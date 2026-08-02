@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Idle Garden Reborn</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">🌸 Idle Garden Reborn</div>
+      <div class="wallets">
+        <div class="pill">💰 <span id="credits">0</span></div>
+        <div class="pill">🎟️ <span id="tickets">0</span></div>
+        <div class="pill">💎 <span id="gems">0</span></div>
+      </div>
+      <div class="actions">
+        <button id="btnBonuses" class="icon-btn" aria-label="Current Bonuses">📜</button>
+        <button id="btnSettings" class="icon-btn" aria-label="Settings">⚙️</button>
+      </div>
+    </header>
+
+    <section class="statusbar">
+      <div class="slot">
+        <h4>Decor</h4>
+        <div id="decorStatus" class="chips"></div>
+      </div>
+      <div class="slot">
+        <h4>Boosters</h4>
+        <div id="boosterStatus" class="chips"></div>
+      </div>
+    </section>
+
+    <main class="playfield">
+      <div id="garden" class="garden" aria-label="Garden">
+        <!-- 3x3 layout: center is the Flower, others are Plots -->
+        <div class="cell" data-kind="plot" data-idx="0"></div>
+        <div class="cell" data-kind="plot" data-idx="1"></div>
+        <div class="cell" data-kind="plot" data-idx="2"></div>
+        <div class="cell" data-kind="plot" data-idx="3"></div>
+        <button id="flower" class="flower" data-kind="flower" aria-label="Central Flower">
+          <div class="combo" id="comboMeter"></div>
+          <div class="spr">🌷</div>
+        </button>
+        <div class="cell" data-kind="plot" data-idx="4"></div>
+        <div class="cell" data-kind="plot" data-idx="5"></div>
+        <div class="cell" data-kind="plot" data-idx="6"></div>
+        <div class="cell" data-kind="plot" data-idx="7"></div>
+      </div>
+    </main>
+
+    <nav class="dock">
+      <button class="dock-btn active" data-tab="upgrades">🪚 Upgrades</button>
+      <button class="dock-btn" data-tab="decor">🧚 Decor</button>
+      <button class="dock-btn" data-tab="boosters">⚡ Boosters</button>
+    </nav>
+
+    <section class="tray">
+      <div id="panel-upgrades" class="panel active"></div>
+      <div id="panel-decor" class="panel"></div>
+      <div id="panel-boosters" class="panel"></div>
+    </section>
+  </div>
+
+  <dialog id="seedPicker">
+    <button type="button" class="dialog-close" aria-label="Close seed picker">&times;</button>
+    <h3>Choose a seed</h3>
+    <div class="seed-picker-controls">
+      <label for="seedSort">Sort by</label>
+      <select id="seedSort">
+        <option value="tier" selected>Tier (Default)</option>
+        <option value="costAsc">Cost (Lowest)</option>
+        <option value="costDesc">Cost (Highest)</option>
+      </select>
+    </div>
+    <div id="seedPickerList" class="picker-list"></div>
+    <form method="dialog">
+      <button>Cancel</button>
+    </form>
+  </dialog>
+
+  <dialog id="settings">
+    <button type="button" class="dialog-close" aria-label="Close settings">&times;</button>
+    <h3>Settings</h3>
+    <button id="cheatBtn" class="cheat">+50 Gems & Tickets</button>
+    <button id="resetBtn" class="danger">Reset Save</button>
+    <form method="dialog">
+      <button>Close</button>
+    </form>
+  </dialog>
+
+  <dialog id="bonuses">
+    <button type="button" class="dialog-close" aria-label="Close bonuses">&times;</button>
+    <h3>Current Bonuses</h3>
+    <div id="bonusList" class="stats"></div>
+    <form method="dialog">
+      <button>Close</button>
+    </form>
+  </dialog>
+
+  <template id="tpl-plot">
+    <button class="plot" aria-label="Empty plot">
+      <div class="lock"><span class="icon">🔒</span><span class="cost"></span></div>
+      <div class="auto-label"></div>
+      <div class="spr"></div>
+      <div class="bar"><span></span></div>
+      <div class="halo"></div>
+    </button>
+  </template>
+
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+  <script src="main.js"></script>
+</body>
+</html>
+

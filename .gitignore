@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Large build output / prototype dumps — never commit these
+Prototype/
+prototypes/
+out/
+.next/
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Archives
+*.rar
+*.zip
+*.7z
+
+# Editor / local
+.vscode/
+.idea/
+*.log
+*.swp
+.env
+.env.local

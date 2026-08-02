@@ -1,0 +1,464 @@
+/* Garden Wonder — simulation layer.
+   All economy math is a faithful port of Idle Garden Reborn; the only addition
+   is the Wonder Effect, which layers a temporary multiplier on top. */
+
+const Game = (() => {
+  const SAVE_KEY = 'gw-save';
+  const LEGACY_KEY = 'igr-save';
+
+  const listeners = {};
+  const on = (evt, fn) => ((listeners[evt] = listeners[evt] || []).push(fn), fn);
+  const emit = (evt, payload) => (listeners[evt] || []).forEach((fn) => fn(payload));
+
+  const nowSeconds = () => Date.now() / 1000;
+
+  const defaultState = () => {
+    const upgrades = {
+      tapPower: 0, critChance: 0, critMult: 0, comboMeter: 0,
+      plotExpansion: 0, autoWater: 0, autoHarvest: 0
+    };
+    PLOT_AUTOPLANTERS.forEach(({ key }) => { upgrades[key] = 0; });
+    return {
+      version: 2,
+      credits: 100,
+      tickets: 0,
+      gems: 0,
+      tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50 },
+      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '' })),
+      upgrades,
+      decor: [],
+      boosters: {},
+      harvestsThisSession: 0,
+      stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
+      wonder: { until: 0, last: 0 },
+      prefs: { sfx: true, music: false },
+      seen: { intro: false, plot: false }
+    };
+  };
+
+  const state = defaultState();
+  let lastAutoHarvest = 0;
+
+  /* ---------------- save / load ---------------- */
+  let saveQueued = false;
+  function save() {
+    if (saveQueued) return;
+    saveQueued = true;
+    setTimeout(() => {
+      saveQueued = false;
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) { /* quota */ }
+    }, 250);
+  }
+  function saveNow() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) { /* quota */ }
+  }
+
+  /** True for a save that was written but never actually played. */
+  function isPristine(save) {
+    if (!save) return true;
+    const st = save.stats || {};
+    return (
+      (save.credits === 100 || save.credits === undefined) &&
+      !st.totalTaps && !st.totalHarvests &&
+      !(save.decor || []).length &&
+      !(save.grid || []).some((c) => c && (c.seed || !c.locked && false))
+    );
+  }
+
+  function load() {
+    let raw = localStorage.getItem(SAVE_KEY);
+    let migrated = false;
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    // An untouched Wonder save should never shadow real progress from the old build.
+    if (raw && legacy) {
+      try {
+        if (isPristine(JSON.parse(raw)) && !isPristine(JSON.parse(legacy))) raw = null;
+      } catch (e) { raw = null; }
+    }
+    if (!raw && legacy) { raw = legacy; migrated = true; }
+    if (!raw) return { migrated: false, fresh: true };
+    try {
+      const parsed = JSON.parse(raw);
+      Object.assign(state, defaultState(), parsed);
+      // fill nested defaults that a legacy save won't have
+      const d = defaultState();
+      state.tap = Object.assign(d.tap, parsed.tap || {});
+      state.stats = Object.assign(d.stats, parsed.stats || {});
+      state.wonder = Object.assign(d.wonder, parsed.wonder || {});
+      state.prefs = Object.assign(d.prefs, parsed.prefs || {});
+      state.seen = Object.assign(d.seen, parsed.seen || {});
+      state.version = 2;
+      lastAutoHarvest = 0;
+
+      if (typeof state.upgrades.plot1Gardener === 'number') {
+        state.upgrades.plot1Harvester = state.upgrades.plot1Harvester || state.upgrades.plot1Gardener;
+        delete state.upgrades.plot1Gardener;
+      }
+      PLOT_AUTOPLANTERS.forEach(({ key }) => {
+        if (typeof state.upgrades[key] !== 'number') state.upgrades[key] = 0;
+      });
+
+      const now = nowSeconds();
+      state.grid.forEach((cell) => {
+        if (!cell) return;
+        if (!cell.seed) { cell.plantedAt = 0; cell.ready = false; return; }
+        if (typeof cell.grow !== 'number' || cell.grow <= 0) cell.grow = 1;
+        if (typeof cell.plantedAt !== 'number' || cell.plantedAt <= 0 || cell.plantedAt < 1e8) {
+          cell.plantedAt = now - cell.grow;
+        } else if (cell.plantedAt > now + 1e5) {
+          cell.plantedAt = now;
+        }
+      });
+      if (migrated) saveNow();
+      return { migrated, fresh: false };
+    } catch (err) {
+      console.warn('Save load failed', err);
+      return { migrated: false, fresh: true };
+    }
+  }
+
+  function reset() {
+    localStorage.removeItem(SAVE_KEY);
+    Object.assign(state, defaultState());
+    lastAutoHarvest = 0;
+    emit('grid');
+    emit('panels');
+    emit('currency');
+  }
+
+  /* ---------------- lookups ---------------- */
+  const seedById = (id) => DATA.seeds.find((s) => s.id === id);
+  const activeBoost = (id) => Boolean(state.boosters[id]) && state.boosters[id] > nowSeconds();
+
+  function boostVal(key) {
+    let v = 0;
+    for (const b of DATA.boosters) if (activeBoost(b.id) && b.effects[key]) v += b.effects[key];
+    return v;
+  }
+
+  function decorVal(key) {
+    let v = 0;
+    for (const d of state.decor) if (d.type === key) v += d.val;
+    return v;
+  }
+
+  function growModifier() {
+    const bonus = decorVal('growSpeed') + boostVal('growSpeed') + state.upgrades.autoWater * 0.05;
+    return Math.max(0.3, 1 - bonus);
+  }
+
+  const plotUnlockCost = (idx) => 400 + 300 * (idx + 1);
+  const upgradePrice = (key) =>
+    Math.round(DATA.upgrades[key].base * Math.pow(DATA.upgrades[key].scale, state.upgrades[key]));
+
+  function rollRarity(extra) {
+    const pool = DATA.rarity.map((r, i) => ({ ...r, w: i > 0 ? r.w * (1 + extra) : r.w }));
+    const tot = pool.reduce((a, b) => a + b.w, 0);
+    let t = Math.random() * tot;
+    for (const r of pool) { t -= r.w; if (t <= 0) return r; }
+    return pool[0];
+  }
+
+  /* ---------------- Wonder Effect ---------------- */
+  const wonderActive = () => state.wonder.until > nowSeconds();
+  const wonderMult = () => (wonderActive() ? WONDER.payoutMult : 1);
+
+  function tryWonder(chance) {
+    const now = nowSeconds();
+    if (wonderActive()) return false;
+    if (now - state.wonder.last < WONDER.cooldown) return false;
+    if (Math.random() >= chance) return false;
+    startWonder();
+    return true;
+  }
+
+  function startWonder() {
+    const now = nowSeconds();
+    state.wonder.until = now + WONDER.duration;
+    state.wonder.last = now;
+    state.stats.wonders = (state.stats.wonders || 0) + 1;
+    save();
+    emit('wonder', { active: true });
+  }
+
+  /* ---------------- actions ---------------- */
+  function tapFlower() {
+    const power = state.tap.power * (1 + decorVal('tapYield')) * (1 + boostVal('tapPower')) * (1 + boostVal('globalCredits'));
+    const critChance = state.tap.critChance + decorVal('critChance') + boostVal('critChance');
+    const critMultiplier = state.tap.critMult * (1 + decorVal('critMult'));
+    const isCrit = Math.random() < critChance;
+    let gain = power;
+    if (isCrit) {
+      gain *= critMultiplier;
+      state.stats.totalCrits += 1;
+      if (Math.random() < 0.03) state.tickets += 1;
+    }
+    let gemDrop = false;
+    if (Math.random() < 0.05) { state.gems += 1; gemDrop = true; }
+    gain *= wonderMult();
+    state.stats.totalTaps += 1;
+    const rounded = Math.round(gain);
+    state.credits += rounded;
+    state.tap.combo = Math.min(state.tap.comboMax, state.tap.combo + 1);
+    const sparked = tryWonder(WONDER.tapChance);
+    save();
+    emit('currency');
+    const payload = { gain: rounded, crit: isCrit, combo: state.tap.combo, gemDrop, sparkedWonder: sparked };
+    emit('tap', payload);
+    return payload;
+  }
+
+  function decayCombo() {
+    if (state.tap.combo <= 0) return false;
+    state.tap.combo = Math.max(0, state.tap.combo - 1);
+    return true;
+  }
+
+  function plant(idx, seedDef, payCost = true) {
+    if (!seedDef) return false;
+    const cell = state.grid[idx];
+    if (!cell || cell.locked || cell.seed) return false;
+    if (payCost && state.credits < seedDef.cost) return false;
+    if (payCost) state.credits -= seedDef.cost;
+    state.grid[idx] = {
+      ...cell,
+      seed: seedDef.id,
+      plantedAt: nowSeconds(),
+      grow: seedDef.grow * growModifier(),
+      aura: ''
+    };
+    save();
+    emit('currency');
+    emit('plant', { idx, seed: seedDef, auto: !payCost });
+    return true;
+  }
+
+  function unlockPlot(idx) {
+    const cell = state.grid[idx];
+    if (!cell || !cell.locked) return false;
+    const cost = plotUnlockCost(idx);
+    if (state.credits < cost) {
+      emit('deny', { reason: 'credits', need: cost, idx });
+      return false;
+    }
+    state.credits -= cost;
+    cell.locked = false;
+    save();
+    emit('currency');
+    emit('unlock', { idx, cost });
+    emit('panels');
+    return true;
+  }
+
+  function unlockNextPlots(count) {
+    const targets = [];
+    for (let i = 0; i < state.grid.length && targets.length < count; i += 1) {
+      if (state.grid[i].locked) targets.push(i);
+    }
+    targets.forEach((idx) => { state.grid[idx].locked = false; });
+    return targets.length;
+  }
+
+  /** Impatient tap on a growing plant: shave 2% off the remaining time. */
+  function hasten(idx) {
+    const cell = state.grid[idx];
+    if (!cell || !cell.seed || cell.ready) return 0;
+    const elapsed = Math.max(0, nowSeconds() - cell.plantedAt);
+    const remain = Math.max(0, cell.grow - elapsed);
+    const hasteFactor = 1 + boostVal('growSpeed') + state.upgrades.autoWater * 0.05;
+    const shaved = 0.02 * cell.grow * hasteFactor;
+    cell.grow = elapsed + Math.max(0, remain - shaved);
+    return shaved;
+  }
+
+  function harvest(idx) {
+    const cell = state.grid[idx];
+    if (!cell || !cell.seed) return null;
+    const sdef = seedById(cell.seed);
+    const now = nowSeconds();
+    if (!sdef || now - cell.plantedAt < cell.grow) return null;
+
+    const r = rollRarity(boostVal('rarityWeight'));
+    const yieldBase = sdef.yield * r.m;
+    const yieldDecor = 1 + decorVal('tapYield') * 0.3 + boostVal('globalCredits');
+    const payout = Math.round(yieldBase * yieldDecor * wonderMult());
+
+    state.credits += payout;
+    state.harvestsThisSession += 1;
+    state.stats.totalHarvests += 1;
+    let ticketBonus = 0;
+    if (state.harvestsThisSession % 10 === 0) { state.tickets += 3; ticketBonus = 3; }
+    const gemChance = typeof sdef.gemChance === 'number' ? sdef.gemChance : 0.05;
+    let gemDrop = false;
+    if (Math.random() < gemChance) { state.gems += 1; gemDrop = true; }
+    let ticketDrop = false;
+    if (typeof sdef.ticketChance === 'number' && Math.random() < sdef.ticketChance) {
+      state.tickets += 1;
+      ticketDrop = true;
+    }
+
+    state.grid[idx] = { ...cell, seed: null, plantedAt: 0, grow: 0, ready: false, aura: r.a };
+    const sparked = tryWonder(WONDER.harvestChance);
+    save();
+    emit('currency');
+    const payload = { idx, payout, rarity: r, seed: sdef, gemDrop, ticketDrop, ticketBonus, sparkedWonder: sparked };
+    emit('harvest', payload);
+    return payload;
+  }
+
+  /* ---------------- shop ---------------- */
+  const UPGRADE_EFFECTS = {
+    tapPower: () => { state.upgrades.tapPower += 1; state.tap.power += 1; return true; },
+    critChance: () => { state.upgrades.critChance += 1; state.tap.critChance += 0.01; return true; },
+    critMult: () => { state.upgrades.critMult += 1; state.tap.critMult = Math.min(50, state.tap.critMult + 2); return true; },
+    comboMeter: () => { state.upgrades.comboMeter += 1; state.tap.comboMax = Math.min(100, state.tap.comboMax + 10); return true; },
+    plotExpansion: () => {
+      const unlocked = unlockNextPlots(2);
+      if (unlocked > 0) { state.upgrades.plotExpansion += 1; return true; }
+      return false;
+    },
+    autoWater: () => { state.upgrades.autoWater += 1; return true; },
+    autoHarvest: () => { state.upgrades.autoHarvest += 1; return true; }
+  };
+  PLOT_AUTOPLANTERS.forEach(({ key }) => {
+    UPGRADE_EFFECTS[key] = () => { state.upgrades[key] += 1; return true; };
+  });
+
+  const upgradeMaxed = (key) => key === 'plotExpansion' && state.grid.every((c) => !c.locked);
+
+  function buyUpgrade(key) {
+    if (upgradeMaxed(key)) return false;
+    const cost = upgradePrice(key);
+    if (state.credits < cost) { emit('deny', { reason: 'credits', need: cost }); return false; }
+    state.credits -= cost;
+    const ok = UPGRADE_EFFECTS[key]();
+    if (ok === false) { state.credits += cost; return false; }
+    save();
+    emit('currency');
+    emit('purchase', { kind: 'upgrade', key, cost });
+    emit('panels');
+    if (key === 'plotExpansion') emit('grid');
+    return true;
+  }
+
+  function buyDecor(id) {
+    const d = DATA.decor.find((x) => x.id === id);
+    if (!d) return false;
+    const pot = d.currency === 'gems' ? state.gems : d.currency === 'tickets' ? state.tickets : state.credits;
+    if (pot < d.cost) { emit('deny', { reason: d.currency, need: d.cost }); return false; }
+    if (d.currency === 'gems') state.gems -= d.cost;
+    else if (d.currency === 'tickets') state.tickets -= d.cost;
+    else state.credits -= d.cost;
+    state.decor.push({ id: d.id, type: d.type, val: d.val });
+    save();
+    emit('currency');
+    emit('purchase', { kind: 'decor', key: id, def: d });
+    emit('panels');
+    return true;
+  }
+
+  function buyBooster(id) {
+    const b = DATA.boosters.find((x) => x.id === id);
+    if (!b) return false;
+    if (state.tickets < b.tickets) { emit('deny', { reason: 'tickets', need: b.tickets }); return false; }
+    state.tickets -= b.tickets;
+    state.boosters[b.id] = nowSeconds() + b.dur;
+    save();
+    emit('currency');
+    emit('purchase', { kind: 'booster', key: id, def: b });
+    emit('panels');
+    return true;
+  }
+
+  const decorCount = (id) => state.decor.filter((d) => d.id === id).length;
+
+  /* ---------------- automation + tick ---------------- */
+  function processAutoHarvest(now) {
+    const level = state.upgrades.autoHarvest;
+    if (!level) return;
+    const cadence = Math.max(0.7, 3 - level * 0.5);
+    if (now - lastAutoHarvest < cadence) return;
+    const target = state.grid.findIndex((cell) => !cell.locked && cell.seed && cell.ready);
+    if (target === -1) return;
+    lastAutoHarvest = now;
+    harvest(target);
+  }
+
+  function processAutoPlant() {
+    PLOT_AUTOPLANTERS.forEach(({ key, idx }) => {
+      const level = state.upgrades[key];
+      if (!level) return;
+      const cell = state.grid[idx];
+      if (!cell || cell.locked || cell.seed) return;
+      const maxSeedIndex = Math.min(level - 1, DATA.seeds.length - 1);
+      let chosen = null;
+      for (let i = maxSeedIndex; i >= 0; i -= 1) {
+        if (state.credits >= DATA.seeds[i].cost) { chosen = DATA.seeds[i]; break; }
+      }
+      if (chosen) plant(idx, chosen, true);
+    });
+  }
+
+  function removeExpiredBoosters() {
+    const now = nowSeconds();
+    let changed = false;
+    for (const [id, until] of Object.entries(state.boosters)) {
+      if (until <= now) { delete state.boosters[id]; changed = true; }
+    }
+    if (changed) emit('panels');
+  }
+
+  let wonderWasActive = false;
+  function tick(dt) {
+    const now = nowSeconds();
+    removeExpiredBoosters();
+
+    const wa = wonderActive();
+    if (wonderWasActive && !wa) emit('wonder', { active: false });
+    wonderWasActive = wa;
+
+    // Wonder accelerates everything still in the ground.
+    if (wa) {
+      state.grid.forEach((cell) => {
+        if (!cell.seed || cell.ready) return;
+        const elapsed = Math.max(0, now - cell.plantedAt);
+        const remain = Math.max(0, cell.grow - elapsed);
+        if (remain <= 0) return;
+        cell.grow = elapsed + Math.max(0, remain - dt * (WONDER.growMult - 1));
+      });
+    }
+
+    // readiness flags
+    state.grid.forEach((cell, i) => {
+      if (cell.locked || !cell.seed) { cell.ready = false; return; }
+      const wasReady = cell.ready;
+      cell.ready = now - cell.plantedAt >= cell.grow;
+      if (cell.ready && !wasReady) emit('ready', { idx: i });
+    });
+
+    processAutoHarvest(now);
+    processAutoPlant();
+  }
+
+  function progressOf(cell) {
+    if (!cell || !cell.seed) return 0;
+    const duration = cell.grow > 0 ? cell.grow : 1;
+    return Math.min(1, Math.max(0, (nowSeconds() - cell.plantedAt) / duration));
+  }
+
+  function remainingOf(cell) {
+    if (!cell || !cell.seed) return 0;
+    return Math.max(0, cell.grow - (nowSeconds() - cell.plantedAt));
+  }
+
+  return {
+    state, on, emit, load, save, saveNow, reset, nowSeconds,
+    seedById, activeBoost, boostVal, decorVal, growModifier, rollRarity,
+    plotUnlockCost, upgradePrice, upgradeMaxed, decorCount,
+    tapFlower, decayCombo, plant, unlockPlot, hasten, harvest,
+    buyUpgrade, buyDecor, buyBooster,
+    tick, progressOf, remainingOf,
+    wonderActive, wonderMult, startWonder,
+    UPGRADE_EFFECTS
+  };
+})();

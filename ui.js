@@ -1,0 +1,1077 @@
+/* Garden Wonder — presentation, input and glue. */
+
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const S = Game.state;
+
+  const el = {
+    game: $('#game'),
+    ui: $('#ui'),
+    garden: $('#garden'),
+    rail: $('#rail'),
+    credits: $('#credits'),
+    tickets: $('#tickets'),
+    gems: $('#gems'),
+    walletCredits: $('#walletCredits'),
+    walletTickets: $('#walletTickets'),
+    walletGems: $('#walletGems'),
+    dock: $('#dock'),
+    sheet: $('#sheet'),
+    sheetBody: $('#sheetBody'),
+    sheetTabs: $('#sheetTabs'),
+    sheetTitle: $('#sheetTitle'),
+    sheetGrip: $('#sheetGrip'),
+    scrim: $('#scrim'),
+    toasts: $('#toasts'),
+    banner: $('#banner'),
+    coach: $('#coach'),
+    cloudsFar: $('#cloudsFar'),
+    cloudsNear: $('#cloudsNear'),
+    sky: $('#sky')
+  };
+
+  /* ============ formatting ============ */
+  const trimZeros = (s) => (s.includes('.') ? s.replace(/\.?0+$/, '') : s);
+  function fmt(n) {
+    n = Math.round(n);
+    const abs = Math.abs(n);
+    if (abs < 100000) return n.toLocaleString();
+    if (abs < 1e6) return trimZeros((n / 1e3).toFixed(1)) + 'K';
+    if (abs < 1e9) return trimZeros((n / 1e6).toFixed(2)) + 'M';
+    if (abs < 1e12) return trimZeros((n / 1e9).toFixed(2)) + 'B';
+    return trimZeros((n / 1e12).toFixed(2)) + 'T';
+  }
+  function fmtTime(sec) {
+    sec = Math.max(0, Math.ceil(sec));
+    if (sec < 60) return sec + 's';
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + 'm' + (s ? ' ' + s + 's' : '');
+  }
+  const pct = (v, d = 0) => `${(v * 100).toFixed(d)}%`;
+  const signed = (v, d = 0) => `${v > 0 ? '+' : ''}${(v * 100).toFixed(d)}%`;
+  const ico = (name, cls = '') => `<span class="ico ${cls}">${Icons.get(name)}</span>`;
+
+  /* ============ scenery ============ */
+  const SKY_KEYS = [
+    { t: 0.00, s1: '#132a52', s2: '#2b4a7a', s3: '#5a7a9e', sun: '#e8f0ff', star: 1, sx: 22, sy: 22 },
+    { t: 0.18, s1: '#ff9e6d', s2: '#ffd9a0', s3: '#ffeed2', sun: '#fff0c4', star: 0.15, sx: 8, sy: 62 },
+    { t: 0.34, s1: '#5cb8ee', s2: '#a9e2ff', s3: '#e4f7ff', sun: '#fff8d0', star: 0, sx: 30, sy: 22 },
+    { t: 0.55, s1: '#7ec8f2', s2: '#bfe9ff', s3: '#e9f8ff', sun: '#fff3bf', star: 0, sx: 62, sy: 12 },
+    { t: 0.74, s1: '#ff8f6b', s2: '#ffc48c', s3: '#ffe6c4', sun: '#ffd08a', star: 0.1, sx: 88, sy: 58 },
+    { t: 0.86, s1: '#3d2a63', s2: '#7a5a92', s3: '#c98fa4', sun: '#ffd9e8', star: 0.55, sx: 96, sy: 74 },
+    { t: 1.00, s1: '#132a52', s2: '#2b4a7a', s3: '#5a7a9e', sun: '#e8f0ff', star: 1, sx: 22, sy: 22 }
+  ];
+  const CYCLE = 360; // seconds for a full day
+  const DAY_START = 0.46; // every session opens at bright midday
+  const bootAt = Date.now() / 1000;
+
+  const hex2rgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const mix = (a, b, k) => {
+    const A = hex2rgb(a), B = hex2rgb(b);
+    return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * k)).join(',')})`;
+  };
+
+  function updateSky() {
+    const t = ((Date.now() / 1000 - bootAt) / CYCLE + DAY_START) % 1;
+    let i = 0;
+    while (i < SKY_KEYS.length - 2 && SKY_KEYS[i + 1].t <= t) i += 1;
+    const a = SKY_KEYS[i], b = SKY_KEYS[i + 1];
+    const k = (t - a.t) / (b.t - a.t);
+    const r = document.documentElement.style;
+    r.setProperty('--sky1', mix(a.s1, b.s1, k));
+    r.setProperty('--sky2', mix(a.s2, b.s2, k));
+    r.setProperty('--sky3', mix(a.s3, b.s3, k));
+    r.setProperty('--sun-c', mix(a.sun, b.sun, k));
+    r.setProperty('--star-op', (a.star + (b.star - a.star) * k).toFixed(2));
+    r.setProperty('--sun-x', (a.sx + (b.sx - a.sx) * k).toFixed(1) + '%');
+    r.setProperty('--sun-y', (a.sy + (b.sy - a.sy) * k).toFixed(1) + '%');
+  }
+
+  function buildClouds() {
+    const make = (host, n, minW, maxW, minDur, maxDur, op) => {
+      for (let i = 0; i < n; i += 1) {
+        const c = document.createElement('div');
+        c.className = 'cloud';
+        const w = minW + Math.random() * (maxW - minW);
+        c.style.setProperty('--w', w + 'px');
+        c.style.setProperty('--dur', (minDur + Math.random() * (maxDur - minDur)) + 's');
+        c.style.setProperty('--delay', (-Math.random() * 90) + 's');
+        c.style.setProperty('--o', op);
+        c.style.top = (14 + Math.random() * 52) + '%';
+        host.appendChild(c);
+      }
+    };
+    make(el.cloudsFar, 3, 58, 92, 130, 200, 0.62);
+    make(el.cloudsNear, 2, 92, 140, 80, 120, 0.9);
+  }
+
+  /* ============ garden ============ */
+  const plotEls = [];
+  let flowerBtn = null;
+  let speechEl = null;
+  let comboRing = null;
+
+  function buildGarden() {
+    el.garden.innerHTML = '';
+    plotEls.length = 0;
+    for (let cell = 0; cell < 9; cell += 1) {
+      if (cell === 4) {
+        const wrap = document.createElement('div');
+        wrap.className = 'flower-cell';
+        wrap.innerHTML = `
+          <div class="flower-glow"></div>
+          <div class="combo-ring"></div>
+          <button class="flower-btn" id="flowerBtn" aria-label="Tap the talking flower">${Flora.talkingFlower()}</button>
+          <div class="speech" id="speech"></div>`;
+        el.garden.appendChild(wrap);
+        flowerBtn = $('#flowerBtn', wrap);
+        speechEl = $('#speech', wrap);
+        comboRing = $('.combo-ring', wrap);
+        wireFlower();
+        continue;
+      }
+      const idx = cell < 4 ? cell : cell - 1;
+      const b = document.createElement('button');
+      b.className = 'plot';
+      b.dataset.idx = idx;
+      b.dataset.state = 'empty';
+      b.innerHTML = `
+        <div class="plot-inner"><div class="plant-slot"></div></div>
+        <div class="empty-mark">${Icons.get('plantSpot')}</div>
+        <div class="lock-badge">${Icons.get('lock')}<div class="lock-cost">${Icons.get('coin')}<span></span></div></div>
+        <div class="bar"><i></i></div>
+        <div class="ready-pop">!</div>
+        <div class="auto-tag">Auto</div>`;
+      b.addEventListener('pointerdown', (e) => { e.preventDefault(); onPlotTap(idx, b); }, { passive: false });
+      el.garden.appendChild(b);
+      plotEls[idx] = {
+        root: b,
+        slot: $('.plant-slot', b),
+        bar: $('.bar i', b),
+        cost: $('.lock-cost span', b),
+        tag: $('.auto-tag', b),
+        cache: {}
+      };
+    }
+  }
+
+  /** Keep the board a perfect square that fills whatever the stage row offers. */
+  function sizeGarden() {
+    const st = $('.stage');
+    const r = st.getBoundingClientRect();
+    const s = Math.max(150, Math.floor(Math.min(r.width, r.height)));
+    el.garden.style.width = s + 'px';
+    el.garden.style.height = s + 'px';
+  }
+
+  function stageOf(p) {
+    if (p < 0.25) return 1;
+    if (p < 0.7) return 2;
+    return 3;
+  }
+
+  function renderPlots() {
+    for (let i = 0; i < 8; i += 1) {
+      const cell = S.grid[i];
+      const v = plotEls[i];
+      if (!v) continue;
+      const c = v.cache;
+
+      let state;
+      if (cell.locked) state = 'locked';
+      else if (!cell.seed) state = 'empty';
+      else if (cell.ready) state = 'ready';
+      else state = 'grow';
+
+      if (c.state !== state) {
+        v.root.dataset.state = state;
+        c.state = state;
+      }
+      if (c.aura !== (cell.aura || '')) {
+        if (cell.aura) v.root.dataset.aura = cell.aura; else delete v.root.dataset.aura;
+        c.aura = cell.aura || '';
+      }
+
+      if (state === 'locked') {
+        const cost = Game.plotUnlockCost(i);
+        if (c.cost !== cost) { v.cost.textContent = fmt(cost); c.cost = cost; }
+        const afford = S.credits >= cost ? '1' : '0';
+        if (c.afford !== afford) { v.root.dataset.afford = afford; c.afford = afford; }
+        if (c.seed !== null) { v.slot.innerHTML = ''; c.seed = null; c.stage = null; }
+        continue;
+      }
+
+      if (!cell.seed) {
+        if (c.seed !== null) { v.slot.innerHTML = ''; c.seed = null; c.stage = null; }
+        continue;
+      }
+
+      if (c.seed !== cell.seed) {
+        const sdef = Game.seedById(cell.seed);
+        v.slot.innerHTML = sdef ? Flora.plant(sdef) : '';
+        c.seed = cell.seed;
+        c.stage = null;
+      }
+
+      const p = Game.progressOf(cell);
+      const st = stageOf(p);
+      if (c.stage !== st) { v.root.dataset.stage = st; c.stage = st; }
+      const w = (p * 100).toFixed(1) + '%';
+      if (c.bar !== w) { v.bar.style.width = w; c.bar = w; }
+    }
+  }
+
+  /* ============ talking flower ============ */
+  let speechTimer = null;
+  let lastSpeech = 0;
+  let idleSince = Date.now() / 1000;
+
+  function say(bucket, force) {
+    const now = Date.now() / 1000;
+    if (!el.coach.hidden) return; // don't stack a bubble on top of a coach mark
+    if (!force && now - lastSpeech < 3.2) return;
+    const lines = FLOWER_LINES[bucket] || FLOWER_LINES.idle;
+    const text = lines[(Math.random() * lines.length) | 0];
+    lastSpeech = now;
+    speechEl.textContent = text;
+    speechEl.classList.add('show');
+    clearTimeout(speechTimer);
+    speechTimer = setTimeout(() => speechEl.classList.remove('show'), 2400);
+  }
+
+  let faceTimer = null;
+  function faceReact(mood) {
+    flowerBtn.classList.remove('bounce');
+    void flowerBtn.offsetWidth;
+    flowerBtn.classList.add('bounce');
+    flowerBtn.classList.toggle('squint', mood === 'crit');
+    flowerBtn.classList.toggle('happy', mood === 'happy');
+    const mouth = $('.tf-mouth-path', flowerBtn);
+    if (mouth) {
+      const shapes = {
+        idle: 'M-8,10 Q0,17 8,10',
+        open: 'M-7,9 Q0,20 7,9 Q0,14 -7,9',
+        crit: 'M-10,8 Q0,23 10,8 Q0,15 -10,8',
+        wow: 'M-6,10 Q0,20 6,10 Q0,20 -6,10'
+      };
+      mouth.setAttribute('d', shapes[mood === 'crit' ? 'crit' : mood === 'wow' ? 'wow' : 'open']);
+      clearTimeout(faceTimer);
+      faceTimer = setTimeout(() => {
+        mouth.setAttribute('d', shapes.idle);
+        flowerBtn.classList.remove('squint');
+      }, 340);
+    }
+  }
+
+  function lookAt(clientX, clientY) {
+    const eyes = $$('.tf-eye', flowerBtn);
+    if (!eyes.length) return;
+    const r = flowerBtn.getBoundingClientRect();
+    const dx = Math.max(-1, Math.min(1, (clientX - (r.left + r.width / 2)) / (r.width / 2)));
+    const dy = Math.max(-1, Math.min(1, (clientY - (r.top + r.height * 0.42)) / (r.height / 2)));
+    flowerBtn.style.setProperty('--px', (dx * 2).toFixed(2));
+    flowerBtn.style.setProperty('--py', (dy * 1.6).toFixed(2));
+  }
+
+  function wireFlower() {
+    flowerBtn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      Sound.resume();
+      lookAt(e.clientX, e.clientY);
+      Game.tapFlower();
+      if (!S.seen.intro) { S.seen.intro = true; Game.save(); hideCoach(); }
+    }, { passive: false });
+  }
+
+  /* ============ HUD ============ */
+  const counters = {
+    credits: { disp: 0, node: el.credits, wallet: el.walletCredits, get: () => S.credits },
+    tickets: { disp: 0, node: el.tickets, wallet: el.walletTickets, get: () => S.tickets },
+    gems: { disp: 0, node: el.gems, wallet: el.walletGems, get: () => S.gems }
+  };
+
+  function hudTick(dt) {
+    Object.values(counters).forEach((c) => {
+      const target = c.get();
+      if (Math.abs(target - c.disp) < 0.6) {
+        if (c.disp !== target) { c.disp = target; c.node.textContent = fmt(target); }
+        return;
+      }
+      c.disp += (target - c.disp) * Math.min(1, dt * 9);
+      c.node.textContent = fmt(c.disp);
+    });
+  }
+
+  function popWallet(name) {
+    const c = counters[name];
+    if (!c) return;
+    c.wallet.classList.remove('pop');
+    void c.wallet.offsetWidth;
+    c.wallet.classList.add('pop');
+  }
+
+  /* ============ rail chips ============ */
+  function renderRail() {
+    const now = Game.nowSeconds();
+    let html = '';
+    DATA.boosters.forEach((b) => {
+      if (!Game.activeBoost(b.id)) return;
+      const remain = Math.max(0, S.boosters[b.id] - now);
+      const p = Math.max(0, Math.min(1, remain / b.dur));
+      html += `<div class="chip timed" style="--tint:${b.tint}">
+        <span class="ring" style="--p:${p.toFixed(3)}"><i>${Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain)}</i></span>
+        <span>${b.name}</span></div>`;
+    });
+    const counts = {};
+    S.decor.forEach((d) => { counts[d.id] = (counts[d.id] || 0) + 1; });
+    Object.entries(counts).forEach(([id, n]) => {
+      const def = DATA.decor.find((d) => d.id === id);
+      if (!def) return;
+      html += `<div class="chip"><span class="chip-ico">${Icons.get(def.icon)}</span><span>${def.name}</span><span class="count">${n}</span></div>`;
+    });
+    if (Game.wonderActive()) {
+      const remain = Math.max(0, S.wonder.until - now);
+      html = `<div class="chip timed" style="--tint:#ff6bd6">
+        <span class="ring" style="--p:${(remain / WONDER.duration).toFixed(3)}"><i>${Math.ceil(remain)}</i></span>
+        <span>WONDER x${WONDER.payoutMult}</span></div>` + html;
+    }
+    if (el.rail.dataset.sig !== html) {
+      el.rail.innerHTML = html;
+      el.rail.dataset.sig = html;
+    }
+  }
+
+  /* ============ toasts ============ */
+  function toast({ title, body, art, kind = '', ms = 3000 }) {
+    const t = document.createElement('div');
+    t.className = `toast ${kind}`;
+    t.innerHTML = `<div class="t-art">${art || Icons.get('sparkle')}</div>
+      <div><div class="t-title">${title}</div>${body ? `<div class="t-body">${body}</div>` : ''}</div>`;
+    el.toasts.appendChild(t);
+    while (el.toasts.children.length > 2) el.toasts.firstElementChild.remove();
+    setTimeout(() => {
+      t.classList.add('out');
+      setTimeout(() => t.remove(), 320);
+    }, ms);
+  }
+
+  /* ============ bottom sheet ============ */
+  let sheetMode = null;
+  let sheetArg = null;
+  let seedSort = 'tier';
+
+  const TABS = [
+    { id: 'badges', label: 'Badges' },
+    { id: 'decor', label: 'Decor' },
+    { id: 'boosters', label: 'Boosts' }
+  ];
+
+  function openSheet(mode, arg) {
+    sheetMode = mode;
+    sheetArg = arg;
+    renderSheet(true);
+    el.sheet.classList.add('open');
+    el.sheet.setAttribute('aria-hidden', 'false');
+    el.scrim.hidden = false;
+    requestAnimationFrame(() => el.scrim.classList.add('show'));
+    Sound.resume();
+    Sound.play('open');
+  }
+
+  function closeSheet() {
+    if (!sheetMode) return;
+    sheetMode = null;
+    el.sheet.classList.remove('open');
+    el.sheet.style.transform = '';
+    el.sheet.setAttribute('aria-hidden', 'true');
+    el.scrim.classList.remove('show');
+    setTimeout(() => { if (!sheetMode) el.scrim.hidden = true; }, 300);
+    Sound.play('close');
+  }
+
+  function renderSheet(resetScroll) {
+    if (!sheetMode) return;
+    const keep = resetScroll ? 0 : el.sheetBody.scrollTop;
+    const titles = {
+      badges: 'Badges', decor: 'Decor', boosters: 'Boosts',
+      seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings'
+    };
+    el.sheetTitle.textContent = titles[sheetMode] || '';
+
+    if (['badges', 'decor', 'boosters'].includes(sheetMode)) {
+      el.sheetTabs.innerHTML = TABS.map(
+        (t) => `<button class="tab" role="tab" data-tab="${t.id}" aria-selected="${t.id === sheetMode}">${t.label}</button>`
+      ).join('');
+    } else if (sheetMode === 'seeds') {
+      const opts = [['tier', 'By tier'], ['costAsc', 'Cheapest'], ['costDesc', 'Priciest']];
+      el.sheetTabs.innerHTML = opts
+        .map(([id, label]) => `<button class="tab" role="tab" data-sort="${id}" aria-selected="${id === seedSort}">${label}</button>`)
+        .join('');
+    } else {
+      el.sheetTabs.innerHTML = '';
+    }
+
+    const render = {
+      badges: renderBadges, decor: renderDecor, boosters: renderBoosters,
+      seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings
+    }[sheetMode];
+    el.sheetBody.innerHTML = render ? render() : '';
+    el.sheetBody.scrollTop = keep;
+  }
+
+  function priceTag(cost, currency, affordable, maxed) {
+    if (maxed) return `<span class="price maxed">${Icons.get('check')}Maxed</span>`;
+    const icon = currency === 'gems' ? 'gem' : currency === 'tickets' ? 'ticket' : 'coin';
+    return `<span class="price ${affordable ? 'ok' : 'no'}">${Icons.get(icon)}${fmt(cost)}</span>`;
+  }
+
+  function pips(level, max = 8) {
+    const shown = Math.min(level, max);
+    let s = '';
+    for (let i = 0; i < max; i += 1) s += `<span class="pip ${i < shown ? '' : 'off'}"></span>`;
+    return `<div class="pips">${s}${level > max ? `<span class="lvl-text">+${level - max}</span>` : ''}</div>`;
+  }
+
+  const CORE_UPGRADES = ['tapPower', 'critChance', 'critMult', 'comboMeter', 'plotExpansion', 'autoWater', 'autoHarvest'];
+
+  function upgradeCard(key) {
+    const def = DATA.upgrades[key];
+    const lvl = S.upgrades[key];
+    const maxed = Game.upgradeMaxed(key);
+    const cost = Game.upgradePrice(key);
+    const can = !maxed && S.credits >= cost;
+    return `<button class="card ${can ? 'affordable' : ''}" data-buy="upgrade" data-key="${key}" ${maxed ? 'disabled' : ''}>
+      <div class="card-top">
+        <span class="card-badge">${Icons.get(def.icon || 'badge')}</span>
+        <span>
+          <span class="card-title">${def.short || def.name}</span>
+          <span class="card-sub">Lv ${lvl}</span>
+        </span>
+      </div>
+      ${pips(lvl)}
+      <span class="card-desc">${def.desc}</span>
+      ${priceTag(cost, 'credits', can, maxed)}
+    </button>`;
+  }
+
+  function renderBadges() {
+    const core = CORE_UPGRADES.map(upgradeCard).join('');
+    const harvesters = PLOT_AUTOPLANTERS.filter(({ idx }) => !S.grid[idx].locked).map(({ key }) => upgradeCard(key)).join('');
+    const lockedCount = PLOT_AUTOPLANTERS.filter(({ idx }) => S.grid[idx].locked).length;
+    return `
+      <p class="sheet-note">Equip badges to power up your taps, speed up growth and automate the garden.</p>
+      <div class="card-grid">${core}</div>
+      <p class="sheet-note" style="margin-top:16px">Harvesters keep a single plot planted for you, choosing the best seed you can afford.</p>
+      <div class="card-grid">${harvesters || '<p class="sheet-note">Unlock a plot to hire its harvester.</p>'}</div>
+      ${lockedCount ? `<p class="sheet-note" style="margin-top:10px">${lockedCount} more harvester${lockedCount > 1 ? 's' : ''} unlock with new plots.</p>` : ''}`;
+  }
+
+  function renderDecor() {
+    const cards = DATA.decor.map((d) => {
+      const owned = Game.decorCount(d.id);
+      const pot = d.currency === 'gems' ? S.gems : d.currency === 'tickets' ? S.tickets : S.credits;
+      const can = pot >= d.cost;
+      return `<button class="card ${can ? 'affordable' : ''}" data-buy="decor" data-key="${d.id}">
+        <div class="card-top">
+          <span class="card-badge">${Icons.get(d.icon)}</span>
+          <span>
+            <span class="card-title">${d.name}</span>
+            <span class="card-sub">${owned ? `Owned x${owned}` : 'Not placed'}</span>
+          </span>
+        </div>
+        <span class="card-desc">${d.desc}</span>
+        ${priceTag(d.cost, d.currency, can)}
+      </button>`;
+    }).join('');
+    return `<p class="sheet-note">Decor stacks — buy the same piece again for another helping of its bonus.</p>
+      <div class="card-grid">${cards}</div>`;
+  }
+
+  function renderBoosters() {
+    const now = Game.nowSeconds();
+    const cards = DATA.boosters.map((b) => {
+      const active = Game.activeBoost(b.id);
+      const can = S.tickets >= b.tickets;
+      const remain = active ? Math.max(0, S.boosters[b.id] - now) : 0;
+      return `<button class="card ${active ? 'active-boost' : can ? 'affordable' : ''}" data-buy="booster" data-key="${b.id}">
+        ${active ? `<span class="card-timer">${fmtTime(remain)}</span>` : ''}
+        <div class="card-top">
+          <span class="card-badge" style="--badge-c:${b.tint}">${Icons.get(b.icon)}</span>
+          <span>
+            <span class="card-title">${b.name}</span>
+            <span class="card-sub">${fmtTime(b.dur)}</span>
+          </span>
+        </div>
+        <span class="card-desc">${b.desc}</span>
+        ${priceTag(b.tickets, 'tickets', can)}
+      </button>`;
+    }).join('');
+    return `<p class="sheet-note">Spend tickets on short, powerful surges. Tickets drop every 10 harvests and from lucky crits.</p>
+      <div class="card-grid">${cards}</div>`;
+  }
+
+  function sortedSeeds() {
+    const list = [...DATA.seeds];
+    if (seedSort === 'costAsc') list.sort((a, b) => a.cost - b.cost);
+    else if (seedSort === 'costDesc') list.sort((a, b) => b.cost - a.cost);
+    return list;
+  }
+
+  function renderSeeds() {
+    const rows = sortedSeeds().map((s) => {
+      const can = S.credits >= s.cost;
+      const grow = Math.round(s.grow * Game.growModifier());
+      const max = Math.round(s.yield * MAX_RARITY_MULT);
+      const drops = [];
+      if (s.gemChance) drops.push(`<span class="stat gem">${Icons.get('gem')}${pct(s.gemChance, 1)}</span>`);
+      if (s.ticketChance) drops.push(`<span class="stat gem">${Icons.get('ticket')}${pct(s.ticketChance, 1)}</span>`);
+      return `<button class="seed-row" data-plant="${s.id}" ${can ? '' : 'disabled'}>
+        <span class="seed-art">${Flora.head(s, 40)}</span>
+        <span>
+          <span class="seed-name">${s.name}</span>
+          <span class="seed-stats">
+            <span class="stat">${Icons.get('coin')}${fmt(s.cost)}</span>
+            <span class="stat">${Icons.get('clock')}${fmtTime(grow)}</span>
+            <span class="stat good">${Icons.get('coin')}${fmt(s.yield)}–${fmt(max)}</span>
+            ${drops.join('')}
+          </span>
+          <span class="seed-desc">${s.desc}</span>
+        </span>
+        <span class="seed-go">${Icons.get(can ? 'sprout' : 'lock')}</span>
+      </button>`;
+    }).join('');
+    return `<p class="sheet-note">Planting into plot ${(sheetArg ?? 0) + 1}. Grow times already include your sprinklers and boosts.</p>${rows}`;
+  }
+
+  function renderBonuses() {
+    const tapMult = (1 + Game.decorVal('tapYield')) * (1 + Game.boostVal('tapPower')) * (1 + Game.boostVal('globalCredits'));
+    const tapEff = S.tap.power * tapMult * Game.wonderMult();
+    const critChance = S.tap.critChance + Game.decorVal('critChance') + Game.boostVal('critChance');
+    const critMult = S.tap.critMult * (1 + Game.decorVal('critMult'));
+    const growBonus = Math.max(0, 1 - Game.growModifier());
+    const harvestBonus = Game.decorVal('tapYield') * 0.3 + Game.boostVal('globalCredits');
+    const ah = S.upgrades.autoHarvest;
+
+    const line = (k, v, d) => `<div class="stat-line"><span class="kk"><span class="k">${k}</span>${d ? `<span class="d">${d}</span>` : ''}</span><span class="v">${v}</span></div>`;
+
+    const harvesters = PLOT_AUTOPLANTERS.map(({ key, name, idx }) => {
+      const lvl = S.upgrades[key];
+      if (!lvl) return null;
+      const seed = DATA.seeds[Math.min(lvl - 1, DATA.seeds.length - 1)];
+      return line(`${name}`, `Lv ${lvl}`, `Plants up to ${seed.name}${S.grid[idx].locked ? ' (plot locked)' : ''}`);
+    }).filter(Boolean).join('');
+
+    return `
+      <div class="stat-block">
+        <h3>${Icons.get('fist')} Tap Power</h3>
+        ${line('Per tap', fmt(tapEff), `Base ${S.tap.power} · ${signed(tapMult - 1)} from decor & boosts`)}
+        ${line('Crit chance', pct(Math.min(critChance, 0.99), 1), 'Chance for a big bonus tap')}
+        ${line('Crit multiplier', `${critMult.toFixed(1)}x`, 'Payout spike when a crit lands')}
+        ${line('Combo cap', `${S.tap.comboMax}`, 'Ring around the flower fills as you tap')}
+      </div>
+      <div class="stat-block">
+        <h3>${Icons.get('sprout')} Garden Mastery</h3>
+        ${line('Growth speed', signed(growBonus), 'Sprinklers, decor and boosts')}
+        ${line('Rarity odds', signed(Game.boostVal('rarityWeight')), 'Chance of Rare, Epic and Legendary harvests')}
+        ${line('Harvest yield', signed(harvestBonus), 'Extra credits on every harvest')}
+        ${line('Wonder bonus', Game.wonderActive() ? `x${WONDER.payoutMult} active` : 'Idle', `Triggers randomly — ${S.stats.wonders || 0} so far`)}
+      </div>
+      <div class="stat-block">
+        <h3>${Icons.get('drone')} Automation</h3>
+        ${ah ? line('Harvest Drone', `Lv ${ah}`, `Collects a ready plot every ${Math.max(0.7, 3 - ah * 0.5).toFixed(1)}s`) : line('Harvest Drone', 'Locked', 'Buy the badge to auto-collect')}
+        ${harvesters || line('Harvesters', 'None hired', 'Hire them in the Badges tab')}
+      </div>
+      <div class="stat-block">
+        <h3>${Icons.get('star')} Records</h3>
+        ${line('Taps', fmt(S.stats.totalTaps))}
+        ${line('Crits', fmt(S.stats.totalCrits))}
+        ${line('Harvests', fmt(S.stats.totalHarvests))}
+        ${line('Wonder Effects', fmt(S.stats.wonders || 0))}
+      </div>
+      <div class="stat-block">
+        <h3>${Icons.get('book')} Seed Almanac</h3>
+        ${DATA.seeds.map((s) => line(
+          `<span style="display:inline-flex;align-items:center;gap:6px">${Flora.head(s, 22)}${s.name}</span>`,
+          `${fmt(s.yield)}–${fmt(Math.round(s.yield * MAX_RARITY_MULT))}`,
+          `${fmt(s.cost)} coins · ${fmtTime(s.grow)} base`
+        )).join('')}
+      </div>`;
+  }
+
+  let resetArmed = false;
+  function renderSettings() {
+    return `
+      <div class="set-row">
+        <span class="lbl">${Icons.get('sound')} Sound effects</span>
+        <button class="toggle" data-toggle="sfx" aria-pressed="${S.prefs.sfx}"><i></i></button>
+      </div>
+      <div class="set-row">
+        <span class="lbl">${Icons.get('music')} Ambient music</span>
+        <button class="toggle" data-toggle="music" aria-pressed="${S.prefs.music}"><i></i></button>
+      </div>
+      <p class="sheet-note">Your garden saves automatically to this browser.</p>
+      <button class="big-btn magic" data-act="cheat">${Icons.get('gem')} Grant 50 Gems &amp; Tickets</button>
+      <button class="big-btn" data-act="wonder">${Icons.get('sparkle')} Summon a Wonder Effect</button>
+      <button class="big-btn danger" data-act="reset">${Icons.get('trash')} ${resetArmed ? 'Tap again to erase everything' : 'Reset save'}</button>
+      <p class="sheet-note" style="margin-top:14px;text-align:center">Garden Wonder · progress carried over from Idle Garden Reborn</p>`;
+  }
+
+  /* ---- sheet interactions ---- */
+  el.sheetTabs.addEventListener('click', (e) => {
+    const tab = e.target.closest('.tab');
+    if (!tab) return;
+    if (tab.dataset.tab) { sheetMode = tab.dataset.tab; renderSheet(true); Sound.play('open'); }
+    else if (tab.dataset.sort) { seedSort = tab.dataset.sort; renderSheet(true); }
+  });
+
+  el.sheetBody.addEventListener('click', (e) => {
+    const buy = e.target.closest('[data-buy]');
+    if (buy) {
+      const { buy: kind, key } = buy.dataset;
+      const ok = kind === 'upgrade' ? Game.buyUpgrade(key) : kind === 'decor' ? Game.buyDecor(key) : Game.buyBooster(key);
+      if (ok) {
+        const c = FX.centerOf(buy);
+        FX.sparks(c.x, c.y, 12, '#ffe066');
+        FX.ring(c.x, c.y, '#ffffff', 0.45, 70);
+      }
+      return;
+    }
+    const plant = e.target.closest('[data-plant]');
+    if (plant) {
+      const seed = Game.seedById(plant.dataset.plant);
+      const idx = sheetArg;
+      if (Game.plant(idx, seed)) {
+        if (!S.seen.plot) { S.seen.plot = true; Game.save(); hideCoach(); }
+        closeSheet();
+      } else {
+        Sound.play('deny');
+        FX.shake(4);
+      }
+      return;
+    }
+    const tog = e.target.closest('[data-toggle]');
+    if (tog) {
+      const k = tog.dataset.toggle;
+      S.prefs[k] = !S.prefs[k];
+      tog.setAttribute('aria-pressed', String(S.prefs[k]));
+      Sound.resume();
+      if (k === 'sfx') Sound.setSfx(S.prefs[k]); else Sound.setMusic(S.prefs[k]);
+      Game.save();
+      if (S.prefs[k]) Sound.play('buy');
+      return;
+    }
+    const act = e.target.closest('[data-act]');
+    if (act) {
+      const a = act.dataset.act;
+      if (a === 'cheat') {
+        S.gems += 50; S.tickets += 50;
+        Game.save(); Game.emit('currency'); Game.emit('panels');
+        Sound.play('coin');
+        toast({ title: 'Pockets filled!', body: '+50 gems and tickets', art: Icons.get('gem') });
+      } else if (a === 'wonder') {
+        Game.startWonder();
+        closeSheet();
+      } else if (a === 'reset') {
+        if (!resetArmed) {
+          resetArmed = true;
+          renderSheet(false);
+          setTimeout(() => { if (resetArmed) { resetArmed = false; if (sheetMode === 'settings') renderSheet(false); } }, 4000);
+        } else {
+          resetArmed = false;
+          Game.reset();
+          buildGarden();
+          renderSheet(true);
+          toast({ title: 'Fresh soil', body: 'The garden has been reset', art: Icons.get('sprout') });
+        }
+      }
+    }
+  });
+
+  $('#sheetClose').addEventListener('click', closeSheet);
+  el.scrim.addEventListener('click', closeSheet);
+
+  el.dock.addEventListener('click', (e) => {
+    const b = e.target.closest('.dock-btn');
+    if (!b) return;
+    if (sheetMode === b.dataset.tab) closeSheet();
+    else openSheet(b.dataset.tab);
+  });
+
+  $('#btnSettings').addEventListener('click', () => openSheet('settings'));
+  $('#btnBonuses').addEventListener('click', () => openSheet('bonuses'));
+
+  /* drag-to-dismiss */
+  (() => {
+    let startY = 0, lastY = 0, lastT = 0, dy = 0, dragging = false;
+    const onDown = (e) => {
+      if (!sheetMode) return;
+      dragging = true;
+      startY = lastY = e.clientY;
+      lastT = performance.now();
+      dy = 0;
+      el.sheet.classList.add('dragging');
+      el.sheetGrip.setPointerCapture(e.pointerId);
+    };
+    const onMove = (e) => {
+      if (!dragging) return;
+      dy = Math.max(0, e.clientY - startY);
+      lastY = e.clientY;
+      lastT = performance.now();
+      el.sheet.style.transform = `translateY(${dy}px)`;
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      el.sheet.classList.remove('dragging');
+      el.sheet.style.transform = '';
+      if (dy > 110) closeSheet();
+    };
+    el.sheetGrip.addEventListener('pointerdown', onDown);
+    el.sheetGrip.addEventListener('pointermove', onMove);
+    el.sheetGrip.addEventListener('pointerup', onUp);
+    el.sheetGrip.addEventListener('pointercancel', onUp);
+  })();
+
+  /* ============ plot input ============ */
+  function onPlotTap(idx, node) {
+    Sound.resume();
+    const cell = S.grid[idx];
+    if (cell.locked) {
+      if (!Game.unlockPlot(idx)) {
+        const c = FX.centerOf(node);
+        FX.float(c.x, c.y, `Need ${fmt(Game.plotUnlockCost(idx))}`, '');
+      }
+      return;
+    }
+    if (!cell.seed) { openSheet('seeds', idx); return; }
+    if (cell.ready) { Game.harvest(idx); return; }
+    Game.hasten(idx);
+    const c = FX.centerOf(node);
+    FX.sparks(c.x, c.y + 10, 4, '#8ce99a');
+    FX.haptic(6);
+  }
+
+  /* ============ coach marks ============ */
+  let coachTarget = null;
+  function showCoach(target, text) {
+    coachTarget = target;
+    el.coach.hidden = false;
+    el.coach.innerHTML = `<div class="tip">${text}</div><div class="arrow"></div>`;
+    placeCoach();
+  }
+  function placeCoach() {
+    if (!coachTarget || el.coach.hidden) return;
+    const r = coachTarget.getBoundingClientRect();
+    el.coach.style.left = `${r.left + r.width / 2}px`;
+    el.coach.style.top = `${Math.max(8, r.top - el.coach.offsetHeight - 6)}px`;
+  }
+  function hideCoach() {
+    coachTarget = null;
+    el.coach.hidden = true;
+  }
+  function refreshCoach() {
+    if (sheetMode) { el.coach.hidden = true; return; }
+    if (!S.seen.intro) {
+      if (coachTarget !== flowerBtn) showCoach(flowerBtn, 'Tap the flower!');
+      el.coach.hidden = false;
+    } else if (!S.seen.plot) {
+      const free = S.grid.findIndex((c) => !c.locked && !c.seed);
+      if (free === -1) { hideCoach(); return; }
+      const node = plotEls[free] && plotEls[free].root;
+      if (node && coachTarget !== node) showCoach(node, 'Plant a seed here');
+      el.coach.hidden = false;
+    } else {
+      hideCoach();
+      return;
+    }
+    placeCoach();
+  }
+
+  /* ============ dock attention dots ============ */
+  function updateDockDots() {
+    const canUpgrade = CORE_UPGRADES.concat(PLOT_AUTOPLANTERS.filter(({ idx }) => !S.grid[idx].locked).map((p) => p.key))
+      .some((k) => !Game.upgradeMaxed(k) && S.credits >= Game.upgradePrice(k));
+    const canDecor = DATA.decor.some((d) => {
+      const pot = d.currency === 'gems' ? S.gems : d.currency === 'tickets' ? S.tickets : S.credits;
+      return pot >= d.cost;
+    });
+    const canBoost = DATA.boosters.some((b) => S.tickets >= b.tickets && !Game.activeBoost(b.id));
+    const map = { badges: canUpgrade, decor: canDecor, boosters: canBoost };
+    $$('.dock-btn', el.dock).forEach((b) => {
+      const dot = $('.dock-dot', b);
+      const show = map[b.dataset.tab] && sheetMode !== b.dataset.tab;
+      dot.hidden = !show;
+    });
+  }
+
+  /* ============ wonder ============ */
+  function showBanner(title, sub, ms = 2200) {
+    el.banner.innerHTML = `<div class="bg"><h2>${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div>`;
+    el.banner.classList.remove('out');
+    el.banner.classList.add('show');
+    setTimeout(() => {
+      el.banner.classList.add('out');
+      setTimeout(() => el.banner.classList.remove('show', 'out'), 400);
+    }, ms);
+  }
+
+  Game.on('wonder', ({ active }) => {
+    if (active) {
+      el.game.classList.add('wonder');
+      showBanner('WONDER!', WONDER.lines[(Math.random() * WONDER.lines.length) | 0], 2600);
+      Sound.play('wonder');
+      FX.shake(10, 0.5);
+      FX.haptic([30, 40, 30, 40, 60]);
+      const c = FX.centerOf(flowerBtn);
+      FX.rainbowBurst(c.x, c.y);
+      for (let i = 0; i < 5; i += 1) {
+        setTimeout(() => FX.confetti(Math.random() * window.innerWidth, window.innerHeight * 0.35, 20), i * 220);
+      }
+      faceReact('wow');
+      say('wonder', true);
+    } else {
+      el.game.classList.remove('wonder');
+      showBanner('Wonder over', 'Back to the quiet garden', 1500);
+    }
+  });
+
+  /* ============ game events ============ */
+  Game.on('currency', () => {
+    if (sheetMode) syncAfford();
+  });
+
+  Game.on('tap', (p) => {
+    const c = FX.centerOf(flowerBtn);
+    FX.floatAt(flowerBtn, `+${fmt(p.gain)}`, p.crit ? 'crit' : '');
+    FX.coins(c.x, c.y, p.crit ? 16 : 4);
+    popWallet('credits');
+    faceReact(p.crit ? 'crit' : 'tap');
+    idleSince = Date.now() / 1000;
+    if (p.crit) {
+      FX.shake(7);
+      FX.stars(c.x, c.y, 10, '#ffe066');
+      FX.ring(c.x, c.y, '#ffe066', 0.5, 130);
+      FX.haptic([12, 30, 22]);
+      Sound.play('crit');
+      say('crit');
+    } else {
+      FX.haptic(7);
+      Sound.play('tap', p.combo);
+      if (Math.random() < 0.06) say('tap');
+    }
+    if (p.gemDrop) {
+      FX.floatAt(flowerBtn, '+1 Gem', 'gem');
+      popWallet('gems');
+    }
+  });
+
+  Game.on('plant', ({ idx, auto }) => {
+    const v = plotEls[idx];
+    if (!v) return;
+    const c = FX.centerOf(v.root);
+    FX.sparks(c.x, c.y + 8, 8, '#c99a6b');
+    if (auto) {
+      v.tag.classList.add('show');
+      setTimeout(() => v.tag.classList.remove('show'), 1100);
+    } else {
+      Sound.play('plant');
+      FX.haptic(10);
+    }
+    idleSince = Date.now() / 1000;
+  });
+
+  Game.on('harvest', (p) => {
+    const v = plotEls[p.idx];
+    const c = v ? FX.centerOf(v.root) : FX.centerOf(flowerBtn);
+    const rk = p.rarity.key;
+    FX.coins(c.x, c.y, rk === 'legend' ? 22 : rk === 'epic' ? 14 : rk === 'rare' ? 9 : 6);
+    FX.float(c.x, c.y - 6, `+${fmt(p.payout)}`, rk === 'common' ? 'big' : rk);
+    popWallet('credits');
+    idleSince = Date.now() / 1000;
+
+    if (rk === 'common') {
+      Sound.play('harvest');
+      FX.haptic(12);
+    } else {
+      const tint = { rare: '#4dabf7', epic: '#b197fc', legend: '#ffd43b' }[rk];
+      FX.stars(c.x, c.y, rk === 'legend' ? 16 : 9, tint);
+      FX.ring(c.x, c.y, tint, 0.6, 150);
+      if (rk === 'legend') {
+        FX.confetti(c.x, c.y, 34);
+        FX.shake(9, 0.4);
+        FX.haptic([20, 40, 20, 40, 40]);
+        Sound.play('legend');
+        say('legend', true);
+      } else {
+        FX.shake(rk === 'epic' ? 5 : 3);
+        FX.haptic([10, 20, 14]);
+        Sound.play(rk === 'epic' ? 'legend' : 'rare');
+      }
+      // Rare fires often enough that a toast would be noise; sparkles carry it.
+      if (rk !== 'rare') {
+        toast({
+          title: `${p.rarity.label} ${p.seed.name}!`,
+          body: `Worth ${fmt(p.payout)} coins`,
+          art: Flora.head(p.seed, 26),
+          kind: rk
+        });
+      }
+    }
+    if (p.gemDrop) { FX.float(c.x + 26, c.y - 20, '+1 Gem', 'gem'); popWallet('gems'); }
+    if (p.ticketDrop) { FX.float(c.x - 26, c.y - 20, '+1 Ticket', 'ticket'); popWallet('tickets'); }
+    if (p.ticketBonus) {
+      FX.float(c.x, c.y - 40, `+${p.ticketBonus} Tickets`, 'ticket');
+      popWallet('tickets');
+      Sound.play('coin');
+    }
+    if (Math.random() < 0.12) say('harvest');
+  });
+
+  Game.on('unlock', ({ idx }) => {
+    const v = plotEls[idx];
+    if (v) {
+      const c = FX.centerOf(v.root);
+      FX.confetti(c.x, c.y, 22);
+      FX.ring(c.x, c.y, '#8ce99a', 0.6, 120);
+    }
+    Sound.play('unlock');
+    FX.haptic([15, 30, 15]);
+    say('unlock', true);
+    toast({ title: 'Plot unlocked!', body: 'New ground to plant on', art: Icons.get('sprout') });
+  });
+
+  Game.on('purchase', ({ kind, def }) => {
+    Sound.play(kind === 'booster' ? 'boost' : 'buy');
+    FX.haptic(14);
+    if (kind === 'booster' && def) {
+      toast({ title: `${def.name} active!`, body: def.desc, art: Icons.get(def.icon), ms: 2400 });
+    }
+  });
+
+  Game.on('deny', () => {
+    Sound.play('deny');
+    FX.shake(3, 0.16);
+    FX.haptic(20);
+    say('broke');
+  });
+
+  Game.on('grid', () => buildGarden());
+  Game.on('panels', () => { if (sheetMode) renderSheet(false); });
+
+  /* refresh affordability styling without a full rebuild */
+  function syncAfford() {
+    $$('[data-buy]', el.sheetBody).forEach((node) => {
+      const { buy: kind, key } = node.dataset;
+      let can = false;
+      if (kind === 'upgrade') can = !Game.upgradeMaxed(key) && S.credits >= Game.upgradePrice(key);
+      else if (kind === 'decor') {
+        const d = DATA.decor.find((x) => x.id === key);
+        const pot = d.currency === 'gems' ? S.gems : d.currency === 'tickets' ? S.tickets : S.credits;
+        can = pot >= d.cost;
+      } else {
+        const b = DATA.boosters.find((x) => x.id === key);
+        can = S.tickets >= b.tickets;
+        node.classList.toggle('active-boost', Game.activeBoost(key) === true);
+      }
+      node.classList.toggle('affordable', Boolean(can) && !node.classList.contains('active-boost'));
+      const price = $('.price', node);
+      if (price && !price.classList.contains('maxed')) {
+        price.classList.toggle('ok', can);
+        price.classList.toggle('no', !can);
+      }
+    });
+    $$('[data-plant]', el.sheetBody).forEach((node) => {
+      const s = Game.seedById(node.dataset.plant);
+      const can = S.credits >= s.cost;
+      node.disabled = !can;
+      const go = $('.seed-go', node);
+      if (go) go.innerHTML = Icons.get(can ? 'sprout' : 'lock');
+    });
+  }
+
+  /* ============ main loop ============ */
+  let last = performance.now();
+  let comboAcc = 0;
+  let railAcc = 0;
+  let slowAcc = 0;
+
+  function frame(now) {
+    const dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+
+    Game.tick(dt);
+    renderPlots();
+    hudTick(dt);
+    FX.step(dt);
+
+    // combo decay, once per second (matches the original cadence)
+    comboAcc += dt;
+    if (comboAcc >= 1) {
+      comboAcc -= 1;
+      Game.decayCombo();
+      const now2 = Date.now() / 1000;
+      if (now2 - idleSince > 26 && !sheetMode) { say('idle'); idleSince = now2; }
+    }
+    const cp = S.tap.combo / S.tap.comboMax;
+    comboRing.style.setProperty('--combo', cp.toFixed(3));
+    comboRing.style.setProperty('--combo-op', (0.3 + cp * 0.7).toFixed(2));
+
+    railAcc += dt;
+    if (railAcc >= 0.25) { railAcc = 0; renderRail(); }
+
+    slowAcc += dt;
+    if (slowAcc >= 0.6) {
+      slowAcc = 0;
+      updateDockDots();
+      refreshCoach();
+      updateSky();
+      if (sheetMode === 'boosters' || sheetMode === 'settings') syncAfford();
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  /* ============ boot ============ */
+  function boot() {
+    Flora.injectDefs();
+    Icons.hydrate(document);
+    FX.init();
+    FX.setMagnet('coin', el.walletCredits);
+
+    const info = Game.load();
+    Sound.prefs.sfx = S.prefs.sfx;
+    Sound.prefs.music = S.prefs.music;
+
+    buildClouds();
+    updateSky();
+    buildGarden();
+    sizeGarden();
+    if (window.ResizeObserver) new ResizeObserver(sizeGarden).observe($('.stage'));
+    renderRail();
+    Object.values(counters).forEach((c) => { c.disp = c.get(); c.node.textContent = fmt(c.disp); });
+
+    el.game.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse' && flowerBtn) lookAt(e.clientX, e.clientY);
+    });
+    window.addEventListener('resize', () => { sizeGarden(); placeCoach(); });
+    window.addEventListener('orientationchange', () => setTimeout(sizeGarden, 250));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) Game.saveNow(); });
+    window.addEventListener('pagehide', () => Game.saveNow());
+    // unlock audio on the very first interaction
+    const unlock = () => { Sound.init(); Sound.setSfx(S.prefs.sfx); Sound.setMusic(S.prefs.music); Sound.resume(); };
+    window.addEventListener('pointerdown', unlock, { once: true });
+
+    setTimeout(() => {
+      if (info.migrated) {
+        toast({ title: 'Progress restored', body: 'Your old garden came along', art: Icons.get('sprout') });
+      }
+      say('greet', true);
+    }, 700);
+
+    requestAnimationFrame((t) => { last = t; frame(t); });
+  }
+
+  boot();
+})();
