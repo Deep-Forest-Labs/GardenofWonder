@@ -5,6 +5,39 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-05 — Direction set: modest revenue, multi-region meta-layer, one new mechanic
+
+**Decisions.** Target is modest revenue (a few thousand a month), not a venture-scale hit. Next
+milestone is a multi-region world built as one contiguous expanding map. Regions feed a single
+interlocking economy driven by a Township-style order system. Exactly **one** genuinely new
+mechanic — match-3 in the mine — with other regions shipping as timer production until the
+structure proves it retains. An engineer ports to Unity, starting with the platform shell rather
+than the garden.
+
+**Why modest revenue.** Township-tier games are user-acquisition businesses with games attached;
+success there is roughly 20% game quality and 80% economy tuning, liveops and CPI-versus-LTV
+arithmetic, funded by large marketing spend. A two-person team without a UA budget can't compete
+on that axis, but a well-made niche idle game with player-friendly monetization and web-portal
+distribution is genuinely achievable.
+
+**Why one contiguous map over a hub with rooms.** Visible sprawl is itself the reward and the store
+screenshot; no context switching means short sessions still touch several systems; one scene is far
+cheaper than N region screens.
+
+**Why the order system.** Nothing else in the design consumes multiple resources at once, so without
+it players optimise the single best region and interdependence is never felt. It's also the
+cheapest infinitely-extensible content lever available and becomes the liveops surface later.
+
+**Why only one new mechanic.** Four minigames is four games' worth of tuning, art, tutorial and bug
+surface for two people. Players need distinct rewards and visuals, not distinct mechanics.
+
+**Why data-driven numbers are non-negotiable.** If changing a grow time needs an engineer and a
+build, tuning stops — and an untuned economy is the most common cause of death in this genre.
+
+Full specification in [12-meta-layer-design.md](12-meta-layer-design.md).
+
+---
+
 ## 2026-08-05 — Documentation set created
 
 **Decision.** Wrote this `docs/` folder as the onboarding surface for future work, on the

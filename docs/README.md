@@ -6,6 +6,11 @@ agent who has never seen the project can get productive without reverse-engineer
 Everything here describes the game **as it is currently built**, not as it was once planned.
 If a document and the code disagree, the code is right and the document is a bug — fix it.
 
+## Start here
+
+**[HANDOFF.md](HANDOFF.md)** — current state, decisions already made, and what to work on next.
+Read it before anything else if you're picking the project up cold.
+
 ## Read these in order
 
 | Doc | Read it when |
@@ -21,6 +26,7 @@ If a document and the code disagree, the code is right and the document is a bug
 | [09-conventions.md](09-conventions.md) | **Before you write your first line of code** |
 | [10-decision-log.md](10-decision-log.md) | You want to know why something is the way it is |
 | [11-known-issues.md](11-known-issues.md) | Something looks wrong and you want to know if it's known |
+| [12-meta-layer-design.md](12-meta-layer-design.md) | You're working on the multi-region world — **design, not built yet** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).
