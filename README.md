@@ -49,9 +49,19 @@ Three currencies: coins from taps and harvests, tickets for boosts, and gems for
 | `game.js` | Simulation: state, save/load, economy, automation |
 | `ui.js` | Rendering, input, the bottom sheet, and all the glue |
 | `legacy/` | The previous build (*Idle Garden Reborn*), kept for reference |
-| `docs/` | Design documents |
+| `docs/` | Full design and technical documentation |
 
 Scripts load in that order as plain `<script>` tags — no modules, so it works over `file://`.
+
+## Working on it
+
+Start with [`docs/`](docs/). It documents the game as actually built — architecture, every
+mechanic and formula, the balance tables, the art and audio systems, the save format, and
+playbooks for common changes.
+
+If you're about to write code, read [`docs/09-conventions.md`](docs/09-conventions.md) first. The
+short version: no build step, no dependencies, no binary assets, and `game.js` never touches the
+DOM.
 
 ## Saves
 
