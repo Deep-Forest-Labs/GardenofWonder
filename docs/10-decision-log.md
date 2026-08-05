@@ -5,7 +5,51 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-05 — Resource graph locked; merge replaces match-3; world stays botanical
+
+**Decisions.** Five regions: Garden, Apiary, Potting Shed, Apothecary, Market. The one new mechanic
+is **merge**, not match-3. Mining and chickens are cut. Tickets retired, water never introduced.
+Land unlocks via reputation. Full specification in
+[12-meta-layer-design.md](12-meta-layer-design.md), with the Market in
+[13-order-system.md](13-order-system.md) and resources in [14-economy-model.md](14-economy-model.md).
+
+**Why merge over match-3.** Reversed from the previous entry. Content efficiency is decisive at two
+people: match-3 players burn roughly fifty hand-designed levels a week, and that treadmill has
+killed more small teams than anything else. A merge item tree entertains for months. Merge is also
+cheaper to build (no cascade resolution, blocker taxonomy, booster interactions or level editor),
+is the strongest-performing casual mechanic of the current era, and its slower pace suits a cozy
+game. Decisively, seed-breeding *is* merging — mechanic and fiction are the same thing, so there's
+no metaphor to teach.
+
+**Why bees instead of chickens, and no mine.** Tonal coherence is this game's cheapest competitive
+advantage. A cozy magical garden with a talking flower is a specific, defensible identity; grey ore
+and a chicken coop pull it toward generic farm-sim, where it competes with Hay Day and loses. Bees
+deliver the same production fantasy on-brand — and honey type following current blooms creates a
+*harder* dependency than a resource sink, because the garden's contents matter, not just its
+throughput.
+
+**Why a crafting tier was added.** Previously under-specified. A graph where regions produce raws
+and the Market consumes them still leaves regions parallel — players farm whichever raw pays best.
+An Apothecary that combines flowers and honey into perfume, with the Market wanting *perfume*, makes
+the dependency structural rather than a matter of pricing.
+
+**Why reputation gates land, not coins.** Idle economies inflate coins unpredictably; reputation
+only moves when a player engages the whole graph, making it a controlled progression gate.
+
+**Why tickets are retired and water was never added.** Casual players fall off past four or five
+tracked quantities. Tickets existed only as an inheritance from the previous build. Water is
+friction without fun — watering stays a tap interaction, which `hasten()` already implements.
+
+**Deliberately not tuned.** The numbers in [14-economy-model.md](14-economy-model.md) are
+placeholders. Tuning waits until the Garden ↔ Apiary loop has been played, because values chosen
+before the loop is felt are fiction with decimal places.
+
+---
+
 ## 2026-08-05 — Direction set: modest revenue, multi-region meta-layer, one new mechanic
+
+> **Partly superseded** by the entry above: the new mechanic is now merge in the Potting Shed, not
+> match-3 in a mine, and the region themes changed. Everything else here still stands.
 
 **Decisions.** Target is modest revenue (a few thousand a month), not a venture-scale hit. Next
 milestone is a multi-region world built as one contiguous expanding map. Regions feed a single

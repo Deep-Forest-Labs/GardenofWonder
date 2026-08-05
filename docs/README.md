@@ -27,6 +27,8 @@ Read it before anything else if you're picking the project up cold.
 | [10-decision-log.md](10-decision-log.md) | You want to know why something is the way it is |
 | [11-known-issues.md](11-known-issues.md) | Something looks wrong and you want to know if it's known |
 | [12-meta-layer-design.md](12-meta-layer-design.md) | You're working on the multi-region world — **design, not built yet** |
+| [13-order-system.md](13-order-system.md) | You're building the Market, the engine that drives the whole graph |
+| [14-economy-model.md](14-economy-model.md) | You're authoring resources, recipes or tuning numbers |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

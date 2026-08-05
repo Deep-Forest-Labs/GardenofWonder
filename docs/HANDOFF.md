@@ -38,8 +38,13 @@ scope, monetization tone, and the bias toward proven patterns.
 [12-meta-layer-design.md](12-meta-layer-design.md). One contiguous expanding map, five regions
 feeding one interlocking economy, driven by a Township-style order system.
 
-**One new mechanic only** — match-3 in the mine. Everything else is timer-and-tap with distinct art
-until the structure proves it retains. This is the main defence against scope collapse.
+**One new mechanic only — merge, in the Potting Shed.** Everything else is timer-and-tap with
+distinct art until the structure proves it retains. This is the main defence against scope collapse.
+Merge replaced an earlier match-3 plan because match-3's hand-designed level treadmill is
+unsustainable for two people.
+
+**The world stays cozy and botanical.** Bees instead of chickens, a nursery instead of a mine.
+Tonal coherence is the cheapest competitive advantage available and the easiest to squander.
 
 **Unity port starts with the platform shell**, not the garden. Store setup, IAP, ad mediation,
 analytics, remote config, cloud save.
@@ -54,14 +59,16 @@ below.
 
 In order:
 
-1. **Lock the resource graph** in [12-meta-layer-design.md](12-meta-layer-design.md) and resolve the
-   open questions listed there.
-2. **Build the economy spreadsheet** — rates, costs, timers across all regions. The spreadsheet is
-   the game.
-3. **Spec the order system** — generation, scaling, rewards.
-4. **Prototype garden → coop → fertilizer** in the web build. Smallest closed loop that proves
-   interdependence is fun. Do this before designing three more regions.
-5. **Fix the known economy bugs** before building content on top of them.
+1. ~~Lock the resource graph~~ — **done**, see [12-meta-layer-design.md](12-meta-layer-design.md).
+2. ~~Spec the order system~~ — **done**, see [13-order-system.md](13-order-system.md).
+3. ~~Economy model skeleton~~ — **done**, see [14-economy-model.md](14-economy-model.md). Structure
+   is locked; the numbers in it are deliberate placeholders.
+4. **Prototype the Garden ↔ Apiary loop** in the web build. Flowers determine honey type, honey
+   feeds one Apothecary recipe, pollination boosts garden yield. This is the current task. Smallest
+   closed loop that proves interdependence is fun — do it before tuning real numbers or designing
+   further regions.
+5. **Tune the economy for real**, informed by how the prototype feels.
+6. **Fix the known economy bugs** before building content on top of them.
 
 ## Known problems worth knowing immediately
 
