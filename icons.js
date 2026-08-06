@@ -112,6 +112,14 @@ const Icons = (() => {
     seed: S(`
       <path d="M12 3.4c4.4 3 6.6 6 6.6 9.4A6.6 6.6 0 0 1 12 20.6a6.6 6.6 0 0 1-6.6-7.8c0-3.4 2.2-6.4 6.6-9.4Z" fill="#c99a6b"/>
       <path d="M12 8.4c1.8 1.6 2.6 3 2.6 4.6" stroke="#8a5a2b" stroke-width="1.8"/>`),
+    ladybug: S(`
+      <path d="M12 6.2a5.8 5.8 0 0 1 5.8 5.8v2.6A5.8 5.8 0 0 1 12 20.4a5.8 5.8 0 0 1-5.8-5.8V12A5.8 5.8 0 0 1 12 6.2Z" fill="#fa5252"/>
+      <path d="M8.6 6.8a3.8 3.8 0 0 1 6.8 0Z" fill="#2c1a10" stroke-width="1.3"/>
+      <path d="M12 6.2v14.2" stroke-width="1.6"/>
+      <circle cx="9.3" cy="11.6" r="1.1" fill="#2c1a10" stroke-width="1"/>
+      <circle cx="14.7" cy="11.6" r="1.1" fill="#2c1a10" stroke-width="1"/>
+      <circle cx="9.7" cy="16.4" r="1.1" fill="#2c1a10" stroke-width="1"/>
+      <circle cx="14.3" cy="16.4" r="1.1" fill="#2c1a10" stroke-width="1"/>`),
     plantSpot: S(`
       <rect x="3.4" y="3.4" width="17.2" height="17.2" rx="5.4"
         stroke="#ffe9c9" stroke-opacity=".9" stroke-width="2.4" stroke-dasharray="4.5 4.2"/>

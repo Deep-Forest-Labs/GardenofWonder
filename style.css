@@ -863,6 +863,9 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .float.legend{font-size:26px;color:var(--legend)}
 .float.epic{color:#d0bfff}
 .float.rare{color:#a5d8ff}
+.float.water{color:#74c0fc}
+.float.bee{color:#ffc93c}
+.float.lucky{color:#fa5252}
 
 /* toasts */
 .toasts{

@@ -5,6 +5,57 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-05 — Three tap-triggered garden procs added; Sprinklers repriced and recapped
+
+**Decision.** Added three new badges that each add an independent, per-tap "slot machine" roll
+(manual tap or hold-tick, same as every other tap effect):
+
+- **Rain Dance** — `level × 1%`, caps at 10% (10 levels). Instantly shaves 3s off a random
+  growing plot's remaining grow time. An "instant shave," not a timed buff — it applies once and
+  is done, rather than granting a temporary rate boost.
+- **Bee Swarm** — `level × 1%`, caps at 5% (5 levels). Adds one jar of whatever's currently
+  blooming to a random hive with room, reusing the same "variety fixed at production" rule the
+  Apiary already uses for natural honey (see [03-systems.md](03-systems.md)).
+- **Lucky Ladybug** — `level × 1%`, caps at 8% (8 levels). Flags a random growing plot; its next
+  harvest gets a +1.0 bump to `rollRarity`'s weight bonus (roughly doubling non-common odds for
+  that one harvest), then the flag clears.
+
+Alongside this, **Sprinklers (`autoWater`) was rebalanced**: effect per level dropped from an
+uncapped 5% to 1%, now hard-capped at 10 levels (10% total), and its price curve was cut from
+2,500 base / 2.2 scale to 400 base / 1.7 scale.
+
+**Why independent per-tap rolls, not a shared pool.** The designer's brief was explicit: it
+should feel like a slot machine — always a live chance of something firing, not a single shared
+roll that one badge "wins" over another. Each badge is checked separately in `tapFlower()`, so on
+a lucky tap more than one can fire at once.
+
+**Why "instant shave" over a timed buff for Rain Dance.** A timed growth-speed window (e.g. "+50%
+speed for 3s") stacks unpredictably with everything else touching `growModifier`, and its value
+depends on how much is currently planted — a dead multiplier if nothing's growing at that moment.
+An instant, flat time reduction is worth the same whether it lands on a nearly-ready plot or one
+that just went in the ground, and it reads clearly on a single plot rather than as a global rate
+change.
+
+**Why duds do nothing instead of rerolling or refunding.** If there's no eligible target (no
+growing plot, no open hive), the trigger is simply wasted — no compensation, no guaranteed retry.
+A slot machine that quietly fixes itself when the reels don't line up stops being an honest one,
+and it would let the badges' *displayed* percentage silently understate their real value.
+
+**Why Sprinklers had to be repriced, not just recapped.** The old price curve was built for an
+effect that was ostensibly uncapped (in practice bounded by the shared 0.3 growth floor around
+level 14, at a cost of roughly 2.4M coins). Keeping that curve while cutting the per-level effect
+to a fifth and hard-capping at level 10 would have made the full 10% cost ~5.5M coins for a much
+smaller payoff than before — a badge nobody would rationally buy past level 2. Since the new
+Sprinklers is a smaller, earlier-game lever by design, it needed a smaller, earlier-game price to
+match. New total cost to fully max: ~114K coins, in line with Rain Dance (~111K) and Lucky Ladybug
+(~150K) — all three now feel like comparable mid-game investments rather than one being priced for
+a payout curve it no longer has.
+
+**Why the 0.3 growth floor stayed in the code.** It's now effectively unreachable with the new
+caps (Seed Rush's +30% plus a maxed Sprinkler Network's +10% only reaches 0.6), but it costs
+nothing to leave as a defensive backstop against future boosts stacking unexpectedly, and removing
+it would be scope with no player-facing benefit.
+
 ## 2026-08-05 — Seed picker gained a "Balanced" sort
 
 **Decision.** Added a fourth seed-sort tab, `balanced`, next to tier/cheapest/priciest. It sorts by

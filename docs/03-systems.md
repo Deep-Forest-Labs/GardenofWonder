@@ -64,6 +64,24 @@ The floor exists so holding can never out-earn active tapping; it only ever catc
 interval is read once when the hold starts, so buying a level mid-hold takes effect on the next
 press, not immediately.
 
+### Tap-triggered garden procs
+
+Three badges each add an independent slot-machine roll to `tapFlower()` — every tap (manual or a
+hold-tick) is a separate chance for each of them to fire. All three share the same shape: `level%`
+chance, gated on owning at least one level, capped at a badge-specific level. None of them can fire
+before the badge is bought, and none of them can crowd out the others — they're checked
+independently in the same call.
+
+| Badge | Chance | Cap | Effect | Dud condition |
+| --- | --- | --- | --- | --- |
+| Rain Dance | `level × 1%` | 10% (10 levels) | Instantly shaves 3s off one random growing plot's remaining grow time | No unlocked, seeded, not-yet-ready plot exists |
+| Bee Swarm | `level × 1%` | 5% (5 levels) | Adds one jar to a random hive with room, using the same "variety fixed at production" rule as natural honey (see Apiary) | No hives, or all hives are full |
+| Lucky Ladybug | `level × 1%` | 8% (8 levels) | Flags one random growing plot; that plot's *next* harvest gets `rollRarity`'s `extra` bumped by +1.0 (roughly doubling the non-common odds for that one harvest), then the flag clears | No unflagged growing plot exists (falls back to any growing plot rather than doing nothing, so a trigger is never fully wasted while any plot qualifies) |
+
+A "dud" (chance rolled true but no eligible target) simply does nothing — no refund, no reroll, no
+UI feedback. That's deliberate: a slot machine that fakes a win when the reels don't line up would
+undercut the whole point of an honest, readable trigger rate.
+
 ## Plots and growth
 
 Eight plots, laid out around the flower as a 3×3 grid with the flower in the centre cell. Four
@@ -80,12 +98,15 @@ and can't be bought.
 ### Growth time
 
 ```
-growModifier = max(0.3, 1 − (boost.growSpeed + sprinklerLevels × 0.05))
+growModifier = max(0.3, 1 − (boost.growSpeed + sprinklerLevels × 0.01))
 actualGrowTime = seed.grow × growModifier
 ```
 
-The 0.3 floor caps total growth acceleration at 70% faster, no matter how much you stack. Fourteen
-Sprinkler levels reach the floor on their own.
+Sprinklers cap at 10 levels (10%) — see the badge cap table in
+[04-economy.md](04-economy.md). The 0.3 floor is a defensive backstop left over from when
+Sprinklers alone could reach it (see [10-decision-log.md](10-decision-log.md)); with the current
+caps, only Seed Rush's +30% plus a maxed Sprinkler Network (+10%) is reachable in practice, well
+short of the floor.
 
 Grow time is **baked in at planting**. Buying sprinklers does not speed up something already in
 the ground, and the seed picker shows times that already include your current bonuses.
@@ -95,7 +116,7 @@ the ground, and the seed picker shows times that already include your current bo
 Tapping a plant that is still growing calls `hasten()`, which shaves time off the remainder:
 
 ```
-shaved = 0.02 × totalGrowTime × (1 + boost.growSpeed + sprinklerLevels × 0.05)
+shaved = 0.02 × totalGrowTime × (1 + boost.growSpeed + sprinklerLevels × 0.01)
 ```
 
 Roughly 2% of the total per tap, scaled up by the same bonuses that speed growth generally. There
@@ -132,7 +153,9 @@ payout  = round(seed.yield × rarity.mult × (1 + boost.globalCredits) × wonder
 
 Fortune Aura and anything else supplying `rarityWeight` multiplies the three non-common weights by
 `(1 + bonus)`, leaving Common's 70 untouched. At Fortune Aura's +50% the weights become 70/30/12/3,
-so Common falls to about 60.9% and Legendary rises to about 2.6%.
+so Common falls to about 60.9% and Legendary rises to about 2.6%. A Lucky Ladybug flag (see
+[Tap-triggered garden procs](#tap-triggered-garden-procs)) adds a further +1.0 to this same `extra`
+term for that one harvest only, stacking with any active boost.
 
 After a harvest the plot keeps an `aura` attribute naming the rarity it produced, which CSS uses to
 tint the empty soil until something new is planted.

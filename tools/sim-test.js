@@ -282,5 +282,104 @@ check('a refused purchase does not charge credits', S.credits === creditsAtFloor
 check('level stops climbing once maxed', S.upgrades.holdSpeed === 12, `got ${S.upgrades.holdSpeed}`);
 G.reset();
 
+group('Sprinklers now cap at 10% (1%/level, down from an uncapped 5%/level)');
+S.credits = 1e9;
+check('starts unmaxed', G.upgradeMaxed('autoWater') === false);
+let waterLevel = 0;
+while (!G.upgradeMaxed('autoWater') && waterLevel < 100) { G.buyUpgrade('autoWater'); waterLevel += 1; }
+check('ten levels reach the cap', waterLevel === 10, `took ${waterLevel} levels`);
+check('growth modifier bottoms out at 0.90 from sprinklers alone',
+  Math.abs(G.growModifier() - 0.9) < 1e-9, `got ${G.growModifier()}`);
+const creditsAtWaterCap = S.credits;
+check('buying past the cap is refused', G.buyUpgrade('autoWater') === false);
+check('a refused purchase does not charge credits', S.credits === creditsAtWaterCap);
+G.reset();
+
+group('Rain Dance instantly waters a random growing plot');
+S.credits = 1e9;
+clearGarden();
+G.plant(0, G.seedById('eternal'));
+S.grid[0].grow = 1e7; // keep it growing no matter how much gets shaved off below
+const growAtStart = S.grid[0].grow;
+for (let i = 0; i < 500; i += 1) G.tapFlower();
+check('unowned badge never shaves grow time', S.grid[0].grow === growAtStart, `${S.grid[0].grow} vs ${growAtStart}`);
+
+let rainLevel = 0;
+while (!G.upgradeMaxed('rainDance') && rainLevel < 100) { G.buyUpgrade('rainDance'); rainLevel += 1; }
+check('ten levels reach the 10% cap', rainLevel === 10, `took ${rainLevel} levels`);
+
+const growBeforeMaxed = S.grid[0].grow;
+const rainTaps = 4000;
+for (let i = 0; i < rainTaps; i += 1) G.tapFlower();
+const totalShaved = growBeforeMaxed - S.grid[0].grow;
+const rainRate = (totalShaved / 3) / rainTaps;
+check('maxed Rain Dance triggers at roughly 10% of taps', Math.abs(rainRate - 0.10) < 0.02, `rate ${rainRate.toFixed(3)}`);
+G.reset();
+
+group('Bee Swarm fills a jar in an open hive');
+S.credits = 1e9;
+clearGarden();
+G.plant(0, G.seedById('daisy'));
+G.buyHive();
+check('hive purchased', G.hiveCount() === 1);
+check('starts unmaxed', G.upgradeMaxed('beeSwarm') === false);
+
+for (let i = 0; i < 400; i += 1) G.tapFlower();
+check('unowned badge never fills a jar', S.apiary.hives[0].jars.length === 0, `got ${S.apiary.hives[0].jars.length}`);
+
+let beeLevel = 0;
+while (!G.upgradeMaxed('beeSwarm') && beeLevel < 100) { G.buyUpgrade('beeSwarm'); beeLevel += 1; }
+check('five levels reach the 5% cap', beeLevel === 5, `took ${beeLevel} levels`);
+
+for (let i = 0; i < 300; i += 1) G.tapFlower();
+const swarmJars = S.apiary.hives[0].jars;
+check('maxed badge fills at least one jar', swarmJars.length > 0, `got ${swarmJars.length}`);
+check('jar variety matches what is blooming', swarmJars.every((j) => j === 'daisy'), JSON.stringify(swarmJars));
+check('a hive never overflows its capacity', swarmJars.length <= APIARY.capacity, `got ${swarmJars.length}`);
+G.reset();
+
+group('Lucky Ladybug lands on a growing plot');
+S.credits = 1e9;
+clearGarden();
+G.plant(0, G.seedById('daisy'));
+S.grid[0].grow = 1e7;
+check('starts unmaxed', G.upgradeMaxed('ladybug') === false);
+
+for (let i = 0; i < 400; i += 1) G.tapFlower();
+check('unowned badge never lands a ladybug', S.grid[0].luckyBug === false);
+
+let bugLevel = 0;
+while (!G.upgradeMaxed('ladybug') && bugLevel < 100) { G.buyUpgrade('ladybug'); bugLevel += 1; }
+check('eight levels reach the 8% cap', bugLevel === 8, `took ${bugLevel} levels`);
+
+for (let i = 0; i < 300; i += 1) G.tapFlower();
+check('maxed badge lands a ladybug on the only growing plot', S.grid[0].luckyBug === true);
+G.reset();
+
+group('Lucky Ladybug\u2019s bonus actually reaches the rarity roll, once');
+clearGarden();
+S.apiary.hives = [];
+const meanNonCommonRate = (lucky) => {
+  let hits = 0;
+  const runs = 6000;
+  for (let i = 0; i < runs; i += 1) {
+    S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: lucky };
+    if (G.harvest(0).rarity.key !== 'common') hits += 1;
+  }
+  return hits / runs;
+};
+const plainRate = meanNonCommonRate(false);
+const luckyRate = meanNonCommonRate(true);
+check('a ladybug meaningfully lifts the non-common harvest rate',
+  luckyRate > plainRate * 1.35, `plain ${plainRate.toFixed(3)}, lucky ${luckyRate.toFixed(3)}`);
+
+S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: true };
+const luckyResult = G.harvest(0);
+check('harvest reports the lucky flag it consumed', luckyResult.luckyHarvest === true);
+check('the flag is cleared off the plot once harvested', S.grid[0].luckyBug === false);
+G.plant(0, G.seedById('daisy'));
+check('a freshly planted seed does not inherit the old lucky flag', S.grid[0].luckyBug === false);
+G.reset();
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

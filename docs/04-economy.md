@@ -115,13 +115,25 @@ costs exactly `base`.
 | `critChance` | Lucky Charm | 500 | 1.5 | 500, 750, 1,125, 1,688, 2,531, 3,797 |
 | `critMult` | Star Strike | 1,000 | 2.0 | 1K, 2K, 4K, 8K, 16K, 32K |
 | `comboMeter` | Combo Coil | 2,500 | 2.0 | 2.5K, 5K, 10K, 20K, 40K, 80K |
+| `rainDance` | Rain Dance | 250 | 1.8 | 250, 450, 810, 1.46K, 2.62K, 4.72K |
+| `beeSwarm` | Bee Swarm | 2,000 | 2.0 | 2K, 4K, 8K, 16K, 32K |
+| `ladybug` | Lucky Ladybug | 800 | 1.9 | 800, 1.52K, 2.89K, 5.49K, 10.4K, 19.8K |
 | `plotExpansion` | Land Deed | 2,000 | 2.0 | 2K, 4K, 8K, 16K, 32K, 64K |
-| `autoWater` | Sprinklers | 2,500 | 2.2 | 2.5K, 5.5K, 12.1K, 26.6K, 58.6K, 128.8K |
+| `autoWater` | Sprinklers | 400 | 1.7 | 400, 680, 1.16K, 1.97K, 3.34K, 5.68K |
 | `autoHarvest` | Harvest Drone | 4,500 | 2.4 | 4.5K, 10.8K, 25.9K, 62.2K, 149.3K, 358.3K |
 
 Lucky Charm's 1.5 scale is by far the gentlest, which makes crit chance the cheapest stat to push
 deep. Power Punch's flat +1 per level becomes irrelevant quickly since it's additive against
 multiplicative bonuses.
+
+Rain Dance, Bee Swarm and Lucky Ladybug are priced to be fully maxed for a moderate mid-game sum —
+111K, 62K and 150K coins respectively to hit their caps — rather than the "always technically
+buyable, practically endless" shape most other badges use. Sprinklers was repriced the same way:
+it used to cost 2,500 base at scale 2.2 for an uncapped +5%/level (practically capped by the 0.3
+growth floor around level 14, ~2.4M coins in). At the new +1%/level, 10-level cap, the old price
+would have made the full 10% cost roughly 5.5M coins — a bad deal for a much smaller effect — so it
+was repriced to 400 base at scale 1.7 (114K coins to fully max). See
+[10-decision-log.md](10-decision-log.md).
 
 ### Per-plot harvesters
 
@@ -151,7 +163,11 @@ design, and harvesters are meant to be levelled only a handful of times.
 | Crit multiplier | 50× | 20 Star Strike levels |
 | Combo cap | 100 | 5 Combo Coil levels |
 | Hold-to-tap interval | 180 ms | 12 Quick Grip levels |
-| Growth modifier | 0.3 (70% faster) | 14 Sprinkler levels |
+| Sprinkler grow bonus | 10% | 10 Sprinkler levels |
+| Rain Dance trigger chance | 10% | 10 Rain Dance levels |
+| Bee Swarm trigger chance | 5% | 5 Bee Swarm levels |
+| Lucky Ladybug trigger chance | 8% | 8 Lucky Ladybug levels |
+| Growth modifier (defensive floor, rarely reachable now) | 0.3 (70% faster) | — |
 | Drone cadence | 0.7 s | 5 Harvest Drone levels |
 | Crit chance | *(none)* | — |
 

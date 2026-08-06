@@ -15,6 +15,7 @@ const Game = (() => {
   const defaultState = () => {
     const upgrades = {
       tapPower: 0, holdSpeed: 0, critChance: 0, critMult: 0, comboMeter: 0,
+      rainDance: 0, beeSwarm: 0, ladybug: 0,
       plotExpansion: 0, autoWater: 0, autoHarvest: 0
     };
     PLOT_AUTOPLANTERS.forEach(({ key }) => { upgrades[key] = 0; });
@@ -24,7 +25,7 @@ const Game = (() => {
       tickets: 0,
       gems: 0,
       tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50, holdInterval: 900 },
-      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '' })),
+      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false })),
       upgrades,
       decor: [],
       boosters: {},
@@ -130,14 +131,17 @@ const Game = (() => {
       PLOT_AUTOPLANTERS.forEach(({ key }) => {
         if (typeof state.upgrades[key] !== 'number') state.upgrades[key] = 0;
       });
-      // A save from before holdSpeed existed won't have it — state.upgrades is
-      // replaced wholesale by the parsed save above, so it needs the same
-      // manual backfill as the harvester keys.
-      if (typeof state.upgrades.holdSpeed !== 'number') state.upgrades.holdSpeed = 0;
+      // A save from before these badges existed won't have them — state.upgrades
+      // is replaced wholesale by the parsed save above, so each new key needs
+      // the same manual backfill as the harvester keys.
+      ['holdSpeed', 'rainDance', 'beeSwarm', 'ladybug'].forEach((key) => {
+        if (typeof state.upgrades[key] !== 'number') state.upgrades[key] = 0;
+      });
 
       const now = nowSeconds();
       state.grid.forEach((cell) => {
         if (!cell) return;
+        if (typeof cell.luckyBug !== 'boolean') cell.luckyBug = false;
         if (!cell.seed) { cell.plantedAt = 0; cell.ready = false; return; }
         if (typeof cell.grow !== 'number' || cell.grow <= 0) cell.grow = 1;
         if (typeof cell.plantedAt !== 'number' || cell.plantedAt <= 0 || cell.plantedAt < 1e8) {
@@ -174,7 +178,7 @@ const Game = (() => {
   }
 
   function growModifier() {
-    const bonus = boostVal('growSpeed') + state.upgrades.autoWater * 0.05;
+    const bonus = boostVal('growSpeed') + state.upgrades.autoWater * 0.01;
     return Math.max(0.3, 1 - bonus);
   }
 
@@ -212,6 +216,59 @@ const Game = (() => {
     emit('wonder', { active: true });
   }
 
+  /* ---------------- tap-triggered garden procs ----------------
+     Independent slot-machine rolls on every tap (including hold-ticks — a
+     hold is just a repeated tap). Each is gated on owning at least one level
+     of its badge, so an unbought badge can never fire. */
+  const RAIN_DANCE_SHAVE = 3;   // seconds shaved off the chosen plot's remaining grow time
+  const LADYBUG_RARITY_BONUS = 1; // added to rollRarity's `extra` for that one harvest
+
+  /** Unlocked, seeded, not-yet-ready plots — eligible targets for a garden proc. */
+  function growingPlotIndices() {
+    const idxs = [];
+    state.grid.forEach((c, i) => { if (!c.locked && c.seed && !c.ready) idxs.push(i); });
+    return idxs;
+  }
+
+  function rollRainDance() {
+    const lvl = state.upgrades.rainDance;
+    if (!lvl || Math.random() >= lvl * 0.01) return null;
+    const idxs = growingPlotIndices();
+    if (!idxs.length) return null;
+    const idx = idxs[Math.floor(Math.random() * idxs.length)];
+    const cell = state.grid[idx];
+    const elapsed = Math.max(0, nowSeconds() - cell.plantedAt);
+    const remain = Math.max(0, cell.grow - elapsed);
+    const shaved = Math.min(RAIN_DANCE_SHAVE, remain);
+    cell.grow = elapsed + Math.max(0, remain - shaved);
+    return { idx, shaved };
+  }
+
+  function rollBeeSwarm() {
+    const lvl = state.upgrades.beeSwarm;
+    if (!lvl || Math.random() >= lvl * 0.01) return null;
+    const openHives = [];
+    state.apiary.hives.forEach((h, i) => { if (h.jars.length < APIARY.capacity) openHives.push(i); });
+    if (!openHives.length) return null;
+    const i = openHives[Math.floor(Math.random() * openHives.length)];
+    const variety = sampleBloom(bloomPool());
+    state.apiary.hives[i].jars.push(variety);
+    return { hive: i, variety };
+  }
+
+  function rollLadybug() {
+    const lvl = state.upgrades.ladybug;
+    if (!lvl || Math.random() >= lvl * 0.01) return null;
+    const idxs = growingPlotIndices();
+    if (!idxs.length) return null;
+    // Prefer a plot that isn't already lucky, so triggers don't pile onto one spot.
+    const fresh = idxs.filter((i) => !state.grid[i].luckyBug);
+    const pool = fresh.length ? fresh : idxs;
+    const idx = pool[Math.floor(Math.random() * pool.length)];
+    state.grid[idx].luckyBug = true;
+    return { idx };
+  }
+
   /* ---------------- actions ---------------- */
   function tapFlower() {
     const power = state.tap.power * (1 + boostVal('tapPower')) * (1 + boostVal('globalCredits'));
@@ -232,9 +289,15 @@ const Game = (() => {
     state.credits += rounded;
     state.tap.combo = Math.min(state.tap.comboMax, state.tap.combo + 1);
     const sparked = tryWonder(WONDER.tapChance);
+    const rainDance = rollRainDance();
+    const beeSwarm = rollBeeSwarm();
+    const ladybug = rollLadybug();
     save();
     emit('currency');
-    const payload = { gain: rounded, crit: isCrit, combo: state.tap.combo, gemDrop, sparkedWonder: sparked };
+    const payload = {
+      gain: rounded, crit: isCrit, combo: state.tap.combo, gemDrop, sparkedWonder: sparked,
+      rainDance, beeSwarm, ladybug
+    };
     emit('tap', payload);
     return payload;
   }
@@ -296,7 +359,7 @@ const Game = (() => {
     if (!cell || !cell.seed || cell.ready) return 0;
     const elapsed = Math.max(0, nowSeconds() - cell.plantedAt);
     const remain = Math.max(0, cell.grow - elapsed);
-    const hasteFactor = 1 + boostVal('growSpeed') + state.upgrades.autoWater * 0.05;
+    const hasteFactor = 1 + boostVal('growSpeed') + state.upgrades.autoWater * 0.01;
     const shaved = 0.02 * cell.grow * hasteFactor;
     cell.grow = elapsed + Math.max(0, remain - shaved);
     return shaved;
@@ -309,7 +372,8 @@ const Game = (() => {
     const now = nowSeconds();
     if (!sdef || now - cell.plantedAt < cell.grow) return null;
 
-    const r = rollRarity(boostVal('rarityWeight'));
+    const luckyHarvest = Boolean(cell.luckyBug);
+    const r = rollRarity(boostVal('rarityWeight') + (luckyHarvest ? LADYBUG_RARITY_BONUS : 0));
     const yieldBase = sdef.yield * r.m;
     const yieldBonus = 1 + boostVal('globalCredits');
     const payout = Math.round(yieldBase * yieldBonus * (1 + pollination()) * wonderMult());
@@ -330,11 +394,13 @@ const Game = (() => {
       ticketDrop = true;
     }
 
-    state.grid[idx] = { ...cell, seed: null, plantedAt: 0, grow: 0, ready: false, aura: r.a };
+    state.grid[idx] = { ...cell, seed: null, plantedAt: 0, grow: 0, ready: false, aura: r.a, luckyBug: false };
     const sparked = tryWonder(WONDER.harvestChance);
     save();
     emit('currency');
-    const payload = { idx, payout, rarity: r, seed: sdef, gemDrop, ticketDrop, ticketBonus, sparkedWonder: sparked };
+    const payload = {
+      idx, payout, rarity: r, seed: sdef, gemDrop, ticketDrop, ticketBonus, sparkedWonder: sparked, luckyHarvest
+    };
     emit('harvest', payload);
     return payload;
   }
@@ -517,6 +583,17 @@ const Game = (() => {
   /* ---------------- shop ---------------- */
   const HOLD_INTERVAL_MIN = 180; // floor, ms — never faster than a fast manual tap
   const HOLD_INTERVAL_STEP = 60; // ms shaved off per level
+  const AUTO_WATER_MAX_LEVEL = 10;  // 1%/level, so this caps growth speed at +10%
+  const RAIN_DANCE_MAX_LEVEL = 10;  // 1%/level, caps trigger chance at 10%
+  const BEE_SWARM_MAX_LEVEL = 5;    // a free jar is worth more than a grow-time shave, so a lower cap
+  const LADYBUG_MAX_LEVEL = 8;      // 1%/level, caps trigger chance at 8%
+
+  /** Simple "own it, level it, cap it" shape shared by the tap-triggered proc badges. */
+  const cappedUpgrade = (key, max) => () => {
+    if (state.upgrades[key] >= max) return false;
+    state.upgrades[key] += 1;
+    return true;
+  };
 
   const UPGRADE_EFFECTS = {
     tapPower: () => { state.upgrades.tapPower += 1; state.tap.power += 1; return true; },
@@ -529,12 +606,15 @@ const Game = (() => {
     critChance: () => { state.upgrades.critChance += 1; state.tap.critChance += 0.01; return true; },
     critMult: () => { state.upgrades.critMult += 1; state.tap.critMult = Math.min(50, state.tap.critMult + 2); return true; },
     comboMeter: () => { state.upgrades.comboMeter += 1; state.tap.comboMax = Math.min(100, state.tap.comboMax + 10); return true; },
+    rainDance: cappedUpgrade('rainDance', RAIN_DANCE_MAX_LEVEL),
+    beeSwarm: cappedUpgrade('beeSwarm', BEE_SWARM_MAX_LEVEL),
+    ladybug: cappedUpgrade('ladybug', LADYBUG_MAX_LEVEL),
     plotExpansion: () => {
       const unlocked = unlockNextPlots(2);
       if (unlocked > 0) { state.upgrades.plotExpansion += 1; return true; }
       return false;
     },
-    autoWater: () => { state.upgrades.autoWater += 1; return true; },
+    autoWater: cappedUpgrade('autoWater', AUTO_WATER_MAX_LEVEL),
     autoHarvest: () => { state.upgrades.autoHarvest += 1; return true; }
   };
   PLOT_AUTOPLANTERS.forEach(({ key }) => {
@@ -544,6 +624,10 @@ const Game = (() => {
   const upgradeMaxed = (key) => {
     if (key === 'plotExpansion') return state.grid.every((c) => !c.locked);
     if (key === 'holdSpeed') return state.tap.holdInterval <= HOLD_INTERVAL_MIN;
+    if (key === 'autoWater') return state.upgrades.autoWater >= AUTO_WATER_MAX_LEVEL;
+    if (key === 'rainDance') return state.upgrades.rainDance >= RAIN_DANCE_MAX_LEVEL;
+    if (key === 'beeSwarm') return state.upgrades.beeSwarm >= BEE_SWARM_MAX_LEVEL;
+    if (key === 'ladybug') return state.upgrades.ladybug >= LADYBUG_MAX_LEVEL;
     return false;
   };
 

@@ -151,7 +151,7 @@ so new fields on it just inherit the default.
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 85 assertions over the simulation layer
+node tools/sim-test.js          # 108 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

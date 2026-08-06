@@ -91,12 +91,21 @@ Nothing else needs touching — the seed picker, Almanac and harvester ceilings 
 
 1. Add an entry to `DATA.upgrades` with `name`, `short`, `base`, `scale`, `icon`, `desc`.
 2. Add the matching effect to `UPGRADE_EFFECTS` in `game.js`. It must increment its own level and
-   return `true`, or return `false` to refund.
+   return `true`, or return `false` to refund. If the badge just levels up to a hard cap and does
+   nothing fancier, use the `cappedUpgrade(key, max)` helper rather than writing the same
+   if/increment/return shape out by hand — `rainDance`, `beeSwarm`, `ladybug` and `autoWater` all
+   use it.
 3. Add its key to `CORE_UPGRADES` in `ui.js` so it appears in the Upgrades tab.
-4. Add the field to `defaultState().upgrades`.
-5. If it has a cap, handle it in `upgradeMaxed()` — currently only `plotExpansion` does.
+4. Add the field to `defaultState().upgrades`, **and** to the manual backfill list in `load()`
+   (`['holdSpeed', 'rainDance', 'beeSwarm', 'ladybug'].forEach(...)`) — see "`load()` replaces
+   `state.upgrades` wholesale" in [HANDOFF.md](HANDOFF.md#traps-in-this-codebase). Skipping this
+   step is invisible until someone loads an old save.
+5. If it has a cap, handle it in `upgradeMaxed()`. Several badges do now: `plotExpansion`,
+   `holdSpeed`, `autoWater`, `rainDance`, `beeSwarm`, `ladybug`.
 6. If it's a new *kind* of effect, find where it should be read in the economy. Nothing is applied
-   automatically.
+   automatically. A per-tap "chance to do something" effect belongs in `tapFlower()` as its own
+   `rollXxx()` helper — see the three tap-triggered procs in
+   [03-systems.md](03-systems.md#tap-triggered-garden-procs) for the pattern.
 
 ## Playbook: add decor
 

@@ -450,7 +450,11 @@
     return `<div class="pips">${s}${level > max ? `<span class="lvl-text">+${level - max}</span>` : ''}</div>`;
   }
 
-  const CORE_UPGRADES = ['tapPower', 'holdSpeed', 'critChance', 'critMult', 'comboMeter', 'plotExpansion', 'autoWater', 'autoHarvest'];
+  const CORE_UPGRADES = [
+    'tapPower', 'holdSpeed', 'critChance', 'critMult', 'comboMeter',
+    'rainDance', 'beeSwarm', 'ladybug',
+    'plotExpansion', 'autoWater', 'autoHarvest'
+  ];
 
   function upgradeCard(key) {
     const def = DATA.upgrades[key];
@@ -736,6 +740,18 @@
         ${line('Crit chance', pct(Math.min(critChance, 0.99), 1), 'Chance for a big bonus tap')}
         ${line('Crit multiplier', `${critMult.toFixed(1)}x`, 'Payout spike when a crit lands')}
         ${line('Combo cap', `${S.tap.comboMax}`, 'Ring around the flower fills as you tap')}
+      </div>
+      <div class="stat-block">
+        <h3>${Icons.get('sparkle')} Tap Bonuses</h3>
+        ${S.upgrades.rainDance
+          ? line('Rain Dance', pct(S.upgrades.rainDance * 0.01, 0), 'Chance per tap to instantly water a growing plot')
+          : line('Rain Dance', 'Locked', 'Buy the badge in Upgrades to unlock')}
+        ${S.upgrades.beeSwarm
+          ? line('Bee Swarm', pct(S.upgrades.beeSwarm * 0.01, 0), 'Chance per tap to fill a jar in an open hive')
+          : line('Bee Swarm', 'Locked', 'Buy the badge in Upgrades to unlock')}
+        ${S.upgrades.ladybug
+          ? line('Lucky Ladybug', pct(S.upgrades.ladybug * 0.01, 0), 'Chance per tap to boost a growing plot\u2019s rarity odds')
+          : line('Lucky Ladybug', 'Locked', 'Buy the badge in Upgrades to unlock')}
       </div>
       <div class="stat-block">
         <h3>${Icons.get('sprout')} Garden Mastery</h3>
@@ -1092,6 +1108,23 @@
       FX.floatAt(flowerBtn, '+1 Gem', 'gem');
       popWallet('gems');
     }
+    if (p.rainDance) {
+      const v = plotEls[p.rainDance.idx];
+      if (v) {
+        const pc = FX.centerOf(v.root);
+        FX.floatAt(v.root, `-${p.rainDance.shaved.toFixed(1)}s`, 'water');
+        FX.sparks(pc.x, pc.y, 6, '#74c0fc');
+        Sound.play('plant');
+      }
+    }
+    if (p.beeSwarm) {
+      FX.floatAt(flowerBtn, 'Bee Swarm!', 'bee');
+      Sound.play('coin');
+    }
+    if (p.ladybug) {
+      const v = plotEls[p.ladybug.idx];
+      if (v) FX.floatAt(v.root, 'Lucky!', 'lucky');
+    }
   });
 
   Game.on('plant', ({ idx, auto }) => {
@@ -1153,6 +1186,7 @@
       popWallet('tickets');
       Sound.play('coin');
     }
+    if (p.luckyHarvest) FX.float(c.x, c.y + 18, 'Ladybug luck!', 'lucky');
     if (Math.random() < 0.12) say('harvest');
   });
 
