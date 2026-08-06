@@ -5,6 +5,46 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-05 — Navigation: places on the map, systems in the dock
+
+**Decision.** The dock holds `World · Orders · Shop · Almanac · Events`. Regions are locations on
+the map, never tabs. Upgrades become contextual to the object they upgrade. Decor becomes purely
+cosmetic. Boosts become power-ups sourced from rewards rather than a shop. Full specification and
+build order in [15-navigation-and-ia.md](15-navigation-and-ia.md).
+
+**What prompted it.** The dock is labeled `aria-label="Shops"`, which is an accurate description of
+the problem: every tab was a checkout, so no tab had a distinct job. Badges and Decor turned out to
+be the same system twice — four decor items and four badges modifying the same four stats, differing
+only in the currency paid.
+
+**Why regions must not be tabs.** The locked design is a contiguous map that grows outward. Tabs and
+a map are competing navigation models: if regions stay tabs the map becomes decoration, the visible
+sprawl that was supposed to be the reward stops being load-bearing, and every new region costs a
+dock slot out of five. The Apiary and Craft tabs shipped as an explicit prototype shortcut.
+
+**Why upgrades become contextual.** A flat list of eight nearly identical plot harvesters is a
+symptom of a global menu doing per-object work. Attaching upgrades to the object is the
+Township/Hay Day pattern and is the only reason the dock can stay at five slots as regions multiply.
+Phased last because a flat list is genuinely fine while there is one region.
+
+**Why decor loses its stats rather than badges being deleted.** Cosmetics are a clean gem sink and
+an expression layer that supports the monetization plan; a second stat menu supports nothing.
+Existing owners get refunded at purchase price, because exact conversion into badge levels is not
+possible — Crystal Fountain's multiplicative `tapYield` has no equivalent in Power Punch's flat +1.
+
+**Why boosts leave the dock.** They are power-ups, and players do not shop for power-ups — in Coin
+Master they fall out of the slot machine. Moving them to a contextual tray also places the
+rewarded-video prompt where a player actually wants a boost, which is worth more than a menu entry.
+This is also the natural moment to retire tickets, since tickets exist almost entirely to buy
+boosts.
+
+**Considered and rejected: a "Manage" mega-tab** holding upgrades, decor and boosts behind
+sub-tabs. Least disruptive to the current code, but it renames the junk drawer instead of emptying
+it. Also rejected: making the order board the home screen, which demotes the garden — in a cozy
+game the pleasure is the place, not the checklist.
+
+---
+
 ## 2026-08-05 — Garden ↔ Apiary ↔ Apothecary prototyped
 
 **Built** the smallest closed version of the resource loop in the web build, as two dock tabs.

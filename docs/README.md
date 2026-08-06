@@ -29,6 +29,7 @@ Read it before anything else if you're picking the project up cold.
 | [12-meta-layer-design.md](12-meta-layer-design.md) | You're working on the multi-region world — **design, not built yet** |
 | [13-order-system.md](13-order-system.md) | You're building the Market, the engine that drives the whole graph |
 | [14-economy-model.md](14-economy-model.md) | You're authoring resources, recipes or tuning numbers |
+| [15-navigation-and-ia.md](15-navigation-and-ia.md) | You're touching the dock, tabs, menus or where a feature lives |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

@@ -22,7 +22,7 @@ sheet the player asked for.
 │      └───┴───┴───┘          │
 │                             │
 ├─────────────────────────────┤
-│  Badges    Decor    Boosts  │  dock   (row 4, auto)
+│ Badges Decor Boosts Apiary Craft │ dock (row 4, auto)
 └─────────────────────────────┘
 ```
 
@@ -75,19 +75,26 @@ drag gestures on the board.
 
 ## The bottom sheet
 
-All shopping happens in one sheet that slides up from the bottom, holding six panels:
+All shopping happens in one sheet that slides up from the bottom, holding eight panels:
 
 | Mode | Title | Opened from | Tabs |
 | --- | --- | --- | --- |
-| `badges` | Badges | Dock | Badges / Decor / Boosts |
-| `decor` | Decor | Dock | Badges / Decor / Boosts |
-| `boosters` | Boosts | Dock | Badges / Decor / Boosts |
+| `badges` | Badges | Dock | shared shop strip |
+| `decor` | Decor | Dock | shared shop strip |
+| `boosters` | Boosts | Dock | shared shop strip |
+| `apiary` | Apiary | Dock | shared shop strip |
+| `craft` | Apothecary | Dock | shared shop strip |
 | `seeds` | Choose a seed | Tapping an empty plot | Sort: tier / cheapest / priciest |
 | `bonuses` | Garden Almanac | Book button in HUD | none |
 | `settings` | Settings | Gear button in HUD | none |
 
-The three dock modes share a tab strip so a player can move between shops without closing. `seeds`
-carries the target plot index in `sheetArg`.
+The five dock modes share a tab strip — the `TABS` array in `ui.js`, with `SHOP_TABS` deciding which
+modes display it — so a player can move between them without closing. `seeds` carries the target
+plot index in `sheetArg`.
+
+> **This structure is being replaced.** Regions belong on the world map, not in the dock, and
+> Badges/Decor are the same system twice. See [15-navigation-and-ia.md](15-navigation-and-ia.md)
+> for the agreed target and its build order before making changes here.
 
 Behaviour:
 
@@ -164,8 +171,15 @@ every 0.6 s. Suppressed while a sheet is open. The flower will not speak while o
 ## Dock attention dots
 
 Each dock button carries a dot shown when something in that shop is affordable and that shop isn't
-already open. Recomputed every 0.6 s. This is the primary discovery mechanism — it's how a player
-learns a shop is worth opening without being nagged.
+already open. Recomputed every 0.6 s in `updateDockDots()`. This is the primary discovery mechanism
+— it's how a player learns a shop is worth opening without being nagged.
+
+Apiary shows a dot when jars are waiting, Craft when something is ready to make or collect.
+
+The same idea is the intended basis for **contextual upgrade affordances** in
+[15-navigation-and-ia.md](15-navigation-and-ia.md): once upgrades live on the objects they upgrade,
+a small corner dot on the object replaces the dock dot. Reuse this pattern rather than inventing a
+second one.
 
 ## Responsive breakpoints
 

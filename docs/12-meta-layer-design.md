@@ -252,7 +252,8 @@ available. Mobile at any revenue level needs discoverability that web portals ha
 - Does the merge board share space with the garden view or open as its own screen?
 - Do rare seeds replace the existing 19-seed tier list, or extend it?
 - What happens to the existing Wonder Effect in a multi-region world — global, or garden-only?
-- Decor: purely cosmetic, or does it keep the stat bonuses it has today?
+- ~~Decor: purely cosmetic, or does it keep its stat bonuses?~~ **Resolved: cosmetic.** See
+  [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
 ## Prototype status
 
@@ -269,6 +270,9 @@ them requiring a *named* honey. Selling raws and crafted goods for credits.
 that muddies the only question the prototype is meant to answer. The Potting Shed, the Market, the
 world map, reputation and land. Crafted goods currently sell for credits because there is no order
 board yet; orders are meant to pay well above these prices.
+
+**Temporary.** The Apiary and Craft *dock tabs* are a shortcut, not the design. Regions belong on
+the map — see [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
 **What to look for when playing it.** Does the garden's *contents* start mattering — do you find
 yourself planting lavender because you want lavender honey? Does collecting jars pull you back into
