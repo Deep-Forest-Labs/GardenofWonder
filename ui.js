@@ -795,6 +795,7 @@
       </div>
       <p class="sheet-note">Your garden saves automatically to this browser.</p>
       <button class="big-btn magic" data-act="cheat">${Icons.get('gem')} Grant 50 Gems &amp; Tickets</button>
+      <button class="big-btn magic" data-act="cheatGold">${Icons.get('coin')} Grant 1,000,000 Gold</button>
       <button class="big-btn" data-act="wonder">${Icons.get('sparkle')} Summon a Wonder Effect</button>
       <button class="big-btn danger" data-act="reset">${Icons.get('trash')} ${resetArmed ? 'Tap again to erase everything' : 'Reset save'}</button>
       <p class="sheet-note" style="margin-top:14px;text-align:center">Garden Wonder · progress carried over from Idle Garden Reborn</p>`;
@@ -899,6 +900,11 @@
         Game.save(); Game.emit('currency'); Game.emit('panels');
         Sound.play('coin');
         toast({ title: 'Pockets filled!', body: '+50 gems and tickets', art: Icons.get('gem') });
+      } else if (a === 'cheatGold') {
+        S.credits += 1000000;
+        Game.save(); Game.emit('currency'); Game.emit('panels');
+        Sound.play('coin');
+        toast({ title: 'Pockets filled!', body: '+1,000,000 gold', art: Icons.get('coin') });
       } else if (a === 'wonder') {
         Game.startWonder();
         closeSheet();
