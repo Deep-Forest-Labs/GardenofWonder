@@ -111,6 +111,7 @@ costs exactly `base`.
 | Badge | In-game name | Base | Scale | First six levels |
 | --- | --- | --- | --- | --- |
 | `tapPower` | Power Punch | 100 | 2.0 | 100, 200, 400, 800, 1.6K, 3.2K |
+| `holdSpeed` | Quick Grip | 150 | 1.9 | 150, 285, 542, 1.03K, 1.95K, 3.71K |
 | `critChance` | Lucky Charm | 500 | 1.5 | 500, 750, 1,125, 1,688, 2,531, 3,797 |
 | `critMult` | Star Strike | 1,000 | 2.0 | 1K, 2K, 4K, 8K, 16K, 32K |
 | `comboMeter` | Combo Coil | 2,500 | 2.0 | 2.5K, 5K, 10K, 20K, 40K, 80K |
@@ -149,6 +150,7 @@ design, and harvesters are meant to be levelled only a handful of times.
 | --- | --- | --- |
 | Crit multiplier | 50× | 20 Star Strike levels |
 | Combo cap | 100 | 5 Combo Coil levels |
+| Hold-to-tap interval | 180 ms | 12 Quick Grip levels |
 | Growth modifier | 0.3 (70% faster) | 14 Sprinkler levels |
 | Drone cadence | 0.7 s | 5 Harvest Drone levels |
 | Crit chance | *(none)* | — |

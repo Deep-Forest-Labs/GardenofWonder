@@ -14,7 +14,7 @@ const Game = (() => {
 
   const defaultState = () => {
     const upgrades = {
-      tapPower: 0, critChance: 0, critMult: 0, comboMeter: 0,
+      tapPower: 0, holdSpeed: 0, critChance: 0, critMult: 0, comboMeter: 0,
       plotExpansion: 0, autoWater: 0, autoHarvest: 0
     };
     PLOT_AUTOPLANTERS.forEach(({ key }) => { upgrades[key] = 0; });
@@ -23,7 +23,7 @@ const Game = (() => {
       credits: 100,
       tickets: 0,
       gems: 0,
-      tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50 },
+      tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50, holdInterval: 900 },
       grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '' })),
       upgrades,
       decor: [],
@@ -130,6 +130,10 @@ const Game = (() => {
       PLOT_AUTOPLANTERS.forEach(({ key }) => {
         if (typeof state.upgrades[key] !== 'number') state.upgrades[key] = 0;
       });
+      // A save from before holdSpeed existed won't have it — state.upgrades is
+      // replaced wholesale by the parsed save above, so it needs the same
+      // manual backfill as the harvester keys.
+      if (typeof state.upgrades.holdSpeed !== 'number') state.upgrades.holdSpeed = 0;
 
       const now = nowSeconds();
       state.grid.forEach((cell) => {
@@ -511,8 +515,17 @@ const Game = (() => {
   }
 
   /* ---------------- shop ---------------- */
+  const HOLD_INTERVAL_MIN = 180; // floor, ms — never faster than a fast manual tap
+  const HOLD_INTERVAL_STEP = 60; // ms shaved off per level
+
   const UPGRADE_EFFECTS = {
     tapPower: () => { state.upgrades.tapPower += 1; state.tap.power += 1; return true; },
+    holdSpeed: () => {
+      if (state.tap.holdInterval <= HOLD_INTERVAL_MIN) return false;
+      state.upgrades.holdSpeed += 1;
+      state.tap.holdInterval = Math.max(HOLD_INTERVAL_MIN, state.tap.holdInterval - HOLD_INTERVAL_STEP);
+      return true;
+    },
     critChance: () => { state.upgrades.critChance += 1; state.tap.critChance += 0.01; return true; },
     critMult: () => { state.upgrades.critMult += 1; state.tap.critMult = Math.min(50, state.tap.critMult + 2); return true; },
     comboMeter: () => { state.upgrades.comboMeter += 1; state.tap.comboMax = Math.min(100, state.tap.comboMax + 10); return true; },
@@ -528,7 +541,11 @@ const Game = (() => {
     UPGRADE_EFFECTS[key] = () => { state.upgrades[key] += 1; return true; };
   });
 
-  const upgradeMaxed = (key) => key === 'plotExpansion' && state.grid.every((c) => !c.locked);
+  const upgradeMaxed = (key) => {
+    if (key === 'plotExpansion') return state.grid.every((c) => !c.locked);
+    if (key === 'holdSpeed') return state.tap.holdInterval <= HOLD_INTERVAL_MIN;
+    return false;
+  };
 
   function buyUpgrade(key) {
     if (upgradeMaxed(key)) return false;

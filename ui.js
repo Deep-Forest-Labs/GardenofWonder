@@ -276,13 +276,25 @@
   }
 
   function wireFlower() {
+    let holdTimer = null;
+    const stopHold = () => {
+      if (holdTimer) { clearInterval(holdTimer); holdTimer = null; }
+    };
     flowerBtn.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       Sound.resume();
       lookAt(e.clientX, e.clientY);
       Game.tapFlower();
       if (!S.seen.intro) { S.seen.intro = true; Game.save(); hideCoach(); }
+      // Holding repeats the same tap at a fixed cadence for as long as the
+      // pointer stays down — Quick Grip shortens that cadence, it never
+      // changes what a single tap is worth.
+      stopHold();
+      holdTimer = setInterval(() => Game.tapFlower(), S.tap.holdInterval);
     }, { passive: false });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) => {
+      flowerBtn.addEventListener(evt, stopHold);
+    });
   }
 
   /* ============ HUD ============ */
@@ -438,7 +450,7 @@
     return `<div class="pips">${s}${level > max ? `<span class="lvl-text">+${level - max}</span>` : ''}</div>`;
   }
 
-  const CORE_UPGRADES = ['tapPower', 'critChance', 'critMult', 'comboMeter', 'plotExpansion', 'autoWater', 'autoHarvest'];
+  const CORE_UPGRADES = ['tapPower', 'holdSpeed', 'critChance', 'critMult', 'comboMeter', 'plotExpansion', 'autoWater', 'autoHarvest'];
 
   function upgradeCard(key) {
     const def = DATA.upgrades[key];
@@ -712,6 +724,7 @@
       <div class="stat-block">
         <h3>${Icons.get('fist')} Tap Power</h3>
         ${line('Per tap', fmt(tapEff), `Base ${S.tap.power} · ${signed(tapMult - 1)} from boosts`)}
+        ${line('Hold-to-tap rate', `${(S.tap.holdInterval / 1000).toFixed(2)}s`, 'Hold the flower for automatic taps')}
         ${line('Crit chance', pct(Math.min(critChance, 0.99), 1), 'Chance for a big bonus tap')}
         ${line('Crit multiplier', `${critMult.toFixed(1)}x`, 'Payout spike when a crit lands')}
         ${line('Combo cap', `${S.tap.comboMax}`, 'Ring around the flower fills as you tap')}

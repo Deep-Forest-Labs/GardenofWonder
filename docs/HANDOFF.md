@@ -140,10 +140,18 @@ cycle and produced a false "saves are broken" report.
 [14-economy-model.md](14-economy-model.md) are mobile-scale and deliberately differ from what the
 web build uses; do not "fix" the discrepancy.
 
+**`load()` replaces `state.upgrades` wholesale, it does not deep-merge it.** `Object.assign(state,
+defaultState(), parsed)` only shallow-copies top-level keys, so a save from before a given badge
+existed simply won't have it in `parsed.upgrades`, and that key comes back `undefined` — not `0`.
+Every new badge key needs its own one-line backfill next to the existing `PLOT_AUTOPLANTERS.forEach`
+one in `load()`, or `upgradePrice()`/the badge's effect will silently produce `NaN` for old saves.
+`state.tap` doesn't have this problem — it's merged with `Object.assign(d.tap, parsed.tap || {})`,
+so new fields on it just inherit the default.
+
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 65 assertions over the simulation layer
+node tools/sim-test.js          # 85 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

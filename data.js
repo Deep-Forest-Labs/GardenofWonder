@@ -129,6 +129,7 @@ const DATA = {
 
   upgrades: {
     tapPower:      { name: 'Tap Power +1',      short: 'Power Punch',   base: 100,  scale: 2,   icon: 'fist',  desc: 'Increase base tap payout by +1 credit per tap.' },
+    holdSpeed:     { name: 'Quick Grip',        short: 'Quick Grip',    base: 150,  scale: 1.9, icon: 'clock', desc: 'Hold the flower instead of tapping it — each level speeds up the hold, up to a full rapid-tap pace.' },
     critChance:    { name: '+1% Crit',          short: 'Lucky Charm',   base: 500,  scale: 1.5, icon: 'clover', desc: 'Raise tap critical hit chance by +1%.' },
     critMult:      { name: '+2x Crit Mult',     short: 'Star Strike',   base: 1000, scale: 2,   icon: 'star',  desc: 'Boost tap crit multiplier by +2x (up to 50x).' },
     comboMeter:    { name: 'Tap Combo Boost',   short: 'Combo Coil',    base: 2500, scale: 2,   icon: 'flame', desc: 'Extend combo cap by +10 taps.' },

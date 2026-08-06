@@ -5,6 +5,28 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-05 — Hold-to-tap added as an input method, not a new payout path
+
+**Decision.** Holding the flower now repeats an ordinary tap on a timer instead of requiring
+repeated presses. The Quick Grip badge shortens that timer, 900ms → 180ms floor over 12 levels.
+Every roll a manual tap makes (crit, gem, ticket, Wonder) still happens per hold-tick, unchanged —
+holding is a different way to trigger `tapFlower()`, not a different, better version of it.
+
+**Why there's a hard floor instead of an uncapped upgrade.** The original ask was an upgrade line
+that shrinks the hold interval "by milliseconds," which taken to its limit is an auto-tap exploit:
+enough levels and holding down a button produces unbounded credits per second, tied to
+implementation details like timer resolution rather than any deliberate rate. The floor (180ms,
+`HOLD_INTERVAL_MIN` in `game.js`) is picked to land at roughly a fast manual tap's cadence, so a
+maxed Quick Grip is *convenient*, never *better than playing*. This was a deliberate design
+constraint agreed with the designer before implementation, not a default I picked unilaterally.
+
+**Why it starts slower than active tapping.** A day-one hold at manual-tap speed would make the
+button-mash feel (crit chance, combo ring, haptics) pointless immediately — nobody taps once
+holding is free and equally fast. Starting at 900ms means holding is initially a strict comfort
+trade against active tapping, and only converges toward parity as the player invests in it.
+
+---
+
 ## 2026-08-05 — Navigation phase 1 built: Upgrades, cosmetic decor, boost tray
 
 **Decision.** Built phase 1 of [15-navigation-and-ia.md](15-navigation-and-ia.md). Badges renamed

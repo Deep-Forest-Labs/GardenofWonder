@@ -263,5 +263,24 @@ const harvestRatio = harvestWithDecor / harvestBare;
 check('harvest payout ignores owned decor', Math.abs(harvestRatio - 1) < 0.05, `ratio ${harvestRatio.toFixed(3)}`);
 S.decor = [];
 
+group('Quick Grip (hold-to-tap speed)');
+G.reset();
+check('starts at 900ms', S.tap.holdInterval === 900, `got ${S.tap.holdInterval}`);
+check('starts unmaxed', G.upgradeMaxed('holdSpeed') === false);
+S.credits = 1e9;
+let level = 0;
+while (!G.upgradeMaxed('holdSpeed') && level < 100) {
+  check(`level ${level + 1} buys and shaves 60ms`, G.buyUpgrade('holdSpeed') === true);
+  level += 1;
+}
+check('twelve levels reach the floor', level === 12, `took ${level} levels`);
+check('floor is 180ms, never less', S.tap.holdInterval === 180, `got ${S.tap.holdInterval}`);
+check('upgradeMaxed is true at the floor', G.upgradeMaxed('holdSpeed') === true);
+const creditsAtFloor = S.credits;
+check('buying past the floor is refused', G.buyUpgrade('holdSpeed') === false);
+check('a refused purchase does not charge credits', S.credits === creditsAtFloor);
+check('level stops climbing once maxed', S.upgrades.holdSpeed === 12, `got ${S.upgrades.holdSpeed}`);
+G.reset();
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

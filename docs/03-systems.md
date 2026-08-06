@@ -51,6 +51,19 @@ behaviour — the previous build worked the same way — but it means the Combo 
 coins buys nothing but a longer musical run and a fuller ring. See
 [11-known-issues.md](11-known-issues.md).
 
+### Hold-to-tap
+
+Holding the flower down repeats an ordinary `tapFlower()` call on a fixed cadence for as long as
+the pointer stays down — it is an input method, not a separate payout path. Every rolled effect
+(crit, gem drop, ticket, Wonder spark) and the combo counter behave exactly as they do for a
+manual tap, because it's the same function call.
+
+`tap.holdInterval` starts at 900ms and is shortened by the Quick Grip badge, 60ms per level, down
+to a hard floor of 180ms (`HOLD_INTERVAL_MIN` in `game.js`) — roughly a fast manual tap cadence.
+The floor exists so holding can never out-earn active tapping; it only ever catches up to it. The
+interval is read once when the hold starts, so buying a level mid-hold takes effect on the next
+press, not immediately.
+
 ## Plots and growth
 
 Eight plots, laid out around the flower as a 3×3 grid with the flower in the centre cell. Four
