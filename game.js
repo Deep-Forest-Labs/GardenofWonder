@@ -19,7 +19,7 @@ const Game = (() => {
     };
     PLOT_AUTOPLANTERS.forEach(({ key }) => { upgrades[key] = 0; });
     return {
-      version: 2,
+      version: 3,
       credits: 100,
       tickets: 0,
       gems: 0,
@@ -69,6 +69,27 @@ const Game = (() => {
     );
   }
 
+  /** Decor lost its stat bonuses in schema v3. Refund what each owned copy cost,
+      in the currency it was bought with, and strip it down to a cosmetic record. */
+  function migrateDecor(fromVersion) {
+    const owned = Array.isArray(state.decor) ? state.decor : [];
+    if (fromVersion >= 3 || !owned.length) return null;
+    const refund = { credits: 0, gems: 0, tickets: 0 };
+    let count = 0;
+    owned.forEach((d) => {
+      const def = DATA.decor.find((x) => x.id === d.id);
+      if (!def) return;
+      refund[def.currency] += def.cost;
+      count += 1;
+    });
+    state.decor = owned.map((d) => ({ id: d.id }));
+    if (!count) return null;
+    state.credits += refund.credits;
+    state.gems += refund.gems;
+    state.tickets += refund.tickets;
+    return { ...refund, count };
+  }
+
   function load() {
     let raw = localStorage.getItem(SAVE_KEY);
     let migrated = false;
@@ -98,7 +119,8 @@ const Game = (() => {
       state.flowers = parsed.flowers && typeof parsed.flowers === 'object' ? parsed.flowers : {};
       state.craft = Array.isArray(parsed.craft) ? parsed.craft : [];
       state.goods = parsed.goods && typeof parsed.goods === 'object' ? parsed.goods : {};
-      state.version = 2;
+      const decorRefund = migrateDecor(parsed.version || 1);
+      state.version = 3;
       lastAutoHarvest = 0;
 
       if (typeof state.upgrades.plot1Gardener === 'number') {
@@ -120,8 +142,8 @@ const Game = (() => {
           cell.plantedAt = now;
         }
       });
-      if (migrated) saveNow();
-      return { migrated, fresh: false };
+      if (migrated || decorRefund) saveNow();
+      return { migrated, fresh: false, decorRefund };
     } catch (err) {
       console.warn('Save load failed', err);
       return { migrated: false, fresh: true };
@@ -147,14 +169,8 @@ const Game = (() => {
     return v;
   }
 
-  function decorVal(key) {
-    let v = 0;
-    for (const d of state.decor) if (d.type === key) v += d.val;
-    return v;
-  }
-
   function growModifier() {
-    const bonus = decorVal('growSpeed') + boostVal('growSpeed') + state.upgrades.autoWater * 0.05;
+    const bonus = boostVal('growSpeed') + state.upgrades.autoWater * 0.05;
     return Math.max(0.3, 1 - bonus);
   }
 
@@ -194,9 +210,9 @@ const Game = (() => {
 
   /* ---------------- actions ---------------- */
   function tapFlower() {
-    const power = state.tap.power * (1 + decorVal('tapYield')) * (1 + boostVal('tapPower')) * (1 + boostVal('globalCredits'));
-    const critChance = state.tap.critChance + decorVal('critChance') + boostVal('critChance');
-    const critMultiplier = state.tap.critMult * (1 + decorVal('critMult'));
+    const power = state.tap.power * (1 + boostVal('tapPower')) * (1 + boostVal('globalCredits'));
+    const critChance = state.tap.critChance + boostVal('critChance');
+    const critMultiplier = state.tap.critMult;
     const isCrit = Math.random() < critChance;
     let gain = power;
     if (isCrit) {
@@ -291,8 +307,8 @@ const Game = (() => {
 
     const r = rollRarity(boostVal('rarityWeight'));
     const yieldBase = sdef.yield * r.m;
-    const yieldDecor = 1 + decorVal('tapYield') * 0.3 + boostVal('globalCredits');
-    const payout = Math.round(yieldBase * yieldDecor * (1 + pollination()) * wonderMult());
+    const yieldBonus = 1 + boostVal('globalCredits');
+    const payout = Math.round(yieldBase * yieldBonus * (1 + pollination()) * wonderMult());
 
     state.credits += payout;
     // The bloom itself is kept as a crafting ingredient, on top of the credits.
@@ -537,7 +553,7 @@ const Game = (() => {
     if (d.currency === 'gems') state.gems -= d.cost;
     else if (d.currency === 'tickets') state.tickets -= d.cost;
     else state.credits -= d.cost;
-    state.decor.push({ id: d.id, type: d.type, val: d.val });
+    state.decor.push({ id: d.id });
     save();
     emit('currency');
     emit('purchase', { kind: 'decor', key: id, def: d });
@@ -643,7 +659,7 @@ const Game = (() => {
 
   return {
     state, on, emit, load, save, saveNow, reset, nowSeconds,
-    seedById, activeBoost, boostVal, decorVal, growModifier, rollRarity,
+    seedById, activeBoost, boostVal, growModifier, rollRarity,
     plotUnlockCost, upgradePrice, upgradeMaxed, decorCount,
     tapFlower, decayCombo, plant, unlockPlot, hasten, harvest,
     buyUpgrade, buyDecor, buyBooster,

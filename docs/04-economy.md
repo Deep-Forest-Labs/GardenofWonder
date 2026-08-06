@@ -152,10 +152,9 @@ design, and harvesters are meant to be levelled only a handful of times.
 | Growth modifier | 0.3 (70% faster) | 14 Sprinkler levels |
 | Drone cadence | 0.7 s | 5 Harvest Drone levels |
 | Crit chance | *(none)* | — |
-| Decor stacking | *(none)* | — |
 
-Two of those have no cap. Crit chance above 100% makes every tap a crit; unlimited decor stacking
-combined with flat pricing is the only genuinely unbounded growth vector in the game.
+Crit chance has no cap — above 100% makes every tap a crit. Decor stacking used to be the other
+uncapped growth vector; it's cosmetic-only now and doesn't move any of these numbers.
 
 ## Boosters
 
@@ -172,20 +171,20 @@ set-and-forget.
 
 ## Decor
 
-| Piece | Currency | Cost | Effect key | Value |
-| --- | --- | --- | --- | --- |
-| Gnome of Fortune | gems | 250 | `critChance` | +5% |
-| Butterfly Shrine | coins | 1,000 | `growSpeed` | +10% |
-| Crystal Fountain | coins | 5,000 | `tapYield` | +10% |
-| Lantern Tree | tickets | 200 | `critMult` | +1% |
+**Purely cosmetic as of navigation phase 1** — see [15-navigation-and-ia.md](15-navigation-and-ia.md).
+Decor used to duplicate four badge stats; that mechanic is gone, `decorVal()` has been deleted, and
+existing owners were refunded at purchase price on their first load after the change (schema v3,
+in `Game.load()`).
 
-**Prices never escalate.** The fiftieth Butterfly Shrine still costs 1,000 coins. Since badges
-scale at 2.0–2.4×, decor overtakes them completely in the late game, and it's the reason a mature
-save can hit the growth floor and 100% crit chance.
+| Piece | Currency | Cost |
+| --- | --- | --- |
+| Gnome of Fortune | gems | 250 |
+| Butterfly Shrine | coins | 1,000 |
+| Crystal Fountain | coins | 5,000 |
+| Lantern Tree | tickets | 200 |
 
-Lantern Tree is poor value at +1% of a multiplier for 200 tickets — five of them equal a single
-Fortune Aura in cost and give +5% crit multiplier permanently, which is worth far less than 30
-minutes of +50% rarity.
+**Prices never escalate.** The fiftieth Butterfly Shrine still costs 1,000 coins. It lives in the
+Shop tab and is a pure currency sink with no effect on the simulation.
 
 ## Where the effect keys are read
 
@@ -202,8 +201,8 @@ to the simulation:
 | `growSpeed` | Planting and hastening | Reduces grow time |
 | `rarityWeight` | Harvests | Scales non-common weights |
 
-`decorVal(key)` and `boostVal(key)` sum every source of a key. Adding a new key means also adding
-the place that reads it — nothing happens automatically.
+`boostVal(key)` sums every active source of a key. Adding a new key means also adding the place
+that reads it — nothing happens automatically. Decor no longer contributes to any of these keys.
 
 ## Progression sketch
 
@@ -216,8 +215,9 @@ Rough shape of a playthrough, assuming a player who taps a bit and reinvests:
 4. **Expansion** — Land Deed at 2,000 opens plots 5 and 6, then 4,000 for 7 and 8.
 5. **Mid-game** — Sprinklers compress grow times; harvesters on every plot. The game largely runs
    itself and tapping becomes optional.
-6. **Late game** — Decor stacking pushes toward the growth floor and 100% crit. Seeds move to the
-   Nebula Orchid tier and above, where net/s jumps sharply.
+6. **Late game** — Badge levels push toward the growth floor and high crit chance (decor no longer
+   contributes, since navigation phase 1). Seeds move to the Nebula Orchid tier and above, where
+   net/s jumps sharply.
 
-There is no ending, no prestige, and no soft wall. The curve simply flattens once decor caps out
+There is no ending, no prestige, and no soft wall. The curve simply flattens once badges cap out
 the modifiers.

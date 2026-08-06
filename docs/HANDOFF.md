@@ -13,7 +13,12 @@ seeds in eight plots, harvest with rarity multipliers, spend on badges, decor an
 
 Since then the first slice of the meta-layer is also playable: **hives producing honey whose variety
 follows what is planted, and an apothecary crafting flowers and honey into goods**. It lives behind
-two dock tabs, which is a deliberate throwaway — see the current task below.
+two dock tabs (Apiary, Craft), a deliberate throwaway until the world map exists.
+
+**Navigation phase 1 is also done**: the dock is now `Upgrades · Apiary · Craft · Shop`. Badges was
+renamed Upgrades; Decor lost its stat bonuses, became cosmetic, and moved into Shop with existing
+owners refunded; Boosts left the dock entirely for a tap-to-activate tray in the status rail. Full
+detail in [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
 Fully documented in this folder. Start with [README.md](README.md), then
 [02-architecture.md](02-architecture.md) and [09-conventions.md](09-conventions.md).
@@ -65,15 +70,14 @@ below.
 
 ## The current task
 
-**Phase 1 of [15-navigation-and-ia.md](15-navigation-and-ia.md).** Read that document in full
-before starting; it contains the build order, the mapping of where every existing feature belongs,
-and an explicit "do not" list.
+**Phase 2 of [15-navigation-and-ia.md](15-navigation-and-ia.md): the world map.** Phase 1 (above)
+is done. Read the nav doc in full before starting phase 2 — it depends on the map existing, and the
+doc's "do not" list still applies (no region as a dock tab, no sixth dock slot, no "Manage" tab).
 
-In short: merge Badges and Decor into one Upgrades surface, move boosts out of the dock into a
-contextual power-up tray, make decor cosmetic with a refund migration, and leave the dock at
-`Upgrades · Apiary · Craft · Shop`.
-
-It is a small, safe, self-contained change and a good first task on a fresh context.
+Phase 2 in short: a zoomed-out scene containing the garden, apiary and apothecary as locations;
+tapping one moves the camera to it; land parcels purchasable on the map; regions leave the dock.
+This is a bigger, riskier change than phase 1 — treat it as its own planning pass, not a quick
+follow-on.
 
 ## What comes after
 
@@ -84,11 +88,12 @@ It is a small, safe, self-contained change and a good first task on a fresh cont
 4. ~~Prototype the Garden ↔ Apiary loop~~ — **done and playable**. Mechanics in
    [03-systems.md](03-systems.md); run `node tools/sim-test.js` after any change to it.
 5. ~~Decide the navigation structure~~ — **done**, [15-navigation-and-ia.md](15-navigation-and-ia.md).
-6. **Navigation phase 1** — the current task, above.
+6. ~~Navigation phase 1~~ — **done**, see above.
 7. **Play the loop and judge it.** The question is narrow: does the garden's *contents* start
    mattering — do you plant lavender because you want lavender honey? Content decisions wait on
    that answer.
-8. **The world map** — navigation phase 2. Unblocks everything else in the meta-layer.
+8. **The world map** — navigation phase 2, the current task, above. Unblocks everything else in the
+   meta-layer.
 9. **The Market** — see [13-order-system.md](13-order-system.md). The prototype has production but
    nothing that *wants* anything, which is exactly the gap orders fill.
 10. **Tune the economy for real.** Every number today is a placeholder.
@@ -138,7 +143,7 @@ web build uses; do not "fix" the discrepancy.
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 51 assertions over the simulation layer
+node tools/sim-test.js          # 65 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

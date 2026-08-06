@@ -41,11 +41,6 @@ grow time jumps 55 s → 90 s. It's the only backwards step in nineteen tiers.
 Both 10.00 net/s. Celestial costs 33% more for the same rate — purely a convenience upgrade. Not
 necessarily wrong, but not obviously intentional either.
 
-### Decor pricing never escalates
-
-Decor is flat-priced and unlimited, while badges scale at 2.0–2.4×. Late game, decor is the only
-sensible purchase and the only unbounded growth vector. Stacking gnomes takes crit chance past 100%.
-
 ### Crit chance is uncapped
 
 Nothing clamps it. Above 100% every tap crits. The Almanac clamps the *display* to 99%, which hides
@@ -85,19 +80,12 @@ completes every plot and expires every booster. No anti-cheat exists.
 
 Fine for a single-player local game. It would matter if leaderboards were ever added.
 
-### `decorVal('tapYield')` is overloaded
-
-The Crystal Fountain's key applies at full strength to taps and 30% to harvests. Functional, but the
-name suggests taps only, and the 0.3 factor is a bare literal in `harvest()`.
-
 ## Dead code
 
 - **`Flora.sprout()`** is exported and never called. Growth stage 1 uses CSS scaling of the full
   plant instead. Either use it for early stages or delete it.
 - **`Icons.get('seed')`** is unused — `plantSpot` replaced it for empty plots.
 - **`Icons.get('mute')`** is unused; the settings toggle uses `sound` in both states.
-- **`state.version`** is set to 2 unconditionally on load and never branched on. Deliberately
-  available for future migrations, but currently inert.
 - **`--scene-tint`** is declared in `:root` and, as far as I can tell, never read.
 
 ## Accessibility
@@ -136,7 +124,7 @@ garbage-collected — but it's needless work while muted.
 
 ### `ui.js` is doing too much
 
-Around 1,000 lines covering DOM construction, six sheet panels, input, HUD, rail, toasts, banners,
+Around 1,300 lines covering DOM construction, seven sheet panels, input, HUD, rail, toasts, banners,
 coach marks, scenery, day/night and the frame loop. The natural split points are the sheet panels,
 the scenery/sky code, and the event wiring.
 

@@ -7,7 +7,7 @@
 | Mechanism | `localStorage`, JSON |
 | Current key | `gw-save` |
 | Legacy key | `igr-save` (*Idle Garden Reborn*) |
-| Schema version | `2` |
+| Schema version | `3` |
 
 Saves are scoped to the browser origin, so a GitHub Pages deployment shares storage with anything
 else published under the same `github.io` account. Progress does not sync between devices and is
@@ -17,7 +17,7 @@ lost if the player clears site data.
 
 ```js
 {
-  version: 2,
+  version: 3,
   credits: 100,
   tickets: 0,
   gems: 0,
@@ -30,7 +30,7 @@ lost if the player clears site data.
     plotExpansion: 0, autoWater: 0, autoHarvest: 0,
     plot1Harvester: 0, /* … through plot8Harvester */
   },
-  decor: [ { id: 'gnome', type: 'critChance', val: 0.05 } ],   // one entry per copy owned
+  decor: [ { id: 'gnome' } ],   // one entry per copy owned, cosmetic only since v3
   boosters: { bloom: 1735689600.123 },                          // id → absolute expiry, epoch seconds
   harvestsThisSession: 0,
   stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
@@ -53,8 +53,9 @@ completes every plot**, and moving it backward strands them. There is no anti-ch
 **`grow` stores the already-modified duration, not the seed's base.** Growth bonuses are baked in at
 planting, so changing sprinkler levels never retroactively affects something in the ground.
 
-**`decor` is a list, not a count.** Each purchased copy pushes another entry, and `decorVal()` sums
-them. A player with ten gnomes has ten array entries.
+**`decor` is a list, not a count.** Each purchased copy pushes another entry, `{ id }` only. A
+player with ten gnomes has ten array entries. `Game.decorCount(id)` counts them for display;
+nothing sums a stat from them anymore.
 
 **`harvestsThisSession` is a misnomer** — it's saved and never reset, so it's a lifetime counter
 driving the every-10-harvests ticket bonus.
@@ -146,7 +147,23 @@ If you add a field:
 3. Existing saves will pick up the default automatically — no version bump needed.
 
 If you change the *meaning* of an existing field, bump `version` and write an explicit upgrade step
-keyed off the old value. Nothing currently branches on `version`; it's set to 2 unconditionally on
-load, so it's available for exactly this purpose but unused so far.
+keyed off the old value.
 
 Never rename a field without a fixup like the `plot1Gardener` one. Players have saves.
+
+### Worked example: decor losing its stats (v2 → v3)
+
+The first real use of `version`-gated migration. When decor became cosmetic (navigation phase 1,
+[15-navigation-and-ia.md](15-navigation-and-ia.md)), existing saves held decor entries carrying
+`type`/`val` that no longer mean anything. `migrateDecor()` in `game.js`:
+
+1. Runs only `if (fromVersion < 3)`, where `fromVersion` is the *incoming* save's `version` (missing
+   entirely on very old saves, treated as `1`).
+2. For each owned decor entry, looks up its `DATA.decor` definition and refunds `cost` in
+   `currency` — the player keeps the item as a cosmetic record, and gets the price back once.
+3. Strips every entry down to `{ id }`, discarding `type`/`val` for good.
+4. Returns `null` if there was nothing to refund (a fresh save, or a save already on v3), so `ui.js`
+   only shows the "refunded" toast once, ever, per save.
+
+`load()` then sets `state.version = 3` unconditionally, same pattern as the old hardcoded `2`. This
+is the template for the next schema change that alters meaning rather than just adding a field.

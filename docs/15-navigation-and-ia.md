@@ -1,7 +1,8 @@
 # Navigation and Information Architecture
 
-**Status: specified, not built.** This is the agreed target structure for the game's navigation.
-Decided 2026-08-05; reasoning in [10-decision-log.md](10-decision-log.md).
+**Status: phase 1 built, phases 2–5 specified but not built.** This is the agreed target structure
+for the game's navigation. Decided 2026-08-05; reasoning in
+[10-decision-log.md](10-decision-log.md).
 
 Read alongside [08-ui-and-layout.md](08-ui-and-layout.md) for how the current UI is put together and
 [12-meta-layer-design.md](12-meta-layer-design.md) for the world this navigation has to serve.
@@ -134,15 +135,31 @@ which is why this is phased last.
 Each phase is independently shippable and reversible. Do not skip ahead — phase 3 depends on the
 map existing.
 
-### Phase 1 — Fix the duplication *(small, safe, do first)*
+### Phase 1 — Fix the duplication *(small, safe, do first)* — **done, 2026-08-05**
 
-- Merge Badges and Decor into one **Upgrades** surface.
+- Merge Badges and Decor into one **Upgrades** surface. *(Badges renamed to Upgrades; decor's stat
+  role was deleted rather than merged in — see below.)*
 - Move boosts out of the dock into a contextual tray.
 - Dock becomes `Upgrades · Apiary · Craft · Shop`.
 - Decor migration and refund.
 
 Done when: no two dock tabs answer the same question, and boosts are no longer purchasable from a
 menu.
+
+**Implementation notes, for whoever reads this before phase 2:**
+
+- The boost tray keeps ticket-purchase — tap a chip in the status rail to buy-and-activate. It is
+  no longer a dock menu, but it isn't yet "sourced from rewards" either, because order rewards and
+  rewarded video don't exist yet. Retiring tickets and adding real drop sources is a deliberate,
+  separate balance project, not a side effect of this phase. See the decision log entry dated
+  2026-08-05.
+- Shop currently holds only cosmetic decor. Gems, IAP and remove-ads arrive with actual
+  monetization work, not as part of navigation.
+- Decor's stat bonuses were deleted outright (`decorVal()` and its three call sites), not
+  converted into Upgrades levels — the doc's "merge" language describes the resolution to the
+  duplication, not a literal content merge. Existing owners were refunded at purchase price via a
+  version-gated migration (schema v2 → v3) in `Game.load()`; they keep the item as a cosmetic
+  record.
 
 ### Phase 2 — Build the world map
 
@@ -183,8 +200,8 @@ Only once there is recurring content to put in it. An empty Events tab is worse 
   land you where the action is, not on a menu.)*
 - Should the Almanac show undiscovered flowers as silhouettes? Standard for collections, and a
   strong pull, but it reveals the content ceiling early.
-- Does the boost tray show empty slots as an upsell, or hide when empty? *(Leaning: hide — empty
-  slots in a cozy game read as nagging.)*
+- ~~Does the boost tray show empty slots as an upsell, or hide when empty?~~ **Resolved in phase
+  1: hide.** A boost chip only renders while active or while affordable and idle.
 - Is there room for a social tab at all given a two-person team? *(Leaning: no. Collections without
   trading or social pressure are achievement lists, which is fine, but do not plan a Coin Master
   card economy around it.)*

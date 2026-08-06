@@ -92,21 +92,29 @@ Nothing else needs touching — the seed picker, Almanac and harvester ceilings 
 1. Add an entry to `DATA.upgrades` with `name`, `short`, `base`, `scale`, `icon`, `desc`.
 2. Add the matching effect to `UPGRADE_EFFECTS` in `game.js`. It must increment its own level and
    return `true`, or return `false` to refund.
-3. Add its key to `CORE_UPGRADES` in `ui.js` so it appears in the Badges tab.
+3. Add its key to `CORE_UPGRADES` in `ui.js` so it appears in the Upgrades tab.
 4. Add the field to `defaultState().upgrades`.
 5. If it has a cap, handle it in `upgradeMaxed()` — currently only `plotExpansion` does.
 6. If it's a new *kind* of effect, find where it should be read in the economy. Nothing is applied
    automatically.
 
-## Playbook: add decor or a booster
+## Playbook: add decor
 
-1. Append to `DATA.decor` or `DATA.boosters`.
+1. Append to `DATA.decor` with `name`, `currency`, `cost`, `icon`, `desc`. Decor is purely
+   cosmetic — no `type`/`val` effect fields. Write flavour text, not a stat claim.
+2. Decor stacks and never escalates in price. `Game.decorCount(id)` reads how many a player owns.
+3. It lives in the Shop tab (`renderShop()` in `ui.js`), bought with `Game.buyDecor(id)`.
+
+## Playbook: add a booster
+
+1. Append to `DATA.boosters` with `tickets`, `dur`, `icon`, `tint`, `effects`, `desc`.
 2. Use an **existing effect key** if you can — see the key table in
-   [04-economy.md](04-economy.md).
-3. For a new key, add the place that reads it. `decorVal(key)` and `boostVal(key)` sum sources, but
-   something has to consume the sum.
-4. Decor stacks and never escalates in price. Boosters replace rather than extend their own timer.
-5. Boosters need a `tint`; decor needs an `icon` from `icons.js`.
+   [04-economy.md](04-economy.md). For a new key, add the place that reads it — `boostVal(key)`
+   sums active sources, but something has to consume the sum.
+3. Boosters replace rather than extend their own timer, and need a `tint` for the rail chip.
+4. There is no shop panel for boosters. They surface as a chip in the status rail (`renderRail()`
+   in `ui.js`) — a countdown while active, a tappable buy-and-activate chip while affordable and
+   idle, invisible otherwise. See [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
 ## Playbook: add a game event with feedback
 
@@ -147,7 +155,7 @@ Before calling a change done:
 1. **Load at 390×844** with device emulation on.
 2. **Tap the flower ~20 times** — coins fly, combo ring fills, pitch climbs, face reacts.
 3. **Plant, hasten, harvest** a plot through all three growth stages.
-4. **Open all six sheet panels.** Check nothing overflows or wraps badly.
+4. **Open all seven sheet panels.** Check nothing overflows or wraps badly.
 5. **Drag the sheet down** to dismiss.
 6. **Reload** and confirm progress persisted.
 7. **Summon a Wonder** from Settings and watch it start and end.

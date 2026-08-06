@@ -5,6 +5,44 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-05 — Navigation phase 1 built: Upgrades, cosmetic decor, boost tray
+
+**Decision.** Built phase 1 of [15-navigation-and-ia.md](15-navigation-and-ia.md). Badges renamed
+to Upgrades (no content change — it already held badges and the eight harvesters). Decor's stat
+role was deleted outright rather than merged into Upgrades; the items themselves became cosmetic
+and moved to a new Shop tab. Boosters lost their dock tab and sheet panel entirely; they now surface
+as chips in the status rail — a countdown while active, a tap-to-buy-and-activate chip while
+affordable and idle, nothing otherwise. Dock is now `Upgrades · Apiary · Craft · Shop`. Existing
+decor owners are refunded at purchase price on first load, via a version-gated migration (save
+schema 2 → 3).
+
+**Why decor was deleted rather than merged.** The doc's "merge Badges and Decor into one Upgrades
+surface" language describes fixing the duplication, not literally combining both cards into one
+list. Badges already covered every stat decor touched; decor's only remaining job is to be an
+honest cosmetic sink.
+
+**Why boosts kept ticket-purchase instead of becoming reward-only immediately.** The doc's full
+vision sources boosts from order rewards, rewarded video and drops — none of which exist yet (no
+order system, no ad mediation, no drop mechanic). Cutting the only working acquisition path with
+nothing to replace it would have made every booster dead content and stranded the ticket currency,
+which exists almost entirely to buy them. Keeping ticket-purchase, just relocated off the dock and
+into a tap-to-activate tray, satisfies the navigational goal (off the dock, contextual, one tap)
+without inventing a new drop economy inside what was scoped as a small, safe, self-contained
+change. Retiring tickets and wiring up real reward sources is its own balance project, deliberately
+deferred — flagged to the designer before building, who confirmed this reading.
+
+**Why the refund keeps the item rather than deleting it.** The alternative — stripping decor
+entirely from a save — would have been a bigger surprise for the same generosity budget. Keeping it
+as a cosmetic record and adding the refund on top costs nothing extra and reads as "this got better
+for you," not "this got taken away."
+
+**Why schema version was bumped for the first time.** `version` had been set unconditionally since
+its introduction, reserved for exactly this kind of change. Decor's meaning changed (stat-carrying
+→ cosmetic), which is what the save-data doc's guidance calls for a version bump over. See the
+worked example in [07-save-data.md](07-save-data.md).
+
+---
+
 ## 2026-08-05 — Navigation: places on the map, systems in the dock
 
 **Decision.** The dock holds `World · Orders · Shop · Almanac · Events`. Regions are locations on

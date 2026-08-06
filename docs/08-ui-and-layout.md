@@ -10,7 +10,7 @@ sheet the player asked for.
 ┌─────────────────────────────┐
 │  wallets          book gear │  hud    (row 1, auto)
 ├─────────────────────────────┤
-│  booster / decor chips      │  rail   (row 2, auto — hidden if short)
+│  boost tray                 │  rail   (row 2, auto — hidden if short)
 ├─────────────────────────────┤
 │                             │
 │      ┌───┬───┬───┐          │
@@ -22,7 +22,7 @@ sheet the player asked for.
 │      └───┴───┴───┘          │
 │                             │
 ├─────────────────────────────┤
-│ Badges Decor Boosts Apiary Craft │ dock (row 4, auto)
+│   Upgrades  Apiary Craft Shop │ dock (row 4, auto)
 └─────────────────────────────┘
 ```
 
@@ -75,26 +75,25 @@ drag gestures on the board.
 
 ## The bottom sheet
 
-All shopping happens in one sheet that slides up from the bottom, holding eight panels:
+All shopping happens in one sheet that slides up from the bottom, holding seven panels:
 
 | Mode | Title | Opened from | Tabs |
 | --- | --- | --- | --- |
-| `badges` | Badges | Dock | shared shop strip |
-| `decor` | Decor | Dock | shared shop strip |
-| `boosters` | Boosts | Dock | shared shop strip |
+| `upgrades` | Upgrades | Dock | shared shop strip |
 | `apiary` | Apiary | Dock | shared shop strip |
 | `craft` | Apothecary | Dock | shared shop strip |
+| `shop` | Shop | Dock | shared shop strip |
 | `seeds` | Choose a seed | Tapping an empty plot | Sort: tier / cheapest / priciest |
 | `bonuses` | Garden Almanac | Book button in HUD | none |
 | `settings` | Settings | Gear button in HUD | none |
 
-The five dock modes share a tab strip — the `TABS` array in `ui.js`, with `SHOP_TABS` deciding which
+The four dock modes share a tab strip — the `TABS` array in `ui.js`, with `SHOP_TABS` deciding which
 modes display it — so a player can move between them without closing. `seeds` carries the target
-plot index in `sheetArg`.
+plot index in `sheetArg`. Boosters have no sheet panel at all; see "Status rail" below.
 
-> **This structure is being replaced.** Regions belong on the world map, not in the dock, and
-> Badges/Decor are the same system twice. See [15-navigation-and-ia.md](15-navigation-and-ia.md)
-> for the agreed target and its build order before making changes here.
+> **This structure is phase 1 of a larger change.** Apiary and Craft are still dock tabs — they
+> move to the world map in phase 2. See [15-navigation-and-ia.md](15-navigation-and-ia.md) for the
+> full build order before making changes here.
 
 Behaviour:
 
@@ -145,10 +144,16 @@ remove/reflow/re-add pattern.
 Numbers are abbreviated above 100,000: `100000` stays as-is up to that point, then `K`, `M`, `B`,
 `T` with trailing zeros trimmed.
 
-## Status rail
+## Status rail — the boost tray
 
-Between HUD and stage, showing active boosters (with a countdown ring), owned decor with counts,
-and a Wonder countdown when active. Wonder is prepended so it always leads.
+Between HUD and stage. This is where boosters live now that they're out of the dock (navigation
+phase 1, [15-navigation-and-ia.md](15-navigation-and-ia.md)): each booster in `DATA.boosters`
+renders as a countdown chip while active, or a tappable `data-boost` buy-and-activate chip while
+affordable and idle. Neither → nothing renders for it, so the tray never shows an empty slot as an
+upsell. A Wonder countdown is prepended when active so it always leads.
+
+Decor no longer appears here — it's cosmetic now, with no gameplay state worth surfacing in a
+glanceable HUD row.
 
 Rebuilt every 0.25 s, but the generated HTML is compared against a stored signature first and only
 written when it differs — otherwise a countdown that only changes once a second would thrash the
@@ -174,7 +179,9 @@ Each dock button carries a dot shown when something in that shop is affordable a
 already open. Recomputed every 0.6 s in `updateDockDots()`. This is the primary discovery mechanism
 — it's how a player learns a shop is worth opening without being nagged.
 
-Apiary shows a dot when jars are waiting, Craft when something is ready to make or collect.
+Upgrades and Shop show a dot when something in them is affordable, Apiary when jars are waiting,
+Craft when something is ready to make or collect. Boosters have no dock dot — the buy chip itself,
+appearing in the rail only when affordable, is the affordance.
 
 The same idea is the intended basis for **contextual upgrade affordances** in
 [15-navigation-and-ia.md](15-navigation-and-ia.md): once upgrades live on the objects they upgrade,

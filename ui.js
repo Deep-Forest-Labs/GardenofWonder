@@ -313,23 +313,25 @@
   }
 
   /* ============ rail chips ============ */
+  /* The boost tray: active boosts show a countdown, affordable-but-idle ones show
+     a tappable buy chip. Nothing renders for a boost that's neither — an empty
+     slot in a cozy game reads as nagging, not an upsell. */
   function renderRail() {
     const now = Game.nowSeconds();
     let html = '';
     DATA.boosters.forEach((b) => {
-      if (!Game.activeBoost(b.id)) return;
-      const remain = Math.max(0, S.boosters[b.id] - now);
-      const p = Math.max(0, Math.min(1, remain / b.dur));
-      html += `<div class="chip timed" style="--tint:${b.tint}">
-        <span class="ring" style="--p:${p.toFixed(3)}"><i>${Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain)}</i></span>
-        <span>${b.name}</span></div>`;
-    });
-    const counts = {};
-    S.decor.forEach((d) => { counts[d.id] = (counts[d.id] || 0) + 1; });
-    Object.entries(counts).forEach(([id, n]) => {
-      const def = DATA.decor.find((d) => d.id === id);
-      if (!def) return;
-      html += `<div class="chip"><span class="chip-ico">${Icons.get(def.icon)}</span><span>${def.name}</span><span class="count">${n}</span></div>`;
+      if (Game.activeBoost(b.id)) {
+        const remain = Math.max(0, S.boosters[b.id] - now);
+        const p = Math.max(0, Math.min(1, remain / b.dur));
+        html += `<div class="chip timed" style="--tint:${b.tint}">
+          <span class="ring" style="--p:${p.toFixed(3)}"><i>${Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain)}</i></span>
+          <span>${b.name}</span></div>`;
+      } else if (S.tickets >= b.tickets) {
+        html += `<button class="chip buyable" data-boost="${b.id}" style="--tint:${b.tint}">
+          <span class="chip-ico">${Icons.get(b.icon)}</span>
+          <span>${b.name}</span>
+          <span class="chip-price">${Icons.get('ticket')}${fmt(b.tickets)}</span></button>`;
+      }
     });
     if (Game.wonderActive()) {
       const remain = Math.max(0, S.wonder.until - now);
@@ -363,11 +365,10 @@
   let seedSort = 'tier';
 
   const TABS = [
-    { id: 'badges', label: 'Badges' },
-    { id: 'decor', label: 'Decor' },
-    { id: 'boosters', label: 'Boosts' },
+    { id: 'upgrades', label: 'Upgrades' },
     { id: 'apiary', label: 'Apiary' },
-    { id: 'craft', label: 'Craft' }
+    { id: 'craft', label: 'Craft' },
+    { id: 'shop', label: 'Shop' }
   ];
   const SHOP_TABS = TABS.map((t) => t.id);
 
@@ -398,8 +399,7 @@
     if (!sheetMode) return;
     const keep = resetScroll ? 0 : el.sheetBody.scrollTop;
     const titles = {
-      badges: 'Badges', decor: 'Decor', boosters: 'Boosts',
-      apiary: 'Apiary', craft: 'Apothecary',
+      upgrades: 'Upgrades', apiary: 'Apiary', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings'
     };
     el.sheetTitle.textContent = titles[sheetMode] || '';
@@ -418,8 +418,7 @@
     }
 
     const render = {
-      badges: renderBadges, decor: renderDecor, boosters: renderBoosters,
-      apiary: renderApiary, craft: renderCraft,
+      upgrades: renderUpgrades, apiary: renderApiary, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings
     }[sheetMode];
     el.sheetBody.innerHTML = render ? render() : '';
@@ -461,7 +460,7 @@
     </button>`;
   }
 
-  function renderBadges() {
+  function renderUpgrades() {
     const core = CORE_UPGRADES.map(upgradeCard).join('');
     const harvesters = PLOT_AUTOPLANTERS.filter(({ idx }) => !S.grid[idx].locked).map(({ key }) => upgradeCard(key)).join('');
     const lockedCount = PLOT_AUTOPLANTERS.filter(({ idx }) => S.grid[idx].locked).length;
@@ -473,7 +472,7 @@
       ${lockedCount ? `<p class="sheet-note" style="margin-top:10px">${lockedCount} more harvester${lockedCount > 1 ? 's' : ''} unlock with new plots.</p>` : ''}`;
   }
 
-  function renderDecor() {
+  function renderShop() {
     const cards = DATA.decor.map((d) => {
       const owned = Game.decorCount(d.id);
       const pot = d.currency === 'gems' ? S.gems : d.currency === 'tickets' ? S.tickets : S.credits;
@@ -490,30 +489,7 @@
         ${priceTag(d.cost, d.currency, can)}
       </button>`;
     }).join('');
-    return `<p class="sheet-note">Decor stacks — buy the same piece again for another helping of its bonus.</p>
-      <div class="card-grid">${cards}</div>`;
-  }
-
-  function renderBoosters() {
-    const now = Game.nowSeconds();
-    const cards = DATA.boosters.map((b) => {
-      const active = Game.activeBoost(b.id);
-      const can = S.tickets >= b.tickets;
-      const remain = active ? Math.max(0, S.boosters[b.id] - now) : 0;
-      return `<button class="card ${active ? 'active-boost' : can ? 'affordable' : ''}" data-buy="booster" data-key="${b.id}">
-        ${active ? `<span class="card-timer">${fmtTime(remain)}</span>` : ''}
-        <div class="card-top">
-          <span class="card-badge" style="--badge-c:${b.tint}">${Icons.get(b.icon)}</span>
-          <span>
-            <span class="card-title">${b.name}</span>
-            <span class="card-sub">${fmtTime(b.dur)}</span>
-          </span>
-        </div>
-        <span class="card-desc">${b.desc}</span>
-        ${priceTag(b.tickets, 'tickets', can)}
-      </button>`;
-    }).join('');
-    return `<p class="sheet-note">Spend tickets on short, powerful surges. Tickets drop every 10 harvests and from lucky crits.</p>
+    return `<p class="sheet-note">Purely decorative — dress up your garden however you like. Buy the same piece again for another copy.</p>
       <div class="card-grid">${cards}</div>`;
   }
 
@@ -715,12 +691,12 @@
   }
 
   function renderBonuses() {
-    const tapMult = (1 + Game.decorVal('tapYield')) * (1 + Game.boostVal('tapPower')) * (1 + Game.boostVal('globalCredits'));
+    const tapMult = (1 + Game.boostVal('tapPower')) * (1 + Game.boostVal('globalCredits'));
     const tapEff = S.tap.power * tapMult * Game.wonderMult();
-    const critChance = S.tap.critChance + Game.decorVal('critChance') + Game.boostVal('critChance');
-    const critMult = S.tap.critMult * (1 + Game.decorVal('critMult'));
+    const critChance = S.tap.critChance + Game.boostVal('critChance');
+    const critMult = S.tap.critMult;
     const growBonus = Math.max(0, 1 - Game.growModifier());
-    const harvestBonus = Game.decorVal('tapYield') * 0.3 + Game.boostVal('globalCredits');
+    const harvestBonus = Game.boostVal('globalCredits');
     const ah = S.upgrades.autoHarvest;
 
     const line = (k, v, d) => `<div class="stat-line"><span class="kk"><span class="k">${k}</span>${d ? `<span class="d">${d}</span>` : ''}</span><span class="v">${v}</span></div>`;
@@ -735,14 +711,14 @@
     return `
       <div class="stat-block">
         <h3>${Icons.get('fist')} Tap Power</h3>
-        ${line('Per tap', fmt(tapEff), `Base ${S.tap.power} · ${signed(tapMult - 1)} from decor & boosts`)}
+        ${line('Per tap', fmt(tapEff), `Base ${S.tap.power} · ${signed(tapMult - 1)} from boosts`)}
         ${line('Crit chance', pct(Math.min(critChance, 0.99), 1), 'Chance for a big bonus tap')}
         ${line('Crit multiplier', `${critMult.toFixed(1)}x`, 'Payout spike when a crit lands')}
         ${line('Combo cap', `${S.tap.comboMax}`, 'Ring around the flower fills as you tap')}
       </div>
       <div class="stat-block">
         <h3>${Icons.get('sprout')} Garden Mastery</h3>
-        ${line('Growth speed', signed(growBonus), 'Sprinklers, decor and boosts')}
+        ${line('Growth speed', signed(growBonus), 'Sprinklers and boosts')}
         ${line('Rarity odds', signed(Game.boostVal('rarityWeight')), 'Chance of Rare, Epic and Legendary harvests')}
         ${line('Harvest yield', signed(harvestBonus), 'Extra credits on every harvest')}
         ${line('Wonder bonus', Game.wonderActive() ? `x${WONDER.payoutMult} active` : 'Idle', `Triggers randomly — ${S.stats.wonders || 0} so far`)}
@@ -750,7 +726,7 @@
       <div class="stat-block">
         <h3>${Icons.get('drone')} Automation</h3>
         ${ah ? line('Harvest Drone', `Lv ${ah}`, `Collects a ready plot every ${Math.max(0.7, 3 - ah * 0.5).toFixed(1)}s`) : line('Harvest Drone', 'Locked', 'Buy the badge to auto-collect')}
-        ${harvesters || line('Harvesters', 'None hired', 'Hire them in the Badges tab')}
+        ${harvesters || line('Harvesters', 'None hired', 'Hire them in the Upgrades tab')}
       </div>
       <div class="stat-block">
         <h3>${Icons.get('star')} Records</h3>
@@ -846,7 +822,7 @@
     const buy = e.target.closest('[data-buy]');
     if (buy) {
       const { buy: kind, key } = buy.dataset;
-      const ok = kind === 'upgrade' ? Game.buyUpgrade(key) : kind === 'decor' ? Game.buyDecor(key) : Game.buyBooster(key);
+      const ok = kind === 'upgrade' ? Game.buyUpgrade(key) : Game.buyDecor(key);
       if (ok) {
         const c = FX.centerOf(buy);
         FX.sparks(c.x, c.y, 12, '#ffe066');
@@ -907,6 +883,19 @@
 
   $('#sheetClose').addEventListener('click', closeSheet);
   el.scrim.addEventListener('click', closeSheet);
+
+  el.rail.addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-boost]');
+    if (!chip) return;
+    if (Game.buyBooster(chip.dataset.boost)) {
+      const c = FX.centerOf(chip);
+      FX.sparks(c.x, c.y, 12, '#ffe066');
+      FX.ring(c.x, c.y, '#ffffff', 0.45, 70);
+    } else {
+      Sound.play('deny');
+      FX.shake(4);
+    }
+  });
 
   el.dock.addEventListener('click', (e) => {
     const b = e.target.closest('.dock-btn');
@@ -1013,10 +1002,9 @@
       const pot = d.currency === 'gems' ? S.gems : d.currency === 'tickets' ? S.tickets : S.credits;
       return pot >= d.cost;
     });
-    const canBoost = DATA.boosters.some((b) => S.tickets >= b.tickets && !Game.activeBoost(b.id));
     const canHive = Game.jarsWaiting() > 0 || (!Game.hiveCount() && S.credits >= Game.nextHiveCost());
     const canBrew = Object.keys(S.goods).length > 0 || CRAFT_RECIPES.some((r) => Game.canCraft(r));
-    const map = { badges: canUpgrade, decor: canDecor, boosters: canBoost, apiary: canHive, craft: canBrew };
+    const map = { upgrades: canUpgrade, apiary: canHive, craft: canBrew, shop: canDecor };
     $$('.dock-btn', el.dock).forEach((b) => {
       const dot = $('.dock-dot', b);
       const show = map[b.dataset.tab] && sheetMode !== b.dataset.tab;
@@ -1197,12 +1185,8 @@
         const d = DATA.decor.find((x) => x.id === key);
         const pot = d.currency === 'gems' ? S.gems : d.currency === 'tickets' ? S.tickets : S.credits;
         can = pot >= d.cost;
-      } else {
-        const b = DATA.boosters.find((x) => x.id === key);
-        can = S.tickets >= b.tickets;
-        node.classList.toggle('active-boost', Game.activeBoost(key) === true);
       }
-      node.classList.toggle('affordable', Boolean(can) && !node.classList.contains('active-boost'));
+      node.classList.toggle('affordable', can);
       const price = $('.price', node);
       if (price && !price.classList.contains('maxed')) {
         price.classList.toggle('ok', can);
@@ -1254,7 +1238,7 @@
       updateDockDots();
       refreshCoach();
       updateSky();
-      if (sheetMode === 'boosters' || sheetMode === 'settings') syncAfford();
+      if (sheetMode === 'settings') syncAfford();
     }
 
     requestAnimationFrame(frame);
@@ -1296,6 +1280,22 @@
       }
       say('greet', true);
     }, 700);
+
+    if (info.decorRefund) {
+      const r = info.decorRefund;
+      const parts = [];
+      if (r.credits) parts.push(`${fmt(r.credits)} coins`);
+      if (r.gems) parts.push(`${fmt(r.gems)} gems`);
+      if (r.tickets) parts.push(`${fmt(r.tickets)} tickets`);
+      setTimeout(() => {
+        toast({
+          title: 'Decor is just for show now',
+          body: `Refunded ${parts.join(' and ')} for what you paid.`,
+          art: Icons.get('decor'),
+          ms: 3600
+        });
+      }, info.migrated ? 1500 : 700);
+    }
 
     requestAnimationFrame((t) => { last = t; frame(t); });
   }

@@ -195,5 +195,73 @@ let threw = null;
 try { advance(200); } catch (e) { threw = e.message; }
 check('ticking it does not throw', threw === null, threw || '');
 
+group('decor migration refunds owned stat-carrying decor once');
+store['gw-save'] = JSON.stringify({
+  version: 2, credits: 0, gems: 0, tickets: 0, grid: S.grid, upgrades: S.upgrades,
+  decor: [
+    { id: 'gnome', type: 'critChance', val: 0.05 },
+    { id: 'gnome', type: 'critChance', val: 0.05 },
+    { id: 'shrine', type: 'growSpeed', val: 0.1 }
+  ]
+});
+let info = G.load();
+check('gems are refunded per copy at purchase price', S.gems === 500, `got ${S.gems}`);
+check('credits are refunded in the currency it was bought with', S.credits === 1000, `got ${S.credits}`);
+check('tickets are untouched — nothing was bought with them', S.tickets === 0);
+check('ownership is kept, just stripped to a cosmetic record', S.decor.length === 3);
+check('no decor entry carries a stat anymore', S.decor.every((d) => !('type' in d) && !('val' in d)), JSON.stringify(S.decor));
+check('load() reports the refund for a one-time toast', info.decorRefund &&
+  info.decorRefund.gems === 500 && info.decorRefund.credits === 1000 && info.decorRefund.count === 3,
+  JSON.stringify(info.decorRefund));
+check('decorVal was deleted along with the mechanic, not left returning zero', typeof G.decorVal === 'undefined');
+
+group('decor migration only ever runs once');
+store['gw-save'] = JSON.stringify({
+  version: 3, credits: 50, gems: 0, tickets: 0, grid: S.grid, upgrades: S.upgrades,
+  decor: [{ id: 'gnome' }]
+});
+info = G.load();
+check('an already-migrated save is not refunded again', info.decorRefund === null);
+check('credits are untouched', S.credits === 50);
+check('the cosmetic decor still comes back', S.decor.length === 1 && S.decor[0].id === 'gnome');
+
+group('decor no longer moves the numbers it used to');
+S.decor = [];
+check('grow speed ignores owned decor (none owned)', Math.abs(G.growModifier() - 1) < 1e-9, `got ${G.growModifier()}`);
+S.decor = [{ id: 'gnome' }, { id: 'fountain' }, { id: 'lanterntree' }];
+check('grow speed ignores owned decor (some owned)', Math.abs(G.growModifier() - 1) < 1e-9, `got ${G.growModifier()}`);
+
+S.boosters = {};
+S.tap = { power: 10, critChance: 0, critMult: 10, combo: 0, comboMax: 50 };
+S.decor = [];
+S.credits = 1e6;
+let before = S.credits;
+G.tapFlower();
+const gainBare = S.credits - before;
+S.decor = [{ id: 'gnome' }, { id: 'fountain' }, { id: 'lanterntree' }];
+S.credits = 1e6;
+before = S.credits;
+G.tapFlower();
+const gainWithDecor = S.credits - before;
+check('tap payout ignores owned decor', gainBare === gainWithDecor && gainBare === 10, `${gainBare} vs ${gainWithDecor}`);
+
+clearGarden();
+S.apiary.hives = [];
+const meanHarvest = (decorOwned) => {
+  S.decor = decorOwned;
+  let total = 0;
+  const runs = 12000;
+  for (let i = 0; i < runs; i += 1) {
+    S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '' };
+    total += G.harvest(0).payout;
+  }
+  return total / runs;
+};
+const harvestBare = meanHarvest([]);
+const harvestWithDecor = meanHarvest([{ id: 'gnome' }, { id: 'fountain' }, { id: 'lanterntree' }]);
+const harvestRatio = harvestWithDecor / harvestBare;
+check('harvest payout ignores owned decor', Math.abs(harvestRatio - 1) < 0.05, `ratio ${harvestRatio.toFixed(3)}`);
+S.decor = [];
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

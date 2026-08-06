@@ -137,11 +137,12 @@ const DATA = {
     autoHarvest:   { name: 'Drone Harvester',   short: 'Harvest Drone', base: 4500, scale: 2.4, icon: 'drone', desc: 'Automatically harvest a ready plot on a timer.' }
   },
 
+  /* Purely cosmetic — no gameplay effect. See docs/15-navigation-and-ia.md for why. */
   decor: [
-    { id: 'gnome',      name: 'Gnome of Fortune',  currency: 'gems',    cost: 250,  type: 'critChance', val: 0.05, spr: '🧙', icon: 'gnome',   desc: '+5% tap crit chance from the lucky gnome.' },
-    { id: 'shrine',     name: 'Butterfly Shrine',  currency: 'credits', cost: 1000, type: 'growSpeed',  val: 0.1,  spr: '🦋', icon: 'butterfly', desc: '+10% plant growth speed with calming butterflies.' },
-    { id: 'fountain',   name: 'Crystal Fountain',  currency: 'credits', cost: 5000, type: 'tapYield',   val: 0.1,  spr: '⛲', icon: 'fountain', desc: '+10% tap earnings from shimmering waters.' },
-    { id: 'lanterntree', name: 'Lantern Tree',     currency: 'tickets', cost: 200,  type: 'critMult',   val: 0.01, spr: '🏮', icon: 'lantern',  desc: '+1% tap crit multiplier each level from glowing lanterns.' }
+    { id: 'gnome',      name: 'Gnome of Fortune',  currency: 'gems',    cost: 250,  spr: '🧙', icon: 'gnome',   desc: 'A cheerful garden gnome. Purely for luck of the decorative kind.' },
+    { id: 'shrine',     name: 'Butterfly Shrine',  currency: 'credits', cost: 1000, spr: '🦋', icon: 'butterfly', desc: 'Butterflies drift lazily around the little shrine.' },
+    { id: 'fountain',   name: 'Crystal Fountain',  currency: 'credits', cost: 5000, spr: '⛲', icon: 'fountain', desc: 'Water trickles prettily. Doesn\u2019t do anything, and that\u2019s fine.' },
+    { id: 'lanterntree', name: 'Lantern Tree',     currency: 'tickets', cost: 200,  spr: '🏮', icon: 'lantern',  desc: 'Glows warm at dusk. A nice spot for the flower to nap.' }
   ],
 
   boosters: [

@@ -311,10 +311,14 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   width:13px;height:13px;border-radius:50%;background:#fff;
   display:grid;place-items:center;font-style:normal;font-size:8px;
 }
-.chip .count{
+.chip.buyable{background:linear-gradient(180deg,#fffdf7,#fff3b0)}
+.chip.buyable:active{transform:translateY(2px)}
+.chip .chip-price{
+  display:flex;align-items:center;gap:2px;
   background:var(--ink);color:#fff;border-radius:999px;
-  padding:1px 5px;font-size:10px;
+  padding:1px 6px;font-size:10px;
 }
+.chip .chip-price svg{width:12px;height:12px}
 
 /* ---------- stage / garden ---------- */
 .stage{display:grid;place-items:center;min-height:0;min-width:0;padding:2px 0;overflow:visible}
@@ -581,7 +585,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .speech.show{opacity:1;transform:translate(-50%,0) scale(1)}
 
 /* ---------- dock ---------- */
-.dock{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.dock{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .dock-btn{
   position:relative;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
@@ -694,12 +698,6 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   content:'';position:absolute;inset:0;border-radius:15px;
   box-shadow:inset 0 0 0 3px rgba(81,207,102,.55);pointer-events:none;
 }
-.card.active-boost{background:linear-gradient(180deg,#fff,#f1e6ff)}
-.card.active-boost::after{
-  content:'';position:absolute;inset:0;border-radius:15px;
-  box-shadow:inset 0 0 0 3px rgba(151,117,250,.8);pointer-events:none;
-}
-
 .card-top{display:flex;align-items:center;gap:8px}
 .card-badge{
   width:46px;height:46px;flex:none;border-radius:50%;
@@ -733,13 +731,6 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .price.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
 .price.no{background:linear-gradient(180deg,#ffe3e3,#ffc9c9)}
 .price.maxed{background:linear-gradient(180deg,#e9ecef,#dee2e6)}
-
-.card-timer{
-  position:absolute;top:7px;right:7px;
-  padding:2px 7px;border:2.5px solid var(--ink);border-radius:999px;
-  background:var(--coin);font-size:11px;font-weight:800;line-height:1.3;
-  box-shadow:0 2px 0 var(--ink-2);
-}
 
 /* seed rows */
 .seed-row{

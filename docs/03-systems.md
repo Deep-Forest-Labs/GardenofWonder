@@ -7,9 +7,9 @@ out inline.
 
 | Currency | Internal name | Earned from | Spent on |
 | --- | --- | --- | --- |
-| Coins | `credits` | Taps, harvests | Seeds, plot unlocks, badges, two decor pieces |
-| Tickets | `tickets` | Every 10th harvest, lucky crits, rare seed drops | Boosters, Lantern Tree decor |
-| Gems | `gems` | 5% of taps, harvest drops | Gnome of Fortune decor |
+| Coins | `credits` | Taps, harvests | Seeds, plot unlocks, badges, two cosmetic decor pieces |
+| Tickets | `tickets` | Every 10th harvest, lucky crits, rare seed drops | Boosters, Lantern Tree (cosmetic) decor |
+| Gems | `gems` | 5% of taps, harvest drops | Gnome of Fortune (cosmetic) decor |
 
 A new garden starts with 100 coins and nothing else.
 
@@ -20,9 +20,9 @@ Gems are the least-used currency: the Gnome of Fortune at 250 gems is currently 
 Base values: 1 coin per tap, 5% crit chance, 10× crit multiplier.
 
 ```
-power   = tap.power × (1 + decor.tapYield) × (1 + boost.tapPower) × (1 + boost.globalCredits)
-crit%   = tap.critChance + decor.critChance + boost.critChance
-critMul = tap.critMult × (1 + decor.critMult)
+power   = tap.power × (1 + boost.tapPower) × (1 + boost.globalCredits)
+crit%   = tap.critChance + boost.critChance
+critMul = tap.critMult
 
 gain = power
 if crit: gain × critMul
@@ -38,7 +38,7 @@ Side rolls on every tap:
 
 Crit chance is uncapped in the simulation. The Almanac clamps its *display* to 99%, but nothing
 prevents the real value exceeding 1.0, at which point every tap crits. Reaching that takes 95
-levels of Lucky Charm or a large stack of gnomes.
+levels of Lucky Charm.
 
 ### The combo ring
 
@@ -67,7 +67,7 @@ and can't be bought.
 ### Growth time
 
 ```
-growModifier = max(0.3, 1 − (decor.growSpeed + boost.growSpeed + sprinklerLevels × 0.05))
+growModifier = max(0.3, 1 − (boost.growSpeed + sprinklerLevels × 0.05))
 actualGrowTime = seed.grow × growModifier
 ```
 
@@ -105,12 +105,8 @@ A plot is ready when elapsed time reaches its grow time. Tapping a ready plot ha
 
 ```
 rarity  = weighted roll
-payout  = round(seed.yield × rarity.mult × (1 + decor.tapYield × 0.3 + boost.globalCredits) × wonderMult)
+payout  = round(seed.yield × rarity.mult × (1 + boost.globalCredits) × wonderMult)
 ```
-
-Note that `decor.tapYield` — the Crystal Fountain's stat — applies at only **30% strength** to
-harvests, versus full strength to taps. The stat is named for its primary use; it is not a
-harvest-specific bonus.
 
 ### Rarity
 
@@ -166,12 +162,14 @@ expensive one it can currently afford**, checking downward from its ceiling. Thi
 high-level harvester quietly spends your coin balance on premium seeds — which is the intended
 behaviour, but it's the reason a big balance can drain while you're in a menu.
 
-Harvesters only appear in the Badges tab for plots you've already unlocked.
+Harvesters only appear in the Upgrades tab for plots you've already unlocked.
 
 ## Boosters
 
 Bought with tickets, timed, and stackable across different boosters. Buying one that's already
-running **replaces** its expiry rather than extending it.
+running **replaces** its expiry rather than extending it. No shop panel — a booster surfaces as a
+chip in the status rail, tap to buy-and-activate. See
+[15-navigation-and-ia.md](15-navigation-and-ia.md).
 
 | Booster | Cost | Duration | Effect |
 | --- | --- | --- | --- |
@@ -184,18 +182,23 @@ Expiry is checked each tick and removal emits `panels` so open shop cards update
 
 ## Decor
 
-Permanent, **stacking**, and repeatable — buying a second gnome gives a second +5%. There is no
-purchase limit, so decor is the long-term way to push a stat past what badges allow.
+Purely cosmetic since navigation phase 1 — see [15-navigation-and-ia.md](15-navigation-and-ia.md).
+Lives in the Shop tab, bought with `Game.buyDecor(id)`. Permanent and repeatable — buying a second
+gnome is a second copy in `state.decor`, tracked only for `Game.decorCount(id)` display.
 
-| Piece | Cost | Stat | Per copy |
-| --- | --- | --- | --- |
-| Gnome of Fortune | 250 gems | `critChance` | +5% |
-| Butterfly Shrine | 1,000 coins | `growSpeed` | +10% |
-| Crystal Fountain | 5,000 coins | `tapYield` | +10% |
-| Lantern Tree | 200 tickets | `critMult` | +1% |
+| Piece | Cost |
+| --- | --- |
+| Gnome of Fortune | 250 gems |
+| Butterfly Shrine | 1,000 coins |
+| Crystal Fountain | 5,000 coins |
+| Lantern Tree | 200 tickets |
 
-Prices are flat — the tenth costs the same as the first — which makes decor strictly better value
-the longer you play, unlike badges. Worth keeping in mind when balancing.
+Prices are flat — the tenth costs the same as the first. No effect on any formula on this page;
+decor doesn't appear in any of them anymore.
+
+Saves from before this change had decor carrying real stat bonuses. `Game.load()` refunds each
+owned copy at its purchase price the first time such a save loads — see
+[07-save-data.md](07-save-data.md) for the migration mechanics.
 
 ## The Wonder Effect
 
