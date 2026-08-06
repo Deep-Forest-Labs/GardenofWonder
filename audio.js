@@ -123,6 +123,17 @@ const Sound = (() => {
     },
     open: () => tone({ freq: note(12), type: 'sine', dur: 0.12, gain: 0.14, slide: 1.3 }),
     close: () => tone({ freq: note(12), type: 'sine', dur: 0.12, gain: 0.12, slide: 0.75 }),
+    rainDance: () => {
+      [0, 0.07, 0.13, 0.21].forEach((at, i) => noise({ dur: 0.09, gain: 0.08, hp: 3000 + i * 500, at }));
+      tone({ freq: note(9), type: 'sine', dur: 0.3, gain: 0.1, slide: 0.5, at: 0.05 });
+    },
+    beeSwarm: () => {
+      [0, 0.05, 0.1, 0.15, 0.2].forEach((at, i) => tone({ freq: note(2 + (i % 2) * 3 + 12), type: 'sawtooth', dur: 0.08, gain: 0.06, at }));
+      tone({ freq: note(16 + 12), type: 'triangle', dur: 0.18, gain: 0.16, at: 0.26 });
+    },
+    ladybug: () => {
+      [0, 4, 7, 12].forEach((s, i) => tone({ freq: note(s + 12), type: 'sine', dur: 0.14, gain: 0.13, at: i * 0.045 }));
+    },
     rare: () => {
       [0, 7, 12].forEach((s, i) => tone({ freq: note(s + 12), type: 'sine', dur: 0.3, gain: 0.13, at: i * 0.07 }));
     },

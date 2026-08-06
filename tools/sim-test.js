@@ -306,14 +306,14 @@ check('unowned badge never shaves grow time', S.grid[0].grow === growAtStart, `$
 
 let rainLevel = 0;
 while (!G.upgradeMaxed('rainDance') && rainLevel < 100) { G.buyUpgrade('rainDance'); rainLevel += 1; }
-check('ten levels reach the 10% cap', rainLevel === 10, `took ${rainLevel} levels`);
+check('ten levels reach the 2% cap', rainLevel === 10, `took ${rainLevel} levels`);
 
 const growBeforeMaxed = S.grid[0].grow;
-const rainTaps = 4000;
+const rainTaps = 20000; // needs a much bigger sample than before — 2% is a lot noisier than 10%
 for (let i = 0; i < rainTaps; i += 1) G.tapFlower();
 const totalShaved = growBeforeMaxed - S.grid[0].grow;
 const rainRate = (totalShaved / 3) / rainTaps;
-check('maxed Rain Dance triggers at roughly 10% of taps', Math.abs(rainRate - 0.10) < 0.02, `rate ${rainRate.toFixed(3)}`);
+check('maxed Rain Dance triggers at roughly 2% of taps', Math.abs(rainRate - 0.02) < 0.006, `rate ${rainRate.toFixed(4)}`);
 G.reset();
 
 group('Bee Swarm fills a jar in an open hive');
@@ -329,9 +329,9 @@ check('unowned badge never fills a jar', S.apiary.hives[0].jars.length === 0, `g
 
 let beeLevel = 0;
 while (!G.upgradeMaxed('beeSwarm') && beeLevel < 100) { G.buyUpgrade('beeSwarm'); beeLevel += 1; }
-check('five levels reach the 5% cap', beeLevel === 5, `took ${beeLevel} levels`);
+check('five levels reach the 1% cap', beeLevel === 5, `took ${beeLevel} levels`);
 
-for (let i = 0; i < 300; i += 1) G.tapFlower();
+for (let i = 0; i < 3000; i += 1) G.tapFlower(); // p=0.01(fail all)^3000 is effectively impossible
 const swarmJars = S.apiary.hives[0].jars;
 check('maxed badge fills at least one jar', swarmJars.length > 0, `got ${swarmJars.length}`);
 check('jar variety matches what is blooming', swarmJars.every((j) => j === 'daisy'), JSON.stringify(swarmJars));
@@ -350,9 +350,9 @@ check('unowned badge never lands a ladybug', S.grid[0].luckyBug === false);
 
 let bugLevel = 0;
 while (!G.upgradeMaxed('ladybug') && bugLevel < 100) { G.buyUpgrade('ladybug'); bugLevel += 1; }
-check('eight levels reach the 8% cap', bugLevel === 8, `took ${bugLevel} levels`);
+check('eight levels reach the 1.6% cap', bugLevel === 8, `took ${bugLevel} levels`);
 
-for (let i = 0; i < 300; i += 1) G.tapFlower();
+for (let i = 0; i < 2000; i += 1) G.tapFlower(); // p=0.016(fail all)^2000 is effectively impossible
 check('maxed badge lands a ladybug on the only growing plot', S.grid[0].luckyBug === true);
 G.reset();
 

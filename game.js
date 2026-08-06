@@ -222,6 +222,10 @@ const Game = (() => {
      of its badge, so an unbought badge can never fire. */
   const RAIN_DANCE_SHAVE = 3;   // seconds shaved off the chosen plot's remaining grow time
   const LADYBUG_RARITY_BONUS = 1; // added to rollRarity's `extra` for that one harvest
+  // Deliberately tiny — these are slot-machine rolls, not efficient growth levers. Levelling a
+  // badge only nudges its odds by a fifth of a percent; the moment it fires is what's meant to
+  // feel big, not the climb toward it. See docs/10-decision-log.md.
+  const PROC_CHANCE_PER_LEVEL = 0.002;
 
   /** Unlocked, seeded, not-yet-ready plots — eligible targets for a garden proc. */
   function growingPlotIndices() {
@@ -232,7 +236,7 @@ const Game = (() => {
 
   function rollRainDance() {
     const lvl = state.upgrades.rainDance;
-    if (!lvl || Math.random() >= lvl * 0.01) return null;
+    if (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL) return null;
     const idxs = growingPlotIndices();
     if (!idxs.length) return null;
     const idx = idxs[Math.floor(Math.random() * idxs.length)];
@@ -246,7 +250,7 @@ const Game = (() => {
 
   function rollBeeSwarm() {
     const lvl = state.upgrades.beeSwarm;
-    if (!lvl || Math.random() >= lvl * 0.01) return null;
+    if (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL) return null;
     const openHives = [];
     state.apiary.hives.forEach((h, i) => { if (h.jars.length < APIARY.capacity) openHives.push(i); });
     if (!openHives.length) return null;
@@ -258,7 +262,7 @@ const Game = (() => {
 
   function rollLadybug() {
     const lvl = state.upgrades.ladybug;
-    if (!lvl || Math.random() >= lvl * 0.01) return null;
+    if (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL) return null;
     const idxs = growingPlotIndices();
     if (!idxs.length) return null;
     // Prefer a plot that isn't already lucky, so triggers don't pile onto one spot.

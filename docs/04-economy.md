@@ -135,6 +135,15 @@ would have made the full 10% cost roughly 5.5M coins — a bad deal for a much s
 was repriced to 400 base at scale 1.7 (114K coins to fully max). See
 [10-decision-log.md](10-decision-log.md).
 
+The three proc badges' trigger chances were later cut again — from `1%/level` to `0.2%/level` — to
+make them feel like rare, volatile slot-machine moments instead of a steady growth lever (see the
+decision log entry linked above). Their prices were deliberately **not** re-cut to match: buying
+one now costs the same 62K–150K coins for a fifth of the old expected value, which is a genuinely
+worse deal on paper. That's accepted on purpose — these three are the game's only "buy a chance at
+a fun moment" badges rather than "buy a guaranteed number," so their value isn't meant to be judged
+purely by coins-per-percent the way the rest of the upgrade list is. If playtesting shows players
+resent the price at the new rate, repricing them down is the first lever to pull.
+
 ### Per-plot harvesters
 
 Eight badges, `plot1Harvester` through `plot8Harvester`, generated in `data.js` rather than written
@@ -164,9 +173,9 @@ design, and harvesters are meant to be levelled only a handful of times.
 | Combo cap | 100 | 5 Combo Coil levels |
 | Hold-to-tap interval | 180 ms | 12 Quick Grip levels |
 | Sprinkler grow bonus | 10% | 10 Sprinkler levels |
-| Rain Dance trigger chance | 10% | 10 Rain Dance levels |
-| Bee Swarm trigger chance | 5% | 5 Bee Swarm levels |
-| Lucky Ladybug trigger chance | 8% | 8 Lucky Ladybug levels |
+| Rain Dance trigger chance | 2% | 10 Rain Dance levels |
+| Bee Swarm trigger chance | 1% | 5 Bee Swarm levels |
+| Lucky Ladybug trigger chance | 1.6% | 8 Lucky Ladybug levels |
 | Growth modifier (defensive floor, rarely reachable now) | 0.3 (70% faster) | — |
 | Drone cadence | 0.7 s | 5 Harvest Drone levels |
 | Crit chance | *(none)* | — |

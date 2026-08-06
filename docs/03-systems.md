@@ -67,20 +67,47 @@ press, not immediately.
 ### Tap-triggered garden procs
 
 Three badges each add an independent slot-machine roll to `tapFlower()` — every tap (manual or a
-hold-tick) is a separate chance for each of them to fire. All three share the same shape: `level%`
-chance, gated on owning at least one level, capped at a badge-specific level. None of them can fire
-before the badge is bought, and none of them can crowd out the others — they're checked
-independently in the same call.
+hold-tick) is a separate chance for each of them to fire. All three share the same shape:
+`level × PROC_CHANCE_PER_LEVEL` chance (0.2%/level, `game.js`), gated on owning at least one level,
+capped at a badge-specific level. None of them can fire before the badge is bought, and none of
+them can crowd out the others — they're checked independently in the same call.
+
+The 0.2%/level rate is deliberately tiny — see
+[the decision log](./10-decision-log.md#tap-triggered-garden-procs-rain-dance-bee-swarm-lucky-ladybug)
+for why these were dropped from an earlier `1%/level` pass. Levelling one of these badges barely
+moves the needle; the payoff is meant to come from the rare moment it fires, not from the climb
+toward it.
 
 | Badge | Chance | Cap | Effect | Dud condition |
 | --- | --- | --- | --- | --- |
-| Rain Dance | `level × 1%` | 10% (10 levels) | Instantly shaves 3s off one random growing plot's remaining grow time | No unlocked, seeded, not-yet-ready plot exists |
-| Bee Swarm | `level × 1%` | 5% (5 levels) | Adds one jar to a random hive with room, using the same "variety fixed at production" rule as natural honey (see Apiary) | No hives, or all hives are full |
-| Lucky Ladybug | `level × 1%` | 8% (8 levels) | Flags one random growing plot; that plot's *next* harvest gets `rollRarity`'s `extra` bumped by +1.0 (roughly doubling the non-common odds for that one harvest), then the flag clears | No unflagged growing plot exists (falls back to any growing plot rather than doing nothing, so a trigger is never fully wasted while any plot qualifies) |
+| Rain Dance | `level × 0.2%` | 2% (10 levels) | Instantly shaves 3s off one random growing plot's remaining grow time | No unlocked, seeded, not-yet-ready plot exists |
+| Bee Swarm | `level × 0.2%` | 1% (5 levels) | Adds one jar to a random hive with room, using the same "variety fixed at production" rule as natural honey (see Apiary) | No hives, or all hives are full |
+| Lucky Ladybug | `level × 0.2%` | 1.6% (8 levels) | Flags one random growing plot; that plot's *next* harvest gets `rollRarity`'s `extra` bumped by +1.0 (roughly doubling the non-common odds for that one harvest), then the flag clears | No unflagged growing plot exists (falls back to any growing plot rather than doing nothing, so a trigger is never fully wasted while any plot qualifies) |
 
 A "dud" (chance rolled true but no eligible target) simply does nothing — no refund, no reroll, no
 UI feedback. That's deliberate: a slot machine that fakes a win when the reels don't line up would
 undercut the whole point of an honest, readable trigger rate.
+
+Each proc has a dedicated animation in `ui.js` (`triggerRainFX`, `triggerBeeFX`,
+`triggerLadybugFX`) so a rare trigger reads as a clear, celebratory event rather than a number
+quietly changing:
+
+- **Rain Dance** — a three-beat sequence on the targeted plot: a cloud pops in above the plot
+  (`.rain-cloud`, ~0–900ms), 12 staggered drops fall and are clipped to the soil art
+  (`.rain-drop`, inside `.plot-inner`), then at +560ms a delayed payoff lands together: a
+  brightness "wet" flash on the soil, a glow flash on the progress bar, a small scale-bounce on the
+  plant, a light-blue spark burst, and a "`Xs` faster!" floater. All the ephemeral pieces are
+  rebuilt from scratch on every trigger (old nodes removed first) so a retrigger on the same plot —
+  possible at high Quick Grip tap speeds — always restarts cleanly instead of looking like a dud.
+- **Bee Swarm** — a bee sprite (reuses the `bee` icon) flies in to the talking flower from above,
+  hovers with a little buzz-wobble, then flies off downward (toward where the Apiary lives in the
+  dock), fading out. A delayed "+1 Honey" floater and amber spark burst land at +430ms, timed to
+  when the bee is "delivering."
+- **Lucky Ladybug** — the ladybug drops onto the targeted plot with a bouncy landing animation and
+  stays there as a small persistent badge (`.lucky-badge`, synced every frame from
+  `cell.luckyBug` in `renderPlots()`) so the player can see which plot is charged up while it
+  grows. The badge is removed when the flag is consumed at harvest, where a red spark burst adds a
+  extra flourish on top of the existing "Ladybug luck!" floater.
 
 ## Plots and growth
 

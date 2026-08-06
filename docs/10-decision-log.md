@@ -5,6 +5,67 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-06 — Tap-triggered garden procs (Rain Dance, Bee Swarm, Lucky Ladybug): rate cut to 0.2%/level, dedicated animations added
+
+**Decision.** One day after shipping the three tap-triggered procs at `level × 1%`, playtesting
+feedback was that they fired far too often to feel like the "slot machine" bonus they were designed
+to be. Cut the shared per-level rate from `1%` to `0.2%` (a fifth of the old rate), keeping each
+badge's existing level count so its cap shrinks proportionally:
+
+| Badge | Old cap | New cap | Levels (unchanged) |
+| --- | --- | --- | --- |
+| Rain Dance | 10% | 2% | 10 |
+| Bee Swarm | 5% | 1% | 5 |
+| Lucky Ladybug | 8% | 1.6% | 8 |
+
+The rate lives in one place now — `PROC_CHANCE_PER_LEVEL` in `game.js` — instead of being repeated
+as a literal `0.01` in each `rollXxx()` function, so the next tuning pass is a one-line change.
+
+Each proc also got a purpose-built animation in `ui.js` (`triggerRainFX`, `triggerBeeFX`,
+`triggerLadybugFX`), because at this rarity the trigger *has* to carry the "you just won something"
+feeling — the numbers involved are small and infrequent by design, so the moment has to do the
+emotional work instead. See [03-systems.md](03-systems.md#tap-triggered-garden-procs) for what each
+animation actually does.
+
+**Why cut the rate instead of, say, keeping 1% but making the effect smaller.** The brief was
+explicit: "I want things to feel more sporadic and volatile... super rare, so the idea of levelling
+it up is still a very, very small percentage." That's a statement about *frequency*, not
+*magnitude* — Rain Dance's 3s shave and Bee Swarm's honey jar are already appropriately small
+per-trigger. Shrinking the payout instead of the rate would have made triggers feel *worse* when
+they landed without making them any rarer, which is the opposite of what was asked for.
+
+**Why keep the same level counts instead of also cutting them.** Fewer levels (e.g. 2 levels of 1%
+each for Rain Dance) would hit the same 2% cap but make the badge feel like barely an upgrade path
+at all — buy it twice and you're done. Keeping 10/5/8 levels at 0.2%/level each means levelling still
+takes the same number of purchases as before; each one just nudges the odds by a sliver. That's the
+point: the climb is deliberately unexciting so all the excitement is reserved for the trigger itself.
+
+**Why the prices weren't cut along with the rate.** Buying a level now returns a fifth of the old
+expected value for the same coin cost, which is a real economic step backward. That's accepted
+deliberately, at least for now — these three badges are sold as "a chance at a fun moment," not "a
+guaranteed number," so judging them purely on coins-per-expected-percent misses the point of what
+they're for (see [04-economy.md](04-economy.md)). If they end up feeling like a trap purchase in
+practice, cutting their price is the next lever to pull — cutting the rate was the priority for now,
+since it's what makes the feature good in the first place.
+
+**Why persistent visuals for Lucky Ladybug but not the other two.** Rain Dance and Bee Swarm are
+one-shot: the effect fully resolves the instant it fires, so a single flourish (falling rain,
+a visiting bee) tells the whole story. Lucky Ladybug's payoff doesn't land until a *later* harvest,
+so without something on the plot in the meantime, the eventual "lucky!" harvest would feel
+disconnected from its cause. A small badge sprite that sits on the plot from trigger to harvest
+(synced every frame off `cell.luckyBug`, same pattern as the existing "Auto" tag) closes that gap
+at the cost of one more piece of UI state to keep in sync.
+
+**Why every FX helper rebuilds its DOM/animation state from scratch instead of reusing nodes.**
+Quick Grip can push tap cadence down to 180ms, so in principle the same plot could get re-targeted
+by the same proc well within its own ~1s animation lifetime. Toggling a class on a long-lived node
+risks a retrigger looking like nothing happened (the browser won't restart a still-running
+animation just because the same class got re-applied). Removing and recreating the ephemeral pieces
+(cloud, drops, bee sprite) every trigger guarantees a fresh animation every time, at the cost of a
+little extra DOM churn that's irrelevant at this scale.
+
+---
+
 ## 2026-08-05 — Three tap-triggered garden procs added; Sprinklers repriced and recapped
 
 **Decision.** Added three new badges that each add an independent, per-tap "slot machine" roll

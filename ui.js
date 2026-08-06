@@ -52,6 +52,7 @@
   const pct = (v, d = 0) => `${(v * 100).toFixed(d)}%`;
   const signed = (v, d = 0) => `${v > 0 ? '+' : ''}${(v * 100).toFixed(d)}%`;
   const ico = (name, cls = '') => `<span class="ico ${cls}">${Icons.get(name)}</span>`;
+  const rnd = (a, b) => a + Math.random() * (b - a);
 
   /* ============ scenery ============ */
   const SKY_KEYS = [
@@ -143,15 +144,18 @@
         <div class="lock-badge">${Icons.get('lock')}<div class="lock-cost">${Icons.get('coin')}<span></span></div></div>
         <div class="bar"><i></i></div>
         <div class="ready-pop">!</div>
-        <div class="auto-tag">Auto</div>`;
+        <div class="auto-tag">Auto</div>
+        <div class="lucky-badge">${Icons.get('ladybug')}</div>`;
       b.addEventListener('pointerdown', (e) => { e.preventDefault(); onPlotTap(idx, b); }, { passive: false });
       el.garden.appendChild(b);
       plotEls[idx] = {
         root: b,
+        inner: $('.plot-inner', b),
         slot: $('.plant-slot', b),
         bar: $('.bar i', b),
         cost: $('.lock-cost span', b),
         tag: $('.auto-tag', b),
+        lucky: $('.lucky-badge', b),
         cache: {}
       };
     }
@@ -193,6 +197,8 @@
         if (cell.aura) v.root.dataset.aura = cell.aura; else delete v.root.dataset.aura;
         c.aura = cell.aura || '';
       }
+      const lucky = Boolean(cell.luckyBug);
+      if (c.lucky !== lucky) { v.lucky.classList.toggle('show', lucky); c.lucky = lucky; }
 
       if (state === 'locked') {
         const cost = Game.plotUnlockCost(i);
@@ -744,13 +750,13 @@
       <div class="stat-block">
         <h3>${Icons.get('sparkle')} Tap Bonuses</h3>
         ${S.upgrades.rainDance
-          ? line('Rain Dance', pct(S.upgrades.rainDance * 0.01, 0), 'Chance per tap to instantly water a growing plot')
+          ? line('Rain Dance', pct(S.upgrades.rainDance * 0.002, 1), 'Chance per tap to instantly water a growing plot')
           : line('Rain Dance', 'Locked', 'Buy the badge in Upgrades to unlock')}
         ${S.upgrades.beeSwarm
-          ? line('Bee Swarm', pct(S.upgrades.beeSwarm * 0.01, 0), 'Chance per tap to fill a jar in an open hive')
+          ? line('Bee Swarm', pct(S.upgrades.beeSwarm * 0.002, 1), 'Chance per tap to fill a jar in an open hive')
           : line('Bee Swarm', 'Locked', 'Buy the badge in Upgrades to unlock')}
         ${S.upgrades.ladybug
-          ? line('Lucky Ladybug', pct(S.upgrades.ladybug * 0.01, 0), 'Chance per tap to boost a growing plot\u2019s rarity odds')
+          ? line('Lucky Ladybug', pct(S.upgrades.ladybug * 0.002, 1), 'Chance per tap to boost a growing plot\u2019s rarity odds')
           : line('Lucky Ladybug', 'Locked', 'Buy the badge in Upgrades to unlock')}
       </div>
       <div class="stat-block">
@@ -1086,6 +1092,86 @@
     }
   });
 
+  /* ============ tap-triggered garden proc FX ============
+     Each of these is rare on purpose (see docs/10-decision-log.md) — the
+     animation is what has to carry the "you just won something" feeling,
+     since the numbers themselves are small and infrequent. All three rebuild
+     their DOM/animation state from scratch on every call rather than
+     toggling a persistent class, so a retrigger on the same target (possible
+     at high Quick Grip speeds) always restarts cleanly instead of looking
+     like a dud. */
+
+  function triggerRainFX(v, shaved) {
+    if (!v) return;
+    v.root.querySelectorAll('.rain-cloud').forEach((n) => n.remove());
+    v.inner.querySelectorAll('.rain-drops').forEach((n) => n.remove());
+
+    const cloud = document.createElement('div');
+    cloud.className = 'rain-cloud';
+    cloud.innerHTML = '<i></i><i></i><i></i>';
+    v.root.appendChild(cloud);
+    setTimeout(() => cloud.remove(), 950);
+
+    const drops = document.createElement('div');
+    drops.className = 'rain-drops';
+    for (let i = 0; i < 12; i += 1) {
+      const d = document.createElement('span');
+      d.className = 'rain-drop';
+      d.style.setProperty('--x', `${rnd(8, 92).toFixed(0)}%`);
+      d.style.setProperty('--delay', `${rnd(0.1, 0.45).toFixed(2)}s`);
+      d.style.setProperty('--dur', `${rnd(0.4, 0.6).toFixed(2)}s`);
+      d.style.setProperty('--fall', `${rnd(80, 100).toFixed(0)}%`);
+      drops.appendChild(d);
+    }
+    v.inner.appendChild(drops);
+    setTimeout(() => drops.remove(), 1100);
+
+    Sound.play('rainDance');
+
+    setTimeout(() => {
+      v.inner.classList.remove('watered'); void v.inner.offsetWidth; v.inner.classList.add('watered');
+      v.bar.classList.remove('flash'); void v.bar.offsetWidth; v.bar.classList.add('flash');
+      v.slot.classList.remove('perk'); void v.slot.offsetWidth; v.slot.classList.add('perk');
+      const pc = FX.centerOf(v.root);
+      FX.sparks(pc.x, pc.y, 6, '#74c0fc');
+      FX.floatAt(v.root, `${shaved.toFixed(1)}s faster!`, 'water');
+    }, 560);
+  }
+
+  function triggerBeeFX() {
+    const c = FX.centerOf(flowerBtn);
+    const bee = document.createElement('div');
+    bee.className = 'bee-fly';
+    bee.innerHTML = Icons.get('bee');
+    bee.style.setProperty('--cx', `${c.x}px`);
+    bee.style.setProperty('--cy', `${c.y}px`);
+    bee.style.setProperty('--ex', `${rnd(-160, 160).toFixed(0)}px`);
+    bee.style.setProperty('--ey', `${rnd(-170, -90).toFixed(0)}px`);
+    bee.style.setProperty('--xx', `${rnd(-160, 160).toFixed(0)}px`);
+    bee.style.setProperty('--xy', `${rnd(90, 170).toFixed(0)}px`);
+    document.body.appendChild(bee);
+    setTimeout(() => bee.remove(), 1000);
+
+    Sound.play('beeSwarm');
+
+    setTimeout(() => {
+      FX.sparks(c.x, c.y - 6, 5, '#ffc93c');
+      FX.floatAt(flowerBtn, '+1 Honey', 'bee');
+    }, 430);
+  }
+
+  function triggerLadybugFX(v) {
+    if (!v) return;
+    v.lucky.classList.add('show');
+    v.lucky.classList.remove('land'); void v.lucky.offsetWidth; v.lucky.classList.add('land');
+    setTimeout(() => v.lucky.classList.remove('land'), 650);
+
+    const pc = FX.centerOf(v.root);
+    FX.sparks(pc.x, pc.y - 6, 6, '#fa5252');
+    FX.floatAt(v.root, 'Lucky spot!', 'lucky');
+    Sound.play('ladybug');
+  }
+
   /* ============ game events ============ */
   Game.on('currency', () => {
     if (sheetMode) syncAfford();
@@ -1114,23 +1200,9 @@
       FX.floatAt(flowerBtn, '+1 Gem', 'gem');
       popWallet('gems');
     }
-    if (p.rainDance) {
-      const v = plotEls[p.rainDance.idx];
-      if (v) {
-        const pc = FX.centerOf(v.root);
-        FX.floatAt(v.root, `-${p.rainDance.shaved.toFixed(1)}s`, 'water');
-        FX.sparks(pc.x, pc.y, 6, '#74c0fc');
-        Sound.play('plant');
-      }
-    }
-    if (p.beeSwarm) {
-      FX.floatAt(flowerBtn, 'Bee Swarm!', 'bee');
-      Sound.play('coin');
-    }
-    if (p.ladybug) {
-      const v = plotEls[p.ladybug.idx];
-      if (v) FX.floatAt(v.root, 'Lucky!', 'lucky');
-    }
+    if (p.rainDance) triggerRainFX(plotEls[p.rainDance.idx], p.rainDance.shaved);
+    if (p.beeSwarm) triggerBeeFX();
+    if (p.ladybug) triggerLadybugFX(plotEls[p.ladybug.idx]);
   });
 
   Game.on('plant', ({ idx, auto }) => {
@@ -1192,7 +1264,10 @@
       popWallet('tickets');
       Sound.play('coin');
     }
-    if (p.luckyHarvest) FX.float(c.x, c.y + 18, 'Ladybug luck!', 'lucky');
+    if (p.luckyHarvest) {
+      FX.sparks(c.x, c.y, 8, '#fa5252');
+      FX.float(c.x, c.y + 18, 'Ladybug luck!', 'lucky');
+    }
     if (Math.random() < 0.12) say('harvest');
   });
 
