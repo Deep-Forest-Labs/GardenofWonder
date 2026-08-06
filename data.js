@@ -165,6 +165,66 @@ PLOT_AUTOPLANTERS.forEach((cfg) => {
 
 const MAX_RARITY_MULT = Math.max(...DATA.rarity.map((r) => r.m));
 
+/* ---------------------------------------------------------------------------
+   Apiary + Apothecary — prototype of the meta-layer resource loop.
+   See docs/12-meta-layer-design.md. Every number here is provisional: the point
+   of the prototype is to find out whether the loop is fun, not to be balanced.
+
+   Timings are deliberately compressed to match the existing garden, where a
+   Daisy matures in 12s. The mobile-scale values live in docs/14-economy-model.md.
+--------------------------------------------------------------------------- */
+
+const APIARY = {
+  maxHives: 4,
+  interval: 90,        // seconds per jar
+  capacity: 5,         // jars a hive holds before the bees stop working
+  pollination: 0.08,   // garden yield bonus per hive
+  waxChance: 0.5,      // chance of a wax comb alongside each jar
+  hiveCost: (owned) => Math.round(2500 * Math.pow(2, owned)),
+
+  // A jar's worth follows the bloom it came from — this is what makes the
+  // garden's *contents* matter to the Apiary, not just its throughput.
+  honeyValue: (seedId) => {
+    const s = DATA.seeds.find((x) => x.id === seedId);
+    return s ? Math.round(s.yield * 0.5) : 40;
+  },
+  honeyName: (seedId) => {
+    const s = DATA.seeds.find((x) => x.id === seedId);
+    return s ? `${s.name} Honey` : 'Wildflower Honey';
+  },
+  wildHoney: 'wild',
+  waxValue: 60
+};
+
+/* Harvesting a plot now also yields the flower itself, as a byproduct. */
+const flowerValue = (seedId) => {
+  const s = DATA.seeds.find((x) => x.id === seedId);
+  return s ? Math.round(s.yield * 0.25) : 10;
+};
+
+/* Recipes must draw on at least two regions — that rule is what stops the
+   regions from being parallel faucets. Lavender Salve goes further and demands
+   a specific bloom, so the garden has to be planted deliberately. */
+const CRAFT_RECIPES = [
+  {
+    id: 'tea', name: 'Flower Tea', icon: 'teacup', time: 60, value: 250,
+    needs: [{ kind: 'flower', qty: 3 }, { kind: 'honey', qty: 1 }],
+    desc: 'Three petals steeped with a spoon of any honey.'
+  },
+  {
+    id: 'perfume', name: 'Petal Perfume', icon: 'perfume', time: 180, value: 700,
+    needs: [{ kind: 'flower', qty: 5 }, { kind: 'wax', qty: 2 }],
+    desc: 'Pressed petals set in beeswax. Slow, but it keeps.'
+  },
+  {
+    id: 'salve', name: 'Lavender Salve', icon: 'salve', time: 120, value: 1200,
+    needs: [{ kind: 'honey', of: 'lavender', qty: 2 }, { kind: 'wax', qty: 1 }, { kind: 'flower', qty: 2 }],
+    desc: 'Needs true lavender honey — keep lavender in the ground.'
+  }
+];
+
+const CRAFT_SLOTS = 2;
+
 /* Wonder Effect — a rare garden-wide transformation. */
 const WONDER = {
   duration: 20,

@@ -1,7 +1,8 @@
 # Meta-Layer Design — The Cozy Garden World
 
-**Status: design, not built.** Nothing here exists in code. The shipped game is the single garden
-described in [03-systems.md](03-systems.md). This is the locked direction for what comes next.
+**Status: mostly design.** The Garden ↔ Apiary ↔ Apothecary loop is now prototyped in the web build
+— see "Prototype status" at the bottom, and [03-systems.md](03-systems.md) for how it works. The
+Potting Shed, the Market and the world map are still design only.
 
 Companion documents: [13-order-system.md](13-order-system.md) for the Market engine,
 [14-economy-model.md](14-economy-model.md) for resources, recipes and tuning.
@@ -253,11 +254,36 @@ available. Mobile at any revenue level needs discoverability that web portals ha
 - What happens to the existing Wonder Effect in a multi-region world — global, or garden-only?
 - Decor: purely cosmetic, or does it keep the stat bonuses it has today?
 
+## Prototype status
+
+The smallest closed version of the loop is playable in the web build, behind two new dock tabs.
+Verified by `node tools/sim-test.js`.
+
+**Built.** Hives producing honey on a timer, capped by capacity. Honey variety sampled from what is
+actually planted, at the moment each jar is produced. Beeswax as a secondary drop. Pollination
+raising every harvest. Flowers kept as an inventory item on harvest, alongside the usual credits.
+Three Apothecary recipes on a two-slot timed bench, each requiring output from two regions, one of
+them requiring a *named* honey. Selling raws and crafted goods for credits.
+
+**Deliberately left out.** Storage caps, which are a locked design decision but would add friction
+that muddies the only question the prototype is meant to answer. The Potting Shed, the Market, the
+world map, reputation and land. Crafted goods currently sell for credits because there is no order
+board yet; orders are meant to pay well above these prices.
+
+**What to look for when playing it.** Does the garden's *contents* start mattering — do you find
+yourself planting lavender because you want lavender honey? Does collecting jars pull you back into
+the app? Does the bench feel like a reason to harvest, or like homework? Is checking three places
+per session pleasant or fussy?
+
+If the answer to the first question is yes, the pattern extends to every other region and the
+design holds. If it is no, the crafting tier needs rethinking before anything else gets built.
+
 ## Next steps
 
 1. ~~Lock the resource graph~~ — done, above.
-2. Order system specification — [13-order-system.md](13-order-system.md).
-3. Economy model skeleton — [14-economy-model.md](14-economy-model.md).
-4. **Prototype the Garden ↔ Apiary loop in the web build.** Flowers determine honey type, honey
-   feeds one Apothecary recipe, pollination boosts garden yield. If that single relationship feels
-   good, the pattern extends to everything else. Do this before tuning real numbers.
+2. ~~Order system specification~~ — [13-order-system.md](13-order-system.md).
+3. ~~Economy model skeleton~~ — [14-economy-model.md](14-economy-model.md).
+4. ~~Prototype the Garden ↔ Apiary loop~~ — done, see above.
+5. **Play it, then decide.** Tuning real numbers, and whether the Potting Shed or the Market comes
+   next. The Market is the safer bet: it is the goal generator, and the prototype currently has no
+   reason to want anything.

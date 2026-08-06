@@ -365,8 +365,11 @@
   const TABS = [
     { id: 'badges', label: 'Badges' },
     { id: 'decor', label: 'Decor' },
-    { id: 'boosters', label: 'Boosts' }
+    { id: 'boosters', label: 'Boosts' },
+    { id: 'apiary', label: 'Apiary' },
+    { id: 'craft', label: 'Craft' }
   ];
+  const SHOP_TABS = TABS.map((t) => t.id);
 
   function openSheet(mode, arg) {
     sheetMode = mode;
@@ -396,11 +399,12 @@
     const keep = resetScroll ? 0 : el.sheetBody.scrollTop;
     const titles = {
       badges: 'Badges', decor: 'Decor', boosters: 'Boosts',
+      apiary: 'Apiary', craft: 'Apothecary',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings'
     };
     el.sheetTitle.textContent = titles[sheetMode] || '';
 
-    if (['badges', 'decor', 'boosters'].includes(sheetMode)) {
+    if (SHOP_TABS.includes(sheetMode)) {
       el.sheetTabs.innerHTML = TABS.map(
         (t) => `<button class="tab" role="tab" data-tab="${t.id}" aria-selected="${t.id === sheetMode}">${t.label}</button>`
       ).join('');
@@ -415,6 +419,7 @@
 
     const render = {
       badges: renderBadges, decor: renderDecor, boosters: renderBoosters,
+      apiary: renderApiary, craft: renderCraft,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings
     }[sheetMode];
     el.sheetBody.innerHTML = render ? render() : '';
@@ -510,6 +515,170 @@
     }).join('');
     return `<p class="sheet-note">Spend tickets on short, powerful surges. Tickets drop every 10 harvests and from lucky crits.</p>
       <div class="card-grid">${cards}</div>`;
+  }
+
+  /* ---- apiary ---- */
+  const honeyIco = (type) => {
+    const s = Game.seedById(type);
+    return s ? Flora.head(s, 22) : Icons.get('honey');
+  };
+
+  function stockRow(icon, name, qty, unit, kind, key) {
+    return `<div class="stock">
+      <span class="stock-ico">${icon}</span>
+      <span class="stock-name">${name}<span class="stock-sub">${Icons.get('coin')}${fmt(unit)} each</span></span>
+      <span class="stock-qty">x${qty}</span>
+      <button class="mini" data-sell="${kind}" data-key="${key}">Sell all</button>
+    </div>`;
+  }
+
+  function renderApiary() {
+    const hives = S.apiary.hives;
+    const waiting = Game.jarsWaiting();
+
+    if (!hives.length) {
+      const cost = Game.nextHiveCost();
+      const can = S.credits >= cost;
+      return `<p class="sheet-note">Bees gather nectar from whatever is blooming right now — plant
+        lavender and you get lavender honey. Every hive also pollinates the garden.</p>
+        <button class="card wide ${can ? 'affordable' : ''}" data-apiary="buy">
+          <div class="card-top">
+            <span class="card-badge">${Icons.get('hive')}</span>
+            <span>
+              <span class="card-title">Set up your first hive</span>
+              <span class="card-sub">A jar every ${fmtTime(APIARY.interval)} · +${pct(APIARY.pollination)} garden yield</span>
+            </span>
+          </div>
+          <span class="card-desc">Holds ${APIARY.capacity} jars before the bees knock off. Collect to keep them working.</span>
+          ${priceTag(cost, 'credits', can)}
+        </button>`;
+    }
+
+    const cards = hives.map((h, i) => {
+      const full = h.jars.length >= APIARY.capacity;
+      const next = full ? 0 : h.at + APIARY.interval;
+      const names = h.jars.length
+        ? [...new Set(h.jars.map((j) => APIARY.honeyName(j)))].join(', ')
+        : 'Empty — the bees are out.';
+      return `<div class="hive ${h.jars.length ? 'has' : ''}">
+        <div class="hive-top">
+          <span class="hive-ico">${Icons.get('hive')}</span>
+          <span class="hive-info">
+            <span class="card-title">Hive ${i + 1}</span>
+            <span class="card-sub">${names}</span>
+          </span>
+          <span class="hive-count">${h.jars.length}/${APIARY.capacity}</span>
+        </div>
+        <div class="jars">${
+          Array.from({ length: APIARY.capacity }, (_, j) =>
+            `<span class="jar ${j < h.jars.length ? 'on' : ''}">${j < h.jars.length ? honeyIco(h.jars[j]) : ''}</span>`
+          ).join('')
+        }</div>
+        <div class="hive-foot">
+          <span class="card-sub">${full ? 'Full — collect to restart' : `Next jar in <b data-countdown="${next}">${fmtTime(Math.max(0, next - Game.nowSeconds()))}</b>`}</span>
+          <button class="mini go" data-apiary="collect" data-i="${i}" ${h.jars.length ? '' : 'disabled'}>Collect</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    const cost = Game.nextHiveCost();
+    const can = S.credits >= cost;
+    const buy = Game.hivesFull()
+      ? '<p class="sheet-note">Every hive the meadow can hold is yours.</p>'
+      : `<button class="card wide ${can ? 'affordable' : ''}" data-apiary="buy">
+          <div class="card-top">
+            <span class="card-badge">${Icons.get('hive')}</span>
+            <span>
+              <span class="card-title">Another hive</span>
+              <span class="card-sub">+${pct(APIARY.pollination)} garden yield</span>
+            </span>
+          </div>
+          ${priceTag(cost, 'credits', can)}
+        </button>`;
+
+    const honeys = Object.keys(S.apiary.honey).sort((a, b) => APIARY.honeyValue(b) - APIARY.honeyValue(a));
+    const stock = honeys.map((t) =>
+      stockRow(honeyIco(t), APIARY.honeyName(t), S.apiary.honey[t], APIARY.honeyValue(t), 'honey', t)
+    ).join('') + (S.apiary.wax ? stockRow(Icons.get('wax'), 'Beeswax', S.apiary.wax, APIARY.waxValue, 'wax', 'wax') : '');
+
+    return `
+      <p class="sheet-note">Pollination is giving every harvest <b>+${pct(Game.pollination())}</b>.
+        ${waiting ? `<b>${waiting}</b> jar${waiting > 1 ? 's' : ''} waiting.` : ''}</p>
+      ${waiting > 1 ? '<button class="wide-btn" data-apiary="all">Collect every hive</button>' : ''}
+      ${cards}
+      ${buy}
+      <p class="sheet-note" style="margin-top:16px">Stores</p>
+      ${stock || '<p class="sheet-note">Nothing in the pantry yet.</p>'}`;
+  }
+
+  /* ---- apothecary ---- */
+  function needLabel(n) {
+    if (n.kind === 'wax') return `${n.qty} beeswax`;
+    if (n.kind === 'flower') return `${n.qty} flowers`;
+    if (n.of) return `${n.qty} ${APIARY.honeyName(n.of).toLowerCase()}`;
+    return `${n.qty} honey`;
+  }
+
+  function haveLabel(n) {
+    if (n.kind === 'wax') return S.apiary.wax;
+    if (n.kind === 'flower') return Game.flowerTotal();
+    if (n.of) return S.apiary.honey[n.of] || 0;
+    return Game.honeyTotal();
+  }
+
+  function renderCraft() {
+    const busy = S.craft.length;
+    const queue = S.craft.map((c) => {
+      const r = CRAFT_RECIPES.find((x) => x.id === c.id);
+      return `<div class="brew">
+        <span class="stock-ico">${Icons.get(r.icon)}</span>
+        <span class="stock-name">${r.name}<span class="stock-sub">Ready in <b data-countdown="${c.doneAt}">${fmtTime(Math.max(0, c.doneAt - Game.nowSeconds()))}</b></span></span>
+      </div>`;
+    }).join('');
+
+    const cards = CRAFT_RECIPES.map((r) => {
+      const can = Game.canCraft(r);
+      const parts = r.needs.map((n) => {
+        const ok = haveLabel(n) >= n.qty;
+        return `<span class="need ${ok ? 'ok' : 'no'}">${needLabel(n)} <b>${haveLabel(n)}/${n.qty}</b></span>`;
+      }).join('');
+      return `<div class="card wide recipe ${can ? 'affordable' : ''}">
+        <div class="card-top">
+          <span class="card-badge">${Icons.get(r.icon)}</span>
+          <span>
+            <span class="card-title">${r.name}</span>
+            <span class="card-sub">${fmtTime(r.time)} · sells for ${fmt(r.value)}</span>
+          </span>
+        </div>
+        <span class="card-desc">${r.desc}</span>
+        <div class="needs">${parts}</div>
+        <button class="mini go" data-craft="${r.id}" ${can ? '' : 'disabled'}>
+          ${busy >= CRAFT_SLOTS ? 'Bench full' : 'Make'}
+        </button>
+      </div>`;
+    }).join('');
+
+    const goods = Object.keys(S.goods).map((id) => {
+      const r = CRAFT_RECIPES.find((x) => x.id === id);
+      return stockRow(Icons.get(r.icon), r.name, S.goods[id], r.value, 'good', id);
+    }).join('');
+
+    const flowers = Object.keys(S.flowers)
+      .sort((a, b) => flowerValue(b) - flowerValue(a))
+      .map((id) => {
+        const s = Game.seedById(id);
+        return `<span class="chip" title="${s ? s.name : id}">${s ? Flora.head(s, 20) : ''}<b>${S.flowers[id]}</b></span>`;
+      }).join('');
+
+    return `
+      <p class="sheet-note">Every harvest keeps the bloom itself. Combine flowers with honey from the
+        Apiary to make something worth far more than its parts.</p>
+      <div class="chips">${flowers || '<span class="card-sub">No flowers yet — go harvest something.</span>'}
+        ${S.apiary.wax ? `<span class="chip">${Icons.get('wax')}<b>${S.apiary.wax}</b></span>` : ''}</div>
+      ${queue ? `<p class="sheet-note" style="margin-top:14px">On the bench (${busy}/${CRAFT_SLOTS})</p>${queue}` : ''}
+      <p class="sheet-note" style="margin-top:14px">Recipes</p>
+      ${cards}
+      ${goods ? `<p class="sheet-note" style="margin-top:16px">Finished goods</p>${goods}` : ''}`;
   }
 
   function sortedSeeds() {
@@ -627,6 +796,53 @@
   });
 
   el.sheetBody.addEventListener('click', (e) => {
+    const api = e.target.closest('[data-apiary]');
+    if (api) {
+      const what = api.dataset.apiary;
+      if (what === 'buy') {
+        if (Game.buyHive()) {
+          const c = FX.centerOf(api);
+          FX.sparks(c.x, c.y, 14, '#ffc93c');
+          FX.ring(c.x, c.y, '#ffe066', 0.5, 80);
+          Sound.play('buy');
+        } else { Sound.play('deny'); FX.shake(4); }
+      } else {
+        const got = what === 'all' ? Game.collectAllHives() : [Game.collectHive(Number(api.dataset.i))].filter(Boolean);
+        const jars = got.reduce((a, r) => a + r.jars.length, 0);
+        const wax = got.reduce((a, r) => a + r.wax, 0);
+        if (jars) {
+          const c = FX.centerOf(api);
+          FX.coins(c.x, c.y, Math.min(12, jars * 2));
+          Sound.play('coin');
+          toast({
+            title: `${jars} jar${jars > 1 ? 's' : ''} collected`,
+            body: wax ? `and ${wax} beeswax` : 'straight to the pantry',
+            art: Icons.get('honey')
+          });
+        }
+      }
+      return;
+    }
+    const craft = e.target.closest('[data-craft]');
+    if (craft) {
+      if (Game.startCraft(craft.dataset.craft)) {
+        const c = FX.centerOf(craft);
+        FX.sparks(c.x, c.y, 10, '#8ce0ff');
+        Sound.play('buy');
+      } else { Sound.play('deny'); FX.shake(4); }
+      return;
+    }
+    const sellBtn = e.target.closest('[data-sell]');
+    if (sellBtn) {
+      const total = Game.sell(sellBtn.dataset.sell, sellBtn.dataset.key, true);
+      if (total) {
+        const c = FX.centerOf(sellBtn);
+        FX.coins(c.x, c.y, 8);
+        FX.float(c.x, c.y - 6, `+${fmt(total)}`, 'big');
+        Sound.play('coin');
+      } else { Sound.play('deny'); }
+      return;
+    }
     const buy = e.target.closest('[data-buy]');
     if (buy) {
       const { buy: kind, key } = buy.dataset;
@@ -798,7 +1014,9 @@
       return pot >= d.cost;
     });
     const canBoost = DATA.boosters.some((b) => S.tickets >= b.tickets && !Game.activeBoost(b.id));
-    const map = { badges: canUpgrade, decor: canDecor, boosters: canBoost };
+    const canHive = Game.jarsWaiting() > 0 || (!Game.hiveCount() && S.credits >= Game.nextHiveCost());
+    const canBrew = Object.keys(S.goods).length > 0 || CRAFT_RECIPES.some((r) => Game.canCraft(r));
+    const map = { badges: canUpgrade, decor: canDecor, boosters: canBoost, apiary: canHive, craft: canBrew };
     $$('.dock-btn', el.dock).forEach((b) => {
       const dot = $('.dock-dot', b);
       const show = map[b.dataset.tab] && sheetMode !== b.dataset.tab;
@@ -960,6 +1178,15 @@
   Game.on('grid', () => buildGarden());
   Game.on('panels', () => { if (sheetMode) renderSheet(false); });
 
+  /* Countdowns tick in place; a full re-render would fight the player's taps. */
+  function tickSheetTimers() {
+    if (!sheetMode) return;
+    $$('[data-countdown]', el.sheetBody).forEach((n) => {
+      const left = Number(n.dataset.countdown) - Game.nowSeconds();
+      n.textContent = left > 0 ? fmtTime(left) : 'a moment';
+    });
+  }
+
   /* refresh affordability styling without a full rebuild */
   function syncAfford() {
     $$('[data-buy]', el.sheetBody).forEach((node) => {
@@ -1019,7 +1246,7 @@
     comboRing.style.setProperty('--combo-op', (0.3 + cp * 0.7).toFixed(2));
 
     railAcc += dt;
-    if (railAcc >= 0.25) { railAcc = 0; renderRail(); }
+    if (railAcc >= 0.25) { railAcc = 0; renderRail(); tickSheetTimers(); }
 
     slowAcc += dt;
     if (slowAcc >= 0.6) {

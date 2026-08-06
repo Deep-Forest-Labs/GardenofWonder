@@ -63,12 +63,16 @@ In order:
 2. ~~Spec the order system~~ — **done**, see [13-order-system.md](13-order-system.md).
 3. ~~Economy model skeleton~~ — **done**, see [14-economy-model.md](14-economy-model.md). Structure
    is locked; the numbers in it are deliberate placeholders.
-4. **Prototype the Garden ↔ Apiary loop** in the web build. Flowers determine honey type, honey
-   feeds one Apothecary recipe, pollination boosts garden yield. This is the current task. Smallest
-   closed loop that proves interdependence is fun — do it before tuning real numbers or designing
-   further regions.
-5. **Tune the economy for real**, informed by how the prototype feels.
-6. **Fix the known economy bugs** before building content on top of them.
+4. ~~Prototype the Garden ↔ Apiary loop~~ — **done and playable**, in the Apiary and Craft dock
+   tabs. Mechanics in [03-systems.md](03-systems.md); run `node tools/sim-test.js` to check the
+   simulation still holds after any change.
+5. **Play it and judge the loop.** The question is narrow: does the garden's *contents* start
+   mattering — do you plant lavender because you want lavender honey? Everything else waits on that
+   answer.
+6. **Then the Market**, most likely — see [13-order-system.md](13-order-system.md). The prototype
+   has production but nothing that *wants* anything, which is exactly the gap orders fill.
+7. **Tune the economy for real**, informed by how it plays. Every number today is a placeholder.
+8. **Fix the known economy bugs** before building content on top of them.
 
 ## Known problems worth knowing immediately
 

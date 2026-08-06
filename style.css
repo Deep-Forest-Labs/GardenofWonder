@@ -581,7 +581,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .speech.show{opacity:1;transform:translate(-50%,0) scale(1)}
 
 /* ---------- dock ---------- */
-.dock{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dock{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .dock-btn{
   position:relative;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
@@ -594,9 +594,13 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   transition:transform .08s ease, box-shadow .08s ease, background .2s ease;
 }
 .dock-btn:active,.dock-btn.pressed{transform:translateY(5px);box-shadow:0 0 0 var(--ink-2), 0 3px 7px rgba(44,26,16,.25)}
-.dock-ico{width:26px;height:26px;display:block}
+.dock-ico{width:24px;height:24px;display:block}
 .dock-ico svg{width:100%;height:100%;display:block}
-.dock-label{font-size:12px;font-weight:800;line-height:1}
+.dock-label{font-size:11px;font-weight:800;line-height:1}
+@media (min-width:420px){
+  .dock-ico{width:26px;height:26px}
+  .dock-label{font-size:12px}
+}
 .dock-dot{
   position:absolute;top:-6px;right:-4px;
   width:16px;height:16px;border-radius:50%;
@@ -968,6 +972,104 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   .dock-btn{min-height:44px}
   .dock-label{font-size:10px}
 }
+
+/* ---------- apiary + apothecary ---------- */
+.card.wide{width:100%;margin-bottom:10px}
+
+.wide-btn{
+  display:block;width:100%;margin:0 0 12px;padding:11px;
+  background:linear-gradient(180deg,#ffe9a8,#ffc93c);
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.16);
+  font-weight:900;font-size:14px;
+  transition:transform .09s ease, box-shadow .09s ease;
+}
+.wide-btn:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink-2)}
+
+.hive{
+  padding:10px 11px 9px;margin-bottom:10px;
+  background:linear-gradient(180deg,#fff,#fff5e2);
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.14);
+}
+.hive.has{background:linear-gradient(180deg,#fffdf0,#ffefc4)}
+.hive-top{display:flex;align-items:center;gap:9px}
+.hive-ico{width:38px;height:38px;flex:none}
+.hive-ico svg{width:100%;height:100%;display:block}
+.hive-info{flex:1;min-width:0}
+.hive-info .card-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hive-count{font-weight:900;font-size:15px;font-variant-numeric:tabular-nums;opacity:.75}
+
+.jars{display:flex;gap:6px;margin:9px 0 7px}
+.jar{
+  flex:1;aspect-ratio:1;max-width:42px;
+  display:grid;place-items:center;
+  border:2.5px dashed rgba(44,26,16,.28);border-radius:11px;
+  background:rgba(44,26,16,.04);
+}
+.jar.on{
+  border-style:solid;border-color:var(--ink);
+  background:linear-gradient(180deg,#ffe9a8,#ffc93c);
+  box-shadow:0 2px 0 var(--ink-2);
+  animation:jarPop .3s ease-out;
+}
+.jar svg{width:78%;height:78%;display:block}
+@keyframes jarPop{from{transform:scale(.4)}to{transform:scale(1)}}
+
+.hive-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hive-foot .card-sub{margin:0}
+
+.mini{
+  flex:none;min-height:42px;padding:0 16px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:3px solid var(--ink);border-radius:999px;
+  background:#fff;font-weight:800;font-size:13px;line-height:1;
+  box-shadow:0 3px 0 var(--ink-2);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.mini:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink-2)}
+.mini.go{background:linear-gradient(180deg,#b2f2bb,#69db7c)}
+.mini[disabled]{filter:grayscale(.6) opacity(.55);box-shadow:0 2px 0 var(--ink-2)}
+
+.stock{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;margin-bottom:7px;
+  background:#fff;border:3px solid var(--ink);border-radius:var(--r-md);
+  box-shadow:0 3px 0 var(--ink-2);
+}
+.stock-ico{width:30px;height:30px;flex:none;display:grid;place-items:center}
+.stock-ico svg,.stock-ico .bloom{width:100%;height:100%;display:block}
+.stock-name{flex:1;min-width:0;font-weight:800;font-size:13.5px;line-height:1.15}
+.stock-sub{display:block;font-size:11px;font-weight:700;opacity:.6;margin-top:1px}
+.stock-sub svg{width:11px;height:11px;vertical-align:-1px;margin-right:2px}
+.stock-qty{font-weight:900;font-size:14px;font-variant-numeric:tabular-nums;opacity:.7}
+
+.brew{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;margin-bottom:7px;
+  background:linear-gradient(180deg,#fff,#eaf6ff);
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  box-shadow:0 3px 0 var(--ink-2);
+}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 9px 4px 5px;
+  background:#fff;border:2.5px solid var(--ink);border-radius:999px;
+  box-shadow:0 2px 0 var(--ink-2);
+  font-weight:800;font-size:12.5px;font-variant-numeric:tabular-nums;
+}
+.chip svg,.chip .bloom{width:20px;height:20px;display:block}
+
+.recipe .needs{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 4px}
+.need{
+  padding:3px 8px;border-radius:999px;
+  font-size:11.5px;font-weight:800;
+  background:rgba(255,107,107,.16);color:#a33;
+}
+.need.ok{background:rgba(81,207,102,.2);color:#2b7a3d}
+.recipe .mini{align-self:flex-start}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.08s !important}

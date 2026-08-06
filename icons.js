@@ -118,6 +118,52 @@ const Icons = (() => {
       <path d="M12 8.4v7.2M8.4 12h7.2" stroke="#ffe9c9" stroke-opacity=".95" stroke-width="2.8"/>`)
   };
 
+  /* Apiary + Apothecary */
+  Object.assign(LIB, {
+    hive: S(`
+      <path d="M6.6 5.4h10.8a1.6 1.6 0 0 1 0 3.2H6.6a1.6 1.6 0 0 1 0-3.2Z" fill="#ffc93c"/>
+      <path d="M5.4 8.6h13.2a1.6 1.6 0 0 1 0 3.2H5.4a1.6 1.6 0 0 1 0-3.2Z" fill="#ffd85e"/>
+      <path d="M4.6 11.8h14.8a1.6 1.6 0 0 1 0 3.2H4.6a1.6 1.6 0 0 1 0-3.2Z" fill="#ffc93c"/>
+      <path d="M5.4 15h13.2a1.6 1.6 0 0 1 0 3.2H5.4a1.6 1.6 0 0 1 0-3.2Z" fill="#ffd85e"/>
+      <ellipse cx="12" cy="16.6" rx="2" ry="1.6" fill="#8a5a2b" stroke-width="1.4"/>`),
+    honey: S(`
+      <path d="M9 2.8h6v2.4l1.6 2.6a3 3 0 0 1 .4 1.5v8.9a2.6 2.6 0 0 1-2.6 2.6H9.6A2.6 2.6 0 0 1 7 18.2V9.3a3 3 0 0 1 .4-1.5L9 5.2Z" fill="#ffb020"/>
+      <path d="M7 11.6c1.6-1 3.4-1 5 0s3.4 1 5 0v6.6a2.6 2.6 0 0 1-2.6 2.6H9.6A2.6 2.6 0 0 1 7 18.2Z" fill="#f08c00"/>
+      <path d="M8.4 2.8h7.2" stroke-width="2.4"/>`),
+    wax: S(`
+      <path d="M12 3.2 19 7.1v7.8L12 18.8 5 14.9V7.1Z" fill="#ffe9a8"/>
+      <path d="M12 3.2 19 7.1 12 11 5 7.1Z" fill="#ffd85e"/>
+      <path d="M12 11v7.8" stroke-width="1.6"/>`),
+    bee: S(`
+      <ellipse cx="8.4" cy="8" rx="4" ry="2.8" fill="#eaf6ff" stroke-width="1.5"/>
+      <ellipse cx="15" cy="8" rx="4" ry="2.8" fill="#eaf6ff" stroke-width="1.5"/>
+      <ellipse cx="12" cy="14.4" rx="5" ry="5.4" fill="#ffc93c"/>
+      <path d="M7.4 12.6h9.2M7.6 16.4h8.8" stroke-width="1.8"/>`),
+    teacup: S(`
+      <path d="M4.6 9.6h12v4.6a4.6 4.6 0 0 1-4.6 4.6H9.2a4.6 4.6 0 0 1-4.6-4.6Z" fill="#ffd6e0"/>
+      <path d="M16.6 11h1.6a2.2 2.2 0 0 1 0 4.4h-1.6" fill="none"/>
+      <path d="M4.6 18.8h13.6" stroke-width="2.2"/>
+      <path d="M8.6 6.6c.8-1 .8-1.8 0-2.8M12.2 6.6c.8-1 .8-1.8 0-2.8" stroke-width="1.5"/>`),
+    perfume: S(`
+      <path d="M9.6 2.8h4.8v3H9.6Z" fill="#cfd8e3"/>
+      <path d="M8 8.4a3 3 0 0 1 3-2.6h2a3 3 0 0 1 3 2.6v9.4a3 3 0 0 1-3 3h-2a3 3 0 0 1-3-3Z" fill="#ffb3d1"/>
+      <path d="M8 13.4h8" stroke-width="1.6"/>
+      <circle cx="18.4" cy="6" r="2" fill="#a5d8ff" stroke-width="1.5"/>`),
+    salve: S(`
+      <path d="M6.4 8.6h11.2v9a3 3 0 0 1-3 3H9.4a3 3 0 0 1-3-3Z" fill="#cdebc5"/>
+      <path d="M5.4 5.4h13.2v3.2H5.4Z" fill="#8fd18a"/>
+      <path d="M6.4 13.4h11.2" stroke-width="1.6"/>
+      <path d="M12 2.6v2.8" stroke-width="1.8"/>`),
+    flask: S(`
+      <path d="M10 2.8h4v6l4.4 7.6a2.6 2.6 0 0 1-2.2 4H7.8a2.6 2.6 0 0 1-2.2-4L10 8.8Z" fill="#e7f5ff"/>
+      <path d="M7.4 14.4h9.2l1.8 2a2.6 2.6 0 0 1-2.2 4H7.8a2.6 2.6 0 0 1-2.2-4Z" fill="#8ce0ff"/>
+      <path d="M9 2.8h6" stroke-width="2.2"/>`),
+    petal: S(`
+      <path d="M12 3.4c2.6 2.4 4 5 4 7.6a4 4 0 0 1-8 0c0-2.6 1.4-5.2 4-7.6Z" fill="#ff8fab"/>
+      <path d="M12 11v9.4" stroke-width="2"/>
+      <path d="M12 15.4c-1.8-1.6-3.4-2-5-1.6.4 2 1.8 3.2 5 3.4Z" fill="#57c15b" stroke-width="1.4"/>`)
+  });
+
   function get(name) {
     return LIB[name] || LIB.sparkle;
   }

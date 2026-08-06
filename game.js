@@ -31,8 +31,12 @@ const Game = (() => {
       harvestsThisSession: 0,
       stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
       wonder: { until: 0, last: 0 },
+      apiary: { hives: [], honey: {}, wax: 0 },
+      flowers: {},
+      craft: [],
+      goods: {},
       prefs: { sfx: true, music: false },
-      seen: { intro: false, plot: false }
+      seen: { intro: false, plot: false, apiary: false }
     };
   };
 
@@ -87,6 +91,13 @@ const Game = (() => {
       state.wonder = Object.assign(d.wonder, parsed.wonder || {});
       state.prefs = Object.assign(d.prefs, parsed.prefs || {});
       state.seen = Object.assign(d.seen, parsed.seen || {});
+      state.apiary = Object.assign(d.apiary, parsed.apiary || {});
+      state.apiary.hives = Array.isArray(state.apiary.hives) ? state.apiary.hives : [];
+      state.apiary.honey = state.apiary.honey && typeof state.apiary.honey === 'object' ? state.apiary.honey : {};
+      state.apiary.wax = Number(state.apiary.wax) || 0;
+      state.flowers = parsed.flowers && typeof parsed.flowers === 'object' ? parsed.flowers : {};
+      state.craft = Array.isArray(parsed.craft) ? parsed.craft : [];
+      state.goods = parsed.goods && typeof parsed.goods === 'object' ? parsed.goods : {};
       state.version = 2;
       lastAutoHarvest = 0;
 
@@ -281,9 +292,11 @@ const Game = (() => {
     const r = rollRarity(boostVal('rarityWeight'));
     const yieldBase = sdef.yield * r.m;
     const yieldDecor = 1 + decorVal('tapYield') * 0.3 + boostVal('globalCredits');
-    const payout = Math.round(yieldBase * yieldDecor * wonderMult());
+    const payout = Math.round(yieldBase * yieldDecor * (1 + pollination()) * wonderMult());
 
     state.credits += payout;
+    // The bloom itself is kept as a crafting ingredient, on top of the credits.
+    state.flowers[sdef.id] = (state.flowers[sdef.id] || 0) + 1;
     state.harvestsThisSession += 1;
     state.stats.totalHarvests += 1;
     let ticketBonus = 0;
@@ -304,6 +317,181 @@ const Game = (() => {
     const payload = { idx, payout, rarity: r, seed: sdef, gemDrop, ticketDrop, ticketBonus, sparkedWonder: sparked };
     emit('harvest', payload);
     return payload;
+  }
+
+  /* ---------------- apiary ---------------- */
+  const hiveCount = () => state.apiary.hives.length;
+  const pollination = () => hiveCount() * APIARY.pollination;
+  const nextHiveCost = () => APIARY.hiveCost(hiveCount());
+  const hivesFull = () => hiveCount() >= APIARY.maxHives;
+
+  function buyHive() {
+    if (hivesFull()) return false;
+    const cost = nextHiveCost();
+    if (state.credits < cost) { emit('deny', { reason: 'credits', need: cost }); return false; }
+    state.credits -= cost;
+    state.apiary.hives.push({ at: nowSeconds(), jars: [] });
+    save();
+    emit('currency');
+    emit('purchase', { kind: 'hive', cost });
+    emit('panels');
+    return true;
+  }
+
+  /** Seeds currently in the ground — the pool a new jar draws its variety from. */
+  function bloomPool() {
+    const pool = [];
+    state.grid.forEach((c) => { if (c && !c.locked && c.seed) pool.push(c.seed); });
+    return pool;
+  }
+
+  /* Variety is decided when the jar is produced, not when it is collected.
+     Sampling at collection time would let a player plant one expensive bloom,
+     collect a full hive of it, and skip the cost of actually growing a garden. */
+  function sampleBloom(pool) {
+    if (!pool.length) return APIARY.wildHoney;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function produceHoney(now) {
+    if (!hiveCount()) return;
+    const pool = bloomPool();
+    let produced = 0;
+    state.apiary.hives.forEach((h) => {
+      if (typeof h.at !== 'number' || h.at > now) h.at = now;
+      if (!Array.isArray(h.jars)) h.jars = [];
+      while (h.jars.length < APIARY.capacity && now - h.at >= APIARY.interval) {
+        h.at += APIARY.interval;
+        h.jars.push(sampleBloom(pool));
+        produced += 1;
+      }
+      // A full hive stops the clock rather than banking jars it cannot hold.
+      if (h.jars.length >= APIARY.capacity) h.at = now;
+    });
+    if (produced) { save(); emit('panels'); emit('honey', { produced }); }
+  }
+
+  function collectHive(i) {
+    const h = state.apiary.hives[i];
+    if (!h || !h.jars.length) return null;
+    const jars = h.jars.slice();
+    let wax = 0;
+    jars.forEach((type) => {
+      state.apiary.honey[type] = (state.apiary.honey[type] || 0) + 1;
+      if (Math.random() < APIARY.waxChance) wax += 1;
+    });
+    state.apiary.wax += wax;
+    h.jars = [];
+    h.at = nowSeconds();
+    save();
+    emit('currency');
+    emit('panels');
+    const payload = { i, jars, wax };
+    emit('collect', payload);
+    return payload;
+  }
+
+  function collectAllHives() {
+    const out = [];
+    state.apiary.hives.forEach((h, i) => { if (h.jars.length) { const r = collectHive(i); if (r) out.push(r); } });
+    return out;
+  }
+
+  const honeyTotal = () => Object.values(state.apiary.honey).reduce((a, b) => a + b, 0);
+  const flowerTotal = () => Object.values(state.flowers).reduce((a, b) => a + b, 0);
+  const jarsWaiting = () => state.apiary.hives.reduce((a, h) => a + h.jars.length, 0);
+
+  /* ---------------- apothecary ---------------- */
+
+  /** Cheapest-first, so the valuable stock survives for direct sale. */
+  function sortedByValue(bag, valueOf) {
+    return Object.keys(bag).filter((k) => bag[k] > 0).sort((a, b) => valueOf(a) - valueOf(b));
+  }
+
+  function haveFor(need) {
+    if (need.kind === 'wax') return state.apiary.wax >= need.qty;
+    if (need.kind === 'flower') return flowerTotal() >= need.qty;
+    if (need.of) return (state.apiary.honey[need.of] || 0) >= need.qty;
+    return honeyTotal() >= need.qty;
+  }
+
+  const canCraft = (r) => Boolean(r) && r.needs.every(haveFor) && state.craft.length < CRAFT_SLOTS;
+
+  function spend(need) {
+    let left = need.qty;
+    if (need.kind === 'wax') { state.apiary.wax -= need.qty; return; }
+    if (need.kind === 'flower') {
+      for (const id of sortedByValue(state.flowers, flowerValue)) {
+        const take = Math.min(left, state.flowers[id]);
+        state.flowers[id] -= take;
+        if (!state.flowers[id]) delete state.flowers[id];
+        left -= take;
+        if (!left) break;
+      }
+      return;
+    }
+    if (need.of) {
+      state.apiary.honey[need.of] -= need.qty;
+      if (!state.apiary.honey[need.of]) delete state.apiary.honey[need.of];
+      return;
+    }
+    for (const id of sortedByValue(state.apiary.honey, APIARY.honeyValue)) {
+      const take = Math.min(left, state.apiary.honey[id]);
+      state.apiary.honey[id] -= take;
+      if (!state.apiary.honey[id]) delete state.apiary.honey[id];
+      left -= take;
+      if (!left) break;
+    }
+  }
+
+  function startCraft(id) {
+    const r = CRAFT_RECIPES.find((x) => x.id === id);
+    if (!canCraft(r)) return false;
+    r.needs.forEach(spend);
+    state.craft.push({ id, doneAt: nowSeconds() + r.time });
+    save();
+    emit('currency');
+    emit('panels');
+    emit('craft', { id, def: r });
+    return true;
+  }
+
+  function processCraft(now) {
+    if (!state.craft.length) return;
+    const done = state.craft.filter((c) => c.doneAt <= now);
+    if (!done.length) return;
+    state.craft = state.craft.filter((c) => c.doneAt > now);
+    done.forEach((c) => { state.goods[c.id] = (state.goods[c.id] || 0) + 1; });
+    save();
+    emit('currency');
+    emit('panels');
+    emit('crafted', { items: done.map((c) => c.id) });
+  }
+
+  /* Selling stands in for the order board until the Market exists. Orders are
+     meant to pay well above these prices — see docs/13-order-system.md. */
+  function sell(kind, key, all) {
+    let unit = 0;
+    let have = 0;
+    if (kind === 'honey') { unit = APIARY.honeyValue(key); have = state.apiary.honey[key] || 0; }
+    else if (kind === 'wax') { unit = APIARY.waxValue; have = state.apiary.wax; }
+    else if (kind === 'flower') { unit = flowerValue(key); have = state.flowers[key] || 0; }
+    else { const r = CRAFT_RECIPES.find((x) => x.id === key); unit = r ? r.value : 0; have = state.goods[key] || 0; }
+    if (!have || !unit) return 0;
+
+    const qty = all ? have : 1;
+    if (kind === 'honey') { state.apiary.honey[key] -= qty; if (!state.apiary.honey[key]) delete state.apiary.honey[key]; }
+    else if (kind === 'wax') state.apiary.wax -= qty;
+    else if (kind === 'flower') { state.flowers[key] -= qty; if (!state.flowers[key]) delete state.flowers[key]; }
+    else { state.goods[key] -= qty; if (!state.goods[key]) delete state.goods[key]; }
+
+    const total = unit * qty;
+    state.credits += total;
+    save();
+    emit('currency');
+    emit('panels');
+    emit('sell', { kind, key, qty, total });
+    return total;
   }
 
   /* ---------------- shop ---------------- */
@@ -438,6 +626,8 @@ const Game = (() => {
 
     processAutoHarvest(now);
     processAutoPlant();
+    produceHoney(now);
+    processCraft(now);
   }
 
   function progressOf(cell) {
@@ -457,6 +647,9 @@ const Game = (() => {
     plotUnlockCost, upgradePrice, upgradeMaxed, decorCount,
     tapFlower, decayCombo, plant, unlockPlot, hasten, harvest,
     buyUpgrade, buyDecor, buyBooster,
+    hiveCount, pollination, nextHiveCost, hivesFull, buyHive,
+    collectHive, collectAllHives, jarsWaiting, honeyTotal, flowerTotal,
+    canCraft, startCraft, sell,
     tick, progressOf, remainingOf,
     wonderActive, wonderMult, startWonder,
     UPGRADE_EFFECTS

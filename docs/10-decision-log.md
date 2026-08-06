@@ -5,6 +5,37 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-05 — Garden ↔ Apiary ↔ Apothecary prototyped
+
+**Built** the smallest closed version of the resource loop in the web build, as two dock tabs.
+Mechanics in [03-systems.md](03-systems.md), tests in `tools/sim-test.js`.
+
+**Why a sheet tab rather than hives beside the garden.** The prototype exists to answer one
+question — is the loop fun — and a camera, a world map and region art answer none of it. The tab
+reuses the existing sheet architecture and is throwaway if the loop fails.
+
+**Why honey variety is fixed when the jar is produced.** Sampling at collection time is simpler, and
+exploitable: leave the garden empty, plant one Eternal Crown, collect five jars of the most
+valuable honey. Fixing variety at production forces the bloom to have actually stood in the garden
+while the bees worked. Offline accrual still works because production is derived from elapsed time.
+
+**Why flowers are a byproduct rather than replacing credits.** Harvest pays credits *and* banks the
+bloom. Making crafting compete with the existing payout would have meant rebalancing the entire
+nineteen-seed economy to test one hypothesis. As a byproduct, crafting is additive and the existing
+balance is untouched.
+
+**Why crafted goods sell for credits.** A placeholder for the Market. The invariant that orders must
+pay more than selling still holds — these prices are the floor orders have to beat.
+
+**Why storage caps were left out**, despite being a locked design decision. They add friction that
+would confound the only question the prototype asks. They go in when the Market does.
+
+**Deliberately untuned.** Every value is provisional. `tools/sim-test.js` asserts the *invariants*
+that must survive tuning — crafted goods beat their ingredients by at least 1.35×, and every recipe
+spans two regions — rather than the numbers themselves.
+
+---
+
 ## 2026-08-05 — Resource graph locked; merge replaces match-3; world stays botanical
 
 **Decisions.** Five regions: Garden, Apiary, Potting Shed, Apothecary, Market. The one new mechanic

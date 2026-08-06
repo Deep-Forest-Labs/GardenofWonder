@@ -245,6 +245,61 @@ greeting, Legendary, unlock, Wonder — always speak. Bubbles clear after 2.4 s.
 If the player does nothing for 26 seconds the flower makes an idle remark, but never while a
 sheet is open.
 
+## The Apiary — prototype
+
+The first piece of the meta-layer described in [12-meta-layer-design.md](12-meta-layer-design.md).
+Lives in the `apiary` dock tab. Data in `APIARY` (`data.js`), simulation in the apiary section of
+`game.js`, tests in `tools/sim-test.js`.
+
+Up to **4 hives**, costing `2500 × 2^owned` credits. Each produces one jar every **90 seconds** and
+holds **5** before the bees stop; a full hive freezes its own clock rather than banking jars it
+cannot hold, so the timer restarts from the moment you collect. Because production is derived from
+elapsed time, offline accrual works for free and is naturally bounded by capacity.
+
+Each hive adds **+8% to every harvest payout** — pollination, applied in `harvest()`.
+
+### Honey variety follows what is blooming
+
+The load-bearing rule. When a jar is produced, its variety is sampled from the seeds *currently in
+the ground*. Lavender planted means lavender honey, worth `seed.yield × 0.5`. An empty garden gives
+Wildflower honey, worth a flat 40.
+
+Sampling happens at **production** time, not collection time, and this matters: sampling on
+collection would let a player keep an empty garden, plant one Eternal Crown, and collect a full hive
+of the most valuable honey without ever growing it. Fixing variety when the jar is made means the
+bloom had to actually be standing in the garden while the bees worked.
+
+Collecting also yields **beeswax**, at a 50% chance per jar.
+
+## The Apothecary — prototype
+
+The crafting tier, in the `craft` dock tab. Recipes in `CRAFT_RECIPES` (`data.js`).
+
+Harvesting now also banks **the flower itself** into `state.flowers`, on top of the credits it
+already paid. Flowers are a byproduct, so crafting is additive income rather than a competing use
+of the garden.
+
+A **two-slot bench** runs timed crafts. Three recipes ship:
+
+| Recipe | Needs | Time | Sells for |
+| --- | --- | --- | --- |
+| Flower Tea | 3 flowers + 1 honey | 60s | 250 |
+| Lavender Salve | 2 *lavender* honey + 1 wax + 2 flowers | 120s | 1,200 |
+| Petal Perfume | 5 flowers + 2 wax | 180s | 700 |
+
+Every recipe draws on at least two regions — the rule that stops regions from being parallel
+faucets. Lavender Salve goes further and names a specific honey, which is the clearest expression
+of the whole design: to make it, you must choose to plant lavender.
+
+Generic ingredient requirements consume **cheapest first**, so valuable stock survives for direct
+sale.
+
+Crafted goods currently **sell for credits**, standing in for the order board that does not exist
+yet. Orders are meant to pay well above these prices — see
+[13-order-system.md](13-order-system.md).
+
+All values here are provisional. See [14-economy-model.md](14-economy-model.md).
+
 ## Onboarding
 
 Two coach marks, tracked by `state.seen`:
