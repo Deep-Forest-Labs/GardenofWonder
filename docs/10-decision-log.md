@@ -5,6 +5,17 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-05 — Seed picker gained a "Balanced" sort
+
+**Decision.** Added a fourth seed-sort tab, `balanced`, next to tier/cheapest/priciest. It sorts by
+`abs(cost − credits/unlockedPlots)` — closest first — instead of raw price. No economy change: it
+only reorders the same list `costAsc`/`costDesc` already draw from.
+
+**Why.** The existing sorts answer "what's cheapest/priciest," which pushes toward either
+under-spending or dumping your whole balance into one plot. Balanced answers "what's the best I
+could plant in *every* plot at once," which is closer to what a player actually wants when working
+a full garden rather than optimizing one cell in isolation.
+
 ## 2026-08-05 — Hold-to-tap added as an input method, not a new payout path
 
 **Decision.** Holding the flower now repeats an ordinary tap on a timer instead of requiring

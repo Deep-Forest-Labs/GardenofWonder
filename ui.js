@@ -421,7 +421,7 @@
         (t) => `<button class="tab" role="tab" data-tab="${t.id}" aria-selected="${t.id === sheetMode}">${t.label}</button>`
       ).join('');
     } else if (sheetMode === 'seeds') {
-      const opts = [['tier', 'By tier'], ['costAsc', 'Cheapest'], ['costDesc', 'Priciest']];
+      const opts = [['tier', 'By tier'], ['balanced', 'Balanced'], ['costAsc', 'Cheapest'], ['costDesc', 'Priciest']];
       el.sheetTabs.innerHTML = opts
         .map(([id, label]) => `<button class="tab" role="tab" data-sort="${id}" aria-selected="${id === seedSort}">${label}</button>`)
         .join('');
@@ -673,6 +673,14 @@
     const list = [...DATA.seeds];
     if (seedSort === 'costAsc') list.sort((a, b) => a.cost - b.cost);
     else if (seedSort === 'costDesc') list.sort((a, b) => b.cost - a.cost);
+    else if (seedSort === 'balanced') {
+      // What you could afford to plant in every plot at once, not what you
+      // could afford to dump into just this one — surfaces the best tier to
+      // spread across the whole garden instead of the single priciest seed.
+      const unlocked = S.grid.filter((c) => !c.locked).length || 1;
+      const budget = S.credits / unlocked;
+      list.sort((a, b) => Math.abs(a.cost - budget) - Math.abs(b.cost - budget));
+    }
     return list;
   }
 

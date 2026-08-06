@@ -83,7 +83,7 @@ All shopping happens in one sheet that slides up from the bottom, holding seven 
 | `apiary` | Apiary | Dock | shared shop strip |
 | `craft` | Apothecary | Dock | shared shop strip |
 | `shop` | Shop | Dock | shared shop strip |
-| `seeds` | Choose a seed | Tapping an empty plot | Sort: tier / cheapest / priciest |
+| `seeds` | Choose a seed | Tapping an empty plot | Sort: tier / balanced / cheapest / priciest |
 | `bonuses` | Garden Almanac | Book button in HUD | none |
 | `settings` | Settings | Gear button in HUD | none |
 
