@@ -89,24 +89,28 @@ below.
 
 ## The current task
 
-**There is no single doc-defined task in progress right now** — the last two sessions were
-open-ended core-loop iteration (see above), not a spec being executed. The next session is a
-genuine decision point, not a foregone next step:
+**Progression and quests — [16-progression-and-quests.md](16-progression-and-quests.md).** Specified
+2026-08-12, not yet built. Read that doc in full before writing anything; the reasoning behind it is
+in [10-decision-log.md](10-decision-log.md).
 
-- **Resume navigation phase 2** ([15-navigation-and-ia.md](15-navigation-and-ia.md)): the world
-  map. Read the nav doc in full before starting — it depends on the map existing, and the doc's "do
-  not" list still applies (no region as a dock tab, no sixth dock slot, no "Manage" tab). This is a
-  bigger, riskier change than phase 1 — treat it as its own planning pass.
-- **Keep iterating on the core loop.** "Play the loop and judge it" (item 7 below) was already the
-  stated prerequisite for the map; the last two sessions are arguably that step in progress, not a
-  detour from it. If the owner doesn't have a strong pull toward the map yet, that's a signal this
-  step isn't finished.
-- **Address one of the known economy bugs** (below) — the combo doing nothing and the endgame
-  gem-chance inversion are both small, contained fixes that have been sitting untouched since before
-  phase 1.
+The diagnosis is that the game has no answer to "what am I working toward" — every system is a
+spend surface, all of them are open from minute one, and nothing is ever granted. Four phases, each
+independently shippable, in this order:
 
-Ask the owner which of these before picking one — don't default to the map just because it's next
-on a list written before this cycle of core-loop work happened.
+1. **Quest ladder and level bar.** A persistent strip under the HUD showing level, reputation
+   progress, and one active quest. Quests are data in `DATA.quests`. Levels grant seeds.
+2. **Retire tickets.** Boosts become earned inventory rather than a rail purchase; tickets convert
+   to gems once and the wallet goes away.
+3. **Make the combo pay.** It currently multiplies nothing. Small, contained, independent of the
+   other three.
+4. **Almanac as a completion goal.** Lifetime discovery tracking plus milestones.
+
+Two things in there will bite if skipped: quest counters must never read `state.flowers` (it's
+spendable, so a quest can un-complete itself when the player crafts), and seed gating must ship with
+the grandfather migration so no existing save loses a seed it could already plant. Both are called
+out in the spec with required sim-test coverage.
+
+The world map (navigation phase 2) stays paused. Don't start it without asking.
 
 ## What comes after
 
@@ -122,22 +126,27 @@ on a list written before this cycle of core-loop work happened.
    procs (above) are texture added toward this question. The question is still narrow and still
    open: does the garden's *contents* start mattering — do you plant lavender because you want
    lavender honey? Content decisions wait on that answer.
-8. **The world map** — navigation phase 2, queued but paused, see "The current task" above.
-   Unblocks everything else in the meta-layer.
-9. **The Market** — see [13-order-system.md](13-order-system.md). The prototype has production but
-   nothing that *wants* anything, which is exactly the gap orders fill.
-10. **Tune the economy for real.** Every number today is a placeholder. Also worth a look: the three
+8. **Progression and quests — specified, current task.** See above and
+   [16-progression-and-quests.md](16-progression-and-quests.md). Slotted ahead of the map because a
+   map full of places is worthless if nothing tells you why you're going anywhere.
+9. **The world map** — navigation phase 2, queued but paused. Unblocks everything else in the
+   meta-layer.
+10. **The Market** — see [13-order-system.md](13-order-system.md). The prototype has production but
+    nothing that *wants* anything, which is exactly the gap orders fill. It pays into the same
+    reputation number the quest ladder does, by design.
+11. **Tune the economy for real.** Every number today is a placeholder. Also worth a look: the three
     new proc badges were repriced once (with Sprinklers) but *not* re-cut when their trigger rates
     were cut again the next day — see [04-economy.md](04-economy.md) for the reasoning and a
     deliberate open question about whether that needs revisiting.
-11. **Fix the known economy bugs** before building content on top of them.
+12. **Fix the known economy bugs** before building content on top of them.
 
 ## Known problems worth knowing immediately
 
 Full list in [11-known-issues.md](11-known-issues.md). The three that affect design decisions:
 
 - **The combo does nothing.** It drives the ring visual and tap pitch only, never payout — which
-  makes the 2,500-coin Combo Coil badge a dead purchase.
+  makes the 2,500-coin Combo Coil badge a dead purchase. A fix is specified as phase 3 of
+  [16-progression-and-quests.md](16-progression-and-quests.md).
 - **Endgame seeds have lower gem chances than a Daisy.** Defining `gemChance` overrides the generous
   5% default, so the best gem farm is spamming the cheapest seed.
 - **Cheat buttons ship to players.** Settings has "Grant 50 Gems & Tickets", "Grant 1,000,000
@@ -239,9 +248,9 @@ Paste something like this into a fresh chat:
 > `docs/09-conventions.md` and `docs/02-architecture.md`, and note the "Traps in this codebase"
 > section of the handoff.
 >
-> There's no single locked task right now — see "The current task" in the handoff for the live
-> options (resume navigation phase 2's world map, keep iterating on the core tap-and-plant loop, or
-> fix a known economy bug). Ask me which before starting.
+> Your task is `docs/16-progression-and-quests.md`, phase 1 only. Read that doc in full before
+> touching anything and tell me your plan first. Do not start phase 2, 3 or 4, and do not build the
+> world map.
 >
 > I'm the designer; an engineer is porting to Unity. Goal is modest revenue, small scope, two-person
 > team. I want you as a design advisor as well as an implementer — push back on scope creep and tell

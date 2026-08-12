@@ -5,6 +5,46 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-12 — Progression pass specified: reputation is the only track, and it is what "level" means
+
+**Decision.** The next project is progression, not the world map. Specified in
+[16-progression-and-quests.md](16-progression-and-quests.md): a quest ladder feeding a level bar,
+tickets retired, the combo made to actually pay, and the Almanac turned into a completion goal.
+
+**The one that matters: no XP.** The obvious build is a level bar backed by its own experience
+number. That would mean two progression tracks, because reputation already exists in the locked
+design as the thing gating land, order tiers and regions
+([13-order-system.md](13-order-system.md)). Two tracks means two curves to tune, two sets of
+rewards to keep from colliding, and an eventual migration when one of them wins. So "level" is a
+display of reputation and nothing else. Quests pay reputation; when the Market ships, orders pay
+into the same number and the bar keeps working with no changes. The authored curve
+(`10 + 5 × (level − 1)` per level) was chosen to land level 4 / 8 / 12 / 20 on the four order-tier
+thresholds already written down, so the two systems agree by construction rather than by later
+reconciliation.
+
+**Tickets are deleted rather than moved.** The request was to move the ticket power-up chips into
+the Shop tab to clear space at the top of the screen. That would have contradicted two decisions
+already made — the boost tray shows what you *hold*, not what you can buy, and the Shop is the
+only place real money appears ([15-navigation-and-ia.md](15-navigation-and-ia.md)). A third
+currency that exists solely to buy four boosts from a rail chip is not worth a wallet slot, a drop
+type and a denial reason. Boosts become earned inventory from quests and level-ups; tickets convert
+to gems once and the field stays only so old saves parse. Clearing the rail was the actual goal,
+and retiring the currency achieves it without putting power-ups behind a price tag.
+
+**Content gating is the reward, and migration is the risk.** Levels grant seeds — three at the
+start, one per level to nineteen — because pacing content is the cheapest way to make progress feel
+like progress, and because it gives the bar something to promise. The danger is that gating an
+already-open game takes something away from existing saves. The spec makes the grandfather
+migration mandatory and sim-tested: no player loses a seed they could already plant.
+
+**Why the combo was folded in.** It isn't progression, but it is a filled meter on the main screen
+that multiplies nothing, and a 2,500-coin badge that raises its cap. Fixing it is a few lines, and
+leaving a visibly broken promise on screen while adding a new one next to it would undercut the
+whole pass. The multiplier scales with absolute combo rather than the fraction of the cap,
+specifically so that Combo Coil raises the ceiling instead of making the meter slower to fill.
+
+---
+
 ## 2026-08-05/06 — Paused navigation phase 2; spent the cycle on the core tap-and-plant loop instead
 
 **Decision.** Immediately after navigation phase 1 shipped, the plan on paper was to move straight
