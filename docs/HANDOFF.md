@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-05**
+Last updated: **2026-08-12**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -11,14 +11,33 @@ The game is **built, working, and live** at <https://jonishua.github.io/ghostgar
 `main` at the repository root. It is a single-screen idle garden — tap a talking flower, plant
 seeds in eight plots, harvest with rarity multipliers, spend on badges, decor and boosters.
 
-Since then the first slice of the meta-layer is also playable: **hives producing honey whose variety
+The first slice of the meta-layer is also playable: **hives producing honey whose variety
 follows what is planted, and an apothecary crafting flowers and honey into goods**. It lives behind
 two dock tabs (Apiary, Craft), a deliberate throwaway until the world map exists.
 
-**Navigation phase 1 is also done**: the dock is now `Upgrades · Apiary · Craft · Shop`. Badges was
+**Navigation phase 1 is done**: the dock is `Upgrades · Apiary · Craft · Shop`. Badges was
 renamed Upgrades; Decor lost its stat bonuses, became cosmetic, and moved into Shop with existing
 owners refunded; Boosts left the dock entirely for a tap-to-activate tray in the status rail. Full
 detail in [15-navigation-and-ia.md](15-navigation-and-ia.md).
+
+**Since then, the last two sessions went into the core tap-and-plant loop instead of phase 2** (see
+the decision log for why that's deliberate, not drift):
+
+- **Hold-to-tap**, with a Quick Grip badge that shortens the hold's repeat interval from 900ms down
+  to a 180ms floor. Purely an input convenience — every roll (crit, gem, the three procs below) runs
+  through the same `tapFlower()` as a manual tap, and the floor exists so holding can never out-earn
+  active tapping.
+- **A "Balanced" seed-sort option** in the plant picker, alongside cheapest/priciest — sorts by
+  distance from `credits ÷ unlocked plot count`, i.e. "what's the right tier across my whole garden,"
+  not just for one plot.
+- **Three tap-triggered "garden proc" badges** — Rain Dance, Bee Swarm, Lucky Ladybug — each an
+  independent, slot-machine-style roll on every tap. Sprinklers (`autoWater`) was recapped and
+  repriced alongside them. One day after shipping, all three trigger rates were cut 5× (to
+  `0.2%/level`) because they fired too often to feel rare, and each got a dedicated animation so the
+  rarer trigger still reads as a clear, celebratory event. Full detail in
+  [03-systems.md](03-systems.md#tap-triggered-garden-procs) and the two decision-log entries dated
+  2026-08-05/06.
+- A **"Grant 1,000,000 Gold" cheat button**, for testing high-currency states quickly.
 
 Fully documented in this folder. Start with [README.md](README.md), then
 [02-architecture.md](02-architecture.md) and [09-conventions.md](09-conventions.md).
@@ -70,14 +89,24 @@ below.
 
 ## The current task
 
-**Phase 2 of [15-navigation-and-ia.md](15-navigation-and-ia.md): the world map.** Phase 1 (above)
-is done. Read the nav doc in full before starting phase 2 — it depends on the map existing, and the
-doc's "do not" list still applies (no region as a dock tab, no sixth dock slot, no "Manage" tab).
+**There is no single doc-defined task in progress right now** — the last two sessions were
+open-ended core-loop iteration (see above), not a spec being executed. The next session is a
+genuine decision point, not a foregone next step:
 
-Phase 2 in short: a zoomed-out scene containing the garden, apiary and apothecary as locations;
-tapping one moves the camera to it; land parcels purchasable on the map; regions leave the dock.
-This is a bigger, riskier change than phase 1 — treat it as its own planning pass, not a quick
-follow-on.
+- **Resume navigation phase 2** ([15-navigation-and-ia.md](15-navigation-and-ia.md)): the world
+  map. Read the nav doc in full before starting — it depends on the map existing, and the doc's "do
+  not" list still applies (no region as a dock tab, no sixth dock slot, no "Manage" tab). This is a
+  bigger, riskier change than phase 1 — treat it as its own planning pass.
+- **Keep iterating on the core loop.** "Play the loop and judge it" (item 7 below) was already the
+  stated prerequisite for the map; the last two sessions are arguably that step in progress, not a
+  detour from it. If the owner doesn't have a strong pull toward the map yet, that's a signal this
+  step isn't finished.
+- **Address one of the known economy bugs** (below) — the combo doing nothing and the endgame
+  gem-chance inversion are both small, contained fixes that have been sitting untouched since before
+  phase 1.
+
+Ask the owner which of these before picking one — don't default to the map just because it's next
+on a list written before this cycle of core-loop work happened.
 
 ## What comes after
 
@@ -89,14 +118,18 @@ follow-on.
    [03-systems.md](03-systems.md); run `node tools/sim-test.js` after any change to it.
 5. ~~Decide the navigation structure~~ — **done**, [15-navigation-and-ia.md](15-navigation-and-ia.md).
 6. ~~Navigation phase 1~~ — **done**, see above.
-7. **Play the loop and judge it.** The question is narrow: does the garden's *contents* start
-   mattering — do you plant lavender because you want lavender honey? Content decisions wait on
-   that answer.
-8. **The world map** — navigation phase 2, the current task, above. Unblocks everything else in the
-   meta-layer.
+7. **Play the loop and judge it — in progress.** Hold-to-tap, Balanced sort, and the three tap
+   procs (above) are texture added toward this question. The question is still narrow and still
+   open: does the garden's *contents* start mattering — do you plant lavender because you want
+   lavender honey? Content decisions wait on that answer.
+8. **The world map** — navigation phase 2, queued but paused, see "The current task" above.
+   Unblocks everything else in the meta-layer.
 9. **The Market** — see [13-order-system.md](13-order-system.md). The prototype has production but
    nothing that *wants* anything, which is exactly the gap orders fill.
-10. **Tune the economy for real.** Every number today is a placeholder.
+10. **Tune the economy for real.** Every number today is a placeholder. Also worth a look: the three
+    new proc badges were repriced once (with Sprinklers) but *not* re-cut when their trigger rates
+    were cut again the next day — see [04-economy.md](04-economy.md) for the reasoning and a
+    deliberate open question about whether that needs revisiting.
 11. **Fix the known economy bugs** before building content on top of them.
 
 ## Known problems worth knowing immediately
@@ -107,8 +140,8 @@ Full list in [11-known-issues.md](11-known-issues.md). The three that affect des
   makes the 2,500-coin Combo Coil badge a dead purchase.
 - **Endgame seeds have lower gem chances than a Daisy.** Defining `gemChance` overrides the generous
   5% default, so the best gem farm is spamming the cheapest seed.
-- **Cheat buttons ship to players.** Settings has "Grant 50 Gems & Tickets" and "Summon a Wonder
-  Effect" with no confirmation, live on the public site.
+- **Cheat buttons ship to players.** Settings has "Grant 50 Gems & Tickets", "Grant 1,000,000
+  Gold", and "Summon a Wonder Effect" with no confirmation, live on the public site.
 
 All inherited from the frozen economy port. Fixing them is a deliberate balance project.
 
@@ -146,7 +179,23 @@ existed simply won't have it in `parsed.upgrades`, and that key comes back `unde
 Every new badge key needs its own one-line backfill next to the existing `PLOT_AUTOPLANTERS.forEach`
 one in `load()`, or `upgradePrice()`/the badge's effect will silently produce `NaN` for old saves.
 `state.tap` doesn't have this problem — it's merged with `Object.assign(d.tap, parsed.tap || {})`,
-so new fields on it just inherit the default.
+so new fields on it just inherit the default. Same trap applies to any new per-cell grid field
+(e.g. `luckyBug`) — it needs its own backfill loop over `state.grid` too.
+
+**Automated/CDP-controlled browser tabs can freeze CSS animation clocks entirely.** If the tab lacks
+OS focus (common for an automation window sitting behind the IDE), Chrome can stop advancing
+`animation` timelines — `element.getAnimations()[0].currentTime` reads back unchanged across a real
+multi-hundred-ms delay, even on an animation that's been looping since page load. `setTimeout` and
+`requestAnimationFrame` keep running, so game logic and JS-driven FX (canvas particles, floating
+text) still work and are safe to verify normally. To visually verify a *CSS keyframe* animation under
+these conditions, don't wait on wall-clock time — trigger it, then manually seek with
+`el.getAnimations().forEach(a => a.currentTime = <ms>)` and screenshot immediately in the same CDP
+call (`take_screenshot_afterwards`). This cost a debugging cycle on the tap-proc animations before
+the cause was found; it is a testing-environment artifact, not a game bug.
+
+**The three tap-proc trigger rates share one constant.** `PROC_CHANCE_PER_LEVEL` in `game.js`
+(currently `0.002`) is read by `rollRainDance()`, `rollBeeSwarm()`, and `rollLadybug()` — tune all
+three at once by changing it in one place, not by editing each `roll*()` function.
 
 ## Checking your work
 
@@ -190,8 +239,9 @@ Paste something like this into a fresh chat:
 > `docs/09-conventions.md` and `docs/02-architecture.md`, and note the "Traps in this codebase"
 > section of the handoff.
 >
-> The current task is navigation phase 1, specified in `docs/15-navigation-and-ia.md`. Read that
-> document in full before starting.
+> There's no single locked task right now — see "The current task" in the handoff for the live
+> options (resume navigation phase 2's world map, keep iterating on the core tap-and-plant loop, or
+> fix a known economy bug). Ask me which before starting.
 >
 > I'm the designer; an engineer is porting to Unity. Goal is modest revenue, small scope, two-person
 > team. I want you as a design advisor as well as an implementer — push back on scope creep and tell

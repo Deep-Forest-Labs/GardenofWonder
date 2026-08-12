@@ -5,6 +5,32 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-05/06 — Paused navigation phase 2; spent the cycle on the core tap-and-plant loop instead
+
+**Decision.** Immediately after navigation phase 1 shipped, the plan on paper was to move straight
+to phase 2 (the world map, [15-navigation-and-ia.md](15-navigation-and-ia.md)). Instead the owner
+redirected to core gameplay: hold-to-tap with a Quick Grip speed badge, a Balanced seed-sort option,
+three new tap-triggered "garden proc" badges (Rain Dance, Bee Swarm, Lucky Ladybug), a Sprinklers
+rebalance, and — the next day — cutting those three procs' trigger rates by 5× and giving each one
+a dedicated animation. None of this touches navigation; the dock is still exactly
+`Upgrades · Apiary · Craft · Shop`.
+
+**Why this isn't scope drift.** The existing roadmap (see "What comes after" in
+[HANDOFF.md](HANDOFF.md)) already listed *"play the loop and judge it"* ahead of the world map —
+the map was only "current" because it was next in the doc, not because judging the loop was done.
+Everything built this cycle is squarely inside "does tapping and planting feel good," which is a
+prerequisite for the map mattering at all: a bigger, riskier structural feature is a bad place to
+find out the core loop needed more texture first.
+
+**Net effect on the loop.** Tapping now has three independent things it can be doing at once beyond
+the base payout: a slow build toward a faster hold cadence (Quick Grip), a small but real chance of
+a rare, celebratory proc firing (Rain Dance / Bee Swarm / Lucky Ladybug, each now tuned to feel
+sporadic rather than routine), and planting decisions now have a "balanced" option that reasons
+across the whole garden instead of one plot at a time. The world map remains queued and unblocked —
+picking it back up is a decision for a future session, not a change to the spec.
+
+---
+
 ## 2026-08-06 — Tap-triggered garden procs (Rain Dance, Bee Swarm, Lucky Ladybug): rate cut to 0.2%/level, dedicated animations added
 
 **Decision.** One day after shipping the three tap-triggered procs at `level × 1%`, playtesting

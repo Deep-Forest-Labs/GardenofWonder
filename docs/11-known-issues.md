@@ -60,8 +60,9 @@ start; arguably a safety net. Currently undocumented in the UI either way.
 
 ### Cheat buttons ship to players
 
-Settings contains "Grant 50 Gems & Tickets" and "Summon a Wonder Effect". These were development
-affordances and are live on the public site. Unlike reset, they have no confirmation.
+Settings contains "Grant 50 Gems & Tickets", "Grant 1,000,000 Gold", and "Summon a Wonder Effect".
+These were development/testing affordances and are live on the public site. Unlike reset, they have
+no confirmation.
 
 Decide deliberately: keep them as a toy, or gate them behind something.
 
