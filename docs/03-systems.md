@@ -27,6 +27,7 @@ critMul = tap.critMult
 gain = power
 if crit: gain × critMul
 gain × wonderMult          // 3 while a Wonder Effect is running, otherwise 1
+gain × (1 + combo × 0.01)  // combo before this tap increments it
 credits += round(gain)
 ```
 
@@ -44,11 +45,11 @@ levels of Lucky Charm.
 Each tap adds 1 to `tap.combo`, capped at `tap.comboMax` (50 by default, +10 per Combo Coil badge,
 hard-capped at 100). It decays by 1 every second.
 
-**The combo does not affect payout.** It drives two things only: how full the ring around the
-flower appears, and which note of the pentatonic scale the tap sound plays. This is inherited
-behaviour — the previous build worked the same way — but it means the Combo Coil badge at 2,500
-coins buys nothing but a longer musical run and a fuller ring. See
-[11-known-issues.md](11-known-issues.md).
+Tap payout is multiplied by `1 + combo × 0.01`, using the combo **before** the tap increments it.
+Combo 0 is 1.0×, combo 50 is 1.5×, combo 100 is 2.0×. The multiplier uses the absolute combo, not
+the fraction of the cap, so Combo Coil actually raises the ceiling. Harvests ignore combo.
+Decay is 1 per second on purpose — see
+[16-progression-and-quests.md](16-progression-and-quests.md#phase-3--make-the-combo-pay).
 
 ### Hold-to-tap
 

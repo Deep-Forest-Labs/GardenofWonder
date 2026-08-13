@@ -21,10 +21,11 @@ renamed Upgrades; Decor lost its stat bonuses, became cosmetic, and moved into S
 owners refunded; Boosts left the dock entirely for a tap-to-activate tray in the status rail. Full
 detail in [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
-**Progression phases 1 and 2 are done**: a quest strip sits between the HUD and the rail, reputation is
+**Progression phases 1–3 are done**: a quest strip sits between the HUD and the rail, reputation is
 the only level track, seeds unlock on the bar, extra plots become buyable at levels 3 / 6 / 9
-/ 12, and tickets are gone — boosts are earned inventory activated from the rail. Full detail in
-[16-progression-and-quests.md](16-progression-and-quests.md). Phases 3–4 (combo, Almanac) and the
+/ 12, tickets are gone — boosts are earned inventory activated from the rail — and the combo
+multiplies tap payout. Full detail in
+[16-progression-and-quests.md](16-progression-and-quests.md). Phase 4 (Almanac) and the
 world map are still queued. A playtest pass after phase 1 made the bar track the quest and the pip
 ring track reputation, replaced generic upgrade quests with buy-then-feel pairs (Combo Coil stays,
 so the later multiplier work is not undone), and gated the empty-plot bob to first-plant
@@ -99,12 +100,10 @@ below.
 
 ## The current task
 
-**Progression phases 3–4**, still specified in
-[16-progression-and-quests.md](16-progression-and-quests.md). Phases 1 (quest ladder) and 2
-(retire tickets) are built. Next independently shippable slices, in this order:
+**Progression phase 4**, still specified in
+[16-progression-and-quests.md](16-progression-and-quests.md). Phases 1–3 (quest ladder, retire
+tickets, combo payout) are built. Next independently shippable slice:
 
-3. **Make the combo pay.** It currently multiplies nothing. Small, contained, independent of the
-   Almanac.
 4. **Almanac as a completion goal.** Lifetime discovery tracking plus milestones.
 
 The world map (navigation phase 2) stays paused. Don't start it without asking.
@@ -123,10 +122,10 @@ The world map (navigation phase 2) stays paused. Don't start it without asking.
    procs (above) are texture added toward this question. The question is still narrow and still
    open: does the garden's *contents* start mattering — do you plant lavender because you want
    lavender honey? Content decisions wait on that answer.
-8. ~~**Progression and quests — specified, current task.**~~ **Phases 1–2 done.** See above and
-    [16-progression-and-quests.md](16-progression-and-quests.md). Phases 3–4 (combo, Almanac) are
-    next, still ahead of the map: a map full of places is worthless if nothing tells you why you're
-    going anywhere.
+8. ~~**Progression and quests — specified, current task.**~~ **Phases 1–3 done.** See above and
+    [16-progression-and-quests.md](16-progression-and-quests.md). Phase 4 (Almanac) is next, still
+    ahead of the map: a map full of places is worthless if nothing tells you why you're going
+    anywhere.
 9. **The world map** — navigation phase 2, queued but paused. Unblocks everything else in the
    meta-layer.
 10. **The Market** — see [13-order-system.md](13-order-system.md). The prototype has production but
@@ -140,11 +139,8 @@ The world map (navigation phase 2) stays paused. Don't start it without asking.
 
 ## Known problems worth knowing immediately
 
-Full list in [11-known-issues.md](11-known-issues.md). The three that affect design decisions:
+Full list in [11-known-issues.md](11-known-issues.md). The two that affect design decisions:
 
-- **The combo does nothing.** It drives the ring visual and tap pitch only, never payout — which
-  makes the 2,500-coin Combo Coil badge a dead purchase. A fix is specified as phase 3 of
-  [16-progression-and-quests.md](16-progression-and-quests.md).
 - **Endgame seeds have lower gem chances than a Daisy.** Defining `gemChance` overrides the generous
   5% default, so the best gem farm is spamming the cheapest seed.
 - **Cheat buttons ship to players.** Settings has "Grant 50 Gems", "Grant 1,000,000

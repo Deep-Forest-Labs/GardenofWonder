@@ -1,3 +1,20 @@
+# Decision Log
+
+Why things are the way they are. Append new entries at the top with a date. Record the reasoning,
+not the diff — git already has the diff.
+
+---
+
+## 2026-08-13 — Combo Coil finally buys a ceiling
+
+**Decision.** Built phase 3 of [16-progression-and-quests.md](16-progression-and-quests.md). Tap
+payout is now `× (1 + combo × 0.01)`, using the combo before the tap increments it. Harvests ignore
+it. The multiplier is absolute, not a fraction of the cap, so Combo Coil raising 50 → 60 actually
+moves the ceiling from 1.5× to 1.6× (and 2.0× at 100). Decay stays 1 per second — hold-to-tap
+already has a shaped relationship with that timer, and changing it would be a different project.
+
+---
+
 ## 2026-08-13 — Tickets retired; boosts are earned inventory
 
 **Decision.** Built phase 2 of [16-progression-and-quests.md](16-progression-and-quests.md). The

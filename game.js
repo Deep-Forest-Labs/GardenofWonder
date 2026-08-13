@@ -564,6 +564,8 @@ const Game = (() => {
     return { idx };
   }
 
+  const comboMult = () => 1 + state.tap.combo * 0.01;
+
   /* ---------------- actions ---------------- */
   function tapFlower(held) {
     const power = state.tap.power * (1 + boostVal('tapPower')) * (1 + boostVal('globalCredits'));
@@ -578,6 +580,7 @@ const Game = (() => {
     let gemDrop = false;
     if (Math.random() < 0.05) { state.gems += 1; gemDrop = true; }
     gain *= wonderMult();
+    gain *= comboMult();
     state.stats.totalTaps += 1;
     const rounded = Math.round(gain);
     state.credits += rounded;
@@ -1095,7 +1098,7 @@ const Game = (() => {
     collectHive, collectAllHives, jarsWaiting, honeyTotal, flowerTotal,
     canCraft, startCraft, sell,
     tick, progressOf, remainingOf,
-    wonderActive, wonderMult, startWonder,
+    wonderActive, wonderMult, startWonder, comboMult,
     UPGRADE_EFFECTS,
     repToNext, cumulativeRep, levelFromRep, repIntoLevel,
     seedUnlocked, seedUnlockLevel, plotAvailable, plotUnlockLevel,

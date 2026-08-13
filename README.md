@@ -22,7 +22,7 @@ python3 -m http.server 8899
 
 ## How it plays
 
-- **Tap the flower** for coins. Taps build a combo ring, and crits pay out a multiple of the base.
+- **Tap the flower** for coins. Taps build a combo that multiplies payout (+1% per combo), and crits pay out a multiple of the base.
 - **Tap a plot** to plant a seed. Tap a growing plant to shave a little time off it, and tap a
   finished one to harvest.
 - **Harvests roll a rarity** — Common, Rare, Epic or Legendary — multiplying the payout up to 8×.

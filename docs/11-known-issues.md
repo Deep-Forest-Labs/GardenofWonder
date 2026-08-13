@@ -7,19 +7,6 @@ If you fix one, delete it from this file in the same commit.
 
 ## Balance
 
-### The combo does nothing
-
-`tap.combo` drives the ring fill and the tap sound's pitch. It does **not** multiply payout.
-
-That makes the **Combo Coil badge a dead purchase** — 2,500 coins escalating at 2× for a longer
-musical run. A player reasonably assumes a "combo" affects earnings.
-
-Inherited from *Idle Garden Reborn*, which worked the same way. Either wire it into payout or rename
-it honestly. Wiring it in is a significant balance change, since taps would gain a multiplier that
-climbs to 50–100.
-
-*Where:* `game.js` `tapFlower()`, `ui.js` frame loop.
-
 ### Endgame seeds are worse gem farms than a Daisy
 
 Harvest gem chance is `seed.gemChance` if defined, otherwise a flat **5%**. Only the top five seeds

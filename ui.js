@@ -877,7 +877,7 @@
         ${line('Hold-to-tap rate', `${(S.tap.holdInterval / 1000).toFixed(2)}s`, 'Hold the flower for automatic taps')}
         ${line('Crit chance', pct(Math.min(critChance, 0.99), 1), 'Chance for a big bonus tap')}
         ${line('Crit multiplier', `${critMult.toFixed(1)}x`, 'Payout spike when a crit lands')}
-        ${line('Combo cap', `${S.tap.comboMax}`, 'Ring around the flower fills as you tap')}
+        ${line('Combo cap', `${S.tap.comboMax}`, `${Game.comboMult().toFixed(2)}× now · +1% per combo`)}
       </div>
       <div class="stat-block">
         <h3>${Icons.get('sparkle')} Tap Bonuses</h3>

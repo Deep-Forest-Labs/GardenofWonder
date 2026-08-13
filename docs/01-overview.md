@@ -50,7 +50,7 @@ Wonder*. Concretely, this project borrows six things from that reference:
 
 Built and working:
 
-- Tapping with crits, a combo ring, and gem drops.
+- Tapping with crits, a combo that multiplies payout, and gem drops.
 - Eight plots, nineteen seeds, four-tier rarity harvests.
 - Fifteen upgrade types, four stacking decor pieces, four timed boosters.
 - Full automation: eight per-plot harvesters plus a harvest drone.

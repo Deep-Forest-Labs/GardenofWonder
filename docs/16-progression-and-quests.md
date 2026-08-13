@@ -1,8 +1,8 @@
 # Progression and Quests
 
-**Status: phases 1–2 built.** Specified 2026-08-12; phase 1 shipped the same day, phase 2 on
-2026-08-13. Reasoning in [10-decision-log.md](10-decision-log.md). Phases 3–4 are still specified,
-not built.
+**Status: phases 1–3 built.** Specified 2026-08-12; phase 1 shipped the same day, phase 2 on
+2026-08-13, phase 3 the same morning. Reasoning in [10-decision-log.md](10-decision-log.md).
+Phase 4 (Almanac) is still specified, not built.
 
 Read alongside [13-order-system.md](13-order-system.md), which owns reputation long-term, and
 [15-navigation-and-ia.md](15-navigation-and-ia.md), which owns where things live on screen.
@@ -286,6 +286,8 @@ earlier in the day. An unclaimed daily expires at midnight; the ladder never exp
 - A maxed harvester still plants only an unlocked seed.
 - Ticket migration converts at 5:1 exactly once; activating a held boost decrements inventory
   and sets the timer; activating with none held is a no-op.
+- Combo payout at 0 / 25 / 50 matches `1 + combo × 0.01`; Combo Coil raises the ceiling; decay
+  reduces the multiplier; harvests ignore combo.
 
 ## Phase 2 — Retire tickets
 
@@ -320,16 +322,16 @@ decrements inventory and sets the timer; activating with none held is a no-op.
 
 ## Phase 3 — Make the combo pay
 
-The combo ring fills as you tap, caps at `comboMax` (50, +10 per Combo Coil level to 100), decays 1
-per second, and **multiplies nothing**. Combo Coil is a 2,500-coin badge that raises a cap on a
-number with no effect. This is the most visible broken promise in the game.
+**Built 2026-08-13.** The combo ring fills as you tap, caps at `comboMax` (50, +10 per Combo Coil level to 100), decays 1
+per second. It now multiplies tap payout:
 
 ```js
 comboMult = 1 + state.tap.combo * 0.01
 ```
 
 Applied in `tapFlower()` alongside the existing multipliers, tap-only — the combo never touches
-harvest payouts.
+harvest payouts. The multiplier uses the combo **before** the tap increments it, so a tap at combo
+0 is 1.0× and a tap at combo 50 is 1.5×.
 
 At combo 50 that is 1.5×, and at 100 it is 2.0×. **The multiplier scales with absolute combo, not
 with the fraction of the cap.** If it scaled with the fraction, Combo Coil would make the combo
@@ -339,8 +341,8 @@ ceiling from +50% to +100% and finally earns its price.
 Leave the 1-per-second decay alone. It is already well shaped against hold-to-tap: at the base 900
 ms hold interval a held finger nets +0.11 combo per second and effectively never maxes, while a
 fully levelled Quick Grip at 180 ms nets +4.56 per second and fills in about eleven seconds. Quick
-Grip therefore buys the combo as a second-order reward, which is a better payoff than the badge
-currently has. Do not "fix" the decay without re-checking that interaction.
+Grip therefore buys the combo as a second-order reward. Do not "fix" the decay without re-checking
+that interaction.
 
 **Sim-test:** payout at combo 0, 25 and 50 matches the formula; Combo Coil raises the achievable
 ceiling; decay reduces the multiplier; harvest payouts are unchanged by combo.
