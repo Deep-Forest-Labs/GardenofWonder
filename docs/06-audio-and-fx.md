@@ -105,7 +105,7 @@ zero under reduced motion. They drift down with a sine sway, wrap at the edges, 
 
 DOM, not canvas, because it needs the game font and outlined text style. `float(x, y, text, kind)`
 appends an absolutely positioned element with a random horizontal drift, then removes it after
-850 ms (1,100 ms for `big`). Kinds: `crit`, `big`, `gem`, `ticket`, and the rarity names.
+850 ms (1,100 ms for `big`). Kinds: `crit`, `big`, `gem`, and the rarity names.
 
 ### Screen shake
 

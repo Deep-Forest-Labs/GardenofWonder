@@ -63,9 +63,9 @@ What the authored data needs to contain. Column names are suggestions; the shape
 
 ### Seeds *(exists — 19 rows)*
 
-`id · name · cost · growSeconds · yield · gemChance · ticketChance · art{}`
+`id · name · cost · growSeconds · yield · gemChance · art{}`
 
-Migration note: `ticketChance` becomes gem chance or is dropped when tickets retire.
+`ticketChance` was dropped when tickets retired (progression phase 2).
 
 ### Flowers
 

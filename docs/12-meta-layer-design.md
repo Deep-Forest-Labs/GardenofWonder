@@ -149,9 +149,8 @@ rather than one region.
 **Reputation is the single global progression track.** It gates land, recipes and seed tiers. One
 number, not parallel systems.
 
-**Tickets are retired.** Boosters move to gems. Tickets exist only because the previous build had
-them, and the game is heading for too many currencies. Migrated saves convert tickets to gems at a
-fixed rate.
+**Tickets are retired.** Boosts are earned inventory (quests, level-ups, later orders and rewarded
+video), not a gem shop. Migrated saves convert leftover tickets to gems at 5:1.
 
 **Water is not a tracked resource.** It's friction without fun, and it would add a currency for no
 gain. Watering stays a *tap interaction* that speeds growth — which the existing `hasten()` already

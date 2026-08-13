@@ -26,14 +26,14 @@ python3 -m http.server 8899
 - **Tap a plot** to plant a seed. Tap a growing plant to shave a little time off it, and tap a
   finished one to harvest.
 - **Harvests roll a rarity** — Common, Rare, Epic or Legendary — multiplying the payout up to 8×.
-- **Badges** upgrade your taps, growth speed and automation. **Decor** grants stacking passive
-  bonuses. **Boosts** are short, powerful surges bought with tickets.
+- **Badges** upgrade your taps, growth speed and automation. **Decor** is cosmetic. **Boosts** are
+  short surges you earn from quests and level-ups, then tap on the tray to activate.
 - **Harvesters** keep a single plot planted on their own, always choosing the best seed you can
   currently afford. The **Harvest Drone** collects ready plots for you.
 - **The Wonder Effect** fires at random: for 20 seconds the garden goes rainbow, everything pays
   triple and plants grow three times faster.
 
-Three currencies: coins from taps and harvests, tickets for boosts, and gems for premium decor.
+Two currencies: coins from taps and harvests, and gems for premium decor.
 
 ## Project layout
 

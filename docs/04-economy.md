@@ -61,16 +61,16 @@ original build. Left alone for now, noted in [11-known-issues.md](11-known-issue
 ### Premium drop chances
 
 Only the top five seeds define their own drop rates. Every other seed uses the default 5% gem
-chance and has no ticket chance at all.
+chance.
 
-| Seed | Gem chance | Ticket chance |
-| --- | --- | --- |
-| Nebula Orchid | 0.8% | 0.3% |
-| Solstice Lily | 1.0% | 0.4% |
-| Aurora Crown | 1.2% | 0.5% |
-| Mythic Starflower | 1.5% | 0.6% |
-| Eternal Crown | 2.0% | 0.8% |
-| *(all others)* | 5.0% *(default)* | none |
+| Seed | Gem chance |
+| --- | --- |
+| Nebula Orchid | 0.8% |
+| Solstice Lily | 1.0% |
+| Aurora Crown | 1.2% |
+| Mythic Starflower | 1.5% |
+| Eternal Crown | 2.0% |
+| *(all others)* | 5.0% *(default)* |
 
 Read that table twice: the endgame seeds have a **lower** gem chance than a Daisy. Explicitly
 defining `gemChance` overrides the generous 5% fallback, so the best gem farm in the game is
@@ -185,16 +185,18 @@ uncapped growth vector; it's cosmetic-only now and doesn't move any of these num
 
 ## Boosters
 
-| Booster | Tickets | Duration | Effect key | Value |
-| --- | --- | --- | --- | --- |
-| Bloom Burst | 25 | 30 s | `tapPower`, `critChance` | +50%, +2% |
-| Seed Rush | 20 | 600 s | `growSpeed` | +30% |
-| Fortune Aura | 40 | 1,800 s | `rarityWeight` | +50% |
-| Golden Popups | 30 | 30 s | `globalCredits` | +25% |
+Earned from quests, level-ups and the daily; stored in `boostInv`; activated from the rail. No
+ticket price.
 
-Value per ticket-second varies wildly: Fortune Aura gives 45 ticket-seconds per ticket, Bloom Burst
-1.2. The short boosters are priced as burst tools for an active session, the long ones as
-set-and-forget.
+| Booster | Duration | Effect key | Value |
+| --- | --- | --- | --- |
+| Bloom Burst | 30 s | `tapPower`, `critChance` | +50%, +2% |
+| Seed Rush | 600 s | `growSpeed` | +30% |
+| Fortune Aura | 1,800 s | `rarityWeight` | +50% |
+| Golden Popups | 30 s | `globalCredits` | +25% |
+
+Scarcity is the point. If playtesting shows they are too rare, the fallback is gem pricing at
+1 gem = 5 old tickets — see [16-progression-and-quests.md](16-progression-and-quests.md).
 
 ## Decor
 
@@ -208,7 +210,7 @@ in `Game.load()`).
 | Gnome of Fortune | gems | 250 |
 | Butterfly Shrine | coins | 1,000 |
 | Crystal Fountain | coins | 5,000 |
-| Lantern Tree | tickets | 200 |
+| Lantern Tree | gems | 40 |
 
 **Prices never escalate.** The fiftieth Butterfly Shrine still costs 1,000 coins. It lives in the
 Shop tab and is a pure currency sink with no effect on the simulation.

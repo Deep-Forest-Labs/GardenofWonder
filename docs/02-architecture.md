@@ -74,10 +74,10 @@ in `boot()`.
 | `tap` | Flower tapped | `{ gain, crit, combo, gemDrop, sparkedWonder, rainDance, beeSwarm, ladybug, held }` |
 | `plant` | Seed planted (manually or by a harvester) | `{ idx, seed, auto }` |
 | `ready` | A plot finishes growing | `{ idx }` |
-| `harvest` | Plot collected | `{ idx, payout, rarity, seed, gemDrop, ticketDrop, ticketBonus, sparkedWonder }` |
+| `harvest` | Plot collected | `{ idx, payout, rarity, seed, gemDrop, repBonus, sparkedWonder, luckyHarvest }` |
 | `unlock` | Plot purchased | `{ idx, cost }` |
 | `purchase` | Upgrade, decor, or booster bought | `{ kind, key, cost?, def? }` |
-| `deny` | A purchase failed | `{ reason, need, idx? }` — `reason` is `credits` / `tickets` / `gems` / `level` |
+| `deny` | A purchase failed | `{ reason, need, idx? }` — `reason` is `credits` / `gems` / `level` |
 | `wonder` | Wonder Effect starts or ends | `{ active }` |
 | `quest` | A quest was claimed | `{ id, def, rep, grants }` |
 | `levelup` | Reputation crossed a level | `{ from, to, grants }` |

@@ -81,8 +81,8 @@ Animate `transform` and `opacity`. Avoid animating layout properties.
    garden level.
 2. Write the `art` block. Pick an existing `shape`, or add a recipe to `rings()` / `customHead()` in
    `flora.js`.
-3. Optionally set `gemChance` / `ticketChance`. Note that setting `gemChance` **overrides** the 5%
-   default rather than adding to it.
+3. Optionally set `gemChance`. Note that setting `gemChance` **overrides** the 5% default rather
+   than adding to it.
 4. Gradients are generated automatically from `c1` / `c2`.
 5. **Check the bloom at 22 px**, not just in a plot. The Almanac renders it that small.
 
@@ -117,14 +117,17 @@ Nothing else needs touching — the seed picker, Almanac and harvester ceilings 
 
 ## Playbook: add a booster
 
-1. Append to `DATA.boosters` with `tickets`, `dur`, `icon`, `tint`, `effects`, `desc`.
+1. Append to `DATA.boosters` with `dur`, `icon`, `tint`, `effects`, `desc`. Do not add a price —
+   boosts are earned, not bought.
 2. Use an **existing effect key** if you can — see the key table in
    [04-economy.md](04-economy.md). For a new key, add the place that reads it — `boostVal(key)`
    sums active sources, but something has to consume the sum.
-3. Boosters replace rather than extend their own timer, and need a `tint` for the rail chip.
+3. A boost that is already running cannot be refreshed — the rail hides the hold-chip until it
+   expires, so a second copy is not spent by accident. Needs a `tint` for the rail chip.
 4. There is no shop panel for boosters. They surface as a chip in the status rail (`renderRail()`
-   in `ui.js`) — a countdown while active, a tappable buy-and-activate chip while affordable and
-   idle, invisible otherwise. See [15-navigation-and-ia.md](15-navigation-and-ia.md).
+   in `ui.js`) — a countdown while active, a tappable consume-one chip while `boostInv` holds at
+   least one and the boost is idle, invisible otherwise. Grant copies through quest `reward.boost`
+   or `DATA.levelGrants`. See [16-progression-and-quests.md](16-progression-and-quests.md).
 
 ## Playbook: add a game event with feedback
 

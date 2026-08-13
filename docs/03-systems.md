@@ -8,12 +8,12 @@ out inline.
 | Currency | Internal name | Earned from | Spent on |
 | --- | --- | --- | --- |
 | Coins | `credits` | Taps, harvests | Seeds, plot unlocks, badges, two cosmetic decor pieces |
-| Tickets | `tickets` | Every 10th harvest, lucky crits, rare seed drops | Boosters, Lantern Tree (cosmetic) decor |
-| Gems | `gems` | 5% of taps, harvest drops | Gnome of Fortune (cosmetic) decor |
+| Gems | `gems` | 5% of taps, harvest drops, ticket conversion | Gnome of Fortune and Lantern Tree (cosmetic) |
 
 A new garden starts with 100 coins and nothing else.
 
-Gems are the least-used currency: the Gnome of Fortune at 250 gems is currently their only sink.
+Gems are the premium sink: Gnome of Fortune at 250 and Lantern Tree at 40. Tickets used to exist
+as a third currency for boosts; they convert to gems at 5:1 on first load of an old save.
 
 ## Tapping
 
@@ -33,7 +33,6 @@ credits += round(gain)
 Side rolls on every tap:
 
 - **5% chance of +1 gem**, independent of everything else.
-- **On a crit only, a further 3% chance of +1 ticket.**
 - **0.15% chance of triggering a Wonder Effect**, subject to its cooldown.
 
 Crit chance is uncapped in the simulation. The Almanac clamps its *display* to 99%, but nothing
@@ -56,7 +55,7 @@ coins buys nothing but a longer musical run and a fuller ring. See
 Holding the flower down repeats `tapFlower(true)` on a fixed cadence for as long as the pointer
 stays down — it is an input method, not a separate payout path. The initial press is a normal tap
 (`held` is false); only the interval repeats count as hold ticks for quests. Every rolled effect
-(crit, gem drop, ticket, Wonder spark) and the combo counter behave exactly as they do for a
+(crit, gem drop, Wonder spark) and the combo counter behave exactly as they do for a
 manual tap, because it's the same function call.
 
 `tap.holdInterval` starts at 900ms and is shortened by the Quick Grip badge, 60ms per level, down
@@ -191,12 +190,11 @@ tint the empty soil until something new is planted.
 
 ### Harvest drops
 
-- **Every 10th harvest pays +3 tickets.** The counter is `harvestsThisSession`, which despite the
+- **Every 10th harvest pays +1 reputation.** The counter is `harvestsThisSession`, which despite the
   name is saved and never reset, so progress toward the next bonus survives reloads.
 - **Gems**: `seed.gemChance` if the seed defines one, otherwise a flat 5%. Counter-intuitively the
   late-game seeds define *lower* gem chances (0.8% – 2%) than the 5% default, so common seeds are
   the better gem farm.
-- **Tickets**: only the six highest seeds define `ticketChance`, from 0.3% to 0.8%.
 - **2% chance of triggering a Wonder Effect**, subject to cooldown.
 
 ## Automation
@@ -239,17 +237,19 @@ instance and increment from game events — they never read `state.flowers`. Ful
 
 ## Boosters
 
-Bought with tickets, timed, and stackable across different boosters. Buying one that's already
-running **replaces** its expiry rather than extending it. No shop panel — a booster surfaces as a
-chip in the status rail, tap to buy-and-activate. See
-[15-navigation-and-ia.md](15-navigation-and-ia.md).
+Earned inventory in `state.boostInv`, timed once activated, and stackable across different
+boosters. Activating one that's already running is a no-op — the rail hides the hold-chip while
+that boost's countdown is up, so you cannot spend a second copy to refresh. No shop panel and no
+purchase path. A held booster surfaces as a chip in the status rail, tap to consume one. See
+[15-navigation-and-ia.md](15-navigation-and-ia.md) and
+[16-progression-and-quests.md](16-progression-and-quests.md).
 
-| Booster | Cost | Duration | Effect |
-| --- | --- | --- | --- |
-| Bloom Burst | 25 | 30 s | +50% tap power, +2% crit chance |
-| Seed Rush | 20 | 10 min | +30% growth speed |
-| Fortune Aura | 40 | 30 min | +50% rarity weights |
-| Golden Popups | 30 | 30 s | +25% credits from all sources |
+| Booster | Duration | Effect |
+| --- | --- | --- |
+| Bloom Burst | 30 s | +50% tap power, +2% crit chance |
+| Seed Rush | 10 min | +30% growth speed |
+| Fortune Aura | 30 min | +50% rarity weights |
+| Golden Popups | 30 s | +25% credits from all sources |
 
 Expiry is checked each tick and removal emits `panels` so open shop cards update themselves.
 
@@ -264,7 +264,7 @@ gnome is a second copy in `state.decor`, tracked only for `Game.decorCount(id)` 
 | Gnome of Fortune | 250 gems |
 | Butterfly Shrine | 1,000 coins |
 | Crystal Fountain | 5,000 coins |
-| Lantern Tree | 200 tickets |
+| Lantern Tree | 40 gems |
 
 Prices are flat — the tenth costs the same as the first. No effect on any formula on this page;
 decor doesn't appear in any of them anymore.
@@ -391,7 +391,7 @@ resize.
 Sound effects (on by default) and ambient music (**off** by default) each toggle independently and
 persist.
 
-Settings also contains three developer affordances that ship to players: grant 50 gems and
-tickets, summon a Wonder Effect, and reset the save. Reset is two-step — the first tap arms it,
+Settings also contains three developer affordances that ship to players: grant 50 gems,
+summon a Wonder Effect, and reset the save. Reset is two-step — the first tap arms it,
 and it disarms itself after 4 seconds. The two grant buttons have no such guard. See
 [11-known-issues.md](11-known-issues.md).

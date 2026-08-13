@@ -1,7 +1,17 @@
-# Decision Log
+## 2026-08-13 — Tickets retired; boosts are earned inventory
 
-Why things are the way they are. Append new entries at the top with a date. Record the reasoning,
-not the diff — git already has the diff.
+**Decision.** Built phase 2 of [16-progression-and-quests.md](16-progression-and-quests.md). The
+HUD is two wallets. Boosts come from quests, level-ups and the daily, sit in `boostInv`, and
+activate from the rail — tap consumes one. There is no buy path.
+
+**Conversion is 5 tickets to 1 gem, once.** The flag is the presence of `boostInv` on the save,
+same shape as the decor refund: toast, then never again. Leftover `state.tickets` stays so old
+saves parse and is zeroed after the grant. Lantern Tree moved to 40 gems, which is the same 5:1
+as the conversion, so a tree that used to cost 200 tickets still costs the same in gem terms.
+
+**The tenth-harvest beat survived as reputation.** +3 tickets every 10 harvests was the only
+regular drip besides quests. Replacing it with +1 reputation keeps the float without inventing a
+second currency or inflating gem income. Combo Coil and the Almanac are still phase 3 and 4.
 
 ---
 

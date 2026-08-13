@@ -256,6 +256,8 @@ clearGarden();
 S.apiary.hives = [];
 const meanHarvest = (decorOwned) => {
   S.decor = decorOwned;
+  unlockTo(20);
+  S.apiary.hives = [];
   let total = 0;
   const runs = 12000;
   for (let i = 0; i < runs; i += 1) {
@@ -531,6 +533,47 @@ globalThis.localStorage.setItem('gw-save', JSON.stringify(saveOf({
 })));
 G.load();
 check('a planted high-tier seed with an empty wallet is not taken away', G.seedUnlocked('moonflower') === true);
+G.reset();
+
+group('tickets convert to gems once and boosts are earned');
+check('Lantern Tree costs gems', (() => {
+  const d = DATA.decor.find((x) => x.id === 'lanterntree');
+  return d && d.currency === 'gems' && d.cost === 40;
+})());
+check('boosters have no ticket price', DATA.boosters.every((b) => !('tickets' in b)));
+G.reset();
+S.harvestsThisSession = 9;
+S.credits = 1e6;
+clearGarden();
+S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false };
+const tenth = G.harvest(0);
+check('the tenth harvest pays reputation, not tickets', tenth.repBonus === 1 && S.rep === 1 && S.tickets === 0);
+
+G.reset();
+S.boostInv.bloom = 1;
+const fired = G.activateBoost('bloom');
+check('activating a held boost consumes it', fired === true && S.boostInv.bloom === 0);
+check('the timer is running', G.activeBoost('bloom') === true);
+check('activating with none held is a no-op', G.activateBoost('bloom') === false && G.activeBoost('bloom') === true);
+S.boosters.bloom = 0;
+check('activating with none held after expiry is still a no-op', G.activateBoost('bloom') === false);
+
+G.reset();
+const prior = JSON.parse(JSON.stringify(S));
+delete prior.boostInv;
+prior.tickets = 23;
+prior.gems = 2;
+prior.rep = 0;
+store['gw-save'] = JSON.stringify(prior);
+const converted = G.load();
+check('migration converts tickets at 5:1', converted.ticketGrant
+  && converted.ticketGrant.tickets === 23
+  && converted.ticketGrant.gems === 5, JSON.stringify(converted.ticketGrant));
+check('those gems land in the wallet', S.gems === 7, `got ${S.gems}`);
+check('tickets are zeroed', S.tickets === 0);
+check('boost inventory exists after conversion', S.boostInv && S.boostInv.bloom === 0);
+const again = G.load();
+check('a second load does not convert again', again.ticketGrant == null && S.gems === 7, JSON.stringify(again.ticketGrant));
 G.reset();
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

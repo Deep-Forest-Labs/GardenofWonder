@@ -1,7 +1,8 @@
 # Progression and Quests
 
-**Status: phase 1 built.** Specified 2026-08-12; phase 1 shipped the same day. Reasoning in
-[10-decision-log.md](10-decision-log.md). Phases 2–4 are still specified, not built.
+**Status: phases 1–2 built.** Specified 2026-08-12; phase 1 shipped the same day, phase 2 on
+2026-08-13. Reasoning in [10-decision-log.md](10-decision-log.md). Phases 3–4 are still specified,
+not built.
 
 Read alongside [13-order-system.md](13-order-system.md), which owns reputation long-term, and
 [15-navigation-and-ia.md](15-navigation-and-ia.md), which owns where things live on screen.
@@ -129,8 +130,8 @@ Auto-planters plant `min(harvester ceiling, highest unlocked seed, affordable)`.
 (`plotExpansion`) can only unlock plots the current level has already opened; at level 1 it reads
 Maxed.
 
-Every level-up also pays a small coin grant (`20 × newLevel`). Boost grants at 3, 6, 9… wait for
-Phase 2.
+Every level-up also pays a small coin grant (`20 × newLevel`). Boosts are granted at levels 3, 6,
+9, 12 and 15 (Bloom Burst, Seed Rush, Golden Popups, Fortune Aura, Bloom Burst).
 
 **Migration is mandatory here.** Taking a seed away from an existing save is the single worst thing
 this feature could do. On first load of a save without a `rep` key (`'rep' in parsed`, not
@@ -262,8 +263,9 @@ collection (`crafted`), not `startCraft`. Sell quests count flowers only.
 ### The daily quest
 
 One quest, reset on local date change, drawn from `DATA.dailies`: Harvest 10 blooms, Plant 6 seeds,
-Tap 100 times, Sell 3 flowers. Pays 12 reputation plus a small coin grant. No craft daily — it can
-strand a day-one return. Boost rewards wait for Phase 2.
+Tap 100 times, Sell 3 flowers. Pays 12 reputation, a small coin grant, and a boost matching the
+verb (Seed Rush, Seed Rush, Bloom Burst, Golden Popups). No craft daily — it can strand a day-one
+return. No Fortune Aura on the daily; that one stays a ladder gift.
 
 Use local date, not a 24-hour timer from last claim. Timers that drift punish players for playing
 earlier in the day. An unclaimed daily expires at midnight; the ladder never expires.
@@ -282,15 +284,17 @@ earlier in the day. An unclaimed daily expires at midnight; the ladder never exp
 - Plot 5 is gated at level 1 and buyable at level 3; Land Deed cannot skip a plot the level has
   not opened.
 - A maxed harvester still plants only an unlocked seed.
+- Ticket migration converts at 5:1 exactly once; activating a held boost decrements inventory
+  and sets the timer; activating with none held is a no-op.
 
 ## Phase 2 — Retire tickets
 
-Tickets are a third currency whose only use is buying four boosts from a rail chip. They add a
-wallet, a drop type, a price display, and a denial reason, and they buy something the player
-doesn't choose so much as tolerate. The nav spec already calls for the boost tray to show **what
+**Built 2026-08-13.** Tickets are a third currency whose only use was buying four boosts from a rail chip. They added a
+wallet, a drop type, a price display, and a denial reason, and they bought something the player
+didn't choose so much as tolerate. The nav spec already calls for the boost tray to show **what
 you hold**, not what you can buy ([15-navigation-and-ia.md](15-navigation-and-ia.md)).
 
-**Boosts become earned inventory. Tickets are deleted.**
+**Boosts are earned inventory. Tickets are deleted.**
 
 | Change | Detail |
 | --- | --- |
@@ -300,12 +304,16 @@ you hold**, not what you can buy ([15-navigation-and-ia.md](15-navigation-and-ia
 | Wallet | Remove tickets from the HUD. Two wallets, credits and gems. |
 | Migration | `gems += round(tickets / 5)`, once, behind a flag, with a toast. Copy the decor-refund migration. |
 | Lantern Tree | Was 200 tickets. Becomes 40 gems. |
-| Drops | Remove `ticketChance` from seeds, the 3% crit-tap ticket, and the +3-per-10-harvests grant. Replace the harvest grant with reputation so the beat survives. |
+| Drops | Removed `ticketChance` from seeds, the 3% crit-tap ticket, and the +3-per-10-harvests grant. The harvest beat now pays +1 reputation every 10 harvests. |
 | `state.tickets` | Keep the field so old saves parse. Stop reading it after migration. |
 
 No purchase path for boosts. Gems keep decor as their sink. If playtesting shows boosts too scarce,
 the documented fallback is gem pricing at 1 gem = 5 old tickets — but try scarcity first, because a
 boost you were given at the right moment reads as a gift and a boost you bought reads as a tax.
+
+Ladder gifts: hive → Seed Rush, Flower Tea → Golden Popups, Rare → Fortune Aura, Epic → Fortune
+Aura, combo 55 → Bloom Burst. Levels 3 / 6 / 9 / 12 / 15 grant Bloom Burst, Seed Rush, Golden
+Popups, Fortune Aura, Bloom Burst.
 
 **Sim-test:** migration converts tickets at the stated rate exactly once; activating a held boost
 decrements inventory and sets the timer; activating with none held is a no-op.

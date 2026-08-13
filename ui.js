@@ -18,10 +18,8 @@
     qCount: $('#qCount'),
     qReward: $('#qReward'),
     credits: $('#credits'),
-    tickets: $('#tickets'),
     gems: $('#gems'),
     walletCredits: $('#walletCredits'),
-    walletTickets: $('#walletTickets'),
     walletGems: $('#walletGems'),
     dock: $('#dock'),
     sheet: $('#sheet'),
@@ -331,7 +329,6 @@
   /* ============ HUD ============ */
   const counters = {
     credits: { disp: 0, node: el.credits, wallet: el.walletCredits, get: () => S.credits },
-    tickets: { disp: 0, node: el.tickets, wallet: el.walletTickets, get: () => S.tickets },
     gems: { disp: 0, node: el.gems, wallet: el.walletGems, get: () => S.gems }
   };
 
@@ -395,9 +392,8 @@
   }
 
   /* ============ rail chips ============ */
-  /* The boost tray: active boosts show a countdown, affordable-but-idle ones show
-     a tappable buy chip. Nothing renders for a boost that's neither — an empty
-     slot in a cozy game reads as nagging, not an upsell. */
+  /* The boost tray: active boosts show a countdown, held idle ones show a
+     tappable chip that consumes one. Nothing renders when you hold none. */
   function renderRail() {
     const now = Game.nowSeconds();
     let html = '';
@@ -408,11 +404,13 @@
         html += `<div class="chip timed" style="--tint:${b.tint}">
           <span class="ring" style="--p:${p.toFixed(3)}"><i>${Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain)}</i></span>
           <span>${b.name}</span></div>`;
-      } else if (S.tickets >= b.tickets) {
+      } else {
+        const held = (S.boostInv && S.boostInv[b.id]) || 0;
+        if (held < 1) return;
         html += `<button class="chip buyable" data-boost="${b.id}" style="--tint:${b.tint}">
           <span class="chip-ico">${Icons.get(b.icon)}</span>
           <span>${b.name}</span>
-          <span class="chip-price">${Icons.get('ticket')}${fmt(b.tickets)}</span></button>`;
+          <span class="chip-price">×${held}</span></button>`;
       }
     });
     if (Game.wonderActive()) {
@@ -510,7 +508,7 @@
 
   function priceTag(cost, currency, affordable, maxed) {
     if (maxed) return `<span class="price maxed">${Icons.get('check')}Maxed</span>`;
-    const icon = currency === 'gems' ? 'gem' : currency === 'tickets' ? 'ticket' : 'coin';
+    const icon = currency === 'gems' ? 'gem' : 'coin';
     return `<span class="price ${affordable ? 'ok' : 'no'}">${Icons.get(icon)}${fmt(cost)}</span>`;
   }
 
@@ -562,7 +560,7 @@
   function renderShop() {
     const cards = DATA.decor.map((d) => {
       const owned = Game.decorCount(d.id);
-      const pot = d.currency === 'gems' ? S.gems : d.currency === 'tickets' ? S.tickets : S.credits;
+      const pot = d.currency === 'gems' ? S.gems : S.credits;
       const can = pot >= d.cost;
       return `<button class="card ${can ? 'affordable' : ''}" data-buy="decor" data-key="${d.id}">
         <div class="card-top">
@@ -767,7 +765,6 @@
       const max = Math.round(s.yield * MAX_RARITY_MULT);
       const drops = [];
       if (s.gemChance) drops.push(`<span class="stat gem">${Icons.get('gem')}${pct(s.gemChance, 1)}</span>`);
-      if (s.ticketChance) drops.push(`<span class="stat gem">${Icons.get('ticket')}${pct(s.ticketChance, 1)}</span>`);
       if (locked) {
         return `<div class="seed-row gated">
           <span class="seed-art">${Flora.head(s, 40)}</span>
@@ -806,6 +803,10 @@
     const bits = [`+${def.rep} reputation`];
     if (def.reward && def.reward.credits) bits.push(`+${fmt(def.reward.credits)} coins`);
     if (def.reward && def.reward.gems) bits.push(`+${def.reward.gems} gems`);
+    if (def.reward && def.reward.boost) {
+      const b = DATA.boosters.find((x) => x.id === def.reward.boost);
+      if (b) bits.push(b.name);
+    }
     return bits.join(' · ');
   }
 
@@ -931,7 +932,7 @@
         <button class="toggle" data-toggle="music" aria-pressed="${S.prefs.music}"><i></i></button>
       </div>
       <p class="sheet-note">Your garden saves automatically to this browser.</p>
-      <button class="big-btn magic" data-act="cheat">${Icons.get('gem')} Grant 50 Gems &amp; Tickets</button>
+      <button class="big-btn magic" data-act="cheat">${Icons.get('gem')} Grant 50 Gems</button>
       <button class="big-btn magic" data-act="cheatGold">${Icons.get('coin')} Grant 1,000,000 Gold</button>
       <button class="big-btn" data-act="wonder">${Icons.get('sparkle')} Summon a Wonder Effect</button>
       <button class="big-btn danger" data-act="reset">${Icons.get('trash')} ${resetArmed ? 'Tap again to erase everything' : 'Reset save'}</button>
@@ -1037,10 +1038,10 @@
     if (act) {
       const a = act.dataset.act;
       if (a === 'cheat') {
-        S.gems += 50; S.tickets += 50;
+        S.gems += 50;
         Game.save(); Game.emit('currency'); Game.emit('panels');
         Sound.play('coin');
-        toast({ title: 'Pockets filled!', body: '+50 gems and tickets', art: Icons.get('gem') });
+        toast({ title: 'Pockets filled!', body: '+50 gems', art: Icons.get('gem') });
       } else if (a === 'cheatGold') {
         S.credits += 1000000;
         Game.save(); Game.emit('currency'); Game.emit('panels');
@@ -1071,13 +1072,11 @@
   el.rail.addEventListener('click', (e) => {
     const chip = e.target.closest('[data-boost]');
     if (!chip) return;
-    if (Game.buyBooster(chip.dataset.boost)) {
+    if (Game.activateBoost(chip.dataset.boost)) {
       const c = FX.centerOf(chip);
       FX.sparks(c.x, c.y, 12, '#ffe066');
       FX.ring(c.x, c.y, '#ffffff', 0.45, 70);
-    } else {
-      Sound.play('deny');
-      FX.shake(4);
+      renderRail();
     }
   });
 
@@ -1194,7 +1193,7 @@
     const canUpgrade = CORE_UPGRADES.concat(PLOT_AUTOPLANTERS.filter(({ idx }) => !S.grid[idx].locked).map((p) => p.key))
       .some((k) => !Game.upgradeMaxed(k) && S.credits >= Game.upgradePrice(k));
     const canDecor = DATA.decor.some((d) => {
-      const pot = d.currency === 'gems' ? S.gems : d.currency === 'tickets' ? S.tickets : S.credits;
+      const pot = d.currency === 'gems' ? S.gems : S.credits;
       return pot >= d.cost;
     });
     const canHive = Game.jarsWaiting() > 0 || (!Game.hiveCount() && S.credits >= Game.nextHiveCost());
@@ -1331,6 +1330,7 @@
     Sound.play('quest');
     FX.haptic([12, 30, 22]);
     renderQuestStrip();
+    renderRail();
   });
 
   Game.on('levelup', ({ to, grants }) => {
@@ -1346,9 +1346,14 @@
     else if (g && g.hive) body = 'A new hive is waiting in the Apiary.';
     else if (g && g.decor) body = 'A new decoration was added to the garden.';
     else if (g && g.gems) body = `+${g.gems} gems`;
+    else if (g && g.boost) {
+      const b = DATA.boosters.find((x) => x.id === g.boost);
+      body = b ? `${b.name} is waiting on the tray.` : 'A boost is waiting on the tray.';
+    }
     toast({ title: `Level ${to}!`, body, art: Icons.get('star') });
     showBanner(`Level ${to}!`, body, 2000);
     renderQuestStrip();
+    renderRail();
   });
 
   Game.on('tap', (p) => {
@@ -1438,11 +1443,9 @@
       }
     }
     if (p.gemDrop) { FX.float(c.x + 26, c.y - 20, '+1 Gem', 'gem'); popWallet('gems'); }
-    if (p.ticketDrop) { FX.float(c.x - 26, c.y - 20, '+1 Ticket', 'ticket'); popWallet('tickets'); }
-    if (p.ticketBonus) {
-      FX.float(c.x, c.y - 40, `+${p.ticketBonus} Tickets`, 'ticket');
-      popWallet('tickets');
-      Sound.play('coin');
+    if (p.repBonus) {
+      FX.float(c.x, c.y - 40, `+${p.repBonus} Reputation`, 'big');
+      renderQuestStrip();
     }
     if (p.luckyHarvest) {
       FX.sparks(c.x, c.y, 8, '#fa5252');
@@ -1499,7 +1502,7 @@
       if (kind === 'upgrade') can = !Game.upgradeMaxed(key) && S.credits >= Game.upgradePrice(key);
       else if (kind === 'decor') {
         const d = DATA.decor.find((x) => x.id === key);
-        const pot = d.currency === 'gems' ? S.gems : d.currency === 'tickets' ? S.tickets : S.credits;
+        const pot = d.currency === 'gems' ? S.gems : S.credits;
         can = pot >= d.cost;
       }
       node.classList.toggle('affordable', can);
@@ -1612,7 +1615,6 @@
       const parts = [];
       if (r.credits) parts.push(`${fmt(r.credits)} coins`);
       if (r.gems) parts.push(`${fmt(r.gems)} gems`);
-      if (r.tickets) parts.push(`${fmt(r.tickets)} tickets`);
       setTimeout(() => {
         toast({
           title: 'Decor is just for show now',
@@ -1630,6 +1632,20 @@
           title: 'The garden remembers you',
           body: 'Your seeds and plots are still yours. Reputation now tracks how far you\'ve come.',
           art: Icons.get('sprout'),
+          ms: 3600
+        });
+      }, delay);
+    }
+
+    if (info.ticketGrant) {
+      const delay = (info.migrated ? 1500 : 700)
+        + (info.decorRefund ? 1600 : 0)
+        + (info.progressionGrant ? 1600 : 0);
+      setTimeout(() => {
+        toast({
+          title: 'Tickets became gems',
+          body: `Converted ${fmt(info.ticketGrant.tickets)} tickets into ${fmt(info.ticketGrant.gems)} gems.`,
+          art: Icons.get('gem'),
           ms: 3600
         });
       }, delay);

@@ -60,7 +60,7 @@ start; arguably a safety net. Currently undocumented in the UI either way.
 
 ### Cheat buttons ship to players
 
-Settings contains "Grant 50 Gems & Tickets", "Grant 1,000,000 Gold", and "Summon a Wonder Effect".
+Settings contains "Grant 50 Gems", "Grant 1,000,000 Gold", and "Summon a Wonder Effect".
 These were development/testing affordances and are live on the public site. Unlike reset, they have
 no confirmation.
 
@@ -71,7 +71,7 @@ Decide deliberately: keep them as a toy, or gate them behind something.
 ### `harvestsThisSession` is not per session
 
 It's saved and never reset, making it a lifetime counter. The name will mislead. Behaviour is
-reasonable — progress toward the 10-harvest ticket bonus surviving a reload is what a player would
+reasonable — progress toward the 10-harvest reputation drip surviving a reload is what a player would
 want — so this is a naming problem.
 
 ### Absolute timestamps are trivially exploitable

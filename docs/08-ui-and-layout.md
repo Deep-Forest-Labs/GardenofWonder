@@ -136,7 +136,7 @@ a harvest.
 
 ## HUD
 
-Three wallet pills — coins, tickets, gems — plus round buttons for the Almanac and Settings. A
+Three wallet pills — coins and gems — plus round buttons for the Almanac and Settings. A
 quest strip sits between the HUD and the rail: level pip with a reputation ring, a thick bar for
 the current quest's progress (task name and count drawn on top of the fill), and a reward chip.
 Tapping it opens the quest panel; tapping a completed quest claims it. See
@@ -156,8 +156,8 @@ Numbers are abbreviated above 100,000: `100000` stays as-is up to that point, th
 
 Between the quest strip and the stage. This is where boosters live now that they're out of the dock (navigation
 phase 1, [15-navigation-and-ia.md](15-navigation-and-ia.md)): each booster in `DATA.boosters`
-renders as a countdown chip while active, or a tappable `data-boost` buy-and-activate chip while
-affordable and idle. Neither → nothing renders for it, so the tray never shows an empty slot as an
+renders as a countdown chip while active, or a tappable `data-boost` chip while you hold at least
+one and it is idle. Neither → nothing renders for it, so the tray never shows an empty slot as an
 upsell. A Wonder countdown is prepended when active so it always leads.
 
 Decor no longer appears here — it's cosmetic now, with no gameplay state worth surfacing in a

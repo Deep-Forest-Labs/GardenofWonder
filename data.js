@@ -98,31 +98,31 @@ const DATA = {
     {
       id: 'nebula', name: 'Nebula Orchid', cost: 20000, grow: 540, yield: 28000, spr: '🌠', unlockLevel: 13,
       desc: 'Starlit bloom humming with distant stardust dividends.',
-      gemChance: 0.008, ticketChance: 0.003,
+      gemChance: 0.008,
       art: { shape: 'star', petals: 8, c1: '#d6336c', c2: '#f9a3c1', core: '#845ef7', leaf: '#7048b6', glow: '#ff7ab8' }
     },
     {
       id: 'solstice', name: 'Solstice Lily', cost: 35000, grow: 600, yield: 49000, spr: '☀️', unlockLevel: 14,
-      desc: 'Radiant petals channel sunflare surges and rare tickets.',
-      gemChance: 0.01, ticketChance: 0.004,
+      desc: 'Radiant petals channel sunflare surges and rare gems.',
+      gemChance: 0.01,
       art: { shape: 'sun', petals: 14, c1: '#ff922b', c2: '#ffdfae', core: '#fff3bf', leaf: '#59a83f', glow: '#ffb454' }
     },
     {
       id: 'auroracrown', name: 'Aurora Crown', cost: 52000, grow: 660, yield: 72800, spr: '🌈', unlockLevel: 15,
       desc: 'Auroral halo weaves shimmering rewards across the garden.',
-      gemChance: 0.012, ticketChance: 0.005,
+      gemChance: 0.012,
       art: { shape: 'point', petals: 12, c1: '#7ce0ff', c2: '#ffe6a7', core: '#ff8fd0', leaf: '#48b39a', rainbow: true, glow: '#b7f5ff' }
     },
     {
       id: 'mythicstar', name: 'Mythic Starflower', cost: 75000, grow: 720, yield: 105000, spr: '🌟', unlockLevel: 16,
       desc: 'Legend-touched bloom whispering of premium windfalls.',
-      gemChance: 0.015, ticketChance: 0.006,
+      gemChance: 0.015,
       art: { shape: 'star', petals: 5, c1: '#ffd43b', c2: '#fff6cc', core: '#ff922b', leaf: '#7a9a3f', glow: '#ffe066' }
     },
     {
       id: 'eternal', name: 'Eternal Crown', cost: 100000, grow: 780, yield: 140000, spr: '💫', unlockLevel: 17,
-      desc: 'Limitless petals with a rare promise of gems and tickets.',
-      gemChance: 0.02, ticketChance: 0.008,
+      desc: 'Limitless petals with a rare promise of gems.',
+      gemChance: 0.02,
       art: { shape: 'lotus', petals: 12, c1: '#ffcf5c', c2: '#fffdf0', core: '#ff9f1c', leaf: '#c9a227', ring: true, glow: '#fff0b0' }
     }
   ],
@@ -146,21 +146,28 @@ const DATA = {
     { id: 'gnome',      name: 'Gnome of Fortune',  currency: 'gems',    cost: 250,  spr: '🧙', icon: 'gnome',   desc: 'A cheerful garden gnome. Purely for luck of the decorative kind.' },
     { id: 'shrine',     name: 'Butterfly Shrine',  currency: 'credits', cost: 1000, spr: '🦋', icon: 'butterfly', desc: 'Butterflies drift lazily around the little shrine.' },
     { id: 'fountain',   name: 'Crystal Fountain',  currency: 'credits', cost: 5000, spr: '⛲', icon: 'fountain', desc: 'Water trickles prettily. Doesn\u2019t do anything, and that\u2019s fine.' },
-    { id: 'lanterntree', name: 'Lantern Tree',     currency: 'tickets', cost: 200,  spr: '🏮', icon: 'lantern',  desc: 'Glows warm at dusk. A nice spot for the flower to nap.' }
+    { id: 'lanterntree', name: 'Lantern Tree',     currency: 'gems',    cost: 40,   spr: '🏮', icon: 'lantern',  desc: 'Glows warm at dusk. A nice spot for the flower to nap.' }
   ],
 
   boosters: [
-    { id: 'bloom',    name: 'Bloom Burst',   tickets: 25, dur: 30,   icon: 'bolt',    tint: '#ff6b9d', effects: { tapPower: 0.5, critChance: 0.02 }, desc: '+50% tap power and +2% crit chance for 30s.' },
-    { id: 'seedrush', name: 'Seed Rush',     tickets: 20, dur: 600,  icon: 'sprout',  tint: '#51cf66', effects: { growSpeed: 0.3 },                  desc: '+30% growth speed for ten minutes.' },
-    { id: 'fortune',  name: 'Fortune Aura',  tickets: 40, dur: 1800, icon: 'clover',  tint: '#9775fa', effects: { rarityWeight: 0.5 },               desc: '+50% rarity odds for harvests during the aura.' },
-    { id: 'golden',   name: 'Golden Popups', tickets: 30, dur: 30,   icon: 'coin',    tint: '#ffc93c', effects: { globalCredits: 0.25 },             desc: '+25% credits from all sources for 30s.' }
+    { id: 'bloom',    name: 'Bloom Burst',   dur: 30,   icon: 'bolt',    tint: '#ff6b9d', effects: { tapPower: 0.5, critChance: 0.02 }, desc: '+50% tap power and +2% crit chance for 30s.' },
+    { id: 'seedrush', name: 'Seed Rush',     dur: 600,  icon: 'sprout',  tint: '#51cf66', effects: { growSpeed: 0.3 },                  desc: '+30% growth speed for ten minutes.' },
+    { id: 'fortune',  name: 'Fortune Aura',  dur: 1800, icon: 'clover',  tint: '#9775fa', effects: { rarityWeight: 0.5 },               desc: '+50% rarity odds for harvests during the aura.' },
+    { id: 'golden',   name: 'Golden Popups', dur: 30,   icon: 'coin',    tint: '#ffc93c', effects: { globalCredits: 0.25 },             desc: '+25% credits from all sources for 30s.' }
   ],
 
   /* Indices 0–3 start open. The rest become buyable at these levels, then cost gold. */
   plotUnlockLevel: [1, 1, 1, 1, 3, 6, 9, 12],
 
   levelCoinGrant: 20,
+  harvestRepEvery: 10,
+  harvestRepGrant: 1,
   levelGrants: {
+    3: { boost: 'bloom' },
+    6: { boost: 'seedrush' },
+    9: { boost: 'golden' },
+    12: { boost: 'fortune' },
+    15: { boost: 'bloom' },
     18: { hive: 1 },
     19: { decor: 'shrine' },
     20: { gems: 5 }
@@ -178,21 +185,21 @@ const DATA = {
     { id: 'q_hold_20',     text: 'Hold the flower 20 times', track: 'hold',   qty: 20,  rep: 12, after: 'q_grip_1' },
     { id: 'q_plant_8',     text: 'Plant 8 seeds',           track: 'plant',   qty: 8,   rep: 12 },
     { id: 'q_sell_5',      text: 'Sell 5 flowers',          track: 'sell',    qty: 5,   rep: 12 },
-    { id: 'q_hive_1',      text: 'Build a hive',            track: 'hive',    qty: 1,   rep: 14 },
+    { id: 'q_hive_1',      text: 'Build a hive',            track: 'hive',    qty: 1,   rep: 14, reward: { boost: 'seedrush' } },
     { id: 'q_honey_3',     text: 'Fill 3 honey jars',       track: 'honey',   qty: 3,   rep: 16 },
     { id: 'q_harvest_10',  text: 'Harvest 10 blooms',       track: 'harvest', qty: 10,  rep: 16 },
-    { id: 'q_tea',         text: 'Craft Flower Tea',        track: 'craft',   key: 'tea',      qty: 1,  rep: 18 },
+    { id: 'q_tea',         text: 'Craft Flower Tea',        track: 'craft',   key: 'tea',      qty: 1,  rep: 18, reward: { boost: 'golden' } },
     { id: 'q_charm_1',     text: 'Buy Lucky Charm',         track: 'upgrade', key: 'critChance', qty: 1, rep: 20 },
     { id: 'q_crit_1',      text: 'Land a crit',             track: 'crit',    qty: 1,   rep: 20, after: 'q_charm_1' },
     { id: 'q_rose_3',      text: 'Harvest 3 roses',         track: 'harvest', key: 'rose',     qty: 3,  rep: 20 },
     { id: 'q_lavender_3',  text: 'Harvest 3 lavender',      track: 'harvest', key: 'lavender', qty: 3,  rep: 22 },
-    { id: 'q_rare',        text: 'Harvest a Rare bloom',    track: 'rarity',  key: 'rare',     qty: 1,  rep: 24 },
+    { id: 'q_rare',        text: 'Harvest a Rare bloom',    track: 'rarity',  key: 'rare',     qty: 1,  rep: 24, reward: { boost: 'fortune' } },
     { id: 'q_star_1',      text: 'Buy Star Strike',         track: 'upgrade', key: 'critMult', qty: 1,  rep: 24 },
     { id: 'q_perfume',     text: 'Craft Petal Perfume',     track: 'craft',   key: 'perfume',  qty: 1,  rep: 32 },
     { id: 'q_honey_8',     text: 'Fill 8 honey jars',       track: 'honey',   qty: 8,   rep: 36 },
-    { id: 'q_epic',        text: 'Harvest an Epic bloom',   track: 'rarity',  key: 'epic',     qty: 1,  rep: 40 },
+    { id: 'q_epic',        text: 'Harvest an Epic bloom',   track: 'rarity',  key: 'epic',     qty: 1,  rep: 40, reward: { boost: 'fortune' } },
     { id: 'q_coil_1',      text: 'Buy Combo Coil',          track: 'upgrade', key: 'comboMeter', qty: 1, rep: 28 },
-    { id: 'q_combo_55',    text: 'Reach combo 55',          track: 'combo',   qty: 55,  rep: 30, after: 'q_coil_1' },
+    { id: 'q_combo_55',    text: 'Reach combo 55',          track: 'combo',   qty: 55,  rep: 30, after: 'q_coil_1', reward: { boost: 'bloom' } },
     { id: 'q_harvest_25',  text: 'Harvest 25 blooms',       track: 'harvest', qty: 25,  rep: 42 },
     { id: 'q_plant_20',    text: 'Plant 20 seeds',          track: 'plant',   qty: 20,  rep: 44 },
     { id: 'q_peony_3',     text: 'Harvest 3 peonies',       track: 'harvest', key: 'peony',    qty: 3,  rep: 46 },
@@ -203,10 +210,10 @@ const DATA = {
   ],
 
   dailies: [
-    { id: 'd_harvest_10', text: 'Harvest 10 blooms', track: 'harvest', qty: 10,  rep: 12, reward: { credits: 50 } },
-    { id: 'd_plant_6',    text: 'Plant 6 seeds',     track: 'plant',   qty: 6,   rep: 12, reward: { credits: 50 } },
-    { id: 'd_tap_100',    text: 'Tap 100 times',     track: 'tap',     qty: 100, rep: 12, reward: { credits: 40 } },
-    { id: 'd_sell_3',     text: 'Sell 3 flowers',    track: 'sell',    qty: 3,   rep: 12, reward: { credits: 50 } }
+    { id: 'd_harvest_10', text: 'Harvest 10 blooms', track: 'harvest', qty: 10,  rep: 12, reward: { credits: 50, boost: 'seedrush' } },
+    { id: 'd_plant_6',    text: 'Plant 6 seeds',     track: 'plant',   qty: 6,   rep: 12, reward: { credits: 50, boost: 'seedrush' } },
+    { id: 'd_tap_100',    text: 'Tap 100 times',     track: 'tap',     qty: 100, rep: 12, reward: { credits: 40, boost: 'bloom' } },
+    { id: 'd_sell_3',     text: 'Sell 3 flowers',    track: 'sell',    qty: 3,   rep: 12, reward: { credits: 50, boost: 'golden' } }
   ]
 };
 

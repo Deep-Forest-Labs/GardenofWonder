@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-12**
+Last updated: **2026-08-13**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -9,7 +9,8 @@ decided, and what to do next. Update it at the end of any significant session.
 
 The game is **built, working, and live** at <https://jonishua.github.io/ghostgarden/>, deployed from
 `main` at the repository root. It is a single-screen idle garden — tap a talking flower, plant
-seeds in eight plots, harvest with rarity multipliers, spend on badges, decor and boosters.
+seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
+from quests and levels.
 
 The first slice of the meta-layer is also playable: **hives producing honey whose variety
 follows what is planted, and an apothecary crafting flowers and honey into goods**. It lives behind
@@ -20,13 +21,14 @@ renamed Upgrades; Decor lost its stat bonuses, became cosmetic, and moved into S
 owners refunded; Boosts left the dock entirely for a tap-to-activate tray in the status rail. Full
 detail in [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
-**Progression phase 1 is done**: a quest strip sits between the HUD and the rail, reputation is
-the only level track, seeds unlock on the bar, and extra plots become buyable at levels 3 / 6 / 9
-/ 12. Full detail in [16-progression-and-quests.md](16-progression-and-quests.md). Phases 2–4
-(tickets, combo, Almanac) and the world map are still queued. A playtest pass after that made the
-bar track the quest and the pip ring track reputation, replaced generic upgrade quests with
-buy-then-feel pairs (Combo Coil stays, so the later multiplier work is not undone), and gated the
-empty-plot bob to first-plant onboarding.
+**Progression phases 1 and 2 are done**: a quest strip sits between the HUD and the rail, reputation is
+the only level track, seeds unlock on the bar, extra plots become buyable at levels 3 / 6 / 9
+/ 12, and tickets are gone — boosts are earned inventory activated from the rail. Full detail in
+[16-progression-and-quests.md](16-progression-and-quests.md). Phases 3–4 (combo, Almanac) and the
+world map are still queued. A playtest pass after phase 1 made the bar track the quest and the pip
+ring track reputation, replaced generic upgrade quests with buy-then-feel pairs (Combo Coil stays,
+so the later multiplier work is not undone), and gated the empty-plot bob to first-plant
+onboarding.
 
 **Since then, the last two sessions went into the core tap-and-plant loop instead of phase 2** (see
 the decision log for why that's deliberate, not drift):
@@ -97,14 +99,12 @@ below.
 
 ## The current task
 
-**Progression phases 2–4**, still specified in
-[16-progression-and-quests.md](16-progression-and-quests.md). Phase 1 (quest ladder, level bar,
-seed gating, plot gating) is built. Next independently shippable slices, in this order:
+**Progression phases 3–4**, still specified in
+[16-progression-and-quests.md](16-progression-and-quests.md). Phases 1 (quest ladder) and 2
+(retire tickets) are built. Next independently shippable slices, in this order:
 
-2. **Retire tickets.** Boosts become earned inventory rather than a rail purchase; tickets convert
-   to gems once and the wallet goes away.
 3. **Make the combo pay.** It currently multiplies nothing. Small, contained, independent of the
-   other two.
+   Almanac.
 4. **Almanac as a completion goal.** Lifetime discovery tracking plus milestones.
 
 The world map (navigation phase 2) stays paused. Don't start it without asking.
@@ -123,9 +123,10 @@ The world map (navigation phase 2) stays paused. Don't start it without asking.
    procs (above) are texture added toward this question. The question is still narrow and still
    open: does the garden's *contents* start mattering — do you plant lavender because you want
    lavender honey? Content decisions wait on that answer.
-8. ~~**Progression and quests — specified, current task.**~~ **Phase 1 done.** See above and
-    [16-progression-and-quests.md](16-progression-and-quests.md). Phases 2–4 are next, still ahead
-    of the map: a map full of places is worthless if nothing tells you why you're going anywhere.
+8. ~~**Progression and quests — specified, current task.**~~ **Phases 1–2 done.** See above and
+    [16-progression-and-quests.md](16-progression-and-quests.md). Phases 3–4 (combo, Almanac) are
+    next, still ahead of the map: a map full of places is worthless if nothing tells you why you're
+    going anywhere.
 9. **The world map** — navigation phase 2, queued but paused. Unblocks everything else in the
    meta-layer.
 10. **The Market** — see [13-order-system.md](13-order-system.md). The prototype has production but
@@ -146,7 +147,7 @@ Full list in [11-known-issues.md](11-known-issues.md). The three that affect des
   [16-progression-and-quests.md](16-progression-and-quests.md).
 - **Endgame seeds have lower gem chances than a Daisy.** Defining `gemChance` overrides the generous
   5% default, so the best gem farm is spamming the cheapest seed.
-- **Cheat buttons ship to players.** Settings has "Grant 50 Gems & Tickets", "Grant 1,000,000
+- **Cheat buttons ship to players.** Settings has "Grant 50 Gems", "Grant 1,000,000
   Gold", and "Summon a Wonder Effect" with no confirmation, live on the public site.
 
 All inherited from the frozen economy port. Fixing them is a deliberate balance project.

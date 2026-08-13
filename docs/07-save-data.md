@@ -19,7 +19,7 @@ lost if the player clears site data.
 {
   version: 3,
   credits: 100,
-  tickets: 0,
+  tickets: 0,                 // kept so old saves parse; zeroed after conversion
   gems: 0,
   tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50 },
   grid: [ /* 8 cells */
@@ -32,6 +32,7 @@ lost if the player clears site data.
   },
   decor: [ { id: 'gnome' } ],   // one entry per copy owned, cosmetic only since v3
   boosters: { bloom: 1735689600.123 },                          // id → absolute expiry, epoch seconds
+  boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },   // held copies, not yet activated
   harvestsThisSession: 0,
   stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
   wonder: { until: 0, last: 0 },
@@ -65,7 +66,11 @@ player with ten gnomes has ten array entries. `Game.decorCount(id)` counts them 
 nothing sums a stat from them anymore.
 
 **`harvestsThisSession` is a misnomer** — it's saved and never reset, so it's a lifetime counter
-driving the every-10-harvests ticket bonus.
+driving the every-10-harvests reputation drip.
+
+**`boostInv` is nested and must be re-merged in `load()`.** A save without that key is a pre-phase-2
+save: tickets convert to gems at `round(tickets / 5)` once, then the field is written so the
+conversion never repeats.
 
 **`rep` is earned, never spent.** `level` is derived from it (`repToNext(L) = 10 + 5×(L−1)`) and
 stored so a level-up can be detected. Nested `quests` is re-merged in `load()` like the other
@@ -118,18 +123,19 @@ see [10-decision-log.md](10-decision-log.md).
 
 `Object.assign(state, defaultState(), parsed)` is shallow, so a legacy save missing `stats`
 entirely would leave that key absent and crash on first write. Each nested object is therefore
-re-merged over its defaults individually: `tap`, `stats`, `wonder`, `prefs`, `seen`.
+re-merged over its defaults individually: `tap`, `stats`, `wonder`, `prefs`, `seen`, `boostInv`.
 
 **When you add a nested object to state, add it to that list.** Forgetting is the single most likely
 way to break loading for existing players.
 
 ### Schema fixups
 
-Two live migrations run on load:
+Three live migrations run on load:
 
 - `plot1Gardener` is renamed to `plot1Harvester` (the key was renamed during the rebuild) and the
   old key deleted.
 - Any missing `plotNHarvester` key is initialised to `0`, so adding harvester slots later is safe.
+- A save without `boostInv` converts leftover tickets to gems at 5:1, once.
 
 ### Grid sanitisation
 

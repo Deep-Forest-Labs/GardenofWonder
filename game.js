@@ -29,6 +29,7 @@ const Game = (() => {
       upgrades,
       decor: [],
       boosters: {},
+      boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },
       harvestsThisSession: 0,
       stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
       wonder: { until: 0, last: 0 },
@@ -94,6 +95,16 @@ const Game = (() => {
     return { ...refund, count };
   }
 
+  function migrateTickets(parsed) {
+    if (Object.prototype.hasOwnProperty.call(parsed, 'boostInv')) return null;
+    const tickets = Math.max(0, Math.round(Number(state.tickets) || 0));
+    state.tickets = 0;
+    if (!tickets) return null;
+    const gems = Math.round(tickets / 5);
+    state.gems += gems;
+    return { tickets, gems };
+  }
+
   function load() {
     let raw = localStorage.getItem(SAVE_KEY);
     let migrated = false;
@@ -128,6 +139,10 @@ const Game = (() => {
         state.quests.daily && typeof state.quests.daily === 'object' ? state.quests.daily : {}
       );
       if (typeof state.rep !== 'number' || !(state.rep >= 0)) state.rep = 0;
+      state.boostInv = Object.assign(d.boostInv, parsed.boostInv && typeof parsed.boostInv === 'object' ? parsed.boostInv : {});
+      DATA.boosters.forEach((b) => {
+        if (typeof state.boostInv[b.id] !== 'number' || state.boostInv[b.id] < 0) state.boostInv[b.id] = 0;
+      });
       state.apiary.hives = Array.isArray(state.apiary.hives) ? state.apiary.hives : [];
       state.apiary.honey = state.apiary.honey && typeof state.apiary.honey === 'object' ? state.apiary.honey : {};
       state.apiary.wax = Number(state.apiary.wax) || 0;
@@ -135,6 +150,7 @@ const Game = (() => {
       state.craft = Array.isArray(parsed.craft) ? parsed.craft : [];
       state.goods = parsed.goods && typeof parsed.goods === 'object' ? parsed.goods : {};
       const decorRefund = migrateDecor(parsed.version || 1);
+      const ticketGrant = migrateTickets(parsed);
       state.version = 3;
       lastAutoHarvest = 0;
 
@@ -169,8 +185,8 @@ const Game = (() => {
         progressionGrant = migrateProgression();
       }
       ensureProgression();
-      if (migrated || decorRefund || progressionGrant) saveNow();
-      return { migrated, fresh: false, decorRefund, progressionGrant };
+      if (migrated || decorRefund || progressionGrant || ticketGrant) saveNow();
+      return { migrated, fresh: false, decorRefund, progressionGrant, ticketGrant };
     } catch (err) {
       console.warn('Save load failed', err);
       return { migrated: false, fresh: true };
@@ -369,12 +385,32 @@ const Game = (() => {
     if (!reward) return;
     if (reward.credits) state.credits += reward.credits;
     if (reward.gems) state.gems += reward.gems;
+    if (reward.boost) giveBoost(reward.boost);
+  }
+  function giveBoost(id, n) {
+    const count = n || 1;
+    if (!id || count < 1) return;
+    if (!DATA.boosters.some((b) => b.id === id)) return;
+    if (!state.boostInv || typeof state.boostInv !== 'object') {
+      state.boostInv = { bloom: 0, seedrush: 0, fortune: 0, golden: 0 };
+    }
+    state.boostInv[id] = (state.boostInv[id] || 0) + count;
+  }
+  function addRep(n) {
+    if (!(n > 0)) return [];
+    const before = levelFromRep(state.rep);
+    state.rep += n;
+    const after = levelFromRep(state.rep);
+    state.level = after;
+    const grants = [];
+    for (let L = before + 1; L <= after; L += 1) grants.push(grantLevel(L));
+    return grants;
   }
   function grantLevel(level) {
     const coins = (DATA.levelCoinGrant || 20) * level;
     state.credits += coins;
     const grant = (DATA.levelGrants && DATA.levelGrants[level]) || {};
-    const out = { level, coins, seed: null, plot: null, hive: false, decor: null, gems: 0 };
+    const out = { level, coins, seed: null, plot: null, hive: false, decor: null, gems: 0, boost: null };
     const seed = DATA.seeds.find((s) => s.unlockLevel === level);
     if (seed) out.seed = seed;
     const plotIdx = (DATA.plotUnlockLevel || []).findIndex((lv, i) => i > 3 && lv === level);
@@ -397,6 +433,10 @@ const Game = (() => {
       state.gems += grant.gems;
       out.gems = grant.gems;
     }
+    if (grant.boost) {
+      giveBoost(grant.boost);
+      out.boost = grant.boost;
+    }
     return out;
   }
 
@@ -417,19 +457,14 @@ const Game = (() => {
       state.quests.active = state.quests.active.filter((q) => q.id !== id);
       fillActive();
     }
-    const before = levelFromRep(state.rep);
-    state.rep += def.rep;
+    const grants = addRep(def.rep);
     applyReward(def.reward);
-    const after = levelFromRep(state.rep);
-    state.level = after;
-    const grants = [];
-    for (let L = before + 1; L <= after; L += 1) grants.push(grantLevel(L));
     save();
     emit('currency');
     emit('panels');
     const payload = { id, def, rep: def.rep, grants };
     emit('quest', payload);
-    if (grants.length) emit('levelup', { from: before, to: after, grants });
+    if (grants.length) emit('levelup', { from: grants[0].level - 1, to: state.level, grants });
     return payload;
   }
 
@@ -539,7 +574,6 @@ const Game = (() => {
     if (isCrit) {
       gain *= critMultiplier;
       state.stats.totalCrits += 1;
-      if (Math.random() < 0.03) state.tickets += 1;
     }
     let gemDrop = false;
     if (Math.random() < 0.05) { state.gems += 1; gemDrop = true; }
@@ -657,25 +691,28 @@ const Game = (() => {
     state.flowers[sdef.id] = (state.flowers[sdef.id] || 0) + 1;
     state.harvestsThisSession += 1;
     state.stats.totalHarvests += 1;
-    let ticketBonus = 0;
-    if (state.harvestsThisSession % 10 === 0) { state.tickets += 3; ticketBonus = 3; }
+    let repBonus = 0;
+    let levelGrants = [];
+    const every = DATA.harvestRepEvery || 10;
+    if (state.harvestsThisSession % every === 0) {
+      repBonus = DATA.harvestRepGrant || 1;
+      levelGrants = addRep(repBonus);
+    }
     const gemChance = typeof sdef.gemChance === 'number' ? sdef.gemChance : 0.05;
     let gemDrop = false;
     if (Math.random() < gemChance) { state.gems += 1; gemDrop = true; }
-    let ticketDrop = false;
-    if (typeof sdef.ticketChance === 'number' && Math.random() < sdef.ticketChance) {
-      state.tickets += 1;
-      ticketDrop = true;
-    }
 
     state.grid[idx] = { ...cell, seed: null, plantedAt: 0, grow: 0, ready: false, aura: r.a, luckyBug: false };
     const sparked = tryWonder(WONDER.harvestChance);
     save();
     emit('currency');
     const payload = {
-      idx, payout, rarity: r, seed: sdef, gemDrop, ticketDrop, ticketBonus, sparkedWonder: sparked, luckyHarvest
+      idx, payout, rarity: r, seed: sdef, gemDrop, repBonus, sparkedWonder: sparked, luckyHarvest
     };
     emit('harvest', payload);
+    if (levelGrants.length) {
+      emit('levelup', { from: levelGrants[0].level - 1, to: state.level, grants: levelGrants });
+    }
     noteQuest('harvest', sdef.id, 1);
     noteQuest('rarity', r.key, 1);
     return payload;
@@ -935,10 +972,9 @@ const Game = (() => {
   function buyDecor(id) {
     const d = DATA.decor.find((x) => x.id === id);
     if (!d) return false;
-    const pot = d.currency === 'gems' ? state.gems : d.currency === 'tickets' ? state.tickets : state.credits;
+    const pot = d.currency === 'gems' ? state.gems : state.credits;
     if (pot < d.cost) { emit('deny', { reason: d.currency, need: d.cost }); return false; }
     if (d.currency === 'gems') state.gems -= d.cost;
-    else if (d.currency === 'tickets') state.tickets -= d.cost;
     else state.credits -= d.cost;
     state.decor.push({ id: d.id });
     save();
@@ -948,11 +984,13 @@ const Game = (() => {
     return true;
   }
 
-  function buyBooster(id) {
+  function activateBoost(id) {
     const b = DATA.boosters.find((x) => x.id === id);
     if (!b) return false;
-    if (state.tickets < b.tickets) { emit('deny', { reason: 'tickets', need: b.tickets }); return false; }
-    state.tickets -= b.tickets;
+    if (activeBoost(b.id)) return false;
+    const held = (state.boostInv && state.boostInv[id]) || 0;
+    if (held < 1) return false;
+    state.boostInv[id] = held - 1;
     state.boosters[b.id] = nowSeconds() + b.dur;
     save();
     emit('currency');
@@ -1052,7 +1090,7 @@ const Game = (() => {
     seedById, activeBoost, boostVal, growModifier, rollRarity,
     plotUnlockCost, upgradePrice, upgradeMaxed, decorCount,
     tapFlower, decayCombo, plant, unlockPlot, hasten, harvest,
-    buyUpgrade, buyDecor, buyBooster,
+    buyUpgrade, buyDecor, activateBoost,
     hiveCount, pollination, nextHiveCost, hivesFull, buyHive,
     collectHive, collectAllHives, jarsWaiting, honeyTotal, flowerTotal,
     canCraft, startCraft, sell,

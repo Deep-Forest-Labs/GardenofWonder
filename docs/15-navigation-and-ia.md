@@ -146,13 +146,11 @@ map existing.
 Done when: no two dock tabs answer the same question, and boosts are no longer purchasable from a
 menu.
 
-**Implementation notes, for whoever reads this before phase 2:**
+**Implementation notes, after progression phase 2:**
 
-- The boost tray keeps ticket-purchase — tap a chip in the status rail to buy-and-activate. It is
-  no longer a dock menu, but it isn't yet "sourced from rewards" either, because order rewards and
-  rewarded video don't exist yet. Retiring tickets and adding real drop sources is a deliberate,
-  separate balance project, not a side effect of this phase. See the decision log entry dated
-  2026-08-05.
+- The boost tray shows held inventory — tap a chip to consume one. Ticket-purchase is gone;
+  tickets convert to gems on load. Order rewards and rewarded video are still future sources.
+  See [16-progression-and-quests.md](16-progression-and-quests.md).
 - Shop currently holds only cosmetic decor. Gems, IAP and remove-ads arrive with actual
   monetization work, not as part of navigation.
 - Decor's stat bonuses were deleted outright (`decorVal()` and its three call sites), not
