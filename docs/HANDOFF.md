@@ -20,6 +20,14 @@ renamed Upgrades; Decor lost its stat bonuses, became cosmetic, and moved into S
 owners refunded; Boosts left the dock entirely for a tap-to-activate tray in the status rail. Full
 detail in [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
+**Progression phase 1 is done**: a quest strip sits between the HUD and the rail, reputation is
+the only level track, seeds unlock on the bar, and extra plots become buyable at levels 3 / 6 / 9
+/ 12. Full detail in [16-progression-and-quests.md](16-progression-and-quests.md). Phases 2–4
+(tickets, combo, Almanac) and the world map are still queued. A playtest pass after that made the
+bar track the quest and the pip ring track reputation, replaced generic upgrade quests with
+buy-then-feel pairs (Combo Coil stays, so the later multiplier work is not undone), and gated the
+empty-plot bob to first-plant onboarding.
+
 **Since then, the last two sessions went into the core tap-and-plant loop instead of phase 2** (see
 the decision log for why that's deliberate, not drift):
 
@@ -89,26 +97,15 @@ below.
 
 ## The current task
 
-**Progression and quests — [16-progression-and-quests.md](16-progression-and-quests.md).** Specified
-2026-08-12, not yet built. Read that doc in full before writing anything; the reasoning behind it is
-in [10-decision-log.md](10-decision-log.md).
+**Progression phases 2–4**, still specified in
+[16-progression-and-quests.md](16-progression-and-quests.md). Phase 1 (quest ladder, level bar,
+seed gating, plot gating) is built. Next independently shippable slices, in this order:
 
-The diagnosis is that the game has no answer to "what am I working toward" — every system is a
-spend surface, all of them are open from minute one, and nothing is ever granted. Four phases, each
-independently shippable, in this order:
-
-1. **Quest ladder and level bar.** A persistent strip under the HUD showing level, reputation
-   progress, and one active quest. Quests are data in `DATA.quests`. Levels grant seeds.
 2. **Retire tickets.** Boosts become earned inventory rather than a rail purchase; tickets convert
    to gems once and the wallet goes away.
 3. **Make the combo pay.** It currently multiplies nothing. Small, contained, independent of the
-   other three.
+   other two.
 4. **Almanac as a completion goal.** Lifetime discovery tracking plus milestones.
-
-Two things in there will bite if skipped: quest counters must never read `state.flowers` (it's
-spendable, so a quest can un-complete itself when the player crafts), and seed gating must ship with
-the grandfather migration so no existing save loses a seed it could already plant. Both are called
-out in the spec with required sim-test coverage.
 
 The world map (navigation phase 2) stays paused. Don't start it without asking.
 
@@ -126,9 +123,9 @@ The world map (navigation phase 2) stays paused. Don't start it without asking.
    procs (above) are texture added toward this question. The question is still narrow and still
    open: does the garden's *contents* start mattering — do you plant lavender because you want
    lavender honey? Content decisions wait on that answer.
-8. **Progression and quests — specified, current task.** See above and
-   [16-progression-and-quests.md](16-progression-and-quests.md). Slotted ahead of the map because a
-   map full of places is worthless if nothing tells you why you're going anywhere.
+8. ~~**Progression and quests — specified, current task.**~~ **Phase 1 done.** See above and
+    [16-progression-and-quests.md](16-progression-and-quests.md). Phases 2–4 are next, still ahead
+    of the map: a map full of places is worthless if nothing tells you why you're going anywhere.
 9. **The world map** — navigation phase 2, queued but paused. Unblocks everything else in the
    meta-layer.
 10. **The Market** — see [13-order-system.md](13-order-system.md). The prototype has production but
@@ -209,7 +206,7 @@ three at once by changing it in one place, not by editing each `roll*()` functio
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 108 assertions over the simulation layer
+node tools/sim-test.js          # 149 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
@@ -248,9 +245,8 @@ Paste something like this into a fresh chat:
 > `docs/09-conventions.md` and `docs/02-architecture.md`, and note the "Traps in this codebase"
 > section of the handoff.
 >
-> Your task is `docs/16-progression-and-quests.md`, phase 1 only. Read that doc in full before
-> touching anything and tell me your plan first. Do not start phase 2, 3 or 4, and do not build the
-> world map.
+> Your task is `docs/16-progression-and-quests.md`, phases 2–4. Phase 1 is built. Read that doc
+> in full before touching anything and tell me your plan first. Do not build the world map.
 >
 > I'm the designer; an engineer is porting to Unity. Goal is modest revenue, small scope, two-person
 > team. I want you as a design advisor as well as an implementer — push back on scope creep and tell

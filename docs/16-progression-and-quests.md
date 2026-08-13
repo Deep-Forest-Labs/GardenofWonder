@@ -1,7 +1,7 @@
 # Progression and Quests
 
-**Status: specified, not built.** Agreed 2026-08-12; reasoning in
-[10-decision-log.md](10-decision-log.md).
+**Status: phase 1 built.** Specified 2026-08-12; phase 1 shipped the same day. Reasoning in
+[10-decision-log.md](10-decision-log.md). Phases 2–4 are still specified, not built.
 
 Read alongside [13-order-system.md](13-order-system.md), which owns reputation long-term, and
 [15-navigation-and-ia.md](15-navigation-and-ia.md), which owns where things live on screen.
@@ -36,7 +36,7 @@ This is the whole reason the feature is affordable. Resist any suggestion to add
 ## Phase 1 — Quest ladder and level bar
 
 The player always has a small number of visible, completable goals. Finishing one pays reputation.
-Reputation fills a bar. The bar filling grants something concrete.
+Reputation fills a ring around the level pip. The ring completing grants something concrete.
 
 ### The surface
 
@@ -46,7 +46,7 @@ A new persistent row between the HUD and the stage:
 ┌───────────────────────────────────────────────┐
 │  wallets                        almanac  gear │   HUD
 ├───────────────────────────────────────────────┤
-│  ⑦ ▓▓▓▓▓▓▓▓░░░░░░  Harvest 3 roses    1 / 3   │   quest strip  ← new
+│  ⑦  ▓▓▓ Harvest 3 roses  1/3 ▓▓   ★+12        │   quest strip  ← new
 ├───────────────────────────────────────────────┤
 │  [WONDER 12s]  [Seed Rush 4:31]               │   rail — active timers only
 ├───────────────────────────────────────────────┤
@@ -54,9 +54,12 @@ A new persistent row between the HUD and the stage:
 ```
 
 - **Always visible**, including on short viewports. If something has to give at ~640 px tall, hide
-  the rail, not this. The rail carries transient timers; this carries the goal.
-- **Level pip** on the left: current level in a circle.
-- **Bar**: reputation progress toward the next level.
+  the rail, not this. The rail carries transient timers; this carries the goal. The strip stays
+  full height — collapsing it to a bar would hide the only goal on screen.
+- **Level pip** on the left: current level in a circle, with a ring around it for reputation
+  toward the next level.
+- **Bar**: progress of the quest currently on the strip (`progress / qty`). The task name and
+  count sit on top of the fill. A chip at the right end shows the reputation reward.
 - **One quest** shown at a time — the oldest incomplete one. Tapping the strip opens the quest
   panel with all active quests.
 - Tapping a **completed** quest claims it. Do not auto-claim. The claim tap is the payoff moment
@@ -109,28 +112,39 @@ hidden.
 
 ### Level rewards
 
-Every level grants something. The primary lever is **seeds**.
+Every level grants something. The primary lever is **seeds**. Plots are the other.
 
 - Seeds 1–3 (Daisy, Tulip, Bluebell) are unlocked at level 1.
-- One further seed unlocks per level from level 2, so Eternal Bloom (seed 19) lands at level 17.
-- Levels 18–20 grant a hive slot, a recipe, and a decor item respectively.
+- One further seed unlocks per level from level 2, so Eternal Crown (seed 19) lands at level 17.
+- Extra plots become **buyable** at levels 3, 6, 9 and 12 (plots 5–8). The gold cost is unchanged
+  (`400 + 300 × (index + 1)`). Level opens the slot; coins buy it. This is not a quest.
+- Levels 18–20 grant a hive slot, a Butterfly Shrine, and 5 gems respectively. Recipes stay
+  ungated — there are only three, they are the craft tutorial, and locking them would need the
+  same grandfathering as seeds for no pacing gain.
 
-Add `unlockLevel` to each entry in `DATA.seeds`. The seed picker shows locked seeds greyed with
-"Level *n*" rather than hiding them — a visible locked tier is a goal; a missing one is nothing.
-Auto-planters plant `min(harvester ceiling, highest unlocked seed, affordable)`.
+Add `unlockLevel` to each entry in `DATA.seeds`. Plot gates live in `DATA.plotUnlockLevel`. The
+seed picker shows locked seeds greyed with "Level *n*" rather than hiding them — a visible locked
+tier is a goal; a missing one is nothing. Locked plots show "Lv *n*" instead of a coin price.
+Auto-planters plant `min(harvester ceiling, highest unlocked seed, affordable)`. Land Deed
+(`plotExpansion`) can only unlock plots the current level has already opened; at level 1 it reads
+Maxed.
 
-Every level-up also pays a small coin grant scaled to the tier, and levels 3, 6, 9… grant a boost
-from inventory (Phase 2).
+Every level-up also pays a small coin grant (`20 × newLevel`). Boost grants at 3, 6, 9… wait for
+Phase 2.
 
 **Migration is mandatory here.** Taking a seed away from an existing save is the single worst thing
-this feature could do. On first load of a save without `rep`:
+this feature could do. On first load of a save without a `rep` key (`'rep' in parsed`, not
+`!state.rep` — a new player legitimately has 0):
 
-1. Find the most expensive seed the player can currently afford.
-2. Set `rep` to the cumulative value of the level that unlocks it.
-3. Show one toast explaining the new system, in the style of the decor refund migration already in
+1. Take the max of: the most expensive seed they can afford, the most expensive seed planted on
+   the grid, the most expensive seed sitting in `state.flowers`, and the highest plot they can
+   currently afford to buy.
+2. Set `rep` to the cumulative value of that level.
+3. Never re-lock a plot that is already unlocked, even if the grandfathered level is lower.
+4. Show one toast explaining the new system, in the style of the decor refund migration already in
    `load()` — copy that pattern rather than inventing a new one.
 
-Nobody loses access to a seed they had. Verify this with a sim-test.
+Nobody loses access to a seed they had or a plot they already opened. Verify this with a sim-test.
 
 ### Quest schema
 
@@ -164,7 +178,11 @@ easiest way to get this feature wrong.
 | `wax` | wax produced | |
 | `sell` | flower sold | |
 | `upgrade` | badge purchased | `key` = upgrade id |
-| `plot` | plot unlocked | |
+| `hold` | hold-to-tap tick | Interval repeats only, not the initial press |
+| `crit` | crit tap | Same exception as rarity — keep tapping |
+| `combo` | tap, set to current combo | Peak combo while the quest is active, not a tap count |
+| `plot` | plot unlocked | Tap-to-buy or Land Deed |
+| `hive` | hive purchased | Not in the original track list; needed for "Build a hive" |
 | `rarity` | harvest at rarity ≥ `key` | Rare / Epic / Legendary |
 | `discover` | first-ever harvest of a seed | Distinct count, Phase 4 |
 
@@ -178,46 +196,92 @@ These are design constraints, not suggestions. A quest must:
 1. **Teach or exercise one verb.** "Harvest 3 roses" is a quest. "Get rich" is not.
 2. **Be completable by playing normally**, within one or two sessions at that stage.
 3. **Never depend on a random proc firing.** Rain Dance is a 2% roll. "Trigger 2 ladybugs" is a
-   quest that can strand a player for an hour through no fault of their own. Rarity quests are the
-   one exception, because rarity rolls on every harvest and the player can just harvest more.
+   quest that can strand a player for an hour through no fault of their own. Rarity quests and
+   "land a crit" are the exceptions, because those rolls happen on every harvest or tap and the
+   player can just keep going.
 4. **Never require spending down a resource the player needs**, unless the quest itself is the
    tutorial for that sink.
 5. **Point at a system the player has access to.** No honey quests before the first hive.
 
 ### The starting ladder
 
-Author roughly 24 quests to carry a player to level 20. A workable spine:
+Thirty-three quests, authored in `DATA.quests`. Payouts climb from 5 to 50 so the ladder sums to
+**777**, which still lands on level 17 (Eternal Crown). Generic "buy an upgrade" rows were replaced
+with a buy-then-feel tutorial for each early tap upgrade, including Combo Coil (the follow-up is
+"Reach combo 55", which needs the cap the badge just bought). Two long-tail filler rows were
+dropped to keep the total near the seed gate.
 
-| Phase of play | Quests |
-| --- | --- |
-| First minutes | Tap 25 times · Plant your first seed · Harvest your first bloom |
-| Learning plots | Harvest 5 daisies · Unlock a second plot · Buy any badge |
-| Widening | Harvest 3 tulips · Plant 4 plots at once · Sell 5 flowers |
-| Apiary intro | Build a hive · Collect 3 jars of honey · Collect wax |
-| Craft intro | Craft Flower Tea · Craft Petal Perfume |
-| Depth | Harvest a Rare bloom · Harvest an Epic bloom · Discover 8 different blooms |
-| Long tail | Harvest 25 blooms · Reach combo 50 · Own 5 badges · Fill a hive |
+Plot unlocks are not quests. Discover quests wait for phase 4. Snapshot goals ("plant 4 plots at
+once", "own 5 badges", "fill a hive") stay out because counters start at zero when a quest
+becomes active.
 
-Rep payouts start around 5 and climb to about 25. Tune so the first level-up lands within the first
-two or three minutes and the second within ten.
+| # | id | Text | track | key | qty | rep |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `q_tap_25` | Tap 25 times | tap | | 25 | 5 |
+| 2 | `q_plant_1` | Plant a seed | plant | | 1 | 5 |
+| 3 | `q_harvest_1` | Harvest a bloom | harvest | | 1 | 5 |
+| 4 | `q_daisy_5` | Harvest 5 daisies | harvest | daisy | 5 | 8 |
+| 5 | `q_power_1` | Buy Power Punch | upgrade | tapPower | 1 | 8 |
+| 6 | `q_tap_50` | Tap 50 times | tap | | 50 | 10 |
+| 7 | `q_tulip_3` | Harvest 3 tulips | harvest | tulip | 3 | 10 |
+| 8 | `q_grip_1` | Buy Quick Grip | upgrade | holdSpeed | 1 | 12 |
+| 9 | `q_hold_20` | Hold the flower 20 times | hold | | 20 | 12 |
+| 10 | `q_plant_8` | Plant 8 seeds | plant | | 8 | 12 |
+| 11 | `q_sell_5` | Sell 5 flowers | sell | | 5 | 12 |
+| 12 | `q_hive_1` | Build a hive | hive | | 1 | 14 |
+| 13 | `q_honey_3` | Fill 3 honey jars | honey | | 3 | 16 |
+| 14 | `q_harvest_10` | Harvest 10 blooms | harvest | | 10 | 16 |
+| 15 | `q_tea` | Craft Flower Tea | craft | tea | 1 | 18 |
+| 16 | `q_charm_1` | Buy Lucky Charm | upgrade | critChance | 1 | 20 |
+| 17 | `q_crit_1` | Land a crit | crit | | 1 | 20 |
+| 18 | `q_rose_3` | Harvest 3 roses | harvest | rose | 3 | 20 |
+| 19 | `q_lavender_3` | Harvest 3 lavender | harvest | lavender | 3 | 22 |
+| 20 | `q_rare` | Harvest a Rare bloom | rarity | rare | 1 | 24 |
+| 21 | `q_star_1` | Buy Star Strike | upgrade | critMult | 1 | 24 |
+| 22 | `q_perfume` | Craft Petal Perfume | craft | perfume | 1 | 32 |
+| 23 | `q_honey_8` | Fill 8 honey jars | honey | | 8 | 36 |
+| 24 | `q_epic` | Harvest an Epic bloom | rarity | epic | 1 | 40 |
+| 25 | `q_coil_1` | Buy Combo Coil | upgrade | comboMeter | 1 | 28 |
+| 26 | `q_combo_55` | Reach combo 55 | combo | | 55 | 30 |
+| 27 | `q_harvest_25` | Harvest 25 blooms | harvest | | 25 | 42 |
+| 28 | `q_plant_20` | Plant 20 seeds | plant | | 20 | 44 |
+| 29 | `q_peony_3` | Harvest 3 peonies | harvest | peony | 3 | 46 |
+| 30 | `q_craft_2` | Craft 2 goods | craft | | 2 | 48 |
+| 31 | `q_marigold_3` | Harvest 3 marigolds | harvest | marigold | 3 | 42 |
+| 32 | `q_harvest_40` | Harvest 40 blooms | harvest | | 40 | 46 |
+| 33 | `q_sell_10` | Sell 10 flowers | sell | | 10 | 50 |
+
+`q_tap_50` has `after: q_power_1`, `q_hold_20` after `q_grip_1`, `q_crit_1` after `q_charm_1`,
+`q_combo_55` after `q_coil_1`. Hold ticks are the repeating interval of a held press, not the
+initial pointer-down. Combo quests set progress to the current combo rather than incrementing.
+
+The first three are active together, so the first level-up lands inside the first minute. Honey
+quests count jars added to a hive (including Bee Swarm), not collected. Craft quests count
+collection (`crafted`), not `startCraft`. Sell quests count flowers only.
 
 ### The daily quest
 
-One quest, reset on local date change, drawn from a pool of repeatable objectives ("Harvest 10
-blooms", "Craft anything", "Tap 200 times"). Pays rep plus a boost. It is the return-tomorrow hook
-and it is cheap: it reuses the whole engine above.
+One quest, reset on local date change, drawn from `DATA.dailies`: Harvest 10 blooms, Plant 6 seeds,
+Tap 100 times, Sell 3 flowers. Pays 12 reputation plus a small coin grant. No craft daily — it can
+strand a day-one return. Boost rewards wait for Phase 2.
 
 Use local date, not a 24-hour timer from last claim. Timers that drift punish players for playing
-earlier in the day.
+earlier in the day. An unclaimed daily expires at midnight; the ladder never expires.
 
 ### Sim-test coverage
 
 - `repToNext` matches the table; level derives correctly from rep at boundaries.
 - A `harvest` event increments only matching quests.
+- Hold ticks increment `hold` and not a manual tap; a crit tap increments `crit`; combo quests
+  track peak combo, not tap count.
 - A quest's counter is unaffected by crafting or selling the flowers involved.
 - Claiming pays rep exactly once and moves the quest to `done`.
-- Migration: a save with 100,000 credits and no `rep` keeps access to every seed it could afford.
+- Migration: a save with 100,000 credits and no `rep` keeps access to every seed it could afford;
+  a planted high-tier seed with an empty wallet is also kept.
 - Seed unlock: at level 1 exactly three seeds are plantable; at level 17 all nineteen are.
+- Plot 5 is gated at level 1 and buyable at level 3; Land Deed cannot skip a plot the level has
+  not opened.
+- A maxed harvester still plants only an unlocked seed.
 
 ## Phase 2 — Retire tickets
 
@@ -301,8 +365,11 @@ The Almanac lists blooms and asks nothing. Make it the collection track.
 
 ## Open questions
 
-- Does the quest strip collapse to just the bar on very short viewports, or stay full height?
+- ~~Does the quest strip collapse to just the bar on very short viewports, or stay full height?~~
+  Stays full height. The rail hides; this does not.
 - Should quests expire? Default answer is no — an expiring quest is a punishment for having a life.
-- Is 24 authored quests enough to reach level 20, or does the daily need to carry more of it?
+  Dailies are the exception: they reset on local date change.
+- ~~Is 24 authored quests enough to reach level 20, or does the daily need to carry more of it?~~
+  29 quests totaling 781 rep reach level 17 (last seed). Levels 18–20 are the daily / Market tail.
 - When the Market ships, do quests retire, or do they stay as the tutorial layer beneath orders?
   Leaning: they stay, but stop being the main rep source.

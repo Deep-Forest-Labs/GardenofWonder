@@ -5,6 +5,61 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-12 — Quest strip measures the quest; upgrades get a buy-then-feel tutorial
+
+**Decision.** Five playtest notes after phase 1 shipped in-session, all taken.
+
+**The bar is the quest, the ring is reputation.** The strip printed `Tap 25 times · 0 / 25` next
+to a meter that was filling from garden reputation. Two quantities, one visual, and the one you
+read is the one with the numbers. The bar now tracks `progress / qty` of the quest on the strip.
+Reputation moved to a conic ring around the level pip — the same pattern the booster chips and
+combo ring already use. The task name sits on top of the thicker fill; a chip at the right shows
+the reputation reward, because "Claim" with no number is a blank payoff.
+
+**Buy, then feel.** Generic "Buy a badge" / "Buy 3 badges" is gone (the dock says Upgrades). Each
+early tap upgrade is now a pair: buy Power Punch then tap 50 times, buy Quick Grip then hold-tap
+20 times, buy Lucky Charm then land a crit, buy Star Strike (the crit quest already showed the
+spike), buy Combo Coil then reach combo 55. Combo Coil stays in even though the multiplier is
+still phase 3 — undoing the tutorial later would cost more than leaving a buy-and-fill-the-ring
+quest in. Hold ticks are a new `hold` track on `tapFlower(true)`; combo quests set progress to the
+current combo rather than counting taps.
+
+**The plant prompt.** `S.seen.plot` only flipped in the seed-sheet click handler, so a harvester
+plant or an old save left "Plant a seed here" hopping forever. It now flips on the `plant` event,
+and empty-plot bobbing is gated behind `#game.onboard` so it stops after the first plant.
+
+---
+
+## 2026-08-12 — Phase 1 of progression: the ladder pays to Eternal, plots are level-gated purchases
+
+**Decision.** Built phase 1 of [16-progression-and-quests.md](16-progression-and-quests.md). Two
+calls on top of the spec, both about not turning the new bar into a punishment.
+
+**The ladder has to actually reach the last seed.** Twenty-four quests paying 5→25 sum to ~360
+reputation, which is level 10. Eternal Crown unlocks at 17 (760). Leaving the back half of the
+seed list on a daily-login treadmill is worse than a slightly fatter late-game claim. So the
+authored ladder is 29 rows, payouts 5→50, totaling 781 — it lands on level 17. Levels 18–20 are
+the "no new seeds until the Market" tail, fed by the daily. Six extra long-tail harvest/plant/honey
+rows were cheaper than compressing the seed schedule.
+
+**Plots are not a quest.** "Unlock a plot" as an objective would sit on the strip for hours while
+the player saved 1,900 coins, and the game already starts with four plots — "unlock a second plot"
+was copy from a different game. Extra plots become *buyable* at levels 3, 6, 9 and 12, then cost
+the same gold they always did. Hours-to-days to open the whole garden, not weeks. Land Deed cannot
+skip a plot the level has not opened, so it cannot undermine the gate; at level 1 it simply reads
+Maxed.
+
+**Grandfathering is broader than "what can you afford right now."** A Moonflower in the ground and
+80 coins would otherwise be knocked back to level 1 and could not be replanted. Migration takes the
+max of affordable seeds, planted seeds, flowers in the bag, and affordable locked plots, and never
+re-locks a plot that is already open.
+
+Recipes stay ungated. There are three of them and they are the craft tutorial; locking them
+recreates the seed-migration problem for no pacing gain. Level 19 grants a Butterfly Shrine
+instead of "a recipe."
+
+---
+
 ## 2026-08-12 — Progression pass specified: reputation is the only track, and it is what "level" means
 
 **Decision.** The next project is progression, not the world map. Specified in

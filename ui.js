@@ -10,6 +10,13 @@
     ui: $('#ui'),
     garden: $('#garden'),
     rail: $('#rail'),
+    questStrip: $('#questStrip'),
+    qPip: $('#qPip'),
+    qPipWrap: $('#qPipWrap'),
+    qBar: $('#qBar'),
+    qText: $('#qText'),
+    qCount: $('#qCount'),
+    qReward: $('#qReward'),
     credits: $('#credits'),
     tickets: $('#tickets'),
     gems: $('#gems'),
@@ -154,6 +161,7 @@
         slot: $('.plant-slot', b),
         bar: $('.bar i', b),
         cost: $('.lock-cost span', b),
+        costWrap: $('.lock-cost', b),
         tag: $('.auto-tag', b),
         lucky: $('.lucky-badge', b),
         cache: {}
@@ -201,10 +209,27 @@
       if (c.lucky !== lucky) { v.lucky.classList.toggle('show', lucky); c.lucky = lucky; }
 
       if (state === 'locked') {
-        const cost = Game.plotUnlockCost(i);
-        if (c.cost !== cost) { v.cost.textContent = fmt(cost); c.cost = cost; }
-        const afford = S.credits >= cost ? '1' : '0';
-        if (c.afford !== afford) { v.root.dataset.afford = afford; c.afford = afford; }
+        const gated = !Game.plotAvailable(i);
+        if (c.gated !== gated) {
+          v.root.dataset.gated = gated ? '1' : '0';
+          if (gated) {
+            v.costWrap.textContent = `Lv ${Game.plotUnlockLevel(i)}`;
+            v.cost = null;
+          } else {
+            v.costWrap.innerHTML = `${Icons.get('coin')}<span></span>`;
+            v.cost = $('span', v.costWrap);
+          }
+          c.gated = gated;
+          c.cost = null;
+        }
+        if (gated) {
+          if (c.afford !== '0') { v.root.dataset.afford = '0'; c.afford = '0'; }
+        } else {
+          const cost = Game.plotUnlockCost(i);
+          if (c.cost !== cost) { if (v.cost) v.cost.textContent = fmt(cost); c.cost = cost; }
+          const afford = S.credits >= cost ? '1' : '0';
+          if (c.afford !== afford) { v.root.dataset.afford = afford; c.afford = afford; }
+        }
         if (c.seed !== null) { v.slot.innerHTML = ''; c.seed = null; c.stage = null; }
         continue;
       }
@@ -296,7 +321,7 @@
       // pointer stays down — Quick Grip shortens that cadence, it never
       // changes what a single tap is worth.
       stopHold();
-      holdTimer = setInterval(() => Game.tapFlower(), S.tap.holdInterval);
+      holdTimer = setInterval(() => Game.tapFlower(true), S.tap.holdInterval);
     }, { passive: false });
     ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) => {
       flowerBtn.addEventListener(evt, stopHold);
@@ -320,6 +345,45 @@
       c.disp += (target - c.disp) * Math.min(1, dt * 9);
       c.node.textContent = fmt(c.disp);
     });
+    renderQuestStrip();
+  }
+
+  function renderQuestStrip() {
+    if (!el.questStrip) return;
+    const q = Game.stripQuest();
+    const lv = Game.levelFromRep(S.rep);
+    const into = Game.repIntoLevel(S.rep);
+    const need = Game.repToNext(lv);
+    const repP = need ? Math.max(0, Math.min(1, into / need)) : 1;
+    let text = 'More reputation is coming';
+    let count = '';
+    let ready = false;
+    let claimId = '';
+    let questP = 0;
+    let reward = '';
+    const rest = q.kind === 'rest' || !q.def;
+    if (!rest) {
+      text = q.def.text;
+      ready = q.complete;
+      questP = q.def.qty ? Math.max(0, Math.min(1, q.inst.progress / q.def.qty)) : 0;
+      count = ready ? 'Claim' : `${q.inst.progress} / ${q.def.qty}`;
+      claimId = ready ? q.def.id : '';
+      reward = `+${q.def.rep}`;
+    }
+    const sig = [lv, repP.toFixed(3), questP.toFixed(3), text, count, claimId, reward, rest].join('|');
+    if (el.questStrip.dataset.sig === sig) return;
+    el.questStrip.dataset.sig = sig;
+    el.qPip.textContent = lv;
+    if (el.qPipWrap) el.qPipWrap.style.setProperty('--p', repP.toFixed(3));
+    el.qBar.style.transform = `scaleX(${questP})`;
+    el.qText.textContent = text;
+    el.qCount.textContent = count;
+    if (el.qReward) {
+      el.qReward.innerHTML = reward ? `${Icons.get('star')}${reward}` : '';
+    }
+    el.questStrip.classList.toggle('ready', ready);
+    el.questStrip.classList.toggle('rest', rest);
+    el.questStrip.dataset.claim = claimId;
   }
 
   function popWallet(name) {
@@ -418,7 +482,8 @@
     const keep = resetScroll ? 0 : el.sheetBody.scrollTop;
     const titles = {
       upgrades: 'Upgrades', apiary: 'Apiary', craft: 'Apothecary', shop: 'Shop',
-      seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings'
+      seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
+      quests: 'Quests'
     };
     el.sheetTitle.textContent = titles[sheetMode] || '';
 
@@ -437,7 +502,7 @@
 
     const render = {
       upgrades: renderUpgrades, apiary: renderApiary, craft: renderCraft, shop: renderShop,
-      seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings
+      seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests
     }[sheetMode];
     el.sheetBody.innerHTML = render ? render() : '';
     el.sheetBody.scrollTop = keep;
@@ -487,7 +552,7 @@
     const harvesters = PLOT_AUTOPLANTERS.filter(({ idx }) => !S.grid[idx].locked).map(({ key }) => upgradeCard(key)).join('');
     const lockedCount = PLOT_AUTOPLANTERS.filter(({ idx }) => S.grid[idx].locked).length;
     return `
-      <p class="sheet-note">Equip badges to power up your taps, speed up growth and automate the garden.</p>
+      <p class="sheet-note">Buy upgrades to power up your taps, speed up growth and automate the garden.</p>
       <div class="card-grid">${core}</div>
       <p class="sheet-note" style="margin-top:16px">Harvesters keep a single plot planted for you, choosing the best seed you can afford.</p>
       <div class="card-grid">${harvesters || '<p class="sheet-note">Unlock a plot to hire its harvester.</p>'}</div>
@@ -696,12 +761,29 @@
 
   function renderSeeds() {
     const rows = sortedSeeds().map((s) => {
-      const can = S.credits >= s.cost;
+      const locked = !Game.seedUnlocked(s.id);
+      const can = !locked && S.credits >= s.cost;
       const grow = Math.round(s.grow * Game.growModifier());
       const max = Math.round(s.yield * MAX_RARITY_MULT);
       const drops = [];
       if (s.gemChance) drops.push(`<span class="stat gem">${Icons.get('gem')}${pct(s.gemChance, 1)}</span>`);
       if (s.ticketChance) drops.push(`<span class="stat gem">${Icons.get('ticket')}${pct(s.ticketChance, 1)}</span>`);
+      if (locked) {
+        return `<div class="seed-row gated">
+          <span class="seed-art">${Flora.head(s, 40)}</span>
+          <span>
+            <span class="seed-name">${s.name}</span>
+            <span class="seed-stats">
+              <span class="stat">${Icons.get('coin')}${fmt(s.cost)}</span>
+              <span class="stat">${Icons.get('clock')}${fmtTime(grow)}</span>
+              <span class="stat good">${Icons.get('coin')}${fmt(s.yield)}–${fmt(max)}</span>
+              ${drops.join('')}
+            </span>
+            <span class="seed-desc">${s.desc}</span>
+          </span>
+          <span class="seed-go">Level ${s.unlockLevel}</span>
+        </div>`;
+      }
       return `<button class="seed-row" data-plant="${s.id}" ${can ? '' : 'disabled'}>
         <span class="seed-art">${Flora.head(s, 40)}</span>
         <span>
@@ -718,6 +800,55 @@
       </button>`;
     }).join('');
     return `<p class="sheet-note">Planting into plot ${(sheetArg ?? 0) + 1}. Grow times already include your sprinklers and boosts.</p>${rows}`;
+  }
+
+  function questRewardLine(def) {
+    const bits = [`+${def.rep} reputation`];
+    if (def.reward && def.reward.credits) bits.push(`+${fmt(def.reward.credits)} coins`);
+    if (def.reward && def.reward.gems) bits.push(`+${def.reward.gems} gems`);
+    return bits.join(' · ');
+  }
+
+  function questCard(inst, def, claimable) {
+    if (!def) return '';
+    const done = inst.progress >= def.qty;
+    const tag = done ? 'Claim' : `${inst.progress} / ${def.qty}`;
+    const reward = questRewardLine(def);
+    if (claimable && done) {
+      return `<button class="quest-card ready" type="button" data-claim="${def.id}">
+        <span class="q-meta"><span class="seed-name">${def.text}</span>
+        <span class="card-sub">${reward}</span></span>
+        <span class="q-prog">${tag}</span>
+      </button>`;
+    }
+    return `<div class="quest-card">
+      <span class="q-meta"><span class="seed-name">${def.text}</span>
+      <span class="card-sub">${reward}</span></span>
+      <span class="q-prog">${tag}</span>
+    </div>`;
+  }
+
+  function renderQuests() {
+    const lv = Game.levelFromRep(S.rep);
+    const into = Game.repIntoLevel(S.rep);
+    const need = Game.repToNext(lv);
+    const active = S.quests.active.map((inst) => questCard(inst, Game.questById(inst.id), true)).join('');
+    const daily = S.quests.daily;
+    const ddef = daily && daily.id ? Game.questById(daily.id) : null;
+    const dailyHtml = ddef && !daily.claimed
+      ? questCard(daily, ddef, true)
+      : `<p class="sheet-note">Today's quest is done. A new one arrives tomorrow.</p>`;
+    const left = DATA.quests.length - S.quests.done.length;
+    const tail = lv >= 17
+      ? 'No new seeds past level 17 until the Market opens. Reputation still fills the bar.'
+      : `${left} quest${left === 1 ? '' : 's'} left on the ladder.`;
+    return `
+      <p class="sheet-note">Level ${lv} · ${fmt(into)} / ${fmt(need)} reputation to the next level.</p>
+      <p class="sheet-note" style="margin-top:4px">${tail}</p>
+      <p class="sheet-note" style="margin-top:14px">Now</p>
+      ${active || '<p class="sheet-note">The ladder is complete.</p>'}
+      <p class="sheet-note" style="margin-top:14px">Today</p>
+      ${dailyHtml}`;
   }
 
   function renderBonuses() {
@@ -751,13 +882,13 @@
         <h3>${Icons.get('sparkle')} Tap Bonuses</h3>
         ${S.upgrades.rainDance
           ? line('Rain Dance', pct(S.upgrades.rainDance * 0.002, 1), 'Chance per tap to instantly water a growing plot')
-          : line('Rain Dance', 'Locked', 'Buy the badge in Upgrades to unlock')}
+          : line('Rain Dance', 'Locked', 'Buy it in Upgrades to unlock')}
         ${S.upgrades.beeSwarm
           ? line('Bee Swarm', pct(S.upgrades.beeSwarm * 0.002, 1), 'Chance per tap to fill a jar in an open hive')
-          : line('Bee Swarm', 'Locked', 'Buy the badge in Upgrades to unlock')}
+          : line('Bee Swarm', 'Locked', 'Buy it in Upgrades to unlock')}
         ${S.upgrades.ladybug
           ? line('Lucky Ladybug', pct(S.upgrades.ladybug * 0.002, 1), 'Chance per tap to boost a growing plot\u2019s rarity odds')
-          : line('Lucky Ladybug', 'Locked', 'Buy the badge in Upgrades to unlock')}
+          : line('Lucky Ladybug', 'Locked', 'Buy it in Upgrades to unlock')}
       </div>
       <div class="stat-block">
         <h3>${Icons.get('sprout')} Garden Mastery</h3>
@@ -768,7 +899,7 @@
       </div>
       <div class="stat-block">
         <h3>${Icons.get('drone')} Automation</h3>
-        ${ah ? line('Harvest Drone', `Lv ${ah}`, `Collects a ready plot every ${Math.max(0.7, 3 - ah * 0.5).toFixed(1)}s`) : line('Harvest Drone', 'Locked', 'Buy the badge to auto-collect')}
+        ${ah ? line('Harvest Drone', `Lv ${ah}`, `Collects a ready plot every ${Math.max(0.7, 3 - ah * 0.5).toFixed(1)}s`) : line('Harvest Drone', 'Locked', 'Buy it to auto-collect')}
         ${harvesters || line('Harvesters', 'None hired', 'Hire them in the Upgrades tab')}
       </div>
       <div class="stat-block">
@@ -816,6 +947,11 @@
   });
 
   el.sheetBody.addEventListener('click', (e) => {
+    const claim = e.target.closest('[data-claim]');
+    if (claim && claim.dataset.claim) {
+      if (Game.claimQuest(claim.dataset.claim)) Sound.resume();
+      return;
+    }
     const api = e.target.closest('[data-apiary]');
     if (api) {
       const what = api.dataset.apiary;
@@ -879,7 +1015,6 @@
       const seed = Game.seedById(plant.dataset.plant);
       const idx = sheetArg;
       if (Game.plant(idx, seed)) {
-        if (!S.seen.plot) { S.seen.plot = true; Game.save(); hideCoach(); }
         closeSheet();
       } else {
         Sound.play('deny');
@@ -955,6 +1090,12 @@
 
   $('#btnSettings').addEventListener('click', () => openSheet('settings'));
   $('#btnBonuses').addEventListener('click', () => openSheet('bonuses'));
+  el.questStrip.addEventListener('click', () => {
+    Sound.resume();
+    const id = el.questStrip.dataset.claim;
+    if (id) Game.claimQuest(id);
+    else openSheet('quests');
+  });
 
   /* drag-to-dismiss */
   (() => {
@@ -993,6 +1134,11 @@
     Sound.resume();
     const cell = S.grid[idx];
     if (cell.locked) {
+      if (!Game.plotAvailable(idx)) {
+        const c = FX.centerOf(node);
+        FX.float(c.x, c.y, `Level ${Game.plotUnlockLevel(idx)}`, '');
+        return;
+      }
       if (!Game.unlockPlot(idx)) {
         const c = FX.centerOf(node);
         FX.float(c.x, c.y, `Need ${fmt(Game.plotUnlockCost(idx))}`, '');
@@ -1177,6 +1323,34 @@
     if (sheetMode) syncAfford();
   });
 
+  Game.on('quest', () => {
+    const c = FX.centerOf(el.questStrip);
+    FX.coins(c.x, c.y, 9);
+    FX.stars(c.x, c.y, 9, '#4dabf7');
+    FX.ring(c.x, c.y, '#4dabf7', 0.5, 120);
+    Sound.play('quest');
+    FX.haptic([12, 30, 22]);
+    renderQuestStrip();
+  });
+
+  Game.on('levelup', ({ to, grants }) => {
+    const c = FX.centerOf(el.questStrip);
+    FX.confetti(c.x, c.y, 34);
+    FX.shake(9, 0.4);
+    FX.haptic([20, 40, 20, 40, 40]);
+    Sound.play('levelup');
+    const g = grants && grants[grants.length - 1];
+    let body = 'The garden is growing.';
+    if (g && g.seed) body = `${g.seed.name} seeds are in the picker.`;
+    else if (g && g.plot != null) body = `Plot ${g.plot + 1} can be bought with coins.`;
+    else if (g && g.hive) body = 'A new hive is waiting in the Apiary.';
+    else if (g && g.decor) body = 'A new decoration was added to the garden.';
+    else if (g && g.gems) body = `+${g.gems} gems`;
+    toast({ title: `Level ${to}!`, body, art: Icons.get('star') });
+    showBanner(`Level ${to}!`, body, 2000);
+    renderQuestStrip();
+  });
+
   Game.on('tap', (p) => {
     const c = FX.centerOf(flowerBtn);
     FX.floatAt(flowerBtn, `+${fmt(p.gain)}`, p.crit ? 'crit' : '');
@@ -1206,6 +1380,12 @@
   });
 
   Game.on('plant', ({ idx, auto }) => {
+    if (!S.seen.plot) {
+      S.seen.plot = true;
+      Game.save();
+      hideCoach();
+      el.game.classList.remove('onboard');
+    }
     const v = plotEls[idx];
     if (!v) return;
     const c = FX.centerOf(v.root);
@@ -1331,6 +1511,10 @@
     });
     $$('[data-plant]', el.sheetBody).forEach((node) => {
       const s = Game.seedById(node.dataset.plant);
+      if (!s || !Game.seedUnlocked(s.id)) {
+        node.disabled = true;
+        return;
+      }
       const can = S.credits >= s.cost;
       node.disabled = !can;
       const go = $('.seed-go', node);
@@ -1388,6 +1572,11 @@
     FX.setMagnet('coin', el.walletCredits);
 
     const info = Game.load();
+    if (!S.seen.plot && (S.stats.totalHarvests || S.grid.some((c) => c && c.seed))) {
+      S.seen.plot = true;
+      Game.save();
+    }
+    if (!S.seen.plot) el.game.classList.add('onboard');
     Sound.prefs.sfx = S.prefs.sfx;
     Sound.prefs.music = S.prefs.music;
 
@@ -1397,6 +1586,7 @@
     sizeGarden();
     if (window.ResizeObserver) new ResizeObserver(sizeGarden).observe($('.stage'));
     renderRail();
+    renderQuestStrip();
     Object.values(counters).forEach((c) => { c.disp = c.get(); c.node.textContent = fmt(c.disp); });
 
     el.game.addEventListener('pointermove', (e) => {
@@ -1431,6 +1621,18 @@
           ms: 3600
         });
       }, info.migrated ? 1500 : 700);
+    }
+
+    if (info.progressionGrant) {
+      const delay = (info.migrated ? 1500 : 700) + (info.decorRefund ? 1600 : 0);
+      setTimeout(() => {
+        toast({
+          title: 'The garden remembers you',
+          body: 'Your seeds and plots are still yours. Reputation now tracks how far you\'ve come.',
+          art: Icons.get('sprout'),
+          ms: 3600
+        });
+      }, delay);
     }
 
     requestAnimationFrame((t) => { last = t; frame(t); });

@@ -36,7 +36,14 @@ lost if the player clears site data.
   stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
   wonder: { until: 0, last: 0 },
   prefs: { sfx: true, music: false },
-  seen: { intro: false, plot: false }
+  seen: { intro: false, plot: false },
+  quests: {
+    active: [ { id: 'q_tap_25', progress: 0 } ],
+    done: [],
+    daily: { id: 'd_harvest_10', progress: 0, day: '2026-8-12', claimed: false }
+  },
+  rep: 0,
+  level: 1
 }
 ```
 
@@ -59,6 +66,11 @@ nothing sums a stat from them anymore.
 
 **`harvestsThisSession` is a misnomer** — it's saved and never reset, so it's a lifetime counter
 driving the every-10-harvests ticket bonus.
+
+**`rep` is earned, never spent.** `level` is derived from it (`repToNext(L) = 10 + 5×(L−1)`) and
+stored so a level-up can be detected. Nested `quests` is re-merged in `load()` like the other
+objects; a save without a `rep` key is grandfathered (see
+[16-progression-and-quests.md](16-progression-and-quests.md)).
 
 **`prefs.music` defaults to `false`.** Deliberate: unrequested audio on load is hostile.
 

@@ -48,6 +48,8 @@ sounds never clash.
 | `harvest` | Rising four-note triangle figure | Common harvest |
 | `plant` | Soft rising sine plus low noise | Planting |
 | `unlock` | Five-note ascending fanfare | Plot unlocked |
+| `quest` | Three soft sine notes | Quest claimed |
+| `levelup` | Seven-note triangle run plus noise (same shape as `legend`) | Level-up |
 | `buy` | Two-note confirmation | Upgrade or decor bought |
 | `deny` | Falling sawtooth buzz | Insufficient funds |
 | `boost` | Long rising sawtooth sweep with noise | Booster activated |
@@ -146,6 +148,8 @@ than a Rare one.
 | Epic harvest | 14 | 9 stars + ring | 5 | `legend` | yes | — |
 | Legendary harvest | 22 | 16 stars + ring + confetti | 9 | `legend` | yes | forced |
 | Plot unlock | — | 22 confetti + ring | — | `unlock` | yes | forced |
+| Quest claim | 9 | 9 stars + ring | — | `quest` | — | — |
+| Level-up | — | 34 confetti + ring | 9 | `levelup` | yes | — |
 | Wonder Effect | — | rainbow burst + 5 confetti waves | 10 | `wonder` | banner | forced |
 
 Rare harvests deliberately get no toast. At 20% frequency they generated constant notification

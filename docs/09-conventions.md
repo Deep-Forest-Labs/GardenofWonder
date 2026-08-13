@@ -77,7 +77,8 @@ Animate `transform` and `opacity`. Avoid animating layout properties.
 ## Playbook: add a seed
 
 1. Append to `DATA.seeds` in `data.js`. **Keep `yield` at exactly `cost × 1.4`** — see
-   [04-economy.md](04-economy.md).
+   [04-economy.md](04-economy.md). Set `unlockLevel` so the seed picker can grey it until that
+   garden level.
 2. Write the `art` block. Pick an existing `shape`, or add a recipe to `rings()` / `customHead()` in
    `flora.js`.
 3. Optionally set `gemChance` / `ticketChance`. Note that setting `gemChance` **overrides** the 5%

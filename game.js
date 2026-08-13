@@ -37,7 +37,10 @@ const Game = (() => {
       craft: [],
       goods: {},
       prefs: { sfx: true, music: false },
-      seen: { intro: false, plot: false, apiary: false }
+      seen: { intro: false, plot: false, apiary: false },
+      quests: { active: [], done: [], daily: { id: null, progress: 0, day: '', claimed: false } },
+      rep: 0,
+      level: 1
     };
   };
 
@@ -102,7 +105,10 @@ const Game = (() => {
       } catch (e) { raw = null; }
     }
     if (!raw && legacy) { raw = legacy; migrated = true; }
-    if (!raw) return { migrated: false, fresh: true };
+    if (!raw) {
+      ensureProgression();
+      return { migrated: false, fresh: true };
+    }
     try {
       const parsed = JSON.parse(raw);
       Object.assign(state, defaultState(), parsed);
@@ -114,6 +120,14 @@ const Game = (() => {
       state.prefs = Object.assign(d.prefs, parsed.prefs || {});
       state.seen = Object.assign(d.seen, parsed.seen || {});
       state.apiary = Object.assign(d.apiary, parsed.apiary || {});
+      state.quests = Object.assign(d.quests, parsed.quests && typeof parsed.quests === 'object' ? parsed.quests : {});
+      if (!Array.isArray(state.quests.active)) state.quests.active = [];
+      if (!Array.isArray(state.quests.done)) state.quests.done = [];
+      state.quests.daily = Object.assign(
+        { id: null, progress: 0, day: '', claimed: false },
+        state.quests.daily && typeof state.quests.daily === 'object' ? state.quests.daily : {}
+      );
+      if (typeof state.rep !== 'number' || !(state.rep >= 0)) state.rep = 0;
       state.apiary.hives = Array.isArray(state.apiary.hives) ? state.apiary.hives : [];
       state.apiary.honey = state.apiary.honey && typeof state.apiary.honey === 'object' ? state.apiary.honey : {};
       state.apiary.wax = Number(state.apiary.wax) || 0;
@@ -150,8 +164,13 @@ const Game = (() => {
           cell.plantedAt = now;
         }
       });
-      if (migrated || decorRefund) saveNow();
-      return { migrated, fresh: false, decorRefund };
+      let progressionGrant = null;
+      if (!Object.prototype.hasOwnProperty.call(parsed, 'rep')) {
+        progressionGrant = migrateProgression();
+      }
+      ensureProgression();
+      if (migrated || decorRefund || progressionGrant) saveNow();
+      return { migrated, fresh: false, decorRefund, progressionGrant };
     } catch (err) {
       console.warn('Save load failed', err);
       return { migrated: false, fresh: true };
@@ -162,6 +181,7 @@ const Game = (() => {
     localStorage.removeItem(SAVE_KEY);
     Object.assign(state, defaultState());
     lastAutoHarvest = 0;
+    ensureProgression();
     emit('grid');
     emit('panels');
     emit('currency');
@@ -192,6 +212,241 @@ const Game = (() => {
     let t = Math.random() * tot;
     for (const r of pool) { t -= r.w; if (t <= 0) return r; }
     return pool[0];
+  }
+
+  /* ---------------- reputation, levels, quests ---------------- */
+  const RARITY_RANK = { common: 0, rare: 1, epic: 2, legend: 3 };
+
+  function repToNext(level) {
+    return 10 + 5 * (level - 1);
+  }
+  function cumulativeRep(level) {
+    if (level <= 1) return 0;
+    const n = level - 1;
+    return 10 * n + 5 * n * (n - 1) / 2;
+  }
+  function levelFromRep(rep) {
+    let level = 1;
+    let need = 0;
+    const r = Math.max(0, Number(rep) || 0);
+    while (level < 1000) {
+      const step = repToNext(level);
+      if (r < need + step) return level;
+      need += step;
+      level += 1;
+    }
+    return level;
+  }
+  function repIntoLevel(rep) {
+    const lv = levelFromRep(rep);
+    return Math.max(0, (Number(rep) || 0) - cumulativeRep(lv));
+  }
+
+  function seedUnlockLevel(id) {
+    const s = typeof id === 'string' ? seedById(id) : id;
+    return (s && s.unlockLevel) || 1;
+  }
+  function seedUnlocked(id) {
+    return seedUnlockLevel(id) <= levelFromRep(state.rep);
+  }
+  function highestUnlockedSeedIndex() {
+    const lv = levelFromRep(state.rep);
+    let max = -1;
+    DATA.seeds.forEach((s, i) => { if ((s.unlockLevel || 1) <= lv) max = i; });
+    return max;
+  }
+
+  function plotUnlockLevel(idx) {
+    const table = DATA.plotUnlockLevel || [];
+    return table[idx] || 1;
+  }
+  function plotAvailable(idx) {
+    return levelFromRep(state.rep) >= plotUnlockLevel(idx);
+  }
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+  function questById(id) {
+    return DATA.quests.find((q) => q.id === id) || DATA.dailies.find((q) => q.id === id) || null;
+  }
+
+  function rollDaily(excludeId) {
+    const pool = DATA.dailies.filter((q) => q.id !== excludeId);
+    const pick = (pool.length ? pool : DATA.dailies)[Math.floor(Math.random() * (pool.length || DATA.dailies.length))];
+    state.quests.daily = { id: pick.id, progress: 0, day: todayKey(), claimed: false };
+  }
+  function refreshDaily() {
+    const day = todayKey();
+    const cur = state.quests.daily;
+    if (cur && cur.id && cur.day === day) return;
+    rollDaily(cur && cur.id);
+  }
+  function fillActive() {
+    const done = new Set(state.quests.done);
+    const have = new Set(state.quests.active.map((q) => q.id));
+    DATA.quests.forEach((def) => {
+      if (state.quests.active.length >= 3) return;
+      if (done.has(def.id) || have.has(def.id)) return;
+      if (def.after && !done.has(def.after)) return;
+      state.quests.active.push({ id: def.id, progress: 0 });
+      have.add(def.id);
+    });
+  }
+  function ensureProgression() {
+    if (!state.quests || typeof state.quests !== 'object') {
+      state.quests = { active: [], done: [], daily: { id: null, progress: 0, day: '', claimed: false } };
+    }
+    if (!Array.isArray(state.quests.active)) state.quests.active = [];
+    if (!Array.isArray(state.quests.done)) state.quests.done = [];
+    if (!state.quests.daily || typeof state.quests.daily !== 'object') {
+      state.quests.daily = { id: null, progress: 0, day: '', claimed: false };
+    }
+    if (typeof state.rep !== 'number' || !(state.rep >= 0)) state.rep = 0;
+    state.level = levelFromRep(state.rep);
+    refreshDaily();
+    fillActive();
+  }
+
+  function migrateProgression() {
+    let best = 1;
+    const consider = (id) => {
+      const lv = seedUnlockLevel(id);
+      if (lv > best) best = lv;
+    };
+    for (let i = DATA.seeds.length - 1; i >= 0; i -= 1) {
+      if (state.credits >= DATA.seeds[i].cost) { consider(DATA.seeds[i].id); break; }
+    }
+    (state.grid || []).forEach((c) => { if (c && c.seed) consider(c.seed); });
+    Object.keys(state.flowers || {}).forEach((id) => {
+      if (state.flowers[id] > 0) consider(id);
+    });
+    (state.grid || []).forEach((c, i) => {
+      if (!c || !c.locked) return;
+      if (state.credits >= plotUnlockCost(i)) {
+        const lv = plotUnlockLevel(i);
+        if (lv > best) best = lv;
+      }
+    });
+    state.rep = cumulativeRep(best);
+    state.level = best;
+    return { level: best };
+  }
+
+  function questMatches(def, track, key) {
+    if (!def || def.track !== track) return false;
+    if (track === 'rarity') return (RARITY_RANK[key] || 0) >= (RARITY_RANK[def.key] || 0);
+    if (def.key && def.key !== key) return false;
+    return true;
+  }
+  function bumpInst(inst, def, n) {
+    if (!inst || !def || inst.progress >= def.qty) return false;
+    const next = def.track === 'combo'
+      ? Math.min(def.qty, Math.max(inst.progress, n))
+      : Math.min(def.qty, inst.progress + n);
+    if (next === inst.progress) return false;
+    inst.progress = next;
+    return true;
+  }
+  function noteQuest(track, key, n) {
+    if (!n) return;
+    refreshDaily();
+    let changed = false;
+    state.quests.active.forEach((inst) => {
+      const def = questById(inst.id);
+      if (questMatches(def, track, key)) changed = bumpInst(inst, def, n) || changed;
+    });
+    const daily = state.quests.daily;
+    if (daily && daily.id && !daily.claimed) {
+      const def = questById(daily.id);
+      if (questMatches(def, track, key)) changed = bumpInst(daily, def, n) || changed;
+    }
+    if (changed) save();
+  }
+
+  function applyReward(reward) {
+    if (!reward) return;
+    if (reward.credits) state.credits += reward.credits;
+    if (reward.gems) state.gems += reward.gems;
+  }
+  function grantLevel(level) {
+    const coins = (DATA.levelCoinGrant || 20) * level;
+    state.credits += coins;
+    const grant = (DATA.levelGrants && DATA.levelGrants[level]) || {};
+    const out = { level, coins, seed: null, plot: null, hive: false, decor: null, gems: 0 };
+    const seed = DATA.seeds.find((s) => s.unlockLevel === level);
+    if (seed) out.seed = seed;
+    const plotIdx = (DATA.plotUnlockLevel || []).findIndex((lv, i) => i > 3 && lv === level);
+    if (plotIdx >= 0) out.plot = plotIdx;
+    if (grant.hive) {
+      if (hiveCount() < APIARY.maxHives) {
+        state.apiary.hives.push({ at: nowSeconds(), jars: [] });
+        out.hive = true;
+      } else {
+        const extra = APIARY.hiveCost(0);
+        state.credits += extra;
+        out.coins += extra;
+      }
+    }
+    if (grant.decor) {
+      state.decor.push({ id: grant.decor });
+      out.decor = grant.decor;
+    }
+    if (grant.gems) {
+      state.gems += grant.gems;
+      out.gems = grant.gems;
+    }
+    return out;
+  }
+
+  function claimQuest(id) {
+    refreshDaily();
+    const def = questById(id);
+    if (!def) return null;
+    const isDaily = DATA.dailies.some((q) => q.id === id);
+    if (isDaily) {
+      const inst = state.quests.daily;
+      if (!inst || inst.id !== id || inst.claimed || inst.progress < def.qty) return null;
+      inst.claimed = true;
+    } else {
+      const inst = state.quests.active.find((q) => q.id === id);
+      if (!inst || inst.progress < def.qty) return null;
+      if (state.quests.done.indexOf(id) !== -1) return null;
+      state.quests.done.push(id);
+      state.quests.active = state.quests.active.filter((q) => q.id !== id);
+      fillActive();
+    }
+    const before = levelFromRep(state.rep);
+    state.rep += def.rep;
+    applyReward(def.reward);
+    const after = levelFromRep(state.rep);
+    state.level = after;
+    const grants = [];
+    for (let L = before + 1; L <= after; L += 1) grants.push(grantLevel(L));
+    save();
+    emit('currency');
+    emit('panels');
+    const payload = { id, def, rep: def.rep, grants };
+    emit('quest', payload);
+    if (grants.length) emit('levelup', { from: before, to: after, grants });
+    return payload;
+  }
+
+  function stripQuest() {
+    refreshDaily();
+    fillActive();
+    const inst = state.quests.active[0];
+    if (inst) {
+      const def = questById(inst.id);
+      if (def) return { kind: 'ladder', inst, def, complete: inst.progress >= def.qty };
+    }
+    const d = state.quests.daily;
+    const ddef = d && d.id ? questById(d.id) : null;
+    if (ddef && !d.claimed) {
+      return { kind: 'daily', inst: d, def: ddef, complete: d.progress >= ddef.qty };
+    }
+    return { kind: 'rest', inst: null, def: null, complete: false };
   }
 
   /* ---------------- Wonder Effect ---------------- */
@@ -257,6 +512,7 @@ const Game = (() => {
     const i = openHives[Math.floor(Math.random() * openHives.length)];
     const variety = sampleBloom(bloomPool());
     state.apiary.hives[i].jars.push(variety);
+    noteQuest('honey', variety, 1);
     return { hive: i, variety };
   }
 
@@ -274,7 +530,7 @@ const Game = (() => {
   }
 
   /* ---------------- actions ---------------- */
-  function tapFlower() {
+  function tapFlower(held) {
     const power = state.tap.power * (1 + boostVal('tapPower')) * (1 + boostVal('globalCredits'));
     const critChance = state.tap.critChance + boostVal('critChance');
     const critMultiplier = state.tap.critMult;
@@ -300,9 +556,13 @@ const Game = (() => {
     emit('currency');
     const payload = {
       gain: rounded, crit: isCrit, combo: state.tap.combo, gemDrop, sparkedWonder: sparked,
-      rainDance, beeSwarm, ladybug
+      rainDance, beeSwarm, ladybug, held: Boolean(held)
     };
     emit('tap', payload);
+    noteQuest('tap', null, 1);
+    if (held) noteQuest('hold', null, 1);
+    if (isCrit) noteQuest('crit', null, 1);
+    noteQuest('combo', null, state.tap.combo);
     return payload;
   }
 
@@ -316,6 +576,7 @@ const Game = (() => {
     if (!seedDef) return false;
     const cell = state.grid[idx];
     if (!cell || cell.locked || cell.seed) return false;
+    if (!seedUnlocked(seedDef.id)) return false;
     if (payCost && state.credits < seedDef.cost) return false;
     if (payCost) state.credits -= seedDef.cost;
     state.grid[idx] = {
@@ -328,12 +589,17 @@ const Game = (() => {
     save();
     emit('currency');
     emit('plant', { idx, seed: seedDef, auto: !payCost });
+    noteQuest('plant', seedDef.id, 1);
     return true;
   }
 
   function unlockPlot(idx) {
     const cell = state.grid[idx];
     if (!cell || !cell.locked) return false;
+    if (!plotAvailable(idx)) {
+      emit('deny', { reason: 'level', need: plotUnlockLevel(idx), idx });
+      return false;
+    }
     const cost = plotUnlockCost(idx);
     if (state.credits < cost) {
       emit('deny', { reason: 'credits', need: cost, idx });
@@ -345,15 +611,19 @@ const Game = (() => {
     emit('currency');
     emit('unlock', { idx, cost });
     emit('panels');
+    noteQuest('plot', idx, 1);
     return true;
   }
 
   function unlockNextPlots(count) {
     const targets = [];
     for (let i = 0; i < state.grid.length && targets.length < count; i += 1) {
-      if (state.grid[i].locked) targets.push(i);
+      if (state.grid[i].locked && plotAvailable(i)) targets.push(i);
     }
-    targets.forEach((idx) => { state.grid[idx].locked = false; });
+    targets.forEach((idx) => {
+      state.grid[idx].locked = false;
+      noteQuest('plot', idx, 1);
+    });
     return targets.length;
   }
 
@@ -406,6 +676,8 @@ const Game = (() => {
       idx, payout, rarity: r, seed: sdef, gemDrop, ticketDrop, ticketBonus, sparkedWonder: sparked, luckyHarvest
     };
     emit('harvest', payload);
+    noteQuest('harvest', sdef.id, 1);
+    noteQuest('rarity', r.key, 1);
     return payload;
   }
 
@@ -425,6 +697,7 @@ const Game = (() => {
     emit('currency');
     emit('purchase', { kind: 'hive', cost });
     emit('panels');
+    noteQuest('hive', null, 1);
     return true;
   }
 
@@ -458,7 +731,12 @@ const Game = (() => {
       // A full hive stops the clock rather than banking jars it cannot hold.
       if (h.jars.length >= APIARY.capacity) h.at = now;
     });
-    if (produced) { save(); emit('panels'); emit('honey', { produced }); }
+    if (produced) {
+      save();
+      emit('panels');
+      emit('honey', { produced });
+      noteQuest('honey', null, produced);
+    }
   }
 
   function collectHive(i) {
@@ -478,6 +756,7 @@ const Game = (() => {
     emit('panels');
     const payload = { i, jars, wax };
     emit('collect', payload);
+    if (wax) noteQuest('wax', null, wax);
     return payload;
   }
 
@@ -556,6 +835,7 @@ const Game = (() => {
     emit('currency');
     emit('panels');
     emit('crafted', { items: done.map((c) => c.id) });
+    done.forEach((c) => noteQuest('craft', c.id, 1));
   }
 
   /* Selling stands in for the order board until the Market exists. Orders are
@@ -581,6 +861,7 @@ const Game = (() => {
     emit('currency');
     emit('panels');
     emit('sell', { kind, key, qty, total });
+    if (kind === 'flower') noteQuest('sell', key, qty);
     return total;
   }
 
@@ -626,7 +907,7 @@ const Game = (() => {
   });
 
   const upgradeMaxed = (key) => {
-    if (key === 'plotExpansion') return state.grid.every((c) => !c.locked);
+    if (key === 'plotExpansion') return !state.grid.some((c, i) => c.locked && plotAvailable(i));
     if (key === 'holdSpeed') return state.tap.holdInterval <= HOLD_INTERVAL_MIN;
     if (key === 'autoWater') return state.upgrades.autoWater >= AUTO_WATER_MAX_LEVEL;
     if (key === 'rainDance') return state.upgrades.rainDance >= RAIN_DANCE_MAX_LEVEL;
@@ -647,6 +928,7 @@ const Game = (() => {
     emit('purchase', { kind: 'upgrade', key, cost });
     emit('panels');
     if (key === 'plotExpansion') emit('grid');
+    noteQuest('upgrade', key, 1);
     return true;
   }
 
@@ -699,7 +981,7 @@ const Game = (() => {
       if (!level) return;
       const cell = state.grid[idx];
       if (!cell || cell.locked || cell.seed) return;
-      const maxSeedIndex = Math.min(level - 1, DATA.seeds.length - 1);
+      const maxSeedIndex = Math.min(level - 1, highestUnlockedSeedIndex(), DATA.seeds.length - 1);
       let chosen = null;
       for (let i = maxSeedIndex; i >= 0; i -= 1) {
         if (state.credits >= DATA.seeds[i].cost) { chosen = DATA.seeds[i]; break; }
@@ -749,6 +1031,7 @@ const Game = (() => {
     processAutoPlant();
     produceHoney(now);
     processCraft(now);
+    refreshDaily();
   }
 
   function progressOf(cell) {
@@ -762,6 +1045,8 @@ const Game = (() => {
     return Math.max(0, cell.grow - (nowSeconds() - cell.plantedAt));
   }
 
+  ensureProgression();
+
   return {
     state, on, emit, load, save, saveNow, reset, nowSeconds,
     seedById, activeBoost, boostVal, growModifier, rollRarity,
@@ -773,6 +1058,9 @@ const Game = (() => {
     canCraft, startCraft, sell,
     tick, progressOf, remainingOf,
     wonderActive, wonderMult, startWonder,
-    UPGRADE_EFFECTS
+    UPGRADE_EFFECTS,
+    repToNext, cumulativeRep, levelFromRep, repIntoLevel,
+    seedUnlocked, seedUnlockLevel, plotAvailable, plotUnlockLevel,
+    claimQuest, stripQuest, questById
   };
 })();

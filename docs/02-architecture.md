@@ -71,14 +71,16 @@ in `boot()`.
 | Event | Emitted when | Payload |
 | --- | --- | --- |
 | `currency` | Any balance changes | none |
-| `tap` | Flower tapped | `{ gain, crit, combo, gemDrop, sparkedWonder }` |
+| `tap` | Flower tapped | `{ gain, crit, combo, gemDrop, sparkedWonder, rainDance, beeSwarm, ladybug, held }` |
 | `plant` | Seed planted (manually or by a harvester) | `{ idx, seed, auto }` |
 | `ready` | A plot finishes growing | `{ idx }` |
 | `harvest` | Plot collected | `{ idx, payout, rarity, seed, gemDrop, ticketDrop, ticketBonus, sparkedWonder }` |
 | `unlock` | Plot purchased | `{ idx, cost }` |
 | `purchase` | Upgrade, decor, or booster bought | `{ kind, key, cost?, def? }` |
-| `deny` | A purchase failed for lack of funds | `{ reason, need, idx? }` |
+| `deny` | A purchase failed | `{ reason, need, idx? }` — `reason` is `credits` / `tickets` / `gems` / `level` |
 | `wonder` | Wonder Effect starts or ends | `{ active }` |
+| `quest` | A quest was claimed | `{ id, def, rep, grants }` |
+| `levelup` | Reputation crossed a level | `{ from, to, grants }` |
 | `grid` | The grid needs a full DOM rebuild | none |
 | `panels` | Open sheet content is stale | none |
 
@@ -95,7 +97,7 @@ Work is tiered by how often it actually needs to happen:
 
 | Cadence | Work |
 | --- | --- |
-| Every frame | `Game.tick`, `renderPlots`, `hudTick`, `FX.step`, combo ring variables |
+| Every frame | `Game.tick`, `renderPlots`, `hudTick` (wallets + quest strip), `FX.step`, combo ring variables |
 | 1 s | Combo decay, idle-chatter check |
 | 0.25 s | Rail chips (booster and Wonder countdowns) |
 | 0.6 s | Dock attention dots, coach mark placement, sky colour, sheet affordability |
@@ -151,9 +153,10 @@ The garden must be a perfect square that fills the stage row, which CSS alone ca
 `sizeGarden()` measures the stage and sets explicit pixel width and height, driven by a
 `ResizeObserver` plus `resize` and `orientationchange` handlers.
 
-The four UI rows (`hud`, `rail`, `stage`, `dock`) have explicit `grid-row` assignments. This is
-not decorative: the rail is `display:none` on short screens, and without explicit rows the
-remaining elements shift up a track and the dock stretches to fill the leftover space.
+The five UI rows (`hud`, `quest-strip`, `rail`, `stage`, `dock`) have explicit `grid-row`
+assignments. This is not decorative: the rail is `display:none` on short screens, and without
+explicit rows the remaining elements shift up a track and the dock stretches to fill the leftover
+space. The quest strip stays visible when the rail hides.
 
 ## Where the awkward bits are
 

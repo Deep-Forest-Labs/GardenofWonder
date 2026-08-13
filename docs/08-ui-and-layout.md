@@ -8,13 +8,15 @@ sheet the player asked for.
 
 ```
 ┌─────────────────────────────┐
-│  wallets          book gear │  hud    (row 1, auto)
+│  wallets          book gear │  hud          (row 1, auto)
 ├─────────────────────────────┤
-│  boost tray                 │  rail   (row 2, auto — hidden if short)
+│  ⑦ ▓▓▓  Harvest 3 roses     │  quest strip  (row 2, auto — always visible)
+├─────────────────────────────┤
+│  boost tray                 │  rail         (row 3, auto — hidden if short)
 ├─────────────────────────────┤
 │                             │
 │      ┌───┬───┬───┐          │
-│      │ P │ P │ P │          │  stage  (row 3, 1fr)
+│      │ P │ P │ P │          │  stage        (row 4, 1fr)
 │      ├───┼───┼───┤          │
 │      │ P │ 🌸│ P │          │
 │      ├───┼───┼───┤          │
@@ -22,7 +24,7 @@ sheet the player asked for.
 │      └───┴───┴───┘          │
 │                             │
 ├─────────────────────────────┤
-│   Upgrades  Apiary Craft Shop │ dock (row 4, auto)
+│   Upgrades  Apiary Craft Shop │ dock       (row 5, auto)
 └─────────────────────────────┘
 ```
 
@@ -31,13 +33,14 @@ whatever space is left.
 
 ### Why the rows are pinned
 
-`hud`, `rail`, `stage` and `dock` each declare an explicit `grid-row`. This looks redundant and
-isn't.
+`hud`, `quest-strip`, `rail`, `stage` and `dock` each declare an explicit `grid-row`. This looks
+redundant and isn't.
 
 The rail is `display: none` below 600 px of height. With implicit row placement, removing it shifts
 the stage and dock up a track, leaving a spare track at the bottom that the dock stretches into —
 producing enormous dock buttons that ate a third of the screen. Explicit rows keep every element
-where it belongs regardless of what's hidden. This was a real bug; don't undo it.
+where it belongs regardless of what's hidden. This was a real bug; don't undo it. The quest strip
+is pinned to row 2 and stays visible when the rail hides.
 
 Grid tracks also use `minmax(0, 1fr)` rather than `1fr`, because `1fr` has an automatic minimum of
 `auto` and lets content push a track wider than its share.
@@ -75,7 +78,7 @@ drag gestures on the board.
 
 ## The bottom sheet
 
-All shopping happens in one sheet that slides up from the bottom, holding seven panels:
+All shopping happens in one sheet that slides up from the bottom, holding eight panels:
 
 | Mode | Title | Opened from | Tabs |
 | --- | --- | --- | --- |
@@ -84,6 +87,7 @@ All shopping happens in one sheet that slides up from the bottom, holding seven 
 | `craft` | Apothecary | Dock | shared shop strip |
 | `shop` | Shop | Dock | shared shop strip |
 | `seeds` | Choose a seed | Tapping an empty plot | Sort: tier / balanced / cheapest / priciest |
+| `quests` | Quests | Tapping the quest strip | none |
 | `bonuses` | Garden Almanac | Book button in HUD | none |
 | `settings` | Settings | Gear button in HUD | none |
 
@@ -122,8 +126,8 @@ Driven by `data-state` on each plot button:
 
 | State | Appearance |
 | --- | --- |
-| `locked` | Padlock and coin price; pulses when affordable (`data-afford="1"`) |
-| `empty` | Bobbing dashed plant-spot marker |
+| `locked` | Padlock and coin price, or "Lv *n*" if the level has not opened it yet; pulses when affordable (`data-afford="1"`) |
+| `empty` | Dashed plant-spot marker; bobs only during first-plant onboarding |
 | `grow` | Plant at its growth stage, progress bar beneath |
 | `ready` | Full bloom, bouncing `!` badge, sweep shine |
 
@@ -132,7 +136,11 @@ a harvest.
 
 ## HUD
 
-Three wallet pills — coins, tickets, gems — plus round buttons for the Almanac and Settings.
+Three wallet pills — coins, tickets, gems — plus round buttons for the Almanac and Settings. A
+quest strip sits between the HUD and the rail: level pip with a reputation ring, a thick bar for
+the current quest's progress (task name and count drawn on top of the fill), and a reward chip.
+Tapping it opens the quest panel; tapping a completed quest claims it. See
+[16-progression-and-quests.md](16-progression-and-quests.md).
 
 Counters **animate toward their target** rather than snapping, lerping at `dt × 9` and locking on
 when within 0.6 to avoid asymptotic crawl. Combined with the coin magnet, earnings appear to fly up
@@ -146,7 +154,7 @@ Numbers are abbreviated above 100,000: `100000` stays as-is up to that point, th
 
 ## Status rail — the boost tray
 
-Between HUD and stage. This is where boosters live now that they're out of the dock (navigation
+Between the quest strip and the stage. This is where boosters live now that they're out of the dock (navigation
 phase 1, [15-navigation-and-ia.md](15-navigation-and-ia.md)): each booster in `DATA.boosters`
 renders as a countdown chip while active, or a tappable `data-boost` buy-and-activate chip while
 affordable and idle. Neither → nothing renders for it, so the tray never shows an empty slot as an

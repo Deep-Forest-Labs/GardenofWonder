@@ -53,8 +53,9 @@ coins buys nothing but a longer musical run and a fuller ring. See
 
 ### Hold-to-tap
 
-Holding the flower down repeats an ordinary `tapFlower()` call on a fixed cadence for as long as
-the pointer stays down — it is an input method, not a separate payout path. Every rolled effect
+Holding the flower down repeats `tapFlower(true)` on a fixed cadence for as long as the pointer
+stays down — it is an input method, not a separate payout path. The initial press is a normal tap
+(`held` is false); only the interval repeats count as hold ticks for quests. Every rolled effect
 (crit, gem drop, ticket, Wonder spark) and the combo counter behave exactly as they do for a
 manual tap, because it's the same function call.
 
@@ -112,15 +113,16 @@ quietly changing:
 ## Plots and growth
 
 Eight plots, laid out around the flower as a 3×3 grid with the flower in the centre cell. Four
-start unlocked; the other four are bought.
+start unlocked. The other four become **buyable** at levels 3, 6, 9 and 12, then cost gold:
 
 ```
 plot unlock cost (index i) = 400 + 300 × (i + 1)
 ```
 
-So plots 5–8 cost 1,900, 2,200, 2,500 and 2,800. The Land Deed badge unlocks two at a time
-instead, and is the only badge that can be maxed out — once every plot is open it reads "Maxed"
-and can't be bought.
+So plots 5–8 cost 1,900, 2,200, 2,500 and 2,800 once the matching level has opened them. A locked
+plot whose level has not arrived shows "Lv *n*" instead of a price. The Land Deed badge still
+unlocks two at a time, but only plots the current level has already opened — at level 1 it reads
+Maxed. It maxes for real once every plot is open.
 
 ### Growth time
 
@@ -220,12 +222,20 @@ base  = round(3000 × 1.3^(n−1))     scale 2.3 per level
 
 So plot 1's harvester starts at 3,000 and plot 8's at 18,825.
 
-A harvester at level *L* may plant any of the first *L* seeds in tier order. It picks the **most
-expensive one it can currently afford**, checking downward from its ceiling. This means a
-high-level harvester quietly spends your coin balance on premium seeds — which is the intended
-behaviour, but it's the reason a big balance can drain while you're in a menu.
+A harvester at level *L* may plant any of the first *L* seeds in tier order, further capped by
+the highest seed the garden level has unlocked. It picks the **most expensive one it can currently
+afford**, checking downward from that ceiling. This means a high-level harvester quietly spends
+your coin balance on premium seeds — which is the intended behaviour, but it's the reason a big
+balance can drain while you're in a menu.
 
 Harvesters only appear in the Upgrades tab for plots you've already unlocked.
+
+## Reputation and quests
+
+Reputation is the only progression number. Level is a display of it. Quests in `DATA.quests` pay
+into `state.rep`; the Market will later pay into the same field. Counters live on the active quest
+instance and increment from game events — they never read `state.flowers`. Full spec in
+[16-progression-and-quests.md](16-progression-and-quests.md).
 
 ## Boosters
 

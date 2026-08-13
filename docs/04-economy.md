@@ -96,12 +96,12 @@ the distribution becomes 60.87 / 26.09 / 10.43 / 2.61 percent and the expected m
 cost(index) = 400 + 300 × (index + 1)
 ```
 
-Indices 0–3 start unlocked, so only the last four prices are ever charged: **1,900, 2,200, 2,500,
-2,800**. Total cost to open the whole garden by hand: 9,400 coins.
+Indices 0–3 start unlocked. Plots 5–8 become buyable at levels 3, 6, 9 and 12, then cost
+**1,900, 2,200, 2,500, 2,800**. Total cost to open the whole garden by hand: 9,400 coins.
 
-The Land Deed badge is the alternative — 2,000 for the first two plots, then 4,000 for the next
-two. That's 6,000 for all four versus 9,400 individually, so Land Deed is the better deal, and it
-is the only badge that can max out.
+The Land Deed badge is the bulk alternative — 2,000 for the first two *opened* plots, then 4,000
+for the next two — but it cannot skip a plot the level bar has not opened yet. At level 1 it
+reads Maxed. Once every plot is open it maxes for good, and it is still the only badge that can.
 
 ## Badge prices
 

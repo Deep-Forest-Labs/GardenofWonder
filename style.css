@@ -221,7 +221,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .ui{
   position:absolute;inset:0;
   display:grid;
-  grid-template-rows:auto auto minmax(0,1fr) auto;
+  grid-template-rows:auto auto auto minmax(0,1fr) auto;
   grid-template-columns:minmax(0,1fr);
   padding:
     calc(env(safe-area-inset-top) + 8px)
@@ -235,9 +235,10 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 
 /* Rows are pinned so a hidden rail never shifts the grid. */
 .hud{grid-row:1}
-.rail{grid-row:2}
-.stage{grid-row:3}
-.dock{grid-row:4}
+.quest-strip{grid-row:2}
+.rail{grid-row:3}
+.stage{grid-row:4}
+.dock{grid-row:5}
 
 /* ---------- HUD ---------- */
 .hud{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
@@ -275,6 +276,70 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .round-btn:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink-2), 0 3px 6px rgba(44,26,16,.25)}
 .round-btn.ghost{width:38px;height:38px;box-shadow:0 3px 0 var(--ink-2)}
 .round-btn.ghost svg{width:20px;height:20px}
+
+/* ---------- quest strip ---------- */
+.quest-strip{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;
+  width:100%;text-align:left;
+  padding:5px 8px 5px 5px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:18px;
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.16);
+  min-height:0;
+}
+.quest-strip:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink-2)}
+.quest-strip.ready{
+  background:linear-gradient(180deg,#fff6c2,#ffe066);
+  animation:affordPulse 1.4s ease-in-out infinite;
+}
+.q-pip-wrap{
+  width:36px;height:36px;flex:none;
+  display:grid;place-items:center;
+}
+.q-pip-ring{
+  grid-area:1/1;width:36px;height:36px;border-radius:50%;
+  background:conic-gradient(from -90deg,#69db7c calc(var(--p,0) * 360deg), rgba(44,26,16,.16) 0);
+}
+.q-pip{
+  grid-area:1/1;position:relative;z-index:1;
+  width:26px;height:26px;
+  display:grid;place-items:center;
+  background:linear-gradient(180deg,#ffe066,#ffc93c);
+  border:2.5px solid var(--ink);border-radius:50%;
+  font-weight:900;font-size:13px;line-height:1;
+  box-shadow:0 1px 0 var(--ink-2);
+}
+.q-bar{
+  position:relative;display:block;height:24px;min-width:0;
+  border-radius:999px;overflow:hidden;
+  background:rgba(44,26,16,.1);border:2.5px solid var(--ink);
+}
+.q-bar i{
+  position:absolute;inset:0;width:100%;
+  background:linear-gradient(90deg,#8ce99a,#ffe066);
+  transform:scaleX(0);transform-origin:left center;
+}
+.q-bar-label{
+  position:relative;z-index:1;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  height:100%;padding:0 10px;
+  color:var(--ink);
+}
+.q-text{
+  font-weight:800;font-size:13px;line-height:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+.q-count{flex:none;font-weight:900;font-size:12px;font-variant-numeric:tabular-nums}
+.q-reward{
+  flex:none;display:flex;align-items:center;gap:3px;
+  padding:4px 8px 4px 6px;
+  background:linear-gradient(180deg,#fff,#fff5e2);
+  border:2.5px solid var(--ink);border-radius:999px;
+  font-weight:900;font-size:12px;line-height:1;
+  box-shadow:0 2px 0 var(--ink-2);
+}
+.q-reward svg{width:14px;height:14px;display:block}
+.quest-strip.rest .q-reward{display:none}
 
 /* ---------- status rail ---------- */
 .rail{
@@ -432,7 +497,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   opacity:.62;pointer-events:none;
 }
 .plot .empty-mark svg{width:30%;height:30%;max-width:44px}
-.plot[data-state="empty"] .empty-mark{animation:emptyBob 2.6s ease-in-out infinite}
+.plot[data-state="empty"] .empty-mark{opacity:.62}
+#game.onboard .plot[data-state="empty"] .empty-mark{animation:emptyBob 2.6s ease-in-out infinite}
 @keyframes emptyBob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5%) scale(1.06)}}
 .plot:not([data-state="empty"]) .empty-mark{display:none}
 
@@ -455,6 +521,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .plot .lock-cost svg{width:13px;height:13px;max-width:none}
 .plot[data-afford="1"] .lock-cost{background:#d3f9d8;animation:affordPulse 1.4s ease-in-out infinite}
+.plot[data-gated="1"] .lock-cost{background:var(--paper);animation:none}
 @keyframes affordPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
 
 /* ready state */
@@ -822,6 +889,23 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .seed-row:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink-2)}
 .seed-row[disabled]{filter:grayscale(.6) opacity(.6)}
+.seed-row.gated{filter:grayscale(.7) opacity(.72);pointer-events:none}
+.seed-row.gated .seed-go{font-size:11px;font-weight:900;opacity:.85;white-space:nowrap}
+
+.quest-card{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  width:100%;text-align:left;
+  padding:10px 12px;margin-bottom:9px;
+  background:linear-gradient(180deg,#fff,#fff5e2);
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  box-shadow:0 4px 0 var(--ink-2);
+}
+.quest-card.ready{
+  background:linear-gradient(180deg,#fff6c2,#ffe066);
+}
+.quest-card .q-meta{min-width:0}
+.quest-card .q-meta .seed-name{display:block}
+.quest-card .q-prog{flex:none;font-weight:900;font-variant-numeric:tabular-nums;font-size:13px}
 .seed-art{
   width:54px;height:54px;flex:none;border-radius:50%;
   display:grid;place-items:center;

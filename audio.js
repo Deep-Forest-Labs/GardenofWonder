@@ -134,6 +134,15 @@ const Sound = (() => {
     ladybug: () => {
       [0, 4, 7, 12].forEach((s, i) => tone({ freq: note(s + 12), type: 'sine', dur: 0.14, gain: 0.13, at: i * 0.045 }));
     },
+    quest: () => {
+      [0, 7, 12].forEach((s, i) => tone({ freq: note(s + 12), type: 'sine', dur: 0.28, gain: 0.13, at: i * 0.07 }));
+    },
+    levelup: () => {
+      [0, 4, 7, 12, 16, 19, 24].forEach((s, i) =>
+        tone({ freq: note(s + 7), type: 'triangle', dur: 0.35, gain: 0.15, at: i * 0.07 })
+      );
+      noise({ dur: 0.7, gain: 0.07, hp: 1800, at: 0.1 });
+    },
     rare: () => {
       [0, 7, 12].forEach((s, i) => tone({ freq: note(s + 12), type: 'sine', dur: 0.3, gain: 0.13, at: i * 0.07 }));
     },

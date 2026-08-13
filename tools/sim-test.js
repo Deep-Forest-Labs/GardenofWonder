@@ -34,6 +34,11 @@ loadScript('game.js');
 const G = globalThis.Game;
 const S = G.state;
 
+const unlockTo = (level) => {
+  S.rep = G.cumulativeRep(level);
+  S.level = level;
+};
+
 let pass = 0;
 let fail = 0;
 const group = (name) => console.log(`\n${name}`);
@@ -73,6 +78,7 @@ check('each gives 8% pollination', Math.abs(G.pollination() - APIARY.pollination
 
 group('honey variety follows what is blooming');
 S.credits = 1e6;
+unlockTo(2);
 G.plant(1, G.seedById('lavender'));
 advance(APIARY.interval * 2 + 5);
 const jars = S.apiary.hives[0].jars;
@@ -96,6 +102,7 @@ S.apiary.honey = {};
 clearGarden();
 advance(APIARY.interval * 3);
 const wildJars = S.apiary.hives[0].jars.slice();
+unlockTo(17);
 G.plant(0, G.seedById('eternal'));
 check('an empty garden gives wildflower honey', wildJars.every((j) => j === 'wild'), JSON.stringify(wildJars));
 check('planting later does not upgrade waiting jars',
@@ -298,6 +305,7 @@ G.reset();
 group('Rain Dance instantly waters a random growing plot');
 S.credits = 1e9;
 clearGarden();
+unlockTo(17);
 G.plant(0, G.seedById('eternal'));
 S.grid[0].grow = 1e7; // keep it growing no matter how much gets shaved off below
 const growAtStart = S.grid[0].grow;
@@ -379,6 +387,150 @@ check('harvest reports the lucky flag it consumed', luckyResult.luckyHarvest ===
 check('the flag is cleared off the plot once harvested', S.grid[0].luckyBug === false);
 G.plant(0, G.seedById('daisy'));
 check('a freshly planted seed does not inherit the old lucky flag', S.grid[0].luckyBug === false);
+G.reset();
+
+group('reputation curve');
+check('rep to leave level 1 is 10', G.repToNext(1) === 10);
+check('rep to leave level 2 is 15', G.repToNext(2) === 15);
+check('level 4 lands on 45', G.cumulativeRep(4) === 45);
+check('level 8 lands on 175', G.cumulativeRep(8) === 175);
+check('level 12 lands on 385', G.cumulativeRep(12) === 385);
+check('level 17 lands on 760', G.cumulativeRep(17) === 760);
+check('level 20 lands on 1045', G.cumulativeRep(20) === 1045);
+check('0 rep is level 1', G.levelFromRep(0) === 1);
+check('9 rep is still level 1', G.levelFromRep(9) === 1);
+check('10 rep is level 2', G.levelFromRep(10) === 2);
+check('44 rep is level 3', G.levelFromRep(44) === 3);
+check('45 rep is level 4', G.levelFromRep(45) === 4);
+check('760 rep is level 17', G.levelFromRep(760) === 17);
+const ladderRep = DATA.quests.reduce((a, q) => a + q.rep, 0);
+check('the ladder reaches Eternal (level 17)', ladderRep >= 760, `sum ${ladderRep}`);
+
+group('seed unlocks follow the level');
+G.reset();
+check('level 1 unlocks exactly three seeds', DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length === 3);
+check('daisy is plantable at level 1', G.seedUnlocked('daisy') === true);
+check('lavender is not', G.seedUnlocked('lavender') === false);
+S.credits = 1e6;
+check('a gated seed cannot be planted', G.plant(0, G.seedById('lavender')) === false && !S.grid[0].seed);
+unlockTo(17);
+check('level 17 unlocks all nineteen', DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length === 19);
+check('eternal is plantable at 17', G.plant(0, G.seedById('eternal')) === true);
+
+group('plots open on the level bar, then cost gold');
+G.reset();
+S.credits = 1e6;
+check('plot 5 is gated at level 1', G.unlockPlot(4) === false && S.grid[4].locked);
+check('Land Deed is maxed until a plot opens', G.upgradeMaxed('plotExpansion') === true);
+unlockTo(3);
+check('plot 5 is buyable at level 3', G.unlockPlot(4) === true && S.grid[4].locked === false);
+check('Land Deed still cannot skip to plot 6', G.upgradeMaxed('plotExpansion') === true);
+unlockTo(6);
+check('Land Deed can buy the next opened plot', G.upgradeMaxed('plotExpansion') === false);
+check('Land Deed unlocks only opened plots', G.buyUpgrade('plotExpansion') === true && S.grid[5].locked === false && S.grid[6].locked === true);
+
+group('auto-planters respect the seed gate');
+G.reset();
+S.credits = 1e9;
+clearGarden();
+S.upgrades.plot1Harvester = 19;
+G.tick(0.1);
+check('a maxed harvester still plants an unlocked seed', S.grid[0].seed === 'bluebell', `got ${S.grid[0].seed}`);
+
+group('quest counters listen to events, not inventory');
+G.reset();
+S.credits = 1e6;
+S.quests.active = [{ id: 'q_daisy_5', progress: 0 }];
+S.quests.done = [];
+clearGarden();
+G.plant(0, G.seedById('daisy'));
+advance(30);
+G.harvest(0);
+const daisyQ = S.quests.active.find((q) => q.id === 'q_daisy_5');
+check('a daisy harvest increments the daisy quest', daisyQ && daisyQ.progress === 1);
+G.plant(1, G.seedById('tulip'));
+advance(30);
+G.harvest(1);
+check('a tulip harvest does not', daisyQ.progress === 1);
+S.flowers = { daisy: 9 };
+S.apiary.honey = { wild: 5 };
+S.apiary.wax = 5;
+G.startCraft('tea');
+check('crafting spent flowers', (S.flowers.daisy || 0) < 9);
+check('crafting does not move the harvest counter', daisyQ.progress === 1);
+G.sell('flower', 'daisy', true);
+check('selling does not move the harvest counter', daisyQ.progress === 1);
+
+group('claiming a quest pays once');
+G.reset();
+S.quests.active = [{ id: 'q_harvest_1', progress: 1 }];
+S.quests.done = [];
+const repBefore = S.rep;
+const claimed = G.claimQuest('q_harvest_1');
+check('claim returns the payout', claimed && claimed.rep === 5);
+check('rep moves by exactly the quest value', S.rep === repBefore + 5);
+check('the id is in done', S.quests.done.indexOf('q_harvest_1') !== -1);
+check('it left the active list', !S.quests.active.some((q) => q.id === 'q_harvest_1'));
+check('a second claim is refused', G.claimQuest('q_harvest_1') === null);
+check('rep does not move again', S.rep === repBefore + 5);
+
+group('upgrade tutorials have distinct tracks');
+check('no quest says badge', DATA.quests.every((q) => !/badge/i.test(q.text)));
+check('Power Punch is on the ladder', DATA.quests.some((q) => q.id === 'q_power_1' && q.key === 'tapPower'));
+check('Combo Coil is on the ladder', DATA.quests.some((q) => q.id === 'q_coil_1' && q.key === 'comboMeter'));
+check('tap-50 waits until Power Punch is claimed', (() => {
+  G.reset();
+  return !S.quests.active.some((q) => q.id === 'q_tap_50');
+})());
+G.reset();
+S.quests.active = [{ id: 'q_hold_20', progress: 0 }];
+S.quests.done = ['q_grip_1'];
+G.tapFlower();
+check('a manual tap is not a hold', S.quests.active[0].progress === 0);
+G.tapFlower(true);
+check('a hold tick increments the hold quest', S.quests.active[0].progress === 1);
+G.reset();
+S.quests.active = [{ id: 'q_crit_1', progress: 0 }];
+S.quests.done = ['q_charm_1'];
+S.tap.critChance = 1;
+G.tapFlower();
+check('a guaranteed crit increments the crit quest', S.quests.active[0].progress === 1);
+G.reset();
+S.quests.active = [{ id: 'q_combo_55', progress: 0 }];
+S.quests.done = ['q_coil_1'];
+S.tap.combo = 0;
+S.tap.comboMax = 60;
+for (let i = 0; i < 12; i += 1) G.tapFlower();
+check('the combo quest tracks peak combo, not tap count', S.quests.active[0].progress === 12);
+
+group('grandfather migration keeps seeds you could already use');
+G.reset();
+const saveOf = (extra) => {
+  const base = JSON.parse(JSON.stringify(S));
+  delete base.rep;
+  delete base.level;
+  delete base.quests;
+  Object.assign(base, extra);
+  return base;
+};
+globalThis.localStorage.setItem('gw-save', JSON.stringify(saveOf({
+  credits: 100000,
+  stats: { totalTaps: 4, totalCrits: 0, totalHarvests: 1, wonders: 0 }
+})));
+const rich = G.load();
+check('a 100k save without rep migrates', rich && rich.progressionGrant && rich.progressionGrant.level === 17);
+check('every seed that save could afford stays plantable', DATA.seeds.every((s) => G.seedUnlocked(s.id)));
+G.reset();
+S.grid[0] = { locked: false, seed: 'moonflower', plantedAt: 0, grow: 10, ready: false, aura: '', luckyBug: false };
+S.credits = 50;
+S.stats.totalTaps = 3;
+globalThis.localStorage.setItem('gw-save', JSON.stringify(saveOf({
+  credits: 50,
+  grid: JSON.parse(JSON.stringify(S.grid)),
+  stats: { totalTaps: 3, totalCrits: 0, totalHarvests: 1, wonders: 0 }
+})));
+G.load();
+check('a planted high-tier seed with an empty wallet is not taken away', G.seedUnlocked('moonflower') === true);
 G.reset();
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
