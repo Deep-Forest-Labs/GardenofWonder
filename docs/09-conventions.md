@@ -85,6 +85,8 @@ Animate `transform` and `opacity`. Avoid animating layout properties.
    than adding to it.
 4. Gradients are generated automatically from `c1` / `c2`.
 5. **Check the bloom at 22 px**, not just in a plot. The Almanac renders it that small.
+6. **Bump the last `DATA.almanacMilestones` `at` to the new `DATA.seeds.length`.** Completing the
+   collection is "every seed", not a frozen 19.
 
 Nothing else needs touching — the seed picker, Almanac and harvester ceilings all read the array.
 

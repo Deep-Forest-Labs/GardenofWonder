@@ -44,7 +44,10 @@ lost if the player clears site data.
     daily: { id: 'd_harvest_10', progress: 0, day: '2026-8-12', claimed: false }
   },
   rep: 0,
-  level: 1
+  level: 1,
+  discovered: {},                 // seedId -> lifetime harvest count
+  bestRarity: {},                 // seedId -> rarity key
+  almanacClaimed: []              // milestone `at` values already paid
 }
 ```
 
@@ -123,7 +126,8 @@ see [10-decision-log.md](10-decision-log.md).
 
 `Object.assign(state, defaultState(), parsed)` is shallow, so a legacy save missing `stats`
 entirely would leave that key absent and crash on first write. Each nested object is therefore
-re-merged over its defaults individually: `tap`, `stats`, `wonder`, `prefs`, `seen`, `boostInv`.
+re-merged over its defaults individually: `tap`, `stats`, `wonder`, `prefs`, `seen`, `boostInv`,
+`discovered`, `bestRarity`. `almanacClaimed` is copied as an array when present, else `[]`.
 
 **When you add a nested object to state, add it to that list.** Forgetting is the single most likely
 way to break loading for existing players.
@@ -136,6 +140,8 @@ Three live migrations run on load:
   old key deleted.
 - Any missing `plotNHarvester` key is initialised to `0`, so adding harvester slots later is safe.
 - A save without `boostInv` converts leftover tickets to gems at 5:1, once.
+- Remaining `flowers` keys backfill `discovered` (max with any existing count). Unclaimed
+  Almanac milestones whose threshold is already met then pay once.
 
 ### Grid sanitisation
 

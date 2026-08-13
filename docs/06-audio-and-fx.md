@@ -59,8 +59,8 @@ sounds never clash.
 | `wonder` | Ten-note square run plus low sawtooth drone | Wonder Effect |
 
 `tap` takes the current combo as its argument and indexes the scale with it, so a sustained tap
-streak plays a climbing melodic run. This is the main reason the combo exists at all, given that it
-doesn't affect payout.
+streak plays a climbing melodic run. Combo also multiplies tap payout; the pitch climb is the
+audible half of that same meter.
 
 Epic harvests deliberately reuse `legend`. There is no separate epic sound.
 
@@ -149,6 +149,8 @@ than a Rare one.
 | Legendary harvest | 22 | 16 stars + ring + confetti | 9 | `legend` | yes | forced |
 | Plot unlock | — | 22 confetti + ring | — | `unlock` | yes | forced |
 | Quest claim | 9 | 9 stars + ring | — | `quest` | — | — |
+| First discover | — | float text | — | — | yes (common/rare only) | — |
+| Almanac milestone | 9 | 9 stars + ring | — | `quest` | yes | — |
 | Level-up | — | 34 confetti + ring | 9 | `levelup` | yes | — |
 | Wonder Effect | — | rainbow burst + 5 confetti waves | 10 | `wonder` | banner | forced |
 

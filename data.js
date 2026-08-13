@@ -173,6 +173,15 @@ const DATA = {
     20: { gems: 5 }
   },
 
+  /* Collection milestones. `at` is distinct species harvested, not inventory.
+     The last rung is DATA.seeds.length; bump it if you add a seed. */
+  almanacMilestones: [
+    { at: 5,  rep: 20, gems: 1, boost: 'bloom' },
+    { at: 10, rep: 30, gems: 2, boost: 'seedrush' },
+    { at: 15, rep: 40, gems: 3, boost: 'fortune' },
+    { at: 19, rep: 50, gems: 5, boost: 'golden' }
+  ],
+
   quests: [
     { id: 'q_tap_25',      text: 'Tap 25 times',            track: 'tap',     qty: 25,  rep: 5 },
     { id: 'q_plant_1',     text: 'Plant a seed',            track: 'plant',   qty: 1,   rep: 5 },

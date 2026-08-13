@@ -860,6 +860,9 @@
     const growBonus = Math.max(0, 1 - Game.growModifier());
     const harvestBonus = Game.boostVal('globalCredits');
     const ah = S.upgrades.autoHarvest;
+    const found = Game.discoveredCount();
+    const total = DATA.seeds.length;
+    const fill = total ? found / total : 0;
 
     const line = (k, v, d) => `<div class="stat-line"><span class="kk"><span class="k">${k}</span>${d ? `<span class="d">${d}</span>` : ''}</span><span class="v">${v}</span></div>`;
 
@@ -870,7 +873,50 @@
       return line(`${name}`, `Lv ${lvl}`, `Plants up to ${seed.name}${S.grid[idx].locked ? ' (plot locked)' : ''}`);
     }).filter(Boolean).join('');
 
+    const seedRows = DATA.seeds.map((s) => {
+      const n = Game.discoveredOf(s.id);
+      const best = Game.bestRarityOf(s.id);
+      const grown = n > 0;
+      const rdef = best ? DATA.rarity.find((r) => r.key === best) : null;
+      let detail = 'Not yet grown';
+      if (grown && rdef) {
+        detail = rdef.key === 'legend'
+          ? `Best ${rdef.label} · ${fmt(n)} grown`
+          : `Best ${rdef.label} · no Legendary yet`;
+      }
+      return `<div class="stat-line${grown ? '' : ' dim'}">
+        <span class="kk">
+          <span class="k"><span class="almanac-bloom">${Flora.head(s, 22)}</span>${s.name}</span>
+          <span class="d">${detail}</span>
+        </span>
+        <span class="v">${grown ? fmt(n) : '—'}</span>
+      </div>`;
+    }).join('');
+
+    const milestoneRows = Game.almanacMilestones().map((m) => {
+      const boost = m.boost ? DATA.boosters.find((b) => b.id === m.boost) : null;
+      const reward = [
+        m.rep ? `★${m.rep}` : '',
+        m.gems ? `${m.gems} gem${m.gems === 1 ? '' : 's'}` : '',
+        boost ? boost.name : ''
+      ].filter(Boolean).join(' · ');
+      const status = m.claimed ? 'Collected' : `${m.at} / ${total}`;
+      return line(`${m.at} species`, status, reward);
+    }).join('');
+
     return `
+      <div class="stat-block">
+        <h3>${Icons.get('book')} Collection</h3>
+        <div class="almanac-meter" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${found}" aria-label="${found} of ${total} discovered">
+          <i style="transform:scaleX(${fill})"></i>
+          <span>${found} / ${total} discovered</span>
+        </div>
+        ${milestoneRows}
+      </div>
+      <div class="stat-block">
+        <h3>${Icons.get('sprout')} Seed Almanac</h3>
+        ${seedRows}
+      </div>
       <div class="stat-block">
         <h3>${Icons.get('fist')} Tap Power</h3>
         ${line('Per tap', fmt(tapEff), `Base ${S.tap.power} · ${signed(tapMult - 1)} from boosts`)}
@@ -909,14 +955,6 @@
         ${line('Crits', fmt(S.stats.totalCrits))}
         ${line('Harvests', fmt(S.stats.totalHarvests))}
         ${line('Wonder Effects', fmt(S.stats.wonders || 0))}
-      </div>
-      <div class="stat-block">
-        <h3>${Icons.get('book')} Seed Almanac</h3>
-        ${DATA.seeds.map((s) => line(
-          `<span style="display:inline-flex;align-items:center;gap:6px">${Flora.head(s, 22)}${s.name}</span>`,
-          `${fmt(s.yield)}–${fmt(Math.round(s.yield * MAX_RARITY_MULT))}`,
-          `${fmt(s.cost)} coins · ${fmtTime(s.grow)} base`
-        )).join('')}
       </div>`;
   }
 
@@ -1451,7 +1489,42 @@
       FX.sparks(c.x, c.y, 8, '#fa5252');
       FX.float(c.x, c.y + 18, 'Ladybug luck!', 'lucky');
     }
+    if (p.firstDiscover && !(p.milestones && p.milestones.length)) {
+      FX.float(c.x - 20, c.y - 28, `${p.seed.name} discovered!`, 'big');
+      if (rk === 'common' || rk === 'rare') {
+        toast({
+          title: `${p.seed.name} discovered!`,
+          body: `${Game.discoveredCount()} / ${DATA.seeds.length} in the Almanac`,
+          art: Flora.head(p.seed, 26)
+        });
+      }
+    }
+    if (sheetMode === 'bonuses') renderSheet(false);
     if (Math.random() < 0.12) say('harvest');
+  });
+
+  Game.on('almanac', ({ found, milestones }) => {
+    const c = FX.centerOf(el.questStrip);
+    FX.coins(c.x, c.y, 9);
+    FX.stars(c.x, c.y, 9, '#51cf66');
+    FX.ring(c.x, c.y, '#51cf66', 0.5, 120);
+    Sound.play('quest');
+    FX.haptic([12, 30, 22]);
+    const last = milestones[milestones.length - 1];
+    const boost = last.boost ? DATA.boosters.find((b) => b.id === last.boost) : null;
+    const parts = [];
+    if (last.rep) parts.push(`+${last.rep} reputation`);
+    if (last.gems) parts.push(`+${last.gems} gem${last.gems === 1 ? '' : 's'}`);
+    if (boost) parts.push(boost.name);
+    toast({
+      title: `${last.at} species collected!`,
+      body: parts.join(' · ') || `${found} / ${DATA.seeds.length} in the Almanac`,
+      art: Icons.get('book')
+    });
+    if (last.gems) popWallet('gems');
+    renderQuestStrip();
+    renderRail();
+    if (sheetMode === 'bonuses') renderSheet(false);
   });
 
   Game.on('unlock', ({ idx }) => {
@@ -1648,6 +1721,25 @@
           art: Icons.get('gem'),
           ms: 3600
         });
+      }, delay);
+    }
+
+    if (info.almanacGrant) {
+      const delay = (info.migrated ? 1500 : 700)
+        + (info.decorRefund ? 1600 : 0)
+        + (info.progressionGrant ? 1600 : 0)
+        + (info.ticketGrant ? 1600 : 0);
+      const paid = info.almanacGrant.paid;
+      const last = paid[paid.length - 1];
+      setTimeout(() => {
+        toast({
+          title: 'The Almanac caught up',
+          body: `${last.at} species already grown — collection rewards are waiting.`,
+          art: Icons.get('book'),
+          ms: 3600
+        });
+        renderRail();
+        renderQuestStrip();
       }, delay);
     }
 

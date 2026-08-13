@@ -27,7 +27,9 @@ python3 -m http.server 8899
   finished one to harvest.
 - **Harvests roll a rarity** — Common, Rare, Epic or Legendary — multiplying the payout up to 8×.
 - **Badges** upgrade your taps, growth speed and automation. **Decor** is cosmetic. **Boosts** are
-  short surges you earn from quests and level-ups, then tap on the tray to activate.
+  short surges you earn from quests, levels and the Almanac, then tap on the tray to activate.
+- **The Almanac** tracks every species you have ever grown, best rarity included, and pays
+  milestones at 5, 10, 15 and 19.
 - **Harvesters** keep a single plot planted on their own, always choosing the best seed you can
   currently afford. The **Harvest Drone** collects ready plots for you.
 - **The Wonder Effect** fires at random: for 20 seconds the garden goes rainbow, everything pays

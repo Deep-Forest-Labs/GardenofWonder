@@ -21,15 +21,15 @@ renamed Upgrades; Decor lost its stat bonuses, became cosmetic, and moved into S
 owners refunded; Boosts left the dock entirely for a tap-to-activate tray in the status rail. Full
 detail in [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
-**Progression phases 1–3 are done**: a quest strip sits between the HUD and the rail, reputation is
+**Progression phases 1–4 are done**: a quest strip sits between the HUD and the rail, reputation is
 the only level track, seeds unlock on the bar, extra plots become buyable at levels 3 / 6 / 9
-/ 12, tickets are gone — boosts are earned inventory activated from the rail — and the combo
-multiplies tap payout. Full detail in
-[16-progression-and-quests.md](16-progression-and-quests.md). Phase 4 (Almanac) and the
-world map are still queued. A playtest pass after phase 1 made the bar track the quest and the pip
-ring track reputation, replaced generic upgrade quests with buy-then-feel pairs (Combo Coil stays,
-so the later multiplier work is not undone), and gated the empty-plot bob to first-plant
-onboarding.
+/ 12, tickets are gone — boosts are earned inventory activated from the rail — the combo
+multiplies tap payout, and the Almanac is a collection track with lifetime discovery, best
+rarity, and milestones at 5 / 10 / 15 / 19 species. Full detail in
+[16-progression-and-quests.md](16-progression-and-quests.md). The world map is still queued. A
+playtest pass after phase 1 made the bar track the quest and the pip ring track reputation,
+replaced generic upgrade quests with buy-then-feel pairs (Combo Coil stays, so the later
+multiplier work is not undone), and gated the empty-plot bob to first-plant onboarding.
 
 **Since then, the last two sessions went into the core tap-and-plant loop instead of phase 2** (see
 the decision log for why that's deliberate, not drift):
@@ -100,13 +100,14 @@ below.
 
 ## The current task
 
-**Progression phase 4**, still specified in
-[16-progression-and-quests.md](16-progression-and-quests.md). Phases 1–3 (quest ladder, retire
-tickets, combo payout) are built. Next independently shippable slice:
+**Progression phases 1–4 are built.** There is no next independently-shippable slice in
+[16-progression-and-quests.md](16-progression-and-quests.md). The world map (navigation phase 2)
+stays paused. Don't start it without asking.
 
-4. **Almanac as a completion goal.** Lifetime discovery tracking plus milestones.
-
-The world map (navigation phase 2) stays paused. Don't start it without asking.
+The useful next conversation is still **play the loop and judge it**: the Almanac now asks you to
+grow each species, including a Legendary of each. That is a new reason to plant something other
+than the cheapest seed. Content decisions still wait on whether the garden's *contents* start
+mattering.
 
 ## What comes after
 
@@ -122,10 +123,10 @@ The world map (navigation phase 2) stays paused. Don't start it without asking.
    procs (above) are texture added toward this question. The question is still narrow and still
    open: does the garden's *contents* start mattering — do you plant lavender because you want
    lavender honey? Content decisions wait on that answer.
-8. ~~**Progression and quests — specified, current task.**~~ **Phases 1–3 done.** See above and
-    [16-progression-and-quests.md](16-progression-and-quests.md). Phase 4 (Almanac) is next, still
-    ahead of the map: a map full of places is worthless if nothing tells you why you're going
-    anywhere.
+8. ~~**Progression and quests — specified, current task.**~~ **Phases 1–4 done.** See above and
+    [16-progression-and-quests.md](16-progression-and-quests.md). The map stays ahead of this
+    only in the sense that a map full of places is worthless if nothing tells you why you're
+    going anywhere — that reason now exists.
 9. **The world map** — navigation phase 2, queued but paused. Unblocks everything else in the
    meta-layer.
 10. **The Market** — see [13-order-system.md](13-order-system.md). The prototype has production but
@@ -200,10 +201,15 @@ the cause was found; it is a testing-environment artifact, not a game bug.
 (currently `0.002`) is read by `rollRainDance()`, `rollBeeSwarm()`, and `rollLadybug()` — tune all
 three at once by changing it in one place, not by editing each `roll*()` function.
 
+**`state.discovered` is not `state.flowers`.** Flowers are spendable inventory; discovered is a
+lifetime harvest count that never decrements. A quest or milestone that reads the pantry will
+go backwards when the player crafts. Backfill on load uses remaining flowers as a lower bound,
+which undercounts old saves on purpose.
+
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 149 assertions over the simulation layer
+node tools/sim-test.js          # 198 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
@@ -242,8 +248,9 @@ Paste something like this into a fresh chat:
 > `docs/09-conventions.md` and `docs/02-architecture.md`, and note the "Traps in this codebase"
 > section of the handoff.
 >
-> Your task is `docs/16-progression-and-quests.md`, phases 2–4. Phase 1 is built. Read that doc
-> in full before touching anything and tell me your plan first. Do not build the world map.
+> Your task is to play the loop and judge it — see `docs/HANDOFF.md`. Progression phases 1–4 are
+> built. Read `docs/16-progression-and-quests.md` before touching that layer. Do not build the
+> world map.
 >
 > I'm the designer; an engineer is porting to Unity. Goal is modest revenue, small scope, two-person
 > team. I want you as a design advisor as well as an implementer — push back on scope creep and tell

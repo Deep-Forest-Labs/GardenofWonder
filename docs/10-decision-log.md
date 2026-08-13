@@ -5,6 +5,32 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-13 — Almanac is the collection track
+
+**Decision.** Built phase 4 of [16-progression-and-quests.md](16-progression-and-quests.md).
+Harvests write a lifetime `discovered` count and a `bestRarity` per seed. The Almanac header is
+`N / 19` with a bar; ungrown blooms stay named and greyscale. Milestones at 5 / 10 / 15 / 19
+auto-pay reputation, gems and a boost, once.
+
+**Rejected: discover quests on the ladder.** The milestones already pay for distinct species. A
+quest on the same beat would double-pay and blow the 777 total that lands Eternal Crown on
+level 17. `noteQuest('discover')` is wired anyway so a later quest can listen without another
+harvest hook.
+
+**Rejected: claim-tap for milestones.** Level-ups auto-grant; the crossing is the moment. A
+second tap to collect would make the Almanac feel like a second quest strip.
+
+**Rejected: mystery names / true silhouettes.** The seed picker already shows every bloom with a
+level gate. Hiding the name only in the Almanac would be a second secret for no pacing gain.
+Greyscale plus "Not yet grown" is enough to read as a hole.
+
+**Backfill pays catch-up.** Remaining `flowers` keys seed `discovered` on load, then any
+already-reached unclaimed rung pays. That is generous (inventory undercounts true lifetime
+harvests) and it is the only way a garden that already holds five species is not locked out of
+the 5-rung forever.
+
+---
+
 ## 2026-08-13 — Combo Coil finally buys a ceiling
 
 **Decision.** Built phase 3 of [16-progression-and-quests.md](16-progression-and-quests.md). Tap
@@ -28,7 +54,8 @@ as the conversion, so a tree that used to cost 200 tickets still costs the same 
 
 **The tenth-harvest beat survived as reputation.** +3 tickets every 10 harvests was the only
 regular drip besides quests. Replacing it with +1 reputation keeps the float without inventing a
-second currency or inflating gem income. Combo Coil and the Almanac are still phase 3 and 4.
+second currency or inflating gem income. Combo Coil and the Almanac were still phase 3 and 4
+when this shipped; both are built now.
 
 ---
 

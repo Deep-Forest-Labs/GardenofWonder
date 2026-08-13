@@ -152,6 +152,10 @@ remove/reflow/re-add pattern.
 Numbers are abbreviated above 100,000: `100000` stays as-is up to that point, then `K`, `M`, `B`,
 `T` with trailing zeros trimmed.
 
+The Almanac panel (`bonuses`) opens with a collection header — `N / 19 discovered` on a bar, then
+the four milestone rungs — before the seed list and the stats that used to be the whole page.
+Ungrown blooms are greyscale with "Not yet grown"; grown ones show harvest count and best rarity.
+
 ## Status rail — the boost tray
 
 Between the quest strip and the stage. This is where boosters live now that they're out of the dock (navigation

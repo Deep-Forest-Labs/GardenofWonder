@@ -44,9 +44,10 @@ happens to persist to `localStorage`. You could run it headless.
 
 `ui.js` must never do economy math. If it needs a number, `game.js` exposes a getter for it. The
 one intentional exception is the Almanac panel (`renderBonuses`), which recomputes effective
-multipliers for display; it calls `Game.boostVal` rather than hardcoding anything. `Game.decorVal`
-was deleted in navigation phase 1 along with decor's stat bonuses — see
-[15-navigation-and-ia.md](15-navigation-and-ia.md).
+multipliers for display; it calls `Game.boostVal` rather than hardcoding anything. Collection
+progress goes through `Game.discoveredCount`, `discoveredOf`, `bestRarityOf` and
+`almanacMilestones`. `Game.decorVal` was deleted in navigation phase 1 along with decor's stat
+bonuses — see [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
 `flora.js`, `icons.js`, `audio.js`, and `fx.js` are leaf utilities. They know nothing about the
 game — you hand them parameters and they produce SVG, sound, or particles.

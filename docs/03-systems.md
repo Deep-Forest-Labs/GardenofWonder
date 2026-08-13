@@ -8,7 +8,7 @@ out inline.
 | Currency | Internal name | Earned from | Spent on |
 | --- | --- | --- | --- |
 | Coins | `credits` | Taps, harvests | Seeds, plot unlocks, badges, two cosmetic decor pieces |
-| Gems | `gems` | 5% of taps, harvest drops, ticket conversion | Gnome of Fortune and Lantern Tree (cosmetic) |
+| Gems | `gems` | 5% of taps, harvest drops, ticket conversion, Almanac milestones | Gnome of Fortune and Lantern Tree (cosmetic) |
 
 A new garden starts with 100 coins and nothing else.
 
@@ -376,6 +376,19 @@ yet. Orders are meant to pay well above these prices — see
 [13-order-system.md](13-order-system.md).
 
 All values here are provisional. See [14-economy-model.md](14-economy-model.md).
+
+## The Almanac — collection track
+
+Lifetime discovery, not inventory. `harvest()` increments `state.discovered[seedId]` and may
+raise `state.bestRarity[seedId]`; selling and crafting never touch either. Distinct species
+count is `discoveredCount()` — a seed with a count of 1 and a seed with a count of 400 both
+count as one.
+
+Milestones at 5, 10, 15 and 19 distinct species auto-pay from `DATA.almanacMilestones`
+(reputation, gems, a boost) and record the `at` value in `state.almanacClaimed` so each rung
+pays once. A save with leftover flowers backfills `discovered` on load and grants any
+already-reached unclaimed rungs. Numbers and the UI are in
+[16-progression-and-quests.md](16-progression-and-quests.md#phase-4--the-almanac-as-a-completion-goal).
 
 ## Onboarding
 

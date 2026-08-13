@@ -41,7 +41,10 @@ const Game = (() => {
       seen: { intro: false, plot: false, apiary: false },
       quests: { active: [], done: [], daily: { id: null, progress: 0, day: '', claimed: false } },
       rep: 0,
-      level: 1
+      level: 1,
+      discovered: {},
+      bestRarity: {},
+      almanacClaimed: []
     };
   };
 
@@ -149,6 +152,17 @@ const Game = (() => {
       state.flowers = parsed.flowers && typeof parsed.flowers === 'object' ? parsed.flowers : {};
       state.craft = Array.isArray(parsed.craft) ? parsed.craft : [];
       state.goods = parsed.goods && typeof parsed.goods === 'object' ? parsed.goods : {};
+      state.discovered = Object.assign(
+        {},
+        d.discovered,
+        parsed.discovered && typeof parsed.discovered === 'object' ? parsed.discovered : {}
+      );
+      state.bestRarity = Object.assign(
+        {},
+        d.bestRarity,
+        parsed.bestRarity && typeof parsed.bestRarity === 'object' ? parsed.bestRarity : {}
+      );
+      state.almanacClaimed = Array.isArray(parsed.almanacClaimed) ? parsed.almanacClaimed.slice() : [];
       const decorRefund = migrateDecor(parsed.version || 1);
       const ticketGrant = migrateTickets(parsed);
       state.version = 3;
@@ -185,8 +199,13 @@ const Game = (() => {
         progressionGrant = migrateProgression();
       }
       ensureProgression();
-      if (migrated || decorRefund || progressionGrant || ticketGrant) saveNow();
-      return { migrated, fresh: false, decorRefund, progressionGrant, ticketGrant };
+      backfillDiscovered();
+      const almanacGrant = grantAlmanacMilestones();
+      if (migrated || decorRefund || progressionGrant || ticketGrant || almanacGrant.paid.length) saveNow();
+      return {
+        migrated, fresh: false, decorRefund, progressionGrant, ticketGrant,
+        almanacGrant: almanacGrant.paid.length ? almanacGrant : null
+      };
     } catch (err) {
       console.warn('Save load failed', err);
       return { migrated: false, fresh: true };
@@ -405,6 +424,69 @@ const Game = (() => {
     const grants = [];
     for (let L = before + 1; L <= after; L += 1) grants.push(grantLevel(L));
     return grants;
+  }
+
+  function discoveredCount() {
+    return DATA.seeds.reduce((n, s) => n + ((state.discovered[s.id] || 0) > 0 ? 1 : 0), 0);
+  }
+  function discoveredOf(id) {
+    return state.discovered[id] || 0;
+  }
+  function bestRarityOf(id) {
+    return state.bestRarity[id] || null;
+  }
+  function almanacMilestones() {
+    const found = discoveredCount();
+    return (DATA.almanacMilestones || []).map((m) => ({
+      at: m.at,
+      rep: m.rep || 0,
+      gems: m.gems || 0,
+      boost: m.boost || null,
+      claimed: state.almanacClaimed.indexOf(m.at) !== -1,
+      reached: found >= m.at
+    }));
+  }
+  function backfillDiscovered() {
+    if (!state.discovered || typeof state.discovered !== 'object') state.discovered = {};
+    if (!state.bestRarity || typeof state.bestRarity !== 'object') state.bestRarity = {};
+    if (!Array.isArray(state.almanacClaimed)) state.almanacClaimed = [];
+    Object.keys(state.flowers || {}).forEach((id) => {
+      const have = Number(state.flowers[id]) || 0;
+      if (have <= 0) return;
+      if (!DATA.seeds.some((s) => s.id === id)) return;
+      state.discovered[id] = Math.max(Number(state.discovered[id]) || 0, have);
+    });
+  }
+  function grantAlmanacMilestones() {
+    const found = discoveredCount();
+    const paid = [];
+    let levelGrants = [];
+    (DATA.almanacMilestones || []).forEach((m) => {
+      if (found < m.at) return;
+      if (state.almanacClaimed.indexOf(m.at) !== -1) return;
+      state.almanacClaimed.push(m.at);
+      if (m.rep) levelGrants = levelGrants.concat(addRep(m.rep));
+      if (m.gems) state.gems += m.gems;
+      if (m.boost) giveBoost(m.boost);
+      paid.push({ at: m.at, rep: m.rep || 0, gems: m.gems || 0, boost: m.boost || null });
+    });
+    return { paid, levelGrants };
+  }
+  function recordHarvest(seedId, rarityKey) {
+    const first = !((state.discovered[seedId] || 0) > 0);
+    state.discovered[seedId] = (state.discovered[seedId] || 0) + 1;
+    const prev = state.bestRarity[seedId];
+    if (prev == null || (RARITY_RANK[rarityKey] || 0) > (RARITY_RANK[prev] || 0)) {
+      state.bestRarity[seedId] = rarityKey;
+    }
+    const granted = grantAlmanacMilestones();
+    return {
+      first,
+      count: state.discovered[seedId],
+      best: state.bestRarity[seedId],
+      milestones: granted.paid,
+      levelGrants: granted.levelGrants
+    };
   }
   function grantLevel(level) {
     const coins = (DATA.levelCoinGrant || 20) * level;
@@ -694,12 +776,13 @@ const Game = (() => {
     state.flowers[sdef.id] = (state.flowers[sdef.id] || 0) + 1;
     state.harvestsThisSession += 1;
     state.stats.totalHarvests += 1;
+    const almanac = recordHarvest(sdef.id, r.key);
     let repBonus = 0;
-    let levelGrants = [];
+    let levelGrants = almanac.levelGrants.slice();
     const every = DATA.harvestRepEvery || 10;
     if (state.harvestsThisSession % every === 0) {
       repBonus = DATA.harvestRepGrant || 1;
-      levelGrants = addRep(repBonus);
+      levelGrants = levelGrants.concat(addRep(repBonus));
     }
     const gemChance = typeof sdef.gemChance === 'number' ? sdef.gemChance : 0.05;
     let gemDrop = false;
@@ -710,14 +793,20 @@ const Game = (() => {
     save();
     emit('currency');
     const payload = {
-      idx, payout, rarity: r, seed: sdef, gemDrop, repBonus, sparkedWonder: sparked, luckyHarvest
+      idx, payout, rarity: r, seed: sdef, gemDrop, repBonus, sparkedWonder: sparked, luckyHarvest,
+      firstDiscover: almanac.first, discovered: almanac.count, bestRarity: almanac.best,
+      milestones: almanac.milestones
     };
     emit('harvest', payload);
+    if (almanac.milestones.length) {
+      emit('almanac', { found: discoveredCount(), seed: sdef, milestones: almanac.milestones });
+    }
     if (levelGrants.length) {
       emit('levelup', { from: levelGrants[0].level - 1, to: state.level, grants: levelGrants });
     }
     noteQuest('harvest', sdef.id, 1);
     noteQuest('rarity', r.key, 1);
+    if (almanac.first) noteQuest('discover', sdef.id, 1);
     return payload;
   }
 
@@ -1102,6 +1191,7 @@ const Game = (() => {
     UPGRADE_EFFECTS,
     repToNext, cumulativeRep, levelFromRep, repIntoLevel,
     seedUnlocked, seedUnlockLevel, plotAvailable, plotUnlockLevel,
-    claimQuest, stripQuest, questById
+    claimQuest, stripQuest, questById,
+    discoveredCount, discoveredOf, bestRarityOf, almanacMilestones
   };
 })();

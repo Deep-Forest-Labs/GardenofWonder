@@ -1,8 +1,7 @@
 # Progression and Quests
 
-**Status: phases 1–3 built.** Specified 2026-08-12; phase 1 shipped the same day, phase 2 on
-2026-08-13, phase 3 the same morning. Reasoning in [10-decision-log.md](10-decision-log.md).
-Phase 4 (Almanac) is still specified, not built.
+**Status: phases 1–4 built.** Specified 2026-08-12; phase 1 shipped the same day, phases 2 and 3
+on 2026-08-13, phase 4 later that day. Reasoning in [10-decision-log.md](10-decision-log.md).
 
 Read alongside [13-order-system.md](13-order-system.md), which owns reputation long-term, and
 [15-navigation-and-ia.md](15-navigation-and-ia.md), which owns where things live on screen.
@@ -19,8 +18,8 @@ Three specific symptoms:
 - **No goal.** The only feedback for playing well is a bigger number in the same wallet.
 - **No gating.** Content isn't paced. A player who happens to have coins sees the whole game at
   once, and a player who doesn't sees no reason to expect more.
-- **Dead beats.** The combo ring fills and does nothing. The Almanac lists blooms and asks nothing
-  of you. Both are progression surfaces already on screen with no progression behind them.
+- **Dead beats.** The combo ring used to fill and do nothing; it now multiplies tap payout. The
+  Almanac used to list blooms and ask nothing; it is now the collection track.
 
 ## The core decision: one progression number
 
@@ -81,7 +80,9 @@ quests: {
 },
 rep: 0,
 level: 1,
-discovered: {}                    // seedId -> lifetime harvest count (Phase 4)
+discovered: {},                   // seedId -> lifetime harvest count
+bestRarity: {},                   // seedId -> rarity key
+almanacClaimed: []                // milestone `at` values already paid
 ```
 
 `rep` and `level` are top-level so the Market can pay into `rep` later without reaching into a
@@ -185,7 +186,7 @@ easiest way to get this feature wrong.
 | `plot` | plot unlocked | Tap-to-buy or Land Deed |
 | `hive` | hive purchased | Not in the original track list; needed for "Build a hive" |
 | `rarity` | harvest at rarity ≥ `key` | Rare / Epic / Legendary |
-| `discover` | first-ever harvest of a seed | Distinct count, Phase 4 |
+| `discover` | first-ever harvest of a seed | Wired; no ladder quests use it — milestones pay instead |
 
 Counters live on the active quest instance, not globally, so a quest that becomes active later
 starts from zero. This is intentional: a quest should describe something you go *do*.
@@ -212,7 +213,9 @@ with a buy-then-feel tutorial for each early tap upgrade, including Combo Coil (
 "Reach combo 55", which needs the cap the badge just bought). Two long-tail filler rows were
 dropped to keep the total near the seed gate.
 
-Plot unlocks are not quests. Discover quests wait for phase 4. Snapshot goals ("plant 4 plots at
+Plot unlocks are not quests. Discover quests were not added to the ladder — the Almanac
+milestones already pay reputation for distinct species, and stacking a quest on the same beat
+would double-pay and blow the 777 total. Snapshot goals ("plant 4 plots at
 once", "own 5 badges", "fill a hive") stay out because counters start at zero when a quest
 becomes active.
 
@@ -284,6 +287,8 @@ earlier in the day. An unclaimed daily expires at midnight; the ladder never exp
 - Plot 5 is gated at level 1 and buyable at level 3; Land Deed cannot skip a plot the level has
   not opened.
 - A maxed harvester still plants only an unlocked seed.
+- Almanac `discovered` never decreases when flowers are spent; a milestone pays once; backfill
+  from remaining `flowers` grants already-reached milestones on first load only.
 - Ticket migration converts at 5:1 exactly once; activating a held boost decrements inventory
   and sets the timer; activating with none held is a no-op.
 - Combo payout at 0 / 25 / 50 matches `1 + combo × 0.01`; Combo Coil raises the ceiling; decay
@@ -301,7 +306,7 @@ you hold**, not what you can buy ([15-navigation-and-ia.md](15-navigation-and-ia
 | Change | Detail |
 | --- | --- |
 | Inventory | `state.boostInv = { bloom: 0, seedrush: 0, fortune: 0, golden: 0 }` |
-| Sources | Quest rewards, level-ups, daily quest. Later: orders, rewarded video. |
+| Sources | Quest rewards, level-ups, daily quest, Almanac milestones. Later: orders, rewarded video. |
 | Rail | Renders held boosts as tappable chips; tap consumes one and activates it. Active boosts keep the existing countdown chip. Nothing renders when you hold none. |
 | Wallet | Remove tickets from the HUD. Two wallets, credits and gems. |
 | Migration | `gems += round(tickets / 5)`, once, behind a flag, with a toast. Copy the decor-refund migration. |
@@ -349,18 +354,39 @@ ceiling; decay reduces the multiplier; harvest payouts are unchanged by combo.
 
 ## Phase 4 — The Almanac as a completion goal
 
-The Almanac lists blooms and asks nothing. Make it the collection track.
+**Built 2026-08-13.** The Almanac is the collection track.
 
-- Add `state.discovered` — seed id to **lifetime** harvest count, never decremented. It is a
-  record, not an inventory, and it is what `discover` quests read.
-- Track best rarity seen per seed. "You have never grown a Legendary Rose" is a better hook than
-  any number on this screen.
-- Header shows `12 / 19 discovered` with a progress bar.
-- Milestones at 5, 10, 15 and 19 pay rep, gems and a boost.
-- Backfill `discovered` on load from existing `state.flowers` keys. It undercounts for old saves,
-  which is fine — it can only be generous going forward.
+- `state.discovered` maps seed id to **lifetime** harvest count, never decremented. Selling and
+  crafting spend `state.flowers` and leave this alone. It is a record, not an inventory.
+- `state.bestRarity` stores the best rarity key seen per seed. Undiscovered rows read
+  "Not yet grown"; discovered rows that are not Legendary read "no Legendary yet".
+- The panel header is `N / 19 discovered` with a progress bar. Ungrown blooms stay named and
+  greyscale — the seed picker already shows them, so hiding the name would be a second secret
+  for no reason.
+- Milestones auto-pay on crossing 5 / 10 / 15 / 19 distinct species (numbers in
+  `DATA.almanacMilestones`). They are not claim-tapped; the crossing is the moment.
 
-**Sim-test:** discovered count never decreases when flowers are spent; a milestone pays once.
+| At | Rep | Gems | Boost |
+| --- | --- | --- | --- |
+| 5 | 20 | 1 | Bloom Burst |
+| 10 | 30 | 2 | Seed Rush |
+| 15 | 40 | 3 | Fortune Aura |
+| 19 | 50 | 5 | Golden Popups |
+
+140 reputation, 11 gems, four boosts across the whole collection. Completing 19 waits on
+Eternal Crown at level 17, so the last rung is a late-game gift rather than a day-one splash.
+
+- `state.almanacClaimed` holds the `at` values already paid, so a milestone pays once.
+- On load, remaining `state.flowers` keys backfill `discovered` (max with any existing count).
+  That undercounts for old saves — harvested-and-spent blooms are gone from inventory — which
+  is fine. Already-reached unclaimed milestones then pay, so a returning garden with five
+  species in the pantry is not locked out of the 5-rung forever.
+- Discover quests were not added to the ladder. Milestones occupy that payout; a quest on the
+  same beat would double-pay and blow the 777 total. `noteQuest('discover')` is wired so a
+  future quest can read it without another harvest hook.
+
+**Sim-test:** discovered count never decreases when flowers are spent; a milestone pays once;
+backfill from remaining flowers grants already-reached milestones on first load only.
 
 ## Do not
 

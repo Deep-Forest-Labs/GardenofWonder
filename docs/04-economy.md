@@ -185,7 +185,7 @@ uncapped growth vector; it's cosmetic-only now and doesn't move any of these num
 
 ## Boosters
 
-Earned from quests, level-ups and the daily; stored in `boostInv`; activated from the rail. No
+Earned from quests, level-ups, the daily and Almanac milestones; stored in `boostInv`; activated from the rail. No
 ticket price.
 
 | Booster | Duration | Effect key | Value |
@@ -197,6 +197,18 @@ ticket price.
 
 Scarcity is the point. If playtesting shows they are too rare, the fallback is gem pricing at
 1 gem = 5 old tickets — see [16-progression-and-quests.md](16-progression-and-quests.md).
+
+## Almanac milestones
+
+Paid once when distinct species harvested crosses the rung. Numbers live in
+`DATA.almanacMilestones`. The last `at` must match `DATA.seeds.length`.
+
+| Distinct species | Rep | Gems | Boost |
+| --- | --- | --- | --- |
+| 5 | 20 | 1 | Bloom Burst |
+| 10 | 30 | 2 | Seed Rush |
+| 15 | 40 | 3 | Fortune Aura |
+| 19 | 50 | 5 | Golden Popups |
 
 ## Decor
 
