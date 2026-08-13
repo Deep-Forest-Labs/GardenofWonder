@@ -257,9 +257,13 @@ document is missing.
 
 ## Maintaining this file
 
-At the end of a significant session, update: where the project stands, decisions made, what's next.
-Add reasoning to [10-decision-log.md](10-decision-log.md) and prune anything fixed from
-[11-known-issues.md](11-known-issues.md).
+This file is **derived, never authored alone.** It summarizes the other documents, so update those
+first and write this one from them — see the definition of done in [AGENTS.md](../AGENTS.md#definition-of-done).
+A handoff written from memory at the end of a long session will confidently describe a game the
+specific docs contradict, and the next agent will believe the specific doc.
+
+At the end of a significant session, update: where the project stands, the current task, what comes
+after, and any new trap you hit.
 
 A full transcript of the founding conversation exists in Cursor's agent history, but it is long and
 mostly implementation detail. **These documents are the intended handoff surface** — if something

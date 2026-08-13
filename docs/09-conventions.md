@@ -192,9 +192,11 @@ Consequences:
 
 ## Documentation duty
 
-Update the relevant doc in the **same commit** as the code, add a dated entry to
-[10-decision-log.md](10-decision-log.md) explaining why, and prune anything you fixed from
-[11-known-issues.md](11-known-issues.md). If you knowingly leave something broken, add it there.
+The checklist is in [AGENTS.md](../AGENTS.md#definition-of-done) and runs in the **same commit** as
+the code. In short: update the doc that owns what you changed, log the reasoning in
+[10-decision-log.md](10-decision-log.md), prune what you fixed from
+[11-known-issues.md](11-known-issues.md) and add what you knowingly left broken, then write
+[HANDOFF.md](HANDOFF.md) last, from the other docs rather than from memory.
 
-Numbers quoted in these docs are copied from code. Rebalancing means grepping `docs/` for the old
-value.
+Numbers quoted in these docs are copied from code by hand. Rebalancing means grepping `docs/` for
+the old value — it is usually quoted in more than one place.

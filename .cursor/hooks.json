@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": ".cursor/hooks/record-doc-baseline.sh",
+        "timeout": 10
+      }
+    ],
+    "stop": [
+      {
+        "command": ".cursor/hooks/check-doc-duty.sh",
+        "timeout": 10,
+        "loop_limit": 1
+      }
+    ]
+  }
+}
