@@ -27,3 +27,7 @@ node_modules/
 *.swp
 .env
 .env.local
+
+# Scratch / personal — never commit
+_to_delete/
+docs/feedback.md
