@@ -5,6 +5,140 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-14 — Bloom Mastery built; the "cheap seeds matter" claim retracted
+
+**Decision.** Phase 5 shipped as specified. Nothing in the mechanic changed: endless per-seed
+ladders, +5% added yield per tier, one gem every fifth tier, auto-pay, Almanac-only surface, no
+Legendary gate. What changed is a claim in the spec that the arithmetic does not support.
+
+**The retraction.** The spec argued mastery "finally gives a cheap seed a late-game reason to
+exist — a deeply mastered Daisy becomes situationally worth planting." It does not, and it is not
+close. Mastery is a percentage of what a flower already pays, so at equal tiers it lifts every
+seed by the same factor and the ranking is unchanged. The cheap seed's only real edge is cycle
+time: a Daisy matures in 12 s against an Eternal Crown's 780 s, so it banks 65× the harvests per
+hour. But the ladder is about six tiers per decade of harvests, so 65× the harvests is roughly
+eleven extra tiers — **+55%, against a 31× gap in coins per second** (Daisy 5.8/s, Eternal Crown
+179.5/s at base). Closing that would need hundreds of tiers and harvest counts with a hundred
+digits.
+
+**Why ship it anyway.** The other two arguments for yield-over-gems are sound and unaffected: it
+survives being infinite, and it self-balances across tiers without per-seed tuning. And the
+retention argument — every grown flower is always mid-goal, so a harvest of anything is progress
+on something — is the real value, and the mechanic delivers it. This is a depth reward and a coin
+faucet, correctly shaped for both.
+
+**Rejected: fixing the ranking.** Making mastery multiplicative (`1.05^n`) still needs ~70 tiers
+to close a 31× gap, which is around 10^12 harvests. Scaling thresholds per seed by grow time would
+work but reintroduces exactly the per-seed tuning the one-shared-table decision exists to avoid,
+across nineteen flowers that would each need revisiting whenever a yield moves. Moving the bonus
+to grow-time reduction hits a floor at -100% and cannot span 31×. All three are worse than
+accepting the honest scope.
+
+**Where the real answer lives.** "Does the garden's contents start mattering" is a Market
+question, not a mastery question. An order that *wants* lavender makes lavender worth planting
+directly, which is already the design in [13-order-system.md](13-order-system.md). Mastery was
+never going to answer it, and the handoff should stop implying it might.
+
+**Three implementation calls the spec left open.** Backfill rates are read from `DATA.rarity`
+rather than hardcoded as 20/8/2 — the same numbers, but they now follow the drop table if it is
+retuned. A credited rarity is floored at 1, because a save with `bestRarity: 'epic'` and three
+lifetime harvests would otherwise round to zero Epics and treat a provably-hit rarity as never
+hit. And the estimate is capped at the harvests that actually happened, allocated rarest first,
+so one lifetime harvest with a Legendary best is one Legendary rather than one of each.
+
+**Toasts were cut back from the spec.** The spec toasts every tier. Early tiers land every ten or
+so harvests of a seed, which across eight plots is a toast roughly every twenty seconds — against
+both the two-toast cap and the "genuinely notable moments" rule in
+[09-conventions.md](09-conventions.md), and against the same reasoning that already denies Rare
+harvests a toast. A tier now toasts only when it is a seed's first or a gem-paying fifth. Every
+other tier keeps the full Rare-tier particle beat on the plot and stays out of the notification
+lane.
+
+**Two naming collisions cost time and are worth knowing.** `masteryGoal()` was the spec's name for
+both the pure by-tier formula and the per-seed UI getter; they are now `masteryTierGoal(tier)` and
+`masteryGoal(id)`. And `.seed-row` was already the plant picker's button class — styling the
+Almanac rows with it wrapped every row in a card and collapsed the three columns onto one
+overflowing line. The Almanac uses `.almanac-row*`.
+
+---
+
+## 2026-08-13 — Bloom Mastery spec locked
+
+**Decision.** Owner ratified phase 5 of [16-progression-and-quests.md](16-progression-and-quests.md).
+Per-flower endless ladders, auto-pay, +5% harvest yield per tier on that seed, one gem every
+fifth tier, Almanac-only surface, no Legendary gate. **Built 2026-08-14.**
+
+The original sketch was 19 quest lines with a gem on every rung. That version is rejected for
+the arithmetic already in the entry below: 570 gems by tier 10 across the book, plus a drowned
+tutorial strip. Yield is the infinite-safe reward; the Almanac row is the surface.
+
+---
+
+## 2026-08-13 — Bloom Mastery pays yield, not gems
+
+**Decision.** Specified phase 5 of [16-progression-and-quests.md](16-progression-and-quests.md).
+Every seed gets an endless ladder of goals — total harvests, Rare-or-better, Epic-or-better — and
+each completed tier permanently adds +5% to that seed's yield. Gems appear on every fifth tier, one
+each. Tiers auto-pay. **Built 2026-08-14.**
+
+**The arithmetic that killed per-tier gems.** The original sketch was 1 gem rising to 5 by the
+tenth tier. Whatever a tier pays is multiplied by nineteen flowers, so that is roughly 570 gems by
+tier 10 across the collection, against a 250-gem Gnome of Fortune and a 40-gem Lantern Tree. It
+would empty the gem shop several times and, worse, teach the player that gems come from grinding —
+the exact belief that stops anyone buying them. One per fifth tier yields 38 for the same player.
+
+**Why yield is the right reward and not reputation.** Reputation drives seed and plot unlocks on a
+curve deliberately aligned to Market order tiers; it cannot absorb an unbounded faucet. Coin
+inflation is what the genre is for. And a percentage reward is self-balancing across the nineteen
+seeds — 5% of a Daisy is 3 coins and 5% of an Eternal Crown is 7,000 — which is what lets every
+flower share one threshold table instead of nineteen tuned ones.
+
+**The real design win is late-game Daisies.** The dominant strategy today is to plant the most
+expensive seed you can afford, always. A deeply mastered cheap seed is the first thing in the game
+that argues otherwise, which is a direct run at the open question in
+[HANDOFF.md](HANDOFF.md#the-current-task) about whether the garden's contents ever start mattering.
+
+**Rejected: Legendary as a tier.** At 2% it stalls a sequential ladder behind a coin flip for
+hours. Legendary stays the `bestRarity` badge from phase 4 — a chase with no gate on it.
+
+**Rejected: per-seed thresholds scaled to grow time.** It equalises pace, but it costs nineteen
+tuning tables and it throws away the self-balancing property above. A hundred harvests is twenty
+minutes of Daisy and twenty-two hours of Eternal Crown; the proportional reward already prices
+that difference.
+
+**Rejected: claim-tap per tier.** The owner initially wanted a claim. Nineteen flowers on endless
+ladders would keep a permanent pile of pending taps, turning the reward into an inbox. Auto-pay
+matches the phase 4 milestones and level-ups.
+
+**Backfill grants yield but no gems.** Old saves never recorded per-rarity counts, so those are
+estimated from the drop table and clamped by `bestRarity` — a rarity the player provably never hit
+is never credited. The tiers that unlocks grant their yield, but the gem belongs to the moment of
+completion and a backfill has no moment.
+
+---
+
+## 2026-08-13 — Two Almanacs were built; the merged one won
+
+**Decision.** Phase 4 was implemented twice in parallel — once by a cloud agent, merged to `main`
+as `947f110`, and once locally in an uncommitted tree. The merged version is the survivor. The
+local one is preserved in a git stash and is not coming back.
+
+**Why the merged one.** It is what is deployed, and it is more complete where it counts: a
+first-discovery float and toast, full FX on a milestone crossing, and a live re-render of the
+Almanac while the sheet is open. Its state shape is also flatter — `discovered` as seed-to-count
+and `bestRarity` as seed-to-key, two flat maps of primitives — which merges more safely in `load()`
+than the nested `{ count, best }` record the local version used.
+
+**What is being carried over from the loser.** Only the seed row. The merged build writes
+"Best Common · no Legendary yet", which reads as a sentence and hides Epic as a tier entirely. It
+becomes three columns: name, best rarity, count. Phase 5 then adds the goal line beneath.
+
+**The lesson worth keeping.** Two agents were pointed at the same spec without either knowing the
+other existed, and both built it competently and incompatibly. Check `git branch -r` before
+starting a specified phase.
+
+---
+
 ## 2026-08-13 — Almanac is the collection track
 
 **Decision.** Built phase 4 of [16-progression-and-quests.md](16-progression-and-quests.md).

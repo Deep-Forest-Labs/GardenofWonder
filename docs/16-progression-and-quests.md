@@ -1,7 +1,9 @@
 # Progression and Quests
 
-**Status: phases 1–4 built.** Specified 2026-08-12; phase 1 shipped the same day, phases 2 and 3
-on 2026-08-13, phase 4 later that day. Reasoning in [10-decision-log.md](10-decision-log.md).
+**Status: phases 1–5 built.** Specified 2026-08-12; phase 1 shipped the same day, phases 2 and 3 on
+2026-08-13, phase 4 later that day. Phase 5 (Bloom Mastery) was specified 2026-08-13,
+owner-ratified the same evening, and built 2026-08-14. Reasoning in
+[10-decision-log.md](10-decision-log.md).
 
 Read alongside [13-order-system.md](13-order-system.md), which owns reputation long-term, and
 [15-navigation-and-ia.md](15-navigation-and-ia.md), which owns where things live on screen.
@@ -82,7 +84,9 @@ rep: 0,
 level: 1,
 discovered: {},                   // seedId -> lifetime harvest count
 bestRarity: {},                   // seedId -> rarity key
-almanacClaimed: []                // milestone `at` values already paid
+almanacClaimed: [],               // milestone `at` values already paid
+mastery: {},                      // seedId -> tiers completed (phase 5, not on disk yet)
+rarityCounts: {}                  // seedId -> { rare, epic, legend } (phase 5)
 ```
 
 `rep` and `level` are top-level so the Market can pay into `rep` later without reaching into a
@@ -358,8 +362,9 @@ ceiling; decay reduces the multiplier; harvest payouts are unchanged by combo.
 
 - `state.discovered` maps seed id to **lifetime** harvest count, never decremented. Selling and
   crafting spend `state.flowers` and leave this alone. It is a record, not an inventory.
-- `state.bestRarity` stores the best rarity key seen per seed. Undiscovered rows read
-  "Not yet grown"; discovered rows that are not Legendary read "no Legendary yet".
+- `state.bestRarity` stores the best rarity key seen per seed. The seed row is three columns —
+  name, best rarity (Common / Rare / Epic / Legendary), lifetime count. Ungrown blooms stay
+  named, greyscale, and dashed. Phase 5 adds the mastery goal as a second line under grown rows.
 - The panel header is `N / 19 discovered` with a progress bar. Ungrown blooms stay named and
   greyscale — the seed picker already shows them, so hiding the name would be a second secret
   for no reason.
@@ -388,6 +393,233 @@ Eternal Crown at level 17, so the last rung is a late-game gift rather than a da
 **Sim-test:** discovered count never decreases when flowers are spent; a milestone pays once;
 backfill from remaining flowers grants already-reached milestones on first load only.
 
+## Phase 5 — Bloom Mastery
+
+**Built 2026-08-14.** Phase 4 answered "how many kinds have you grown." It does not answer "why
+keep growing the ones you already have." Once a species is in the book it stops asking for
+anything, and the dominant strategy stays what it has always been: plant the most expensive seed
+you can afford and never look back.
+
+Mastery gives every one of the nineteen flowers its own endless ladder. Every grown flower is
+always mid-goal, so a harvest of anything is progress on something. The ladders live on the
+Almanac row, not on the quest strip — the strip stays the tutorial of three goals and one verb.
+
+### The reward is the flower itself
+
+Each completed tier permanently adds **+5% to that seed's harvest yield**, added and not
+compounded, so tier 10 is +50% and tier 20 is +100%. There is no cap, because the ladder has no
+end. The bonus applies to harvests *after* the completing one.
+
+This is chosen over paying reputation or gems per tier for three reasons:
+
+- **It survives being infinite.** A percentage of one seed's yield inflates coins, which is what an
+  idle game is *for*. Reputation drives seed and plot unlocks on a curve deliberately aligned to
+  Market order tiers ([13-order-system.md](13-order-system.md)) and cannot absorb an unbounded
+  faucet.
+- **It is self-balancing across tiers.** 5% of a Daisy's 70 yield is 3 coins; 5% of an Eternal
+  Crown's 140,000 is 7,000. Cheap flowers master quickly and are worth little; expensive flowers
+  master slowly and pay enormously. That is why every flower can share one threshold table without
+  per-seed tuning.
+- **It rewards depth in whatever you actually grow.** Every grown flower is mid-goal at all times,
+  so a harvest of anything is progress on something, and the seed you have leaned on is visibly
+  better in your hands than in someone else's. That is the retention argument, and it is the one
+  the mechanic delivers.
+
+**What it does not do is re-rank the seeds.** The spec originally claimed a deeply mastered Daisy
+becomes situationally worth planting. It does not, and the arithmetic is not close. Mastery is a
+percentage of what a flower already pays, so it lifts both ends of the list by the same factor at
+the same tier. The cheap seed's only real edge is speed — a Daisy matures in 12 s against an
+Eternal Crown's 780 s, so it banks 65× the harvests in the same wall clock. But the ladder is
+roughly six tiers per decade of harvests, so 65× the harvests is about eleven extra tiers, or
++55%, against a **31× gap in coins per second**. Closing that would take hundreds of tiers and
+harvest counts with a hundred digits.
+
+Left as designed. The feature is a depth reward and a coin faucet and is worth shipping as both;
+it is simply not the answer to "does the garden's contents start mattering." That question belongs
+to the Market ([13-order-system.md](13-order-system.md)), where an order that *wants* lavender
+makes lavender worth planting directly. See the 2026-08-14 entry in
+[10-decision-log.md](10-decision-log.md).
+
+**Gems are 1 per fifth tier, flat, and nothing on the other four.** The arithmetic that rules out
+anything richer: whatever a tier pays is multiplied by nineteen flowers. An escalating 1-to-5 gem
+reward on every tier is roughly 570 gems by tier 10 across the collection — more than twice the
+250-gem Gnome of Fortune, and the whole gem shop emptied several times over. At 1 per fifth tier
+the same player earns 38, which is one Lantern Tree and feels earned.
+[15-navigation-and-ia.md](15-navigation-and-ia.md) already warns that the collection is a retention
+feature and not a monetization engine. An uncapped gem faucet inverts that.
+
+### State
+
+```js
+mastery: {},                      // seedId -> tiers completed and paid
+rarityCounts: {}                  // seedId -> { rare, epic, legend } lifetime, exact tier
+```
+
+`mastery` is a flat map of integers. `rarityCounts` is nested per seed and must be re-merged in
+`load()` the same way `boostInv` is — a missing seed key is `{ rare: 0, epic: 0, legend: 0 }`.
+Common counts are not stored; `discovered[id]` is the total. `bestRarity` stays, still driving
+the row's tier label.
+
+### The ladder
+
+The same thresholds for every flower, generated rather than authored — nineteen flowers times an
+endless ladder cannot live in `data.js` as data. Precedent is `repToNext()`. Numbers that *are*
+data: `DATA.masteryYieldPerTier` (`0.05`), `DATA.masteryGemEvery` (`5`), `DATA.masteryGemGrant`
+(`1`).
+
+Track repeats every four tiers: **total, Rare, total, Epic**. Each track walks a 1 / 2.5 / 5
+decade pattern forever:
+
+```js
+function decadeQty(steps, i) {
+  return steps[i % steps.length] * Math.pow(10, Math.floor(i / steps.length));
+}
+
+function masteryTierGoal(tier) {      // 1-based: the tier you are currently climbing
+  const cycle = (tier - 1) % 4;
+  if (cycle === 0 || cycle === 2) {
+    return { track: 'total', qty: decadeQty([10, 25, 50], Math.floor((tier - 1) / 2)) };
+  }
+  if (cycle === 1) {
+    return { track: 'rare', qty: decadeQty([4, 10, 20], Math.floor((tier - 1) / 4)) };
+  }
+  return { track: 'epic', qty: decadeQty([2, 5, 10], Math.floor((tier - 1) / 4)) };
+}
+```
+
+| Track | Sequence | `have` |
+| --- | --- | --- |
+| Total harvests | 10, 25, 50, 100, 250, 500, 1,000, 2,500, … | `discovered[id]` |
+| Rare or better | 4, 10, 20, 40, 100, 200, … | rare + epic + legend |
+| Epic or better | 2, 5, 10, 20, 50, 100, … | epic + legend |
+
+Which produces:
+
+| Tier | Goal | Expected harvests | Pays |
+| --- | --- | --- | --- |
+| 1 | 10 total | 10 | +5% |
+| 2 | 4 Rare or better | ~13 | +5% |
+| 3 | 25 total | 25 | +5% |
+| 4 | 2 Epic or better | ~20 | +5% |
+| 5 | 50 total | 50 | +5%, 1 gem |
+| 6 | 10 Rare or better | ~33 | +5% |
+| 7 | 100 total | 100 | +5% |
+| 8 | 5 Epic or better | ~50 | +5% |
+| 9 | 250 total | 250 | +5% |
+| 10 | 20 Rare or better | ~67 | +5%, 1 gem |
+
+A gem lands when `tier % DATA.masteryGemEvery === 0`.
+
+**Rarity goals count that rarity or better**, matching `questMatches()` on the `rarity` track. An
+Epic advancing a Rare goal is the only behaviour that isn't infuriating.
+
+**Legendary is deliberately not a ladder tier.** At 2% it would stall a sequential ladder for
+hours behind a coin flip, which is authoring rule 3 in everything but name. Legendary stays what
+phase 4 made it: the `bestRarity` badge on the row, a chase with no gate attached.
+
+### Paying out
+
+Tiers **auto-pay on completion**. The owner ratified this: a claim-tap is a nicer beat on paper,
+but nineteen flowers on endless ladders become an inbox of unclaimed gifts. Auto-pay matches the
+phase 4 milestones — the crossing is the moment.
+
+A single harvest can complete more than one tier, so the check loops. `recordHarvest()` banks the
+count and rarity first, then `advanceMastery()` loops `masteryTierGoal(current + 1)` until
+`have < qty`, paying each crossed tier before looking at the next. One `mastery` event is emitted
+per harvest that paid anything, carrying every tier crossed plus the highest tier, the gems, and
+whether it was that seed's first.
+
+Harvest payout, once mastery exists:
+
+```
+payout = round(seed.yield × rarity.m × (1 + globalCredits) × (1 + pollination) × wonder × masteryMult)
+masteryMult = 1 + DATA.masteryYieldPerTier × (state.mastery[id] || 0)
+```
+
+The completing harvest uses the *old* multiplier. Taps, flower-sell prices, and craft inputs are
+untouched.
+
+### Surface
+
+Mastery is not a quest. It never appears on the strip, never takes a `DATA.quests` row, and never
+pays reputation. Grown Almanac rows become two lines:
+
+```
+🌼  Daisy                    COMMON   ×47
+    Tier 5 · 47 / 50 total  ▓▓▓▓▓░░   +20%
+```
+
+Name, best rarity, and lifetime count on top — three columns, no sentences. Current tier, its
+goal, a thin progress bar, and the yield earned so far underneath. **Only the current goal is
+ever shown**, never the rest of the ladder. Ungrown rows stay a single greyed line with dashes
+and no mastery bar; the first harvest starts the climb toward tier 1. Progress is shown as
+`have / qty` beside the bar, matching the quest strip's `1/3`; the bar alone cannot say how far
+away the goal is. A gem pip marks a fifth tier while it is being climbed. Layout detail in
+[08-ui-and-layout.md](08-ui-and-layout.md#the-almanac-seed-row).
+
+`ui.js` reads getters, never the formula: `Game.masteryOf(id)`, `Game.masteryMult(id)`,
+`Game.masteryGoal(id)` → `{ tier, track, qty, have }` or `null` if undiscovered. The pure
+by-tier formula is exposed separately as `Game.masteryTierGoal(tier)` → `{ track, qty }`, because
+the spec originally used one name for both and the UI getter and the formula are different
+functions.
+
+Toast copy names the flower and the highest tier paid that harvest (`Daisy · Tier 5 · +5% yield`);
+append `· +1 gem` when a gem landed. Juice sits on the feedback ladder at **Rare / Almanac
+milestone** — stars, ring, `quest` sound. A gem-paying tier does not jump to Epic or Legendary
+juice.
+
+**A tier only toasts when it is a seed's first or a gem-paying fifth.** Early tiers land every ten
+or so harvests of a seed, which across eight plots is a toast every twenty seconds — noise, and
+against the two-toast cap and the "genuinely notable moments" rule in
+[09-conventions.md](09-conventions.md). Every other tier keeps the full particle beat and two
+floating texts on the plot, and no toast. See
+[06-audio-and-fx.md](06-audio-and-fx.md#the-feedback-ladder).
+
+### Old saves
+
+`rarityCounts` was never recorded, so a save with 500 lifetime Daisies would stall at tier 2
+forever. Backfill estimates it from the drop table — 20% Rare, 8% Epic, 2% Legendary of
+`discovered[id]` — **clamped by `bestRarity`, so a rarity the player has provably never hit is
+never credited**. Tiers then advance to wherever that puts them.
+
+Three details the spec left implicit, settled in the build:
+
+- **The rates are read from `DATA.rarity`, not hardcoded.** They are the same 20 / 8 / 2, and
+  deriving them means the backfill follows the drop table if it is ever retuned.
+- **A credited rarity is floored at 1.** A save with `bestRarity: 'epic'` and three lifetime
+  harvests would otherwise round to zero Epics, treating a rarity the player provably hit as
+  never hit.
+- **The estimate is capped by the harvests that happened**, allocated rarest first. One lifetime
+  harvest with a Legendary best is one Legendary, not one of each.
+
+Backfill is idempotent: once a seed has a `rarityCounts` entry it is normalised, never
+re-estimated, so a second load changes nothing.
+
+**Backfilled tiers grant the yield bonus but pay no gems and fire no toasts.** The gem belongs to
+the moment of completion and a backfill has no moment; it also keeps a migration from dumping
+gems into nineteen flowers at once.
+
+### Sim-test
+
+- A tier auto-pays once and the yield multiplier moves with it.
+- The completing harvest uses the old multiplier; the next harvest of that seed uses the new one.
+- One harvest that crosses two tiers pays both.
+- Rarity goals count that rarity or better.
+- `rarityCounts` never decreases when flowers are spent.
+- Backfill never credits a rarity above `bestRarity`, and pays no gems.
+- Gems land on tiers 5 and 10 and nowhere else.
+- `masteryTierGoal(1)` through `masteryTierGoal(10)` match the table above, and the decade pattern
+  keeps going past it.
+- Backfill is idempotent — a second load advances nothing further.
+
+All eight are in `tools/sim-test.js`, which now runs 249 assertions.
+
+**Trap the build found:** mastery multiplies harvest payout and climbs as a run proceeds, so any
+sim-test measuring a *different* harvest multiplier over thousands of harvests has to reset the
+ladder **and the lifetime counts it reads** first — `clearMastery()` does this. Resetting only
+`mastery` leaves the second run's counts already banked, so it jumps several tiers on its first
+harvest and the ratio being measured comes out wrong.
+
 ## Do not
 
 - **Do not add XP.** Reputation is the number. One track.
@@ -397,6 +629,12 @@ backfill from remaining flowers grants already-reached milestones on first load 
   dock is full and the tab test in [15-navigation-and-ia.md](15-navigation-and-ia.md) applies.
 - **Do not ship seed gating without the grandfather migration.**
 - **Do not add a shop for boosts.** Power-ups are earned; the Shop is for money.
+- **Do not put mastery on the quest strip.** It is an Almanac ladder, not a `DATA.quests` row.
+- **Do not pay gems on every mastery tier.** Anything a tier pays is multiplied by nineteen
+  flowers and the ladder never ends. One gem per fifth tier is the ceiling.
+- **Do not put reputation on a mastery tier.** The level curve is aligned to Market order tiers
+  and cannot absorb an endless faucet.
+- **Do not make Legendary a mastery goal.** A 2% roll on a sequential ladder is a stall.
 - **Do not build the world map.** Still deferred. Same reasons as before.
 
 ## Open questions

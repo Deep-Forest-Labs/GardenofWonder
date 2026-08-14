@@ -58,6 +58,8 @@
   const signed = (v, d = 0) => `${v > 0 ? '+' : ''}${(v * 100).toFixed(d)}%`;
   const ico = (name, cls = '') => `<span class="ico ${cls}">${Icons.get(name)}</span>`;
   const rnd = (a, b) => a + Math.random() * (b - a);
+  /* Rarity mastery goals count that rarity or better; the plus carries that. */
+  const MASTERY_TRACK = { total: 'total', rare: 'Rare+', epic: 'Epic+' };
 
   /* ============ scenery ============ */
   const SKY_KEYS = [
@@ -876,20 +878,27 @@
     const seedRows = DATA.seeds.map((s) => {
       const n = Game.discoveredOf(s.id);
       const best = Game.bestRarityOf(s.id);
-      const grown = n > 0;
       const rdef = best ? DATA.rarity.find((r) => r.key === best) : null;
-      let detail = 'Not yet grown';
-      if (grown && rdef) {
-        detail = rdef.key === 'legend'
-          ? `Best ${rdef.label} · ${fmt(n)} grown`
-          : `Best ${rdef.label} · no Legendary yet`;
+      const goal = Game.masteryGoal(s.id);
+      const head = `<span class="n"><span class="almanac-bloom">${Flora.head(s, 22)}</span>${s.name}</span>`;
+      if (!goal || !rdef) {
+        return `<div class="almanac-row dim">
+          <div class="almanac-row-top">${head}<span class="r">—</span><span class="c">—</span></div>
+        </div>`;
       }
-      return `<div class="stat-line${grown ? '' : ' dim'}">
-        <span class="kk">
-          <span class="k"><span class="almanac-bloom">${Flora.head(s, 22)}</span>${s.name}</span>
-          <span class="d">${detail}</span>
-        </span>
-        <span class="v">${grown ? fmt(n) : '—'}</span>
+      const fill = goal.qty ? Math.max(0, Math.min(1, goal.have / goal.qty)) : 0;
+      const gemTier = DATA.masteryGemEvery && goal.tier % DATA.masteryGemEvery === 0;
+      return `<div class="almanac-row">
+        <div class="almanac-row-top">
+          ${head}
+          <span class="r r-${rdef.key}">${rdef.label}</span>
+          <span class="c">×${fmt(n)}</span>
+        </div>
+        <div class="almanac-row-goal">
+          <span class="g">Tier ${goal.tier} · ${fmt(goal.have)} / ${fmt(goal.qty)} ${MASTERY_TRACK[goal.track]}${gemTier ? `<span class="gem-pip">${Icons.get('gem')}</span>` : ''}</span>
+          <i class="mastery-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${goal.qty}" aria-valuenow="${Math.min(goal.have, goal.qty)}" aria-label="${s.name} mastery tier ${goal.tier}"><b style="transform:scaleX(${fill})"></b></i>
+          <span class="y">${signed(Game.masteryMult(s.id) - 1)}</span>
+        </div>
       </div>`;
     }).join('');
 
@@ -1524,6 +1533,28 @@
     if (last.gems) popWallet('gems');
     renderQuestStrip();
     renderRail();
+    if (sheetMode === 'bonuses') renderSheet(false);
+  });
+
+  Game.on('mastery', ({ idx, seed, tier, gems, first, mult }) => {
+    const v = plotEls[idx];
+    const c = v ? FX.centerOf(v.root) : FX.centerOf(el.questStrip);
+    FX.stars(c.x, c.y, 9, '#ffd43b');
+    FX.ring(c.x, c.y, '#ffd43b', 0.5, 110);
+    Sound.play('quest');
+    FX.haptic([12, 30, 22]);
+    FX.float(c.x, c.y - 52, `${seed.name} Tier ${tier}`, 'big');
+    FX.float(c.x, c.y - 34, signed(mult - 1), 'gem');
+    // A tier lands every few harvests of a seed, so only the beats that are
+    // actually rare get a toast. The rest ride on the sparkles.
+    if (gems || first) {
+      toast({
+        title: `${seed.name} · Tier ${tier}`,
+        body: `${signed(mult - 1)} yield${gems ? ` · +${gems} gem${gems === 1 ? '' : 's'}` : ''}`,
+        art: Flora.head(seed, 26)
+      });
+    }
+    if (gems) popWallet('gems');
     if (sheetMode === 'bonuses') renderSheet(false);
   });
 

@@ -957,6 +957,36 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .stat-line .kk{flex:1}
 .stat-line.dim{opacity:.45}
 .almanac-bloom{display:inline-flex;vertical-align:middle;margin-right:6px}
+
+/* almanac seed rows — three columns, plus the mastery goal underneath */
+.almanac-row{padding:6px 0;border-bottom:2px dashed rgba(44,26,16,.12)}
+.almanac-row:last-child{border-bottom:0}
+.almanac-row.dim{opacity:.45}
+.almanac-row-top{display:flex;align-items:baseline;gap:8px}
+.almanac-row-top .n{flex:1;min-width:0;font-size:13px;font-weight:800;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.almanac-row-top .r{flex:0 0 auto;font-size:11px;font-weight:800;opacity:.7;
+  text-transform:uppercase;letter-spacing:.04em}
+.almanac-row-top .r-rare{color:#1c7ed6;opacity:1}
+.almanac-row-top .r-epic{color:#9775fa;opacity:1}
+.almanac-row-top .r-legend{color:#f08c00;opacity:1}
+.almanac-row-top .c{flex:0 0 46px;font-size:13px;font-weight:800;
+  font-variant-numeric:tabular-nums;color:#2b8a3e;text-align:right}
+.almanac-row-goal{display:flex;align-items:center;gap:8px;margin-top:3px}
+.almanac-row-goal .g{flex:0 0 auto;font-size:11px;font-weight:700;opacity:.6;
+  display:inline-flex;align-items:center;gap:3px}
+.almanac-row-goal .gem-pip svg{width:11px;height:11px;vertical-align:-1px}
+.almanac-row-goal .y{flex:0 0 46px;font-size:11px;font-weight:800;
+  font-variant-numeric:tabular-nums;color:#f08c00;text-align:right}
+.mastery-bar{
+  flex:1;min-width:24px;height:6px;border-radius:999px;overflow:hidden;
+  background:rgba(44,26,16,.12);border:1.5px solid rgba(44,26,16,.35);
+}
+.mastery-bar b{
+  display:block;height:100%;width:100%;
+  background:linear-gradient(90deg,#ffd43b,#f08c00);
+  transform:scaleX(0);transform-origin:left center;
+}
 .almanac-meter{
   position:relative;height:24px;margin:4px 0 10px;
   border-radius:999px;overflow:hidden;

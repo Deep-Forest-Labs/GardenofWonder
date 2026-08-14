@@ -182,6 +182,14 @@ const DATA = {
     { at: 19, rep: 50, gems: 5, boost: 'golden' }
   ],
 
+  /* Bloom Mastery. The ladder itself is generated in game.js — nineteen flowers
+     times an endless ladder cannot live here as data. These are the payouts.
+     Anything a tier pays is multiplied by nineteen flowers and never stops, so
+     masteryGemEvery is a ceiling and not a dial. */
+  masteryYieldPerTier: 0.05,
+  masteryGemEvery: 5,
+  masteryGemGrant: 1,
+
   quests: [
     { id: 'q_tap_25',      text: 'Tap 25 times',            track: 'tap',     qty: 25,  rep: 5 },
     { id: 'q_plant_1',     text: 'Plant a seed',            track: 'plant',   qty: 1,   rep: 5 },

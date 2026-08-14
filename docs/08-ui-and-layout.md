@@ -108,6 +108,33 @@ Behaviour:
 - Re-rendering preserves `scrollTop` unless the mode changed, so buying an upgrade doesn't jump you
   back to the top of a long list.
 
+### The Almanac seed row
+
+The `bonuses` panel lists all nineteen seeds. A grown row is two lines; an ungrown row is one.
+
+```
+🌼  Daisy                       LEGENDARY   ×512
+    Tier 13 · 512 / 1,000 total  ▓▓▓▓▓░░░    +60%
+```
+
+The top line is three columns and no sentence — bloom and name, best rarity, lifetime count. The
+name flexes and ellipsises; rarity and count are fixed width so the columns line up down the list.
+The rarity label is tinted per tier (`.r-rare` / `.r-epic` / `.r-legend`); Common stays grey.
+
+The second line is the **current mastery goal only**, never the rest of the ladder: tier number,
+progress against the goal, a thin bar, and the yield earned so far. A gem pip sits beside the goal
+text when the tier being climbed is a fifth one, so the reward is visible before it lands. Ungrown
+rows keep the bloom and name, show a dash in both columns, dim to 45%, and get no second line —
+the first harvest starts the climb toward tier 1.
+
+`ui.js` reads `Game.masteryGoal(id)`, `Game.masteryOf(id)` and `Game.masteryMult(id)` and does no
+ladder arithmetic of its own. Track labels are UI copy, in `MASTERY_TRACK`: `Rare+` and `Epic+`,
+where the plus carries "or better".
+
+**The row classes are `almanac-row*`, not `seed-row*`.** `.seed-row` is already the plant picker's
+button, and reusing it wraps every Almanac row in a card treatment with the columns collapsed onto
+one overflowing line.
+
 ### Keeping the sheet live
 
 Two update paths, deliberately different in cost:
@@ -136,7 +163,7 @@ a harvest.
 
 ## HUD
 
-Three wallet pills — coins and gems — plus round buttons for the Almanac and Settings. A
+Two wallet pills — coins and gems — plus round buttons for the Almanac and Settings. A
 quest strip sits between the HUD and the rail: level pip with a reputation ring, a thick bar for
 the current quest's progress (task name and count drawn on top of the fill), and a reward chip.
 Tapping it opens the quest panel; tapping a completed quest claims it. See
@@ -153,8 +180,8 @@ Numbers are abbreviated above 100,000: `100000` stays as-is up to that point, th
 `T` with trailing zeros trimmed.
 
 The Almanac panel (`bonuses`) opens with a collection header — `N / 19 discovered` on a bar, then
-the four milestone rungs — before the seed list and the stats that used to be the whole page.
-Ungrown blooms are greyscale with "Not yet grown"; grown ones show harvest count and best rarity.
+the four milestone rungs — followed by the seed list in the two-line row described above, then the
+stats that used to be the whole page.
 
 ## Status rail — the boost tray
 

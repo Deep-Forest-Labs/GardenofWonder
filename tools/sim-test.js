@@ -58,6 +58,12 @@ const clearGarden = () => S.grid.forEach((c) => {
   c.locked = false; c.seed = null; c.plantedAt = 0; c.grow = 0; c.ready = false;
 });
 
+/* Mastery multiplies harvest payout and climbs as a run proceeds, so a test
+   measuring some *other* harvest multiplier has to start from a clean ladder —
+   including the lifetime counts the ladder reads, or the next run starts the
+   ladder over with thousands of harvests already banked and jumps tiers at once. */
+const clearMastery = () => { S.mastery = {}; S.rarityCounts = {}; S.discovered = {}; };
+
 group('flowers are kept as a crafting byproduct');
 S.credits = 1e6;
 G.plant(0, G.seedById('daisy'));
@@ -111,6 +117,7 @@ check('planting later does not upgrade waiting jars',
 group('pollination raises harvest payouts');
 clearGarden();
 const meanPayout = (hives) => {
+  clearMastery();
   S.apiary.hives = Array.from({ length: hives }, () => ({ at: clock, jars: [] }));
   let total = 0;
   const runs = 4000;
@@ -255,6 +262,7 @@ check('tap payout ignores owned decor', gainBare === gainWithDecor && gainBare =
 clearGarden();
 S.apiary.hives = [];
 const meanHarvest = (decorOwned) => {
+  clearMastery();
   S.decor = decorOwned;
   unlockTo(20);
   S.apiary.hives = [];
@@ -615,6 +623,7 @@ S.wonder.until = 0;
 S.wonder.last = G.nowSeconds();
 const rng = Math.random;
 Math.random = () => 0;
+clearMastery();
 S.tap.combo = 0;
 S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false };
 const harvestBareCombo = G.harvest(0).payout;
@@ -713,6 +722,154 @@ check('reached milestones pay on load', almanacLoaded.almanacGrant
   && almanacLoaded.almanacGrant.paid.some((m) => m.at === 5), JSON.stringify(almanacLoaded.almanacGrant));
 const almanacLoadedAgain = G.load();
 check('a second load does not pay again', almanacLoadedAgain.almanacGrant == null);
+G.reset();
+
+group('the mastery ladder is one generated table for every flower');
+const goalStr = (t) => { const g = G.masteryTierGoal(t); return `${g.track}:${g.qty}`; };
+const LADDER = ['total:10', 'rare:4', 'total:25', 'epic:2', 'total:50',
+  'rare:10', 'total:100', 'epic:5', 'total:250', 'rare:20'];
+LADDER.forEach((want, i) => {
+  check(`tier ${i + 1} is ${want}`, goalStr(i + 1) === want, `got ${goalStr(i + 1)}`);
+});
+check('the decade pattern keeps going', goalStr(11) === 'total:500' && goalStr(13) === 'total:1000',
+  `${goalStr(11)} / ${goalStr(13)}`);
+check('an undiscovered seed has no goal', G.masteryGoal('daisy') === null);
+
+group('mastery tiers pay themselves and lift that seed only');
+G.reset();
+S.credits = 1e9;
+clearGarden();
+const rngMastery = Math.random;
+Math.random = () => 0.5;    // 0.5 × 100 lands in the 70-wide common band, and no gem
+const harvestDaisies = (n) => {
+  let last = null;
+  for (let i = 0; i < n; i += 1) {
+    S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false };
+    last = G.harvest(0);
+  }
+  return last;
+};
+check('a fresh seed starts at 1.0×', G.masteryMult('daisy') === 1 && G.masteryOf('daisy') === 0);
+const ninth = harvestDaisies(9);
+check('nine harvests do not reach tier 1', G.masteryOf('daisy') === 0 && ninth.mastery.length === 0);
+check('the goal reads back as tier 1 of 10 total', JSON.stringify(G.masteryGoal('daisy'))
+  === JSON.stringify({ tier: 1, track: 'total', qty: 10, have: 9 }), JSON.stringify(G.masteryGoal('daisy')));
+const tenthDaisy = harvestDaisies(1);
+check('the tenth harvest completes tier 1', G.masteryOf('daisy') === 1 && tenthDaisy.mastery.length === 1);
+check('the completing harvest was paid at the old rate', tenthDaisy.payout === ninth.payout,
+  `${ninth.payout} then ${tenthDaisy.payout}`);
+check('the tier moved the multiplier', Math.abs(G.masteryMult('daisy') - 1.05) < 1e-9,
+  `${G.masteryMult('daisy')}`);
+const eleventh = harvestDaisies(1);
+check('the next harvest is paid at the new rate',
+  eleventh.payout === Math.round(ninth.payout * 1.05), `${ninth.payout} then ${eleventh.payout}`);
+check('a tier pays once and does not re-pay', eleventh.mastery.length === 0 && G.masteryOf('daisy') === 1);
+check('another seed is untouched', G.masteryOf('tulip') === 0 && G.masteryMult('tulip') === 1);
+Math.random = rngMastery;
+
+group('rarity tiers count that rarity or better');
+G.reset();
+S.credits = 1e9;
+clearGarden();
+S.discovered.daisy = 10;
+S.mastery.daisy = 1;                       // sitting on tier 2: 4 Rare or better
+S.rarityCounts.daisy = { rare: 1, epic: 2, legend: 0 };
+check('epics count toward a Rare goal', G.masteryGoal('daisy').have === 3,
+  JSON.stringify(G.masteryGoal('daisy')));
+S.rarityCounts.daisy = { rare: 1, epic: 2, legend: 1 };
+check('legendaries count too', G.masteryGoal('daisy').have === 4);
+S.mastery.daisy = 3;                       // tier 4: 2 Epic or better
+check('a Rare does not count toward an Epic goal', G.masteryGoal('daisy').have === 3,
+  JSON.stringify(G.masteryGoal('daisy')));
+
+group('one harvest can cross more than one tier');
+G.reset();
+S.credits = 1e9;
+clearGarden();
+S.discovered.daisy = 24;
+S.rarityCounts.daisy = { rare: 3, epic: 0, legend: 0 };
+S.mastery.daisy = 0;
+const rngCross = Math.random;
+Math.random = () => 0.75;                  // a Rare: 70 common / 20 rare on the table
+S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false };
+const crossing = G.harvest(0);
+Math.random = rngCross;
+check('the roll was a Rare', crossing.rarity.key === 'rare', crossing.rarity.key);
+check('it paid tiers 1, 2 and 3 at once', crossing.mastery.map((t) => t.tier).join(',') === '1,2,3',
+  JSON.stringify(crossing.mastery.map((t) => t.tier)));
+check('the multiplier moved by all three', Math.abs(G.masteryMult('daisy') - 1.15) < 1e-9,
+  `${G.masteryMult('daisy')}`);
+
+group('gems land on every fifth tier and nowhere else');
+G.reset();
+clearGarden();
+const gemTiers = [];
+for (let t = 1; t <= 12; t += 1) {
+  G.state.mastery.daisy = t - 1;
+  G.state.discovered.daisy = 1e9;
+  G.state.rarityCounts.daisy = { rare: 1e9, epic: 1e9, legend: 0 };
+  const gemsBefore = S.gems;
+  S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false };
+  const res = G.harvest(0);
+  const tierPaid = res.mastery.find((x) => x.tier === t);
+  if (tierPaid && tierPaid.gems > 0) gemTiers.push(t);
+  check(`tier ${t} gem grant matches the rule`,
+    (t % DATA.masteryGemEvery === 0) === Boolean(tierPaid && tierPaid.gems > 0)
+    && (!tierPaid || S.gems >= gemsBefore));
+}
+check('only tiers 5 and 10 paid a gem', gemTiers.join(',') === '5,10', gemTiers.join(','));
+
+group('mastery records are lifetime, not inventory');
+G.reset();
+S.credits = 1e9;
+clearGarden();
+const rngSpend = Math.random;
+Math.random = () => 0.75;                  // every harvest is a Rare
+for (let i = 0; i < 6; i += 1) {
+  S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false };
+  G.harvest(0);
+}
+Math.random = rngSpend;
+const countsBeforeSpend = JSON.stringify(G.rarityCountsOf('daisy'));
+check('six rare harvests were recorded', G.rarityCountsOf('daisy').rare === 6, countsBeforeSpend);
+G.sell('flower', 'daisy', true);
+check('selling does not decrease rarityCounts', JSON.stringify(G.rarityCountsOf('daisy')) === countsBeforeSpend);
+S.flowers = { daisy: 9 };
+S.apiary.honey = { wild: 5 };
+S.apiary.wax = 5;
+G.startCraft('tea');
+check('crafting does not decrease rarityCounts', JSON.stringify(G.rarityCountsOf('daisy')) === countsBeforeSpend);
+
+group('mastery backfill is bounded by bestRarity and pays no gems');
+G.reset();
+const priorMastery = JSON.parse(JSON.stringify(S));
+delete priorMastery.mastery;
+delete priorMastery.rarityCounts;
+priorMastery.discovered = { daisy: 500, tulip: 500, bluebell: 1 };
+priorMastery.bestRarity = { daisy: 'common', tulip: 'rare', bluebell: 'legend' };
+priorMastery.gems = 0;
+priorMastery.flowers = {};
+store['gw-save'] = JSON.stringify(priorMastery);
+G.load();
+check('a common-only seed is credited no rarities',
+  JSON.stringify(G.rarityCountsOf('daisy')) === JSON.stringify({ rare: 0, epic: 0, legend: 0 }),
+  JSON.stringify(G.rarityCountsOf('daisy')));
+check('a Rare-best seed is credited rares but never epics',
+  G.rarityCountsOf('tulip').rare === 100 && G.rarityCountsOf('tulip').epic === 0
+  && G.rarityCountsOf('tulip').legend === 0, JSON.stringify(G.rarityCountsOf('tulip')));
+check('an estimate never exceeds the harvests that happened',
+  G.rarityCountsOf('bluebell').rare + G.rarityCountsOf('bluebell').epic
+  + G.rarityCountsOf('bluebell').legend <= 1, JSON.stringify(G.rarityCountsOf('bluebell')));
+check('backfilled tiers still grant the yield', G.masteryOf('daisy') > 0 && G.masteryMult('daisy') > 1,
+  `${G.masteryOf('daisy')} tiers`);
+check('a common-only seed stalls on its first rarity tier', G.masteryOf('daisy') === 1,
+  `${G.masteryOf('daisy')} tiers`);
+check('rarity credit carries a Rare-best seed further', G.masteryOf('tulip') > G.masteryOf('daisy'),
+  `${G.masteryOf('tulip')} vs ${G.masteryOf('daisy')}`);
+check('backfill pays no gems', S.gems === 0, `${S.gems}`);
+const masteryBefore = G.masteryOf('tulip');
+G.load();
+check('a second load does not advance again', G.masteryOf('tulip') === masteryBefore);
 G.reset();
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

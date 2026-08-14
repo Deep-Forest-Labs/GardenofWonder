@@ -390,6 +390,39 @@ pays once. A save with leftover flowers backfills `discovered` on load and grant
 already-reached unclaimed rungs. Numbers and the UI are in
 [16-progression-and-quests.md](16-progression-and-quests.md#phase-4--the-almanac-as-a-completion-goal).
 
+## Bloom Mastery
+
+Every grown seed carries its own endless ladder, generated rather than authored. The goal repeats
+every four tiers — total harvests, Rare-or-better, total, Epic-or-better — and each track walks a
+1 / 2.5 / 5 decade pattern forever, so tier 1 is 10 total and tier 10 is 20 Rare-or-better.
+`masteryTierGoal(tier)` is the pure formula; `masteryGoal(id)` is the per-seed getter the Almanac
+row reads.
+
+Progress comes from two lifetime records and never from inventory. Totals use
+`state.discovered[id]`; rarity tracks sum `state.rarityCounts[id]`, which holds rare, epic and
+legend counts per seed. **Rarity goals count that rarity or better**, matching `questMatches()` —
+an Epic advances a Rare goal. Legendary is deliberately not a tier: at 2% it would stall a
+sequential ladder behind a coin flip.
+
+Each completed tier permanently adds **+5% to that seed's harvest yield**, added and not
+compounded, and nothing else — no reputation, and a gem only on every fifth tier. Tiers auto-pay
+the moment the count crosses, like Almanac milestones; there is no claim tap, because nineteen
+endless ladders would become an inbox of unclaimed gifts. A single harvest can cross more than one
+tier, so `advanceMastery()` loops, and the harvest that completes a tier is paid at the **old**
+multiplier — `masteryMult()` is read before `recordHarvest()` runs. Taps, flower sale prices and
+craft inputs are untouched.
+
+One `mastery` event fires per harvest that paid anything, listing every tier crossed. Old saves
+never recorded `rarityCounts`, so `backfillMastery()` estimates it from the drop-table weights in
+`DATA.rarity`, clamped by `bestRarity` so a rarity the player has provably never hit is never
+credited, and capped so the estimate never exceeds the harvests that actually happened. Backfilled
+tiers grant their yield but pay no gems and fire no toasts — the gem belongs to a moment of
+completion, and a backfill has none.
+
+Numbers are in [04-economy.md](04-economy.md#bloom-mastery), the surface in
+[08-ui-and-layout.md](08-ui-and-layout.md#the-almanac-seed-row), the reasoning in
+[16-progression-and-quests.md](16-progression-and-quests.md#phase-5--bloom-mastery).
+
 ## Onboarding
 
 Two coach marks, tracked by `state.seen`:

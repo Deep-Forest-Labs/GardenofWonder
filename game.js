@@ -44,7 +44,9 @@ const Game = (() => {
       level: 1,
       discovered: {},
       bestRarity: {},
-      almanacClaimed: []
+      almanacClaimed: [],
+      mastery: {},
+      rarityCounts: {}
     };
   };
 
@@ -163,6 +165,16 @@ const Game = (() => {
         parsed.bestRarity && typeof parsed.bestRarity === 'object' ? parsed.bestRarity : {}
       );
       state.almanacClaimed = Array.isArray(parsed.almanacClaimed) ? parsed.almanacClaimed.slice() : [];
+      state.mastery = Object.assign(
+        {},
+        d.mastery,
+        parsed.mastery && typeof parsed.mastery === 'object' ? parsed.mastery : {}
+      );
+      state.rarityCounts = Object.assign(
+        {},
+        d.rarityCounts,
+        parsed.rarityCounts && typeof parsed.rarityCounts === 'object' ? parsed.rarityCounts : {}
+      );
       const decorRefund = migrateDecor(parsed.version || 1);
       const ticketGrant = migrateTickets(parsed);
       state.version = 3;
@@ -201,7 +213,10 @@ const Game = (() => {
       ensureProgression();
       backfillDiscovered();
       const almanacGrant = grantAlmanacMilestones();
-      if (migrated || decorRefund || progressionGrant || ticketGrant || almanacGrant.paid.length) saveNow();
+      // Silent by design: a backfilled tier grants its yield but has no moment to celebrate.
+      const masteryBackfill = backfillMastery();
+      if (migrated || decorRefund || progressionGrant || ticketGrant
+        || almanacGrant.paid.length || masteryBackfill.changed) saveNow();
       return {
         migrated, fresh: false, decorRefund, progressionGrant, ticketGrant,
         almanacGrant: almanacGrant.paid.length ? almanacGrant : null
@@ -472,6 +487,73 @@ const Game = (() => {
     });
     return { paid, levelGrants };
   }
+  /* ---------------- bloom mastery ---------------- */
+
+  const emptyRarityCount = () => ({ rare: 0, epic: 0, legend: 0 });
+
+  function rarityCountsOf(id) {
+    const c = state.rarityCounts[id];
+    if (!c || typeof c !== 'object') return emptyRarityCount();
+    return {
+      rare: Number(c.rare) || 0,
+      epic: Number(c.epic) || 0,
+      legend: Number(c.legend) || 0
+    };
+  }
+
+  function decadeQty(steps, i) {
+    return steps[i % steps.length] * Math.pow(10, Math.floor(i / steps.length));
+  }
+
+  /** The goal for a 1-based tier number, identical for every flower. */
+  function masteryTierGoal(tier) {
+    const cycle = (tier - 1) % 4;
+    if (cycle === 0 || cycle === 2) {
+      return { track: 'total', qty: decadeQty([10, 25, 50], Math.floor((tier - 1) / 2)) };
+    }
+    if (cycle === 1) {
+      return { track: 'rare', qty: decadeQty([4, 10, 20], Math.floor((tier - 1) / 4)) };
+    }
+    return { track: 'epic', qty: decadeQty([2, 5, 10], Math.floor((tier - 1) / 4)) };
+  }
+
+  /** Rarity tracks count that rarity or better, matching questMatches(). */
+  function masteryHave(id, track) {
+    const c = rarityCountsOf(id);
+    if (track === 'rare') return c.rare + c.epic + c.legend;
+    if (track === 'epic') return c.epic + c.legend;
+    return state.discovered[id] || 0;
+  }
+
+  const masteryOf = (id) => state.mastery[id] || 0;
+  const masteryMult = (id) => 1 + (DATA.masteryYieldPerTier || 0) * masteryOf(id);
+
+  function masteryGoal(id) {
+    if (!((state.discovered[id] || 0) > 0)) return null;
+    const tier = masteryOf(id) + 1;
+    const goal = masteryTierGoal(tier);
+    return { tier, track: goal.track, qty: goal.qty, have: masteryHave(id, goal.track) };
+  }
+
+  /** Advance as far as the recorded counts allow. `payGems` is false for backfill. */
+  function advanceMastery(id, payGems) {
+    const paid = [];
+    const every = DATA.masteryGemEvery || 0;
+    for (;;) {
+      const tier = masteryOf(id) + 1;
+      const goal = masteryTierGoal(tier);
+      if (masteryHave(id, goal.track) < goal.qty) break;
+      state.mastery[id] = tier;
+      let gems = 0;
+      if (payGems && every && tier % every === 0) {
+        gems = DATA.masteryGemGrant || 0;
+        state.gems += gems;
+      }
+      paid.push({ tier, track: goal.track, qty: goal.qty, gems });
+    }
+    return paid;
+  }
+
   function recordHarvest(seedId, rarityKey) {
     const first = !((state.discovered[seedId] || 0) > 0);
     state.discovered[seedId] = (state.discovered[seedId] || 0) + 1;
@@ -479,14 +561,63 @@ const Game = (() => {
     if (prev == null || (RARITY_RANK[rarityKey] || 0) > (RARITY_RANK[prev] || 0)) {
       state.bestRarity[seedId] = rarityKey;
     }
+    if (rarityKey === 'rare' || rarityKey === 'epic' || rarityKey === 'legend') {
+      const c = rarityCountsOf(seedId);
+      c[rarityKey] += 1;
+      state.rarityCounts[seedId] = c;
+    }
     const granted = grantAlmanacMilestones();
+    // Counts are recorded before the ladder is walked, so one harvest can cross
+    // more than one tier.
+    const mastery = advanceMastery(seedId, true);
     return {
       first,
       count: state.discovered[seedId],
       best: state.bestRarity[seedId],
       milestones: granted.paid,
-      levelGrants: granted.levelGrants
+      levelGrants: granted.levelGrants,
+      mastery
     };
+  }
+
+  /* rarityCounts was never recorded before mastery shipped, so an old save would
+     stall on the first Rare tier forever. Estimate from the drop table, but never
+     credit a rarity the player has provably never hit. */
+  function backfillMastery() {
+    if (!state.mastery || typeof state.mastery !== 'object') state.mastery = {};
+    if (!state.rarityCounts || typeof state.rarityCounts !== 'object') state.rarityCounts = {};
+    const totalWeight = DATA.rarity.reduce((n, r) => n + r.w, 0);
+    const share = {};
+    DATA.rarity.forEach((r) => { share[r.key] = totalWeight ? r.w / totalWeight : 0; });
+    let changed = false;
+    DATA.seeds.forEach((s) => {
+      const id = s.id;
+      const total = state.discovered[id] || 0;
+      const existing = state.rarityCounts[id];
+      if (total <= 0 || (existing && typeof existing === 'object')) {
+        if (existing && typeof existing === 'object') state.rarityCounts[id] = rarityCountsOf(id);
+        return;
+      }
+      const bestRank = RARITY_RANK[state.bestRarity[id]] || 0;
+      const c = emptyRarityCount();
+      // Rarest first: bestRarity proves those happened, so they get the budget.
+      let budget = total;
+      ['legend', 'epic', 'rare'].forEach((key) => {
+        if (RARITY_RANK[key] > bestRank) return;
+        // They demonstrably reached this tier at least once, so never round it to zero.
+        const want = Math.max(1, Math.round(total * (share[key] || 0)));
+        c[key] = Math.max(0, Math.min(want, budget));
+        budget -= c[key];
+      });
+      state.rarityCounts[id] = c;
+      changed = true;
+    });
+    const granted = [];
+    DATA.seeds.forEach((s) => {
+      const tiers = advanceMastery(s.id, false);
+      if (tiers.length) granted.push({ id: s.id, tiers: tiers.length });
+    });
+    return { changed: changed || granted.length > 0, granted };
   }
   function grantLevel(level) {
     const coins = (DATA.levelCoinGrant || 20) * level;
@@ -769,7 +900,9 @@ const Game = (() => {
     const r = rollRarity(boostVal('rarityWeight') + (luckyHarvest ? LADYBUG_RARITY_BONUS : 0));
     const yieldBase = sdef.yield * r.m;
     const yieldBonus = 1 + boostVal('globalCredits');
-    const payout = Math.round(yieldBase * yieldBonus * (1 + pollination()) * wonderMult());
+    // Read before recordHarvest: the harvest that completes a tier is paid at the old rate.
+    const mastered = masteryMult(sdef.id);
+    const payout = Math.round(yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * mastered);
 
     state.credits += payout;
     // The bloom itself is kept as a crafting ingredient, on top of the credits.
@@ -795,11 +928,22 @@ const Game = (() => {
     const payload = {
       idx, payout, rarity: r, seed: sdef, gemDrop, repBonus, sparkedWonder: sparked, luckyHarvest,
       firstDiscover: almanac.first, discovered: almanac.count, bestRarity: almanac.best,
-      milestones: almanac.milestones
+      milestones: almanac.milestones, mastery: almanac.mastery
     };
     emit('harvest', payload);
     if (almanac.milestones.length) {
       emit('almanac', { found: discoveredCount(), seed: sdef, milestones: almanac.milestones });
+    }
+    if (almanac.mastery.length) {
+      emit('mastery', {
+        idx,
+        seed: sdef,
+        tiers: almanac.mastery,
+        tier: almanac.mastery[almanac.mastery.length - 1].tier,
+        gems: almanac.mastery.reduce((n, t) => n + t.gems, 0),
+        first: almanac.mastery[0].tier === 1,
+        mult: masteryMult(sdef.id)
+      });
     }
     if (levelGrants.length) {
       emit('levelup', { from: levelGrants[0].level - 1, to: state.level, grants: levelGrants });
@@ -1192,6 +1336,7 @@ const Game = (() => {
     repToNext, cumulativeRep, levelFromRep, repIntoLevel,
     seedUnlocked, seedUnlockLevel, plotAvailable, plotUnlockLevel,
     claimQuest, stripQuest, questById,
-    discoveredCount, discoveredOf, bestRarityOf, almanacMilestones
+    discoveredCount, discoveredOf, bestRarityOf, almanacMilestones,
+    masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf
   };
 })();

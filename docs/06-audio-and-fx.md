@@ -151,12 +151,20 @@ than a Rare one.
 | Quest claim | 9 | 9 stars + ring | — | `quest` | — | — |
 | First discover | — | float text | — | — | yes (common/rare only) | — |
 | Almanac milestone | 9 | 9 stars + ring | — | `quest` | yes | — |
+| Mastery tier | — | 9 stars + ring + 2 float texts | — | `quest` | first or gem tier only | — |
 | Level-up | — | 34 confetti + ring | 9 | `levelup` | yes | — |
 | Wonder Effect | — | rainbow burst + 5 confetti waves | 10 | `wonder` | banner | forced |
 
 Rare harvests deliberately get no toast. At 20% frequency they generated constant notification
 noise; stars and floating text carry the moment instead. Toasts are also capped at two on screen
 at once, oldest evicted.
+
+Mastery tiers follow the same reasoning one step further. Early tiers land every ten or so
+harvests of a seed, which across eight plots is a toast every twenty seconds — so a tier only
+toasts when it is genuinely rare: a seed's **first** tier, or a **gem-paying** fifth tier. Every
+other tier gets the full Rare-tier juice on the plot itself — stars, ring, the `quest` sound, and
+two floating texts naming the flower, the tier, and the new yield — and no toast. A gem tier does
+not escalate to Epic or Legendary juice; the gem is in the toast body, not in more confetti.
 
 This ladder is a design contract. If you add an event, place it on the ladder deliberately rather
 than giving it maximum juice.

@@ -46,7 +46,8 @@ happens to persist to `localStorage`. You could run it headless.
 one intentional exception is the Almanac panel (`renderBonuses`), which recomputes effective
 multipliers for display; it calls `Game.boostVal` rather than hardcoding anything. Collection
 progress goes through `Game.discoveredCount`, `discoveredOf`, `bestRarityOf` and
-`almanacMilestones`. `Game.decorVal` was deleted in navigation phase 1 along with decor's stat
+`almanacMilestones`; mastery goes through `Game.masteryOf`, `masteryMult` and `masteryGoal`, and
+the ladder formula stays in `game.js`. `Game.decorVal` was deleted in navigation phase 1 along with decor's stat
 bonuses — see [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
 `flora.js`, `icons.js`, `audio.js`, and `fx.js` are leaf utilities. They know nothing about the
@@ -80,6 +81,8 @@ in `boot()`.
 | `purchase` | Upgrade, decor, or booster bought | `{ kind, key, cost?, def? }` |
 | `deny` | A purchase failed | `{ reason, need, idx? }` — `reason` is `credits` / `gems` / `level` |
 | `wonder` | Wonder Effect starts or ends | `{ active }` |
+| `almanac` | A harvest crossed a collection milestone | `{ found, seed, milestones }` |
+| `mastery` | A harvest completed one or more mastery tiers | `{ idx, seed, tiers, tier, gems, first, mult }` |
 | `quest` | A quest was claimed | `{ id, def, rep, grants }` |
 | `levelup` | Reputation crossed a level | `{ from, to, grants }` |
 | `grid` | The grid needs a full DOM rebuild | none |

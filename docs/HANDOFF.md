@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-13**
+Last updated: **2026-08-14**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -21,11 +21,12 @@ renamed Upgrades; Decor lost its stat bonuses, became cosmetic, and moved into S
 owners refunded; Boosts left the dock entirely for a tap-to-activate tray in the status rail. Full
 detail in [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
-**Progression phases 1–4 are done**: a quest strip sits between the HUD and the rail, reputation is
+**Progression phases 1–5 are done**: a quest strip sits between the HUD and the rail, reputation is
 the only level track, seeds unlock on the bar, extra plots become buyable at levels 3 / 6 / 9
 / 12, tickets are gone — boosts are earned inventory activated from the rail — the combo
 multiplies tap payout, and the Almanac is a collection track with lifetime discovery, best
-rarity, and milestones at 5 / 10 / 15 / 19 species. Full detail in
+rarity, and milestones at 5 / 10 / 15 / 19 species, and **every seed carries an endless Bloom Mastery ladder**
+on its Almanac row paying +5% to that seed's yield per tier. Full detail in
 [16-progression-and-quests.md](16-progression-and-quests.md). The world map is still queued. A
 playtest pass after phase 1 made the bar track the quest and the pip ring track reputation,
 replaced generic upgrade quests with buy-then-feel pairs (Combo Coil stays, so the later
@@ -100,14 +101,24 @@ below.
 
 ## The current task
 
-**Progression phases 1–4 are built.** There is no next independently-shippable slice in
-[16-progression-and-quests.md](16-progression-and-quests.md). The world map (navigation phase 2)
-stays paused. Don't start it without asking.
+**Nothing is mid-flight.** Bloom Mastery shipped 2026-08-14 and was the last specified phase, so
+the progression track in [16-progression-and-quests.md](16-progression-and-quests.md) is complete
+end to end. Pick the next item from "What comes after" with the owner.
 
-The useful next conversation is still **play the loop and judge it**: the Almanac now asks you to
-grow each species, including a Legendary of each. That is a new reason to plant something other
-than the cheapest seed. Content decisions still wait on whether the garden's *contents* start
-mattering.
+**Play the loop and judge it** is still the open question, and it just got narrower. Mastery was
+sold as the answer to *does the garden's contents start mattering* — a deeply mastered Daisy
+becoming worth planting. **It is not, and the arithmetic is not close.** Mastery is a percentage
+of what a flower already pays, so at equal tiers it lifts every seed by the same factor. The cheap
+seed's only edge is cycle time, worth about eleven extra tiers or +55% over a realistic session,
+against a **31× gap in coins per second**. The claim is retracted in the spec and reasoned through
+in [10-decision-log.md](10-decision-log.md); don't restore it. Mastery is a depth reward and a
+coin faucet, and it is good at both.
+
+The contents question therefore belongs to **the Market** — an order that *wants* lavender makes
+lavender worth planting directly ([13-order-system.md](13-order-system.md)). That is now the
+strongest argument for moving the Market up the queue.
+
+The world map (navigation phase 2) stays paused. Don't start it without asking.
 
 ## What comes after
 
@@ -120,23 +131,28 @@ mattering.
 5. ~~Decide the navigation structure~~ — **done**, [15-navigation-and-ia.md](15-navigation-and-ia.md).
 6. ~~Navigation phase 1~~ — **done**, see above.
 7. **Play the loop and judge it — in progress.** Hold-to-tap, Balanced sort, and the three tap
-   procs (above) are texture added toward this question. The question is still narrow and still
-   open: does the garden's *contents* start mattering — do you plant lavender because you want
-   lavender honey? Content decisions wait on that answer.
-8. ~~**Progression and quests — specified, current task.**~~ **Phases 1–4 done.** See above and
-    [16-progression-and-quests.md](16-progression-and-quests.md). The map stays ahead of this
+   procs (above) are texture added toward this question. Bloom Mastery was expected to answer it
+   and does not — see "The current task". The question stands: does the garden's *contents* start
+   mattering — do you plant lavender because you want lavender honey? Content decisions wait on
+   that answer, and the honest place to get it is the Market.
+8. ~~**Progression and quests — specified, current task.**~~ **All five phases done.** See above
+    and [16-progression-and-quests.md](16-progression-and-quests.md). The map stays ahead of this
     only in the sense that a map full of places is worthless if nothing tells you why you're
     going anywhere — that reason now exists.
-9. **The world map** — navigation phase 2, queued but paused. Unblocks everything else in the
-   meta-layer.
+9. ~~**Bloom Mastery**~~ — **done 2026-08-14.** Phase 5 of
+   [16-progression-and-quests.md](16-progression-and-quests.md#phase-5--bloom-mastery). Per-seed
+   endless ladders paying a permanent per-seed yield bonus, one gem every fifth tier.
 10. **The Market** — see [13-order-system.md](13-order-system.md). The prototype has production but
     nothing that *wants* anything, which is exactly the gap orders fill. It pays into the same
-    reputation number the quest ladder does, by design.
-11. **Tune the economy for real.** Every number today is a placeholder. Also worth a look: the three
+    reputation number the quest ladder does, by design. **Now the strongest candidate for next**,
+    because it is the only thing on the list that can make one flower worth planting over another.
+11. **The world map** — navigation phase 2, queued but paused. Unblocks everything else in the
+   meta-layer.
+12. **Tune the economy for real.** Every number today is a placeholder. Also worth a look: the three
     new proc badges were repriced once (with Sprinklers) but *not* re-cut when their trigger rates
     were cut again the next day — see [04-economy.md](04-economy.md) for the reasoning and a
     deliberate open question about whether that needs revisiting.
-12. **Fix the known economy bugs** before building content on top of them.
+13. **Fix the known economy bugs** before building content on top of them.
 
 ## Known problems worth knowing immediately
 
@@ -152,6 +168,11 @@ All inherited from the frozen economy port. Fixing them is a deliberate balance 
 ## Traps in this codebase
 
 Things that cost real time to discover. None are visible from a casual read.
+
+**Check `git branch -r` before starting a specified phase.** Phase 4 was built twice, in parallel,
+by two agents that did not know about each other — competently and incompatibly, with different
+state shapes for the same feature. Cloud agents push to `cursor/*` branches and may already have
+merged to `main` while your local tree still looks current. `git fetch` first.
 
 **`audio.js` already has a global-looking `RECIPES`.** It is a table of *sound* recipes, declared
 inside the `Sound` IIFE. Crafting recipes are therefore named `CRAFT_RECIPES`. Shadowing would
@@ -204,12 +225,33 @@ three at once by changing it in one place, not by editing each `roll*()` functio
 **`state.discovered` is not `state.flowers`.** Flowers are spendable inventory; discovered is a
 lifetime harvest count that never decrements. A quest or milestone that reads the pantry will
 go backwards when the player crafts. Backfill on load uses remaining flowers as a lower bound,
-which undercounts old saves on purpose.
+which undercounts old saves on purpose. `state.rarityCounts` is the same kind of record for
+mastery and has the same rule.
+
+**Mastery silently perturbs any sim-test that measures a harvest multiplier.** It multiplies
+harvest payout and climbs as a run proceeds, so a test averaging thousands of harvests to isolate
+some *other* multiplier has to reset the ladder first — and resetting `state.mastery` alone is not
+enough, because the ladder reads `state.discovered`, so the next run restarts tier 1 with
+thousands of harvests already banked and jumps several tiers on its first harvest. `clearMastery()`
+in the suite clears all three. This broke the pollination and decor ratio tests the moment mastery
+landed, and the failure looks like a balance regression rather than a test artifact.
+
+**`.seed-row` is the plant picker's button, not a generic row.** Reusing it for the Almanac wrapped
+every row in a card treatment and collapsed the columns onto one overflowing line. The Almanac's
+classes are `.almanac-row*`. Check for an existing class before naming a new one — `style.css` is
+50 KB and the collision is invisible until you screenshot it.
+
+**The `load()` upgrade backfill does not cover the original badges.** The hand-maintained list
+covers the harvester keys plus `holdSpeed`, `rainDance`, `beeSwarm`, `ladybug` — but not
+`tapPower`, `critChance`, `critMult`, `comboMeter`, `plotExpansion`, `autoWater`, `autoHarvest`.
+Real saves always have those, so this only bites synthetic or hand-edited saves — where it shows up
+as `NaN%` in the Almanac and looks like a live bug. See
+[11-known-issues.md](11-known-issues.md#correctness).
 
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 198 assertions over the simulation layer
+node tools/sim-test.js          # 249 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
@@ -248,9 +290,8 @@ Paste something like this into a fresh chat:
 > `docs/09-conventions.md` and `docs/02-architecture.md`, and note the "Traps in this codebase"
 > section of the handoff.
 >
-> Your task is to play the loop and judge it — see `docs/HANDOFF.md`. Progression phases 1–4 are
-> built. Read `docs/16-progression-and-quests.md` before touching that layer. Do not build the
-> world map.
+> Your task is in `docs/HANDOFF.md`. All five progression phases, including Bloom Mastery, are
+> built — see `docs/16-progression-and-quests.md`. Do not build the world map.
 >
 > I'm the designer; an engineer is porting to Unity. Goal is modest revenue, small scope, two-person
 > team. I want you as a design advisor as well as an implementer — push back on scope creep and tell

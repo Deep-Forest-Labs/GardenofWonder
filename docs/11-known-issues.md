@@ -55,6 +55,34 @@ Decide deliberately: keep them as a toy, or gate them behind something.
 
 *Where:* `ui.js` `renderSettings()`.
 
+### The `load()` upgrade backfill misses the original badges
+
+The documented trap is that `load()` replaces `state.upgrades` wholesale, so every new badge key
+needs a manual backfill. The backfill list covers the harvester keys plus `holdSpeed`, `rainDance`,
+`beeSwarm` and `ladybug` — but **not** the badges that have existed since v1: `tapPower`,
+`critChance`, `critMult`, `comboMeter`, `plotExpansion`, `autoWater`, `autoHarvest`. A save whose
+`upgrades` object is missing one of those reads `undefined` and the Almanac shows `NaN%` for
+growth speed.
+
+No real save is affected — those keys have existed since the first version, so every genuine save
+has them. It bites synthetic saves, hand-edited saves, and anything a future migration writes. The
+fix is one line: back-fill every key in `defaultState().upgrades` instead of a hand-maintained
+list, which also removes the step people forget.
+
+*Where:* `game.js` `load()`.
+
+### "Garden Mastery" and "Bloom Mastery" are two different things one panel apart
+
+The Almanac's stats section has always had a block headed **Garden Mastery** — growth speed, rarity
+odds, harvest yield, Wonder bonus. Bloom Mastery tiers now appear a few blocks above it in the same
+panel. A player scrolling the Almanac sees "Tier 13" and then "Garden Mastery" and will reasonably
+assume they are related.
+
+Copy fix, not a code fix: rename the stats block to something like "Garden Bonuses". Left alone
+because panel copy is the owner's call.
+
+*Where:* `ui.js` `renderBonuses()`.
+
 ### `harvestsThisSession` is not per session
 
 It's saved and never reset, making it a lifetime counter. The name will mislead. Behaviour is
@@ -122,7 +150,9 @@ All interpolated content currently comes from `data.js` and is trusted, so there
 vulnerability. But there's no escaping helper, so the first time player-supplied text reaches a
 panel it will be an injection. Add escaping before adding any naming or text-entry feature.
 
-### No automated tests
+### No automated tests for anything above the simulation
 
-Verification is manual, per the checklist in [09-conventions.md](09-conventions.md). `game.js` has
-no DOM dependencies and would be straightforward to test headlessly if that ever seems worth it.
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 249 assertions over the
+economy, progression, saves and mastery. Everything above that line — `ui.js`, layout, the sheet,
+FX — is verified by hand against the checklist in [09-conventions.md](09-conventions.md). That is
+the right split for a prototype, but a UI regression has no net under it.

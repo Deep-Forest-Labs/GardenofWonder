@@ -47,7 +47,9 @@ lost if the player clears site data.
   level: 1,
   discovered: {},                 // seedId -> lifetime harvest count
   bestRarity: {},                 // seedId -> rarity key
-  almanacClaimed: []              // milestone `at` values already paid
+  almanacClaimed: [],             // milestone `at` values already paid
+  mastery: {},                    // seedId -> mastery tiers completed and paid
+  rarityCounts: {}                // seedId -> { rare, epic, legend } lifetime counts
 }
 ```
 
@@ -127,7 +129,10 @@ see [10-decision-log.md](10-decision-log.md).
 `Object.assign(state, defaultState(), parsed)` is shallow, so a legacy save missing `stats`
 entirely would leave that key absent and crash on first write. Each nested object is therefore
 re-merged over its defaults individually: `tap`, `stats`, `wonder`, `prefs`, `seen`, `boostInv`,
-`discovered`, `bestRarity`. `almanacClaimed` is copied as an array when present, else `[]`.
+`discovered`, `bestRarity`, `mastery`, `rarityCounts`. `almanacClaimed` is copied as an array when
+present, else `[]`. `rarityCounts` is nested a second level — a missing seed key reads as
+`{ rare: 0, epic: 0, legend: 0 }` through `rarityCountsOf()`, which is the only thing that should
+read it.
 
 **When you add a nested object to state, add it to that list.** Forgetting is the single most likely
 way to break loading for existing players.
@@ -142,6 +147,11 @@ Three live migrations run on load:
 - A save without `boostInv` converts leftover tickets to gems at 5:1, once.
 - Remaining `flowers` keys backfill `discovered` (max with any existing count). Unclaimed
   Almanac milestones whose threshold is already met then pay once.
+- A seed with lifetime harvests but no `rarityCounts` entry has one estimated from the drop-table
+  weights in `DATA.rarity`, clamped by `bestRarity` and capped at the harvests that happened.
+  Mastery tiers then advance to wherever that puts them, granting yield but **no gems and no
+  toasts**. Once a seed has a `rarityCounts` entry it is normalised, never re-estimated, so the
+  migration is idempotent.
 
 ### Grid sanitisation
 
