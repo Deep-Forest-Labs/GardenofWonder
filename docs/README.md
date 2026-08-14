@@ -30,7 +30,8 @@ Read it before anything else if you're picking the project up cold.
 | [13-order-system.md](13-order-system.md) | You're building the Market, the engine that drives the whole graph |
 | [14-economy-model.md](14-economy-model.md) | You're authoring resources, recipes or tuning numbers |
 | [15-navigation-and-ia.md](15-navigation-and-ia.md) | You're touching the dock, tabs, menus or where a feature lives |
-| [16-progression-and-quests.md](16-progression-and-quests.md) | You're working on quests, levels, reputation, boosts or the Almanac — **phases 1–5 built** |
+| [16-progression-and-quests.md](16-progression-and-quests.md) | You're working on quests, levels, reputation, boosts or the Almanac — **phases 1–5 built, phase 6 specified** |
+| [17-market-and-positioning.md](17-market-and-positioning.md) | You want to know who this game is for, what it competes with, or why an individual flower should be worth wanting — **research, not the game** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

@@ -360,6 +360,12 @@ ceiling; decay reduces the multiplier; harvest payouts are unchanged by combo.
 
 **Built 2026-08-13.** The Almanac is the collection track.
 
+> **Superseded in shape by Phase 6 (below), decided 2026-08-14.** The state model here —
+> `discovered`, `bestRarity`, milestone-pays-once — is right and survives. The *shape* does not: one
+> 19-species track with rungs at 5/10/15/19 is a single 19-item set, and collection research puts the
+> effective set size at **7–12**. Phase 6 restructures the same data into themed card sets. Read this
+> section for what exists today and Phase 6 for where it is going.
+
 - `state.discovered` maps seed id to **lifetime** harvest count, never decremented. Selling and
   crafting spend `state.flowers` and leave this alone. It is a record, not an inventory.
 - `state.bestRarity` stores the best rarity key seen per seed. The seed row is three columns —
@@ -619,6 +625,60 @@ sim-test measuring a *different* harvest multiplier over thousands of harvests h
 ladder **and the lifetime counts it reads** first — `clearMastery()` does this. Resetting only
 `mastery` leaves the second run's counts already banked, so it jumps several tiers on its first
 harvest and the ratio being measured comes out wrong.
+
+## Phase 6 — The Almanac becomes card sets
+
+**Specified 2026-08-14, not built.** This is a restructuring of Phase 4's surface, not a new system.
+Reasoning in [10-decision-log.md](10-decision-log.md); evidence in
+[17-market-and-positioning.md](17-market-and-positioning.md#who-this-game-is-for).
+
+### Why this is now the spine
+
+The Family/Farm Sim audience is **69% female** against an 18.5% sample-wide average, and for women
+the two most common *primary* motivations are **Completion** and **Fantasy**. Completion being the
+single most common motivation of the likely audience promotes the Almanac from a side panel to the
+game's spine. It should be the best-built thing here.
+
+### The rules, from collection research
+
+| Rule | Current state | Change |
+| --- | --- | --- |
+| **Set size 7–12** | One 19-species set | Split into themed sets of 7–12 |
+| **Never start at zero** | Starts empty | Pre-load one card per set as a gift |
+| **Theme, don't index** | "N / 19 discovered" | Named sets — "Moonlit Blooms", not "Page 1" |
+| **40–60% is the commitment point** | n/a | Set sizes chosen so the halfway rung arrives early |
+| **Last item moderately hard** | 19th waits on level 17 | Keep one late card per set, never a 2% roll |
+| **Completion improves the engine** | Pays rep, gems, a boost | Pays a *permanent growing bonus* |
+
+The last row is the important one and is Pokémon's Shiny Charm device: **the reward for collecting is
+a better collecting engine.** Completing a set should grant faster germination, better mutation odds,
+or an extra plot — something that makes the *next* set easier to fill. Reputation and gems are fine
+as a garnish; they must not be the whole payout, because a trophy case gets abandoned and a tool does
+not.
+
+### What survives from Phase 4
+
+All of the state model. `state.discovered` stays a lifetime record, `state.bestRarity` stays,
+`state.almanacClaimed` stays a pays-once ledger. Sets are a presentation and reward layer over the
+same data, plus a set-membership table in `data.js`.
+
+### Trading-ready, but no trading
+
+The owner raised Monopoly Go's sticker trading. Collection ships; trading does not — it needs
+accounts, a friend graph, a server and anti-fraud, against a local-first architecture, and its
+monetization runs on chasing the last card, which is the pattern this audience punishes hardest.
+
+**The constraint that matters now:** model a card as an owned *instance* with an id, not as a boolean
+on the species. That single choice keeps duplicates representable, which is what any future gifting
+or trading needs. Async gifting via share codes — no accounts, no server — is the cheap next step if
+social pressure ever justifies it.
+
+### Do not
+
+- **Do not make a card's only reward a number.** Each carries flavour text, and ideally a memento or
+  a hidden bloom state. See [17-market-and-positioning.md](17-market-and-positioning.md).
+- **Do not put an impossible drop rate on a final card.** Players detect rigging and quit.
+- **Do not build trading.** Build the data model that would allow it.
 
 ## Do not
 

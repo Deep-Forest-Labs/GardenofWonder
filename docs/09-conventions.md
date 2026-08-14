@@ -18,7 +18,7 @@ See [05-art-direction.md](05-art-direction.md).
 dependency order.
 
 **Relative paths only.** No leading slashes anywhere. The game is served from a subpath on GitHub
-Pages (`/ghostgarden/`), so `/style.css` would 404.
+Pages (`/gardenwonder/`), so `/style.css` would 404.
 
 ## Layering
 
@@ -186,7 +186,7 @@ confirm the import plus the "Progress restored" toast. Then test the pristine-sh
 ## Deploying
 
 The repository root **is** the deployed site. GitHub Pages serves `main` at
-`https://jonishua.github.io/ghostgarden/`.
+`https://jonishua.github.io/gardenwonder/`.
 
 Consequences:
 

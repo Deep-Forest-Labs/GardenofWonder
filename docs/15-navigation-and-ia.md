@@ -58,10 +58,36 @@ Places live on the map. Systems live in the dock.
 | **World** | *Where* | Returns to the map. Pan and zoom between regions; buy land. |
 | **Orders** | *Goals* | The Market order board — see [13-order-system.md](13-order-system.md). |
 | **Shop** | *Money* | Gems, IAP, starter packs, remove-ads, cosmetic decor. The only place real money appears. |
-| **Almanac** | *Collection* | Flowers discovered by rarity, recipes learned, stats. |
+| **Cards** | *Collection* | Themed card sets, flowers discovered by rarity, stats. Renamed from Almanac 2026-08-14 — see [16-progression-and-quests.md](16-progression-and-quests.md) phase 6. |
 | **Events** | *Now* | Limited-time content. **Do not add until events exist.** |
 
 Hard cap of five. If a sixth is ever wanted, something must leave.
+
+### Interim dock, after the Apiary rework
+
+**Decided 2026-08-14.** The world map is still paused, so the five-tab target above cannot be built
+yet. But folding the Apiary and Apothecary into garden adjacency (see
+[10-decision-log.md](10-decision-log.md)) frees two tabs immediately, which is the answer to the
+dock's current shape:
+
+```
+│  Garden  │  Cards  │  Market  │  Shop  │
+```
+
+| Tab | One word | Contains |
+| --- | --- | --- |
+| **Garden** | *Where* | The garden itself, and the upgrades that act on it. Becomes **World** when the map exists. |
+| **Cards** | *Collection* | The card sets. Promoted from a HUD button, because Completion is the audience's top motivation. |
+| **Market** | *Goals* | The order board. Empty until [13-order-system.md](13-order-system.md) is built. |
+| **Shop** | *Money* | Cosmetic decor now; gems, IAP and remove-ads later. |
+
+This is four destinations that map to what the player actually does, replacing two real systems and
+two prototype leftovers. It also survives contact with the target structure — Garden becomes World
+and nothing else moves.
+
+**Upgrades loses its tab**, which anticipates phase 4 (contextual upgrades) rather than fighting it.
+Where upgrades surface in the interim is an open question; the cheapest answer is a sheet opened from
+the Garden tab.
 
 ## Where everything currently in the game goes
 
@@ -161,17 +187,26 @@ menu.
 
 ### Phase 2 — Build the world map
 
-- A zoomed-out scene containing the garden, the apiary and the apothecary as locations.
+- A zoomed-out scene containing the garden and whatever regions still exist as locations. **Note,
+  2026-08-14: the apiary and apothecary are no longer regions** — they fold into garden adjacency.
+  See [12-meta-layer-design.md](12-meta-layer-design.md).
 - Tapping a location moves the camera to it; a back or pinch gesture returns to the map.
 - Land parcels purchasable on the map.
 - Regions leave the dock.
 
 Done when: every region is reachable from the map and none from the dock.
 
+### Phase 1.5 — Interim dock *(new, 2026-08-14, ahead of the map)*
+
+- Apiary and Craft tabs removed with the adjacency rework.
+- Dock becomes `Garden · Cards · Market · Shop`. See "Interim dock" above.
+- Cards promoted out of the HUD early, because Completion is the audience's top motivation and the
+  HUD button under-sells it.
+
 ### Phase 3 — Final dock
 
-- `World · Orders · Shop · Almanac`, with Orders arriving alongside the Market.
-- Almanac promoted out of the HUD.
+- `World · Orders · Shop · Cards`, with Orders arriving alongside the Market.
+- Garden becomes World once the map exists. Nothing else moves.
 
 ### Phase 4 — Contextual upgrades
 

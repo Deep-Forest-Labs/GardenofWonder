@@ -322,7 +322,18 @@ greeting, Legendary, unlock, Wonder — always speak. Bubbles clear after 2.4 s.
 If the player does nothing for 26 seconds the flower makes an idle remark, but never while a
 sheet is open.
 
-## The Apiary — prototype
+## The Apiary — prototype, slated for rework
+
+> **Decided 2026-08-14: this system is being folded into garden adjacency and will lose its dock
+> tab.** Bees become a plot-adjacency effect — a flower attracts them, they lift neighbouring plots,
+> honey becomes an occasional drop rather than a parallel production chain. The Apiary was built as
+> an explicit throwaway to give the garden's output a consumer, because nothing in the game wanted
+> anything; once plants have their own verbs and orders exist, that job is absorbed and a second
+> economy just competes with the one that matters. Reasoning in
+> [10-decision-log.md](10-decision-log.md); the target shape is in
+> [17-market-and-positioning.md](17-market-and-positioning.md#why-plant-this-flower).
+>
+> The description below is **what is built today**, and stays accurate until the rework lands.
 
 The first piece of the meta-layer described in [12-meta-layer-design.md](12-meta-layer-design.md).
 Lives in the `apiary` dock tab. Data in `APIARY` (`data.js`), simulation in the apiary section of
@@ -348,7 +359,14 @@ bloom had to actually be standing in the garden while the bees worked.
 
 Collecting also yields **beeswax**, at a 50% chance per jar.
 
-## The Apothecary — prototype
+## The Apothecary — prototype, slated for rework
+
+> **Decided 2026-08-14: folded down alongside the Apiary and losing its dock tab.** Same reasoning —
+> it exists to consume the garden's output, and orders plus per-plant verbs do that job better. What
+> survives of crafting, if anything, is an open question that waits on the garden's verbs being
+> settled. See [10-decision-log.md](10-decision-log.md).
+>
+> The description below is **what is built today**.
 
 The crafting tier, in the `craft` dock tab. Recipes in `CRAFT_RECIPES` (`data.js`).
 

@@ -45,13 +45,19 @@ start; arguably a safety net. Currently undocumented in the UI either way.
 
 *Where:* `game.js` `reset()`.
 
-### Cheat buttons ship to players
+### Cheat buttons ship to players — kept on purpose, for now
 
 Settings contains "Grant 50 Gems", "Grant 1,000,000 Gold", and "Summon a Wonder Effect".
 These were development/testing affordances and are live on the public site. Unlike reset, they have
 no confirmation.
 
-Decide deliberately: keep them as a toy, or gate them behind something.
+**Decided 2026-08-14: leave them.** The audience is friends and buddies, their sessions are not being
+treated as clean playtest data, and the buttons are the fastest way to reach high-currency states.
+The game has no analytics either way, so a cheated run and a genuine one are already
+indistinguishable.
+
+**Revisit before any real external audience.** The likely fix is a `?dev=1` URL gate rather than
+removal, so the affordance survives for development. Don't re-raise it unprompted before then.
 
 *Where:* `ui.js` `renderSettings()`.
 

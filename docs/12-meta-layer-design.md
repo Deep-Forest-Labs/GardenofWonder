@@ -61,20 +61,31 @@ Ranked by confidence, which is also the build order.
 Tap, plant, harvest on timers. Two-to-five-minute cadence. The heartbeat, and the thing that is
 always ready when the app opens. Home of the talking flower and the emotional centre of the game.
 
-### 2. The Apiary — *honey, wax, pollination* — idle production
+### 2. The Apiary — *honey, wax, pollination* — **demoted 2026-08-14, no longer a region**
 
-Hives at the garden's edge. The next region to build.
+> **This is no longer a region.** Bees fold into the Garden as an **adjacency effect** — a flower
+> that attracts them, a lift to neighbouring plots, honey as an occasional drop. The dock tab goes.
+> Reasoning in [10-decision-log.md](10-decision-log.md).
+>
+> The argument below was that honey-follows-bloom makes the garden's *contents* matter. That
+> instinct was right and the mechanism was wrong: it makes contents matter to a **second** economy
+> sitting beside the first, rather than to the garden itself. Per-plant verbs and adjacency make
+> contents matter *in place*, which is cheaper and reinforces the core loop instead of competing
+> with it. See
+> [17-market-and-positioning.md](17-market-and-positioning.md#why-plant-this-flower).
+>
+> Keep the visual language — amber jars, drifting bees, honeycomb — it is still free store
+> screenshots. Only the separate production chain is cut.
+
+Hives at the garden's edge.
 
 **Honey type follows what is currently blooming.** Lavender in the ground yields lavender honey.
-This is the detail that makes the Apiary a genuine dependency rather than a second faucet — the
-garden's *contents* matter, not just its throughput. Protect this even though it complicates the
-data model.
+Retained as the rule for whatever honey survives the rework — sampling at production time, never at
+collection time (see [03-systems.md](03-systems.md)).
 
 Bees also generate **pollination**, a buff that raises garden yield, closing a visible cause-and-
-effect loop inside a single session.
-
-Cheap to build: idle production plus an assignment layer, no new mechanic to tune. Visually it's
-amber jars, drifting bees and honeycomb UI — free store screenshots.
+effect loop inside a single session. **This part survives intact** and becomes the model for the
+adjacency rework.
 
 ### 3. The Potting Shed — *rare seeds* — **merge**
 

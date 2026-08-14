@@ -5,6 +5,128 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-14 — Strategy pass: the item-identity problem gets a real answer, and the Apiary loses
+
+A market and competitor review ran against the whole design. Findings live in
+[17-market-and-positioning.md](17-market-and-positioning.md); this entry records what changed and
+why. Several of these overturn decisions previously marked as locked — deliberately. The owner's
+instruction was that nothing in this folder is set in stone and anything in the game could be done
+better.
+
+**Ambition revised.** The standing decision was "modest revenue, a few thousand a month, low risk,
+bias to proven patterns." That remains the *execution* target. What changed is the ceiling: the
+owner's words were "I don't want our vision of the project to be too small that it hurts us in the
+end." So execution stays incremental, but no structural decision may cap the ceiling — every number
+stays in data and remote-config-ready, and the economy stays prestige-compatible before a prestige
+layer exists. Push back on scope creep in execution, not in architecture.
+
+**The item-identity problem has an answer, and it is not the Market.** The open question — *does the
+garden's contents start mattering* — was handed to the Market in the entry below. That was half
+right. An order makes a flower *instrumentally* wanted, which is a quota to fill, not desire. The
+genre's actual answer is **per-plant unique verbs with adjacency effects**: Cookie Clicker's Garden
+minigame runs 40+ species where one buffs its neighbours at a cost to itself, one suppresses weeds
+in a 5×5, one is immortal and ages its neighbours, one explodes usefully when it dies, and one
+actively contaminates orthogonal plots. The garden becomes a layout puzzle rather than a shopping
+list, and ten flowers with distinct verbs read as more depth than a hundred with ascending numbers.
+
+This game already has the board for it — eight plots ringing the flower, with adjacency completely
+unused.
+
+It also structurally defeats the min-max convergence that percentage bonuses invite: there is no
+single dominant answer when effects are categorical rather than numeric.
+
+**Named as the diagnosis: the AdVenture Capitalist trap.** 40M+ players, charming distinct-looking
+businesses, every one producing money at a rate on a timer. No synergies, no unique verbs, no
+collection layer. Pocket Gamer 3/10, "little reward for progress," now decayed to roughly $100K a
+month. This game's protected invariant — every seed yields exactly 1.4× cost at Common across all
+nineteen tiers, differing only in throughput — is that pattern exactly. It is also the real reason
+Bloom Mastery could not make contents matter: a percentage of an undifferentiated thing is still
+undifferentiated.
+
+**The Apiary is folded into garden adjacency and loses its dock tab.** It was built as an explicit
+throwaway to give the garden's output a consumer, because nothing in the game wanted anything. Once
+plants have verbs and orders exist, that job is absorbed, and a parallel production chain becomes a
+second economy competing with the one that matters. Bees become a plot-adjacency effect — a flower
+attracts them, they lift neighbouring plots, honey is an occasional drop. The Apiary and Craft dock
+tabs go, which the navigation doc already wanted.
+
+*Rejected: keeping it as a shrunken single-hive flavour system.* It would still sit beside the core
+loop instead of reinforcing it, and the tab cost is the same whether it holds one hive or four.
+
+**The Almanac becomes themed card sets and is promoted to the spine.** The strongest audience finding
+in the review: the Family/Farm Sim cluster is **69% female** against an 18.5% sample-wide average
+(Quantic Foundry, n≈1.9M), and for women the two most common *primary* motivations are **Completion**
+and **Fantasy**. Completion being the number-one motivation of the likely audience makes the Almanac
+the spine of the game, not a side panel.
+
+Current shape is wrong for that: one 19-species track with milestones at 5/10/15/19. Collection
+research is specific — **optimal set size 7–12**, never start a player at zero, themes not indices,
+the last item moderately hard, and **completion should improve the collecting engine itself**
+(Pokémon's Shiny Charm device) rather than pay a trophy. See
+[16-progression-and-quests.md](16-progression-and-quests.md).
+
+**Card trading is deferred, but the data model must not preclude it.** The owner raised Monopoly Go's
+sticker trading as a mass-market feature. Collection sets: yes, and the audience data backs it hard.
+Trading: not yet. It needs accounts, a friend graph, a server and anti-fraud, all of which contradict
+the local-first architecture — and the mechanic is inseparable from Monopoly Go's monetization, which
+runs on chasing the last gold sticker, the pattern cozy players punish hardest. The Sims Mobile is
+the cautionary tale: delisted after ~8 years with all progress server-side and lost.
+
+*The middle path, if social pressure comes:* async gifting of duplicates via share codes — no
+accounts, no server — which is most of the social warmth for almost none of the infrastructure.
+Design the card data model so that stays possible.
+
+**PWA is withdrawn as a retention strategy.** An earlier recommendation in this session to add a
+manifest and service worker was wrong and is retracted. iOS push works only for Home-Screen-installed
+web apps, is unavailable in the EU on iOS 17.4+, has no automatic install prompt, and lacks
+Background Sync. It remains fine as convenience for testers. Native is the retention plan; a WebGL
+build on CrazyGames is a free demand test, not a revenue channel.
+
+**Offline earnings become a two-axis unlock chain rather than a system.** Currently automation runs
+on `requestAnimationFrame` and stops dead when the tab closes, so the maximum reward for being away
+is eight ripe plots and 7.5 minutes of honey — an overnight absence pays the same as a coffee break.
+The fix is Cookie Clicker's split of **rate** and **duration** into two independently upgradeable
+axes, which turns "how the game treats you while away" into ~14 nameable unlocks instead of a tax.
+Start generous (~25% rate / 4h full rate) given the cosy pillar; Melvor Idle's 18-hour cap produced a
+public rage-quit thread and it retreated to 24h. **Do not use the cap as a monetization lever, and
+state it openly** — hidden caps read as theft.
+
+The welcome-back screen is a **scene, not a number**: who visited, what bloomed, what they left.
+Never "+4,213 gold while you were away."
+
+**Prestige gets a framing that fits the brand.** Still not built, but no longer blocked on tone. A
+flat "delete your garden" reset is brand-hostile; **seasonal turnover** — the garden clears because
+that is what gardens do, and you keep the seeds — is narratively free and makes the loop cozy. Cube
+root on lifetime earnings for the payout curve, permaslots so the player chooses what survives, and
+never use the word "reset."
+
+**Monetization shape settled.** Rewarded video only — zero interstitials, zero banners, no ads in
+session one. But **not** an 80–90% ad-revenue plan: Terrarium: Garden Idle has ~11M installs and
+earns roughly $9K a month on exactly that model. For a collection game the primary lever is Little
+Alchemy 2's content pack (more discoverables), with Egg, Inc.'s accruing piggy bank as the best
+IAP-per-effort mechanic in the genre. No battle pass, no scheduled live events, no energy, no gacha.
+
+**Repo renamed `ghostgarden` → `gardenwonder`.** The game has been called Garden Wonder in the title,
+meta tags and docs throughout; only the URL still carried the old prototype name. Saves are unaffected
+because `localStorage` is keyed to the origin, which does not change. Noted for the record: "Garden
+Wonder" sits close to *Super Mario Bros. Wonder*, whose aesthetic this game deliberately borrows —
+worth a trademark search before any store submission, though it is not a prototype-stage problem.
+
+**Cheat buttons stay live, deliberately.** "Grant 50 Gems", "Grant 1,000,000 Gold" and "Summon a
+Wonder Effect" remain unconfirmed in Settings on the public build. The audience is friends and
+buddies, their sessions are not being treated as clean data, and the buttons are useful for reaching
+high-currency states. Revisit before any real external audience. Recorded in
+[11-known-issues.md](11-known-issues.md) as a decision rather than an open question.
+
+**Also recorded, not yet acted on:** the bottom HUD and meta layer need work (owner's assessment);
+the docs' locked "storage caps" decision should be re-examined, because item durability was the one
+change Neko Atsume 2's audience actively punished and caps are decay-adjacent against a "nothing
+punishes you for leaving" pillar; and the talking flower needs a **full mute for both text and
+audio** — Nintendo shipped only one or the other and was criticised for it, and the Talking Flowers
+were that game's single most divisive element.
+
+---
+
 ## 2026-08-14 — Bloom Mastery built; the "cheap seeds matter" claim retracted
 
 **Decision.** Phase 5 shipped as specified. Nothing in the mechanic changed: endless per-seed
@@ -671,6 +793,9 @@ repository was scanned for secrets and personal data first and contained none.
 
 **Consequence.** The repository root is now a live public site and pushing to `main` deploys. There
 is no staging environment.
+
+**Later.** The repository was renamed `ghostgarden` → `gardenwonder` on 2026-08-14; the URL in this
+entry is historical. See the strategy-pass entry at the top of this file.
 
 ---
 

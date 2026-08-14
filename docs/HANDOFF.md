@@ -7,10 +7,19 @@ decided, and what to do next. Update it at the end of any significant session.
 
 ## Where the project stands
 
-The game is **built, working, and live** at <https://jonishua.github.io/ghostgarden/>, deployed from
+The game is **built, working, and live** at <https://jonishua.github.io/gardenwonder/>, deployed from
 `main` at the repository root. It is a single-screen idle garden — tap a talking flower, plant
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
+
+> **A strategy pass on 2026-08-14 changed the direction of several systems.** Read
+> [17-market-and-positioning.md](17-market-and-positioning.md) and the top entry in
+> [10-decision-log.md](10-decision-log.md) before planning work. In short: the Apiary and Apothecary
+> are being folded into garden adjacency and losing their dock tabs; the Almanac becomes themed card
+> sets and is promoted to the spine of the game; per-plant verbs with adjacency effects — not the
+> Market — are the answer to "why plant *this* flower"; and the repo was renamed
+> `ghostgarden` → `gardenwonder`. Several decisions previously marked as locked were overturned
+> deliberately, on the owner's instruction that nothing in this folder is set in stone.
 
 The first slice of the meta-layer is also playable: **hives producing honey whose variety
 follows what is planted, and an apothecary crafting flowers and honey into goods**. It lives behind
@@ -71,12 +80,19 @@ product**. Keep them in that relationship; don't gold-plate the web build.
 
 Don't relitigate these without a reason.
 
-**Goal is modest revenue** — a few thousand a month, low risk. Not a venture-scale hit. This drives
-scope, monetization tone, and the bias toward proven patterns.
+**Goal is modest revenue in execution, but do not cap the ceiling.** A few thousand a month is the
+near-term target and still drives scope and monetization tone. **Revised 2026-08-14:** the owner's
+instruction is that the *vision* should not be small enough to hurt later — "I don't want our vision
+of the project to be too small that it hurts us in the end." So ship incrementally, but keep every
+number in data and remote-config-ready, and keep the economy prestige-compatible before a prestige
+layer exists. Push back on scope creep in execution, not in architecture. For what "a few thousand a
+month" means in players, see
+[17-market-and-positioning.md](17-market-and-positioning.md#numbers-to-plan-against) — roughly
+2,000–3,000 sustained DAU.
 
-**Next milestone is the multi-region meta-layer**, specified in
-[12-meta-layer-design.md](12-meta-layer-design.md). One contiguous expanding map, five regions
-feeding one interlocking economy, driven by a Township-style order system.
+**The meta-layer shrank, 2026-08-14.** [12-meta-layer-design.md](12-meta-layer-design.md) still
+describes the map and the order system, but **the Apiary and Apothecary are no longer regions** —
+they fold into garden adjacency. Five regions is now three at most. The Market and the map survive.
 
 **One new mechanic only — merge, in the Potting Shed.** Everything else is timer-and-tap with
 distinct art until the structure proves it retains. This is the main defence against scope collapse.
@@ -94,29 +110,37 @@ constraint on the port.
 
 **Navigation follows "places on the map, systems in the dock"**, specified in
 [15-navigation-and-ia.md](15-navigation-and-ia.md). Regions are locations you travel to, not tabs.
-The current Apiary and Craft tabs are a prototype shortcut and are meant to be removed.
+The Apiary and Craft tabs are a prototype shortcut and are **now scheduled for removal** with the
+adjacency rework — the interim dock is `Garden · Cards · Market · Shop` (phase 1.5 in that doc).
+
+**Nothing in `docs/` is set in stone.** Stated by the owner 2026-08-14: anything in the game could be
+done better, and a decision recorded here is a decision that was right at the time, not a
+constraint. The strategy pass overturned several previously locked items. Continue to record
+reasoning — but do not treat this file as a fence.
 
 **Economy is currently a frozen port** from *Idle Garden Reborn* and contains known problems — see
 below.
 
 ## The current task
 
-**Nothing is mid-flight.** Bloom Mastery shipped 2026-08-14 and was the last specified phase, so
-the progression track in [16-progression-and-quests.md](16-progression-and-quests.md) is complete
-end to end. Pick the next item from "What comes after" with the owner.
+**Nothing is mid-flight in code.** Bloom Mastery shipped 2026-08-14; the strategy pass that same day
+re-pointed the roadmap but wrote no code. Pick the next item from "What comes after" with the owner.
 
-**Play the loop and judge it** is still the open question, and it just got narrower. Mastery was
-sold as the answer to *does the garden's contents start mattering* — a deeply mastered Daisy
-becoming worth planting. **It is not, and the arithmetic is not close.** Mastery is a percentage
-of what a flower already pays, so at equal tiers it lifts every seed by the same factor. The cheap
-seed's only edge is cycle time, worth about eleven extra tiers or +55% over a realistic session,
-against a **31× gap in coins per second**. The claim is retracted in the spec and reasoned through
-in [10-decision-log.md](10-decision-log.md); don't restore it. Mastery is a depth reward and a
-coin faucet, and it is good at both.
+**The long-running open question — *does the garden's contents start mattering* — now has an
+answer.** It was handed first to Bloom Mastery, which could not deliver it (a percentage of an
+undifferentiated thing is still undifferentiated), and then to the Market, which is only half right:
+an order makes a flower *instrumentally* wanted, which is a quota to fill rather than desire.
 
-The contents question therefore belongs to **the Market** — an order that *wants* lavender makes
-lavender worth planting directly ([13-order-system.md](13-order-system.md)). That is now the
-strongest argument for moving the Market up the queue.
+The real answer is **per-plant unique verbs with adjacency effects** — one flower that buffs its
+neighbours at a cost to itself, one that suppresses weeds nearby, one that is immortal, one that pays
+out when it dies. The garden becomes a layout puzzle instead of a shopping list, and the eight plots
+ringing the flower are already the board for it. Full reasoning and the reference implementation are
+in [17-market-and-positioning.md](17-market-and-positioning.md#why-plant-this-flower).
+
+The diagnosis that goes with it: **this game is currently in the AdVenture Capitalist trap.** Every
+seed yields exactly 1.4× cost at Common across all nineteen tiers, differing only in throughput —
+charming, distinct-looking producers that all do the same thing. That pattern decays; see the market
+doc.
 
 The world map (navigation phase 2) stays paused. Don't start it without asking.
 
@@ -142,10 +166,9 @@ The world map (navigation phase 2) stays paused. Don't start it without asking.
 9. ~~**Bloom Mastery**~~ — **done 2026-08-14.** Phase 5 of
    [16-progression-and-quests.md](16-progression-and-quests.md#phase-5--bloom-mastery). Per-seed
    endless ladders paying a permanent per-seed yield bonus, one gem every fifth tier.
-10. **The Market** — see [13-order-system.md](13-order-system.md). The prototype has production but
-    nothing that *wants* anything, which is exactly the gap orders fill. It pays into the same
-    reputation number the quest ladder does, by design. **Now the strongest candidate for next**,
-    because it is the only thing on the list that can make one flower worth planting over another.
+10. **The Market** — see [13-order-system.md](13-order-system.md). Still valuable as the goal
+    generator, the reputation source and the entire liveops surface. **No longer load-bearing for
+    "why this flower"** — that burden moved to per-plant verbs. Skipping is now specified as free.
 11. **The world map** — navigation phase 2, queued but paused. Unblocks everything else in the
    meta-layer.
 12. **Tune the economy for real.** Every number today is a placeholder. Also worth a look: the three
@@ -154,16 +177,45 @@ The world map (navigation phase 2) stays paused. Don't start it without asking.
     deliberate open question about whether that needs revisiting.
 13. **Fix the known economy bugs** before building content on top of them.
 
+### The build order agreed 2026-08-14
+
+This supersedes the ordering above where they conflict. Reasoning in
+[10-decision-log.md](10-decision-log.md).
+
+1. **Per-plant verbs and adjacency** — the single highest-leverage change. Cheapest structural fix
+   to the undifferentiated seed ladder, and it uses a board that already exists.
+2. **Mutations and variants** — any plant can roll a jackpot version, which decouples excitement
+   from tier position. Recombines the Wonder Effect, day/night and rarity rolls, all already built.
+3. **Named synergy pairs** — one data row and a name each; companion planting writes itself.
+4. **Fold the Apiary and Apothecary into adjacency**, and move the dock to
+   `Garden · Cards · Market · Shop` ([15-navigation-and-ia.md](15-navigation-and-ia.md) phase 1.5).
+5. **Item-as-key, mementos, hidden blooms, and companion flavour text** — ~150 lines of writing is
+   the cheapest differentiator available and the talking flower is a ready-made delivery vehicle.
+6. **Two-axis offline (rate × duration) plus a narrated welcome-back scene.** Currently a closed tab
+   earns nothing; automation runs on `requestAnimationFrame`. Start generous and state the cap.
+7. **Card sets** — [16-progression-and-quests.md](16-progression-and-quests.md) phase 6. Model a card
+   as an owned instance with an id, not a boolean, so trading stays possible later.
+8. **The Market.**
+9. **Gem sinks**, then the known economy bugs.
+10. **Seasonal turnover** (prestige) — designed now, built later. Never call it a reset.
+
+Not on the list, deliberately: trading, battle pass, live events, PWA/service worker, world map,
+merge.
+
 ## Known problems worth knowing immediately
 
 Full list in [11-known-issues.md](11-known-issues.md). The two that affect design decisions:
 
 - **Endgame seeds have lower gem chances than a Daisy.** Defining `gemChance` overrides the generous
   5% default, so the best gem farm is spamming the cheapest seed.
-- **Cheat buttons ship to players.** Settings has "Grant 50 Gems", "Grant 1,000,000
-  Gold", and "Summon a Wonder Effect" with no confirmation, live on the public site.
+- **Cheat buttons ship to players — on purpose.** Settings has "Grant 50 Gems", "Grant 1,000,000
+  Gold", and "Summon a Wonder Effect" with no confirmation, live on the public site. **Decided
+  2026-08-14: leave them.** The audience is friends, their sessions are not clean data, and the game
+  has no analytics either way. Revisit before any real external audience; don't re-raise it before
+  then.
 
-All inherited from the frozen economy port. Fixing them is a deliberate balance project.
+The gem-chance inversion is inherited from the frozen economy port. Fixing it is a deliberate balance
+project.
 
 ## Traps in this codebase
 

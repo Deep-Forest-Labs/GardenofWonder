@@ -11,6 +11,12 @@ whichever region pays best and ignore the rest — interdependence exists on pap
 An order requesting three lavender, two honey and one perfume forces every production chain to keep
 running. That single property is what turns the resource graph from a diagram into gameplay.
 
+**Scope correction, 2026-08-14.** This document previously carried the whole "why plant *this*
+flower" burden. It should not. An order makes a flower *instrumentally* wanted — a quota to fill —
+which is not the same as wanting the flower. Desire comes from per-plant verbs, adjacency, mutations
+and collection; see [17-market-and-positioning.md](17-market-and-positioning.md). Orders remain the
+goal generator and the liveops surface, which is plenty.
+
 It is also:
 
 - The **goal generator**. Idle games die from "what do I do now?" Orders always answer it.
@@ -87,7 +93,10 @@ These matter more than the generation logic. Break them and the board becomes a 
   it.
 - **Guarantee variety.** Don't request the same resource in three consecutive generations for a
   slot.
-- **Skipping is always available**, cheaply. A stuck board is an uninstall.
+- **Skipping is always available, and free.** This is the load-bearing one. Township's helipad
+  orders are dismissable with **no penalty beyond a 30-minute refresh timer** (or a small premium
+  cost to refill instantly), and that single rule is what converts "I don't have that" from a wall
+  into a choice. A stuck board is an uninstall. Do not price the first reroll.
 
 ### Reputation tiers
 
@@ -200,8 +209,12 @@ opinions about who's demanding.
   cozy player.)
 - Can players see upcoming orders to plan production?
 - Is there a "favourite customer" mechanic that biases generation?
-- Does skipping cost gems, a timer, or a rewarded video?
-- Should crafted goods be sellable outside orders at all, or only deliverable?
+- ~~Does skipping cost gems, a timer, or a rewarded video?~~ **Resolved 2026-08-14: a free timer.**
+  See the anti-frustration rules above.
+- Should crafted goods be sellable outside orders at all, or only deliverable? **Note:** the
+  Apothecary is being folded down alongside the Apiary (see
+  [10-decision-log.md](10-decision-log.md)), so "crafted goods" may not be a category this system
+  needs to handle at all. Settle the garden's verbs first.
 
 ## Build order
 
