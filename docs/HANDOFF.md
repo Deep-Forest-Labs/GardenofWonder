@@ -130,6 +130,19 @@ reasoning — but do not treat this file as a fence.
 **Economy is currently a frozen port** from *Idle Garden Reborn* and contains known problems — see
 below.
 
+## Two things to know before touching the economy
+
+**The economy needs a full retune, and it is deliberately deferred.** Every number is a placeholder,
+and the owner has said the whole curve — possibly including *fewer* seeds, unlocked through card
+packs — is open. It is not being done now because an economy is tuned against the systems that
+consume it, and orders, cards and prestige do not exist yet. Retuning now means retuning twice. The
+right moment is after the Market and card sets land.
+
+**When it happens, the level curve is the dependency nobody expects.** Levels 2–17 currently pay out
+**one seed each** — that is the entire reward structure of the progression ladder. Pull seeds back
+and those levels have nothing to grant, so a seed-count change is also a progression rework. Scope it
+as one piece rather than discovering it halfway through.
+
 ## The current task
 
 **Nothing is mid-flight in code.** Bloom Mastery shipped 2026-08-14; the strategy pass that same day
@@ -194,8 +207,12 @@ This supersedes the ordering above where they conflict. Reasoning in
 1. ~~**Per-plant verbs and adjacency**~~ — **done 2026-08-14.** Six seeds carry a verb; the other
    thirteen stay plain yield tiers on purpose. Expanding the set is cheap when the mechanic proves
    out — it is one `DATA.verbs` entry, one `verb:` field and a consumer.
-2. **Mutations and variants** — any plant can roll a jackpot version, which decouples excitement
-   from tier position. Recombines the Wonder Effect, day/night and rarity rolls, all already built.
+2. **Mutations and variants** — **specified 2026-08-15, not built.** Full spec in
+   [18-mutations-and-weather.md](18-mutations-and-weather.md). Deterministic epoch-clock weather
+   causes four tiers of visible, stackable mutation; verbs raise the catch chance; the ladder is
+   tuned to a **measured 20–30% income share** rather than to chosen multipliers. Also the card
+   album's content engine — 19 species × 5 states is 95 cards from existing procedural art.
+   **Build steps 1–3 of that doc first; they are the minimum to judge whether it is fun.**
 3. **Named synergy pairs** — one data row and a name each; companion planting writes itself.
 4. **Fold the Apiary and Apothecary into adjacency**, and move the dock to
    `Garden · Cards · Market · Shop` ([15-navigation-and-ia.md](15-navigation-and-ia.md) phase 1.5).

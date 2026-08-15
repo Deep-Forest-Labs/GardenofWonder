@@ -5,6 +5,80 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — Mutations specified: weather causes them, verbs stack them, and the income share is the number that matters
+
+Full spec in [18-mutations-and-weather.md](18-mutations-and-weather.md). Nothing built yet.
+
+**The problem the design had to solve first.** The game already rolls four rarity tiers on every
+harvest. A mutation that is "a second dice roll multiplying payout" is rarity repainted — the same
+AdVenture Capitalist failure this project already diagnosed. Three properties keep it structurally
+different, and all three are load-bearing: a mutation is **visible while the plant grows**, its odds
+are **stackable by the player**, and its cause is **visible weather in the world**. Drop any one and
+it collapses back into rarity.
+
+**Weather is derived from wall-clock epoch time, not a running timer.** `slot = floor(epoch /
+slotSeconds)`, weather is a deterministic hash of the slot. No stored state, no scheduler. Three
+consequences justify the choice: every player sees the same sky at the same moment (a shared-world
+feel with no server), past weather is computable so time away can be reconciled exactly, and it moves
+the day/night clock out of `ui.js` — where it is keyed to *page boot* and restarts on every reload —
+which **re-opens the night-blooming verb that had to be dropped from the first verb pass.**
+
+**Weather rarity gates mutation rarity.** A Wonderstruck needs a rare sky *and* a roll inside it. Two
+gates make the top tier genuinely rare without any single absurd probability, and the rare sky is
+itself an event worth planting into.
+
+**Decision: tune the income share, not the multipliers.** Target is **20–30% of total income from
+mutations**. Pick the share, derive chance × multiplier to hit it. The share survives a full economy
+retune; specific multipliers do not.
+
+**The arithmetic that drove the ladder, because it is counterintuitive.** Contribution to average
+income is `chance × (multiplier − 1)`. A **×3 at 20% adds +40%**; a **×50 at 0.2% adds +10%**. The
+modest frequent bonus inflates the curve *four times harder* than the spectacular rare one and
+delivers a fraction of the feeling. So the rule is **generous at the top of the ladder, stingy at the
+bottom** — jackpots are cheap, and frequent small bonuses are what quietly wreck an economy. The
+owner's framing was the same conclusion from the other direction: unforgettable beats mild.
+
+*Rejected: a single mutation tier.* Four tiers at four cadences — a couple a session, every other
+session, weekly, and rarely — do genuinely different jobs. One tier can be frequent-and-mild or
+rare-and-huge but not both, and the game wants both.
+
+*Rejected: mutation replacing the rarity roll.* Cleaner arithmetic, but it makes rarity irrelevant
+whenever a mutation lands, and two axes that can both fire is more interesting than one that
+overrides the other.
+
+**Slow seeds catch more weather, and that is kept on purpose.** Exposure is per weather slot lived
+through, so a 780-second Eternal Crown sees far more sky than a 12-second Daisy. It hands long-grow
+seeds an advantage unrelated to yield and partially answers the throughput-trap problem in
+[11-known-issues.md](11-known-issues.md). It also makes the ladder impossible to tune by hand, which
+is why the sim-test measures the income share directly rather than asserting chosen numbers.
+
+**Stacking multiplies catch chance, never payout.** A well-arranged garden gets *more jackpots*, not
+bigger ones, so the income-share target stays computable.
+
+**Anti-FOMO rules are part of the spec, not a footnote.** Mutations land on what is already growing,
+weather recurs forever, nothing is missable, and **weather is never a push notification**. The first
+pillar is "cosy, not demanding," and a sky you have to be present for would break it.
+
+**Mutations are the card album's content engine.** 19 species × 5 states = **95 cards from art
+already rendered procedurally**, and card rarity maps onto the mutation ladder with **Mythical =
+Wonderstruck**. That deliberately aligns the album's hardest row with the game's biggest moment.
+
+**Album structure, from the owner.** ~12 sets of 9 cards per season, Common → Legendary plus one
+Mythical per set, album completion as the season goal, ~3-month seasons. Nine sits inside the 7–12
+band the collection research recommends. Recorded in
+[16-progression-and-quests.md](16-progression-and-quests.md), **along with a warning**: a quarterly
+season is a standing commitment to author ~108 cards four times a year, and missing one scores worse
+than never promising it. The position taken is **build the album, design seasons as possible, and do
+not announce a cadence until one season has been authored end to end and measured.**
+
+**On the economy retune.** The owner is right that the whole economy needs one, and possibly fewer
+seeds unlocked through card packs. Deliberately deferred: an economy is tuned against the systems
+that consume it, and orders, cards and prestige do not exist yet — retuning now means retuning twice.
+Noted dependency for whenever it happens: **the level curve currently pays one seed per level to 17**,
+so pulling seeds back leaves levels 2–17 with nothing to grant and needs a replacement reward.
+
+---
+
 ## 2026-08-14 — Verbs built: six flowers that do something, on an axis the yield curve doesn't govern
 
 **Decision.** Six of the nineteen seeds now carry a **verb** — Keeper, Nurse, Beacon, Lantern,

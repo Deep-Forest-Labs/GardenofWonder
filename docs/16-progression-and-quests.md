@@ -643,7 +643,7 @@ game's spine. It should be the best-built thing here.
 
 | Rule | Current state | Change |
 | --- | --- | --- |
-| **Set size 7–12** | One 19-species set | Split into themed sets of 7–12 |
+| **Set size 7–12** | One 19-species set | Split into themed sets of **9** (see below) |
 | **Never start at zero** | Starts empty | Pre-load one card per set as a gift |
 | **Theme, don't index** | "N / 19 discovered" | Named sets — "Moonlit Blooms", not "Page 1" |
 | **40–60% is the commitment point** | n/a | Set sizes chosen so the halfway rung arrives early |
@@ -661,6 +661,55 @@ not.
 All of the state model. `state.discovered` stays a lifetime record, `state.bestRarity` stays,
 `state.almanacClaimed` stays a pays-once ledger. Sets are a presentation and reward layer over the
 same data, plus a set-membership table in `data.js`.
+
+### The album, as the owner specified it (2026-08-15)
+
+The target shape, taken from Monopoly Go's sticker album:
+
+- **~12 sets per season**, **9 cards per set** — about **108 cards** in a season.
+- Cards run **Common → Legendary**, plus **exactly one Mythical per set**.
+- Completing a set pays; **completing the whole album** is the season's headline goal.
+- **A season lasts ~3 months**, after which a new album of sets arrives.
+
+Nine per set sits inside the 7–12 band the collection research recommends, and twelve sets gives the
+album a shape a player can hold in their head. Both are good numbers; keep them.
+
+**Mutations are the content engine.** Card rarity maps onto the mutation ladder in
+[18-mutations-and-weather.md](18-mutations-and-weather.md):
+
+| Card rarity | Earned by |
+| --- | --- |
+| Common | harvesting the species plain |
+| Uncommon | a Dewkissed harvest |
+| Rare | a Gilded harvest |
+| Legendary | a Prismatic harvest |
+| **Mythical** | a **Wonderstruck** harvest of one specific species |
+
+**19 species × 5 states = 95 cards from art already rendered procedurally**, which is most of a
+season with no new art pipeline. It also aligns the album's hardest row with the game's biggest
+moment — the Mythical and the Wonderstruck are the same event.
+
+### The seasonal cadence is a real commitment — treat it as one
+
+Recorded plainly because it is the one part of this plan that can hurt a two-person team.
+
+A three-month season means **authoring ~108 cards four times a year, forever.** The research is
+blunt about this class of commitment: a battle pass or seasonal album is a subscription to your own
+content pipeline, and **missing a season scores worse than never having promised one.** It is the
+single most common way small teams burn out on live-ops — see
+[17-market-and-positioning.md](17-market-and-positioning.md#monetization).
+
+Three things make it affordable, and all three should be true before any cadence is announced:
+
+1. **Generate, don't author.** Cards are species × mutation, from the existing procedural SVG. Bespoke
+   card art per season is the version that fails.
+2. **Author one full season end to end before committing publicly to a date.** Measure what it
+   actually costs in hours, then decide the cadence from the measurement rather than the ambition.
+3. **Have a no-op fallback.** Pocket Camp Complete recycled seven years of events into a fixed
+   offline rotation; a season that re-runs an earlier album with a fresh completion track is far
+   better than a season that does not arrive.
+
+**Build the album now. Design seasons as possible. Do not announce a cadence yet.**
 
 ### Trading-ready, but no trading
 
