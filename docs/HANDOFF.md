@@ -211,8 +211,9 @@ This supersedes the ordering above where they conflict. Reasoning in
    [18-mutations-and-weather.md](18-mutations-and-weather.md). Deterministic epoch-clock weather
    causes four tiers of visible, stackable mutation; verbs raise the catch chance; the ladder is
    tuned to a **measured 20–30% income share** rather than to chosen multipliers. Also the card
-   album's content engine — 19 species × 5 states is 95 cards from existing procedural art.
    **Build steps 1–3 of that doc first; they are the minimum to judge whether it is fun.**
+   **Mutations do *not* feed the card album** — an earlier claim that they did is retracted; see
+   [19-card-album.md](19-card-album.md).
 3. **Named synergy pairs** — one data row and a name each; companion planting writes itself.
 4. **Fold the Apiary and Apothecary into adjacency**, and move the dock to
    `Garden · Cards · Market · Shop` ([15-navigation-and-ia.md](15-navigation-and-ia.md) phase 1.5).
@@ -220,8 +221,12 @@ This supersedes the ordering above where they conflict. Reasoning in
    the cheapest differentiator available and the talking flower is a ready-made delivery vehicle.
 6. **Two-axis offline (rate × duration) plus a narrated welcome-back scene.** Currently a closed tab
    earns nothing; automation runs on `requestAnimationFrame`. Start generous and state the cap.
-7. **Card sets** — [16-progression-and-quests.md](16-progression-and-quests.md) phase 6. Model a card
-   as an owned instance with an id, not a boolean, so trading stays possible later.
+7. **The card album** — [19-card-album.md](19-card-album.md). A **parallel meta, independent of the
+   garden**: packs from quests, levels, dailies, the shop and a random spawn on a plant; ~12 sets of
+   9 per themed season, with its own art and story. Model a card as an owned instance with an id, not
+   a boolean, so dust and any future trading stay possible. **Paid randomized packs are loot boxes —
+   read the warning in that doc before touching monetization.** Separate from the species Almanac in
+   [16-progression-and-quests.md](16-progression-and-quests.md), which stays coupled to the garden.
 8. **The Market.**
 9. **Gem sinks**, then the known economy bugs.
 10. **Seasonal turnover** (prestige) — designed now, built later. Never call it a reset.

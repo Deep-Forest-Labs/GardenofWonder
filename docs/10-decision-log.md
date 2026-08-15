@@ -5,6 +5,55 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — Retracted: the card album is not coupled to flowers, and that independence is the design
+
+**Correction.** The same day's earlier entry claimed mutations were the card album's content engine —
+19 species × 5 states yielding ~95 cards from procedural art, with card rarity mapping onto the
+mutation ladder and Mythical = Wonderstruck. **That is wrong and is withdrawn.** The owner's design,
+which is the correct one, is in [19-card-album.md](19-card-album.md).
+
+**Cards are a parallel meta, independent of the garden.** No card is earned by growing any particular
+species, mutation or rarity. Packs come from quests, level-ups, the daily reward, the shop, and a
+**random spawn on a plant in the garden** — the Lucky Ladybug pattern. The album carries its own
+seasonal theme (*Harvest Moon*), its own art, and its own story, flower- and farm-flavoured but not
+about the game's mechanics. The references do exactly this: Monopoly Go's stickers are not board
+spaces, Coin Master's cards are not spins.
+
+**Why the independence is right, recorded because the coupled version was tempting.** If a card
+required a Gilded Marigold, the album would dictate what the player plants — the garden would stop
+being a place to arrange and become a checklist to satisfy. Verbs, adjacency and mutations all exist
+to make planting a *choice*, and a coupled album would cancel them out. Independence also lets
+*every* system pay into the album rather than only the one it is bolted to, and keeps two economies
+from distorting each other when either is retuned.
+
+**The cost of being right: the affordability argument is gone.** The coupled design got ~95 cards
+free from art already rendered. Independent cards with bespoke art and story mean **~108 hand-authored
+illustrations plus ~108 lines of writing per season, forever** — and that collides with the
+no-binary-assets rule in [09-conventions.md](09-conventions.md). Three routes are recorded in the
+spec: let the prototype cheat with procedural placeholder cards (the web build is the design lab, not
+the product), compose cards from background × motif × frame rather than drawing each one, and keep a
+recycled-season fallback. **Position unchanged: build the album, design seasons as possible, do not
+announce a cadence until one season has been authored and measured.**
+
+**The best idea in the feature is the spawning pack.** A card pack that appears on a plant and must
+be tapped, exactly like Lucky Ladybug — a fourth entry in the existing tap-proc pattern, which is
+already built and already tuned through one shared constant. It gives tapping a second reason to
+exist without touching the coin economy, and it connects the album to the garden **without coupling
+them**: the garden is where packs turn up, never what decides their contents.
+
+**Loot-box warning recorded prominently**, because "sales" came up as a pack source. Selling a
+*randomized* pack for real money is a loot box: banned as gambling in Belgium and the Netherlands,
+barred to under-18s in Brazil from March 2026, rated **16+ by PEGI** — which a bright family-appeal
+game cannot absorb — and the stated reason Nintendo shut down a $381M Pocket Camp. Earned packs are
+fine however random. Selling a *specific card*, a *guaranteed-contents bundle*, *dust*, or a *whole
+new set with contents listed* is fine. **Sell more album, never a better chance.**
+
+**Duplicates get a dust sink from day one.** Trading is deferred, so duplicates convert to a currency
+that buys a chosen card. That turns "I already have this" into visible progress and defuses the
+endgame where one card remains. Reachable but expensive; never trivial, never impossible.
+
+---
+
 ## 2026-08-15 — Mutations specified: weather causes them, verbs stack them, and the income share is the number that matters
 
 Full spec in [18-mutations-and-weather.md](18-mutations-and-weather.md). Nothing built yet.

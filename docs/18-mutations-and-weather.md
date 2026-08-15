@@ -173,26 +173,24 @@ The first design pillar is *cosy, not demanding*. Weather must never punish abse
 - **Never notify about weather.** A push telling someone to come and watch the sky is the exact
   pattern this audience punishes.
 
-## Feeding the card album
+## Mutations do NOT feed the card album
 
-Mutations are the album's content engine — see
-[16-progression-and-quests.md](16-progression-and-quests.md).
+An earlier draft of this document claimed mutations were the album's content engine, with card rarity
+mapping onto the mutation ladder. **That was wrong and is retracted** — see
+[19-card-album.md](19-card-album.md) and [10-decision-log.md](10-decision-log.md).
 
-**19 species × 5 states (plain + four mutations) = 95 distinct cards from art already rendered
-procedurally.** A Gilded Daisy is genuinely a different card from a Daisy.
+Cards are a **parallel meta**, deliberately independent of the garden. No card is earned by growing
+anything in particular. The reason matters here: if a card required a Gilded Marigold, the album
+would dictate what the player plants, and the garden would stop being a place to arrange and become a
+checklist to satisfy. Verbs, adjacency and mutations all exist to make planting a *choice*. An album
+that overrode that choice would cancel them out.
 
-Card rarity maps directly onto the ladder:
+**Mutations pay in coins, rarity and spectacle. They do not pay in cards.** The album's relationship
+to the garden is that packs *turn up* there — the spawning-pack proc — never that the garden
+determines their contents.
 
-| Card rarity | Earned by |
-| --- | --- |
-| Common | harvesting the species plain |
-| Uncommon | a Dewkissed harvest |
-| Rare | a Gilded harvest |
-| Legendary | a Prismatic harvest |
-| **Mythical** | a **Wonderstruck** harvest of one specific species |
-
-That makes the rarest mutation the rarest card, which is the correct alignment: **the album's hardest
-row and the game's biggest moment are the same event.**
+The mutation Almanac is a separate thing from the card album and stays coupled to species, as it
+should: see [16-progression-and-quests.md](16-progression-and-quests.md).
 
 ## State and save
 
