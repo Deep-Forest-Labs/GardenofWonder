@@ -5,6 +5,69 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-14 — Verbs built: six flowers that do something, on an axis the yield curve doesn't govern
+
+**Decision.** Six of the nineteen seeds now carry a **verb** — Keeper, Nurse, Beacon, Lantern,
+Deeproot, Spreader — each affecting the two plots adjacent to it. Mechanic in
+[03-systems.md](03-systems.md#verbs-and-adjacency), numbers in
+[04-economy.md](04-economy.md#verb-tuning), playbook in [09-conventions.md](09-conventions.md).
+
+**Why six and not nineteen.** Smallest change that tests whether the idea works. Verbs are a
+content axis, so the authoring cost scales linearly and there is no reason to pay it before the
+mechanic has proved itself in play. The other thirteen stay plain yield tiers and are not worse for
+it — a garden where *everything* has a special property has no figure and ground.
+
+**The load-bearing constraint: verbs stay off the yield curve.** `yield === cost × 1.4` still holds
+for every seed, and a sim-test asserts it. Verbs are applied as multipliers at harvest exactly the
+way rarity, mastery, pollination and the Wonder already are. This is what makes them safe: any verb
+can be added to any seed without a rebalance, and the economy stays tunable by the one invariant
+that has always governed it.
+
+**Rejected: giving verb-carriers a yield discount to "pay for" the verb.** It sounds fair and it
+would wreck the only thing keeping nineteen tiers coherent. A verb is not worth a fixed number of
+coins — Lantern is worth a great deal beside a Daisy farm and nothing beside an empty garden — so
+any discount would be wrong at most moments of the game.
+
+**Rejected: one shared "adjacency bonus" stat with per-seed magnitudes.** That is the mastery
+mistake again: same effect, different number, nothing to choose between. The rule that replaced it
+is that **no two verbs may share an effect category**, and a sim-test enforces it. Speed, yield,
+rarity, drops, density and propagation are six genuinely different questions, so "which of these do
+I want next to my Daisy" has no single dominant answer.
+
+**Rejected: a night-blooming verb.** Wanted one, and it would have been the best-themed of the set.
+The day/night cycle lives entirely in `ui.js` and is keyed to page-boot rather than wall clock, so
+"pays double at night" would reset its phase on every reload and be trivially farmable. Moving the
+cycle into `game.js` is a bigger change than the verb is worth today. Deeproot took the slot.
+
+**The ring turned out to be free symmetry.** The eight plots share edges in exactly one closed loop,
+`0-1-2-4-7-6-5-3-0`, so **every plot has exactly two neighbours**. No plot is better positioned than
+another, which means verbs need no per-plot balancing and every effect has a known ceiling of two
+stacks. This was luck, not design — the layout predates the mechanic — but it is worth protecting if
+the board ever changes shape.
+
+**Keeper needed a second code path.** Growth time is baked in at plant time, so a plot planted next
+to an existing Keeper gets the bonus naturally, but a Keeper planted *afterwards* would have done
+nothing. `quickenNeighbours()` shaves its share off anything already growing. Without it the verb
+would only pay out when the player happened to plant in the right order — a rule nobody would ever
+discover, and one that would read as the feature being broken.
+
+**No new saved state, deliberately.** Verbs derive entirely from the seed id already sitting in
+`state.grid[i].seed`. Nothing was added to the save, so there is no migration, no backfill, and no
+new instance of the `load()` trap that has bitten every previous badge. Retuning a verb is a
+`data.js` edit that applies to every existing save immediately. Keep it that way.
+
+**Also fixed, while in there.** The sim-test `gems move by the milestone` asserted an exact gem count
+while the triggering harvest rolled its own independent 5% gem chance — it failed **6 runs in 40** on
+the committed code. `Math.random` is now pinned across that block. The general rule is recorded in
+[11-known-issues.md](11-known-issues.md): any assertion on an exact currency delta has to pin the
+RNG, because harvest pays gems, rarity, mastery and Wonder rolls from the same call.
+
+**Verification.** 280 sim-test assertions pass, 40 consecutive runs clean. In the browser: verb chips
+and notes render in the picker, the adjacency flash marks the correct source and neighbour plots,
+Keeper measured 12 s → 10.2 s both when planted first and when planted last, console clean.
+
+---
+
 ## 2026-08-14 — Strategy pass: the item-identity problem gets a real answer, and the Apiary loses
 
 A market and competitor review ran against the whole design. Findings live in

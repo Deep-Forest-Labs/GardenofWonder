@@ -90,6 +90,34 @@ Animate `transform` and `opacity`. Avoid animating layout properties.
 
 Nothing else needs touching — the seed picker, Almanac and harvester ceilings all read the array.
 
+A seed may also carry a `verb` — see the next playbook. Most don't, and that's fine.
+
+## Playbook: add or change a verb
+
+Background in [03-systems.md](03-systems.md#verbs-and-adjacency), numbers in
+[04-economy.md](04-economy.md#verb-tuning).
+
+1. Add an entry to `DATA.verbs` with `name`, `cat`, `tint`, `desc`. **`cat` must be one no other verb
+   uses** — a sim-test enforces it. That rule is the mechanic: two verbs that are both "+X% coins"
+   give the player nothing to choose between.
+2. Put its numbers in `DATA.verbTuning`, never inline in `game.js`. One place, so a balance pass is
+   one edit.
+3. Set `verb: 'yourVerb'` on exactly one seed in `DATA.seeds`. **Do not touch that seed's `yield`** —
+   `yield === cost × 1.4` holds for every seed including verb-carriers, and a sim-test asserts it.
+   Verbs are a second axis, not a discount.
+4. Consume it somewhere. Nothing is applied automatically:
+   - A **payout** effect belongs in `verbPayoutMult()`.
+   - A **growth** effect belongs in `keeperModifier()` and needs a retro path like
+     `quickenNeighbours()`, or it only works when the player plants in the right order.
+   - A **harvest-moment** effect (rarity, drops, sowing) goes in `harvest()`, and must be read
+     **before the plot is cleared** — clearing changes the neighbourhood.
+5. Add sim-test coverage. The existing verb groups are the template; assert the neutral case
+   (no neighbours = no effect) as well as the active one.
+6. Nothing goes in the save. Verbs are derived from the seed id already in `state.grid[i].seed`, so
+   there is no migration and retuning applies to every existing save instantly. **Keep it that way.**
+
+Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at two stacks.
+
 ## Playbook: add an upgrade (badge)
 
 1. Add an entry to `DATA.upgrades` with `name`, `short`, `base`, `scale`, `icon`, `desc`.

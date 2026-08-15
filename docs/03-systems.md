@@ -198,6 +198,81 @@ tint the empty soil until something new is planted.
   the better gem farm.
 - **2% chance of triggering a Wonder Effect**, subject to cooldown.
 
+## Verbs and adjacency
+
+**Built 2026-08-14.** A verb is what a flower *does*, as distinct from what it pays. Six of the
+nineteen seeds carry one. Definitions in `DATA.verbs`, numbers in `DATA.verbTuning`, simulation in
+the verbs section of `game.js`.
+
+### The ring
+
+The eight plots surround the flower in a 3×3 with the centre occupied:
+
+```
+0 1 2
+3 . 4
+5 6 7
+```
+
+Sharing an edge therefore makes **one closed loop** — `0-1-2-4-7-6-5-3-0` — and **every plot has
+exactly two neighbours.** That symmetry is the reason verbs need no per-plot balancing: no plot is
+better positioned than any other. `PLOT_NEIGHBOURS` in `game.js` is the table; `neighboursOf(idx)`
+filters out locked plots, so a verb only reaches the garden the player actually owns.
+
+### The six verbs
+
+| Verb | Seed | Effect | Category |
+| --- | --- | --- | --- |
+| **Keeper** | Bluebell | Neighbours grow 15% faster | speed |
+| **Nurse** | Lavender | Neighbours pay +20%; this plot pays −10% | yield |
+| **Beacon** | Marigold | Neighbours roll rarity with +6 extra weight | rarity |
+| **Lantern** | Orchid | Neighbours' gem chance ×2 | drops |
+| **Deeproot** | Moonflower | Pays +8% per *planted* neighbour | density |
+| **Spreader** | Starlit Iris | 20% chance on harvest to sow a free copy into an empty neighbour | propagation |
+
+**No two verbs share an effect category.** That is the whole point — a player choosing between two
+flowers that both say "+30%" is choosing nothing. A sim-test asserts the categories stay distinct.
+
+### The invariant they must not break
+
+`yield === cost × 1.4` still holds for **every** seed, verbs included, and a sim-test asserts it.
+Verbs are a **second axis**, applied as multipliers at harvest the same way rarity, mastery,
+pollination and the Wonder already are. Keeping them off the yield curve is what lets the economy
+stay tunable — and it is why a verb can be added to any seed without a rebalance.
+
+### Timing rules that matter
+
+**Verbs are read off what is growing, not off the plot.** An empty plot has no verb. `verbAt(idx)`
+returns null unless something with a verb is in the ground.
+
+**Harvest reads the neighbourhood before clearing the plot**, because clearing it changes what the
+neighbours see. Beacon, Lantern and the payout multiplier are all captured first.
+
+**Keeper works in both directions.** Growth time is baked in at plant time (`grow = seed.grow ×
+growModifier() × keeperModifier(idx)`), so a plot planted *next to* an existing Keeper gets the
+bonus for free. A Keeper planted *afterwards* calls `quickenNeighbours()`, which shaves its share
+off the remaining time of anything already growing. Without that second path the verb would only
+pay out when the player happened to plant in the right order, which is a rule nobody would ever
+discover.
+
+**Spreader plants through the normal `plant()` path** with `payCost = false`, so a sown copy is free,
+fires the usual `plant` event, and counts for quests exactly like any other planting.
+
+### No new saved state
+
+Verbs are derived entirely from the seed id already in `state.grid[i].seed`. **Nothing was added to
+the save**, so there is no migration and no backfill — see
+[07-save-data.md](07-save-data.md). Retuning a verb is a `data.js` edit that applies to every
+existing save immediately.
+
+### Surface
+
+The plant picker shows a tinted **verb chip** next to the name and a bordered **verb note** under
+the description. On planting a verb flower, the source plot flashes a solid ring and its two
+neighbours flash dashed rings in the verb's colour, then fade after 1.6 s — adjacency is invisible
+until something points at it, and a permanent indicator would clutter a board whose readability is
+the point. See [08-ui-and-layout.md](08-ui-and-layout.md).
+
 ## Automation
 
 ### Harvest Drone

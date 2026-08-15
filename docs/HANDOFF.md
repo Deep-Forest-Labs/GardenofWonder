@@ -12,6 +12,15 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **Verbs shipped 2026-08-14.** Six of the nineteen seeds now do something to their two neighbours
+> — Keeper (growth), Nurse (yield, at a cost to itself), Beacon (rarity), Lantern (gems), Deeproot
+> (density), Spreader (free propagation). This is the first step of the build order below and the
+> first real answer to "why plant *this* flower". Mechanic in
+> [03-systems.md](03-systems.md#verbs-and-adjacency), numbers in
+> [04-economy.md](04-economy.md#verb-tuning), playbook in [09-conventions.md](09-conventions.md).
+> **Verbs stay off the yield curve** — `yield === cost × 1.4` still holds for every seed and a
+> sim-test asserts it. **No two verbs may share an effect category**, also asserted.
+
 > **A strategy pass on 2026-08-14 changed the direction of several systems.** Read
 > [17-market-and-positioning.md](17-market-and-positioning.md) and the top entry in
 > [10-decision-log.md](10-decision-log.md) before planning work. In short: the Apiary and Apothecary
@@ -182,8 +191,9 @@ The world map (navigation phase 2) stays paused. Don't start it without asking.
 This supersedes the ordering above where they conflict. Reasoning in
 [10-decision-log.md](10-decision-log.md).
 
-1. **Per-plant verbs and adjacency** — the single highest-leverage change. Cheapest structural fix
-   to the undifferentiated seed ladder, and it uses a board that already exists.
+1. ~~**Per-plant verbs and adjacency**~~ — **done 2026-08-14.** Six seeds carry a verb; the other
+   thirteen stay plain yield tiers on purpose. Expanding the set is cheap when the mechanic proves
+   out — it is one `DATA.verbs` entry, one `verb:` field and a consumer.
 2. **Mutations and variants** — any plant can roll a jackpot version, which decouples excitement
    from tier position. Recombines the Wonder Effect, day/night and rarity rolls, all already built.
 3. **Named synergy pairs** — one data row and a name each; companion planting writes itself.
@@ -300,10 +310,25 @@ Real saves always have those, so this only bites synthetic or hand-edited saves 
 as `NaN%` in the Almanac and looks like a live bug. See
 [11-known-issues.md](11-known-issues.md#correctness).
 
+**Verb effects must be read before the plot is cleared.** `harvest()` captures the neighbourhood —
+Beacon weight, Lantern gem multiplier, the payout multiplier — at the top, because clearing the plot
+changes what its neighbours see. A verb consumer added after the `state.grid[idx] = {...}` line will
+silently read the wrong garden.
+
+**A growth verb needs two code paths, not one.** Growth time is baked in at plant time, so a plot
+planted next to an existing Keeper gets the bonus for free — but a Keeper planted *afterwards* would
+do nothing without `quickenNeighbours()`. Any future growth-affecting verb needs the same pair, or it
+only works when the player happens to plant in the right order.
+
+**Sim-tests that assert an exact currency delta must pin `Math.random`.** `gems move by the
+milestone` failed 6 runs in 40 because the triggering harvest rolls its own 5% gem chance. Harvest
+pays gems, rarity, mastery tiers and Wonder rolls from the same call, so any exact-count assertion is
+flaky until the RNG is pinned. See [11-known-issues.md](11-known-issues.md).
+
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 249 assertions over the simulation layer
+node tools/sim-test.js          # 280 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

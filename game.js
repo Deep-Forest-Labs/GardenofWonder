@@ -264,6 +264,57 @@ const Game = (() => {
     return pool[0];
   }
 
+  /* ---------------- verbs and adjacency ---------------- */
+
+  /* The eight plots ring the flower in a 3x3 with the centre occupied:
+       0 1 2
+       3 . 4
+       5 6 7
+     Sharing an edge therefore makes one closed loop, 0-1-2-4-7-6-5-3-0, and every plot has
+     exactly two neighbours. That symmetry is why verbs need no per-plot balancing. */
+  const PLOT_NEIGHBOURS = [[1, 3], [0, 2], [1, 4], [0, 5], [2, 7], [3, 6], [5, 7], [6, 4]];
+
+  const VT = () => DATA.verbTuning;
+
+  /** Unlocked neighbours of a plot. Locked plots are not part of the garden yet. */
+  function neighboursOf(idx) {
+    const list = PLOT_NEIGHBOURS[idx] || [];
+    return list.filter((n) => state.grid[n] && !state.grid[n].locked);
+  }
+
+  /** The verb of whatever is growing in a plot, or null. Empty plots have no verb. */
+  function verbAt(idx) {
+    const cell = state.grid[idx];
+    if (!cell || cell.locked || !cell.seed) return null;
+    const sdef = seedById(cell.seed);
+    return sdef && sdef.verb ? sdef.verb : null;
+  }
+
+  /** How many neighbours of a plot are currently growing a given verb. */
+  function neighbourVerbs(idx, verbId) {
+    return neighboursOf(idx).reduce((n, i) => n + (verbAt(i) === verbId ? 1 : 0), 0);
+  }
+
+  /** Neighbours holding anything at all — Deeproot's density read. */
+  function plantedNeighbours(idx) {
+    return neighboursOf(idx).reduce((n, i) => n + (state.grid[i].seed ? 1 : 0), 0);
+  }
+
+  /** Growth multiplier contributed by adjacent Keepers, baked in at plant time. */
+  function keeperModifier(idx) {
+    return Math.max(0.3, 1 - neighbourVerbs(idx, 'keeper') * VT().keeperGrowth);
+  }
+
+  /** Payout multiplier a plot earns from its own verb and its neighbours'. */
+  function verbPayoutMult(idx) {
+    const t = VT();
+    let m = 1 + neighbourVerbs(idx, 'nurse') * t.nurseGive;
+    const own = verbAt(idx);
+    if (own === 'nurse') m *= (1 - t.nurseCost);
+    if (own === 'deeproot') m *= 1 + plantedNeighbours(idx) * t.deeprootPerNeighbour;
+    return m;
+  }
+
   /* ---------------- reputation, levels, quests ---------------- */
   const RARITY_RANK = { common: 0, rare: 1, epic: 2, legend: 3 };
 
@@ -833,14 +884,41 @@ const Game = (() => {
       ...cell,
       seed: seedDef.id,
       plantedAt: nowSeconds(),
-      grow: seedDef.grow * growModifier(),
+      grow: seedDef.grow * growModifier() * keeperModifier(idx),
       aura: ''
     };
+    /* A Keeper planted next to something already growing has to help it too, or the verb would
+       only ever pay out when the player happened to plant in the right order. */
+    const quickened = seedDef.verb === 'keeper' ? quickenNeighbours(idx) : [];
     save();
     emit('currency');
-    emit('plant', { idx, seed: seedDef, auto: !payCost });
+    emit('plant', { idx, seed: seedDef, auto: !payCost, verb: seedDef.verb || null, quickened });
     noteQuest('plant', seedDef.id, 1);
     return true;
+  }
+
+  /** A Spreader may sow itself, free, into one empty neighbour. Returns the plot, or -1. */
+  function trySpread(idx, sdef) {
+    if (Math.random() >= VT().spreaderChance) return -1;
+    const open = neighboursOf(idx).filter((n) => !state.grid[n].seed);
+    if (!open.length) return -1;
+    const target = open[Math.floor(Math.random() * open.length)];
+    return plant(target, sdef, false) ? target : -1;
+  }
+
+  /** Shave a Keeper's share off neighbours that were already growing when it went in. */
+  function quickenNeighbours(idx) {
+    const touched = [];
+    neighboursOf(idx).forEach((n) => {
+      const cell = state.grid[n];
+      if (!cell.seed || cell.ready) return;
+      const elapsed = Math.max(0, nowSeconds() - cell.plantedAt);
+      const remain = Math.max(0, cell.grow - elapsed);
+      if (remain <= 0) return;
+      cell.grow = elapsed + remain * (1 - VT().keeperGrowth);
+      touched.push(n);
+    });
+    return touched;
   }
 
   function unlockPlot(idx) {
@@ -897,12 +975,22 @@ const Game = (() => {
     if (!sdef || now - cell.plantedAt < cell.grow) return null;
 
     const luckyHarvest = Boolean(cell.luckyBug);
-    const r = rollRarity(boostVal('rarityWeight') + (luckyHarvest ? LADYBUG_RARITY_BONUS : 0));
+    /* Verbs are read before the plot is cleared, because clearing it changes its neighbourhood. */
+    const beacons = neighbourVerbs(idx, 'beacon');
+    const lanterns = neighbourVerbs(idx, 'lantern');
+    const verbMult = verbPayoutMult(idx);
+    const r = rollRarity(
+      boostVal('rarityWeight')
+      + (luckyHarvest ? LADYBUG_RARITY_BONUS : 0)
+      + beacons * VT().beaconRarity
+    );
     const yieldBase = sdef.yield * r.m;
     const yieldBonus = 1 + boostVal('globalCredits');
     // Read before recordHarvest: the harvest that completes a tier is paid at the old rate.
     const mastered = masteryMult(sdef.id);
-    const payout = Math.round(yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * mastered);
+    const payout = Math.round(
+      yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * mastered * verbMult
+    );
 
     state.credits += payout;
     // The bloom itself is kept as a crafting ingredient, on top of the credits.
@@ -917,18 +1005,21 @@ const Game = (() => {
       repBonus = DATA.harvestRepGrant || 1;
       levelGrants = levelGrants.concat(addRep(repBonus));
     }
-    const gemChance = typeof sdef.gemChance === 'number' ? sdef.gemChance : 0.05;
+    const baseGem = typeof sdef.gemChance === 'number' ? sdef.gemChance : 0.05;
+    const gemChance = baseGem * (lanterns ? Math.pow(VT().lanternGemMult, lanterns) : 1);
     let gemDrop = false;
     if (Math.random() < gemChance) { state.gems += 1; gemDrop = true; }
 
     state.grid[idx] = { ...cell, seed: null, plantedAt: 0, grow: 0, ready: false, aura: r.a, luckyBug: false };
+    const sown = sdef.verb === 'spreader' ? trySpread(idx, sdef) : -1;
     const sparked = tryWonder(WONDER.harvestChance);
     save();
     emit('currency');
     const payload = {
       idx, payout, rarity: r, seed: sdef, gemDrop, repBonus, sparkedWonder: sparked, luckyHarvest,
       firstDiscover: almanac.first, discovered: almanac.count, bestRarity: almanac.best,
-      milestones: almanac.milestones, mastery: almanac.mastery
+      milestones: almanac.milestones, mastery: almanac.mastery,
+      verbMult, beacons, lanterns, sown
     };
     emit('harvest', payload);
     if (almanac.milestones.length) {
@@ -1337,6 +1428,7 @@ const Game = (() => {
     seedUnlocked, seedUnlockLevel, plotAvailable, plotUnlockLevel,
     claimQuest, stripQuest, questById,
     discoveredCount, discoveredOf, bestRarityOf, almanacMilestones,
-    masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf
+    masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf,
+    neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier
   };
 })();

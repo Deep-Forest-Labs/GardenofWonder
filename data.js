@@ -24,6 +24,29 @@ const DATA = {
     { key: 'legend', w: 2, m: 8, a: 'legend', label: 'Legendary' }
   ],
 
+  /* Verbs are what a flower *does*, as opposed to what it pays. They are a second axis, kept
+     deliberately free of the yield curve so `yield === cost * 1.4` still holds for every seed.
+     No two verbs share an effect category — that is the point of them. */
+  verbs: {
+    keeper:   { name: 'Keeper',   cat: 'speed',       tint: '#6f7bff', desc: 'Neighbouring plots grow 15% faster.' },
+    nurse:    { name: 'Nurse',    cat: 'yield',       tint: '#a06cd5', desc: 'Neighbouring plots pay 20% more. This one pays 10% less.' },
+    beacon:   { name: 'Beacon',   cat: 'rarity',      tint: '#ff9f1c', desc: 'Neighbouring plots roll for rarity more generously.' },
+    lantern:  { name: 'Lantern',  cat: 'drops',       tint: '#ff8fd0', desc: 'Neighbouring plots are twice as likely to drop a gem.' },
+    deeproot: { name: 'Deeproot', cat: 'density',     tint: '#8fd6ff', desc: 'Pays 8% more for every neighbouring plot that is planted.' },
+    spreader: { name: 'Spreader', cat: 'propagation', tint: '#ffd23f', desc: 'On harvest, may sow a free copy of itself in an empty neighbour.' }
+  },
+
+  /* Tuning for the verbs above. One place, so a balance pass is one edit. */
+  verbTuning: {
+    keeperGrowth: 0.15,
+    nurseGive: 0.20,
+    nurseCost: 0.10,
+    beaconRarity: 6,
+    lanternGemMult: 2,
+    deeprootPerNeighbour: 0.08,
+    spreaderChance: 0.20
+  },
+
   seeds: [
     {
       id: 'daisy', name: 'Daisy', cost: 50, grow: 12, yield: 70, spr: '🌼', unlockLevel: 1,
@@ -36,12 +59,12 @@ const DATA = {
       art: { shape: 'tulip', petals: 3, c1: '#ff5d8f', c2: '#ff9dbd', core: '#ffd23f', leaf: '#4bb257' }
     },
     {
-      id: 'bluebell', name: 'Bluebell', cost: 180, grow: 24, yield: 252, spr: '🪻', unlockLevel: 1,
+      id: 'bluebell', verb: 'keeper', name: 'Bluebell', cost: 180, grow: 24, yield: 252, spr: '🪻', unlockLevel: 1,
       desc: 'Shaded blossom that rewards patient gardeners.',
       art: { shape: 'bell', petals: 5, c1: '#6f7bff', c2: '#a5adff', core: '#eceeff', leaf: '#43a95a' }
     },
     {
-      id: 'lavender', name: 'Lavender', cost: 260, grow: 28, yield: 364, spr: '💜', unlockLevel: 2,
+      id: 'lavender', verb: 'nurse', name: 'Lavender', cost: 260, grow: 28, yield: 364, spr: '💜', unlockLevel: 2,
       desc: 'Calming scent draws in gentle critters and steady credits.',
       art: { shape: 'spike', petals: 8, c1: '#a06cd5', c2: '#cba3f0', core: '#efe0ff', leaf: '#57a06a' }
     },
@@ -56,12 +79,12 @@ const DATA = {
       art: { shape: 'round', petals: 15, c1: '#ff4f9a', c2: '#ff93c4', core: '#ffe066', leaf: '#46ad5c' }
     },
     {
-      id: 'marigold', name: 'Marigold', cost: 750, grow: 55, yield: 1050, spr: '🌻', unlockLevel: 5,
+      id: 'marigold', verb: 'beacon', name: 'Marigold', cost: 750, grow: 55, yield: 1050, spr: '🌻', unlockLevel: 5,
       desc: 'Sun-kissed bloom that loves booster synergies.',
       art: { shape: 'point', petals: 16, c1: '#ff9f1c', c2: '#ffc857', core: '#8a5a2b', leaf: '#4faa4f' }
     },
     {
-      id: 'orchid', name: 'Orchid', cost: 1100, grow: 90, yield: 1540, spr: '🪷', unlockLevel: 6,
+      id: 'orchid', verb: 'lantern', name: 'Orchid', cost: 1100, grow: 90, yield: 1540, spr: '🪷', unlockLevel: 6,
       desc: 'Elegant slow-grower with strong harvest multipliers.',
       art: { shape: 'lotus', petals: 8, c1: '#ff8fd0', c2: '#ffd4ec', core: '#ffe066', leaf: '#46ad7c' }
     },
@@ -76,12 +99,12 @@ const DATA = {
       art: { shape: 'fern', petals: 6, c1: '#43aa5a', c2: '#8ce99a', core: '#2f7d3f', leaf: '#2f7d3f' }
     },
     {
-      id: 'moonflower', name: 'Moonflower', cost: 4500, grow: 220, yield: 6300, spr: '🌙', unlockLevel: 9,
+      id: 'moonflower', verb: 'deeproot', name: 'Moonflower', cost: 4500, grow: 220, yield: 6300, spr: '🌙', unlockLevel: 9,
       desc: 'Night-blooming marvel with stellar rarity chances.',
       art: { shape: 'lotus', petals: 7, c1: '#b9dcff', c2: '#ffffff', core: '#7aa8ff', leaf: '#4a8fa8', glow: '#a9d8ff' }
     },
     {
-      id: 'starlit', name: 'Starlit Iris', cost: 6500, grow: 280, yield: 9100, spr: '✨', unlockLevel: 10,
+      id: 'starlit', verb: 'spreader', name: 'Starlit Iris', cost: 6500, grow: 280, yield: 9100, spr: '✨', unlockLevel: 10,
       desc: 'Nebula-touched petals shimmer with crit energy.',
       art: { shape: 'star', petals: 6, c1: '#b197fc', c2: '#e7dcff', core: '#ffe066', leaf: '#5c8bd6', glow: '#c9b6ff' }
     },

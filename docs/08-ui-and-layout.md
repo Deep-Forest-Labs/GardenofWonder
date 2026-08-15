@@ -161,6 +161,30 @@ Driven by `data-state` on each plot button:
 Plots also carry `data-stage` (1–3) for growth and `data-aura` (rarity name) tinting the soil after
 a harvest.
 
+### The adjacency flash
+
+Two transient classes, added on planting a flower that carries a verb and removed after 1.6 s:
+
+| Class | Appearance |
+| --- | --- |
+| `verb-source` | Solid ring in the verb's colour, with a dark outer shadow — the flower you just planted |
+| `verb-linked` | Dashed ring in the same colour — the two plots it affects |
+
+Both read `--verb`, set inline from `DATA.verbs[id].tint`, and animate through `verbLink` — scale up,
+hold, fade to nothing. Reduced motion swaps to `verbLinkCalm`, which does the same fade with no
+scaling.
+
+**Why it is transient.** Adjacency is invisible until something points at it, so it has to be shown
+at the moment the choice is made. But a permanent link indicator on all eight plots would clutter a
+board whose readability at arm's length is the single hardest-won property of this layout. Showing
+it on plant and fading it out is the compromise: taught at the decision point, gone by the time you
+are looking at the garden again.
+
+**Testing note.** An automated tab without OS focus can freeze CSS animation clocks entirely, so the
+flash may screenshot as invisible even though it fired. Verify by asserting the classes and the
+`--verb` value, or seek the animation manually — see "Traps in this codebase" in
+[HANDOFF.md](HANDOFF.md).
+
 ## HUD
 
 Two wallet pills — coins and gems — plus round buttons for the Almanac and Settings. A

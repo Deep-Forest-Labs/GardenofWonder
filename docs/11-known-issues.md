@@ -18,10 +18,14 @@ it means either lowering the default or giving every seed an explicit value.
 
 *Where:* `game.js` `harvest()`, `data.js` seed definitions.
 
-### Orchid is a throughput trap
+### Orchid is a throughput trap — half fixed
 
 Orchid at 4.89 net coins/second is worse than Marigold at 5.45, despite costing 47% more, because
 grow time jumps 55 s → 90 s. It's the only backwards step in nineteen tiers.
+
+**Softened 2026-08-14.** Orchid now carries the **Lantern** verb — it doubles its neighbours' gem
+chance — so there is a reason to plant it that is not coins per second. The coin curve is still
+backwards and still worth fixing; the seed is just no longer strictly pointless.
 
 ### Aurora Bloom and Celestial Lotus have identical throughput
 
@@ -156,9 +160,19 @@ All interpolated content currently comes from `data.js` and is trusted, so there
 vulnerability. But there's no escaping helper, so the first time player-supplied text reaches a
 panel it will be an injection. Add escaping before adding any naming or text-entry feature.
 
+### One sim-test was flaky, and the class of bug is worth remembering
+
+`gems move by the milestone` asserted an exact gem count while the harvest that triggered it rolled
+its own independent **5% gem chance**. It failed roughly one run in twenty — measured at **6 of 40
+runs** on the committed code before the fix. `Math.random` is now pinned across that block.
+
+**The general rule:** any assertion on an exact currency delta has to pin `Math.random`, because
+harvest pays gems, rarity, mastery tiers and Wonder rolls from the same call. A test that passes
+nineteen times out of twenty reads as a real regression the one time it doesn't.
+
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 249 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 280 assertions over the
 economy, progression, saves and mastery. Everything above that line — `ui.js`, layout, the sheet,
 FX — is verified by hand against the checklist in [09-conventions.md](09-conventions.md). That is
 the right split for a prototype, but a UI regression has no net under it.

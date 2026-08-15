@@ -759,6 +759,19 @@
     return list;
   }
 
+  /* A verb is what the flower *does*. Shown as a tinted chip so it reads as a different kind of
+     fact from the cost/time/yield numbers beside it. */
+  function verbChip(seed) {
+    const v = seed.verb && DATA.verbs[seed.verb];
+    if (!v) return '';
+    return `<span class="verb-chip" style="--verb:${v.tint}">${v.name}</span>`;
+  }
+
+  function verbNote(seed) {
+    const v = seed.verb && DATA.verbs[seed.verb];
+    return v ? `<span class="verb-note" style="--verb:${v.tint}">${v.desc}</span>` : '';
+  }
+
   function renderSeeds() {
     const rows = sortedSeeds().map((s) => {
       const locked = !Game.seedUnlocked(s.id);
@@ -771,7 +784,7 @@
         return `<div class="seed-row gated">
           <span class="seed-art">${Flora.head(s, 40)}</span>
           <span>
-            <span class="seed-name">${s.name}</span>
+            <span class="seed-name">${s.name}${verbChip(s)}</span>
             <span class="seed-stats">
               <span class="stat">${Icons.get('coin')}${fmt(s.cost)}</span>
               <span class="stat">${Icons.get('clock')}${fmtTime(grow)}</span>
@@ -779,6 +792,7 @@
               ${drops.join('')}
             </span>
             <span class="seed-desc">${s.desc}</span>
+            ${verbNote(s)}
           </span>
           <span class="seed-go">Level ${s.unlockLevel}</span>
         </div>`;
@@ -786,7 +800,7 @@
       return `<button class="seed-row" data-plant="${s.id}" ${can ? '' : 'disabled'}>
         <span class="seed-art">${Flora.head(s, 40)}</span>
         <span>
-          <span class="seed-name">${s.name}</span>
+          <span class="seed-name">${s.name}${verbChip(s)}</span>
           <span class="seed-stats">
             <span class="stat">${Icons.get('coin')}${fmt(s.cost)}</span>
             <span class="stat">${Icons.get('clock')}${fmtTime(grow)}</span>
@@ -794,6 +808,7 @@
             ${drops.join('')}
           </span>
           <span class="seed-desc">${s.desc}</span>
+          ${verbNote(s)}
         </span>
         <span class="seed-go">${Icons.get(can ? 'sprout' : 'lock')}</span>
       </button>`;
@@ -1431,7 +1446,29 @@
     if (p.ladybug) triggerLadybugFX(plotEls[p.ladybug.idx]);
   });
 
-  Game.on('plant', ({ idx, auto }) => {
+  /* Adjacency is invisible until something points at it, and a permanent indicator would clutter
+     a board kept deliberately clean. So it is shown at the moment the choice is made, then fades. */
+  function flashAdjacency(idx, verbId) {
+    const def = DATA.verbs[verbId];
+    if (!def) return;
+    const targets = Game.neighboursOf(idx);
+    if (!targets.length) return;
+    targets.forEach((n) => {
+      const nv = plotEls[n];
+      if (!nv) return;
+      nv.root.style.setProperty('--verb', def.tint);
+      nv.root.classList.add('verb-linked');
+      setTimeout(() => nv.root.classList.remove('verb-linked'), 1600);
+    });
+    const src = plotEls[idx];
+    if (src) {
+      src.root.style.setProperty('--verb', def.tint);
+      src.root.classList.add('verb-source');
+      setTimeout(() => src.root.classList.remove('verb-source'), 1600);
+    }
+  }
+
+  Game.on('plant', ({ idx, auto, verb }) => {
     if (!S.seen.plot) {
       S.seen.plot = true;
       Game.save();
@@ -1440,6 +1477,7 @@
     }
     const v = plotEls[idx];
     if (!v) return;
+    if (verb) flashAdjacency(idx, verb);
     const c = FX.centerOf(v.root);
     FX.sparks(c.x, c.y + 8, 8, '#c99a6b');
     if (auto) {

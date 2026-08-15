@@ -49,14 +49,39 @@ honest measure of a seed's throughput. "Max" is a Legendary roll at 8×.
 
 ### Two things to notice in that curve
 
-**Orchid is a trap.** At 4.89 net/s it is *worse* than Marigold's 5.45 despite costing 47% more,
-because its grow time jumps from 55 s to 90 s. It's the only backwards step in the table.
+**Orchid is a trap *on throughput alone*.** At 4.89 net/s it is *worse* than Marigold's 5.45 despite
+costing 47% more, because its grow time jumps from 55 s to 90 s. It's the only backwards step in the
+table. **Partly answered 2026-08-14:** Orchid now carries the **Lantern** verb, doubling its
+neighbours' gem chance, so it has a reason to be in the ground that has nothing to do with coins per
+second. The coin curve is still backwards and still worth fixing; it is no longer the whole story.
 
 **Aurora Bloom and Celestial Lotus are identical** at 10.00 net/s, so Celestial is a pure
 convenience upgrade — bigger numbers per harvest, same rate, at 33% more capital.
 
 Whether these are bugs or intentional texture is not recorded anywhere. They came over from the
 original build. Left alone for now, noted in [11-known-issues.md](11-known-issues.md).
+
+### Verb tuning
+
+Verbs are a second axis and are deliberately **not** on the yield curve — see
+[03-systems.md](03-systems.md#verbs-and-adjacency). All seven numbers live in `DATA.verbTuning` so a
+balance pass is one edit.
+
+| Key | Value | Effect |
+| --- | --- | --- |
+| `keeperGrowth` | 0.15 | Keeper: neighbours grow 15% faster |
+| `nurseGive` | 0.20 | Nurse: neighbours pay +20% |
+| `nurseCost` | 0.10 | Nurse: the nurse itself pays −10% |
+| `beaconRarity` | 6 | Beacon: extra weight passed to `rollRarity()` |
+| `lanternGemMult` | 2 | Lantern: gem-chance multiplier, compounding per adjacent Lantern |
+| `deeprootPerNeighbour` | 0.08 | Deeproot: +8% per planted neighbour |
+| `spreaderChance` | 0.20 | Spreader: chance to sow a free copy on harvest |
+
+Because every plot has exactly two neighbours, the ceilings are bounded and known: a plot can be
+flanked by at most two of anything. Two Nurses is ×1.4 payout, two Keepers is ×0.7 grow time, two
+Lanterns is ×4 gem chance, and Deeproot tops out at +16%. **`beaconRarity` is the one to watch** —
+it is passed as `extra` to `rollRarity()`, which multiplies the non-Common weights, so 6 is already
+a large lift and two Beacons is 12. Cut this first if rare harvests start feeling cheap.
 
 ### Premium drop chances
 

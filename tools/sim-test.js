@@ -690,17 +690,23 @@ const gemsBefore = S.gems;
 const bloomBefore = S.boostInv.bloom;
 const repBeforeMile = S.rep;
 clearGarden();
+/* A harvest rolls its own 5% gem drop independently of the milestone, so leaving this to real
+   randomness made "gems move by the milestone" fail roughly one run in twenty. Pin the roll high
+   enough to miss the gem (and land on Rare, which none of these assertions care about). */
+const rngMilestone = Math.random;
+Math.random = () => 0.9;
 G.plant(0, G.seedById('rose'));
 advance(40);
 const fifth = G.harvest(0);
 check('the fifth species pays the 5-milestone', fifth.milestones && fifth.milestones.some((m) => m.at === 5));
 check('rep moves by the milestone', S.rep === repBeforeMile + 20, `got ${S.rep}`);
-check('gems move by the milestone', S.gems === gemsBefore + 1);
+check('gems move by the milestone', S.gems === gemsBefore + 1, `got ${S.gems}, was ${gemsBefore}`);
 check('a bloom boost was granted', S.boostInv.bloom === bloomBefore + 1);
 check('the milestone is marked claimed', S.almanacClaimed.indexOf(5) !== -1);
 G.plant(0, G.seedById('rose'));
 advance(40);
 const fifthAgain = G.harvest(0);
+Math.random = rngMilestone;
 check('a second harvest does not pay again', !(fifthAgain.milestones && fifthAgain.milestones.length));
 check('rep does not move again', S.rep === repBeforeMile + 20, `got ${S.rep}`);
 
@@ -870,6 +876,199 @@ check('backfill pays no gems', S.gems === 0, `${S.gems}`);
 const masteryBefore = G.masteryOf('tulip');
 G.load();
 check('a second load does not advance again', G.masteryOf('tulip') === masteryBefore);
+G.reset();
+
+/* ---------------- verbs and adjacency ---------------- */
+
+group('the plot ring is symmetric');
+G.reset();
+clearGarden();
+check('every plot has exactly two neighbours',
+  S.grid.every((_, i) => G.neighboursOf(i).length === 2));
+check('adjacency is mutual',
+  S.grid.every((_, i) => G.neighboursOf(i).every((n) => G.neighboursOf(n).includes(i))));
+check('the ring is one closed loop of eight', (() => {
+  const seen = new Set([0]);
+  let cur = 0, prev = -1;
+  for (let step = 0; step < 8; step += 1) {
+    const next = G.neighboursOf(cur).find((n) => n !== prev);
+    prev = cur; cur = next; seen.add(cur);
+  }
+  return seen.size === 8 && cur === 0;
+})());
+check('a locked plot is not a neighbour', (() => {
+  S.grid[1].locked = true;
+  const n = G.neighboursOf(0);
+  S.grid[1].locked = false;
+  return !n.includes(1) && n.length === 1;
+})());
+
+group('verbs are read off what is growing, not the plot');
+clearGarden();
+S.credits = 1e9;
+unlockTo(20);
+check('an empty plot has no verb', G.verbAt(0) === null);
+G.plant(0, G.seedById('lavender'));
+check('a planted verb seed reports its verb', G.verbAt(0) === 'nurse');
+G.plant(1, G.seedById('daisy'));
+check('a plain seed reports none', G.verbAt(1) === null);
+check('the neighbour sees the nurse', G.neighbourVerbs(1, 'nurse') === 1);
+check('a plot does not count its own verb', G.neighbourVerbs(0, 'nurse') === 0);
+
+group('Nurse trades its own payout for its neighbours');
+clearGarden();
+clearMastery();
+S.credits = 1e9;
+check('a lone plot is unmodified', G.verbPayoutMult(2) === 1);
+G.plant(0, G.seedById('lavender'));
+check('the nurse itself pays less', Math.abs(G.verbPayoutMult(0) - 0.9) < 1e-9,
+  `${G.verbPayoutMult(0)}`);
+check('an adjacent plot pays more', Math.abs(G.verbPayoutMult(1) - 1.2) < 1e-9,
+  `${G.verbPayoutMult(1)}`);
+check('a plot two steps away is untouched', G.verbPayoutMult(2) === 1);
+G.plant(2, G.seedById('lavender'));
+check('two nurses on one plot stack', Math.abs(G.verbPayoutMult(1) - 1.4) < 1e-9,
+  `${G.verbPayoutMult(1)}`);
+
+group('Deeproot pays for a full neighbourhood');
+clearGarden();
+S.credits = 1e9;
+G.plant(3, G.seedById('moonflower'));
+check('alone it is unmodified', G.verbPayoutMult(3) === 1);
+G.plant(0, G.seedById('daisy'));
+check('one planted neighbour pays 8%', Math.abs(G.verbPayoutMult(3) - 1.08) < 1e-9,
+  `${G.verbPayoutMult(3)}`);
+G.plant(5, G.seedById('daisy'));
+check('both neighbours pay 16%', Math.abs(G.verbPayoutMult(3) - 1.16) < 1e-9,
+  `${G.verbPayoutMult(3)}`);
+
+group('Keeper shortens growth both ways round');
+clearGarden();
+S.credits = 1e9;
+check('no keeper leaves growth alone', G.keeperModifier(1) === 1);
+G.plant(0, G.seedById('bluebell'));
+check('an adjacent keeper shortens the modifier',
+  Math.abs(G.keeperModifier(1) - 0.85) < 1e-9, `${G.keeperModifier(1)}`);
+G.plant(1, G.seedById('daisy'));
+const keptGrow = S.grid[1].grow;
+check('planting beside a keeper bakes the bonus in',
+  Math.abs(keptGrow - G.seedById('daisy').grow * G.growModifier() * 0.85) < 1e-6, `${keptGrow}`);
+clearGarden();
+G.plant(1, G.seedById('daisy'));
+const plainGrow = S.grid[1].grow;
+G.plant(0, G.seedById('bluebell'));
+check('a keeper planted later still helps what is already growing',
+  S.grid[1].grow < plainGrow, `${S.grid[1].grow} vs ${plainGrow}`);
+check('it never rushes a plot that is already done', (() => {
+  clearGarden();
+  G.plant(1, G.seedById('daisy'));
+  advance(60);
+  const done = S.grid[1].grow;
+  G.plant(0, G.seedById('bluebell'));
+  return S.grid[1].grow === done;
+})());
+
+group('Lantern multiplies the gem chance it finds');
+clearGarden();
+clearMastery();
+S.credits = 1e9;
+S.gems = 0;
+G.plant(0, G.seedById('orchid'));
+let lanternGems = 0;
+for (let i = 0; i < 4000; i += 1) {
+  G.plant(1, G.seedById('daisy'));
+  advance(30);
+  const h = G.harvest(1);
+  if (h && h.gemDrop) lanternGems += 1;
+  if (!S.grid[0].seed) G.plant(0, G.seedById('orchid'));
+}
+clearGarden();
+S.gems = 0;
+let plainGems = 0;
+for (let i = 0; i < 4000; i += 1) {
+  G.plant(1, G.seedById('daisy'));
+  advance(30);
+  const h = G.harvest(1);
+  if (h && h.gemDrop) plainGems += 1;
+}
+check('a lantern roughly doubles gem drops next door',
+  lanternGems > plainGems * 1.5, `${lanternGems} vs ${plainGems}`);
+
+group('Beacon lifts rarity next door');
+clearGarden();
+clearMastery();
+S.credits = 1e9;
+const commonShare = (plotHasBeacon) => {
+  clearGarden();
+  clearMastery();
+  if (plotHasBeacon) G.plant(0, G.seedById('marigold'));
+  let common = 0, total = 0;
+  for (let i = 0; i < 3000; i += 1) {
+    G.plant(1, G.seedById('daisy'));
+    advance(30);
+    const h = G.harvest(1);
+    if (h) { total += 1; if (h.rarity.key === 'common') common += 1; }
+    if (plotHasBeacon && !S.grid[0].seed) G.plant(0, G.seedById('marigold'));
+  }
+  return common / total;
+};
+const withBeacon = commonShare(true);
+const withoutBeacon = commonShare(false);
+check('a beacon makes Common meaningfully rarer', withBeacon < withoutBeacon - 0.1,
+  `${withBeacon.toFixed(3)} vs ${withoutBeacon.toFixed(3)}`);
+
+group('Spreader sows into empty neighbours only');
+clearGarden();
+clearMastery();
+S.credits = 1e9;
+let sowed = 0;
+for (let i = 0; i < 600; i += 1) {
+  clearGarden();
+  G.plant(0, G.seedById('starlit'));
+  advance(400);
+  const h = G.harvest(0);
+  if (h && h.sown >= 0) {
+    sowed += 1;
+    if (!G.neighboursOf(0).includes(h.sown)) { sowed = -9999; break; }
+  }
+}
+check('it sows sometimes but not always', sowed > 40 && sowed < 400, `${sowed}/600`);
+check('it only ever sows into a neighbour', sowed > 0);
+check('it never sows over an occupied plot', (() => {
+  for (let i = 0; i < 400; i += 1) {
+    clearGarden();
+    G.plant(0, G.seedById('starlit'));
+    G.plant(1, G.seedById('daisy'));
+    G.plant(3, G.seedById('daisy'));
+    advance(400);
+    const before = S.grid[1].seed;
+    const h = G.harvest(0);
+    if (h && h.sown >= 0) return false;
+    if (S.grid[1].seed !== before) return false;
+  }
+  return true;
+})());
+check('a sown copy is free', (() => {
+  for (let i = 0; i < 600; i += 1) {
+    clearGarden();
+    G.plant(0, G.seedById('starlit'));
+    advance(400);
+    const credits = S.credits;
+    const h = G.harvest(0);
+    if (h && h.sown >= 0) return S.credits === credits + h.payout;
+  }
+  return false;
+})());
+
+group('verbs leave the yield curve alone');
+check('every seed still yields exactly 1.4x its cost',
+  DATA.seeds.every((s) => Math.abs(s.yield - s.cost * 1.4) < 1e-6));
+check('every verb on a seed is a real verb',
+  DATA.seeds.every((s) => !s.verb || Boolean(DATA.verbs[s.verb])));
+check('no two verbs share an effect category', (() => {
+  const cats = Object.values(DATA.verbs).map((v) => v.cat);
+  return new Set(cats).size === cats.length;
+})());
 G.reset();
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
