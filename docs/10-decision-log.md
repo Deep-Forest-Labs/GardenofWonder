@@ -56,15 +56,25 @@ discover, and one that would read as the feature being broken.
 new instance of the `load()` trap that has bitten every previous badge. Retuning a verb is a
 `data.js` edit that applies to every existing save immediately. Keep it that way.
 
-**Also fixed, while in there.** The sim-test `gems move by the milestone` asserted an exact gem count
-while the triggering harvest rolled its own independent 5% gem chance — it failed **6 runs in 40** on
-the committed code. `Math.random` is now pinned across that block. The general rule is recorded in
-[11-known-issues.md](11-known-issues.md): any assertion on an exact currency delta has to pin the
-RNG, because harvest pays gems, rarity, mastery and Wonder rolls from the same call.
+**Also fixed, while in there: two pre-existing flaky sim-tests.** Measured at **4 failures in 50
+runs** on the committed code, both statistical rather than real.
 
-**Verification.** 280 sim-test assertions pass, 40 consecutive runs clean. In the browser: verb chips
-and notes render in the picker, the adjacency flash marks the correct source and neighbour plots,
-Keeper measured 12 s → 10.2 s both when planted first and when planted last, console clean.
+- `gems move by the milestone` asserted an exact gem count while the triggering harvest rolled its
+  own independent 5% gem chance.
+- `four hives lift yield by about 32%` averaged 4,000 random harvests with a ±0.06 tolerance, which
+  put the 2%-Legendary tail inside the band (observed 1.253 against a 1.26 floor). It now pins the
+  roll and asserts **exact payouts on a single harvest**, which also removed a mastery drift — the
+  ladder climbs as a loop proceeds, so a sampled mean was measuring two things at once.
+
+Neither was caused by verbs; both were confirmed against the pre-change code. The rule is recorded
+in [11-known-issues.md](11-known-issues.md): **prefer an exact assertion on one harvest to a
+tolerance on a sampled mean.** A test that passes forty-nine times in fifty reads as a real
+regression the one time it doesn't, and sends the next person hunting a balance bug that isn't there.
+
+**Verification.** 282 sim-test assertions pass, and the suite is now deterministic — **60 consecutive
+runs clean**, against 4-in-50 failing before. In the browser: verb chips and notes render in the
+picker, the adjacency flash marks the correct source and neighbour plots, Keeper measured 12 s →
+10.2 s both when planted first and when planted last, console clean.
 
 ---
 

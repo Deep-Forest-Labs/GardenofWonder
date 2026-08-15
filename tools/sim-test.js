@@ -116,19 +116,29 @@ check('planting later does not upgrade waiting jars',
 
 group('pollination raises harvest payouts');
 clearGarden();
-const meanPayout = (hives) => {
-  clearMastery();
+/* This used to average 4,000 random harvests and allow ±0.06, which put the 2%-Legendary tail
+   inside the tolerance — it failed roughly one run in fifty (measured 1/50, ratio 1.253). Pinning
+   the roll makes the ratio exact: 0.5 lands on Common, misses the 5% gem, and misses the 2% Wonder,
+   so the only thing left moving the payout is pollination itself. */
+const rngPollination = Math.random;
+const payoutWith = (hives) => {
+  clearMastery();                       // mastery climbs as a run proceeds and would drift the result
+  S.wonder = { until: 0, last: 0 };
+  S.boosters = {};
   S.apiary.hives = Array.from({ length: hives }, () => ({ at: clock, jars: [] }));
-  let total = 0;
-  const runs = 4000;
-  for (let i = 0; i < runs; i += 1) {
-    S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '' };
-    total += G.harvest(0).payout;
-  }
-  return total / runs;
+  Math.random = () => 0.5;
+  S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '' };
+  const p = G.harvest(0).payout;
+  Math.random = rngPollination;
+  return p;
 };
-const ratio = meanPayout(4) / meanPayout(0);
-check('four hives lift yield by about 32%', Math.abs(ratio - 1.32) < 0.06, `ratio ${ratio.toFixed(3)}`);
+const plainPay = payoutWith(0);
+const pollinatedPay = payoutWith(4);
+const daisyYield = G.seedById('daisy').yield;
+check('four hives report 32% pollination', Math.abs(G.pollination() - 0.32) < 1e-9, `${G.pollination()}`);
+check('an unpollinated daisy pays exactly its yield', plainPay === daisyYield, `${plainPay}`);
+check('four hives lift that by exactly 32%', pollinatedPay === Math.round(daisyYield * 1.32),
+  `${pollinatedPay} vs ${Math.round(daisyYield * 1.32)}`);
 
 group('crafting');
 S.apiary.hives = [];

@@ -160,19 +160,31 @@ All interpolated content currently comes from `data.js` and is trusted, so there
 vulnerability. But there's no escaping helper, so the first time player-supplied text reaches a
 panel it will be an injection. Add escaping before adding any naming or text-entry feature.
 
-### One sim-test was flaky, and the class of bug is worth remembering
+### Two sim-tests were flaky, and the class of bug is worth remembering
 
-`gems move by the milestone` asserted an exact gem count while the harvest that triggered it rolled
-its own independent **5% gem chance**. It failed roughly one run in twenty — measured at **6 of 40
-runs** on the committed code before the fix. `Math.random` is now pinned across that block.
+Both fixed 2026-08-14. Measured on the committed code beforehand: **4 of 50 runs failed.** The suite
+now runs clean 60 times out of 60.
 
-**The general rule:** any assertion on an exact currency delta has to pin `Math.random`, because
-harvest pays gems, rarity, mastery tiers and Wonder rolls from the same call. A test that passes
-nineteen times out of twenty reads as a real regression the one time it doesn't.
+- **`gems move by the milestone`** asserted an exact gem count while the harvest that triggered it
+  rolled its own independent **5% gem chance**. `Math.random` is now pinned across the block.
+- **`four hives lift yield by about 32%`** averaged 4,000 random harvests and allowed ±0.06, which
+  put the 2%-Legendary tail inside the tolerance (observed ratio 1.253 against a 1.26 floor). It now
+  pins the roll and asserts **exact payouts** for one harvest instead of a sampled mean — which also
+  removed the mastery drift, since mastery climbs as a loop proceeds and would otherwise skew it.
+
+**The general rule:** any assertion touching a harvest has to pin `Math.random`, because harvest
+pays rarity, gems, mastery tiers and Wonder rolls from the same call. Prefer asserting an exact
+value on one harvest over a tolerance on a sampled mean — a statistical test that passes
+forty-nine times in fifty reads as a real regression the one time it doesn't, and the person who
+hits it will go looking for a balance bug that isn't there.
+
+**Also clear the ladder.** Any loop of many harvests climbs Bloom Mastery as it goes, so a test
+measuring some *other* multiplier must call `clearMastery()` — and prefer a single harvest, where
+the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 280 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 282 assertions over the
 economy, progression, saves and mastery. Everything above that line — `ui.js`, layout, the sheet,
 FX — is verified by hand against the checklist in [09-conventions.md](09-conventions.md). That is
 the right split for a prototype, but a UI regression has no net under it.

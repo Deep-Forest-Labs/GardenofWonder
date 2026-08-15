@@ -320,15 +320,17 @@ planted next to an existing Keeper gets the bonus for free — but a Keeper plan
 do nothing without `quickenNeighbours()`. Any future growth-affecting verb needs the same pair, or it
 only works when the player happens to plant in the right order.
 
-**Sim-tests that assert an exact currency delta must pin `Math.random`.** `gems move by the
-milestone` failed 6 runs in 40 because the triggering harvest rolls its own 5% gem chance. Harvest
-pays gems, rarity, mastery tiers and Wonder rolls from the same call, so any exact-count assertion is
-flaky until the RNG is pinned. See [11-known-issues.md](11-known-issues.md).
+**Sim-tests that touch a harvest must pin `Math.random`.** Two were flaky and both are fixed —
+together they failed 4 runs in 50. Harvest pays rarity, gems, mastery tiers and Wonder rolls from the
+same call, so any assertion on a payout or a currency delta is flaky until the RNG is pinned.
+**Prefer an exact assertion on one harvest to a tolerance on a sampled mean** — and if you must loop,
+call `clearMastery()`, because the ladder climbs as the loop runs and you end up measuring two things
+at once. See [11-known-issues.md](11-known-issues.md).
 
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 280 assertions over the simulation layer
+node tools/sim-test.js          # 282 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
