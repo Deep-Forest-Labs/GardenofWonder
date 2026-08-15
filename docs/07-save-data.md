@@ -201,3 +201,20 @@ The first real use of `version`-gated migration. When decor became cosmetic (nav
 
 `load()` then sets `state.version = 3` unconditionally, same pattern as the old hardcoded `2`. This
 is the template for the next schema change that alters meaning rather than just adding a field.
+
+## Weather and mutation fields (added 2026-08-15)
+
+Two new **per-cell grid fields** and one top-level field:
+
+| Field | Where | Notes |
+| --- | --- | --- |
+| `mutation` | `state.grid[i]` | Mutation id or `null`. Cleared on harvest with the rest of the plot. |
+| `mutateAt` | `state.grid[i]` | Epoch seconds of this plant's single mutation roll; `0` once spent. |
+| `lastSeen` | top level | Epoch seconds, written every tick. For offline reconciliation, not yet used. |
+
+**Both grid fields need their own backfill loop over `state.grid` in `load()`** — the same trap
+`luckyBug` hit, and they sit beside it. A save from before this feature has neither key, and
+`undefined` is not `null`.
+
+**The weather clock itself stores nothing.** It is a pure function of epoch time, so there is no
+migration for it and never will be.

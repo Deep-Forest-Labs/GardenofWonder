@@ -5,6 +5,78 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — Weather and mutations built; the spec's exposure model was wrong and measurement caught it
+
+Built: the epoch weather clock, the sky, all four mutation tiers, Beacon stacking, and the visuals.
+Not built: offline reconciliation and card generation, steps 5 and 6 of
+[18-mutations-and-weather.md](18-mutations-and-weather.md).
+
+**The design survived contact. One number in it did not.**
+
+The spec said exposure was **one roll per weather slot a plant lives through**, on the theory that
+slow seeds *should* catch more weather — a long grow time buying mutation chances. It was reasoned
+about, not measured. The first run of the income-share test said:
+
+| Seed | Share of income from mutations |
+| --- | --- |
+| Eternal Crown (780 s) | **75.0%** |
+| Marigold (55 s) | 21.2% |
+| Daisy (12 s) | **5.9%** |
+
+A **65× spread**. Scaling the catch rates down to bring the Crown into band pushed a Daisy to 0.6%,
+which means a new player would go hours without seeing the feature at all.
+
+**The error in the reasoning:** slow seeds don't need extra exposure, because they already collect
+the reward. The same ×10 lands on a far bigger yield — ×10 on an Eternal Crown is worth roughly
+2,000× the same mutation on a Daisy. Exposure was paying them a second time for the same virtue.
+
+**The fix: one roll per plant**, at a moment chosen when it is sown. Share is now even across the
+ladder — Daisy 20.4%, Marigold 20.9%, Eternal Crown 19.2% — which is the property that keeps
+mutations present at every stage of the game rather than dominant late and invisible early. **The
+original catch rates were right all along**; only the exposure model was wrong, and the numbers in the
+spec table now match measurement almost exactly (Dewkissed ~5%, Gilded ~1%, Prismatic ~0.3%,
+Wonderstruck ~0.045%).
+
+*Consequence, and it resolves an open question:* one roll means **no upgrades**. A plant cannot catch
+Dewkissed and later improve to Gilded. Simpler to reason about, and it removes a rule that would have
+needed explaining.
+
+**The lesson worth keeping:** the income-share test earned its place before it ever guarded a
+regression — it caught a design error that reasoning had not, on the first run. The version that
+matters compares a **fast seed against a slow one**; a single-seed measurement would have passed and
+shipped the bug.
+
+**Rejected: fixing the spread by shortening the weather slot.** Shorter slots raise everyone's
+exposure but leave the ratio between fast and slow seeds untouched — it scales the problem rather
+than solving it, and a sky changing every ten seconds is unpleasant besides.
+
+**Rejected: capping exposures per plant.** Would have bounded the top end without lifting the bottom;
+a Daisy at 12 s against a 60 s slot still crosses a boundary only a fifth of the time.
+
+**Ripe plots do not roll.** Only unlocked, growing, unharvested plots do. Letting a ripe plot keep
+rolling would make "never harvest, wait for Wonderfall" a real strategy, which fights the core loop.
+
+**Stacking raises the catch chance, never the payout** — `beaconCatchBonus: 0.5` per adjacent
+Beacon. An arranged garden gets *more jackpots*, not bigger ones, which is what keeps the income
+share computable however much agency is added later.
+
+**Nothing new is stored beyond two per-cell fields.** `mutation` and `mutateAt` on each grid cell,
+plus `lastSeen` for the reconciliation that is still to come. The weather clock itself stores
+nothing, because it is a pure function of time. Both grid fields needed their own backfill loop in
+`load()`, per the trap `luckyBug` established.
+
+**Left knowingly broken**, both in [11-known-issues.md](11-known-issues.md): mutations do not
+reconcile across time away, and the day/night cycle still keys to page boot while weather keys to
+epoch — so the sky's weather is shared and honest while its time of day is per-session. Fixing the
+latter is small and **unblocks the night-blooming verb**.
+
+**Verification.** 315 sim-test assertions pass. In the browser: all four tiers caught from their
+matching weather, each with a distinct readable treatment; the storm sky greys the scene without
+hiding the garden; a Wonderstruck Daisy paid 7,000 against a plain 70, exactly ×100; the plot cleared;
+console clean.
+
+---
+
 ## 2026-08-15 — Retracted: the card album is not coupled to flowers, and that independence is the design
 
 **Correction.** The same day's earlier entry claimed mutations were the card album's content engine —

@@ -198,6 +198,47 @@ tint the empty soil until something new is planted.
   the better gem farm.
 - **2% chance of triggering a Wonder Effect**, subject to cooldown.
 
+## Weather and mutations
+
+**Built 2026-08-15.** Full design and reasoning in
+[18-mutations-and-weather.md](18-mutations-and-weather.md); numbers in
+[04-economy.md](04-economy.md#weather-and-mutation-tuning). Tables in `DATA.weather` and
+`DATA.mutations`, simulation in the weather section of `game.js`.
+
+**Weather is a pure function of the clock.** `slot = floor(epochSeconds / 60)`, and the weather for a
+slot is a deterministic hash of the slot number — no stored state, no scheduler. Everyone sees the
+same sky at the same moment, and any past slot stays computable, which is what will let time away be
+reconciled later. `game.js` owns the clock and exposes `weatherAt(t)` / `currentWeather()`; `ui.js`
+paints. The no-DOM rule is unchanged.
+
+Clear 70% · Rain 20% · Thunderstorm 7% · Aurora 2.5% · Wonderfall 0.5%.
+
+**Every plant rolls for a mutation exactly once.** `plant()` picks a moment inside the grow window
+(`plantedAt + random() × grow`) and stores it on the cell as `mutateAt`. `rollMutations()`, driven
+from `tick()`, fires any roll whose moment has passed, against the weather standing at that moment,
+then zeroes `mutateAt` so it can never fire twice. Only unlocked, growing, unharvested plots roll.
+
+| Mutation | From | Pays | Share of harvests |
+| --- | --- | --- | --- |
+| Dewkissed | Rain, 25% | ×2 | ~5% |
+| Gilded | Thunderstorm, 15% | ×10 | ~1% |
+| Prismatic | Aurora, 12% | ×25 | ~0.3% |
+| Wonderstruck | Wonderfall, 10% | ×100 | ~0.045% |
+
+**Weather rarity gates mutation rarity** — the top tier needs a rare sky *and* a roll inside it, two
+gates rather than one absurd probability.
+
+An adjacent **Beacon** raises a plot's catch chance by 50% (`catchMultiplier()`). Stacking raises the
+chance, **never the payout**, so the income share stays computable however much agency is added.
+
+**Mutations are a third axis, off the yield curve.** `yield === cost × 1.4` still holds for every
+seed. The multiplier is applied at harvest alongside rarity, mastery, pollination and the Wonder, and
+the mutation is captured before the plot is cleared.
+
+Measured contribution: **~20% of income, evenly across seeds** — Daisy 20.4%, Marigold 20.9%, Eternal
+Crown 19.2%. That evenness is deliberate and is asserted by the suite; an earlier per-slot exposure
+model produced a 65× spread and was cut. See the spec.
+
 ## Verbs and adjacency
 
 **Built 2026-08-14.** A verb is what a flower *does*, as distinct from what it pays. Six of the

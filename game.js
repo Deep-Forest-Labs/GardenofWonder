@@ -25,12 +25,13 @@ const Game = (() => {
       tickets: 0,
       gems: 0,
       tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50, holdInterval: 900 },
-      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false })),
+      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0 })),
       upgrades,
       decor: [],
       boosters: {},
       boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },
       harvestsThisSession: 0,
+      lastSeen: 0,
       stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
       wonder: { until: 0, last: 0 },
       apiary: { hives: [], honey: {}, wax: 0 },
@@ -198,6 +199,8 @@ const Game = (() => {
       state.grid.forEach((cell) => {
         if (!cell) return;
         if (typeof cell.luckyBug !== 'boolean') cell.luckyBug = false;
+        if (typeof cell.mutation === 'undefined') cell.mutation = null;
+        if (typeof cell.mutateAt !== 'number') cell.mutateAt = 0;
         if (!cell.seed) { cell.plantedAt = 0; cell.ready = false; return; }
         if (typeof cell.grow !== 'number' || cell.grow <= 0) cell.grow = 1;
         if (typeof cell.plantedAt !== 'number' || cell.plantedAt <= 0 || cell.plantedAt < 1e8) {
@@ -313,6 +316,85 @@ const Game = (() => {
     if (own === 'nurse') m *= (1 - t.nurseCost);
     if (own === 'deeproot') m *= 1 + plantedNeighbours(idx) * t.deeprootPerNeighbour;
     return m;
+  }
+
+  /* ---------------- weather and mutations ---------------- */
+
+  /* Weather is a pure function of wall-clock time. Nothing is stored and nothing schedules it, so
+     every player sees the same sky at the same moment and any past slot stays computable — which
+     is what lets time away be reconciled later. */
+  const weatherSlotOf = (seconds) => Math.floor(seconds / DATA.weather.slotSeconds);
+
+  /** Deterministic [0,1) from a slot number. Math.imul keeps this exact in 32-bit. */
+  function slotNoise(slot) {
+    let h = Math.imul(slot | 0, 2654435761);
+    h ^= h >>> 15;
+    h = Math.imul(h, 2246822519);
+    h ^= h >>> 13;
+    h = Math.imul(h, 3266489917);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  }
+
+  function weatherForSlot(slot) {
+    const types = DATA.weather.types;
+    const total = types.reduce((a, t) => a + t.w, 0);
+    let t = slotNoise(slot) * total;
+    for (const w of types) { t -= w.w; if (t <= 0) return w; }
+    return types[0];
+  }
+
+  const weatherAt = (seconds) => weatherForSlot(weatherSlotOf(seconds));
+  const currentWeather = () => weatherAt(nowSeconds());
+
+  const mutationDef = (id) => (id ? DATA.mutations[id] : null) || null;
+  const mutationRank = (id) => (mutationDef(id) ? mutationDef(id).rank : 0);
+  const mutationMult = (id) => (mutationDef(id) ? mutationDef(id).mult : 1);
+
+  /** Adjacent Beacons make a plot more likely to catch. Stacking raises the chance, never the
+      payout, so the income share stays computable however much agency is added later. */
+  function catchMultiplier(idx) {
+    return 1 + neighbourVerbs(idx, 'beacon') * VT().beaconCatchBonus;
+  }
+
+  /* Every plant gets exactly ONE mutation roll, at a moment chosen when it is sown, against the
+     weather standing at that moment. One roll per cycle rather than one per slot lived through:
+     rolling per slot made exposure proportional to grow time, which measured out at a 65x spread
+     between an Eternal Crown and a Daisy — dominant late and invisible early. A slow seed is
+     already rewarded, because the same multiplier lands on a far bigger yield. */
+  const mutationMoment = (plantedAt, grow) => plantedAt + Math.random() * grow;
+
+  /** Roll any plant whose moment has arrived. Returns what caught, for the UI to celebrate. */
+  function rollMutations() {
+    const now = nowSeconds();
+    const caught = [];
+    state.grid.forEach((cell, idx) => {
+      if (cell.locked || !cell.seed || !cell.mutateAt || now < cell.mutateAt) return;
+      const w = weatherAt(cell.mutateAt);
+      cell.mutateAt = 0;
+      if (!w.mutation) return;
+      if (Math.random() >= w.catch * catchMultiplier(idx)) return;
+      cell.mutation = w.mutation;
+      caught.push({ idx, mutation: w.mutation, weather: w, seed: seedById(cell.seed) });
+    });
+    return caught;
+  }
+
+  let lastWeatherSlot = null;
+
+  function processWeather() {
+    const slot = weatherSlotOf(nowSeconds());
+    if (lastWeatherSlot !== slot) {
+      const first = lastWeatherSlot === null;
+      lastWeatherSlot = slot;
+      if (!first) emit('weather', { weather: weatherForSlot(slot) });
+    }
+    const caught = rollMutations();
+    state.lastSeen = nowSeconds();
+    if (caught.length) {
+      save();
+      emit('mutate', { caught });
+    }
   }
 
   /* ---------------- reputation, levels, quests ---------------- */
@@ -885,8 +967,12 @@ const Game = (() => {
       seed: seedDef.id,
       plantedAt: nowSeconds(),
       grow: seedDef.grow * growModifier() * keeperModifier(idx),
-      aura: ''
+      aura: '',
+      mutation: null,
+      mutateAt: 0
     };
+    const cellNow = state.grid[idx];
+    cellNow.mutateAt = mutationMoment(cellNow.plantedAt, cellNow.grow);
     /* A Keeper planted next to something already growing has to help it too, or the verb would
        only ever pay out when the player happened to plant in the right order. */
     const quickened = seedDef.verb === 'keeper' ? quickenNeighbours(idx) : [];
@@ -979,6 +1065,8 @@ const Game = (() => {
     const beacons = neighbourVerbs(idx, 'beacon');
     const lanterns = neighbourVerbs(idx, 'lantern');
     const verbMult = verbPayoutMult(idx);
+    const mutation = cell.mutation || null;
+    const mutMult = mutationMult(mutation);
     const r = rollRarity(
       boostVal('rarityWeight')
       + (luckyHarvest ? LADYBUG_RARITY_BONUS : 0)
@@ -989,7 +1077,7 @@ const Game = (() => {
     // Read before recordHarvest: the harvest that completes a tier is paid at the old rate.
     const mastered = masteryMult(sdef.id);
     const payout = Math.round(
-      yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * mastered * verbMult
+      yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * mastered * verbMult * mutMult
     );
 
     state.credits += payout;
@@ -1010,7 +1098,7 @@ const Game = (() => {
     let gemDrop = false;
     if (Math.random() < gemChance) { state.gems += 1; gemDrop = true; }
 
-    state.grid[idx] = { ...cell, seed: null, plantedAt: 0, grow: 0, ready: false, aura: r.a, luckyBug: false };
+    state.grid[idx] = { ...cell, seed: null, plantedAt: 0, grow: 0, ready: false, aura: r.a, luckyBug: false, mutation: null, mutateAt: 0 };
     const sown = sdef.verb === 'spreader' ? trySpread(idx, sdef) : -1;
     const sparked = tryWonder(WONDER.harvestChance);
     save();
@@ -1019,7 +1107,7 @@ const Game = (() => {
       idx, payout, rarity: r, seed: sdef, gemDrop, repBonus, sparkedWonder: sparked, luckyHarvest,
       firstDiscover: almanac.first, discovered: almanac.count, bestRarity: almanac.best,
       milestones: almanac.milestones, mastery: almanac.mastery,
-      verbMult, beacons, lanterns, sown
+      verbMult, beacons, lanterns, sown, mutation, mutMult
     };
     emit('harvest', payload);
     if (almanac.milestones.length) {
@@ -1368,6 +1456,7 @@ const Game = (() => {
   function tick(dt) {
     const now = nowSeconds();
     removeExpiredBoosters();
+    processWeather();
 
     const wa = wonderActive();
     if (wonderWasActive && !wa) emit('wonder', { active: false });
@@ -1429,6 +1518,8 @@ const Game = (() => {
     claimQuest, stripQuest, questById,
     discoveredCount, discoveredOf, bestRarityOf, almanacMilestones,
     masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf,
-    neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier
+    neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier,
+    weatherSlotOf, weatherForSlot, weatherAt, currentWeather, rollMutations, processWeather,
+    mutationDef, mutationRank, mutationMult, catchMultiplier
   };
 })();

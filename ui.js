@@ -201,6 +201,18 @@
         v.root.dataset.state = state;
         c.state = state;
       }
+      const mut = cell.mutation || '';
+      if (c.mutation !== mut) {
+        if (mut) {
+          const md = DATA.mutations[mut];
+          v.root.dataset.mutation = mut;
+          v.root.style.setProperty('--mut', md.tint);
+          v.root.style.setProperty('--mut-glow', md.glow);
+        } else {
+          delete v.root.dataset.mutation;
+        }
+        c.mutation = mut;
+      }
       if (c.aura !== (cell.aura || '')) {
         if (cell.aura) v.root.dataset.aura = cell.aura; else delete v.root.dataset.aura;
         c.aura = cell.aura || '';
@@ -1467,6 +1479,46 @@
       setTimeout(() => src.root.classList.remove('verb-source'), 1600);
     }
   }
+
+  /* The sky is the only cue for ordinary weather — a banner four times an hour would be noise.
+     Rare weather earns a line from the flower. */
+  function paintWeather(w) {
+    el.game.dataset.weather = w.id;
+    if (w.tint) el.game.style.setProperty('--weather-tint', w.tint);
+    else el.game.style.removeProperty('--weather-tint');
+  }
+
+  Game.on('weather', ({ weather }) => {
+    paintWeather(weather);
+    if (FLOWER_LINES[weather.id]) say(weather.id, weather.id === 'wonderfall');
+    if (weather.id === 'wonderfall') showBanner('Wonderfall', 'Anything growing might change');
+  });
+
+  const seedNameOf = (idx) => {
+    const cell = S.grid[idx];
+    const sd = cell && cell.seed ? Game.seedById(cell.seed) : null;
+    return sd ? sd.name : '';
+  };
+
+  Game.on('mutate', ({ caught }) => {
+    caught.forEach(({ idx, mutation }) => {
+      const v = plotEls[idx];
+      const md = DATA.mutations[mutation];
+      if (!v || !md) return;
+      const c = FX.centerOf(v.root);
+      const rank = md.rank;
+      FX.sparks(c.x, c.y, 6 + rank * 6, md.tint);
+      FX.ring(c.x, c.y, md.glow, 0.5, 60 + rank * 30);
+      FX.float(c.x, c.y - 10, md.name, rank >= 3 ? 'legend' : rank === 2 ? 'epic' : 'rare');
+      if (rank >= 3) {
+        FX.shake(rank * 2);
+        FX.confetti(c.x, c.y);
+        showBanner(md.name, `Your ${seedNameOf(idx) || 'bloom'} changed`);
+      }
+      Sound.play(rank >= 3 ? 'legend' : 'rare');
+      FX.haptic(rank * 8);
+    });
+  });
 
   Game.on('plant', ({ idx, auto, verb }) => {
     if (!S.seen.plot) {

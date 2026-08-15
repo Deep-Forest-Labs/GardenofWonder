@@ -44,7 +44,32 @@ const DATA = {
     beaconRarity: 6,
     lanternGemMult: 2,
     deeprootPerNeighbour: 0.08,
-    spreaderChance: 0.20
+    spreaderChance: 0.20,
+    beaconCatchBonus: 0.5   // each adjacent Beacon raises this plot's mutation catch chance
+  },
+
+  /* Weather is derived from wall-clock epoch time, never from a running timer, so every player
+     sees the same sky at the same moment and past weather stays computable. Weights are shares
+     of all slots and must total 100. */
+  weather: {
+    slotSeconds: 60,
+    types: [
+      { id: 'clear',      name: 'Clear',        w: 70,  mutation: null,           catch: 0,    tint: '' },
+      { id: 'rain',       name: 'Rain',         w: 20,  mutation: 'dew',          catch: 0.25, tint: '#7fa8c9' },
+      { id: 'storm',      name: 'Thunderstorm', w: 7,   mutation: 'gilded',       catch: 0.15, tint: '#4d5b78' },
+      { id: 'aurora',     name: 'Aurora',       w: 2.5, mutation: 'prismatic',    catch: 0.12, tint: '#5fe0e8' },
+      { id: 'wonderfall', name: 'Wonderfall',   w: 0.5, mutation: 'wonderstruck', catch: 0.10, tint: '#ffb3f0' }
+    ]
+  },
+
+  /* A plant holds at most one mutation and only ever upgrades to a higher rank. `mult` multiplies
+     harvest payout. Tune against the measured income share, never by eye — see
+     docs/18-mutations-and-weather.md. */
+  mutations: {
+    dew:          { name: 'Dewkissed',    rank: 1, mult: 2,   tint: '#8fd6ff', glow: '#cfeeff' },
+    gilded:       { name: 'Gilded',       rank: 2, mult: 10,  tint: '#ffc93c', glow: '#ffe9a8' },
+    prismatic:    { name: 'Prismatic',    rank: 3, mult: 25,  tint: '#c9b6ff', glow: '#e7dcff' },
+    wonderstruck: { name: 'Wonderstruck', rank: 4, mult: 100, tint: '#ff8fd0', glow: '#ffd4ec' }
   },
 
   seeds: [
@@ -356,5 +381,10 @@ const FLOWER_LINES = {
   idle: ['Psst... the plots are lonely.', 'Try planting something new.', 'Tap me if you get bored.', 'Nice weather for growing.'],
   broke: ['Save up a few coins first!', 'Not enough in the pouch.', 'Tap me for pocket change!'],
   unlock: ['New ground to grow on!', 'More room for flowers!', 'Ooh, fresh soil!'],
+  rain: ['Rain! The garden loves this.', 'Mmm, petrichor.', 'Drink up, everyone.'],
+  storm: ['Thunder! Hold onto your petals.', 'Ooh, that one was close.', 'What a sky.'],
+  aurora: ['Look up — the sky has colours!', 'I have only seen this twice.', 'The whole garden is glowing.'],
+  wonderfall: ['The sky is doing something wonderful.', 'Oh my. Oh MY.', 'Remember this one.'],
+  mutation: ['Something changed out there!', 'That bloom looks different...', 'Well, would you look at that.'],
   wonder: ['WONDERRRR!', 'Everything is upside-down lovely!', 'Grab it all!']
 };

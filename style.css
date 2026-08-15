@@ -444,6 +444,56 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .plot:active{transform:translateY(3px);box-shadow:inset 0 5px 0 rgba(255,255,255,.16), inset 0 -7px 0 rgba(0,0,0,.18), 0 1px 0 var(--soil-dd), 0 4px 8px rgba(44,26,16,.22)}
 .plot-inner{position:absolute;inset:0;border-radius:15px;overflow:hidden}
 
+/* A mutation is visible the moment it lands and stays visible until harvest — that permanence is
+   the whole mechanic, and it is what separates a mutation from a rarity roll revealed at the end. */
+.plot[data-mutation]{
+  border-color:var(--mut,#8fd6ff);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.16),
+    inset 0 -7px 0 rgba(0,0,0,.18),
+    0 4px 0 var(--soil-dd),
+    0 0 0 3px var(--mut,#8fd6ff),
+    0 0 18px 2px var(--mut-glow,#cfeeff),
+    0 8px 14px rgba(44,26,16,.24);
+}
+.plot[data-mutation] .plant{filter:drop-shadow(0 0 6px var(--mut-glow,#cfeeff))}
+.plot[data-mutation]::before{
+  content:'';position:absolute;inset:0;border-radius:15px;pointer-events:none;z-index:2;
+  background:radial-gradient(circle at 50% 40%, var(--mut-glow,#cfeeff) 0%, transparent 62%);
+  opacity:.28;
+  animation:mutPulse 2.6s ease-in-out infinite;
+}
+/* Rank climbs with the treatment: the top two tiers get a moving sheen the lower two don't. */
+.plot[data-mutation="prismatic"] .plant,
+.plot[data-mutation="wonderstruck"] .plant{animation:mutShimmer 2.2s ease-in-out infinite}
+@keyframes mutPulse{0%,100%{opacity:.20}50%{opacity:.40}}
+@keyframes mutShimmer{
+  0%,100%{filter:drop-shadow(0 0 6px var(--mut-glow,#cfeeff)) saturate(1)}
+  50%{filter:drop-shadow(0 0 14px var(--mut-glow,#cfeeff)) saturate(1.5)}
+}
+@media (prefers-reduced-motion:reduce){
+  .plot[data-mutation]::before{animation:none;opacity:.3}
+  .plot[data-mutation="prismatic"] .plant,
+  .plot[data-mutation="wonderstruck"] .plant{animation:none}
+}
+
+/* Weather tints the whole scene rather than replacing the sky, so the day/night cycle keeps
+   running underneath it. */
+.game{--weather-fade:.55s}
+.scenery::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:var(--weather-tint,transparent);
+  opacity:0;transition:opacity var(--weather-fade) ease, background var(--weather-fade) ease;
+  mix-blend-mode:multiply;
+}
+.game[data-weather="rain"] .scenery::after{opacity:.30}
+.game[data-weather="storm"] .scenery::after{opacity:.52}
+.game[data-weather="aurora"] .scenery::after{opacity:.26;mix-blend-mode:screen}
+.game[data-weather="wonderfall"] .scenery::after{opacity:.34;mix-blend-mode:screen}
+@media (prefers-reduced-motion:reduce){
+  .scenery::after{transition:none}
+}
+
 /* Adjacency, shown only at the moment a verb flower goes in and then faded out. A permanent
    indicator would clutter a board whose readability is the point. */
 .plot.verb-source::after,

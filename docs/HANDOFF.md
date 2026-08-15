@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-14**
+Last updated: **2026-08-15**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -11,6 +11,15 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 `main` at the repository root. It is a single-screen idle garden — tap a talking flower, plant
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
+
+> **Weather and mutations shipped 2026-08-15.** The sky runs on wall-clock epoch time — the same
+> weather for everyone at the same moment, and any past slot computable. Every plant rolls once for a
+> mutation mid-growth: Dewkissed ×2, Gilded ×10, Prismatic ×25, Wonderstruck ×100, visible from the
+> moment it lands until harvest. An adjacent Beacon raises the catch chance. Measured at **~20% of
+> income, evenly across every seed** — the spec's original per-slot exposure model produced a 65×
+> spread and was cut after the sim-test caught it. Mechanic in
+> [03-systems.md](03-systems.md#weather-and-mutations), design and the retraction in
+> [18-mutations-and-weather.md](18-mutations-and-weather.md).
 
 > **Verbs shipped 2026-08-14.** Six of the nineteen seeds now do something to their two neighbours
 > — Keeper (growth), Nurse (yield, at a cost to itself), Beacon (rarity), Lantern (gems), Deeproot
@@ -207,11 +216,10 @@ This supersedes the ordering above where they conflict. Reasoning in
 1. ~~**Per-plant verbs and adjacency**~~ — **done 2026-08-14.** Six seeds carry a verb; the other
    thirteen stay plain yield tiers on purpose. Expanding the set is cheap when the mechanic proves
    out — it is one `DATA.verbs` entry, one `verb:` field and a consumer.
-2. **Mutations and variants** — **specified 2026-08-15, not built.** Full spec in
-   [18-mutations-and-weather.md](18-mutations-and-weather.md). Deterministic epoch-clock weather
-   causes four tiers of visible, stackable mutation; verbs raise the catch chance; the ladder is
-   tuned to a **measured 20–30% income share** rather than to chosen multipliers. Also the card
-   **Build steps 1–3 of that doc first; they are the minimum to judge whether it is fun.**
+2. ~~**Mutations and variants**~~ — **built 2026-08-15**, steps 1–4 of
+   [18-mutations-and-weather.md](18-mutations-and-weather.md): epoch-clock weather, four mutation
+   tiers, Beacon stacking, visuals. Measured at ~20% of income, evenly across seeds. **Steps 5–6
+   remain** — offline reconciliation and card generation.
    **Mutations do *not* feed the card album** — an earlier claim that they did is retracted; see
    [19-card-album.md](19-card-album.md).
 3. **Named synergy pairs** — one data row and a name each; companion planting writes itself.
@@ -332,6 +340,15 @@ Real saves always have those, so this only bites synthetic or hand-edited saves 
 as `NaN%` in the Almanac and looks like a live bug. See
 [11-known-issues.md](11-known-issues.md#correctness).
 
+**A plant's mutation roll fires once and only once.** `plant()` schedules `cell.mutateAt` inside the
+grow window; `rollMutations()` fires it and zeroes it. Anything writing a grid cell by hand — a test
+fixture, a migration, a future auto-planter — must set `mutateAt` too, or that plant silently never
+rolls. Both `mutation` and `mutateAt` need their own backfill loop in `load()`, beside `luckyBug`.
+
+**Weather is a pure function of epoch time, so never store it.** `weatherForSlot(n)` is a hash of the
+slot number. Caching or persisting the current weather means the design has been misunderstood — the
+point is that any past or future slot is computable on demand.
+
 **Verb effects must be read before the plot is cleared.** `harvest()` captures the neighbourhood —
 Beacon weight, Lantern gem multiplier, the payout multiplier — at the top, because clearing the plot
 changes what its neighbours see. A verb consumer added after the `state.grid[idx] = {...}` line will
@@ -352,7 +369,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 282 assertions over the simulation layer
+node tools/sim-test.js          # 315 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

@@ -160,6 +160,27 @@ All interpolated content currently comes from `data.js` and is trusted, so there
 vulnerability. But there's no escaping helper, so the first time player-supplied text reaches a
 panel it will be an injection. Add escaping before adding any naming or text-entry feature.
 
+### Weather is built but time away is not reconciled
+
+`processWeather()` only rolls mutations while the tab is open. Weather is a pure function of epoch
+time and `state.lastSeen` is already written every tick, so the data needed to reconcile a gap is
+there — but nothing walks it yet. **A plant whose mutation moment passed while the game was closed
+simply rolls the instant the tab is reopened**, against whatever weather is standing then rather than
+the weather it should have met.
+
+Harmless today and invisible in play. It becomes wrong the moment offline earnings ship, and it is
+step 5 of the build order in [18-mutations-and-weather.md](18-mutations-and-weather.md).
+
+### The day/night cycle still restarts on every reload
+
+Unchanged by the weather work, and now inconsistent with it. `updateSky()` in `ui.js` keys the cycle
+to `bootAt` — page load — while weather keys to wall-clock epoch. So the sky's *weather* is shared
+and honest while the sky's *time of day* is per-session and resets.
+
+Moving the day cycle onto the same epoch clock is a small change and **unblocks the night-blooming
+verb** that had to be dropped from the first verb pass. See
+[10-decision-log.md](10-decision-log.md).
+
 ### Two sim-tests were flaky, and the class of bug is worth remembering
 
 Both fixed 2026-08-14. Measured on the committed code beforehand: **4 of 50 runs failed.** The suite
@@ -184,7 +205,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 282 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 315 assertions over the
 economy, progression, saves and mastery. Everything above that line — `ui.js`, layout, the sheet,
 FX — is verified by hand against the checklist in [09-conventions.md](09-conventions.md). That is
 the right split for a prototype, but a UI regression has no net under it.

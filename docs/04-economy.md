@@ -61,6 +61,44 @@ convenience upgrade — bigger numbers per harvest, same rate, at 33% more capit
 Whether these are bugs or intentional texture is not recorded anywhere. They came over from the
 original build. Left alone for now, noted in [11-known-issues.md](11-known-issues.md).
 
+### Weather and mutation tuning
+
+A third axis, and like verbs it is deliberately **off the yield curve** — `yield === cost × 1.4`
+still holds for every seed. Design in
+[18-mutations-and-weather.md](18-mutations-and-weather.md).
+
+`DATA.weather` — shares of all slots, must total 100. `slotSeconds: 60` in the web build.
+
+| Weather | Share | Causes | Catch chance |
+| --- | --- | --- | --- |
+| Clear | 70% | — | — |
+| Rain | 20% | Dewkissed | 25% |
+| Thunderstorm | 7% | Gilded | 15% |
+| Aurora | 2.5% | Prismatic | 12% |
+| Wonderfall | 0.5% | Wonderstruck | 10% |
+
+`DATA.mutations` — payout multipliers.
+
+| Mutation | Rank | Pays | Reaches this share of harvests |
+| --- | --- | --- | --- |
+| Dewkissed | 1 | ×2 | ~5% |
+| Gilded | 2 | ×10 | ~1% |
+| Prismatic | 3 | ×25 | ~0.29% |
+| Wonderstruck | 4 | ×100 | ~0.045% |
+
+`verbTuning.beaconCatchBonus: 0.5` — each adjacent Beacon raises the catch chance by 50%. It raises
+the **chance**, never the payout, which is what keeps the income share computable.
+
+**Tune the income share, not these numbers.** Target is **20–30% of total income from mutations**;
+measured today at ~20%, evenly across seeds. The share survives an economy retune, the multipliers do
+not. The arithmetic to reason with is `contribution = chance × (multiplier − 1)`, which produces the
+rule that matters: **a ×3 at 20% adds +40% to average income while a ×50 at 0.2% adds +10%.** Be
+generous at the top of the ladder and stingy at the bottom — jackpots are cheap, frequent small
+bonuses are what wreck a curve.
+
+The suite asserts the share for a fast seed *and* a slow one and that they match. Do not tune these
+by eye; run `node tools/sim-test.js`.
+
 ### Verb tuning
 
 Verbs are a second axis and are deliberately **not** on the yield curve — see

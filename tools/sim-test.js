@@ -55,7 +55,7 @@ const advance = (seconds, step = 1) => {
 };
 
 const clearGarden = () => S.grid.forEach((c) => {
-  c.locked = false; c.seed = null; c.plantedAt = 0; c.grow = 0; c.ready = false;
+  c.locked = false; c.seed = null; c.plantedAt = 0; c.grow = 0; c.ready = false; c.mutation = null;
 });
 
 /* Mastery multiplies harvest payout and climbs as a run proceeds, so a test
@@ -1079,6 +1079,222 @@ check('no two verbs share an effect category', (() => {
   const cats = Object.values(DATA.verbs).map((v) => v.cat);
   return new Set(cats).size === cats.length;
 })());
+G.reset();
+
+/* ---------------- weather and mutations ---------------- */
+
+group('weather is a pure function of the clock');
+G.reset();
+check('the same slot always gives the same weather',
+  G.weatherForSlot(12345).id === G.weatherForSlot(12345).id);
+check('slots are derived from epoch seconds',
+  G.weatherSlotOf(DATA.weather.slotSeconds * 7) === 7
+  && G.weatherSlotOf(DATA.weather.slotSeconds * 7 + 1) === 7);
+check('weatherAt agrees with weatherForSlot', (() => {
+  const t = 987654;
+  return G.weatherAt(t).id === G.weatherForSlot(G.weatherSlotOf(t)).id;
+})());
+check('the table weights total 100',
+  Math.abs(DATA.weather.types.reduce((a, t) => a + t.w, 0) - 100) < 1e-9);
+check('the distribution matches the table', (() => {
+  const seen = {};
+  const N = 200000;
+  for (let s = 0; s < N; s += 1) {
+    const id = G.weatherForSlot(s).id;
+    seen[id] = (seen[id] || 0) + 1;
+  }
+  return DATA.weather.types.every((t) => Math.abs((seen[t.id] || 0) / N * 100 - t.w) < 1.0);
+})());
+check('every weather either mutates or is clear',
+  DATA.weather.types.every((t) => (t.mutation === null) === (t.catch === 0)));
+check('every weather mutation is a real mutation',
+  DATA.weather.types.every((t) => !t.mutation || Boolean(DATA.mutations[t.mutation])));
+
+group('the mutation ladder is well formed');
+check('ranks are unique and contiguous', (() => {
+  const ranks = Object.values(DATA.mutations).map((m) => m.rank).sort((a, b) => a - b);
+  return ranks.every((r, i) => r === i + 1);
+})());
+check('a higher rank always pays more', (() => {
+  const byRank = Object.values(DATA.mutations).sort((a, b) => a.rank - b.rank);
+  return byRank.every((m, i) => i === 0 || m.mult > byRank[i - 1].mult);
+})());
+check('a rarer weather carries a higher-ranked mutation', (() => {
+  const carriers = DATA.weather.types.filter((t) => t.mutation)
+    .sort((a, b) => b.w - a.w);
+  return carriers.every((t, i) => i === 0
+    || DATA.mutations[t.mutation].rank > DATA.mutations[carriers[i - 1].mutation].rank);
+})());
+check('no mutation means no multiplier', G.mutationMult(null) === 1 && G.mutationRank(null) === 0);
+
+group('catching a mutation');
+const slotOfWeather = (id) => {
+  for (let s = 0; s < 500000; s += 1) if (G.weatherForSlot(s).id === id) return s;
+  return -1;
+};
+const SLOT = DATA.weather.slotSeconds;
+const rainSlot = slotOfWeather('rain');
+const clearSlot = slotOfWeather('clear');
+const stormSlot = slotOfWeather('storm');
+check('the table is reachable — rain, clear and storm all occur',
+  rainSlot >= 0 && clearSlot >= 0 && stormSlot >= 0);
+
+const rngMut = Math.random;
+/* Put a plant in the ground whose single mutation moment is already due, standing in the
+   middle of a chosen weather slot. */
+const dueIn = (idx, seed, slot) => {
+  S.grid[idx] = {
+    locked: false, seed, plantedAt: clock - 10, grow: 1e6, ready: false, aura: '',
+    luckyBug: false, mutation: null, mutateAt: slot * SLOT + SLOT / 2
+  };
+};
+clearGarden();
+unlockTo(20);
+S.credits = 1e9;
+
+Math.random = () => 0;                                   // always catch
+dueIn(0, 'daisy', clearSlot);
+G.rollMutations();
+check('clear weather never mutates', S.grid[0].mutation === null);
+check('a spent roll is not repeated', S.grid[0].mutateAt === 0);
+dueIn(0, 'daisy', rainSlot);
+G.rollMutations();
+check('rain can mutate a growing plot', S.grid[0].mutation === 'dew');
+const spent = S.grid[0].mutateAt;
+G.rollMutations();
+check('each plant rolls exactly once', spent === 0 && S.grid[0].mutation === 'dew');
+
+clearGarden();
+dueIn(1, 'daisy', rainSlot);
+S.grid[1].mutateAt = clock + 1e6;                        // not due yet
+G.rollMutations();
+check('a roll in the future does not fire early', S.grid[1].mutation === null);
+clearGarden();
+G.rollMutations();
+check('an empty plot never rolls', S.grid.every((c) => c.mutation === null));
+dueIn(2, 'daisy', rainSlot);
+S.grid[2].locked = true;
+G.rollMutations();
+S.grid[2].locked = false;
+check('a locked plot never rolls', S.grid[2].mutation === null);
+Math.random = rngMut;
+
+group('planting schedules exactly one roll');
+clearGarden();
+S.credits = 1e9;
+G.plant(0, G.seedById('daisy'));
+const cell0 = S.grid[0];
+check('a moment is scheduled on planting', cell0.mutateAt > 0);
+check('the moment falls inside the grow window',
+  cell0.mutateAt >= cell0.plantedAt && cell0.mutateAt <= cell0.plantedAt + cell0.grow,
+  `${cell0.mutateAt - cell0.plantedAt} of ${cell0.grow}`);
+check('moments vary between plantings', (() => {
+  const seen = new Set();
+  for (let i = 0; i < 40; i += 1) {
+    clearGarden();
+    G.plant(0, G.seedById('eternal'));
+    seen.add(Math.round(S.grid[0].mutateAt - S.grid[0].plantedAt));
+  }
+  return seen.size > 20;
+})());
+
+group('Beacon raises the catch chance, never the payout');
+clearGarden();
+check('a lone plot has no bonus', G.catchMultiplier(1) === 1);
+S.credits = 1e9;
+G.plant(0, G.seedById('marigold'));
+check('an adjacent beacon raises the multiplier',
+  Math.abs(G.catchMultiplier(1) - 1.5) < 1e-9, `${G.catchMultiplier(1)}`);
+check('it does not touch the payout multiplier', G.verbPayoutMult(1) === 1);
+const catchRate = (withBeacon) => {
+  let caught = 0;
+  const N = 4000;
+  for (let i = 0; i < N; i += 1) {
+    clearGarden();
+    if (withBeacon) dueIn(0, 'marigold', clearSlot);
+    dueIn(1, 'daisy', rainSlot);
+    G.rollMutations();
+    if (S.grid[1].mutation) caught += 1;
+  }
+  return caught / N;
+};
+const beaconCatch = catchRate(true);
+const plainCatch = catchRate(false);
+check('a beacon meaningfully raises how often a neighbour catches',
+  beaconCatch > plainCatch * 1.25, `${beaconCatch.toFixed(3)} vs ${plainCatch.toFixed(3)}`);
+
+group('mutations pay out and then clear');
+clearGarden();
+clearMastery();
+S.wonder = { until: 0, last: 0 };
+S.boosters = {};
+S.apiary.hives = [];
+Math.random = () => 0.5;                                 // Common, no gem, no Wonder
+const ripe = (mutation) => {
+  S.grid[0] = {
+    locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '',
+    luckyBug: false, mutation, mutateAt: 0
+  };
+};
+ripe(null);
+const plainHarvest = G.harvest(0).payout;
+clearMastery();
+ripe('gilded');
+const gildedResult = G.harvest(0);
+Math.random = rngMut;
+check('a gilded harvest pays its multiplier',
+  gildedResult.payout === Math.round(plainHarvest * DATA.mutations.gilded.mult),
+  `${gildedResult.payout} vs ${Math.round(plainHarvest * DATA.mutations.gilded.mult)}`);
+check('the harvest reports which mutation paid', gildedResult.mutation === 'gilded');
+check('the plot is left clean',
+  S.grid[0].mutation === null && S.grid[0].mutateAt === 0);
+
+group('mutations leave the seed curve alone');
+check('every seed still yields exactly 1.4x its cost',
+  DATA.seeds.every((s) => Math.abs(s.yield - s.cost * 1.4) < 1e-6));
+
+/* The assertion the whole ladder is tuned against. One roll per plant makes the share even
+   across seeds, which is the property that keeps mutations present at every stage of the game
+   rather than dominant late and invisible early. Deliberately statistical: wide band. */
+group('mutations contribute a fifth of income, evenly across seeds');
+const incomeShare = (seedId, cycles) => {
+  clearGarden();
+  clearMastery();
+  S.wonder = { until: 0, last: 0 };
+  S.boosters = {};
+  S.apiary.hives = [];
+  S.credits = 1e18;
+  const seed = G.seedById(seedId);
+  let base = 0;
+  let actual = 0;
+  for (let i = 0; i < cycles; i += 1) {
+    clock += seed.grow + 1;
+    S.grid[0] = {
+      locked: false, seed: seedId, plantedAt: clock - seed.grow, grow: seed.grow, ready: false,
+      aura: '', luckyBug: false, mutation: null, mutateAt: 0
+    };
+    S.grid[0].mutateAt = S.grid[0].plantedAt + Math.random() * seed.grow;
+    G.rollMutations();
+    const mut = S.grid[0].mutation;
+    S.grid[0].ready = true;
+    S.grid[0].plantedAt = 0;
+    S.grid[0].grow = 0;
+    const h = G.harvest(0);
+    actual += h.payout;
+    base += h.payout / G.mutationMult(mut);
+    clearMastery();
+  }
+  return (actual - base) / actual;
+};
+const fastShare = incomeShare('daisy', 20000);
+const slowShare = incomeShare('eternal', 20000);
+check('a cheap seed sits in the 12-32% band',
+  fastShare > 0.12 && fastShare < 0.32, `${(fastShare * 100).toFixed(1)}%`);
+check('an expensive seed sits in the same band',
+  slowShare > 0.12 && slowShare < 0.32, `${(slowShare * 100).toFixed(1)}%`);
+check('the share does not swing wildly between them',
+  Math.abs(fastShare - slowShare) < 0.12,
+  `${(fastShare * 100).toFixed(1)}% vs ${(slowShare * 100).toFixed(1)}%`);
 G.reset();
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

@@ -1,7 +1,8 @@
 # Mutations and Weather
 
-**Status: specification, not built.** Specified 2026-08-15. Structure is locked; every number below
-is a starting point to be tuned against a measured target, not a value to trust. Reasoning in
+**Status: built 2026-08-15**, except offline reconciliation (step 5) and card generation (step 6),
+which are deliberately still open. One thing in the original spec was wrong and was corrected by
+measurement during the build — see "Exposure" below. Reasoning in
 [10-decision-log.md](10-decision-log.md). Market evidence in
 [17-market-and-positioning.md](17-market-and-positioning.md#why-plant-this-flower).
 
@@ -66,24 +67,25 @@ Reuse the Wonder Effect's existing veil and palette for Wonderfall rather than a
 garden-wide treatment. It already exists, it already reads as "something special is happening", and
 the tonal overlap is a feature.
 
-**Slot length.** Web build runs compressed like everything else here — a few minutes per slot, in
-keeping with a Daisy maturing in 12 seconds. Mobile scale will be much longer. Do not "fix" the
+**Slot length is 60 s** in the web build, compressed like everything else here, in keeping with a
+Daisy maturing in 12 seconds. Mobile scale will be much longer. Do not "fix" the
 discrepancy; see the same note about grow times in [HANDOFF.md](HANDOFF.md).
 
 ## The mutation ladder
 
-Four tiers. A plant holds **at most one** mutation — the best it has caught — so tiers never stack
-on a single bloom.
+Four tiers. A plant holds **at most one** mutation and rolls for it exactly once, so tiers never
+stack on a single bloom.
 
-| Mutation | Catch chance per slot | Pays | Contribution to average income |
+| Mutation | Catch chance | Pays | How often a harvest carries it |
 | --- | --- | --- | --- |
-| **Dewkissed** | 25% during Rain | ×2 | ~+5% |
-| **Gilded** | 15% during Thunderstorm | ×10 | ~+9% |
-| **Prismatic** | 12% during Aurora | ×25 | ~+7% |
-| **Wonderstruck** | 10% during Wonderfall | ×100 | ~+5% |
+| **Dewkissed** | 25% during Rain | ×2 | **~5.0%** |
+| **Gilded** | 15% during Thunderstorm | ×10 | **~1.0%** |
+| **Prismatic** | 12% during Aurora | ×25 | **~0.29%** |
+| **Wonderstruck** | 10% during Wonderfall | ×100 | **~0.045%** |
 
-Roughly **+26% of average income**, arriving as four genuinely different events at four different
-cadences — a couple a session, every other session, about weekly, and once in a very long while.
+Measured at **~20% of income**, evenly across seeds (Daisy 20.4%, Marigold 20.9%, Eternal Crown
+19.2%). Four genuinely different events at four cadences — a couple a session, every other session,
+about weekly, and once in a very long while.
 
 ### Tune the income share, not the multipliers
 
@@ -106,16 +108,37 @@ modest common bonus inflates the curve four times harder and delivers a fraction
 **So: be generous at the top of the ladder and stingy at the bottom.** Jackpots are cheap. Frequent
 small bonuses are what quietly wreck an economy.
 
-### Slow seeds catch more weather, on purpose
+### Exposure: one roll per plant — the spec's original model was wrong
 
-A plant is exposed to mutation once per weather slot it lives through, so a 780-second Eternal Crown
-sees far more weather than a 12-second Daisy. **This is a feature, not a rounding error.** It hands
-long-grow seeds a real advantage that has nothing to do with yield, and it partially answers the
-throughput-trap class of problem recorded in [11-known-issues.md](11-known-issues.md) — a slow seed
-is now buying mutation exposure with its grow time.
+**Every plant gets exactly one mutation roll**, at a moment chosen when it is sown
+(`plantedAt + random() × grow`), evaluated against the weather standing at that moment. The roll
+fires mid-growth, so the result is visible while the plant is still in the ground.
 
-It also makes the ladder harder to tune by hand, which is why the target is a *measured* income share
-rather than a set of numbers someone reasoned about. See "Sim-test requirements" below.
+The first version of this spec said exposure was **one roll per weather slot lived through**, on the
+theory that slow seeds *should* catch more weather. That was reasoned about, not measured, and the
+measurement killed it:
+
+| Seed | Income share, per-slot model |
+| --- | --- |
+| Eternal Crown (780 s) | **75%** |
+| Marigold (55 s) | 21% |
+| Daisy (12 s) | **5.9%** |
+
+A **65× spread** — dominant late, nearly invisible early. Turning the catch rates down to fix the top
+end pushed a Daisy to 0.6%, meaning a new player would go hours without ever seeing the feature the
+game is partly built around.
+
+**The reasoning error:** slow seeds do not need extra exposure, because they already get the reward.
+The same ×10 lands on a far bigger yield — ×10 on an Eternal Crown is worth about 2,000× the same
+mutation on a Daisy. Exposure was paying them twice.
+
+With one roll per plant the share is **even across every seed** (20.4% / 20.9% / 19.2%), which is the
+property that keeps mutations present at every stage of the game. The original catch rates turned out
+to be right all along; only the exposure model was wrong.
+
+**Consequence: there are no upgrades.** One roll means one outcome, so a plant cannot catch Dewkissed
+and later improve to Gilded. That resolves an open question in the earlier draft, and it is simpler
+to reason about.
 
 ## Stacking the odds
 
@@ -208,16 +231,17 @@ Keep this small — the weather clock is derived and stores nothing.
 
 ## Sim-test requirements
 
-The ladder cannot be tuned by hand, because "slow seeds catch more weather" makes the blended result
-depend on what the player plants. The suite measures it instead.
+The ladder cannot be tuned by hand. The suite measures it instead — and it was the measurement that
+caught the exposure error above, which no amount of reasoning had.
 
-1. **Measure the income share directly.** Play a representative garden forward across many weather
-   slots and assert mutations contribute **20–30%** of total income. This is the assertion that
-   makes the whole design tunable; write it first.
+1. **Measure the income share directly**, for a fast seed *and* a slow one, and assert they land in
+   the same band. This is the assertion that makes the design tunable, and the cross-seed comparison
+   is what catches an exposure model that favours one end of the ladder. Write it first.
 2. **Weather is deterministic.** The same slot yields the same weather on every call and across
    reloads.
 3. **The distribution matches the table** over a large sample.
-4. **A plant holds at most one mutation**, and only ever upgrades to a better tier.
+4. **A plant rolls exactly once** — a spent roll never re-fires, and a roll scheduled in the future
+   does not fire early.
 5. **Offline reconciliation is exact** — walking slots forward equals having been present.
 6. **Stacking raises catch chance and never payout.**
 7. **`yield === cost × 1.4` still holds**, as it does through verbs. Mutations are a third axis and

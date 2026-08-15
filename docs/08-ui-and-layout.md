@@ -161,6 +161,27 @@ Driven by `data-state` on each plot button:
 Plots also carry `data-stage` (1–3) for growth and `data-aura` (rarity name) tinting the soil after
 a harvest.
 
+### Mutation and weather visuals
+
+**Mutated plots** carry `data-mutation` plus `--mut` / `--mut-glow` set inline from
+`DATA.mutations`. The treatment escalates with rank: every tier gets a tinted border, an outer glow
+and a slow pulse; **Prismatic and Wonderstruck also get a moving shimmer** the lower two don't. The
+mutation stays visible from the moment it lands until harvest — that permanence *is* the mechanic,
+and it is what separates a mutation from a rarity roll revealed at the end.
+
+Written through the `renderPlots()` cache like every other plot property, so an unchanged mutation
+touches no DOM.
+
+**Weather** sets `data-weather` on `.game` and `--weather-tint`, painted as an overlay on
+`.scenery::after` rather than by replacing the sky — so the day/night cycle keeps running underneath.
+Rain and Thunderstorm `multiply`; Aurora and Wonderfall `screen`. Opacity is per-weather and tops out
+at .52 for a storm, which reads as overcast without hiding the garden.
+
+**Cue discipline.** The sky is the only cue for ordinary weather; a banner four times an hour would
+be noise. Aurora and Wonderfall get a line from the flower, and Wonderfall alone gets a banner.
+Catching a mutation is celebrated per rank — sparks and a float for the lower two, plus shake,
+confetti and a banner for the top two. Both honour reduced motion.
+
 ### The adjacency flash
 
 Two transient classes, added on planting a flower that carries a verb and removed after 1.6 s:
