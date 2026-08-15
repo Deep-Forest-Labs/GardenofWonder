@@ -1387,6 +1387,56 @@ check('forcing one proc does not fire the others', (() => {
   const r = G.Dev.fireProc('rainDance');
   return Boolean(r && r.rainDance) && !r.ladybug;
 })());
+check('a boosted proc toggles on and off', (() => {
+  G.Dev.clearAll();
+  const on = G.Dev.toggleProc('ladybug');
+  const listed = G.Dev.boostedProcs().includes('ladybug');
+  const off = G.Dev.toggleProc('ladybug');
+  return on === true && listed && off === false && !G.Dev.boostedProcs().includes('ladybug');
+})());
+check('boosting raises the chance well above the badge rate', (() => {
+  G.Dev.clearAll();
+  S.upgrades.ladybug = 0;
+  const base = G.Dev.procChance('ladybug');
+  G.Dev.toggleProc('ladybug');
+  const boosted = G.Dev.procChance('ladybug');
+  G.Dev.clearAll();
+  return base === 0 && boosted >= 0.5;
+})());
+check('a boosted proc fires repeatedly across ordinary taps', (() => {
+  clearGarden();
+  clearMastery();
+  S.credits = 1e12;
+  S.upgrades.ladybug = 0;
+  G.Dev.clearAll();
+  G.Dev.toggleProc('ladybug');
+  let fired = 0;
+  for (let i = 0; i < 200; i += 1) {
+    if (!S.grid[0].seed) G.plant(0, G.seedById('eternal'));
+    S.grid[0].luckyBug = false;
+    if (G.tapFlower().ladybug) fired += 1;
+  }
+  G.Dev.clearAll();
+  return fired > 60 && fired < 160;          // ~50% of 200
+})(), 'boosted ladybug fire count');
+check('turning the boost off restores the badge rate', (() => {
+  clearGarden();
+  S.credits = 1e12;
+  S.upgrades.ladybug = 0;
+  G.Dev.clearAll();
+  G.plant(0, G.seedById('eternal'));
+  let fired = 0;
+  for (let i = 0; i < 400; i += 1) { S.grid[0].luckyBug = false; if (G.tapFlower().ladybug) fired += 1; }
+  return fired === 0;                        // level 0 and no boost means never
+})());
+check('the chance is never above certainty', (() => {
+  S.upgrades.ladybug = 999;
+  G.Dev.toggleProc('ladybug');
+  const c = G.Dev.procChance('ladybug');
+  G.Dev.clearAll();
+  S.upgrades.ladybug = 0;
+  return c === 1;
+})());
 check('clearing drops everything armed', (() => {
   G.Dev.armRarity('epic');
   G.Dev.armGem();

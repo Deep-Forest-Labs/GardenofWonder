@@ -276,11 +276,20 @@ cheat exercises the feature it claims to test, and the animation seen is the one
 | Hold the weather | Sticky override on `weatherAt()`, until released |
 | Mutate a growing plot | Applies a tier now and fires the celebration |
 | Arm the next harvest | Forces a rarity or a gem drop, **consumed once** |
-| Fire a tap proc | Rain Dance, Bee Swarm, Lucky Ladybug, Wonder — all ignore level and chance |
+| Boost a tap proc | **Sticky toggle.** Holds Rain Dance, Bee Swarm or Lucky Ladybug at a 50% chance per tap, bypassing the badge level entirely |
+| Trigger now | Wonder Effect, one-shot |
 | Garden | Fill plots, ripen everything, add a hive |
 | Give | Gold, gems, levels |
 
-Everything except the weather hold is one-shot, and `clearAll()` drops the lot. A sim-test asserts
+**The proc buttons are toggles, not one-shots.** A single forced fire meant reopening the panel for
+every look at an animation; held at 50% per tap you can leave the sheet closed and just tap. The
+boost is **additive on top of the badge rate and bypasses the level gate**, because testing Bee Swarm
+should not require buying Bee Swarm first — `procChance()` is the one place that decides, and it
+clamps at certainty.
+
+The weather hold and the proc boosts are sticky; everything else is one-shot. `clearAll()` drops the
+lot, and the panel lists whatever is currently armed at the top so a boost left on is never a
+mystery. A sim-test asserts
 that **nothing armed leaks into an ordinary harvest** — the failure that would quietly corrupt every
 balance reading taken afterwards.
 

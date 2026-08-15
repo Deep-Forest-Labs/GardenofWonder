@@ -1021,6 +1021,7 @@
 
   function renderDev() {
     const pending = Game.Dev.pending();
+    const boosted = pending.boost || [];
     const wx = DATA.weather.types.map((w) =>
       `<button class="dev-btn${pending.weather === w.id ? ' on' : ''}" data-dev="weather" data-arg="${w.id}">${w.name}</button>`).join('');
     const muts = Object.entries(DATA.mutations).map(([id, m]) =>
@@ -1032,6 +1033,7 @@
     if (pending.rarity) armed.push(`next harvest: ${pending.rarity}`);
     if (pending.gem) armed.push('next harvest: gem');
     if (pending.weather) armed.push(`weather held: ${pending.weather}`);
+    if (boosted.length) armed.push(`procs boosted to 50%: ${boosted.join(', ')}`);
 
     return `
       <p class="sheet-note">Nothing here is random. Each button forces the real system, so the
@@ -1040,11 +1042,11 @@
       ${devRow('Hold the weather', wx + '<button class="dev-btn warn" data-dev="weather" data-arg="">Release</button>')}
       ${devRow('Mutate a growing plot now', muts)}
       ${devRow('Arm the next harvest', rars + '<button class="dev-btn" data-dev="gem" data-arg="1">Gem drop</button>')}
-      ${devRow('Fire a tap proc', `
-        <button class="dev-btn" data-dev="proc" data-arg="rainDance">Rain Dance</button>
-        <button class="dev-btn" data-dev="proc" data-arg="beeSwarm">Bee Swarm</button>
-        <button class="dev-btn" data-dev="proc" data-arg="ladybug">Lucky Ladybug</button>
-        <button class="dev-btn" data-dev="wonder" data-arg="1">Wonder Effect</button>`)}
+      ${devRow('Boost a tap proc — stays on, then just tap the flower', `
+        <button class="dev-btn${boosted.includes('rainDance') ? ' on' : ''}" data-dev="proc" data-arg="rainDance">Rain Dance</button>
+        <button class="dev-btn${boosted.includes('beeSwarm') ? ' on' : ''}" data-dev="proc" data-arg="beeSwarm">Bee Swarm</button>
+        <button class="dev-btn${boosted.includes('ladybug') ? ' on' : ''}" data-dev="proc" data-arg="ladybug">Lucky Ladybug</button>`)}
+      ${devRow('Trigger now', '<button class="dev-btn" data-dev="wonder" data-arg="1">Wonder Effect</button>')}
       ${devRow('Garden', `
         <button class="dev-btn" data-dev="fill" data-arg="1">Fill plots</button>
         <button class="dev-btn" data-dev="ripen" data-arg="1">Ripen all</button>
@@ -1068,7 +1070,7 @@
       case 'mutate': ok = Boolean(D.mutate(arg)); redraw = false; break;
       case 'rarity': D.armRarity(arg); break;
       case 'gem': D.armGem(); break;
-      case 'proc': ok = Boolean(D.fireProc(arg)); redraw = false; break;
+      case 'proc': D.toggleProc(arg); break;
       case 'wonder': Game.startWonder(); redraw = false; break;
       case 'fill': ok = D.fillGarden() > 0; break;
       case 'ripen': ok = D.ripenAll() > 0; break;

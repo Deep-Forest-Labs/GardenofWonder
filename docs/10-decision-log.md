@@ -37,7 +37,14 @@ the panel a liar — every effect would play perfectly whether or not the system
 whole point of this menu is to test features without relying on chance, which is only true if the
 features actually run.
 
-**Everything except the weather hold is one-shot.** A sticky armed rarity would silently corrupt
+**The proc buttons are toggles rather than one-shots**, added the same day after the first version
+proved annoying to use. A single forced fire meant reopening the panel for every look at an
+animation; held at 50% per tap the sheet can stay closed. The boost is additive on the badge rate and
+**bypasses the level gate**, because testing Bee Swarm should not require buying Bee Swarm first.
+`procChance()` became the one place that decides a proc's odds, which also tidied three duplicated
+gates into one function.
+
+**Everything except the weather hold and the proc boosts is one-shot.** A sticky armed rarity would silently corrupt
 every balance reading taken afterwards, so a sim-test asserts that **nothing armed leaks into an
 ordinary harvest** — 2,000 unarmed harvests must land near the natural 2% Legendary rate.
 

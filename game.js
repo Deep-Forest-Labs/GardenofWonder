@@ -881,7 +881,11 @@ const Game = (() => {
   /* Development overrides. Every one of these forces an outcome through the *real* code path
      rather than faking an effect, so a cheat exercises the feature it claims to test. Each is
      consumed once and cleared, except `weather`, which is sticky until reset. */
-  const dev = { rarity: null, gem: false, weather: null, procs: {} };
+  const dev = { rarity: null, gem: false, weather: null, procs: {}, boost: {} };
+  /* Dev-only, deliberately not in data.js: this is a testing affordance, not a tunable, and it
+     must never reach remote config. Additive so a boosted proc fires often enough to watch even
+     with its badge at level zero. */
+  const DEV_PROC_BOOST = 0.5;
   const devTake = (key) => {
     const v = dev[key];
     if (key !== 'weather') dev[key] = key === 'gem' ? false : null;
@@ -893,6 +897,13 @@ const Game = (() => {
     return true;
   };
 
+  /* The badge level and the dev boost meet here, so a boosted proc bypasses the level gate as
+     well as the rate — testing Bee Swarm should not require buying Bee Swarm first. */
+  function procChance(key) {
+    const base = (state.upgrades[key] || 0) * PROC_CHANCE_PER_LEVEL;
+    return Math.min(1, base + (dev.boost[key] ? DEV_PROC_BOOST : 0));
+  }
+
   /** Unlocked, seeded, not-yet-ready plots — eligible targets for a garden proc. */
   function growingPlotIndices() {
     const idxs = [];
@@ -902,8 +913,7 @@ const Game = (() => {
 
   function rollRainDance() {
     const forced = devProc('rainDance');
-    const lvl = state.upgrades.rainDance;
-    if (!forced && (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL)) return null;
+    if (!forced && Math.random() >= procChance('rainDance')) return null;
     const idxs = growingPlotIndices();
     if (!idxs.length) return null;
     const idx = idxs[Math.floor(Math.random() * idxs.length)];
@@ -917,8 +927,7 @@ const Game = (() => {
 
   function rollBeeSwarm() {
     const forced = devProc('beeSwarm');
-    const lvl = state.upgrades.beeSwarm;
-    if (!forced && (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL)) return null;
+    if (!forced && Math.random() >= procChance('beeSwarm')) return null;
     const openHives = [];
     state.apiary.hives.forEach((h, i) => { if (h.jars.length < APIARY.capacity) openHives.push(i); });
     if (!openHives.length) return null;
@@ -931,8 +940,7 @@ const Game = (() => {
 
   function rollLadybug() {
     const forced = devProc('ladybug');
-    const lvl = state.upgrades.ladybug;
-    if (!forced && (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL)) return null;
+    if (!forced && Math.random() >= procChance('ladybug')) return null;
     const idxs = growingPlotIndices();
     if (!idxs.length) return null;
     // Prefer a plot that isn't already lucky, so triggers don't pile onto one spot.
@@ -1565,7 +1573,15 @@ const Game = (() => {
     armRarity(key) { dev.rarity = key; return key; },
     armGem() { dev.gem = true; return true; },
 
-    /** Force a tap proc, then take a real tap so it fires through tapFlower(). */
+    /** Hold a proc at a high rate so it can be watched across many ordinary taps. */
+    toggleProc(key) {
+      dev.boost[key] = !dev.boost[key];
+      return dev.boost[key];
+    },
+    boostedProcs: () => Object.keys(dev.boost).filter((k) => dev.boost[k]),
+    procChance,
+
+    /** Force a tap proc once, then take a real tap so it fires through tapFlower(). */
     fireProc(key) {
       dev.procs[key] = true;
       const r = tapFlower();
@@ -1610,10 +1626,11 @@ const Game = (() => {
       dev.gem = false;
       dev.weather = null;
       dev.procs = {};
+      dev.boost = {};
       emit('weather', { weather: currentWeather() });
     },
 
-    pending: () => ({ rarity: dev.rarity, gem: dev.gem, weather: dev.weather })
+    pending: () => ({ rarity: dev.rarity, gem: dev.gem, weather: dev.weather, boost: Object.keys(dev.boost).filter((k) => dev.boost[k]) })
   };
 
   return {
