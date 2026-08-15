@@ -71,9 +71,7 @@
     { t: 0.86, s1: '#3d2a63', s2: '#7a5a92', s3: '#c98fa4', sun: '#ffd9e8', star: 0.55, sx: 96, sy: 74 },
     { t: 1.00, s1: '#132a52', s2: '#2b4a7a', s3: '#5a7a9e', sun: '#e8f0ff', star: 1, sx: 22, sy: 22 }
   ];
-  const CYCLE = 360; // seconds for a full day
-  const DAY_START = 0.46; // every session opens at bright midday
-  const bootAt = Date.now() / 1000;
+
 
   const hex2rgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const mix = (a, b, k) => {
@@ -82,7 +80,7 @@
   };
 
   function updateSky() {
-    const t = ((Date.now() / 1000 - bootAt) / CYCLE + DAY_START) % 1;
+    const t = Game.dayPhase();
     let i = 0;
     while (i < SKY_KEYS.length - 2 && SKY_KEYS[i + 1].t <= t) i += 1;
     const a = SKY_KEYS[i], b = SKY_KEYS[i + 1];
@@ -495,7 +493,7 @@
     const titles = {
       upgrades: 'Upgrades', apiary: 'Apiary', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
-      quests: 'Quests'
+      quests: 'Quests', dev: 'Developer tools'
     };
     el.sheetTitle.textContent = titles[sheetMode] || '';
 
@@ -514,7 +512,8 @@
 
     const render = {
       upgrades: renderUpgrades, apiary: renderApiary, craft: renderCraft, shop: renderShop,
-      seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests
+      seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
+      dev: renderDev
     }[sheetMode];
     el.sheetBody.innerHTML = render ? render() : '';
     el.sheetBody.scrollTop = keep;
@@ -1013,6 +1012,85 @@
       <p class="sheet-note" style="margin-top:14px;text-align:center">Garden Wonder · progress carried over from Idle Garden Reborn</p>`;
   }
 
+  /* Development tools. Everything here forces an outcome through the real code path rather than
+     faking an effect, so a cheat exercises the feature it claims to test. Reached from an
+     unlabelled hit area beside the gem wallet. */
+  function devRow(label, buttons) {
+    return `<p class="dev-label">${label}</p><div class="dev-row">${buttons}</div>`;
+  }
+
+  function renderDev() {
+    const pending = Game.Dev.pending();
+    const wx = DATA.weather.types.map((w) =>
+      `<button class="dev-btn${pending.weather === w.id ? ' on' : ''}" data-dev="weather" data-arg="${w.id}">${w.name}</button>`).join('');
+    const muts = Object.entries(DATA.mutations).map(([id, m]) =>
+      `<button class="dev-btn" style="--dev:${m.tint}" data-dev="mutate" data-arg="${id}">${m.name}</button>`).join('');
+    const rars = DATA.rarity.slice(1).map((r) =>
+      `<button class="dev-btn${pending.rarity === r.key ? ' on' : ''}" data-dev="rarity" data-arg="${r.key}">${r.label}</button>`).join('');
+
+    const armed = [];
+    if (pending.rarity) armed.push(`next harvest: ${pending.rarity}`);
+    if (pending.gem) armed.push('next harvest: gem');
+    if (pending.weather) armed.push(`weather held: ${pending.weather}`);
+
+    return `
+      <p class="sheet-note">Nothing here is random. Each button forces the real system, so the
+      animation you see is the one players get.</p>
+      ${armed.length ? `<p class="dev-armed">Armed — ${armed.join(' · ')}</p>` : ''}
+      ${devRow('Hold the weather', wx + '<button class="dev-btn warn" data-dev="weather" data-arg="">Release</button>')}
+      ${devRow('Mutate a growing plot now', muts)}
+      ${devRow('Arm the next harvest', rars + '<button class="dev-btn" data-dev="gem" data-arg="1">Gem drop</button>')}
+      ${devRow('Fire a tap proc', `
+        <button class="dev-btn" data-dev="proc" data-arg="rainDance">Rain Dance</button>
+        <button class="dev-btn" data-dev="proc" data-arg="beeSwarm">Bee Swarm</button>
+        <button class="dev-btn" data-dev="proc" data-arg="ladybug">Lucky Ladybug</button>
+        <button class="dev-btn" data-dev="wonder" data-arg="1">Wonder Effect</button>`)}
+      ${devRow('Garden', `
+        <button class="dev-btn" data-dev="fill" data-arg="1">Fill plots</button>
+        <button class="dev-btn" data-dev="ripen" data-arg="1">Ripen all</button>
+        <button class="dev-btn" data-dev="hive" data-arg="1">Add hive</button>`)}
+      ${devRow('Give', `
+        <button class="dev-btn" data-dev="gold" data-arg="1">+1M gold</button>
+        <button class="dev-btn" data-dev="gems" data-arg="1">+50 gems</button>
+        <button class="dev-btn" data-dev="level" data-arg="1">+1 level</button>
+        <button class="dev-btn" data-dev="level" data-arg="5">+5 levels</button>`)}
+      <button class="big-btn" data-dev="clear" data-arg="1">Clear everything armed</button>
+      <p class="sheet-note">Day phase ${(Game.dayPhase() * 100).toFixed(0)}% · ${Game.isNight() ? 'night' : 'day'} ·
+      sky now ${Game.currentWeather().name}</p>`;
+  }
+
+  function handleDev(what, arg) {
+    const D = Game.Dev;
+    let redraw = true;
+    let ok = true;
+    switch (what) {
+      case 'weather': D.setWeather(arg); break;
+      case 'mutate': ok = Boolean(D.mutate(arg)); redraw = false; break;
+      case 'rarity': D.armRarity(arg); break;
+      case 'gem': D.armGem(); break;
+      case 'proc': ok = Boolean(D.fireProc(arg)); redraw = false; break;
+      case 'wonder': Game.startWonder(); redraw = false; break;
+      case 'fill': ok = D.fillGarden() > 0; break;
+      case 'ripen': ok = D.ripenAll() > 0; break;
+      case 'hive': S.credits += Game.nextHiveCost(); ok = Game.buyHive(); break;
+      case 'gold': S.credits += 1e6; Game.save(); Game.emit('currency'); break;
+      case 'gems': S.gems += 50; Game.save(); Game.emit('currency'); break;
+      case 'level': D.grantLevels(Number(arg) || 1); break;
+      case 'clear': D.clearAll(); break;
+      default: ok = false;
+    }
+    /* A cheat that quietly did nothing is worse than no cheat — say so. Most failures are a
+       precondition, like mutating with nothing in the ground. */
+    if (!ok) {
+      Sound.play('deny');
+      FX.shake(4);
+      toast({ title: 'Nothing to apply', body: 'That cheat needs something in the garden first.' });
+    } else {
+      Sound.play(what === 'clear' ? 'close' : 'buy');
+    }
+    if (redraw) renderSheet(true);
+  }
+
   /* ---- sheet interactions ---- */
   el.sheetTabs.addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
@@ -1108,6 +1186,11 @@
       if (S.prefs[k]) Sound.play('buy');
       return;
     }
+    const devBtn = e.target.closest('[data-dev]');
+    if (devBtn) {
+      handleDev(devBtn.dataset.dev, devBtn.dataset.arg);
+      return;
+    }
     const act = e.target.closest('[data-act]');
     if (act) {
       const a = act.dataset.act;
@@ -1162,6 +1245,7 @@
   });
 
   $('#btnSettings').addEventListener('click', () => openSheet('settings'));
+  $('#btnDev').addEventListener('click', () => openSheet('dev'));
   $('#btnBonuses').addEventListener('click', () => openSheet('bonuses'));
   el.questStrip.addEventListener('click', () => {
     Sound.resume();

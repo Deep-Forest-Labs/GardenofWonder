@@ -171,16 +171,6 @@ the weather it should have met.
 Harmless today and invisible in play. It becomes wrong the moment offline earnings ship, and it is
 step 5 of the build order in [18-mutations-and-weather.md](18-mutations-and-weather.md).
 
-### The day/night cycle still restarts on every reload
-
-Unchanged by the weather work, and now inconsistent with it. `updateSky()` in `ui.js` keys the cycle
-to `bootAt` — page load — while weather keys to wall-clock epoch. So the sky's *weather* is shared
-and honest while the sky's *time of day* is per-session and resets.
-
-Moving the day cycle onto the same epoch clock is a small change and **unblocks the night-blooming
-verb** that had to be dropped from the first verb pass. See
-[10-decision-log.md](10-decision-log.md).
-
 ### Two sim-tests were flaky, and the class of bug is worth remembering
 
 Both fixed 2026-08-14. Measured on the committed code beforehand: **4 of 50 runs failed.** The suite
@@ -205,7 +195,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 315 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 334 assertions over the
 economy, progression, saves and mastery. Everything above that line — `ui.js`, layout, the sheet,
 FX — is verified by hand against the checklist in [09-conventions.md](09-conventions.md). That is
 the right split for a prototype, but a UI regression has no net under it.

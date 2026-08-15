@@ -344,8 +344,23 @@ const Game = (() => {
     return types[0];
   }
 
-  const weatherAt = (seconds) => weatherForSlot(weatherSlotOf(seconds));
+  const weatherAt = (seconds) => {
+    if (dev.weather) {
+      const forced = DATA.weather.types.find((t) => t.id === dev.weather);
+      if (forced) return forced;
+    }
+    return weatherForSlot(weatherSlotOf(seconds));
+  };
   const currentWeather = () => weatherAt(nowSeconds());
+
+  /* The day cycle keys to epoch time for the same reason weather does: a phase derived from page
+     boot restarts on every reload, so "is it night" could never mean anything the simulation could
+     act on. Same 6-minute cycle, now shared and answerable. */
+  const dayPhase = (seconds) => (((seconds === undefined ? nowSeconds() : seconds) / DAY.cycle) + DAY.offset) % 1;
+  const isNight = (seconds) => {
+    const t = dayPhase(seconds);
+    return t < DAY.dawn || t >= DAY.dusk;
+  };
 
   const mutationDef = (id) => (id ? DATA.mutations[id] : null) || null;
   const mutationRank = (id) => (mutationDef(id) ? mutationDef(id).rank : 0);
@@ -863,6 +878,21 @@ const Game = (() => {
   // feel big, not the climb toward it. See docs/10-decision-log.md.
   const PROC_CHANCE_PER_LEVEL = 0.002;
 
+  /* Development overrides. Every one of these forces an outcome through the *real* code path
+     rather than faking an effect, so a cheat exercises the feature it claims to test. Each is
+     consumed once and cleared, except `weather`, which is sticky until reset. */
+  const dev = { rarity: null, gem: false, weather: null, procs: {} };
+  const devTake = (key) => {
+    const v = dev[key];
+    if (key !== 'weather') dev[key] = key === 'gem' ? false : null;
+    return v;
+  };
+  const devProc = (key) => {
+    if (!dev.procs[key]) return false;
+    dev.procs[key] = false;
+    return true;
+  };
+
   /** Unlocked, seeded, not-yet-ready plots — eligible targets for a garden proc. */
   function growingPlotIndices() {
     const idxs = [];
@@ -871,8 +901,9 @@ const Game = (() => {
   }
 
   function rollRainDance() {
+    const forced = devProc('rainDance');
     const lvl = state.upgrades.rainDance;
-    if (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL) return null;
+    if (!forced && (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL)) return null;
     const idxs = growingPlotIndices();
     if (!idxs.length) return null;
     const idx = idxs[Math.floor(Math.random() * idxs.length)];
@@ -885,8 +916,9 @@ const Game = (() => {
   }
 
   function rollBeeSwarm() {
+    const forced = devProc('beeSwarm');
     const lvl = state.upgrades.beeSwarm;
-    if (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL) return null;
+    if (!forced && (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL)) return null;
     const openHives = [];
     state.apiary.hives.forEach((h, i) => { if (h.jars.length < APIARY.capacity) openHives.push(i); });
     if (!openHives.length) return null;
@@ -898,8 +930,9 @@ const Game = (() => {
   }
 
   function rollLadybug() {
+    const forced = devProc('ladybug');
     const lvl = state.upgrades.ladybug;
-    if (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL) return null;
+    if (!forced && (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL)) return null;
     const idxs = growingPlotIndices();
     if (!idxs.length) return null;
     // Prefer a plot that isn't already lucky, so triggers don't pile onto one spot.
@@ -1067,11 +1100,14 @@ const Game = (() => {
     const verbMult = verbPayoutMult(idx);
     const mutation = cell.mutation || null;
     const mutMult = mutationMult(mutation);
-    const r = rollRarity(
-      boostVal('rarityWeight')
-      + (luckyHarvest ? LADYBUG_RARITY_BONUS : 0)
-      + beacons * VT().beaconRarity
-    );
+    const forcedRarity = devTake('rarity');
+    const r = forcedRarity
+      ? DATA.rarity.find((x) => x.key === forcedRarity)
+      : rollRarity(
+        boostVal('rarityWeight')
+        + (luckyHarvest ? LADYBUG_RARITY_BONUS : 0)
+        + beacons * VT().beaconRarity
+      );
     const yieldBase = sdef.yield * r.m;
     const yieldBonus = 1 + boostVal('globalCredits');
     // Read before recordHarvest: the harvest that completes a tier is paid at the old rate.
@@ -1096,7 +1132,7 @@ const Game = (() => {
     const baseGem = typeof sdef.gemChance === 'number' ? sdef.gemChance : 0.05;
     const gemChance = baseGem * (lanterns ? Math.pow(VT().lanternGemMult, lanterns) : 1);
     let gemDrop = false;
-    if (Math.random() < gemChance) { state.gems += 1; gemDrop = true; }
+    if (devTake('gem') || Math.random() < gemChance) { state.gems += 1; gemDrop = true; }
 
     state.grid[idx] = { ...cell, seed: null, plantedAt: 0, grow: 0, ready: false, aura: r.a, luckyBug: false, mutation: null, mutateAt: 0 };
     const sown = sdef.verb === 'spreader' ? trySpread(idx, sdef) : -1;
@@ -1501,6 +1537,85 @@ const Game = (() => {
 
   ensureProgression();
 
+  /* ---------------- development tools ---------------- */
+
+  const Dev = {
+    /* Weather is sticky so the sky can be held while animations are inspected. */
+    setWeather(id) {
+      dev.weather = id || null;
+      emit('weather', { weather: currentWeather() });
+      return currentWeather();
+    },
+    weatherOverride: () => dev.weather,
+
+    /** Drop a mutation onto a growing plot and fire the real celebration. */
+    mutate(id) {
+      if (!DATA.mutations[id]) return null;
+      const idx = state.grid.findIndex((c) => !c.locked && c.seed && !c.ready);
+      if (idx === -1) return null;
+      state.grid[idx].mutation = id;
+      state.grid[idx].mutateAt = 0;
+      save();
+      const caught = [{ idx, mutation: id, weather: currentWeather(), seed: seedById(state.grid[idx].seed) }];
+      emit('mutate', { caught });
+      return caught[0];
+    },
+
+    /** Arm the next harvest. Consumed by harvest() itself, so the whole payout path runs. */
+    armRarity(key) { dev.rarity = key; return key; },
+    armGem() { dev.gem = true; return true; },
+
+    /** Force a tap proc, then take a real tap so it fires through tapFlower(). */
+    fireProc(key) {
+      dev.procs[key] = true;
+      const r = tapFlower();
+      dev.procs[key] = false;
+      return r;
+    },
+
+    /** Fill every open plot with the priciest seed the player can actually plant. */
+    fillGarden() {
+      let n = 0;
+      state.grid.forEach((cell, idx) => {
+        if (cell.locked || cell.seed) return;
+        const pick = DATA.seeds.filter((sd) => seedUnlocked(sd.id)).pop();
+        if (pick && plant(idx, pick, false)) n += 1;
+      });
+      return n;
+    },
+
+    /** Bring everything in the ground to ripe, so harvest animations can be inspected. */
+    ripenAll() {
+      let n = 0;
+      state.grid.forEach((cell) => {
+        if (cell.locked || !cell.seed || cell.ready) return;
+        cell.plantedAt = nowSeconds() - cell.grow - 1;
+        n += 1;
+      });
+      save();
+      emit('panels');
+      return n;
+    },
+
+    grantLevels(n) {
+      const grants = addRep(cumulativeRep(state.level + n) - state.rep);
+      save();
+      emit('currency');
+      if (grants.length) emit('levelup', { from: grants[0].level - 1, to: state.level, grants });
+      return state.level;
+    },
+
+    clearAll() {
+      dev.rarity = null;
+      dev.gem = false;
+      dev.weather = null;
+      dev.procs = {};
+      emit('weather', { weather: currentWeather() });
+    },
+
+    pending: () => ({ rarity: dev.rarity, gem: dev.gem, weather: dev.weather })
+  };
+
   return {
     state, on, emit, load, save, saveNow, reset, nowSeconds,
     seedById, activeBoost, boostVal, growModifier, rollRarity,
@@ -1520,6 +1635,7 @@ const Game = (() => {
     masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf,
     neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier,
     weatherSlotOf, weatherForSlot, weatherAt, currentWeather, rollMutations, processWeather,
-    mutationDef, mutationRank, mutationMult, catchMultiplier
+    mutationDef, mutationRank, mutationMult, catchMultiplier,
+    dayPhase, isNight, Dev
   };
 })();

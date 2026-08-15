@@ -19,7 +19,7 @@ globalThis.localStorage = {
 
 /* The game files are plain scripts that declare globals, so evaluate them and
    then re-export what they defined onto globalThis. */
-const GLOBALS = ['DATA', 'WONDER', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
+const GLOBALS = ['DATA', 'WONDER', 'DAY', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
   'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'flowerValue', 'Game'];
 
 function loadScript(file) {
@@ -1295,6 +1295,118 @@ check('an expensive seed sits in the same band',
 check('the share does not swing wildly between them',
   Math.abs(fastShare - slowShare) < 0.12,
   `${(fastShare * 100).toFixed(1)}% vs ${(slowShare * 100).toFixed(1)}%`);
+G.reset();
+
+group('the day cycle keys to epoch, not to page load');
+G.reset();
+check('the same instant always gives the same phase',
+  G.dayPhase(1000000) === G.dayPhase(1000000));
+check('phase stays inside 0..1', (() => {
+  for (let i = 0; i < 500; i += 1) {
+    const t = G.dayPhase(i * 977);
+    if (!(t >= 0 && t < 1)) return false;
+  }
+  return true;
+})());
+check('a full cycle later is the same phase',
+  Math.abs(G.dayPhase(500) - G.dayPhase(500 + DAY.cycle)) < 1e-9);
+check('half a cycle later is not', Math.abs(G.dayPhase(500) - G.dayPhase(500 + DAY.cycle / 2)) > 0.4);
+check('night and day both occur across a cycle', (() => {
+  let night = 0, day = 0;
+  for (let i = 0; i < DAY.cycle; i += 1) { if (G.isNight(i)) night += 1; else day += 1; }
+  return night > 0 && day > 0;
+})());
+check('isNight agrees with the dawn and dusk bounds', (() => {
+  for (let i = 0; i < 2000; i += 1) {
+    const t = G.dayPhase(i * 13);
+    if (G.isNight(i * 13) !== (t < DAY.dawn || t >= DAY.dusk)) return false;
+  }
+  return true;
+})());
+check('night is the minority of the cycle', (() => {
+  let night = 0;
+  for (let i = 0; i < DAY.cycle; i += 1) if (G.isNight(i)) night += 1;
+  return night / DAY.cycle < 0.5;
+})());
+
+group('development tools force the real path');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('a forced weather overrides the clock',
+  G.Dev.setWeather('wonderfall').id === 'wonderfall' && G.currentWeather().id === 'wonderfall');
+check('releasing it returns to the real sky', (() => {
+  G.Dev.setWeather(null);
+  const t = G.nowSeconds();
+  return G.currentWeather().id === G.weatherForSlot(G.weatherSlotOf(t)).id;
+})());
+check('filling the garden plants every open plot', (() => {
+  clearGarden();
+  const n = G.Dev.fillGarden();
+  return n === 8 && S.grid.every((c) => c.seed);
+})());
+check('a forced mutation lands on a growing plot', Boolean(G.Dev.mutate('gilded')));
+check('an unknown mutation is refused', G.Dev.mutate('nonsense') === null);
+check('ripening makes everything harvestable', (() => {
+  const n = G.Dev.ripenAll();
+  return n > 0 && S.grid.filter((c) => c.seed).every((c) => G.nowSeconds() - c.plantedAt >= c.grow);
+})());
+check('an armed rarity is honoured and then spent', (() => {
+  clearGarden();
+  clearMastery();
+  G.Dev.armRarity('legend');
+  S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+  const first = G.harvest(0);
+  S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+  const second = G.harvest(0);
+  return first.rarity.key === 'legend' && G.Dev.pending().rarity === null && second.rarity.key !== undefined;
+})());
+check('an armed gem drops once', (() => {
+  clearGarden();
+  clearMastery();
+  S.gems = 0;
+  G.Dev.armGem();
+  S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+  const h = G.harvest(0);
+  return h.gemDrop === true && G.Dev.pending().gem === false;
+})());
+check('a forced proc fires with the upgrade at zero', (() => {
+  clearGarden();
+  S.credits = 1e9;
+  S.upgrades.ladybug = 0;
+  G.plant(0, G.seedById('daisy'));
+  const r = G.Dev.fireProc('ladybug');
+  return Boolean(r && r.ladybug);
+})());
+check('forcing one proc does not fire the others', (() => {
+  clearGarden();
+  S.credits = 1e9;
+  S.upgrades.rainDance = 0; S.upgrades.ladybug = 0;
+  G.plant(0, G.seedById('eternal'));
+  const r = G.Dev.fireProc('rainDance');
+  return Boolean(r && r.rainDance) && !r.ladybug;
+})());
+check('clearing drops everything armed', (() => {
+  G.Dev.armRarity('epic');
+  G.Dev.armGem();
+  G.Dev.setWeather('storm');
+  G.Dev.clearAll();
+  const p = G.Dev.pending();
+  return p.rarity === null && p.gem === false && p.weather === null;
+})());
+check('nothing armed leaks into an ordinary harvest', (() => {
+  clearGarden();
+  clearMastery();
+  G.Dev.clearAll();
+  let legends = 0;
+  for (let i = 0; i < 2000; i += 1) {
+    S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+    if (G.harvest(0).rarity.key === 'legend') legends += 1;
+    clearMastery();
+  }
+  return legends > 5 && legends < 120;   // ~2% of 2000, nowhere near forced
+})());
 G.reset();
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

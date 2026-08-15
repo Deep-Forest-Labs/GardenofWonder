@@ -239,6 +239,54 @@ Measured contribution: **~20% of income, evenly across seeds** — Daisy 20.4%, 
 Crown 19.2%. That evenness is deliberate and is asserted by the suite; an earlier per-slot exposure
 model produced a 65× spread and was cut. See the spec.
 
+## The day cycle
+
+**Moved onto epoch time 2026-08-15.** Constants in `DAY` (`data.js`), phase in `game.js`, painting in
+`ui.js`.
+
+```
+phase = ((epochSeconds / DAY.cycle) + DAY.offset) % 1
+```
+
+A 360-second cycle, unchanged. What changed is the reference point: it used to key to `bootAt` —
+page load — so the phase restarted on every reload and "is it night" was a per-session accident.
+Keying to epoch makes it a **shared fact the simulation can answer**, via `Game.isNight()`, and that
+is what a night-blooming verb would need.
+
+`DAY.dawn` (0.14) and `DAY.dusk` (0.82) are read off the star values in `ui.js`'s `SKY_KEYS`, so
+"night" means the part of the cycle where stars are actually visible. Night is the minority of the
+cycle, and a sim-test asserts it.
+
+**`DAY.offset` no longer means "every session opens at midday"** — it cannot, now that sessions do
+not set the phase. It is just a global shift, and the 2026-08-01 decision it came from is superseded.
+
+## Development tools
+
+**Built 2026-08-15.** `Game.Dev` in `game.js`, `renderDev()` in `ui.js`, reached from an unlabelled
+44 px hit area beside the gem wallet (`#btnDev`).
+
+**The rule that makes it worth having: every cheat forces an outcome through the *real* code path**
+rather than faking an effect. An armed rarity is consumed inside `harvest()`; a forced proc sets a
+flag that `rollRainDance()` and friends check before their level and chance gates, then takes an
+actual tap; a forced mutation writes the cell and emits the same `mutate` event weather does. So a
+cheat exercises the feature it claims to test, and the animation seen is the one players get.
+
+| Group | What it does |
+| --- | --- |
+| Hold the weather | Sticky override on `weatherAt()`, until released |
+| Mutate a growing plot | Applies a tier now and fires the celebration |
+| Arm the next harvest | Forces a rarity or a gem drop, **consumed once** |
+| Fire a tap proc | Rain Dance, Bee Swarm, Lucky Ladybug, Wonder — all ignore level and chance |
+| Garden | Fill plots, ripen everything, add a hive |
+| Give | Gold, gems, levels |
+
+Everything except the weather hold is one-shot, and `clearAll()` drops the lot. A sim-test asserts
+that **nothing armed leaks into an ordinary harvest** — the failure that would quietly corrupt every
+balance reading taken afterwards.
+
+Cheats that cannot apply — mutating with nothing in the ground, a bee swarm with no hive — say so
+with a deny sound and a toast rather than failing silently.
+
 ## Verbs and adjacency
 
 **Built 2026-08-14.** A verb is what a flower *does*, as distinct from what it pays. Six of the

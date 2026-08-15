@@ -356,6 +356,17 @@ const CRAFT_RECIPES = [
 const CRAFT_SLOTS = 2;
 
 /* Wonder Effect — a rare garden-wide transformation. */
+/* The day cycle. Phase is derived from epoch time rather than page load, so "is it night" is a
+   shared fact the simulation can answer — see docs/03-systems.md. `offset` only shifts the global
+   phase; it no longer means "every session opens at midday", because sessions no longer set it.
+   dawn/dusk are read off the SKY_KEYS star values in ui.js. */
+const DAY = {
+  cycle: 360,
+  offset: 0.46,
+  dawn: 0.14,
+  dusk: 0.82
+};
+
 const WONDER = {
   duration: 20,
   payoutMult: 3,

@@ -180,6 +180,21 @@ Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at
 6. Make sure the frequently-changing parts are updatable by `syncAfford()` so it doesn't need a full
    rebuild on every tap.
 
+## Playbook: add a development cheat
+
+Panel is `renderDev()` in `ui.js`; the logic is `Game.Dev` in `game.js`. Full description in
+[03-systems.md](03-systems.md#development-tools).
+
+1. Add the behaviour to `Game.Dev`. **Force the real code path** — arm a flag the real function
+   checks, or call the real function. Never call an FX helper directly to simulate an effect; a
+   panel that plays perfect animations for broken features is worse than no panel.
+2. Add a button to `renderDev()` with `data-dev="<what>"` and `data-arg`.
+3. Handle it in `handleDev()`. Return falsey when a precondition fails so the caller can deny —
+   a cheat that quietly does nothing reads as the feature being broken.
+4. **Make it one-shot unless it is deliberately sticky.** A forced rarity left armed corrupts every
+   balance reading taken afterwards. Only the weather hold is sticky, and it is visibly marked.
+5. Add a sim-test. At minimum assert the force works *and* that nothing leaks into an unforced run.
+
 ## Playbook: change saved state
 
 Covered fully in [07-save-data.md](07-save-data.md). The short version:

@@ -444,6 +444,44 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .plot:active{transform:translateY(3px);box-shadow:inset 0 5px 0 rgba(255,255,255,.16), inset 0 -7px 0 rgba(0,0,0,.18), 0 1px 0 var(--soil-dd), 0 4px 8px rgba(44,26,16,.22)}
 .plot-inner{position:absolute;inset:0;border-radius:15px;overflow:hidden}
 
+/* Deliberately invisible: a hit area beside the gem wallet, not a control. Sized to the 44px
+   touch minimum so it can actually be hit on a phone, and out of the tab order so a keyboard
+   user never lands on it by accident. */
+/* Absolutely positioned so it can never take a flex row of its own and grow the HUD — as a
+   sibling in flow it wrapped and made the wallets three rows tall. */
+.wallets{position:relative}
+.dev-dot{
+  position:absolute;left:100%;top:0;
+  width:44px;height:100%;min-height:32px;
+  border:0;background:transparent;padding:0;
+  opacity:0;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  cursor:default;
+}
+.dev-label{
+  margin:14px 0 6px;font-size:11px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.05em;opacity:.55;
+}
+.dev-row{display:flex;flex-wrap:wrap;gap:6px}
+.dev-btn{
+  flex:0 0 auto;
+  padding:7px 11px;border-radius:10px;
+  border:2px solid var(--ink);
+  background:var(--dev,#fffaf0);
+  font-size:12px;font-weight:800;color:#2c1a10;
+  box-shadow:0 2px 0 rgba(44,26,16,.35);
+  touch-action:manipulation;
+}
+.dev-btn:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
+.dev-btn.on{outline:3px solid #51cf66;outline-offset:1px}
+.dev-btn.warn{background:#ffe3e3}
+.dev-armed{
+  margin:8px 0;padding:6px 10px;border-radius:9px;
+  background:rgba(81,207,102,.18);border-left:4px solid #51cf66;
+  font-size:11.5px;font-weight:800;
+}
+
 /* A mutation is visible the moment it lands and stays visible until harvest — that permanence is
    the whole mechanic, and it is what separates a mutation from a rarity roll revealed at the end. */
 .plot[data-mutation]{

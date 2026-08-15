@@ -90,6 +90,7 @@ All shopping happens in one sheet that slides up from the bottom, holding eight 
 | `quests` | Quests | Tapping the quest strip | none |
 | `bonuses` | Garden Almanac | Book button in HUD | none |
 | `settings` | Settings | Gear button in HUD | none |
+| `dev` | Developer tools | Unlabelled hit area beside the gem wallet | none |
 
 The four dock modes share a tab strip — the `TABS` array in `ui.js`, with `SHOP_TABS` deciding which
 modes display it — so a player can move between them without closing. `seeds` carries the target
@@ -160,6 +161,17 @@ Driven by `data-state` on each plot button:
 
 Plots also carry `data-stage` (1–3) for growth and `data-aura` (rarity name) tinting the soil after
 a harvest.
+
+### The developer hit area
+
+`#btnDev` sits **absolutely positioned at `left: 100%` of `.wallets`** — immediately right of the gem
+wallet, 44 px wide, `opacity: 0`, and `tabindex="-1"`.
+
+Absolute rather than a flex sibling for a concrete reason: in flow it wrapped onto its own row and
+made the wallets three rows tall, pushing the HUD down. Out of flow it cannot affect layout at all.
+
+44 px because that is the touch minimum — an invisible control still has to be hittable on a phone.
+Out of the tab order so a keyboard user never lands on something with no visible state.
 
 ### Mutation and weather visuals
 

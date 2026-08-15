@@ -12,6 +12,13 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **Day cycle and dev tools, 2026-08-15.** The day cycle now keys to **epoch time**, so `isNight()`
+> is a shared fact the simulation can answer and the **night-blooming verb is unblocked**. A
+> development panel sits behind an unlabelled hit area beside the gem wallet — weather holds, forced
+> mutations, armed rarities and gem drops, forced tap procs, fill/ripen, and grants. **Every cheat
+> forces the real code path rather than faking the effect**, so the animation you inspect is the one
+> players get. See [03-systems.md](03-systems.md#development-tools).
+
 > **Weather and mutations shipped 2026-08-15.** The sky runs on wall-clock epoch time — the same
 > weather for everyone at the same moment, and any past slot computable. Every plant rolls once for a
 > mutation mid-growth: Dewkissed ×2, Gilded ×10, Prismatic ×25, Wonderstruck ×100, visible from the
@@ -369,7 +376,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 315 assertions over the simulation layer
+node tools/sim-test.js          # 334 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

@@ -5,6 +5,53 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — Day cycle moved onto epoch; a real cheat menu that forces the real code paths
+
+**The day cycle now keys to wall-clock epoch time** instead of `bootAt`, using the same 360-second
+cycle. Phase and `isNight()` live in `game.js`; `ui.js` reads them and paints.
+
+**Why it mattered enough to change:** keyed to page load, the phase restarted on every reload, so
+"is it night" was a per-session accident that no game rule could ever depend on. It is now a shared
+fact the simulation can answer — which is precisely what the **night-blooming verb** needed, the one
+dropped from the first verb pass for this exact reason. That verb is now unblocked. The matching
+entry in [11-known-issues.md](11-known-issues.md) is deleted, since it is fixed.
+
+**Supersedes the 2026-08-01 "day cycle always starts at midday" decision.** It cannot hold once
+sessions no longer set the phase. `DAY.offset` survives as a global shift and nothing more. The
+trade accepted: a player can now open the game at night. Given the cycle is six minutes, the cost is
+small and the shared clock is worth it.
+
+**A development panel, reached from an unlabelled 44 px hit area beside the gem wallet.** Absolutely
+positioned so it can never take a flex row and grow the HUD — as a sibling in flow it wrapped and
+made the wallets three rows tall.
+
+**The design rule, and the reason it is worth the code: every cheat forces an outcome through the
+real path rather than faking an effect.** An armed rarity is consumed inside `harvest()`. A forced
+proc sets a flag the existing `roll*()` functions check *before* their level and chance gates, then
+takes a genuine tap. A forced mutation writes the cell and emits the same `mutate` event the weather
+does. So the animation the owner inspects is the one players get, and a cheat cannot pass while the
+feature is broken.
+
+*Rejected: calling the FX functions directly from the panel.* Far simpler, and it would have made
+the panel a liar — every effect would play perfectly whether or not the system behind it worked. The
+whole point of this menu is to test features without relying on chance, which is only true if the
+features actually run.
+
+**Everything except the weather hold is one-shot.** A sticky armed rarity would silently corrupt
+every balance reading taken afterwards, so a sim-test asserts that **nothing armed leaks into an
+ordinary harvest** — 2,000 unarmed harvests must land near the natural 2% Legendary rate.
+
+**Cheats that cannot apply say so.** Mutating with nothing in the ground, or a bee swarm with no
+hive, returns a deny sound and a toast. A cheat that quietly does nothing is worse than no cheat,
+because it reads as the feature being broken.
+
+**Not gated behind `?dev=1`.** Consistent with the standing decision to leave the existing cheat
+buttons live — the audience is friends, and the affordance is useful. The hit area being unlabelled
+and out of the tab order is enough for now. Revisit alongside the other cheats before any real
+external audience.
+
+---
+
 ## 2026-08-15 — Weather and mutations built; the spec's exposure model was wrong and measurement caught it
 
 Built: the epoch weather clock, the sky, all four mutation tiers, Beacon stacking, and the visuals.
