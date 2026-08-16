@@ -415,6 +415,34 @@ const Game = (() => {
     }
   }
 
+  /* Below this, a reload is just a reload and the player is told nothing. */
+  const WELCOME_MIN_AWAY = 120;
+
+  /* Reconcile time away and report what happened, for the welcome-back scene.
+     Mutations need no catch-up pass: rollMutations() evaluates each plant against the weather at
+     its own scheduled moment, so a roll that came due while the tab was shut resolves against the
+     sky that was actually standing then, not the one standing now. */
+  function reconcile() {
+    const now = nowSeconds();
+    const since = state.lastSeen || 0;
+    const away = since ? Math.max(0, now - since) : 0;
+
+    const caught = rollMutations();
+    const ripe = [];
+    state.grid.forEach((cell, idx) => {
+      if (cell.locked || !cell.seed) return;
+      if (now - cell.plantedAt >= cell.grow) ripe.push(idx);
+    });
+    const jars = jarsWaiting();
+
+    state.lastSeen = now;
+    if (caught.length) save();
+
+    if (away < WELCOME_MIN_AWAY) return null;
+    if (!ripe.length && !caught.length && !jars) return null;
+    return { away, caught, ripened: ripe.length, jars, weather: currentWeather() };
+  }
+
   /* ---------------- reputation, levels, quests ---------------- */
   const RARITY_RANK = { common: 0, rare: 1, epic: 2, legend: 3 };
 
@@ -1656,6 +1684,6 @@ const Game = (() => {
     neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier,
     weatherSlotOf, weatherForSlot, weatherAt, currentWeather, rollMutations, processWeather,
     mutationDef, mutationRank, mutationMult, catchMultiplier,
-    dayPhase, isNight, Dev
+    dayPhase, isNight, reconcile, Dev
   };
 })();

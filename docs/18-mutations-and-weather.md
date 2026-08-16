@@ -1,7 +1,7 @@
 # Mutations and Weather
 
-**Status: built 2026-08-15**, except offline reconciliation (step 5) and card generation (step 6),
-which are deliberately still open. One thing in the original spec was wrong and was corrected by
+**Status: built 2026-08-15**, steps 1–5. Step 6, card generation, is **withdrawn** — cards are a
+parallel meta and are not fed by mutations; see [19-card-album.md](19-card-album.md). One thing in the original spec was wrong and was corrected by
 measurement during the build — see "Exposure" below. Reasoning in
 [10-decision-log.md](10-decision-log.md). Market evidence in
 [17-market-and-positioning.md](17-market-and-positioning.md#why-plant-this-flower).
@@ -177,8 +177,14 @@ Rain does not. A cue on every slot change would be noise four times an hour.
 Because weather is computable for any past moment, **mutations happen while you are away**, and a
 garden left full is a garden that catches weather.
 
-Reconcile on load by walking the slots since `lastSeen`, and surface the result in the welcome-back
-scene as *events*, not as a total: *"A thunderstorm passed over. Your Marigold came back Gilded."*
+**No catch-up walk is needed, and an earlier draft of this section was wrong to call for one.**
+`rollMutations()` evaluates each plant against `weatherAt(cell.mutateAt)` — the weather at *its own
+scheduled moment* — so a roll that came due while the tab was shut already resolves against the sky
+that was actually standing then. Reconciliation is O(plots), not O(slots), and it was correct before
+anyone reported it. What was missing was only the *telling*.
+
+`Game.reconcile()` returns the report and is called once on load. Surface it as *events*, not a
+total: *"A thunderstorm passed over. Your Marigold came back Gilded."*
 That is the Neko Atsume framing recorded in
 [17-market-and-positioning.md](17-market-and-positioning.md#offline-progress) — who visited and what
 they left, never "+4,213 coins".

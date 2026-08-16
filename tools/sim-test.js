@@ -1489,5 +1489,69 @@ check('nothing armed leaks into an ordinary harvest', (() => {
 })());
 G.reset();
 
+group('coming back after time away');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('a fresh save reports nothing', G.reconcile() === null);
+check('a quick reload reports nothing', (() => {
+  G.plant(0, G.seedById('daisy'));
+  advance(30);
+  S.lastSeen = G.nowSeconds() - 5;
+  return G.reconcile() === null;
+})());
+check('a long absence with a ripe plot reports it', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('daisy'));
+  advance(60);
+  S.lastSeen = G.nowSeconds() - 7200;
+  const r = G.reconcile();
+  return r !== null && r.ripened === 1 && r.away >= 7200;
+})());
+check('a long absence with an empty garden still reports nothing', (() => {
+  clearGarden();
+  S.apiary.hives = [];
+  S.lastSeen = G.nowSeconds() - 7200;
+  return G.reconcile() === null;
+})());
+check('lastSeen advances on every reconcile', (() => {
+  S.lastSeen = G.nowSeconds() - 7200;
+  G.reconcile();
+  return Math.abs(S.lastSeen - G.nowSeconds()) < 2;
+})());
+check('a mutation due while away resolves against the sky of its own moment', (() => {
+  clearGarden();
+  clearMastery();
+  const rainAt = rainSlot * SLOT + SLOT / 2;
+  S.grid[0] = {
+    locked: false, seed: 'daisy', plantedAt: clock - 10, grow: 1e6, ready: false, aura: '',
+    luckyBug: false, mutation: null, mutateAt: rainAt
+  };
+  const rng = Math.random;
+  Math.random = () => 0;
+  S.lastSeen = G.nowSeconds() - 7200;
+  const r = G.reconcile();
+  Math.random = rng;
+  /* Rain is long past — the clock now stands somewhere else entirely — yet the roll must still
+     resolve as rain, because it is evaluated at the moment it was scheduled for. */
+  return r && r.caught.length === 1 && r.caught[0].mutation === 'dew';
+})());
+check('the report names the weather that actually caused it', (() => {
+  clearGarden();
+  const stormAt = stormSlot * SLOT + SLOT / 2;
+  S.grid[0] = {
+    locked: false, seed: 'daisy', plantedAt: clock - 10, grow: 1e6, ready: false, aura: '',
+    luckyBug: false, mutation: null, mutateAt: stormAt
+  };
+  const rng = Math.random;
+  Math.random = () => 0;
+  S.lastSeen = G.nowSeconds() - 7200;
+  const r = G.reconcile();
+  Math.random = rng;
+  return r && r.caught[0].weather.id === 'storm' && r.caught[0].mutation === 'gilded';
+})());
+G.reset();
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

@@ -5,6 +5,45 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — The welcome-back scene, and a known issue that turned out not to be one
+
+**`Game.reconcile()` now reports what happened while the player was away**, and `renderWelcome()`
+shows it as a short account: how long you were gone, what ripened, which weather passed and what it
+changed, and how much honey is waiting.
+
+**The correction worth recording: the reconciliation bug I logged did not exist.** The entry in
+[11-known-issues.md](11-known-issues.md) said a plant whose mutation moment passed while the tab was
+shut would roll "against whatever weather is standing then rather than the weather it should have
+met." That was wrong. `rollMutations()` reads `weatherAt(cell.mutateAt)` — the moment the roll was
+*scheduled for* — so it always resolved against the correct historical sky. The design had handled
+it and I misread my own code when writing the issue up.
+
+What was actually missing was only the **telling**. Verified in the browser: a storm hours in the
+past, a clear sky now, and the scene still reads *"A spell of thunderstorm passed. Your Marigold came
+back Gilded."*
+
+Two consequences worth keeping. **Reconciliation is O(plots), not O(slots)** — because each plant
+carries its own moment, there is no walk over elapsed time and no cap needed, which is the thing the
+spec worried about. And **the one-roll-per-plant decision paid a dividend nobody planned**: the
+per-slot model this replaced would have required exactly the expensive catch-up walk the spec
+described.
+
+**The scene is an account, not a receipt**, per
+[17-market-and-positioning.md](17-market-and-positioning.md#offline-progress). Never a total. It also
+stays shut when there is nothing to say — under two minutes away, nothing happened, or the player has
+not planted yet and the coach mark owns the screen. A welcome-back that fires on every reload with
+"nothing happened" trains people to dismiss it unread.
+
+*Rejected: a banner instead of a sheet.* Three or four events with a tinted line each need room to be
+read, and the sheet is the established vocabulary for anything with a list in it.
+
+**Automation still does not run while away.** The drone and auto-planters need the frame loop, so a
+closed tab earns nothing beyond what was in the ground. That is the next piece — the two-axis offline
+earnings chain in [17-market-and-positioning.md](17-market-and-positioning.md#offline-progress) — and
+this scene is the surface it will report into.
+
+---
+
 ## 2026-08-15 — Nightbell: the verb the epoch clock was for, and it pays *less* half the time
 
 **Moonflower now carries Nightbell** — ×2 if harvested at night, ×0.5 by day — and **Deeproot moved

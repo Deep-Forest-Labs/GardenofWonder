@@ -91,6 +91,7 @@ All shopping happens in one sheet that slides up from the bottom, holding eight 
 | `bonuses` | Garden Almanac | Book button in HUD | none |
 | `settings` | Settings | Gear button in HUD | none |
 | `dev` | Developer tools | Unlabelled hit area beside the gem wallet | none |
+| `welcome` | While you were away | Opens itself on load after a real absence | none |
 
 The four dock modes share a tab strip — the `TABS` array in `ui.js`, with `SHOP_TABS` deciding which
 modes display it — so a player can move between them without closing. `seeds` carries the target

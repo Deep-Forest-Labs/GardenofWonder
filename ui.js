@@ -493,7 +493,7 @@
     const titles = {
       upgrades: 'Upgrades', apiary: 'Apiary', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
-      quests: 'Quests', dev: 'Developer tools'
+      quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away'
     };
     el.sheetTitle.textContent = titles[sheetMode] || '';
 
@@ -513,7 +513,7 @@
     const render = {
       upgrades: renderUpgrades, apiary: renderApiary, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
-      dev: renderDev
+      dev: renderDev, welcome: renderWelcome
     }[sheetMode];
     el.sheetBody.innerHTML = render ? render() : '';
     el.sheetBody.scrollTop = keep;
@@ -1012,6 +1012,46 @@
       <p class="sheet-note" style="margin-top:14px;text-align:center">Garden Wonder · progress carried over from Idle Garden Reborn</p>`;
   }
 
+  /* The welcome-back scene. Deliberately a list of things that *happened* rather than a total —
+     "a thunderstorm passed and your Marigold came back Gilded" is a garden that lived without you,
+     where "+4,213 coins" is a receipt. See docs/18-mutations-and-weather.md. */
+  let awayReport = null;
+
+  function awayWords(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.round((seconds % 3600) / 60);
+    if (h >= 24) {
+      const d = Math.floor(h / 24);
+      return `${d} day${d === 1 ? '' : 's'}`;
+    }
+    if (h) return `${h} hour${h === 1 ? '' : 's'}${m ? ` and ${m} minute${m === 1 ? '' : 's'}` : ''}`;
+    return `${Math.max(1, m)} minute${m === 1 ? '' : 's'}`;
+  }
+
+  function renderWelcome() {
+    if (!awayReport) return '';
+    const r = awayReport;
+    const lines = [];
+
+    if (r.ripened) {
+      lines.push(`<li>${Icons.get('sprout')}<span><b>${r.ripened}</b> ${r.ripened === 1 ? 'bloom is' : 'blooms are'} ready to pick.</span></li>`);
+    }
+    r.caught.forEach((c) => {
+      const m = DATA.mutations[c.mutation];
+      const w = c.weather && c.weather.name ? c.weather.name.toLowerCase() : 'the weather';
+      lines.push(`<li style="--mut:${m.tint}" class="away-mut">${Icons.get('sparkle')}<span>${w === 'clear' ? 'Something' : `A spell of ${w}`} passed. Your <b>${c.seed.name}</b> came back <b>${m.name}</b>.</span></li>`);
+    });
+    if (r.jars) {
+      lines.push(`<li>${Icons.get('hive')}<span>The bees left <b>${r.jars}</b> ${r.jars === 1 ? 'jar' : 'jars'}.</span></li>`);
+    }
+
+    return `
+      <p class="away-lede">You were gone <b>${awayWords(r.away)}</b>. The garden kept going.</p>
+      <ul class="away-list">${lines.join('')}</ul>
+      <p class="sheet-note">The sky is ${r.weather.name.toLowerCase()} right now.</p>
+      <button class="big-btn magic" data-act="closeWelcome">Back to the garden</button>`;
+  }
+
   /* Development tools. Everything here forces an outcome through the real code path rather than
      faking an effect, so a cheat exercises the feature it claims to test. Reached from an
      unlabelled hit area beside the gem wallet. */
@@ -1196,6 +1236,7 @@
     const act = e.target.closest('[data-act]');
     if (act) {
       const a = act.dataset.act;
+      if (a === 'closeWelcome') { closeSheet(); Sound.play('close'); return; }
       if (a === 'cheat') {
         S.gems += 50;
         Game.save(); Game.emit('currency'); Game.emit('panels');
@@ -1882,6 +1923,16 @@
     // unlock audio on the very first interaction
     const unlock = () => { Sound.init(); Sound.setSfx(S.prefs.sfx); Sound.setMusic(S.prefs.music); Sound.resume(); };
     window.addEventListener('pointerdown', unlock, { once: true });
+
+    /* After the coach mark, never over it — a returning player who has not planted yet is being
+       onboarded, and the scene would land on top of that. */
+    awayReport = Game.reconcile();
+    if (awayReport && S.seen.plot) {
+      setTimeout(() => {
+        openSheet('welcome');
+        Sound.play('open');
+      }, 900);
+    }
 
     setTimeout(() => {
       if (info.migrated) {

@@ -12,6 +12,14 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **The welcome-back scene shipped 2026-08-15.** `Game.reconcile()` reports time away, what
+> ripened, which weather passed and what it changed, and honey waiting — as an account, never a
+> total. It stays shut when there is nothing to say. **Note:** the reconciliation bug once logged in
+> [11-known-issues.md](11-known-issues.md) did not exist — mutations always resolved against the sky
+> at their own scheduled moment. See [03-systems.md](03-systems.md#coming-back-after-time-away).
+> **Automation still does not run while away**; the two-axis offline earnings chain is the next
+> piece, and this scene is the surface it reports into.
+
 > **Nightbell shipped 2026-08-15.** Moonflower pays ×2 harvested at night and ×0.5 by day — the
 > verb that was cut from the first pass for want of a real clock, now a twenty-line change. Near
 > neutral on average by design (≈0.98): it makes *when you pick it* the decision, not *how much it
@@ -239,8 +247,12 @@ This supersedes the ordering above where they conflict. Reasoning in
    `Garden · Cards · Market · Shop` ([15-navigation-and-ia.md](15-navigation-and-ia.md) phase 1.5).
 5. **Item-as-key, mementos, hidden blooms, and companion flavour text** — ~150 lines of writing is
    the cheapest differentiator available and the talking flower is a ready-made delivery vehicle.
-6. **Two-axis offline (rate × duration) plus a narrated welcome-back scene.** Currently a closed tab
-   earns nothing; automation runs on `requestAnimationFrame`. Start generous and state the cap.
+6. **Two-axis offline earnings (rate × duration).** ~~The narrated welcome-back scene~~ — **done
+   2026-08-15**, and it is the surface these earnings should report into. What remains is the
+   earning itself: a closed tab still pays nothing beyond what was already in the ground, because
+   automation runs on `requestAnimationFrame`. Start generous (~25% rate / 4h full rate), make both
+   axes upgradeable, and **state the cap openly** — see
+   [17-market-and-positioning.md](17-market-and-positioning.md#offline-progress).
 7. **The card album** — [19-card-album.md](19-card-album.md). A **parallel meta, independent of the
    garden**: packs from quests, levels, dailies, the shop and a random spawn on a plant; ~12 sets of
    9 per themed season, with its own art and story. Model a card as an owned instance with an id, not
@@ -381,7 +393,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 347 assertions over the simulation layer
+node tools/sim-test.js          # 354 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

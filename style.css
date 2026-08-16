@@ -444,6 +444,22 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .plot:active{transform:translateY(3px);box-shadow:inset 0 5px 0 rgba(255,255,255,.16), inset 0 -7px 0 rgba(0,0,0,.18), 0 1px 0 var(--soil-dd), 0 4px 8px rgba(44,26,16,.22)}
 .plot-inner{position:absolute;inset:0;border-radius:15px;overflow:hidden}
 
+/* The welcome-back scene. Reads as a short account of what happened, not a receipt. */
+.away-lede{font-size:14px;font-weight:800;line-height:1.4;margin:2px 0 12px}
+.away-list{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}
+.away-list li{
+  display:flex;align-items:flex-start;gap:9px;
+  padding:9px 11px;border-radius:12px;
+  background:rgba(44,26,16,.06);
+  border-left:4px solid rgba(44,26,16,.22);
+  font-size:12.5px;font-weight:700;line-height:1.35;
+}
+.away-list li svg{width:18px;height:18px;flex:none;margin-top:1px}
+.away-list li.away-mut{
+  border-left-color:var(--mut,#8fd6ff);
+  background:color-mix(in srgb, var(--mut,#8fd6ff) 16%, transparent);
+}
+
 /* Deliberately invisible: a hit area beside the gem wallet, not a control. Sized to the 44px
    touch minimum so it can actually be hit on a phone, and out of the tab order so a keyboard
    user never lands on it by accident. */

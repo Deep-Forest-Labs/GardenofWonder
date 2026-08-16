@@ -239,6 +239,35 @@ Measured contribution: **~20% of income, evenly across seeds** — Daisy 20.4%, 
 Crown 19.2%. That evenness is deliberate and is asserted by the suite; an earlier per-slot exposure
 model produced a 65× spread and was cut. See the spec.
 
+## Coming back after time away
+
+**Built 2026-08-15.** `Game.reconcile()` in `game.js`, `renderWelcome()` in `ui.js`, called once on
+load.
+
+**Nothing needs replaying.** Growth, honey, crafts and booster expiry all run off absolute
+timestamps, and `rollMutations()` evaluates each plant against the weather at **its own scheduled
+moment**. So a mutation that came due while the tab was shut resolves against the sky that was
+actually standing then, hours later, with the current sky irrelevant. Reconciliation is O(plots),
+not O(slots).
+
+What `reconcile()` adds is the **report**: time away, blooms that ripened, mutations that landed and
+the weather that caused each, and honey waiting.
+
+It returns `null` — and the scene never opens — when:
+
+- the player was away **less than two minutes** (a reload is just a reload), or
+- **nothing happened** worth saying, or
+- the player has not planted yet, so the coach mark owns the screen.
+
+**The scene is a short account, not a receipt.** *"A spell of thunderstorm passed. Your Marigold came
+back Gilded"* is a garden that lived without you; *"+4,213 coins"* is a bank statement. The
+distinction is the whole point and is the Neko Atsume lesson recorded in
+[17-market-and-positioning.md](17-market-and-positioning.md#offline-progress).
+
+**Automation still does not run while away** — the drone and auto-planters need the frame loop, so a
+closed tab earns nothing beyond what was already in the ground. That is the next piece of work, not
+an oversight.
+
 ## The day cycle
 
 **Moved onto epoch time 2026-08-15.** Constants in `DAY` (`data.js`), phase in `game.js`, painting in
