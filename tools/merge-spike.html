@@ -103,6 +103,19 @@
   @keyframes ringOut { 0% { transform: scale(.5); opacity: 1; } 100% { transform: scale(1.7); opacity: 0; } }
   .ring.go { animation: ringOut .5s ease-out; }
 
+  .combo {
+    position: absolute; left: 50%; top: -2px; z-index: 5;
+    padding: 1px 7px; border: 2.5px solid var(--ink); border-radius: 999px;
+    background: var(--gold); color: var(--ink); font-size: 13px;
+    pointer-events: none; white-space: nowrap;
+    animation: comboUp .6s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  @keyframes comboUp {
+    0%   { transform: translate(-50%, 4px) scale(.5); opacity: 0; }
+    35%  { transform: translate(-50%, -12px) scale(1.15); opacity: 1; }
+    100% { transform: translate(-50%, -30px) scale(1); opacity: 0; }
+  }
+
   /* ---- basket ---- */
   #basketWrap { width: 100%; max-width: 440px; }
   .label { font-size: 12px; color: var(--ink-soft); margin: 0 0 4px 2px; }
@@ -202,34 +215,53 @@
     return out;
   }
 
-  // Resolves the move at `idx` and any cascade it sets off. Only ever called
-  // for a cell the player just touched, so nothing merges on its own.
-  function resolve(idx) {
-    let merges = 0;
-    for (let guard = 0; guard < 40; guard++) {
-      const here = S.cells[idx];
-      if (!here || here.tier >= CHAIN.length - 1) break;
-      const group = groupFrom(idx);
-      if (group.length < S.threshold) break;
+  // Exactly one merge, never a lookahead. A cascade is this called repeatedly
+  // with a beat between each, because collapsing six petals straight to a
+  // bouquet in one frame throws away the two moments the player earned.
+  function mergeOnce(idx) {
+    const here = S.cells[idx];
+    if (!here || here.tier >= CHAIN.length - 1) return false;
+    const group = groupFrom(idx);
+    if (group.length < S.threshold) return false;
 
-      const big = group.length >= S.bonusAt;
-      const take = big ? S.bonusAt : S.threshold;
-      const outputs = big ? 2 : 1;
-      const eaten = group.slice(0, take);
-      eaten.forEach(i => { S.cells[i] = null; });
+    const big = group.length >= S.bonusAt;
+    const eaten = group.slice(0, big ? S.bonusAt : S.threshold);
+    eaten.forEach(i => { S.cells[i] = null; });
 
-      S.cells[idx] = { tier: here.tier + 1, count: 1 };
-      S.made[here.tier + 1] = (S.made[here.tier + 1] || 0) + 1;
-      if (outputs === 2) {
-        const spare = eaten.find(i => i !== idx && !S.cells[i]);
-        if (spare !== undefined) {
-          S.cells[spare] = { tier: here.tier + 1, count: 1 };
-          S.made[here.tier + 1]++;
-        }
+    S.cells[idx] = { tier: here.tier + 1, count: 1 };
+    S.made[here.tier + 1] = (S.made[here.tier + 1] || 0) + 1;
+    if (big) {
+      const spare = eaten.find(i => i !== idx && !S.cells[i]);
+      if (spare !== undefined) {
+        S.cells[spare] = { tier: here.tier + 1, count: 1 };
+        S.made[here.tier + 1]++;
       }
-      merges++;
     }
-    return merges;
+    return true;
+  }
+
+  const FIRST_MS = 150;   // long enough to see the third item land
+  const STEP_MS = 300;    // one beat per rung of the cascade
+
+  const cascadeLog = [];
+
+  function cascade(idx, depth) {
+    if (!mergeOnce(idx)) { busy = false; render(); return; }
+    cascadeLog.push({ at: Math.round(performance.now()), idx, depth, tier: S.cells[idx].tier });
+    render();
+    flash(idx, 'merged');
+    if (depth > 1) showCombo(idx, depth);
+    setTimeout(() => cascade(idx, depth + 1), STEP_MS);
+  }
+
+  function showCombo(idx, n) {
+    const cell = board.children[idx];
+    if (!cell) return;
+    const tag = document.createElement('span');
+    tag.className = 'combo';
+    tag.textContent = '×' + n;
+    cell.appendChild(tag);
+    setTimeout(() => tag.remove(), 600);
   }
 
   const LOCK = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
@@ -376,7 +408,7 @@
     if (!dst) {
       remove(from, srcIdx);
       S.cells[dstIdx] = { tier: src.tier, count: src.count };
-      return S.spatial && resolve(dstIdx) ? 'merge' : 'move';
+      return S.spatial ? 'placed' : 'move';
     }
 
     if (S.spatial) return null;          // one item per cell, no stacking
@@ -404,8 +436,10 @@
 
   // ---- dragging -------------------------------------------------------
   let drag = null;
+  let busy = false;   // a cascade is playing out; picking something up would race it
 
   function onDown(e) {
+    if (busy) return;
     const item = e.target.closest('.item');
     if (!item) return;
     e.preventDefault();
@@ -523,7 +557,18 @@
     const dstIdx = Number(cell.dataset.idx);
     const result = drop(from, srcIdx, dstIdx);
     render();
-    if (result === 'merge') flash(dstIdx, 'merged');
+    if (result === 'placed') {
+      flash(dstIdx, 'added');
+      // Only lock the bench when something is actually going to happen — a
+      // placement that merges nothing must stay instant under a fast thumb.
+      const here = S.cells[dstIdx];
+      if (here && here.tier < CHAIN.length - 1 && groupFrom(dstIdx).length >= S.threshold) {
+        // The item lands and is visibly there on its own; only then does the
+        // bench start resolving, one rung at a time.
+        busy = true;
+        setTimeout(() => cascade(dstIdx, 1), FIRST_MS);
+      }
+    } else if (result === 'merge') flash(dstIdx, 'merged');
     else if (result) flash(dstIdx, 'added');
   }
 
@@ -574,6 +619,16 @@
   });
 
   harvest(8);
+
+  // Debug handle. This is a spike; being able to set a board up by hand and
+  // read back what the bench did is worth more here than keeping the scope shut.
+  window.MergeSpike = {
+    S, CHAIN, COLS, cascadeLog,
+    render,
+    put(idx, tier) { S.cells[idx] = { tier, count: 1 }; render(); },
+    trigger(idx) { cascadeLog.length = 0; busy = true; setTimeout(() => cascade(idx, 1), FIRST_MS); },
+    reset() { S.cells = new Array(SIZE).fill(null); S.made = {}; S.banked = {}; cascadeLog.length = 0; render(); }
+  };
 })();
 </script>
 </body>
