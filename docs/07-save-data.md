@@ -294,3 +294,26 @@ containing a junk rung, an impossible `side` and a bogus basket entry.
 
 **The bench does not add a per-cell grid field**, so the `state.grid` backfill loop beside `luckyBug`
 and `mutateAt` is untouched. It is its own top-level object.
+
+## Creatures (added 2026-08-16)
+
+```js
+critters: {
+  pip: { since, fed, gifts, met }   // one entry per creature that has moved in
+}
+```
+
+Nested, so it needs its **own re-merge in `load()`**, same as `bench` and `cards`.
+
+The backfill is defensive in two ways that matter:
+
+- **An id no longer in `CREATURES` is dropped.** Retiring or renaming a creature must not leave a
+  save carrying a ghost the code cannot look up.
+- **`gifts` is clamped to that creature's `keepsake.cap`.** Lowering a cap in `data.js` would
+  otherwise leave old saves holding more than the game will ever hand out again.
+
+An entry without `since` is treated as absent, so a half-written record cannot resurrect a creature
+that never actually arrived.
+
+**Attraction stores nothing.** Progress is read live from `state.discovered`, which is already a
+lifetime record that never decrements — see [22-creatures.md](22-creatures.md).

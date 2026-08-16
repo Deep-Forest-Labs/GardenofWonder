@@ -194,11 +194,17 @@
   }
 
   function say(bucket, force) {
+    const lines = FLOWER_LINES[bucket] || FLOWER_LINES.idle;
+    sayText(lines[(Math.random() * lines.length) | 0], force);
+  }
+
+  /* The same bubble and the same cooldown, for lines that live somewhere other
+     than FLOWER_LINES — a creature's, for instance. */
+  function sayText(text, force) {
     const now = Date.now() / 1000;
+    if (!text) return;
     if (!el.coach.hidden) return; // don't stack a bubble on top of a coach mark
     if (!force && now - lastSpeech < 3.2) return;
-    const lines = FLOWER_LINES[bucket] || FLOWER_LINES.idle;
-    const text = lines[(Math.random() * lines.length) | 0];
     lastSpeech = now;
     speechEl.textContent = text;
     speechEl.classList.add('show');
@@ -414,6 +420,14 @@
   }
 
 
+  el.critterYard.addEventListener('pointerdown', (e) => {
+    const node = e.target.closest('[data-critter]');
+    if (!node) return;
+    e.preventDefault();
+    noteActivity();
+    tapCritter(node.dataset.critter);
+  }, { passive: false });
+
   el.rail.addEventListener('click', (e) => {
     const chip = e.target.closest('[data-boost]');
     if (!chip) return;
@@ -541,6 +555,91 @@
   let railAcc = 0;
   let slowAcc = 0;
 
+  /* ============ creatures ============ */
+
+  /* Fixed spots along the lawn, so a creature keeps its place between renders
+     rather than jumping about whenever the yard is rebuilt. */
+  const CRITTER_SPOTS = [18, 78, 40, 62];
+  const critterEls = new Map();
+
+  function buildCritter(def, spot) {
+    const node = document.createElement('button');
+    node.className = 'critter';
+    node.type = 'button';
+    node.dataset.critter = def.id;
+    node.style.setProperty('--x', spot + '%');
+    node.setAttribute('aria-label', `${def.name}, a ${def.species}`);
+    node.innerHTML = `
+      <span class="critter-motes">${Critters.motes(3, def.art.glow)}</span>
+      ${Critters.draw(def)}
+      <span class="critter-gift" hidden>${Icons.get('gem')}</span>`;
+    return node;
+  }
+
+  function renderCritters() {
+    const home = Game.crittersHome();
+    home.forEach((def, i) => {
+      let node = critterEls.get(def.id);
+      if (!node) {
+        node = buildCritter(def, CRITTER_SPOTS[i % CRITTER_SPOTS.length]);
+        critterEls.set(def.id, node);
+        el.critterYard.appendChild(node);
+        // Arrive with a hop rather than simply existing.
+        requestAnimationFrame(() => node.classList.add('here'));
+      }
+      const waiting = Game.keepsakesWaiting(def.id);
+      const gift = node.querySelector('.critter-gift');
+      // Visibility belongs to `hidden`, never to a keyframe — an element that
+      // only exists once an animation has run is uncollectable wherever the
+      // animation does not play.
+      if (gift.hidden === (waiting > 0)) gift.hidden = waiting <= 0;
+      node.classList.toggle('has-gift', waiting > 0);
+    });
+    critterEls.forEach((node, id) => {
+      if (home.some((d) => d.id === id)) return;
+      node.remove();
+      critterEls.delete(id);
+    });
+  }
+
+  function critterLine(def, mood) {
+    const lines = (def.lines && def.lines[mood]) || [];
+    return lines.length ? lines[Math.floor(Math.random() * lines.length)] : '';
+  }
+
+  function tapCritter(id) {
+    const def = Game.critterById(id);
+    if (!def) return;
+    const node = critterEls.get(id);
+    if (node) { node.classList.remove('bop'); void node.offsetWidth; node.classList.add('bop'); }
+
+    const got = Game.collectKeepsakes(id);
+    if (got) {
+      Sound.play('quest');
+      if (node) {
+        const c = FX.centerOf(node);
+        FX.sparks(c.x, c.y, 14, def.art.glow);
+        FX.stars(c.x, c.y, 5, def.art.accent);
+        FX.float(c.x, c.y - 18, `×${got.count} ${got.name}`, 'good');
+      }
+      toast({
+        title: `${def.name} left you something`,
+        body: `${got.count} × ${got.name}`,
+        art: Critters.draw(def),
+        kind: 'gem'
+      });
+      sayText(critterLine(def, 'gift'), true);
+      popWallet('credits');
+      if (got.gems) popWallet('gems');
+      renderCritters();
+      return;
+    }
+    Game.petCritter(id);
+    Sound.play('tap');
+    FX.haptic(8);
+    sayText(critterLine(def, 'pet'));
+  }
+
   function frame(now) {
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
@@ -568,6 +667,7 @@
     slowAcc += dt;
     if (slowAcc >= 0.6) {
       slowAcc = 0;
+      renderCritters();
       updateDockDots();
       refreshCoach();
       UI.updateSky();
@@ -596,7 +696,11 @@
     // this, a page opened during rain or a storm renders a clear sky until the
     // slot rolls over. Roughly a quarter of slots are not clear.
     UI.paintWeather(Game.currentWeather());
+    // Roll a capped creature's clock forward once, so time away it could never
+    // have banked does not sit there pretending to still be accruing.
+    Game.settleCritters();
     buildGarden();
+    renderCritters();
     sizeGarden();
     if (window.ResizeObserver) new ResizeObserver(sizeGarden).observe($('.stage'));
     renderRail();
@@ -708,6 +812,9 @@
   UI.plotEls = plotEls;
   /* A function, not the node: buildGarden() throws the flower away and makes a new one. */
   UI.flowerBtn = () => flowerBtn;
+  UI.sayText = sayText;
+  UI.renderCritters = renderCritters;
+  UI.tapCritter = tapCritter;
 
   boot();
 })();

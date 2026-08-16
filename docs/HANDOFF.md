@@ -12,6 +12,17 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **The first creature moved in, 2026-08-16 — and the direction changed.** The diagnosis was the
+> owner's: the world had a place and a character but **no inhabitants**. So the frame moved from
+> *factory* (garden → bench → market) to **habitat** — the garden is a place that becomes alive
+> because of what you plant. **Pip the Grove Spirit** arrives after five lifetime Bluebell harvests,
+> lives on the lawn, reacts when tapped, and leaves keepsakes on a slow clock. **This is the most
+> direct answer the project has found to "why plant this flower":** Pip comes for bluebells and for
+> nothing else. Art is original work in the kodama archetype, not a copy — the game ships
+> commercially. See [22-creatures.md](22-creatures.md) and the top of
+> [10-decision-log.md](10-decision-log.md). **The build before this is tagged `v1-bench`** and is
+> recoverable with `git checkout v1-bench`.
+
 > **The Potting Bench landed as simulation, 2026-08-16.** A merge board fed by the garden, and
 > **it is what replaces the Apothecary** — both turn garden output into goods the Market will want,
 > and a timed craft bench is the worse version of merging. A harvest drops a chain item into a
@@ -222,27 +233,37 @@ as one piece rather than discovering it halfway through.
 
 ## The current task
 
-**The Potting Bench is mid-flight, and the half that is missing is the visible half.** The
-simulation, the save and 51 sim-test assertions are in; there is no panel, no dock entry and no art.
-Next, in order:
+**The habitat direction is live and one creature deep.** Pip works end to end — arrival, living on
+the lawn, petting, keepsakes, save. The obvious next pieces, in order:
 
-1. **The bench panel** in `ui-sheet.js`, with the drag ported from `tools/merge-spike.html`. Watch
-   the sheet's own fling-to-dismiss drag — a drag inside the sheet body will fight it.
-2. **Six chain icons** in `icons.js`. Silhouettes are teardrop / cluster / cone / handle / ring /
-   crown, deliberately distinct in pure black at thumbnail size.
-3. **The dock swap** — Craft becomes Shed, giving `Upgrades · Apiary · Shed · Shop`.
-   `CRAFT_RECIPES` and `state.craft` stay so old saves keep parsing; only the tab goes.
+1. **A second and third creature.** The roster is a data array; a new entry needs no code. A
+   night-only creature is one `attract` field away and `Game.isNight()` already exists.
+2. **The creature collection panel** — who has visited, who is missing, what each one likes. This is
+   the Completion surface, and Completion is the audience's top motivation. It is the biggest
+   missing piece.
+3. **Flower breeding**, the second half of the direction. Cross two mature neighbours into a hybrid
+   seed. It reuses the adjacency board and generates content rather than authoring it — but it
+   changes the seed model, so it has a much bigger blast radius than creatures did. Do it after the
+   roster proves out.
 
-**Do not remove the Craft quests when the tab goes.** They were already repointed at the bench on
-2026-08-16 and keep their ids on purpose — see
-[21-potting-bench.md](21-potting-bench.md#quests). They carry 98 of the ladder's 777 reputation
-and a sim-test asserts the ladder still reaches level 17.
+**Two things are deliberately parked, not abandoned.**
 
-The bigger frame, agreed with the owner 2026-08-16: **the game feels solitary** — one screen, one
-verb, and every system built recently is a modifier on that verb rather than a second thing to do.
-The three features answering that, in order, are **the Market as customers who walk up to the garden
-fence**, **the world map** (built after the Market so it is not empty on arrival), and **the Potting
-Bench**, which is the one in progress.
+**The Potting Bench** is built as simulation with **no surface at all** — Craft is still the third
+dock tab and the bench fills its basket invisibly. Under the habitat frame it is optional. Decide
+within a couple of sessions whether it gets a panel or gets deleted; dormant code nobody surfaces is
+what [11-known-issues.md](11-known-issues.md) exists to prevent. If it does ship, the remaining work
+is the panel in `ui-sheet.js` (port the drag from `tools/merge-spike.html`, and watch the sheet's own
+fling-to-dismiss fighting it), six chain icons, and the dock swap. **Do not remove the Craft quests
+when that tab goes** — they were repointed at the bench and keep their ids on purpose, and they carry
+98 of the ladder's 777 reputation ([21-potting-bench.md](21-potting-bench.md#quests)).
+
+**The card album vs the creature roster is an open decision.** There are now two collection systems,
+and splitting Completion across two unrelated albums halves the pull of both. Creatures are coupled
+to the garden and answer "why plant this flower"; cards are deliberately independent. Settle it
+deliberately rather than letting it drift.
+
+The Market as **customers who walk up to the garden fence** and the **world map** both remain good
+and both remain unbuilt.
 
 **The long-running open question — *does the garden's contents start mattering* — now has an
 answer.** It was handed first to Bloom Mastery, which could not deliver it (a percentage of an

@@ -682,6 +682,29 @@ bloom had to actually be standing in the garden while the bees worked.
 
 Collecting also yields **beeswax**, at a 50% chance per jar.
 
+## Creatures
+
+**Built 2026-08-16.** Full design in [22-creatures.md](22-creatures.md). Content in `CREATURES`
+(`data.js`), art in `critters.js`, simulation in the creatures section of `game.js`, the yard in
+`ui.js`.
+
+**A creature comes to live in the garden because of what you chose to grow.** Pip the Grove Spirit
+arrives after five lifetime Bluebell harvests, then lives on the lawn, reacts when tapped, and leaves
+keepsakes on a slow clock.
+
+- **Attraction reads `state.discovered`**, the lifetime record, never the spendable pantry — so
+  spending a bloom can never send a creature away.
+- **Keepsakes accrue off an absolute timestamp and cap**, so an absence is a small gift waiting
+  rather than a pile of homework. `settleCritters()` on boot stops a full creature banking time it
+  can never use.
+- **Petting pays nothing.** A creature you tap for currency is a button; one that just reacts is a
+  pet.
+- **A creature is a character first and a mechanic a distant second** — a sim-test asserts every one
+  has a name, a species, a hint, a line about itself and three moods of dialogue.
+
+This is the first piece of the habitat direction, and it is the most direct answer the project has
+found to *why plant this flower*: Pip comes for bluebells and for nothing else.
+
 ## The Potting Bench — simulation built, no surface yet
 
 **Built 2026-08-16**, simulation only. Full design in [21-potting-bench.md](21-potting-bench.md),

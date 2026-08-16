@@ -43,6 +43,7 @@ const Game = (() => {
       craft: [],
       goods: {},
       bench: { cells: Array(BENCH.cols * BENCH.cols).fill(null), side: BENCH.startSide, basket: [], stock: {} },
+      critters: {},
       prefs: { sfx: true, music: false },
       seen: { intro: false, plot: false, apiary: false },
       quests: { active: [], done: [], daily: { id: null, progress: 0, day: '', claimed: false } },
@@ -166,6 +167,20 @@ const Game = (() => {
       state.flowers = parsed.flowers && typeof parsed.flowers === 'object' ? parsed.flowers : {};
       state.craft = Array.isArray(parsed.craft) ? parsed.craft : [];
       state.goods = parsed.goods && typeof parsed.goods === 'object' ? parsed.goods : {};
+      {
+        const c = parsed.critters && typeof parsed.critters === 'object' ? parsed.critters : {};
+        state.critters = {};
+        CREATURES.forEach((def) => {
+          const r = c[def.id];
+          if (!r || !r.since) return;
+          state.critters[def.id] = {
+            since: Number(r.since) || nowSeconds(),
+            fed: Number(r.fed) || 0,
+            gifts: Math.max(0, Math.min(def.keepsake.cap, Number(r.gifts) || 0)),
+            met: r.met !== false
+          };
+        });
+      }
       // Nested objects are replaced wholesale by the parsed save, so the bench
       // needs its own re-merge or a save written before it existed reads back
       // undefined and every lookup below throws.
@@ -1521,6 +1536,9 @@ const Game = (() => {
     noteQuest('harvest', sdef.id, 1);
     noteQuest('rarity', r.key, 1);
     if (almanac.first) noteQuest('discover', sdef.id, 1);
+    // After recordHarvest, so the bloom that meets the threshold is the one
+    // that brings the creature rather than the one after it.
+    checkCritters();
     return payload;
   }
 
@@ -1612,6 +1630,97 @@ const Game = (() => {
   const honeyTotal = () => Object.values(state.apiary.honey).reduce((a, b) => a + b, 0);
   const flowerTotal = () => Object.values(state.flowers).reduce((a, b) => a + b, 0);
   const jarsWaiting = () => state.apiary.hives.reduce((a, h) => a + h.jars.length, 0);
+
+  /* ---------------- creatures ----------------
+
+     A creature arrives because of what you chose to grow, then lives in the
+     garden and leaves you things. Keepsakes accrue off an absolute timestamp,
+     so time away counts for free and nothing needs replaying — the same shape
+     the hives already use. See docs/22-creatures.md. */
+
+  const critterById = (id) => CREATURES.find((c) => c.id === id) || null;
+  const critterHome = (id) => state.critters[id] || null;
+  const critterHere = (id) => Boolean(state.critters[id]);
+  const crittersHome = () => CREATURES.filter((c) => critterHere(c.id));
+
+  /** Lifetime harvests of the bloom this creature comes for. Reads `discovered`,
+      never `flowers`, so spending a bloom can never send it away again. */
+  function critterProgress(def) {
+    if (!def || !def.attract || !def.attract.seed) return 0;
+    return state.discovered[def.attract.seed] || 0;
+  }
+
+  const critterReady = (def) => critterProgress(def) >= (def.attract.count || 1);
+
+  /** Called after a harvest. Returns the creatures that turned up this time. */
+  function checkCritters() {
+    const arrived = [];
+    CREATURES.forEach((def) => {
+      if (critterHere(def.id) || !critterReady(def)) return;
+      state.critters[def.id] = { since: nowSeconds(), fed: 0, gifts: 0, met: false };
+      arrived.push(def);
+    });
+    if (arrived.length) {
+      save();
+      arrived.forEach((def) => emit('critter', { def, arrived: true }));
+    }
+    return arrived;
+  }
+
+  /** Keepsakes waiting, derived from elapsed time rather than a running timer. */
+  function keepsakesWaiting(id) {
+    const def = critterById(id);
+    const home = critterHome(id);
+    if (!def || !home) return 0;
+    const k = def.keepsake;
+    const since = home.fed || home.since;
+    const earned = Math.floor((nowSeconds() - since) / k.every);
+    return Math.max(0, Math.min(k.cap, home.gifts + earned));
+  }
+
+  /** Roll the clock forward without paying out, so a capped creature stops
+      banking time it can never turn into a keepsake. */
+  function settleCritters() {
+    CREATURES.forEach((def) => {
+      const home = critterHome(def.id);
+      if (!home) return;
+      const waiting = keepsakesWaiting(def.id);
+      if (waiting !== home.gifts) {
+        home.gifts = waiting;
+        home.fed = nowSeconds();
+      }
+    });
+  }
+
+  function collectKeepsakes(id) {
+    const def = critterById(id);
+    const home = critterHome(id);
+    if (!def || !home) return null;
+    const n = keepsakesWaiting(id);
+    if (n <= 0) return null;
+    const k = def.keepsake;
+    const credits = (k.credits || 0) * n;
+    const gems = (k.gems || 0) * n;
+    state.credits += credits;
+    state.gems += gems;
+    home.gifts = 0;
+    home.fed = nowSeconds();
+    home.met = true;
+    save();
+    emit('currency');
+    emit('critter', { def, collected: n, credits, gems });
+    return { def, count: n, credits, gems, name: k.name };
+  }
+
+  /** Tapping a creature is not a currency button — it just reacts. */
+  function petCritter(id) {
+    const def = critterById(id);
+    if (!def || !critterHere(id)) return null;
+    const home = state.critters[id];
+    home.met = true;
+    emit('critter', { def, petted: true });
+    return def;
+  }
 
   /* ---------------- the potting bench ----------------
 
@@ -2190,6 +2299,8 @@ const Game = (() => {
     hiveCount, pollination, nextHiveCost, hivesFull, buyHive,
     collectHive, collectAllHives, jarsWaiting, honeyTotal, flowerTotal,
     canCraft, startCraft, sell,
+    critterById, critterHome, critterHere, crittersHome, critterProgress, critterReady,
+    checkCritters, keepsakesWaiting, settleCritters, collectKeepsakes, petCritter,
     benchDef, benchTop, benchUnlocked, benchFirstFree, benchEntryTier, benchNeighbours,
     benchGroup, benchMergeOnce, benchAddToBasket, benchPlace, benchBank,
     benchExpand, benchExpandCost, benchUsed, benchCapacity, benchStockOf,

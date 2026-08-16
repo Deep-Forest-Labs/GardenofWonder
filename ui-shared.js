@@ -16,6 +16,7 @@ const UI = (() => {
     game: $('#game'),
     ui: $('#ui'),
     garden: $('#garden'),
+    critterYard: $('#critterYard'),
     rail: $('#rail'),
     questStrip: $('#questStrip'),
     qPip: $('#qPip'),

@@ -321,6 +321,22 @@
     if (Math.random() < 0.12) UI.say('harvest');
   });
 
+  /* A creature arriving is a moment, not a notification. It gets the garden's
+     attention: confetti, the flower reacting, and the creature introducing
+     itself in its own voice rather than the flower's. */
+  Game.on('critter', ({ def, arrived }) => {
+    if (!arrived) return;
+    UI.renderCritters();
+    const c = FX.centerOf(el.garden);
+    FX.confetti(c.x, c.y, 26);
+    FX.stars(c.x, c.y, 10, def.art.glow);
+    Sound.play('quest');
+    FX.haptic([14, 40, 18]);
+    UI.faceReact('wow');
+    UI.showBanner(`${def.name} has moved in`, def.species);
+    setTimeout(() => UI.sayText(def.lines.arrive[0], true), 900);
+  });
+
   Game.on('almanac', ({ found, milestones }) => {
     const c = FX.centerOf(el.questStrip);
     FX.coins(c.x, c.y, 9);

@@ -20,7 +20,7 @@ globalThis.localStorage = {
 /* The game files are plain scripts that declare globals, so evaluate them and
    then re-export what they defined onto globalThis. */
 const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
-  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'flowerValue', 'Game'];
+  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -514,7 +514,13 @@ G.reset();
 S.quests.active = [{ id: 'q_crit_1', progress: 0 }];
 S.quests.done = ['q_charm_1'];
 S.tap.critChance = 1;
+/* critChanceNow() caps crit at 99% on purpose, so a tap can always miss and
+   `critChance = 1` is not a guarantee — this failed about one run in thirty
+   until the roll was pinned. */
+const rngCrit = Math.random;
+Math.random = () => 0;
 G.tapFlower();
+Math.random = rngCrit;
 check('a guaranteed crit increments the crit quest', S.quests.active[0].progress === 1);
 G.reset();
 S.quests.active = [{ id: 'q_combo_55', progress: 0 }];
@@ -2298,6 +2304,100 @@ check('no quest still points at a craft recipe', !DATA.quests.some((q) => q.trac
 check('the bench quests name real chain rungs', DATA.quests
   .filter((q) => q.track === 'merge' || q.track === 'bank')
   .every((q) => !q.key || benchIds().includes(q.key)));
+
+/* ---------------- creatures ---------------- */
+
+const PIP = CREATURES[0];
+
+group('a creature comes for the bloom it likes, and nothing else');
+G.reset();
+check('nobody is home in a new garden', G.crittersHome().length === 0);
+S.discovered = {};
+S.discovered[PIP.attract.seed] = PIP.attract.count - 1;
+check('one short is still not enough', G.checkCritters().length === 0 && !G.critterHere(PIP.id));
+S.discovered.daisy = 9999;
+check('the wrong bloom never counts', G.checkCritters().length === 0);
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+const came = G.checkCritters();
+check('meeting the count brings it', came.length === 1 && came[0].id === PIP.id);
+check('and it is home', G.critterHere(PIP.id));
+check('it does not arrive twice', G.checkCritters().length === 0);
+
+group('attraction reads a lifetime record, never the pantry');
+check('progress comes from discovered', G.critterProgress(PIP) === S.discovered[PIP.attract.seed]);
+S.flowers = {};
+check('an empty pantry does not send it away', G.critterHere(PIP.id));
+check('and progress is unchanged', G.critterProgress(PIP) === S.discovered[PIP.attract.seed]);
+
+group('keepsakes accrue off the clock and cap');
+const home = G.critterHome(PIP.id);
+const K = PIP.keepsake;
+home.since = G.nowSeconds();
+home.fed = 0;
+home.gifts = 0;
+check('nothing waiting straight away', G.keepsakesWaiting(PIP.id) === 0);
+home.since = G.nowSeconds() - K.every;
+check('one turns up on the clock', G.keepsakesWaiting(PIP.id) === 1);
+home.since = G.nowSeconds() - K.every * 999;
+check('they cap rather than piling up', G.keepsakesWaiting(PIP.id) === K.cap, `${G.keepsakesWaiting(PIP.id)} vs cap ${K.cap}`);
+check('an absence is never negative', G.keepsakesWaiting(PIP.id) >= 0);
+check('a creature that is not home has none', G.keepsakesWaiting('nobody') === 0);
+
+group('collecting pays once and resets the clock');
+const critCredits = S.credits;
+const critGems = S.gems;
+const got = G.collectKeepsakes(PIP.id);
+check('it hands over the capped amount', got && got.count === K.cap);
+check('coins land', S.credits === critCredits + K.credits * K.cap);
+check('gems land', S.gems === critGems + K.gems * K.cap);
+check('nothing is left waiting', G.keepsakesWaiting(PIP.id) === 0);
+check('collecting again pays nothing', G.collectKeepsakes(PIP.id) === null);
+check('collecting from nobody is a no-op', G.collectKeepsakes('nobody') === null);
+
+group('petting is a reaction, not a currency button');
+const walletBefore = S.credits + S.gems;
+check('petting works while it is home', G.petCritter(PIP.id) !== null);
+check('and pays nothing at all', S.credits + S.gems === walletBefore);
+check('petting an absent creature does nothing', G.petCritter('nobody') === null);
+
+group('a harvest is what brings a creature');
+G.reset();
+clearGarden();
+clearMastery();
+S.credits = 1e9;
+S.discovered[PIP.attract.seed] = PIP.attract.count - 1;
+const seedDef = G.seedById(PIP.attract.seed);
+S.grid[0].locked = false;
+G.plant(0, seedDef);
+S.grid[0].plantedAt = G.nowSeconds() - 99999;
+G.tick(0.1);
+G.harvest(0);
+check('the harvest that meets the count is the one that brings it', G.critterHere(PIP.id));
+
+group('creatures survive a save');
+G.saveNow();
+G.load();
+check('it is still home after a reload', G.critterHere(PIP.id));
+localStorage.setItem('gw-save', JSON.stringify({ version: 3, credits: 500 }));
+G.load();
+check('a save from before creatures loads clean', G.crittersHome().length === 0);
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, critters: { nobody: { since: 1 }, [PIP.id]: { since: 1, gifts: 9999 } }
+}));
+G.load();
+check('an unknown creature is dropped', !G.critterHere('nobody'));
+check('a real one is kept', G.critterHere(PIP.id));
+check('an impossible gift count is clamped', G.critterHome(PIP.id).gifts <= K.cap);
+
+group('every creature is authored as a character, not a stat');
+check('each has a name and a species', CREATURES.every((c) => c.name && c.species));
+check('each says something about itself', CREATURES.every((c) => c.about && c.hint));
+check('each comes for a real seed', CREATURES.every((c) => DATA.seeds.some((s) => s.id === c.attract.seed)));
+check('each leaves a named keepsake', CREATURES.every((c) => c.keepsake && c.keepsake.name && c.keepsake.every > 0 && c.keepsake.cap > 0));
+check('each has arrival, idle and pet lines', CREATURES.every((c) => (
+  c.lines && c.lines.arrive.length && c.lines.idle.length && c.lines.pet.length
+)));
+check('ids are unique', new Set(CREATURES.map((c) => c.id)).size === CREATURES.length);
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

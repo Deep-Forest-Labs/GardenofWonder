@@ -486,6 +486,44 @@ const BENCH = {
   rarityBump: { common: 0, rare: 1, epic: 2, legend: 3 }
 };
 
+/* Creatures that come to live in the garden.
+
+   The rule that makes this worth building: a creature is a *character* first and
+   a mechanic a distant second. If a grove spirit is "+5% growth" with a face on
+   it, this is the badge list wearing a costume. Its keepsake is a small joke
+   about who it is, and `attract` is the honest answer to "why plant this
+   flower" — Pip comes for bluebells and for nothing else.
+
+   `attract.seed` counts LIFETIME harvests via state.discovered, never the
+   pantry, so it can never go backwards when flowers are spent. */
+const CREATURES = [
+  {
+    id: 'pip',
+    name: 'Pip',
+    species: 'Grove Spirit',
+    attract: { seed: 'bluebell', count: 5 },
+    hint: 'Bluebells, apparently. Only bluebells.',
+    about: 'Rattles its head when it is thinking. It is almost never thinking.',
+    /* Keepsakes accrue on a slow clock and cap, so an absence is a small gift
+       waiting rather than a pile of homework. */
+    keepsake: { name: 'Mossy Pebble', every: 900, cap: 3, gems: 1, credits: 250 },
+    art: {
+      body: 'pebble',
+      skin: '#f4fdf5',
+      shade: '#c9e8d5',
+      accent: '#69db7c',
+      cheek: '#ff9ec4',
+      glow: '#b6f2c8'
+    },
+    lines: {
+      arrive: ['...oh! Hello.', 'It tilts its head at you.', 'Something small has moved in.'],
+      idle: ['It rattles softly.', 'It is watching a bee.', 'It has found a nice spot.', 'It sways with nothing in particular.'],
+      pet: ['It wobbles happily.', 'It makes a tiny sound.', 'It leans into your finger.', 'It rattles, delighted.'],
+      gift: ['It left you something.', 'A small offering appears.', 'It seems very pleased with itself.']
+    }
+  }
+];
+
 /* Wonder Effect — a rare garden-wide transformation. */
 /* The day cycle. Phase is derived from epoch time rather than page load, so "is it night" is a
    shared fact the simulation can answer — see docs/03-systems.md. `offset` only shifts the global

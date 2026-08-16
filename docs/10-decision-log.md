@@ -5,6 +5,85 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-16 — The habitat direction, and the first creature
+
+**Built:** `critters.js`, one creature end to end — Pip the Grove Spirit — and 36 sim-test
+assertions. Design in [22-creatures.md](22-creatures.md).
+
+**The owner's diagnosis, and it was the right one:** *"There's no life like Merge Dragons, outside of
+our main character."* The world had a place and a character but no inhabitants. Every system built
+in the previous month was a modifier on one verb, and nothing lived in the garden.
+
+**The reframe: this is a habitat, not a factory.** The whole design had been thinking in production
+chains — garden makes flowers, bench makes goods, market consumes goods. That is Township, in a
+crowded capital-heavy lane, and it is not what the research says this audience wants: the likely
+audience is **69% female with Completion and Fantasy as the top two motivations**, and neither is
+"optimise a supply chain." The garden should be a place that becomes alive because of what you plant.
+
+**Market evidence checked the same day, not recalled:**
+
+- **Grow a Garden — this project's own demand proof — has gone all-in on creatures**: pet mutations,
+  a Pet Mutation Machine, the pet level cap raised 100 → 500, tameable pets, 60-day event worlds.
+- **Shared spaces and cooperative decoration show up to 300% longer retention** than solo cozy
+  experiences, which is a direct measurement of the thing the owner was feeling.
+- **Neko Atsume 2 added a "Going Out" mode** for visiting other players' yards — from the studio that
+  defined the solitary cozy game.
+- **Simulation revenue is up ~12% YoY** and western cozy with ethical monetization is still called
+  out as underexploited. The lane in [17-market-and-positioning.md](17-market-and-positioning.md)
+  is still open.
+
+**The rule that makes it worth building: a creature is a character first and a mechanic a distant
+second.** A grove spirit that is "+5% growth" with a face on it is the badge list in a costume, and
+it fails for exactly the reason the AdVenture Capitalist trap describes. A sim-test asserts every
+creature carries a name, a species, a hint, a line about itself and three moods of dialogue, so a
+stat-only creature cannot be added without the suite noticing.
+
+**This is the most direct answer the project has found to *why plant this flower*.** Verbs made
+flowers behave differently; mutations made any flower exciting; orders would make a flower wanted.
+None made you want a *specific* bloom. **Pip comes for bluebells and for nothing else** — desire
+rather than a quota, for the price of a data row.
+
+**Attraction reads `state.discovered`, never `state.flowers`.** Flowers are spendable, so an
+attraction keyed to the pantry would let a creature *leave* when the player crafts — the same class
+of bug that once jammed the quest strip on an uncompletable goal.
+
+**Petting pays nothing, deliberately, and a test asserts it.** A creature you tap for currency is a
+button. A creature that just reacts is a pet. The keepsake is the reward; the tap is the
+relationship.
+
+**Keepsakes cap.** Three waiting is a small gift, thirty is homework, and homework is what the cosy
+pillar exists to prevent. `settleCritters()` runs once on boot so a creature that has been full for
+a week is not silently banking time it can never use.
+
+*Rejected: forking the repo.* The owner asked whether to start fresh to avoid losing what exists. The
+opposite is true — creatures and breeding are the **first features that reuse nearly everything**
+already built: the garden, adjacency, the day/night clock, the Almanac's lifetime records, the
+welcome-back scene (which is literally the Neko Atsume screen), the talking flower as narrator, the
+save discipline and the test harness. A fork would mean rebuilding all of it and splitting the docs,
+which are the actual asset. The build was tagged **`v1-bench`** instead, so every state is
+recoverable with one command.
+
+*Rejected: copying the kodama design.* The owner asked for Studio Ghibli's forest spirits, which are
+from *Princess Mononoke* rather than *Spirited Away*. The game ships commercially, so Pip borrows the
+archetype's silhouette language and is original work: a sprout instead of a bare head, moss speckles,
+blush, and a saturated storybook palette. Bright, never haunted.
+
+**Three art rules learned by drawing it.** The sprout has to clear the body or the crown swallows it
+and it reads as a generic ghost. Blush must stay well inside the silhouette or it reads as a
+rendering fault. And blush plus an eye highlight are what keep a pale spirit friendly.
+
+**A pre-existing flake was found and fixed on the way.** `a guaranteed crit increments the crit
+quest` set `critChance = 1` and tapped — but `critChanceNow()` caps crit at 99% on purpose so a tap
+can always miss, making the test's name a lie about one run in thirty. Confirmed against `v1-bench`
+that it predated this work, then pinned the roll. 0 failures in 40 runs, from 3 in 30.
+
+**What this means for merge, stated plainly:** under the habitat frame the bench becomes optional. It
+is fun and it is tested, but it is a separate board with a separate verb whose main job — turning
+flowers into goods a customer wants — is not one this direction especially needs. It stays dormant
+and undecided rather than being quietly deleted or quietly shipped.
+
+---
+
 ## 2026-08-16 — The Potting Bench: merge replaces the Apothecary, and the garden is its generator
 
 **Built:** the bench simulation, its save, and 51 sim-test assertions. **Not built:** any surface for
