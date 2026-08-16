@@ -183,9 +183,10 @@ Legacy and corrupted saves produce impossible timestamps, so every planted cell 
 Settings offers a reset behind a two-tap confirmation that disarms after 4 seconds. It removes
 `gw-save`, restores defaults in place, and emits `grid`, `panels` and `currency`.
 
-**Reset does not touch `igr-save`.** The legacy save is never destroyed, so a reset player will
-have their old *Idle Garden Reborn* progress re-imported on the next load. Arguably a bug,
-arguably a safety net. Recorded in [11-known-issues.md](11-known-issues.md).
+**Reset clears `igr-save` as well as `gw-save`** (changed 2026-08-15). It previously left the
+legacy key alone, so the next load re-imported the player's old *Idle Garden Reborn* progress and a
+reset silently didn't take. The safety-net reading lost: a player who asks for a clean start is
+asking for a clean start, and nothing in the UI explained the import.
 
 ## Changing the schema
 

@@ -36,9 +36,11 @@ Side rolls on every tap:
 - **5% chance of +1 gem**, independent of everything else.
 - **0.15% chance of triggering a Wonder Effect**, subject to its cooldown.
 
-Crit chance is uncapped in the simulation. The Almanac clamps its *display* to 99%, but nothing
-prevents the real value exceeding 1.0, at which point every tap crits. Reaching that takes 95
-levels of Lucky Charm.
+Crit chance is capped at **99%**, so a tap can always miss. Lucky Charm has no level cap, and at 95
+levels the raw value would reach 1.0 and make every tap a crit — at which point "critical" stops
+meaning anything. The cap lives in `Game.critChanceNow()`, which both the roll and the Almanac read,
+so the number shown is the number used. It previously clamped only the display, which hid the
+situation rather than preventing it.
 
 ### The combo ring
 

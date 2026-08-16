@@ -32,22 +32,7 @@ backwards and still worth fixing; the seed is just no longer strictly pointless.
 Both 10.00 net/s. Celestial costs 33% more for the same rate — purely a convenience upgrade. Not
 necessarily wrong, but not obviously intentional either.
 
-### Crit chance is uncapped
-
-Nothing clamps it. Above 100% every tap crits. The Almanac clamps the *display* to 99%, which hides
-the situation rather than preventing it.
-
-*Where:* `game.js` `tapFlower()`, `ui.js` `renderBonuses()`.
-
 ## Correctness
-
-### Reset doesn't clear the legacy save
-
-`Game.reset()` removes `gw-save` but leaves `igr-save` untouched, so a player who resets gets their
-old *Idle Garden Reborn* progress re-imported on the next load. Confusing if you wanted a clean
-start; arguably a safety net. Currently undocumented in the UI either way.
-
-*Where:* `game.js` `reset()`.
 
 ### Cheat buttons ship to players — kept on purpose, for now
 
@@ -64,22 +49,6 @@ indistinguishable.
 removal, so the affordance survives for development. Don't re-raise it unprompted before then.
 
 *Where:* `ui.js` `renderSettings()`.
-
-### The `load()` upgrade backfill misses the original badges
-
-The documented trap is that `load()` replaces `state.upgrades` wholesale, so every new badge key
-needs a manual backfill. The backfill list covers the harvester keys plus `holdSpeed`, `rainDance`,
-`beeSwarm` and `ladybug` — but **not** the badges that have existed since v1: `tapPower`,
-`critChance`, `critMult`, `comboMeter`, `plotExpansion`, `autoWater`, `autoHarvest`. A save whose
-`upgrades` object is missing one of those reads `undefined` and the Almanac shows `NaN%` for
-growth speed.
-
-No real save is affected — those keys have existed since the first version, so every genuine save
-has them. It bites synthetic saves, hand-edited saves, and anything a future migration writes. The
-fix is one line: back-fill every key in `defaultState().upgrades` instead of a hand-maintained
-list, which also removes the step people forget.
-
-*Where:* `game.js` `load()`.
 
 ### "Garden Mastery" and "Bloom Mastery" are two different things one panel apart
 
@@ -106,14 +75,6 @@ completes every plot and expires every booster. No anti-cheat exists.
 
 Fine for a single-player local game. It would matter if leaderboards were ever added.
 
-## Dead code
-
-- **`Flora.sprout()`** is exported and never called. Growth stage 1 uses CSS scaling of the full
-  plant instead. Either use it for early stages or delete it.
-- **`Icons.get('seed')`** is unused — `plantSpot` replaced it for empty plots.
-- **`Icons.get('mute')`** is unused; the settings toggle uses `sound` in both states.
-- **`--scene-tint`** is declared in `:root` and, as far as I can tell, never read.
-
 ## Accessibility
 
 - **No keyboard support and no focus styles.** Buttons are focusable but nothing is styled, and the
@@ -139,12 +100,6 @@ published to the same account would need a distinct key prefix.
 
 `navigator.vibrate` is unimplemented. Calls are wrapped in try/catch. iPhone players get no
 haptic feedback and there's no alternative.
-
-### Ambient music scheduler never stops
-
-`startMusic()` sets a 3.2 s interval that is never cleared. Muting takes the bus gain to zero but
-the scheduler keeps creating oscillator nodes. Harmless in practice — they're short and
-garbage-collected — but it's needless work while muted.
 
 ## Structural
 

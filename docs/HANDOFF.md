@@ -263,11 +263,13 @@ web build uses; do not "fix" the discrepancy.
 **`load()` replaces `state.upgrades` wholesale, it does not deep-merge it.** `Object.assign(state,
 defaultState(), parsed)` only shallow-copies top-level keys, so a save from before a given badge
 existed simply won't have it in `parsed.upgrades`, and that key comes back `undefined` — not `0`.
-Every new badge key needs its own one-line backfill next to the existing `PLOT_AUTOPLANTERS.forEach`
-one in `load()`, or `upgradePrice()`/the badge's effect will silently produce `NaN` for old saves.
-`state.tap` doesn't have this problem — it's merged with `Object.assign(d.tap, parsed.tap || {})`,
-so new fields on it just inherit the default. Same trap applies to any new per-cell grid field
-(e.g. `luckyBug`) — it needs its own backfill loop over `state.grid` too.
+**Badges no longer need a per-key line** (fixed 2026-08-15): `load()` backfills every key in
+`defaultState().upgrades`, so declaring the badge there is enough. The hand-maintained list it
+replaced had already drifted and was missing all seven v1 badges. `state.tap` doesn't have this
+problem — it's merged with `Object.assign(d.tap, parsed.tap || {})`, so new fields on it just
+inherit the default. **The trap still applies to anything not covered by that loop**: a new
+per-cell grid field (e.g. `luckyBug`) needs its own backfill over `state.grid`, and a new
+`state.seen` flag needs its own line — see [07-save-data.md](07-save-data.md).
 
 **Automated/CDP-controlled browser tabs can freeze CSS animation clocks entirely.** If the tab lacks
 OS focus (common for an automation window sitting behind the IDE), Chrome can stop advancing
@@ -302,13 +304,6 @@ landed, and the failure looks like a balance regression rather than a test artif
 every row in a card treatment and collapsed the columns onto one overflowing line. The Almanac's
 classes are `.almanac-row*`. Check for an existing class before naming a new one — `style.css` is
 50 KB and the collision is invisible until you screenshot it.
-
-**The `load()` upgrade backfill does not cover the original badges.** The hand-maintained list
-covers the harvester keys plus `holdSpeed`, `rainDance`, `beeSwarm`, `ladybug` — but not
-`tapPower`, `critChance`, `critMult`, `comboMeter`, `plotExpansion`, `autoWater`, `autoHarvest`.
-Real saves always have those, so this only bites synthetic or hand-edited saves — where it shows up
-as `NaN%` in the Almanac and looks like a live bug. See
-[11-known-issues.md](11-known-issues.md#correctness).
 
 **Verb effects must be read before the plot is cleared.** `harvest()` captures the neighbourhood —
 Beacon weight, Lantern gem multiplier, the payout multiplier — at the top, because clearing the plot

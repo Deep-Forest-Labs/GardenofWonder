@@ -10,10 +10,6 @@ const Icons = (() => {
       <circle cx="12" cy="12" r="9" fill="#ffc93c"/>
       <circle cx="12" cy="12" r="5.6" fill="#ffe27a" stroke-width="1.6"/>
       <path d="M12 9.2c1.1 0 1.7 1 1.4 1.9 .9-.3 1.9.3 1.9 1.4 0 1.1-1 1.7-1.9 1.4 .3.9-.3 1.9-1.4 1.9s-1.7-1-1.4-1.9c-.9.3-1.9-.3-1.9-1.4 0-1.1 1-1.7 1.9-1.4-.3-.9.3-1.9 1.4-1.9Z" fill="#f59f00" stroke-width="1.2"/>`),
-    ticket: S(`
-      <path d="M3 8.5A2 2 0 0 1 5 6.5h14a2 2 0 0 1 2 2v1.2a2.3 2.3 0 0 0 0 4.6v1.2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.2a2.3 2.3 0 0 0 0-4.6Z" fill="#ff8fab"/>
-      <path d="M8.4 8.8v6.4" stroke-dasharray="1.5 2.2" stroke-width="1.8"/>
-      <path d="M14.9 9.6l1 2 2.2.3-1.6 1.6.4 2.2-2-1-2 1 .4-2.2-1.6-1.6 2.2-.3Z" fill="#fff" stroke-width="1.3"/>`),
     gem: S(`
       <path d="M7 3.6h10l4 5.2-9 11.6L3 8.8Z" fill="#8ce0ff"/>
       <path d="M7 3.6 9.6 8.8 12 20.4 14.4 8.8 17 3.6" stroke-width="1.5"/>
@@ -96,9 +92,6 @@ const Icons = (() => {
     sound: S(`
       <path d="M4.6 9.4h3.2L12 5.6v12.8l-4.2-3.8H4.6Z" fill="#a5d8ff"/>
       <path d="M15.4 9.2a4 4 0 0 1 0 5.6M18 6.6a7.6 7.6 0 0 1 0 10.8"/>`),
-    mute: S(`
-      <path d="M4.6 9.4h3.2L12 5.6v12.8l-4.2-3.8H4.6Z" fill="#ced4da"/>
-      <path d="m15.6 9.6 4.8 4.8M20.4 9.6l-4.8 4.8"/>`),
     music: S(`
       <path d="M9.4 17.4V5.6l9-1.8v11.4" />
       <ellipse cx="6.9" cy="17.8" rx="2.6" ry="2.2" fill="#d0bfff"/>
@@ -108,10 +101,6 @@ const Icons = (() => {
       <path d="M6.4 6.6h11.2l-1 12.4a2 2 0 0 1-2 1.8H9.4a2 2 0 0 1-2-1.8Z" fill="#ffa8a8"/>`),
     sparkle: S(`<path d="M12 2.6c.8 5.4 3.4 8 8.8 8.8-5.4.8-8 3.4-8.8 8.8-.8-5.4-3.4-8-8.8-8.8 5.4-.8 8-3.4 8.8-8.8Z" fill="#ffe066"/>`),
     clock: S(`<circle cx="12" cy="12" r="8.6" fill="#e7f5ff"/><path d="M12 7v5.2l3.4 2.2" stroke-width="2.2"/>`),
-    plus: S(`<path d="M12 5.4v13.2M5.4 12h13.2" stroke-width="3"/>`),
-    seed: S(`
-      <path d="M12 3.4c4.4 3 6.6 6 6.6 9.4A6.6 6.6 0 0 1 12 20.6a6.6 6.6 0 0 1-6.6-7.8c0-3.4 2.2-6.4 6.6-9.4Z" fill="#c99a6b"/>
-      <path d="M12 8.4c1.8 1.6 2.6 3 2.6 4.6" stroke="#8a5a2b" stroke-width="1.8"/>`),
     ladybug: S(`
       <path d="M12 6.2a5.8 5.8 0 0 1 5.8 5.8v2.6A5.8 5.8 0 0 1 12 20.4a5.8 5.8 0 0 1-5.8-5.8V12A5.8 5.8 0 0 1 12 6.2Z" fill="#fa5252"/>
       <path d="M8.6 6.8a3.8 3.8 0 0 1 6.8 0Z" fill="#2c1a10" stroke-width="1.3"/>
@@ -166,10 +155,6 @@ const Icons = (() => {
       <path d="M10 2.8h4v6l4.4 7.6a2.6 2.6 0 0 1-2.2 4H7.8a2.6 2.6 0 0 1-2.2-4L10 8.8Z" fill="#e7f5ff"/>
       <path d="M7.4 14.4h9.2l1.8 2a2.6 2.6 0 0 1-2.2 4H7.8a2.6 2.6 0 0 1-2.2-4Z" fill="#8ce0ff"/>
       <path d="M9 2.8h6" stroke-width="2.2"/>`),
-    petal: S(`
-      <path d="M12 3.4c2.6 2.4 4 5 4 7.6a4 4 0 0 1-8 0c0-2.6 1.4-5.2 4-7.6Z" fill="#ff8fab"/>
-      <path d="M12 11v9.4" stroke-width="2"/>
-      <path d="M12 15.4c-1.8-1.6-3.4-2-5-1.6.4 2 1.8 3.2 5 3.4Z" fill="#57c15b" stroke-width="1.4"/>`)
   });
 
   function get(name) {

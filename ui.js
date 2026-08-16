@@ -872,7 +872,7 @@
   function renderBonuses() {
     const tapMult = (1 + Game.boostVal('tapPower')) * (1 + Game.boostVal('globalCredits'));
     const tapEff = S.tap.power * tapMult * Game.wonderMult();
-    const critChance = S.tap.critChance + Game.boostVal('critChance');
+    const critChance = Game.critChanceNow();
     const critMult = S.tap.critMult;
     const growBonus = Math.max(0, 1 - Game.growModifier());
     const harvestBonus = Game.boostVal('globalCredits');
@@ -945,7 +945,7 @@
         <h3>${Icons.get('fist')} Tap Power</h3>
         ${line('Per tap', fmt(tapEff), `Base ${S.tap.power} · ${signed(tapMult - 1)} from boosts`)}
         ${line('Hold-to-tap rate', `${(S.tap.holdInterval / 1000).toFixed(2)}s`, 'Hold the flower for automatic taps')}
-        ${line('Crit chance', pct(Math.min(critChance, 0.99), 1), 'Chance for a big bonus tap')}
+        ${line('Crit chance', pct(critChance, 1), 'Chance for a big bonus tap')}
         ${line('Crit multiplier', `${critMult.toFixed(1)}x`, 'Payout spike when a crit lands')}
         ${line('Combo cap', `${S.tap.comboMax}`, `${Game.comboMult().toFixed(2)}× now · +1% per combo`)}
       </div>

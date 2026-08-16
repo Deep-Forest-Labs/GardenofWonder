@@ -557,6 +557,39 @@ check('the slot it held was refilled', S.quests.active.length === 3);
 check('every remaining active quest resolves', S.quests.active.every((q) => DATA.quests.some((d) => d.id === q.id)));
 check('the unknown daily was rerolled', DATA.dailies.some((d) => d.id === S.quests.daily.id));
 
+group('every upgrade key survives a save that predates it');
+G.reset();
+const strippedSave = JSON.parse(JSON.stringify(S));
+strippedSave.upgrades = { tapPower: 3 }; // a save from before everything else shipped
+globalThis.localStorage.setItem('gw-save', JSON.stringify(strippedSave));
+G.load();
+check('the key the save did have is kept', S.upgrades.tapPower === 3);
+Object.keys(S.upgrades).forEach((key) => {
+  check(`${key} is a number, not undefined`, typeof S.upgrades[key] === 'number');
+});
+check('no upgrade price comes back NaN',
+  Object.keys(S.upgrades).every((k) => Number.isFinite(G.upgradePrice(k))));
+
+group('reset clears the legacy save too');
+G.reset();
+globalThis.localStorage.setItem('igr-save', JSON.stringify({ credits: 999999 }));
+G.reset();
+check('the legacy key is gone', globalThis.localStorage.getItem('igr-save') === null);
+G.load();
+check('a reset player does not get old progress back', S.credits === 100, `credits ${S.credits}`);
+// Explicit, so that a regression here fails this group alone instead of leaking
+// an Idle Garden Reborn save into every test that runs after it.
+globalThis.localStorage.removeItem('igr-save');
+G.reset();
+
+group('crit chance cannot reach a certainty');
+G.reset();
+S.tap.critChance = 4;
+check('the roll is clamped below 1', G.critChanceNow() < 1);
+check('the clamp is the documented 99%', G.critChanceNow() === 0.99);
+S.tap.critChance = 0.05;
+check('an ordinary value is untouched', Math.abs(G.critChanceNow() - 0.05) < 1e-9);
+
 group('onboarding does not replay for a save that predates the seen flags');
 G.reset();
 const playedSave = JSON.parse(JSON.stringify(S));

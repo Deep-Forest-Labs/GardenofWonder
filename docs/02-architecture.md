@@ -129,10 +129,10 @@ that generation.
 
 **`flora.js`** — Turns a seed's `art` block into SVG. Exposes `plant()` (full stem, leaves and
 head for a plot), `head()` (bloom only, for shop cards), `talkingFlower()`, and `injectDefs()`,
-which writes one hidden `<svg>` holding every gradient so blooms stay cheap to draw. Also exports
-`sprout()`, which is currently unused.
+which writes one hidden `<svg>` holding every gradient so blooms stay cheap to draw.
 
-**`icons.js`** — Thirty-three hand-built outlined SVG icons. `get(name)` returns a string;
+**`icons.js`** — Thirty-eight hand-built outlined SVG icons, every one of them referenced.
+`get(name)` falls back to `sparkle` for an unknown name, so a typo degrades instead of throwing;
 `hydrate(root)` replaces every `<span data-icon="…">` in a subtree. Static markup in
 `index.html` uses `data-icon`; JavaScript-generated markup calls `Icons.get`.
 

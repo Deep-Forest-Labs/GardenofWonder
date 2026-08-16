@@ -136,7 +136,6 @@ its definitions automatically; a new *gradient kind* means editing `injectDefs()
 | `Flora.plant(seed)` | Stem, leaves, head in a 100×120 viewBox | Plots |
 | `Flora.head(seed, size)` | Bloom only, square viewBox | Shop cards, Almanac, toasts |
 | `Flora.talkingFlower()` | The face character | Centre cell |
-| `Flora.sprout(seed)` | Generic sprout | **Nothing — currently unused** |
 
 ## Growth animation
 

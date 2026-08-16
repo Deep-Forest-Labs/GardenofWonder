@@ -190,13 +190,14 @@ const Game = (() => {
         state.upgrades.plot1Harvester = state.upgrades.plot1Harvester || state.upgrades.plot1Gardener;
         delete state.upgrades.plot1Gardener;
       }
-      PLOT_AUTOPLANTERS.forEach(({ key }) => {
-        if (typeof state.upgrades[key] !== 'number') state.upgrades[key] = 0;
-      });
-      // A save from before these badges existed won't have them — state.upgrades
-      // is replaced wholesale by the parsed save above, so each new key needs
-      // the same manual backfill as the harvester keys.
-      ['holdSpeed', 'rainDance', 'beeSwarm', 'ladybug'].forEach((key) => {
+      // state.upgrades is replaced wholesale by the parsed save above, so every
+      // key the game expects has to be restored here or it reads back undefined
+      // and upgradePrice() yields NaN. Derived from defaultState() rather than
+      // hand-listed: the old list had drifted and was missing every badge that
+      // shipped in v1 (tapPower, critChance, critMult, comboMeter,
+      // plotExpansion, autoWater, autoHarvest), and a new badge needed a line
+      // here that was easy to forget.
+      Object.keys(d.upgrades).forEach((key) => {
         if (typeof state.upgrades[key] !== 'number') state.upgrades[key] = 0;
       });
 
@@ -235,6 +236,9 @@ const Game = (() => {
 
   function reset() {
     localStorage.removeItem(SAVE_KEY);
+    // Without this the next load() re-imports the old Idle Garden Reborn save
+    // and the player who asked for a clean start gets their old progress back.
+    localStorage.removeItem(LEGACY_KEY);
     Object.assign(state, defaultState());
     lastAutoHarvest = 0;
     ensureProgression();
@@ -843,9 +847,18 @@ const Game = (() => {
   const comboMult = () => 1 + state.tap.combo * 0.01;
 
   /* ---------------- actions ---------------- */
+  /* Lucky Charm has no level cap, so crit chance could pass 100% and make every
+     tap a crit — at which point "critical" means nothing. The Almanac was already
+     clamping the number it displayed to 99%, which hid that rather than
+     preventing it. One source for both now, so the shown number is the real one. */
+  const CRIT_CHANCE_MAX = 0.99;
+  function critChanceNow() {
+    return Math.min(CRIT_CHANCE_MAX, state.tap.critChance + boostVal('critChance'));
+  }
+
   function tapFlower(held) {
     const power = state.tap.power * (1 + boostVal('tapPower')) * (1 + boostVal('globalCredits'));
-    const critChance = state.tap.critChance + boostVal('critChance');
+    const critChance = critChanceNow();
     const critMultiplier = state.tap.critMult;
     const isCrit = Math.random() < critChance;
     let gain = power;
@@ -1428,7 +1441,7 @@ const Game = (() => {
     state, on, emit, load, save, saveNow, reset, nowSeconds,
     seedById, activeBoost, boostVal, growModifier, rollRarity,
     plotUnlockCost, upgradePrice, upgradeMaxed, decorCount,
-    tapFlower, decayCombo, plant, unlockPlot, hasten, harvest,
+    tapFlower, decayCombo, plant, unlockPlot, hasten, harvest, critChanceNow,
     buyUpgrade, buyDecor, activateBoost,
     hiveCount, pollination, nextHiveCost, hivesFull, buyHive,
     collectHive, collectAllHives, jarsWaiting, honeyTotal, flowerTotal,

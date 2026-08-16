@@ -201,17 +201,6 @@ const Flora = (() => {
     </svg>`;
   }
 
-  /** Seed / sprout art used for the first growth beats. */
-  function sprout(seed) {
-    const leaf = seed && seed.art ? seed.art.leaf : '#4bb257';
-    return `
-    <svg class="plant sprout" viewBox="0 0 100 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-      <path d="M50,120 C50,108 50,100 50,92" fill="none" stroke="${leaf}" stroke-width="7" stroke-linecap="round"/>
-      <path d="M50,98 C40,100 32,95 30,88 C39,84 47,90 50,98 Z" fill="${leaf}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>
-      <path d="M50,94 C60,96 68,91 70,84 C61,80 53,86 50,94 Z" fill="${leaf}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>
-    </svg>`;
-  }
-
   /** The star of the show: a Talking Flower with a face. */
   function talkingFlower() {
     const petal = 'M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z';
@@ -284,5 +273,5 @@ const Flora = (() => {
     document.body.appendChild(svg);
   }
 
-  return { plant, head, sprout, talkingFlower, injectDefs, INK };
+  return { plant, head, talkingFlower, injectDefs, INK };
 })();

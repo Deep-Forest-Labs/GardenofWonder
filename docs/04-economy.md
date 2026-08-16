@@ -203,10 +203,13 @@ design, and harvesters are meant to be levelled only a handful of times.
 | Lucky Ladybug trigger chance | 1.6% | 8 Lucky Ladybug levels |
 | Growth modifier (defensive floor, rarely reachable now) | 0.3 (70% faster) | — |
 | Drone cadence | 0.7 s | 5 Harvest Drone levels |
-| Crit chance | *(none)* | — |
+| Crit chance | 99% | 94 Lucky Charm levels |
 
-Crit chance has no cap — above 100% makes every tap a crit. Decor stacking used to be the other
-uncapped growth vector; it's cosmetic-only now and doesn't move any of these numbers.
+Crit chance is capped at 99% so a tap can always miss; the cap is in `Game.critChanceNow()` and
+feeds both the roll and the Almanac readout. Lucky Charm itself is still uncapped, and its 1.5 cost
+scale is the gentlest in the table, so the cap is what stops crit from becoming a flat multiplier.
+Decor stacking used to be the other uncapped growth vector; it's cosmetic-only now and doesn't move
+any of these numbers.
 
 ## Boosters
 

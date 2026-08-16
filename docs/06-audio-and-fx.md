@@ -70,8 +70,11 @@ Off by default. A four-bar chord progression — `[0,4,7]`, `[-3,2,5]`, `[-5,0,4
 scheduled on a 3.2 s `setInterval`. Each bar lays down a 3.4 s sine pad an octave down, plus a
 six-note triangle arpeggio drawn from the same chord.
 
-It's the only recurring timer outside the frame loop. It starts on demand and is never stopped —
-muting only takes the bus to zero, so the scheduler keeps running. Harmless, but worth knowing.
+It's the only recurring timer outside the frame loop. `setMusic(true)` starts it and
+`setMusic(false)` stops it via `stopMusic()`, which clears the interval and nulls the handle so
+`startMusic()`'s re-entry guard stays honest. Muting used to take the bus gain to zero and leave the
+scheduler running, quietly building oscillator nodes every 3.2 s for as long as the tab stayed open.
+Notes already scheduled are untouched and fade out with the bus, so stopping is silent.
 
 ## Visual effects
 

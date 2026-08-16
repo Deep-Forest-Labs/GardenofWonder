@@ -40,7 +40,10 @@ const Sound = (() => {
   function setMusic(on) {
     prefs.music = on;
     if (!ready) return;
-    if (on) startMusic();
+    // Muting used to take the bus to zero and leave the scheduler running, so a
+    // muted game kept building oscillator nodes every 3.2s forever. Notes already
+    // scheduled are unaffected and fade out with the bus.
+    if (on) startMusic(); else stopMusic();
     musicBus.gain.setTargetAtTime(on ? 0.16 : 0, ctx.currentTime, 0.4);
   }
 
@@ -191,6 +194,12 @@ const Sound = (() => {
     };
     step();
     musicTimer = setInterval(step, 3200);
+  }
+
+  function stopMusic() {
+    if (!musicTimer) return;
+    clearInterval(musicTimer);
+    musicTimer = null;
   }
 
   return { init, resume, play, setSfx, setMusic, prefs };
