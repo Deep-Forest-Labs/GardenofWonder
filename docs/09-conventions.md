@@ -23,13 +23,15 @@ Pages (`/gardenwonder/`), so `/style.css` would 404.
 ## Layering
 
 ```
-data.js   →  game.js  →  ui.js
-             (no DOM)     (no economy math)
+data.js   →  game.js  →  ui-shared.js → ui-scenery.js / ui-sheet.js / ui-events.js / ui.js
+             (no DOM)                    (no economy math)
 ```
 
 - **`game.js` must never touch the DOM.** No `document`, no `window`, no element references. It's a
   headless simulation.
-- **`ui.js` must never do economy math.** Need a number? Add a getter to `game.js`.
+- **The `ui-*` files must never do economy math.** Need a number? Add a getter to `game.js`.
+- **They share one global, `UI`**, and a call that crosses a file boundary is written
+  `UI.something()` — see [02-architecture.md](02-architecture.md#the-shared-ui-surface).
 - **`flora.js` / `icons.js` / `audio.js` / `fx.js` know nothing about the game.** Parameters in,
   output out. Don't let game concepts leak into them.
 - **`data.js` holds no logic.** Values and content only.
@@ -165,7 +167,7 @@ Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at
 ## Playbook: add a game event with feedback
 
 1. `Game.emit('yourEvent', payload)` from `game.js`.
-2. `Game.on('yourEvent', …)` in `ui.js` — **at module level, never inside a function that reruns**.
+2. `Game.on('yourEvent', …)` in `ui-events.js` — **at module level, never inside a function that reruns**.
 3. Place it on the feedback ladder in [06-audio-and-fx.md](06-audio-and-fx.md) deliberately.
    Don't give a minor event Legendary-tier juice.
 4. Add a sound recipe to `RECIPES` if it needs one, pitched to the pentatonic scale.

@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-15**
+Last updated: **2026-08-16**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -11,6 +11,15 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 `main` at the repository root. It is a single-screen idle garden — tap a talking flower, plant
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
+
+> **`ui.js` was split, 2026-08-16.** 2,309 lines became five files along the three seams the docs
+> had named for months: `ui-shared.js` (the scope they share), `ui-scenery.js`, `ui-sheet.js`,
+> `ui-events.js`, and a ~700-line `ui.js` keeping the garden, the flower, the HUD, input, the frame
+> loop and `boot()`. **The shared scope is passed as one global, `UI`**, and a call that crosses a
+> file boundary is written `UI.something()` — the prefix is how you count one file's reach into
+> another. **Pure motion**: no behaviour changed, and the one bug spotted on the way went into
+> [11-known-issues.md](11-known-issues.md) instead of the diff. See
+> [02-architecture.md](02-architecture.md#the-shared-ui-surface).
 
 > **Packs now turn up in the garden, 2026-08-15.** A fourth tap roll drops a card pack onto a plot,
 > where it waits to be tapped — the Lucky Ladybug beat, but tappable. **Always on with no badge
@@ -202,8 +211,8 @@ as one piece rather than discovering it halfway through.
 
 ## The current task
 
-**Nothing is mid-flight in code.** Bloom Mastery shipped 2026-08-14; the strategy pass that same day
-re-pointed the roadmap but wrote no code. Pick the next item from "What comes after" with the owner.
+**Nothing is mid-flight in code.** The `ui.js` split finished 2026-08-16 and changed no behaviour.
+Pick the next item from "What comes after" with the owner.
 
 **The long-running open question — *does the garden's contents start mattering* — now has an
 answer.** It was handed first to Bloom Mastery, which could not deliver it (a percentage of an
@@ -319,6 +328,14 @@ by two agents that did not know about each other — competently and incompatibl
 state shapes for the same feature. Cloud agents push to `cursor/*` branches and may already have
 merged to `main` while your local tree still looks current. `git fetch` first.
 
+**The UI is five files sharing one global, and the sharing rule is load-order-sensitive.** A
+`ui-*` file may destructure the `ui-shared.js` primitives at the top (`const { $, S, el, fmt } =
+UI;`) because those exist as soon as `UI` does. It may **not** destructure anything another UI file
+attaches — `UI.toast`, `UI.openSheet`, `UI.plotEls` — because that file may not have loaded yet;
+call those through `UI.` at call time. `ui.js` publishes its half at the very bottom, just before
+`boot()`. **`UI.flowerBtn` is a function, not the node**, because `buildGarden()` replaces the
+flower on every plot expansion.
+
 **`audio.js` already has a global-looking `RECIPES`.** It is a table of *sound* recipes, declared
 inside the `Sound` IIFE. Crafting recipes are therefore named `CRAFT_RECIPES`. Shadowing would
 technically work, but do not reintroduce the collision.
@@ -430,7 +447,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 437 assertions over the simulation layer
+node tools/sim-test.js          # 512 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

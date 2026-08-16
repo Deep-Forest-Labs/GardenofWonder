@@ -52,7 +52,8 @@ Two currencies: coins from taps and harvests, and gems for premium decor.
 | `ui-shared.js` | The scope the UI files share — `$`, `el`, the formatting helpers |
 | `ui-scenery.js` | The sky ramp, day/night interpolation, clouds and the weather tint |
 | `ui-sheet.js` | The bottom sheet and every panel that opens over the garden |
-| `ui.js` | Rendering, input, and all the glue |
+| `ui-events.js` | Every `Game.on(...)` subscription — feedback for what the simulation reports |
+| `ui.js` | The garden, the talking flower, HUD, rail, input, the frame loop and boot |
 | `legacy/` | The previous build (*Idle Garden Reborn*), kept for reference |
 | `docs/` | Full design and technical documentation |
 

@@ -91,7 +91,7 @@ A "dud" (chance rolled true but no eligible target) simply does nothing — no r
 UI feedback. That's deliberate: a slot machine that fakes a win when the reels don't line up would
 undercut the whole point of an honest, readable trigger rate.
 
-Each proc has a dedicated animation in `ui.js` (`triggerRainFX`, `triggerBeeFX`,
+Each proc has a dedicated animation in `ui-events.js` (`triggerRainFX`, `triggerBeeFX`,
 `triggerLadybugFX`) so a rare trigger reads as a clear, celebratory event rather than a number
 quietly changing:
 

@@ -105,17 +105,35 @@ haptic feedback and there's no alternative.
 
 ## Structural
 
-### `ui.js` is doing too much
+### ~~`ui.js` is doing too much~~ — split 2026-08-16
 
-Around 1,300 lines covering DOM construction, seven sheet panels, input, HUD, rail, toasts, banners,
-coach marks, scenery, day/night and the frame loop. The natural split points are the sheet panels,
-the scenery/sky code, and the event wiring.
+It had reached 2,309 lines. All three named seams are out: the bottom sheet into `ui-sheet.js`, the
+scenery and day/night code into `ui-scenery.js`, and the event wiring into `ui-events.js`, over a
+shared `UI` global declared by `ui-shared.js`. `ui.js` is about 700 lines and keeps the garden, the
+talking flower, the HUD, the rail, input, the frame loop and `boot()`. See
+[02-architecture.md](02-architecture.md#the-shared-ui-surface).
+
+Kept here rather than deleted because one dependency is worth knowing before adding to the UI:
+**`ui-events.js` reaches into `ui.js` for twelve things** — `toast`, `showBanner`, `buildGarden`,
+`say`, `faceReact`, `popWallet`, `renderQuestStrip`, `renderRail`, `hideCoach`, `noteActivity`,
+`plotEls` and `flowerBtn`. That is the widest edge in the UI and the one most likely to grow. If it
+keeps growing, the answer is to split the garden out of `ui.js`, not to widen `UI` further.
 
 ### Sheet panels use `innerHTML` with interpolation
 
 All interpolated content currently comes from `data.js` and is trusted, so there's no live
 vulnerability. But there's no escaping helper, so the first time player-supplied text reaches a
 panel it will be an injection. Add escaping before adding any naming or text-entry feature.
+
+*Where:* `ui-sheet.js`.
+
+### `ico()` is declared and never called
+
+A helper on the shared `UI` surface that nothing uses — every caller reaches for `Icons.get()`
+directly. It was already dead inside the old `ui.js` IIFE; the split moved it to `ui-shared.js`
+without deleting it, so that the split stayed pure motion. Delete it or start using it.
+
+*Where:* `ui-shared.js`.
 
 ### Four sim-tests have been flaky, and the class of bug keeps recurring
 
@@ -151,7 +169,12 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 437 assertions over the
-economy, progression, saves and mastery. Everything above that line — `ui.js`, layout, the sheet,
-FX — is verified by hand against the checklist in [09-conventions.md](09-conventions.md). That is
-the right split for a prototype, but a UI regression has no net under it.
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 512 assertions over the
+economy, progression, saves and mastery. Everything above that line — the four `ui-*` files,
+layout, the sheet, FX — is verified by hand against the checklist in
+[09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI
+regression has no net under it.
+
+**This bit during the `ui.js` split.** The suite stays green through a change that breaks the plant
+picker, because it never loads a DOM. A UI change has to be played, panel by panel, or it is not
+checked at all.

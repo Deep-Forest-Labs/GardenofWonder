@@ -2,7 +2,7 @@
 
 ## Shape of the project
 
-Ten JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
+Eleven JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
 dependencies. Each file defines exactly one global and they load in dependency order as plain
 `<script>` tags.
 
@@ -25,7 +25,8 @@ reference globals defined above it.
 | 7 | `ui-shared.js` | `UI` | `Game`, the DOM |
 | 8 | `ui-scenery.js` | *(attaches to `UI`)* | `UI` |
 | 9 | `ui-sheet.js` | *(attaches to `UI`)* | `UI` |
-| 10 | `ui.js` | *(attaches to `UI`)* | everything above |
+| 10 | `ui-events.js` | *(attaches nothing)* | `UI` |
+| 11 | `ui.js` | *(attaches to `UI`)* | everything above |
 
 The UI files touch the DOM on load, and only `ui.js` calls `boot()`. Every other file is inert
 until something calls into it.
@@ -82,7 +83,7 @@ game — you hand them parameters and they produce SVG, sound, or particles.
 
 ## The event bus
 
-`game.js` has a minimal pub/sub. `ui.js` subscribes; nothing else does.
+`game.js` has a minimal pub/sub. `ui-events.js` subscribes; nothing else does.
 
 ```js
 Game.on('harvest', (payload) => { /* ... */ });
@@ -192,8 +193,22 @@ It needs three things from `ui.js` — `UI.toast`, `UI.showBanner` and `UI.build
 publishes `openSheet`, `closeSheet`, `renderSheet`, `sheetMode`, `setAwayReport`, `syncAfford`,
 `tickSheetTimers` and `CORE_UPGRADES`.
 
-**`ui.js`** — Everything else: DOM construction, input handling, HUD counters, the rail, toasts,
-banners, coach marks, the game-event wiring and the frame loop.
+**`ui-events.js`** — The wiring from simulation events to what the player sees and hears. Every
+`Game.on(...)` subscription lives here, along with the animations only they trigger: the three
+tap-proc effects, the adjacency flash, and the seed-name lookup for mutation banners. It decides
+nothing — it turns an event payload into particles, sound, haptics, a toast or a banner. It
+attaches nothing to `UI`, being a pure consumer, and is the file with the widest reach into the
+others.
+
+**`ui.js`** — Everything else: DOM construction, the garden and its per-frame render, the talking
+flower, input handling, HUD counters, the quest strip, the rail, toasts, banners, coach marks, the
+dock, the frame loop and `boot()`.
+
+It publishes the presentation primitives the other UI files drive: `toast`, `showBanner`,
+`buildGarden`, `say`, `faceReact`, `popWallet`, `renderQuestStrip`, `renderRail`, `hideCoach`,
+`noteActivity`, `plotEls` and `flowerBtn`. **`flowerBtn` is a function, not the node** —
+`buildGarden()` throws the flower away and makes a new one on every plot expansion, so a captured
+reference goes stale.
 
 ## Sizing the garden
 
@@ -208,9 +223,13 @@ space. The quest strip stays visible when the rail hides.
 
 ## Where the awkward bits are
 
-`ui.js` reached 2,309 lines before being split along the seams named here for a long time: the
-sheet panels, the scenery and day/night code, and the event wiring. The sheet and the scenery are
-out; the event wiring is still in `ui.js`.
+`ui.js` reached 2,309 lines before being split, on 2026-08-16, along the three seams the docs had
+named for months: the sheet panels, the scenery and day/night code, and the event wiring. All
+three are out. What is left in `ui.js` is the garden, the talking flower, the HUD and rail, input,
+the frame loop and `boot()` — about 700 lines.
+
+The next seam, if one is ever needed, is the garden itself: `buildGarden`, `renderPlots` and the
+talking flower are independent of the HUD and the rail. It is not worth doing yet.
 
 Sheet panels return HTML strings that are assigned with `innerHTML`. This is concise and fast
 enough, but it means **any content interpolated into a panel must be trusted**. All current

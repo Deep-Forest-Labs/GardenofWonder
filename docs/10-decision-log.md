@@ -1093,7 +1093,7 @@ badge's existing level count so its cap shrinks proportionally:
 The rate lives in one place now — `PROC_CHANCE_PER_LEVEL` in `game.js` — instead of being repeated
 as a literal `0.01` in each `rollXxx()` function, so the next tuning pass is a one-line change.
 
-Each proc also got a purpose-built animation in `ui.js` (`triggerRainFX`, `triggerBeeFX`,
+Each proc also got a purpose-built animation in `ui-events.js` (`triggerRainFX`, `triggerBeeFX`,
 `triggerLadybugFX`), because at this rarity the trigger *has* to carry the "you just won something"
 feeling — the numbers involved are small and infrequent by design, so the moment has to do the
 emotional work instead. See [03-systems.md](03-systems.md#tap-triggered-garden-procs) for what each
