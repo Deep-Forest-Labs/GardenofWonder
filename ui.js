@@ -1233,7 +1233,10 @@
     el.coach.hidden = true;
   }
   function refreshCoach() {
-    if (sheetMode) { el.coach.hidden = true; return; }
+    // hideCoach(), not just hidden=true: leaving coachTarget set means the next
+    // tick takes the `coachTarget !== node` shortcut, skips showCoach(), and
+    // reveals the old bubble with stale text at a stale position.
+    if (sheetMode) { hideCoach(); return; }
     if (!S.seen.intro) {
       if (coachTarget !== flowerBtn) showCoach(flowerBtn, 'Tap the flower!');
       el.coach.hidden = false;
@@ -1717,10 +1720,6 @@
     FX.setMagnet('coin', el.walletCredits);
 
     const info = Game.load();
-    if (!S.seen.plot && (S.stats.totalHarvests || S.grid.some((c) => c && c.seed))) {
-      S.seen.plot = true;
-      Game.save();
-    }
     if (!S.seen.plot) el.game.classList.add('onboard');
     Sound.prefs.sfx = S.prefs.sfx;
     Sound.prefs.music = S.prefs.music;

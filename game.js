@@ -135,6 +135,12 @@ const Game = (() => {
       state.wonder = Object.assign(d.wonder, parsed.wonder || {});
       state.prefs = Object.assign(d.prefs, parsed.prefs || {});
       state.seen = Object.assign(d.seen, parsed.seen || {});
+      // Merged defaults-first, so a save written before one of these keys
+      // existed comes back false and replays onboarding over a garden the
+      // player has plainly already used. Backfill from the evidence the save
+      // does carry. Any future `seen` flag needs its own line here.
+      if (!state.seen.intro && (state.stats.totalTaps || state.stats.totalHarvests)) state.seen.intro = true;
+      if (!state.seen.plot && (state.stats.totalHarvests || (parsed.grid || []).some((c) => c && c.seed))) state.seen.plot = true;
       state.apiary = Object.assign(d.apiary, parsed.apiary || {});
       state.quests = Object.assign(d.quests, parsed.quests && typeof parsed.quests === 'object' ? parsed.quests : {});
       if (!Array.isArray(state.quests.active)) state.quests.active = [];

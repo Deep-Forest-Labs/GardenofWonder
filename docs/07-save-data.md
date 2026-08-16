@@ -91,6 +91,12 @@ three, so the dead entry permanently costs the player a slot, and `stripQuest()`
 quests were removed (2026-08-15). A claimed daily is left alone on purpose — rerolling it would pay
 its reward twice.
 
+**`seen` flags are backfilled from play evidence in `load()`.** Like the other nested objects it is
+merged defaults-first, so a save predating a flag reads back `false` and re-runs onboarding for a
+player who is plainly past it. `intro` is inferred from `stats.totalTaps || stats.totalHarvests`,
+`plot` from `stats.totalHarvests` or any occupied plot. **A new `seen` flag needs its own line**,
+the same rule as a new badge key. Covered by the suite.
+
 **`prefs.music` defaults to `false`.** Deliberate: unrequested audio on load is hostile.
 
 ## Writing

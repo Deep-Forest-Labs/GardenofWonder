@@ -557,6 +557,31 @@ check('the slot it held was refilled', S.quests.active.length === 3);
 check('every remaining active quest resolves', S.quests.active.every((q) => DATA.quests.some((d) => d.id === q.id)));
 check('the unknown daily was rerolled', DATA.dailies.some((d) => d.id === S.quests.daily.id));
 
+group('onboarding does not replay for a save that predates the seen flags');
+G.reset();
+const playedSave = JSON.parse(JSON.stringify(S));
+delete playedSave.seen;
+playedSave.stats.totalTaps = 400;
+playedSave.stats.totalHarvests = 250;
+globalThis.localStorage.setItem('gw-save', JSON.stringify(playedSave));
+G.load();
+check('a played save is not told to tap the flower', S.seen.intro === true);
+check('a played save is not told to plant a seed', S.seen.plot === true);
+G.reset();
+const tappedOnly = JSON.parse(JSON.stringify(S));
+delete tappedOnly.seen;
+tappedOnly.stats.totalTaps = 12;
+globalThis.localStorage.setItem('gw-save', JSON.stringify(tappedOnly));
+G.load();
+check('tapping alone clears the flower prompt', S.seen.intro === true);
+check('tapping alone still prompts the first plant', S.seen.plot === false);
+G.reset();
+const freshSave = JSON.parse(JSON.stringify(S));
+delete freshSave.seen;
+globalThis.localStorage.setItem('gw-save', JSON.stringify(freshSave));
+G.load();
+check('a save with no play at all still onboards', S.seen.intro === false && S.seen.plot === false);
+
 group('grandfather migration keeps seeds you could already use');
 G.reset();
 const saveOf = (extra) => {

@@ -526,6 +526,26 @@ Two coach marks, tracked by `state.seen`:
 Both are one-shot and persist as seen. They hide whenever a sheet is open and reposition on
 resize.
 
+Two rules keep them from outstaying their welcome:
+
+**The flags are backfilled on load.** `state.seen` is merged defaults-first, so a save written
+before one of these keys existed reads back `false` and replays onboarding over a garden the player
+has plainly already used. `load()` therefore infers `intro` from `stats.totalTaps ||
+stats.totalHarvests` and `plot` from `stats.totalHarvests` or any occupied plot. **Any new `seen`
+flag needs its own backfill line**, the same way every new badge key does — see
+[07-save-data.md](07-save-data.md).
+
+**Opening a sheet calls `hideCoach()`, not just `hidden = true`.** `refreshCoach()` skips
+`showCoach()` when `coachTarget` already matches the element it would point at, so leaving the
+target set while hiding the node meant the next tick revealed the *old* bubble — stale text, stale
+position — instead of building a fresh one. Clearing the target is what makes the re-show correct.
+
+Note that visibility is polled from the 0.6 s slow tick, so it inherits the frame loop's fate: when
+`requestAnimationFrame` is suspended — a backgrounded tab, an unfocused automation window — the
+bubble freezes on screen along with everything else until the loop resumes. Both actions call
+`hideCoach()` synchronously, so this only ever delays *showing* the next mark, never hiding the
+finished one.
+
 ## Settings
 
 Sound effects (on by default) and ambient music (**off** by default) each toggle independently and
