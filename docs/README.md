@@ -35,6 +35,7 @@ Read it before anything else if you're picking the project up cold.
 | [18-mutations-and-weather.md](18-mutations-and-weather.md) | You're building weather or mutations — **specified, not built** |
 | [19-card-album.md](19-card-album.md) | You're building card packs, sets, seasons or the album — a parallel meta, **deliberately independent of the garden** |
 | [20-card-art-prompts.md](20-card-art-prompts.md) | You're generating card art externally and want the prompts, the style rules and how it gets wired in |
+| [21-potting-bench.md](21-potting-bench.md) | You're touching the merge bench — the chain, entry tier, cascade timing, the deadlock, or what replaced the Apothecary |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

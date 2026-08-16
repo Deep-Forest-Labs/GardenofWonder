@@ -682,6 +682,45 @@ bloom had to actually be standing in the garden while the bees worked.
 
 Collecting also yields **beeswax**, at a 50% chance per jar.
 
+## The Potting Bench — simulation built, no surface yet
+
+**Built 2026-08-16**, simulation only. Full design in [21-potting-bench.md](21-potting-bench.md),
+numbers in [04-economy.md](04-economy.md#the-potting-bench), state in
+[07-save-data.md](07-save-data.md). Content in `BENCH` (`data.js`), logic in the potting bench
+section of `game.js`.
+
+**This is what replaces the Apothecary.** Both turn garden output into goods the Market will want,
+and a timed craft bench is the strictly worse version of merging.
+
+A harvest drops one chain item into a **basket**; the player places it on a fixed 6×6 bench; **three
+of a kind that end up orthogonally connected merge into the rung above.** Six rungs: Petal, Posy,
+Bouquet, Flower Basket, Wreath, Flower Crown.
+
+Four rules carry the design:
+
+- **The bench never outputs a seed or a flower.** Flowers are the input, the chain is a separate
+  category, and a sim-test asserts no chain id collides with a seed id. Otherwise the bench becomes
+  a way to manufacture expensive seeds from cheap ones and routes around the level ladder.
+- **Entry tier scales with the seed**, `seedBucket + rarityBump`, never flat per harvest — a Daisy
+  cycles 65× faster than an Eternal Crown, so a flat rate recreates the gem-faucet inversion exactly.
+  The rarity roll that already happens now decides where a bloom lands on the chain.
+- **`benchMergeOnce()` performs exactly one merge and returns.** A cascade is that called again with
+  a beat between rungs, and each rung is *slower* than the last. The bench must never look ahead and
+  resolve six petals straight to a Bouquet.
+- **Harvests land in the basket, never on the bench**, so an absence can never hand the player a
+  board that filled itself.
+
+**Banking is the escape hatch, not a convenience.** A full bench with no three alike adjacent has no
+legal move at all — spatial merging can genuinely deadlock, and a checkerboard reaches it in about
+forty harvests on a 4×4. Dragging an item off into `state.bench.stock` unsticks it, and is the
+gesture a Market customer will eventually collect from.
+
+The bench is always 6×6 with padlocks on locked cells — the same language the garden uses for plots
+5–8 — opening at 4×4 and expanding for coins.
+
+**There is no surface for any of this yet.** Craft is still the third dock tab; the bench fills its
+basket invisibly. The panel and the dock swap are the next commit.
+
 ## The Apothecary — prototype, slated for rework
 
 > **Decided 2026-08-14: folded down alongside the Apiary and losing its dock tab.** Same reasoning —

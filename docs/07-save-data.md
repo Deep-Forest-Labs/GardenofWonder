@@ -263,3 +263,34 @@ no per-cell backfill, but it does need to survive `load()`; a stale one simply e
 All three are top-level and **all three need their own re-merge in `load()`** — nested objects are
 replaced wholesale, so a save from before the album would otherwise come back with `cards`
 undefined. A test loads a stripped save and asserts they rebuild.
+
+## The potting bench (added 2026-08-16)
+
+```js
+bench: {
+  cells: Array(36),     // null | { tier } — a fixed 6x6, whatever is unlocked
+  side: 4,              // unlocked square, side length, 1..6
+  basket: [],           // tier numbers waiting to be placed, capped at 60
+  stock: {}             // chain id -> count, banked off the bench
+}
+```
+
+`state.bench` is **nested, so it needs its own re-merge in `load()`** — the same trap as `cards` and
+`boostInv`. A save written before the bench existed comes back with `bench` undefined otherwise, and
+every lookup in the bench section of `game.js` throws on the first harvest.
+
+The backfill is deliberately defensive on every field, because all four are player-visible state that
+a future data change can invalidate:
+
+- **`cells`** is truncated or padded to exactly `BENCH.cols²`, and any entry whose `tier` no longer
+  names a rung in `BENCH.chain` is dropped to `null`. Shortening the chain must not brick a save.
+- **`side`** is clamped to `1..BENCH.cols`. A save claiming a bigger bench than the data allows would
+  otherwise let items sit in cells the code treats as locked.
+- **`basket`** drops any entry that is not a real rung and is capped at `BENCH.basketMax`.
+- **`stock`** is a plain id → count map and needs no repair.
+
+Three sim-tests cover this: a full round-trip, a save written before the bench existed, and a save
+containing a junk rung, an impossible `side` and a bogus basket entry.
+
+**The bench does not add a per-cell grid field**, so the `state.grid` backfill loop beside `luckyBug`
+and `mutateAt` is untouched. It is its own top-level object.

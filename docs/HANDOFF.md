@@ -12,6 +12,17 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **The Potting Bench landed as simulation, 2026-08-16.** A merge board fed by the garden, and
+> **it is what replaces the Apothecary** — both turn garden output into goods the Market will want,
+> and a timed craft bench is the worse version of merging. A harvest drops a chain item into a
+> **basket**, the player places it, and **three of a kind that end up orthogonally connected merge**
+> into the rung above. Six rungs, Petal through Flower Crown. **No surface exists yet** — Craft is
+> still the third dock tab and the bench fills its basket invisibly; the panel and the dock swap are
+> the next commit, split off because `tools/sim-test.js` cannot see a `ui-*` file and landing both
+> blind into a live game is how a working build breaks. Feel was settled first in a standalone spike
+> at `tools/merge-spike.html`, which is still the fastest way to try it. See
+> [21-potting-bench.md](21-potting-bench.md).
+
 > **`ui.js` was split, 2026-08-16.** 2,309 lines became five files along the three seams the docs
 > had named for months: `ui-shared.js` (the scope they share), `ui-scenery.js`, `ui-sheet.js`,
 > `ui-events.js`, and a ~700-line `ui.js` keeping the garden, the flower, the HUD, input, the frame
@@ -211,8 +222,27 @@ as one piece rather than discovering it halfway through.
 
 ## The current task
 
-**Nothing is mid-flight in code.** The `ui.js` split finished 2026-08-16 and changed no behaviour.
-Pick the next item from "What comes after" with the owner.
+**The Potting Bench is mid-flight, and the half that is missing is the visible half.** The
+simulation, the save and 51 sim-test assertions are in; there is no panel, no dock entry and no art.
+Next, in order:
+
+1. **The bench panel** in `ui-sheet.js`, with the drag ported from `tools/merge-spike.html`. Watch
+   the sheet's own fling-to-dismiss drag — a drag inside the sheet body will fight it.
+2. **Six chain icons** in `icons.js`. Silhouettes are teardrop / cluster / cone / handle / ring /
+   crown, deliberately distinct in pure black at thumbnail size.
+3. **The dock swap** — Craft becomes Shed, giving `Upgrades · Apiary · Shed · Shop`.
+   `CRAFT_RECIPES` and `state.craft` stay so old saves keep parsing; only the tab goes.
+
+**Do not remove the Craft quests when the tab goes.** They were already repointed at the bench on
+2026-08-16 and keep their ids on purpose — see
+[21-potting-bench.md](21-potting-bench.md#quests). They carry 98 of the ladder's 777 reputation
+and a sim-test asserts the ladder still reaches level 17.
+
+The bigger frame, agreed with the owner 2026-08-16: **the game feels solitary** — one screen, one
+verb, and every system built recently is a modifier on that verb rather than a second thing to do.
+The three features answering that, in order, are **the Market as customers who walk up to the garden
+fence**, **the world map** (built after the Market so it is not empty on arrival), and **the Potting
+Bench**, which is the one in progress.
 
 **The long-running open question — *does the garden's contents start mattering* — now has an
 answer.** It was handed first to Bloom Mastery, which could not deliver it (a percentage of an

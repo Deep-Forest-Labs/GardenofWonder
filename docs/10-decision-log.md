@@ -5,6 +5,91 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-16 — The Potting Bench: merge replaces the Apothecary, and the garden is its generator
+
+**Built:** the bench simulation, its save, and 51 sim-test assertions. **Not built:** any surface for
+it. Design in [21-potting-bench.md](21-potting-bench.md); the feel was settled first in a standalone
+spike at `tools/merge-spike.html`.
+
+**The owner's diagnosis is what started this: the game feels solitary.** One screen, one verb, and
+every system built in the last month is a modifier on that verb rather than a second thing to do.
+Merge is the second verb, and the Apiary — which the owner has never liked — is the thing it is
+replacing the sibling of.
+
+**Merge replaces the Apothecary, not the Apiary.** Both turn garden output into goods the Market
+will want, and the timed craft bench is the strictly worse version: pick a recipe, wait, collect is a
+vending machine with a progress bar. This also resolves a tension recorded on 2026-08-14, where the
+Apothecary was being folded away *and* a Market was being planned that needs a supply chain to ask
+for. Crafting does not die; it becomes the good version.
+
+**The positioning claim worth keeping:** every shipped merge game gates its board behind a generator
+— energy, a timer, a paid tap — and that generator is the most complained-about part of the genre.
+This game already built a generator people enjoy for its own sake. Nothing else in the category has
+one.
+
+**The rule that protects the economy: the bench never outputs a seed or a flower.** Two ladders that
+both mean "better flower" eat each other, and a bench that manufactured expensive seeds from cheap
+ones would route around both the coin sink and the level ladder — levels 2–17 grant one seed each,
+which is the entire reward structure of progression. A sim-test asserts no chain id collides with a
+seed id.
+
+**Entry tier scales with the seed, because this exact bug has already been fixed once.** A flat
+one-item-per-harvest rate makes Daisy spam the best feed, since a Daisy cycles 65× faster than an
+Eternal Crown — the same inversion the gem faucet had before chance was derived from grow time on
+2026-08-15. Entry is `seedBucket + rarityBump` instead, and the suite asserts a Daisy cannot
+out-feed the endgame seed by more than 1.35×.
+
+*The rarity half is the part worth having.* The 70/20/8/2 roll already happens on every harvest and
+currently only scales a number. Making it decide where the bloom lands on the chain costs nothing
+and makes a Legendary worth watching. Measured in the spike it roughly **triples** throughput
+against Commons only, so `+3` for Legendary is the first number to cut if the bench runs hot.
+
+**Merge-3 by adjacency, chosen over merge-2 by stacking**, at the owner's call after playing both in
+the spike. Merge-3 chews through surplus about 1.6× faster, which matters when the generator never
+stops, and adjacency makes the bench a spatial puzzle that rhymes with the garden's verb adjacency
+instead of merely sitting beside it.
+
+**Two things the spike found that reasoning did not.**
+
+*Spatial merging can deadlock.* A full bench with no three alike adjacent has no legal move at all,
+and a checkerboard of petals and posies reaches that in about forty harvests on a 4×4. Stacking never
+had this problem, because a match was always droppable. The escape hatch is **banking** — drag an
+item off the bench into stock — which unsticks the board and happens to be the exact gesture a Market
+customer will collect from. A sim-test builds the deadlock and asserts banking is the way out.
+
+*A grid that grows resizes everything on it.* The bench is therefore a fixed 6×6 with padlocks on
+the locked cells, the same language the garden already uses for plots 5–8, unlocking 4×4 → 5×5 →
+6×6. Board space is the tension in this mechanic and it is a coin sink the late game badly needs.
+
+**A cascade is played one rung at a time, and each rung is slower than the last.** The first pass
+resolved a whole cascade inside one frame, so six petals appeared to collapse straight into a bouquet
+— the logic was already stepwise, it simply had no time. `benchMergeOnce()` now performs exactly one
+merge and returns; the caller owns the beat. **The bench must never look ahead** and resolve a chain
+in one go. Timings escalate 300 ms → 396 ms → 523 ms because a cascade should build like a drum roll;
+a flat one blurs into a single event.
+
+**Harvests land in the basket, never on the bench.** Offline earnings run all night, and an idle
+generator feeding a merge board directly hands the player a full board on open — the worst feeling
+the genre has.
+
+**The three Apothecary quests were repointed, not removed.** They carry 98 of the ladder's 777
+reputation, and the suite asserts the ladder still reaches level 17 where Eternal Crown unlocks.
+Dropping them would also have jammed the quest strip on an uncompletable goal, exactly as the sell
+quests once did. **Their ids are deliberately kept**, against the "never reuse an id" rule in
+[16-progression-and-quests.md](16-progression-and-quests.md): a new id orphans any instance already
+sitting in a player's `quests.active`, and an orphaned active quest is the jam this change exists to
+avoid.
+
+*Rejected: shipping the panel in the same commit.* The simulation is headlessly testable and the
+panel is not — `tools/sim-test.js` cannot see a `ui-*` file, as the `ui.js` split proved. Landing
+both blind into a live game is how a working build breaks. The bench runs invisibly until the panel
+lands; nothing is removed and nothing regresses.
+
+*Rejected: deleting `CRAFT_RECIPES` and `state.craft` now.* They are untouched so existing saves keep
+parsing. Only the quests moved.
+
+---
+
 ## 2026-08-16 — Splitting `ui.js`, and how the shared scope gets passed
 
 **Decided before moving a line, because discovering it halfway through is how this goes wrong.**

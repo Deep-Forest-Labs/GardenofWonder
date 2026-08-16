@@ -126,6 +126,45 @@ bonuses are what wreck a curve.
 The suite asserts the share for a fast seed *and* a slow one and that they match. Do not tune these
 by eye; run `node tools/sim-test.js`.
 
+### The potting bench
+
+`BENCH` in `data.js`. Mechanic and reasoning in [21-potting-bench.md](21-potting-bench.md).
+**Simulation only as of 2026-08-16 — there is no surface yet.**
+
+| Rung | Item | Value |
+| --- | --- | --- |
+| 1 | Petal | 10 |
+| 2 | Posy | 45 |
+| 3 | Bouquet | 200 |
+| 4 | Flower Basket | 900 |
+| 5 | Wreath | 4,000 |
+| 6 | Flower Crown | 18,000 |
+
+**These are placeholders against a Market that does not exist. The ratio is the real number** — each
+rung is 4.5× the one below, so merging three beats selling them by 1.5× and the `raw < crafted <
+order` chain in [14-economy-model.md](14-economy-model.md) holds at every step. A sim-test asserts
+the ratio survives a retune; the absolute values do not matter until orders can pay for them.
+
+| Key | Value | Effect |
+| --- | --- | --- |
+| `cols` | 6 | The bench is always 6×6; `side` decides how much is unlocked |
+| `startSide` | 4 | Opens at 4×4 = 16 cells |
+| `merge` | 3 | Items that must meet to combine |
+| `bonusAt` | 5 | A connected run this long pays two outputs |
+| `basketMax` | 60 | Harvests stop stacking up past this |
+
+Expansion costs `round(6000 × 3.2^step)` — 6,000 for 5×5 and 19,200 for 6×6. Priced against late-game
+coin inflation rather than against the seeds, because board space is the only sink that scales with
+how automated the garden already is.
+
+**Entry tier is the number to watch.** What a harvest is worth to the bench is
+`seedBucket[seed] + rarityBump[rarity]`, capped at the top rung — never flat per harvest, because a
+Daisy cycles 65× faster than an Eternal Crown and any flat rate recreates the gem-faucet inversion
+fixed on 2026-08-15. `rarityBump` is Common +0, Rare +1, Epic +2, Legendary +3, and **the +3 is the
+first thing to cut if the bench runs hot**: measured in the spike, the rarity term roughly triples
+chain throughput against Commons only. The suite asserts a Daisy cannot out-feed the endgame seed by
+more than 1.35×.
+
 ### Verb tuning
 
 Verbs are a second axis and are deliberately **not** on the yield curve — see

@@ -20,7 +20,7 @@ globalThis.localStorage = {
 /* The game files are plain scripts that declare globals, so evaluate them and
    then re-export what they defined onto globalThis. */
 const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
-  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'flowerValue', 'Game'];
+  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -2129,6 +2129,175 @@ check('a finished album has nothing left to complete', (() => {
   return G.Dev.completeSet() === null;
 })());
 G.reset();
+
+/* ---------------- the potting bench ---------------- */
+
+const COLS = BENCH.cols;
+function clearBench(side) {
+  S.bench.cells = new Array(COLS * COLS).fill(null);
+  S.bench.basket = [];
+  S.bench.stock = {};
+  S.bench.side = side || BENCH.startSide;
+}
+const putBench = (i, tier) => { S.bench.cells[i] = { tier }; };
+const tierAt = (i) => (S.bench.cells[i] ? S.bench.cells[i].tier : null);
+const benchIds = () => BENCH.chain.map((c) => c.id);
+
+group('the bench merges three of a kind that meet');
+clearBench();
+putBench(0, 0); putBench(2, 0);
+check('two apart do not merge', G.benchMergeOnce(0) === null);
+putBench(1, 0);
+const bridged = G.benchMergeOnce(1);
+check('bridging the gap merges', Boolean(bridged) && bridged.tier === 1);
+check('the survivor sits where the player dropped', tierAt(1) === 1);
+check('the other two are consumed', tierAt(0) === null && tierAt(2) === null);
+
+group('a cascade is one rung at a time, never a lookahead');
+clearBench();
+putBench(6, 0); putBench(8, 0);            // petals
+putBench(1, 1); putBench(0, 1);            // posies
+putBench(7, 0);                            // the dropped piece
+const rung1 = G.benchMergeOnce(7);
+check('the first call only climbs one rung', rung1.tier === 1);
+check('the intermediate item really exists', tierAt(7) === 1);
+const rung2 = G.benchMergeOnce(7);
+check('the second call climbs the next', rung2.tier === 2);
+check('a third call finds nothing left', G.benchMergeOnce(7) === null);
+
+group('a longer run pays a bonus');
+clearBench();
+[0, 2, 3, 7].forEach((i) => putBench(i, 0));
+putBench(1, 0);
+const big = G.benchMergeOnce(1);
+check(`${BENCH.bonusAt} connected pays two`, big.made.length === 2, `made ${big.made.length}`);
+check('and eats the whole run', big.ate === BENCH.bonusAt);
+clearBench();
+[0, 1].forEach((i) => putBench(i, 0));
+putBench(2, 0);
+check('three connected pays one', G.benchMergeOnce(2).made.length === 1);
+
+group('the bench never reaches past what is unlocked');
+clearBench(BENCH.startSide);
+const outside = COLS * COLS - 1;
+check('a locked cell is locked', !G.benchUnlocked(outside));
+check('nothing can be placed on it', G.benchPlace('board', 0, outside) === false);
+putBench(0, 0);
+check('a locked cell is not a neighbour', G.benchNeighbours(0).every(G.benchUnlocked));
+clearBench(COLS);
+check('a full bench unlocks every cell', G.benchUnlocked(outside));
+
+group('the top of the chain stops');
+clearBench();
+const top = G.benchTop();
+[0, 1, 2].forEach((i) => putBench(i, top));
+check('three crowns do not merge into anything', G.benchMergeOnce(2) === null);
+check('and they are all still there', tierAt(0) === top && tierAt(1) === top && tierAt(2) === top);
+
+group('banking is the way out of a dead bench');
+clearBench();
+// A checkerboard: full, and no three of a kind touch anywhere.
+for (let r = 0; r < S.bench.side; r += 1) {
+  for (let c = 0; c < S.bench.side; c += 1) putBench(r * COLS + c, (r + c) % 2);
+}
+check('the bench is full', G.benchUsed() === G.benchCapacity());
+const anyMerge = S.bench.cells.some((cell, i) => cell && G.benchUnlocked(i) && G.benchMergeOnce(i));
+check('no merge is available anywhere', !anyMerge);
+check('no cell is free', G.benchFirstFree() === -1);
+const banked = G.benchBank(0);
+check('banking frees a cell', Boolean(banked) && G.benchUsed() === G.benchCapacity() - 1);
+check('and the item is in stock', G.benchStockOf(banked.id) === 1);
+check('banking an empty cell does nothing', G.benchBank(0) === null);
+
+group('a harvest feeds the basket, never the bench itself');
+clearBench();
+clearGarden();
+clearMastery();
+S.credits = 1e9;
+const beforeCells = S.bench.cells.filter(Boolean).length;
+G.plant(0, G.seedById('daisy'));
+S.grid[0].plantedAt = G.nowSeconds() - 9999;
+G.tick(0.1);
+G.harvest(0);
+check('the basket took one', S.bench.basket.length === 1);
+check('the bench is untouched', S.bench.cells.filter(Boolean).length === beforeCells);
+S.bench.basket = new Array(BENCH.basketMax).fill(0);
+check('a full basket refuses more', G.benchAddToBasket(0) === false);
+
+group('what a harvest is worth to the bench does not favour cheap seeds');
+const lastSeed = DATA.seeds[DATA.seeds.length - 1].id;
+check('a common daisy enters at the bottom', G.benchEntryTier('daisy', 'common') === 0);
+check('a common endgame seed enters higher',
+  G.benchEntryTier(lastSeed, 'common') > G.benchEntryTier('daisy', 'common'));
+check('rarity lifts the entry', G.benchEntryTier('daisy', 'legend') > G.benchEntryTier('daisy', 'common'));
+check('nothing enters above the chain', G.benchEntryTier(lastSeed, 'legend') <= G.benchTop());
+/* Bench value per hour has to stay roughly flat across the ladder for the same
+   reason gem chance does — a Daisy cycles ~65x faster than an Eternal Crown, so
+   any flat-per-harvest rate makes spamming the cheapest seed the best feed. */
+const perHour = (id) => {
+  const s = G.seedById(id);
+  const v = DATA.rarity.reduce((sum, r) => {
+    const w = r.w / DATA.rarity.reduce((a, x) => a + x.w, 0);
+    return sum + w * BENCH.chain[G.benchEntryTier(id, r.key)].value;
+  }, 0);
+  return (v * 3600) / s.grow;
+};
+const fast = perHour('daisy');
+const slow = perHour(lastSeed);
+check('a daisy does not out-feed the endgame seed', fast <= slow * 1.35,
+  `daisy ${Math.round(fast)}/h vs ${lastSeed} ${Math.round(slow)}/h`);
+
+group('expanding the bench costs and sticks');
+clearBench(BENCH.startSide);
+S.credits = 0;
+check('an empty wallet cannot expand', G.benchExpand() === false);
+S.credits = 1e12;
+const wasSide = S.bench.side;
+const price = G.benchExpandCost();
+check('expanding takes the money', G.benchExpand() === true && S.credits === 1e12 - price);
+check('and the bench is bigger', S.bench.side === wasSide + 1);
+check('the next one costs more', G.benchExpandCost() > price);
+S.bench.side = COLS;
+check('a maxed bench cannot expand', G.benchExpand() === false);
+check('and has no price', G.benchExpandCost() === 0);
+
+group('the bench survives a save');
+clearBench(5);
+putBench(0, 2);
+S.bench.basket = [0, 1];
+S.bench.stock = { posy: 3 };
+G.saveNow();
+G.load();
+check('the cells come back', tierAt(0) === 2);
+check('the side comes back', S.bench.side === 5);
+check('the basket comes back', S.bench.basket.join(',') === '0,1');
+check('the stock comes back', G.benchStockOf('posy') === 3);
+localStorage.setItem('gw-save', JSON.stringify({ version: 3, credits: 500 }));
+G.load();
+check('a save from before the bench loads clean', Array.isArray(S.bench.cells) && S.bench.cells.length === COLS * COLS);
+check('and starts at the opening size', S.bench.side === BENCH.startSide);
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, bench: { cells: [{ tier: 99 }, { tier: 1 }], side: 99, basket: [0, 77], stock: {} }
+}));
+G.load();
+check('a rung that does not exist is dropped', tierAt(0) === null && tierAt(1) === 1);
+check('an impossible side is clamped', S.bench.side === COLS);
+check('a bogus basket entry is dropped', S.bench.basket.join(',') === '0');
+
+group('the bench cannot manufacture a seed');
+check('no chain item shares an id with a seed',
+  benchIds().every((id) => !DATA.seeds.some((s) => s.id === id)));
+check('merging up beats selling the parts', BENCH.chain.every((c, i) => (
+  i === 0 || c.value > BENCH.chain[i - 1].value * BENCH.merge * 1.35
+)));
+
+group('retiring the craft quests kept the ladder intact');
+const ladderNow = DATA.quests.reduce((a, q) => a + q.rep, 0);
+check('the ladder still reaches Eternal (level 17)', ladderNow >= 760, `sum ${ladderNow}`);
+check('no quest still points at a craft recipe', !DATA.quests.some((q) => q.track === 'craft'));
+check('the bench quests name real chain rungs', DATA.quests
+  .filter((q) => q.track === 'merge' || q.track === 'bank')
+  .every((q) => !q.key || benchIds().includes(q.key)));
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

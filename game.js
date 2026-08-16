@@ -42,6 +42,7 @@ const Game = (() => {
       flowers: {},
       craft: [],
       goods: {},
+      bench: { cells: Array(BENCH.cols * BENCH.cols).fill(null), side: BENCH.startSide, basket: [], stock: {} },
       prefs: { sfx: true, music: false },
       seen: { intro: false, plot: false, apiary: false },
       quests: { active: [], done: [], daily: { id: null, progress: 0, day: '', claimed: false } },
@@ -165,6 +166,22 @@ const Game = (() => {
       state.flowers = parsed.flowers && typeof parsed.flowers === 'object' ? parsed.flowers : {};
       state.craft = Array.isArray(parsed.craft) ? parsed.craft : [];
       state.goods = parsed.goods && typeof parsed.goods === 'object' ? parsed.goods : {};
+      // Nested objects are replaced wholesale by the parsed save, so the bench
+      // needs its own re-merge or a save written before it existed reads back
+      // undefined and every lookup below throws.
+      {
+        const b = parsed.bench && typeof parsed.bench === 'object' ? parsed.bench : {};
+        const size = BENCH.cols * BENCH.cols;
+        const cells = Array.isArray(b.cells) ? b.cells.slice(0, size) : [];
+        while (cells.length < size) cells.push(null);
+        state.bench = {
+          cells: cells.map((c) => (c && benchDef(c.tier) ? { tier: c.tier } : null)),
+          side: Math.min(BENCH.cols, Math.max(1, Number(b.side) || BENCH.startSide)),
+          basket: (Array.isArray(b.basket) ? b.basket : [])
+            .filter((t) => benchDef(t)).slice(0, BENCH.basketMax),
+          stock: b.stock && typeof b.stock === 'object' ? b.stock : {}
+        };
+      }
       state.discovered = Object.assign(
         {},
         d.discovered,
@@ -1452,6 +1469,10 @@ const Game = (() => {
     state.credits += payout;
     // The bloom itself is kept as a crafting ingredient, on top of the credits.
     state.flowers[sdef.id] = (state.flowers[sdef.id] || 0) + 1;
+    // ...and lands in the bench basket, never straight onto the bench, so an
+    // absence can never hand the player a board that filled itself.
+    const benchTier = benchEntryTier(sdef.id, r.key);
+    const benchGot = benchAddToBasket(benchTier);
     state.harvestsThisSession += 1;
     state.stats.totalHarvests += 1;
     const almanac = recordHarvest(sdef.id, r.key);
@@ -1476,7 +1497,8 @@ const Game = (() => {
       idx, payout, rarity: r, seed: sdef, gemDrop, repBonus, sparkedWonder: sparked, luckyHarvest,
       firstDiscover: almanac.first, discovered: almanac.count, bestRarity: almanac.best,
       milestones: almanac.milestones, mastery: almanac.mastery,
-      verbMult, beacons, lanterns, sown, mutation, mutMult
+      verbMult, beacons, lanterns, sown, mutation, mutMult,
+      benchTier: benchGot ? benchTier : -1
     };
     emit('harvest', payload);
     if (almanac.milestones.length) {
@@ -1590,6 +1612,143 @@ const Game = (() => {
   const honeyTotal = () => Object.values(state.apiary.honey).reduce((a, b) => a + b, 0);
   const flowerTotal = () => Object.values(state.flowers).reduce((a, b) => a + b, 0);
   const jarsWaiting = () => state.apiary.hives.reduce((a, h) => a + h.jars.length, 0);
+
+  /* ---------------- the potting bench ----------------
+
+     A harvest drops one chain item into the basket; the player places it, and
+     three of a kind that end up orthogonally connected merge into the rung
+     above. The bench never produces a seed or a flower, so it cannot route
+     around the seed ladder — see docs/21-potting-bench.md. */
+
+  const benchDef = (tier) => BENCH.chain[tier] || null;
+  const benchTop = () => BENCH.chain.length - 1;
+  const benchUnlocked = (i) =>
+    Math.floor(i / BENCH.cols) < state.bench.side && (i % BENCH.cols) < state.bench.side;
+  const benchFirstFree = () => state.bench.cells.findIndex((c, i) => !c && benchUnlocked(i));
+
+  /** Where a harvest lands on the chain. Scales with the seed so a fast cheap
+      seed cannot out-feed a slow expensive one, and with rarity so the roll
+      that already happens is worth watching. */
+  function benchEntryTier(seedId, rarityKey) {
+    const idx = DATA.seeds.findIndex((s) => s.id === seedId);
+    const bucket = BENCH.seedBucket[idx] || 0;
+    const bump = BENCH.rarityBump[rarityKey] || 0;
+    return Math.min(benchTop(), bucket + bump);
+  }
+
+  function benchNeighbours(i) {
+    const r = Math.floor(i / BENCH.cols);
+    const c = i % BENCH.cols;
+    const out = [];
+    if (r > 0) out.push(i - BENCH.cols);
+    if (r < BENCH.cols - 1) out.push(i + BENCH.cols);
+    if (c > 0) out.push(i - 1);
+    if (c < BENCH.cols - 1) out.push(i + 1);
+    return out.filter(benchUnlocked);
+  }
+
+  /** Connected run of the same rung, breadth-first from `start`, so the item
+      the player just moved is always first and is always the one that survives. */
+  function benchGroup(start) {
+    const seed = state.bench.cells[start];
+    if (!seed) return [];
+    const seen = new Set([start]);
+    const queue = [start];
+    const out = [];
+    while (queue.length) {
+      const i = queue.shift();
+      out.push(i);
+      benchNeighbours(i).forEach((n) => {
+        const c = state.bench.cells[n];
+        if (!seen.has(n) && c && c.tier === seed.tier) { seen.add(n); queue.push(n); }
+      });
+    }
+    return out;
+  }
+
+  /** Exactly one merge, never a lookahead. A cascade is this called again, and
+      the caller is what puts a beat between the rungs. */
+  function benchMergeOnce(idx) {
+    const here = state.bench.cells[idx];
+    if (!here || here.tier >= benchTop()) return null;
+    const group = benchGroup(idx);
+    if (group.length < BENCH.merge) return null;
+
+    const big = group.length >= BENCH.bonusAt;
+    const eaten = group.slice(0, big ? BENCH.bonusAt : BENCH.merge);
+    eaten.forEach((i) => { state.bench.cells[i] = null; });
+
+    const tier = here.tier + 1;
+    const made = [idx];
+    state.bench.cells[idx] = { tier };
+    if (big) {
+      const spare = eaten.find((i) => i !== idx && !state.bench.cells[i]);
+      if (spare !== undefined) { state.bench.cells[spare] = { tier }; made.push(spare); }
+    }
+    noteQuest('merge', BENCH.chain[tier].id, made.length);
+    save();
+    return { tier, at: idx, made, ate: eaten.length };
+  }
+
+  function benchAddToBasket(tier) {
+    if (!benchDef(tier)) return false;
+    if (state.bench.basket.length >= BENCH.basketMax) return false;
+    state.bench.basket.push(tier);
+    return true;
+  }
+
+  /** Move a basket item or a bench item onto an empty unlocked cell. Merging is
+      never done here — the caller resolves it a rung at a time. */
+  function benchPlace(from, srcIdx, dstIdx) {
+    const b = state.bench;
+    if (!benchUnlocked(dstIdx) || b.cells[dstIdx]) return false;
+    if (from === 'basket') {
+      const tier = b.basket[srcIdx];
+      if (!benchDef(tier)) return false;
+      b.basket.splice(srcIdx, 1);
+      b.cells[dstIdx] = { tier };
+    } else {
+      const it = b.cells[srcIdx];
+      if (!it || srcIdx === dstIdx) return false;
+      b.cells[srcIdx] = null;
+      b.cells[dstIdx] = it;
+    }
+    save();
+    return true;
+  }
+
+  /** Pull an item off the bench into stock. This is the escape hatch: a full
+      bench with no three alike adjacent has no other legal move at all. */
+  function benchBank(idx) {
+    const it = state.bench.cells[idx];
+    if (!it) return null;
+    const def = benchDef(it.tier);
+    state.bench.cells[idx] = null;
+    state.bench.stock[def.id] = (state.bench.stock[def.id] || 0) + 1;
+    noteQuest('bank', def.id, 1);
+    save();
+    return def;
+  }
+
+  function benchExpandCost() {
+    const step = state.bench.side - BENCH.startSide;
+    return state.bench.side >= BENCH.cols ? 0 : Math.round(6000 * Math.pow(3.2, step));
+  }
+
+  function benchExpand() {
+    if (state.bench.side >= BENCH.cols) return false;
+    const cost = benchExpandCost();
+    if (state.credits < cost) return false;
+    state.credits -= cost;
+    state.bench.side += 1;
+    save();
+    emit('panels');
+    return true;
+  }
+
+  const benchUsed = () => state.bench.cells.filter((c, i) => c && benchUnlocked(i)).length;
+  const benchCapacity = () => state.bench.side * state.bench.side;
+  const benchStockOf = (id) => state.bench.stock[id] || 0;
 
   /* ---------------- apothecary ---------------- */
 
@@ -2031,6 +2190,9 @@ const Game = (() => {
     hiveCount, pollination, nextHiveCost, hivesFull, buyHive,
     collectHive, collectAllHives, jarsWaiting, honeyTotal, flowerTotal,
     canCraft, startCraft, sell,
+    benchDef, benchTop, benchUnlocked, benchFirstFree, benchEntryTier, benchNeighbours,
+    benchGroup, benchMergeOnce, benchAddToBasket, benchPlace, benchBank,
+    benchExpand, benchExpandCost, benchUsed, benchCapacity, benchStockOf,
     tick, progressOf, remainingOf,
     wonderActive, wonderMult, startWonder, comboMult,
     UPGRADE_EFFECTS,

@@ -189,6 +189,8 @@ easiest way to get this feature wrong.
 | `combo` | tap, set to current combo | Peak combo while the quest is active, not a tap count |
 | `plot` | plot unlocked | Tap-to-buy or Land Deed |
 | `hive` | hive purchased | Not in the original track list; needed for "Build a hive" |
+| `merge` | a bench merge completes | `key` = chain id — added 2026-08-16 |
+| `bank` | an item is pulled off the bench into stock | Added 2026-08-16 |
 | `rarity` | harvest at rarity ≥ `key` | Rare / Epic / Legendary |
 | `discover` | first-ever harvest of a seed | Wired; no ladder quests use it — milestones pay instead |
 
@@ -239,14 +241,14 @@ becomes active.
 | 12 | `q_hive_1` | Build a hive | hive | | 1 | 14 |
 | 13 | `q_honey_3` | Fill 3 honey jars | honey | | 3 | 16 |
 | 14 | `q_harvest_10` | Harvest 10 blooms | harvest | | 10 | 16 |
-| 15 | `q_tea` | Craft Flower Tea | craft | tea | 1 | 18 |
+| 15 | `q_tea` | Merge a Posy | merge | posy | 1 | 18 |
 | 16 | `q_charm_1` | Buy Lucky Charm | upgrade | critChance | 1 | 20 |
 | 17 | `q_crit_1` | Land a crit | crit | | 1 | 20 |
 | 18 | `q_rose_3` | Harvest 3 roses | harvest | rose | 3 | 20 |
 | 19 | `q_lavender_3` | Harvest 3 lavender | harvest | lavender | 3 | 22 |
 | 20 | `q_rare` | Harvest a Rare bloom | rarity | rare | 1 | 24 |
 | 21 | `q_star_1` | Buy Star Strike | upgrade | critMult | 1 | 24 |
-| 22 | `q_perfume` | Craft Petal Perfume | craft | perfume | 1 | 32 |
+| 22 | `q_perfume` | Merge a Bouquet | merge | bouquet | 1 | 32 |
 | 23 | `q_honey_8` | Fill 8 honey jars | honey | | 8 | 36 |
 | 24 | `q_epic` | Harvest an Epic bloom | rarity | epic | 1 | 40 |
 | 25 | `q_coil_1` | Buy Combo Coil | upgrade | comboMeter | 1 | 28 |
@@ -254,7 +256,7 @@ becomes active.
 | 27 | `q_harvest_25` | Harvest 25 blooms | harvest | | 25 | 42 |
 | 28 | `q_plant_20` | Plant 20 seeds | plant | | 20 | 44 |
 | 29 | `q_peony_3` | Harvest 3 peonies | harvest | peony | 3 | 46 |
-| 30 | `q_craft_2` | Craft 2 goods | craft | | 2 | 48 |
+| 30 | `q_craft_2` | Bank 5 bench goods | bank | | 5 | 48 |
 | 31 | `q_marigold_3` | Harvest 3 marigolds | harvest | marigold | 3 | 42 |
 | 32 | `q_harvest_40` | Harvest 40 blooms | harvest | | 40 | 46 |
 | 33 | `q_discover_12` | Discover 12 species | discover | | 12 | 50 |
@@ -267,6 +269,14 @@ The first three are active together, so the first level-up lands inside the firs
 quests count jars added to a hive (including Bee Swarm), not collected. Craft quests count
 collection (`crafted`), not `startCraft`. Discover quests count the first harvest of a species, so
 they advance off `almanac.first` and never go backwards.
+
+**The three Apothecary quests were repointed at the bench, 2026-08-16**, when merge replaced
+crafting — see [21-potting-bench.md](21-potting-bench.md). They carry 98 of the ladder's 777
+reputation and the suite asserts the ladder still reaches level 17, so removing them was not an
+option; dropping them would also have jammed the strip on an uncompletable goal exactly as the sell
+quests below once did. **Their ids are kept on purpose, against the rule above**: a new id orphans
+any instance already sitting in a player's `quests.active`, and that orphan is the jam being avoided.
+Reputation, ordering and the 777 total are all unchanged.
 
 **The `sell` track carries no quests, deliberately.** `q_sell_5`, `q_sell_10` and `d_sell_3` were
 removed 2026-08-15: `sell()` only credits the track for `kind === 'flower'`, and `stockRow()` is

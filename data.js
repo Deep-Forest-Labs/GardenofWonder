@@ -355,14 +355,14 @@ const DATA = {
     { id: 'q_hive_1',      text: 'Build a hive',            track: 'hive',    qty: 1,   rep: 14, reward: { boost: 'seedrush' } },
     { id: 'q_honey_3',     text: 'Fill 3 honey jars',       track: 'honey',   qty: 3,   rep: 16 },
     { id: 'q_harvest_10',  text: 'Harvest 10 blooms',       track: 'harvest', qty: 10,  rep: 16 },
-    { id: 'q_tea',         text: 'Craft Flower Tea',        track: 'craft',   key: 'tea',      qty: 1,  rep: 18, reward: { boost: 'golden' } },
+    { id: 'q_tea',         text: 'Merge a Posy',            track: 'merge',   key: 'posy',     qty: 1,  rep: 18, reward: { boost: 'golden' } },
     { id: 'q_charm_1',     text: 'Buy Lucky Charm',         track: 'upgrade', key: 'critChance', qty: 1, rep: 20 },
     { id: 'q_crit_1',      text: 'Land a crit',             track: 'crit',    qty: 1,   rep: 20, after: 'q_charm_1' },
     { id: 'q_rose_3',      text: 'Harvest 3 roses',         track: 'harvest', key: 'rose',     qty: 3,  rep: 20 },
     { id: 'q_lavender_3',  text: 'Harvest 3 lavender',      track: 'harvest', key: 'lavender', qty: 3,  rep: 22 },
     { id: 'q_rare',        text: 'Harvest a Rare bloom',    track: 'rarity',  key: 'rare',     qty: 1,  rep: 24, reward: { boost: 'fortune' } },
     { id: 'q_star_1',      text: 'Buy Star Strike',         track: 'upgrade', key: 'critMult', qty: 1,  rep: 24 },
-    { id: 'q_perfume',     text: 'Craft Petal Perfume',     track: 'craft',   key: 'perfume',  qty: 1,  rep: 32 },
+    { id: 'q_perfume',     text: 'Merge a Bouquet',         track: 'merge',   key: 'bouquet',  qty: 1,  rep: 32 },
     { id: 'q_honey_8',     text: 'Fill 8 honey jars',       track: 'honey',   qty: 8,   rep: 36 },
     { id: 'q_epic',        text: 'Harvest an Epic bloom',   track: 'rarity',  key: 'epic',     qty: 1,  rep: 40, reward: { boost: 'fortune' } },
     { id: 'q_coil_1',      text: 'Buy Combo Coil',          track: 'upgrade', key: 'comboMeter', qty: 1, rep: 28 },
@@ -370,7 +370,7 @@ const DATA = {
     { id: 'q_harvest_25',  text: 'Harvest 25 blooms',       track: 'harvest', qty: 25,  rep: 42 },
     { id: 'q_plant_20',    text: 'Plant 20 seeds',          track: 'plant',   qty: 20,  rep: 44 },
     { id: 'q_peony_3',     text: 'Harvest 3 peonies',       track: 'harvest', key: 'peony',    qty: 3,  rep: 46 },
-    { id: 'q_craft_2',     text: 'Craft 2 goods',           track: 'craft',   qty: 2,   rep: 48 },
+    { id: 'q_craft_2',     text: 'Bank 5 bench goods',      track: 'bank',    qty: 5,   rep: 48 },
     { id: 'q_marigold_3',  text: 'Harvest 3 marigolds',     track: 'harvest', key: 'marigold', qty: 3,  rep: 42 },
     { id: 'q_harvest_40',  text: 'Harvest 40 blooms',       track: 'harvest', qty: 40,  rep: 46 },
     { id: 'q_discover_12', text: 'Discover 12 species',     track: 'discover', qty: 12, rep: 50 }
@@ -455,6 +455,36 @@ const CRAFT_RECIPES = [
 ];
 
 const CRAFT_SLOTS = 2;
+
+/* The potting bench — harvested blooms arrive as chain items and are merged
+   upward. Nothing on this chain is a seed or a flower, so the bench can never
+   manufacture one and the seed ladder stays the only way to get a bloom.
+
+   Values are placeholders against the Market, which does not exist yet. The
+   ratio between rungs is the part that matters: each is 4.5x the one below, so
+   merging three beats selling them by 1.5x and the raw < crafted rule in
+   docs/14-economy-model.md holds at every step. */
+const BENCH = {
+  cols: 6,
+  startSide: 4,
+  merge: 3,
+  bonusAt: 5,
+  basketMax: 60,
+  chain: [
+    { id: 'petal',   name: 'Petal',         icon: 'petal',    value: 10 },
+    { id: 'posy',    name: 'Posy',          icon: 'posy',     value: 45 },
+    { id: 'bouquet', name: 'Bouquet',       icon: 'bouquet',  value: 200 },
+    { id: 'basket',  name: 'Flower Basket', icon: 'basket',   value: 900 },
+    { id: 'wreath',  name: 'Wreath',        icon: 'wreath',   value: 4000 },
+    { id: 'crown',   name: 'Flower Crown',  icon: 'crown',    value: 18000 }
+  ],
+  /* What a harvest is worth to the bench scales with the seed, not flat per
+     harvest. A Daisy cycles 65x faster than an Eternal Crown, so any flat rate
+     would make spamming the cheapest seed the best way to feed the bench — the
+     same inversion the gem faucet had before it was derived from grow time. */
+  seedBucket: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4],
+  rarityBump: { common: 0, rare: 1, epic: 2, legend: 3 }
+};
 
 /* Wonder Effect — a rare garden-wide transformation. */
 /* The day cycle. Phase is derived from epoch time rather than page load, so "is it night" is a
