@@ -59,6 +59,9 @@
   }
   .cell.over { background: #c99a68; box-shadow: inset 0 0 0 3px var(--gold); }
   .cell.bad  { box-shadow: inset 0 0 0 3px #e06a5a; }
+  /* Which items a drop would consume. Without this, spatial merging reads as
+     random — the player has to be able to see the group before committing. */
+  .cell.premerge { box-shadow: inset 0 0 0 3px var(--gold); background: #c99a68; }
   .cell.locked {
     background: #8f6c48; box-shadow: inset 0 3px 0 rgba(0,0,0,.2);
     display: flex; align-items: center; justify-content: center;
@@ -110,6 +113,7 @@
   }
   #basket .item { position: relative; inset: auto; width: 54px; height: 54px; flex: 0 0 54px; }
   #basket:empty::after { content: 'empty — harvest something'; color: var(--ink-soft); font-size: 12px; align-self: center; padding-left: 6px; }
+  #basket.hot { border-color: #2a7a45; background: #cfe9c8; }
 
   #controls { width: 100%; max-width: 440px; display: flex; gap: 8px; flex-wrap: wrap; }
   #log { width: 100%; max-width: 440px; font-size: 12px; color: var(--ink-soft); min-height: 34px; line-height: 1.45; }
@@ -127,7 +131,7 @@
 <div id="board" aria-label="merge board"></div>
 
 <div id="basketWrap">
-  <p class="label">Basket — drag onto the board</p>
+  <p class="label">Basket — drag onto the board, or drag a bench item back here to bank it</p>
   <div id="basket"></div>
 </div>
 
@@ -136,6 +140,7 @@
   <button class="pill" id="harvestBigBtn">Harvest ×10</button>
   <button class="pill" id="legendaryBtn">Legendary drop</button>
   <button class="pill" id="expandBtn">Expand bench</button>
+  <button class="pill" id="spatialBtn" data-on="1">spatial merge</button>
 </div>
 
 <div id="log"></div>
@@ -160,12 +165,72 @@
     cells: new Array(SIZE).fill(null),   // { tier, count }
     basket: [],                          // tier numbers
     threshold: 3,
+    bonusAt: 5,                          // a group this big pays two outputs
+    spatial: true,                       // Merge Dragons rules vs drop-on-to-stack
     side: START_SIDE,                    // unlocked square, side length
-    made: {}
+    made: {},
+    banked: {}                           // pulled off the board as finished stock
   };
 
   const unlocked = i => Math.floor(i / COLS) < S.side && (i % COLS) < S.side;
   const firstFree = () => S.cells.findIndex((c, i) => !c && unlocked(i));
+
+  function neighbours(i) {
+    const r = Math.floor(i / COLS), c = i % COLS, out = [];
+    if (r > 0) out.push(i - COLS);
+    if (r < COLS - 1) out.push(i + COLS);
+    if (c > 0) out.push(i - 1);
+    if (c < COLS - 1) out.push(i + 1);
+    return out.filter(unlocked);
+  }
+
+  // Orthogonally connected run of the same tier, breadth-first from `start`, so
+  // the moved item is always first and therefore always the one that survives.
+  function groupFrom(start) {
+    const seed = S.cells[start];
+    if (!seed) return [];
+    const seen = new Set([start]), queue = [start], out = [];
+    while (queue.length) {
+      const i = queue.shift();
+      out.push(i);
+      for (const n of neighbours(i)) {
+        if (seen.has(n)) continue;
+        const c = S.cells[n];
+        if (c && c.tier === seed.tier) { seen.add(n); queue.push(n); }
+      }
+    }
+    return out;
+  }
+
+  // Resolves the move at `idx` and any cascade it sets off. Only ever called
+  // for a cell the player just touched, so nothing merges on its own.
+  function resolve(idx) {
+    let merges = 0;
+    for (let guard = 0; guard < 40; guard++) {
+      const here = S.cells[idx];
+      if (!here || here.tier >= CHAIN.length - 1) break;
+      const group = groupFrom(idx);
+      if (group.length < S.threshold) break;
+
+      const big = group.length >= S.bonusAt;
+      const take = big ? S.bonusAt : S.threshold;
+      const outputs = big ? 2 : 1;
+      const eaten = group.slice(0, take);
+      eaten.forEach(i => { S.cells[i] = null; });
+
+      S.cells[idx] = { tier: here.tier + 1, count: 1 };
+      S.made[here.tier + 1] = (S.made[here.tier + 1] || 0) + 1;
+      if (outputs === 2) {
+        const spare = eaten.find(i => i !== idx && !S.cells[i]);
+        if (spare !== undefined) {
+          S.cells[spare] = { tier: here.tier + 1, count: 1 };
+          S.made[here.tier + 1]++;
+        }
+      }
+      merges++;
+    }
+    return merges;
+  }
 
   const LOCK = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
     '<path d="M30 46V32a20 20 0 0 1 40 0v14" fill="none" stroke="#3d2a1c" stroke-width="9" stroke-linecap="round"/>' +
@@ -261,7 +326,11 @@
     const used = S.cells.filter((c, i) => c && unlocked(i)).length;
     const bits = Object.keys(S.made).sort((a, b) => b - a)
       .map(t => `<b>${S.made[t]}×</b> ${CHAIN[t].name}`);
+    const banked = Object.keys(S.banked).sort((a, b) => b - a)
+      .filter(t => S.banked[t] > 0)
+      .map(t => `<b>${S.banked[t]}×</b> ${CHAIN[t].name}`);
     log.innerHTML = `Bench <b>${S.side}×${S.side}</b> · <b>${used}/${total}</b> used` +
+      (banked.length ? '<br>Banked: ' + banked.join(' · ') : '') +
       (bits.length ? '<br>Made: ' + bits.join(' · ') : '');
 
     const btn = $('#expandBtn');
@@ -307,9 +376,10 @@
     if (!dst) {
       remove(from, srcIdx);
       S.cells[dstIdx] = { tier: src.tier, count: src.count };
-      return 'move';
+      return S.spatial && resolve(dstIdx) ? 'merge' : 'move';
     }
 
+    if (S.spatial) return null;          // one item per cell, no stacking
     if (dst.tier !== src.tier) return null;
     if (src.tier >= CHAIN.length - 1) return null;   // top of the chain
 
@@ -352,6 +422,8 @@
       node: item,
       ghost,
       cell: null,
+      hint: [],
+      bank: false,
       host,
       id: e.pointerId
     };
@@ -375,10 +447,20 @@
     drag.ghost.style.visibility = 'hidden';
     const under = document.elementFromPoint(e.clientX, e.clientY);
     drag.ghost.style.visibility = '';
-    const cell = under && under.closest('.cell');
+
+    // Dragging a board item back to the basket banks it. This is the escape
+    // hatch: a full board with no adjacent triple has no other legal move.
+    const bank = !!(under && under.closest('#basket') && drag.from === 'board');
+    if (bank !== drag.bank) {
+      drag.bank = bank;
+      basket.classList.toggle('hot', bank);
+    }
+    const cell = bank ? null : (under && under.closest('.cell'));
 
     if (cell === drag.cell) return;
     if (drag.cell) drag.cell.classList.remove('over', 'bad');
+    drag.hint.forEach(c => c.classList.remove('premerge'));
+    drag.hint = [];
     drag.cell = cell;
     if (!cell) return;
 
@@ -386,9 +468,25 @@
     const src = take(drag.from, drag.idx);
     const dst = S.cells[dstIdx];
     const ok = unlocked(dstIdx) && (!dst
-      || (dst.tier === src.tier && src.tier < CHAIN.length - 1
+      || (!S.spatial && dst.tier === src.tier && src.tier < CHAIN.length - 1
           && !(drag.from === 'board' && drag.idx === dstIdx)));
     cell.classList.add(ok ? 'over' : 'bad');
+    if (!ok || !S.spatial || src.tier >= CHAIN.length - 1) return;
+
+    // Show the group this drop would eat, without committing to it.
+    const wasSrc = drag.from === 'board' ? S.cells[drag.idx] : null;
+    if (drag.from === 'board') S.cells[drag.idx] = null;
+    S.cells[dstIdx] = { tier: src.tier, count: 1 };
+    const group = groupFrom(dstIdx);
+    S.cells[dstIdx] = null;
+    if (drag.from === 'board') S.cells[drag.idx] = wasSrc;
+
+    if (group.length < S.threshold) return;
+    const take_ = group.length >= S.bonusAt ? S.bonusAt : S.threshold;
+    drag.hint = group.slice(0, take_)
+      .filter(i => i !== dstIdx)
+      .map(i => board.children[i]);
+    drag.hint.forEach(c => c.classList.add('premerge'));
   }
 
   function up(e) {
@@ -403,10 +501,22 @@
     const cell = drag.cell;
     drag.ghost.remove();
     drag.node.classList.remove('drag');
+    drag.hint.forEach(c => c.classList.remove('premerge'));
+    basket.classList.remove('hot');
     if (cell) cell.classList.remove('over', 'bad');
 
-    const from = drag.from, srcIdx = drag.idx;
+    const from = drag.from, srcIdx = drag.idx, bank = drag.bank;
     drag = null;
+
+    if (bank && from === 'board') {
+      const it = S.cells[srcIdx];
+      if (it) {
+        S.banked[it.tier] = (S.banked[it.tier] || 0) + it.count;
+        S.cells[srcIdx] = null;
+      }
+      render();
+      return;
+    }
 
     if (!cell) { render(); return; }
 
@@ -447,7 +557,14 @@
     S.cells = new Array(SIZE).fill(null);
     S.basket = [];
     S.made = {};
+    S.banked = {};
     S.side = START_SIDE;
+    render();
+  });
+  $('#spatialBtn').addEventListener('click', e => {
+    S.spatial = !S.spatial;
+    e.currentTarget.textContent = S.spatial ? 'spatial merge' : 'stack on drop';
+    e.currentTarget.dataset.on = S.spatial ? '1' : '';
     render();
   });
   $('#modeBtn').addEventListener('click', e => {
