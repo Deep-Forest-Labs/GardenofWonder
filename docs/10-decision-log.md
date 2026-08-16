@@ -5,6 +5,45 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — Packs turn up in the garden, and a badge that needed an animation to exist
+
+**Built:** a fourth tap roll drops a card pack onto a plot, where it waits to be tapped. Plus dev
+cheats to grant a card, a mythical, a completed set, or a pack on the ground.
+
+**The Lucky Ladybug shape, deliberately.** *"Something turned up in your garden, go and get it"* is a
+better beat than a number appearing in a wallet, and the pattern is already built and already tuned.
+What changed is that the badge is **tappable** — the ladybug's is decoration, this one is the reward.
+New icon: a fanned deck of three cards, in the house style.
+
+**Always on, with no badge behind it** — unlike the three proc badges, which all gate on an upgrade.
+`packDropChance` is a flat 0.0015 per tap. The reasoning: this is the album's **only in-game source**
+of packs, so a player who has bought nothing still has to be able to find one. A pack behind a
+paywall of coins would make the album invisible to exactly the players most likely to start it.
+
+**This is how the album touches the garden without being coupled to it.** The garden is *where packs
+turn up*; it never decides *what is inside them*. That distinction is the whole reason the album was
+untied from flowers earlier today, and the spawning pack is the version of "connect them" that does
+not undo it.
+
+**A real bug, caught by looking rather than by a test.** The badge started at `transform: scale(0)`
+and relied on a keyframe to become visible. **A badge that only exists once an animation has run is
+invisible and uncollectable anywhere the animation does not play** — a frozen CSS clock, a reduced
+motion path someone adds later, an engine that drops the keyframe. Visibility now comes from
+`display`, and the landing and bob are a flourish on top. Worth generalising: *never let an
+animation be the thing that makes an interactive element exist.*
+
+**Environment note, not a bug.** The badge appeared to do nothing in the automated browser because
+`requestAnimationFrame` had stopped entirely — measured **0 frames** across two calls — so
+`renderPlots()` never ran to apply the class. This is the hidden-pane version of the frozen-clock
+trap already in the handoff. Verified instead by applying the class directly and by dispatching a
+real `pointerdown`, which granted exactly one pack and cleared that plot alone.
+
+**`clearGarden()` in the suite did not reset `packDrop`**, so a test that filled all eight plots
+leaked into the next one. Third time a new per-cell field has caught that helper out, after
+`mutation` and `mutateAt` — the helper now clears all three.
+
+---
+
 ## 2026-08-15 — The card album built, with art as a slot rather than a dependency
 
 **Built:** 12 sets of 9 = 108 cards in one season, pack opening, the album and set views, and the

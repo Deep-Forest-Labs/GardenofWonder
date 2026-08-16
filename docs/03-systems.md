@@ -218,7 +218,15 @@ feature is the album rather than the illustration.
 Packs hold three cards, drawn by rarity and then **biased toward what the player is missing**. The
 opening reveals one card at a time with rarity telegraphed before the name is legible.
 
-Not yet built: the spawning-pack proc, duplicates and dust, seasons, completion rewards.
+**Packs turn up in the garden.** A fourth tap roll, `rollCardPack()`, drops a pack onto an unlocked
+plot at a flat 0.0015 per tap — **always on, with no badge behind it**, because it is the album's
+only in-game source. It sits on the plot until tapped, the Lucky Ladybug shape, and `collectPackDrop()`
+hands over the pack. `cell.packDrop` is a new per-cell field and needs its own backfill.
+
+That is how the album touches the garden **without being coupled to it**: the garden is where packs
+turn up, never what decides their contents.
+
+Not yet built: duplicates and dust, seasons, completion rewards.
 
 ## Gems: where they come from and what they buy
 
@@ -409,6 +417,7 @@ cheat exercises the feature it claims to test, and the animation seen is the one
 | Hold the weather | Sticky override on `weatherAt()`, until released |
 | Mutate a growing plot | Applies a tier now and fires the celebration |
 | Arm the next harvest | Forces a rarity or a gem drop, **consumed once** |
+| Cards | Grant packs, a card, a mythical, a completed set, or drop a pack in the garden |
 | Boost a tap proc | **Sticky toggle.** Holds Rain Dance, Bee Swarm or Lucky Ladybug at a 50% chance per tap, bypassing the badge level entirely |
 | Trigger now | Wonder Effect, one-shot |
 | Garden | Fill plots, ripen everything, add a hive |

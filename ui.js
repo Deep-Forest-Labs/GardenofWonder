@@ -151,7 +151,13 @@
         <div class="ready-pop">!</div>
         <div class="auto-tag">Auto</div>
         <div class="lucky-badge">${Icons.get('ladybug')}</div>
-        <button class="skip-chip" type="button" aria-label="Finish this plant with gems">${Icons.get('gem')}<span></span></button>`;
+        <button class="skip-chip" type="button" aria-label="Finish this plant with gems">${Icons.get('gem')}<span></span></button>
+        <button class="pack-drop" type="button" aria-label="Collect a card pack">${Icons.get('cards')}</button>`;
+      $('.pack-drop', b).addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onPackTap(idx);
+      }, { passive: false });
       $('.skip-chip', b).addEventListener('pointerdown', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -168,6 +174,7 @@
         costWrap: $('.lock-cost', b),
         tag: $('.auto-tag', b),
         skip: $('.skip-chip', b),
+        pack: $('.pack-drop', b),
         skipNum: $('.skip-chip span', b),
         lucky: $('.lucky-badge', b),
         cache: {}
@@ -206,6 +213,11 @@
       if (c.state !== state) {
         v.root.dataset.state = state;
         c.state = state;
+      }
+      const hasPack = Boolean(cell.packDrop);
+      if (c.packDrop !== hasPack) {
+        v.root.classList.toggle('has-pack', hasPack);
+        c.packDrop = hasPack;
       }
       const skipGems = state === 'grow' ? Game.skipCost(i) : 0;
       if (c.skip !== skipGems) {
@@ -1084,6 +1096,24 @@
     FX.haptic(12);
   }
 
+  function onPackTap(idx) {
+    const r = Game.collectPackDrop(idx);
+    if (!r) return;
+    const v = plotEls[idx];
+    const c = FX.centerOf(v.root);
+    FX.sparks(c.x, c.y, 16, '#ffe066');
+    FX.ring(c.x, c.y, '#ffffff', 0.5, 90);
+    FX.float(c.x, c.y - 10, 'Card pack!', 'epic');
+    Sound.play('quest');
+    FX.haptic(16);
+    say('greet');
+    toast({
+      title: 'A pack of cards',
+      body: 'Someone left it by the beds. Open it in the album.',
+      art: Icons.get('cards')
+    });
+  }
+
   /* ---- the card album ---- */
 
   /* Card art is a slot. `{ icon, tint }` composes a placeholder from the existing icon vocabulary;
@@ -1285,7 +1315,11 @@
       ${devRow('Cards', `
         <button class="dev-btn" data-dev="packs" data-arg="1">+1 pack</button>
         <button class="dev-btn" data-dev="packs" data-arg="10">+10 packs</button>
-        <button class="dev-btn" data-dev="packs" data-arg="60">+60 packs</button>`)}
+        <button class="dev-btn" data-dev="packs" data-arg="60">+60 packs</button>
+        <button class="dev-btn" data-dev="card" data-arg="">+1 card</button>
+        <button class="dev-btn" data-dev="card" data-arg="mythic">+1 mythical</button>
+        <button class="dev-btn" data-dev="completeSet" data-arg="1">Complete a set</button>
+        <button class="dev-btn" data-dev="dropPack" data-arg="1">Drop a pack in the garden</button>`)}
       ${devRow('Simulate an absence', `
         <button class="dev-btn" data-dev="away" data-arg="3">3 hours</button>
         <button class="dev-btn" data-dev="away" data-arg="6">6 hours</button>
@@ -1326,6 +1360,24 @@
         break;
       }
       case 'packs': Game.grantPacks(Number(arg) || 1); break;
+      case 'card': {
+        const got = D.grantCard(arg || null);
+        ok = Boolean(got);
+        if (ok) {
+          toast({ title: got.isNew ? 'New card' : 'Another copy', body: `${got.card.name} — ${got.set.name}`, art: Icons.get('cards') });
+          if (got.completedSet) showBanner('Set complete', got.set.name);
+        }
+        redraw = false;
+        break;
+      }
+      case 'completeSet': {
+        const set = D.completeSet();
+        ok = Boolean(set);
+        if (ok) showBanner('Set complete', set.name);
+        redraw = false;
+        break;
+      }
+      case 'dropPack': ok = Boolean(D.dropPack()); redraw = false; break;
       case 'clear': D.clearAll(); break;
       default: ok = false;
     }
@@ -1821,6 +1873,16 @@
     if (p.rainDance) triggerRainFX(plotEls[p.rainDance.idx], p.rainDance.shaved);
     if (p.beeSwarm) triggerBeeFX();
     if (p.ladybug) triggerLadybugFX(plotEls[p.ladybug.idx]);
+    if (p.cardPack) {
+      const v = plotEls[p.cardPack.idx];
+      if (v) {
+        const c = FX.centerOf(v.root);
+        FX.sparks(c.x, c.y, 14, '#ffe066');
+        FX.ring(c.x, c.y, '#ffe066', 0.55, 80);
+        Sound.play('rare');
+        FX.haptic(10);
+      }
+    }
   });
 
   /* Adjacency is invisible until something points at it, and a permanent indicator would clutter

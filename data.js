@@ -135,6 +135,11 @@ const DATA = {
   },
   skipSecondsPerGem: 30,
 
+  /* A pack that turns up in the garden. Always on rather than behind a badge, because it is the
+     album's only in-game source and a new player has to be able to find one. Same slot-machine
+     shape as the three tap procs, and tuned to land roughly as often as they do. */
+  packDropChance: 0.0015,
+
   gemChancePerGrowSecond: 0.0005,
   gemChanceMax: 0.5,
 

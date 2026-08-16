@@ -25,7 +25,7 @@ const Game = (() => {
       tickets: 0,
       gems: 0,
       tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50, holdInterval: 900 },
-      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0 })),
+      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0, packDrop: false })),
       upgrades,
       decor: [],
       boosters: {},
@@ -210,6 +210,7 @@ const Game = (() => {
         if (typeof cell.luckyBug !== 'boolean') cell.luckyBug = false;
         if (typeof cell.mutation === 'undefined') cell.mutation = null;
         if (typeof cell.mutateAt !== 'number') cell.mutateAt = 0;
+        if (typeof cell.packDrop !== 'boolean') cell.packDrop = false;
         if (!cell.seed) { cell.plantedAt = 0; cell.ready = false; return; }
         if (typeof cell.grow !== 'number' || cell.grow <= 0) cell.grow = 1;
         if (typeof cell.plantedAt !== 'number' || cell.plantedAt <= 0 || cell.plantedAt < 1e8) {
@@ -1208,6 +1209,33 @@ const Game = (() => {
     return { hive: i, variety };
   }
 
+  /* A pack lands on a plot and waits to be collected — the Lucky Ladybug shape, because "something
+     turned up in your garden, go and get it" is a better beat than a number appearing in a wallet.
+     Unlike the three badge procs this is always on: it is the album's only in-game source, so a
+     player who has bought nothing still has to be able to find one. */
+  function rollCardPack() {
+    const forced = devProc('cardPack');
+    if (!forced && Math.random() >= DATA.packDropChance) return null;
+    const open = [];
+    state.grid.forEach((cell, i) => { if (!cell.locked && !cell.packDrop) open.push(i); });
+    if (!open.length) return null;
+    const idx = open[Math.floor(Math.random() * open.length)];
+    state.grid[idx].packDrop = true;
+    return { idx };
+  }
+
+  /** Collect a pack sitting on a plot. Returns the plot, or null if there was nothing there. */
+  function collectPackDrop(idx) {
+    const cell = state.grid[idx];
+    if (!cell || !cell.packDrop) return null;
+    cell.packDrop = false;
+    state.packs += 1;
+    save();
+    emit('panels');
+    emit('packs', { granted: 1, total: state.packs });
+    return { idx, packs: state.packs };
+  }
+
   function rollLadybug() {
     const forced = devProc('ladybug');
     if (!forced && Math.random() >= procChance('ladybug')) return null;
@@ -1246,11 +1274,12 @@ const Game = (() => {
     const rainDance = rollRainDance();
     const beeSwarm = rollBeeSwarm();
     const ladybug = rollLadybug();
+    const cardPack = rollCardPack();
     save();
     emit('currency');
     const payload = {
       gain: rounded, crit: isCrit, combo: state.tap.combo, gemDrop, sparkedWonder: sparked,
-      rainDance, beeSwarm, ladybug, held: Boolean(held)
+      rainDance, beeSwarm, ladybug, cardPack, held: Boolean(held)
     };
     emit('tap', payload);
     noteQuest('tap', null, 1);
@@ -1913,6 +1942,48 @@ const Game = (() => {
       return report;
     },
 
+    /** Drop a pack onto a plot so the collect beat can be inspected without waiting on the roll. */
+    dropPack() {
+      dev.procs.cardPack = true;
+      const r = rollCardPack();
+      dev.procs.cardPack = false;
+      if (r) { save(); emit('panels'); }
+      return r;
+    },
+
+    /** Hand over a card. `rarity` narrows it; otherwise anything still missing. */
+    grantCard(rarity) {
+      const pool = [];
+      ALBUM.sets.forEach((set) => set.cards.forEach((c) => {
+        if (rarity && c.rarity !== rarity) return;
+        pool.push(c);
+      }));
+      if (!pool.length) return null;
+      const missing = pool.filter((c) => !hasCard(c.id));
+      const from = missing.length ? missing : pool;
+      const card = from[Math.floor(Math.random() * from.length)];
+      const set = setOfCard(card.id);
+      const wasComplete = setComplete(set.id);
+      const isNew = !hasCard(card.id);
+      state.cards[card.id] = cardCount(card.id) + 1;
+      const completed = isNew && !wasComplete && setComplete(set.id);
+      if (completed && state.setsClaimed.indexOf(set.id) === -1) state.setsClaimed.push(set.id);
+      save();
+      emit('panels');
+      return { card, set, isNew, copies: cardCount(card.id), completedSet: completed };
+    },
+
+    /** Fill the first unfinished set, to reach the completion beat directly. */
+    completeSet() {
+      const set = ALBUM.sets.find((x) => !setComplete(x.id));
+      if (!set) return null;
+      set.cards.forEach((c) => { if (!hasCard(c.id)) state.cards[c.id] = 1; });
+      if (state.setsClaimed.indexOf(set.id) === -1) state.setsClaimed.push(set.id);
+      save();
+      emit('panels');
+      return set;
+    },
+
     clearAll() {
       dev.rarity = null;
       dev.gem = false;
@@ -1947,7 +2018,7 @@ const Game = (() => {
     mutationDef, mutationRank, mutationMult, catchMultiplier,
     dayPhase, isNight, reconcile, gemChanceFor,
     cardById, setOfCard, rarityDef, cardCount, hasCard, setOwned, setComplete,
-    albumOwned, albumTotal, openPack, grantPacks,
+    albumOwned, albumTotal, openPack, grantPacks, collectPackDrop,
     callWeather, weatherCallPrice, weatherCallable, weatherCallActive, skipCost, skipGrow, offlineRate, offlineHours, passiveIncomeRate, offlineEarnings, Dev
   };
 })();

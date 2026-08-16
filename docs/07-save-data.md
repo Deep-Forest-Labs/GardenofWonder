@@ -210,6 +210,7 @@ Two new **per-cell grid fields** and one top-level field:
 | --- | --- | --- |
 | `mutation` | `state.grid[i]` | Mutation id or `null`. Cleared on harvest with the rest of the plot. |
 | `mutateAt` | `state.grid[i]` | Epoch seconds of this plant's single mutation roll; `0` once spent. |
+| `packDrop` | `state.grid[i]` | A card pack waiting on this plot. Added 2026-08-15; needs its own backfill. |
 | `lastSeen` | top level | Epoch seconds, written every tick. For offline reconciliation, not yet used. |
 
 **Both grid fields need their own backfill loop over `state.grid` in `load()`** — the same trap

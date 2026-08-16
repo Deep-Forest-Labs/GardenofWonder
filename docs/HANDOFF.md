@@ -12,6 +12,11 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **Packs now turn up in the garden, 2026-08-15.** A fourth tap roll drops a card pack onto a plot,
+> where it waits to be tapped — the Lucky Ladybug beat, but tappable. **Always on with no badge
+> behind it**, because it is the album's only in-game source. The garden is where packs turn up,
+> never what decides their contents.
+
 > **The card album shipped 2026-08-15.** 12 sets of 9 = 108 cards in one season, packs of three,
 > and the reveal. **Independent of the garden by design** — no card is earned by growing anything.
 > **Card art is a slot**: `{ icon, tint }` draws a placeholder from the icon vocabulary, `{ src }`
@@ -388,6 +393,14 @@ Real saves always have those, so this only bites synthetic or hand-edited saves 
 as `NaN%` in the Almanac and looks like a live bug. See
 [11-known-issues.md](11-known-issues.md#correctness).
 
+**Never let an animation be the thing that makes an interactive element exist.** The pack badge
+started at `scale(0)` and depended on a keyframe to appear, which makes it uncollectable anywhere the
+animation does not run. Visibility belongs to `display`; animation is a flourish on top.
+
+**New per-cell grid fields keep catching out `clearGarden()` in the suite.** `mutation`, `mutateAt`
+and `packDrop` have each leaked between tests. Add the field there at the same time you add it to
+`defaultState()` and the `load()` backfill.
+
 **A plant's mutation roll fires once and only once.** `plant()` schedules `cell.mutateAt` inside the
 grow window; `rollMutations()` fires it and zeroes it. Anything writing a grid cell by hand — a test
 fixture, a migration, a future auto-planter — must set `mutateAt` too, or that plant silently never
@@ -422,7 +435,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 421 assertions over the simulation layer
+node tools/sim-test.js          # 437 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

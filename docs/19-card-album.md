@@ -1,7 +1,7 @@
 # The Card Album
 
-**Status: built 2026-08-15** — album, sets, cards, packs and the opening. Not yet built: the
-spawning-pack proc, duplicates and dust, seasons, and completion rewards. Specified the same day,
+**Status: built 2026-08-15** — album, sets, cards, packs, the opening, and the spawning pack. Not
+yet built: duplicates and dust, seasons, and completion rewards. Specified the same day,
 replacing an earlier and wrong sketch that tied cards to flower species and mutations. Reasoning in [10-decision-log.md](10-decision-log.md).
 
 ## What it is
@@ -84,9 +84,11 @@ Every one of these is a system that already exists or is already planned:
 | **Random spawn in the garden** | Surprise | The best one — see below |
 | **Order completion** | Later | When the Market ships |
 
-### The spawning pack
+### The spawning pack — built
 
-**A card pack that appears on a plant and has to be tapped**, exactly like Lucky Ladybug.
+**A card pack lands on a plot and waits to be collected.** Borrowed from Lucky Ladybug, because
+"something turned up in your garden, go and get it" is a better beat than a number appearing in a
+wallet. Unlike the ladybug badge it is **tappable**, since collecting it is the point.
 
 This is the most valuable idea in the whole feature, because it costs almost nothing and does two
 jobs at once. The machinery is built: three tap-triggered procs already roll independently on every
@@ -100,8 +102,14 @@ What it buys:
   never *what determines their contents*. That is the right relationship — presence without
   dependence.
 
-Rate it like the other procs: rare enough to be an event, and give it a real animation. The lesson
-from the proc pass is on record — the first tuning fired too often to feel rare and was cut 5×.
+**Always on, unlike the three badge procs.** `packDropChance` is a flat 0.0015 per tap with no
+badge behind it, because this is the album's only in-game source — a player who has bought nothing
+still has to be able to find one. It lands on any unlocked plot that does not already hold a pack,
+planted or empty.
+
+**The badge's visibility comes from `display`, never from its animation.** A badge that only exists
+once a keyframe has run is invisible and uncollectable anywhere the animation does not play. The
+landing and bob are a flourish on top.
 
 ### The opening
 

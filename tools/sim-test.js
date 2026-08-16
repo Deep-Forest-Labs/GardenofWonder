@@ -55,7 +55,8 @@ const advance = (seconds, step = 1) => {
 };
 
 const clearGarden = () => S.grid.forEach((c) => {
-  c.locked = false; c.seed = null; c.plantedAt = 0; c.grow = 0; c.ready = false; c.mutation = null;
+  c.locked = false; c.seed = null; c.plantedAt = 0; c.grow = 0; c.ready = false;
+  c.mutation = null; c.mutateAt = 0; c.packDrop = false;
 });
 
 /* Mastery multiplies harvest payout and climbs as a run proceeds, so a test
@@ -1952,6 +1953,88 @@ check('an old save without an album still loads', (() => {
   store['gw-save'] = JSON.stringify(prior);
   G.load();
   return typeof S.cards === 'object' && S.packs === 0 && Array.isArray(S.setsClaimed);
+})());
+G.reset();
+
+group('a pack that turns up in the garden');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('nothing to collect on a clean plot', G.collectPackDrop(0) === null);
+check('a dropped pack lands on a plot', (() => {
+  const r = G.Dev.dropPack();
+  return r && S.grid[r.idx].packDrop === true;
+})());
+check('collecting it grants exactly one pack', (() => {
+  const idx = S.grid.findIndex((c) => c.packDrop);
+  S.packs = 0;
+  const r = G.collectPackDrop(idx);
+  return r && S.packs === 1 && S.grid[idx].packDrop === false;
+})());
+check('it cannot be collected twice', (() => {
+  const idx = S.grid.findIndex((c) => c.packDrop);
+  return idx === -1;
+})());
+check('a drop never doubles up on one plot', (() => {
+  clearGarden();
+  for (let i = 0; i < 8; i += 1) G.Dev.dropPack();
+  return S.grid.filter((c) => c.packDrop).length === 8;
+})());
+check('a full garden refuses another drop', G.Dev.dropPack() === null);
+check('it needs no badge to fire', (() => {
+  clearGarden();
+  S.upgrades.rainDance = 0; S.upgrades.beeSwarm = 0; S.upgrades.ladybug = 0;
+  const r = G.Dev.dropPack();
+  return Boolean(r);
+})());
+check('locked plots are never chosen', (() => {
+  clearGarden();
+  S.grid.forEach((c, i) => { c.locked = i > 0; c.packDrop = false; });
+  const r = G.Dev.dropPack();
+  S.grid.forEach((c) => { c.locked = false; });
+  return r && r.idx === 0;
+})());
+check('the drop survives a reload', (() => {
+  clearGarden();
+  const r = G.Dev.dropPack();
+  G.saveNow();
+  G.load();
+  return S.grid[r.idx].packDrop === true;
+})());
+check('an old save without the field loads clean', (() => {
+  const prior = JSON.parse(JSON.stringify(S));
+  prior.grid.forEach((c) => { delete c.packDrop; });
+  store['gw-save'] = JSON.stringify(prior);
+  G.load();
+  return S.grid.every((c) => typeof c.packDrop === 'boolean');
+})());
+
+group('card cheats hand over real cards');
+G.reset();
+check('granting a card records it', (() => {
+  const got = G.Dev.grantCard();
+  return got && G.cardCount(got.card.id) === 1 && got.isNew === true;
+})());
+check('a rarity can be asked for', (() => {
+  const got = G.Dev.grantCard('mythic');
+  return got && got.card.rarity === 'mythic';
+})());
+check('an unknown rarity yields nothing', G.Dev.grantCard('nonsense') === null);
+check('completing a set fills it and claims it once', (() => {
+  G.reset();
+  const set = G.Dev.completeSet();
+  return set && G.setComplete(set.id)
+    && S.setsClaimed.filter((x) => x === set.id).length === 1;
+})());
+check('completing again moves to the next set', (() => {
+  const first = ALBUM.sets.find((x) => G.setComplete(x.id));
+  const next = G.Dev.completeSet();
+  return next && next.id !== first.id && G.setComplete(next.id);
+})());
+check('a finished album has nothing left to complete', (() => {
+  ALBUM.sets.forEach((s) => s.cards.forEach((c) => { S.cards[c.id] = 1; }));
+  return G.Dev.completeSet() === null;
 })());
 G.reset();
 
