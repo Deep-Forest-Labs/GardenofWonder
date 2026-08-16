@@ -5,6 +5,59 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — The card album built, with art as a slot rather than a dependency
+
+**Built:** 12 sets of 9 = 108 cards in one season, pack opening, the album and set views, and the
+reveal. **Not built:** the spawning-pack proc, dust, seasons, completion rewards.
+
+**The structural decision: card art is a slot.** `art` is either `{ icon, tint }` — a placeholder
+composed from the existing 33-icon vocabulary — or `{ src }`, a real illustration. `cardArt()`
+renders either and nothing else in the codebase knows which it got.
+
+That is what lets two things be true at once: the web build keeps its **no-binary-assets** rule
+intact, and real card art can arrive whenever the owner wants without touching code. The owner has a
+Midjourney account and asked whether it could be used. It can — just not *here*. The web build is the
+design lab; finished illustration belongs to the Unity port, which has an asset pipeline and no such
+rule. **Nine motifs cycle across all twelve sets on purpose:** the feature is the album, not the
+picture.
+
+*Rejected: bending the no-binary-assets rule for cards.* Tempting, since cards are inherently
+illustrated. But it would put ~108 PNGs in a static site with no build step, for a prototype whose
+whole job is to test whether the loop is fun — and the loop is testable with circles and icons.
+
+*Rejected: reusing `Flora.head()` for card art.* It would have given 19 genuinely lovely images for
+free, and it would have quietly re-coupled the album to the garden — the exact mistake retracted
+earlier the same day. The placeholders are worse-looking and structurally correct.
+
+**Every set has an identical rarity shape** — 3 Common, 2 Uncommon, 2 Rare, 1 Legendary, 1 Mythical.
+Fixed so that authoring a new set is nine names and a tint rather than a balancing exercise, and a
+sim-test holds the shape across all twelve.
+
+**Cards are counts, not booleans.** `state.cards[id]` is a number. Nothing needs duplicates yet — but
+dust does, and gifting would, and retrofitting a count onto a boolean after players have saves is the
+kind of migration worth avoiding by spending one line now.
+
+**The draw is biased toward what the player is missing**, within a rolled rarity. Without dust to
+soften them, duplicates are pure disappointment, and an album that keeps returning cards you already
+have is the fastest way to make collecting feel like a chore. A test fills every Common but one and
+asserts the gap closes quickly.
+
+**Set completion is reported once, on the pack that closes it** — `setsClaimed` records it — and the
+banner fires *after* the last card of the pack, not interrupting the reveal.
+
+**The opening is the feature, so it got the care.** One card at a time, never a grid. Rarity is
+telegraphed by the frame before the name is legible. A duplicate is greyed and says so. Celebration
+escalates by rarity, with confetti and a shake reserved for the top two tiers and a pulse for
+Mythical alone — the same discipline as the mutation ladder, for the same reason: a top tier that
+looks like the tier below it is not a top tier.
+
+**Content note.** The twelfth set, *The Open Question*, is written as an unresolved thread — "A Gate
+You Did Not Build", "Someone Has Been Weeding", "Not Yet". That is the Merge Mansion device recorded
+in [17-market-and-positioning.md](17-market-and-positioning.md): **you do not have to write an
+ending, you have to write a question.**
+
+---
+
 ## 2026-08-15 — Gems get a rule, a corrected faucet, and two sinks that cannot become pay-to-win
 
 **The rule, ratified by the owner and now the test every gem or IAP proposal faces:**

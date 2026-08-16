@@ -33,6 +33,9 @@ const Game = (() => {
       harvestsThisSession: 0,
       lastSeen: 0,
       weatherCall: null,
+      cards: {},
+      packs: 0,
+      setsClaimed: [],
       stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
       wonder: { until: 0, last: 0 },
       apiary: { hives: [], honey: {}, wax: 0 },
@@ -195,6 +198,11 @@ const Game = (() => {
       ['holdSpeed', 'rainDance', 'beeSwarm', 'ladybug', 'offlineRate', 'offlineHours'].forEach((key) => {
         if (typeof state.upgrades[key] !== 'number') state.upgrades[key] = 0;
       });
+
+      /* Nested objects are replaced wholesale by load(), so these need their own re-merge. */
+      if (!state.cards || typeof state.cards !== 'object') state.cards = {};
+      if (typeof state.packs !== 'number') state.packs = 0;
+      if (!Array.isArray(state.setsClaimed)) state.setsClaimed = [];
 
       const now = nowSeconds();
       state.grid.forEach((cell) => {
@@ -599,6 +607,79 @@ const Game = (() => {
       earned: earned.coins, capped: earned.capped,
       capHours: offlineHours(), rate: offlineRate()
     };
+  }
+
+  /* ---------------- the card album ---------------- */
+
+  const CARD_INDEX = (() => {
+    const map = {};
+    ALBUM.sets.forEach((set) => set.cards.forEach((card) => { map[card.id] = { card, set }; }));
+    return map;
+  })();
+
+  const cardById = (id) => (CARD_INDEX[id] ? CARD_INDEX[id].card : null);
+  const setOfCard = (id) => (CARD_INDEX[id] ? CARD_INDEX[id].set : null);
+  const rarityDef = (key) => CARD_RARITIES.find((r) => r.key === key) || CARD_RARITIES[0];
+
+  /* Cards are owned *instances*, not booleans — duplicates have to be representable for a dust
+     sink or any future gifting to exist at all. `state.cards[id]` is a count. */
+  const cardCount = (id) => state.cards[id] || 0;
+  const hasCard = (id) => cardCount(id) > 0;
+  const setOwned = (setId) => {
+    const set = ALBUM.sets.find((x) => x.id === setId);
+    return set ? set.cards.reduce((n, c) => n + (hasCard(c.id) ? 1 : 0), 0) : 0;
+  };
+  const setComplete = (setId) => setOwned(setId) === 9;
+  const albumOwned = () => ALBUM.sets.reduce((n, s) => n + setOwned(s.id), 0);
+  const albumTotal = () => ALBUM.sets.length * 9;
+
+  /* Weighted by rarity, then biased toward cards the player is missing — an album that keeps
+     handing back duplicates nobody can yet spend is the fastest way to make collecting a chore. */
+  function drawCard() {
+    const total = CARD_RARITIES.reduce((a, r) => a + r.w, 0);
+    let t = Math.random() * total;
+    let rarity = CARD_RARITIES[0];
+    for (const r of CARD_RARITIES) { t -= r.w; if (t <= 0) { rarity = r; break; } }
+    const pool = [];
+    ALBUM.sets.forEach((set) => set.cards.forEach((c) => { if (c.rarity === rarity.key) pool.push(c); }));
+    if (!pool.length) return null;
+    const missing = pool.filter((c) => !hasCard(c.id));
+    const from = missing.length ? missing : pool;
+    return from[Math.floor(Math.random() * from.length)];
+  }
+
+  /** Open a pack. Returns what came out, each marked new or duplicate. */
+  function openPack() {
+    if (state.packs <= 0) return null;
+    state.packs -= 1;
+    const drawn = [];
+    const completedSets = [];
+    for (let i = 0; i < ALBUM.packSize; i += 1) {
+      const card = drawCard();
+      if (!card) continue;
+      const set = setOfCard(card.id);
+      const wasComplete = setComplete(set.id);
+      const isNew = !hasCard(card.id);
+      state.cards[card.id] = cardCount(card.id) + 1;
+      if (isNew && !wasComplete && setComplete(set.id)) completedSets.push(set.id);
+      drawn.push({ card, set, isNew, copies: cardCount(card.id) });
+    }
+    completedSets.forEach((id) => {
+      if (state.setsClaimed.indexOf(id) === -1) state.setsClaimed.push(id);
+    });
+    save();
+    emit('panels');
+    return { drawn, completedSets, packsLeft: state.packs };
+  }
+
+  function grantPacks(n) {
+    const add = Math.max(0, Math.floor(n));
+    if (!add) return 0;
+    state.packs += add;
+    save();
+    emit('panels');
+    emit('packs', { granted: add, total: state.packs });
+    return state.packs;
   }
 
   /* ---------------- reputation, levels, quests ---------------- */
@@ -1865,6 +1946,8 @@ const Game = (() => {
     weatherSlotOf, weatherForSlot, weatherAt, currentWeather, rollMutations, processWeather,
     mutationDef, mutationRank, mutationMult, catchMultiplier,
     dayPhase, isNight, reconcile, gemChanceFor,
+    cardById, setOfCard, rarityDef, cardCount, hasCard, setOwned, setComplete,
+    albumOwned, albumTotal, openPack, grantPacks,
     callWeather, weatherCallPrice, weatherCallable, weatherCallActive, skipCost, skipGrow, offlineRate, offlineHours, passiveIncomeRate, offlineEarnings, Dev
   };
 })();

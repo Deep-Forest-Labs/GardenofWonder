@@ -1454,3 +1454,101 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.08s !important}
   .cloud{display:none}
 }
+
+/* ============ THE CARD ALBUM ============
+   Card art is a slot: .card-motif composes a placeholder from the icon vocabulary, .card-img would
+   carry a real illustration. Both sit in the same box, so swapping one for the other changes
+   nothing about the layout. */
+.album-head{margin:2px 0 12px}
+.album-lede{font-size:12.5px;font-weight:700;line-height:1.4;margin:0 0 8px;opacity:.85}
+.album-bar,.set-bar{
+  position:relative;display:block;height:16px;border-radius:999px;
+  background:rgba(44,26,16,.14);border:2px solid var(--ink);overflow:hidden;
+}
+.album-bar i,.set-bar i{position:absolute;inset:0 auto 0 0;background:#8ce99a;border-radius:999px}
+.album-bar b,.set-bar b{
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-size:9.5px;font-weight:900;color:#2c1a10;letter-spacing:.02em;
+}
+
+.set-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+.set-tile{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:11px 9px;border-radius:16px;
+  border:3px solid var(--ink);background:var(--set,#f4ead9);
+  box-shadow:0 3px 0 rgba(44,26,16,.35);
+  touch-action:manipulation;
+}
+.set-tile:active{transform:translateY(3px);box-shadow:0 0 0 rgba(44,26,16,.35)}
+.set-tile.done{outline:3px solid #51cf66;outline-offset:1px}
+.set-ring{
+  width:44px;height:44px;border-radius:50%;flex:none;
+  display:grid;place-items:center;
+  background:rgba(255,255,255,.6);border:3px solid var(--ink);
+}
+.set-ring svg{width:22px;height:22px}
+.set-name{font-size:12px;font-weight:900;text-align:center;line-height:1.2;min-height:2.4em;display:grid;align-items:center}
+.set-tile .set-bar{width:100%}
+
+.setbar{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 11px;border-radius:14px;margin-bottom:12px;
+  background:var(--set,#f4ead9);border:3px solid var(--ink);
+}
+.setbar small{font-size:11px;font-weight:700;opacity:.75}
+
+.card-grid9{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.cardcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;touch-action:manipulation}
+.cstars{display:flex;gap:1px;justify-content:center}
+.cstar svg{width:12px;height:12px;opacity:.28}
+.cstar.on svg{opacity:1;color:#ffd43b}
+.cardface{
+  position:relative;width:100%;aspect-ratio:3/4;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  padding:6px 4px;border-radius:12px;
+  border:3px solid var(--ink);
+  background:rgba(44,26,16,.09);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.3);
+}
+.cardcell.have .cardface{background:var(--set,#f4ead9);box-shadow:0 3px 0 rgba(44,26,16,.3)}
+.cardcell:active .cardface{transform:translateY(2px)}
+.cardname{font-size:9px;font-weight:800;text-align:center;line-height:1.15;padding:0 2px}
+.cardcell:not(.have) .cardname{opacity:.5}
+.card-motif{display:grid;place-items:center;border-radius:50%;background:var(--motif,#d8cfc0);border:2px solid var(--ink)}
+.card-motif svg{width:58%;height:58%}
+.card-img{border-radius:8px;object-fit:cover}
+.cdupe{
+  position:absolute;top:14px;right:-2px;
+  padding:1px 5px;border-radius:999px;
+  background:#fff;border:2px solid var(--ink);
+  font-size:9px;font-weight:900;
+}
+
+/* The opening. Rarity is telegraphed by the frame before the name is legible. */
+.pack-reveal{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0 14px}
+.pack-card{
+  width:min(62%,210px);aspect-ratio:3/4;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  padding:14px;border-radius:18px;
+  border:4px solid var(--ink);background:var(--set,#f4ead9);
+  box-shadow:0 5px 0 rgba(44,26,16,.35);
+  animation:packIn .42s cubic-bezier(.2,1.5,.4,1) both;
+}
+.pack-name{font-size:14px;font-weight:900;text-align:center;line-height:1.2}
+.pack-tag{font-size:12px;font-weight:800;margin:0}
+.pack-reveal:not(.is-new){opacity:.85}
+.pack-reveal:not(.is-new) .pack-card{filter:grayscale(.45)}
+.pack-reveal.r-rare .pack-card{box-shadow:0 5px 0 rgba(44,26,16,.35),0 0 22px 3px rgba(140,224,255,.75)}
+.pack-reveal.r-legend .pack-card{box-shadow:0 5px 0 rgba(44,26,16,.35),0 0 26px 5px rgba(255,201,60,.85)}
+.pack-reveal.r-mythic .pack-card{
+  box-shadow:0 5px 0 rgba(44,26,16,.35),0 0 34px 7px rgba(255,143,208,.9);
+  animation:mythicPulse 1.6s ease-in-out infinite;
+}
+@keyframes packIn{0%{transform:scale(.7) rotate(-4deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes mythicPulse{0%,100%{filter:saturate(1)}50%{filter:saturate(1.45)}}
+@media (prefers-reduced-motion:reduce){
+  .pack-card{animation:none}
+  .pack-reveal.r-mythic .pack-card{animation:none}
+}
+.setbar-txt{flex:1;display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800}
+.setbar-txt .set-bar{width:100%}

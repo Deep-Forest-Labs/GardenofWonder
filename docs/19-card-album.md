@@ -1,7 +1,8 @@
 # The Card Album
 
-**Status: specification, not built.** Specified 2026-08-15, replacing an earlier and wrong sketch that
-tied cards to flower species and mutations. Reasoning in [10-decision-log.md](10-decision-log.md).
+**Status: built 2026-08-15** — album, sets, cards, packs and the opening. Not yet built: the
+spawning-pack proc, duplicates and dust, seasons, and completion rewards. Specified the same day,
+replacing an earlier and wrong sketch that tied cards to flower species and mutations. Reasoning in [10-decision-log.md](10-decision-log.md).
 
 ## What it is
 
@@ -188,6 +189,56 @@ Three ways through, not mutually exclusive:
 
 **Position: build the album, design seasons as possible, and do not announce a cadence until one
 season has been authored end to end and the hours measured.**
+
+## What exists today
+
+**12 sets of 9 = 108 cards**, in one season, *The Long Season*. Content in `ALBUM_SETS` / `ALBUM`
+(`data.js`); state and drawing in the album section of `game.js`; three sheet panels in `ui.js` —
+`album`, `cardset`, `pack`. Reached from a star button in the HUD.
+
+Every set has the **same rarity shape**: three Common, two Uncommon, two Rare, one Legendary, one
+Mythical. Fixed on purpose — a new set is then only nine names and a tint, and a sim-test asserts
+the shape holds across all twelve.
+
+### Card art is a slot, not a commitment
+
+```js
+art: { icon: 'sprout', tint: '#8ce99a' }   // procedural placeholder, drawn from icons.js
+art: { src: 'cards/dawn.png' }             // a real illustration, when one exists
+```
+
+`cardArt()` in `ui.js` renders either and nothing else knows which it got. **Nine motifs are cycled
+across all twelve sets** — deliberately placeholder, because the feature is the album, not the
+illustration.
+
+This is how the no-binary-assets rule in [09-conventions.md](09-conventions.md) and real card art
+coexist: the web build is the design lab and keeps its placeholders, finished art belongs to the
+Unity port, and swapping one for the other is a data edit with no code change. Midjourney or any
+other generator can therefore be used freely without it ever blocking the build.
+
+### Drawing
+
+`drawCard()` rolls a rarity off `CARD_RARITIES` (weights 46/27/17/8/2), then **biases toward cards
+the player is missing** within that rarity. An album that keeps returning duplicates nobody can yet
+spend is the fastest way to make collecting feel like a chore, and dust does not exist yet to soften
+it. A sim-test asserts a single missing card gets found quickly.
+
+A pack is **three cards**. `openPack()` returns each marked new or duplicate, plus any sets the pack
+completed — reported **once**, on the pack that finishes them.
+
+### State
+
+`state.cards` maps card id to a **count**, not a boolean — duplicates have to be representable for
+dust or any future gifting to exist at all. Plus `state.packs` and `state.setsClaimed`. All three are
+top-level and all three need their own re-merge in `load()`, since nested objects are replaced
+wholesale; an old save without them loads clean, and a test covers it.
+
+### The opening
+
+Cards reveal **one at a time**, never as a grid. The frame telegraphs rarity before the name is
+legible, a duplicate is visibly greyed and reads "Already had it", and the celebration escalates —
+sparks for common, a ring for rare, confetti and a shake for Legendary and Mythical, which also
+pulses. Set completion fires a banner after the last card, not during.
 
 ## Data model
 

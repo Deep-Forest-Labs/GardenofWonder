@@ -198,6 +198,28 @@ tint the empty soil until something new is planted.
   the better gem farm.
 - **2% chance of triggering a Wonder Effect**, subject to cooldown.
 
+## The card album
+
+**Built 2026-08-15.** Full design in [19-card-album.md](19-card-album.md). Content in `ALBUM`
+(`data.js`), state and drawing in `game.js`, three panels in `ui.js`.
+
+**Deliberately independent of the garden.** No card is earned by growing anything in particular —
+packs come from play, and what is inside them owes nothing to what is planted. A coupled album would
+dictate what the player plants and turn the garden from a place to arrange into a checklist.
+
+12 sets × 9 cards = 108, in one season. Every set is three Common, two Uncommon, two Rare, one
+Legendary and one Mythical. `state.cards` holds **counts, not flags**, so duplicates are
+representable for the dust sink that has yet to be built.
+
+**Card art is a slot** — `{ icon, tint }` composes a placeholder from the existing icon vocabulary,
+`{ src }` would carry a real illustration. Nine motifs are cycled across all twelve sets, because the
+feature is the album rather than the illustration.
+
+Packs hold three cards, drawn by rarity and then **biased toward what the player is missing**. The
+opening reveals one card at a time with rarity telegraphed before the name is legible.
+
+Not yet built: the spawning-pack proc, duplicates and dust, seasons, completion rewards.
+
 ## Gems: where they come from and what they buy
 
 **Reworked 2026-08-15.** The standing rule, which every future gem or IAP proposal is tested

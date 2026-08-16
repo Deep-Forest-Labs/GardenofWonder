@@ -234,3 +234,15 @@ on every `processWeather()` tick and on every `reconcile()`.
 `state.weatherCall` is `{ id, from, until }` or `null` — a player-bought sky. Top-level, so it needs
 no per-cell backfill, but it does need to survive `load()`; a stale one simply expires because
 `weatherAt()` checks the window.
+
+## The card album (added 2026-08-15)
+
+| Field | Notes |
+| --- | --- |
+| `cards` | Card id → **count**, not a boolean. Duplicates must stay representable for dust and any future gifting. |
+| `packs` | Unopened packs. |
+| `setsClaimed` | Set ids whose completion has been recorded, so it pays once. |
+
+All three are top-level and **all three need their own re-merge in `load()`** — nested objects are
+replaced wholesale, so a save from before the album would otherwise come back with `cards`
+undefined. A test loads a stripped save and asserts they rebuild.

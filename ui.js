@@ -511,9 +511,15 @@
     const titles = {
       upgrades: 'Upgrades', apiary: 'Apiary', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
-      quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away'
+      quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away',
+      album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
     };
-    el.sheetTitle.textContent = titles[sheetMode] || '';
+    let title = titles[sheetMode] || '';
+    if (sheetMode === 'cardset') {
+      const set = ALBUM.sets.find((x) => x.id === sheetArg);
+      if (set) title = set.name;
+    }
+    el.sheetTitle.textContent = title;
 
     if (SHOP_TABS.includes(sheetMode)) {
       el.sheetTabs.innerHTML = TABS.map(
@@ -531,7 +537,8 @@
     const render = {
       upgrades: renderUpgrades, apiary: renderApiary, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
-      dev: renderDev, welcome: renderWelcome
+      dev: renderDev, welcome: renderWelcome,
+      album: renderAlbum, cardset: renderCardSet, pack: renderPack
     }[sheetMode];
     el.sheetBody.innerHTML = render ? render() : '';
     el.sheetBody.scrollTop = keep;
@@ -1077,6 +1084,121 @@
     FX.haptic(12);
   }
 
+  /* ---- the card album ---- */
+
+  /* Card art is a slot. `{ icon, tint }` composes a placeholder from the existing icon vocabulary;
+     `{ src }` would drop in a real illustration without touching this function. Nothing here knows
+     or cares which it got. */
+  function cardArt(card, size) {
+    const a = card.art || {};
+    if (a.src) return `<img class="card-img" src="${a.src}" alt="" width="${size}" height="${size}">`;
+    return `<span class="card-motif" style="--motif:${a.tint || '#d8cfc0'};width:${size}px;height:${size}px">
+      ${Icons.get(a.icon || 'petal')}</span>`;
+  }
+
+  const starRow = (n, lit) => {
+    let out = '';
+    for (let i = 0; i < n; i += 1) out += `<i class="cstar${i < lit ? ' on' : ''}">${Icons.get('star')}</i>`;
+    return `<span class="cstars">${out}</span>`;
+  };
+
+  function renderAlbum() {
+    const owned = Game.albumOwned();
+    const total = Game.albumTotal();
+    const tiles = ALBUM.sets.map((set) => {
+      const n = Game.setOwned(set.id);
+      const done = n === 9;
+      return `<button class="set-tile${done ? ' done' : ''}" data-set="${set.id}" style="--set:${set.tint}">
+        <span class="set-ring">${Icons.get(done ? 'check' : 'book')}</span>
+        <span class="set-name">${set.name}</span>
+        <span class="set-bar"><i style="width:${(n / 9) * 100}%"></i><b>${n}/9</b></span>
+      </button>`;
+    }).join('');
+    return `
+      <div class="album-head">
+        <p class="album-lede">Collect nine cards to finish a set, and every set to finish the album.</p>
+        <span class="album-bar"><i style="width:${(owned / total) * 100}%"></i><b>${owned} / ${total}</b></span>
+      </div>
+      ${S.packs ? `<button class="big-btn magic" data-act="openPack">Open a pack &middot; ${fmt(S.packs)} waiting</button>`
+        : '<p class="sheet-note">No packs right now. They turn up from quests, levels and the odd surprise in the garden.</p>'}
+      <div class="set-grid">${tiles}</div>`;
+  }
+
+  function renderCardSet() {
+    const set = ALBUM.sets.find((x) => x.id === sheetArg) || ALBUM.sets[0];
+    const n = Game.setOwned(set.id);
+    const cards = set.cards.map((card) => {
+      const have = Game.hasCard(card.id);
+      const r = Game.rarityDef(card.rarity);
+      const copies = Game.cardCount(card.id);
+      return `<button class="cardcell${have ? ' have' : ''}" data-card="${card.id}">
+        ${starRow(r.stars, have ? r.stars : 0)}
+        <span class="cardface" style="--set:${set.tint}">
+          ${have ? cardArt(card, 46) : ''}
+          <span class="cardname">${card.name}</span>
+        </span>
+        ${have && copies > 1 ? `<span class="cdupe">+${copies - 1}</span>` : ''}
+      </button>`;
+    }).join('');
+    return `
+      <div class="setbar" style="--set:${set.tint}">
+        <span class="set-ring">${Icons.get(n === 9 ? 'check' : 'book')}</span>
+        <span class="setbar-txt">
+          <b>${n === 9 ? 'Complete' : `${n} of 9 collected`}</b>
+          <span class="set-bar"><i style="width:${(n / 9) * 100}%"></i><b>${n}/9</b></span>
+        </span>
+      </div>
+      <div class="card-grid9">${cards}</div>
+      <button class="big-btn" data-act="backToAlbum">Back to the album</button>`;
+  }
+
+  /* The opening is the feature. Cards reveal one at a time, rarity telegraphed before the card is
+     legible, and a duplicate has to read differently from a new card at a glance. */
+  let packQueue = [];
+  let packShown = 0;
+
+  let packCompleted = [];
+
+  function celebrateCard() {
+    const item = packQueue[packShown];
+    if (!item) return;
+    const r = Game.rarityDef(item.card.rarity);
+    const node = $('.pack-card', el.sheetBody);
+    const c = node ? FX.centerOf(node) : FX.centerOf(el.sheetBody);
+    if (!item.isNew) { Sound.play('close'); return; }
+    FX.sparks(c.x, c.y, 6 + r.stars * 5, item.set.tint);
+    if (r.stars >= 4) {
+      FX.confetti(c.x, c.y);
+      FX.shake(r.stars);
+      Sound.play('legend');
+    } else if (r.stars === 3) {
+      FX.ring(c.x, c.y, '#ffffff', 0.5, 90);
+      Sound.play('rare');
+    } else {
+      Sound.play('coin');
+    }
+    FX.haptic(r.stars * 6);
+  }
+
+  function renderPack() {
+    const item = packQueue[packShown];
+    if (!item) return '<p class="sheet-note">Nothing left in this pack.</p>';
+    const r = Game.rarityDef(item.card.rarity);
+    const last = packShown >= packQueue.length - 1;
+    return `
+      <div class="pack-reveal r-${item.card.rarity}${item.isNew ? ' is-new' : ''}">
+        ${starRow(r.stars, r.stars)}
+        <div class="pack-card" style="--set:${item.set.tint}">
+          ${cardArt(item.card, 96)}
+          <span class="pack-name">${item.card.name}</span>
+        </div>
+        <p class="pack-tag">${item.isNew ? `New &middot; ${r.label}` : `Already had it &middot; ${item.copies} copies`}</p>
+        <p class="sheet-note">${item.set.name}</p>
+      </div>
+      <button class="big-btn magic" data-act="${last ? 'packDone' : 'packNext'}">
+        ${last ? 'Done' : `Next &middot; ${packShown + 1} of ${packQueue.length}`}</button>`;
+  }
+
   /* The welcome-back scene. Deliberately a list of things that *happened* rather than a total —
      "a thunderstorm passed and your Marigold came back Gilded" is a garden that lived without you,
      where "+4,213 coins" is a receipt. See docs/18-mutations-and-weather.md. */
@@ -1160,6 +1282,10 @@
         <button class="dev-btn" data-dev="fill" data-arg="1">Fill plots</button>
         <button class="dev-btn" data-dev="ripen" data-arg="1">Ripen all</button>
         <button class="dev-btn" data-dev="hive" data-arg="1">Add hive</button>`)}
+      ${devRow('Cards', `
+        <button class="dev-btn" data-dev="packs" data-arg="1">+1 pack</button>
+        <button class="dev-btn" data-dev="packs" data-arg="10">+10 packs</button>
+        <button class="dev-btn" data-dev="packs" data-arg="60">+60 packs</button>`)}
       ${devRow('Simulate an absence', `
         <button class="dev-btn" data-dev="away" data-arg="3">3 hours</button>
         <button class="dev-btn" data-dev="away" data-arg="6">6 hours</button>
@@ -1199,6 +1325,7 @@
         redraw = false;
         break;
       }
+      case 'packs': Game.grantPacks(Number(arg) || 1); break;
       case 'clear': D.clearAll(); break;
       default: ok = false;
     }
@@ -1315,6 +1442,8 @@
       if (S.prefs[k]) Sound.play('buy');
       return;
     }
+    const setTile = e.target.closest('[data-set]');
+    if (setTile) { openSheet('cardset', setTile.dataset.set); Sound.play('open'); return; }
     const devBtn = e.target.closest('[data-dev]');
     if (devBtn) {
       handleDev(devBtn.dataset.dev, devBtn.dataset.arg);
@@ -1324,6 +1453,27 @@
     if (act) {
       const a = act.dataset.act;
       if (a === 'closeWelcome') { closeSheet(); Sound.play('close'); return; }
+      if (a === 'backToAlbum') { openSheet('album'); Sound.play('open'); return; }
+      if (a === 'openPack') {
+        const r = Game.openPack();
+        if (!r) { Sound.play('deny'); FX.shake(4); return; }
+        packQueue = r.drawn;
+        packShown = 0;
+        packCompleted = r.completedSets;
+        openSheet('pack');
+        celebrateCard();
+        return;
+      }
+      if (a === 'packNext') { packShown += 1; renderSheet(true); celebrateCard(); return; }
+      if (a === 'packDone') {
+        packCompleted.forEach((id) => {
+          const set = ALBUM.sets.find((x) => x.id === id);
+          if (set) showBanner('Set complete', set.name);
+        });
+        if (S.packs > 0) { openSheet('album'); } else { openSheet('album'); }
+        Sound.play('close');
+        return;
+      }
       if (a === 'cheat') {
         S.gems += 50;
         Game.save(); Game.emit('currency'); Game.emit('panels');
@@ -1376,6 +1526,7 @@
 
   $('#btnSettings').addEventListener('click', () => openSheet('settings'));
   $('#btnDev').addEventListener('click', () => openSheet('dev'));
+  $('#btnAlbum').addEventListener('click', () => openSheet('album'));
   $('#btnBonuses').addEventListener('click', () => openSheet('bonuses'));
   el.questStrip.addEventListener('click', () => {
     Sound.resume();

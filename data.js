@@ -16,6 +16,73 @@ const PLOT_AUTOPLANTERS = Array.from({ length: 8 }, (_, i) => {
   };
 });
 
+
+/* ============ THE CARD ALBUM ============
+   A parallel meta, deliberately independent of the garden — no card is earned by growing anything
+   in particular. See docs/19-card-album.md.
+
+   Card art is a *slot*, not a commitment: `{ icon, tint }` draws a procedural placeholder from the
+   existing icon vocabulary, and `{ src }` would point at a real illustration instead. The web build
+   is the design lab and takes no binary assets, so placeholders live here and finished art belongs
+   to the Unity port. Swapping one for the other is a data edit. */
+
+const CARD_RARITIES = [
+  { key: 'common',   stars: 1, w: 46, label: 'Common' },
+  { key: 'uncommon', stars: 2, w: 27, label: 'Uncommon' },
+  { key: 'rare',     stars: 3, w: 17, label: 'Rare' },
+  { key: 'legend',   stars: 4, w: 8,  label: 'Legendary' },
+  { key: 'mythic',   stars: 5, w: 2,  label: 'Mythical' }
+];
+
+/* Nine per set: three common, two uncommon, two rare, one legendary, one mythical. The shape is
+   fixed so a new set is only names and a tint. */
+const SET_SHAPE = ['common', 'common', 'common', 'uncommon', 'uncommon', 'rare', 'rare', 'legend', 'mythic'];
+
+/* Nine reusable motifs, cycled across every set. Placeholder art on purpose — the feature is the
+   album, not the illustration. */
+const CARD_MOTIFS = [
+  { icon: 'sprout',    tint: '#8ce99a' },
+  { icon: 'petal',     tint: '#ffc9de' },
+  { icon: 'sparkle',   tint: '#c9b6ff' },
+  { icon: 'lantern',   tint: '#ffd6a5' },
+  { icon: 'butterfly', tint: '#a5d8ff' },
+  { icon: 'hive',      tint: '#ffe066' },
+  { icon: 'teacup',    tint: '#d8b4a0' },
+  { icon: 'clover',    tint: '#b2f2bb' },
+  { icon: 'star',      tint: '#ffd43b' }
+];
+
+const ALBUM_SETS = [
+  { id: 'firstlight', name: 'First Light',     tint: '#ffe3bf', cards: ['Dawn Chorus', 'Dewfall', 'The Early Row', 'Frost on the Gate', 'Mist Over the Beds', 'Long Shadows', 'The Watering Can', 'Sunrise Bloom', 'The First Warmth'] },
+  { id: 'harvestmoon', name: 'Harvest Moon',   tint: '#ffd6a5', cards: ['Full Moon', 'The Late Crop', 'Lantern Path', 'Moths at the Window', 'Cider Press', 'The Long Table', 'Autumn Wreath', 'Moonlit Furrow', 'The Harvest Song'] },
+  { id: 'goodneighbours', name: 'Good Neighbours', tint: '#b2f2bb', cards: ['Over the Fence', 'Borrowed Shears', 'The Spare Seedling', 'Jam for the Postman', 'A Cutting to Share', 'The Shared Wall', 'Left on the Step', 'Village Show', 'The Kindest Gardener'] },
+  { id: 'smallvisitors', name: 'Small Visitors', tint: '#a5d8ff', cards: ['Bumblebee', 'Ladybird', 'Garden Snail', 'The Bold Robin', 'Hedgehog at Dusk', 'Dragonfly', 'The Fox Who Waits', 'Barn Owl', 'The Rare Moth'] },
+  { id: 'weatherwatch', name: 'Weather Watch',  tint: '#c5f6fa', cards: ['Soft Rain', 'Sun After Rain', 'The Still Morning', 'Thunder Far Off', 'Petrichor', 'Hailstones', 'The Green Sky', 'Aurora', 'The Wonderfall'] },
+  { id: 'toolshed', name: 'The Tool Shed',      tint: '#e9d8c4', cards: ['Trowel', 'Twine', 'The Good Gloves', 'Terracotta Pots', 'Seed Tins', 'The Wheelbarrow', 'Grandfather\u2019s Spade', 'The Brass Tap', 'The Lost Key'] },
+  { id: 'nightgarden', name: 'The Night Garden', tint: '#c9b6ff', cards: ['Evening Primrose', 'Moonflower', 'Night Scent', 'The Owl\u2019s Round', 'Glow Worms', 'Stars Through Leaves', 'The Sleeping Hive', 'Midnight Bloom', 'What Blooms Once'] },
+  { id: 'sweetthings', name: 'Sweet Things',    tint: '#ffc9de', cards: ['Honeycomb', 'Elderflower Cordial', 'Windfall Apples', 'Bramble Jam', 'The Cake on the Sill', 'Sugared Petals', 'Rosehip Syrup', 'The Secret Recipe', 'First Honey'] },
+  { id: 'ledger', name: 'The Gardener\u2019s Ledger', tint: '#d8cfc0', cards: ['Seed Packets', 'Pressed Flowers', 'The Margin Note', 'A Bad Year', 'The Good Year', 'Sketch of a Bee', 'Weather Notes', 'The Last Page', 'What Was Planted First'] },
+  { id: 'wildedge', name: 'The Wild Edge',      tint: '#8ce99a', cards: ['Nettles', 'The Unmown Corner', 'Bindweed', 'Seedheads', 'Where the Fence Ends', 'The Old Hedge', 'Foxgloves', 'The Path Nobody Cut', 'What Grew Back'] },
+  { id: 'keeping', name: 'Keeping',             tint: '#ffe066', cards: ['Dried Bunches', 'The Cold Frame', 'Wrapped in Newspaper', 'Root Cellar', 'Labelled Jars', 'The Saved Seed', 'Overwintering', 'The Long Wait', 'Come Spring'] },
+  { id: 'openquestion', name: 'The Open Question', tint: '#ffd43b', cards: ['A Gate You Did Not Build', 'Footprints in the Beds', 'The Bell Nobody Rang', 'Someone Has Been Weeding', 'A Note, Unsigned', 'The Locked Greenhouse', 'What the Flower Won\u2019t Say', 'The Ninth Row', 'Not Yet'] }
+];
+
+const ALBUM = {
+  season: 'The Long Season',
+  packSize: 3,
+  sets: ALBUM_SETS.map((set) => ({
+    id: set.id,
+    name: set.name,
+    tint: set.tint,
+    cards: set.cards.map((name, i) => ({
+      id: `${set.id}_${i}`,
+      name,
+      rarity: SET_SHAPE[i],
+      art: CARD_MOTIFS[i]
+    }))
+  }))
+};
+
 const DATA = {
   rarity: [
     { key: 'common', w: 70, m: 1, a: '', label: 'Common' },

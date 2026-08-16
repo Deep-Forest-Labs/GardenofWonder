@@ -19,7 +19,7 @@ globalThis.localStorage = {
 
 /* The game files are plain scripts that declare globals, so evaluate them and
    then re-export what they defined onto globalThis. */
-const GLOBALS = ['DATA', 'WONDER', 'DAY', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
+const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
   'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'flowerValue', 'Game'];
 
 function loadScript(file) {
@@ -1824,6 +1824,134 @@ check('skipping cannot manufacture a rare mutation', (() => {
   }
   clock = keep;
   return skyNow === 'wonderfall' && wonders === 0;
+})());
+G.reset();
+
+group('the card album is well formed');
+G.reset();
+check('twelve sets of nine', ALBUM.sets.length === 12 && ALBUM.sets.every((s) => s.cards.length === 9));
+check('every set has the same rarity shape', (() => {
+  const shape = ALBUM.sets[0].cards.map((c) => c.rarity).join(',');
+  return ALBUM.sets.every((s) => s.cards.map((c) => c.rarity).join(',') === shape);
+})());
+check('exactly one mythical per set',
+  ALBUM.sets.every((s) => s.cards.filter((c) => c.rarity === 'mythic').length === 1));
+check('card ids are unique', (() => {
+  const ids = ALBUM.sets.flatMap((s) => s.cards.map((c) => c.id));
+  return new Set(ids).size === ids.length;
+})());
+check('card names are unique', (() => {
+  const names = ALBUM.sets.flatMap((s) => s.cards.map((c) => c.name));
+  return new Set(names).size === names.length;
+})());
+check('every card carries art', ALBUM.sets.every((s) => s.cards.every((c) => c.art && (c.art.icon || c.art.src))));
+check('rarer cards are scarcer in the table', (() => {
+  const w = CARD_RARITIES.map((r) => r.w);
+  return w.every((x, i) => i === 0 || x < w[i - 1]);
+})());
+check('stars climb with rarity',
+  CARD_RARITIES.every((r, i) => r.stars === i + 1));
+check('the album totals 108', G.albumTotal() === 108);
+
+group('opening packs');
+G.reset();
+check('no packs means no opening', G.openPack() === null);
+check('granting packs works', G.grantPacks(5) === 5);
+check('opening spends exactly one', (() => {
+  const r = G.openPack();
+  return r && r.packsLeft === 4;
+})());
+check('a pack holds three cards', (() => {
+  const r = G.openPack();
+  return r && r.drawn.length === ALBUM.packSize;
+})());
+check('every drawn card is real',
+  (() => { const r = G.openPack(); return r.drawn.every((d) => G.cardById(d.card.id) && d.set); })());
+check('owning is recorded as a count, not a flag', (() => {
+  G.reset();
+  G.grantPacks(1);
+  const r = G.openPack();
+  return r.drawn.every((d) => G.cardCount(d.card.id) >= 1);
+})());
+check('duplicates increment rather than overwrite', (() => {
+  G.reset();
+  const id = ALBUM.sets[0].cards[0].id;
+  S.cards[id] = 2;
+  S.cards[id] = G.cardCount(id) + 1;
+  return G.cardCount(id) === 3;
+})());
+check('the draw prefers cards you are missing', (() => {
+  /* Fill every common but one, then draw many commons: the gap should close almost at once. */
+  G.reset();
+  const commons = ALBUM.sets.flatMap((s) => s.cards.filter((c) => c.rarity === 'common'));
+  const hole = commons[7];
+  commons.forEach((c) => { if (c.id !== hole.id) S.cards[c.id] = 1; });
+  G.grantPacks(40);
+  for (let i = 0; i < 40 && !G.hasCard(hole.id); i += 1) G.openPack();
+  return G.hasCard(hole.id);
+})());
+check('a full album still opens without erroring', (() => {
+  G.reset();
+  ALBUM.sets.forEach((s) => s.cards.forEach((c) => { S.cards[c.id] = 1; }));
+  G.grantPacks(3);
+  const r = G.openPack();
+  return r && r.drawn.length === ALBUM.packSize && r.drawn.every((d) => !d.isNew);
+})());
+
+group('sets and album completion');
+G.reset();
+check('a fresh album owns nothing', G.albumOwned() === 0 && G.setOwned('firstlight') === 0);
+check('set progress counts distinct cards, not copies', (() => {
+  const set = ALBUM.sets[0];
+  S.cards[set.cards[0].id] = 5;
+  return G.setOwned(set.id) === 1;
+})());
+check('a set completes at nine', (() => {
+  const set = ALBUM.sets[0];
+  set.cards.forEach((c) => { S.cards[c.id] = 1; });
+  return G.setComplete(set.id) && G.setOwned(set.id) === 9;
+})());
+check('completion is reported once, on the pack that finishes it', (() => {
+  G.reset();
+  const set = ALBUM.sets[0];
+  set.cards.forEach((c, i) => { if (i > 0) S.cards[c.id] = 1; });
+  const missing = set.cards[0];
+  G.grantPacks(200);
+  let sawIt = 0;
+  for (let i = 0; i < 200; i += 1) {
+    const r = G.openPack();
+    if (!r) break;
+    if (r.completedSets.indexOf(set.id) !== -1) sawIt += 1;
+    if (G.setComplete(set.id) && sawIt) break;
+  }
+  return G.hasCard(missing.id) && sawIt === 1;
+})());
+check('a completed set is only claimed once', (() => {
+  const set = ALBUM.sets[0];
+  return S.setsClaimed.filter((x) => x === set.id).length <= 1;
+})());
+check('the album counts every set', (() => {
+  G.reset();
+  ALBUM.sets.forEach((s) => s.cards.forEach((c) => { S.cards[c.id] = 1; }));
+  return G.albumOwned() === G.albumTotal();
+})());
+
+group('the album survives a reload');
+G.reset();
+S.cards[ALBUM.sets[3].cards[2].id] = 4;
+S.packs = 7;
+G.saveNow();
+G.load();
+check('owned cards persist', G.cardCount(ALBUM.sets[3].cards[2].id) === 4);
+check('packs persist', S.packs === 7);
+check('an old save without an album still loads', (() => {
+  const prior = JSON.parse(JSON.stringify(S));
+  delete prior.cards;
+  delete prior.packs;
+  delete prior.setsClaimed;
+  store['gw-save'] = JSON.stringify(prior);
+  G.load();
+  return typeof S.cards === 'object' && S.packs === 0 && Array.isArray(S.setsClaimed);
 })());
 G.reset();
 

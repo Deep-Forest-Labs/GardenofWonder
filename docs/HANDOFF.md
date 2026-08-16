@@ -12,6 +12,13 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **The card album shipped 2026-08-15.** 12 sets of 9 = 108 cards in one season, packs of three,
+> and the reveal. **Independent of the garden by design** — no card is earned by growing anything.
+> **Card art is a slot**: `{ icon, tint }` draws a placeholder from the icon vocabulary, `{ src }`
+> would carry a real illustration, so finished art can arrive without touching code and without
+> breaking the no-binary-assets rule. Remaining: the spawning-pack proc, dust, seasons, completion
+> rewards. See [19-card-album.md](19-card-album.md).
+
 > **Gems got a faucet fix and real sinks, 2026-08-15.** Drop chance now derives from grow time, so
 > gems/hour is flat across the ladder and Daisy-spamming is no longer the best gem farm. Gems buy
 > **calling a sky** (Rain 8, Thunderstorm 25 — which also pulls every unspent mutation roll into the
@@ -266,7 +273,8 @@ This supersedes the ordering above where they conflict. Reasoning in
 6. ~~**Two-axis offline earnings (rate × duration)**~~ — **done 2026-08-15**, along with the
    welcome-back scene it reports into. Both axes are upgradeable and clamped, the cap is stated
    openly, and income only accrues from automation the player actually owns.
-7. **The card album** — [19-card-album.md](19-card-album.md). A **parallel meta, independent of the
+7. ~~**The card album**~~ — **built 2026-08-15**, minus the spawning proc, dust, seasons and
+   completion rewards. [19-card-album.md](19-card-album.md). A **parallel meta, independent of the
    garden**: packs from quests, levels, dailies, the shop and a random spawn on a plant; ~12 sets of
    9 per themed season, with its own art and story. Model a card as an owned instance with an id, not
    a boolean, so dust and any future trading stay possible. **Paid randomized packs are loot boxes —
@@ -414,7 +422,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 394 assertions over the simulation layer
+node tools/sim-test.js          # 421 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
