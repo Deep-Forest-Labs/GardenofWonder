@@ -38,25 +38,37 @@
   .pill[data-on="1"] { background: var(--gold); }
 
   /* ---- board ---- */
+  /* Rows are declared explicitly. Left implicit they size to their content, so
+     dropping an item into a cell grew that row and shoved the whole board. */
   #board {
+    --n: 6;
     width: 100%; max-width: 440px; aspect-ratio: 1;
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    display: grid;
+    grid-template-columns: repeat(var(--n), 1fr);
+    grid-template-rows: repeat(var(--n), 1fr);
+    gap: 5px;
     padding: 8px; border: 4px solid var(--ink); border-radius: 18px;
     background: var(--cell); box-shadow: var(--shadow);
     touch-action: none;
   }
   .cell {
-    position: relative; border-radius: 11px; background: var(--cell-in);
+    position: relative; min-width: 0; min-height: 0;
+    border-radius: 10px; background: var(--cell-in);
     box-shadow: inset 0 3px 0 rgba(0,0,0,.13);
-    display: flex; align-items: center; justify-content: center;
     transition: background .1s, box-shadow .1s;
   }
   .cell.over { background: #c99a68; box-shadow: inset 0 0 0 3px var(--gold); }
   .cell.bad  { box-shadow: inset 0 0 0 3px #e06a5a; }
+  .cell.locked {
+    background: #8f6c48; box-shadow: inset 0 3px 0 rgba(0,0,0,.2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cell.locked svg { width: 42%; height: 42%; opacity: .45; }
 
   /* ---- items ---- */
+  /* Absolute, so an item can never contribute to its cell's size. */
   .item {
-    position: relative; width: 88%; height: 88%;
+    position: absolute; inset: 6%;
     display: flex; align-items: center; justify-content: center;
     cursor: grab; touch-action: none; user-select: none;
   }
@@ -96,7 +108,7 @@
     border: 4px solid var(--ink); border-radius: 16px; background: var(--paper-dk);
     box-shadow: var(--shadow); overflow-x: auto; touch-action: pan-x;
   }
-  #basket .item { width: 54px; height: 54px; flex: 0 0 54px; }
+  #basket .item { position: relative; inset: auto; width: 54px; height: 54px; flex: 0 0 54px; }
   #basket:empty::after { content: 'empty — harvest something'; color: var(--ink-soft); font-size: 12px; align-self: center; padding-left: 6px; }
 
   #controls { width: 100%; max-width: 440px; display: flex; gap: 8px; flex-wrap: wrap; }
@@ -123,6 +135,7 @@
   <button class="pill" id="harvestBtn">Harvest ×3</button>
   <button class="pill" id="harvestBigBtn">Harvest ×10</button>
   <button class="pill" id="legendaryBtn">Legendary drop</button>
+  <button class="pill" id="expandBtn">Expand bench</button>
 </div>
 
 <div id="log"></div>
@@ -140,13 +153,23 @@
     { name: 'Flower Crown',  fill: '#c8a2ff', edge: '#6d43b8' }
   ];
 
-  const SIZE = 25;
+  const COLS = 6;                        // the board never changes size
+  const SIZE = COLS * COLS;
+  const START_SIDE = 4;                  // how much of it starts unlocked
   const S = {
     cells: new Array(SIZE).fill(null),   // { tier, count }
     basket: [],                          // tier numbers
     threshold: 3,
+    side: START_SIDE,                    // unlocked square, side length
     made: {}
   };
+
+  const unlocked = i => Math.floor(i / COLS) < S.side && (i % COLS) < S.side;
+  const firstFree = () => S.cells.findIndex((c, i) => !c && unlocked(i));
+
+  const LOCK = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
+    '<path d="M30 46V32a20 20 0 0 1 40 0v14" fill="none" stroke="#3d2a1c" stroke-width="9" stroke-linecap="round"/>' +
+    '<rect x="20" y="46" width="60" height="44" rx="9" fill="#3d2a1c"/></svg>';
 
   const $ = s => document.querySelector(s);
   const board = $('#board');
@@ -205,11 +228,18 @@
 
   // ---- render ---------------------------------------------------------
   function render() {
+    board.style.setProperty('--n', COLS);
     board.innerHTML = '';
     S.cells.forEach((c, i) => {
       const cell = document.createElement('div');
       cell.className = 'cell';
       cell.dataset.idx = i;
+      if (!unlocked(i)) {
+        cell.classList.add('locked');
+        cell.innerHTML = LOCK;
+        board.appendChild(cell);
+        return;
+      }
       if (c) {
         const n = itemNode(c.tier, c.count);
         n.dataset.from = 'board';
@@ -227,9 +257,17 @@
       basket.appendChild(n);
     });
 
+    const total = S.side * S.side;
+    const used = S.cells.filter((c, i) => c && unlocked(i)).length;
     const bits = Object.keys(S.made).sort((a, b) => b - a)
       .map(t => `<b>${S.made[t]}×</b> ${CHAIN[t].name}`);
-    log.innerHTML = bits.length ? 'Made: ' + bits.join(' · ') : 'Drag a petal from the basket onto the board.';
+    log.innerHTML = `Bench <b>${S.side}×${S.side}</b> · <b>${used}/${total}</b> used` +
+      (bits.length ? '<br>Made: ' + bits.join(' · ') : '');
+
+    const btn = $('#expandBtn');
+    btn.textContent = S.side < COLS ? `Expand to ${S.side + 1}×${S.side + 1}` : 'Bench maxed';
+    btn.disabled = S.side >= COLS;
+    btn.style.opacity = S.side >= COLS ? .5 : 1;
   }
 
   function flash(idx, cls) {
@@ -261,6 +299,7 @@
   function drop(from, srcIdx, dstIdx) {
     const src = take(from, srcIdx);
     if (!src) return null;
+    if (!unlocked(dstIdx)) return null;
     if (from === 'board' && srcIdx === dstIdx) return null;
 
     const dst = S.cells[dstIdx];
@@ -281,7 +320,7 @@
       const left = total - S.threshold;
       S.cells[dstIdx] = { tier: src.tier + 1, count: 1 };
       if (left > 0) {
-        const spot = S.cells.indexOf(null);
+        const spot = firstFree();
         if (spot >= 0) S.cells[spot] = { tier: src.tier, count: left };
         else S.basket.push(src.tier);
       }
@@ -346,9 +385,9 @@
     const dstIdx = Number(cell.dataset.idx);
     const src = take(drag.from, drag.idx);
     const dst = S.cells[dstIdx];
-    const ok = !dst
+    const ok = unlocked(dstIdx) && (!dst
       || (dst.tier === src.tier && src.tier < CHAIN.length - 1
-          && !(drag.from === 'board' && drag.idx === dstIdx));
+          && !(drag.from === 'board' && drag.idx === dstIdx)));
     cell.classList.add(ok ? 'over' : 'bad');
   }
 
@@ -399,10 +438,16 @@
   $('#harvestBtn').addEventListener('click', () => harvest(3));
   $('#harvestBigBtn').addEventListener('click', () => harvest(10));
   $('#legendaryBtn').addEventListener('click', () => harvest(1, 3));
+  $('#expandBtn').addEventListener('click', () => {
+    if (S.side >= COLS) return;
+    S.side++;
+    render();
+  });
   $('#clearBtn').addEventListener('click', () => {
     S.cells = new Array(SIZE).fill(null);
     S.basket = [];
     S.made = {};
+    S.side = START_SIDE;
     render();
   });
   $('#modeBtn').addEventListener('click', e => {
