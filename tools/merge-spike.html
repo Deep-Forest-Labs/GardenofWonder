@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Bloom Chain — merge feel spike</title>
+<style>
+  :root {
+    --paper: #f7ead1;
+    --paper-dk: #e8d5b0;
+    --ink: #3d2a1c;
+    --ink-soft: #7a6047;
+    --cell: #b58a5f;
+    --cell-in: #a2764c;
+    --gold: #ffc94a;
+    --shadow: 0 4px 0 rgba(61,42,28,.35);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Baloo 2', ui-rounded, 'Trebuchet MS', system-ui, sans-serif;
+    font-weight: 700;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+  body { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px; }
+
+  header { width: 100%; max-width: 440px; display: flex; align-items: center; gap: 8px; }
+  h1 { font-size: 16px; margin: 0; flex: 1; letter-spacing: .2px; }
+  .pill {
+    border: 3px solid var(--ink); border-radius: 999px; background: var(--paper-dk);
+    padding: 5px 11px; font-size: 13px; box-shadow: var(--shadow); cursor: pointer;
+    font-family: inherit; font-weight: 700; color: var(--ink);
+  }
+  .pill:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(61,42,28,.35); }
+  .pill[data-on="1"] { background: var(--gold); }
+
+  /* ---- board ---- */
+  #board {
+    width: 100%; max-width: 440px; aspect-ratio: 1;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    padding: 8px; border: 4px solid var(--ink); border-radius: 18px;
+    background: var(--cell); box-shadow: var(--shadow);
+    touch-action: none;
+  }
+  .cell {
+    position: relative; border-radius: 11px; background: var(--cell-in);
+    box-shadow: inset 0 3px 0 rgba(0,0,0,.13);
+    display: flex; align-items: center; justify-content: center;
+    transition: background .1s, box-shadow .1s;
+  }
+  .cell.over { background: #c99a68; box-shadow: inset 0 0 0 3px var(--gold); }
+  .cell.bad  { box-shadow: inset 0 0 0 3px #e06a5a; }
+
+  /* ---- items ---- */
+  .item {
+    position: relative; width: 88%; height: 88%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: grab; touch-action: none; user-select: none;
+  }
+  .item svg { width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .item .count {
+    position: absolute; right: -3px; bottom: -3px;
+    min-width: 19px; height: 19px; padding: 0 3px;
+    border: 2.5px solid var(--ink); border-radius: 999px;
+    background: var(--paper); color: var(--ink);
+    font-size: 11px; line-height: 15px; text-align: center;
+  }
+  .item.drag { opacity: .28; }
+  #ghost {
+    position: fixed; z-index: 50; width: 64px; height: 64px; pointer-events: none;
+    transform: translate(-50%, -50%) scale(1.18) rotate(-4deg);
+    filter: drop-shadow(0 8px 6px rgba(61,42,28,.4));
+  }
+  #ghost svg { width: 100%; height: 100%; overflow: visible; }
+
+  @keyframes pop { 0% { transform: scale(.4); } 55% { transform: scale(1.22); } 100% { transform: scale(1); } }
+  @keyframes nudge { 0%,100% { transform: scale(1); } 50% { transform: scale(1.09); } }
+  .item.merged { animation: pop .34s cubic-bezier(.34,1.56,.64,1); }
+  .item.added  { animation: nudge .2s ease-out; }
+
+  .ring {
+    position: absolute; inset: -6%; border-radius: 50%;
+    border: 4px solid var(--gold); opacity: 0; pointer-events: none;
+  }
+  @keyframes ringOut { 0% { transform: scale(.5); opacity: 1; } 100% { transform: scale(1.7); opacity: 0; } }
+  .ring.go { animation: ringOut .5s ease-out; }
+
+  /* ---- basket ---- */
+  #basketWrap { width: 100%; max-width: 440px; }
+  .label { font-size: 12px; color: var(--ink-soft); margin: 0 0 4px 2px; }
+  #basket {
+    display: flex; gap: 6px; padding: 7px; min-height: 72px;
+    border: 4px solid var(--ink); border-radius: 16px; background: var(--paper-dk);
+    box-shadow: var(--shadow); overflow-x: auto; touch-action: pan-x;
+  }
+  #basket .item { width: 54px; height: 54px; flex: 0 0 54px; }
+  #basket:empty::after { content: 'empty — harvest something'; color: var(--ink-soft); font-size: 12px; align-self: center; padding-left: 6px; }
+
+  #controls { width: 100%; max-width: 440px; display: flex; gap: 8px; flex-wrap: wrap; }
+  #log { width: 100%; max-width: 440px; font-size: 12px; color: var(--ink-soft); min-height: 34px; line-height: 1.45; }
+  #log b { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Bloom chain — feel spike</h1>
+  <button class="pill" id="modeBtn">merge-3</button>
+  <button class="pill" id="clearBtn">clear</button>
+</header>
+
+<div id="board" aria-label="merge board"></div>
+
+<div id="basketWrap">
+  <p class="label">Basket — drag onto the board</p>
+  <div id="basket"></div>
+</div>
+
+<div id="controls">
+  <button class="pill" id="harvestBtn">Harvest ×3</button>
+  <button class="pill" id="harvestBigBtn">Harvest ×10</button>
+  <button class="pill" id="legendaryBtn">Legendary drop</button>
+</div>
+
+<div id="log"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const CHAIN = [
+    { name: 'Petal',         fill: '#ff9ec4', edge: '#d4577f' },
+    { name: 'Posy',          fill: '#ffb3d1', edge: '#d4577f' },
+    { name: 'Bouquet',       fill: '#ffd166', edge: '#c98a1e' },
+    { name: 'Flower Basket', fill: '#e2a15c', edge: '#9c5f26' },
+    { name: 'Wreath',        fill: '#8ce99a', edge: '#3d8b4d' },
+    { name: 'Flower Crown',  fill: '#c8a2ff', edge: '#6d43b8' }
+  ];
+
+  const SIZE = 25;
+  const S = {
+    cells: new Array(SIZE).fill(null),   // { tier, count }
+    basket: [],                          // tier numbers
+    threshold: 3,
+    made: {}
+  };
+
+  const $ = s => document.querySelector(s);
+  const board = $('#board');
+  const basket = $('#basket');
+  const log = $('#log');
+
+  // ---- art ------------------------------------------------------------
+  // Six silhouettes that stay distinct at thumbnail size: teardrop,
+  // cluster, cone, handle, ring, crown.
+  function shape(tier) {
+    const c = CHAIN[tier];
+    const f = c.fill, e = c.edge;
+    const S = `stroke="${e}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"`;
+    const body = [
+      // 0 Petal
+      `<path d="M50 12 C74 34 74 62 50 88 C26 62 26 34 50 12Z" fill="${f}" ${S}/>`,
+      // 1 Posy
+      `<path d="M50 92 L38 62 M50 92 L62 62 M50 92 L50 58" stroke="${e}" stroke-width="6" fill="none" stroke-linecap="round"/>
+       <circle cx="32" cy="50" r="17" fill="${f}" ${S}/>
+       <circle cx="68" cy="50" r="17" fill="${f}" ${S}/>
+       <circle cx="50" cy="30" r="18" fill="${f}" ${S}/>`,
+      // 2 Bouquet
+      `<path d="M34 56 L50 96 L66 56Z" fill="#f6e3c2" ${S}/>
+       <circle cx="30" cy="44" r="16" fill="${f}" ${S}/>
+       <circle cx="70" cy="44" r="16" fill="${f}" ${S}/>
+       <circle cx="50" cy="28" r="18" fill="${f}" ${S}/>`,
+      // 3 Flower Basket
+      `<path d="M28 22 C28 -2 72 -2 72 22" fill="none" stroke="${e}" stroke-width="6" stroke-linecap="round"/>
+       <path d="M16 40 L84 40 L72 92 L28 92Z" fill="${f}" ${S}/>
+       <path d="M16 40 L84 40" stroke="${e}" stroke-width="6" stroke-linecap="round"/>
+       <circle cx="36" cy="30" r="11" fill="#ff9ec4" ${S}/>
+       <circle cx="64" cy="30" r="11" fill="#ffd166" ${S}/>`,
+      // 4 Wreath
+      `<circle cx="50" cy="52" r="33" fill="none" stroke="${e}" stroke-width="15"/>
+       <circle cx="50" cy="52" r="33" fill="none" stroke="${f}" stroke-width="9"/>
+       <circle cx="50" cy="19" r="10" fill="#ff9ec4" ${S}/>
+       <circle cx="83" cy="52" r="10" fill="#ffd166" ${S}/>
+       <circle cx="50" cy="85" r="10" fill="#c8a2ff" ${S}/>
+       <circle cx="17" cy="52" r="10" fill="#8ce99a" ${S}/>`,
+      // 5 Flower Crown
+      `<path d="M16 78 L16 40 L33 56 L50 28 L67 56 L84 40 L84 78Z" fill="${f}" ${S}/>
+       <circle cx="50" cy="24" r="11" fill="#ffd166" ${S}/>
+       <circle cx="16" cy="38" r="9" fill="#ff9ec4" ${S}/>
+       <circle cx="84" cy="38" r="9" fill="#8ce99a" ${S}/>`
+    ][tier];
+    return `<svg viewBox="0 0 100 100" aria-hidden="true">${body}</svg>`;
+  }
+
+  function itemNode(tier, count) {
+    const n = document.createElement('div');
+    n.className = 'item';
+    n.innerHTML = shape(tier) + '<span class="ring"></span>' +
+      (count > 1 ? `<span class="count">${count}</span>` : '');
+    return n;
+  }
+
+  // ---- render ---------------------------------------------------------
+  function render() {
+    board.innerHTML = '';
+    S.cells.forEach((c, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.idx = i;
+      if (c) {
+        const n = itemNode(c.tier, c.count);
+        n.dataset.from = 'board';
+        n.dataset.idx = i;
+        cell.appendChild(n);
+      }
+      board.appendChild(cell);
+    });
+
+    basket.innerHTML = '';
+    S.basket.forEach((tier, i) => {
+      const n = itemNode(tier, 1);
+      n.dataset.from = 'basket';
+      n.dataset.idx = i;
+      basket.appendChild(n);
+    });
+
+    const bits = Object.keys(S.made).sort((a, b) => b - a)
+      .map(t => `<b>${S.made[t]}×</b> ${CHAIN[t].name}`);
+    log.innerHTML = bits.length ? 'Made: ' + bits.join(' · ') : 'Drag a petal from the basket onto the board.';
+  }
+
+  function flash(idx, cls) {
+    const n = board.children[idx] && board.children[idx].firstChild;
+    if (!n) return;
+    n.classList.remove(cls);
+    void n.offsetWidth;
+    n.classList.add(cls);
+    if (cls === 'merged') {
+      const ring = n.querySelector('.ring');
+      ring.classList.remove('go');
+      void ring.offsetWidth;
+      ring.classList.add('go');
+    }
+  }
+
+  // ---- rules ----------------------------------------------------------
+  function take(from, idx) {
+    if (from === 'basket') return { tier: S.basket[idx], count: 1 };
+    return S.cells[idx];
+  }
+
+  function remove(from, idx) {
+    if (from === 'basket') S.basket.splice(idx, 1);
+    else S.cells[idx] = null;
+  }
+
+  // Returns 'merge' | 'move' | 'stack' | null
+  function drop(from, srcIdx, dstIdx) {
+    const src = take(from, srcIdx);
+    if (!src) return null;
+    if (from === 'board' && srcIdx === dstIdx) return null;
+
+    const dst = S.cells[dstIdx];
+
+    if (!dst) {
+      remove(from, srcIdx);
+      S.cells[dstIdx] = { tier: src.tier, count: src.count };
+      return 'move';
+    }
+
+    if (dst.tier !== src.tier) return null;
+    if (src.tier >= CHAIN.length - 1) return null;   // top of the chain
+
+    const total = dst.count + src.count;
+    remove(from, srcIdx);
+
+    if (total >= S.threshold) {
+      const left = total - S.threshold;
+      S.cells[dstIdx] = { tier: src.tier + 1, count: 1 };
+      if (left > 0) {
+        const spot = S.cells.indexOf(null);
+        if (spot >= 0) S.cells[spot] = { tier: src.tier, count: left };
+        else S.basket.push(src.tier);
+      }
+      S.made[src.tier + 1] = (S.made[src.tier + 1] || 0) + 1;
+      return 'merge';
+    }
+
+    S.cells[dstIdx] = { tier: dst.tier, count: total };
+    return 'stack';
+  }
+
+  // ---- dragging -------------------------------------------------------
+  let drag = null;
+
+  function onDown(e) {
+    const item = e.target.closest('.item');
+    if (!item) return;
+    e.preventDefault();
+
+    const ghost = document.createElement('div');
+    ghost.id = 'ghost';
+    ghost.innerHTML = item.querySelector('svg').outerHTML;
+    document.body.appendChild(ghost);
+
+    const host = e.currentTarget;
+    drag = {
+      from: item.dataset.from,
+      idx: Number(item.dataset.idx),
+      node: item,
+      ghost,
+      cell: null,
+      host,
+      id: e.pointerId
+    };
+    item.classList.add('drag');
+    move(e);
+
+    // Capture on the container, not the item — the item is replaced by
+    // render() and a lost pointer would otherwise strand the ghost.
+    try { host.setPointerCapture(e.pointerId); } catch (_) {}
+    host.addEventListener('pointermove', move);
+    host.addEventListener('pointerup', up);
+    host.addEventListener('pointercancel', up);
+    host.addEventListener('lostpointercapture', up);
+  }
+
+  function move(e) {
+    if (!drag) return;
+    drag.ghost.style.left = e.clientX + 'px';
+    drag.ghost.style.top = e.clientY + 'px';
+
+    drag.ghost.style.visibility = 'hidden';
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    drag.ghost.style.visibility = '';
+    const cell = under && under.closest('.cell');
+
+    if (cell === drag.cell) return;
+    if (drag.cell) drag.cell.classList.remove('over', 'bad');
+    drag.cell = cell;
+    if (!cell) return;
+
+    const dstIdx = Number(cell.dataset.idx);
+    const src = take(drag.from, drag.idx);
+    const dst = S.cells[dstIdx];
+    const ok = !dst
+      || (dst.tier === src.tier && src.tier < CHAIN.length - 1
+          && !(drag.from === 'board' && drag.idx === dstIdx));
+    cell.classList.add(ok ? 'over' : 'bad');
+  }
+
+  function up(e) {
+    if (!drag) return;
+    const host = drag.host;
+    host.removeEventListener('pointermove', move);
+    host.removeEventListener('pointerup', up);
+    host.removeEventListener('pointercancel', up);
+    host.removeEventListener('lostpointercapture', up);
+    try { host.releasePointerCapture(drag.id); } catch (_) {}
+
+    const cell = drag.cell;
+    drag.ghost.remove();
+    drag.node.classList.remove('drag');
+    if (cell) cell.classList.remove('over', 'bad');
+
+    const from = drag.from, srcIdx = drag.idx;
+    drag = null;
+
+    if (!cell) { render(); return; }
+
+    const dstIdx = Number(cell.dataset.idx);
+    const result = drop(from, srcIdx, dstIdx);
+    render();
+    if (result === 'merge') flash(dstIdx, 'merged');
+    else if (result) flash(dstIdx, 'added');
+  }
+
+  board.addEventListener('pointerdown', onDown);
+  basket.addEventListener('pointerdown', onDown);
+
+  // ---- controls -------------------------------------------------------
+  // Entry tier stands in for `seedBucket + rarityBump` — the spike only
+  // needs the spread, not the real formula.
+  function harvest(n, forceTier) {
+    for (let i = 0; i < n; i++) {
+      let tier = forceTier;
+      if (tier === undefined) {
+        const r = Math.random();
+        tier = r < 0.70 ? 0 : r < 0.90 ? 1 : r < 0.98 ? 2 : 3;
+      }
+      S.basket.push(tier);
+    }
+    render();
+  }
+
+  $('#harvestBtn').addEventListener('click', () => harvest(3));
+  $('#harvestBigBtn').addEventListener('click', () => harvest(10));
+  $('#legendaryBtn').addEventListener('click', () => harvest(1, 3));
+  $('#clearBtn').addEventListener('click', () => {
+    S.cells = new Array(SIZE).fill(null);
+    S.basket = [];
+    S.made = {};
+    render();
+  });
+  $('#modeBtn').addEventListener('click', e => {
+    S.threshold = S.threshold === 3 ? 2 : 3;
+    e.currentTarget.textContent = 'merge-' + S.threshold;
+    e.currentTarget.dataset.on = S.threshold === 2 ? '1' : '';
+  });
+
+  harvest(8);
+})();
+</script>
+</body>
+</html>
