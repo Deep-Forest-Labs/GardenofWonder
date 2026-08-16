@@ -12,6 +12,14 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **Offline earnings shipped 2026-08-15.** Two upgradeable axes — Moonlight Tending (rate, 25% base)
+> and Lantern Oil (duration, 4h base) — with a 10% trickle past the cap rather than a wall. Income is
+> **earned, not granted**: only plots with an auto-planter count, and only if the drone exists to
+> pick them, so an unautomated garden still earns nothing. **The cap is the retention lever** — 12h
+> banks ~644K, 24h ~805K, so doubling an absence adds a quarter. If offline feels stingy, raise the
+> rate, not the cap. `Dev.simulateAway(3/6/12/24)` winds the world back to test it. See
+> [03-systems.md](03-systems.md#offline-earnings).
+
 > **The welcome-back scene shipped 2026-08-15.** `Game.reconcile()` reports time away, what
 > ripened, which weather passed and what it changed, and honey waiting — as an account, never a
 > total. It stays shut when there is nothing to say. **Note:** the reconciliation bug once logged in
@@ -247,12 +255,9 @@ This supersedes the ordering above where they conflict. Reasoning in
    `Garden · Cards · Market · Shop` ([15-navigation-and-ia.md](15-navigation-and-ia.md) phase 1.5).
 5. **Item-as-key, mementos, hidden blooms, and companion flavour text** — ~150 lines of writing is
    the cheapest differentiator available and the talking flower is a ready-made delivery vehicle.
-6. **Two-axis offline earnings (rate × duration).** ~~The narrated welcome-back scene~~ — **done
-   2026-08-15**, and it is the surface these earnings should report into. What remains is the
-   earning itself: a closed tab still pays nothing beyond what was already in the ground, because
-   automation runs on `requestAnimationFrame`. Start generous (~25% rate / 4h full rate), make both
-   axes upgradeable, and **state the cap openly** — see
-   [17-market-and-positioning.md](17-market-and-positioning.md#offline-progress).
+6. ~~**Two-axis offline earnings (rate × duration)**~~ — **done 2026-08-15**, along with the
+   welcome-back scene it reports into. Both axes are upgradeable and clamped, the cap is stated
+   openly, and income only accrues from automation the player actually owns.
 7. **The card album** — [19-card-album.md](19-card-album.md). A **parallel meta, independent of the
    garden**: packs from quests, levels, dailies, the shop and a random spawn on a plant; ~12 sets of
    9 per themed season, with its own art and story. Model a card as an owned instance with an id, not
@@ -373,6 +378,11 @@ rolls. Both `mutation` and `mutateAt` need their own backfill loop in `load()`, 
 slot number. Caching or persisting the current weather means the design has been misunderstood — the
 point is that any past or future slot is computable on demand.
 
+**Offline income is a closed-form rate, not a replayed simulation.** `passiveIncomeRate()` values
+each auto-planted plot at what its planter would grow and caps the total by the drone's cadence. It
+is O(1) in the length of the absence, deliberately — do not "improve" it by stepping the simulation
+forward across a 24-hour gap.
+
 **Verb effects must be read before the plot is cleared.** `harvest()` captures the neighbourhood —
 Beacon weight, Lantern gem multiplier, the payout multiplier — at the top, because clearing the plot
 changes what its neighbours see. A verb consumer added after the `state.grid[idx] = {...}` line will
@@ -393,7 +403,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 354 assertions over the simulation layer
+node tools/sim-test.js          # 372 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

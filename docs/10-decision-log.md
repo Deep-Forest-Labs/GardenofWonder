@@ -5,6 +5,60 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — Offline earnings on two axes, and a cap that is the whole point
+
+**Built.** Rate and duration as separate upgradeable tracks — Moonlight Tending (25% base, +5%/level,
+clamped at 100%) and Lantern Oil (4h base, +1h/level, clamped at 24h) — with a **10% trickle past the
+cap rather than a hard zero**. Numbers in [04-economy.md](04-economy.md#offline-earnings).
+
+**Two axes rather than one number**, per the Cookie Clicker model recorded in
+[17-market-and-positioning.md](17-market-and-positioning.md#offline-progress). One system yields ~35
+individually meaningful levels, and it turns "how the game treats you while away" from a tax into a
+chain of things to want.
+
+**The cap is the retention mechanic, and the owner called it before I built it.** At base, a fully
+automated garden banks ~644K over 12 hours and ~805K over 24 — **doubling an absence adds a
+quarter**. Returning at the four-hour mark is far more efficient than sleeping on it, which is
+exactly the pull wanted. Recorded in the economy doc: if offline feels stingy, **raise the rate, not
+the cap.**
+
+**A trickle, not a wall.** A hard zero past the cap reads as punishment; a trickle reads as a rule.
+It also keeps the curve monotonic — a sim-test asserts a longer absence never pays less, which a
+hard cap plus any rounding could otherwise violate.
+
+**Offline income is earned, not granted.** `passiveIncomeRate()` pays only for plots that have an
+auto-planter, and only if the drone exists to pick them, valued at what that planter would actually
+grow. **An unautomated garden earns nothing while away.** That is honest — the player was not
+earning passively — and it gives the automation badges a second reason to exist.
+
+**The drone's cadence caps throughput**, since it lifts one plot at a time. Both directions are
+asserted: plots outrunning a slow drone are throttled by it, and a drone faster than the plots adds
+nothing. The second test is the one that matters — without it the model would happily invent income
+from an upgrade that changes nothing.
+
+*Rejected: replaying the simulation forward across the absence.* Faithful, and far too expensive for
+a 24-hour gap. The closed-form rate is accurate enough for a number nobody can audit, and it stays
+O(1) regardless of how long someone was gone.
+
+**`EXPECTED_RARITY_MULT` is derived from `DATA.rarity`**, not hardcoded at 1.58, so the eventual
+rarity retune carries into offline income without anyone remembering to do it.
+
+**The cap is disclosed in the scene.** It names the hours, says what happened after, and points at
+the badge that extends it. Hidden caps read as theft.
+
+**`Dev.simulateAway(hours)` winds the world back, not the clock forward.** Plot planting times,
+mutation moments and hive clocks all move, so plots genuinely mature and rolls genuinely come due —
+the report then comes from the same `reconcile()` a real absence runs. Winding `lastSeen` forward
+instead would have produced a report about a garden that had not actually changed, which is precisely
+the kind of cheat that passes while the feature is broken.
+
+**One bug found in review, not by a test:** the cap notice put `<b>4h</b>` directly inside a
+`display:flex` paragraph, making the bold text its own flex item and breaking the sentence across
+lines. Wrapped in a span. Worth remembering that the `.away-list` items already had span wrappers for
+this exact reason.
+
+---
+
 ## 2026-08-15 — The welcome-back scene, and a known issue that turned out not to be one
 
 **`Game.reconcile()` now reports what happened while the player was away**, and `renderWelcome()`

@@ -1553,5 +1553,136 @@ check('the report names the weather that actually caused it', (() => {
 })());
 G.reset();
 
+group('offline earnings run on two axes');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e15;
+check('base rate and hours match the table',
+  Math.abs(G.offlineRate() - DATA.offline.baseRate) < 1e-9
+  && Math.abs(G.offlineHours() - DATA.offline.baseHours) < 1e-9);
+check('an unautomated garden earns nothing while away', (() => {
+  S.upgrades.autoHarvest = 0;
+  return G.passiveIncomeRate() === 0 && G.offlineEarnings(7200).coins === 0;
+})());
+check('a drone with no planters still earns nothing', (() => {
+  S.upgrades.autoHarvest = 3;
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 0; });
+  return G.passiveIncomeRate() === 0;
+})());
+check('planters plus a drone produce income', (() => {
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+  return G.passiveIncomeRate() > 0;
+})());
+check('the drone cadence caps throughput when the plots outrun it', (() => {
+  /* Planters at level 1 plant Daisies, so eight plots want 8/12 = 0.67 harvests a second — more
+     than a slow drone can lift. Faster drone, more income. */
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 1; });
+  S.upgrades.autoHarvest = 1;
+  const slow = G.passiveIncomeRate();
+  S.upgrades.autoHarvest = 5;
+  const fast = G.passiveIncomeRate();
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+  S.upgrades.autoHarvest = 3;
+  return fast > slow;
+})());
+check('a drone faster than the plots adds nothing', (() => {
+  /* The mirror case: planters at 3 grow Bluebells slowly enough that the drone has spare
+     capacity, so upgrading it further must not invent income. */
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+  S.upgrades.autoHarvest = 5;
+  const a = G.passiveIncomeRate();
+  S.upgrades.autoHarvest = 9;
+  const b = G.passiveIncomeRate();
+  S.upgrades.autoHarvest = 3;
+  return Math.abs(a - b) < 1e-9;
+})());
+check('the rate axis raises earnings', (() => {
+  S.upgrades.offlineRate = 0;
+  const low = G.offlineEarnings(3600).coins;
+  S.upgrades.offlineRate = 10;
+  const high = G.offlineEarnings(3600).coins;
+  S.upgrades.offlineRate = 0;
+  return high > low;
+})());
+check('the rate axis is capped at full pace', (() => {
+  S.upgrades.offlineRate = 999;
+  const r = G.offlineRate();
+  S.upgrades.offlineRate = 0;
+  return r === DATA.offline.maxRate;
+})());
+check('the hours axis is capped', (() => {
+  S.upgrades.offlineHours = 999;
+  const h = G.offlineHours();
+  S.upgrades.offlineHours = 0;
+  return h === DATA.offline.maxHours;
+})());
+check('inside the cap, earnings are linear in time', (() => {
+  const one = G.offlineEarnings(3600);
+  const two = G.offlineEarnings(7200);
+  return !one.capped && !two.capped && Math.abs(two.coins - one.coins * 2) <= 2;
+})());
+check('past the cap it trickles rather than stopping', (() => {
+  const capSec = G.offlineHours() * 3600;
+  const atCap = G.offlineEarnings(capSec);
+  const wayOver = G.offlineEarnings(capSec * 10);
+  return wayOver.capped && wayOver.coins > atCap.coins
+    && wayOver.coins < atCap.coins * 10;
+})());
+check('the trickle matches the configured share', (() => {
+  const capSec = G.offlineHours() * 3600;
+  const atCap = G.offlineEarnings(capSec).coins;
+  const plusOneCap = G.offlineEarnings(capSec * 2).coins;
+  const extra = plusOneCap - atCap;
+  return Math.abs(extra - atCap * DATA.offline.trickle) <= 2;
+})());
+check('a longer absence never pays less', (() => {
+  let prev = -1;
+  for (let h = 1; h <= 72; h += 1) {
+    const c = G.offlineEarnings(h * 3600).coins;
+    if (c < prev) return false;
+    prev = c;
+  }
+  return true;
+})());
+check('reconcile banks the coins and reports the cap', (() => {
+  clearGarden();
+  S.upgrades.autoHarvest = 3;
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+  S.credits = 0;
+  S.lastSeen = G.nowSeconds() - 48 * 3600;
+  const r = G.reconcile();
+  return r && r.earned > 0 && S.credits === r.earned && r.capped === true
+    && r.capHours === DATA.offline.baseHours;
+})());
+
+group('simulating an absence winds the world back');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e15;
+S.upgrades.autoHarvest = 3;
+PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+check('zero hours does nothing', G.Dev.simulateAway(0) === null);
+check('plots that were growing come back ripe', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('eternal'));
+  const r = G.Dev.simulateAway(6);
+  return r && r.ripened >= 1;
+})());
+check('the report covers the hours asked for', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('eternal'));
+  const r = G.Dev.simulateAway(12);
+  return r && Math.abs(r.away - 12 * 3600) < 5;
+})());
+check('a long simulated absence trips the cap', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('eternal'));
+  const r = G.Dev.simulateAway(24);
+  return r && r.capped === true;
+})());
+G.reset();
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

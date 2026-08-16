@@ -264,9 +264,43 @@ back Gilded"* is a garden that lived without you; *"+4,213 coins"* is a bank sta
 distinction is the whole point and is the Neko Atsume lesson recorded in
 [17-market-and-positioning.md](17-market-and-positioning.md#offline-progress).
 
-**Automation still does not run while away** — the drone and auto-planters need the frame loop, so a
-closed tab earns nothing beyond what was already in the ground. That is the next piece of work, not
-an oversight.
+### Offline earnings
+
+**Built 2026-08-15.** Two axes, `DATA.offline`, badges `offlineRate` (Moonlight Tending) and
+`offlineHours` (Lantern Oil).
+
+- **Rate** — share of passive income earned while away. Base **25%**, +5%/level, clamped at 100%.
+- **Duration** — how long full rate lasts. Base **4h**, +1h/level, clamped at 24h.
+- **Past the cap it trickles at 10% of the rate**, never zero.
+
+Two separate tracks on purpose: it turns "how the game treats you while away" into a chain of
+nameable unlocks rather than a wall, and both badges max exactly when their value does.
+
+**What counts as passive income.** `passiveIncomeRate()` returns coins per second the garden makes on
+its own:
+
+- A plot contributes only if it has an **auto-planter**, and only if the **drone** exists to pick it.
+  An unautomated garden earns nothing while away — honest, and it makes automation matter.
+- Each contributing plot is valued at its planter's seed choice, `(expected gross − seed cost) /
+  grow time`, with rarity at its expected 1.58×, plus pollination, boosts, mastery and verbs.
+- **The drone's cadence caps the total**, because it can only lift one plot at a time. A drone faster
+  than the plots adds nothing; plots faster than the drone are throttled by it. Both directions are
+  asserted.
+
+`EXPECTED_RARITY_MULT` is derived from `DATA.rarity` rather than hardcoded, so retuning rarity
+carries through automatically.
+
+**The cap is stated, never hidden.** The welcome-back scene says the lantern burned out, for how
+long, and which badge extends it. Hidden caps read as theft; stated caps read as rules — see
+[17-market-and-positioning.md](17-market-and-positioning.md#offline-progress).
+
+The shape it produces, at base with a fully automated garden: **12h away banks ~644K, 24h banks
+~805K.** Doubling an absence adds a quarter, which is the incentive to return doing its work.
+
+**Simulating an absence.** `Game.Dev.simulateAway(hours)` winds the *world* back — plot planting
+times, mutation moments, hive clocks — rather than winding `lastSeen` forward, so plots genuinely
+mature and rolls genuinely come due, and the report is produced by the same `reconcile()` a real
+absence runs.
 
 ## The day cycle
 

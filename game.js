@@ -16,7 +16,7 @@ const Game = (() => {
     const upgrades = {
       tapPower: 0, holdSpeed: 0, critChance: 0, critMult: 0, comboMeter: 0,
       rainDance: 0, beeSwarm: 0, ladybug: 0,
-      plotExpansion: 0, autoWater: 0, autoHarvest: 0
+      plotExpansion: 0, autoWater: 0, autoHarvest: 0, offlineRate: 0, offlineHours: 0
     };
     PLOT_AUTOPLANTERS.forEach(({ key }) => { upgrades[key] = 0; });
     return {
@@ -191,7 +191,7 @@ const Game = (() => {
       // A save from before these badges existed won't have them — state.upgrades
       // is replaced wholesale by the parsed save above, so each new key needs
       // the same manual backfill as the harvester keys.
-      ['holdSpeed', 'rainDance', 'beeSwarm', 'ladybug'].forEach((key) => {
+      ['holdSpeed', 'rainDance', 'beeSwarm', 'ladybug', 'offlineRate', 'offlineHours'].forEach((key) => {
         if (typeof state.upgrades[key] !== 'number') state.upgrades[key] = 0;
       });
 
@@ -418,6 +418,74 @@ const Game = (() => {
   /* Below this, a reload is just a reload and the player is told nothing. */
   const WELCOME_MIN_AWAY = 120;
 
+  /* Derived from the rarity table rather than hardcoded, so retuning rarity carries through to
+     offline income automatically. Currently 1.58. */
+  const OFFLINE_RATE_MAX = Math.ceil(
+    (DATA.offline.maxRate - DATA.offline.baseRate) / DATA.offline.ratePerLevel
+  );
+  const OFFLINE_HOURS_MAX = Math.ceil(
+    (DATA.offline.maxHours - DATA.offline.baseHours) / DATA.offline.hoursPerLevel
+  );
+
+  const EXPECTED_RARITY_MULT = (() => {
+    const total = DATA.rarity.reduce((a, r) => a + r.w, 0);
+    return DATA.rarity.reduce((a, r) => a + (r.w / total) * r.m, 0);
+  })();
+
+  const offlineRate = () => Math.min(
+    DATA.offline.maxRate,
+    DATA.offline.baseRate + state.upgrades.offlineRate * DATA.offline.ratePerLevel
+  );
+  const offlineHours = () => Math.min(
+    DATA.offline.maxHours,
+    DATA.offline.baseHours + state.upgrades.offlineHours * DATA.offline.hoursPerLevel
+  );
+
+  /* What the garden actually produces on its own, in coins per second.
+     A plot counts only if it has an auto-planter, and only if the drone exists to pick it —
+     an unautomated garden earns nothing while away, which is honest and makes automation matter.
+     The drone's cadence caps the total, because it can only lift one plot at a time. */
+  function passiveIncomeRate() {
+    const droneLevel = state.upgrades.autoHarvest;
+    if (!droneLevel) return 0;
+    const droneCapacity = 1 / Math.max(0.7, 3 - droneLevel * 0.5);
+
+    const yieldBonus = (1 + boostVal('globalCredits')) * (1 + pollination());
+    let cycles = 0;
+    let weightedNet = 0;
+    PLOT_AUTOPLANTERS.forEach(({ key, idx }) => {
+      const level = state.upgrades[key];
+      const cell = state.grid[idx];
+      if (!level || !cell || cell.locked) return;
+      const maxSeedIndex = Math.min(level - 1, highestUnlockedSeedIndex(), DATA.seeds.length - 1);
+      if (maxSeedIndex < 0) return;
+      const seed = DATA.seeds[maxSeedIndex];
+      const grow = seed.grow * growModifier() * keeperModifier(idx);
+      if (grow <= 0) return;
+      const gross = seed.yield * EXPECTED_RARITY_MULT * yieldBonus
+        * masteryMult(seed.id) * verbPayoutMult(idx);
+      const perCycle = Math.max(0, gross - seed.cost);
+      const rate = 1 / grow;
+      cycles += rate;
+      weightedNet += rate * perCycle;
+    });
+    if (cycles <= 0) return 0;
+    const avgNet = weightedNet / cycles;
+    return Math.min(cycles, droneCapacity) * avgNet;
+  }
+
+  /* Full rate up to the cap, then a deliberate trickle rather than nothing. A hard zero reads as
+     punishment; a trickle reads as a rule, and it is the cap that gives returning a point. */
+  function offlineEarnings(seconds) {
+    const rate = passiveIncomeRate();
+    if (rate <= 0 || seconds <= 0) return { coins: 0, capped: false, paidSeconds: 0, rate };
+    const capSeconds = offlineHours() * 3600;
+    const full = Math.min(seconds, capSeconds);
+    const over = Math.max(0, seconds - capSeconds);
+    const coins = Math.floor(rate * offlineRate() * (full + over * DATA.offline.trickle));
+    return { coins, capped: over > 0, paidSeconds: full, overSeconds: over, rate };
+  }
+
   /* Reconcile time away and report what happened, for the welcome-back scene.
      Mutations need no catch-up pass: rollMutations() evaluates each plant against the weather at
      its own scheduled moment, so a roll that came due while the tab was shut resolves against the
@@ -435,12 +503,22 @@ const Game = (() => {
     });
     const jars = jarsWaiting();
 
+    const earned = away >= WELCOME_MIN_AWAY ? offlineEarnings(away) : { coins: 0, capped: false };
+    if (earned.coins > 0) {
+      state.credits += earned.coins;
+      emit('currency');
+    }
+
     state.lastSeen = now;
-    if (caught.length) save();
+    if (caught.length || earned.coins > 0) save();
 
     if (away < WELCOME_MIN_AWAY) return null;
-    if (!ripe.length && !caught.length && !jars) return null;
-    return { away, caught, ripened: ripe.length, jars, weather: currentWeather() };
+    if (!ripe.length && !caught.length && !jars && !earned.coins) return null;
+    return {
+      away, caught, ripened: ripe.length, jars, weather: currentWeather(),
+      earned: earned.coins, capped: earned.capped,
+      capHours: offlineHours(), rate: offlineRate()
+    };
   }
 
   /* ---------------- reputation, levels, quests ---------------- */
@@ -1427,7 +1505,9 @@ const Game = (() => {
       return false;
     },
     autoWater: cappedUpgrade('autoWater', AUTO_WATER_MAX_LEVEL),
-    autoHarvest: () => { state.upgrades.autoHarvest += 1; return true; }
+    autoHarvest: () => { state.upgrades.autoHarvest += 1; return true; },
+    offlineRate: cappedUpgrade('offlineRate', OFFLINE_RATE_MAX),
+    offlineHours: cappedUpgrade('offlineHours', OFFLINE_HOURS_MAX)
   };
   PLOT_AUTOPLANTERS.forEach(({ key }) => {
     UPGRADE_EFFECTS[key] = () => { state.upgrades[key] += 1; return true; };
@@ -1440,6 +1520,8 @@ const Game = (() => {
     if (key === 'rainDance') return state.upgrades.rainDance >= RAIN_DANCE_MAX_LEVEL;
     if (key === 'beeSwarm') return state.upgrades.beeSwarm >= BEE_SWARM_MAX_LEVEL;
     if (key === 'ladybug') return state.upgrades.ladybug >= LADYBUG_MAX_LEVEL;
+    if (key === 'offlineRate') return state.upgrades.offlineRate >= OFFLINE_RATE_MAX;
+    if (key === 'offlineHours') return state.upgrades.offlineHours >= OFFLINE_HOURS_MAX;
     return false;
   };
 
@@ -1652,6 +1734,24 @@ const Game = (() => {
       return state.level;
     },
 
+    /* Wind the world back by n hours rather than winding `lastSeen` forward, so plots really do
+       mature, mutation moments really do come due, and hives really do fill — the report is then
+       produced by the same reconcile() a genuine absence would run. */
+    simulateAway(hours) {
+      const back = Math.max(0, hours) * 3600;
+      if (!back) return null;
+      state.grid.forEach((cell) => {
+        if (cell.locked || !cell.seed) return;
+        cell.plantedAt -= back;
+        if (cell.mutateAt) cell.mutateAt -= back;
+      });
+      state.apiary.hives.forEach((h) => { h.at -= back; });
+      state.lastSeen = nowSeconds() - back;
+      const report = reconcile();
+      emit('panels');
+      return report;
+    },
+
     clearAll() {
       dev.rarity = null;
       dev.gem = false;
@@ -1684,6 +1784,6 @@ const Game = (() => {
     neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier,
     weatherSlotOf, weatherForSlot, weatherAt, currentWeather, rollMutations, processWeather,
     mutationDef, mutationRank, mutationMult, catchMultiplier,
-    dayPhase, isNight, reconcile, Dev
+    dayPhase, isNight, reconcile, offlineRate, offlineHours, passiveIncomeRate, offlineEarnings, Dev
   };
 })();

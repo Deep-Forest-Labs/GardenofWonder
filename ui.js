@@ -535,7 +535,8 @@
   const CORE_UPGRADES = [
     'tapPower', 'holdSpeed', 'critChance', 'critMult', 'comboMeter',
     'rainDance', 'beeSwarm', 'ladybug',
-    'plotExpansion', 'autoWater', 'autoHarvest'
+    'plotExpansion', 'autoWater', 'autoHarvest',
+    'offlineRate', 'offlineHours'
   ];
 
   function upgradeCard(key) {
@@ -1033,6 +1034,9 @@
     const r = awayReport;
     const lines = [];
 
+    if (r.earned) {
+      lines.push(`<li class="away-earn">${Icons.get('coin')}<span>The garden kept working and banked <b>${fmt(r.earned)}</b> coins.</span></li>`);
+    }
     if (r.ripened) {
       lines.push(`<li>${Icons.get('sprout')}<span><b>${r.ripened}</b> ${r.ripened === 1 ? 'bloom is' : 'blooms are'} ready to pick.</span></li>`);
     }
@@ -1048,7 +1052,8 @@
     return `
       <p class="away-lede">You were gone <b>${awayWords(r.away)}</b>. The garden kept going.</p>
       <ul class="away-list">${lines.join('')}</ul>
-      <p class="sheet-note">The sky is ${r.weather.name.toLowerCase()} right now.</p>
+      ${r.capped ? `<p class="away-cap">${Icons.get('lantern')}<span>The lantern burned out after <b>${r.capHours}h</b> — after that the garden only ticked over. Lantern Oil keeps it lit longer.</span></p>` : ''}
+      <p class="sheet-note">The sky is ${r.weather.name.toLowerCase()} right now.${r.rate ? ` The garden works at ${Math.round(r.rate * 100)}% pace while you are gone.` : ''}</p>
       <button class="big-btn magic" data-act="closeWelcome">Back to the garden</button>`;
   }
 
@@ -1091,6 +1096,11 @@
         <button class="dev-btn" data-dev="fill" data-arg="1">Fill plots</button>
         <button class="dev-btn" data-dev="ripen" data-arg="1">Ripen all</button>
         <button class="dev-btn" data-dev="hive" data-arg="1">Add hive</button>`)}
+      ${devRow('Simulate an absence', `
+        <button class="dev-btn" data-dev="away" data-arg="3">3 hours</button>
+        <button class="dev-btn" data-dev="away" data-arg="6">6 hours</button>
+        <button class="dev-btn" data-dev="away" data-arg="12">12 hours</button>
+        <button class="dev-btn" data-dev="away" data-arg="24">24 hours</button>`)}
       ${devRow('Give', `
         <button class="dev-btn" data-dev="gold" data-arg="1">+1M gold</button>
         <button class="dev-btn" data-dev="gems" data-arg="1">+50 gems</button>
@@ -1118,6 +1128,13 @@
       case 'gold': S.credits += 1e6; Game.save(); Game.emit('currency'); break;
       case 'gems': S.gems += 50; Game.save(); Game.emit('currency'); break;
       case 'level': D.grantLevels(Number(arg) || 1); break;
+      case 'away': {
+        const report = D.simulateAway(Number(arg) || 3);
+        ok = Boolean(report);
+        if (ok) { awayReport = report; closeSheet(); setTimeout(() => openSheet('welcome'), 260); }
+        redraw = false;
+        break;
+      }
       case 'clear': D.clearAll(); break;
       default: ok = false;
     }

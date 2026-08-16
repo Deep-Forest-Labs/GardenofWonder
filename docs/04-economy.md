@@ -61,6 +61,33 @@ convenience upgrade — bigger numbers per harvest, same rate, at 33% more capit
 Whether these are bugs or intentional texture is not recorded anywhere. They came over from the
 original build. Left alone for now, noted in [11-known-issues.md](11-known-issues.md).
 
+### Offline earnings
+
+`DATA.offline`, plus two badges. Design in [03-systems.md](03-systems.md#offline-earnings).
+
+| Key | Value | Effect |
+| --- | --- | --- |
+| `baseRate` | 0.25 | Share of passive income earned while away, before upgrades |
+| `ratePerLevel` | 0.05 | Moonlight Tending, per level |
+| `maxRate` | 1 | Clamp — 15 levels reaches it |
+| `baseHours` | 4 | Hours at full rate before the cap |
+| `hoursPerLevel` | 1 | Lantern Oil, per level |
+| `maxHours` | 24 | Clamp — 20 levels reaches it |
+| `trickle` | 0.1 | Share of the rate still earned past the cap |
+
+| Badge | Base | Scale |
+| --- | --- | --- |
+| Moonlight Tending (`offlineRate`) | 4,000 | 1.9 |
+| Lantern Oil (`offlineHours`) | 6,000 | 2.0 |
+
+**The cap is the retention lever, so tune it before the rate.** At base, a fully automated garden
+banks ~644K over 12 hours and ~805K over 24 — doubling the absence adds a quarter. Raising
+`baseHours` weakens the reason to return; raising `trickle` weakens it more, because it flattens the
+curve everywhere. If offline feels stingy, **raise the rate, not the cap.**
+
+`EXPECTED_RARITY_MULT` in `game.js` is derived from the rarity table above, so a rarity retune
+carries into offline income without a second edit.
+
 ### Weather and mutation tuning
 
 A third axis, and like verbs it is deliberately **off the yield curve** — `yield === cost × 1.4`

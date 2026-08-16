@@ -51,6 +51,19 @@ const DATA = {
     beaconCatchBonus: 0.5   // each adjacent Beacon raises this plot's mutation catch chance
   },
 
+  /* How much of the garden's passive work survives an absence, and for how long. Two axes on
+     purpose: rate and duration are separate upgrade tracks, which turns "how the game treats you
+     while away" into a chain of nameable unlocks rather than a wall. */
+  offline: {
+    baseRate: 0.25,
+    ratePerLevel: 0.05,
+    maxRate: 1,
+    baseHours: 4,
+    hoursPerLevel: 1,
+    maxHours: 24,
+    trickle: 0.1
+  },
+
   /* Weather is derived from wall-clock epoch time, never from a running timer, so every player
      sees the same sky at the same moment and past weather stays computable. Weights are shares
      of all slots and must total 100. */
@@ -189,7 +202,9 @@ const DATA = {
     ladybug:       { name: 'Lucky Ladybug',     short: 'Lucky Ladybug', base: 800,  scale: 1.9, icon: 'ladybug', desc: 'A rare chance on every tap to land a ladybug on a growing plot, boosting its rarity odds when harvested (up to 1.6%).' },
     plotExpansion: { name: 'Plot Expansion +2', short: 'Land Deed',     base: 2000, scale: 2,   icon: 'grid',  desc: 'Unlock two garden plots your reputation has already opened.' },
     autoWater:     { name: 'Sprinkler Network', short: 'Sprinklers',    base: 400,  scale: 1.7, icon: 'drop',  desc: 'Increase grow speed by 1% per level for all plants (up to 10%).' },
-    autoHarvest:   { name: 'Drone Harvester',   short: 'Harvest Drone', base: 4500, scale: 2.4, icon: 'drone', desc: 'Automatically harvest a ready plot on a timer.' }
+    autoHarvest:   { name: 'Drone Harvester',   short: 'Harvest Drone', base: 4500, scale: 2.4, icon: 'drone', desc: 'Automatically harvest a ready plot on a timer.' },
+    offlineRate:   { name: 'Moonlight Tending', short: 'Moonlight',     base: 4000, scale: 1.9, icon: 'sparkle', desc: 'More of the garden\u2019s work carries on while you are away.' },
+    offlineHours:  { name: 'Lantern Oil',       short: 'Lantern Oil',   base: 6000, scale: 2.0, icon: 'lantern', desc: 'Keeps the lantern lit longer, so the garden works at full pace for more of your absence.' }
   },
 
   /* Purely cosmetic — no gameplay effect. See docs/15-navigation-and-ia.md for why. */

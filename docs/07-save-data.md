@@ -218,3 +218,13 @@ Two new **per-cell grid fields** and one top-level field:
 
 **The weather clock itself stores nothing.** It is a pure function of epoch time, so there is no
 migration for it and never will be.
+
+## Offline earning badges (added 2026-08-15)
+
+`offlineRate` and `offlineHours` join `state.upgrades`. Like every badge before them they need
+their line in the **manual backfill list in `load()`** — they are in it, beside `holdSpeed` and the
+proc keys. Without that an old save reads `undefined`, not `0`, and the offline rate comes back
+`NaN`.
+
+`state.lastSeen` (added with the weather work) is what an absence is measured against. It is written
+on every `processWeather()` tick and on every `reconcile()`.
