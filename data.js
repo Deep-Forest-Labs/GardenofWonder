@@ -16,6 +16,73 @@ const PLOT_AUTOPLANTERS = Array.from({ length: 8 }, (_, i) => {
   };
 });
 
+
+/* ============ THE CARD ALBUM ============
+   A parallel meta, deliberately independent of the garden — no card is earned by growing anything
+   in particular. See docs/19-card-album.md.
+
+   Card art is a *slot*, not a commitment: `{ icon, tint }` draws a procedural placeholder from the
+   existing icon vocabulary, and `{ src }` would point at a real illustration instead. The web build
+   is the design lab and takes no binary assets, so placeholders live here and finished art belongs
+   to the Unity port. Swapping one for the other is a data edit. */
+
+const CARD_RARITIES = [
+  { key: 'common',   stars: 1, w: 46, label: 'Common' },
+  { key: 'uncommon', stars: 2, w: 27, label: 'Uncommon' },
+  { key: 'rare',     stars: 3, w: 17, label: 'Rare' },
+  { key: 'legend',   stars: 4, w: 8,  label: 'Legendary' },
+  { key: 'mythic',   stars: 5, w: 2,  label: 'Mythical' }
+];
+
+/* Nine per set: three common, two uncommon, two rare, one legendary, one mythical. The shape is
+   fixed so a new set is only names and a tint. */
+const SET_SHAPE = ['common', 'common', 'common', 'uncommon', 'uncommon', 'rare', 'rare', 'legend', 'mythic'];
+
+/* Nine reusable motifs, cycled across every set. Placeholder art on purpose — the feature is the
+   album, not the illustration. */
+const CARD_MOTIFS = [
+  { icon: 'sprout',    tint: '#8ce99a' },
+  { icon: 'petal',     tint: '#ffc9de' },
+  { icon: 'sparkle',   tint: '#c9b6ff' },
+  { icon: 'lantern',   tint: '#ffd6a5' },
+  { icon: 'butterfly', tint: '#a5d8ff' },
+  { icon: 'hive',      tint: '#ffe066' },
+  { icon: 'teacup',    tint: '#d8b4a0' },
+  { icon: 'clover',    tint: '#b2f2bb' },
+  { icon: 'star',      tint: '#ffd43b' }
+];
+
+const ALBUM_SETS = [
+  { id: 'firstlight', name: 'First Light',     tint: '#ffe3bf', cards: ['Dawn Chorus', 'Dewfall', 'The Early Row', 'Frost on the Gate', 'Mist Over the Beds', 'Long Shadows', 'The Watering Can', 'Sunrise Bloom', 'The First Warmth'] },
+  { id: 'harvestmoon', name: 'Harvest Moon',   tint: '#ffd6a5', cards: ['Full Moon', 'The Late Crop', 'Lantern Path', 'Moths at the Window', 'Cider Press', 'The Long Table', 'Autumn Wreath', 'Moonlit Furrow', 'The Harvest Song'] },
+  { id: 'goodneighbours', name: 'Good Neighbours', tint: '#b2f2bb', cards: ['Over the Fence', 'Borrowed Shears', 'The Spare Seedling', 'Jam for the Postman', 'A Cutting to Share', 'The Shared Wall', 'Left on the Step', 'Village Show', 'The Kindest Gardener'] },
+  { id: 'smallvisitors', name: 'Small Visitors', tint: '#a5d8ff', cards: ['Bumblebee', 'Ladybird', 'Garden Snail', 'The Bold Robin', 'Hedgehog at Dusk', 'Dragonfly', 'The Fox Who Waits', 'Barn Owl', 'The Rare Moth'] },
+  { id: 'weatherwatch', name: 'Weather Watch',  tint: '#c5f6fa', cards: ['Soft Rain', 'Sun After Rain', 'The Still Morning', 'Thunder Far Off', 'Petrichor', 'Hailstones', 'The Green Sky', 'Aurora', 'The Wonderfall'] },
+  { id: 'toolshed', name: 'The Tool Shed',      tint: '#e9d8c4', cards: ['Trowel', 'Twine', 'The Good Gloves', 'Terracotta Pots', 'Seed Tins', 'The Wheelbarrow', 'Grandfather\u2019s Spade', 'The Brass Tap', 'The Lost Key'] },
+  { id: 'nightgarden', name: 'The Night Garden', tint: '#c9b6ff', cards: ['Evening Primrose', 'Moonflower', 'Night Scent', 'The Owl\u2019s Round', 'Glow Worms', 'Stars Through Leaves', 'The Sleeping Hive', 'Midnight Bloom', 'What Blooms Once'] },
+  { id: 'sweetthings', name: 'Sweet Things',    tint: '#ffc9de', cards: ['Honeycomb', 'Elderflower Cordial', 'Windfall Apples', 'Bramble Jam', 'The Cake on the Sill', 'Sugared Petals', 'Rosehip Syrup', 'The Secret Recipe', 'First Honey'] },
+  { id: 'ledger', name: 'The Gardener\u2019s Ledger', tint: '#d8cfc0', cards: ['Seed Packets', 'Pressed Flowers', 'The Margin Note', 'A Bad Year', 'The Good Year', 'Sketch of a Bee', 'Weather Notes', 'The Last Page', 'What Was Planted First'] },
+  { id: 'wildedge', name: 'The Wild Edge',      tint: '#8ce99a', cards: ['Nettles', 'The Unmown Corner', 'Bindweed', 'Seedheads', 'Where the Fence Ends', 'The Old Hedge', 'Foxgloves', 'The Path Nobody Cut', 'What Grew Back'] },
+  { id: 'keeping', name: 'Keeping',             tint: '#ffe066', cards: ['Dried Bunches', 'The Cold Frame', 'Wrapped in Newspaper', 'Root Cellar', 'Labelled Jars', 'The Saved Seed', 'Overwintering', 'The Long Wait', 'Come Spring'] },
+  { id: 'openquestion', name: 'The Open Question', tint: '#ffd43b', cards: ['A Gate You Did Not Build', 'Footprints in the Beds', 'The Bell Nobody Rang', 'Someone Has Been Weeding', 'A Note, Unsigned', 'The Locked Greenhouse', 'What the Flower Won\u2019t Say', 'The Ninth Row', 'Not Yet'] }
+];
+
+const ALBUM = {
+  season: 'The Long Season',
+  packSize: 3,
+  sets: ALBUM_SETS.map((set) => ({
+    id: set.id,
+    name: set.name,
+    tint: set.tint,
+    cards: set.cards.map((name, i) => ({
+      id: `${set.id}_${i}`,
+      name,
+      rarity: SET_SHAPE[i],
+      art: CARD_MOTIFS[i]
+    }))
+  }))
+};
+
 const DATA = {
   rarity: [
     { key: 'common', w: 70, m: 1, a: '', label: 'Common' },
@@ -33,6 +100,7 @@ const DATA = {
     beacon:   { name: 'Beacon',   cat: 'rarity',      tint: '#ff9f1c', desc: 'Neighbouring plots roll for rarity more generously.' },
     lantern:  { name: 'Lantern',  cat: 'drops',       tint: '#ff8fd0', desc: 'Neighbouring plots are twice as likely to drop a gem.' },
     deeproot: { name: 'Deeproot', cat: 'density',     tint: '#8fd6ff', desc: 'Pays 8% more for every neighbouring plot that is planted.' },
+    nightbell:{ name: 'Nightbell',cat: 'time',        tint: '#7aa8ff', desc: 'Pays double if harvested at night, half by day.' },
     spreader: { name: 'Spreader', cat: 'propagation', tint: '#ffd23f', desc: 'On harvest, may sow a free copy of itself in an empty neighbour.' }
   },
 
@@ -44,7 +112,69 @@ const DATA = {
     beaconRarity: 6,
     lanternGemMult: 2,
     deeprootPerNeighbour: 0.08,
-    spreaderChance: 0.20
+    nightbellNight: 2,
+    nightbellDay: 0.5,
+    spreaderChance: 0.20,
+    beaconCatchBonus: 0.5   // each adjacent Beacon raises this plot's mutation catch chance
+  },
+
+  /* How much of the garden's passive work survives an absence, and for how long. Two axes on
+     purpose: rate and duration are separate upgrade tracks, which turns "how the game treats you
+     while away" into a chain of nameable unlocks rather than a wall. */
+  /* Gems are earned per unit of *time in the ground*, not per harvest. A flat per-harvest rate
+     made a Daisy the best gem farm in the game, because it cycles 65x more often than an Eternal
+     Crown — the inversion recorded in docs/11-known-issues.md. Chance = grow seconds x this, so
+     gems/hour is roughly constant whatever the player plants. A seed may still set an explicit
+     `gemChance` to override. */
+  /* Gems buy chances, choices and looks — never outcomes. Calling a sky buys a *chance* at a
+     mutation for what is already in the ground; the two rare skies are deliberately not for sale,
+     so the game's biggest moment can never be purchased. Skipping buys time and nothing else. */
+  weatherCall: {
+    minutes: 4,
+    prices: { rain: 8, storm: 25 }
+  },
+  skipSecondsPerGem: 30,
+
+  /* A pack that turns up in the garden. Always on rather than behind a badge, because it is the
+     album's only in-game source and a new player has to be able to find one. Same slot-machine
+     shape as the three tap procs, and tuned to land roughly as often as they do. */
+  packDropChance: 0.0015,
+
+  gemChancePerGrowSecond: 0.0005,
+  gemChanceMax: 0.5,
+
+  offline: {
+    baseRate: 0.25,
+    ratePerLevel: 0.05,
+    maxRate: 1,
+    baseHours: 4,
+    hoursPerLevel: 1,
+    maxHours: 24,
+    trickle: 0.1
+  },
+
+  /* Weather is derived from wall-clock epoch time, never from a running timer, so every player
+     sees the same sky at the same moment and past weather stays computable. Weights are shares
+     of all slots and must total 100. */
+  weather: {
+    slotSeconds: 60,
+    types: [
+      { id: 'clear',      name: 'Clear',        w: 70,  mutation: null,           catch: 0,    tint: '' },
+      { id: 'rain',       name: 'Rain',         w: 20,  mutation: 'dew',          catch: 0.25, tint: '#7fa8c9' },
+      { id: 'storm',      name: 'Thunderstorm', w: 7,   mutation: 'gilded',       catch: 0.15, tint: '#4d5b78' },
+      { id: 'aurora',     name: 'Aurora',       w: 2.5, mutation: 'prismatic',    catch: 0.12, tint: '#5fe0e8' },
+      { id: 'wonderfall', name: 'Wonderfall',   w: 0.5, mutation: 'wonderstruck', catch: 0.10, tint: '#ffb3f0' }
+    ]
+  },
+
+  /* A plant holds at most one mutation and only ever upgrades to a higher rank. `mult` multiplies
+     harvest payout. Tune against the measured income share, never by eye — see
+     docs/18-mutations-and-weather.md. */
+  mutations: {
+    dew:          { name: 'Dewkissed',    rank: 1, mult: 2,   tint: '#8fd6ff', glow: '#cfeeff' },
+    gilded:       { name: 'Gilded',       rank: 2, mult: 10,  tint: '#ffc93c', glow: '#ffe9a8' },
+    prismatic:    { name: 'Prismatic',    rank: 3, mult: 25,  tint: '#c9b6ff', glow: '#e7dcff' },
+    wonderstruck: { name: 'Wonderstruck', rank: 4, mult: 100, tint: '#ff8fd0', glow: '#ffd4ec' }
   },
 
   seeds: [
@@ -94,12 +224,12 @@ const DATA = {
       art: { shape: 'sun', petals: 12, c1: '#ffc93c', c2: '#fff3b0', core: '#ff8f1f', leaf: '#5cb85c', glow: '#ffd85e' }
     },
     {
-      id: 'jadefern', name: 'Jade Fern', cost: 3200, grow: 180, yield: 4480, spr: '🌿', unlockLevel: 8,
+      id: 'jadefern', verb: 'deeproot', name: 'Jade Fern', cost: 3200, grow: 180, yield: 4480, spr: '🌿', unlockLevel: 8,
       desc: 'Ancient frond storing rich nutrients for big hauls.',
       art: { shape: 'fern', petals: 6, c1: '#43aa5a', c2: '#8ce99a', core: '#2f7d3f', leaf: '#2f7d3f' }
     },
     {
-      id: 'moonflower', verb: 'deeproot', name: 'Moonflower', cost: 4500, grow: 220, yield: 6300, spr: '🌙', unlockLevel: 9,
+      id: 'moonflower', verb: 'nightbell', name: 'Moonflower', cost: 4500, grow: 220, yield: 6300, spr: '🌙', unlockLevel: 9,
       desc: 'Night-blooming marvel with stellar rarity chances.',
       art: { shape: 'lotus', petals: 7, c1: '#b9dcff', c2: '#ffffff', core: '#7aa8ff', leaf: '#4a8fa8', glow: '#a9d8ff' }
     },
@@ -121,31 +251,26 @@ const DATA = {
     {
       id: 'nebula', name: 'Nebula Orchid', cost: 20000, grow: 540, yield: 28000, spr: '🌠', unlockLevel: 13,
       desc: 'Starlit bloom humming with distant stardust dividends.',
-      gemChance: 0.008,
       art: { shape: 'star', petals: 8, c1: '#d6336c', c2: '#f9a3c1', core: '#845ef7', leaf: '#7048b6', glow: '#ff7ab8' }
     },
     {
       id: 'solstice', name: 'Solstice Lily', cost: 35000, grow: 600, yield: 49000, spr: '☀️', unlockLevel: 14,
       desc: 'Radiant petals channel sunflare surges and rare gems.',
-      gemChance: 0.01,
       art: { shape: 'sun', petals: 14, c1: '#ff922b', c2: '#ffdfae', core: '#fff3bf', leaf: '#59a83f', glow: '#ffb454' }
     },
     {
       id: 'auroracrown', name: 'Aurora Crown', cost: 52000, grow: 660, yield: 72800, spr: '🌈', unlockLevel: 15,
       desc: 'Auroral halo weaves shimmering rewards across the garden.',
-      gemChance: 0.012,
       art: { shape: 'point', petals: 12, c1: '#7ce0ff', c2: '#ffe6a7', core: '#ff8fd0', leaf: '#48b39a', rainbow: true, glow: '#b7f5ff' }
     },
     {
       id: 'mythicstar', name: 'Mythic Starflower', cost: 75000, grow: 720, yield: 105000, spr: '🌟', unlockLevel: 16,
       desc: 'Legend-touched bloom whispering of premium windfalls.',
-      gemChance: 0.015,
       art: { shape: 'star', petals: 5, c1: '#ffd43b', c2: '#fff6cc', core: '#ff922b', leaf: '#7a9a3f', glow: '#ffe066' }
     },
     {
       id: 'eternal', name: 'Eternal Crown', cost: 100000, grow: 780, yield: 140000, spr: '💫', unlockLevel: 17,
       desc: 'Limitless petals with a rare promise of gems.',
-      gemChance: 0.02,
       art: { shape: 'lotus', petals: 12, c1: '#ffcf5c', c2: '#fffdf0', core: '#ff9f1c', leaf: '#c9a227', ring: true, glow: '#fff0b0' }
     }
   ],
@@ -161,7 +286,9 @@ const DATA = {
     ladybug:       { name: 'Lucky Ladybug',     short: 'Lucky Ladybug', base: 800,  scale: 1.9, icon: 'ladybug', desc: 'A rare chance on every tap to land a ladybug on a growing plot, boosting its rarity odds when harvested (up to 1.6%).' },
     plotExpansion: { name: 'Plot Expansion +2', short: 'Land Deed',     base: 2000, scale: 2,   icon: 'grid',  desc: 'Unlock two garden plots your reputation has already opened.' },
     autoWater:     { name: 'Sprinkler Network', short: 'Sprinklers',    base: 400,  scale: 1.7, icon: 'drop',  desc: 'Increase grow speed by 1% per level for all plants (up to 10%).' },
-    autoHarvest:   { name: 'Drone Harvester',   short: 'Harvest Drone', base: 4500, scale: 2.4, icon: 'drone', desc: 'Automatically harvest a ready plot on a timer.' }
+    autoHarvest:   { name: 'Drone Harvester',   short: 'Harvest Drone', base: 4500, scale: 2.4, icon: 'drone', desc: 'Automatically harvest a ready plot on a timer.' },
+    offlineRate:   { name: 'Moonlight Tending', short: 'Moonlight',     base: 4000, scale: 1.9, icon: 'sparkle', desc: 'More of the garden\u2019s work carries on while you are away.' },
+    offlineHours:  { name: 'Lantern Oil',       short: 'Lantern Oil',   base: 6000, scale: 2.0, icon: 'lantern', desc: 'Keeps the lantern lit longer, so the garden works at full pace for more of your absence.' }
   },
 
   /* Purely cosmetic — no gameplay effect. See docs/15-navigation-and-ia.md for why. */
@@ -330,6 +457,17 @@ const CRAFT_RECIPES = [
 const CRAFT_SLOTS = 2;
 
 /* Wonder Effect — a rare garden-wide transformation. */
+/* The day cycle. Phase is derived from epoch time rather than page load, so "is it night" is a
+   shared fact the simulation can answer — see docs/03-systems.md. `offset` only shifts the global
+   phase; it no longer means "every session opens at midday", because sessions no longer set it.
+   dawn/dusk are read off the SKY_KEYS star values in ui.js. */
+const DAY = {
+  cycle: 360,
+  offset: 0.46,
+  dawn: 0.14,
+  dusk: 0.82
+};
+
 const WONDER = {
   duration: 20,
   payoutMult: 3,
@@ -355,5 +493,10 @@ const FLOWER_LINES = {
   idle: ['Psst... the plots are lonely.', 'Try planting something new.', 'Tap me if you get bored.', 'Nice weather for growing.'],
   broke: ['Save up a few coins first!', 'Not enough in the pouch.', 'Tap me for pocket change!'],
   unlock: ['New ground to grow on!', 'More room for flowers!', 'Ooh, fresh soil!'],
+  rain: ['Rain! The garden loves this.', 'Mmm, petrichor.', 'Drink up, everyone.'],
+  storm: ['Thunder! Hold onto your petals.', 'Ooh, that one was close.', 'What a sky.'],
+  aurora: ['Look up — the sky has colours!', 'I have only seen this twice.', 'The whole garden is glowing.'],
+  wonderfall: ['The sky is doing something wonderful.', 'Oh my. Oh MY.', 'Remember this one.'],
+  mutation: ['Something changed out there!', 'That bloom looks different...', 'Well, would you look at that.'],
   wonder: ['WONDERRRR!', 'Everything is upside-down lovely!', 'Grab it all!']
 };

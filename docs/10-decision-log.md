@@ -5,6 +5,540 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — Packs turn up in the garden, and a badge that needed an animation to exist
+
+**Built:** a fourth tap roll drops a card pack onto a plot, where it waits to be tapped. Plus dev
+cheats to grant a card, a mythical, a completed set, or a pack on the ground.
+
+**The Lucky Ladybug shape, deliberately.** *"Something turned up in your garden, go and get it"* is a
+better beat than a number appearing in a wallet, and the pattern is already built and already tuned.
+What changed is that the badge is **tappable** — the ladybug's is decoration, this one is the reward.
+New icon: a fanned deck of three cards, in the house style.
+
+**Always on, with no badge behind it** — unlike the three proc badges, which all gate on an upgrade.
+`packDropChance` is a flat 0.0015 per tap. The reasoning: this is the album's **only in-game source**
+of packs, so a player who has bought nothing still has to be able to find one. A pack behind a
+paywall of coins would make the album invisible to exactly the players most likely to start it.
+
+**This is how the album touches the garden without being coupled to it.** The garden is *where packs
+turn up*; it never decides *what is inside them*. That distinction is the whole reason the album was
+untied from flowers earlier today, and the spawning pack is the version of "connect them" that does
+not undo it.
+
+**A real bug, caught by looking rather than by a test.** The badge started at `transform: scale(0)`
+and relied on a keyframe to become visible. **A badge that only exists once an animation has run is
+invisible and uncollectable anywhere the animation does not play** — a frozen CSS clock, a reduced
+motion path someone adds later, an engine that drops the keyframe. Visibility now comes from
+`display`, and the landing and bob are a flourish on top. Worth generalising: *never let an
+animation be the thing that makes an interactive element exist.*
+
+**Environment note, not a bug.** The badge appeared to do nothing in the automated browser because
+`requestAnimationFrame` had stopped entirely — measured **0 frames** across two calls — so
+`renderPlots()` never ran to apply the class. This is the hidden-pane version of the frozen-clock
+trap already in the handoff. Verified instead by applying the class directly and by dispatching a
+real `pointerdown`, which granted exactly one pack and cleared that plot alone.
+
+**`clearGarden()` in the suite did not reset `packDrop`**, so a test that filled all eight plots
+leaked into the next one. Third time a new per-cell field has caught that helper out, after
+`mutation` and `mutateAt` — the helper now clears all three.
+
+---
+
+## 2026-08-15 — The card album built, with art as a slot rather than a dependency
+
+**Built:** 12 sets of 9 = 108 cards in one season, pack opening, the album and set views, and the
+reveal. **Not built:** the spawning-pack proc, dust, seasons, completion rewards.
+
+**The structural decision: card art is a slot.** `art` is either `{ icon, tint }` — a placeholder
+composed from the existing 33-icon vocabulary — or `{ src }`, a real illustration. `cardArt()`
+renders either and nothing else in the codebase knows which it got.
+
+That is what lets two things be true at once: the web build keeps its **no-binary-assets** rule
+intact, and real card art can arrive whenever the owner wants without touching code. The owner has a
+Midjourney account and asked whether it could be used. It can — just not *here*. The web build is the
+design lab; finished illustration belongs to the Unity port, which has an asset pipeline and no such
+rule. **Nine motifs cycle across all twelve sets on purpose:** the feature is the album, not the
+picture.
+
+*Rejected: bending the no-binary-assets rule for cards.* Tempting, since cards are inherently
+illustrated. But it would put ~108 PNGs in a static site with no build step, for a prototype whose
+whole job is to test whether the loop is fun — and the loop is testable with circles and icons.
+
+*Rejected: reusing `Flora.head()` for card art.* It would have given 19 genuinely lovely images for
+free, and it would have quietly re-coupled the album to the garden — the exact mistake retracted
+earlier the same day. The placeholders are worse-looking and structurally correct.
+
+**Every set has an identical rarity shape** — 3 Common, 2 Uncommon, 2 Rare, 1 Legendary, 1 Mythical.
+Fixed so that authoring a new set is nine names and a tint rather than a balancing exercise, and a
+sim-test holds the shape across all twelve.
+
+**Cards are counts, not booleans.** `state.cards[id]` is a number. Nothing needs duplicates yet — but
+dust does, and gifting would, and retrofitting a count onto a boolean after players have saves is the
+kind of migration worth avoiding by spending one line now.
+
+**The draw is biased toward what the player is missing**, within a rolled rarity. Without dust to
+soften them, duplicates are pure disappointment, and an album that keeps returning cards you already
+have is the fastest way to make collecting feel like a chore. A test fills every Common but one and
+asserts the gap closes quickly.
+
+**Set completion is reported once, on the pack that closes it** — `setsClaimed` records it — and the
+banner fires *after* the last card of the pack, not interrupting the reveal.
+
+**The opening is the feature, so it got the care.** One card at a time, never a grid. Rarity is
+telegraphed by the frame before the name is legible. A duplicate is greyed and says so. Celebration
+escalates by rarity, with confetti and a shake reserved for the top two tiers and a pulse for
+Mythical alone — the same discipline as the mutation ladder, for the same reason: a top tier that
+looks like the tier below it is not a top tier.
+
+**Content note.** The twelfth set, *The Open Question*, is written as an unresolved thread — "A Gate
+You Did Not Build", "Someone Has Been Weeding", "Not Yet". That is the Merge Mansion device recorded
+in [17-market-and-positioning.md](17-market-and-positioning.md): **you do not have to write an
+ending, you have to write a question.**
+
+---
+
+## 2026-08-15 — Gems get a rule, a corrected faucet, and two sinks that cannot become pay-to-win
+
+**The rule, ratified by the owner and now the test every gem or IAP proposal faces:**
+
+> **Gems buy chances, choices and looks. Never outcomes.**
+> Skipping a timer is the one deliberate exception, at an expensive rate — it is farm-game
+> convention and it buys *time*, not a better result.
+
+The reason to fix the rule before the sink: **gems are the obvious IAP currency, so whatever gems
+buy is what money buys.** Deciding the sink casually would have quietly chosen the monetization
+model. The genre research is blunt that this audience punishes pay-to-win harder than any other —
+what works is selling identity, breadth, relief and earliness.
+
+**The faucet was the real bug, and it was worse than the known-issues entry said.** That entry
+blamed the explicit `gemChance` values on the top five seeds overriding a generous 5% default. True,
+but incomplete: **a Daisy cycles 65× more often than an Eternal Crown, so *any* flat per-harvest rate
+makes the cheapest seed the best gem farm.** Removing the overrides alone would not have fixed it.
+
+Gem chance is now **derived from grow time** — `grow × 0.0005`, capped at 50% — which makes gems per
+hour constant at ~1.8 per plot across all nineteen seeds. Gems track *time played*, not seed choice,
+and nobody is punished for growing what they like. The five overrides are deleted; the conventions
+playbook now says to leave `gemChance` alone rather than "optionally set it".
+
+*Rejected: making endgame seeds strictly better gem farms.* Tempting as a reward, but it re-creates
+the same problem pointing the other way — a correct answer to "what should I plant for gems" is a
+worse game than no answer at all.
+
+**Sink one: calling a sky.** Rain 8 gems, Thunderstorm 25, for four minutes. It does two things —
+holds the weather, and **pulls every unspent mutation roll in the ground into the window**. Without
+the second half the purchase is nearly a no-op, because a roll is a single instant and most fall
+outside four minutes. This is the infinite sink, it needed no new art, and it turns gems into agency
+over a system that was previously pure luck.
+
+**Aurora and Wonderfall are deliberately unpriced.** A ×100 behind a paywall is a jackpot you can
+buy; if gems ever cost money that is pay-to-win *and* gambling-shaped, and it is exactly the pattern
+that cost Pocket Camp its life. **The game's biggest moment should never be purchasable** — that
+principle is worth more than the revenue, and a sim-test enforces it.
+
+**Sink two: skipping a timer**, at `ceil(remaining / 30)` gems. The owner asked for this explicitly
+as industry-standard practice, and it is — Township and Hay Day both do it, and both show the price
+on the crop, which is why the cost chip sits on the plant rather than behind a gesture.
+
+**The skip buys time and nothing else.** The mutation roll still resolves against the weather at its
+*originally scheduled* moment, which is computable because weather is deterministic. So hurrying a
+plant can neither gain nor lose a mutation. That closes the exploit where a player waits out a
+Wonderfall and skip-grows the whole garden into it — the version where the roll resolves against
+*now* would have made gems buy a ×100 through the back door, defeating the pricing decision above.
+
+**Two bugs found while building, both worth recording:**
+
+- The skip originally shrank `grow` to match elapsed time. A plant skipped *the instant it went in*
+  has zero elapsed seconds, so any positive grow left it permanently one tick short of ripe. It now
+  backdates `plantedAt` instead, which also keeps the progress bar reading full.
+- The first version of the "skipping cannot manufacture a rare mutation" test used the dev weather
+  override, which **ignores time by design** — so it was testing the override, not the real path. It
+  now moves the actual clock into a genuine Wonderfall. A test that cannot fail is worse than no
+  test.
+
+**Three more flaky tests fell out of this, all the same class.** The combo block asserted exact
+credit deltas from `tapFlower()` without pinning the roll, and a tap can spark a Wonder that triples
+the payout — two assertions failing about one run in twenty-five. And the Lantern gem test sampled a
+Daisy, whose base chance dropped from 5% to 0.6% with the faucet fix: the effect was still real, the
+instrument had silently become eight times too small. **A sampled test is coupled to the number its
+rate is built on** — an economy change can turn a good test into a flaky one without anyone touching
+it.
+
+**Still open:** cosmetic breadth. A fixed catalogue always gets bought out against an endless faucet,
+so gems eventually need escalating prices or a growing list. Card packs are the real infinite sink
+once the album exists.
+
+---
+
+## 2026-08-15 — Offline earnings on two axes, and a cap that is the whole point
+
+**Built.** Rate and duration as separate upgradeable tracks — Moonlight Tending (25% base, +5%/level,
+clamped at 100%) and Lantern Oil (4h base, +1h/level, clamped at 24h) — with a **10% trickle past the
+cap rather than a hard zero**. Numbers in [04-economy.md](04-economy.md#offline-earnings).
+
+**Two axes rather than one number**, per the Cookie Clicker model recorded in
+[17-market-and-positioning.md](17-market-and-positioning.md#offline-progress). One system yields ~35
+individually meaningful levels, and it turns "how the game treats you while away" from a tax into a
+chain of things to want.
+
+**The cap is the retention mechanic, and the owner called it before I built it.** At base, a fully
+automated garden banks ~644K over 12 hours and ~805K over 24 — **doubling an absence adds a
+quarter**. Returning at the four-hour mark is far more efficient than sleeping on it, which is
+exactly the pull wanted. Recorded in the economy doc: if offline feels stingy, **raise the rate, not
+the cap.**
+
+**A trickle, not a wall.** A hard zero past the cap reads as punishment; a trickle reads as a rule.
+It also keeps the curve monotonic — a sim-test asserts a longer absence never pays less, which a
+hard cap plus any rounding could otherwise violate.
+
+**Offline income is earned, not granted.** `passiveIncomeRate()` pays only for plots that have an
+auto-planter, and only if the drone exists to pick them, valued at what that planter would actually
+grow. **An unautomated garden earns nothing while away.** That is honest — the player was not
+earning passively — and it gives the automation badges a second reason to exist.
+
+**The drone's cadence caps throughput**, since it lifts one plot at a time. Both directions are
+asserted: plots outrunning a slow drone are throttled by it, and a drone faster than the plots adds
+nothing. The second test is the one that matters — without it the model would happily invent income
+from an upgrade that changes nothing.
+
+*Rejected: replaying the simulation forward across the absence.* Faithful, and far too expensive for
+a 24-hour gap. The closed-form rate is accurate enough for a number nobody can audit, and it stays
+O(1) regardless of how long someone was gone.
+
+**`EXPECTED_RARITY_MULT` is derived from `DATA.rarity`**, not hardcoded at 1.58, so the eventual
+rarity retune carries into offline income without anyone remembering to do it.
+
+**The cap is disclosed in the scene.** It names the hours, says what happened after, and points at
+the badge that extends it. Hidden caps read as theft.
+
+**`Dev.simulateAway(hours)` winds the world back, not the clock forward.** Plot planting times,
+mutation moments and hive clocks all move, so plots genuinely mature and rolls genuinely come due —
+the report then comes from the same `reconcile()` a real absence runs. Winding `lastSeen` forward
+instead would have produced a report about a garden that had not actually changed, which is precisely
+the kind of cheat that passes while the feature is broken.
+
+**One bug found in review, not by a test:** the cap notice put `<b>4h</b>` directly inside a
+`display:flex` paragraph, making the bold text its own flex item and breaking the sentence across
+lines. Wrapped in a span. Worth remembering that the `.away-list` items already had span wrappers for
+this exact reason.
+
+---
+
+## 2026-08-15 — The welcome-back scene, and a known issue that turned out not to be one
+
+**`Game.reconcile()` now reports what happened while the player was away**, and `renderWelcome()`
+shows it as a short account: how long you were gone, what ripened, which weather passed and what it
+changed, and how much honey is waiting.
+
+**The correction worth recording: the reconciliation bug I logged did not exist.** The entry in
+[11-known-issues.md](11-known-issues.md) said a plant whose mutation moment passed while the tab was
+shut would roll "against whatever weather is standing then rather than the weather it should have
+met." That was wrong. `rollMutations()` reads `weatherAt(cell.mutateAt)` — the moment the roll was
+*scheduled for* — so it always resolved against the correct historical sky. The design had handled
+it and I misread my own code when writing the issue up.
+
+What was actually missing was only the **telling**. Verified in the browser: a storm hours in the
+past, a clear sky now, and the scene still reads *"A spell of thunderstorm passed. Your Marigold came
+back Gilded."*
+
+Two consequences worth keeping. **Reconciliation is O(plots), not O(slots)** — because each plant
+carries its own moment, there is no walk over elapsed time and no cap needed, which is the thing the
+spec worried about. And **the one-roll-per-plant decision paid a dividend nobody planned**: the
+per-slot model this replaced would have required exactly the expensive catch-up walk the spec
+described.
+
+**The scene is an account, not a receipt**, per
+[17-market-and-positioning.md](17-market-and-positioning.md#offline-progress). Never a total. It also
+stays shut when there is nothing to say — under two minutes away, nothing happened, or the player has
+not planted yet and the coach mark owns the screen. A welcome-back that fires on every reload with
+"nothing happened" trains people to dismiss it unread.
+
+*Rejected: a banner instead of a sheet.* Three or four events with a tinted line each need room to be
+read, and the sheet is the established vocabulary for anything with a list in it.
+
+**Automation still does not run while away.** The drone and auto-planters need the frame loop, so a
+closed tab earns nothing beyond what was in the ground. That is the next piece — the two-axis offline
+earnings chain in [17-market-and-positioning.md](17-market-and-positioning.md#offline-progress) — and
+this scene is the surface it will report into.
+
+---
+
+## 2026-08-15 — Nightbell: the verb the epoch clock was for, and it pays *less* half the time
+
+**Moonflower now carries Nightbell** — ×2 if harvested at night, ×0.5 by day — and **Deeproot moved
+to Jade Fern**, which suits it better anyway ("ancient frond storing rich nutrients" is what a
+deeproot is). Moonflower's own description has read "night-blooming marvel" since the first build; it
+was always the right home and the clock was the only thing in the way.
+
+**It is deliberately not a buff.** Night is ~32% of the cycle, so the expected multiplier is ≈0.98 —
+a sim-test asserts it stays inside 0.85–1.15 across a full cycle. Nightbell does not make a flower
+pay more. It makes **when you pick it** a decision, which is a kind of choice no other verb offers.
+
+*Rejected: "pays double at night" with no downside.* That is a +32% flower, which is just Nurse with
+extra steps and a worse name. The halving is what turns it from a number into a question, and it
+gives the verb a real interaction with Keeper — speed a bloom up so it lands on the right side of
+dusk.
+
+**Read at harvest, not at planting.** The decision being bought is *when to pick it*, which only
+means anything if the clock is checked at the moment you pick.
+
+**This is the seventh effect category** — time — and the category-uniqueness rule still holds. Two
+new assertions came with it: every verb must be used by some seed, and no seed carries two.
+
+Worth noting the sequence, because it is the argument for doing infrastructure properly: this verb
+was cut from the first verb pass, and the reason was recorded rather than the idea being abandoned.
+Moving the day cycle to epoch time made it a twenty-line change.
+
+---
+
+## 2026-08-15 — Day cycle moved onto epoch; a real cheat menu that forces the real code paths
+
+**The day cycle now keys to wall-clock epoch time** instead of `bootAt`, using the same 360-second
+cycle. Phase and `isNight()` live in `game.js`; `ui.js` reads them and paints.
+
+**Why it mattered enough to change:** keyed to page load, the phase restarted on every reload, so
+"is it night" was a per-session accident that no game rule could ever depend on. It is now a shared
+fact the simulation can answer — which is precisely what the **night-blooming verb** needed, the one
+dropped from the first verb pass for this exact reason. That verb is now unblocked. The matching
+entry in [11-known-issues.md](11-known-issues.md) is deleted, since it is fixed.
+
+**Supersedes the 2026-08-01 "day cycle always starts at midday" decision.** It cannot hold once
+sessions no longer set the phase. `DAY.offset` survives as a global shift and nothing more. The
+trade accepted: a player can now open the game at night. Given the cycle is six minutes, the cost is
+small and the shared clock is worth it.
+
+**A development panel, reached from an unlabelled 44 px hit area beside the gem wallet.** Absolutely
+positioned so it can never take a flex row and grow the HUD — as a sibling in flow it wrapped and
+made the wallets three rows tall.
+
+**The design rule, and the reason it is worth the code: every cheat forces an outcome through the
+real path rather than faking an effect.** An armed rarity is consumed inside `harvest()`. A forced
+proc sets a flag the existing `roll*()` functions check *before* their level and chance gates, then
+takes a genuine tap. A forced mutation writes the cell and emits the same `mutate` event the weather
+does. So the animation the owner inspects is the one players get, and a cheat cannot pass while the
+feature is broken.
+
+*Rejected: calling the FX functions directly from the panel.* Far simpler, and it would have made
+the panel a liar — every effect would play perfectly whether or not the system behind it worked. The
+whole point of this menu is to test features without relying on chance, which is only true if the
+features actually run.
+
+**The proc buttons are toggles rather than one-shots**, added the same day after the first version
+proved annoying to use. A single forced fire meant reopening the panel for every look at an
+animation; held at 50% per tap the sheet can stay closed. The boost is additive on the badge rate and
+**bypasses the level gate**, because testing Bee Swarm should not require buying Bee Swarm first.
+`procChance()` became the one place that decides a proc's odds, which also tidied three duplicated
+gates into one function.
+
+**Everything except the weather hold and the proc boosts is one-shot.** A sticky armed rarity would silently corrupt
+every balance reading taken afterwards, so a sim-test asserts that **nothing armed leaks into an
+ordinary harvest** — 2,000 unarmed harvests must land near the natural 2% Legendary rate.
+
+**Cheats that cannot apply say so.** Mutating with nothing in the ground, or a bee swarm with no
+hive, returns a deny sound and a toast. A cheat that quietly does nothing is worse than no cheat,
+because it reads as the feature being broken.
+
+**Not gated behind `?dev=1`.** Consistent with the standing decision to leave the existing cheat
+buttons live — the audience is friends, and the affordance is useful. The hit area being unlabelled
+and out of the tab order is enough for now. Revisit alongside the other cheats before any real
+external audience.
+
+---
+
+## 2026-08-15 — Weather and mutations built; the spec's exposure model was wrong and measurement caught it
+
+Built: the epoch weather clock, the sky, all four mutation tiers, Beacon stacking, and the visuals.
+Not built: offline reconciliation and card generation, steps 5 and 6 of
+[18-mutations-and-weather.md](18-mutations-and-weather.md).
+
+**The design survived contact. One number in it did not.**
+
+The spec said exposure was **one roll per weather slot a plant lives through**, on the theory that
+slow seeds *should* catch more weather — a long grow time buying mutation chances. It was reasoned
+about, not measured. The first run of the income-share test said:
+
+| Seed | Share of income from mutations |
+| --- | --- |
+| Eternal Crown (780 s) | **75.0%** |
+| Marigold (55 s) | 21.2% |
+| Daisy (12 s) | **5.9%** |
+
+A **65× spread**. Scaling the catch rates down to bring the Crown into band pushed a Daisy to 0.6%,
+which means a new player would go hours without seeing the feature at all.
+
+**The error in the reasoning:** slow seeds don't need extra exposure, because they already collect
+the reward. The same ×10 lands on a far bigger yield — ×10 on an Eternal Crown is worth roughly
+2,000× the same mutation on a Daisy. Exposure was paying them a second time for the same virtue.
+
+**The fix: one roll per plant**, at a moment chosen when it is sown. Share is now even across the
+ladder — Daisy 20.4%, Marigold 20.9%, Eternal Crown 19.2% — which is the property that keeps
+mutations present at every stage of the game rather than dominant late and invisible early. **The
+original catch rates were right all along**; only the exposure model was wrong, and the numbers in the
+spec table now match measurement almost exactly (Dewkissed ~5%, Gilded ~1%, Prismatic ~0.3%,
+Wonderstruck ~0.045%).
+
+*Consequence, and it resolves an open question:* one roll means **no upgrades**. A plant cannot catch
+Dewkissed and later improve to Gilded. Simpler to reason about, and it removes a rule that would have
+needed explaining.
+
+**The lesson worth keeping:** the income-share test earned its place before it ever guarded a
+regression — it caught a design error that reasoning had not, on the first run. The version that
+matters compares a **fast seed against a slow one**; a single-seed measurement would have passed and
+shipped the bug.
+
+**Rejected: fixing the spread by shortening the weather slot.** Shorter slots raise everyone's
+exposure but leave the ratio between fast and slow seeds untouched — it scales the problem rather
+than solving it, and a sky changing every ten seconds is unpleasant besides.
+
+**Rejected: capping exposures per plant.** Would have bounded the top end without lifting the bottom;
+a Daisy at 12 s against a 60 s slot still crosses a boundary only a fifth of the time.
+
+**Ripe plots do not roll.** Only unlocked, growing, unharvested plots do. Letting a ripe plot keep
+rolling would make "never harvest, wait for Wonderfall" a real strategy, which fights the core loop.
+
+**Stacking raises the catch chance, never the payout** — `beaconCatchBonus: 0.5` per adjacent
+Beacon. An arranged garden gets *more jackpots*, not bigger ones, which is what keeps the income
+share computable however much agency is added later.
+
+**Nothing new is stored beyond two per-cell fields.** `mutation` and `mutateAt` on each grid cell,
+plus `lastSeen` for the reconciliation that is still to come. The weather clock itself stores
+nothing, because it is a pure function of time. Both grid fields needed their own backfill loop in
+`load()`, per the trap `luckyBug` established.
+
+**Left knowingly broken**, both in [11-known-issues.md](11-known-issues.md): mutations do not
+reconcile across time away, and the day/night cycle still keys to page boot while weather keys to
+epoch — so the sky's weather is shared and honest while its time of day is per-session. Fixing the
+latter is small and **unblocks the night-blooming verb**.
+
+**Verification.** 315 sim-test assertions pass. In the browser: all four tiers caught from their
+matching weather, each with a distinct readable treatment; the storm sky greys the scene without
+hiding the garden; a Wonderstruck Daisy paid 7,000 against a plain 70, exactly ×100; the plot cleared;
+console clean.
+
+---
+
+## 2026-08-15 — Retracted: the card album is not coupled to flowers, and that independence is the design
+
+**Correction.** The same day's earlier entry claimed mutations were the card album's content engine —
+19 species × 5 states yielding ~95 cards from procedural art, with card rarity mapping onto the
+mutation ladder and Mythical = Wonderstruck. **That is wrong and is withdrawn.** The owner's design,
+which is the correct one, is in [19-card-album.md](19-card-album.md).
+
+**Cards are a parallel meta, independent of the garden.** No card is earned by growing any particular
+species, mutation or rarity. Packs come from quests, level-ups, the daily reward, the shop, and a
+**random spawn on a plant in the garden** — the Lucky Ladybug pattern. The album carries its own
+seasonal theme (*Harvest Moon*), its own art, and its own story, flower- and farm-flavoured but not
+about the game's mechanics. The references do exactly this: Monopoly Go's stickers are not board
+spaces, Coin Master's cards are not spins.
+
+**Why the independence is right, recorded because the coupled version was tempting.** If a card
+required a Gilded Marigold, the album would dictate what the player plants — the garden would stop
+being a place to arrange and become a checklist to satisfy. Verbs, adjacency and mutations all exist
+to make planting a *choice*, and a coupled album would cancel them out. Independence also lets
+*every* system pay into the album rather than only the one it is bolted to, and keeps two economies
+from distorting each other when either is retuned.
+
+**The cost of being right: the affordability argument is gone.** The coupled design got ~95 cards
+free from art already rendered. Independent cards with bespoke art and story mean **~108 hand-authored
+illustrations plus ~108 lines of writing per season, forever** — and that collides with the
+no-binary-assets rule in [09-conventions.md](09-conventions.md). Three routes are recorded in the
+spec: let the prototype cheat with procedural placeholder cards (the web build is the design lab, not
+the product), compose cards from background × motif × frame rather than drawing each one, and keep a
+recycled-season fallback. **Position unchanged: build the album, design seasons as possible, do not
+announce a cadence until one season has been authored and measured.**
+
+**The best idea in the feature is the spawning pack.** A card pack that appears on a plant and must
+be tapped, exactly like Lucky Ladybug — a fourth entry in the existing tap-proc pattern, which is
+already built and already tuned through one shared constant. It gives tapping a second reason to
+exist without touching the coin economy, and it connects the album to the garden **without coupling
+them**: the garden is where packs turn up, never what decides their contents.
+
+**Loot-box warning recorded prominently**, because "sales" came up as a pack source. Selling a
+*randomized* pack for real money is a loot box: banned as gambling in Belgium and the Netherlands,
+barred to under-18s in Brazil from March 2026, rated **16+ by PEGI** — which a bright family-appeal
+game cannot absorb — and the stated reason Nintendo shut down a $381M Pocket Camp. Earned packs are
+fine however random. Selling a *specific card*, a *guaranteed-contents bundle*, *dust*, or a *whole
+new set with contents listed* is fine. **Sell more album, never a better chance.**
+
+**Duplicates get a dust sink from day one.** Trading is deferred, so duplicates convert to a currency
+that buys a chosen card. That turns "I already have this" into visible progress and defuses the
+endgame where one card remains. Reachable but expensive; never trivial, never impossible.
+
+---
+
+## 2026-08-15 — Mutations specified: weather causes them, verbs stack them, and the income share is the number that matters
+
+Full spec in [18-mutations-and-weather.md](18-mutations-and-weather.md). Nothing built yet.
+
+**The problem the design had to solve first.** The game already rolls four rarity tiers on every
+harvest. A mutation that is "a second dice roll multiplying payout" is rarity repainted — the same
+AdVenture Capitalist failure this project already diagnosed. Three properties keep it structurally
+different, and all three are load-bearing: a mutation is **visible while the plant grows**, its odds
+are **stackable by the player**, and its cause is **visible weather in the world**. Drop any one and
+it collapses back into rarity.
+
+**Weather is derived from wall-clock epoch time, not a running timer.** `slot = floor(epoch /
+slotSeconds)`, weather is a deterministic hash of the slot. No stored state, no scheduler. Three
+consequences justify the choice: every player sees the same sky at the same moment (a shared-world
+feel with no server), past weather is computable so time away can be reconciled exactly, and it moves
+the day/night clock out of `ui.js` — where it is keyed to *page boot* and restarts on every reload —
+which **re-opens the night-blooming verb that had to be dropped from the first verb pass.**
+
+**Weather rarity gates mutation rarity.** A Wonderstruck needs a rare sky *and* a roll inside it. Two
+gates make the top tier genuinely rare without any single absurd probability, and the rare sky is
+itself an event worth planting into.
+
+**Decision: tune the income share, not the multipliers.** Target is **20–30% of total income from
+mutations**. Pick the share, derive chance × multiplier to hit it. The share survives a full economy
+retune; specific multipliers do not.
+
+**The arithmetic that drove the ladder, because it is counterintuitive.** Contribution to average
+income is `chance × (multiplier − 1)`. A **×3 at 20% adds +40%**; a **×50 at 0.2% adds +10%**. The
+modest frequent bonus inflates the curve *four times harder* than the spectacular rare one and
+delivers a fraction of the feeling. So the rule is **generous at the top of the ladder, stingy at the
+bottom** — jackpots are cheap, and frequent small bonuses are what quietly wreck an economy. The
+owner's framing was the same conclusion from the other direction: unforgettable beats mild.
+
+*Rejected: a single mutation tier.* Four tiers at four cadences — a couple a session, every other
+session, weekly, and rarely — do genuinely different jobs. One tier can be frequent-and-mild or
+rare-and-huge but not both, and the game wants both.
+
+*Rejected: mutation replacing the rarity roll.* Cleaner arithmetic, but it makes rarity irrelevant
+whenever a mutation lands, and two axes that can both fire is more interesting than one that
+overrides the other.
+
+**Slow seeds catch more weather, and that is kept on purpose.** Exposure is per weather slot lived
+through, so a 780-second Eternal Crown sees far more sky than a 12-second Daisy. It hands long-grow
+seeds an advantage unrelated to yield and partially answers the throughput-trap problem in
+[11-known-issues.md](11-known-issues.md). It also makes the ladder impossible to tune by hand, which
+is why the sim-test measures the income share directly rather than asserting chosen numbers.
+
+**Stacking multiplies catch chance, never payout.** A well-arranged garden gets *more jackpots*, not
+bigger ones, so the income-share target stays computable.
+
+**Anti-FOMO rules are part of the spec, not a footnote.** Mutations land on what is already growing,
+weather recurs forever, nothing is missable, and **weather is never a push notification**. The first
+pillar is "cosy, not demanding," and a sky you have to be present for would break it.
+
+**Mutations are the card album's content engine.** 19 species × 5 states = **95 cards from art
+already rendered procedurally**, and card rarity maps onto the mutation ladder with **Mythical =
+Wonderstruck**. That deliberately aligns the album's hardest row with the game's biggest moment.
+
+**Album structure, from the owner.** ~12 sets of 9 cards per season, Common → Legendary plus one
+Mythical per set, album completion as the season goal, ~3-month seasons. Nine sits inside the 7–12
+band the collection research recommends. Recorded in
+[16-progression-and-quests.md](16-progression-and-quests.md), **along with a warning**: a quarterly
+season is a standing commitment to author ~108 cards four times a year, and missing one scores worse
+than never promising it. The position taken is **build the album, design seasons as possible, and do
+not announce a cadence until one season has been authored end to end and measured.**
+
+**On the economy retune.** The owner is right that the whole economy needs one, and possibly fewer
+seeds unlocked through card packs. Deliberately deferred: an economy is tuned against the systems
+that consume it, and orders, cards and prestige do not exist yet — retuning now means retuning twice.
+Noted dependency for whenever it happens: **the level curve currently pays one seed per level to 17**,
+so pulling seeds back leaves levels 2–17 with nothing to grant and needs a replacement reward.
+
+---
+
 ## 2026-08-14 — Verbs built: six flowers that do something, on an axis the yield curve doesn't govern
 
 **Decision.** Six of the nineteen seeds now carry a **verb** — Keeper, Nurse, Beacon, Lantern,

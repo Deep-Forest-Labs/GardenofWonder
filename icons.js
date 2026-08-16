@@ -101,6 +101,11 @@ const Icons = (() => {
       <path d="M6.4 6.6h11.2l-1 12.4a2 2 0 0 1-2 1.8H9.4a2 2 0 0 1-2-1.8Z" fill="#ffa8a8"/>`),
     sparkle: S(`<path d="M12 2.6c.8 5.4 3.4 8 8.8 8.8-5.4.8-8 3.4-8.8 8.8-.8-5.4-3.4-8-8.8-8.8 5.4-.8 8-3.4 8.8-8.8Z" fill="#ffe066"/>`),
     clock: S(`<circle cx="12" cy="12" r="8.6" fill="#e7f5ff"/><path d="M12 7v5.2l3.4 2.2" stroke-width="2.2"/>`),
+    cards: S(`
+      <rect x="3.2" y="7.4" width="9.4" height="13" rx="2.2" fill="#8ce99a" transform="rotate(-16 7.9 13.9)"/>
+      <rect x="7.3" y="6.2" width="9.4" height="13" rx="2.2" fill="#a5d8ff" transform="rotate(-3 12 12.7)"/>
+      <rect x="11.4" y="4.6" width="9.4" height="13" rx="2.2" fill="#ffe066"/>
+      <path d="M16.1 8.4c.9-1.1 2.6-.5 2.6.8 0 1.3-1.6 2.4-2.6 3.2-1-.8-2.6-1.9-2.6-3.2 0-1.3 1.7-1.9 2.6-.8Z" fill="#ff6b9d" stroke-width="1.3"/>`),
     ladybug: S(`
       <path d="M12 6.2a5.8 5.8 0 0 1 5.8 5.8v2.6A5.8 5.8 0 0 1 12 20.4a5.8 5.8 0 0 1-5.8-5.8V12A5.8 5.8 0 0 1 12 6.2Z" fill="#fa5252"/>
       <path d="M8.6 6.8a3.8 3.8 0 0 1 6.8 0Z" fill="#2c1a10" stroke-width="1.3"/>
@@ -155,6 +160,10 @@ const Icons = (() => {
       <path d="M10 2.8h4v6l4.4 7.6a2.6 2.6 0 0 1-2.2 4H7.8a2.6 2.6 0 0 1-2.2-4L10 8.8Z" fill="#e7f5ff"/>
       <path d="M7.4 14.4h9.2l1.8 2a2.6 2.6 0 0 1-2.2 4H7.8a2.6 2.6 0 0 1-2.2-4Z" fill="#8ce0ff"/>
       <path d="M9 2.8h6" stroke-width="2.2"/>`),
+    petal: S(`
+      <path d="M12 3.4c2.6 2.4 4 5 4 7.6a4 4 0 0 1-8 0c0-2.6 1.4-5.2 4-7.6Z" fill="#ff8fab"/>
+      <path d="M12 11v9.4" stroke-width="2"/>
+      <path d="M12 15.4c-1.8-1.6-3.4-2-5-1.6.4 2 1.8 3.2 5 3.4Z" fill="#57c15b" stroke-width="1.4"/>`)
   });
 
   function get(name) {

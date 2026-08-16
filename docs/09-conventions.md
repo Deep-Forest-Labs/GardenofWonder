@@ -81,8 +81,11 @@ Animate `transform` and `opacity`. Avoid animating layout properties.
    garden level.
 2. Write the `art` block. Pick an existing `shape`, or add a recipe to `rings()` / `customHead()` in
    `flora.js`.
-3. Optionally set `gemChance`. Note that setting `gemChance` **overrides** the 5% default rather
-   than adding to it.
+3. **Leave `gemChance` alone.** It is derived from grow time (`grow × 0.0005`, capped at 50%) so
+   gems per hour stays flat across the ladder — see
+   [04-economy.md](04-economy.md#gem-drops). Setting it explicitly overrides that and reintroduces
+   the inversion that made Daisies the best gem farm in the game. Only do it with a reason in the
+   decision log.
 4. Gradients are generated automatically from `c1` / `c2`.
 5. **Check the bloom at 22 px**, not just in a plot. The Almanac renders it that small.
 6. **Bump the last `DATA.almanacMilestones` `at` to the new `DATA.seeds.length`.** Completing the
@@ -179,6 +182,21 @@ Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at
    attribute rather than adding another listener.
 6. Make sure the frequently-changing parts are updatable by `syncAfford()` so it doesn't need a full
    rebuild on every tap.
+
+## Playbook: add a development cheat
+
+Panel is `renderDev()` in `ui.js`; the logic is `Game.Dev` in `game.js`. Full description in
+[03-systems.md](03-systems.md#development-tools).
+
+1. Add the behaviour to `Game.Dev`. **Force the real code path** — arm a flag the real function
+   checks, or call the real function. Never call an FX helper directly to simulate an effect; a
+   panel that plays perfect animations for broken features is worse than no panel.
+2. Add a button to `renderDev()` with `data-dev="<what>"` and `data-arg`.
+3. Handle it in `handleDev()`. Return falsey when a precondition fails so the caller can deny —
+   a cheat that quietly does nothing reads as the feature being broken.
+4. **Make it one-shot unless it is deliberately sticky.** A forced rarity left armed corrupts every
+   balance reading taken afterwards. Only the weather hold is sticky, and it is visibly marked.
+5. Add a sim-test. At minimum assert the force works *and* that nothing leaks into an unforced run.
 
 ## Playbook: change saved state
 

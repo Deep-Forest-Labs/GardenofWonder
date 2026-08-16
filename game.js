@@ -16,7 +16,7 @@ const Game = (() => {
     const upgrades = {
       tapPower: 0, holdSpeed: 0, critChance: 0, critMult: 0, comboMeter: 0,
       rainDance: 0, beeSwarm: 0, ladybug: 0,
-      plotExpansion: 0, autoWater: 0, autoHarvest: 0
+      plotExpansion: 0, autoWater: 0, autoHarvest: 0, offlineRate: 0, offlineHours: 0
     };
     PLOT_AUTOPLANTERS.forEach(({ key }) => { upgrades[key] = 0; });
     return {
@@ -25,12 +25,17 @@ const Game = (() => {
       tickets: 0,
       gems: 0,
       tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50, holdInterval: 900 },
-      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false })),
+      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0, packDrop: false })),
       upgrades,
       decor: [],
       boosters: {},
       boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },
       harvestsThisSession: 0,
+      lastSeen: 0,
+      weatherCall: null,
+      cards: {},
+      packs: 0,
+      setsClaimed: [],
       stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
       wonder: { until: 0, last: 0 },
       apiary: { hives: [], honey: {}, wax: 0 },
@@ -196,15 +201,24 @@ const Game = (() => {
       // hand-listed: the old list had drifted and was missing every badge that
       // shipped in v1 (tapPower, critChance, critMult, comboMeter,
       // plotExpansion, autoWater, autoHarvest), and a new badge needed a line
-      // here that was easy to forget.
+      // here that was easy to forget. Declaring it in defaultState() is now
+      // enough — offlineRate and offlineHours are covered without a line here.
       Object.keys(d.upgrades).forEach((key) => {
         if (typeof state.upgrades[key] !== 'number') state.upgrades[key] = 0;
       });
+
+      /* Nested objects are replaced wholesale by load(), so these need their own re-merge. */
+      if (!state.cards || typeof state.cards !== 'object') state.cards = {};
+      if (typeof state.packs !== 'number') state.packs = 0;
+      if (!Array.isArray(state.setsClaimed)) state.setsClaimed = [];
 
       const now = nowSeconds();
       state.grid.forEach((cell) => {
         if (!cell) return;
         if (typeof cell.luckyBug !== 'boolean') cell.luckyBug = false;
+        if (typeof cell.mutation === 'undefined') cell.mutation = null;
+        if (typeof cell.mutateAt !== 'number') cell.mutateAt = 0;
+        if (typeof cell.packDrop !== 'boolean') cell.packDrop = false;
         if (!cell.seed) { cell.plantedAt = 0; cell.ready = false; return; }
         if (typeof cell.grow !== 'number' || cell.grow <= 0) cell.grow = 1;
         if (typeof cell.plantedAt !== 'number' || cell.plantedAt <= 0 || cell.plantedAt < 1e8) {
@@ -322,7 +336,362 @@ const Game = (() => {
     const own = verbAt(idx);
     if (own === 'nurse') m *= (1 - t.nurseCost);
     if (own === 'deeproot') m *= 1 + plantedNeighbours(idx) * t.deeprootPerNeighbour;
+    /* Read at harvest, not at planting — the decision Nightbell creates is *when to pick it*,
+       which only means something if the clock is checked at the moment you pick. */
+    if (own === 'nightbell') m *= isNight() ? t.nightbellNight : t.nightbellDay;
     return m;
+  }
+
+  /* ---------------- weather and mutations ---------------- */
+
+  /* Weather is a pure function of wall-clock time. Nothing is stored and nothing schedules it, so
+     every player sees the same sky at the same moment and any past slot stays computable — which
+     is what lets time away be reconciled later. */
+  const weatherSlotOf = (seconds) => Math.floor(seconds / DATA.weather.slotSeconds);
+
+  /** Deterministic [0,1) from a slot number. Math.imul keeps this exact in 32-bit. */
+  function slotNoise(slot) {
+    let h = Math.imul(slot | 0, 2654435761);
+    h ^= h >>> 15;
+    h = Math.imul(h, 2246822519);
+    h ^= h >>> 13;
+    h = Math.imul(h, 3266489917);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  }
+
+  function weatherForSlot(slot) {
+    const types = DATA.weather.types;
+    const total = types.reduce((a, t) => a + t.w, 0);
+    let t = slotNoise(slot) * total;
+    for (const w of types) { t -= w.w; if (t <= 0) return w; }
+    return types[0];
+  }
+
+  const weatherAt = (seconds) => {
+    const call = state.weatherCall;
+    if (call && call.id && seconds >= call.from && seconds < call.until) {
+      const t = DATA.weather.types.find((w) => w.id === call.id);
+      if (t) return t;
+    }
+    if (dev.weather) {
+      const forced = DATA.weather.types.find((t) => t.id === dev.weather);
+      if (forced) return forced;
+    }
+    return weatherForSlot(weatherSlotOf(seconds));
+  };
+  const currentWeather = () => weatherAt(nowSeconds());
+
+  /* The day cycle keys to epoch time for the same reason weather does: a phase derived from page
+     boot restarts on every reload, so "is it night" could never mean anything the simulation could
+     act on. Same 6-minute cycle, now shared and answerable. */
+  const dayPhase = (seconds) => (((seconds === undefined ? nowSeconds() : seconds) / DAY.cycle) + DAY.offset) % 1;
+  const isNight = (seconds) => {
+    const t = dayPhase(seconds);
+    return t < DAY.dawn || t >= DAY.dusk;
+  };
+
+  const mutationDef = (id) => (id ? DATA.mutations[id] : null) || null;
+  const mutationRank = (id) => (mutationDef(id) ? mutationDef(id).rank : 0);
+  const mutationMult = (id) => (mutationDef(id) ? mutationDef(id).mult : 1);
+
+  /** Adjacent Beacons make a plot more likely to catch. Stacking raises the chance, never the
+      payout, so the income share stays computable however much agency is added later. */
+  function catchMultiplier(idx) {
+    return 1 + neighbourVerbs(idx, 'beacon') * VT().beaconCatchBonus;
+  }
+
+  /* Every plant gets exactly ONE mutation roll, at a moment chosen when it is sown, against the
+     weather standing at that moment. One roll per cycle rather than one per slot lived through:
+     rolling per slot made exposure proportional to grow time, which measured out at a 65x spread
+     between an Eternal Crown and a Daisy — dominant late and invisible early. A slow seed is
+     already rewarded, because the same multiplier lands on a far bigger yield. */
+  const mutationMoment = (plantedAt, grow) => plantedAt + Math.random() * grow;
+
+  /** Roll any plant whose moment has arrived. Returns what caught, for the UI to celebrate. */
+  function rollMutations() {
+    const now = nowSeconds();
+    const caught = [];
+    state.grid.forEach((cell, idx) => {
+      if (cell.locked || !cell.seed || !cell.mutateAt || now < cell.mutateAt) return;
+      const w = weatherAt(cell.mutateAt);
+      cell.mutateAt = 0;
+      if (!w.mutation) return;
+      if (Math.random() >= w.catch * catchMultiplier(idx)) return;
+      cell.mutation = w.mutation;
+      caught.push({ idx, mutation: w.mutation, weather: w, seed: seedById(cell.seed) });
+    });
+    return caught;
+  }
+
+  let lastWeatherSlot = null;
+
+  function processWeather() {
+    const slot = weatherSlotOf(nowSeconds());
+    if (lastWeatherSlot !== slot) {
+      const first = lastWeatherSlot === null;
+      lastWeatherSlot = slot;
+      if (!first) emit('weather', { weather: weatherForSlot(slot) });
+    }
+    const caught = rollMutations();
+    state.lastSeen = nowSeconds();
+    if (caught.length) {
+      save();
+      emit('mutate', { caught });
+    }
+  }
+
+  /* Below this, a reload is just a reload and the player is told nothing. */
+  const WELCOME_MIN_AWAY = 120;
+
+  /* Derived from the rarity table rather than hardcoded, so retuning rarity carries through to
+     offline income automatically. Currently 1.58. */
+  const OFFLINE_RATE_MAX = Math.ceil(
+    (DATA.offline.maxRate - DATA.offline.baseRate) / DATA.offline.ratePerLevel
+  );
+  const OFFLINE_HOURS_MAX = Math.ceil(
+    (DATA.offline.maxHours - DATA.offline.baseHours) / DATA.offline.hoursPerLevel
+  );
+
+  const EXPECTED_RARITY_MULT = (() => {
+    const total = DATA.rarity.reduce((a, r) => a + r.w, 0);
+    return DATA.rarity.reduce((a, r) => a + (r.w / total) * r.m, 0);
+  })();
+
+  /* Proportional to grow time, so gems accrue with time in the ground rather than with harvest
+     count — a Daisy cycles 65x faster than an Eternal Crown and used to out-farm it for gems. */
+  function gemChanceFor(seed) {
+    if (!seed) return 0;
+    if (typeof seed.gemChance === 'number') return seed.gemChance;
+    return Math.min(DATA.gemChanceMax, seed.grow * DATA.gemChancePerGrowSecond);
+  }
+
+  const weatherCallPrice = (id) => DATA.weatherCall.prices[id] || 0;
+  const weatherCallable = (id) => Object.prototype.hasOwnProperty.call(DATA.weatherCall.prices, id);
+  const weatherCallActive = () => {
+    const c = state.weatherCall;
+    return c && c.id && nowSeconds() < c.until ? c : null;
+  };
+
+  /* Buying a sky does two things: it holds that weather for a few minutes, and it pulls every
+     unspent mutation roll in the ground into the window. Without the second part the purchase is
+     mostly a no-op, because a roll is a single instant and most of them fall outside four minutes.
+     Only the common skies are callable — the rare ones stay unbuyable on purpose. */
+  function callWeather(id) {
+    if (!weatherCallable(id)) return null;
+    if (weatherCallActive()) return null;
+    const price = weatherCallPrice(id);
+    if (state.gems < price) return null;
+    state.gems -= price;
+    const from = nowSeconds();
+    const until = from + DATA.weatherCall.minutes * 60;
+    state.weatherCall = { id, from, until };
+    let pulled = 0;
+    state.grid.forEach((cell) => {
+      if (cell.locked || !cell.seed || !cell.mutateAt) return;
+      cell.mutateAt = from + Math.random() * (until - from);
+      pulled += 1;
+    });
+    save();
+    emit('currency');
+    emit('weather', { weather: currentWeather() });
+    emit('panels');
+    return { id, until, pulled, price };
+  }
+
+  const skipCost = (idx) => {
+    const cell = state.grid[idx];
+    if (!cell || cell.locked || !cell.seed) return 0;
+    const remain = Math.max(0, cell.grow - (nowSeconds() - cell.plantedAt));
+    if (remain <= 0) return 0;
+    return Math.max(1, Math.ceil(remain / DATA.skipSecondsPerGem));
+  };
+
+  /* A skip buys time and nothing else. The roll still resolves against the weather standing at the
+     moment it was originally scheduled for — computable because weather is deterministic — so
+     hurrying a plant can neither gain nor lose you a mutation. */
+  function skipGrow(idx) {
+    const cell = state.grid[idx];
+    const cost = skipCost(idx);
+    if (!cost || state.gems < cost) return null;
+    state.gems -= cost;
+    if (cell.mutateAt) {
+      const w = weatherAt(cell.mutateAt);
+      cell.mutateAt = 0;
+      if (w.mutation && Math.random() < w.catch * catchMultiplier(idx)) {
+        cell.mutation = w.mutation;
+        emit('mutate', { caught: [{ idx, mutation: w.mutation, weather: w, seed: seedById(cell.seed) }] });
+      }
+    }
+    /* Backdate the planting rather than shrinking the grow time: a plant skipped the instant it
+       went in has zero elapsed seconds, and any positive grow left it permanently one tick short
+       of ripe. This also keeps `grow` intact so the progress bar still reads full. */
+    cell.plantedAt = nowSeconds() - cell.grow;
+    save();
+    emit('currency');
+    return { idx, cost };
+  }
+
+  const offlineRate = () => Math.min(
+    DATA.offline.maxRate,
+    DATA.offline.baseRate + state.upgrades.offlineRate * DATA.offline.ratePerLevel
+  );
+  const offlineHours = () => Math.min(
+    DATA.offline.maxHours,
+    DATA.offline.baseHours + state.upgrades.offlineHours * DATA.offline.hoursPerLevel
+  );
+
+  /* What the garden actually produces on its own, in coins per second.
+     A plot counts only if it has an auto-planter, and only if the drone exists to pick it —
+     an unautomated garden earns nothing while away, which is honest and makes automation matter.
+     The drone's cadence caps the total, because it can only lift one plot at a time. */
+  function passiveIncomeRate() {
+    const droneLevel = state.upgrades.autoHarvest;
+    if (!droneLevel) return 0;
+    const droneCapacity = 1 / Math.max(0.7, 3 - droneLevel * 0.5);
+
+    const yieldBonus = (1 + boostVal('globalCredits')) * (1 + pollination());
+    let cycles = 0;
+    let weightedNet = 0;
+    PLOT_AUTOPLANTERS.forEach(({ key, idx }) => {
+      const level = state.upgrades[key];
+      const cell = state.grid[idx];
+      if (!level || !cell || cell.locked) return;
+      const maxSeedIndex = Math.min(level - 1, highestUnlockedSeedIndex(), DATA.seeds.length - 1);
+      if (maxSeedIndex < 0) return;
+      const seed = DATA.seeds[maxSeedIndex];
+      const grow = seed.grow * growModifier() * keeperModifier(idx);
+      if (grow <= 0) return;
+      const gross = seed.yield * EXPECTED_RARITY_MULT * yieldBonus
+        * masteryMult(seed.id) * verbPayoutMult(idx);
+      const perCycle = Math.max(0, gross - seed.cost);
+      const rate = 1 / grow;
+      cycles += rate;
+      weightedNet += rate * perCycle;
+    });
+    if (cycles <= 0) return 0;
+    const avgNet = weightedNet / cycles;
+    return Math.min(cycles, droneCapacity) * avgNet;
+  }
+
+  /* Full rate up to the cap, then a deliberate trickle rather than nothing. A hard zero reads as
+     punishment; a trickle reads as a rule, and it is the cap that gives returning a point. */
+  function offlineEarnings(seconds) {
+    const rate = passiveIncomeRate();
+    if (rate <= 0 || seconds <= 0) return { coins: 0, capped: false, paidSeconds: 0, rate };
+    const capSeconds = offlineHours() * 3600;
+    const full = Math.min(seconds, capSeconds);
+    const over = Math.max(0, seconds - capSeconds);
+    const coins = Math.floor(rate * offlineRate() * (full + over * DATA.offline.trickle));
+    return { coins, capped: over > 0, paidSeconds: full, overSeconds: over, rate };
+  }
+
+  /* Reconcile time away and report what happened, for the welcome-back scene.
+     Mutations need no catch-up pass: rollMutations() evaluates each plant against the weather at
+     its own scheduled moment, so a roll that came due while the tab was shut resolves against the
+     sky that was actually standing then, not the one standing now. */
+  function reconcile() {
+    const now = nowSeconds();
+    const since = state.lastSeen || 0;
+    const away = since ? Math.max(0, now - since) : 0;
+
+    const caught = rollMutations();
+    const ripe = [];
+    state.grid.forEach((cell, idx) => {
+      if (cell.locked || !cell.seed) return;
+      if (now - cell.plantedAt >= cell.grow) ripe.push(idx);
+    });
+    const jars = jarsWaiting();
+
+    const earned = away >= WELCOME_MIN_AWAY ? offlineEarnings(away) : { coins: 0, capped: false };
+    if (earned.coins > 0) {
+      state.credits += earned.coins;
+      emit('currency');
+    }
+
+    state.lastSeen = now;
+    if (caught.length || earned.coins > 0) save();
+
+    if (away < WELCOME_MIN_AWAY) return null;
+    if (!ripe.length && !caught.length && !jars && !earned.coins) return null;
+    return {
+      away, caught, ripened: ripe.length, jars, weather: currentWeather(),
+      earned: earned.coins, capped: earned.capped,
+      capHours: offlineHours(), rate: offlineRate()
+    };
+  }
+
+  /* ---------------- the card album ---------------- */
+
+  const CARD_INDEX = (() => {
+    const map = {};
+    ALBUM.sets.forEach((set) => set.cards.forEach((card) => { map[card.id] = { card, set }; }));
+    return map;
+  })();
+
+  const cardById = (id) => (CARD_INDEX[id] ? CARD_INDEX[id].card : null);
+  const setOfCard = (id) => (CARD_INDEX[id] ? CARD_INDEX[id].set : null);
+  const rarityDef = (key) => CARD_RARITIES.find((r) => r.key === key) || CARD_RARITIES[0];
+
+  /* Cards are owned *instances*, not booleans — duplicates have to be representable for a dust
+     sink or any future gifting to exist at all. `state.cards[id]` is a count. */
+  const cardCount = (id) => state.cards[id] || 0;
+  const hasCard = (id) => cardCount(id) > 0;
+  const setOwned = (setId) => {
+    const set = ALBUM.sets.find((x) => x.id === setId);
+    return set ? set.cards.reduce((n, c) => n + (hasCard(c.id) ? 1 : 0), 0) : 0;
+  };
+  const setComplete = (setId) => setOwned(setId) === 9;
+  const albumOwned = () => ALBUM.sets.reduce((n, s) => n + setOwned(s.id), 0);
+  const albumTotal = () => ALBUM.sets.length * 9;
+
+  /* Weighted by rarity, then biased toward cards the player is missing — an album that keeps
+     handing back duplicates nobody can yet spend is the fastest way to make collecting a chore. */
+  function drawCard() {
+    const total = CARD_RARITIES.reduce((a, r) => a + r.w, 0);
+    let t = Math.random() * total;
+    let rarity = CARD_RARITIES[0];
+    for (const r of CARD_RARITIES) { t -= r.w; if (t <= 0) { rarity = r; break; } }
+    const pool = [];
+    ALBUM.sets.forEach((set) => set.cards.forEach((c) => { if (c.rarity === rarity.key) pool.push(c); }));
+    if (!pool.length) return null;
+    const missing = pool.filter((c) => !hasCard(c.id));
+    const from = missing.length ? missing : pool;
+    return from[Math.floor(Math.random() * from.length)];
+  }
+
+  /** Open a pack. Returns what came out, each marked new or duplicate. */
+  function openPack() {
+    if (state.packs <= 0) return null;
+    state.packs -= 1;
+    const drawn = [];
+    const completedSets = [];
+    for (let i = 0; i < ALBUM.packSize; i += 1) {
+      const card = drawCard();
+      if (!card) continue;
+      const set = setOfCard(card.id);
+      const wasComplete = setComplete(set.id);
+      const isNew = !hasCard(card.id);
+      state.cards[card.id] = cardCount(card.id) + 1;
+      if (isNew && !wasComplete && setComplete(set.id)) completedSets.push(set.id);
+      drawn.push({ card, set, isNew, copies: cardCount(card.id) });
+    }
+    completedSets.forEach((id) => {
+      if (state.setsClaimed.indexOf(id) === -1) state.setsClaimed.push(id);
+    });
+    save();
+    emit('panels');
+    return { drawn, completedSets, packsLeft: state.packs };
+  }
+
+  function grantPacks(n) {
+    const add = Math.max(0, Math.floor(n));
+    if (!add) return 0;
+    state.packs += add;
+    save();
+    emit('panels');
+    emit('packs', { granted: add, total: state.packs });
+    return state.packs;
   }
 
   /* ---------------- reputation, levels, quests ---------------- */
@@ -797,6 +1166,32 @@ const Game = (() => {
   // feel big, not the climb toward it. See docs/10-decision-log.md.
   const PROC_CHANCE_PER_LEVEL = 0.002;
 
+  /* Development overrides. Every one of these forces an outcome through the *real* code path
+     rather than faking an effect, so a cheat exercises the feature it claims to test. Each is
+     consumed once and cleared, except `weather`, which is sticky until reset. */
+  const dev = { rarity: null, gem: false, weather: null, procs: {}, boost: {} };
+  /* Dev-only, deliberately not in data.js: this is a testing affordance, not a tunable, and it
+     must never reach remote config. Additive so a boosted proc fires often enough to watch even
+     with its badge at level zero. */
+  const DEV_PROC_BOOST = 0.5;
+  const devTake = (key) => {
+    const v = dev[key];
+    if (key !== 'weather') dev[key] = key === 'gem' ? false : null;
+    return v;
+  };
+  const devProc = (key) => {
+    if (!dev.procs[key]) return false;
+    dev.procs[key] = false;
+    return true;
+  };
+
+  /* The badge level and the dev boost meet here, so a boosted proc bypasses the level gate as
+     well as the rate — testing Bee Swarm should not require buying Bee Swarm first. */
+  function procChance(key) {
+    const base = (state.upgrades[key] || 0) * PROC_CHANCE_PER_LEVEL;
+    return Math.min(1, base + (dev.boost[key] ? DEV_PROC_BOOST : 0));
+  }
+
   /** Unlocked, seeded, not-yet-ready plots — eligible targets for a garden proc. */
   function growingPlotIndices() {
     const idxs = [];
@@ -805,8 +1200,8 @@ const Game = (() => {
   }
 
   function rollRainDance() {
-    const lvl = state.upgrades.rainDance;
-    if (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL) return null;
+    const forced = devProc('rainDance');
+    if (!forced && Math.random() >= procChance('rainDance')) return null;
     const idxs = growingPlotIndices();
     if (!idxs.length) return null;
     const idx = idxs[Math.floor(Math.random() * idxs.length)];
@@ -819,8 +1214,8 @@ const Game = (() => {
   }
 
   function rollBeeSwarm() {
-    const lvl = state.upgrades.beeSwarm;
-    if (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL) return null;
+    const forced = devProc('beeSwarm');
+    if (!forced && Math.random() >= procChance('beeSwarm')) return null;
     const openHives = [];
     state.apiary.hives.forEach((h, i) => { if (h.jars.length < APIARY.capacity) openHives.push(i); });
     if (!openHives.length) return null;
@@ -831,9 +1226,36 @@ const Game = (() => {
     return { hive: i, variety };
   }
 
+  /* A pack lands on a plot and waits to be collected — the Lucky Ladybug shape, because "something
+     turned up in your garden, go and get it" is a better beat than a number appearing in a wallet.
+     Unlike the three badge procs this is always on: it is the album's only in-game source, so a
+     player who has bought nothing still has to be able to find one. */
+  function rollCardPack() {
+    const forced = devProc('cardPack');
+    if (!forced && Math.random() >= DATA.packDropChance) return null;
+    const open = [];
+    state.grid.forEach((cell, i) => { if (!cell.locked && !cell.packDrop) open.push(i); });
+    if (!open.length) return null;
+    const idx = open[Math.floor(Math.random() * open.length)];
+    state.grid[idx].packDrop = true;
+    return { idx };
+  }
+
+  /** Collect a pack sitting on a plot. Returns the plot, or null if there was nothing there. */
+  function collectPackDrop(idx) {
+    const cell = state.grid[idx];
+    if (!cell || !cell.packDrop) return null;
+    cell.packDrop = false;
+    state.packs += 1;
+    save();
+    emit('panels');
+    emit('packs', { granted: 1, total: state.packs });
+    return { idx, packs: state.packs };
+  }
+
   function rollLadybug() {
-    const lvl = state.upgrades.ladybug;
-    if (!lvl || Math.random() >= lvl * PROC_CHANCE_PER_LEVEL) return null;
+    const forced = devProc('ladybug');
+    if (!forced && Math.random() >= procChance('ladybug')) return null;
     const idxs = growingPlotIndices();
     if (!idxs.length) return null;
     // Prefer a plot that isn't already lucky, so triggers don't pile onto one spot.
@@ -878,11 +1300,12 @@ const Game = (() => {
     const rainDance = rollRainDance();
     const beeSwarm = rollBeeSwarm();
     const ladybug = rollLadybug();
+    const cardPack = rollCardPack();
     save();
     emit('currency');
     const payload = {
       gain: rounded, crit: isCrit, combo: state.tap.combo, gemDrop, sparkedWonder: sparked,
-      rainDance, beeSwarm, ladybug, held: Boolean(held)
+      rainDance, beeSwarm, ladybug, cardPack, held: Boolean(held)
     };
     emit('tap', payload);
     noteQuest('tap', null, 1);
@@ -910,8 +1333,12 @@ const Game = (() => {
       seed: seedDef.id,
       plantedAt: nowSeconds(),
       grow: seedDef.grow * growModifier() * keeperModifier(idx),
-      aura: ''
+      aura: '',
+      mutation: null,
+      mutateAt: 0
     };
+    const cellNow = state.grid[idx];
+    cellNow.mutateAt = mutationMoment(cellNow.plantedAt, cellNow.grow);
     /* A Keeper planted next to something already growing has to help it too, or the verb would
        only ever pay out when the player happened to plant in the right order. */
     const quickened = seedDef.verb === 'keeper' ? quickenNeighbours(idx) : [];
@@ -1004,17 +1431,22 @@ const Game = (() => {
     const beacons = neighbourVerbs(idx, 'beacon');
     const lanterns = neighbourVerbs(idx, 'lantern');
     const verbMult = verbPayoutMult(idx);
-    const r = rollRarity(
-      boostVal('rarityWeight')
-      + (luckyHarvest ? LADYBUG_RARITY_BONUS : 0)
-      + beacons * VT().beaconRarity
-    );
+    const mutation = cell.mutation || null;
+    const mutMult = mutationMult(mutation);
+    const forcedRarity = devTake('rarity');
+    const r = forcedRarity
+      ? DATA.rarity.find((x) => x.key === forcedRarity)
+      : rollRarity(
+        boostVal('rarityWeight')
+        + (luckyHarvest ? LADYBUG_RARITY_BONUS : 0)
+        + beacons * VT().beaconRarity
+      );
     const yieldBase = sdef.yield * r.m;
     const yieldBonus = 1 + boostVal('globalCredits');
     // Read before recordHarvest: the harvest that completes a tier is paid at the old rate.
     const mastered = masteryMult(sdef.id);
     const payout = Math.round(
-      yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * mastered * verbMult
+      yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * mastered * verbMult * mutMult
     );
 
     state.credits += payout;
@@ -1030,12 +1462,12 @@ const Game = (() => {
       repBonus = DATA.harvestRepGrant || 1;
       levelGrants = levelGrants.concat(addRep(repBonus));
     }
-    const baseGem = typeof sdef.gemChance === 'number' ? sdef.gemChance : 0.05;
+    const baseGem = gemChanceFor(sdef);
     const gemChance = baseGem * (lanterns ? Math.pow(VT().lanternGemMult, lanterns) : 1);
     let gemDrop = false;
-    if (Math.random() < gemChance) { state.gems += 1; gemDrop = true; }
+    if (devTake('gem') || Math.random() < gemChance) { state.gems += 1; gemDrop = true; }
 
-    state.grid[idx] = { ...cell, seed: null, plantedAt: 0, grow: 0, ready: false, aura: r.a, luckyBug: false };
+    state.grid[idx] = { ...cell, seed: null, plantedAt: 0, grow: 0, ready: false, aura: r.a, luckyBug: false, mutation: null, mutateAt: 0 };
     const sown = sdef.verb === 'spreader' ? trySpread(idx, sdef) : -1;
     const sparked = tryWonder(WONDER.harvestChance);
     save();
@@ -1044,7 +1476,7 @@ const Game = (() => {
       idx, payout, rarity: r, seed: sdef, gemDrop, repBonus, sparkedWonder: sparked, luckyHarvest,
       firstDiscover: almanac.first, discovered: almanac.count, bestRarity: almanac.best,
       milestones: almanac.milestones, mastery: almanac.mastery,
-      verbMult, beacons, lanterns, sown
+      verbMult, beacons, lanterns, sown, mutation, mutMult
     };
     emit('harvest', payload);
     if (almanac.milestones.length) {
@@ -1289,7 +1721,9 @@ const Game = (() => {
       return false;
     },
     autoWater: cappedUpgrade('autoWater', AUTO_WATER_MAX_LEVEL),
-    autoHarvest: () => { state.upgrades.autoHarvest += 1; return true; }
+    autoHarvest: () => { state.upgrades.autoHarvest += 1; return true; },
+    offlineRate: cappedUpgrade('offlineRate', OFFLINE_RATE_MAX),
+    offlineHours: cappedUpgrade('offlineHours', OFFLINE_HOURS_MAX)
   };
   PLOT_AUTOPLANTERS.forEach(({ key }) => {
     UPGRADE_EFFECTS[key] = () => { state.upgrades[key] += 1; return true; };
@@ -1302,6 +1736,8 @@ const Game = (() => {
     if (key === 'rainDance') return state.upgrades.rainDance >= RAIN_DANCE_MAX_LEVEL;
     if (key === 'beeSwarm') return state.upgrades.beeSwarm >= BEE_SWARM_MAX_LEVEL;
     if (key === 'ladybug') return state.upgrades.ladybug >= LADYBUG_MAX_LEVEL;
+    if (key === 'offlineRate') return state.upgrades.offlineRate >= OFFLINE_RATE_MAX;
+    if (key === 'offlineHours') return state.upgrades.offlineHours >= OFFLINE_HOURS_MAX;
     return false;
   };
 
@@ -1393,6 +1829,7 @@ const Game = (() => {
   function tick(dt) {
     const now = nowSeconds();
     removeExpiredBoosters();
+    processWeather();
 
     const wa = wonderActive();
     if (wonderWasActive && !wa) emit('wonder', { active: false });
@@ -1437,6 +1874,154 @@ const Game = (() => {
 
   ensureProgression();
 
+  /* ---------------- development tools ---------------- */
+
+  const Dev = {
+    /* Weather is sticky so the sky can be held while animations are inspected. */
+    setWeather(id) {
+      dev.weather = id || null;
+      emit('weather', { weather: currentWeather() });
+      return currentWeather();
+    },
+    weatherOverride: () => dev.weather,
+
+    /** Drop a mutation onto a growing plot and fire the real celebration. */
+    mutate(id) {
+      if (!DATA.mutations[id]) return null;
+      const idx = state.grid.findIndex((c) => !c.locked && c.seed && !c.ready);
+      if (idx === -1) return null;
+      state.grid[idx].mutation = id;
+      state.grid[idx].mutateAt = 0;
+      save();
+      const caught = [{ idx, mutation: id, weather: currentWeather(), seed: seedById(state.grid[idx].seed) }];
+      emit('mutate', { caught });
+      return caught[0];
+    },
+
+    /** Arm the next harvest. Consumed by harvest() itself, so the whole payout path runs. */
+    armRarity(key) { dev.rarity = key; return key; },
+    armGem() { dev.gem = true; return true; },
+
+    /** Hold a proc at a high rate so it can be watched across many ordinary taps. */
+    toggleProc(key) {
+      dev.boost[key] = !dev.boost[key];
+      return dev.boost[key];
+    },
+    boostedProcs: () => Object.keys(dev.boost).filter((k) => dev.boost[k]),
+    procChance,
+
+    /** Force a tap proc once, then take a real tap so it fires through tapFlower(). */
+    fireProc(key) {
+      dev.procs[key] = true;
+      const r = tapFlower();
+      dev.procs[key] = false;
+      return r;
+    },
+
+    /** Fill every open plot with the priciest seed the player can actually plant. */
+    fillGarden() {
+      let n = 0;
+      state.grid.forEach((cell, idx) => {
+        if (cell.locked || cell.seed) return;
+        const pick = DATA.seeds.filter((sd) => seedUnlocked(sd.id)).pop();
+        if (pick && plant(idx, pick, false)) n += 1;
+      });
+      return n;
+    },
+
+    /** Bring everything in the ground to ripe, so harvest animations can be inspected. */
+    ripenAll() {
+      let n = 0;
+      state.grid.forEach((cell) => {
+        if (cell.locked || !cell.seed || cell.ready) return;
+        cell.plantedAt = nowSeconds() - cell.grow - 1;
+        n += 1;
+      });
+      save();
+      emit('panels');
+      return n;
+    },
+
+    grantLevels(n) {
+      const grants = addRep(cumulativeRep(state.level + n) - state.rep);
+      save();
+      emit('currency');
+      if (grants.length) emit('levelup', { from: grants[0].level - 1, to: state.level, grants });
+      return state.level;
+    },
+
+    /* Wind the world back by n hours rather than winding `lastSeen` forward, so plots really do
+       mature, mutation moments really do come due, and hives really do fill — the report is then
+       produced by the same reconcile() a genuine absence would run. */
+    simulateAway(hours) {
+      const back = Math.max(0, hours) * 3600;
+      if (!back) return null;
+      state.grid.forEach((cell) => {
+        if (cell.locked || !cell.seed) return;
+        cell.plantedAt -= back;
+        if (cell.mutateAt) cell.mutateAt -= back;
+      });
+      state.apiary.hives.forEach((h) => { h.at -= back; });
+      state.lastSeen = nowSeconds() - back;
+      const report = reconcile();
+      emit('panels');
+      return report;
+    },
+
+    /** Drop a pack onto a plot so the collect beat can be inspected without waiting on the roll. */
+    dropPack() {
+      dev.procs.cardPack = true;
+      const r = rollCardPack();
+      dev.procs.cardPack = false;
+      if (r) { save(); emit('panels'); }
+      return r;
+    },
+
+    /** Hand over a card. `rarity` narrows it; otherwise anything still missing. */
+    grantCard(rarity) {
+      const pool = [];
+      ALBUM.sets.forEach((set) => set.cards.forEach((c) => {
+        if (rarity && c.rarity !== rarity) return;
+        pool.push(c);
+      }));
+      if (!pool.length) return null;
+      const missing = pool.filter((c) => !hasCard(c.id));
+      const from = missing.length ? missing : pool;
+      const card = from[Math.floor(Math.random() * from.length)];
+      const set = setOfCard(card.id);
+      const wasComplete = setComplete(set.id);
+      const isNew = !hasCard(card.id);
+      state.cards[card.id] = cardCount(card.id) + 1;
+      const completed = isNew && !wasComplete && setComplete(set.id);
+      if (completed && state.setsClaimed.indexOf(set.id) === -1) state.setsClaimed.push(set.id);
+      save();
+      emit('panels');
+      return { card, set, isNew, copies: cardCount(card.id), completedSet: completed };
+    },
+
+    /** Fill the first unfinished set, to reach the completion beat directly. */
+    completeSet() {
+      const set = ALBUM.sets.find((x) => !setComplete(x.id));
+      if (!set) return null;
+      set.cards.forEach((c) => { if (!hasCard(c.id)) state.cards[c.id] = 1; });
+      if (state.setsClaimed.indexOf(set.id) === -1) state.setsClaimed.push(set.id);
+      save();
+      emit('panels');
+      return set;
+    },
+
+    clearAll() {
+      dev.rarity = null;
+      dev.gem = false;
+      dev.weather = null;
+      dev.procs = {};
+      dev.boost = {};
+      emit('weather', { weather: currentWeather() });
+    },
+
+    pending: () => ({ rarity: dev.rarity, gem: dev.gem, weather: dev.weather, boost: Object.keys(dev.boost).filter((k) => dev.boost[k]) })
+  };
+
   return {
     state, on, emit, load, save, saveNow, reset, nowSeconds,
     seedById, activeBoost, boostVal, growModifier, rollRarity,
@@ -1454,6 +2039,12 @@ const Game = (() => {
     claimQuest, stripQuest, questById,
     discoveredCount, discoveredOf, bestRarityOf, almanacMilestones,
     masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf,
-    neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier
+    neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier,
+    weatherSlotOf, weatherForSlot, weatherAt, currentWeather, rollMutations, processWeather,
+    mutationDef, mutationRank, mutationMult, catchMultiplier,
+    dayPhase, isNight, reconcile, gemChanceFor,
+    cardById, setOfCard, rarityDef, cardCount, hasCard, setOwned, setComplete,
+    albumOwned, albumTotal, openPack, grantPacks, collectPackDrop,
+    callWeather, weatherCallPrice, weatherCallable, weatherCallActive, skipCost, skipGrow, offlineRate, offlineHours, passiveIncomeRate, offlineEarnings, Dev
   };
 })();

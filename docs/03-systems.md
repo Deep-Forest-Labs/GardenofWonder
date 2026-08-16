@@ -200,6 +200,246 @@ tint the empty soil until something new is planted.
   the better gem farm.
 - **2% chance of triggering a Wonder Effect**, subject to cooldown.
 
+## The card album
+
+**Built 2026-08-15.** Full design in [19-card-album.md](19-card-album.md). Content in `ALBUM`
+(`data.js`), state and drawing in `game.js`, three panels in `ui.js`.
+
+**Deliberately independent of the garden.** No card is earned by growing anything in particular —
+packs come from play, and what is inside them owes nothing to what is planted. A coupled album would
+dictate what the player plants and turn the garden from a place to arrange into a checklist.
+
+12 sets × 9 cards = 108, in one season. Every set is three Common, two Uncommon, two Rare, one
+Legendary and one Mythical. `state.cards` holds **counts, not flags**, so duplicates are
+representable for the dust sink that has yet to be built.
+
+**Card art is a slot** — `{ icon, tint }` composes a placeholder from the existing icon vocabulary,
+`{ src }` would carry a real illustration. Nine motifs are cycled across all twelve sets, because the
+feature is the album rather than the illustration.
+
+Packs hold three cards, drawn by rarity and then **biased toward what the player is missing**. The
+opening reveals one card at a time with rarity telegraphed before the name is legible.
+
+**Packs turn up in the garden.** A fourth tap roll, `rollCardPack()`, drops a pack onto an unlocked
+plot at a flat 0.0015 per tap — **always on, with no badge behind it**, because it is the album's
+only in-game source. It sits on the plot until tapped, the Lucky Ladybug shape, and `collectPackDrop()`
+hands over the pack. `cell.packDrop` is a new per-cell field and needs its own backfill.
+
+That is how the album touches the garden **without being coupled to it**: the garden is where packs
+turn up, never what decides their contents.
+
+Not yet built: duplicates and dust, seasons, completion rewards.
+
+## Gems: where they come from and what they buy
+
+**Reworked 2026-08-15.** The standing rule, which every future gem or IAP proposal is tested
+against:
+
+> **Gems buy chances, choices and looks. Never outcomes.**
+> Skipping a timer is the one deliberate exception, at an expensive rate — it is farm-game
+> convention and it buys *time*, not a better result.
+
+### The faucet
+
+`gemChanceFor(seed)` derives the drop chance from **grow time**: `grow × 0.0005`, clamped at 50%.
+A Daisy is 0.6%, an Eternal Crown 39% — and because a Daisy cycles 65× more often, **gems per hour
+come out flat at ~1.8 per plot whatever is planted.**
+
+That replaces a flat 5% default which, combined with explicit low values on the top five seeds, made
+the cheapest seed the best gem farm in the game. Gems now track *time played*, not seed choice, and
+nobody is punished for growing what they like. A seed may still set an explicit `gemChance` to
+override; none currently do.
+
+### Calling a sky
+
+Gems buy Rain (8) or Thunderstorm (25) for four minutes. The purchase does two things: it holds that
+weather, and it **pulls every unspent mutation roll in the ground into the window**. Without the
+second part the purchase is nearly a no-op, since a roll is a single instant and most fall outside
+four minutes.
+
+**Aurora and Wonderfall are not for sale at any price.** The rarest skies have to find you — a ×100
+behind a paywall is a jackpot you can buy, and if gems ever cost money that is both pay-to-win and
+gambling-shaped. A sim-test asserts they stay unbuyable.
+
+Only one call runs at a time.
+
+### Skipping a timer
+
+`skipCost(idx)` is `ceil(remaining / 30)` gems, minimum 1 — so it falls as a plant grows and a ripe
+plot is free. The cost shows on the plant itself, always visible, which is the farm-game convention
+and teaches the option without hiding it behind a gesture.
+
+**A skip buys time and nothing else.** The mutation roll still resolves against the weather standing
+at its *originally scheduled* moment — computable because weather is deterministic — so hurrying a
+plant can neither gain nor lose a mutation. That closes the exploit where a player waits for a
+Wonderfall and skip-grows the whole garden into it.
+
+Implementation note: the skip **backdates `plantedAt`** rather than shrinking `grow`. A plant skipped
+the instant it went in has zero elapsed seconds, and any positive grow left it permanently one tick
+short of ripe.
+
+## Weather and mutations
+
+**Built 2026-08-15.** Full design and reasoning in
+[18-mutations-and-weather.md](18-mutations-and-weather.md); numbers in
+[04-economy.md](04-economy.md#weather-and-mutation-tuning). Tables in `DATA.weather` and
+`DATA.mutations`, simulation in the weather section of `game.js`.
+
+**Weather is a pure function of the clock.** `slot = floor(epochSeconds / 60)`, and the weather for a
+slot is a deterministic hash of the slot number — no stored state, no scheduler. Everyone sees the
+same sky at the same moment, and any past slot stays computable, which is what will let time away be
+reconciled later. `game.js` owns the clock and exposes `weatherAt(t)` / `currentWeather()`; `ui.js`
+paints. The no-DOM rule is unchanged.
+
+Clear 70% · Rain 20% · Thunderstorm 7% · Aurora 2.5% · Wonderfall 0.5%.
+
+**Every plant rolls for a mutation exactly once.** `plant()` picks a moment inside the grow window
+(`plantedAt + random() × grow`) and stores it on the cell as `mutateAt`. `rollMutations()`, driven
+from `tick()`, fires any roll whose moment has passed, against the weather standing at that moment,
+then zeroes `mutateAt` so it can never fire twice. Only unlocked, growing, unharvested plots roll.
+
+| Mutation | From | Pays | Share of harvests |
+| --- | --- | --- | --- |
+| Dewkissed | Rain, 25% | ×2 | ~5% |
+| Gilded | Thunderstorm, 15% | ×10 | ~1% |
+| Prismatic | Aurora, 12% | ×25 | ~0.3% |
+| Wonderstruck | Wonderfall, 10% | ×100 | ~0.045% |
+
+**Weather rarity gates mutation rarity** — the top tier needs a rare sky *and* a roll inside it, two
+gates rather than one absurd probability.
+
+An adjacent **Beacon** raises a plot's catch chance by 50% (`catchMultiplier()`). Stacking raises the
+chance, **never the payout**, so the income share stays computable however much agency is added.
+
+**Mutations are a third axis, off the yield curve.** `yield === cost × 1.4` still holds for every
+seed. The multiplier is applied at harvest alongside rarity, mastery, pollination and the Wonder, and
+the mutation is captured before the plot is cleared.
+
+Measured contribution: **~20% of income, evenly across seeds** — Daisy 20.4%, Marigold 20.9%, Eternal
+Crown 19.2%. That evenness is deliberate and is asserted by the suite; an earlier per-slot exposure
+model produced a 65× spread and was cut. See the spec.
+
+## Coming back after time away
+
+**Built 2026-08-15.** `Game.reconcile()` in `game.js`, `renderWelcome()` in `ui.js`, called once on
+load.
+
+**Nothing needs replaying.** Growth, honey, crafts and booster expiry all run off absolute
+timestamps, and `rollMutations()` evaluates each plant against the weather at **its own scheduled
+moment**. So a mutation that came due while the tab was shut resolves against the sky that was
+actually standing then, hours later, with the current sky irrelevant. Reconciliation is O(plots),
+not O(slots).
+
+What `reconcile()` adds is the **report**: time away, blooms that ripened, mutations that landed and
+the weather that caused each, and honey waiting.
+
+It returns `null` — and the scene never opens — when:
+
+- the player was away **less than two minutes** (a reload is just a reload), or
+- **nothing happened** worth saying, or
+- the player has not planted yet, so the coach mark owns the screen.
+
+**The scene is a short account, not a receipt.** *"A spell of thunderstorm passed. Your Marigold came
+back Gilded"* is a garden that lived without you; *"+4,213 coins"* is a bank statement. The
+distinction is the whole point and is the Neko Atsume lesson recorded in
+[17-market-and-positioning.md](17-market-and-positioning.md#offline-progress).
+
+### Offline earnings
+
+**Built 2026-08-15.** Two axes, `DATA.offline`, badges `offlineRate` (Moonlight Tending) and
+`offlineHours` (Lantern Oil).
+
+- **Rate** — share of passive income earned while away. Base **25%**, +5%/level, clamped at 100%.
+- **Duration** — how long full rate lasts. Base **4h**, +1h/level, clamped at 24h.
+- **Past the cap it trickles at 10% of the rate**, never zero.
+
+Two separate tracks on purpose: it turns "how the game treats you while away" into a chain of
+nameable unlocks rather than a wall, and both badges max exactly when their value does.
+
+**What counts as passive income.** `passiveIncomeRate()` returns coins per second the garden makes on
+its own:
+
+- A plot contributes only if it has an **auto-planter**, and only if the **drone** exists to pick it.
+  An unautomated garden earns nothing while away — honest, and it makes automation matter.
+- Each contributing plot is valued at its planter's seed choice, `(expected gross − seed cost) /
+  grow time`, with rarity at its expected 1.58×, plus pollination, boosts, mastery and verbs.
+- **The drone's cadence caps the total**, because it can only lift one plot at a time. A drone faster
+  than the plots adds nothing; plots faster than the drone are throttled by it. Both directions are
+  asserted.
+
+`EXPECTED_RARITY_MULT` is derived from `DATA.rarity` rather than hardcoded, so retuning rarity
+carries through automatically.
+
+**The cap is stated, never hidden.** The welcome-back scene says the lantern burned out, for how
+long, and which badge extends it. Hidden caps read as theft; stated caps read as rules — see
+[17-market-and-positioning.md](17-market-and-positioning.md#offline-progress).
+
+The shape it produces, at base with a fully automated garden: **12h away banks ~644K, 24h banks
+~805K.** Doubling an absence adds a quarter, which is the incentive to return doing its work.
+
+**Simulating an absence.** `Game.Dev.simulateAway(hours)` winds the *world* back — plot planting
+times, mutation moments, hive clocks — rather than winding `lastSeen` forward, so plots genuinely
+mature and rolls genuinely come due, and the report is produced by the same `reconcile()` a real
+absence runs.
+
+## The day cycle
+
+**Moved onto epoch time 2026-08-15.** Constants in `DAY` (`data.js`), phase in `game.js`, painting in
+`ui.js`.
+
+```
+phase = ((epochSeconds / DAY.cycle) + DAY.offset) % 1
+```
+
+A 360-second cycle, unchanged. What changed is the reference point: it used to key to `bootAt` —
+page load — so the phase restarted on every reload and "is it night" was a per-session accident.
+Keying to epoch makes it a **shared fact the simulation can answer**, via `Game.isNight()`, and that
+is what a night-blooming verb would need.
+
+`DAY.dawn` (0.14) and `DAY.dusk` (0.82) are read off the star values in `ui.js`'s `SKY_KEYS`, so
+"night" means the part of the cycle where stars are actually visible. Night is the minority of the
+cycle, and a sim-test asserts it.
+
+**`DAY.offset` no longer means "every session opens at midday"** — it cannot, now that sessions do
+not set the phase. It is just a global shift, and the 2026-08-01 decision it came from is superseded.
+
+## Development tools
+
+**Built 2026-08-15.** `Game.Dev` in `game.js`, `renderDev()` in `ui.js`, reached from an unlabelled
+44 px hit area beside the gem wallet (`#btnDev`).
+
+**The rule that makes it worth having: every cheat forces an outcome through the *real* code path**
+rather than faking an effect. An armed rarity is consumed inside `harvest()`; a forced proc sets a
+flag that `rollRainDance()` and friends check before their level and chance gates, then takes an
+actual tap; a forced mutation writes the cell and emits the same `mutate` event weather does. So a
+cheat exercises the feature it claims to test, and the animation seen is the one players get.
+
+| Group | What it does |
+| --- | --- |
+| Hold the weather | Sticky override on `weatherAt()`, until released |
+| Mutate a growing plot | Applies a tier now and fires the celebration |
+| Arm the next harvest | Forces a rarity or a gem drop, **consumed once** |
+| Cards | Grant packs, a card, a mythical, a completed set, or drop a pack in the garden |
+| Boost a tap proc | **Sticky toggle.** Holds Rain Dance, Bee Swarm or Lucky Ladybug at a 50% chance per tap, bypassing the badge level entirely |
+| Trigger now | Wonder Effect, one-shot |
+| Garden | Fill plots, ripen everything, add a hive |
+| Give | Gold, gems, levels |
+
+**The proc buttons are toggles, not one-shots.** A single forced fire meant reopening the panel for
+every look at an animation; held at 50% per tap you can leave the sheet closed and just tap. The
+boost is **additive on top of the badge rate and bypasses the level gate**, because testing Bee Swarm
+should not require buying Bee Swarm first — `procChance()` is the one place that decides, and it
+clamps at certainty.
+
+The weather hold and the proc boosts are sticky; everything else is one-shot. `clearAll()` drops the
+lot, and the panel lists whatever is currently armed at the top so a boost left on is never a
+mystery. A sim-test asserts
+that **nothing armed leaks into an ordinary harvest** — the failure that would quietly corrupt every
+balance reading taken afterwards.
+
+Cheats that cannot apply — mutating with nothing in the ground, a bee swarm with no hive — say so
+with a deny sound and a toast rather than failing silently.
+
 ## Verbs and adjacency
 
 **Built 2026-08-14.** A verb is what a flower *does*, as distinct from what it pays. Six of the
@@ -229,8 +469,14 @@ filters out locked plots, so a verb only reaches the garden the player actually 
 | **Nurse** | Lavender | Neighbours pay +20%; this plot pays −10% | yield |
 | **Beacon** | Marigold | Neighbours roll rarity with +6 extra weight | rarity |
 | **Lantern** | Orchid | Neighbours' gem chance ×2 | drops |
-| **Deeproot** | Moonflower | Pays +8% per *planted* neighbour | density |
+| **Deeproot** | Jade Fern | Pays +8% per *planted* neighbour | density |
+| **Nightbell** | Moonflower | Pays ×2 if harvested at night, ×0.5 by day | time |
 | **Spreader** | Starlit Iris | 20% chance on harvest to sow a free copy into an empty neighbour | propagation |
+
+**Nightbell is the only verb that reads the clock**, and the only one that is roughly *neutral* on
+average — night is about 32% of the cycle, so ×2 night against ×0.5 day averages ≈0.98. It does not
+make a flower pay more; it makes *when you pick it* a decision. That is why it needed the day cycle
+moved onto epoch time first.
 
 **No two verbs share an effect category.** That is the whole point — a player choosing between two
 flowers that both say "+30%" is choosing nothing. A sim-test asserts the categories stay distinct.

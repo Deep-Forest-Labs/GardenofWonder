@@ -217,3 +217,49 @@ The first real use of `version`-gated migration. When decor became cosmetic (nav
 
 `load()` then sets `state.version = 3` unconditionally, same pattern as the old hardcoded `2`. This
 is the template for the next schema change that alters meaning rather than just adding a field.
+
+## Weather and mutation fields (added 2026-08-15)
+
+Two new **per-cell grid fields** and one top-level field:
+
+| Field | Where | Notes |
+| --- | --- | --- |
+| `mutation` | `state.grid[i]` | Mutation id or `null`. Cleared on harvest with the rest of the plot. |
+| `mutateAt` | `state.grid[i]` | Epoch seconds of this plant's single mutation roll; `0` once spent. |
+| `packDrop` | `state.grid[i]` | A card pack waiting on this plot. Added 2026-08-15; needs its own backfill. |
+| `lastSeen` | top level | Epoch seconds, written every tick. For offline reconciliation, not yet used. |
+
+**Both grid fields need their own backfill loop over `state.grid` in `load()`** — the same trap
+`luckyBug` hit, and they sit beside it. A save from before this feature has neither key, and
+`undefined` is not `null`.
+
+**The weather clock itself stores nothing.** It is a pure function of epoch time, so there is no
+migration for it and never will be.
+
+## Offline earning badges (added 2026-08-15)
+
+`offlineRate` and `offlineHours` join `state.upgrades`. Like every badge before them they need
+their line in the **manual backfill list in `load()`** — they are in it, beside `holdSpeed` and the
+proc keys. Without that an old save reads `undefined`, not `0`, and the offline rate comes back
+`NaN`.
+
+`state.lastSeen` (added with the weather work) is what an absence is measured against. It is written
+on every `processWeather()` tick and on every `reconcile()`.
+
+## `weatherCall` (added 2026-08-15)
+
+`state.weatherCall` is `{ id, from, until }` or `null` — a player-bought sky. Top-level, so it needs
+no per-cell backfill, but it does need to survive `load()`; a stale one simply expires because
+`weatherAt()` checks the window.
+
+## The card album (added 2026-08-15)
+
+| Field | Notes |
+| --- | --- |
+| `cards` | Card id → **count**, not a boolean. Duplicates must stay representable for dust and any future gifting. |
+| `packs` | Unopened packs. |
+| `setsClaimed` | Set ids whose completion has been recorded, so it pays once. |
+
+All three are top-level and **all three need their own re-merge in `load()`** — nested objects are
+replaced wholesale, so a save from before the album would otherwise come back with `cards`
+undefined. A test loads a stripped save and asserts they rebuild.

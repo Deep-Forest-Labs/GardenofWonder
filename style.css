@@ -443,6 +443,140 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .plot:active{transform:translateY(3px);box-shadow:inset 0 5px 0 rgba(255,255,255,.16), inset 0 -7px 0 rgba(0,0,0,.18), 0 1px 0 var(--soil-dd), 0 4px 8px rgba(44,26,16,.22)}
 .plot-inner{position:absolute;inset:0;border-radius:15px;overflow:hidden}
 
+/* Farm-game convention: the cost of hurrying a plant sits on the plant, always visible, so the
+   option teaches itself rather than hiding behind a long-press nobody finds. */
+.skip-chip{
+  position:absolute;top:5px;right:5px;z-index:4;
+  display:none;align-items:center;gap:2px;
+  padding:2px 6px 2px 4px;border-radius:999px;
+  border:2px solid var(--ink);
+  background:#cdeeff;
+  font-size:10px;font-weight:900;color:#2c1a10;line-height:1.4;
+  box-shadow:0 2px 0 rgba(44,26,16,.35);
+  touch-action:manipulation;
+}
+.plot[data-skip] .skip-chip{display:inline-flex}
+.plot[data-skip="no"] .skip-chip{background:#e6e0d8;opacity:.65}
+.skip-chip svg{width:11px;height:11px}
+.skip-chip:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
+@media (max-height:600px){ .skip-chip{padding:1px 5px 1px 3px;font-size:9px} }
+
+/* The welcome-back scene. Reads as a short account of what happened, not a receipt. */
+.away-lede{font-size:14px;font-weight:800;line-height:1.4;margin:2px 0 12px}
+.away-list{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}
+.away-list li{
+  display:flex;align-items:flex-start;gap:9px;
+  padding:9px 11px;border-radius:12px;
+  background:rgba(44,26,16,.06);
+  border-left:4px solid rgba(44,26,16,.22);
+  font-size:12.5px;font-weight:700;line-height:1.35;
+}
+.away-list li svg{width:18px;height:18px;flex:none;margin-top:1px}
+.away-list li.away-earn{
+  border-left-color:#ffc93c;
+  background:rgba(255,201,60,.18);
+}
+.away-cap{
+  display:flex;align-items:flex-start;gap:8px;
+  margin:0 0 12px;padding:9px 11px;border-radius:12px;
+  background:rgba(44,26,16,.05);
+  border-left:4px solid #c99a6b;
+  font-size:11.5px;font-weight:700;line-height:1.35;opacity:.85;
+}
+.away-cap svg{width:16px;height:16px;flex:none;margin-top:1px}
+.away-list li.away-mut{
+  border-left-color:var(--mut,#8fd6ff);
+  background:color-mix(in srgb, var(--mut,#8fd6ff) 16%, transparent);
+}
+
+/* Deliberately invisible: a hit area beside the gem wallet, not a control. Sized to the 44px
+   touch minimum so it can actually be hit on a phone, and out of the tab order so a keyboard
+   user never lands on it by accident. */
+/* Absolutely positioned so it can never take a flex row of its own and grow the HUD — as a
+   sibling in flow it wrapped and made the wallets three rows tall. */
+.wallets{position:relative}
+.dev-dot{
+  position:absolute;left:100%;top:0;
+  width:44px;height:100%;min-height:32px;
+  border:0;background:transparent;padding:0;
+  opacity:0;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  cursor:default;
+}
+.dev-label{
+  margin:14px 0 6px;font-size:11px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.05em;opacity:.55;
+}
+.dev-row{display:flex;flex-wrap:wrap;gap:6px}
+.dev-btn{
+  flex:0 0 auto;
+  padding:7px 11px;border-radius:10px;
+  border:2px solid var(--ink);
+  background:var(--dev,#fffaf0);
+  font-size:12px;font-weight:800;color:#2c1a10;
+  box-shadow:0 2px 0 rgba(44,26,16,.35);
+  touch-action:manipulation;
+}
+.dev-btn:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
+.dev-btn.on{outline:3px solid #51cf66;outline-offset:1px}
+.dev-btn.warn{background:#ffe3e3}
+.dev-armed{
+  margin:8px 0;padding:6px 10px;border-radius:9px;
+  background:rgba(81,207,102,.18);border-left:4px solid #51cf66;
+  font-size:11.5px;font-weight:800;
+}
+
+/* A mutation is visible the moment it lands and stays visible until harvest — that permanence is
+   the whole mechanic, and it is what separates a mutation from a rarity roll revealed at the end. */
+.plot[data-mutation]{
+  border-color:var(--mut,#8fd6ff);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.16),
+    inset 0 -7px 0 rgba(0,0,0,.18),
+    0 4px 0 var(--soil-dd),
+    0 0 0 3px var(--mut,#8fd6ff),
+    0 0 18px 2px var(--mut-glow,#cfeeff),
+    0 8px 14px rgba(44,26,16,.24);
+}
+.plot[data-mutation] .plant{filter:drop-shadow(0 0 6px var(--mut-glow,#cfeeff))}
+.plot[data-mutation]::before{
+  content:'';position:absolute;inset:0;border-radius:15px;pointer-events:none;z-index:2;
+  background:radial-gradient(circle at 50% 40%, var(--mut-glow,#cfeeff) 0%, transparent 62%);
+  opacity:.28;
+  animation:mutPulse 2.6s ease-in-out infinite;
+}
+/* Rank climbs with the treatment: the top two tiers get a moving sheen the lower two don't. */
+.plot[data-mutation="prismatic"] .plant,
+.plot[data-mutation="wonderstruck"] .plant{animation:mutShimmer 2.2s ease-in-out infinite}
+@keyframes mutPulse{0%,100%{opacity:.20}50%{opacity:.40}}
+@keyframes mutShimmer{
+  0%,100%{filter:drop-shadow(0 0 6px var(--mut-glow,#cfeeff)) saturate(1)}
+  50%{filter:drop-shadow(0 0 14px var(--mut-glow,#cfeeff)) saturate(1.5)}
+}
+@media (prefers-reduced-motion:reduce){
+  .plot[data-mutation]::before{animation:none;opacity:.3}
+  .plot[data-mutation="prismatic"] .plant,
+  .plot[data-mutation="wonderstruck"] .plant{animation:none}
+}
+
+/* Weather tints the whole scene rather than replacing the sky, so the day/night cycle keeps
+   running underneath it. */
+.game{--weather-fade:.55s}
+.scenery::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:var(--weather-tint,transparent);
+  opacity:0;transition:opacity var(--weather-fade) ease, background var(--weather-fade) ease;
+  mix-blend-mode:multiply;
+}
+.game[data-weather="rain"] .scenery::after{opacity:.30}
+.game[data-weather="storm"] .scenery::after{opacity:.52}
+.game[data-weather="aurora"] .scenery::after{opacity:.26;mix-blend-mode:screen}
+.game[data-weather="wonderfall"] .scenery::after{opacity:.34;mix-blend-mode:screen}
+@media (prefers-reduced-motion:reduce){
+  .scenery::after{transition:none}
+}
+
 /* Adjacency, shown only at the moment a verb flower goes in and then faded out. A permanent
    indicator would clutter a board whose readability is the point. */
 .plot.verb-source::after,
@@ -1318,4 +1452,135 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.08s !important}
   .cloud{display:none}
+}
+
+/* ============ THE CARD ALBUM ============
+   Card art is a slot: .card-motif composes a placeholder from the icon vocabulary, .card-img would
+   carry a real illustration. Both sit in the same box, so swapping one for the other changes
+   nothing about the layout. */
+.album-head{margin:2px 0 12px}
+.album-lede{font-size:12.5px;font-weight:700;line-height:1.4;margin:0 0 8px;opacity:.85}
+.album-bar,.set-bar{
+  position:relative;display:block;height:16px;border-radius:999px;
+  background:rgba(44,26,16,.14);border:2px solid var(--ink);overflow:hidden;
+}
+.album-bar i,.set-bar i{position:absolute;inset:0 auto 0 0;background:#8ce99a;border-radius:999px}
+.album-bar b,.set-bar b{
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-size:9.5px;font-weight:900;color:#2c1a10;letter-spacing:.02em;
+}
+
+.set-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+.set-tile{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:11px 9px;border-radius:16px;
+  border:3px solid var(--ink);background:var(--set,#f4ead9);
+  box-shadow:0 3px 0 rgba(44,26,16,.35);
+  touch-action:manipulation;
+}
+.set-tile:active{transform:translateY(3px);box-shadow:0 0 0 rgba(44,26,16,.35)}
+.set-tile.done{outline:3px solid #51cf66;outline-offset:1px}
+.set-ring{
+  width:44px;height:44px;border-radius:50%;flex:none;
+  display:grid;place-items:center;
+  background:rgba(255,255,255,.6);border:3px solid var(--ink);
+}
+.set-ring svg{width:22px;height:22px}
+.set-name{font-size:12px;font-weight:900;text-align:center;line-height:1.2;min-height:2.4em;display:grid;align-items:center}
+.set-tile .set-bar{width:100%}
+
+.setbar{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 11px;border-radius:14px;margin-bottom:12px;
+  background:var(--set,#f4ead9);border:3px solid var(--ink);
+}
+.setbar small{font-size:11px;font-weight:700;opacity:.75}
+
+.card-grid9{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.cardcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;touch-action:manipulation}
+.cstars{display:flex;gap:1px;justify-content:center}
+.cstar svg{width:12px;height:12px;opacity:.28}
+.cstar.on svg{opacity:1;color:#ffd43b}
+.cardface{
+  position:relative;width:100%;aspect-ratio:3/4;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  padding:6px 4px;border-radius:12px;
+  border:3px solid var(--ink);
+  background:rgba(44,26,16,.09);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.3);
+}
+.cardcell.have .cardface{background:var(--set,#f4ead9);box-shadow:0 3px 0 rgba(44,26,16,.3)}
+.cardcell:active .cardface{transform:translateY(2px)}
+.cardname{font-size:9px;font-weight:800;text-align:center;line-height:1.15;padding:0 2px}
+.cardcell:not(.have) .cardname{opacity:.5}
+.card-motif{display:grid;place-items:center;border-radius:50%;background:var(--motif,#d8cfc0);border:2px solid var(--ink)}
+.card-motif svg{width:58%;height:58%}
+.card-img{border-radius:8px;object-fit:cover}
+.cdupe{
+  position:absolute;top:14px;right:-2px;
+  padding:1px 5px;border-radius:999px;
+  background:#fff;border:2px solid var(--ink);
+  font-size:9px;font-weight:900;
+}
+
+/* The opening. Rarity is telegraphed by the frame before the name is legible. */
+.pack-reveal{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0 14px}
+.pack-card{
+  width:min(62%,210px);aspect-ratio:3/4;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  padding:14px;border-radius:18px;
+  border:4px solid var(--ink);background:var(--set,#f4ead9);
+  box-shadow:0 5px 0 rgba(44,26,16,.35);
+  animation:packIn .42s cubic-bezier(.2,1.5,.4,1) both;
+}
+.pack-name{font-size:14px;font-weight:900;text-align:center;line-height:1.2}
+.pack-tag{font-size:12px;font-weight:800;margin:0}
+.pack-reveal:not(.is-new){opacity:.85}
+.pack-reveal:not(.is-new) .pack-card{filter:grayscale(.45)}
+.pack-reveal.r-rare .pack-card{box-shadow:0 5px 0 rgba(44,26,16,.35),0 0 22px 3px rgba(140,224,255,.75)}
+.pack-reveal.r-legend .pack-card{box-shadow:0 5px 0 rgba(44,26,16,.35),0 0 26px 5px rgba(255,201,60,.85)}
+.pack-reveal.r-mythic .pack-card{
+  box-shadow:0 5px 0 rgba(44,26,16,.35),0 0 34px 7px rgba(255,143,208,.9);
+  animation:mythicPulse 1.6s ease-in-out infinite;
+}
+@keyframes packIn{0%{transform:scale(.7) rotate(-4deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes mythicPulse{0%,100%{filter:saturate(1)}50%{filter:saturate(1.45)}}
+@media (prefers-reduced-motion:reduce){
+  .pack-card{animation:none}
+  .pack-reveal.r-mythic .pack-card{animation:none}
+}
+.setbar-txt{flex:1;display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800}
+.setbar-txt .set-bar{width:100%}
+
+/* A pack that turned up in the garden. Borrows the Lucky Ladybug's arrival beat — something lands
+   and asks to be collected — but is tappable, because collecting it is the point. */
+.pack-drop{
+  position:absolute;top:-9px;left:50%;z-index:5;
+  width:40px;height:40px;padding:4px;
+  transform:translateX(-50%);
+  display:none;place-items:center;
+  border-radius:50%;border:3px solid var(--ink);
+  background:#fff6d8;
+  box-shadow:0 3px 0 rgba(44,26,16,.4), 0 0 16px 3px rgba(255,224,102,.85);
+  touch-action:manipulation;pointer-events:none;
+}
+/* Visibility comes from `display`, never from the animation — a badge that only exists once a
+   keyframe has run is invisible and uncollectable anywhere the animation does not play. */
+.plot.has-pack .pack-drop{
+  display:grid;
+  pointer-events:auto;
+  animation:packLand .5s cubic-bezier(.2,1.6,.4,1) both, packBob 1.9s ease-in-out .5s infinite;
+}
+.pack-drop svg{width:100%;height:100%}
+.pack-drop:active{filter:brightness(.94)}
+@keyframes packLand{
+  0%{transform:translateX(-50%) translateY(-26px) scale(.3) rotate(-20deg);opacity:0}
+  100%{transform:translateX(-50%) translateY(0) scale(1) rotate(0);opacity:1}
+}
+@keyframes packBob{
+  0%,100%{transform:translateX(-50%) translateY(0) rotate(-4deg)}
+  50%{transform:translateX(-50%) translateY(-5px) rotate(4deg)}
+}
+@media (prefers-reduced-motion:reduce){
+  .plot.has-pack .pack-drop{animation:none;transform:translateX(-50%) scale(1)}
 }

@@ -90,6 +90,11 @@ All shopping happens in one sheet that slides up from the bottom, holding eight 
 | `quests` | Quests | Tapping the quest strip | none |
 | `bonuses` | Garden Almanac | Book button in HUD | none |
 | `settings` | Settings | Gear button in HUD | none |
+| `dev` | Developer tools | Unlabelled hit area beside the gem wallet | none |
+| `welcome` | While you were away | Opens itself on load after a real absence | none |
+| `album` | *(season name)* | Star button in HUD | none |
+| `cardset` | *(set name)* | Tapping a set tile | none |
+| `pack` | Opening a pack | Opening a pack from the album | none |
 
 The four dock modes share a tab strip — the `TABS` array in `ui.js`, with `SHOP_TABS` deciding which
 modes display it — so a player can move between them without closing. `seeds` carries the target
@@ -160,6 +165,38 @@ Driven by `data-state` on each plot button:
 
 Plots also carry `data-stage` (1–3) for growth and `data-aura` (rarity name) tinting the soil after
 a harvest.
+
+### The developer hit area
+
+`#btnDev` sits **absolutely positioned at `left: 100%` of `.wallets`** — immediately right of the gem
+wallet, 44 px wide, `opacity: 0`, and `tabindex="-1"`.
+
+Absolute rather than a flex sibling for a concrete reason: in flow it wrapped onto its own row and
+made the wallets three rows tall, pushing the HUD down. Out of flow it cannot affect layout at all.
+
+44 px because that is the touch minimum — an invisible control still has to be hittable on a phone.
+Out of the tab order so a keyboard user never lands on something with no visible state.
+
+### Mutation and weather visuals
+
+**Mutated plots** carry `data-mutation` plus `--mut` / `--mut-glow` set inline from
+`DATA.mutations`. The treatment escalates with rank: every tier gets a tinted border, an outer glow
+and a slow pulse; **Prismatic and Wonderstruck also get a moving shimmer** the lower two don't. The
+mutation stays visible from the moment it lands until harvest — that permanence *is* the mechanic,
+and it is what separates a mutation from a rarity roll revealed at the end.
+
+Written through the `renderPlots()` cache like every other plot property, so an unchanged mutation
+touches no DOM.
+
+**Weather** sets `data-weather` on `.game` and `--weather-tint`, painted as an overlay on
+`.scenery::after` rather than by replacing the sky — so the day/night cycle keeps running underneath.
+Rain and Thunderstorm `multiply`; Aurora and Wonderfall `screen`. Opacity is per-weather and tops out
+at .52 for a storm, which reads as overcast without hiding the garden.
+
+**Cue discipline.** The sky is the only cue for ordinary weather; a banner four times an hour would
+be noise. Aurora and Wonderfall get a line from the flower, and Wonderfall alone gets a banner.
+Catching a mutation is celebrated per rank — sparks and a float for the lower two, plus shake,
+confetti and a banner for the top two. Both honour reduced motion.
 
 ### The adjacency flash
 

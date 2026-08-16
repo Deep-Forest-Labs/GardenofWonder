@@ -32,6 +32,8 @@ Read it before anything else if you're picking the project up cold.
 | [15-navigation-and-ia.md](15-navigation-and-ia.md) | You're touching the dock, tabs, menus or where a feature lives |
 | [16-progression-and-quests.md](16-progression-and-quests.md) | You're working on quests, levels, reputation, boosts or the Almanac — **phases 1–5 built, phase 6 specified** |
 | [17-market-and-positioning.md](17-market-and-positioning.md) | You want to know who this game is for, what it competes with, or why an individual flower should be worth wanting — **research, not the game** |
+| [18-mutations-and-weather.md](18-mutations-and-weather.md) | You're building weather or mutations — **specified, not built** |
+| [19-card-album.md](19-card-album.md) | You're building card packs, sets, seasons or the album — a parallel meta, **deliberately independent of the garden**; specified, not built |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

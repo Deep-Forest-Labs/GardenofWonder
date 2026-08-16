@@ -632,7 +632,7 @@ gems into nineteen flowers at once.
   keeps going past it.
 - Backfill is idempotent — a second load advances nothing further.
 
-All eight are in `tools/sim-test.js`, which now runs 282 assertions.
+All eight are in `tools/sim-test.js`, which now runs 437 assertions.
 
 **Trap the build found:** mastery multiplies harvest payout and climbs as a run proceeds, so any
 sim-test measuring a *different* harvest multiplier over thousands of harvests has to reset the
@@ -657,7 +657,7 @@ game's spine. It should be the best-built thing here.
 
 | Rule | Current state | Change |
 | --- | --- | --- |
-| **Set size 7–12** | One 19-species set | Split into themed sets of 7–12 |
+| **Set size 7–12** | One 19-species set | Split into themed pages of 7–12 species |
 | **Never start at zero** | Starts empty | Pre-load one card per set as a gift |
 | **Theme, don't index** | "N / 19 discovered" | Named sets — "Moonlit Blooms", not "Page 1" |
 | **40–60% is the commitment point** | n/a | Set sizes chosen so the halfway rung arrives early |
@@ -675,6 +675,24 @@ not.
 All of the state model. `state.discovered` stays a lifetime record, `state.bestRarity` stays,
 `state.almanacClaimed` stays a pays-once ledger. Sets are a presentation and reward layer over the
 same data, plus a set-membership table in `data.js`.
+
+### The card album is a separate system — see 19-card-album.md
+
+**Corrected 2026-08-15.** An earlier draft of this section treated "card sets" and "the Almanac" as
+the same feature, with cards earned by growing particular species and mutations. **They are two
+different things.**
+
+- **The Almanac** — this phase — is the *species* collection. It is coupled to the garden by design:
+  what you grow is what fills it.
+- **The card album** — [19-card-album.md](19-card-album.md) — is a *parallel meta*, deliberately
+  **independent of the garden**. Packs are earned from quests, levels, dailies, the shop and a random
+  spawn; no card requires growing anything in particular. It carries its own seasonal story and art.
+
+The reason they are separate: an album coupled to species would dictate what the player plants,
+turning the garden from a place to arrange into a checklist to satisfy. Verbs and adjacency exist to
+make planting a choice.
+
+Both use the same instance-with-an-id data rule below.
 
 ### Trading-ready, but no trading
 

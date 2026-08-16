@@ -61,6 +61,71 @@ convenience upgrade — bigger numbers per harvest, same rate, at 33% more capit
 Whether these are bugs or intentional texture is not recorded anywhere. They came over from the
 original build. Left alone for now, noted in [11-known-issues.md](11-known-issues.md).
 
+### Offline earnings
+
+`DATA.offline`, plus two badges. Design in [03-systems.md](03-systems.md#offline-earnings).
+
+| Key | Value | Effect |
+| --- | --- | --- |
+| `baseRate` | 0.25 | Share of passive income earned while away, before upgrades |
+| `ratePerLevel` | 0.05 | Moonlight Tending, per level |
+| `maxRate` | 1 | Clamp — 15 levels reaches it |
+| `baseHours` | 4 | Hours at full rate before the cap |
+| `hoursPerLevel` | 1 | Lantern Oil, per level |
+| `maxHours` | 24 | Clamp — 20 levels reaches it |
+| `trickle` | 0.1 | Share of the rate still earned past the cap |
+
+| Badge | Base | Scale |
+| --- | --- | --- |
+| Moonlight Tending (`offlineRate`) | 4,000 | 1.9 |
+| Lantern Oil (`offlineHours`) | 6,000 | 2.0 |
+
+**The cap is the retention lever, so tune it before the rate.** At base, a fully automated garden
+banks ~644K over 12 hours and ~805K over 24 — doubling the absence adds a quarter. Raising
+`baseHours` weakens the reason to return; raising `trickle` weakens it more, because it flattens the
+curve everywhere. If offline feels stingy, **raise the rate, not the cap.**
+
+`EXPECTED_RARITY_MULT` in `game.js` is derived from the rarity table above, so a rarity retune
+carries into offline income without a second edit.
+
+### Weather and mutation tuning
+
+A third axis, and like verbs it is deliberately **off the yield curve** — `yield === cost × 1.4`
+still holds for every seed. Design in
+[18-mutations-and-weather.md](18-mutations-and-weather.md).
+
+`DATA.weather` — shares of all slots, must total 100. `slotSeconds: 60` in the web build.
+
+| Weather | Share | Causes | Catch chance |
+| --- | --- | --- | --- |
+| Clear | 70% | — | — |
+| Rain | 20% | Dewkissed | 25% |
+| Thunderstorm | 7% | Gilded | 15% |
+| Aurora | 2.5% | Prismatic | 12% |
+| Wonderfall | 0.5% | Wonderstruck | 10% |
+
+`DATA.mutations` — payout multipliers.
+
+| Mutation | Rank | Pays | Reaches this share of harvests |
+| --- | --- | --- | --- |
+| Dewkissed | 1 | ×2 | ~5% |
+| Gilded | 2 | ×10 | ~1% |
+| Prismatic | 3 | ×25 | ~0.29% |
+| Wonderstruck | 4 | ×100 | ~0.045% |
+
+`verbTuning.beaconCatchBonus: 0.5` — each adjacent Beacon raises the catch chance by 50%. It raises
+the **chance**, never the payout, which is what keeps the income share computable.
+
+**Tune the income share, not these numbers.** Target is **20–30% of total income from mutations**;
+measured today at ~20%, evenly across seeds. The share survives an economy retune, the multipliers do
+not. The arithmetic to reason with is `contribution = chance × (multiplier − 1)`, which produces the
+rule that matters: **a ×3 at 20% adds +40% to average income while a ×50 at 0.2% adds +10%.** Be
+generous at the top of the ladder and stingy at the bottom — jackpots are cheap, frequent small
+bonuses are what wreck a curve.
+
+The suite asserts the share for a fast seed *and* a slow one and that they match. Do not tune these
+by eye; run `node tools/sim-test.js`.
+
 ### Verb tuning
 
 Verbs are a second axis and are deliberately **not** on the yield curve — see
@@ -75,7 +140,13 @@ balance pass is one edit.
 | `beaconRarity` | 6 | Beacon: extra weight passed to `rollRarity()` |
 | `lanternGemMult` | 2 | Lantern: gem-chance multiplier, compounding per adjacent Lantern |
 | `deeprootPerNeighbour` | 0.08 | Deeproot: +8% per planted neighbour |
+| `nightbellNight` | 2 | Nightbell: multiplier when harvested at night |
+| `nightbellDay` | 0.5 | Nightbell: multiplier when harvested by day |
 | `spreaderChance` | 0.20 | Spreader: chance to sow a free copy on harvest |
+
+**Nightbell is deliberately near-neutral**, not a buff: night is ~32% of the cycle, so the expected
+multiplier is ≈0.98. Changing either number changes what the verb *is* — push the pair apart and it
+becomes a sharper timing gamble, pull them together and it stops being a decision at all.
 
 Because every plot has exactly two neighbours, the ceilings are bounded and known: a plot can be
 flanked by at most two of anything. Two Nurses is ×1.4 payout, two Keepers is ×0.7 grow time, two
@@ -83,24 +154,46 @@ Lanterns is ×4 gem chance, and Deeproot tops out at +16%. **`beaconRarity` is t
 it is passed as `extra` to `rollRarity()`, which multiplies the non-Common weights, so 6 is already
 a large lift and two Beacons is 12. Cut this first if rare harvests start feeling cheap.
 
-### Premium drop chances
+### Gem drops
 
-Only the top five seeds define their own drop rates. Every other seed uses the default 5% gem
-chance.
+Derived from grow time, not set per seed: `gemChance = grow × gemChancePerGrowSecond`, clamped by
+`gemChanceMax`.
 
-| Seed | Gem chance |
+| Key | Value |
 | --- | --- |
-| Nebula Orchid | 0.8% |
-| Solstice Lily | 1.0% |
-| Aurora Crown | 1.2% |
-| Mythic Starflower | 1.5% |
-| Eternal Crown | 2.0% |
-| *(all others)* | 5.0% *(default)* |
+| `gemChancePerGrowSecond` | 0.0005 |
+| `gemChanceMax` | 0.5 |
 
-Read that table twice: the endgame seeds have a **lower** gem chance than a Daisy. Explicitly
-defining `gemChance` overrides the generous 5% fallback, so the best gem farm in the game is
-spamming the cheapest, fastest seed. Almost certainly not the intent, but it is the current
-behaviour and migrated saves depend on it.
+| Seed | Grow | Gem chance | Gems/hour/plot |
+| --- | --- | --- | --- |
+| Daisy | 12 s | 0.60% | 1.80 |
+| Lavender | 28 s | 1.40% | 1.80 |
+| Orchid | 90 s | 4.50% | 1.80 |
+| Aurora Bloom | 360 s | 18.00% | 1.80 |
+| Eternal Crown | 780 s | 39.00% | 1.80 |
+
+**Gems per hour is constant by construction**, so gem income tracks time played rather than seed
+choice. This replaced a flat 5% default that, with explicit low values on the top five seeds, made
+spamming Daisies the optimal gem strategy — the inversion that sat in
+[11-known-issues.md](11-known-issues.md) since the port. Those five overrides are gone; a seed may
+still set `gemChance` to opt out, and none do.
+
+### Gem sinks
+
+| Sink | Price | Notes |
+| --- | --- | --- |
+| Call Rain | 8 gems | 4 minutes, pulls unspent rolls into the window |
+| Call Thunderstorm | 25 gems | as above |
+| Skip a timer | `ceil(remaining / 30)`, min 1 | Falls as the plant grows |
+| Gnome of Fortune | 250 gems | Cosmetic |
+| Lantern Tree | 40 gems | Cosmetic |
+
+Eight plots earn ~14 gems/hour, so a Thunderstorm call is close to two hours of income — a real
+decision rather than pocket change. **Price sinks against that rate, not against the cosmetics**,
+which are a one-off catalogue and will always be finished.
+
+**Aurora and Wonderfall have no price and must not get one.** See
+[03-systems.md](03-systems.md#gems-where-they-come-from-and-what-they-buy).
 
 ## Rarity
 

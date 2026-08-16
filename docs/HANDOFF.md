@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-14**
+Last updated: **2026-08-15**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -11,6 +11,63 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 `main` at the repository root. It is a single-screen idle garden — tap a talking flower, plant
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
+
+> **Packs now turn up in the garden, 2026-08-15.** A fourth tap roll drops a card pack onto a plot,
+> where it waits to be tapped — the Lucky Ladybug beat, but tappable. **Always on with no badge
+> behind it**, because it is the album's only in-game source. The garden is where packs turn up,
+> never what decides their contents.
+
+> **The card album shipped 2026-08-15.** 12 sets of 9 = 108 cards in one season, packs of three,
+> and the reveal. **Independent of the garden by design** — no card is earned by growing anything.
+> **Card art is a slot**: `{ icon, tint }` draws a placeholder from the icon vocabulary, `{ src }`
+> would carry a real illustration, so finished art can arrive without touching code and without
+> breaking the no-binary-assets rule. Remaining: the spawning-pack proc, dust, seasons, completion
+> rewards. See [19-card-album.md](19-card-album.md).
+
+> **Gems got a faucet fix and real sinks, 2026-08-15.** Drop chance now derives from grow time, so
+> gems/hour is flat across the ladder and Daisy-spamming is no longer the best gem farm. Gems buy
+> **calling a sky** (Rain 8, Thunderstorm 25 — which also pulls every unspent mutation roll into the
+> window) and **skipping a timer** (`ceil(remaining/30)` gems, shown on the plant). The standing
+> rule: **gems buy chances, choices and looks, never outcomes**, with the timer skip as the one
+> deliberate exception. **Aurora and Wonderfall have no price and must not get one.** See
+> [03-systems.md](03-systems.md#gems-where-they-come-from-and-what-they-buy).
+
+> **Offline earnings shipped 2026-08-15.** Two upgradeable axes — Moonlight Tending (rate, 25% base)
+> and Lantern Oil (duration, 4h base) — with a 10% trickle past the cap rather than a wall. Income is
+> **earned, not granted**: only plots with an auto-planter count, and only if the drone exists to
+> pick them, so an unautomated garden still earns nothing. **The cap is the retention lever** — 12h
+> banks ~644K, 24h ~805K, so doubling an absence adds a quarter. If offline feels stingy, raise the
+> rate, not the cap. `Dev.simulateAway(3/6/12/24)` winds the world back to test it. See
+> [03-systems.md](03-systems.md#offline-earnings).
+
+> **The welcome-back scene shipped 2026-08-15.** `Game.reconcile()` reports time away, what
+> ripened, which weather passed and what it changed, and honey waiting — as an account, never a
+> total. It stays shut when there is nothing to say. **Note:** the reconciliation bug once logged in
+> [11-known-issues.md](11-known-issues.md) did not exist — mutations always resolved against the sky
+> at their own scheduled moment. See [03-systems.md](03-systems.md#coming-back-after-time-away).
+> **Automation still does not run while away**; the two-axis offline earnings chain is the next
+> piece, and this scene is the surface it reports into.
+
+> **Nightbell shipped 2026-08-15.** Moonflower pays ×2 harvested at night and ×0.5 by day — the
+> verb that was cut from the first pass for want of a real clock, now a twenty-line change. Near
+> neutral on average by design (≈0.98): it makes *when you pick it* the decision, not *how much it
+> pays*. Deeproot moved to Jade Fern. Seventh effect category, rule intact.
+
+> **Day cycle and dev tools, 2026-08-15.** The day cycle now keys to **epoch time**, so `isNight()`
+> is a shared fact the simulation can answer and the **night-blooming verb is unblocked**. A
+> development panel sits behind an unlabelled hit area beside the gem wallet — weather holds, forced
+> mutations, armed rarities and gem drops, forced tap procs, fill/ripen, and grants. **Every cheat
+> forces the real code path rather than faking the effect**, so the animation you inspect is the one
+> players get. See [03-systems.md](03-systems.md#development-tools).
+
+> **Weather and mutations shipped 2026-08-15.** The sky runs on wall-clock epoch time — the same
+> weather for everyone at the same moment, and any past slot computable. Every plant rolls once for a
+> mutation mid-growth: Dewkissed ×2, Gilded ×10, Prismatic ×25, Wonderstruck ×100, visible from the
+> moment it lands until harvest. An adjacent Beacon raises the catch chance. Measured at **~20% of
+> income, evenly across every seed** — the spec's original per-slot exposure model produced a 65×
+> spread and was cut after the sim-test caught it. Mechanic in
+> [03-systems.md](03-systems.md#weather-and-mutations), design and the retraction in
+> [18-mutations-and-weather.md](18-mutations-and-weather.md).
 
 > **Verbs shipped 2026-08-14.** Six of the nineteen seeds now do something to their two neighbours
 > — Keeper (growth), Nurse (yield, at a cost to itself), Beacon (rarity), Lantern (gems), Deeproot
@@ -130,6 +187,19 @@ reasoning — but do not treat this file as a fence.
 **Economy is currently a frozen port** from *Idle Garden Reborn* and contains known problems — see
 below.
 
+## Two things to know before touching the economy
+
+**The economy needs a full retune, and it is deliberately deferred.** Every number is a placeholder,
+and the owner has said the whole curve — possibly including *fewer* seeds, unlocked through card
+packs — is open. It is not being done now because an economy is tuned against the systems that
+consume it, and orders, cards and prestige do not exist yet. Retuning now means retuning twice. The
+right moment is after the Market and card sets land.
+
+**When it happens, the level curve is the dependency nobody expects.** Levels 2–17 currently pay out
+**one seed each** — that is the entire reward structure of the progression ladder. Pull seeds back
+and those levels have nothing to grant, so a seed-count change is also a progression rework. Scope it
+as one piece rather than discovering it halfway through.
+
 ## The current task
 
 **Nothing is mid-flight in code.** Bloom Mastery shipped 2026-08-14; the strategy pass that same day
@@ -194,19 +264,31 @@ This supersedes the ordering above where they conflict. Reasoning in
 1. ~~**Per-plant verbs and adjacency**~~ — **done 2026-08-14.** Six seeds carry a verb; the other
    thirteen stay plain yield tiers on purpose. Expanding the set is cheap when the mechanic proves
    out — it is one `DATA.verbs` entry, one `verb:` field and a consumer.
-2. **Mutations and variants** — any plant can roll a jackpot version, which decouples excitement
-   from tier position. Recombines the Wonder Effect, day/night and rarity rolls, all already built.
+2. ~~**Mutations and variants**~~ — **built 2026-08-15**, steps 1–4 of
+   [18-mutations-and-weather.md](18-mutations-and-weather.md): epoch-clock weather, four mutation
+   tiers, Beacon stacking, visuals. Measured at ~20% of income, evenly across seeds. **Steps 5–6
+   remain** — offline reconciliation and card generation.
+   **Mutations do *not* feed the card album** — an earlier claim that they did is retracted; see
+   [19-card-album.md](19-card-album.md).
 3. **Named synergy pairs** — one data row and a name each; companion planting writes itself.
 4. **Fold the Apiary and Apothecary into adjacency**, and move the dock to
    `Garden · Cards · Market · Shop` ([15-navigation-and-ia.md](15-navigation-and-ia.md) phase 1.5).
 5. **Item-as-key, mementos, hidden blooms, and companion flavour text** — ~150 lines of writing is
    the cheapest differentiator available and the talking flower is a ready-made delivery vehicle.
-6. **Two-axis offline (rate × duration) plus a narrated welcome-back scene.** Currently a closed tab
-   earns nothing; automation runs on `requestAnimationFrame`. Start generous and state the cap.
-7. **Card sets** — [16-progression-and-quests.md](16-progression-and-quests.md) phase 6. Model a card
-   as an owned instance with an id, not a boolean, so trading stays possible later.
+6. ~~**Two-axis offline earnings (rate × duration)**~~ — **done 2026-08-15**, along with the
+   welcome-back scene it reports into. Both axes are upgradeable and clamped, the cap is stated
+   openly, and income only accrues from automation the player actually owns.
+7. ~~**The card album**~~ — **built 2026-08-15**, minus the spawning proc, dust, seasons and
+   completion rewards. [19-card-album.md](19-card-album.md). A **parallel meta, independent of the
+   garden**: packs from quests, levels, dailies, the shop and a random spawn on a plant; ~12 sets of
+   9 per themed season, with its own art and story. Model a card as an owned instance with an id, not
+   a boolean, so dust and any future trading stay possible. **Paid randomized packs are loot boxes —
+   read the warning in that doc before touching monetization.** Separate from the species Almanac in
+   [16-progression-and-quests.md](16-progression-and-quests.md), which stays coupled to the garden.
 8. **The Market.**
-9. **Gem sinks**, then the known economy bugs.
+9. ~~**Gem sinks**~~ — **done 2026-08-15**, along with the gem-faucet inversion. Cosmetic breadth
+   is the remaining piece: a fixed catalogue always gets bought out, so gems need either escalating
+   prices or a growing list. Card packs are the eventual infinite sink.
 10. **Seasonal turnover** (prestige) — designed now, built later. Never call it a reset.
 
 Not on the list, deliberately: trading, battle pass, live events, PWA/service worker, world map,
@@ -216,16 +298,17 @@ merge.
 
 Full list in [11-known-issues.md](11-known-issues.md). The two that affect design decisions:
 
-- **Endgame seeds have lower gem chances than a Daisy.** Defining `gemChance` overrides the generous
-  5% default, so the best gem farm is spamming the cheapest seed.
+- ~~**Endgame seeds have lower gem chances than a Daisy.**~~ **Fixed 2026-08-15.** Gem chance is now
+  derived from grow time, so gems per hour is flat across all nineteen seeds and gem income tracks
+  time played rather than seed choice.
 - **Cheat buttons ship to players — on purpose.** Settings has "Grant 50 Gems", "Grant 1,000,000
   Gold", and "Summon a Wonder Effect" with no confirmation, live on the public site. **Decided
   2026-08-14: leave them.** The audience is friends, their sessions are not clean data, and the game
   has no analytics either way. Revisit before any real external audience; don't re-raise it before
   then.
 
-The gem-chance inversion is inherited from the frozen economy port. Fixing it is a deliberate balance
-project.
+That inversion was inherited from the frozen economy port; it is fixed. What remains from the port is
+the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
 
@@ -305,6 +388,28 @@ every row in a card treatment and collapsed the columns onto one overflowing lin
 classes are `.almanac-row*`. Check for an existing class before naming a new one — `style.css` is
 50 KB and the collision is invisible until you screenshot it.
 
+**Never let an animation be the thing that makes an interactive element exist.** The pack badge
+started at `scale(0)` and depended on a keyframe to appear, which makes it uncollectable anywhere the
+animation does not run. Visibility belongs to `display`; animation is a flourish on top.
+
+**New per-cell grid fields keep catching out `clearGarden()` in the suite.** `mutation`, `mutateAt`
+and `packDrop` have each leaked between tests. Add the field there at the same time you add it to
+`defaultState()` and the `load()` backfill.
+
+**A plant's mutation roll fires once and only once.** `plant()` schedules `cell.mutateAt` inside the
+grow window; `rollMutations()` fires it and zeroes it. Anything writing a grid cell by hand — a test
+fixture, a migration, a future auto-planter — must set `mutateAt` too, or that plant silently never
+rolls. Both `mutation` and `mutateAt` need their own backfill loop in `load()`, beside `luckyBug`.
+
+**Weather is a pure function of epoch time, so never store it.** `weatherForSlot(n)` is a hash of the
+slot number. Caching or persisting the current weather means the design has been misunderstood — the
+point is that any past or future slot is computable on demand.
+
+**Offline income is a closed-form rate, not a replayed simulation.** `passiveIncomeRate()` values
+each auto-planted plot at what its planter would grow and caps the total by the drone's cadence. It
+is O(1) in the length of the absence, deliberately — do not "improve" it by stepping the simulation
+forward across a 24-hour gap.
+
 **Verb effects must be read before the plot is cleared.** `harvest()` captures the neighbourhood —
 Beacon weight, Lantern gem multiplier, the payout multiplier — at the top, because clearing the plot
 changes what its neighbours see. A verb consumer added after the `state.grid[idx] = {...}` line will
@@ -325,7 +430,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 282 assertions over the simulation layer
+node tools/sim-test.js          # 437 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

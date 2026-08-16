@@ -19,7 +19,7 @@ globalThis.localStorage = {
 
 /* The game files are plain scripts that declare globals, so evaluate them and
    then re-export what they defined onto globalThis. */
-const GLOBALS = ['DATA', 'WONDER', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
+const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
   'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'flowerValue', 'Game'];
 
 function loadScript(file) {
@@ -56,6 +56,7 @@ const advance = (seconds, step = 1) => {
 
 const clearGarden = () => S.grid.forEach((c) => {
   c.locked = false; c.seed = null; c.plantedAt = 0; c.grow = 0; c.ready = false;
+  c.mutation = null; c.mutateAt = 0; c.packDrop = false;
 });
 
 /* Mastery multiplies harvest payout and climbs as a run proceeds, so a test
@@ -687,6 +688,11 @@ check('a second load does not convert again', again.ticketGrant == null && S.gem
 G.reset();
 
 group('combo multiplies tap payout, not harvests');
+/* Every assertion here is an exact credit delta, and a tap can spark a Wonder (0.15%) that triples
+   the payout — so the roll has to be pinned or the block fails roughly one run in twenty. 0.5 clears
+   the Wonder, the crit and all three procs. Same rule as the milestone and pollination blocks. */
+const rngCombo = Math.random;
+Math.random = () => 0.5;
 const tapGain = () => {
   const before = S.credits;
   G.tapFlower();
@@ -720,6 +726,7 @@ S.tap.power = 100;
 S.tap.critChance = 0;
 S.credits = 0;
 check('decay reduces the multiplier', tapGain() === 149);
+Math.random = rngCombo;
 clearGarden();
 S.wonder.until = 0;
 S.wonder.last = G.nowSeconds();
@@ -1035,7 +1042,7 @@ check('two nurses on one plot stack', Math.abs(G.verbPayoutMult(1) - 1.4) < 1e-9
 group('Deeproot pays for a full neighbourhood');
 clearGarden();
 S.credits = 1e9;
-G.plant(3, G.seedById('moonflower'));
+G.plant(3, G.seedById('jadefern'));
 check('alone it is unmodified', G.verbPayoutMult(3) === 1);
 G.plant(0, G.seedById('daisy'));
 check('one planted neighbour pays 8%', Math.abs(G.verbPayoutMult(3) - 1.08) < 1e-9,
@@ -1043,6 +1050,31 @@ check('one planted neighbour pays 8%', Math.abs(G.verbPayoutMult(3) - 1.08) < 1e
 G.plant(5, G.seedById('daisy'));
 check('both neighbours pay 16%', Math.abs(G.verbPayoutMult(3) - 1.16) < 1e-9,
   `${G.verbPayoutMult(3)}`);
+
+group('Nightbell trades day payout for night');
+/* dayPhase = ((t / DAY.cycle) + DAY.offset) % 1, so a phase can be dialled in exactly. */
+const setPhase = (p) => { clock = DAY.cycle * (((p - DAY.offset) % 1 + 1) % 1) + DAY.cycle * 1000; };
+clearGarden();
+S.credits = 1e9;
+G.plant(0, G.seedById('moonflower'));
+setPhase(0.95);
+check('the clock can be put at night', G.isNight());
+check('it pays double at night', Math.abs(G.verbPayoutMult(0) - 2) < 1e-9, `${G.verbPayoutMult(0)}`);
+setPhase(0.5);
+check('the clock can be put at midday', !G.isNight());
+check('it pays half by day', Math.abs(G.verbPayoutMult(0) - 0.5) < 1e-9, `${G.verbPayoutMult(0)}`);
+check('it does not touch its neighbours',
+  G.verbPayoutMult(1) === 1 && G.verbPayoutMult(3) === 1);
+check('over a whole cycle it is close to neutral', (() => {
+  let total = 0;
+  const N = 720;
+  for (let i = 0; i < N; i += 1) {
+    setPhase(i / N);
+    total += G.verbPayoutMult(0);
+  }
+  const mean = total / N;
+  return mean > 0.85 && mean < 1.15;
+})(), 'mean multiplier across a cycle');
 
 group('Keeper shortens growth both ways round');
 clearGarden();
@@ -1071,30 +1103,31 @@ check('it never rushes a plot that is already done', (() => {
 })());
 
 group('Lantern multiplies the gem chance it finds');
-clearGarden();
-clearMastery();
-S.credits = 1e9;
-S.gems = 0;
-G.plant(0, G.seedById('orchid'));
-let lanternGems = 0;
-for (let i = 0; i < 4000; i += 1) {
-  G.plant(1, G.seedById('daisy'));
-  advance(30);
-  const h = G.harvest(1);
-  if (h && h.gemDrop) lanternGems += 1;
-  if (!S.grid[0].seed) G.plant(0, G.seedById('orchid'));
-}
-clearGarden();
-S.gems = 0;
-let plainGems = 0;
-for (let i = 0; i < 4000; i += 1) {
-  G.plant(1, G.seedById('daisy'));
-  advance(30);
-  const h = G.harvest(1);
-  if (h && h.gemDrop) plainGems += 1;
-}
+/* Measured on an Eternal Crown, whose 39% base makes the doubling unmistakable. A Daisy's 0.6%
+   would need tens of thousands of samples to separate the two — gem chance now scales with grow
+   time, so the cheap seed is a terrible instrument for this. */
+const gemDropRate = (withLantern) => {
+  clearGarden();
+  clearMastery();
+  S.credits = 1e14;
+  S.gems = 0;
+  let drops = 0;
+  const N = 3000;
+  for (let i = 0; i < N; i += 1) {
+    if (withLantern && !S.grid[0].seed) {
+      S.grid[0] = { locked: false, seed: 'orchid', plantedAt: clock, grow: 1e6, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+    }
+    S.grid[1] = { locked: false, seed: 'eternal', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+    const h = G.harvest(1);
+    if (h && h.gemDrop) drops += 1;
+    clearMastery();
+  }
+  return drops / N;
+};
+const withLantern = gemDropRate(true);
+const noLantern = gemDropRate(false);
 check('a lantern roughly doubles gem drops next door',
-  lanternGems > plainGems * 1.5, `${lanternGems} vs ${plainGems}`);
+  withLantern > noLantern * 1.6, `${withLantern.toFixed(3)} vs ${noLantern.toFixed(3)}`);
 
 group('Beacon lifts rarity next door');
 clearGarden();
@@ -1167,9 +1200,933 @@ check('every seed still yields exactly 1.4x its cost',
   DATA.seeds.every((s) => Math.abs(s.yield - s.cost * 1.4) < 1e-6));
 check('every verb on a seed is a real verb',
   DATA.seeds.every((s) => !s.verb || Boolean(DATA.verbs[s.verb])));
+check('every verb is actually used by a seed', (() => {
+  const used = new Set(DATA.seeds.map((sd) => sd.verb).filter(Boolean));
+  return Object.keys(DATA.verbs).every((v) => used.has(v));
+})());
+check('no seed carries two verbs', DATA.seeds.every((sd) => !Array.isArray(sd.verb)));
 check('no two verbs share an effect category', (() => {
   const cats = Object.values(DATA.verbs).map((v) => v.cat);
   return new Set(cats).size === cats.length;
+})());
+G.reset();
+
+/* ---------------- weather and mutations ---------------- */
+
+group('weather is a pure function of the clock');
+G.reset();
+check('the same slot always gives the same weather',
+  G.weatherForSlot(12345).id === G.weatherForSlot(12345).id);
+check('slots are derived from epoch seconds',
+  G.weatherSlotOf(DATA.weather.slotSeconds * 7) === 7
+  && G.weatherSlotOf(DATA.weather.slotSeconds * 7 + 1) === 7);
+check('weatherAt agrees with weatherForSlot', (() => {
+  const t = 987654;
+  return G.weatherAt(t).id === G.weatherForSlot(G.weatherSlotOf(t)).id;
+})());
+check('the table weights total 100',
+  Math.abs(DATA.weather.types.reduce((a, t) => a + t.w, 0) - 100) < 1e-9);
+check('the distribution matches the table', (() => {
+  const seen = {};
+  const N = 200000;
+  for (let s = 0; s < N; s += 1) {
+    const id = G.weatherForSlot(s).id;
+    seen[id] = (seen[id] || 0) + 1;
+  }
+  return DATA.weather.types.every((t) => Math.abs((seen[t.id] || 0) / N * 100 - t.w) < 1.0);
+})());
+check('every weather either mutates or is clear',
+  DATA.weather.types.every((t) => (t.mutation === null) === (t.catch === 0)));
+check('every weather mutation is a real mutation',
+  DATA.weather.types.every((t) => !t.mutation || Boolean(DATA.mutations[t.mutation])));
+
+group('the mutation ladder is well formed');
+check('ranks are unique and contiguous', (() => {
+  const ranks = Object.values(DATA.mutations).map((m) => m.rank).sort((a, b) => a - b);
+  return ranks.every((r, i) => r === i + 1);
+})());
+check('a higher rank always pays more', (() => {
+  const byRank = Object.values(DATA.mutations).sort((a, b) => a.rank - b.rank);
+  return byRank.every((m, i) => i === 0 || m.mult > byRank[i - 1].mult);
+})());
+check('a rarer weather carries a higher-ranked mutation', (() => {
+  const carriers = DATA.weather.types.filter((t) => t.mutation)
+    .sort((a, b) => b.w - a.w);
+  return carriers.every((t, i) => i === 0
+    || DATA.mutations[t.mutation].rank > DATA.mutations[carriers[i - 1].mutation].rank);
+})());
+check('no mutation means no multiplier', G.mutationMult(null) === 1 && G.mutationRank(null) === 0);
+
+group('catching a mutation');
+const slotOfWeather = (id) => {
+  for (let s = 0; s < 500000; s += 1) if (G.weatherForSlot(s).id === id) return s;
+  return -1;
+};
+const SLOT = DATA.weather.slotSeconds;
+const rainSlot = slotOfWeather('rain');
+const clearSlot = slotOfWeather('clear');
+const stormSlot = slotOfWeather('storm');
+check('the table is reachable — rain, clear and storm all occur',
+  rainSlot >= 0 && clearSlot >= 0 && stormSlot >= 0);
+
+const rngMut = Math.random;
+/* Put a plant in the ground whose single mutation moment is already due, standing in the
+   middle of a chosen weather slot. */
+const dueIn = (idx, seed, slot) => {
+  S.grid[idx] = {
+    locked: false, seed, plantedAt: clock - 10, grow: 1e6, ready: false, aura: '',
+    luckyBug: false, mutation: null, mutateAt: slot * SLOT + SLOT / 2
+  };
+};
+clearGarden();
+unlockTo(20);
+S.credits = 1e9;
+
+Math.random = () => 0;                                   // always catch
+dueIn(0, 'daisy', clearSlot);
+G.rollMutations();
+check('clear weather never mutates', S.grid[0].mutation === null);
+check('a spent roll is not repeated', S.grid[0].mutateAt === 0);
+dueIn(0, 'daisy', rainSlot);
+G.rollMutations();
+check('rain can mutate a growing plot', S.grid[0].mutation === 'dew');
+const spent = S.grid[0].mutateAt;
+G.rollMutations();
+check('each plant rolls exactly once', spent === 0 && S.grid[0].mutation === 'dew');
+
+clearGarden();
+dueIn(1, 'daisy', rainSlot);
+S.grid[1].mutateAt = clock + 1e6;                        // not due yet
+G.rollMutations();
+check('a roll in the future does not fire early', S.grid[1].mutation === null);
+clearGarden();
+G.rollMutations();
+check('an empty plot never rolls', S.grid.every((c) => c.mutation === null));
+dueIn(2, 'daisy', rainSlot);
+S.grid[2].locked = true;
+G.rollMutations();
+S.grid[2].locked = false;
+check('a locked plot never rolls', S.grid[2].mutation === null);
+Math.random = rngMut;
+
+group('planting schedules exactly one roll');
+clearGarden();
+S.credits = 1e9;
+G.plant(0, G.seedById('daisy'));
+const cell0 = S.grid[0];
+check('a moment is scheduled on planting', cell0.mutateAt > 0);
+check('the moment falls inside the grow window',
+  cell0.mutateAt >= cell0.plantedAt && cell0.mutateAt <= cell0.plantedAt + cell0.grow,
+  `${cell0.mutateAt - cell0.plantedAt} of ${cell0.grow}`);
+check('moments vary between plantings', (() => {
+  const seen = new Set();
+  for (let i = 0; i < 40; i += 1) {
+    clearGarden();
+    G.plant(0, G.seedById('eternal'));
+    seen.add(Math.round(S.grid[0].mutateAt - S.grid[0].plantedAt));
+  }
+  return seen.size > 20;
+})());
+
+group('Beacon raises the catch chance, never the payout');
+clearGarden();
+check('a lone plot has no bonus', G.catchMultiplier(1) === 1);
+S.credits = 1e9;
+G.plant(0, G.seedById('marigold'));
+check('an adjacent beacon raises the multiplier',
+  Math.abs(G.catchMultiplier(1) - 1.5) < 1e-9, `${G.catchMultiplier(1)}`);
+check('it does not touch the payout multiplier', G.verbPayoutMult(1) === 1);
+const catchRate = (withBeacon) => {
+  let caught = 0;
+  const N = 4000;
+  for (let i = 0; i < N; i += 1) {
+    clearGarden();
+    if (withBeacon) dueIn(0, 'marigold', clearSlot);
+    dueIn(1, 'daisy', rainSlot);
+    G.rollMutations();
+    if (S.grid[1].mutation) caught += 1;
+  }
+  return caught / N;
+};
+const beaconCatch = catchRate(true);
+const plainCatch = catchRate(false);
+check('a beacon meaningfully raises how often a neighbour catches',
+  beaconCatch > plainCatch * 1.25, `${beaconCatch.toFixed(3)} vs ${plainCatch.toFixed(3)}`);
+
+group('mutations pay out and then clear');
+clearGarden();
+clearMastery();
+S.wonder = { until: 0, last: 0 };
+S.boosters = {};
+S.apiary.hives = [];
+Math.random = () => 0.5;                                 // Common, no gem, no Wonder
+const ripe = (mutation) => {
+  S.grid[0] = {
+    locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '',
+    luckyBug: false, mutation, mutateAt: 0
+  };
+};
+ripe(null);
+const plainHarvest = G.harvest(0).payout;
+clearMastery();
+ripe('gilded');
+const gildedResult = G.harvest(0);
+Math.random = rngMut;
+check('a gilded harvest pays its multiplier',
+  gildedResult.payout === Math.round(plainHarvest * DATA.mutations.gilded.mult),
+  `${gildedResult.payout} vs ${Math.round(plainHarvest * DATA.mutations.gilded.mult)}`);
+check('the harvest reports which mutation paid', gildedResult.mutation === 'gilded');
+check('the plot is left clean',
+  S.grid[0].mutation === null && S.grid[0].mutateAt === 0);
+
+group('mutations leave the seed curve alone');
+check('every seed still yields exactly 1.4x its cost',
+  DATA.seeds.every((s) => Math.abs(s.yield - s.cost * 1.4) < 1e-6));
+
+/* The assertion the whole ladder is tuned against. One roll per plant makes the share even
+   across seeds, which is the property that keeps mutations present at every stage of the game
+   rather than dominant late and invisible early. Deliberately statistical: wide band. */
+group('mutations contribute a fifth of income, evenly across seeds');
+const incomeShare = (seedId, cycles) => {
+  clearGarden();
+  clearMastery();
+  S.wonder = { until: 0, last: 0 };
+  S.boosters = {};
+  S.apiary.hives = [];
+  S.credits = 1e18;
+  const seed = G.seedById(seedId);
+  let base = 0;
+  let actual = 0;
+  for (let i = 0; i < cycles; i += 1) {
+    clock += seed.grow + 1;
+    S.grid[0] = {
+      locked: false, seed: seedId, plantedAt: clock - seed.grow, grow: seed.grow, ready: false,
+      aura: '', luckyBug: false, mutation: null, mutateAt: 0
+    };
+    S.grid[0].mutateAt = S.grid[0].plantedAt + Math.random() * seed.grow;
+    G.rollMutations();
+    const mut = S.grid[0].mutation;
+    S.grid[0].ready = true;
+    S.grid[0].plantedAt = 0;
+    S.grid[0].grow = 0;
+    const h = G.harvest(0);
+    actual += h.payout;
+    base += h.payout / G.mutationMult(mut);
+    clearMastery();
+  }
+  return (actual - base) / actual;
+};
+const fastShare = incomeShare('daisy', 20000);
+const slowShare = incomeShare('eternal', 20000);
+check('a cheap seed sits in the 12-32% band',
+  fastShare > 0.12 && fastShare < 0.32, `${(fastShare * 100).toFixed(1)}%`);
+check('an expensive seed sits in the same band',
+  slowShare > 0.12 && slowShare < 0.32, `${(slowShare * 100).toFixed(1)}%`);
+check('the share does not swing wildly between them',
+  Math.abs(fastShare - slowShare) < 0.12,
+  `${(fastShare * 100).toFixed(1)}% vs ${(slowShare * 100).toFixed(1)}%`);
+G.reset();
+
+group('the day cycle keys to epoch, not to page load');
+G.reset();
+check('the same instant always gives the same phase',
+  G.dayPhase(1000000) === G.dayPhase(1000000));
+check('phase stays inside 0..1', (() => {
+  for (let i = 0; i < 500; i += 1) {
+    const t = G.dayPhase(i * 977);
+    if (!(t >= 0 && t < 1)) return false;
+  }
+  return true;
+})());
+check('a full cycle later is the same phase',
+  Math.abs(G.dayPhase(500) - G.dayPhase(500 + DAY.cycle)) < 1e-9);
+check('half a cycle later is not', Math.abs(G.dayPhase(500) - G.dayPhase(500 + DAY.cycle / 2)) > 0.4);
+check('night and day both occur across a cycle', (() => {
+  let night = 0, day = 0;
+  for (let i = 0; i < DAY.cycle; i += 1) { if (G.isNight(i)) night += 1; else day += 1; }
+  return night > 0 && day > 0;
+})());
+check('isNight agrees with the dawn and dusk bounds', (() => {
+  for (let i = 0; i < 2000; i += 1) {
+    const t = G.dayPhase(i * 13);
+    if (G.isNight(i * 13) !== (t < DAY.dawn || t >= DAY.dusk)) return false;
+  }
+  return true;
+})());
+check('night is the minority of the cycle', (() => {
+  let night = 0;
+  for (let i = 0; i < DAY.cycle; i += 1) if (G.isNight(i)) night += 1;
+  return night / DAY.cycle < 0.5;
+})());
+
+group('development tools force the real path');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('a forced weather overrides the clock',
+  G.Dev.setWeather('wonderfall').id === 'wonderfall' && G.currentWeather().id === 'wonderfall');
+check('releasing it returns to the real sky', (() => {
+  G.Dev.setWeather(null);
+  const t = G.nowSeconds();
+  return G.currentWeather().id === G.weatherForSlot(G.weatherSlotOf(t)).id;
+})());
+check('filling the garden plants every open plot', (() => {
+  clearGarden();
+  const n = G.Dev.fillGarden();
+  return n === 8 && S.grid.every((c) => c.seed);
+})());
+check('a forced mutation lands on a growing plot', Boolean(G.Dev.mutate('gilded')));
+check('an unknown mutation is refused', G.Dev.mutate('nonsense') === null);
+check('ripening makes everything harvestable', (() => {
+  const n = G.Dev.ripenAll();
+  return n > 0 && S.grid.filter((c) => c.seed).every((c) => G.nowSeconds() - c.plantedAt >= c.grow);
+})());
+check('an armed rarity is honoured and then spent', (() => {
+  clearGarden();
+  clearMastery();
+  G.Dev.armRarity('legend');
+  S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+  const first = G.harvest(0);
+  S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+  const second = G.harvest(0);
+  return first.rarity.key === 'legend' && G.Dev.pending().rarity === null && second.rarity.key !== undefined;
+})());
+check('an armed gem drops once', (() => {
+  clearGarden();
+  clearMastery();
+  S.gems = 0;
+  G.Dev.armGem();
+  S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+  const h = G.harvest(0);
+  return h.gemDrop === true && G.Dev.pending().gem === false;
+})());
+check('a forced proc fires with the upgrade at zero', (() => {
+  clearGarden();
+  S.credits = 1e9;
+  S.upgrades.ladybug = 0;
+  G.plant(0, G.seedById('daisy'));
+  const r = G.Dev.fireProc('ladybug');
+  return Boolean(r && r.ladybug);
+})());
+check('forcing one proc does not fire the others', (() => {
+  clearGarden();
+  S.credits = 1e9;
+  S.upgrades.rainDance = 0; S.upgrades.ladybug = 0;
+  G.plant(0, G.seedById('eternal'));
+  const r = G.Dev.fireProc('rainDance');
+  return Boolean(r && r.rainDance) && !r.ladybug;
+})());
+check('a boosted proc toggles on and off', (() => {
+  G.Dev.clearAll();
+  const on = G.Dev.toggleProc('ladybug');
+  const listed = G.Dev.boostedProcs().includes('ladybug');
+  const off = G.Dev.toggleProc('ladybug');
+  return on === true && listed && off === false && !G.Dev.boostedProcs().includes('ladybug');
+})());
+check('boosting raises the chance well above the badge rate', (() => {
+  G.Dev.clearAll();
+  S.upgrades.ladybug = 0;
+  const base = G.Dev.procChance('ladybug');
+  G.Dev.toggleProc('ladybug');
+  const boosted = G.Dev.procChance('ladybug');
+  G.Dev.clearAll();
+  return base === 0 && boosted >= 0.5;
+})());
+check('a boosted proc fires repeatedly across ordinary taps', (() => {
+  clearGarden();
+  clearMastery();
+  S.credits = 1e12;
+  S.upgrades.ladybug = 0;
+  G.Dev.clearAll();
+  G.Dev.toggleProc('ladybug');
+  let fired = 0;
+  for (let i = 0; i < 200; i += 1) {
+    if (!S.grid[0].seed) G.plant(0, G.seedById('eternal'));
+    S.grid[0].luckyBug = false;
+    if (G.tapFlower().ladybug) fired += 1;
+  }
+  G.Dev.clearAll();
+  return fired > 60 && fired < 160;          // ~50% of 200
+})(), 'boosted ladybug fire count');
+check('turning the boost off restores the badge rate', (() => {
+  clearGarden();
+  S.credits = 1e12;
+  S.upgrades.ladybug = 0;
+  G.Dev.clearAll();
+  G.plant(0, G.seedById('eternal'));
+  let fired = 0;
+  for (let i = 0; i < 400; i += 1) { S.grid[0].luckyBug = false; if (G.tapFlower().ladybug) fired += 1; }
+  return fired === 0;                        // level 0 and no boost means never
+})());
+check('the chance is never above certainty', (() => {
+  S.upgrades.ladybug = 999;
+  G.Dev.toggleProc('ladybug');
+  const c = G.Dev.procChance('ladybug');
+  G.Dev.clearAll();
+  S.upgrades.ladybug = 0;
+  return c === 1;
+})());
+check('clearing drops everything armed', (() => {
+  G.Dev.armRarity('epic');
+  G.Dev.armGem();
+  G.Dev.setWeather('storm');
+  G.Dev.clearAll();
+  const p = G.Dev.pending();
+  return p.rarity === null && p.gem === false && p.weather === null;
+})());
+check('nothing armed leaks into an ordinary harvest', (() => {
+  clearGarden();
+  clearMastery();
+  G.Dev.clearAll();
+  let legends = 0;
+  for (let i = 0; i < 2000; i += 1) {
+    S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+    if (G.harvest(0).rarity.key === 'legend') legends += 1;
+    clearMastery();
+  }
+  return legends > 5 && legends < 120;   // ~2% of 2000, nowhere near forced
+})());
+G.reset();
+
+group('coming back after time away');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('a fresh save reports nothing', G.reconcile() === null);
+check('a quick reload reports nothing', (() => {
+  G.plant(0, G.seedById('daisy'));
+  advance(30);
+  S.lastSeen = G.nowSeconds() - 5;
+  return G.reconcile() === null;
+})());
+check('a long absence with a ripe plot reports it', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('daisy'));
+  advance(60);
+  S.lastSeen = G.nowSeconds() - 7200;
+  const r = G.reconcile();
+  return r !== null && r.ripened === 1 && r.away >= 7200;
+})());
+check('a long absence with an empty garden still reports nothing', (() => {
+  clearGarden();
+  S.apiary.hives = [];
+  S.lastSeen = G.nowSeconds() - 7200;
+  return G.reconcile() === null;
+})());
+check('lastSeen advances on every reconcile', (() => {
+  S.lastSeen = G.nowSeconds() - 7200;
+  G.reconcile();
+  return Math.abs(S.lastSeen - G.nowSeconds()) < 2;
+})());
+check('a mutation due while away resolves against the sky of its own moment', (() => {
+  clearGarden();
+  clearMastery();
+  const rainAt = rainSlot * SLOT + SLOT / 2;
+  S.grid[0] = {
+    locked: false, seed: 'daisy', plantedAt: clock - 10, grow: 1e6, ready: false, aura: '',
+    luckyBug: false, mutation: null, mutateAt: rainAt
+  };
+  const rng = Math.random;
+  Math.random = () => 0;
+  S.lastSeen = G.nowSeconds() - 7200;
+  const r = G.reconcile();
+  Math.random = rng;
+  /* Rain is long past — the clock now stands somewhere else entirely — yet the roll must still
+     resolve as rain, because it is evaluated at the moment it was scheduled for. */
+  return r && r.caught.length === 1 && r.caught[0].mutation === 'dew';
+})());
+check('the report names the weather that actually caused it', (() => {
+  clearGarden();
+  const stormAt = stormSlot * SLOT + SLOT / 2;
+  S.grid[0] = {
+    locked: false, seed: 'daisy', plantedAt: clock - 10, grow: 1e6, ready: false, aura: '',
+    luckyBug: false, mutation: null, mutateAt: stormAt
+  };
+  const rng = Math.random;
+  Math.random = () => 0;
+  S.lastSeen = G.nowSeconds() - 7200;
+  const r = G.reconcile();
+  Math.random = rng;
+  return r && r.caught[0].weather.id === 'storm' && r.caught[0].mutation === 'gilded';
+})());
+G.reset();
+
+group('offline earnings run on two axes');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e15;
+check('base rate and hours match the table',
+  Math.abs(G.offlineRate() - DATA.offline.baseRate) < 1e-9
+  && Math.abs(G.offlineHours() - DATA.offline.baseHours) < 1e-9);
+check('an unautomated garden earns nothing while away', (() => {
+  S.upgrades.autoHarvest = 0;
+  return G.passiveIncomeRate() === 0 && G.offlineEarnings(7200).coins === 0;
+})());
+check('a drone with no planters still earns nothing', (() => {
+  S.upgrades.autoHarvest = 3;
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 0; });
+  return G.passiveIncomeRate() === 0;
+})());
+check('planters plus a drone produce income', (() => {
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+  return G.passiveIncomeRate() > 0;
+})());
+check('the drone cadence caps throughput when the plots outrun it', (() => {
+  /* Planters at level 1 plant Daisies, so eight plots want 8/12 = 0.67 harvests a second — more
+     than a slow drone can lift. Faster drone, more income. */
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 1; });
+  S.upgrades.autoHarvest = 1;
+  const slow = G.passiveIncomeRate();
+  S.upgrades.autoHarvest = 5;
+  const fast = G.passiveIncomeRate();
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+  S.upgrades.autoHarvest = 3;
+  return fast > slow;
+})());
+check('a drone faster than the plots adds nothing', (() => {
+  /* The mirror case: planters at 3 grow Bluebells slowly enough that the drone has spare
+     capacity, so upgrading it further must not invent income. */
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+  S.upgrades.autoHarvest = 5;
+  const a = G.passiveIncomeRate();
+  S.upgrades.autoHarvest = 9;
+  const b = G.passiveIncomeRate();
+  S.upgrades.autoHarvest = 3;
+  return Math.abs(a - b) < 1e-9;
+})());
+check('the rate axis raises earnings', (() => {
+  S.upgrades.offlineRate = 0;
+  const low = G.offlineEarnings(3600).coins;
+  S.upgrades.offlineRate = 10;
+  const high = G.offlineEarnings(3600).coins;
+  S.upgrades.offlineRate = 0;
+  return high > low;
+})());
+check('the rate axis is capped at full pace', (() => {
+  S.upgrades.offlineRate = 999;
+  const r = G.offlineRate();
+  S.upgrades.offlineRate = 0;
+  return r === DATA.offline.maxRate;
+})());
+check('the hours axis is capped', (() => {
+  S.upgrades.offlineHours = 999;
+  const h = G.offlineHours();
+  S.upgrades.offlineHours = 0;
+  return h === DATA.offline.maxHours;
+})());
+check('inside the cap, earnings are linear in time', (() => {
+  const one = G.offlineEarnings(3600);
+  const two = G.offlineEarnings(7200);
+  return !one.capped && !two.capped && Math.abs(two.coins - one.coins * 2) <= 2;
+})());
+check('past the cap it trickles rather than stopping', (() => {
+  const capSec = G.offlineHours() * 3600;
+  const atCap = G.offlineEarnings(capSec);
+  const wayOver = G.offlineEarnings(capSec * 10);
+  return wayOver.capped && wayOver.coins > atCap.coins
+    && wayOver.coins < atCap.coins * 10;
+})());
+check('the trickle matches the configured share', (() => {
+  const capSec = G.offlineHours() * 3600;
+  const atCap = G.offlineEarnings(capSec).coins;
+  const plusOneCap = G.offlineEarnings(capSec * 2).coins;
+  const extra = plusOneCap - atCap;
+  return Math.abs(extra - atCap * DATA.offline.trickle) <= 2;
+})());
+check('a longer absence never pays less', (() => {
+  let prev = -1;
+  for (let h = 1; h <= 72; h += 1) {
+    const c = G.offlineEarnings(h * 3600).coins;
+    if (c < prev) return false;
+    prev = c;
+  }
+  return true;
+})());
+check('reconcile banks the coins and reports the cap', (() => {
+  clearGarden();
+  S.upgrades.autoHarvest = 3;
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+  S.credits = 0;
+  S.lastSeen = G.nowSeconds() - 48 * 3600;
+  const r = G.reconcile();
+  return r && r.earned > 0 && S.credits === r.earned && r.capped === true
+    && r.capHours === DATA.offline.baseHours;
+})());
+
+group('simulating an absence winds the world back');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e15;
+S.upgrades.autoHarvest = 3;
+PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+check('zero hours does nothing', G.Dev.simulateAway(0) === null);
+check('plots that were growing come back ripe', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('eternal'));
+  const r = G.Dev.simulateAway(6);
+  return r && r.ripened >= 1;
+})());
+check('the report covers the hours asked for', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('eternal'));
+  const r = G.Dev.simulateAway(12);
+  return r && Math.abs(r.away - 12 * 3600) < 5;
+})());
+check('a long simulated absence trips the cap', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('eternal'));
+  const r = G.Dev.simulateAway(24);
+  return r && r.capped === true;
+})());
+G.reset();
+
+group('gems now track time in the ground, not harvest count');
+G.reset();
+check('gem chance rises with grow time',
+  DATA.seeds.every((sd, i) => i === 0 || G.gemChanceFor(sd) >= G.gemChanceFor(DATA.seeds[i - 1])));
+check('gems per hour are flat across the ladder', (() => {
+  const rates = DATA.seeds.map((sd) => G.gemChanceFor(sd) * 3600 / sd.grow);
+  const lo = Math.min(...rates);
+  const hi = Math.max(...rates);
+  return hi - lo < 1e-6;
+})());
+check('the cheapest seed no longer out-farms the dearest', (() => {
+  const daisy = G.gemChanceFor(G.seedById('daisy')) * 3600 / G.seedById('daisy').grow;
+  const crown = G.gemChanceFor(G.seedById('eternal')) * 3600 / G.seedById('eternal').grow;
+  return Math.abs(daisy - crown) < 1e-6;
+})());
+check('the chance is clamped', (() => {
+  const huge = { grow: 1e9 };
+  return G.gemChanceFor(huge) === DATA.gemChanceMax;
+})());
+check('an explicit override still wins', G.gemChanceFor({ grow: 10, gemChance: 0.42 }) === 0.42);
+check('no seed defines an override any more',
+  DATA.seeds.every((sd) => typeof sd.gemChance === 'undefined'));
+
+group('calling a sky');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('the two rare skies are not for sale',
+  !G.weatherCallable('aurora') && !G.weatherCallable('wonderfall') && !G.weatherCallable('clear'));
+check('the two common skies are', G.weatherCallable('rain') && G.weatherCallable('storm'));
+check('a call is refused without the gems', (() => {
+  S.gems = 0;
+  return G.callWeather('rain') === null;
+})());
+check('a call takes the gems and holds the sky', (() => {
+  S.gems = 100;
+  const before = S.gems;
+  const r = G.callWeather('rain');
+  return r && S.gems === before - DATA.weatherCall.prices.rain
+    && G.currentWeather().id === 'rain';
+})());
+check('a second call is refused while one is running', G.callWeather('storm') === null);
+check('the hold expires', (() => {
+  advance(DATA.weatherCall.minutes * 60 + 10);
+  return G.weatherCallActive() === null;
+})());
+check('a rare sky cannot be bought at any price', (() => {
+  S.gems = 1e9;
+  return G.callWeather('wonderfall') === null && G.callWeather('aurora') === null;
+})());
+check('calling pulls unspent rolls into the window', (() => {
+  clearGarden();
+  S.gems = 1000;
+  S.credits = 1e12;
+  G.plant(0, G.seedById('eternal'));
+  G.plant(1, G.seedById('eternal'));
+  const r = G.callWeather('storm');
+  const c = S.weatherCall;
+  return r && r.pulled === 2
+    && S.grid.filter((x) => x.seed).every((x) => x.mutateAt >= c.from && x.mutateAt < c.until);
+})());
+check('a spent roll is not pulled back', (() => {
+  advance(DATA.weatherCall.minutes * 60 + 10);
+  clearGarden();
+  S.gems = 1000;
+  G.plant(0, G.seedById('eternal'));
+  S.grid[0].mutateAt = 0;
+  const r = G.callWeather('rain');
+  return r && r.pulled === 0;
+})());
+
+group('skipping a timer buys time and nothing else');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('an empty plot costs nothing', G.skipCost(0) === 0);
+check('a longer wait costs more', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('daisy'));
+  G.plant(1, G.seedById('eternal'));
+  return G.skipCost(1) > G.skipCost(0);
+})());
+check('the cost falls as the plant grows', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('eternal'));
+  const full = G.skipCost(0);
+  advance(400);
+  return G.skipCost(0) < full;
+})());
+check('a ripe plot costs nothing', (() => {
+  advance(1000);
+  return G.skipCost(0) === 0;
+})());
+check('skipping is refused without the gems', (() => {
+  clearGarden();
+  S.gems = 0;
+  G.plant(0, G.seedById('eternal'));
+  return G.skipGrow(0) === null;
+})());
+check('skipping takes the gems and makes it ripe', (() => {
+  clearGarden();
+  S.gems = 500;
+  G.plant(0, G.seedById('eternal'));
+  const cost = G.skipCost(0);
+  const before = S.gems;
+  const r = G.skipGrow(0);
+  return r && S.gems === before - cost && G.harvest(0) !== null;
+})());
+check('skipping cannot manufacture a rare mutation', (() => {
+  /* The roll resolves against the sky at its *scheduled* moment, so standing inside a real
+     Wonderfall and hurrying a plant whose roll was booked under a clear sky must hand it nothing.
+     Uses the genuine clock rather than the dev override, which deliberately ignores time. */
+  const wonderSlot = slotOfWeather('wonderfall');
+  if (wonderSlot < 0) return false;
+  clearGarden();
+  clearMastery();
+  S.gems = 1e6;
+  S.credits = 1e12;
+  const keep = clock;
+  clock = wonderSlot * SLOT + SLOT / 2;
+  const skyNow = G.currentWeather().id;
+  let wonders = 0;
+  for (let i = 0; i < 400; i += 1) {
+    G.plant(0, G.seedById('daisy'));
+    S.grid[0].mutateAt = clearSlot * SLOT + SLOT / 2;   // booked under a clear sky
+    G.skipGrow(0);
+    if (S.grid[0].mutation) wonders += 1;
+    G.harvest(0);
+  }
+  clock = keep;
+  return skyNow === 'wonderfall' && wonders === 0;
+})());
+G.reset();
+
+group('the card album is well formed');
+G.reset();
+check('twelve sets of nine', ALBUM.sets.length === 12 && ALBUM.sets.every((s) => s.cards.length === 9));
+check('every set has the same rarity shape', (() => {
+  const shape = ALBUM.sets[0].cards.map((c) => c.rarity).join(',');
+  return ALBUM.sets.every((s) => s.cards.map((c) => c.rarity).join(',') === shape);
+})());
+check('exactly one mythical per set',
+  ALBUM.sets.every((s) => s.cards.filter((c) => c.rarity === 'mythic').length === 1));
+check('card ids are unique', (() => {
+  const ids = ALBUM.sets.flatMap((s) => s.cards.map((c) => c.id));
+  return new Set(ids).size === ids.length;
+})());
+check('card names are unique', (() => {
+  const names = ALBUM.sets.flatMap((s) => s.cards.map((c) => c.name));
+  return new Set(names).size === names.length;
+})());
+check('every card carries art', ALBUM.sets.every((s) => s.cards.every((c) => c.art && (c.art.icon || c.art.src))));
+check('rarer cards are scarcer in the table', (() => {
+  const w = CARD_RARITIES.map((r) => r.w);
+  return w.every((x, i) => i === 0 || x < w[i - 1]);
+})());
+check('stars climb with rarity',
+  CARD_RARITIES.every((r, i) => r.stars === i + 1));
+check('the album totals 108', G.albumTotal() === 108);
+
+group('opening packs');
+G.reset();
+check('no packs means no opening', G.openPack() === null);
+check('granting packs works', G.grantPacks(5) === 5);
+check('opening spends exactly one', (() => {
+  const r = G.openPack();
+  return r && r.packsLeft === 4;
+})());
+check('a pack holds three cards', (() => {
+  const r = G.openPack();
+  return r && r.drawn.length === ALBUM.packSize;
+})());
+check('every drawn card is real',
+  (() => { const r = G.openPack(); return r.drawn.every((d) => G.cardById(d.card.id) && d.set); })());
+check('owning is recorded as a count, not a flag', (() => {
+  G.reset();
+  G.grantPacks(1);
+  const r = G.openPack();
+  return r.drawn.every((d) => G.cardCount(d.card.id) >= 1);
+})());
+check('duplicates increment rather than overwrite', (() => {
+  G.reset();
+  const id = ALBUM.sets[0].cards[0].id;
+  S.cards[id] = 2;
+  S.cards[id] = G.cardCount(id) + 1;
+  return G.cardCount(id) === 3;
+})());
+check('the draw prefers cards you are missing', (() => {
+  /* Fill every common but one, then draw many commons: the gap should close almost at once. */
+  G.reset();
+  const commons = ALBUM.sets.flatMap((s) => s.cards.filter((c) => c.rarity === 'common'));
+  const hole = commons[7];
+  commons.forEach((c) => { if (c.id !== hole.id) S.cards[c.id] = 1; });
+  G.grantPacks(40);
+  for (let i = 0; i < 40 && !G.hasCard(hole.id); i += 1) G.openPack();
+  return G.hasCard(hole.id);
+})());
+check('a full album still opens without erroring', (() => {
+  G.reset();
+  ALBUM.sets.forEach((s) => s.cards.forEach((c) => { S.cards[c.id] = 1; }));
+  G.grantPacks(3);
+  const r = G.openPack();
+  return r && r.drawn.length === ALBUM.packSize && r.drawn.every((d) => !d.isNew);
+})());
+
+group('sets and album completion');
+G.reset();
+check('a fresh album owns nothing', G.albumOwned() === 0 && G.setOwned('firstlight') === 0);
+check('set progress counts distinct cards, not copies', (() => {
+  const set = ALBUM.sets[0];
+  S.cards[set.cards[0].id] = 5;
+  return G.setOwned(set.id) === 1;
+})());
+check('a set completes at nine', (() => {
+  const set = ALBUM.sets[0];
+  set.cards.forEach((c) => { S.cards[c.id] = 1; });
+  return G.setComplete(set.id) && G.setOwned(set.id) === 9;
+})());
+check('completion is reported once, on the pack that finishes it', (() => {
+  G.reset();
+  const set = ALBUM.sets[0];
+  set.cards.forEach((c, i) => { if (i > 0) S.cards[c.id] = 1; });
+  const missing = set.cards[0];
+  G.grantPacks(200);
+  let sawIt = 0;
+  for (let i = 0; i < 200; i += 1) {
+    const r = G.openPack();
+    if (!r) break;
+    if (r.completedSets.indexOf(set.id) !== -1) sawIt += 1;
+    if (G.setComplete(set.id) && sawIt) break;
+  }
+  return G.hasCard(missing.id) && sawIt === 1;
+})());
+check('a completed set is only claimed once', (() => {
+  const set = ALBUM.sets[0];
+  return S.setsClaimed.filter((x) => x === set.id).length <= 1;
+})());
+check('the album counts every set', (() => {
+  G.reset();
+  ALBUM.sets.forEach((s) => s.cards.forEach((c) => { S.cards[c.id] = 1; }));
+  return G.albumOwned() === G.albumTotal();
+})());
+
+group('the album survives a reload');
+G.reset();
+S.cards[ALBUM.sets[3].cards[2].id] = 4;
+S.packs = 7;
+G.saveNow();
+G.load();
+check('owned cards persist', G.cardCount(ALBUM.sets[3].cards[2].id) === 4);
+check('packs persist', S.packs === 7);
+check('an old save without an album still loads', (() => {
+  const prior = JSON.parse(JSON.stringify(S));
+  delete prior.cards;
+  delete prior.packs;
+  delete prior.setsClaimed;
+  store['gw-save'] = JSON.stringify(prior);
+  G.load();
+  return typeof S.cards === 'object' && S.packs === 0 && Array.isArray(S.setsClaimed);
+})());
+G.reset();
+
+group('a pack that turns up in the garden');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('nothing to collect on a clean plot', G.collectPackDrop(0) === null);
+check('a dropped pack lands on a plot', (() => {
+  const r = G.Dev.dropPack();
+  return r && S.grid[r.idx].packDrop === true;
+})());
+check('collecting it grants exactly one pack', (() => {
+  const idx = S.grid.findIndex((c) => c.packDrop);
+  S.packs = 0;
+  const r = G.collectPackDrop(idx);
+  return r && S.packs === 1 && S.grid[idx].packDrop === false;
+})());
+check('it cannot be collected twice', (() => {
+  const idx = S.grid.findIndex((c) => c.packDrop);
+  return idx === -1;
+})());
+check('a drop never doubles up on one plot', (() => {
+  clearGarden();
+  for (let i = 0; i < 8; i += 1) G.Dev.dropPack();
+  return S.grid.filter((c) => c.packDrop).length === 8;
+})());
+check('a full garden refuses another drop', G.Dev.dropPack() === null);
+check('it needs no badge to fire', (() => {
+  clearGarden();
+  S.upgrades.rainDance = 0; S.upgrades.beeSwarm = 0; S.upgrades.ladybug = 0;
+  const r = G.Dev.dropPack();
+  return Boolean(r);
+})());
+check('locked plots are never chosen', (() => {
+  clearGarden();
+  S.grid.forEach((c, i) => { c.locked = i > 0; c.packDrop = false; });
+  const r = G.Dev.dropPack();
+  S.grid.forEach((c) => { c.locked = false; });
+  return r && r.idx === 0;
+})());
+check('the drop survives a reload', (() => {
+  clearGarden();
+  const r = G.Dev.dropPack();
+  G.saveNow();
+  G.load();
+  return S.grid[r.idx].packDrop === true;
+})());
+check('an old save without the field loads clean', (() => {
+  const prior = JSON.parse(JSON.stringify(S));
+  prior.grid.forEach((c) => { delete c.packDrop; });
+  store['gw-save'] = JSON.stringify(prior);
+  G.load();
+  return S.grid.every((c) => typeof c.packDrop === 'boolean');
+})());
+
+group('card cheats hand over real cards');
+G.reset();
+check('granting a card records it', (() => {
+  const got = G.Dev.grantCard();
+  return got && G.cardCount(got.card.id) === 1 && got.isNew === true;
+})());
+check('a rarity can be asked for', (() => {
+  const got = G.Dev.grantCard('mythic');
+  return got && got.card.rarity === 'mythic';
+})());
+check('an unknown rarity yields nothing', G.Dev.grantCard('nonsense') === null);
+check('completing a set fills it and claims it once', (() => {
+  G.reset();
+  const set = G.Dev.completeSet();
+  return set && G.setComplete(set.id)
+    && S.setsClaimed.filter((x) => x === set.id).length === 1;
+})());
+check('completing again moves to the next set', (() => {
+  const first = ALBUM.sets.find((x) => G.setComplete(x.id));
+  const next = G.Dev.completeSet();
+  return next && next.id !== first.id && G.setComplete(next.id);
+})());
+check('a finished album has nothing left to complete', (() => {
+  ALBUM.sets.forEach((s) => s.cards.forEach((c) => { S.cards[c.id] = 1; }));
+  return G.Dev.completeSet() === null;
 })());
 G.reset();
 

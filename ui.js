@@ -71,9 +71,7 @@
     { t: 0.86, s1: '#3d2a63', s2: '#7a5a92', s3: '#c98fa4', sun: '#ffd9e8', star: 0.55, sx: 96, sy: 74 },
     { t: 1.00, s1: '#132a52', s2: '#2b4a7a', s3: '#5a7a9e', sun: '#e8f0ff', star: 1, sx: 22, sy: 22 }
   ];
-  const CYCLE = 360; // seconds for a full day
-  const DAY_START = 0.46; // every session opens at bright midday
-  const bootAt = Date.now() / 1000;
+
 
   const hex2rgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const mix = (a, b, k) => {
@@ -82,7 +80,7 @@
   };
 
   function updateSky() {
-    const t = ((Date.now() / 1000 - bootAt) / CYCLE + DAY_START) % 1;
+    const t = Game.dayPhase();
     let i = 0;
     while (i < SKY_KEYS.length - 2 && SKY_KEYS[i + 1].t <= t) i += 1;
     const a = SKY_KEYS[i], b = SKY_KEYS[i + 1];
@@ -152,7 +150,19 @@
         <div class="bar"><i></i></div>
         <div class="ready-pop">!</div>
         <div class="auto-tag">Auto</div>
-        <div class="lucky-badge">${Icons.get('ladybug')}</div>`;
+        <div class="lucky-badge">${Icons.get('ladybug')}</div>
+        <button class="skip-chip" type="button" aria-label="Finish this plant with gems">${Icons.get('gem')}<span></span></button>
+        <button class="pack-drop" type="button" aria-label="Collect a card pack">${Icons.get('cards')}</button>`;
+      $('.pack-drop', b).addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onPackTap(idx);
+      }, { passive: false });
+      $('.skip-chip', b).addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onSkipTap(idx);
+      }, { passive: false });
       b.addEventListener('pointerdown', (e) => { e.preventDefault(); onPlotTap(idx, b); }, { passive: false });
       el.garden.appendChild(b);
       plotEls[idx] = {
@@ -163,6 +173,9 @@
         cost: $('.lock-cost span', b),
         costWrap: $('.lock-cost', b),
         tag: $('.auto-tag', b),
+        skip: $('.skip-chip', b),
+        pack: $('.pack-drop', b),
+        skipNum: $('.skip-chip span', b),
         lucky: $('.lucky-badge', b),
         cache: {}
       };
@@ -200,6 +213,33 @@
       if (c.state !== state) {
         v.root.dataset.state = state;
         c.state = state;
+      }
+      const hasPack = Boolean(cell.packDrop);
+      if (c.packDrop !== hasPack) {
+        v.root.classList.toggle('has-pack', hasPack);
+        c.packDrop = hasPack;
+      }
+      const skipGems = state === 'grow' ? Game.skipCost(i) : 0;
+      if (c.skip !== skipGems) {
+        if (skipGems) {
+          v.skipNum.textContent = fmt(skipGems);
+          v.root.dataset.skip = S.gems >= skipGems ? 'ok' : 'no';
+        } else {
+          delete v.root.dataset.skip;
+        }
+        c.skip = skipGems;
+      }
+      const mut = cell.mutation || '';
+      if (c.mutation !== mut) {
+        if (mut) {
+          const md = DATA.mutations[mut];
+          v.root.dataset.mutation = mut;
+          v.root.style.setProperty('--mut', md.tint);
+          v.root.style.setProperty('--mut-glow', md.glow);
+        } else {
+          delete v.root.dataset.mutation;
+        }
+        c.mutation = mut;
       }
       if (c.aura !== (cell.aura || '')) {
         if (cell.aura) v.root.dataset.aura = cell.aura; else delete v.root.dataset.aura;
@@ -483,9 +523,15 @@
     const titles = {
       upgrades: 'Upgrades', apiary: 'Apiary', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
-      quests: 'Quests'
+      quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away',
+      album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
     };
-    el.sheetTitle.textContent = titles[sheetMode] || '';
+    let title = titles[sheetMode] || '';
+    if (sheetMode === 'cardset') {
+      const set = ALBUM.sets.find((x) => x.id === sheetArg);
+      if (set) title = set.name;
+    }
+    el.sheetTitle.textContent = title;
 
     if (SHOP_TABS.includes(sheetMode)) {
       el.sheetTabs.innerHTML = TABS.map(
@@ -502,7 +548,9 @@
 
     const render = {
       upgrades: renderUpgrades, apiary: renderApiary, craft: renderCraft, shop: renderShop,
-      seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests
+      seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
+      dev: renderDev, welcome: renderWelcome,
+      album: renderAlbum, cardset: renderCardSet, pack: renderPack
     }[sheetMode];
     el.sheetBody.innerHTML = render ? render() : '';
     el.sheetBody.scrollTop = keep;
@@ -524,7 +572,8 @@
   const CORE_UPGRADES = [
     'tapPower', 'holdSpeed', 'critChance', 'critMult', 'comboMeter',
     'rainDance', 'beeSwarm', 'ladybug',
-    'plotExpansion', 'autoWater', 'autoHarvest'
+    'plotExpansion', 'autoWater', 'autoHarvest',
+    'offlineRate', 'offlineHours'
   ];
 
   function upgradeCard(key) {
@@ -559,6 +608,31 @@
       ${lockedCount ? `<p class="sheet-note" style="margin-top:10px">${lockedCount} more harvester${lockedCount > 1 ? 's' : ''} unlock with new plots.</p>` : ''}`;
   }
 
+  function skyCards() {
+    const active = Game.weatherCallActive();
+    const rows = Object.keys(DATA.weatherCall.prices).map((id) => {
+      const w = DATA.weather.types.find((t) => t.id === id);
+      const m = DATA.mutations[w.mutation];
+      const price = Game.weatherCallPrice(id);
+      const can = S.gems >= price && !active;
+      return `<button class="card ${can ? 'affordable' : ''}" data-buy="sky" data-key="${id}" ${active ? 'disabled' : ''}>
+        <div class="card-top">
+          <span class="card-badge" style="background:${w.tint}">${Icons.get('sparkle')}</span>
+          <span>
+            <span class="card-title">Call ${w.name}</span>
+            <span class="card-sub">${DATA.weatherCall.minutes} min &middot; everything growing gets a shot at ${m.name}</span>
+          </span>
+        </div>
+        ${priceTag(price, 'gems', can, false)}
+      </button>`;
+    }).join('');
+    return `<p class="dev-label">The sky</p>
+      ${active ? `<p class="away-cap">${Icons.get('sparkle')}<span>A ${DATA.weather.types.find((t) => t.id === active.id).name.toLowerCase()} is already running.</span></p>` : ''}
+      ${rows}
+      <p class="sheet-note">Aurora and Wonderfall are not for sale &mdash; the rarest skies have to find you.</p>
+      <p class="dev-label">Decor</p>`;
+  }
+
   function renderShop() {
     const cards = DATA.decor.map((d) => {
       const owned = Game.decorCount(d.id);
@@ -576,7 +650,8 @@
         ${priceTag(d.cost, d.currency, can)}
       </button>`;
     }).join('');
-    return `<p class="sheet-note">Purely decorative — dress up your garden however you like. Buy the same piece again for another copy.</p>
+    return `${skyCards()}
+      <p class="sheet-note">Purely decorative — dress up your garden however you like. Buy the same piece again for another copy.</p>
       <div class="card-grid">${cards}</div>`;
   }
 
@@ -1001,6 +1076,323 @@
       <p class="sheet-note" style="margin-top:14px;text-align:center">Garden Wonder · progress carried over from Idle Garden Reborn</p>`;
   }
 
+  function onSkipTap(idx) {
+    const cost = Game.skipCost(idx);
+    if (!cost) return;
+    if (S.gems < cost) {
+      Sound.play('deny');
+      FX.shake(4);
+      popWallet('gems');
+      say('broke');
+      return;
+    }
+    const r = Game.skipGrow(idx);
+    if (!r) return;
+    const v = plotEls[idx];
+    const c = FX.centerOf(v.root);
+    FX.sparks(c.x, c.y, 12, '#8ce0ff');
+    FX.float(c.x, c.y - 8, `-${fmt(cost)}`, 'rare');
+    Sound.play('buy');
+    FX.haptic(12);
+  }
+
+  function onPackTap(idx) {
+    const r = Game.collectPackDrop(idx);
+    if (!r) return;
+    const v = plotEls[idx];
+    const c = FX.centerOf(v.root);
+    FX.sparks(c.x, c.y, 16, '#ffe066');
+    FX.ring(c.x, c.y, '#ffffff', 0.5, 90);
+    FX.float(c.x, c.y - 10, 'Card pack!', 'epic');
+    Sound.play('quest');
+    FX.haptic(16);
+    say('greet');
+    toast({
+      title: 'A pack of cards',
+      body: 'Someone left it by the beds. Open it in the album.',
+      art: Icons.get('cards')
+    });
+  }
+
+  /* ---- the card album ---- */
+
+  /* Card art is a slot. `{ icon, tint }` composes a placeholder from the existing icon vocabulary;
+     `{ src }` would drop in a real illustration without touching this function. Nothing here knows
+     or cares which it got. */
+  function cardArt(card, size) {
+    const a = card.art || {};
+    if (a.src) return `<img class="card-img" src="${a.src}" alt="" width="${size}" height="${size}">`;
+    return `<span class="card-motif" style="--motif:${a.tint || '#d8cfc0'};width:${size}px;height:${size}px">
+      ${Icons.get(a.icon || 'petal')}</span>`;
+  }
+
+  const starRow = (n, lit) => {
+    let out = '';
+    for (let i = 0; i < n; i += 1) out += `<i class="cstar${i < lit ? ' on' : ''}">${Icons.get('star')}</i>`;
+    return `<span class="cstars">${out}</span>`;
+  };
+
+  function renderAlbum() {
+    const owned = Game.albumOwned();
+    const total = Game.albumTotal();
+    const tiles = ALBUM.sets.map((set) => {
+      const n = Game.setOwned(set.id);
+      const done = n === 9;
+      return `<button class="set-tile${done ? ' done' : ''}" data-set="${set.id}" style="--set:${set.tint}">
+        <span class="set-ring">${Icons.get(done ? 'check' : 'book')}</span>
+        <span class="set-name">${set.name}</span>
+        <span class="set-bar"><i style="width:${(n / 9) * 100}%"></i><b>${n}/9</b></span>
+      </button>`;
+    }).join('');
+    return `
+      <div class="album-head">
+        <p class="album-lede">Collect nine cards to finish a set, and every set to finish the album.</p>
+        <span class="album-bar"><i style="width:${(owned / total) * 100}%"></i><b>${owned} / ${total}</b></span>
+      </div>
+      ${S.packs ? `<button class="big-btn magic" data-act="openPack">Open a pack &middot; ${fmt(S.packs)} waiting</button>`
+        : '<p class="sheet-note">No packs right now. They turn up from quests, levels and the odd surprise in the garden.</p>'}
+      <div class="set-grid">${tiles}</div>`;
+  }
+
+  function renderCardSet() {
+    const set = ALBUM.sets.find((x) => x.id === sheetArg) || ALBUM.sets[0];
+    const n = Game.setOwned(set.id);
+    const cards = set.cards.map((card) => {
+      const have = Game.hasCard(card.id);
+      const r = Game.rarityDef(card.rarity);
+      const copies = Game.cardCount(card.id);
+      return `<button class="cardcell${have ? ' have' : ''}" data-card="${card.id}">
+        ${starRow(r.stars, have ? r.stars : 0)}
+        <span class="cardface" style="--set:${set.tint}">
+          ${have ? cardArt(card, 46) : ''}
+          <span class="cardname">${card.name}</span>
+        </span>
+        ${have && copies > 1 ? `<span class="cdupe">+${copies - 1}</span>` : ''}
+      </button>`;
+    }).join('');
+    return `
+      <div class="setbar" style="--set:${set.tint}">
+        <span class="set-ring">${Icons.get(n === 9 ? 'check' : 'book')}</span>
+        <span class="setbar-txt">
+          <b>${n === 9 ? 'Complete' : `${n} of 9 collected`}</b>
+          <span class="set-bar"><i style="width:${(n / 9) * 100}%"></i><b>${n}/9</b></span>
+        </span>
+      </div>
+      <div class="card-grid9">${cards}</div>
+      <button class="big-btn" data-act="backToAlbum">Back to the album</button>`;
+  }
+
+  /* The opening is the feature. Cards reveal one at a time, rarity telegraphed before the card is
+     legible, and a duplicate has to read differently from a new card at a glance. */
+  let packQueue = [];
+  let packShown = 0;
+
+  let packCompleted = [];
+
+  function celebrateCard() {
+    const item = packQueue[packShown];
+    if (!item) return;
+    const r = Game.rarityDef(item.card.rarity);
+    const node = $('.pack-card', el.sheetBody);
+    const c = node ? FX.centerOf(node) : FX.centerOf(el.sheetBody);
+    if (!item.isNew) { Sound.play('close'); return; }
+    FX.sparks(c.x, c.y, 6 + r.stars * 5, item.set.tint);
+    if (r.stars >= 4) {
+      FX.confetti(c.x, c.y);
+      FX.shake(r.stars);
+      Sound.play('legend');
+    } else if (r.stars === 3) {
+      FX.ring(c.x, c.y, '#ffffff', 0.5, 90);
+      Sound.play('rare');
+    } else {
+      Sound.play('coin');
+    }
+    FX.haptic(r.stars * 6);
+  }
+
+  function renderPack() {
+    const item = packQueue[packShown];
+    if (!item) return '<p class="sheet-note">Nothing left in this pack.</p>';
+    const r = Game.rarityDef(item.card.rarity);
+    const last = packShown >= packQueue.length - 1;
+    return `
+      <div class="pack-reveal r-${item.card.rarity}${item.isNew ? ' is-new' : ''}">
+        ${starRow(r.stars, r.stars)}
+        <div class="pack-card" style="--set:${item.set.tint}">
+          ${cardArt(item.card, 96)}
+          <span class="pack-name">${item.card.name}</span>
+        </div>
+        <p class="pack-tag">${item.isNew ? `New &middot; ${r.label}` : `Already had it &middot; ${item.copies} copies`}</p>
+        <p class="sheet-note">${item.set.name}</p>
+      </div>
+      <button class="big-btn magic" data-act="${last ? 'packDone' : 'packNext'}">
+        ${last ? 'Done' : `Next &middot; ${packShown + 1} of ${packQueue.length}`}</button>`;
+  }
+
+  /* The welcome-back scene. Deliberately a list of things that *happened* rather than a total —
+     "a thunderstorm passed and your Marigold came back Gilded" is a garden that lived without you,
+     where "+4,213 coins" is a receipt. See docs/18-mutations-and-weather.md. */
+  let awayReport = null;
+
+  function awayWords(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.round((seconds % 3600) / 60);
+    if (h >= 24) {
+      const d = Math.floor(h / 24);
+      return `${d} day${d === 1 ? '' : 's'}`;
+    }
+    if (h) return `${h} hour${h === 1 ? '' : 's'}${m ? ` and ${m} minute${m === 1 ? '' : 's'}` : ''}`;
+    return `${Math.max(1, m)} minute${m === 1 ? '' : 's'}`;
+  }
+
+  function renderWelcome() {
+    if (!awayReport) return '';
+    const r = awayReport;
+    const lines = [];
+
+    if (r.earned) {
+      lines.push(`<li class="away-earn">${Icons.get('coin')}<span>The garden kept working and banked <b>${fmt(r.earned)}</b> coins.</span></li>`);
+    }
+    if (r.ripened) {
+      lines.push(`<li>${Icons.get('sprout')}<span><b>${r.ripened}</b> ${r.ripened === 1 ? 'bloom is' : 'blooms are'} ready to pick.</span></li>`);
+    }
+    r.caught.forEach((c) => {
+      const m = DATA.mutations[c.mutation];
+      const w = c.weather && c.weather.name ? c.weather.name.toLowerCase() : 'the weather';
+      lines.push(`<li style="--mut:${m.tint}" class="away-mut">${Icons.get('sparkle')}<span>${w === 'clear' ? 'Something' : `A spell of ${w}`} passed. Your <b>${c.seed.name}</b> came back <b>${m.name}</b>.</span></li>`);
+    });
+    if (r.jars) {
+      lines.push(`<li>${Icons.get('hive')}<span>The bees left <b>${r.jars}</b> ${r.jars === 1 ? 'jar' : 'jars'}.</span></li>`);
+    }
+
+    return `
+      <p class="away-lede">You were gone <b>${awayWords(r.away)}</b>. The garden kept going.</p>
+      <ul class="away-list">${lines.join('')}</ul>
+      ${r.capped ? `<p class="away-cap">${Icons.get('lantern')}<span>The lantern burned out after <b>${r.capHours}h</b> — after that the garden only ticked over. Lantern Oil keeps it lit longer.</span></p>` : ''}
+      <p class="sheet-note">The sky is ${r.weather.name.toLowerCase()} right now.${r.rate ? ` The garden works at ${Math.round(r.rate * 100)}% pace while you are gone.` : ''}</p>
+      <button class="big-btn magic" data-act="closeWelcome">Back to the garden</button>`;
+  }
+
+  /* Development tools. Everything here forces an outcome through the real code path rather than
+     faking an effect, so a cheat exercises the feature it claims to test. Reached from an
+     unlabelled hit area beside the gem wallet. */
+  function devRow(label, buttons) {
+    return `<p class="dev-label">${label}</p><div class="dev-row">${buttons}</div>`;
+  }
+
+  function renderDev() {
+    const pending = Game.Dev.pending();
+    const boosted = pending.boost || [];
+    const wx = DATA.weather.types.map((w) =>
+      `<button class="dev-btn${pending.weather === w.id ? ' on' : ''}" data-dev="weather" data-arg="${w.id}">${w.name}</button>`).join('');
+    const muts = Object.entries(DATA.mutations).map(([id, m]) =>
+      `<button class="dev-btn" style="--dev:${m.tint}" data-dev="mutate" data-arg="${id}">${m.name}</button>`).join('');
+    const rars = DATA.rarity.slice(1).map((r) =>
+      `<button class="dev-btn${pending.rarity === r.key ? ' on' : ''}" data-dev="rarity" data-arg="${r.key}">${r.label}</button>`).join('');
+
+    const armed = [];
+    if (pending.rarity) armed.push(`next harvest: ${pending.rarity}`);
+    if (pending.gem) armed.push('next harvest: gem');
+    if (pending.weather) armed.push(`weather held: ${pending.weather}`);
+    if (boosted.length) armed.push(`procs boosted to 50%: ${boosted.join(', ')}`);
+
+    return `
+      <p class="sheet-note">Nothing here is random. Each button forces the real system, so the
+      animation you see is the one players get.</p>
+      ${armed.length ? `<p class="dev-armed">Armed — ${armed.join(' · ')}</p>` : ''}
+      ${devRow('Hold the weather', wx + '<button class="dev-btn warn" data-dev="weather" data-arg="">Release</button>')}
+      ${devRow('Mutate a growing plot now', muts)}
+      ${devRow('Arm the next harvest', rars + '<button class="dev-btn" data-dev="gem" data-arg="1">Gem drop</button>')}
+      ${devRow('Boost a tap proc — stays on, then just tap the flower', `
+        <button class="dev-btn${boosted.includes('rainDance') ? ' on' : ''}" data-dev="proc" data-arg="rainDance">Rain Dance</button>
+        <button class="dev-btn${boosted.includes('beeSwarm') ? ' on' : ''}" data-dev="proc" data-arg="beeSwarm">Bee Swarm</button>
+        <button class="dev-btn${boosted.includes('ladybug') ? ' on' : ''}" data-dev="proc" data-arg="ladybug">Lucky Ladybug</button>`)}
+      ${devRow('Trigger now', '<button class="dev-btn" data-dev="wonder" data-arg="1">Wonder Effect</button>')}
+      ${devRow('Garden', `
+        <button class="dev-btn" data-dev="fill" data-arg="1">Fill plots</button>
+        <button class="dev-btn" data-dev="ripen" data-arg="1">Ripen all</button>
+        <button class="dev-btn" data-dev="hive" data-arg="1">Add hive</button>`)}
+      ${devRow('Cards', `
+        <button class="dev-btn" data-dev="packs" data-arg="1">+1 pack</button>
+        <button class="dev-btn" data-dev="packs" data-arg="10">+10 packs</button>
+        <button class="dev-btn" data-dev="packs" data-arg="60">+60 packs</button>
+        <button class="dev-btn" data-dev="card" data-arg="">+1 card</button>
+        <button class="dev-btn" data-dev="card" data-arg="mythic">+1 mythical</button>
+        <button class="dev-btn" data-dev="completeSet" data-arg="1">Complete a set</button>
+        <button class="dev-btn" data-dev="dropPack" data-arg="1">Drop a pack in the garden</button>`)}
+      ${devRow('Simulate an absence', `
+        <button class="dev-btn" data-dev="away" data-arg="3">3 hours</button>
+        <button class="dev-btn" data-dev="away" data-arg="6">6 hours</button>
+        <button class="dev-btn" data-dev="away" data-arg="12">12 hours</button>
+        <button class="dev-btn" data-dev="away" data-arg="24">24 hours</button>`)}
+      ${devRow('Give', `
+        <button class="dev-btn" data-dev="gold" data-arg="1">+1M gold</button>
+        <button class="dev-btn" data-dev="gems" data-arg="1">+50 gems</button>
+        <button class="dev-btn" data-dev="level" data-arg="1">+1 level</button>
+        <button class="dev-btn" data-dev="level" data-arg="5">+5 levels</button>`)}
+      <button class="big-btn" data-dev="clear" data-arg="1">Clear everything armed</button>
+      <p class="sheet-note">Day phase ${(Game.dayPhase() * 100).toFixed(0)}% · ${Game.isNight() ? 'night' : 'day'} ·
+      sky now ${Game.currentWeather().name}</p>`;
+  }
+
+  function handleDev(what, arg) {
+    const D = Game.Dev;
+    let redraw = true;
+    let ok = true;
+    switch (what) {
+      case 'weather': D.setWeather(arg); break;
+      case 'mutate': ok = Boolean(D.mutate(arg)); redraw = false; break;
+      case 'rarity': D.armRarity(arg); break;
+      case 'gem': D.armGem(); break;
+      case 'proc': D.toggleProc(arg); break;
+      case 'wonder': Game.startWonder(); redraw = false; break;
+      case 'fill': ok = D.fillGarden() > 0; break;
+      case 'ripen': ok = D.ripenAll() > 0; break;
+      case 'hive': S.credits += Game.nextHiveCost(); ok = Game.buyHive(); break;
+      case 'gold': S.credits += 1e6; Game.save(); Game.emit('currency'); break;
+      case 'gems': S.gems += 50; Game.save(); Game.emit('currency'); break;
+      case 'level': D.grantLevels(Number(arg) || 1); break;
+      case 'away': {
+        const report = D.simulateAway(Number(arg) || 3);
+        ok = Boolean(report);
+        if (ok) { awayReport = report; closeSheet(); setTimeout(() => openSheet('welcome'), 260); }
+        redraw = false;
+        break;
+      }
+      case 'packs': Game.grantPacks(Number(arg) || 1); break;
+      case 'card': {
+        const got = D.grantCard(arg || null);
+        ok = Boolean(got);
+        if (ok) {
+          toast({ title: got.isNew ? 'New card' : 'Another copy', body: `${got.card.name} — ${got.set.name}`, art: Icons.get('cards') });
+          if (got.completedSet) showBanner('Set complete', got.set.name);
+        }
+        redraw = false;
+        break;
+      }
+      case 'completeSet': {
+        const set = D.completeSet();
+        ok = Boolean(set);
+        if (ok) showBanner('Set complete', set.name);
+        redraw = false;
+        break;
+      }
+      case 'dropPack': ok = Boolean(D.dropPack()); redraw = false; break;
+      case 'clear': D.clearAll(); break;
+      default: ok = false;
+    }
+    /* A cheat that quietly did nothing is worse than no cheat — say so. Most failures are a
+       precondition, like mutating with nothing in the ground. */
+    if (!ok) {
+      Sound.play('deny');
+      FX.shake(4);
+      toast({ title: 'Nothing to apply', body: 'That cheat needs something in the garden first.' });
+    } else {
+      Sound.play(what === 'clear' ? 'close' : 'buy');
+    }
+    if (redraw) renderSheet(true);
+  }
+
   /* ---- sheet interactions ---- */
   el.sheetTabs.addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
@@ -1065,11 +1457,17 @@
     const buy = e.target.closest('[data-buy]');
     if (buy) {
       const { buy: kind, key } = buy.dataset;
-      const ok = kind === 'upgrade' ? Game.buyUpgrade(key) : Game.buyDecor(key);
+      const ok = kind === 'upgrade' ? Game.buyUpgrade(key)
+        : kind === 'sky' ? Boolean(Game.callWeather(key))
+        : Game.buyDecor(key);
       if (ok) {
         const c = FX.centerOf(buy);
         FX.sparks(c.x, c.y, 12, '#ffe066');
         FX.ring(c.x, c.y, '#ffffff', 0.45, 70);
+        if (kind === 'sky') renderSheet(true);
+      } else if (kind === 'sky') {
+        Sound.play('deny');
+        FX.shake(4);
       }
       return;
     }
@@ -1096,9 +1494,38 @@
       if (S.prefs[k]) Sound.play('buy');
       return;
     }
+    const setTile = e.target.closest('[data-set]');
+    if (setTile) { openSheet('cardset', setTile.dataset.set); Sound.play('open'); return; }
+    const devBtn = e.target.closest('[data-dev]');
+    if (devBtn) {
+      handleDev(devBtn.dataset.dev, devBtn.dataset.arg);
+      return;
+    }
     const act = e.target.closest('[data-act]');
     if (act) {
       const a = act.dataset.act;
+      if (a === 'closeWelcome') { closeSheet(); Sound.play('close'); return; }
+      if (a === 'backToAlbum') { openSheet('album'); Sound.play('open'); return; }
+      if (a === 'openPack') {
+        const r = Game.openPack();
+        if (!r) { Sound.play('deny'); FX.shake(4); return; }
+        packQueue = r.drawn;
+        packShown = 0;
+        packCompleted = r.completedSets;
+        openSheet('pack');
+        celebrateCard();
+        return;
+      }
+      if (a === 'packNext') { packShown += 1; renderSheet(true); celebrateCard(); return; }
+      if (a === 'packDone') {
+        packCompleted.forEach((id) => {
+          const set = ALBUM.sets.find((x) => x.id === id);
+          if (set) showBanner('Set complete', set.name);
+        });
+        if (S.packs > 0) { openSheet('album'); } else { openSheet('album'); }
+        Sound.play('close');
+        return;
+      }
       if (a === 'cheat') {
         S.gems += 50;
         Game.save(); Game.emit('currency'); Game.emit('panels');
@@ -1150,6 +1577,8 @@
   });
 
   $('#btnSettings').addEventListener('click', () => openSheet('settings'));
+  $('#btnDev').addEventListener('click', () => openSheet('dev'));
+  $('#btnAlbum').addEventListener('click', () => openSheet('album'));
   $('#btnBonuses').addEventListener('click', () => openSheet('bonuses'));
   el.questStrip.addEventListener('click', () => {
     Sound.resume();
@@ -1447,6 +1876,16 @@
     if (p.rainDance) triggerRainFX(plotEls[p.rainDance.idx], p.rainDance.shaved);
     if (p.beeSwarm) triggerBeeFX();
     if (p.ladybug) triggerLadybugFX(plotEls[p.ladybug.idx]);
+    if (p.cardPack) {
+      const v = plotEls[p.cardPack.idx];
+      if (v) {
+        const c = FX.centerOf(v.root);
+        FX.sparks(c.x, c.y, 14, '#ffe066');
+        FX.ring(c.x, c.y, '#ffe066', 0.55, 80);
+        Sound.play('rare');
+        FX.haptic(10);
+      }
+    }
   });
 
   /* Adjacency is invisible until something points at it, and a permanent indicator would clutter
@@ -1470,6 +1909,46 @@
       setTimeout(() => src.root.classList.remove('verb-source'), 1600);
     }
   }
+
+  /* The sky is the only cue for ordinary weather — a banner four times an hour would be noise.
+     Rare weather earns a line from the flower. */
+  function paintWeather(w) {
+    el.game.dataset.weather = w.id;
+    if (w.tint) el.game.style.setProperty('--weather-tint', w.tint);
+    else el.game.style.removeProperty('--weather-tint');
+  }
+
+  Game.on('weather', ({ weather }) => {
+    paintWeather(weather);
+    if (FLOWER_LINES[weather.id]) say(weather.id, weather.id === 'wonderfall');
+    if (weather.id === 'wonderfall') showBanner('Wonderfall', 'Anything growing might change');
+  });
+
+  const seedNameOf = (idx) => {
+    const cell = S.grid[idx];
+    const sd = cell && cell.seed ? Game.seedById(cell.seed) : null;
+    return sd ? sd.name : '';
+  };
+
+  Game.on('mutate', ({ caught }) => {
+    caught.forEach(({ idx, mutation }) => {
+      const v = plotEls[idx];
+      const md = DATA.mutations[mutation];
+      if (!v || !md) return;
+      const c = FX.centerOf(v.root);
+      const rank = md.rank;
+      FX.sparks(c.x, c.y, 6 + rank * 6, md.tint);
+      FX.ring(c.x, c.y, md.glow, 0.5, 60 + rank * 30);
+      FX.float(c.x, c.y - 10, md.name, rank >= 3 ? 'legend' : rank === 2 ? 'epic' : 'rare');
+      if (rank >= 3) {
+        FX.shake(rank * 2);
+        FX.confetti(c.x, c.y);
+        showBanner(md.name, `Your ${seedNameOf(idx) || 'bloom'} changed`);
+      }
+      Sound.play(rank >= 3 ? 'legend' : 'rare');
+      FX.haptic(rank * 8);
+    });
+  });
 
   Game.on('plant', ({ idx, auto, verb }) => {
     if (!S.seen.plot) {
@@ -1649,6 +2128,8 @@
         const d = DATA.decor.find((x) => x.id === key);
         const pot = d.currency === 'gems' ? S.gems : S.credits;
         can = pot >= d.cost;
+      } else if (kind === 'sky') {
+        can = !Game.weatherCallActive() && S.gems >= Game.weatherCallPrice(key);
       }
       node.classList.toggle('affordable', can);
       const price = $('.price', node);
@@ -1743,6 +2224,16 @@
     // unlock audio on the very first interaction
     const unlock = () => { Sound.init(); Sound.setSfx(S.prefs.sfx); Sound.setMusic(S.prefs.music); Sound.resume(); };
     window.addEventListener('pointerdown', unlock, { once: true });
+
+    /* After the coach mark, never over it — a returning player who has not planted yet is being
+       onboarded, and the scene would land on top of that. */
+    awayReport = Game.reconcile();
+    if (awayReport && S.seen.plot) {
+      setTimeout(() => {
+        openSheet('welcome');
+        Sound.play('open');
+      }, 900);
+    }
 
     setTimeout(() => {
       if (info.migrated) {
