@@ -5,6 +5,40 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-16 — Splitting `ui.js`, and how the shared scope gets passed
+
+**Decided before moving a line, because discovering it halfway through is how this goes wrong.**
+`ui.js` had grown to 2,309 lines and every function in it closed over the same IIFE scope. Any
+split has to answer one question first: how does a function that has moved to another file still
+reach `$`, `S`, `el`, `fmt`, `openSheet` and `syncAfford`? There is no build step and
+`<script type="module">` is banned, so the answer cannot be imports.
+
+**One global, `UI`.** `ui-shared.js` loads first with the dependency-free part of that scope; every
+other UI file attaches its public functions to the same object as it loads. Cross-file calls are
+written `UI.something()` and resolve at call time, so the `UI.` prefix is a countable marker of how
+much one file reaches into another, and the UI files after `ui-shared.js` stay order-independent.
+
+**Rejected: passing the scope as an argument to each module's IIFE** (`UI_SHEET(shared)`). It reads
+better, but it forces the dependency edges to be settled at load time, which puts the files back in
+a strict order and makes a cycle — the sheet needs `toast`, `ui.js` needs `openSheet` — impossible
+to express without splitting one of them again.
+
+**Rejected: several globals, one per file** (`UI_SHEET`, `UI_SCENERY`, …). It is more precise about
+who owns what, but a reader then has to know which global holds which helper before they can find
+anything, and the precision buys nothing that grepping `UI.` does not already give.
+
+**Rejected: leaving it alone.** Tempting, since the file works and there is no automated test above
+the simulation layer to catch a mistake. But the cost of the split only grows, and the seams —
+sheet panels, scenery, event wiring — have been named in the docs since before any of this code was
+written.
+
+**The split is pure motion.** No behaviour changes, no reformatting, no drive-by fixes; anything
+spotted along the way went into [11-known-issues.md](11-known-issues.md) rather than into the diff.
+One seam per commit, with `node tools/sim-test.js`, `node --check` and a real play of the moved
+panel after each.
+
+---
+
 ## 2026-08-15 — Packs turn up in the garden, and a badge that needed an animation to exist
 
 **Built:** a fourth tap roll drops a card pack onto a plot, where it waits to be tapped. Plus dev

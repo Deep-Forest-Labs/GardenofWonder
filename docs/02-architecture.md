@@ -2,7 +2,7 @@
 
 ## Shape of the project
 
-Seven JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
+Eight JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
 dependencies. Each file defines exactly one global and they load in dependency order as plain
 `<script>` tags.
 
@@ -22,10 +22,35 @@ reference globals defined above it.
 | 4 | `audio.js` | `Sound` | nothing |
 | 5 | `fx.js` | `FX` | nothing |
 | 6 | `game.js` | `Game` | `DATA`, `WONDER`, `PLOT_AUTOPLANTERS` |
-| 7 | `ui.js` | *(none — IIFE)* | everything above |
+| 7 | `ui-shared.js` | `UI` | `Game`, the DOM |
+| 8 | `ui.js` | *(none — IIFE)* | everything above |
 
-Only `ui.js` touches the DOM on load, and only `ui.js` calls `boot()`. Every other file is inert
+The UI files touch the DOM on load, and only `ui.js` calls `boot()`. Every other file is inert
 until something calls into it.
+
+## The shared UI surface
+
+`ui.js` was one IIFE, and everything in it closed over the same locals: `$`, `$$`,
+`S = Game.state`, the cached `el` element map, the formatting helpers, and callbacks like
+`openSheet` and `syncAfford`. Splitting the UI across several files means that scope has to be
+passed by hand, because there is no build step and `<script type="module">` is banned.
+
+**It is passed as one global, `UI`.** `ui-shared.js` defines the part with no dependencies —
+`$`, `$$`, `S`, `el`, `fmt`, `fmtTime`, `pct`, `signed`, `ico`, `rnd`, `MASTERY_TRACK` — and every
+other UI file attaches its own public functions to `UI` as it loads.
+
+Two rules keep this honest:
+
+- **A call that crosses a file boundary is written `UI.something()`.** A call within a file stays
+  bare. So the `UI.` prefix is the marker for "this reaches into another file", and the size of
+  each file's dependency on the others is countable by grepping for it.
+- **Cross-file references resolve at call time, never at load time.** A file may destructure the
+  `ui-shared.js` primitives at the top, because those exist as soon as `UI` does. It may *not*
+  destructure another UI file's contributions, because that file may not have loaded yet. This is
+  what makes the UI files after `ui-shared.js` order-independent among themselves.
+
+`ui-shared.js` must load first, because the other UI files attach listeners to `el` nodes at load.
+`ui.js` must load last, because it calls `boot()`.
 
 ## The layering rule
 
@@ -147,7 +172,10 @@ screen-shake driver that writes CSS variables on `#game`, and haptics. Reads
 **`game.js`** — The simulation. State, save/load/migration, economy math, purchases,
 automation, the Wonder Effect, and the tick. Returns a frozen-in-practice public API.
 
-**`ui.js`** — Everything else: DOM construction, input handling, the bottom sheet, all six sheet
+**`ui-shared.js`** — The scope the UI files share. No behaviour of its own: DOM lookups, the
+cached `el` map, and the formatting helpers. See "The shared UI surface" above.
+
+**`ui.js`** — Everything else: DOM construction, input handling, the bottom sheet, all sheet
 panels, HUD counters, the rail, toasts, banners, coach marks, day/night interpolation, clouds, and
 the frame loop.
 
