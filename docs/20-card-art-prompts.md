@@ -1,11 +1,39 @@
 # Card Art Prompts
 
 Prompts for generating card art externally — **Grok or Midjourney** — and dropping it into the album.
-Structure and slots are described in [19-card-album.md](19-card-album.md); the house style these
-prompts encode is [05-art-direction.md](05-art-direction.md).
+Structure and slots are in [19-card-album.md](19-card-album.md).
 
 **Nothing here is required.** The album ships with procedural placeholders and works without a single
 image. This exists so art can be added when it is wanted, not before.
+
+## The style is the game, not the interface
+
+An earlier version of this document described flat vector emblems with heavy outlines. **That was
+wrong** — it described the *card frames* and the rest of the UI chrome, not the world the game is set
+in.
+
+The art direction is [05-art-direction.md](05-art-direction.md): **Super Mario Bros. Wonder**, with
+Mario Kart alongside it. Vivid grass greens, warm oranges, sunny yellows. Everything glossy, rounded,
+slightly plush. Soft dimensional shading rather than flat fills. Bouncy, characterful, joyful.
+
+**Why the in-game art looks flatter than this.** Everything in the running game is procedural SVG
+drawn at 22–64px, so it needs thick outlines and big shapes to survive. Card art has neither
+constraint. **It should be the aspirational version of the same world** — what the garden looks like
+in the player's head.
+
+### So: ask for detail
+
+Earlier advice here said *few big shapes, minimal detail*. That was reasoning from a constraint that
+does not apply. Generated art is free, and the reveal shows a card at roughly **210px** — plenty for
+richness.
+
+Ask for **whimsy and small delightful details**. A bee circling the honey jar. Dewdrops catching the
+light. Sparkles trailing a butterfly. The one thing to keep is a **clear hero subject**, so the 46px
+thumbnail in the set grid still reads — but that is a composition rule, not a detail budget.
+
+*The silhouette test in [17-market-and-positioning.md](17-market-and-positioning.md) applies to
+**flower species**, which have to be told apart at a glance during play. Cards do not. Don't apply it
+here.*
 
 ## How art gets in
 
@@ -20,7 +48,7 @@ art: { src: 'cards/first-light-1.png' }    // a generated illustration
 
 **The web build takes no binary assets** ([09-conventions.md](09-conventions.md)) — that rule stands.
 Generated art belongs to the **Unity port**, which has an asset pipeline. The prompts live here so
-the two stay in step; the design lab keeps its circles and icons.
+the two stay in step.
 
 ## The two approaches
 
@@ -28,199 +56,188 @@ the two stay in step; the design lab keeps its circles and icons.
 | --- | --- | --- |
 | Images needed | **9**, cycled across all 12 sets | **108**, nine per set |
 | Generation sessions | 1 | 12 |
-| Aspect | 1:1, emblem on the card face | 3:4, full-bleed |
-| Feel | Clean, systematic, clearly a prototype | Much closer to Monopoly Go |
+| Aspect | 1:1, hero object on the card face | 3:4, full-bleed scene |
 | Cost per season | Trivial | A real content pipeline |
 
-Start with the nine. They prove the pipeline end to end at a twelfth of the effort, and if the album
-turns out not to retain, nothing is wasted.
-
-## Two rules that matter more than the prompt
-
-**Cards render at 46px in the set grid and 96px in the reveal.** That is small. Detail is not just
-wasted, it turns to mush. Push for big shapes and few of them.
-
-**Apply the silhouette test** from [17-market-and-positioning.md](17-market-and-positioning.md):
-fill the image with pure black and look at it at 64px. If you cannot tell what it is, reject it and
-regenerate. This is the single best filter on output quality here.
+Start with the nine. They prove the pipeline end to end at a twelfth of the effort.
 
 ## Running it in Grok
 
-Grok generates conversationally and takes **no Midjourney-style flags**. `--ar`, `--style raw`,
-`--s`, `--no` and `--sref` all do nothing; everything has to be said in plain language. The subject
-lines below are unchanged — only the wrapper differs.
+Grok generates conversationally and takes **no Midjourney flags**. `--ar`, `--style raw`, `--s`,
+`--no` and `--sref` all do nothing; everything is said in plain language.
 
-**Consistency comes from the thread, not from a parameter.** This is the whole technique:
+**Consistency comes from the thread, not a parameter:**
 
-1. Open **one** conversation and stay in it for the entire batch. Do not start a new chat per card.
-2. Generate **card 1**. Iterate on it conversationally — "thicker outline", "simpler shapes",
-   "less detail", "warmer cream" — until it is genuinely right. This first image sets the style for
-   everything after it.
-3. Then generate **card 9, the Mythical, second.** If the style cannot do "radiant and special",
-   you want to know that now rather than after seven more images. If card 9 does not clearly beat
-   card 1, adjust the style before continuing.
-4. For every card after that, lead with **"Same style, same outlines, same palette as before. Now:"**
-   followed by the subject line.
+1. **One conversation for the whole batch.** Not a new chat per card — that is the mistake that
+   ruins it.
+2. Generate **card 1** and iterate conversationally — "more vibrant", "glossier", "warmer light",
+   "more playful" — until it is genuinely right. This image sets the style for everything after.
+3. Then generate **card 9, the Mythical, second.** If the style cannot do spectacular, find out now
+   rather than after seven more images.
+4. Every card after that leads with **"Same style, same lighting, same palette as before. Now:"**
 5. If it drifts, **re-upload the approved card 1** and say "match this exactly."
 
-Two things Grok does better than Midjourney here: you can **iterate on a single image in
-conversation**, and you can **attach an approved image as a reference**. Two things it does worse:
-aspect ratio is a request rather than a guarantee, and it drifts toward photorealism unless the
-style language pushes hard.
+Grok is better than Midjourney at two things here: iterating on one image in conversation, and taking
+an approved image as a reference. It is worse at two: aspect ratio is a request rather than a
+guarantee, and it drifts toward photorealism unless pushed.
 
-*Grok's capabilities move quickly and this was written against what it did at the time. If the
-interface offers explicit aspect-ratio or style-reference controls, prefer those over describing
-them.*
+*Grok moves quickly and this was written against what it did at the time. If the interface offers
+explicit aspect-ratio or style-reference controls, prefer those over describing them.*
 
 ## Running it in Midjourney
 
-Generate **one** image first. When you have one you like, pass its job ID or image URL as a **style
-reference** (`--sref`) on every subsequent prompt in the batch. Without it, nine images from nine
-prompts will not look like they belong together — the specific failure that makes generated card art
-look cheap.
+Generate one image, then pass its job ID or URL as `--sref` on every subsequent prompt. Without it,
+nine prompts produce nine unrelated images — the specific failure that makes generated card art look
+cheap. Keep the style block byte-identical; change only the subject.
 
-Keep the style block byte-identical between prompts. Change only the subject line.
+---
 
 ## A. The nine reusable motifs
 
-Each motif is a **centred emblem** on the card's tinted face — the same job the icons do now.
+A **hero object**, rendered richly, sitting on the card's tinted face.
 
-**They must ascend.** Motif index maps to rarity: 0–2 are Commons, 3–4 Uncommons, 5–6 Rares, 7 the
-Legendary, 8 the Mythical. Card nine should feel like the prize; card one should feel like a seed
-packet.
+**They must ascend.** Motif index maps to rarity: 1–3 are Commons, 4–5 Uncommons, 6–7 Rares, 8 the
+Legendary, 9 the Mythical. Card nine should look like a prize; card one should look like a nice
+start.
 
-### The style block — Grok
+### Style block — Grok
 
-Paste this once at the top of the thread, then send subjects one at a time.
+Paste once at the top of the thread, then send subjects one at a time.
 
 ```
-Draw a chunky storybook emblem in a cosy children's picture-book style. Bold dark brown outlines,
-flat saturated colours, simple bold shapes, warm paper palette, high contrast, clean vector look.
-Centre the subject with generous space around it on a plain soft cream background. Square image.
+Draw bright, vibrant cartoon video-game art in the style of a modern Nintendo platformer — glossy,
+colourful and joyful. Soft rounded three-dimensional forms with clean crisp edges. Richly saturated
+colours: vivid grass greens, warm oranges, sunny yellows, bright sky blues. A cheerful sunlit
+storybook world, playful and whimsical, with a sense of bounce and life.
 
-Keep it simple — this is seen very small, so use a few big shapes rather than fine detail.
+Soft rim lighting, gentle highlights, a little gloss on every surface. Pack in small delightful
+details — sparkles, dewdrops, tiny creatures — while keeping one clear hero subject in the centre.
 
-No text, letters, numbers, watermarks or signatures. Not photorealistic. No 3D rendering, no drop
-shadows, no busy background.
+Square image. Simple uncluttered background so the subject pops.
+
+No text, letters, numbers, watermarks or signatures. No people or human faces. Not photorealistic,
+not gritty, not muted.
 
 The subject is:
 ```
 
-### The style block — Midjourney
+### Style block — Midjourney
 
 ```
-chunky storybook emblem, bold dark brown outline, flat saturated colour, simple bold shapes,
-cosy children's picture book, warm paper palette, clean vector look, high contrast, centred,
-generous negative space, plain soft cream background
---ar 1:1 --style raw --s 150
---no text, letters, words, numbers, watermark, signature, photorealism, 3d render, drop shadow,
-busy background, clutter, tiny detail
+bright vibrant cartoon video game art, modern Nintendo platformer aesthetic, glossy and colourful,
+soft rounded 3d forms with clean edges, richly saturated vivid greens oranges and sunny yellows,
+cheerful sunlit storybook world, playful and whimsical, soft rim lighting, gentle highlights,
+delightful small details, sparkles and dewdrops, single clear hero subject centred,
+simple uncluttered background
+--ar 1:1 --style raw --s 400
+--no text, letters, words, numbers, watermark, signature, photorealism, gritty, muted, dark,
+people, human faces, ui, frame, border
 ```
 
 ### The nine subjects
 
-| # | Rarity | Subject line to prepend |
+| # | Rarity | Subject |
 | --- | --- | --- |
-| 1 | Common | `a single small green seedling with two round leaves,` |
-| 2 | Common | `one simple white daisy seen from the front,` |
-| 3 | Common | `a terracotta plant pot, empty,` |
-| 4 | Uncommon | `a single butterfly with rounded wings, wings open,` |
-| 5 | Uncommon | `a small jar of honey with a wooden dipper,` |
-| 6 | Rare | `a warm glowing paper lantern,` |
-| 7 | Rare | `a rounded teacup with a curl of steam,` |
-| 8 | Legendary | `a golden four-leaf clover, softly gleaming,` |
-| 9 | Mythical | `a radiant star-shaped bloom with light rays behind it,` |
+| 1 | Common | `a bright green seedling bursting up out of rich dark soil, two glossy round leaves, one dewdrop catching the light` |
+| 2 | Common | `a cheerful white daisy with a big golden centre, petals glowing in warm sunlight, a tiny ladybird on one petal` |
+| 3 | Common | `a warm terracotta plant pot sitting in sunlight, a small chip in the rim, rich soil inside and a curl of green` |
+| 4 | Uncommon | `a butterfly with vivid orange and yellow wings caught mid-flutter, a trail of sparkles behind it` |
+| 5 | Uncommon | `a fat jar of golden honey overflowing down its sides, a wooden dipper resting in it, one happy bee circling` |
+| 6 | Rare | `a glowing paper lantern spilling warm orange light into the dusk, two soft moths drawn to the glow` |
+| 7 | Rare | `a rounded teacup with steam curling up and flower petals floating on the surface, cosy golden light` |
+| 8 | Legendary | `a golden four-leaf clover radiating light, jewel-bright dewdrops on its leaves, sparkles spinning around it` |
+| 9 | Mythical | `an enormous radiant star-shaped bloom exploding with rays of golden light, rainbow shimmer, floating sparkles, glorious and magical` |
 
-In Grok, send the style block once and then each subject as its own message. In Midjourney, the
-subject line goes first and the style block after it, as one continuous prompt.
+In Grok, send the style block once and each subject as its own message. In Midjourney, subject first,
+style block after, as one prompt.
 
-**On the cream background.** Neither tool does reliable transparency, so the motif will arrive with
-its background baked in. That is fine — the motif renders as a round medallion on the card face, so
-the cream becomes the medallion's own colour rather than clashing with the set tint. Do not spend
-time trying to cut it out.
+**On the background.** Neither tool does reliable transparency, so it comes baked in. That is fine —
+the motif renders as a round medallion on the card face, so it becomes the medallion's own colour.
+Do not spend time cutting it out.
 
 ### What to accept
 
-- Readable as a **silhouette** at 64px.
-- Outline reads as **dark brown**, not black, and is thick enough to survive downscaling.
-- The subject **fills most of the frame** with a little air around it — not a small object in a big
-  scene.
-- Nine images that look like **one family**. If one is an outlier, regenerate it in the same thread
-  (Grok) or against the `--sref` (Midjourney) rather than accepting it.
+- **Vibrant.** If it looks muted or tasteful, it is wrong. This world is loud and happy.
+- The subject **reads at 46px** — a strong central focal point, not a busy scene.
+- Nine images that look like **one family**.
+- **Card nine is obviously the best one.** If the Mythical does not beat the Common at a glance,
+  regenerate it.
 
 ---
 
 ## B. Per-set art — *First Light*
 
-The first set a player meets, and therefore the right one to test with. Nine full-bleed 3:4 scenes.
+Nine full-bleed 3:4 scenes. The first set a player meets, so the right one to test with.
 
-The mood arc is the point: the set is **a garden waking up**, and the cards should get warmer and
-brighter as rarity climbs. Cards 1–3 are cold, blue and quiet. Card 9 is the sun finally on your
-face.
+The arc is the point: **a garden waking up.** Cards 1–3 are cool blue and quiet, card 9 is full
+golden daylight. Rarity and warmth climb together.
 
-### The style block — Grok
+### Style block — Grok
 
 ```
-Draw a cosy storybook garden illustration in a children's picture-book style. Bold dark brown
-outlines, flat saturated colours, simple bold shapes, painterly but clean, warm inviting palette,
-strong silhouette, uncluttered composition. Tall portrait image, 3:4 ratio, taller than it is wide.
+Draw a bright, vibrant cartoon garden scene in the style of a modern Nintendo platformer — glossy,
+colourful and joyful. Soft rounded three-dimensional forms with clean crisp edges. Richly saturated
+colours: vivid grass greens, warm oranges, sunny yellows, bright sky blues. A cheerful storybook
+garden world, playful and whimsical, full of life.
 
-Keep the composition simple — this is seen very small, so it needs to read at a glance.
+Beautiful atmospheric light, soft rim lighting, gentle glow. Pack in small delightful details —
+sparkles, dewdrops, bees, butterflies, tiny flowers — while keeping one clear focal point.
 
-No people or faces. No text, letters, numbers, watermarks or signatures. Not photorealistic. No 3D
-rendering. No frame, border or interface elements.
+Tall portrait image, 3:4 ratio, taller than it is wide.
+
+No text, letters, numbers, watermarks or signatures. No people or human faces. Not photorealistic,
+not gritty, not muted. No frame or border.
 
 The scene is:
 ```
 
-### The style block — Midjourney
+### Style block — Midjourney
 
 ```
-cosy storybook garden illustration, bold dark brown outlines, flat saturated colour, simple bold
-shapes, children's picture book, painterly but clean, warm inviting palette, strong silhouette,
-uncluttered composition, no people
---ar 3:4 --style raw --s 250
---no text, letters, words, numbers, watermark, signature, photorealism, 3d render, ui, frame,
-border, faces, people, clutter
+bright vibrant cartoon garden scene, modern Nintendo platformer aesthetic, glossy and colourful,
+soft rounded 3d forms with clean edges, richly saturated vivid greens oranges and sunny yellows,
+cheerful storybook garden world, playful and whimsical, beautiful atmospheric light, soft rim
+lighting, delightful small details, bees and butterflies and sparkles, clear focal point
+--ar 3:4 --style raw --s 500
+--no text, letters, words, numbers, watermark, signature, photorealism, gritty, muted, dark,
+people, human faces, ui, frame, border
 ```
 
 ### The nine scenes
 
-| # | Card | Rarity | Subject line to prepend |
+| # | Card | Rarity | Scene |
 | --- | --- | --- | --- |
-| 1 | Dawn Chorus | Common | `two small round birds singing on a garden fence at first light, pale blue sky,` |
-| 2 | Dewfall | Common | `close view of fat dew droplets on a broad green leaf, cool early morning light,` |
-| 3 | The Early Row | Common | `a neat row of young seedlings in dark soil, long cool morning shadows,` |
-| 4 | Frost on the Gate | Uncommon | `a wooden garden gate rimed with white frost, still blue dawn,` |
-| 5 | Mist Over the Beds | Uncommon | `low white mist lying across quiet vegetable beds, soft pale light,` |
-| 6 | Long Shadows | Rare | `long golden shadows stretching across a garden path at sunrise,` |
-| 7 | The Watering Can | Rare | `an old metal watering can catching the first warm sunlight, dew on its handle,` |
-| 8 | Sunrise Bloom | Legendary | `a single large flower opening to a golden sunrise, petals lit from behind,` |
-| 9 | The First Warmth | Mythical | `warm golden sunlight flooding a whole garden at once, radiant and glowing, the moment the cold lifts,` |
+| 1 | Dawn Chorus | Common | `two plump cheerful birds singing on a wooden garden fence as the sun just begins to rise, cool blue sky warming at the horizon, little musical sparkles in the air` |
+| 2 | Dewfall | Common | `enormous glistening dewdrops clinging to a vivid green leaf, each one reflecting the pale morning sky, cool early light` |
+| 3 | The Early Row | Common | `a tidy row of bright green seedlings in rich dark soil, long cool shadows stretching away, the first sliver of sun cresting a hedge` |
+| 4 | Frost on the Gate | Uncommon | `a wooden garden gate covered in sparkling frost crystals, cold blue dawn light, the first warm sun just catching the top edge` |
+| 5 | Mist Over the Beds | Uncommon | `soft white mist rolling low across lush vegetable beds, pale golden sunbeams cutting through it, everything hushed` |
+| 6 | Long Shadows | Rare | `a golden sunrise casting long dramatic shadows across a winding garden path, warm light and cool blue shade side by side` |
+| 7 | The Watering Can | Rare | `a colourful metal watering can gleaming in the first sunlight, dewdrops beading on it, a tiny rainbow in the drifting spray` |
+| 8 | Sunrise Bloom | Legendary | `an enormous flower unfurling toward a blazing sunrise, petals glowing translucent with the light shining through them, warm and radiant` |
+| 9 | The First Warmth | Mythical | `a whole garden flooded with glorious golden morning light all at once, everything glowing, butterflies and sparkles rising, pure joy, the moment the cold finally lifts` |
 
 ### What to accept
 
-- The **arc holds**: laid out in order, they should visibly warm from card one to card nine.
-- Card nine should be **obviously the best one**. If it does not read as the prize, regenerate it.
-- Each is legible at **96px** — the size it is actually seen at in the reveal.
-- No text anywhere. The card name is drawn by the UI over the art; baked-in lettering will collide.
+- **The arc holds.** Laid out in order they should visibly warm from cold blue to full gold.
+- **Card nine is spectacular.** It is the rarest thing in the set and should feel like it.
+- Vibrant, not tasteful. Muted output is wrong output.
+- No text anywhere — the UI draws the card name over the art and baked lettering will collide.
 
 ---
 
 ## Files and wiring
 
-Export **PNG**, square-cropped for motifs and 3:4 for scenes, **512px on the long edge** — enough for
-a 96px reveal on a high-density screen, and small enough that 108 of them do not become a payload
-problem later.
-
-Name them predictably, because the wiring reads the name:
+Export **PNG**, **1024px on the long edge**. The reveal shows a card at ~210px, so 1024 leaves room
+on a high-density screen and for whatever Unity does with it later.
 
 ```
 motifs/motif-1.png … motif-9.png
 first-light/first-light-1.png … first-light-9.png
 ```
 
-Then it is a data edit per card. **One caveat worth knowing before generating 108 of anything:** the
-`{ src }` path currently renders a *square* image at the motif's size, which suits approach A. Full
-3:4 card art wants to fill the card face instead, which is a small CSS change — ask for it at the
-same time as the first batch rather than after.
+Then it is a data edit per card.
+
+**One caveat before generating 108 of anything:** the `{ src }` path currently renders a *square*
+image at the motif's size, which suits approach A. Full 3:4 card art wants to fill the card face
+instead — a small CSS change. Ask for it alongside the first batch rather than after.
