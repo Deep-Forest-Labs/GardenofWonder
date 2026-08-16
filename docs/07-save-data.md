@@ -82,6 +82,15 @@ stored so a level-up can be detected. Nested `quests` is re-merged in `load()` l
 objects; a save without a `rep` key is grandfathered (see
 [16-progression-and-quests.md](16-progression-and-quests.md)).
 
+**Retiring a quest requires pruning live saves, not just deleting the definition.**
+`ensureProgression()` drops any `quests.active` entry whose id no longer resolves through
+`questById()`, and nulls an unclaimed `quests.daily.id` so `refreshDaily()` rerolls it. Without
+that, a save carrying the retired quest keeps the orphan forever: `fillActive()` caps `active` at
+three, so the dead entry permanently costs the player a slot, and `stripQuest()` renders
+`active[0]`, so it can also jam the quest strip. This was added when the three unreachable sell
+quests were removed (2026-08-15). A claimed daily is left alone on purpose — rerolling it would pay
+its reward twice.
+
 **`prefs.music` defaults to `false`.** Deliberate: unrequested audio on load is hostile.
 
 ## Writing

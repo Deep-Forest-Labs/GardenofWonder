@@ -235,7 +235,7 @@ becomes active.
 | 8 | `q_grip_1` | Buy Quick Grip | upgrade | holdSpeed | 1 | 12 |
 | 9 | `q_hold_20` | Hold the flower 20 times | hold | | 20 | 12 |
 | 10 | `q_plant_8` | Plant 8 seeds | plant | | 8 | 12 |
-| 11 | `q_sell_5` | Sell 5 flowers | sell | | 5 | 12 |
+| 11 | `q_discover_5` | Discover 5 species | discover | | 5 | 12 |
 | 12 | `q_hive_1` | Build a hive | hive | | 1 | 14 |
 | 13 | `q_honey_3` | Fill 3 honey jars | honey | | 3 | 16 |
 | 14 | `q_harvest_10` | Harvest 10 blooms | harvest | | 10 | 16 |
@@ -257,7 +257,7 @@ becomes active.
 | 30 | `q_craft_2` | Craft 2 goods | craft | | 2 | 48 |
 | 31 | `q_marigold_3` | Harvest 3 marigolds | harvest | marigold | 3 | 42 |
 | 32 | `q_harvest_40` | Harvest 40 blooms | harvest | | 40 | 46 |
-| 33 | `q_sell_10` | Sell 10 flowers | sell | | 10 | 50 |
+| 33 | `q_discover_12` | Discover 12 species | discover | | 12 | 50 |
 
 `q_tap_50` has `after: q_power_1`, `q_hold_20` after `q_grip_1`, `q_crit_1` after `q_charm_1`,
 `q_combo_55` after `q_coil_1`. Hold ticks are the repeating interval of a held press, not the
@@ -265,14 +265,28 @@ initial pointer-down. Combo quests set progress to the current combo rather than
 
 The first three are active together, so the first level-up lands inside the first minute. Honey
 quests count jars added to a hive (including Bee Swarm), not collected. Craft quests count
-collection (`crafted`), not `startCraft`. Sell quests count flowers only.
+collection (`crafted`), not `startCraft`. Discover quests count the first harvest of a species, so
+they advance off `almanac.first` and never go backwards.
+
+**The `sell` track carries no quests, deliberately.** `q_sell_5`, `q_sell_10` and `d_sell_3` were
+removed 2026-08-15: `sell()` only credits the track for `kind === 'flower'`, and `stockRow()` is
+only ever called for honey, wax and crafted goods, so no player could sell a flower. Because
+`fillActive()` caps at three and `stripQuest()` always renders `active[0]`, the quest strip jammed
+permanently at "Sell 5 flowers 0/5" once it reached the front. The ladder's two slots became
+`q_discover_5` and `q_discover_12`, at the same reputation, which keeps the total at 777 — the
+suite asserts the ladder still reaches Eternal. **Do not add a sell quest until the UI can sell a
+flower**; a sim-test now fails if one appears before then. When the Market ships
+([13-order-system.md](13-order-system.md)), the track is ready and `Game.sell('flower', …)` already
+works.
 
 ### The daily quest
 
 One quest, reset on local date change, drawn from `DATA.dailies`: Harvest 10 blooms, Plant 6 seeds,
-Tap 100 times, Sell 3 flowers. Pays 12 reputation, a small coin grant, and a boost matching the
-verb (Seed Rush, Seed Rush, Bloom Burst, Golden Popups). No craft daily — it can strand a day-one
-return. No Fortune Aura on the daily; that one stays a ladder gift.
+Tap 100 times. Pays 12 reputation, a small coin grant, and a boost matching the verb (Seed Rush,
+Seed Rush, Bloom Burst). No craft daily — it can strand a day-one return. No Fortune Aura on the
+daily; that one stays a ladder gift. The pool is deliberately three, not four — "Sell 3 flowers"
+was removed with the other sell quests, and every remaining daily is completable with nothing but
+the garden, which is the property that matters for a daily.
 
 Use local date, not a 24-hour timer from last claim. Timers that drift punish players for playing
 earlier in the day. An unclaimed daily expires at midnight; the ladder never expires.

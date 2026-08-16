@@ -405,6 +405,12 @@ const Game = (() => {
       state.quests.daily = { id: null, progress: 0, day: '', claimed: false };
     }
     if (typeof state.rep !== 'number' || !(state.rep >= 0)) state.rep = 0;
+    // Drop instances whose definition no longer exists. A retired quest left in
+    // `active` can never be claimed, so it holds one of the three slots forever
+    // and jams stripQuest(), which always shows active[0].
+    state.quests.active = state.quests.active.filter((q) => q && questById(q.id));
+    const daily = state.quests.daily;
+    if (daily.id && !questById(daily.id) && !daily.claimed) daily.id = null; // forces a reroll below
     state.level = levelFromRep(state.rep);
     refreshDaily();
     fillActive();

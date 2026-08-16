@@ -523,6 +523,40 @@ S.tap.comboMax = 60;
 for (let i = 0; i < 12; i += 1) G.tapFlower();
 check('the combo quest tracks peak combo, not tap count', S.quests.active[0].progress === 12);
 
+/* A quest whose track cannot be advanced can never be completed, and because
+   fillActive() caps at three and stripQuest() always shows active[0], it holds
+   a slot forever and jams the strip. Three "Sell N flowers" quests shipped that
+   way. Note that grepping game.js is NOT enough to catch it — `noteQuest('sell')`
+   is right there in sell(), it just only fires for kind 'flower', and the only
+   sell buttons ui.js renders are honey, wax and crafted goods. Both halves below
+   earn their keep: the first catches a typo'd track, the second catches a track
+   that exists but nothing can reach. */
+group('every quest track is one the game actually emits');
+const gameSrc = fs.readFileSync(path.join(ROOT, 'game.js'), 'utf8');
+const emitted = new Set([...gameSrc.matchAll(/noteQuest\(\s*'([a-z]+)'/g)].map((m) => m[1]));
+check('the source exposes a sane set of tracks', emitted.size >= 10, `found ${emitted.size}`);
+DATA.quests.concat(DATA.dailies).forEach((q) => {
+  check(`${q.id} (${q.track}) is emitted somewhere`, emitted.has(q.track));
+});
+
+group('no quest rides a track the player cannot reach');
+const uiSrc = fs.readFileSync(path.join(ROOT, 'ui.js'), 'utf8');
+const sellsFlowers = /stockRow\([^\n]*'flower'/.test(uiSrc);
+check('sell quests exist only if the UI can sell a flower',
+  sellsFlowers || !DATA.quests.concat(DATA.dailies).some((q) => q.track === 'sell'),
+  sellsFlowers ? 'UI sells flowers' : 'UI sells no flowers, so no sell quest may ship');
+
+group('a retired quest is pruned from an existing save');
+G.reset();
+S.quests.active = [{ id: 'q_retired_forever', progress: 0 }, { id: 'q_plant_1', progress: 0 }];
+S.quests.daily = { id: 'd_retired_forever', progress: 0, day: '', claimed: false };
+G.saveNow();
+G.load();
+check('the unknown ladder quest is gone', !S.quests.active.some((q) => q.id === 'q_retired_forever'));
+check('the slot it held was refilled', S.quests.active.length === 3);
+check('every remaining active quest resolves', S.quests.active.every((q) => DATA.quests.some((d) => d.id === q.id)));
+check('the unknown daily was rerolled', DATA.dailies.some((d) => d.id === S.quests.daily.id));
+
 group('grandfather migration keeps seeds you could already use');
 G.reset();
 const saveOf = (extra) => {

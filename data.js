@@ -224,7 +224,7 @@ const DATA = {
     { id: 'q_grip_1',      text: 'Buy Quick Grip',          track: 'upgrade', key: 'holdSpeed', qty: 1, rep: 12 },
     { id: 'q_hold_20',     text: 'Hold the flower 20 times', track: 'hold',   qty: 20,  rep: 12, after: 'q_grip_1' },
     { id: 'q_plant_8',     text: 'Plant 8 seeds',           track: 'plant',   qty: 8,   rep: 12 },
-    { id: 'q_sell_5',      text: 'Sell 5 flowers',          track: 'sell',    qty: 5,   rep: 12 },
+    { id: 'q_discover_5',  text: 'Discover 5 species',      track: 'discover', qty: 5,  rep: 12 },
     { id: 'q_hive_1',      text: 'Build a hive',            track: 'hive',    qty: 1,   rep: 14, reward: { boost: 'seedrush' } },
     { id: 'q_honey_3',     text: 'Fill 3 honey jars',       track: 'honey',   qty: 3,   rep: 16 },
     { id: 'q_harvest_10',  text: 'Harvest 10 blooms',       track: 'harvest', qty: 10,  rep: 16 },
@@ -246,14 +246,13 @@ const DATA = {
     { id: 'q_craft_2',     text: 'Craft 2 goods',           track: 'craft',   qty: 2,   rep: 48 },
     { id: 'q_marigold_3',  text: 'Harvest 3 marigolds',     track: 'harvest', key: 'marigold', qty: 3,  rep: 42 },
     { id: 'q_harvest_40',  text: 'Harvest 40 blooms',       track: 'harvest', qty: 40,  rep: 46 },
-    { id: 'q_sell_10',     text: 'Sell 10 flowers',         track: 'sell',    qty: 10,  rep: 50 }
+    { id: 'q_discover_12', text: 'Discover 12 species',     track: 'discover', qty: 12, rep: 50 }
   ],
 
   dailies: [
     { id: 'd_harvest_10', text: 'Harvest 10 blooms', track: 'harvest', qty: 10,  rep: 12, reward: { credits: 50, boost: 'seedrush' } },
     { id: 'd_plant_6',    text: 'Plant 6 seeds',     track: 'plant',   qty: 6,   rep: 12, reward: { credits: 50, boost: 'seedrush' } },
-    { id: 'd_tap_100',    text: 'Tap 100 times',     track: 'tap',     qty: 100, rep: 12, reward: { credits: 40, boost: 'bloom' } },
-    { id: 'd_sell_3',     text: 'Sell 3 flowers',    track: 'sell',    qty: 3,   rep: 12, reward: { credits: 50, boost: 'golden' } }
+    { id: 'd_tap_100',    text: 'Tap 100 times',     track: 'tap',     qty: 100, rep: 12, reward: { credits: 40, boost: 'bloom' } }
   ]
 };
 
