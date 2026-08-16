@@ -1,6 +1,6 @@
 # Card Art Prompts
 
-Prompts for generating card art externally (Midjourney or similar) and dropping it into the album.
+Prompts for generating card art externally — **Grok or Midjourney** — and dropping it into the album.
 Structure and slots are described in [19-card-album.md](19-card-album.md); the house style these
 prompts encode is [05-art-direction.md](05-art-direction.md).
 
@@ -44,16 +44,42 @@ wasted, it turns to mush. Push for big shapes and few of them.
 fill the image with pure black and look at it at 64px. If you cannot tell what it is, reject it and
 regenerate. This is the single best filter on output quality here.
 
-## Consistency across a set
+## Running it in Grok
 
-Generate **one** image first. When you get one you like, take its job ID or image URL and pass it as
-a **style reference** (`--sref`) on every subsequent prompt in that batch. Without this, nine images
-generated from nine prompts will not look like they belong together, which is the failure mode that
-makes generated card art look cheap.
+Grok generates conversationally and takes **no Midjourney-style flags**. `--ar`, `--style raw`,
+`--s`, `--no` and `--sref` all do nothing; everything has to be said in plain language. The subject
+lines below are unchanged — only the wrapper differs.
 
-Keep the STYLE block below byte-identical between prompts. Change only the subject line.
+**Consistency comes from the thread, not from a parameter.** This is the whole technique:
 
----
+1. Open **one** conversation and stay in it for the entire batch. Do not start a new chat per card.
+2. Generate **card 1**. Iterate on it conversationally — "thicker outline", "simpler shapes",
+   "less detail", "warmer cream" — until it is genuinely right. This first image sets the style for
+   everything after it.
+3. Then generate **card 9, the Mythical, second.** If the style cannot do "radiant and special",
+   you want to know that now rather than after seven more images. If card 9 does not clearly beat
+   card 1, adjust the style before continuing.
+4. For every card after that, lead with **"Same style, same outlines, same palette as before. Now:"**
+   followed by the subject line.
+5. If it drifts, **re-upload the approved card 1** and say "match this exactly."
+
+Two things Grok does better than Midjourney here: you can **iterate on a single image in
+conversation**, and you can **attach an approved image as a reference**. Two things it does worse:
+aspect ratio is a request rather than a guarantee, and it drifts toward photorealism unless the
+style language pushes hard.
+
+*Grok's capabilities move quickly and this was written against what it did at the time. If the
+interface offers explicit aspect-ratio or style-reference controls, prefer those over describing
+them.*
+
+## Running it in Midjourney
+
+Generate **one** image first. When you have one you like, pass its job ID or image URL as a **style
+reference** (`--sref`) on every subsequent prompt in the batch. Without it, nine images from nine
+prompts will not look like they belong together — the specific failure that makes generated card art
+look cheap.
+
+Keep the style block byte-identical between prompts. Change only the subject line.
 
 ## A. The nine reusable motifs
 
@@ -63,7 +89,24 @@ Each motif is a **centred emblem** on the card's tinted face — the same job th
 Legendary, 8 the Mythical. Card nine should feel like the prize; card one should feel like a seed
 packet.
 
-### The style block — paste this on every one
+### The style block — Grok
+
+Paste this once at the top of the thread, then send subjects one at a time.
+
+```
+Draw a chunky storybook emblem in a cosy children's picture-book style. Bold dark brown outlines,
+flat saturated colours, simple bold shapes, warm paper palette, high contrast, clean vector look.
+Centre the subject with generous space around it on a plain soft cream background. Square image.
+
+Keep it simple — this is seen very small, so use a few big shapes rather than fine detail.
+
+No text, letters, numbers, watermarks or signatures. Not photorealistic. No 3D rendering, no drop
+shadows, no busy background.
+
+The subject is:
+```
+
+### The style block — Midjourney
 
 ```
 chunky storybook emblem, bold dark brown outline, flat saturated colour, simple bold shapes,
@@ -88,8 +131,13 @@ busy background, clutter, tiny detail
 | 8 | Legendary | `a golden four-leaf clover, softly gleaming,` |
 | 9 | Mythical | `a radiant star-shaped bloom with light rays behind it,` |
 
-So the full prompt for card five is the subject line, then the style block, then the parameters —
-one continuous prompt.
+In Grok, send the style block once and then each subject as its own message. In Midjourney, the
+subject line goes first and the style block after it, as one continuous prompt.
+
+**On the cream background.** Neither tool does reliable transparency, so the motif will arrive with
+its background baked in. That is fine — the motif renders as a round medallion on the card face, so
+the cream becomes the medallion's own colour rather than clashing with the set tint. Do not spend
+time trying to cut it out.
 
 ### What to accept
 
@@ -97,8 +145,8 @@ one continuous prompt.
 - Outline reads as **dark brown**, not black, and is thick enough to survive downscaling.
 - The subject **fills most of the frame** with a little air around it — not a small object in a big
   scene.
-- Nine images that look like **one family**. If one is an outlier, regenerate it against the `--sref`
-  rather than accepting it.
+- Nine images that look like **one family**. If one is an outlier, regenerate it in the same thread
+  (Grok) or against the `--sref` (Midjourney) rather than accepting it.
 
 ---
 
@@ -110,7 +158,22 @@ The mood arc is the point: the set is **a garden waking up**, and the cards shou
 brighter as rarity climbs. Cards 1–3 are cold, blue and quiet. Card 9 is the sun finally on your
 face.
 
-### The style block — paste this on every one
+### The style block — Grok
+
+```
+Draw a cosy storybook garden illustration in a children's picture-book style. Bold dark brown
+outlines, flat saturated colours, simple bold shapes, painterly but clean, warm inviting palette,
+strong silhouette, uncluttered composition. Tall portrait image, 3:4 ratio, taller than it is wide.
+
+Keep the composition simple — this is seen very small, so it needs to read at a glance.
+
+No people or faces. No text, letters, numbers, watermarks or signatures. Not photorealistic. No 3D
+rendering. No frame, border or interface elements.
+
+The scene is:
+```
+
+### The style block — Midjourney
 
 ```
 cosy storybook garden illustration, bold dark brown outlines, flat saturated colour, simple bold
