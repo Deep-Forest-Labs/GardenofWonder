@@ -33,6 +33,7 @@ const DATA = {
     beacon:   { name: 'Beacon',   cat: 'rarity',      tint: '#ff9f1c', desc: 'Neighbouring plots roll for rarity more generously.' },
     lantern:  { name: 'Lantern',  cat: 'drops',       tint: '#ff8fd0', desc: 'Neighbouring plots are twice as likely to drop a gem.' },
     deeproot: { name: 'Deeproot', cat: 'density',     tint: '#8fd6ff', desc: 'Pays 8% more for every neighbouring plot that is planted.' },
+    nightbell:{ name: 'Nightbell',cat: 'time',        tint: '#7aa8ff', desc: 'Pays double if harvested at night, half by day.' },
     spreader: { name: 'Spreader', cat: 'propagation', tint: '#ffd23f', desc: 'On harvest, may sow a free copy of itself in an empty neighbour.' }
   },
 
@@ -44,6 +45,8 @@ const DATA = {
     beaconRarity: 6,
     lanternGemMult: 2,
     deeprootPerNeighbour: 0.08,
+    nightbellNight: 2,
+    nightbellDay: 0.5,
     spreaderChance: 0.20,
     beaconCatchBonus: 0.5   // each adjacent Beacon raises this plot's mutation catch chance
   },
@@ -119,12 +122,12 @@ const DATA = {
       art: { shape: 'sun', petals: 12, c1: '#ffc93c', c2: '#fff3b0', core: '#ff8f1f', leaf: '#5cb85c', glow: '#ffd85e' }
     },
     {
-      id: 'jadefern', name: 'Jade Fern', cost: 3200, grow: 180, yield: 4480, spr: '🌿', unlockLevel: 8,
+      id: 'jadefern', verb: 'deeproot', name: 'Jade Fern', cost: 3200, grow: 180, yield: 4480, spr: '🌿', unlockLevel: 8,
       desc: 'Ancient frond storing rich nutrients for big hauls.',
       art: { shape: 'fern', petals: 6, c1: '#43aa5a', c2: '#8ce99a', core: '#2f7d3f', leaf: '#2f7d3f' }
     },
     {
-      id: 'moonflower', verb: 'deeproot', name: 'Moonflower', cost: 4500, grow: 220, yield: 6300, spr: '🌙', unlockLevel: 9,
+      id: 'moonflower', verb: 'nightbell', name: 'Moonflower', cost: 4500, grow: 220, yield: 6300, spr: '🌙', unlockLevel: 9,
       desc: 'Night-blooming marvel with stellar rarity chances.',
       art: { shape: 'lotus', petals: 7, c1: '#b9dcff', c2: '#ffffff', core: '#7aa8ff', leaf: '#4a8fa8', glow: '#a9d8ff' }
     },

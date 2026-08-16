@@ -5,6 +5,34 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — Nightbell: the verb the epoch clock was for, and it pays *less* half the time
+
+**Moonflower now carries Nightbell** — ×2 if harvested at night, ×0.5 by day — and **Deeproot moved
+to Jade Fern**, which suits it better anyway ("ancient frond storing rich nutrients" is what a
+deeproot is). Moonflower's own description has read "night-blooming marvel" since the first build; it
+was always the right home and the clock was the only thing in the way.
+
+**It is deliberately not a buff.** Night is ~32% of the cycle, so the expected multiplier is ≈0.98 —
+a sim-test asserts it stays inside 0.85–1.15 across a full cycle. Nightbell does not make a flower
+pay more. It makes **when you pick it** a decision, which is a kind of choice no other verb offers.
+
+*Rejected: "pays double at night" with no downside.* That is a +32% flower, which is just Nurse with
+extra steps and a worse name. The halving is what turns it from a number into a question, and it
+gives the verb a real interaction with Keeper — speed a bloom up so it lands on the right side of
+dusk.
+
+**Read at harvest, not at planting.** The decision being bought is *when to pick it*, which only
+means anything if the clock is checked at the moment you pick.
+
+**This is the seventh effect category** — time — and the category-uniqueness rule still holds. Two
+new assertions came with it: every verb must be used by some seed, and no seed carries two.
+
+Worth noting the sequence, because it is the argument for doing infrastructure properly: this verb
+was cut from the first verb pass, and the reason was recorded rather than the idea being abandoned.
+Moving the day cycle to epoch time made it a twenty-line change.
+
+---
+
 ## 2026-08-15 — Day cycle moved onto epoch; a real cheat menu that forces the real code paths
 
 **The day cycle now keys to wall-clock epoch time** instead of `bootAt`, using the same 360-second

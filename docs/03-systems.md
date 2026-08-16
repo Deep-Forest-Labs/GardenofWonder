@@ -325,8 +325,14 @@ filters out locked plots, so a verb only reaches the garden the player actually 
 | **Nurse** | Lavender | Neighbours pay +20%; this plot pays −10% | yield |
 | **Beacon** | Marigold | Neighbours roll rarity with +6 extra weight | rarity |
 | **Lantern** | Orchid | Neighbours' gem chance ×2 | drops |
-| **Deeproot** | Moonflower | Pays +8% per *planted* neighbour | density |
+| **Deeproot** | Jade Fern | Pays +8% per *planted* neighbour | density |
+| **Nightbell** | Moonflower | Pays ×2 if harvested at night, ×0.5 by day | time |
 | **Spreader** | Starlit Iris | 20% chance on harvest to sow a free copy into an empty neighbour | propagation |
+
+**Nightbell is the only verb that reads the clock**, and the only one that is roughly *neutral* on
+average — night is about 32% of the cycle, so ×2 night against ×0.5 day averages ≈0.98. It does not
+make a flower pay more; it makes *when you pick it* a decision. That is why it needed the day cycle
+moved onto epoch time first.
 
 **No two verbs share an effect category.** That is the whole point — a player choosing between two
 flowers that both say "+30%" is choosing nothing. A sim-test asserts the categories stay distinct.

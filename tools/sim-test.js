@@ -943,7 +943,7 @@ check('two nurses on one plot stack', Math.abs(G.verbPayoutMult(1) - 1.4) < 1e-9
 group('Deeproot pays for a full neighbourhood');
 clearGarden();
 S.credits = 1e9;
-G.plant(3, G.seedById('moonflower'));
+G.plant(3, G.seedById('jadefern'));
 check('alone it is unmodified', G.verbPayoutMult(3) === 1);
 G.plant(0, G.seedById('daisy'));
 check('one planted neighbour pays 8%', Math.abs(G.verbPayoutMult(3) - 1.08) < 1e-9,
@@ -951,6 +951,31 @@ check('one planted neighbour pays 8%', Math.abs(G.verbPayoutMult(3) - 1.08) < 1e
 G.plant(5, G.seedById('daisy'));
 check('both neighbours pay 16%', Math.abs(G.verbPayoutMult(3) - 1.16) < 1e-9,
   `${G.verbPayoutMult(3)}`);
+
+group('Nightbell trades day payout for night');
+/* dayPhase = ((t / DAY.cycle) + DAY.offset) % 1, so a phase can be dialled in exactly. */
+const setPhase = (p) => { clock = DAY.cycle * (((p - DAY.offset) % 1 + 1) % 1) + DAY.cycle * 1000; };
+clearGarden();
+S.credits = 1e9;
+G.plant(0, G.seedById('moonflower'));
+setPhase(0.95);
+check('the clock can be put at night', G.isNight());
+check('it pays double at night', Math.abs(G.verbPayoutMult(0) - 2) < 1e-9, `${G.verbPayoutMult(0)}`);
+setPhase(0.5);
+check('the clock can be put at midday', !G.isNight());
+check('it pays half by day', Math.abs(G.verbPayoutMult(0) - 0.5) < 1e-9, `${G.verbPayoutMult(0)}`);
+check('it does not touch its neighbours',
+  G.verbPayoutMult(1) === 1 && G.verbPayoutMult(3) === 1);
+check('over a whole cycle it is close to neutral', (() => {
+  let total = 0;
+  const N = 720;
+  for (let i = 0; i < N; i += 1) {
+    setPhase(i / N);
+    total += G.verbPayoutMult(0);
+  }
+  const mean = total / N;
+  return mean > 0.85 && mean < 1.15;
+})(), 'mean multiplier across a cycle');
 
 group('Keeper shortens growth both ways round');
 clearGarden();
@@ -1075,6 +1100,11 @@ check('every seed still yields exactly 1.4x its cost',
   DATA.seeds.every((s) => Math.abs(s.yield - s.cost * 1.4) < 1e-6));
 check('every verb on a seed is a real verb',
   DATA.seeds.every((s) => !s.verb || Boolean(DATA.verbs[s.verb])));
+check('every verb is actually used by a seed', (() => {
+  const used = new Set(DATA.seeds.map((sd) => sd.verb).filter(Boolean));
+  return Object.keys(DATA.verbs).every((v) => used.has(v));
+})());
+check('no seed carries two verbs', DATA.seeds.every((sd) => !Array.isArray(sd.verb)));
 check('no two verbs share an effect category', (() => {
   const cats = Object.values(DATA.verbs).map((v) => v.cat);
   return new Set(cats).size === cats.length;

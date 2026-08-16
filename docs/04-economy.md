@@ -113,7 +113,13 @@ balance pass is one edit.
 | `beaconRarity` | 6 | Beacon: extra weight passed to `rollRarity()` |
 | `lanternGemMult` | 2 | Lantern: gem-chance multiplier, compounding per adjacent Lantern |
 | `deeprootPerNeighbour` | 0.08 | Deeproot: +8% per planted neighbour |
+| `nightbellNight` | 2 | Nightbell: multiplier when harvested at night |
+| `nightbellDay` | 0.5 | Nightbell: multiplier when harvested by day |
 | `spreaderChance` | 0.20 | Spreader: chance to sow a free copy on harvest |
+
+**Nightbell is deliberately near-neutral**, not a buff: night is ~32% of the cycle, so the expected
+multiplier is ≈0.98. Changing either number changes what the verb *is* — push the pair apart and it
+becomes a sharper timing gamble, pull them together and it stops being a decision at all.
 
 Because every plot has exactly two neighbours, the ceilings are bounded and known: a plot can be
 flanked by at most two of anything. Two Nurses is ×1.4 payout, two Keepers is ×0.7 grow time, two

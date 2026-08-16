@@ -618,7 +618,7 @@ gems into nineteen flowers at once.
   keeps going past it.
 - Backfill is idempotent — a second load advances nothing further.
 
-All eight are in `tools/sim-test.js`, which now runs 339 assertions.
+All eight are in `tools/sim-test.js`, which now runs 347 assertions.
 
 **Trap the build found:** mastery multiplies harvest payout and climbs as a run proceeds, so any
 sim-test measuring a *different* harvest multiplier over thousands of harvests has to reset the

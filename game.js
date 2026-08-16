@@ -315,6 +315,9 @@ const Game = (() => {
     const own = verbAt(idx);
     if (own === 'nurse') m *= (1 - t.nurseCost);
     if (own === 'deeproot') m *= 1 + plantedNeighbours(idx) * t.deeprootPerNeighbour;
+    /* Read at harvest, not at planting — the decision Nightbell creates is *when to pick it*,
+       which only means something if the clock is checked at the moment you pick. */
+    if (own === 'nightbell') m *= isNight() ? t.nightbellNight : t.nightbellDay;
     return m;
   }
 

@@ -12,6 +12,11 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **Nightbell shipped 2026-08-15.** Moonflower pays ×2 harvested at night and ×0.5 by day — the
+> verb that was cut from the first pass for want of a real clock, now a twenty-line change. Near
+> neutral on average by design (≈0.98): it makes *when you pick it* the decision, not *how much it
+> pays*. Deeproot moved to Jade Fern. Seventh effect category, rule intact.
+
 > **Day cycle and dev tools, 2026-08-15.** The day cycle now keys to **epoch time**, so `isNight()`
 > is a shared fact the simulation can answer and the **night-blooming verb is unblocked**. A
 > development panel sits behind an unlabelled hit area beside the gem wallet — weather holds, forced
@@ -376,7 +381,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 339 assertions over the simulation layer
+node tools/sim-test.js          # 347 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
