@@ -39,7 +39,7 @@ until something calls into it.
 passed by hand, because there is no build step and `<script type="module">` is banned.
 
 **It is passed as one global, `UI`.** `ui-shared.js` defines the part with no dependencies —
-`$`, `$$`, `S`, `el`, `fmt`, `fmtTime`, `pct`, `signed`, `ico`, `rnd`, `MASTERY_TRACK` — and every
+`$`, `$$`, `S`, `el`, `fmt`, `fmtTime`, `pct`, `signed`, `rnd`, `MASTERY_TRACK` — and every
 other UI file attaches its own public functions to `UI` as it loads.
 
 Two rules keep this honest:

@@ -114,14 +114,6 @@ panel it will be an injection. Add escaping before adding any naming or text-ent
 
 *Where:* `ui-sheet.js`.
 
-### `ico()` is declared and never called
-
-A helper on the shared `UI` surface that nothing uses — every caller reaches for `Icons.get()`
-directly. It was already dead inside the old `ui.js` IIFE; the split moved it to `ui-shared.js`
-without deleting it, so that the split stayed pure motion. Delete it or start using it.
-
-*Where:* `ui-shared.js`.
-
 ### Four sim-tests have been flaky, and the class of bug keeps recurring
 
 All fixed. The first two on 2026-08-14 (**4 of 50 runs failed** beforehand), the second two on

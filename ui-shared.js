@@ -63,10 +63,9 @@ const UI = (() => {
   }
   const pct = (v, d = 0) => `${(v * 100).toFixed(d)}%`;
   const signed = (v, d = 0) => `${v > 0 ? '+' : ''}${(v * 100).toFixed(d)}%`;
-  const ico = (name, cls = '') => `<span class="ico ${cls}">${Icons.get(name)}</span>`;
   const rnd = (a, b) => a + Math.random() * (b - a);
   /* Rarity mastery goals count that rarity or better; the plus carries that. */
   const MASTERY_TRACK = { total: 'total', rare: 'Rare+', epic: 'Epic+' };
 
-  return { $, $$, S, el, fmt, fmtTime, pct, signed, ico, rnd, MASTERY_TRACK };
+  return { $, $$, S, el, fmt, fmtTime, pct, signed, rnd, MASTERY_TRACK };
 })();
