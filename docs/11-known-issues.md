@@ -51,6 +51,19 @@ because panel copy is the owner's call.
 
 *Where:* `ui-sheet.js` `renderBonuses()`.
 
+### The weather is not painted until the sky next changes
+
+`paintWeather()` runs only from the `weather` event, and `processWeather()` deliberately suppresses
+that event for the first slot it sees (`if (!first)`). Nothing calls it on load. So a page opened
+during rain or a thunderstorm shows a clear sky — `.game[data-weather]` is unset, so the overlay
+opacity and `--weather-tint` never apply — until the slot rolls over, up to a minute later. Calling
+a sky with gems paints it immediately, because that path emits its own `weather`.
+
+Spotted during the `ui.js` split and deliberately left, so that change stayed pure motion. The fix
+is one line in `boot()`: paint `Game.currentWeather()` alongside the first `updateSky()`.
+
+*Where:* `ui-scenery.js` `paintWeather()`, `game.js` `processWeather()`, `ui.js` `boot()`.
+
 ### `harvestsThisSession` is not per session
 
 It's saved and never reset, making it a lifetime counter. The name will mislead. Behaviour is

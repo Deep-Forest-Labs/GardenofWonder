@@ -288,8 +288,8 @@ short of ripe.
 **Weather is a pure function of the clock.** `slot = floor(epochSeconds / 60)`, and the weather for a
 slot is a deterministic hash of the slot number — no stored state, no scheduler. Everyone sees the
 same sky at the same moment, and any past slot stays computable, which is what will let time away be
-reconciled later. `game.js` owns the clock and exposes `weatherAt(t)` / `currentWeather()`; `ui.js`
-paints. The no-DOM rule is unchanged.
+reconciled later. `game.js` owns the clock and exposes `weatherAt(t)` / `currentWeather()`;
+`ui-scenery.js` paints. The no-DOM rule is unchanged.
 
 Clear 70% · Rain 20% · Thunderstorm 7% · Aurora 2.5% · Wonderfall 0.5%.
 
@@ -385,7 +385,7 @@ absence runs.
 ## The day cycle
 
 **Moved onto epoch time 2026-08-15.** Constants in `DAY` (`data.js`), phase in `game.js`, painting in
-`ui.js`.
+`ui-scenery.js`.
 
 ```
 phase = ((epochSeconds / DAY.cycle) + DAY.offset) % 1
@@ -396,7 +396,7 @@ page load — so the phase restarted on every reload and "is it night" was a per
 Keying to epoch makes it a **shared fact the simulation can answer**, via `Game.isNight()`, and that
 is what a night-blooming verb would need.
 
-`DAY.dawn` (0.14) and `DAY.dusk` (0.82) are read off the star values in `ui.js`'s `SKY_KEYS`, so
+`DAY.dawn` (0.14) and `DAY.dusk` (0.82) are read off the star values in `ui-scenery.js`'s `SKY_KEYS`, so
 "night" means the part of the cycle where stars are actually visible. Night is the minority of the
 cycle, and a sim-test asserts it.
 

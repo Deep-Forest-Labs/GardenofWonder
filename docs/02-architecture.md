@@ -2,7 +2,7 @@
 
 ## Shape of the project
 
-Nine JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
+Ten JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
 dependencies. Each file defines exactly one global and they load in dependency order as plain
 `<script>` tags.
 
@@ -23,8 +23,9 @@ reference globals defined above it.
 | 5 | `fx.js` | `FX` | nothing |
 | 6 | `game.js` | `Game` | `DATA`, `WONDER`, `PLOT_AUTOPLANTERS` |
 | 7 | `ui-shared.js` | `UI` | `Game`, the DOM |
-| 8 | `ui-sheet.js` | *(attaches to `UI`)* | `UI` |
-| 9 | `ui.js` | *(attaches to `UI`)* | everything above |
+| 8 | `ui-scenery.js` | *(attaches to `UI`)* | `UI` |
+| 9 | `ui-sheet.js` | *(attaches to `UI`)* | `UI` |
+| 10 | `ui.js` | *(attaches to `UI`)* | everything above |
 
 The UI files touch the DOM on load, and only `ui.js` calls `boot()`. Every other file is inert
 until something calls into it.
@@ -176,6 +177,11 @@ automation, the Wonder Effect, and the tick. Returns a frozen-in-practice public
 **`ui-shared.js`** — The scope the UI files share. No behaviour of its own: DOM lookups, the
 cached `el` map, and the formatting helpers. See "The shared UI surface" above.
 
+**`ui-scenery.js`** — Everything that paints the world behind the interface: the `SKY_KEYS`
+gradient ramp and the day/night interpolation in `updateSky()`, the parallax clouds, and the
+weather tint. Publishes `updateSky`, `buildClouds` and `paintWeather`, and asks nothing of the
+other UI files.
+
 **`ui-sheet.js`** — The bottom sheet and every panel that opens over the garden: upgrades, shop,
 apiary, apothecary, the seed picker, quests, the almanac, settings, the card album, a pack
 opening, the welcome-back scene and the developer tools. It owns the sheet element and everything
@@ -187,7 +193,7 @@ publishes `openSheet`, `closeSheet`, `renderSheet`, `sheetMode`, `setAwayReport`
 `tickSheetTimers` and `CORE_UPGRADES`.
 
 **`ui.js`** — Everything else: DOM construction, input handling, HUD counters, the rail, toasts,
-banners, coach marks, day/night interpolation, clouds, the game-event wiring and the frame loop.
+banners, coach marks, the game-event wiring and the frame loop.
 
 ## Sizing the garden
 
@@ -203,8 +209,8 @@ space. The quest strip stays visible when the rail hides.
 ## Where the awkward bits are
 
 `ui.js` reached 2,309 lines before being split along the seams named here for a long time: the
-sheet panels, the scenery and day/night code, and the event wiring. The sheet is out; the other
-two are still in `ui.js`.
+sheet panels, the scenery and day/night code, and the event wiring. The sheet and the scenery are
+out; the event wiring is still in `ui.js`.
 
 Sheet panels return HTML strings that are assigned with `innerHTML`. This is concise and fast
 enough, but it means **any content interpolated into a panel must be trusted**. All current
