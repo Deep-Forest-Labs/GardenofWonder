@@ -81,8 +81,11 @@ Animate `transform` and `opacity`. Avoid animating layout properties.
    garden level.
 2. Write the `art` block. Pick an existing `shape`, or add a recipe to `rings()` / `customHead()` in
    `flora.js`.
-3. Optionally set `gemChance`. Note that setting `gemChance` **overrides** the 5% default rather
-   than adding to it.
+3. **Leave `gemChance` alone.** It is derived from grow time (`grow × 0.0005`, capped at 50%) so
+   gems per hour stays flat across the ladder — see
+   [04-economy.md](04-economy.md#gem-drops). Setting it explicitly overrides that and reintroduces
+   the inversion that made Daisies the best gem farm in the game. Only do it with a reason in the
+   decision log.
 4. Gradients are generated automatically from `c1` / `c2`.
 5. **Check the bloom at 22 px**, not just in a plot. The Almanac renders it that small.
 6. **Bump the last `DATA.almanacMilestones` `at` to the new `DATA.seeds.length`.** Completing the

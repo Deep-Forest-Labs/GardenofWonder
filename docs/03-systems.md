@@ -198,6 +198,54 @@ tint the empty soil until something new is planted.
   the better gem farm.
 - **2% chance of triggering a Wonder Effect**, subject to cooldown.
 
+## Gems: where they come from and what they buy
+
+**Reworked 2026-08-15.** The standing rule, which every future gem or IAP proposal is tested
+against:
+
+> **Gems buy chances, choices and looks. Never outcomes.**
+> Skipping a timer is the one deliberate exception, at an expensive rate — it is farm-game
+> convention and it buys *time*, not a better result.
+
+### The faucet
+
+`gemChanceFor(seed)` derives the drop chance from **grow time**: `grow × 0.0005`, clamped at 50%.
+A Daisy is 0.6%, an Eternal Crown 39% — and because a Daisy cycles 65× more often, **gems per hour
+come out flat at ~1.8 per plot whatever is planted.**
+
+That replaces a flat 5% default which, combined with explicit low values on the top five seeds, made
+the cheapest seed the best gem farm in the game. Gems now track *time played*, not seed choice, and
+nobody is punished for growing what they like. A seed may still set an explicit `gemChance` to
+override; none currently do.
+
+### Calling a sky
+
+Gems buy Rain (8) or Thunderstorm (25) for four minutes. The purchase does two things: it holds that
+weather, and it **pulls every unspent mutation roll in the ground into the window**. Without the
+second part the purchase is nearly a no-op, since a roll is a single instant and most fall outside
+four minutes.
+
+**Aurora and Wonderfall are not for sale at any price.** The rarest skies have to find you — a ×100
+behind a paywall is a jackpot you can buy, and if gems ever cost money that is both pay-to-win and
+gambling-shaped. A sim-test asserts they stay unbuyable.
+
+Only one call runs at a time.
+
+### Skipping a timer
+
+`skipCost(idx)` is `ceil(remaining / 30)` gems, minimum 1 — so it falls as a plant grows and a ripe
+plot is free. The cost shows on the plant itself, always visible, which is the farm-game convention
+and teaches the option without hiding it behind a gesture.
+
+**A skip buys time and nothing else.** The mutation roll still resolves against the weather standing
+at its *originally scheduled* moment — computable because weather is deterministic — so hurrying a
+plant can neither gain nor lose a mutation. That closes the exploit where a player waits for a
+Wonderfall and skip-grows the whole garden into it.
+
+Implementation note: the skip **backdates `plantedAt`** rather than shrinking `grow`. A plant skipped
+the instant it went in has zero elapsed seconds, and any positive grow left it permanently one tick
+short of ripe.
+
 ## Weather and mutations
 
 **Built 2026-08-15.** Full design and reasoning in

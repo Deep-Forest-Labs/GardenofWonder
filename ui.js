@@ -150,7 +150,13 @@
         <div class="bar"><i></i></div>
         <div class="ready-pop">!</div>
         <div class="auto-tag">Auto</div>
-        <div class="lucky-badge">${Icons.get('ladybug')}</div>`;
+        <div class="lucky-badge">${Icons.get('ladybug')}</div>
+        <button class="skip-chip" type="button" aria-label="Finish this plant with gems">${Icons.get('gem')}<span></span></button>`;
+      $('.skip-chip', b).addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onSkipTap(idx);
+      }, { passive: false });
       b.addEventListener('pointerdown', (e) => { e.preventDefault(); onPlotTap(idx, b); }, { passive: false });
       el.garden.appendChild(b);
       plotEls[idx] = {
@@ -161,6 +167,8 @@
         cost: $('.lock-cost span', b),
         costWrap: $('.lock-cost', b),
         tag: $('.auto-tag', b),
+        skip: $('.skip-chip', b),
+        skipNum: $('.skip-chip span', b),
         lucky: $('.lucky-badge', b),
         cache: {}
       };
@@ -198,6 +206,16 @@
       if (c.state !== state) {
         v.root.dataset.state = state;
         c.state = state;
+      }
+      const skipGems = state === 'grow' ? Game.skipCost(i) : 0;
+      if (c.skip !== skipGems) {
+        if (skipGems) {
+          v.skipNum.textContent = fmt(skipGems);
+          v.root.dataset.skip = S.gems >= skipGems ? 'ok' : 'no';
+        } else {
+          delete v.root.dataset.skip;
+        }
+        c.skip = skipGems;
       }
       const mut = cell.mutation || '';
       if (c.mutation !== mut) {
@@ -571,6 +589,31 @@
       ${lockedCount ? `<p class="sheet-note" style="margin-top:10px">${lockedCount} more harvester${lockedCount > 1 ? 's' : ''} unlock with new plots.</p>` : ''}`;
   }
 
+  function skyCards() {
+    const active = Game.weatherCallActive();
+    const rows = Object.keys(DATA.weatherCall.prices).map((id) => {
+      const w = DATA.weather.types.find((t) => t.id === id);
+      const m = DATA.mutations[w.mutation];
+      const price = Game.weatherCallPrice(id);
+      const can = S.gems >= price && !active;
+      return `<button class="card ${can ? 'affordable' : ''}" data-buy="sky" data-key="${id}" ${active ? 'disabled' : ''}>
+        <div class="card-top">
+          <span class="card-badge" style="background:${w.tint}">${Icons.get('sparkle')}</span>
+          <span>
+            <span class="card-title">Call ${w.name}</span>
+            <span class="card-sub">${DATA.weatherCall.minutes} min &middot; everything growing gets a shot at ${m.name}</span>
+          </span>
+        </div>
+        ${priceTag(price, 'gems', can, false)}
+      </button>`;
+    }).join('');
+    return `<p class="dev-label">The sky</p>
+      ${active ? `<p class="away-cap">${Icons.get('sparkle')}<span>A ${DATA.weather.types.find((t) => t.id === active.id).name.toLowerCase()} is already running.</span></p>` : ''}
+      ${rows}
+      <p class="sheet-note">Aurora and Wonderfall are not for sale &mdash; the rarest skies have to find you.</p>
+      <p class="dev-label">Decor</p>`;
+  }
+
   function renderShop() {
     const cards = DATA.decor.map((d) => {
       const owned = Game.decorCount(d.id);
@@ -588,7 +631,8 @@
         ${priceTag(d.cost, d.currency, can)}
       </button>`;
     }).join('');
-    return `<p class="sheet-note">Purely decorative — dress up your garden however you like. Buy the same piece again for another copy.</p>
+    return `${skyCards()}
+      <p class="sheet-note">Purely decorative — dress up your garden however you like. Buy the same piece again for another copy.</p>
       <div class="card-grid">${cards}</div>`;
   }
 
@@ -1013,6 +1057,26 @@
       <p class="sheet-note" style="margin-top:14px;text-align:center">Garden Wonder · progress carried over from Idle Garden Reborn</p>`;
   }
 
+  function onSkipTap(idx) {
+    const cost = Game.skipCost(idx);
+    if (!cost) return;
+    if (S.gems < cost) {
+      Sound.play('deny');
+      FX.shake(4);
+      popWallet('gems');
+      say('broke');
+      return;
+    }
+    const r = Game.skipGrow(idx);
+    if (!r) return;
+    const v = plotEls[idx];
+    const c = FX.centerOf(v.root);
+    FX.sparks(c.x, c.y, 12, '#8ce0ff');
+    FX.float(c.x, c.y - 8, `-${fmt(cost)}`, 'rare');
+    Sound.play('buy');
+    FX.haptic(12);
+  }
+
   /* The welcome-back scene. Deliberately a list of things that *happened* rather than a total —
      "a thunderstorm passed and your Marigold came back Gilded" is a garden that lived without you,
      where "+4,213 coins" is a receipt. See docs/18-mutations-and-weather.md. */
@@ -1214,11 +1278,17 @@
     const buy = e.target.closest('[data-buy]');
     if (buy) {
       const { buy: kind, key } = buy.dataset;
-      const ok = kind === 'upgrade' ? Game.buyUpgrade(key) : Game.buyDecor(key);
+      const ok = kind === 'upgrade' ? Game.buyUpgrade(key)
+        : kind === 'sky' ? Boolean(Game.callWeather(key))
+        : Game.buyDecor(key);
       if (ok) {
         const c = FX.centerOf(buy);
         FX.sparks(c.x, c.y, 12, '#ffe066');
         FX.ring(c.x, c.y, '#ffffff', 0.45, 70);
+        if (kind === 'sky') renderSheet(true);
+      } else if (kind === 'sky') {
+        Sound.play('deny');
+        FX.shake(4);
       }
       return;
     }
@@ -1842,6 +1912,8 @@
         const d = DATA.decor.find((x) => x.id === key);
         const pot = d.currency === 'gems' ? S.gems : S.credits;
         can = pot >= d.cost;
+      } else if (kind === 'sky') {
+        can = !Game.weatherCallActive() && S.gems >= Game.weatherCallPrice(key);
       }
       node.classList.toggle('affordable', can);
       const price = $('.price', node);

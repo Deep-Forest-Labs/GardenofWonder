@@ -7,17 +7,6 @@ If you fix one, delete it from this file in the same commit.
 
 ## Balance
 
-### Endgame seeds are worse gem farms than a Daisy
-
-Harvest gem chance is `seed.gemChance` if defined, otherwise a flat **5%**. Only the top five seeds
-define one — at 0.8% to 2%. So the optimal gem strategy is spamming the cheapest, fastest seed,
-which is backwards.
-
-Almost certainly the default was meant as a fallback for cheap seeds and got applied broadly. Fixing
-it means either lowering the default or giving every seed an explicit value.
-
-*Where:* `game.js` `harvest()`, `data.js` seed definitions.
-
 ### Orchid is a throughput trap — half fixed
 
 Orchid at 4.89 net coins/second is worse than Marigold at 5.45, despite costing 47% more, because
@@ -184,7 +173,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 372 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 394 assertions over the
 economy, progression, saves and mastery. Everything above that line — `ui.js`, layout, the sheet,
 FX — is verified by hand against the checklist in [09-conventions.md](09-conventions.md). That is
 the right split for a prototype, but a UI regression has no net under it.

@@ -12,6 +12,14 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **Gems got a faucet fix and real sinks, 2026-08-15.** Drop chance now derives from grow time, so
+> gems/hour is flat across the ladder and Daisy-spamming is no longer the best gem farm. Gems buy
+> **calling a sky** (Rain 8, Thunderstorm 25 — which also pulls every unspent mutation roll into the
+> window) and **skipping a timer** (`ceil(remaining/30)` gems, shown on the plant). The standing
+> rule: **gems buy chances, choices and looks, never outcomes**, with the timer skip as the one
+> deliberate exception. **Aurora and Wonderfall have no price and must not get one.** See
+> [03-systems.md](03-systems.md#gems-where-they-come-from-and-what-they-buy).
+
 > **Offline earnings shipped 2026-08-15.** Two upgradeable axes — Moonlight Tending (rate, 25% base)
 > and Lantern Oil (duration, 4h base) — with a 10% trickle past the cap rather than a wall. Income is
 > **earned, not granted**: only plots with an auto-planter count, and only if the drone exists to
@@ -265,7 +273,9 @@ This supersedes the ordering above where they conflict. Reasoning in
    read the warning in that doc before touching monetization.** Separate from the species Almanac in
    [16-progression-and-quests.md](16-progression-and-quests.md), which stays coupled to the garden.
 8. **The Market.**
-9. **Gem sinks**, then the known economy bugs.
+9. ~~**Gem sinks**~~ — **done 2026-08-15**, along with the gem-faucet inversion. Cosmetic breadth
+   is the remaining piece: a fixed catalogue always gets bought out, so gems need either escalating
+   prices or a growing list. Card packs are the eventual infinite sink.
 10. **Seasonal turnover** (prestige) — designed now, built later. Never call it a reset.
 
 Not on the list, deliberately: trading, battle pass, live events, PWA/service worker, world map,
@@ -275,16 +285,17 @@ merge.
 
 Full list in [11-known-issues.md](11-known-issues.md). The two that affect design decisions:
 
-- **Endgame seeds have lower gem chances than a Daisy.** Defining `gemChance` overrides the generous
-  5% default, so the best gem farm is spamming the cheapest seed.
+- ~~**Endgame seeds have lower gem chances than a Daisy.**~~ **Fixed 2026-08-15.** Gem chance is now
+  derived from grow time, so gems per hour is flat across all nineteen seeds and gem income tracks
+  time played rather than seed choice.
 - **Cheat buttons ship to players — on purpose.** Settings has "Grant 50 Gems", "Grant 1,000,000
   Gold", and "Summon a Wonder Effect" with no confirmation, live on the public site. **Decided
   2026-08-14: leave them.** The audience is friends, their sessions are not clean data, and the game
   has no analytics either way. Revisit before any real external audience; don't re-raise it before
   then.
 
-The gem-chance inversion is inherited from the frozen economy port. Fixing it is a deliberate balance
-project.
+That inversion was inherited from the frozen economy port; it is fixed. What remains from the port is
+the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
 
@@ -403,7 +414,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 372 assertions over the simulation layer
+node tools/sim-test.js          # 394 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

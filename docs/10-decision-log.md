@@ -5,6 +5,70 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-15 — Gems get a rule, a corrected faucet, and two sinks that cannot become pay-to-win
+
+**The rule, ratified by the owner and now the test every gem or IAP proposal faces:**
+
+> **Gems buy chances, choices and looks. Never outcomes.**
+> Skipping a timer is the one deliberate exception, at an expensive rate — it is farm-game
+> convention and it buys *time*, not a better result.
+
+The reason to fix the rule before the sink: **gems are the obvious IAP currency, so whatever gems
+buy is what money buys.** Deciding the sink casually would have quietly chosen the monetization
+model. The genre research is blunt that this audience punishes pay-to-win harder than any other —
+what works is selling identity, breadth, relief and earliness.
+
+**The faucet was the real bug, and it was worse than the known-issues entry said.** That entry
+blamed the explicit `gemChance` values on the top five seeds overriding a generous 5% default. True,
+but incomplete: **a Daisy cycles 65× more often than an Eternal Crown, so *any* flat per-harvest rate
+makes the cheapest seed the best gem farm.** Removing the overrides alone would not have fixed it.
+
+Gem chance is now **derived from grow time** — `grow × 0.0005`, capped at 50% — which makes gems per
+hour constant at ~1.8 per plot across all nineteen seeds. Gems track *time played*, not seed choice,
+and nobody is punished for growing what they like. The five overrides are deleted; the conventions
+playbook now says to leave `gemChance` alone rather than "optionally set it".
+
+*Rejected: making endgame seeds strictly better gem farms.* Tempting as a reward, but it re-creates
+the same problem pointing the other way — a correct answer to "what should I plant for gems" is a
+worse game than no answer at all.
+
+**Sink one: calling a sky.** Rain 8 gems, Thunderstorm 25, for four minutes. It does two things —
+holds the weather, and **pulls every unspent mutation roll in the ground into the window**. Without
+the second half the purchase is nearly a no-op, because a roll is a single instant and most fall
+outside four minutes. This is the infinite sink, it needed no new art, and it turns gems into agency
+over a system that was previously pure luck.
+
+**Aurora and Wonderfall are deliberately unpriced.** A ×100 behind a paywall is a jackpot you can
+buy; if gems ever cost money that is pay-to-win *and* gambling-shaped, and it is exactly the pattern
+that cost Pocket Camp its life. **The game's biggest moment should never be purchasable** — that
+principle is worth more than the revenue, and a sim-test enforces it.
+
+**Sink two: skipping a timer**, at `ceil(remaining / 30)` gems. The owner asked for this explicitly
+as industry-standard practice, and it is — Township and Hay Day both do it, and both show the price
+on the crop, which is why the cost chip sits on the plant rather than behind a gesture.
+
+**The skip buys time and nothing else.** The mutation roll still resolves against the weather at its
+*originally scheduled* moment, which is computable because weather is deterministic. So hurrying a
+plant can neither gain nor lose a mutation. That closes the exploit where a player waits out a
+Wonderfall and skip-grows the whole garden into it — the version where the roll resolves against
+*now* would have made gems buy a ×100 through the back door, defeating the pricing decision above.
+
+**Two bugs found while building, both worth recording:**
+
+- The skip originally shrank `grow` to match elapsed time. A plant skipped *the instant it went in*
+  has zero elapsed seconds, so any positive grow left it permanently one tick short of ripe. It now
+  backdates `plantedAt` instead, which also keeps the progress bar reading full.
+- The first version of the "skipping cannot manufacture a rare mutation" test used the dev weather
+  override, which **ignores time by design** — so it was testing the override, not the real path. It
+  now moves the actual clock into a genuine Wonderfall. A test that cannot fail is worse than no
+  test.
+
+**Still open:** cosmetic breadth. A fixed catalogue always gets bought out against an endless faucet,
+so gems eventually need escalating prices or a growing list. Card packs are the real infinite sink
+once the album exists.
+
+---
+
 ## 2026-08-15 — Offline earnings on two axes, and a cap that is the whole point
 
 **Built.** Rate and duration as separate upgradeable tracks — Moonlight Tending (25% base, +5%/level,

@@ -444,6 +444,24 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .plot:active{transform:translateY(3px);box-shadow:inset 0 5px 0 rgba(255,255,255,.16), inset 0 -7px 0 rgba(0,0,0,.18), 0 1px 0 var(--soil-dd), 0 4px 8px rgba(44,26,16,.22)}
 .plot-inner{position:absolute;inset:0;border-radius:15px;overflow:hidden}
 
+/* Farm-game convention: the cost of hurrying a plant sits on the plant, always visible, so the
+   option teaches itself rather than hiding behind a long-press nobody finds. */
+.skip-chip{
+  position:absolute;top:5px;right:5px;z-index:4;
+  display:none;align-items:center;gap:2px;
+  padding:2px 6px 2px 4px;border-radius:999px;
+  border:2px solid var(--ink);
+  background:#cdeeff;
+  font-size:10px;font-weight:900;color:#2c1a10;line-height:1.4;
+  box-shadow:0 2px 0 rgba(44,26,16,.35);
+  touch-action:manipulation;
+}
+.plot[data-skip] .skip-chip{display:inline-flex}
+.plot[data-skip="no"] .skip-chip{background:#e6e0d8;opacity:.65}
+.skip-chip svg{width:11px;height:11px}
+.skip-chip:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
+@media (max-height:600px){ .skip-chip{padding:1px 5px 1px 3px;font-size:9px} }
+
 /* The welcome-back scene. Reads as a short account of what happened, not a receipt. */
 .away-lede{font-size:14px;font-weight:800;line-height:1.4;margin:2px 0 12px}
 .away-list{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}

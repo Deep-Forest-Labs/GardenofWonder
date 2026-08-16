@@ -595,6 +595,11 @@ check('a second load does not convert again', again.ticketGrant == null && S.gem
 G.reset();
 
 group('combo multiplies tap payout, not harvests');
+/* Every assertion here is an exact credit delta, and a tap can spark a Wonder (0.15%) that triples
+   the payout — so the roll has to be pinned or the block fails roughly one run in twenty. 0.5 clears
+   the Wonder, the crit and all three procs. Same rule as the milestone and pollination blocks. */
+const rngCombo = Math.random;
+Math.random = () => 0.5;
 const tapGain = () => {
   const before = S.credits;
   G.tapFlower();
@@ -628,6 +633,7 @@ S.tap.power = 100;
 S.tap.critChance = 0;
 S.credits = 0;
 check('decay reduces the multiplier', tapGain() === 149);
+Math.random = rngCombo;
 clearGarden();
 S.wonder.until = 0;
 S.wonder.last = G.nowSeconds();
@@ -1004,30 +1010,31 @@ check('it never rushes a plot that is already done', (() => {
 })());
 
 group('Lantern multiplies the gem chance it finds');
-clearGarden();
-clearMastery();
-S.credits = 1e9;
-S.gems = 0;
-G.plant(0, G.seedById('orchid'));
-let lanternGems = 0;
-for (let i = 0; i < 4000; i += 1) {
-  G.plant(1, G.seedById('daisy'));
-  advance(30);
-  const h = G.harvest(1);
-  if (h && h.gemDrop) lanternGems += 1;
-  if (!S.grid[0].seed) G.plant(0, G.seedById('orchid'));
-}
-clearGarden();
-S.gems = 0;
-let plainGems = 0;
-for (let i = 0; i < 4000; i += 1) {
-  G.plant(1, G.seedById('daisy'));
-  advance(30);
-  const h = G.harvest(1);
-  if (h && h.gemDrop) plainGems += 1;
-}
+/* Measured on an Eternal Crown, whose 39% base makes the doubling unmistakable. A Daisy's 0.6%
+   would need tens of thousands of samples to separate the two — gem chance now scales with grow
+   time, so the cheap seed is a terrible instrument for this. */
+const gemDropRate = (withLantern) => {
+  clearGarden();
+  clearMastery();
+  S.credits = 1e14;
+  S.gems = 0;
+  let drops = 0;
+  const N = 3000;
+  for (let i = 0; i < N; i += 1) {
+    if (withLantern && !S.grid[0].seed) {
+      S.grid[0] = { locked: false, seed: 'orchid', plantedAt: clock, grow: 1e6, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+    }
+    S.grid[1] = { locked: false, seed: 'eternal', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false, mutation: null, mutateAt: 0 };
+    const h = G.harvest(1);
+    if (h && h.gemDrop) drops += 1;
+    clearMastery();
+  }
+  return drops / N;
+};
+const withLantern = gemDropRate(true);
+const noLantern = gemDropRate(false);
 check('a lantern roughly doubles gem drops next door',
-  lanternGems > plainGems * 1.5, `${lanternGems} vs ${plainGems}`);
+  withLantern > noLantern * 1.6, `${withLantern.toFixed(3)} vs ${noLantern.toFixed(3)}`);
 
 group('Beacon lifts rarity next door');
 clearGarden();
@@ -1681,6 +1688,142 @@ check('a long simulated absence trips the cap', (() => {
   G.plant(0, G.seedById('eternal'));
   const r = G.Dev.simulateAway(24);
   return r && r.capped === true;
+})());
+G.reset();
+
+group('gems now track time in the ground, not harvest count');
+G.reset();
+check('gem chance rises with grow time',
+  DATA.seeds.every((sd, i) => i === 0 || G.gemChanceFor(sd) >= G.gemChanceFor(DATA.seeds[i - 1])));
+check('gems per hour are flat across the ladder', (() => {
+  const rates = DATA.seeds.map((sd) => G.gemChanceFor(sd) * 3600 / sd.grow);
+  const lo = Math.min(...rates);
+  const hi = Math.max(...rates);
+  return hi - lo < 1e-6;
+})());
+check('the cheapest seed no longer out-farms the dearest', (() => {
+  const daisy = G.gemChanceFor(G.seedById('daisy')) * 3600 / G.seedById('daisy').grow;
+  const crown = G.gemChanceFor(G.seedById('eternal')) * 3600 / G.seedById('eternal').grow;
+  return Math.abs(daisy - crown) < 1e-6;
+})());
+check('the chance is clamped', (() => {
+  const huge = { grow: 1e9 };
+  return G.gemChanceFor(huge) === DATA.gemChanceMax;
+})());
+check('an explicit override still wins', G.gemChanceFor({ grow: 10, gemChance: 0.42 }) === 0.42);
+check('no seed defines an override any more',
+  DATA.seeds.every((sd) => typeof sd.gemChance === 'undefined'));
+
+group('calling a sky');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('the two rare skies are not for sale',
+  !G.weatherCallable('aurora') && !G.weatherCallable('wonderfall') && !G.weatherCallable('clear'));
+check('the two common skies are', G.weatherCallable('rain') && G.weatherCallable('storm'));
+check('a call is refused without the gems', (() => {
+  S.gems = 0;
+  return G.callWeather('rain') === null;
+})());
+check('a call takes the gems and holds the sky', (() => {
+  S.gems = 100;
+  const before = S.gems;
+  const r = G.callWeather('rain');
+  return r && S.gems === before - DATA.weatherCall.prices.rain
+    && G.currentWeather().id === 'rain';
+})());
+check('a second call is refused while one is running', G.callWeather('storm') === null);
+check('the hold expires', (() => {
+  advance(DATA.weatherCall.minutes * 60 + 10);
+  return G.weatherCallActive() === null;
+})());
+check('a rare sky cannot be bought at any price', (() => {
+  S.gems = 1e9;
+  return G.callWeather('wonderfall') === null && G.callWeather('aurora') === null;
+})());
+check('calling pulls unspent rolls into the window', (() => {
+  clearGarden();
+  S.gems = 1000;
+  S.credits = 1e12;
+  G.plant(0, G.seedById('eternal'));
+  G.plant(1, G.seedById('eternal'));
+  const r = G.callWeather('storm');
+  const c = S.weatherCall;
+  return r && r.pulled === 2
+    && S.grid.filter((x) => x.seed).every((x) => x.mutateAt >= c.from && x.mutateAt < c.until);
+})());
+check('a spent roll is not pulled back', (() => {
+  advance(DATA.weatherCall.minutes * 60 + 10);
+  clearGarden();
+  S.gems = 1000;
+  G.plant(0, G.seedById('eternal'));
+  S.grid[0].mutateAt = 0;
+  const r = G.callWeather('rain');
+  return r && r.pulled === 0;
+})());
+
+group('skipping a timer buys time and nothing else');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('an empty plot costs nothing', G.skipCost(0) === 0);
+check('a longer wait costs more', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('daisy'));
+  G.plant(1, G.seedById('eternal'));
+  return G.skipCost(1) > G.skipCost(0);
+})());
+check('the cost falls as the plant grows', (() => {
+  clearGarden();
+  G.plant(0, G.seedById('eternal'));
+  const full = G.skipCost(0);
+  advance(400);
+  return G.skipCost(0) < full;
+})());
+check('a ripe plot costs nothing', (() => {
+  advance(1000);
+  return G.skipCost(0) === 0;
+})());
+check('skipping is refused without the gems', (() => {
+  clearGarden();
+  S.gems = 0;
+  G.plant(0, G.seedById('eternal'));
+  return G.skipGrow(0) === null;
+})());
+check('skipping takes the gems and makes it ripe', (() => {
+  clearGarden();
+  S.gems = 500;
+  G.plant(0, G.seedById('eternal'));
+  const cost = G.skipCost(0);
+  const before = S.gems;
+  const r = G.skipGrow(0);
+  return r && S.gems === before - cost && G.harvest(0) !== null;
+})());
+check('skipping cannot manufacture a rare mutation', (() => {
+  /* The roll resolves against the sky at its *scheduled* moment, so standing inside a real
+     Wonderfall and hurrying a plant whose roll was booked under a clear sky must hand it nothing.
+     Uses the genuine clock rather than the dev override, which deliberately ignores time. */
+  const wonderSlot = slotOfWeather('wonderfall');
+  if (wonderSlot < 0) return false;
+  clearGarden();
+  clearMastery();
+  S.gems = 1e6;
+  S.credits = 1e12;
+  const keep = clock;
+  clock = wonderSlot * SLOT + SLOT / 2;
+  const skyNow = G.currentWeather().id;
+  let wonders = 0;
+  for (let i = 0; i < 400; i += 1) {
+    G.plant(0, G.seedById('daisy'));
+    S.grid[0].mutateAt = clearSlot * SLOT + SLOT / 2;   // booked under a clear sky
+    G.skipGrow(0);
+    if (S.grid[0].mutation) wonders += 1;
+    G.harvest(0);
+  }
+  clock = keep;
+  return skyNow === 'wonderfall' && wonders === 0;
 })());
 G.reset();
 

@@ -228,3 +228,9 @@ proc keys. Without that an old save reads `undefined`, not `0`, and the offline 
 
 `state.lastSeen` (added with the weather work) is what an absence is measured against. It is written
 on every `processWeather()` tick and on every `reconcile()`.
+
+## `weatherCall` (added 2026-08-15)
+
+`state.weatherCall` is `{ id, from, until }` or `null` — a player-bought sky. Top-level, so it needs
+no per-cell backfill, but it does need to survive `load()`; a stale one simply expires because
+`weatherAt()` checks the window.

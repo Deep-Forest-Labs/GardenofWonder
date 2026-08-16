@@ -32,6 +32,7 @@ const Game = (() => {
       boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },
       harvestsThisSession: 0,
       lastSeen: 0,
+      weatherCall: null,
       stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
       wonder: { until: 0, last: 0 },
       apiary: { hives: [], honey: {}, wax: 0 },
@@ -348,6 +349,11 @@ const Game = (() => {
   }
 
   const weatherAt = (seconds) => {
+    const call = state.weatherCall;
+    if (call && call.id && seconds >= call.from && seconds < call.until) {
+      const t = DATA.weather.types.find((w) => w.id === call.id);
+      if (t) return t;
+    }
     if (dev.weather) {
       const forced = DATA.weather.types.find((t) => t.id === dev.weather);
       if (forced) return forced;
@@ -431,6 +437,80 @@ const Game = (() => {
     const total = DATA.rarity.reduce((a, r) => a + r.w, 0);
     return DATA.rarity.reduce((a, r) => a + (r.w / total) * r.m, 0);
   })();
+
+  /* Proportional to grow time, so gems accrue with time in the ground rather than with harvest
+     count — a Daisy cycles 65x faster than an Eternal Crown and used to out-farm it for gems. */
+  function gemChanceFor(seed) {
+    if (!seed) return 0;
+    if (typeof seed.gemChance === 'number') return seed.gemChance;
+    return Math.min(DATA.gemChanceMax, seed.grow * DATA.gemChancePerGrowSecond);
+  }
+
+  const weatherCallPrice = (id) => DATA.weatherCall.prices[id] || 0;
+  const weatherCallable = (id) => Object.prototype.hasOwnProperty.call(DATA.weatherCall.prices, id);
+  const weatherCallActive = () => {
+    const c = state.weatherCall;
+    return c && c.id && nowSeconds() < c.until ? c : null;
+  };
+
+  /* Buying a sky does two things: it holds that weather for a few minutes, and it pulls every
+     unspent mutation roll in the ground into the window. Without the second part the purchase is
+     mostly a no-op, because a roll is a single instant and most of them fall outside four minutes.
+     Only the common skies are callable — the rare ones stay unbuyable on purpose. */
+  function callWeather(id) {
+    if (!weatherCallable(id)) return null;
+    if (weatherCallActive()) return null;
+    const price = weatherCallPrice(id);
+    if (state.gems < price) return null;
+    state.gems -= price;
+    const from = nowSeconds();
+    const until = from + DATA.weatherCall.minutes * 60;
+    state.weatherCall = { id, from, until };
+    let pulled = 0;
+    state.grid.forEach((cell) => {
+      if (cell.locked || !cell.seed || !cell.mutateAt) return;
+      cell.mutateAt = from + Math.random() * (until - from);
+      pulled += 1;
+    });
+    save();
+    emit('currency');
+    emit('weather', { weather: currentWeather() });
+    emit('panels');
+    return { id, until, pulled, price };
+  }
+
+  const skipCost = (idx) => {
+    const cell = state.grid[idx];
+    if (!cell || cell.locked || !cell.seed) return 0;
+    const remain = Math.max(0, cell.grow - (nowSeconds() - cell.plantedAt));
+    if (remain <= 0) return 0;
+    return Math.max(1, Math.ceil(remain / DATA.skipSecondsPerGem));
+  };
+
+  /* A skip buys time and nothing else. The roll still resolves against the weather standing at the
+     moment it was originally scheduled for — computable because weather is deterministic — so
+     hurrying a plant can neither gain nor lose you a mutation. */
+  function skipGrow(idx) {
+    const cell = state.grid[idx];
+    const cost = skipCost(idx);
+    if (!cost || state.gems < cost) return null;
+    state.gems -= cost;
+    if (cell.mutateAt) {
+      const w = weatherAt(cell.mutateAt);
+      cell.mutateAt = 0;
+      if (w.mutation && Math.random() < w.catch * catchMultiplier(idx)) {
+        cell.mutation = w.mutation;
+        emit('mutate', { caught: [{ idx, mutation: w.mutation, weather: w, seed: seedById(cell.seed) }] });
+      }
+    }
+    /* Backdate the planting rather than shrinking the grow time: a plant skipped the instant it
+       went in has zero elapsed seconds, and any positive grow left it permanently one tick short
+       of ripe. This also keeps `grow` intact so the progress bar still reads full. */
+    cell.plantedAt = nowSeconds() - cell.grow;
+    save();
+    emit('currency');
+    return { idx, cost };
+  }
 
   const offlineRate = () => Math.min(
     DATA.offline.maxRate,
@@ -1246,7 +1326,7 @@ const Game = (() => {
       repBonus = DATA.harvestRepGrant || 1;
       levelGrants = levelGrants.concat(addRep(repBonus));
     }
-    const baseGem = typeof sdef.gemChance === 'number' ? sdef.gemChance : 0.05;
+    const baseGem = gemChanceFor(sdef);
     const gemChance = baseGem * (lanterns ? Math.pow(VT().lanternGemMult, lanterns) : 1);
     let gemDrop = false;
     if (devTake('gem') || Math.random() < gemChance) { state.gems += 1; gemDrop = true; }
@@ -1784,6 +1864,7 @@ const Game = (() => {
     neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier,
     weatherSlotOf, weatherForSlot, weatherAt, currentWeather, rollMutations, processWeather,
     mutationDef, mutationRank, mutationMult, catchMultiplier,
-    dayPhase, isNight, reconcile, offlineRate, offlineHours, passiveIncomeRate, offlineEarnings, Dev
+    dayPhase, isNight, reconcile, gemChanceFor,
+    callWeather, weatherCallPrice, weatherCallable, weatherCallActive, skipCost, skipGrow, offlineRate, offlineHours, passiveIncomeRate, offlineEarnings, Dev
   };
 })();

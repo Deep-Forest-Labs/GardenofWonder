@@ -54,6 +54,23 @@ const DATA = {
   /* How much of the garden's passive work survives an absence, and for how long. Two axes on
      purpose: rate and duration are separate upgrade tracks, which turns "how the game treats you
      while away" into a chain of nameable unlocks rather than a wall. */
+  /* Gems are earned per unit of *time in the ground*, not per harvest. A flat per-harvest rate
+     made a Daisy the best gem farm in the game, because it cycles 65x more often than an Eternal
+     Crown — the inversion recorded in docs/11-known-issues.md. Chance = grow seconds x this, so
+     gems/hour is roughly constant whatever the player plants. A seed may still set an explicit
+     `gemChance` to override. */
+  /* Gems buy chances, choices and looks — never outcomes. Calling a sky buys a *chance* at a
+     mutation for what is already in the ground; the two rare skies are deliberately not for sale,
+     so the game's biggest moment can never be purchased. Skipping buys time and nothing else. */
+  weatherCall: {
+    minutes: 4,
+    prices: { rain: 8, storm: 25 }
+  },
+  skipSecondsPerGem: 30,
+
+  gemChancePerGrowSecond: 0.0005,
+  gemChanceMax: 0.5,
+
   offline: {
     baseRate: 0.25,
     ratePerLevel: 0.05,
@@ -162,31 +179,26 @@ const DATA = {
     {
       id: 'nebula', name: 'Nebula Orchid', cost: 20000, grow: 540, yield: 28000, spr: '🌠', unlockLevel: 13,
       desc: 'Starlit bloom humming with distant stardust dividends.',
-      gemChance: 0.008,
       art: { shape: 'star', petals: 8, c1: '#d6336c', c2: '#f9a3c1', core: '#845ef7', leaf: '#7048b6', glow: '#ff7ab8' }
     },
     {
       id: 'solstice', name: 'Solstice Lily', cost: 35000, grow: 600, yield: 49000, spr: '☀️', unlockLevel: 14,
       desc: 'Radiant petals channel sunflare surges and rare gems.',
-      gemChance: 0.01,
       art: { shape: 'sun', petals: 14, c1: '#ff922b', c2: '#ffdfae', core: '#fff3bf', leaf: '#59a83f', glow: '#ffb454' }
     },
     {
       id: 'auroracrown', name: 'Aurora Crown', cost: 52000, grow: 660, yield: 72800, spr: '🌈', unlockLevel: 15,
       desc: 'Auroral halo weaves shimmering rewards across the garden.',
-      gemChance: 0.012,
       art: { shape: 'point', petals: 12, c1: '#7ce0ff', c2: '#ffe6a7', core: '#ff8fd0', leaf: '#48b39a', rainbow: true, glow: '#b7f5ff' }
     },
     {
       id: 'mythicstar', name: 'Mythic Starflower', cost: 75000, grow: 720, yield: 105000, spr: '🌟', unlockLevel: 16,
       desc: 'Legend-touched bloom whispering of premium windfalls.',
-      gemChance: 0.015,
       art: { shape: 'star', petals: 5, c1: '#ffd43b', c2: '#fff6cc', core: '#ff922b', leaf: '#7a9a3f', glow: '#ffe066' }
     },
     {
       id: 'eternal', name: 'Eternal Crown', cost: 100000, grow: 780, yield: 140000, spr: '💫', unlockLevel: 17,
       desc: 'Limitless petals with a rare promise of gems.',
-      gemChance: 0.02,
       art: { shape: 'lotus', petals: 12, c1: '#ffcf5c', c2: '#fffdf0', core: '#ff9f1c', leaf: '#c9a227', ring: true, glow: '#fff0b0' }
     }
   ],

@@ -154,24 +154,46 @@ Lanterns is ×4 gem chance, and Deeproot tops out at +16%. **`beaconRarity` is t
 it is passed as `extra` to `rollRarity()`, which multiplies the non-Common weights, so 6 is already
 a large lift and two Beacons is 12. Cut this first if rare harvests start feeling cheap.
 
-### Premium drop chances
+### Gem drops
 
-Only the top five seeds define their own drop rates. Every other seed uses the default 5% gem
-chance.
+Derived from grow time, not set per seed: `gemChance = grow × gemChancePerGrowSecond`, clamped by
+`gemChanceMax`.
 
-| Seed | Gem chance |
+| Key | Value |
 | --- | --- |
-| Nebula Orchid | 0.8% |
-| Solstice Lily | 1.0% |
-| Aurora Crown | 1.2% |
-| Mythic Starflower | 1.5% |
-| Eternal Crown | 2.0% |
-| *(all others)* | 5.0% *(default)* |
+| `gemChancePerGrowSecond` | 0.0005 |
+| `gemChanceMax` | 0.5 |
 
-Read that table twice: the endgame seeds have a **lower** gem chance than a Daisy. Explicitly
-defining `gemChance` overrides the generous 5% fallback, so the best gem farm in the game is
-spamming the cheapest, fastest seed. Almost certainly not the intent, but it is the current
-behaviour and migrated saves depend on it.
+| Seed | Grow | Gem chance | Gems/hour/plot |
+| --- | --- | --- | --- |
+| Daisy | 12 s | 0.60% | 1.80 |
+| Lavender | 28 s | 1.40% | 1.80 |
+| Orchid | 90 s | 4.50% | 1.80 |
+| Aurora Bloom | 360 s | 18.00% | 1.80 |
+| Eternal Crown | 780 s | 39.00% | 1.80 |
+
+**Gems per hour is constant by construction**, so gem income tracks time played rather than seed
+choice. This replaced a flat 5% default that, with explicit low values on the top five seeds, made
+spamming Daisies the optimal gem strategy — the inversion that sat in
+[11-known-issues.md](11-known-issues.md) since the port. Those five overrides are gone; a seed may
+still set `gemChance` to opt out, and none do.
+
+### Gem sinks
+
+| Sink | Price | Notes |
+| --- | --- | --- |
+| Call Rain | 8 gems | 4 minutes, pulls unspent rolls into the window |
+| Call Thunderstorm | 25 gems | as above |
+| Skip a timer | `ceil(remaining / 30)`, min 1 | Falls as the plant grows |
+| Gnome of Fortune | 250 gems | Cosmetic |
+| Lantern Tree | 40 gems | Cosmetic |
+
+Eight plots earn ~14 gems/hour, so a Thunderstorm call is close to two hours of income — a real
+decision rather than pocket change. **Price sinks against that rate, not against the cosmetics**,
+which are a one-off catalogue and will always be finished.
+
+**Aurora and Wonderfall have no price and must not get one.** See
+[03-systems.md](03-systems.md#gems-where-they-come-from-and-what-they-buy).
 
 ## Rarity
 
