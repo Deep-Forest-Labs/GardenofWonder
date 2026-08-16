@@ -201,7 +201,7 @@ season has been authored end to end and the hours measured.**
 ## What exists today
 
 **12 sets of 9 = 108 cards**, in one season, *The Long Season*. Content in `ALBUM_SETS` / `ALBUM`
-(`data.js`); state and drawing in the album section of `game.js`; three sheet panels in `ui.js` —
+(`data.js`); state and drawing in the album section of `game.js`; three sheet panels in `ui-sheet.js` —
 `album`, `cardset`, `pack`. Reached from a star button in the HUD.
 
 Every set has the **same rarity shape**: three Common, two Uncommon, two Rare, one Legendary, one
@@ -215,7 +215,7 @@ art: { icon: 'sprout', tint: '#8ce99a' }   // procedural placeholder, drawn from
 art: { src: 'cards/dawn.png' }             // a real illustration, when one exists
 ```
 
-`cardArt()` in `ui.js` renders either and nothing else knows which it got. **Nine motifs are cycled
+`cardArt()` in `ui-sheet.js` renders either and nothing else knows which it got. **Nine motifs are cycled
 across all twelve sets** — deliberately placeholder, because the feature is the album, not the
 illustration.
 

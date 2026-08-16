@@ -323,7 +323,7 @@ merged to `main` while your local tree still looks current. `git fetch` first.
 inside the `Sound` IIFE. Crafting recipes are therefore named `CRAFT_RECIPES`. Shadowing would
 technically work, but do not reintroduce the collision.
 
-**`syncAfford()` in `ui.js` assumes every `[data-buy]` is one of three kinds.** Its final `else`
+**`syncAfford()` in `ui-sheet.js` assumes every `[data-buy]` is one of three kinds.** Its final `else`
 branch treats anything unrecognised as a booster and will throw. New purchase buttons must use
 their own data attribute — the Apiary and Craft panels use `data-apiary`, `data-craft` and
 `data-sell` for exactly this reason.

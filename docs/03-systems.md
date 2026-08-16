@@ -203,7 +203,7 @@ tint the empty soil until something new is planted.
 ## The card album
 
 **Built 2026-08-15.** Full design in [19-card-album.md](19-card-album.md). Content in `ALBUM`
-(`data.js`), state and drawing in `game.js`, three panels in `ui.js`.
+(`data.js`), state and drawing in `game.js`, three panels in `ui-sheet.js`.
 
 **Deliberately independent of the garden.** No card is earned by growing anything in particular —
 packs come from play, and what is inside them owes nothing to what is planted. A coupled album would
@@ -321,7 +321,7 @@ model produced a 65× spread and was cut. See the spec.
 
 ## Coming back after time away
 
-**Built 2026-08-15.** `Game.reconcile()` in `game.js`, `renderWelcome()` in `ui.js`, called once on
+**Built 2026-08-15.** `Game.reconcile()` in `game.js`, `renderWelcome()` in `ui-sheet.js`, called once on
 load.
 
 **Nothing needs replaying.** Growth, honey, crafts and booster expiry all run off absolute
@@ -405,7 +405,7 @@ not set the phase. It is just a global shift, and the 2026-08-01 decision it cam
 
 ## Development tools
 
-**Built 2026-08-15.** `Game.Dev` in `game.js`, `renderDev()` in `ui.js`, reached from an unlabelled
+**Built 2026-08-15.** `Game.Dev` in `game.js`, `renderDev()` in `ui-sheet.js`, reached from an unlabelled
 44 px hit area beside the gem wallet (`#btnDev`).
 
 **The rule that makes it worth having: every cheat forces an outcome through the *real* code path**

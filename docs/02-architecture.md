@@ -2,7 +2,7 @@
 
 ## Shape of the project
 
-Eight JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
+Nine JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
 dependencies. Each file defines exactly one global and they load in dependency order as plain
 `<script>` tags.
 
@@ -23,7 +23,8 @@ reference globals defined above it.
 | 5 | `fx.js` | `FX` | nothing |
 | 6 | `game.js` | `Game` | `DATA`, `WONDER`, `PLOT_AUTOPLANTERS` |
 | 7 | `ui-shared.js` | `UI` | `Game`, the DOM |
-| 8 | `ui.js` | *(none — IIFE)* | everything above |
+| 8 | `ui-sheet.js` | *(attaches to `UI`)* | `UI` |
+| 9 | `ui.js` | *(attaches to `UI`)* | everything above |
 
 The UI files touch the DOM on load, and only `ui.js` calls `boot()`. Every other file is inert
 until something calls into it.
@@ -175,9 +176,18 @@ automation, the Wonder Effect, and the tick. Returns a frozen-in-practice public
 **`ui-shared.js`** — The scope the UI files share. No behaviour of its own: DOM lookups, the
 cached `el` map, and the formatting helpers. See "The shared UI surface" above.
 
-**`ui.js`** — Everything else: DOM construction, input handling, the bottom sheet, all sheet
-panels, HUD counters, the rail, toasts, banners, coach marks, day/night interpolation, clouds, and
-the frame loop.
+**`ui-sheet.js`** — The bottom sheet and every panel that opens over the garden: upgrades, shop,
+apiary, apothecary, the seed picker, quests, the almanac, settings, the card album, a pack
+opening, the welcome-back scene and the developer tools. It owns the sheet element and everything
+rendered into it, including the delegated `sheetBody` click listener and drag-to-dismiss. The dock
+and HUD buttons that *open* it stay in `ui.js`, with the elements they sit on.
+
+It needs three things from `ui.js` — `UI.toast`, `UI.showBanner` and `UI.buildGarden` — and
+publishes `openSheet`, `closeSheet`, `renderSheet`, `sheetMode`, `setAwayReport`, `syncAfford`,
+`tickSheetTimers` and `CORE_UPGRADES`.
+
+**`ui.js`** — Everything else: DOM construction, input handling, HUD counters, the rail, toasts,
+banners, coach marks, day/night interpolation, clouds, the game-event wiring and the frame loop.
 
 ## Sizing the garden
 
@@ -192,9 +202,9 @@ space. The quest strip stays visible when the rail hides.
 
 ## Where the awkward bits are
 
-`ui.js` is about 1,000 lines and is the file most likely to need splitting as the game grows. The
-natural seams are the sheet panels (six `render*` functions), the scenery and day/night code, and
-the event wiring.
+`ui.js` reached 2,309 lines before being split along the seams named here for a long time: the
+sheet panels, the scenery and day/night code, and the event wiring. The sheet is out; the other
+two are still in `ui.js`.
 
 Sheet panels return HTML strings that are assigned with `innerHTML`. This is concise and fast
 enough, but it means **any content interpolated into a panel must be trusted**. All current

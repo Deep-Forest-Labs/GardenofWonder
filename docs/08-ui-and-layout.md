@@ -96,7 +96,7 @@ All shopping happens in one sheet that slides up from the bottom, holding eight 
 | `cardset` | *(set name)* | Tapping a set tile | none |
 | `pack` | Opening a pack | Opening a pack from the album | none |
 
-The four dock modes share a tab strip — the `TABS` array in `ui.js`, with `SHOP_TABS` deciding which
+The four dock modes share a tab strip — the `TABS` array in `ui-sheet.js`, with `SHOP_TABS` deciding which
 modes display it — so a player can move between them without closing. `seeds` carries the target
 plot index in `sheetArg`. Boosters have no sheet panel at all; see "Status rail" below.
 

@@ -37,7 +37,7 @@ indistinguishable.
 **Revisit before any real external audience.** The likely fix is a `?dev=1` URL gate rather than
 removal, so the affordance survives for development. Don't re-raise it unprompted before then.
 
-*Where:* `ui.js` `renderSettings()`.
+*Where:* `ui-sheet.js` `renderSettings()`.
 
 ### "Garden Mastery" and "Bloom Mastery" are two different things one panel apart
 
@@ -49,7 +49,7 @@ assume they are related.
 Copy fix, not a code fix: rename the stats block to something like "Garden Bonuses". Left alone
 because panel copy is the owner's call.
 
-*Where:* `ui.js` `renderBonuses()`.
+*Where:* `ui-sheet.js` `renderBonuses()`.
 
 ### `harvestsThisSession` is not per session
 

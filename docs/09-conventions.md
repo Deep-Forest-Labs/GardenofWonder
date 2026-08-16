@@ -129,7 +129,7 @@ Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at
    nothing fancier, use the `cappedUpgrade(key, max)` helper rather than writing the same
    if/increment/return shape out by hand — `rainDance`, `beeSwarm`, `ladybug` and `autoWater` all
    use it.
-3. Add its key to `CORE_UPGRADES` in `ui.js` so it appears in the Upgrades tab.
+3. Add its key to `CORE_UPGRADES` in `ui-sheet.js` so it appears in the Upgrades tab.
 4. Add the field to `defaultState().upgrades`, **and** to the manual backfill list in `load()`
    (`['holdSpeed', 'rainDance', 'beeSwarm', 'ladybug'].forEach(...)`) — see "`load()` replaces
    `state.upgrades` wholesale" in [HANDOFF.md](HANDOFF.md#traps-in-this-codebase). Skipping this
@@ -146,7 +146,7 @@ Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at
 1. Append to `DATA.decor` with `name`, `currency`, `cost`, `icon`, `desc`. Decor is purely
    cosmetic — no `type`/`val` effect fields. Write flavour text, not a stat claim.
 2. Decor stacks and never escalates in price. `Game.decorCount(id)` reads how many a player owns.
-3. It lives in the Shop tab (`renderShop()` in `ui.js`), bought with `Game.buyDecor(id)`.
+3. It lives in the Shop tab (`renderShop()` in `ui-sheet.js`), bought with `Game.buyDecor(id)`.
 
 ## Playbook: add a booster
 
@@ -174,6 +174,8 @@ Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at
 
 ## Playbook: add a sheet panel
 
+All of this is in `ui-sheet.js`.
+
 1. Add a `render*()` function returning an HTML string.
 2. Register it in the `render` map and the `titles` map in `renderSheet()`.
 3. Open it with `openSheet('yourMode')`.
@@ -185,7 +187,7 @@ Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at
 
 ## Playbook: add a development cheat
 
-Panel is `renderDev()` in `ui.js`; the logic is `Game.Dev` in `game.js`. Full description in
+Panel is `renderDev()` in `ui-sheet.js`; the logic is `Game.Dev` in `game.js`. Full description in
 [03-systems.md](03-systems.md#development-tools).
 
 1. Add the behaviour to `Game.Dev`. **Force the real code path** — arm a flag the real function

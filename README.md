@@ -49,7 +49,9 @@ Two currencies: coins from taps and harvests, and gems for premium decor.
 | `audio.js` | Web Audio synth for sound effects and ambient music |
 | `fx.js` | Canvas particles, screen shake, floating numbers, haptics |
 | `game.js` | Simulation: state, save/load, economy, automation |
-| `ui.js` | Rendering, input, the bottom sheet, and all the glue |
+| `ui-shared.js` | The scope the UI files share — `$`, `el`, the formatting helpers |
+| `ui-sheet.js` | The bottom sheet and every panel that opens over the garden |
+| `ui.js` | Rendering, input, and all the glue |
 | `legacy/` | The previous build (*Idle Garden Reborn*), kept for reference |
 | `docs/` | Full design and technical documentation |
 
