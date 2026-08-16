@@ -149,10 +149,10 @@ All interpolated content currently comes from `data.js` and is trusted, so there
 vulnerability. But there's no escaping helper, so the first time player-supplied text reaches a
 panel it will be an injection. Add escaping before adding any naming or text-entry feature.
 
-### Two sim-tests were flaky, and the class of bug is worth remembering
+### Four sim-tests have been flaky, and the class of bug keeps recurring
 
-Both fixed 2026-08-14. Measured on the committed code beforehand: **4 of 50 runs failed.** The suite
-now runs clean 60 times out of 60.
+All fixed. The first two on 2026-08-14 (**4 of 50 runs failed** beforehand), the second two on
+2026-08-15. The suite now runs clean 40 times out of 40.
 
 - **`gems move by the milestone`** asserted an exact gem count while the harvest that triggered it
   rolled its own independent **5% gem chance**. `Math.random` is now pinned across the block.
@@ -161,11 +161,21 @@ now runs clean 60 times out of 60.
   pins the roll and asserts **exact payouts** for one harvest instead of a sampled mean — which also
   removed the mastery drift, since mastery climbs as a loop proceeds and would otherwise skew it.
 
-**The general rule:** any assertion touching a harvest has to pin `Math.random`, because harvest
-pays rarity, gems, mastery tiers and Wonder rolls from the same call. Prefer asserting an exact
+- **The combo block** asserted exact credit deltas from `tapFlower()`, and a tap can spark a Wonder
+  (0.15%) that triples the payout. Two of its assertions failed about one run in twenty-five.
+- **`a lantern roughly doubles gem drops next door`** sampled a Daisy, whose base gem chance fell
+  from 5% to 0.6% when the faucet was fixed. The effect was still real; the instrument had silently
+  become eight times too small. It now measures an Eternal Crown at 39%.
+
+**The general rule:** any assertion touching a harvest **or a tap** has to pin `Math.random`, because
+both pay rarity, gems, mastery tiers and Wonder rolls from the same call. Prefer asserting an exact
 value on one harvest over a tolerance on a sampled mean — a statistical test that passes
 forty-nine times in fifty reads as a real regression the one time it doesn't, and the person who
 hits it will go looking for a balance bug that isn't there.
+
+**And re-check your instruments after an economy change.** The lantern flake was not a bad test when
+it was written; a faucet fix eight times smaller made it one. A sampled test is coupled to whatever
+number its rate is built on.
 
 **Also clear the ladder.** Any loop of many harvests climbs Bloom Mastery as it goes, so a test
 measuring some *other* multiplier must call `clearMastery()` — and prefer a single harvest, where

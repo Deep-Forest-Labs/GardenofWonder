@@ -63,6 +63,14 @@ Wonderfall and skip-grows the whole garden into it — the version where the rol
   now moves the actual clock into a genuine Wonderfall. A test that cannot fail is worse than no
   test.
 
+**Three more flaky tests fell out of this, all the same class.** The combo block asserted exact
+credit deltas from `tapFlower()` without pinning the roll, and a tap can spark a Wonder that triples
+the payout — two assertions failing about one run in twenty-five. And the Lantern gem test sampled a
+Daisy, whose base chance dropped from 5% to 0.6% with the faucet fix: the effect was still real, the
+instrument had silently become eight times too small. **A sampled test is coupled to the number its
+rate is built on** — an economy change can turn a good test into a flaky one without anyone touching
+it.
+
 **Still open:** cosmetic breadth. A fixed catalogue always gets bought out against an endless faucet,
 so gems eventually need escalating prices or a growing list. Card packs are the real infinite sink
 once the album exists.
