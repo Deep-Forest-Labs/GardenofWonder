@@ -591,6 +591,11 @@
 
     UI.buildClouds();
     UI.updateSky();
+    // processWeather() suppresses the `weather` event for the first slot it sees,
+    // and that event is the only thing that calls paintWeather() — so without
+    // this, a page opened during rain or a storm renders a clear sky until the
+    // slot rolls over. Roughly a quarter of slots are not clear.
+    UI.paintWeather(Game.currentWeather());
     buildGarden();
     sizeGarden();
     if (window.ResizeObserver) new ResizeObserver(sizeGarden).observe($('.stage'));
