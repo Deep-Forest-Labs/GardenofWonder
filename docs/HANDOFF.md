@@ -12,19 +12,34 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
-> **The first creature moved in, 2026-08-16 — and the direction changed.** The diagnosis was the
-> owner's: the world had a place and a character but **no inhabitants**. So the frame moved from
-> *factory* (garden → bench → market) to **habitat** — the garden is a place that becomes alive
-> because of what you plant. **Pip the Grove Spirit** arrives after five lifetime Bluebell harvests,
-> lives on the lawn, reacts when tapped, and leaves keepsakes on a slow clock. **This is the most
-> direct answer the project has found to "why plant this flower":** Pip comes for bluebells and for
-> nothing else. **Creatures carry a trait and only a few tend at once** — habitat slots at levels
-> 1 / 8 / 14 / 20, toggled in the Almanac's *The Habitat* block, with more creatures than slots so
-> which one is out is a real question. **A trait must never sit on an effect category a verb already
-> owns**, and the suite asserts it. Art is original work in the kodama archetype, not a copy — the
-> game ships commercially. See [22-creatures.md](22-creatures.md) and the top of
-> [10-decision-log.md](10-decision-log.md). **The build before this is tagged `v1-bench`** and is
-> recoverable with `git checkout v1-bench`.
+> **Creatures arrived, and the direction changed, 2026-08-16.** The diagnosis was the owner's: the
+> world had a place and a character but **no inhabitants**. So the frame moved from *factory*
+> (garden → bench → market) to **habitat** — the garden is a place that becomes alive because of what
+> you plant.
+>
+> **Six creatures**, each drawn by a different bloom across seed unlock levels 1–10: Pip (Bluebell),
+> Bumble (Lavender), Bramble (Rose), Thistle (Marigold), Luna (Moonflower), Ember (Starlit Iris). They
+> live on the lawn, react when tapped, and leave keepsakes on a slow clock. **This is the most direct
+> answer the project has found to "why plant this flower":** Pip comes for bluebells and nothing else.
+>
+> **A creature is raised, not found.** It arrives at one star carrying a fifth of its trait and grows
+> to five, and **the duplicate that raises it is the same bloom that attracted it** at an escalating
+> count (Pip: 5 / 15 / 45 / 135 / 405). That is also the first real answer to **"why would I ever plant
+> a Daisy again"** — a low-tier seed stays worth growing long after its coins stop mattering.
+>
+> **Only a few tend at once** — habitat slots at levels **1 / 5 / 10 / 16**, toggled in the Almanac's
+> *The Habitat* block, and only tending creatures stand in the yard. **Eight named pairs**: two
+> specific creatures tending together do a third thing neither does alone, with two deliberate
+> "perfect trios" rewarding opposite play patterns. Listed under *Companions*.
+>
+> **The rule about traits and verbs was retracted the same day.** Traits **may** share an axis with a
+> verb — they stack, and stacking is the point of the genre. What the suite actually enforces is that
+> every trait declares a `pool`, that the roster is not all one kind of effect, that at most a third
+> sits in the `yield` pool, and that **no pair touches `yield` at all**.
+>
+> Art is original work in the kodama archetype, not a copy — the game ships commercially. See
+> [22-creatures.md](22-creatures.md) and the top of [10-decision-log.md](10-decision-log.md). **The
+> build before all of this is tagged `v1-bench`**, recoverable with `git checkout v1-bench`.
 
 > **The Potting Bench landed as simulation, 2026-08-16.** A merge board fed by the garden, and
 > **it is what replaces the Apothecary** — both turn garden output into goods the Market will want,
