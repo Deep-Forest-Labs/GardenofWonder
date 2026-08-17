@@ -166,10 +166,34 @@ brightens with its star** — how grown a creature is reads off the art rather t
 **Stars are shown as stars, never as the word "level."** Five pips under the name say everything at a
 glance, and the Almanac row carries a progress bar to the next one.
 
-**Where resting creatures live is an open design space and a good one.** The owner's instinct is a
-farmhouse or den you can visit — see them lounging, feed them, and swap the loadout there instead of
-in a list. That is the Neko Atsume yard applied to the bench half of the roster, and it is the natural
-home for feeding, naming and any relationship mechanic later.
+**Where resting creatures live: the Hollow.** Agreed 2026-08-16 and drawn as an art spike at
+`tools/hollow-spike.html` — a warm burrow *under* the garden, reached through a crack in the roots.
+Chosen over a shed interior or a fenced paddock because it is the only option that is both an
+interior — walls, alcoves, somewhere to put a memento — **and** continuous with the garden, which the
+locked navigation in [15-navigation-and-ia.md](15-navigation-and-ia.md) requires: you go *down*, not
+away.
+
+**`tools/hollow-spike-v1.html` is a frozen reference**, kept as a live file rather than a screenshot
+so the wisps, the breathing light and the night palette can be compared honestly against any later
+pass. Do not edit it.
+
+**Warm earth, never stone.** Night cools only the light coming through the crack; the walls stay
+ochre. A cold palette on the earth turns the room into a cellar, which is the failure this design is
+most exposed to.
+
+Three drawing lessons, all found by looking rather than by a test:
+
+- **A jagged outline drawn the obvious way is a mountain.** In SVG a smaller `y` is higher, so the
+  first two attempts at the crack produced upward peaks. A hole seen from below only reads when it is
+  a bright irregular gap with dark earth teeth hanging *down* into it.
+- **An even-width stroke is a wire, not a root.** A root has to be fat where it leaves the soil and
+  thin where it ends.
+- **Reuse a shape that already works before inventing one.** A plank shelf for mementos read as a
+  wire strung across the wall; a small carved alcove — the burrow mouth at a smaller size — reads
+  immediately.
+
+Still to design: how many chambers, how the player moves between them, and what the dock becomes
+while down there. Nothing is wired — the spike answers "burrow or basement", and nothing else.
 
 ### Stars — a creature is raised, not found
 

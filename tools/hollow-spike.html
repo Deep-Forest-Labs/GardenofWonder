@@ -123,6 +123,17 @@ whether it reads as a burrow you would want to sit in, or as a basement.</p>
     </g>`;
   }
 
+  /* A trailing vine with a few leaves. Cheap, and it gives the ceiling something
+     to hang so the upper wall is not a blank field of ochre. */
+  function vine(x, y, len) {
+    const leaf = (ly, dir) => `<ellipse cx="${x + dir * 7}" cy="${y + ly}" rx="7" ry="4"
+      fill="#7cc47f" stroke="${INK}" stroke-width="2.5" transform="rotate(${dir * 22} ${x} ${y + ly})"/>`;
+    return `<g>
+      <path d="M${x} ${y} q 6 ${len / 2} 0 ${len}" fill="none" stroke="#5aa552" stroke-width="4" stroke-linecap="round"/>
+      ${leaf(len * 0.32, -1)}${leaf(len * 0.62, 1)}${leaf(len * 0.9, -1)}
+    </g>`;
+  }
+
   function wisp(w, c) {
     return `<g class="wisp" style="--dx:${w.dx}px;--dy:${w.dy}px;--dur:${w.dur}s;--delay:${w.delay}s">
       <circle cx="${w.x}" cy="${w.y}" r="${w.r * 3.6}" fill="#ffe9a8" opacity="0.22"/>
@@ -164,15 +175,53 @@ whether it reads as a burrow you would want to sit in, or as a basement.</p>
     return `<path d="${d}" fill="${fill}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
   }
 
+  /* A burrow mouth is dug, not built — so it is a slightly squashed circle with a
+     flat mossy floor, rather than the arch the first pass used. Arches read as
+     masonry, and one of them read as a headstone. */
   function nook(x, y, rw, rh, c) {
+    const floor = y + rh * 0.42;
     return `<g>
-      <path d="M${x - rw} ${y + rh} v-${rh * 0.5} a${rw} ${rh} 0 0 1 ${rw * 2} 0 v${rh * 0.5} Z"
-        fill="${c.wallDeep}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
-      <path d="M${x - rw + 5} ${y + rh} v-${rh * 0.45} a${rw - 5} ${rh - 5} 0 0 1 ${(rw - 5) * 2} 0 v${rh * 0.45} Z"
-        fill="${c.chamber}" opacity="0.55"/>
-      ${mossLip(x - rw, y + rh, rw * 2, 4, '#7cc47f')}
+      <ellipse cx="${x}" cy="${y}" rx="${rw}" ry="${rh}" fill="${c.wallDeep}"
+        stroke="${INK}" stroke-width="4"/>
+      <ellipse cx="${x}" cy="${y - rh * 0.1}" rx="${rw - 6}" ry="${rh - 6}" fill="${c.chamber}" opacity="0.5"/>
+      <path d="M${x - rw * 0.92} ${floor} a${rw} ${rh} 0 0 0 ${rw * 1.84} 0 v${rh * 0.34} h-${rw * 1.84} Z"
+        fill="${c.wallDeep}"/>
+      ${mossLip(x - rw * 0.92, floor, rw * 1.84, 4, '#7cc47f')}
+      <ellipse cx="${x}" cy="${y}" rx="${rw}" ry="${rh}" fill="none" stroke="${INK}" stroke-width="4"/>
     </g>`;
   }
+
+  /* A cubby for kept mementos — the same dug shape as a burrow mouth, just
+     smaller. A plank shelf was tried first and read as a wire strung across the
+     wall; reusing the shape language that already works is the cheaper answer
+     than inventing a second one. */
+  function cubby(x, y, rw, rh, c, items) {
+    const floor = y + rh * 0.42;
+    return `<g>
+      <ellipse cx="${x}" cy="${y}" rx="${rw}" ry="${rh}" fill="${c.wallDeep}" stroke="${INK}" stroke-width="4"/>
+      <ellipse cx="${x}" cy="${y - rh * 0.12}" rx="${rw - 5}" ry="${rh - 5}" fill="${c.chamber}" opacity="0.45"/>
+      <path d="M${x - rw * 0.9} ${floor} a${rw} ${rh} 0 0 0 ${rw * 1.8} 0 v${rh * 0.34} h-${rw * 1.8} Z" fill="${c.wallDeep}"/>
+      ${mossLip(x - rw * 0.9, floor, rw * 1.8, 3, '#7cc47f')}
+      ${items}
+      <ellipse cx="${x}" cy="${y}" rx="${rw}" ry="${rh}" fill="none" stroke="${INK}" stroke-width="4"/>
+    </g>`;
+  }
+
+  /* The keepsakes, drawn small enough to read as objects on a shelf rather than
+     as icons. Each is the one its creature actually leaves. */
+  const KEEPSAKE_ART = {
+    pebble: (x, y) => `<ellipse cx="${x}" cy="${y - 5}" rx="9" ry="7" fill="#bcd9b0" stroke="${INK}" stroke-width="3"/>
+      <ellipse cx="${x - 3}" cy="${y - 7}" rx="3" ry="2" fill="#8ec48a"/>`,
+    button: (x, y) => `<circle cx="${x}" cy="${y - 6}" r="7.5" fill="#ffd6e0" stroke="${INK}" stroke-width="3"/>
+      <circle cx="${x - 2.5}" cy="${y - 7}" r="1.4" fill="${INK}"/><circle cx="${x + 2.5}" cy="${y - 7}" r="1.4" fill="${INK}"/>`,
+    nail: (x, y) => `<path d="M${x} ${y - 1} l2 -14" stroke="#9aa7b0" stroke-width="4" stroke-linecap="round"/>
+      <path d="M${x - 4} ${y - 15} h10" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>`,
+    thimble: (x, y) => `<path d="M${x - 6} ${y - 1} l1.5 -11 a5 5 0 0 1 9 0 l1.5 11 Z" fill="#ffd166" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`,
+    dust: (x, y) => `<circle cx="${x}" cy="${y - 6}" r="6.5" fill="#e5d6ff" stroke="${INK}" stroke-width="3"/>
+      <circle cx="${x - 2}" cy="${y - 8}" r="1.6" fill="#fff"/>`,
+    warm: (x, y) => `<ellipse cx="${x}" cy="${y - 5}" rx="8" ry="6.5" fill="#ffc07a" stroke="${INK}" stroke-width="3"/>
+      <circle cx="${x}" cy="${y - 5}" r="12" fill="#ffe066" opacity="0.28"/>`
+  };
 
   function scene() {
     const c = SKIES[state.sky];
@@ -239,10 +288,21 @@ whether it reads as a burrow you would want to sit in, or as a basement.</p>
       ${root('M124 30 C118 48 130 58 124 74', 10, 3.5)}
       ${root('M278 30 C286 48 274 58 280 76', 10, 3.5)}
 
+      <!-- Vines hung from the ceiling arch itself, so they read as growing through
+           it rather than floating in front of the wall. -->
+      ${vine(160, 68, 40)}
+      ${vine(286, 70, 40)}
+
+      <!-- One shelf of kept mementos, on the only genuinely empty wall. The right
+           wall already carries the lantern and a root; a second shelf there was
+           clutter, and clutter is what made v1 read better. -->
+      ${cubby(104, 128, 40, 30, c,
+        KEEPSAKE_ART.pebble(88, 138) + KEEPSAKE_ART.nail(105, 139) + KEEPSAKE_ART.button(120, 138))}
+
       <!-- nooks: one each side, one high up -->
-      ${nook(86, 190, 40, 34, c)}
-      ${nook(316, 178, 40, 34, c)}
-      ${nook(200, 148, 38, 30, c)}
+      ${nook(86, 196, 42, 36, c)}
+      ${nook(316, 184, 42, 36, c)}
+      ${nook(200, 152, 40, 33, c)}
 
       <!-- a hanging lantern, because a warm room needs a light source of its own -->
       <g>
