@@ -192,8 +192,34 @@ Three drawing lessons, all found by looking rather than by a test:
   wire strung across the wall; a small carved alcove — the burrow mouth at a smaller size — reads
   immediately.
 
-Still to design: how many chambers, how the player moves between them, and what the dock becomes
-while down there. Nothing is wired — the spike answers "burrow or basement", and nothing else.
+**The spike is now full-screen portrait, 390 × 844**, because a square canvas was hiding the real
+composition problem — the room has to fill a phone. What that settled:
+
+- **A vertical tower of burrows reads well.** Five staggered rather than gridded, because earth is dug
+  where it lets you, plus a floor spot and a memento cubby. Six creatures visible in one chamber.
+- **The bottom 96px belong to the Hollow's own dock**, so the floor sits *above* it rather than
+  disappearing under it. Reserving that strip changes the composition and had to be designed in, not
+  added later.
+- **The Hollow has different verbs from the garden** — Feed, Pet, Loadout, Decorate. A per-place dock
+  is a small evolution of "places on the map, systems in the dock" in
+  [15-navigation-and-ia.md](15-navigation-and-ia.md), and it also sidesteps the five-tab cap, because
+  places no longer compete for slots.
+- **Arch burrows, not circles.** A round mouth read as a sticker sitting on the moss; the arch
+  encloses a creature. Moss **drips over the lip** — drawn behind the band so only the rounded bottom
+  shows, because narrow shapes drawn in front read as table legs.
+- **Vines run beside a burrow, never across one**, and have to hang from something. A vine crossing a
+  burrow mouth reads as growing through somebody's front door, and one starting in mid-air reads as a
+  mistake.
+
+Agreed but not yet designed: **chambers rather than a continuous strip** — swipe between rooms of
+three or four, which is more legible one-handed than scrubbing along a wall, gives each room its own
+character, and is the natural unit for the decoration the owner wants later. **One level first**; a
+second is a progression reward once the roster needs it, since an empty second floor is worse than
+none. Entry is **a visible burrow mouth in the garden to teach it, and a swipe down as the fast
+path** — swipe alone is undiscoverable, and swipe-down also fights the sheet drag and browser refresh.
+
+Nothing is wired. The spike answers what the room looks like and what the screen has to hold; it
+opens from nowhere and none of its mementos are real.
 
 ### Stars — a creature is raised, not found
 

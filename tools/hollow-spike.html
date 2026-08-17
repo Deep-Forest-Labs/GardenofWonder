@@ -3,117 +3,169 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>The Hollow — art spike</title>
+<title>The Hollow — full screen</title>
 <style>
-  :root {
-    --paper: #f7ead1;
-    --ink: #2c1a10;
-    --shadow: 0 4px 0 rgba(44,26,16,.35);
-  }
+  :root { --paper: #f7ead1; --ink: #2c1a10; --shadow: 0 4px 0 rgba(44,26,16,.35); }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink);
+  html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(--ink);
     font-family: 'Baloo 2', ui-rounded, 'Trebuchet MS', system-ui, sans-serif; font-weight: 700; }
-  body { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px; }
+  body { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 10px 30px; }
 
-  header { width: 100%; max-width: 460px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  h1 { font-size: 16px; margin: 0; flex: 1; }
+  header { width: 100%; max-width: 390px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  h1 { font-size: 15px; margin: 0; flex: 1 0 100%; }
   .pill { border: 3px solid var(--ink); border-radius: 999px; background: #e8d5b0;
-    padding: 5px 11px; font-size: 12px; box-shadow: var(--shadow); cursor: pointer;
+    padding: 4px 10px; font-size: 11.5px; box-shadow: var(--shadow); cursor: pointer;
     font-family: inherit; font-weight: 700; color: var(--ink); }
   .pill[data-on="1"] { background: #ffc94a; }
   .pill:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(44,26,16,.35); }
 
-  #stage { width: 100%; max-width: 460px; border: 4px solid var(--ink); border-radius: 20px;
-    overflow: hidden; box-shadow: var(--shadow); position: relative; line-height: 0; }
-  #stage svg { width: 100%; display: block; }
+  /* A real phone, so the composition is judged at the shape it ships in. */
+  #phone { width: 100%; max-width: 390px; aspect-ratio: 390 / 844; position: relative;
+    border: 5px solid var(--ink); border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+  #phone svg.scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-  /* Creatures sit in the nooks, positioned as a percentage of the scene. */
-  .nook-pet { position: absolute; width: 15%; transform: translate(-50%, -50%); line-height: 0; }
+  .nook-pet { position: absolute; width: 19%; transform: translate(-50%, -50%); line-height: 0; }
   .nook-pet svg { width: 100%; overflow: visible; }
-  .nook-pet .cr-glow { opacity: .45; }
+  .nook-pet .cr-glow { opacity: .42; }
 
-  #note { width: 100%; max-width: 460px; font-size: 12px; color: #7a6047; line-height: 1.5; }
+  .exit-hint { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 7px; padding: 5px 13px 5px 9px;
+    border: 3px solid var(--ink); border-radius: 999px; background: rgba(255,247,225,.92);
+    font-size: 11.5px; box-shadow: 0 3px 0 rgba(44,26,16,.28); }
+  .exit-hint i { display: block; width: 0; height: 0; border: 5px solid transparent;
+    border-bottom-color: var(--ink); animation: nudge-up 2.4s ease-in-out infinite; }
+  @keyframes nudge-up { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 
-  /* ---- motion: everything slow, nothing blinking ---- */
-  .wisp { animation: wisp-drift var(--dur, 7s) ease-in-out infinite; animation-delay: var(--delay, 0s);
+  /* The Hollow's own dock — this place has different verbs from the garden. */
+  .dock { position: absolute; left: 0; right: 0; bottom: 0; height: 96px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; padding: 9px 9px 16px;
+    background: linear-gradient(180deg, rgba(44,26,16,0), rgba(44,26,16,.2) 40%, rgba(44,26,16,.32)); }
+  .dock button { position: relative; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3px; border: 3px solid var(--ink); border-radius: 16px;
+    background: #fff7e1; color: var(--ink); font-family: inherit; font-weight: 800; font-size: 10.5px;
+    cursor: pointer; box-shadow: 0 3px 0 rgba(44,26,16,.4); padding: 6px 2px; }
+  .dock button:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(44,26,16,.4); }
+  .dock svg { width: 20px; height: 20px; }
+  .dock .badge { position: absolute; top: -7px; right: -5px; min-width: 17px; height: 17px;
+    border: 2.5px solid var(--ink); border-radius: 999px; background: #ff6b6b; color: #fff;
+    font-size: 9.5px; line-height: 12px; }
+
+  .pager { position: absolute; left: 0; right: 0; bottom: 104px; display: flex; justify-content: center; gap: 6px; }
+  .pager i { width: 8px; height: 8px; border-radius: 999px; border: 2.5px solid var(--ink);
+    background: rgba(255,247,225,.55); display: block; }
+  .pager i.on { background: #ffc94a; }
+  .arrow { position: absolute; top: 45%; width: 34px; height: 34px; display: grid; place-items: center;
+    border: 3px solid var(--ink); border-radius: 999px; background: rgba(255,247,225,.9);
+    box-shadow: 0 3px 0 rgba(44,26,16,.3); font-size: 16px; cursor: pointer; }
+  .arrow.l { left: 8px; } .arrow.r { right: 8px; }
+
+  #note { width: 100%; max-width: 390px; font-size: 12px; color: #7a6047; line-height: 1.5; }
+
+  .wisp { animation: wisp-drift var(--dur,7s) ease-in-out infinite; animation-delay: var(--delay,0s);
     transform-box: fill-box; transform-origin: center; }
   @keyframes wisp-drift {
-    0%, 100% { transform: translate(0, 0); opacity: .25; }
-    25%      { opacity: .95; }
-    50%      { transform: translate(var(--dx, 10px), var(--dy, -14px)); opacity: .7; }
-    75%      { opacity: .3; }
+    0%,100% { transform: translate(0,0); opacity: .22; } 25% { opacity: .95; }
+    50% { transform: translate(var(--dx,10px), var(--dy,-14px)); opacity: .7; } 75% { opacity: .3; }
   }
-  .shaft { animation: shaft-breathe 9s ease-in-out infinite; transform-box: fill-box; transform-origin: top center; }
-  @keyframes shaft-breathe { 0%, 100% { opacity: .5; } 50% { opacity: .72; } }
-  .mote-dust { animation: dust-fall var(--dur, 11s) linear infinite; animation-delay: var(--delay, 0s);
+  .shaft { animation: shaft-breathe 9s ease-in-out infinite; }
+  @keyframes shaft-breathe { 0%,100% { opacity: .55; } 50% { opacity: .78; } }
+  .mote-dust { animation: dust-fall var(--dur,11s) linear infinite; animation-delay: var(--delay,0s);
     transform-box: fill-box; }
   @keyframes dust-fall {
-    0%   { transform: translate(0, -10px); opacity: 0; }
-    15%  { opacity: .8; }
-    85%  { opacity: .5; }
-    100% { transform: translate(var(--dx, 6px), 150px); opacity: 0; }
+    0% { transform: translate(0,-10px); opacity: 0; } 15% { opacity: .8; }
+    85% { opacity: .45; } 100% { transform: translate(var(--dx,6px), 430px); opacity: 0; }
   }
   .glowpulse { animation: glowpulse 4.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-  @keyframes glowpulse { 0%, 100% { opacity: .35; } 50% { opacity: .7; } }
+  @keyframes glowpulse { 0%,100% { opacity: .35; } 50% { opacity: .7; } }
   @media (prefers-reduced-motion: reduce) {
-    .wisp, .shaft, .mote-dust, .glowpulse { animation: none; }
+    .wisp, .shaft, .mote-dust, .glowpulse, .exit-hint i { animation: none; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>The Hollow</h1>
+  <h1>The Hollow — full screen (390 × 844)</h1>
   <button class="pill" id="skyBtn" data-on="1">sunlight</button>
   <button class="pill" id="wispBtn" data-on="1">wisps</button>
   <button class="pill" id="petBtn" data-on="1">pets</button>
+  <button class="pill" id="dockBtn" data-on="1">chrome</button>
 </header>
 
-<div id="stage"></div>
+<div id="phone"></div>
 
-<p id="note">Under the garden, through a crack in the roots. Warm earth, not stone — the test is
-whether it reads as a burrow you would want to sit in, or as a basement.</p>
+<p id="note">Portrait, at the size it ships. The bottom 96px belong to the Hollow's own dock, so the
+floor sits above it rather than under it. One chamber of six; the arrows and pips stand in for
+swiping sideways to the next.</p>
 
 <script src="../data.js"></script>
+<script src="../icons.js"></script>
 <script src="../critters.js"></script>
 <script>
 (() => {
   'use strict';
   const INK = '#2c1a10';
-  const stage = document.getElementById('stage');
+  const W = 390, H = 844;
+  const DOCK_H = 96;                       // reserved; the floor has to clear it
+  const FLOOR_Y = H - DOCK_H - 62;
+  const phone = document.getElementById('phone');
 
-  /* Two palettes for the same room. The walls stay warm in both — the whole
-     point is that this never reads as stone. Night only cools the light coming
-     through the crack, never the earth itself. */
   const SKIES = {
-    sun: {
-      shaft: '#fff3c4', shaftEdge: '#ffe082', beam: '#fffbe8',
-      above: '#8ed36b', aboveDeep: '#6cb551', sky: '#bfe6ff',
-      wall: '#d9a86e', wallDeep: '#b8834c', chamber: '#f0c894', floorLip: '#c08d55'
-    },
-    moon: {
-      shaft: '#dfe8ff', shaftEdge: '#b9c9f5', beam: '#f2f6ff',
-      above: '#5f8f57', aboveDeep: '#456b41', sky: '#2f3d6b',
-      wall: '#c99a68', wallDeep: '#a5764a', chamber: '#e2b785', floorLip: '#b07f4d'
-    }
+    sun:  { beam: '#fffbe8', shaft: '#fff3c4', sky: '#bfe6ff', above: '#8ed36b', aboveDeep: '#6cb551',
+            wall: '#d9a86e', wallDeep: '#b8834c', chamber: '#f0c894', floorLip: '#c08d55' },
+    moon: { beam: '#f2f6ff', shaft: '#dfe8ff', sky: '#2f3d6b', above: '#5f8f57', aboveDeep: '#456b41',
+            wall: '#c99a68', wallDeep: '#a5764a', chamber: '#e2b785', floorLip: '#b07f4d' }
   };
+  const state = { sky: 'sun', wisps: true, pets: true, chrome: true };
 
-  const state = { sky: 'sun', wisps: true, pets: true };
+  /* Moss, with a few runs of it over the edge. The flat underside of the old lip
+     is what made an arch read as a headstone; drips break that line without
+     turning into texture. */
+  function moss(x, y, w, n, fill, drips) {
+    let d = `M${x} ${y}`;
+    const step = w / n;
+    for (let i = 0; i < n; i += 1) d += ` q ${step / 2} -${7 + (i % 3) * 2.5} ${step} 0`;
+    d += ` v 12 h -${w} Z`;
+    /* Drips go BEHIND the band, so only the rounded bottom of each shows below
+       the edge. Drawn in front as narrow shapes they read as table legs. */
+    let out = '';
+    (drips || []).forEach(([t, len, r]) => {
+      const dx = x + w * t;
+      out += `<ellipse cx="${dx}" cy="${y + 6 + len * 0.55}" rx="${r * 1.25}" ry="${len * 0.75}"
+        fill="${fill}" stroke="${INK}" stroke-width="3"/>`;
+    });
+    out += `<path d="${d}" fill="${fill}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    /* Re-stroke only the band's own top scallop, so the drips read as part of the
+       same mass rather than as beads hung off it. */
+    out += `<path d="${d}" fill="${fill}" stroke="none"/>`;
+    return out;
+  }
 
-  /* Wisps: slow, uneven, and never all lit at once. They are the only thing in
-     the room that moves quickly enough to notice. */
-  const WISPS = [
-    { x: 96,  y: 200, r: 8,   dx: 14,  dy: -22, dur: 7.5, delay: 0 },
-    { x: 302, y: 172, r: 6.5, dx: -16, dy: -14, dur: 9,   delay: 1.6 },
-    { x: 226, y: 232, r: 7.5, dx: 11,  dy: -26, dur: 8.2, delay: 3.1 },
-    { x: 138, y: 152, r: 5.5, dx: -10, dy: -12, dur: 10,  delay: 4.4 },
-    { x: 340, y: 220, r: 7,   dx: 12,  dy: -18, dur: 8.8, delay: 2.2 },
-    { x: 62,  y: 158, r: 5.5, dx: 9,   dy: -15, dur: 11,  delay: 5.5 }
-  ];
+  /* The arch, kept. It encloses a creature in a way a circle drawn on grass does
+     not — a round mouth read as a sticker sitting on the moss. */
+  function nook(x, y, rw, rh, c) {
+    const base = y + rh;
+    return `<g>
+      <path d="M${x - rw} ${base} v-${rh * 0.42} a${rw} ${rh} 0 0 1 ${rw * 2} 0 v${rh * 0.42} Z"
+        fill="${c.wallDeep}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M${x - rw + 6} ${base} v-${rh * 0.36} a${rw - 6} ${rh - 6} 0 0 1 ${(rw - 6) * 2} 0 v${rh * 0.36} Z"
+        fill="${c.chamber}" opacity="0.5"/>
+      ${moss(x - rw, base, rw * 2, 4, '#7cc47f', [[0.16, 10, 5], [0.5, 15, 6], [0.84, 8, 4]])}
+    </g>`;
+  }
 
-  /* A root as a filled shape that narrows along its length. Two offset copies of
-     the same curve, joined — cheaper than authoring an outline by hand and it
-     tapers honestly. */
+  function cubby(x, y, rw, rh, c, items) {
+    const base = y + rh;
+    return `<g>
+      <path d="M${x - rw} ${base} v-${rh * 0.4} a${rw} ${rh} 0 0 1 ${rw * 2} 0 v${rh * 0.4} Z"
+        fill="${c.wallDeep}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M${x - rw + 6} ${base} v-${rh * 0.34} a${rw - 6} ${rh - 6} 0 0 1 ${(rw - 6) * 2} 0 v${rh * 0.34} Z"
+        fill="${c.chamber}" opacity="0.45"/>
+      ${moss(x - rw, base, rw * 2, 3, '#7cc47f', [[0.3, 9, 4], [0.74, 7, 4]])}
+      ${items}
+    </g>`;
+  }
+
   function root(d, w0, w1) {
     return `<g>
       <path d="${d}" fill="none" stroke="${INK}" stroke-width="${w0 + 7}" stroke-linecap="round"/>
@@ -123,123 +175,93 @@ whether it reads as a burrow you would want to sit in, or as a basement.</p>
     </g>`;
   }
 
-  /* A trailing vine with a few leaves. Cheap, and it gives the ceiling something
-     to hang so the upper wall is not a blank field of ochre. */
+  /* Vines run down the wall BESIDE a burrow, never across one. A vine crossing a
+     burrow mouth reads as growing through somebody's front door. */
   function vine(x, y, len) {
-    const leaf = (ly, dir) => `<ellipse cx="${x + dir * 7}" cy="${y + ly}" rx="7" ry="4"
-      fill="#7cc47f" stroke="${INK}" stroke-width="2.5" transform="rotate(${dir * 22} ${x} ${y + ly})"/>`;
+    const leaf = (t, dir) => `<ellipse cx="${x + dir * 8}" cy="${y + len * t}" rx="8" ry="4.4"
+      fill="#7cc47f" stroke="${INK}" stroke-width="2.5" transform="rotate(${dir * 24} ${x} ${y + len * t})"/>`;
     return `<g>
-      <path d="M${x} ${y} q 6 ${len / 2} 0 ${len}" fill="none" stroke="#5aa552" stroke-width="4" stroke-linecap="round"/>
-      ${leaf(len * 0.32, -1)}${leaf(len * 0.62, 1)}${leaf(len * 0.9, -1)}
+      <path d="M${x} ${y} q 7 ${len * 0.3} 0 ${len * 0.55} q -7 ${len * 0.25} 0 ${len * 0.45}"
+        fill="none" stroke="#5aa552" stroke-width="4" stroke-linecap="round"/>
+      ${leaf(0.22, -1)}${leaf(0.45, 1)}${leaf(0.68, -1)}${leaf(0.88, 1)}
     </g>`;
   }
 
-  function wisp(w, c) {
+  function wisp(w) {
     return `<g class="wisp" style="--dx:${w.dx}px;--dy:${w.dy}px;--dur:${w.dur}s;--delay:${w.delay}s">
-      <circle cx="${w.x}" cy="${w.y}" r="${w.r * 3.6}" fill="#ffe9a8" opacity="0.22"/>
-      <circle cx="${w.x}" cy="${w.y}" r="${w.r * 2}" fill="#ffe066" opacity="0.42"/>
+      <circle cx="${w.x}" cy="${w.y}" r="${w.r * 3.6}" fill="#ffe9a8" opacity="0.2"/>
+      <circle cx="${w.x}" cy="${w.y}" r="${w.r * 2}" fill="#ffe066" opacity="0.4"/>
       <circle cx="${w.x}" cy="${w.y}" r="${w.r}" fill="#fffbe8" stroke="#ffd166" stroke-width="2"/>
     </g>`;
   }
 
-  /* A cap, a stalk and one highlight. Anything more and they stop reading at
-     thumbnail size. */
   function mushroom(x, y, s, cap, spot) {
     return `<g transform="translate(${x} ${y}) scale(${s})">
       <path d="M-5 0h10v13a5 5 0 0 1-10 0Z" fill="#fff2dd" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
       <path d="M-16 1c0-10 7-16 16-16s16 6 16 16c0 3-32 3-32 0Z" fill="${cap}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
-      <circle cx="-6" cy="-6" r="3.1" fill="${spot}"/>
-      <circle cx="6" cy="-8" r="2.4" fill="${spot}"/>
-      <circle cx="1" cy="-2" r="2" fill="${spot}"/>
+      <circle cx="-6" cy="-6" r="3.1" fill="${spot}"/><circle cx="6" cy="-8" r="2.4" fill="${spot}"/>
     </g>`;
   }
 
   function bloom(x, y, s, petal, mid) {
     return `<g transform="translate(${x} ${y}) scale(${s})">
       <path d="M0 0v-9" stroke="#5aa552" stroke-width="2.6" stroke-linecap="round"/>
-      ${[0, 72, 144, 216, 288].map((a) => `<ellipse cx="0" cy="-13" rx="3.4" ry="5"
-        fill="${petal}" stroke="${INK}" stroke-width="1.8" transform="rotate(${a} 0 -9)"/>`).join('')}
+      ${[0, 72, 144, 216, 288].map((a) => `<ellipse cx="0" cy="-13" rx="3.4" ry="5" fill="${petal}"
+        stroke="${INK}" stroke-width="1.8" transform="rotate(${a} 0 -9)"/>`).join('')}
       <circle cx="0" cy="-9" r="2.6" fill="${mid}" stroke="${INK}" stroke-width="1.6"/>
     </g>`;
   }
 
-  /* Moss reads as a soft scalloped lip rather than a texture — texture turns to
-     noise the moment the scene is scaled down to a phone. */
-  function mossLip(x, y, w, n, fill) {
-    let d = `M${x} ${y}`;
-    const step = w / n;
-    for (let i = 0; i < n; i += 1) {
-      d += ` q ${step / 2} -${7 + (i % 3) * 2.5} ${step} 0`;
-    }
-    d += ` v 14 h -${w} Z`;
-    return `<path d="${d}" fill="${fill}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
-  }
-
-  /* A burrow mouth is dug, not built — so it is a slightly squashed circle with a
-     flat mossy floor, rather than the arch the first pass used. Arches read as
-     masonry, and one of them read as a headstone. */
-  function nook(x, y, rw, rh, c) {
-    const floor = y + rh * 0.42;
-    return `<g>
-      <ellipse cx="${x}" cy="${y}" rx="${rw}" ry="${rh}" fill="${c.wallDeep}"
-        stroke="${INK}" stroke-width="4"/>
-      <ellipse cx="${x}" cy="${y - rh * 0.1}" rx="${rw - 6}" ry="${rh - 6}" fill="${c.chamber}" opacity="0.5"/>
-      <path d="M${x - rw * 0.92} ${floor} a${rw} ${rh} 0 0 0 ${rw * 1.84} 0 v${rh * 0.34} h-${rw * 1.84} Z"
-        fill="${c.wallDeep}"/>
-      ${mossLip(x - rw * 0.92, floor, rw * 1.84, 4, '#7cc47f')}
-      <ellipse cx="${x}" cy="${y}" rx="${rw}" ry="${rh}" fill="none" stroke="${INK}" stroke-width="4"/>
-    </g>`;
-  }
-
-  /* A cubby for kept mementos — the same dug shape as a burrow mouth, just
-     smaller. A plank shelf was tried first and read as a wire strung across the
-     wall; reusing the shape language that already works is the cheaper answer
-     than inventing a second one. */
-  function cubby(x, y, rw, rh, c, items) {
-    const floor = y + rh * 0.42;
-    return `<g>
-      <ellipse cx="${x}" cy="${y}" rx="${rw}" ry="${rh}" fill="${c.wallDeep}" stroke="${INK}" stroke-width="4"/>
-      <ellipse cx="${x}" cy="${y - rh * 0.12}" rx="${rw - 5}" ry="${rh - 5}" fill="${c.chamber}" opacity="0.45"/>
-      <path d="M${x - rw * 0.9} ${floor} a${rw} ${rh} 0 0 0 ${rw * 1.8} 0 v${rh * 0.34} h-${rw * 1.8} Z" fill="${c.wallDeep}"/>
-      ${mossLip(x - rw * 0.9, floor, rw * 1.8, 3, '#7cc47f')}
-      ${items}
-      <ellipse cx="${x}" cy="${y}" rx="${rw}" ry="${rh}" fill="none" stroke="${INK}" stroke-width="4"/>
-    </g>`;
-  }
-
-  /* The keepsakes, drawn small enough to read as objects on a shelf rather than
-     as icons. Each is the one its creature actually leaves. */
-  const KEEPSAKE_ART = {
-    pebble: (x, y) => `<ellipse cx="${x}" cy="${y - 5}" rx="9" ry="7" fill="#bcd9b0" stroke="${INK}" stroke-width="3"/>
-      <ellipse cx="${x - 3}" cy="${y - 7}" rx="3" ry="2" fill="#8ec48a"/>`,
-    button: (x, y) => `<circle cx="${x}" cy="${y - 6}" r="7.5" fill="#ffd6e0" stroke="${INK}" stroke-width="3"/>
-      <circle cx="${x - 2.5}" cy="${y - 7}" r="1.4" fill="${INK}"/><circle cx="${x + 2.5}" cy="${y - 7}" r="1.4" fill="${INK}"/>`,
-    nail: (x, y) => `<path d="M${x} ${y - 1} l2 -14" stroke="#9aa7b0" stroke-width="4" stroke-linecap="round"/>
-      <path d="M${x - 4} ${y - 15} h10" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>`,
-    thimble: (x, y) => `<path d="M${x - 6} ${y - 1} l1.5 -11 a5 5 0 0 1 9 0 l1.5 11 Z" fill="#ffd166" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`,
-    dust: (x, y) => `<circle cx="${x}" cy="${y - 6}" r="6.5" fill="#e5d6ff" stroke="${INK}" stroke-width="3"/>
-      <circle cx="${x - 2}" cy="${y - 8}" r="1.6" fill="#fff"/>`,
-    warm: (x, y) => `<ellipse cx="${x}" cy="${y - 5}" rx="8" ry="6.5" fill="#ffc07a" stroke="${INK}" stroke-width="3"/>
-      <circle cx="${x}" cy="${y - 5}" r="12" fill="#ffe066" opacity="0.28"/>`
+  const KEEP = {
+    pebble: (x, y) => `<ellipse cx="${x}" cy="${y}" rx="9" ry="7" fill="#bcd9b0" stroke="${INK}" stroke-width="3"/>`,
+    nail:   (x, y) => `<path d="M${x} ${y + 4} l2 -15" stroke="#9aa7b0" stroke-width="4" stroke-linecap="round"/>
+                       <path d="M${x - 4} ${y - 11} h10" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>`,
+    button: (x, y) => `<circle cx="${x}" cy="${y}" r="8" fill="#ffd6e0" stroke="${INK}" stroke-width="3"/>
+                       <circle cx="${x - 2.6}" cy="${y - 1}" r="1.5" fill="${INK}"/><circle cx="${x + 2.6}" cy="${y - 1}" r="1.5" fill="${INK}"/>`
   };
+
+  /* Burrows staggered rather than gridded — earth is dug where it lets you. */
+  const NOOKS = [
+    { x: 196, y: 196, rw: 54, rh: 44 },
+    { x: 92,  y: 288, rw: 60, rh: 50 },
+    { x: 300, y: 350, rw: 58, rh: 48 },
+    { x: 96,  y: 464, rw: 58, rh: 48 },
+    { x: 296, y: 546, rw: 56, rh: 46 }
+  ];
+
+  const SPOTS = [
+    { id: 'bramble', left: 50.3, top: 25.6 },
+    { id: 'pip',     left: 23.6, top: 36.6 },
+    { id: 'luna',    left: 77,   top: 44.2 },
+    { id: 'thistle', left: 24.6, top: 58.1 },
+    { id: 'bumble',  left: 75.9, top: 67.7 },
+    { id: 'ember',   left: 56,   top: 77.5 }
+  ];
+
+  const WISPS = [
+    { x: 58,  y: 396, r: 8,   dx: 14,  dy: -26, dur: 7.5, delay: 0 },
+    { x: 342, y: 254, r: 6.5, dx: -16, dy: -18, dur: 9,   delay: 1.6 },
+    { x: 206, y: 600, r: 8.5, dx: 12,  dy: -30, dur: 8.2, delay: 3.1 },
+    { x: 136, y: 168, r: 5.5, dx: -10, dy: -14, dur: 10,  delay: 4.4 },
+    { x: 352, y: 630, r: 7,   dx: 12,  dy: -22, dur: 8.8, delay: 2.2 },
+    { x: 42,  y: 592, r: 6,   dx: 9,   dy: -18, dur: 11,  delay: 5.5 }
+  ];
 
   function scene() {
     const c = SKIES[state.sky];
-    const dust = Array.from({ length: 9 }, (_, i) => {
-      const x = 176 + Math.round(Math.sin(i * 2.1) * 22) + i * 5;
-      return `<circle class="mote-dust" cx="${x}" cy="70" r="${1.6 + (i % 3) * 0.6}" fill="${c.beam}"
-        style="--dx:${(i % 2 ? 1 : -1) * (5 + i)}px;--dur:${9 + i * 0.7}s;--delay:${i * 1.2}s"/>`;
+    const dust = Array.from({ length: 10 }, (_, i) => {
+      const x = 170 + Math.round(Math.sin(i * 2.1) * 26) + i * 4;
+      return `<circle class="mote-dust" cx="${x}" cy="150" r="${1.6 + (i % 3) * 0.7}" fill="${c.beam}"
+        style="--dx:${(i % 2 ? 1 : -1) * (6 + i)}px;--dur:${11 + i}s;--delay:${i * 1.4}s"/>`;
     }).join('');
 
-    return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+    return `<svg class="scene" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="wallG" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${c.wall}"/>
-          <stop offset="100%" stop-color="${c.wallDeep}"/>
+          <stop offset="0%" stop-color="${c.wall}"/><stop offset="100%" stop-color="${c.wallDeep}"/>
         </linearGradient>
-        <radialGradient id="chamberG" cx="50%" cy="34%" r="72%">
-          <stop offset="0%" stop-color="${c.chamber}"/>
-          <stop offset="100%" stop-color="${c.wall}"/>
+        <radialGradient id="chamberG" cx="50%" cy="24%" r="78%">
+          <stop offset="0%" stop-color="${c.chamber}"/><stop offset="100%" stop-color="${c.wall}"/>
         </radialGradient>
         <linearGradient id="beamG" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="${c.shaft}" stop-opacity="0.95"/>
@@ -247,114 +269,108 @@ whether it reads as a burrow you would want to sit in, or as a basement.</p>
         </linearGradient>
       </defs>
 
-      <!-- the world above: sky, turf, then a band of earth the roots hang from -->
-      <rect width="400" height="300" fill="url(#wallG)"/>
-      <rect x="0" y="0" width="400" height="16" fill="${c.sky}"/>
-      <path d="M0 8 h400 v16 H0 Z" fill="${c.above}"/>
-      <path d="M0 20 q 20 10 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 v10 H0 Z"
+      <rect width="${W}" height="${H}" fill="url(#wallG)"/>
+
+      <!-- the world above -->
+      <rect x="0" y="0" width="${W}" height="34" fill="${c.sky}"/>
+      <path d="M0 24 h${W} v18 H0 Z" fill="${c.above}"/>
+      <path d="M0 38 q 20 10 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0 v10 H0 Z"
         fill="${c.aboveDeep}"/>
-      <path d="M0 28 h400 v30 H0 Z" fill="${c.wallDeep}"/>
-      <path d="M0 28 h400" stroke="${INK}" stroke-width="3.5"/>
+      <path d="M0 46 h${W} v58 H0 Z" fill="${c.wallDeep}"/>
+      <path d="M0 46 h${W}" stroke="${INK}" stroke-width="3.5"/>
 
-      <!-- the chamber: a warm room carved out of the earth, not a hole in rock -->
-      <path d="M14 300 V158 C14 96 98 58 200 58 s186 38 186 100 V300 Z" fill="url(#chamberG)"
-        stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>
+      <!-- the chamber -->
+      <path d="M10 ${H} V244 C10 156 96 102 ${W / 2} 102 s186 54 186 142 V${H} Z"
+        fill="url(#chamberG)" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>
 
-      <!-- The crack, seen from below. Drawn as a bright gap with dark earth teeth
-           hanging DOWN into it, rather than as a jagged outline: in SVG a smaller
-           y is higher, so two earlier passes produced upward peaks — which is a
-           mountain silhouette, not a hole. Teeth that point down are unambiguous. -->
+      <!-- the crack: a bright gap with earth teeth hanging down into it -->
       <g>
-        <path d="M158 40 L172 31 L198 35 L220 30 L242 36 L250 50 L244 62 L166 59 L156 50 Z"
+        <path d="M148 58 L166 49 L196 53 L222 48 L246 54 L254 72 L246 90 L156 87 L142 74 Z"
           fill="${c.beam}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
-        <path d="M158 40 L172 31 L198 35 L220 30 L242 36 L248 46 L160 46 Z" fill="${c.sky}" opacity="0.8"/>
-        <path d="M166 36 L176 58 L187 35 Z" fill="${c.wallDeep}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M197 34 L206 63 L217 33 Z" fill="${c.wallDeep}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M226 33 L233 55 L241 37 Z" fill="${c.wallDeep}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M148 58 L166 49 L196 53 L222 48 L246 54 L252 66 L150 66 Z" fill="${c.sky}" opacity="0.8"/>
+        <path d="M158 54 L170 86 L182 52 Z" fill="${c.wallDeep}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M194 51 L205 92 L218 50 Z" fill="${c.wallDeep}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M228 51 L237 80 L247 56 Z" fill="${c.wallDeep}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
       </g>
       <g class="shaft">
-        <path d="M170 60 L138 300 H274 L238 60 Z" fill="url(#beamG)"/>
-        <path d="M186 60 L166 300 H244 L214 60 Z" fill="${c.beam}" opacity="0.42"/>
+        <path d="M152 88 L92 ${FLOOR_Y + 46} H304 L246 88 Z" fill="url(#beamG)"/>
+        <path d="M172 88 L138 ${FLOOR_Y + 46} H264 L228 88 Z" fill="${c.beam}" opacity="0.34"/>
       </g>
       ${dust}
 
-      <!-- Roots, drawn as filled tapering shapes rather than strokes. A stroke of
-           even width reads as wire; a root has to be fat where it leaves the soil
-           and thin where it ends. -->
-      ${root('M50 30 C64 74 40 104 56 150 C68 186 46 214 56 252', 22, 5)}
-      ${root('M100 30 C108 60 92 78 100 108', 13, 4)}
-      ${root('M348 30 C334 78 360 108 342 156 C330 192 350 216 340 252', 21, 5)}
-      ${root('M300 30 C292 56 306 72 298 98', 12, 4)}
-      ${root('M124 30 C118 48 130 58 124 74', 10, 3.5)}
-      ${root('M278 30 C286 48 274 58 280 76', 10, 3.5)}
+      <!-- roots down both walls, the full height of the room -->
+      ${root(`M34 46 C48 140 22 214 40 306 C54 382 26 458 40 546 C50 616 30 664 40 ${FLOOR_Y + 10}`, 24, 6)}
+      ${root(`M356 46 C342 152 368 228 350 320 C336 398 364 474 348 566 C338 630 358 670 348 ${FLOOR_Y + 10}`, 23, 6)}
+      ${root('M120 46 C112 82 126 104 118 138', 12, 4)}
+      ${root('M268 46 C278 84 264 106 272 144', 12, 4)}
 
-      <!-- Vines hung from the ceiling arch itself, so they read as growing through
-           it rather than floating in front of the wall. -->
-      ${vine(160, 68, 40)}
-      ${vine(286, 70, 40)}
+      <!-- vines: down the gaps between burrows, never across one -->
+      ${vine(150, 106, 68)}
+      ${vine(244, 106, 54)}
+      ${vine(52, 330, 82)}
+      ${vine(340, 430, 74)}
 
-      <!-- One shelf of kept mementos, on the only genuinely empty wall. The right
-           wall already carries the lantern and a root; a second shelf there was
-           clutter, and clutter is what made v1 read better. -->
-      ${cubby(104, 128, 40, 30, c,
-        KEEPSAKE_ART.pebble(88, 138) + KEEPSAKE_ART.nail(105, 139) + KEEPSAKE_ART.button(120, 138))}
-
-      <!-- nooks: one each side, one high up -->
-      ${nook(86, 196, 42, 36, c)}
-      ${nook(316, 184, 42, 36, c)}
-      ${nook(200, 152, 40, 33, c)}
-
-      <!-- a hanging lantern, because a warm room needs a light source of its own -->
+      <!-- a lantern on the right wall -->
       <g>
-        <path d="M322 58 v20" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
-        <circle class="glowpulse" cx="322" cy="94" r="26" fill="#ffe9a8"/>
-        <path d="M312 82 h20 l4 18 a14 14 0 0 1 -28 0 Z" fill="#ffd166" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
-        <path d="M310 80 h24" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M330 116 v22" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+        <circle class="glowpulse" cx="330" cy="156" r="28" fill="#ffe9a8"/>
+        <path d="M319 144 h22 l4 19 a15 15 0 0 1 -30 0 Z" fill="#ffd166" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+        <path d="M317 142 h26" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
       </g>
 
-      <!-- the floor: moss, mushrooms, and a few flowers that found the light -->
-      <path d="M0 258 q 60 -20 120 -6 t 130 -2 q 80 -8 150 10 V300 H0 Z" fill="${c.floorLip}"
-        stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
-      ${mossLip(0, 262, 400, 16, '#7cc47f')}
-      <path d="M0 276 h400 v24 H0 Z" fill="#5aa552"/>
+      ${NOOKS.map((n) => nook(n.x, n.y, n.rw, n.rh, c)).join('')}
 
-      ${mushroom(52, 258, 1, '#ff8f6b', '#ffe3d1')}
-      ${mushroom(120, 266, 0.72, '#ffb4a2', '#fff2e8')}
-      ${mushroom(268, 262, 0.85, '#e0715a', '#ffe3d1')}
-      ${mushroom(352, 268, 0.62, '#ff8f6b', '#ffe3d1')}
+      <!-- kept mementos, in a cubby of their own -->
+      ${cubby(90, 592, 54, 38, c, KEEP.pebble(66, 624) + KEEP.nail(90, 624) + KEEP.button(114, 623))}
 
-      ${bloom(94, 262, 1, '#ffc9de', '#ffe066')}
-      ${bloom(168, 268, 0.85, '#e5c9ff', '#fff2b8')}
-      ${bloom(230, 264, 0.9, '#ffd6a5', '#fff2b8')}
-      ${bloom(310, 266, 0.8, '#ffc9de', '#ffe066')}
-      ${bloom(390, 262, 0.7, '#e5c9ff', '#fff2b8')}
+      <!-- the floor, sitting above the dock rather than under it -->
+      <path d="M0 ${FLOOR_Y} q 60 -18 120 -6 t 130 -2 q 80 -8 150 10 V${H} H0 Z"
+        fill="${c.floorLip}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      ${moss(0, FLOOR_Y + 6, W, 14, '#7cc47f', [[0.1, 11, 5], [0.36, 15, 6], [0.62, 9, 5], [0.88, 13, 5]])}
+      <path d="M0 ${FLOOR_Y + 34} h${W} v${H - FLOOR_Y - 34} H0 Z" fill="#5aa552"/>
 
-      ${state.wisps ? WISPS.map((w) => wisp(w, c)).join('') : ''}
+      ${mushroom(44, FLOOR_Y + 36, 0.95, '#ff8f6b', '#ffe3d1')}
+      ${mushroom(108, FLOOR_Y + 44, 0.7, '#ffb4a2', '#fff2e8')}
+      ${mushroom(302, FLOOR_Y + 40, 0.85, '#e0715a', '#ffe3d1')}
+      ${mushroom(358, FLOOR_Y + 46, 0.6, '#ff8f6b', '#ffe3d1')}
+      ${bloom(78, FLOOR_Y + 40, 0.95, '#ffc9de', '#ffe066')}
+      ${bloom(146, FLOOR_Y + 46, 0.8, '#e5c9ff', '#fff2b8')}
+      ${bloom(252, FLOOR_Y + 42, 0.85, '#ffd6a5', '#fff2b8')}
+      ${bloom(336, FLOOR_Y + 48, 0.75, '#ffc9de', '#ffe066')}
+
+      ${state.wisps ? WISPS.map(wisp).join('') : ''}
     </svg>`;
   }
 
-  /* Real creatures from data.js, so this is a room with its actual tenants in it
-     rather than a mood board. */
-  const SPOTS = [
-    { id: 'pip',     left: 21.5, top: 62 },
-    { id: 'luna',    left: 79,   top: 59 },
-    { id: 'thistle', left: 50,   top: 49 },
-    { id: 'bumble',  left: 64,   top: 82.5 },
-    { id: 'bramble', left: 33,   top: 84 }
+  const DOCK = [
+    { icon: 'honey',  label: 'Feed',     badge: 2 },
+    { icon: 'sprout', label: 'Pet' },
+    { icon: 'star',   label: 'Loadout',  badge: 1 },
+    { icon: 'decor',  label: 'Decorate' }
   ];
 
+  function chrome() {
+    if (!state.chrome) return '';
+    const ico = (n) => (typeof Icons !== 'undefined' ? Icons.get(n) : '');
+    return `<div class="exit-hint"><i></i><span>Swipe up for the garden</span></div>
+      <nav class="dock">${DOCK.map((d) => `<button type="button">${ico(d.icon)}<span>${d.label}</span>${
+        d.badge ? `<span class="badge">${d.badge}</span>` : ''}</button>`).join('')}</nav>
+      <div class="pager"><i class="on"></i><i></i><i></i></div>
+      <div class="arrow l">&lsaquo;</div><div class="arrow r">&rsaquo;</div>`;
+  }
+
   function render() {
-    stage.innerHTML = scene();
+    phone.innerHTML = scene() + chrome();
     if (!state.pets || typeof CREATURES === 'undefined') return;
     SPOTS.forEach((s) => {
-      const def = CREATURES.find((c) => c.id === s.id);
+      const def = CREATURES.find((x) => x.id === s.id);
       if (!def) return;
-      const node = document.createElement('div');
-      node.className = 'nook-pet';
-      node.style.left = s.left + '%';
-      node.style.top = s.top + '%';
-      node.innerHTML = Critters.draw(def);
-      stage.appendChild(node);
+      const n = document.createElement('div');
+      n.className = 'nook-pet';
+      n.style.left = s.left + '%';
+      n.style.top = s.top + '%';
+      n.innerHTML = Critters.draw(def);
+      phone.appendChild(n);
     });
   }
 
@@ -363,15 +379,12 @@ whether it reads as a burrow you would want to sit in, or as a basement.</p>
     e.currentTarget.textContent = state.sky === 'sun' ? 'sunlight' : 'moonlight';
     render();
   });
-  document.getElementById('wispBtn').addEventListener('click', (e) => {
-    state.wisps = !state.wisps;
-    e.currentTarget.dataset.on = state.wisps ? '1' : '';
-    render();
-  });
-  document.getElementById('petBtn').addEventListener('click', (e) => {
-    state.pets = !state.pets;
-    e.currentTarget.dataset.on = state.pets ? '1' : '';
-    render();
+  [['wispBtn', 'wisps'], ['petBtn', 'pets'], ['dockBtn', 'chrome']].forEach(([id, key]) => {
+    document.getElementById(id).addEventListener('click', (e) => {
+      state[key] = !state[key];
+      e.currentTarget.dataset.on = state[key] ? '1' : '';
+      render();
+    });
   });
 
   render();
