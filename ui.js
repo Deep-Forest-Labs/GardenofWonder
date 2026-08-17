@@ -422,6 +422,11 @@
   }
 
 
+  el.burrowDoor.addEventListener('click', () => {
+    noteActivity();
+    UI.enterHollow();
+  });
+
   el.critterYard.addEventListener('pointerdown', (e) => {
     const node = e.target.closest('[data-critter]');
     if (!node) return;
@@ -561,7 +566,7 @@
 
   /* Fixed spots along the lawn, so a creature keeps its place between renders
      rather than jumping about whenever the yard is rebuilt. */
-  const CRITTER_SPOTS = [18, 78, 40, 62];
+  const CRITTER_SPOTS = [34, 80, 52, 66];
   const critterEls = new Map();
 
   function buildCritter(def, spot) {
@@ -683,7 +688,7 @@
     slowAcc += dt;
     if (slowAcc >= 0.6) {
       slowAcc = 0;
-      renderCritters();
+      if (UI.hollowOpen && UI.hollowOpen()) UI.renderHollow(); else renderCritters();
       updateDockDots();
       refreshCoach();
       UI.updateSky();

@@ -218,8 +218,27 @@ second is a progression reward once the roster needs it, since an empty second f
 none. Entry is **a visible burrow mouth in the garden to teach it, and a swipe down as the fast
 path** — swipe alone is undiscoverable, and swipe-down also fights the sheet drag and browser refresh.
 
-Nothing is wired. The spike answers what the room looks like and what the screen has to hold; it
-opens from nowhere and none of its mementos are real.
+**Wired into the game 2026-08-16.** A **burrow mouth** in the garden, bottom left, opens it; the exit
+chip or a swipe up closes it. `hollow.js` draws the room and knows nothing about the game;
+`ui-hollow.js` places real creatures into `Hollow.SPOTS` and owns the screen.
+
+- **Every creature that has moved in lives down here**, up to six per chamber. The garden yard shows
+  only the ones tending — the **leaf badge** in the Hollow is what says which, and the gem badge says
+  who has a keepsake waiting. Tapping one pets it or collects, through the same `UI.tapCritter()` the
+  garden uses, so there is one code path for the whole interaction.
+- **The Hollow has its own dock** — Feed, Pet, Loadout, Decorate. Loadout opens the Almanac. **Feed
+  and Decorate are honest about not existing** rather than doing something token: the buttons are
+  there because the shape of the screen depends on them, and they say so when tapped.
+- **The garden's dock, rail and quest strip hide while the Hollow is up**, via `.in-hollow` on
+  `#game`. The frame loop redraws the Hollow instead of the garden yard while it is open.
+- **The sky follows `Game.isNight()`**, so the room is lit by whichever light is actually outside.
+
+Two placements had to move once it was in the game rather than in a spike: the tending count sat over
+the crack, where the art is busy enough to swallow small white text, and the garden's leftmost creature
+spot sat under the burrow door. Neither was visible at spike size.
+
+Still not built: chambers and sideways paging, a second level, feeding, decorating, and any way to
+change the loadout from inside the room rather than through the Almanac.
 
 ### Stars — a creature is raised, not found
 

@@ -73,7 +73,12 @@
           <div class="garden" id="garden" aria-label="Your garden"></div>
         </div>
         <div class="critter-yard" id="critterYard" aria-label="Creatures living in your garden"></div>
+        <button class="burrow-door" id="burrowDoor" type="button" aria-label="Go down to the Hollow">
+          <span class="burrow-mouth"></span>
+          <span class="burrow-label">The Hollow</span>
+        </button>
       </main>
+      <section class="hollow" id="hollow" aria-label="The Hollow" hidden></section>
 
       <nav class="dock" id="dock" aria-label="Shops">
         <button class="dock-btn" data-tab="upgrades">
@@ -120,6 +125,7 @@
   <script src="data.js"></script>
   <script src="flora.js"></script>
   <script src="critters.js"></script>
+  <script src="hollow.js"></script>
   <script src="icons.js"></script>
   <script src="audio.js"></script>
   <script src="fx.js"></script>
@@ -127,6 +133,7 @@
   <script src="ui-shared.js"></script>
   <script src="ui-scenery.js"></script>
   <script src="ui-sheet.js"></script>
+  <script src="ui-hollow.js"></script>
   <script src="ui-events.js"></script>
   <script src="ui.js"></script>
 </body>
