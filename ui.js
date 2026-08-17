@@ -72,11 +72,13 @@
     }
   }
 
-  /** Keep the board a perfect square that fills whatever the stage row offers. */
+  /** Keep the board a perfect square that fills whatever the stage row offers,
+      less the strip reserved for the creature yard beneath it. */
   function sizeGarden() {
     const st = $('.stage');
     const r = st.getBoundingClientRect();
-    const s = Math.max(150, Math.floor(Math.min(r.width, r.height)));
+    const yard = el.critterYard ? el.critterYard.getBoundingClientRect().height : 0;
+    const s = Math.max(150, Math.floor(Math.min(r.width, r.height - yard)));
     el.garden.style.width = s + 'px';
     el.garden.style.height = s + 'px';
   }
@@ -601,6 +603,13 @@
       const leaf = node.querySelector('.critter-leaf');
       const tending = Game.critterTending(def.id);
       if (leaf.hidden === tending) leaf.hidden = !tending;
+      // A grown creature glows brighter, so its star reads off the art itself
+      // rather than only out of a panel.
+      const lvl = Game.critterLevel(def.id);
+      if (node.dataset.level !== String(lvl)) {
+        node.dataset.level = String(lvl);
+        node.style.setProperty('--lvl', (0.7 + lvl * 0.16).toFixed(2));
+      }
     });
     critterEls.forEach((node, id) => {
       if (home.some((d) => d.id === id)) return;
@@ -822,6 +831,7 @@
   UI.sayText = sayText;
   UI.renderCritters = renderCritters;
   UI.tapCritter = tapCritter;
+  UI.critterLine = critterLine;
 
   boot();
 })();

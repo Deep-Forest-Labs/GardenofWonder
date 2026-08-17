@@ -1,8 +1,8 @@
 # Creatures
 
 **Status: built 2026-08-16.** One creature, end to end — Pip the Grove Spirit. Arrival, living in
-the garden, petting, keepsakes, **traits and tending**, a habitat block in the Almanac, save, and 58
-sim-test assertions.
+the garden, petting, keepsakes, traits and tending, **stars and growth**, a habitat block in the
+Almanac, save, and 80 sim-test assertions.
 
 This is the first step of the **habitat direction** agreed 2026-08-16. Reasoning in
 [10-decision-log.md](10-decision-log.md).
@@ -130,18 +130,53 @@ and still one tap from coming back. Nothing is ever taken away, which is what ke
 more creatures than slots is what makes "which three are out" a decision, and that decision is the
 strategy layer.
 
-A tending creature wears a leaf badge, so the state is legible from the garden itself.
+A tending creature wears a leaf badge, so the state is legible from the garden itself, and **its glow
+brightens with its star** — how grown a creature is reads off the art rather than only out of a panel.
+
+**Stars are shown as stars, never as the word "level."** Five pips under the name say everything at a
+glance, and the Almanac row carries a progress bar to the next one.
 
 **Where resting creatures live is an open design space and a good one.** The owner's instinct is a
 farmhouse or den you can visit — see them lounging, feed them, and swap the loadout there instead of
 in a list. That is the Neko Atsume yard applied to the bench half of the roster, and it is the natural
 home for feeding, naming and any relationship mechanic later.
 
+### Stars — a creature is raised, not found
+
+```js
+CREATURE_STARS = 5
+attract: { seed: 'bluebell', count: 5, growth: 3 }
+```
+
+A creature **arrives at one star with a fifth of its trait** and grows to full. `trait.value` in
+`data.js` is the value at five stars, and `critterTraitAt()` scales it — so a one-star Pip gives 5%
+and a five-star Pip gives the listed 25%.
+
+This exists because a creature that arrives finished has nothing left to ask for — the same problem
+Bloom Mastery was invented to solve for flowers. The point of a pet is that you raise it.
+
+**The duplicate that raises it comes from the same bloom that attracted it**, at an escalating count:
+`count × growth^(level−1)`, so Pip needs 5 / 15 / 45 / 135 / 405 lifetime Bluebell harvests. In
+fiction, a second Pip turns up and merges in.
+
+**This is the payoff, and it is bigger than the levelling itself:** a low-tier seed now has a reason
+to be in the ground long after its coins stop mattering. It is the first real answer this project has
+had to *"why would I ever plant a Daisy again."*
+
+Arrival and growth run through **one** `checkCritters()`, and the growth check **loops** — a long
+absence can bank enough for more than one star at once, and granting a single level per harvest would
+silently swallow the rest.
+
+Numbers are placeholders. The shape — arrives weak, escalating cost per star, capped at five — is the
+part to keep.
+
 ### Pip's trait
 
-| Trait | Category | Effect |
+| Trait | Pool | Effect at ★5 |
 | --- | --- | --- |
 | `mutationLuck` — *Coaxes the Sky* | chance | Plants are **25% more likely** to catch the weather |
+
+At one star that is 5%, climbing a fifth per star.
 
 Wired into **`catchMultiplier()`**, which is the single choke point both mutation roll paths already
 go through, so there is no second consumer to keep in sync. It raises the **chance and never the
@@ -164,9 +199,12 @@ already sees it.
 ## Where they live
 
 On the lawn **below the garden board, never on a plot** — a creature standing on a plot reads as
-something to harvest. `#critterYard` is absolutely positioned over the bottom of the stage, so it
-overlays the lawn rather than adding a row that pushes the whole stage down past the dock. Creatures
-take fixed spots along it and keep them between renders.
+something to harvest.
+
+**The yard's height is reserved as `padding-bottom` on `.stage`, and `sizeGarden()` subtracts it.**
+This is not cosmetic: the board sizes itself to the stage, so on a taller viewport it grew *down over*
+the yard and put a creature on top of a plot. Reserving the strip is what keeps them separate at every
+screen size. Creatures take fixed spots along the yard and keep them between renders.
 
 **No permanent name label.** The arrival banner names it and the toast names it; a tag stapled under
 every creature is clutter, and Neko Atsume reveals names on interaction for the same reason.

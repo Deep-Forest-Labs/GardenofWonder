@@ -170,11 +170,18 @@ more than 1.35×.
 `CREATURE_TRAITS` and `HABITAT_SLOT_LEVELS` in `data.js`. Design in
 [22-creatures.md](22-creatures.md#traits-and-tending).
 
-| Creature | Trait | Category | Value |
+| Creature | Trait | Pool | Value at ★5 |
 | --- | --- | --- | --- |
 | Pip | `mutationLuck` — Coaxes the Sky | chance | +0.25 to the catch multiplier |
 
 Habitat slots open at levels **1, 8, 14, 20**, so a player holds at most four tending creatures.
+
+**A creature arrives at one star and carries a fifth of its trait**, climbing to the listed value at
+five. `CREATURE_STARS` is 5 and `trait.value` is the ceiling, so a one-star Pip is +0.05. The
+duplicate that raises a star costs `count × growth^(level−1)` lifetime harvests of its own bloom —
+Pip is 5 / 15 / 45 / 135 / 405 Bluebells. **That escalation is what keeps a low-tier seed worth
+planting late**, which is the first answer the game has had to "why would I ever plant a Daisy again."
+Placeholders; the shape is what matters.
 
 **Traits are a third axis and stay off the yield curve** — `yield === cost × 1.4` still holds. Pip
 raises the mutation **catch chance** and never a payout, so the 20–30% mutation income target stays

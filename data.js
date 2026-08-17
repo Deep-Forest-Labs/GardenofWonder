@@ -520,7 +520,9 @@ const CREATURE_TRAITS = {
     category: 'weather',
     pool: 'chance',
     icon: 'sparkle',
-    desc: (v) => `Plants are ${Math.round(v * 100)}% more likely to catch the weather`
+    desc: (v) => `Plants are ${Math.round(v * 100)}% more likely to catch the weather`,
+    /* Shown on an unmet creature's row, where the value is not known yet. */
+    maxDesc: (v) => `Up to ${Math.round(v * 100)}% more likely to catch the weather`
   }
 };
 
@@ -528,12 +530,22 @@ const CREATURE_TRAITS = {
    point — the choice is what makes them strategy rather than a checklist. */
 const HABITAT_SLOT_LEVELS = [1, 8, 14, 20];
 
+/* Stars a creature can reach. A creature arrives at one star with a fifth of its
+   trait and grows to full — the point of a pet is that you raise it, and one that
+   arrives finished has nothing left to ask for.
+
+   The duplicate that raises it comes from the SAME bloom that attracted it, at an
+   escalating count. That is the whole reason this is worth building: it keeps a
+   low-tier seed worth planting forever, which is the first real answer this game
+   has had to "why would I ever plant a Daisy again." */
+const CREATURE_STARS = 5;
+
 const CREATURES = [
   {
     id: 'pip',
     name: 'Pip',
     species: 'Grove Spirit',
-    attract: { seed: 'bluebell', count: 5 },
+    attract: { seed: 'bluebell', count: 5, growth: 3 },
     hint: 'Bluebells, apparently. Only bluebells.',
     about: 'Rattles its head when it is thinking. It is almost never thinking.',
     trait: { id: 'mutationLuck', value: 0.25 },

@@ -324,17 +324,29 @@
   /* A creature arriving is a moment, not a notification. It gets the garden's
      attention: confetti, the flower reacting, and the creature introducing
      itself in its own voice rather than the flower's. */
-  Game.on('critter', ({ def, arrived }) => {
-    if (!arrived) return;
+  Game.on('critter', ({ def, arrived, levelled, level }) => {
+    if (!arrived && !levelled) return;
     UI.renderCritters();
     const c = FX.centerOf(el.garden);
-    FX.confetti(c.x, c.y, 26);
-    FX.stars(c.x, c.y, 10, def.art.glow);
     Sound.play('quest');
-    FX.haptic([14, 40, 18]);
     UI.faceReact('wow');
-    UI.showBanner(`${def.name} has moved in`, def.species);
-    setTimeout(() => UI.sayText(def.lines.arrive[0], true), 900);
+    if (arrived) {
+      FX.confetti(c.x, c.y, 26);
+      FX.stars(c.x, c.y, 10, def.art.glow);
+      FX.haptic([14, 40, 18]);
+      UI.showBanner(`${def.name} has moved in`, def.species);
+      setTimeout(() => UI.sayText(def.lines.arrive[0], true), 900);
+      return;
+    }
+    /* A second one turned up and merged in. Scale the celebration with the star,
+       so the last one is the loudest — same discipline as the mutation ladder. */
+    const stars = '\u2605'.repeat(level);
+    FX.stars(c.x, c.y, 6 + level * 2, def.art.glow);
+    if (level >= CREATURE_STARS) FX.confetti(c.x, c.y, 30);
+    FX.haptic([10, 26, 14]);
+    UI.showBanner(`${def.name} grew to ${stars}`,
+      level >= CREATURE_STARS ? 'Fully grown' : `${def.species} · ${CREATURE_STARS - level} to go`);
+    setTimeout(() => UI.sayText(UI.critterLine(def, 'pet'), true), 800);
   });
 
   Game.on('almanac', ({ found, milestones }) => {

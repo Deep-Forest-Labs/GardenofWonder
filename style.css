@@ -385,7 +385,10 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .chip .chip-price svg{width:12px;height:12px}
 
 /* ---------- stage / garden ---------- */
-.stage{position:relative;display:grid;place-items:center;min-height:0;min-width:0;padding:2px 0;overflow:visible}
+/* The yard is reserved as padding rather than overlaying, or the garden board
+   grows down over it and a creature ends up standing on a plot — which reads as
+   something to harvest. */
+.stage{--yard-h:clamp(70px,13vh,108px);position:relative;display:grid;place-items:center;min-height:0;min-width:0;padding:2px 0 var(--yard-h);overflow:visible}
 .garden-frame{
   width:100%;height:100%;
   display:grid;place-items:center;
@@ -1595,7 +1598,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   left: 0;
   right: 0;
   bottom: 0;
-  height: clamp(70px, 13vh, 108px);
+  height: var(--yard-h);
   pointer-events: none;
   z-index: 3;
 }
@@ -1759,3 +1762,17 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .critter-leaf[hidden]{display:none}
 .critter-leaf svg{width:12px;height:12px}
+
+/* ---------- creature stars and growth ---------- */
+.critter-stars{display:inline-flex;gap:1px;margin-left:6px;vertical-align:middle}
+.cr-star svg{width:11px;height:11px;display:block;color:#ffc94a}
+.cr-star.off{opacity:.26}
+.critter-grow{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-soft,#7a6047)}
+.critter-grow i{
+  flex:0 0 62px;height:7px;border-radius:999px;
+  background:#8ce99a;border:2px solid var(--ink);
+  transform-origin:left center;
+}
+.critter-grow span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* The glow scales with the creature's star, set from renderCritters(). */
+.critter .cr-glow{opacity:calc(0.32 * var(--lvl, 1))}

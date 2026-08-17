@@ -240,13 +240,18 @@ as one piece rather than discovering it halfway through.
 the lawn, petting, keepsakes, save. The obvious next pieces, in order:
 
 1. **A second and third creature.** The roster is a data array; a new entry needs no code. A
-   night-only creature is one `attract` field away and `Game.isNight()` already exists. **Each new
-   trait must use an unclaimed category** — free axes are offline rate and duration, keepsake cadence,
-   pack luck and combo decay; a sim-test fails if two creatures share one.
-2. **The creature collection panel** — who has visited, who is missing, what each one likes. This is
-   the Completion surface, and Completion is the audience's top motivation. It is the biggest
-   missing piece.
-3. **Flower breeding**, the second half of the direction. Cross two mature neighbours into a hybrid
+   night-only creature is one `attract` field away and `Game.isNight()` already exists. Traits **may**
+   stack with a verb — that rule was retracted — but every trait declares a `pool`, and a sim-test
+   fails if the roster becomes all one kind of effect or if more than a third sits in the `yield`
+   pool. A drafted roster of five (Thistle, Bramble, Luna, Ember, Bumble) is in the conversation
+   record but not yet in `data.js`.
+2. **Named synergy pairs.** Two specific creatures both tending unlock a third, named effect —
+   Cookie Clicker ships 36 of these and each is one data row. This is what stops a loadout being
+   "pick the three strongest" and is the highest-value addition once there are pets to pair.
+3. **A den or farmhouse for resting creatures.** Resting pets now leave the screen, so they need
+   somewhere to *be* — visit them, feed them, and swap the loadout there rather than in a list row.
+   The owner's idea, and a much better surface than the Almanac block currently standing in for it.
+4. **Flower breeding**, the second half of the direction. Cross two mature neighbours into a hybrid
    seed. It reuses the adjacency board and generates content rather than authoring it — but it
    changes the seed model, so it has a much bigger blast radius than creatures did. Do it after the
    roster proves out.

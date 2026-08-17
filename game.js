@@ -178,6 +178,9 @@ const Game = (() => {
             fed: Number(r.fed) || 0,
             gifts: Math.max(0, Math.min(def.keepsake.cap, Number(r.gifts) || 0)),
             met: r.met !== false,
+            // A save from before stars existed is a creature the player already
+            // earned, so it comes back at one star rather than at zero.
+            level: Math.max(1, Math.min(CREATURE_STARS, Number(r.level) || 1)),
             // Absent means "written before tending existed", not "switched off".
             // A returning player should find their creature working, not idle
             // with no explanation; the slot trim below caps it either way.
@@ -1693,9 +1696,16 @@ const Game = (() => {
   /** Summed value of one trait across every creature currently tending. Reading
       by trait id rather than by creature is what makes a new creature a data
       row: add the row, and any consumer already asking for that trait sees it. */
+  /** `trait.value` is the value at full stars, so a creature contributes its share
+      of that. A one-star arrival is a fifth as strong as the same creature raised. */
+  function critterTraitAt(def, level) {
+    if (!def || !def.trait) return 0;
+    return (def.trait.value || 0) * (Math.max(1, Math.min(CREATURE_STARS, level)) / CREATURE_STARS);
+  }
+
   function critterTrait(traitId) {
     return crittersTending().reduce((n, def) => (
-      def.trait && def.trait.id === traitId ? n + (def.trait.value || 0) : n
+      def.trait && def.trait.id === traitId ? n + critterTraitAt(def, critterLevel(def.id)) : n
     ), 0);
   }
 
@@ -1706,23 +1716,65 @@ const Game = (() => {
     return state.discovered[def.attract.seed] || 0;
   }
 
-  const critterReady = (def) => critterProgress(def) >= (def.attract.count || 1);
+  const critterLevel = (id) => (state.critters[id] ? state.critters[id].level || 1 : 0);
+  const critterMaxed = (id) => critterLevel(id) >= CREATURE_STARS;
 
-  /** Called after a harvest. Returns the creatures that turned up this time. */
+  /** Lifetime harvests needed to reach `level`. The same bloom raises the creature
+      that attracted it, at an escalating count, so a low-tier seed keeps a reason
+      to be in the ground long after its coins stop mattering. */
+  function critterGoalFor(def, level) {
+    if (!def || !def.attract) return Infinity;
+    const base = def.attract.count || 1;
+    const growth = def.attract.growth || 3;
+    return Math.round(base * Math.pow(growth, Math.max(0, level - 1)));
+  }
+
+  /** What the creature is currently climbing toward, or null once it is maxed. */
+  function critterGoal(id) {
+    const def = critterById(id);
+    if (!def) return null;
+    const level = critterLevel(id);
+    if (level >= CREATURE_STARS) return null;
+    return {
+      level: level + 1,
+      qty: critterGoalFor(def, level + 1),
+      have: critterProgress(def),
+      seed: def.attract.seed
+    };
+  }
+
+  const critterReady = (def) => critterProgress(def) >= critterGoalFor(def, 1);
+
+  /** Called after a harvest. Handles both a creature turning up for the first time
+      and a duplicate turning up to raise one that is already home — the same
+      threshold machinery, escalating. Returns what happened. */
   function checkCritters() {
-    const arrived = [];
+    const events = [];
     CREATURES.forEach((def) => {
-      if (critterHere(def.id) || !critterReady(def)) return;
-      // Tend automatically when there is room: a first creature that did nothing
-      // until the player found a toggle would read as broken.
-      state.critters[def.id] = { since: nowSeconds(), fed: 0, gifts: 0, met: false, tending: habitatFree() > 0 };
-      arrived.push(def);
+      if (!critterHere(def.id)) {
+        if (!critterReady(def)) return;
+        // Tend automatically when there is room: a first creature that did nothing
+        // until the player found a toggle would read as broken.
+        state.critters[def.id] = {
+          since: nowSeconds(), fed: 0, gifts: 0, met: false, level: 1, tending: habitatFree() > 0
+        };
+        events.push({ def, arrived: true, level: 1 });
+        return;
+      }
+      // Loop, because a long absence can bank enough for more than one star.
+      let grew = 0;
+      while (critterLevel(def.id) < CREATURE_STARS
+        && critterProgress(def) >= critterGoalFor(def, critterLevel(def.id) + 1)) {
+        state.critters[def.id].level = critterLevel(def.id) + 1;
+        grew += 1;
+      }
+      if (grew) events.push({ def, levelled: true, level: critterLevel(def.id), gained: grew });
     });
-    if (arrived.length) {
+    if (events.length) {
       save();
-      arrived.forEach((def) => emit('critter', { def, arrived: true }));
+      events.forEach((e) => emit('critter', e));
     }
-    return arrived;
+    return events;
   }
 
   /** Keepsakes waiting, derived from elapsed time rather than a running timer. */
@@ -2359,6 +2411,7 @@ const Game = (() => {
     canCraft, startCraft, sell,
     critterById, critterHome, critterHere, crittersHome, critterProgress, critterReady,
     habitatSlots, habitatUsed, habitatFree, critterTending, crittersTending, setTending, critterTrait,
+    critterLevel, critterMaxed, critterGoal, critterGoalFor, critterTraitAt,
     checkCritters, keepsakesWaiting, settleCritters, collectKeepsakes, petCritter,
     benchDef, benchTop, benchUnlocked, benchFirstFree, benchEntryTier, benchNeighbours,
     benchGroup, benchMergeOnce, benchAddToBasket, benchPlace, benchBank,

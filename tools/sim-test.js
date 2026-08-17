@@ -20,7 +20,7 @@ globalThis.localStorage = {
 /* The game files are plain scripts that declare globals, so evaluate them and
    then re-export what they defined onto globalThis. */
 const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
-  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'flowerValue', 'Game'];
+  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -2319,7 +2319,8 @@ S.discovered.daisy = 9999;
 check('the wrong bloom never counts', G.checkCritters().length === 0);
 S.discovered[PIP.attract.seed] = PIP.attract.count;
 const came = G.checkCritters();
-check('meeting the count brings it', came.length === 1 && came[0].id === PIP.id);
+check('meeting the count brings it', came.length === 1 && came[0].def.id === PIP.id && came[0].arrived);
+check('and it arrives at one star', G.critterLevel(PIP.id) === 1);
 check('and it is home', G.critterHere(PIP.id));
 check('it does not arrive twice', G.checkCritters().length === 0);
 
@@ -2413,9 +2414,16 @@ G.setTending(PIP.id, false);
 const catchResting = G.catchMultiplier(0);
 G.setTending(PIP.id, true);
 const catchTending = G.catchMultiplier(0);
+const oneStar = PIP.trait.value / CREATURE_STARS;
 check('resting changes nothing', catchResting === 1, `got ${catchResting}`);
-check('tending lifts the catch chance', catchTending === 1 + PIP.trait.value, `got ${catchTending}`);
-check('the trait reads by id', G.critterTrait(PIP.trait.id) === PIP.trait.value);
+/* A one-star arrival is a fifth as strong as the same creature raised — the
+   whole point of levelling is that the listed value is the ceiling. */
+check('a one-star creature gives a fifth', Math.abs(catchTending - (1 + oneStar)) < 1e-9, `got ${catchTending}`);
+check('the trait reads by id', Math.abs(G.critterTrait(PIP.trait.id) - oneStar) < 1e-9);
+S.critters[PIP.id].level = CREATURE_STARS;
+check('a maxed creature gives the listed value',
+  Math.abs(G.critterTrait(PIP.trait.id) - PIP.trait.value) < 1e-9);
+S.critters[PIP.id].level = 1;
 check('an unknown trait sums to zero', G.critterTrait('nonsense') === 0);
 /* The mutation doc is explicit that stacking raises the CHANCE and never the
    payout, or the income share stops being computable. */
@@ -2478,11 +2486,65 @@ check('few traits multiply the harvest product', (() => {
 check('every trait can describe itself', Object.values(CREATURE_TRAITS)
   .every((t) => t.name && typeof t.desc === 'function' && t.desc(0.25).length > 0));
 
+group('a creature is raised by the bloom that attracted it');
+G.reset();
+S.discovered[PIP.attract.seed] = G.critterGoalFor(PIP, 1);
+G.checkCritters();
+check('starts at one star', G.critterLevel(PIP.id) === 1);
+check('and is not maxed', !G.critterMaxed(PIP.id));
+const goal2 = G.critterGoal(PIP.id);
+check('the next goal names the next star', goal2.level === 2);
+check('and needs more than the first', goal2.qty > G.critterGoalFor(PIP, 1));
+check('the goal is the same bloom', goal2.seed === PIP.attract.seed);
+S.discovered[PIP.attract.seed] = goal2.qty - 1;
+check('one short does not raise it', G.checkCritters().length === 0 && G.critterLevel(PIP.id) === 1);
+S.discovered[PIP.attract.seed] = goal2.qty;
+const grew = G.checkCritters();
+check('meeting it raises a star', grew.length === 1 && grew[0].levelled && G.critterLevel(PIP.id) === 2);
+check('the trait grew with it',
+  Math.abs(G.critterTrait(PIP.trait.id) - PIP.trait.value * 2 / CREATURE_STARS) < 1e-9);
+/* A long absence can bank enough for more than one star at once, so the check
+   loops rather than granting a single level per harvest. */
+S.discovered[PIP.attract.seed] = G.critterGoalFor(PIP, CREATURE_STARS);
+const jumped = G.checkCritters();
+check('a big jump grants every star it earned', G.critterLevel(PIP.id) === CREATURE_STARS);
+check('and reports how many it gained', jumped.length === 1 && jumped[0].gained >= 2);
+check('a maxed creature has no next goal', G.critterGoal(PIP.id) === null);
+check('and stops climbing', G.checkCritters().length === 0);
+S.discovered[PIP.attract.seed] = 1e9;
+check('it never passes the ceiling', G.checkCritters().length === 0 && G.critterLevel(PIP.id) === CREATURE_STARS);
+check('a maxed creature gives exactly the listed value',
+  Math.abs(G.critterTraitAt(PIP, G.critterLevel(PIP.id)) - PIP.trait.value) < 1e-9);
+check('a creature that is not home has no level', G.critterLevel('nobody') === 0);
+
+group('stars survive a save, and an old creature keeps what it earned');
+S.critters[PIP.id].level = 3;
+G.saveNow();
+G.load();
+check('the level comes back', G.critterLevel(PIP.id) === 3);
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0,
+  discovered: { [PIP.attract.seed]: 1 },
+  critters: { [PIP.id]: { since: 1, gifts: 0 } }
+}));
+G.load();
+check('a save from before stars comes back at one, not zero', G.critterLevel(PIP.id) === 1);
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0,
+  discovered: { [PIP.attract.seed]: 1 },
+  critters: { [PIP.id]: { since: 1, gifts: 0, level: 999 } }
+}));
+G.load();
+check('an impossible level is clamped', G.critterLevel(PIP.id) === CREATURE_STARS);
+
 group('every creature is authored as a character, not a stat');
 check('each has a name and a species', CREATURES.every((c) => c.name && c.species));
 check('each says something about itself', CREATURES.every((c) => c.about && c.hint));
 check('each comes for a real seed', CREATURES.every((c) => DATA.seeds.some((s) => s.id === c.attract.seed)));
 check('each leaves a named keepsake', CREATURES.every((c) => c.keepsake && c.keepsake.name && c.keepsake.every > 0 && c.keepsake.cap > 0));
+check('each escalates toward its last star', CREATURES.every((c) => (
+  G.critterGoalFor(c, CREATURE_STARS) > G.critterGoalFor(c, 1)
+)));
 check('each has arrival, idle and pet lines', CREATURES.every((c) => (
   c.lines && c.lines.arrive.length && c.lines.idle.length && c.lines.pet.length
 )));

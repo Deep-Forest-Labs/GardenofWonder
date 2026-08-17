@@ -5,6 +5,49 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-16 — Creatures are raised, and the bloom that attracts one is what grows it
+
+**Built:** five stars per creature, an escalating growth threshold, a level-up beat, stars and a
+growth bar in the Almanac, and a glow that brightens with the star. 21 new assertions.
+
+**The owner's ask, and it fixes a real weakness:** a creature that arrives fully powered has nothing
+left to give, which is exactly the "stops asking for anything" problem Bloom Mastery was invented to
+solve for flowers. A pet is something you raise.
+
+**The design that made it cheap: the duplicate comes from the bloom that attracted it.** Rather than
+an inventory of duplicate pets to manage, continuing to grow bluebells brings another Pip that merges
+in — same fiction, no new machinery, and it reuses the `discovered` lifetime record already in place.
+Thresholds escalate `count × growth^(level−1)`, so Pip is 5 / 15 / 45 / 135 / 405.
+
+**The payoff is larger than the levelling.** A low-tier seed now has a reason to be in the ground long
+after its coins stop mattering — **the first real answer this project has had to "why would I ever
+plant a Daisy again."** That question has been open since the AdVenture Capitalist diagnosis, and
+neither verbs, mutations, mastery nor orders answered it.
+
+**`trait.value` became the ceiling rather than the current value.** A one-star creature gives a fifth.
+This was chosen over authoring five values per creature because it keeps a creature one data row, and
+the listed number stays the promise rather than the reality.
+
+**The growth check loops.** A long absence can bank enough for more than one star, and granting a
+single level per harvest would silently swallow the rest — the same class of bug as a mutation roll
+that never fires.
+
+**Stars, not the word "level."** Five pips under a name say how grown something is at a glance, which
+is what the owner asked for and is also the right call for a game read at arm's length.
+
+*Rejected: an inventory of duplicate creatures.* It is closer to the literal merge fiction, but it
+adds a management layer, a second collection surface and a whole new save shape for a feeling the
+escalating threshold already delivers.
+
+**A real bug the change exposed.** The board sizes itself to the stage, so on a taller viewport it grew
+*down over* the creature yard and put Pip on top of a plot — precisely the thing
+[22-creatures.md](22-creatures.md) says must never happen, since a creature on a plot reads as
+something to harvest. The yard's height is now reserved as `padding-bottom` on `.stage` and
+`sizeGarden()` subtracts it, so they stay separate at every screen size. Found by looking at a
+screenshot, not by a test; the suite cannot see layout.
+
+---
+
 ## 2026-08-16 — Retracting the trait-collision rule, and only tending pets on screen
 
 **A correction to an entry written the same day.** That entry said a creature trait must not share an

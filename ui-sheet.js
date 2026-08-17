@@ -473,6 +473,15 @@
   /* Every creature in the game, home or not. A creature you have not met is a
      named silhouette with its hint showing, because a locked thing you can see
      is a goal and a missing one is nothing. */
+  /* Stars, not the word "level" — a glance should say how grown a creature is. */
+  function critterStars(level) {
+    let out = '';
+    for (let i = 1; i <= CREATURE_STARS; i += 1) {
+      out += `<span class="cr-star${i <= level ? '' : ' off'}">${Icons.get('star')}</span>`;
+    }
+    return `<span class="critter-stars" aria-label="${level} of ${CREATURE_STARS} stars">${out}</span>`;
+  }
+
   function critterRows() {
     return CREATURES.map((def) => {
       const home = Game.critterHere(def.id);
@@ -489,17 +498,30 @@
             <span class="critter-who">${def.name} <em>· ${def.species}</em></span>
             <span class="critter-note">${def.hint}</span>
             <span class="critter-note">${Math.min(have, want)} / ${want} ${seed ? seed.name : ''} harvested</span>
+            ${trait ? `<span class="critter-trait">${Icons.get(trait.icon)}<b>${trait.name}:</b> ${
+              (trait.maxDesc || trait.desc)(def.trait.value)}</span>` : ''}
           </span>
         </div>`;
       }
 
+      const level = Game.critterLevel(def.id);
+      const goal = Game.critterGoal(def.id);
+      const now = trait ? Game.critterTraitAt(def, level) : 0;
       const canTend = tending || Game.habitatFree() > 0;
+      const grow = goal
+        ? `<span class="critter-grow">
+             <i style="transform:scaleX(${Math.min(1, goal.have / goal.qty).toFixed(3)})"></i>
+             <span>${fmt(Math.min(goal.have, goal.qty))} / ${fmt(goal.qty)} ${seed ? seed.name : ''} to ★${goal.level}</span>
+           </span>`
+        : '<span class="critter-note">Fully grown.</span>';
+
       return `<div class="critter-row${tending ? ' tending' : ''}">
         <span class="critter-face">${Critters.draw(def)}</span>
         <span class="critter-copy">
-          <span class="critter-who">${def.name} <em>· ${def.species}</em></span>
+          <span class="critter-who">${def.name} <em>· ${def.species}</em>${critterStars(level)}</span>
           <span class="critter-note">${def.about}</span>
-          ${trait ? `<span class="critter-trait">${Icons.get(trait.icon)}<b>${trait.name}:</b> ${trait.desc(def.trait.value)}</span>` : ''}
+          ${trait ? `<span class="critter-trait">${Icons.get(trait.icon)}<b>${trait.name}:</b> ${trait.desc(now)}</span>` : ''}
+          ${grow}
         </span>
         <button class="critter-toggle" data-tend="${def.id}" data-on="${tending ? '1' : '0'}"
           ${canTend ? '' : 'disabled'}>${tending ? 'Tending' : 'Resting'}</button>

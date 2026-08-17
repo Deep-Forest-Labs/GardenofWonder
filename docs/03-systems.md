@@ -702,6 +702,12 @@ keepsakes on a slow clock.
 - **A creature is a character first and a mechanic a distant second** — a sim-test asserts every one
   has a name, a species, a hint, a line about itself and three moods of dialogue.
 
+**A creature is raised, not found.** It arrives at one star carrying a fifth of its trait and grows to
+five, and **the duplicate that raises it comes from the same bloom that attracted it** at an
+escalating count — Pip needs 5 / 15 / 45 / 135 / 405 lifetime Bluebells. That is what gives a low-tier
+seed a reason to stay in the ground after its coins stop mattering. Stars show as stars, the Almanac
+row carries a bar to the next one, and the creature's glow brightens as it grows.
+
 **Creatures carry a trait, and only a few tend at once.** Habitat slots open at levels 1, 8, 14 and
 20; every creature that has moved in stays visible in the garden, but only a *tending* one applies its
 trait, and a tending creature wears a leaf badge. Having more creatures than slots is what makes the

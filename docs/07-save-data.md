@@ -315,6 +315,9 @@ The backfill is defensive in two ways that matter:
 An entry without `since` is treated as absent, so a half-written record cannot resurrect a creature
 that never actually arrived.
 
+`level` (added with stars) is clamped to `1..CREATURE_STARS`, and **an absent value comes back as 1,
+not 0** — a save from before stars is a creature the player already earned.
+
 `tending` (added with traits) has two rules that matter:
 
 - **Absent means "tend it", not "off".** A save written before traits existed must come back working
