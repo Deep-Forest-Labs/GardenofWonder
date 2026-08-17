@@ -5,6 +5,58 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-16 — Eight named pairs, and slots moved earlier so they can be found
+
+**Built:** eight pairs, their eight consumers, a Companions block in the Almanac, a discovery banner,
+and 35 new assertions. Drafted on paper first and owner-approved before a line was written, which is
+the right order for content this cheap to author and this easy to get wrong.
+
+**The problem pairs solve:** six creatures and three slots is 20 trios, and without pairs the answer
+is fixed — pick the three biggest numbers. A loadout that has one correct answer is a ranking, not a
+decision.
+
+**Two perfect trios, deliberately.** Pip + Luna + Ember lights Nightbloom, Lantern in the Rain and The
+Long Watch — a *night-and-away* build. Thistle + Bramble + Bumble lights The Hedgerow, Jar of Odds and
+Ends and The Delivery Round — a *finds-and-gems* build. **Neither dominates; they reward different
+lives**, which is the property to protect as the roster grows.
+
+**No pair touches the yield pool**, and a sim-test asserts a full loadout never changes
+`critterPayoutMult()`. Eight pairs quietly joining the harvest product would be a multiplier stack
+wearing eight names — the exact thing the pool rule exists to stop.
+
+**Every creature sits in at least two pairs**, asserted. A creature appearing in none would be
+strictly worse than the rest the moment pairs existed, and the whole roster would collapse to five.
+
+**Habitat slots moved from 1 / 8 / 14 / 20 to 1 / 5 / 10 / 16**, at the owner's call. Pairs need two
+slots to exist at all, so at the old spacing a player could not form one until level 8 or hold two
+until 14. **Discovering the most interesting mechanic in the system late is the same as not having
+it.**
+
+**Nightbloom was toned down before shipping, also at the owner's call.** Upgrading Dewkissed (×2) to
+Gilded (×10) is a 5× jump on that harvest, so it became a coin flip rather than a certainty, and
+`nightbloomCap` stops it ever producing the top tier. **The game's biggest moment should be found, not
+engineered** — the same principle that keeps Wonderfall unpriced.
+
+**Pairs are binary, and categorical.** Both out and it is on; no scaling with stars, because a bonus
+you cannot tell is active is not a bonus. And every effect is a different *thing happening* rather
+than "+X% more" — "a mutation at night comes in one tier higher" is a pair, "+15% mutation chance" is
+just Pip again, louder.
+
+**Two implementations are not where you would guess, and are worth knowing.** Night Errand **banks a
+rarity floor** in `state.luckyPacks` rather than tagging a pack, because `state.packs` is a count and
+always has been; `openPack()` spends one floor on its first card. And Nightbloom is applied at **both**
+mutation roll sites — the live one and the gem-skip path — because applying it at one would make it
+silently inconsistent depending on how the plant finished.
+
+**Unformed pairs show both portraits with the effect hidden.** A locked thing you can see is a goal; a
+missing one is nothing — the same rule the seed picker already follows. It also tells the player
+exactly which creature to go and find.
+
+**Every pair is tested on and off.** The "off" half matters more: a pair that is silently always on is
+indistinguishable from a buff nobody chose, and nothing about the panel would look wrong.
+
+---
+
 ## 2026-08-16 — Five more creatures, and a feature vocabulary instead of five drawings
 
 **Built:** Thistle, Bramble, Luna, Ember and Bumble, their five traits and five consumers, and the art

@@ -239,9 +239,10 @@ as one piece rather than discovering it halfway through.
 **The habitat direction is live and one creature deep.** Pip works end to end — arrival, living on
 the lawn, petting, keepsakes, save. The obvious next pieces, in order:
 
-1. **Named synergy pairs.** Two specific creatures both tending unlock a third, named effect —
-   Cookie Clicker ships 36 of these and each is one data row. This is what stops a loadout being
-   "pick the three strongest" and is the highest-value addition once there are pets to pair.
+1. **More pairs, or a seventh creature.** Eight pairs exist of a possible fifteen, so there is room
+   to author more without touching code. Any new one must stay off the `yield` pool and stay
+   categorical rather than "+X% more"; the suite enforces both, plus that every creature sits in at
+   least two pairs.
 3. **A den or farmhouse for resting creatures.** Resting pets now leave the screen, so they need
    somewhere to *be* — visit them, feed them, and swap the loadout there rather than in a list row.
    The owner's idea, and a much better surface than the Almanac block currently standing in for it.

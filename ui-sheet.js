@@ -482,6 +482,29 @@
     return `<span class="critter-stars" aria-label="${level} of ${CREATURE_STARS} stars">${out}</span>`;
   }
 
+  /* Unformed pairs show both portraits with the effect hidden — a locked thing you
+     can see is a goal, a missing one is nothing. Same rule as the seed picker. */
+  function pairRows() {
+    return CREATURE_PAIRS.map((pair) => {
+      const on = Game.pairActive(pair.id);
+      const seen = S.pairsSeen.indexOf(pair.id) !== -1;
+      const faces = pair.of.map((id) => {
+        const def = Game.critterById(id);
+        const home = Game.critterHere(id);
+        return `<span class="pair-face${home ? '' : ' unmet'}" title="${def.name}">${Critters.draw(def)}</span>`;
+      }).join('');
+      const names = pair.of.map((id) => Game.critterById(id).name).join(' + ');
+      return `<div class="pair-row${on ? ' on' : ''}${seen ? '' : ' dim'}">
+        <span class="pair-faces">${faces}</span>
+        <span class="pair-copy">
+          <span class="pair-name">${seen ? pair.name : '???'}${on ? '<em>active</em>' : ''}</span>
+          <span class="pair-note">${seen ? pair.desc : 'Have both of them tending to find out.'}</span>
+          <span class="pair-who">${names}</span>
+        </span>
+      </div>`;
+    }).join('');
+  }
+
   function critterRows() {
     return CREATURES.map((def) => {
       const home = Game.critterHere(def.id);
@@ -606,6 +629,12 @@
         <p class="stat-note">${Game.habitatUsed()} of ${Game.habitatSlots()} tending${
           Game.habitatFree() > 0 ? '' : ' — rest one to swap another in'}</p>
         ${critterRows()}
+      </div>
+      <div class="stat-block">
+        <h3>${Icons.get('clover')} Companions</h3>
+        <p class="stat-note">${S.pairsSeen.length} of ${CREATURE_PAIRS.length} found${
+          Game.activePairs().length ? ` · ${Game.activePairs().length} active now` : ''}</p>
+        ${pairRows()}
       </div>
       <div class="stat-block">
         <h3>${Icons.get('fist')} Tap Power</h3>

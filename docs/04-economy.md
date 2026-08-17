@@ -184,7 +184,15 @@ cycle, so ×1.3 at night is ≈+10% on average. That is the shape any future yie
 nominally large, structurally bounded by something the player does not control. Four unbounded +25%
 yield traits would be 2.44× on top of mastery, verbs, rarity and mutations.
 
-Habitat slots open at levels **1, 8, 14, 20**, so a player holds at most four tending creatures.
+Habitat slots open at levels **1, 5, 10, 16**, so a player holds at most four tending creatures.
+Moved earlier from 1 / 8 / 14 / 20 because pairs need two slots to exist and were otherwise
+undiscoverable until level 8.
+
+**Eight named pairs** in `CREATURE_PAIRS`, tuned in `PAIR_TUNING`. **None of them touches the yield
+pool** — every effect is a chance, a duration, a cap or an upgrade-to-a-roll, and a sim-test asserts a
+full loadout never changes the harvest multiplier. `nightbloomChance` (0.5) and `nightbloomCap` (3)
+are the two to watch: upgrading Dewkissed to Gilded is a 5× jump on that harvest, so it is a coin
+flip and can never reach the top tier.
 
 **A creature arrives at one star and carries a fifth of its trait**, climbing to the listed value at
 five. `CREATURE_STARS` is 5 and `trait.value` is the ceiling, so a one-star Pip is +0.05. The

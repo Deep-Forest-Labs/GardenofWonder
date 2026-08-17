@@ -568,7 +568,7 @@ const CREATURE_TRAITS = {
 
 /* How many creatures can tend at once. More attracted than slots is the whole
    point — the choice is what makes them strategy rather than a checklist. */
-const HABITAT_SLOT_LEVELS = [1, 8, 14, 20];
+const HABITAT_SLOT_LEVELS = [1, 5, 10, 16];
 
 /* Stars a creature can reach. A creature arrives at one star with a fifth of its
    trait and grows to full — the point of a pet is that you raise it, and one that
@@ -579,6 +579,73 @@ const HABITAT_SLOT_LEVELS = [1, 8, 14, 20];
    low-tier seed worth planting forever, which is the first real answer this game
    has had to "why would I ever plant a Daisy again." */
 const CREATURE_STARS = 5;
+
+/* Named pairs. Two specific creatures tending together unlock a third thing that
+   neither does alone — Cookie Clicker ships 36 of these and each is one row.
+
+   Four rules, and the first two are the load-bearing ones:
+
+   1. NOTHING here touches the yield pool. Every effect is a chance, a duration, a
+      cap or an upgrade-to-a-roll. Eight pairs quietly joining the harvest product
+      would be a multiplier stack wearing eight names.
+   2. Categorical, never "+X% more". "A mutation at night comes in one tier higher"
+      is a different thing happening; "+15% mutation chance" is Pip again, louder,
+      and that is what turns a loadout into a ranking.
+   3. Every creature sits in at least two pairs, so no creature is ever strictly a
+      bench-warmer. Asserted.
+   4. Binary. Both out and it is on — a bonus you cannot tell is active is not a
+      bonus, and scaling it with stars would make it unreadable. */
+const CREATURE_PAIRS = [
+  {
+    id: 'nightbloom', name: 'Nightbloom', of: ['pip', 'luna'], icon: 'moon',
+    desc: 'A mutation caught after dark has a 50% chance to come in one tier higher.'
+  },
+  {
+    id: 'lanternrain', name: 'Lantern in the Rain', of: ['pip', 'ember'], icon: 'lantern',
+    desc: 'A sky you call with gems lasts twice as long.'
+  },
+  {
+    id: 'pollination', name: 'Pollination Rounds', of: ['pip', 'bumble'], icon: 'hive',
+    desc: 'Every creature holds five keepsakes instead of three.'
+  },
+  {
+    id: 'longwatch', name: 'The Long Watch', of: ['luna', 'ember'], icon: 'moon',
+    desc: 'The garden earns at full rate for two more hours while you are away.'
+  },
+  {
+    id: 'nighterrand', name: 'Night Errand', of: ['luna', 'bramble'], icon: 'cards',
+    desc: 'A pack found after dark is guaranteed a Rare card or better.'
+  },
+  {
+    id: 'hedgerow', name: 'The Hedgerow', of: ['thistle', 'bramble'], icon: 'gem',
+    desc: 'A foraged pack turns up with gems tucked inside it.'
+  },
+  {
+    id: 'oddsandends', name: 'Jar of Odds and Ends', of: ['thistle', 'bumble'], icon: 'gem',
+    desc: 'Thistle\u2019s keepsakes pay double gems.'
+  },
+  {
+    id: 'deliveryround', name: 'The Delivery Round', of: ['bramble', 'bumble'], icon: 'gift',
+    desc: 'A keepsake you collect may turn out to be a card pack instead.'
+  }
+];
+
+/* Tuning for the pairs above, in one place so a balance pass is one edit.
+
+   `nightbloomChance` and `nightbloomCap` are the two to watch. Upgrading Dewkissed
+   to Gilded is a 5x jump on that harvest, so it is a coin flip rather than a
+   certainty — and it can never produce the top tier, because the game's biggest
+   moment should be found rather than engineered. */
+const PAIR_TUNING = {
+  nightbloomChance: 0.5,
+  nightbloomCap: 3,        // may not upgrade past Prismatic
+  lanternRainMult: 2,
+  pollinationCap: 5,
+  longWatchHours: 2,
+  hedgerowGems: 3,
+  oddsAndEndsMult: 2,
+  deliveryChance: 0.2
+};
 
 const CREATURES = [
   {

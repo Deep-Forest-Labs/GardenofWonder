@@ -1,8 +1,8 @@
 # Creatures
 
-**Status: built 2026-08-16.** **Six creatures**, arrival, living in the garden, petting, keepsakes,
-traits and tending, stars and growth, a habitat block in the Almanac, save, and 96 sim-test
-assertions.
+**Status: built 2026-08-16.** Six creatures, arrival, living in the garden, petting, keepsakes,
+traits and tending, stars and growth, **eight named pairs**, a habitat and companions block in the
+Almanac, save, and 131 sim-test assertions.
 
 This is the first step of the **habitat direction** agreed 2026-08-16. Reasoning in
 [10-decision-log.md](10-decision-log.md).
@@ -121,8 +121,12 @@ Two sim-tests replace the retracted rule, and they guard what actually goes wron
 ### The slot limit is the whole mechanic
 
 ```js
-HABITAT_SLOT_LEVELS = [1, 8, 14, 20]   // slots = how many of these the level has passed
+HABITAT_SLOT_LEVELS = [1, 5, 10, 16]   // slots = how many of these the level has passed
 ```
+
+**Moved earlier on 2026-08-16, from 1 / 8 / 14 / 20.** Pairs are the most interesting thing in the
+system and they need two slots to exist at all — at the old spacing a player could not form a single
+pair until level 8, or hold two until 14. Discovering the mechanic late is the same as not having it.
 
 **Only tending creatures stand in the yard.** Four is the most the lawn holds before it reads as
 clutter, so a resting creature leaves the screen — but it is still home, still in the Almanac roster,
@@ -227,6 +231,72 @@ already sees it.
   existed must come back working; a returning player finding their creature idle with no explanation
   is the same class of harm as taking a seed away. A *deliberate* rest is still respected, and the
   slot trim caps both cases.
+
+## Named pairs
+
+Two specific creatures tending together unlock a third thing neither does alone. Cookie Clicker ships
+36 of these; this game starts with eight, and each is one row of `CREATURE_PAIRS`.
+
+**This is what stops a loadout being a ranking.** With six creatures and three slots there are 20
+trios, and without pairs the answer is fixed — pick the three biggest numbers. With pairs, a trio
+forms up to **three** at once, and the best answer depends on how you play.
+
+| Pair | Both tending | Effect |
+| --- | --- | --- |
+| **Nightbloom** | Pip + Luna | A mutation caught after dark has a 50% chance to come in one tier higher |
+| **Lantern in the Rain** | Pip + Ember | A sky called with gems lasts twice as long |
+| **Pollination Rounds** | Pip + Bumble | Every creature holds five keepsakes instead of three |
+| **The Long Watch** | Luna + Ember | Two more hours at full rate while away |
+| **Night Errand** | Luna + Bramble | A pack found after dark is guaranteed a Rare or better |
+| **The Hedgerow** | Thistle + Bramble | A foraged pack turns up with gems in it |
+| **Jar of Odds and Ends** | Thistle + Bumble | Thistle's keepsakes pay double gems |
+| **The Delivery Round** | Bramble + Bumble | A collected keepsake may turn out to be a card pack |
+
+### Two perfect trios, on purpose
+
+- **Pip + Luna + Ember** lights all three of Nightbloom, Lantern in the Rain and The Long Watch — a
+  *night-and-away* build, for someone who checks in twice a day.
+- **Thistle + Bramble + Bumble** lights The Hedgerow, Jar of Odds and Ends and The Delivery Round — a
+  *finds-and-gems* build, for someone who plays actively.
+
+Neither dominates. They reward **different lives**, which is the property worth protecting as the
+roster grows.
+
+### The four rules
+
+1. **No pair touches the `yield` pool.** Every effect is a chance, a duration, a cap or an
+   upgrade-to-a-roll. Eight pairs quietly joining the harvest product would be a multiplier stack
+   wearing eight names. A sim-test asserts a full loadout never changes `critterPayoutMult()`.
+2. **Categorical, never "+X% more."** "A mutation at night comes in one tier higher" is a different
+   thing happening; "+15% mutation chance" is Pip again, louder.
+3. **Every creature sits in at least two pairs**, asserted — otherwise a creature that appeared in
+   none would be strictly worse than the rest the moment pairs existed.
+4. **Binary.** Both out and it is on. A bonus you cannot tell is active is not a bonus, and scaling
+   it with stars would make it unreadable.
+
+### Nightbloom is the one to watch
+
+Upgrading Dewkissed (×2) to Gilded (×10) is a **5× jump on that harvest**, so it is deliberately a
+coin flip rather than a certainty, and `nightbloomCap` stops it ever producing the top tier — **the
+game's biggest moment should be found, not engineered**, the same principle that keeps Wonderfall
+unpriced in [03-systems.md](03-systems.md#gems-where-they-come-from-and-what-they-buy). Both numbers
+live in `PAIR_TUNING`. If the economy runs hot, this is the first dial.
+
+### Where each pair lands
+
+Two are worth knowing because they are not where you would guess:
+
+- **Night Errand banks a rarity floor** in `state.luckyPacks` rather than tagging the pack, because
+  `state.packs` is a count and always has been. `openPack()` spends one floor on its first card.
+- **Nightbloom is applied at both mutation roll sites** — the live one and the skip path. Applying it
+  at one would make it silently inconsistent.
+
+### Discovery
+
+The Almanac's **Companions** block lists all eight. A pair you have formed is named with its effect;
+one you have not shows **both portraits with the effect hidden** — a locked thing you can see is a
+goal, a missing one is nothing. `state.pairsSeen` records the first forming, which fires a banner
+once and never again.
 
 ## Where they live
 

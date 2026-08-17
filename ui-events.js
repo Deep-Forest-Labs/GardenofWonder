@@ -349,6 +349,19 @@
     setTimeout(() => UI.sayText(UI.critterLine(def, 'pet'), true), 800);
   });
 
+  /* Forming a pair for the first time is a discovery, so it gets the garden's
+     attention once and never again. */
+  Game.on('pair', ({ pair, first }) => {
+    if (!first) return;
+    const c = FX.centerOf(el.garden);
+    FX.confetti(c.x, c.y, 24);
+    FX.ring(c.x, c.y, '#8ce99a', 0.5, 130);
+    Sound.play('quest');
+    FX.haptic([12, 34, 16]);
+    UI.faceReact('wow');
+    UI.showBanner(pair.name, pair.desc, 3000);
+  });
+
   Game.on('almanac', ({ found, milestones }) => {
     const c = FX.centerOf(el.questStrip);
     FX.coins(c.x, c.y, 9);

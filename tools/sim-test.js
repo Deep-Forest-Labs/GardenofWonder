@@ -20,7 +20,7 @@ globalThis.localStorage = {
 /* The game files are plain scripts that declare globals, so evaluate them and
    then re-export what they defined onto globalThis. */
 const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
-  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'flowerValue', 'Game'];
+  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'CREATURE_PAIRS', 'PAIR_TUNING', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -2631,6 +2631,192 @@ restAll();
   restAll();
   check('and it goes back when the helper rests', G.keepsakesWaiting('pip') === 0);
 })();
+
+/* Every pair, proved on and proved off. The "off" half matters more than the
+   "on" half — a pair that is silently always on is indistinguishable from a
+   buff nobody chose. */
+group('named pairs are on only when both are tending');
+G.reset();
+S.level = 20;
+CREATURES.forEach((c) => bring(c.id));
+restAll();
+check('nothing is active with everyone resting', G.activePairs().length === 0);
+CREATURE_PAIRS.forEach((pair) => {
+  restAll();
+  S.critters[pair.of[0]].tending = true;
+  const half = G.pairActive(pair.id);
+  S.critters[pair.of[1]].tending = true;
+  const both = G.pairActive(pair.id);
+  check(`${pair.name} needs both`, !half && both);
+});
+restAll();
+
+group('every pair changes something it claims to');
+const PT = PAIR_TUNING;
+
+// Nightbloom — upgrades a night catch, never past the cap
+(() => {
+  const on = (v) => { restAll(); if (v) { S.critters.pip.tending = true; S.critters.luna.tending = true; } };
+  const rng = Math.random;
+  Math.random = () => 0;                      // always take the upgrade roll
+  const nightAt = (() => {
+    // find an epoch second that is night, so the test does not depend on when it runs
+    let t = G.nowSeconds();
+    for (let i = 0; i < 4000; i += 1) { if (G.dayPhase(t) && G.isNight(t)) break; t += 60; }
+    return t;
+  })();
+  on(true);
+  const wasNight = G.isNight();
+  const up = wasNight ? G.nightbloomUpgrade('dewkissed') : 'skipped';
+  check('a night catch is upgraded a tier',
+    !wasNight || G.mutationRank(up) === G.mutationRank('dewkissed') + 1, `got ${up}`);
+  const top = Object.keys(DATA.mutations).find((k) => DATA.mutations[k].rank === PT.nightbloomCap);
+  check('and never past the cap',
+    !wasNight || G.nightbloomUpgrade(top) === top, 'the top tier must be found, not engineered');
+  on(false);
+  check('and nothing without the pair', G.nightbloomUpgrade('dewkissed') === 'dewkissed');
+  Math.random = rng;
+})();
+
+// Lantern in the Rain — a called sky lasts twice as long
+(() => {
+  const call = () => {
+    S.weatherCall = null;
+    S.gems = 9999;
+    const id = Object.keys(DATA.weatherCall.prices)[0];
+    G.callWeather(id);
+    return S.weatherCall.until - S.weatherCall.from;
+  };
+  restAll();
+  const plain = call();
+  restAll();
+  S.critters.pip.tending = true;
+  S.critters.ember.tending = true;
+  const paired = call();
+  check('a called sky lasts longer', paired === plain * PT.lanternRainMult, `${plain} -> ${paired}`);
+  S.weatherCall = null;
+  restAll();
+})();
+
+// Pollination Rounds — everyone holds five
+(() => {
+  const pipK = G.critterById('pip').keepsake;
+  S.critters.pip.since = G.nowSeconds() - pipK.every * 99;
+  S.critters.pip.fed = 0;
+  S.critters.pip.gifts = 0;
+  restAll();
+  check('the normal cap holds', G.keepsakesWaiting('pip') === pipK.cap);
+  S.critters.pip.tending = true;
+  S.critters.bumble.tending = true;
+  check('the pair raises the cap', G.keepsakesWaiting('pip') === PT.pollinationCap);
+  restAll();
+})();
+
+// The Long Watch — two more hours away
+(() => {
+  restAll();
+  const plain = G.offlineHours();
+  S.critters.luna.tending = true;
+  S.critters.ember.tending = true;
+  check('two more hours away', G.offlineHours() === plain + PT.longWatchHours);
+  S.upgrades.offlineHours = 99;
+  check('and the cap moves with it, not past it',
+    G.offlineHours() === DATA.offline.maxHours + PT.longWatchHours);
+  S.upgrades.offlineHours = 0;
+  restAll();
+})();
+
+// Night Errand — a banked rarity floor is spent on the next pack
+(() => {
+  S.luckyPacks = 1;
+  S.cards = {};
+  S.packs = 1;
+  const rng = Math.random;
+  Math.random = () => 0.99;                   // would otherwise draw the commonest
+  const opened = G.openPack();
+  Math.random = rng;
+  const floorIdx = CARD_RARITIES.findIndex((r) => r.key === 'rare');
+  const gotIdx = CARD_RARITIES.findIndex((r) => r.key === opened.drawn[0].card.rarity);
+  check('a lucky pack opens on Rare or better', gotIdx >= floorIdx,
+    `first card was ${opened.drawn[0].card.rarity}`);
+  check('and the floor is spent', S.luckyPacks === 0);
+})();
+
+// The Hedgerow and The Delivery Round, and Jar of Odds and Ends
+(() => {
+  restAll();
+  S.critters.thistle.tending = true;
+  S.critters.bumble.tending = true;
+  const tK = G.critterById('thistle').keepsake;
+  S.critters.thistle.since = G.nowSeconds() - tK.every * 99;
+  S.critters.thistle.fed = 0;
+  S.critters.thistle.gifts = 0;
+  const n = G.keepsakesWaiting('thistle');
+  const got = G.collectKeepsakes('thistle');
+  check('Thistle pays double gems', got.doubled && got.gems === (tK.gems || 0) * n * PT.oddsAndEndsMult);
+
+  restAll();
+  S.critters.bramble.tending = true;
+  S.critters.bumble.tending = true;
+  S.critters.pip.since = G.nowSeconds() - G.critterById('pip').keepsake.every * 99;
+  S.critters.pip.fed = 0;
+  S.critters.pip.gifts = 0;
+  const packsBefore = S.packs;
+  const rng2 = Math.random;
+  Math.random = () => 0;                      // every delivery roll lands
+  const got2 = G.collectKeepsakes('pip');
+  Math.random = rng2;
+  check('a keepsake can arrive as a pack', got2.pack > 0 && S.packs > packsBefore);
+  restAll();
+})();
+
+group('a pair is a discovery, recorded once');
+G.reset();
+S.level = 20;
+CREATURES.forEach((c) => bring(c.id));
+restAll();
+S.pairsSeen = [];
+S.critters.pip.tending = true;
+check('one alone discovers nothing', G.notePairs().length === 0);
+G.setTending('luna', true);
+check('forming it records it', S.pairsSeen.indexOf('nightbloom') !== -1);
+check('and it is not recorded twice', G.notePairs().length === 0);
+G.saveNow();
+G.load();
+check('the record survives a save', S.pairsSeen.indexOf('nightbloom') !== -1);
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, pairsSeen: ['nightbloom', 'not_a_real_pair'], luckyPacks: -5
+}));
+G.load();
+check('an unknown pair id is dropped', S.pairsSeen.indexOf('not_a_real_pair') === -1);
+check('a real one is kept', S.pairsSeen.indexOf('nightbloom') !== -1);
+check('a negative lucky-pack count is clamped', S.luckyPacks === 0);
+
+group('the pair table holds its own rules');
+check('every pair names two real creatures', CREATURE_PAIRS.every((p) => (
+  p.of.length === 2 && p.of.every((id) => CREATURES.some((c) => c.id === id))
+)));
+check('no pair pairs a creature with itself', CREATURE_PAIRS.every((p) => p.of[0] !== p.of[1]));
+check('no two pairs use the same couple', (() => {
+  const keys = CREATURE_PAIRS.map((p) => p.of.slice().sort().join('+'));
+  return new Set(keys).size === keys.length;
+})());
+check('every pair has a name and a description', CREATURE_PAIRS.every((p) => p.name && p.desc));
+check('ids are unique', new Set(CREATURE_PAIRS.map((p) => p.id)).size === CREATURE_PAIRS.length);
+/* No creature may be a bench-warmer: if one appeared in no pair, it would be
+   strictly worse than the others the moment pairs exist. */
+check('every creature sits in at least two pairs', CREATURES.every((c) => (
+  CREATURE_PAIRS.filter((p) => p.of.indexOf(c.id) !== -1).length >= 2
+)));
+/* Pairs must stay off the harvest product. Eight of them joining it would be a
+   multiplier stack wearing eight names. */
+check('a full loadout never multiplies the harvest', (() => {
+  CREATURES.forEach((c) => { if (S.critters[c.id]) S.critters[c.id].tending = true; });
+  const withAll = G.critterPayoutMult();
+  restAll();
+  const withNone = G.critterPayoutMult();
+  return withAll === withNone || !G.isNight();
+})(), 'only a creature trait may touch payout, never a pair');
 
 group('the roster is paced across the seed ladder');
 check('every creature comes for a different bloom', (() => {

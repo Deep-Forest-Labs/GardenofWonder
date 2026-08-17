@@ -315,6 +315,10 @@ The backfill is defensive in two ways that matter:
 An entry without `since` is treated as absent, so a half-written record cannot resurrect a creature
 that never actually arrived.
 
+`state.pairsSeen` and `state.luckyPacks` are top-level, added with named pairs. `pairsSeen` filters
+out any id no longer in `CREATURE_PAIRS`, so retiring a pair cannot leave a save holding a ghost, and
+`luckyPacks` is clamped at zero.
+
 `level` (added with stars) is clamped to `1..CREATURE_STARS`, and **an absent value comes back as 1,
 not 0** — a save from before stars is a creature the player already earned.
 

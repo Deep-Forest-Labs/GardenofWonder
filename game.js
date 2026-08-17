@@ -44,6 +44,8 @@ const Game = (() => {
       goods: {},
       bench: { cells: Array(BENCH.cols * BENCH.cols).fill(null), side: BENCH.startSide, basket: [], stock: {} },
       critters: {},
+      pairsSeen: [],
+      luckyPacks: 0,
       prefs: { sfx: true, music: false },
       seen: { intro: false, plot: false, apiary: false },
       quests: { active: [], done: [], daily: { id: null, progress: 0, day: '', claimed: false } },
@@ -167,6 +169,9 @@ const Game = (() => {
       state.flowers = parsed.flowers && typeof parsed.flowers === 'object' ? parsed.flowers : {};
       state.craft = Array.isArray(parsed.craft) ? parsed.craft : [];
       state.goods = parsed.goods && typeof parsed.goods === 'object' ? parsed.goods : {};
+      state.pairsSeen = (Array.isArray(parsed.pairsSeen) ? parsed.pairsSeen : [])
+        .filter((id) => CREATURE_PAIRS.some((p) => p.id === id));
+      state.luckyPacks = Math.max(0, Number(parsed.luckyPacks) || 0);
       {
         const c = parsed.critters && typeof parsed.critters === 'object' ? parsed.critters : {};
         state.critters = {};
@@ -446,6 +451,19 @@ const Game = (() => {
     return t < DAY.dawn || t >= DAY.dusk;
   };
 
+  /** Nightbloom. A mutation caught after dark may come in one tier higher — a coin
+      flip rather than a certainty, because Dewkissed to Gilded is a 5x jump on that
+      harvest. Capped below the top tier: the game's biggest moment should be found,
+      never engineered, which is the same principle that keeps Wonderfall unpriced. */
+  function nightbloomUpgrade(id) {
+    if (!id || !pairActive('nightbloom') || !isNight()) return id;
+    if (Math.random() >= PAIR_TUNING.nightbloomChance) return id;
+    const rank = mutationRank(id);
+    if (rank >= PAIR_TUNING.nightbloomCap) return id;
+    const next = Object.keys(DATA.mutations).find((k) => DATA.mutations[k].rank === rank + 1);
+    return next || id;
+  }
+
   const mutationDef = (id) => (id ? DATA.mutations[id] : null) || null;
   const mutationRank = (id) => (mutationDef(id) ? mutationDef(id).rank : 0);
   const mutationMult = (id) => (mutationDef(id) ? mutationDef(id).mult : 1);
@@ -478,8 +496,11 @@ const Game = (() => {
       cell.mutateAt = 0;
       if (!w.mutation) return;
       if (Math.random() >= w.catch * catchMultiplier(idx)) return;
-      cell.mutation = w.mutation;
-      caught.push({ idx, mutation: w.mutation, weather: w, seed: seedById(cell.seed) });
+      cell.mutation = nightbloomUpgrade(w.mutation);
+      caught.push({
+        idx, mutation: cell.mutation, weather: w, seed: seedById(cell.seed),
+        upgraded: cell.mutation !== w.mutation
+      });
     });
     return caught;
   }
@@ -544,7 +565,8 @@ const Game = (() => {
     if (state.gems < price) return null;
     state.gems -= price;
     const from = nowSeconds();
-    const until = from + DATA.weatherCall.minutes * 60;
+    const until = from + DATA.weatherCall.minutes * 60
+      * (pairActive('lanternrain') ? PAIR_TUNING.lanternRainMult : 1);
     state.weatherCall = { id, from, until };
     let pulled = 0;
     state.grid.forEach((cell) => {
@@ -579,8 +601,13 @@ const Game = (() => {
       const w = weatherAt(cell.mutateAt);
       cell.mutateAt = 0;
       if (w.mutation && Math.random() < w.catch * catchMultiplier(idx)) {
-        cell.mutation = w.mutation;
-        emit('mutate', { caught: [{ idx, mutation: w.mutation, weather: w, seed: seedById(cell.seed) }] });
+        cell.mutation = nightbloomUpgrade(w.mutation);
+        emit('mutate', {
+          caught: [{
+            idx, mutation: cell.mutation, weather: w, seed: seedById(cell.seed),
+            upgraded: cell.mutation !== w.mutation
+          }]
+        });
       }
     }
     /* Backdate the planting rather than shrinking the grow time: a plant skipped the instant it
@@ -598,8 +625,9 @@ const Game = (() => {
       * (1 + critterTrait('offlineRate'))
   );
   const offlineHours = () => Math.min(
-    DATA.offline.maxHours,
+    DATA.offline.maxHours + (pairActive('longwatch') ? PAIR_TUNING.longWatchHours : 0),
     DATA.offline.baseHours + state.upgrades.offlineHours * DATA.offline.hoursPerLevel
+      + (pairActive('longwatch') ? PAIR_TUNING.longWatchHours : 0)
   );
 
   /* What the garden actually produces on its own, in coins per second.
@@ -708,11 +736,15 @@ const Game = (() => {
 
   /* Weighted by rarity, then biased toward cards the player is missing — an album that keeps
      handing back duplicates nobody can yet spend is the fastest way to make collecting a chore. */
-  function drawCard() {
-    const total = CARD_RARITIES.reduce((a, r) => a + r.w, 0);
+  const RARITY_FLOOR = 'rare';
+
+  function drawCard(floor) {
+    const min = floor ? CARD_RARITIES.findIndex((r) => r.key === floor) : 0;
+    const pool0 = min > 0 ? CARD_RARITIES.slice(min) : CARD_RARITIES;
+    const total = pool0.reduce((a, r) => a + r.w, 0);
     let t = Math.random() * total;
-    let rarity = CARD_RARITIES[0];
-    for (const r of CARD_RARITIES) { t -= r.w; if (t <= 0) { rarity = r; break; } }
+    let rarity = pool0[0];
+    for (const r of pool0) { t -= r.w; if (t <= 0) { rarity = r; break; } }
     const pool = [];
     ALBUM.sets.forEach((set) => set.cards.forEach((c) => { if (c.rarity === rarity.key) pool.push(c); }));
     if (!pool.length) return null;
@@ -725,10 +757,14 @@ const Game = (() => {
   function openPack() {
     if (state.packs <= 0) return null;
     state.packs -= 1;
+    // A pack the fox found after dark spends one banked rarity floor on its first
+    // card. Banked rather than tagged, because packs are a count, not instances.
+    const lucky = state.luckyPacks > 0;
+    if (lucky) state.luckyPacks -= 1;
     const drawn = [];
     const completedSets = [];
     for (let i = 0; i < ALBUM.packSize; i += 1) {
-      const card = drawCard();
+      const card = drawCard(lucky && i === 0 ? RARITY_FLOOR : null);
       if (!card) continue;
       const set = setOfCard(card.id);
       const wasComplete = setComplete(set.id);
@@ -1574,7 +1610,19 @@ const Game = (() => {
     // this can land on the one just picked.
     const foragerOdds = critterTrait('packLuck');
     const foraged = foragerOdds > 0 ? rollCardPack(foragerOdds) : null;
-    if (foraged) payload.cardPack = foraged;
+    if (foraged) {
+      payload.cardPack = foraged;
+      // Night Errand banks a rarity floor rather than tagging the pack itself,
+      // because state.packs is a count and always has been.
+      if (pairActive('nighterrand') && isNight()) {
+        state.luckyPacks += 1;
+        payload.luckyPack = true;
+      }
+      if (pairActive('hedgerow')) {
+        state.gems += PAIR_TUNING.hedgerowGems;
+        payload.hedgerowGems = PAIR_TUNING.hedgerowGems;
+      }
+    }
     if (almanac.first) noteQuest('discover', sdef.id, 1);
     // After recordHarvest, so the bloom that meets the threshold is the one
     // that brings the creature rather than the one after it.
@@ -1708,8 +1756,36 @@ const Game = (() => {
     if (habitatFree() <= 0) return false;
     home.tending = true;
     save();
+    notePairs();
     emit('panels');
     return true;
+  }
+
+  /* ---- named pairs ----
+     Two specific creatures tending together unlock a third thing neither does
+     alone. Binary on purpose: a bonus you cannot tell is active is not a bonus. */
+
+  const pairById = (id) => CREATURE_PAIRS.find((p) => p.id === id) || null;
+  const pairActive = (id) => {
+    const p = pairById(id);
+    return Boolean(p) && p.of.every((c) => critterTending(c));
+  };
+  const activePairs = () => CREATURE_PAIRS.filter((p) => pairActive(p.id));
+
+  /** Called wherever tending changes, so a first forming is a moment rather than
+      a number quietly appearing in a panel. */
+  function notePairs() {
+    const found = [];
+    activePairs().forEach((p) => {
+      if (state.pairsSeen.indexOf(p.id) !== -1) return;
+      state.pairsSeen.push(p.id);
+      found.push(p);
+    });
+    if (found.length) {
+      save();
+      found.forEach((p) => emit('pair', { pair: p, first: true }));
+    }
+    return found;
   }
 
   /** Summed value of one trait across every creature currently tending. Reading
@@ -1802,12 +1878,13 @@ const Game = (() => {
     const home = critterHome(id);
     if (!def || !home) return 0;
     const k = def.keepsake;
+    const cap = pairActive('pollination') ? Math.max(k.cap, PAIR_TUNING.pollinationCap) : k.cap;
     const since = home.fed || home.since;
     // Floored at a quarter of the authored wait, so no stack of helpers can turn
     // keepsakes into a tap-to-print button.
     const every = Math.max(k.every / 4, k.every / (1 + critterTrait('keepsakeSpeed')));
     const earned = Math.floor((nowSeconds() - since) / every);
-    return Math.max(0, Math.min(k.cap, home.gifts + earned));
+    return Math.max(0, Math.min(cap, home.gifts + earned));
   }
 
   /** Roll the clock forward without paying out, so a capped creature stops
@@ -1832,16 +1909,25 @@ const Game = (() => {
     if (n <= 0) return null;
     const k = def.keepsake;
     const credits = (k.credits || 0) * n;
-    const gems = (k.gems || 0) * n;
+    const doubled = id === 'thistle' && pairActive('oddsandends');
+    const gems = (k.gems || 0) * n * (doubled ? PAIR_TUNING.oddsAndEndsMult : 1);
     state.credits += credits;
     state.gems += gems;
+    // The Delivery Round: what you picked up turns out to be a pack instead.
+    let pack = 0;
+    if (pairActive('deliveryround')) {
+      for (let i = 0; i < n; i += 1) {
+        if (Math.random() < PAIR_TUNING.deliveryChance) pack += 1;
+      }
+      state.packs += pack;
+    }
     home.gifts = 0;
     home.fed = nowSeconds();
     home.met = true;
     save();
     emit('currency');
-    emit('critter', { def, collected: n, credits, gems });
-    return { def, count: n, credits, gems, name: k.name };
+    emit('critter', { def, collected: n, credits, gems, pack });
+    return { def, count: n, credits, gems, pack, doubled, name: k.name };
   }
 
   /** Tapping a creature is not a currency button — it just reacts. */
@@ -2434,6 +2520,7 @@ const Game = (() => {
     critterById, critterHome, critterHere, crittersHome, critterProgress, critterReady,
     habitatSlots, habitatUsed, habitatFree, critterTending, crittersTending, setTending, critterTrait,
     critterLevel, critterMaxed, critterGoal, critterGoalFor, critterTraitAt, critterPayoutMult,
+    pairById, pairActive, activePairs, notePairs, nightbloomUpgrade,
     checkCritters, keepsakesWaiting, settleCritters, collectKeepsakes, petCritter,
     benchDef, benchTop, benchUnlocked, benchFirstFree, benchEntryTier, benchNeighbours,
     benchGroup, benchMergeOnce, benchAddToBasket, benchPlace, benchBank,

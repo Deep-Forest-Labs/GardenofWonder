@@ -712,6 +712,13 @@ escalating count — Pip needs 5 / 15 / 45 / 135 / 405 lifetime Bluebells. That 
 seed a reason to stay in the ground after its coins stop mattering. Stars show as stars, the Almanac
 row carries a bar to the next one, and the creature's glow brightens as it grows.
 
+**Eight named pairs.** Two specific creatures tending together unlock a third thing neither does
+alone — Nightbloom (Pip + Luna) upgrades a mutation caught after dark, The Long Watch (Luna + Ember)
+adds two hours away, and six more. **This is what stops a loadout being a ranking**: a trio lights up
+to three pairs at once, and two deliberate "perfect trios" reward opposite play patterns — night-and-
+away versus finds-and-gems. **No pair touches the yield pool**, asserted. Listed in the Almanac's
+Companions block, with unformed ones showing both portraits and a hidden effect.
+
 **Creatures carry a trait, and only a few tend at once.** Habitat slots open at levels 1, 8, 14 and
 20; every creature that has moved in stays visible in the garden, but only a *tending* one applies its
 trait, and a tending creature wears a leaf badge. Having more creatures than slots is what makes the
