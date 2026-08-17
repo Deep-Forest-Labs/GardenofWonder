@@ -201,7 +201,12 @@ this audience punishes hardest.
 1,000 impressions, per [17-market-and-positioning.md](17-market-and-positioning.md). That is a
 marketing constraint, not a design one. Loadouts and stats are fine; "RPG" on the store page is not.
 
-*A trait must not share an effect category with a verb.* Verbs own growth, yield, rarity, gems,
+*A trait must not share an effect category with a verb.* **Retracted the same day — see the entry
+above.** They stack, and stacking is the point of the genre; this rule was imported from the verb
+system, where it is correct for a reason that does not carry. Kept here as written because the log
+records what was decided at the time. The reasoning as it stood:
+
+Verbs own growth, yield, rarity, gems,
 density, propagation and night, and a sim-test already asserts no two verbs collide. A trait on one of
 those axes would quietly cancel a verb out and nothing would look broken. **Two new assertions
 enforce it**: no trait may sit on a verb category, and no two creatures may share a trait category —
