@@ -18,8 +18,11 @@ from quests and levels.
 > because of what you plant. **Pip the Grove Spirit** arrives after five lifetime Bluebell harvests,
 > lives on the lawn, reacts when tapped, and leaves keepsakes on a slow clock. **This is the most
 > direct answer the project has found to "why plant this flower":** Pip comes for bluebells and for
-> nothing else. Art is original work in the kodama archetype, not a copy — the game ships
-> commercially. See [22-creatures.md](22-creatures.md) and the top of
+> nothing else. **Creatures carry a trait and only a few tend at once** — habitat slots at levels
+> 1 / 8 / 14 / 20, toggled in the Almanac's *The Habitat* block, with more creatures than slots so
+> which one is out is a real question. **A trait must never sit on an effect category a verb already
+> owns**, and the suite asserts it. Art is original work in the kodama archetype, not a copy — the
+> game ships commercially. See [22-creatures.md](22-creatures.md) and the top of
 > [10-decision-log.md](10-decision-log.md). **The build before this is tagged `v1-bench`** and is
 > recoverable with `git checkout v1-bench`.
 
@@ -237,7 +240,9 @@ as one piece rather than discovering it halfway through.
 the lawn, petting, keepsakes, save. The obvious next pieces, in order:
 
 1. **A second and third creature.** The roster is a data array; a new entry needs no code. A
-   night-only creature is one `attract` field away and `Game.isNight()` already exists.
+   night-only creature is one `attract` field away and `Game.isNight()` already exists. **Each new
+   trait must use an unclaimed category** — free axes are offline rate and duration, keepsake cadence,
+   pack luck and combo decay; a sim-test fails if two creatures share one.
 2. **The creature collection panel** — who has visited, who is missing, what each one likes. This is
    the Completion surface, and Completion is the audience's top motivation. It is the biggest
    missing piece.

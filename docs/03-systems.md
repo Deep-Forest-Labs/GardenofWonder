@@ -702,6 +702,17 @@ keepsakes on a slow clock.
 - **A creature is a character first and a mechanic a distant second** — a sim-test asserts every one
   has a name, a species, a hint, a line about itself and three moods of dialogue.
 
+**Creatures carry a trait, and only a few tend at once.** Habitat slots open at levels 1, 8, 14 and
+20; every creature that has moved in stays visible in the garden, but only a *tending* one applies its
+trait, and a tending creature wears a leaf badge. Having more creatures than slots is what makes the
+roster strategy rather than a checklist. Pip's trait, **Coaxes the Sky**, raises the mutation catch
+chance by 25% through `catchMultiplier()` — the chance, never the payout. Toggle it in the Almanac's
+**The Habitat** block.
+
+**A trait must never sit on an effect category a verb already owns**, and no two creatures may share a
+trait category. Both are asserted, because a collision would quietly cancel a verb out and nothing
+would look wrong.
+
 This is the first piece of the habitat direction, and it is the most direct answer the project has
 found to *why plant this flower*: Pip comes for bluebells and for nothing else.
 

@@ -470,6 +470,43 @@
       ${dailyHtml}`;
   }
 
+  /* Every creature in the game, home or not. A creature you have not met is a
+     named silhouette with its hint showing, because a locked thing you can see
+     is a goal and a missing one is nothing. */
+  function critterRows() {
+    return CREATURES.map((def) => {
+      const home = Game.critterHere(def.id);
+      const tending = Game.critterTending(def.id);
+      const trait = def.trait ? CREATURE_TRAITS[def.trait.id] : null;
+      const seed = Game.seedById(def.attract.seed);
+      const have = Game.critterProgress(def);
+      const want = def.attract.count;
+
+      if (!home) {
+        return `<div class="critter-row dim">
+          <span class="critter-face">${Critters.draw(def)}</span>
+          <span class="critter-copy">
+            <span class="critter-who">${def.name} <em>· ${def.species}</em></span>
+            <span class="critter-note">${def.hint}</span>
+            <span class="critter-note">${Math.min(have, want)} / ${want} ${seed ? seed.name : ''} harvested</span>
+          </span>
+        </div>`;
+      }
+
+      const canTend = tending || Game.habitatFree() > 0;
+      return `<div class="critter-row${tending ? ' tending' : ''}">
+        <span class="critter-face">${Critters.draw(def)}</span>
+        <span class="critter-copy">
+          <span class="critter-who">${def.name} <em>· ${def.species}</em></span>
+          <span class="critter-note">${def.about}</span>
+          ${trait ? `<span class="critter-trait">${Icons.get(trait.icon)}<b>${trait.name}:</b> ${trait.desc(def.trait.value)}</span>` : ''}
+        </span>
+        <button class="critter-toggle" data-tend="${def.id}" data-on="${tending ? '1' : '0'}"
+          ${canTend ? '' : 'disabled'}>${tending ? 'Tending' : 'Resting'}</button>
+      </div>`;
+    }).join('');
+  }
+
   function renderBonuses() {
     const tapMult = (1 + Game.boostVal('tapPower')) * (1 + Game.boostVal('globalCredits'));
     const tapEff = S.tap.power * tapMult * Game.wonderMult();
@@ -541,6 +578,12 @@
       <div class="stat-block">
         <h3>${Icons.get('sprout')} Seed Almanac</h3>
         ${seedRows}
+      </div>
+      <div class="stat-block">
+        <h3>${Icons.get('sparkle')} The Habitat</h3>
+        <p class="stat-note">${Game.habitatUsed()} of ${Game.habitatSlots()} tending${
+          Game.habitatFree() > 0 ? '' : ' — rest one to swap another in'}</p>
+        ${critterRows()}
       </div>
       <div class="stat-block">
         <h3>${Icons.get('fist')} Tap Power</h3>
@@ -890,6 +933,18 @@
   });
 
   el.sheetBody.addEventListener('click', (e) => {
+    /* Its own data attribute rather than data-buy — syncAfford()'s final else
+       treats anything unrecognised as a booster and throws. */
+    const tend = e.target.closest('[data-tend]');
+    if (tend) {
+      const id = tend.dataset.tend;
+      if (Game.setTending(id, !Game.critterTending(id))) {
+        Sound.play('tap');
+        renderSheet(false);
+        UI.renderCritters();
+      }
+      return;
+    }
     const claim = e.target.closest('[data-claim]');
     if (claim && claim.dataset.claim) {
       if (Game.claimQuest(claim.dataset.claim)) Sound.resume();

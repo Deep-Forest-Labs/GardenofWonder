@@ -165,6 +165,25 @@ first thing to cut if the bench runs hot**: measured in the spike, the rarity te
 chain throughput against Commons only. The suite asserts a Daisy cannot out-feed the endgame seed by
 more than 1.35×.
 
+### Creature traits
+
+`CREATURE_TRAITS` and `HABITAT_SLOT_LEVELS` in `data.js`. Design in
+[22-creatures.md](22-creatures.md#traits-and-tending).
+
+| Creature | Trait | Category | Value |
+| --- | --- | --- | --- |
+| Pip | `mutationLuck` — Coaxes the Sky | chance | +0.25 to the catch multiplier |
+
+Habitat slots open at levels **1, 8, 14, 20**, so a player holds at most four tending creatures.
+
+**Traits are a third axis and stay off the yield curve** — `yield === cost × 1.4` still holds. Pip
+raises the mutation **catch chance** and never a payout, so the 20–30% mutation income target stays
+computable: at one tending Pip the catch multiplier is 1.25, which lifts the mutation share by
+roughly a quarter of itself, not by 25% of total income.
+
+**Two rules the suite enforces**, because breaking either is invisible until much later: no trait may
+sit on an effect category a verb already owns, and no two creatures may share a trait category.
+
 ### Verb tuning
 
 Verbs are a second axis and are deliberately **not** on the yield curve — see

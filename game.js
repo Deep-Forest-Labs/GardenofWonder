@@ -177,8 +177,21 @@ const Game = (() => {
             since: Number(r.since) || nowSeconds(),
             fed: Number(r.fed) || 0,
             gifts: Math.max(0, Math.min(def.keepsake.cap, Number(r.gifts) || 0)),
-            met: r.met !== false
+            met: r.met !== false,
+            // Absent means "written before tending existed", not "switched off".
+            // A returning player should find their creature working, not idle
+            // with no explanation; the slot trim below caps it either way.
+            tending: r.tending === undefined ? true : Boolean(r.tending)
           };
+        });
+        // A save can carry more tenders than the current level allows — the slot
+        // table can shrink in a balance pass, and a save can be edited. Drop the
+        // overflow rather than handing out effects the game no longer grants.
+        let room = HABITAT_SLOT_LEVELS.filter((lv) => (Number(parsed.level) || 1) >= lv).length;
+        CREATURES.forEach((def) => {
+          const rec = state.critters[def.id];
+          if (!rec || !rec.tending) return;
+          if (room > 0) room -= 1; else rec.tending = false;
         });
       }
       // Nested objects are replaced wholesale by the parsed save, so the bench
@@ -429,8 +442,13 @@ const Game = (() => {
 
   /** Adjacent Beacons make a plot more likely to catch. Stacking raises the chance, never the
       payout, so the income share stays computable however much agency is added later. */
+  /* The one place both mutation roll paths go through, so a creature tending the
+     garden lifts the catch chance everywhere without a second consumer to keep
+     in sync. Raises the CHANCE and never the payout — the income share stays
+     computable, per docs/18-mutations-and-weather.md. */
   function catchMultiplier(idx) {
-    return 1 + neighbourVerbs(idx, 'beacon') * VT().beaconCatchBonus;
+    return 1 + neighbourVerbs(idx, 'beacon') * VT().beaconCatchBonus
+      + critterTrait('mutationLuck');
   }
 
   /* Every plant gets exactly ONE mutation roll, at a moment chosen when it is sown, against the
@@ -1643,6 +1661,44 @@ const Game = (() => {
   const critterHere = (id) => Boolean(state.critters[id]);
   const crittersHome = () => CREATURES.filter((c) => critterHere(c.id));
 
+  /* ---- tending ----
+     Every creature that has moved in stays in the garden and stays visible; only
+     a few tend at a time. Nothing is ever taken away, which is what keeps this
+     cosy, but the slot limit is what makes "which one is out" a decision. */
+
+  const habitatSlots = () => HABITAT_SLOT_LEVELS.filter((lv) => state.level >= lv).length;
+  const critterTending = (id) => Boolean(state.critters[id] && state.critters[id].tending);
+  const crittersTending = () => CREATURES.filter((c) => critterTending(c.id));
+  const habitatUsed = () => crittersTending().length;
+  const habitatFree = () => Math.max(0, habitatSlots() - habitatUsed());
+
+  function setTending(id, on) {
+    const home = critterHome(id);
+    if (!home) return false;
+    if (!on) {
+      if (!home.tending) return false;
+      home.tending = false;
+      save();
+      emit('panels');
+      return true;
+    }
+    if (home.tending) return false;
+    if (habitatFree() <= 0) return false;
+    home.tending = true;
+    save();
+    emit('panels');
+    return true;
+  }
+
+  /** Summed value of one trait across every creature currently tending. Reading
+      by trait id rather than by creature is what makes a new creature a data
+      row: add the row, and any consumer already asking for that trait sees it. */
+  function critterTrait(traitId) {
+    return crittersTending().reduce((n, def) => (
+      def.trait && def.trait.id === traitId ? n + (def.trait.value || 0) : n
+    ), 0);
+  }
+
   /** Lifetime harvests of the bloom this creature comes for. Reads `discovered`,
       never `flowers`, so spending a bloom can never send it away again. */
   function critterProgress(def) {
@@ -1657,7 +1713,9 @@ const Game = (() => {
     const arrived = [];
     CREATURES.forEach((def) => {
       if (critterHere(def.id) || !critterReady(def)) return;
-      state.critters[def.id] = { since: nowSeconds(), fed: 0, gifts: 0, met: false };
+      // Tend automatically when there is room: a first creature that did nothing
+      // until the player found a toggle would read as broken.
+      state.critters[def.id] = { since: nowSeconds(), fed: 0, gifts: 0, met: false, tending: habitatFree() > 0 };
       arrived.push(def);
     });
     if (arrived.length) {
@@ -2300,6 +2358,7 @@ const Game = (() => {
     collectHive, collectAllHives, jarsWaiting, honeyTotal, flowerTotal,
     canCraft, startCraft, sell,
     critterById, critterHome, critterHere, crittersHome, critterProgress, critterReady,
+    habitatSlots, habitatUsed, habitatFree, critterTending, crittersTending, setTending, critterTrait,
     checkCritters, keepsakesWaiting, settleCritters, collectKeepsakes, petCritter,
     benchDef, benchTop, benchUnlocked, benchFirstFree, benchEntryTier, benchNeighbours,
     benchGroup, benchMergeOnce, benchAddToBasket, benchPlace, benchBank,

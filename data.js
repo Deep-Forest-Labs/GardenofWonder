@@ -496,6 +496,35 @@ const BENCH = {
 
    `attract.seed` counts LIFETIME harvests via state.discovered, never the
    pantry, so it can never go backwards when flowers are spent. */
+/* What a tending creature does for the garden.
+
+   Two hard constraints, both already enforced elsewhere and both easy to break
+   by accident:
+
+   1. A trait must not share an effect CATEGORY with a verb. Verbs already own
+      growth, yield, rarity, gems, density, propagation and night, and a sim-test
+      asserts no two verbs collide. A trait on one of those axes would quietly
+      cancel a verb out. Unclaimed axes: mutation catch chance, offline rate and
+      duration, keepsake cadence, pack luck, combo decay.
+   2. Rotate categories as the roster grows — chance, then rate, then duration,
+      then a utility — per the rule in 17-market-and-positioning.md. Two
+      creatures that both add a percentage are one creature.
+
+   A trait is a small nudge on purpose. The creature is the reward; the trait is
+   why you think about which one is out. */
+const CREATURE_TRAITS = {
+  mutationLuck: {
+    name: 'Coaxes the Sky',
+    category: 'chance',
+    icon: 'sparkle',
+    desc: (v) => `Plants are ${Math.round(v * 100)}% more likely to catch the weather`
+  }
+};
+
+/* How many creatures can tend at once. More attracted than slots is the whole
+   point — the choice is what makes them strategy rather than a checklist. */
+const HABITAT_SLOT_LEVELS = [1, 8, 14, 20];
+
 const CREATURES = [
   {
     id: 'pip',
@@ -504,6 +533,7 @@ const CREATURES = [
     attract: { seed: 'bluebell', count: 5 },
     hint: 'Bluebells, apparently. Only bluebells.',
     about: 'Rattles its head when it is thinking. It is almost never thinking.',
+    trait: { id: 'mutationLuck', value: 0.25 },
     /* Keepsakes accrue on a slow clock and cap, so an absence is a small gift
        waiting rather than a pile of homework. */
     keepsake: { name: 'Mossy Pebble', every: 900, cap: 3, gems: 1, credits: 250 },

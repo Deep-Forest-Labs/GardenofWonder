@@ -20,7 +20,7 @@ globalThis.localStorage = {
 /* The game files are plain scripts that declare globals, so evaluate them and
    then re-export what they defined onto globalThis. */
 const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
-  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'flowerValue', 'Game'];
+  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -2388,6 +2388,80 @@ G.load();
 check('an unknown creature is dropped', !G.critterHere('nobody'));
 check('a real one is kept', G.critterHere(PIP.id));
 check('an impossible gift count is clamped', G.critterHome(PIP.id).gifts <= K.cap);
+
+group('tending is a limited choice, not a free buff');
+G.reset();
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+G.checkCritters();
+check('an arrival tends itself when there is room', G.critterTending(PIP.id));
+check('one slot at level 1', G.habitatSlots() === 1);
+check('and it is taken', G.habitatFree() === 0);
+check('tending again is a no-op', G.setTending(PIP.id, true) === false);
+check('resting frees the slot', G.setTending(PIP.id, false) === true && G.habitatFree() === 1);
+check('resting twice is a no-op', G.setTending(PIP.id, false) === false);
+check('a resting creature is still home', G.critterHere(PIP.id));
+check('tending a creature that is not home fails', G.setTending('nobody', true) === false);
+S.level = HABITAT_SLOT_LEVELS[HABITAT_SLOT_LEVELS.length - 1];
+check('slots grow with level', G.habitatSlots() === HABITAT_SLOT_LEVELS.length);
+S.level = 1;
+
+group('a tending creature actually moves the mutation rate');
+G.reset();
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+G.checkCritters();
+G.setTending(PIP.id, false);
+const catchResting = G.catchMultiplier(0);
+G.setTending(PIP.id, true);
+const catchTending = G.catchMultiplier(0);
+check('resting changes nothing', catchResting === 1, `got ${catchResting}`);
+check('tending lifts the catch chance', catchTending === 1 + PIP.trait.value, `got ${catchTending}`);
+check('the trait reads by id', G.critterTrait(PIP.trait.id) === PIP.trait.value);
+check('an unknown trait sums to zero', G.critterTrait('nonsense') === 0);
+/* The mutation doc is explicit that stacking raises the CHANCE and never the
+   payout, or the income share stops being computable. */
+check('and never touches the payout', G.mutationMult('gilded') === DATA.mutations.gilded.mult);
+
+group('tending survives a save, and cannot exceed the slots');
+G.saveNow();
+G.load();
+check('a tender comes back tending', G.critterTending(PIP.id));
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0,
+  discovered: { [PIP.attract.seed]: 99 },
+  critters: { [PIP.id]: { since: 1, tending: true } }
+}));
+G.load();
+check('one tender at one slot is fine', G.habitatUsed() <= G.habitatSlots());
+/* A save written before tending existed must come back working, not silently
+   idle — the same rule as never taking a seed away from an old save. */
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0,
+  discovered: { [PIP.attract.seed]: 99 },
+  critters: { [PIP.id]: { since: 1, gifts: 0 } }
+}));
+G.load();
+check('an old creature comes back tending', G.critterTending(PIP.id));
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0,
+  discovered: { [PIP.attract.seed]: 99 },
+  critters: { [PIP.id]: { since: 1, gifts: 0, tending: false } }
+}));
+G.load();
+check('but a deliberate rest is respected', !G.critterTending(PIP.id));
+check('a trait cannot outrun the slot table', G.critterTrait(PIP.trait.id) <= PIP.trait.value * G.habitatSlots());
+
+group('traits stay off the axes verbs already own');
+const VERB_CATEGORIES = ['growth', 'yield', 'rarity', 'gems', 'density', 'propagation', 'night'];
+check('every trait names a real entry', CREATURES.every((c) => !c.trait || CREATURE_TRAITS[c.trait.id]));
+check('every trait has a positive value', CREATURES.every((c) => !c.trait || c.trait.value > 0));
+check('no trait sits on a verb category', Object.values(CREATURE_TRAITS)
+  .every((t) => VERB_CATEGORIES.indexOf(t.category) === -1));
+check('no two creatures share a trait category', (() => {
+  const cats = CREATURES.filter((c) => c.trait).map((c) => CREATURE_TRAITS[c.trait.id].category);
+  return new Set(cats).size === cats.length;
+})());
+check('every trait can describe itself', Object.values(CREATURE_TRAITS)
+  .every((t) => t.name && typeof t.desc === 'function' && t.desc(0.25).length > 0));
 
 group('every creature is authored as a character, not a stat');
 check('each has a name and a species', CREATURES.every((c) => c.name && c.species));

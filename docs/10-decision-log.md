@@ -5,6 +5,57 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-16 — Creatures get traits, and a slot limit to make them a decision
+
+**Built:** one trait per creature, habitat slots, a tending toggle, and a **The Habitat** block in the
+Almanac. 22 new assertions. Design in [22-creatures.md](22-creatures.md#traits-and-tending).
+
+**The owner's framing, and it is a good one:** badges never felt integrated, but creatures read as
+*pets that carry attributes* — and the wish is to swap them for different parts of the game later.
+Character first, buffs second, but with enough of a stat layer to feel strategic.
+
+**The slot limit is the mechanic, not the trait.** A trait on its own is a badge with a face. What
+makes it interesting is that there are more creatures than slots, so *which one is out* is a standing
+question. Slots open at levels 1 / 8 / 14 / 20. **Nothing is ever taken away** — every creature that
+has moved in stays in the garden and stays visible, resting or not, because removal is the one thing
+this audience punishes hardest.
+
+**Two rails, both already in the docs, both easy to fall off.**
+
+*RPG framing is the trap, not RPG depth.* Idle RPG has the worst install rate in mobile at 2.0 per
+1,000 impressions, per [17-market-and-positioning.md](17-market-and-positioning.md). That is a
+marketing constraint, not a design one. Loadouts and stats are fine; "RPG" on the store page is not.
+
+*A trait must not share an effect category with a verb.* Verbs own growth, yield, rarity, gems,
+density, propagation and night, and a sim-test already asserts no two verbs collide. A trait on one of
+those axes would quietly cancel a verb out and nothing would look broken. **Two new assertions
+enforce it**: no trait may sit on a verb category, and no two creatures may share a trait category —
+so the roster is *forced* to rotate categories rather than stacking percentages, which is the
+AdVenture Capitalist rule applied to a new system before it can go wrong.
+
+**Pip raises the mutation catch chance, never a payout.** Wired into `catchMultiplier()`, the single
+choke point both mutation roll paths already run through, so there is no second consumer to keep in
+sync. Chance-not-payout is what keeps the 20–30% mutation income target computable.
+
+**Consumers read a trait by id, not by creature.** `critterTrait('mutationLuck')` sums across everyone
+tending, so adding a creature is genuinely a data row — the consumer already sees it.
+
+**Two migration rules.** An arrival tends itself when there is room, because a first creature that did
+nothing until the player found a toggle reads as broken. And **an absent `tending` field means "tend
+it", not "off"** — a save from before traits must come back working, which is the same rule as never
+taking a seed away from an old save. A deliberate rest is still respected, and the slot count trims
+the overflow either way.
+
+*Rejected: hanging the toggle off `data-buy`.* `syncAfford()`'s final `else` treats anything
+unrecognised as a booster and throws — the trap already recorded in the handoff. The button uses
+`data-tend`, and it was verified that `syncAfford()` still runs clean with it on screen.
+
+*Rejected: a dedicated creatures panel, for now.* The Almanac already owns collection, the sheet
+system already exists, and a habitat block there is both cheaper and more discoverable than a fifth
+dock tab against a dock that caps at five.
+
+---
+
 ## 2026-08-16 — The habitat direction, and the first creature
 
 **Built:** `critters.js`, one creature end to end — Pip the Grove Spirit — and 36 sim-test

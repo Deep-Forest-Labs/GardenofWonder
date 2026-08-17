@@ -315,5 +315,14 @@ The backfill is defensive in two ways that matter:
 An entry without `since` is treated as absent, so a half-written record cannot resurrect a creature
 that never actually arrived.
 
+`tending` (added with traits) has two rules that matter:
+
+- **Absent means "tend it", not "off".** A save written before traits existed must come back working
+  — a returning player finding their creature idle is the same harm as taking a seed away. An
+  explicit `tending: false` is still respected.
+- **The total is trimmed to the current slot count**, walking `CREATURES` in order. The slot table can
+  shrink in a balance pass and a save can be edited, so the overflow is dropped rather than handing
+  out effects the game no longer grants.
+
 **Attraction stores nothing.** Progress is read live from `state.discovered`, which is already a
 lifetime record that never decrements — see [22-creatures.md](22-creatures.md).

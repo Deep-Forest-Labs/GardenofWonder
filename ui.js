@@ -572,7 +572,8 @@
     node.innerHTML = `
       <span class="critter-motes">${Critters.motes(3, def.art.glow)}</span>
       ${Critters.draw(def)}
-      <span class="critter-gift" hidden>${Icons.get('gem')}</span>`;
+      <span class="critter-gift" hidden>${Icons.get('gem')}</span>
+      <span class="critter-leaf" hidden>${Icons.get('sprout')}</span>`;
     return node;
   }
 
@@ -594,6 +595,9 @@
       // animation does not play.
       if (gift.hidden === (waiting > 0)) gift.hidden = waiting <= 0;
       node.classList.toggle('has-gift', waiting > 0);
+      const leaf = node.querySelector('.critter-leaf');
+      const tending = Game.critterTending(def.id);
+      if (leaf.hidden === tending) leaf.hidden = !tending;
     });
     critterEls.forEach((node, id) => {
       if (home.some((d) => d.id === id)) return;

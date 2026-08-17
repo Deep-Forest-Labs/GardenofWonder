@@ -1,7 +1,8 @@
 # Creatures
 
 **Status: built 2026-08-16.** One creature, end to end — Pip the Grove Spirit. Arrival, living in
-the garden, petting, keepsakes, save, and 36 sim-test assertions.
+the garden, petting, keepsakes, **traits and tending**, a habitat block in the Almanac, save, and 58
+sim-test assertions.
 
 This is the first step of the **habitat direction** agreed 2026-08-16. Reasoning in
 [10-decision-log.md](10-decision-log.md).
@@ -74,6 +75,62 @@ never turn into anything.
 button; a creature that just reacts is a pet. The keepsake is the reward and the tap is the
 relationship.
 
+## Traits and tending
+
+**Added 2026-08-16.** Creatures carry stats, because the owner wanted the roster to feel like pets
+with attributes rather than a gallery — swappable, and worth thinking about.
+
+Two rails this runs between, both already in the docs and both easy to fall off:
+
+1. **Depth is fine; RPG *framing* is the trap.**
+   [17-market-and-positioning.md](17-market-and-positioning.md#what-to-avoid-entirely) says idle RPG
+   has the worst install rate in mobile at 2.0 per 1,000 impressions. That is about how the game is
+   *marketed*, not whether there is strategy underneath. Loadouts, yes. "RPG" on the store page, no.
+2. **A trait must not share an effect category with a verb.** Verbs already own growth, yield,
+   rarity, gems, density, propagation and night, and a sim-test asserts no two verbs collide. A trait
+   on one of those axes would quietly cancel a verb out. **Unclaimed axes:** mutation catch chance,
+   offline rate and duration, keepsake cadence, pack luck, combo decay.
+
+A sim-test enforces both: no trait may sit on a verb category, and no two creatures may share a
+trait category — so the roster is forced to rotate rather than stacking percentages.
+
+### The slot limit is the whole mechanic
+
+```js
+HABITAT_SLOT_LEVELS = [1, 8, 14, 20]   // slots = how many of these the level has passed
+```
+
+**Every creature that has moved in stays in the garden and stays visible.** Only a few *tend* at a
+time, and only a tending creature's trait applies. Nothing is ever taken away, which is what keeps
+this cosy — but having more creatures than slots is what makes "which one is out" a decision, and
+that decision is the strategy layer.
+
+A tending creature wears a leaf badge in the yard, so the state is legible without opening a panel.
+
+### Pip's trait
+
+| Trait | Category | Effect |
+| --- | --- | --- |
+| `mutationLuck` — *Coaxes the Sky* | chance | Plants are **25% more likely** to catch the weather |
+
+Wired into **`catchMultiplier()`**, which is the single choke point both mutation roll paths already
+go through, so there is no second consumer to keep in sync. It raises the **chance and never the
+payout**, which is the rule that keeps the mutation income share computable — see
+[18-mutations-and-weather.md](18-mutations-and-weather.md#tune-the-income-share-not-the-multipliers).
+
+`critterTrait(id)` sums a trait across every tending creature. Consumers ask **by trait id, not by
+creature**, which is what makes a new creature a data row: add the row and any existing consumer
+already sees it.
+
+### Two migration rules worth keeping
+
+- **An arrival tends itself if there is room.** A first creature that did nothing until the player
+  found a toggle would read as broken.
+- **An absent `tending` field means "tend it", not "switched off".** A save written before traits
+  existed must come back working; a returning player finding their creature idle with no explanation
+  is the same class of harm as taking a seed away. A *deliberate* rest is still respected, and the
+  slot trim caps both cases.
+
 ## Where they live
 
 On the lawn **below the garden board, never on a plot** — a creature standing on a plot reads as
@@ -125,8 +182,10 @@ creature id, and an impossible gift count.
 ## What is not built
 
 - **Only one creature.** The roster is a data array and a second entry needs no code.
-- **No creature collection panel.** There is nowhere to see who has visited, who is missing, or what
-  each one likes. That is the Completion surface and it is the obvious next piece.
+- **The collection surface is a start, not finished.** The Almanac now has a **The Habitat** block
+  listing every creature — met ones with their about line, trait and a Tending toggle; unmet ones as
+  a greyscale silhouette with their hint and harvest progress. It is not yet a proper Completion
+  screen with keepsake records or a roster count.
 - **Keepsakes pay coins and gems**, which is a placeholder. They should eventually pay something
   expressive rather than currency — see the memento device in
   [17-market-and-positioning.md](17-market-and-positioning.md).
