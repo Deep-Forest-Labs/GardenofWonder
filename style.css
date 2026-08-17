@@ -1633,10 +1633,10 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 /* The head-tilt is the whole personality. Slow, irregular, and never while the
    player is touching it. */
-.critter .cr-body { transform-origin: 50% 88%; animation: critter-tilt 5.2s ease-in-out infinite; }
-.critter .cr-sprout { transform-origin: 50% 90%; animation: critter-tilt 5.2s ease-in-out infinite; }
-.critter .cr-glow { animation: critter-glow 2.8s ease-in-out infinite; }
-.critter .cr-eye { transform-origin: center; animation: critter-blink 5.9s infinite; }
+.critter .cr-body, .hollow-pet .cr-body { transform-origin: 50% 88%; animation: critter-tilt 5.2s ease-in-out infinite; }
+.critter .cr-sprout, .hollow-pet .cr-sprout { transform-origin: 50% 90%; animation: critter-tilt 5.2s ease-in-out infinite; }
+.critter .cr-glow, .hollow-pet .cr-glow { animation: critter-glow 2.8s ease-in-out infinite; }
+.critter .cr-eye, .hollow-pet .cr-eye { transform-origin: center; animation: critter-blink 5.9s infinite; }
 
 @keyframes critter-float {
   0%, 100% { transform: translateY(0); }
@@ -1709,7 +1709,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 
 @media (prefers-reduced-motion: reduce) {
   .critter-svg, .critter .cr-body, .critter .cr-sprout,
-  .critter .cr-glow, .critter .cr-eye, .cr-mote, .critter-gift {
+  .critter .cr-glow, .critter .cr-eye, .cr-mote, .critter-gift,
+  .hollow-pet .cr-body, .hollow-pet .cr-sprout, .hollow-pet .cr-glow, .hollow-pet .cr-eye {
     animation: none;
   }
 }
@@ -1777,8 +1778,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 /* The glow scales with the creature's star, set from renderCritters(). */
 .critter .cr-glow{opacity:calc(0.32 * var(--lvl, 1))}
 /* Wings beat; a tail sways. Both are decoration on top of the float. */
-.critter .cr-wings{transform-origin:50% 58%;animation:critter-wing 0.9s ease-in-out infinite}
-.critter .cr-tail{transform-origin:74% 80%;animation:critter-tail 3.1s ease-in-out infinite}
+.critter .cr-wings,.hollow-pet .cr-wings{transform-origin:50% 58%;animation:critter-wing 0.9s ease-in-out infinite}
+.critter .cr-tail,.hollow-pet .cr-tail{transform-origin:74% 80%;animation:critter-tail 3.1s ease-in-out infinite}
 @keyframes critter-wing{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.82)}}
 @keyframes critter-tail{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-11deg)}}
 @media (prefers-reduced-motion: reduce){
@@ -1834,7 +1835,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   text-shadow:0 2px 0 rgba(44,26,16,.9),0 0 6px rgba(44,26,16,.6);
 }
 .burrow-door:active .burrow-mouth{transform:translateY(2px)}
-.in-hollow .stage,.in-hollow .dock,.in-hollow .rail,.in-hollow .quest-strip{display:none}
+.in-hollow .stage,.in-hollow #dock,.in-hollow .rail,.in-hollow .quest-strip{display:none}
 
 /* ============ the Hollow ============ */
 .hollow{position:absolute;inset:0;z-index:20;overflow:hidden;background:#b8834c}
@@ -1844,8 +1845,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 
 .hollow-tenants{position:absolute;inset:0;pointer-events:none}
 .hollow-pet{
-  position:absolute;width:19%;aspect-ratio:1;
-  transform:translate(-50%,-50%);margin:0;padding:0;border:0;background:none;
+  position:absolute;transform:translate(-50%,-50%);
+  margin:0;padding:0;border:0;background:none;
   pointer-events:auto;cursor:pointer;line-height:0;
 }
 .hollow-pet svg{width:100%;height:100%;overflow:visible}
@@ -1872,9 +1873,9 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:rgba(255,247,225,.94);font-family:inherit;font-weight:700;font-size:11.5px;
   color:var(--ink);box-shadow:0 3px 0 rgba(44,26,16,.28);cursor:pointer;
 }
-.hollow-exit i{width:0;height:0;border:5px solid transparent;border-bottom-color:var(--ink);
-  animation:hl-nudge 2.4s ease-in-out infinite}
-@keyframes hl-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.hollow-exit i{width:0;height:0;border:5px solid transparent;border-top-color:var(--ink);
+  margin-top:4px;animation:hl-nudge 2.4s ease-in-out infinite}
+@keyframes hl-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
 .hollow-exit:active{transform:translateX(-50%) translateY(2px);box-shadow:0 1px 0 rgba(44,26,16,.28)}
 
 .hollow-count{
@@ -1891,19 +1892,9 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 
 .hollow-dock{
   position:absolute;left:0;right:0;bottom:0;z-index:3;
-  height:calc(96px + env(safe-area-inset-bottom));
-  display:grid;grid-template-columns:repeat(4,1fr);gap:7px;
-  padding:9px 9px calc(16px + env(safe-area-inset-bottom));
+  padding:9px 9px calc(14px + env(safe-area-inset-bottom));
   background:linear-gradient(180deg,rgba(44,26,16,0),rgba(44,26,16,.2) 40%,rgba(44,26,16,.32));
 }
-.hollow-dock button{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  border:3px solid var(--ink);border-radius:16px;background:var(--paper,#fff7e1);color:var(--ink);
-  font-family:inherit;font-weight:800;font-size:10.5px;cursor:pointer;
-  box-shadow:0 3px 0 rgba(44,26,16,.4);padding:6px 2px;
-}
-.hollow-dock button:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(44,26,16,.4)}
-.hollow-dock svg{width:20px;height:20px}
 
 /* Motion emitted by hollow.js, named so it cannot collide with the garden's. */
 .hl-wisp{animation:hl-drift var(--dur,7s) ease-in-out infinite;animation-delay:var(--delay,0s);

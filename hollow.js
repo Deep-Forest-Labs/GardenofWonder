@@ -153,16 +153,25 @@ const Hollow = (() => {
     { x: 296, y: 546, rw: 56, rh: 46 }
   ];
 
-  /* Where a creature sits, as a percentage of the canvas — five burrows and one
-     spot on the floor, so one chamber holds six. */
+  /* Where a creature sits, in the scene's OWN coordinates — five burrows and one
+     spot on the floor, so one chamber holds six.
+
+     Not percentages of the container: the scene is drawn with
+     `preserveAspectRatio="slice"`, so on any screen that is not exactly 390x844
+     it is cropped, and a percentage of the container stops agreeing with a
+     position in the art. The caller maps these through the SVG's own matrix. */
   const SPOTS = [
-    { left: 50.3, top: 25.6 },
-    { left: 23.6, top: 36.6 },
-    { left: 77, top: 44.2 },
-    { left: 24.6, top: 58.1 },
-    { left: 75.9, top: 67.7 },
-    { left: 56, top: 78.4 }
+    { x: 196, y: 216 },
+    { x: 92, y: 309 },
+    { x: 300, y: 373 },
+    { x: 96, y: 490 },
+    { x: 296, y: 571 },
+    { x: 218, y: 662 }
   ];
+
+  /* How wide a creature is drawn, in the same coordinates. */
+  const PET_SIZE = 74;
+  const VIEW = { width: 390, height: 844 };
 
   const WISPS = [
     { x: 58, y: 396, r: 8, dx: 14, dy: -26, dur: 7.5, delay: 0 },
@@ -265,5 +274,5 @@ const Hollow = (() => {
     </svg>`;
   }
 
-  return { scene, SPOTS, INK };
+  return { scene, SPOTS, PET_SIZE, VIEW, INK };
 })();

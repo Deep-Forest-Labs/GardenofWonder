@@ -233,9 +233,31 @@ chip or a swipe up closes it. `hollow.js` draws the room and knows nothing about
   `#game`. The frame loop redraws the Hollow instead of the garden yard while it is open.
 - **The sky follows `Game.isNight()`**, so the room is lit by whichever light is actually outside.
 
-Two placements had to move once it was in the game rather than in a spike: the tending count sat over
-the crack, where the art is busy enough to swallow small white text, and the garden's leftmost creature
-spot sat under the burrow door. Neither was visible at spike size.
+### Five things only a real device showed
+
+All five came from playing it on a phone, and four are the kind a screenshot hides.
+
+- **Rebuilding is what breaks motion.** `renderTenants()` wiped and rebuilt every creature node on the
+  0.6s tick, so every float, tilt and glow restarted constantly — which reads as a hitch at the end of
+  the loop, not as a rebuild. The scene was redrawn on every entry too, which restarted the wisps and
+  made the lights cut off harshly instead of fading. **Nodes are now built once and only their badges
+  change**, and the scene is only redrawn when the sky actually changes.
+- **A percentage of the container is not a position in the art.** The scene is drawn with
+  `preserveAspectRatio="slice"`, so on any screen that is not exactly 390×844 it is cropped — and the
+  overlaid creatures drifted off their burrows. `Hollow.SPOTS` are now the scene's **own coordinates**,
+  mapped through the SVG's `getScreenCTM()`. Measured at 0px offset on every creature.
+- **Swipe down to go up.** Dragging down pulls the world down past you, which is the direction every
+  scroll already uses. Swiping up to rise reads backwards the moment you try it.
+- **The dock has to be the garden's dock.** It was styled from scratch and felt like a different game;
+  it now reuses `.dock` / `.dock-btn` / `.dock-ico`, so it matches by construction rather than by
+  someone remembering to keep two rules in step. **Watch the hide rule**: `.in-hollow .dock` then
+  swallowed the Hollow's own dock, so the garden's is hidden by `#dock` instead.
+- **Idle animation was scoped to `.critter`**, so creatures in the Hollow floated but never tilted or
+  blinked — noticeably less alive than the same creature upstairs. Every idle rule now covers
+  `.hollow-pet` too.
+
+Two placements also had to move: the tending count sat over the crack, where the art is busy enough to
+swallow small white text, and the garden's leftmost creature spot sat under the burrow door.
 
 Still not built: chambers and sideways paging, a second level, feeding, decorating, and any way to
 change the loadout from inside the room rather than through the Almanac.
