@@ -239,13 +239,7 @@ as one piece rather than discovering it halfway through.
 **The habitat direction is live and one creature deep.** Pip works end to end — arrival, living on
 the lawn, petting, keepsakes, save. The obvious next pieces, in order:
 
-1. **A second and third creature.** The roster is a data array; a new entry needs no code. A
-   night-only creature is one `attract` field away and `Game.isNight()` already exists. Traits **may**
-   stack with a verb — that rule was retracted — but every trait declares a `pool`, and a sim-test
-   fails if the roster becomes all one kind of effect or if more than a third sits in the `yield`
-   pool. A drafted roster of five (Thistle, Bramble, Luna, Ember, Bumble) is in the conversation
-   record but not yet in `data.js`.
-2. **Named synergy pairs.** Two specific creatures both tending unlock a third, named effect —
+1. **Named synergy pairs.** Two specific creatures both tending unlock a third, named effect —
    Cookie Clicker ships 36 of these and each is one data row. This is what stops a loadout being
    "pick the three strongest" and is the highest-value addition once there are pets to pair.
 3. **A den or farmhouse for resting creatures.** Resting pets now leave the screen, so they need

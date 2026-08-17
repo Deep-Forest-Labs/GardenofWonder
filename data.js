@@ -523,6 +523,46 @@ const CREATURE_TRAITS = {
     desc: (v) => `Plants are ${Math.round(v * 100)}% more likely to catch the weather`,
     /* Shown on an unmet creature's row, where the value is not known yet. */
     maxDesc: (v) => `Up to ${Math.round(v * 100)}% more likely to catch the weather`
+  },
+  gemLuck: {
+    name: 'Rummager',
+    category: 'drops',
+    pool: 'chance',
+    icon: 'gem',
+    desc: (v) => `Harvests are ${Math.round(v * 100)}% more likely to turn up a gem`,
+    maxDesc: (v) => `Up to ${Math.round(v * 100)}% more likely to turn up a gem`
+  },
+  packLuck: {
+    name: 'Forager',
+    category: 'finds',
+    pool: 'chance',
+    icon: 'cards',
+    desc: (v) => `${(v * 100).toFixed(1)}% chance a harvest turns up a card pack`,
+    maxDesc: (v) => `Up to a ${(v * 100).toFixed(1)}% chance of finding a card pack`
+  },
+  nightYield: {
+    name: 'Moonlit',
+    category: 'time',
+    pool: 'yield',
+    icon: 'moon',
+    desc: (v) => `Harvests at night pay ${Math.round(v * 100)}% more`,
+    maxDesc: (v) => `Night harvests pay up to ${Math.round(v * 100)}% more`
+  },
+  offlineRate: {
+    name: 'Lantern Keeper',
+    category: 'offline',
+    pool: 'utility',
+    icon: 'lantern',
+    desc: (v) => `The garden earns ${Math.round(v * 100)}% more while you are away`,
+    maxDesc: (v) => `Up to ${Math.round(v * 100)}% more while you are away`
+  },
+  keepsakeSpeed: {
+    name: 'Busy Hands',
+    category: 'keepsakes',
+    pool: 'utility',
+    icon: 'gift',
+    desc: (v) => `Every creature leaves keepsakes ${Math.round(v * 100)}% faster`,
+    maxDesc: (v) => `Keepsakes arrive up to ${Math.round(v * 100)}% faster, for everyone`
   }
 };
 
@@ -565,6 +605,110 @@ const CREATURES = [
       idle: ['It rattles softly.', 'It is watching a bee.', 'It has found a nice spot.', 'It sways with nothing in particular.'],
       pet: ['It wobbles happily.', 'It makes a tiny sound.', 'It leans into your finger.', 'It rattles, delighted.'],
       gift: ['It left you something.', 'A small offering appears.', 'It seems very pleased with itself.']
+    }
+  },
+  {
+    id: 'thistle',
+    name: 'Thistle',
+    species: 'Hedgepig',
+    attract: { seed: 'marigold', count: 6, growth: 3 },
+    hint: 'Sleeps under the marigolds. Refuses to explain why.',
+    about: 'Digs constantly and remembers nothing about where.',
+    trait: { id: 'gemLuck', value: 0.6 },
+    keepsake: { name: 'Bent Nail', every: 1200, cap: 3, gems: 1, credits: 400 },
+    art: {
+      body: 'bean', crown: 'spines',
+      skin: '#f7e2c8', shade: '#d9b78f', accent: '#a4713f', cheek: '#ff9ec4', glow: '#ffd8a8'
+    },
+    lines: {
+      arrive: ['It does not look up.', 'Something is snuffling about.', 'A small round shape arrives.'],
+      idle: ['It is digging again.', 'It has forgotten what it buried.', 'It snuffles at a root.', 'It is asleep, probably.'],
+      pet: ['It uncurls a little.', 'It huffs approvingly.', 'It leans on your finger.', 'It sneezes.'],
+      gift: ['It presents something it found.', 'It has been digging.', 'It looks extremely proud.']
+    }
+  },
+  {
+    id: 'bramble',
+    name: 'Bramble',
+    species: 'Hedgefox',
+    attract: { seed: 'rose', count: 8, growth: 3 },
+    hint: 'Comes for the roses. Stays for the company, it says.',
+    about: 'Brings you things. Not all of them are hers.',
+    trait: { id: 'packLuck', value: 0.02 },
+    keepsake: { name: 'Someone Else\u2019s Button', every: 1500, cap: 3, gems: 2, credits: 600 },
+    art: {
+      body: 'bean', crown: 'ears', tail: true,
+      skin: '#ffb27a', shade: '#e08b4e', accent: '#c96a2e', accent2: '#ffd9b8',
+      cheek: '#ff8fb0', glow: '#ffd8a8'
+    },
+    lines: {
+      arrive: ['She was already here, apparently.', 'A red shape settles by the fence.', 'She pretends not to have arrived.'],
+      idle: ['She is watching the gate.', 'She has hidden something.', 'She yawns enormously.', 'She is pretending to sleep.'],
+      pet: ['She permits it.', 'She thumps her tail once.', 'She leans, then pretends she did not.'],
+      gift: ['She drops something at your feet.', 'She found this. Somewhere.', 'She is very pleased with herself.']
+    }
+  },
+  {
+    id: 'luna',
+    name: 'Luna',
+    species: 'Moonmoth',
+    attract: { seed: 'moonflower', count: 6, growth: 3 },
+    hint: 'Only ever seen near moonflowers, and only after dark.',
+    about: 'Navigates by something that is not the moon.',
+    trait: { id: 'nightYield', value: 0.3 },
+    keepsake: { name: 'Wing Dust', every: 1500, cap: 3, gems: 2, credits: 700 },
+    art: {
+      body: 'pebble', crown: 'antennae', wings: 'moth',
+      skin: '#e8e0ff', shade: '#bfb0e8', accent: '#b197fc', wingFill: '#cbb9ff',
+      cheek: '#ffa8d8', glow: '#c9b6ff'
+    },
+    lines: {
+      arrive: ['She circles once, then settles.', 'Something pale drifts in.', 'She arrives on no wind at all.'],
+      idle: ['She is following a light that is not there.', 'Her wings are very still.', 'She drifts a little.', 'She prefers the dark side of the fence.'],
+      pet: ['Her wings shiver.', 'She dusts your finger.', 'She holds very still, then lifts.'],
+      gift: ['She has left a little dust.', 'Something shimmers where she sat.', 'A small silver thing.']
+    }
+  },
+  {
+    id: 'ember',
+    name: 'Ember',
+    species: 'Lampfly',
+    attract: { seed: 'starlit', count: 5, growth: 3 },
+    hint: 'Drawn to starlit iris. Keeps the night shift.',
+    about: 'Insists on carrying the light, badly.',
+    trait: { id: 'offlineRate', value: 0.2 },
+    keepsake: { name: 'Warm Pebble', every: 1800, cap: 3, gems: 2, credits: 900 },
+    art: {
+      body: 'pebble', crown: 'antennae', wings: 'buzz',
+      skin: '#fff3c4', shade: '#f5cf6a', accent: '#ffb703', wingFill: '#fff0b3',
+      cheek: '#ff9ec4', glow: '#ffe066', speckles: false
+    },
+    lines: {
+      arrive: ['A small light bobs over the fence.', 'He arrives, glowing faintly.', 'Something warm settles in.'],
+      idle: ['He is on watch.', 'He dims, then remembers.', 'He is guarding something invisible.', 'He hums.'],
+      pet: ['He glows brighter.', 'He bobs happily.', 'He warms your finger.'],
+      gift: ['He left something warm.', 'Still warm, in fact.', 'He is very proud of this one.']
+    }
+  },
+  {
+    id: 'bumble',
+    name: 'Bumble',
+    species: 'Gardenbee',
+    attract: { seed: 'lavender', count: 7, growth: 3 },
+    hint: 'Lavender. Obviously lavender. What else would it be.',
+    about: 'Helps everyone else and never once sits down.',
+    trait: { id: 'keepsakeSpeed', value: 1 },
+    keepsake: { name: 'Thimble of Honey', every: 1200, cap: 3, gems: 1, credits: 500 },
+    art: {
+      body: 'bean', crown: 'antennae', wings: 'buzz', stripes: true,
+      skin: '#ffe066', shade: '#e6b800', accent: '#3d2a1c', stripe: '#4a3520',
+      wingFill: '#fffbe6', cheek: '#ff9ec4', glow: '#ffe9a8', speckles: false
+    },
+    lines: {
+      arrive: ['She is already busy.', 'A round yellow blur arrives.', 'She does not stop to say hello.'],
+      idle: ['She is helping. Somehow.', 'She has not stopped all day.', 'She checks on the others.', 'She is reorganising something.'],
+      pet: ['She buzzes, briefly.', 'She allows exactly one pat.', 'She is far too busy for this.'],
+      gift: ['She left a little honey.', 'She made time for this.', 'It is still warm.']
     }
   }
 ];

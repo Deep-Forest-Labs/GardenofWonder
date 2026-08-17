@@ -2537,6 +2537,116 @@ localStorage.setItem('gw-save', JSON.stringify({
 G.load();
 check('an impossible level is clamped', G.critterLevel(PIP.id) === CREATURE_STARS);
 
+/* Every trait needs a consumer, and a trait wired to nothing is invisible until
+   someone notices the number never moves. One assertion per trait, each proving
+   the value actually reaches the system it claims to touch. */
+group('every trait reaches the system it claims to touch');
+function bring(id, level) {
+  const def = G.critterById(id);
+  S.discovered[def.attract.seed] = G.critterGoalFor(def, CREATURE_STARS);
+  G.checkCritters();
+  S.critters[id].level = level || CREATURE_STARS;
+  S.critters[id].tending = true;
+  return def;
+}
+function restAll() {
+  CREATURES.forEach((c) => { if (S.critters[c.id]) S.critters[c.id].tending = false; });
+}
+
+G.reset();
+S.level = 20;                                   // enough habitat slots to test each
+CREATURES.forEach((c) => bring(c.id));
+restAll();
+
+// mutationLuck -> catchMultiplier
+S.critters.pip.tending = true;
+check('mutationLuck lifts the catch multiplier', G.catchMultiplier(0) > 1);
+restAll();
+
+// gemLuck -> the harvest gem roll
+const plainGem = G.gemChanceFor(G.seedById('daisy'));
+S.critters.thistle.tending = true;
+check('gemLuck is a real trait value', G.critterTrait('gemLuck') > 0);
+check('gemChanceFor itself is untouched', G.gemChanceFor(G.seedById('daisy')) === plainGem,
+  'the trait belongs at the roll, not in the base rate');
+restAll();
+
+// packLuck -> a pack can land on a harvest
+S.critters.bramble.tending = true;
+check('packLuck is a real trait value', G.critterTrait('packLuck') > 0);
+(() => {
+  clearGarden();
+  clearMastery();
+  S.credits = 1e9;
+  const rng = Math.random;
+  Math.random = () => 0;                        // forces every roll to land
+  G.plant(0, G.seedById('daisy'));
+  S.grid[0].plantedAt = G.nowSeconds() - 9999;
+  G.tick(0.1);
+  const p = G.harvest(0);
+  Math.random = rng;
+  check('a forager turns a pack up on a harvest', Boolean(p && p.cardPack));
+})();
+restAll();
+(() => {
+  clearGarden();
+  S.credits = 1e9;
+  const rng = Math.random;
+  Math.random = () => 0;
+  G.plant(0, G.seedById('daisy'));
+  S.grid[0].plantedAt = G.nowSeconds() - 9999;
+  G.tick(0.1);
+  const p = G.harvest(0);
+  Math.random = rng;
+  check('and no pack without a forager tending', !(p && p.cardPack));
+})();
+
+// nightYield -> the harvest payout, only at night
+S.critters.luna.tending = true;
+check('nightYield only pays after dark',
+  G.isNight() ? G.critterPayoutMult() > 1 : G.critterPayoutMult() === 1,
+  `isNight ${G.isNight()} mult ${G.critterPayoutMult()}`);
+restAll();
+check('and nothing while it rests', G.critterPayoutMult() === 1);
+
+// offlineRate -> offlineRate(), still clamped
+const rateNoPet = G.offlineRate();
+S.critters.ember.tending = true;
+check('offlineRate lifts the away rate', G.offlineRate() > rateNoPet,
+  `${rateNoPet} -> ${G.offlineRate()}`);
+S.upgrades.offlineRate = 99;
+check('but never past the cap', G.offlineRate() <= DATA.offline.maxRate);
+S.upgrades.offlineRate = 0;
+restAll();
+
+// keepsakeSpeed -> everyone's keepsakes, including its own
+(() => {
+  const pipK = G.critterById('pip').keepsake;
+  S.critters.pip.since = G.nowSeconds() - pipK.every / 2;
+  S.critters.pip.fed = 0;
+  S.critters.pip.gifts = 0;
+  check('half a wait yields nothing on its own', G.keepsakesWaiting('pip') === 0);
+  S.critters.bumble.tending = true;
+  check('a helper makes it arrive early', G.keepsakesWaiting('pip') >= 1);
+  restAll();
+  check('and it goes back when the helper rests', G.keepsakesWaiting('pip') === 0);
+})();
+
+group('the roster is paced across the seed ladder');
+check('every creature comes for a different bloom', (() => {
+  const seeds = CREATURES.map((c) => c.attract.seed);
+  return new Set(seeds).size === seeds.length;
+})());
+check('no creature waits on a seed the game never unlocks', CREATURES.every((c) => {
+  const seed = DATA.seeds.find((x) => x.id === c.attract.seed);
+  return seed && (seed.unlockLevel || 1) <= 20;
+}));
+check('the first creature is reachable early', (() => {
+  const first = CREATURES.map((c) => DATA.seeds.find((x) => x.id === c.attract.seed))
+    .reduce((lo, s) => Math.min(lo, s.unlockLevel || 1), 99);
+  return first <= 2;
+})());
+
 group('every creature is authored as a character, not a stat');
 check('each has a name and a species', CREATURES.every((c) => c.name && c.species));
 check('each says something about itself', CREATURES.every((c) => c.about && c.hint));

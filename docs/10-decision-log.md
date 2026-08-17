@@ -5,6 +5,51 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-16 — Five more creatures, and a feature vocabulary instead of five drawings
+
+**Built:** Thistle, Bramble, Luna, Ember and Bumble, their five traits and five consumers, and the art
+features they needed. 16 new assertions. Roster in [22-creatures.md](22-creatures.md#the-roster).
+
+**Each one is on a different bloom and a different axis, spread across seed unlock levels 1 to 10**, so
+creatures arrive gradually rather than all at once and the roster paces itself against the seed ladder.
+A sim-test holds all three properties.
+
+**The loadout is deliberately not six parallel percentages.** Bumble *buffs the other creatures*,
+which makes choosing three self-referential rather than a ranking — and it is the cheapest possible
+preview of what synergy pairs will do.
+
+**Luna is the only trait in the `yield` pool, and its cap is the clock.** Night is roughly 32% of the
+cycle, so +30% at night is about +10% on average, and the bound is something the player does not
+control. That is the shape any future yield trait should copy — nominally large, structurally bounded.
+
+**A trait wired to nothing is invisible**, because nobody notices a number that never moves. So there
+is now one assertion per trait proving the value reaches its consumer, including two negative cases:
+no pack turns up without a forager tending, and keepsakes go back to their normal wait when the helper
+rests.
+
+**`gemLuck` goes at the roll, not in `gemChanceFor()`.** The base rate stays the derived
+grow-time number that fixed the gem faucet on 2026-08-15; a creature multiplies the roll beside the
+Lantern verb. A test asserts the base function is untouched.
+
+**`keepsakeSpeed` is floored at a quarter of the authored wait**, so no stack of helpers can turn
+keepsakes into a tap-to-print button.
+
+**Art: one body and a vocabulary of features, not five drawings.** `crown` is
+`sprout | spines | ears | antennae`, plus optional `wings`, `tail`, `stripes` and a palette. Six
+creatures fall out of that and a seventh is a data row. **One crown each** — two turns the silhouette
+to mush at thumbnail size.
+
+**Two art bugs found by looking, which no test could catch.** An inline `clip-path: path()` silently
+did nothing, so the bee had no stripes — the one thing a bee needs; it now uses a real `<clipPath>`
+with a unique id per draw. And the moth's wings were tucked behind her body, reading as small nubs;
+wings have to clear the body by a wide margin or a moth stops being a moth.
+
+**The shading band was removed from every creature.** An `inset()` clip drew a hard horizontal seam
+across the body, most obvious on a light one. The house style is flat fills inside one thick outline,
+so the band was off-style as well as an artifact.
+
+---
+
 ## 2026-08-16 — Creatures are raised, and the bloom that attracts one is what grows it
 
 **Built:** five stars per creature, an escalating growth threshold, a level-up beat, stars and a

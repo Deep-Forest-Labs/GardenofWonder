@@ -1776,3 +1776,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .critter-grow span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* The glow scales with the creature's star, set from renderCritters(). */
 .critter .cr-glow{opacity:calc(0.32 * var(--lvl, 1))}
+/* Wings beat; a tail sways. Both are decoration on top of the float. */
+.critter .cr-wings{transform-origin:50% 58%;animation:critter-wing 0.9s ease-in-out infinite}
+.critter .cr-tail{transform-origin:74% 80%;animation:critter-tail 3.1s ease-in-out infinite}
+@keyframes critter-wing{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.82)}}
+@keyframes critter-tail{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-11deg)}}
+@media (prefers-reduced-motion: reduce){
+  .critter .cr-wings,.critter .cr-tail{animation:none}
+}

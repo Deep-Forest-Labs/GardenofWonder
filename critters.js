@@ -55,6 +55,69 @@ const Critters = (() => {
     </g>`;
   }
 
+  /* Spines, ears, antennae — whatever sits on the crown. Only one per creature,
+     because two crowns turn the silhouette to mush at thumbnail size. */
+  function spines(fill) {
+    let out = '';
+    const at = [[22, 52], [26, 38], [36, 28], [50, 24], [64, 28], [74, 38], [78, 52]];
+    at.forEach(([x, y], i) => {
+      const lean = (x - 50) * 0.22;
+      out += `<path d="M${x} ${y} L${x + lean} ${y - 17} L${x + 6} ${y - 1} Z"
+        fill="${fill}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    });
+    return `<g class="cr-sprout">${out}</g>`;
+  }
+
+  function ears(fill) {
+    return `<g class="cr-sprout">
+      <path d="M28 40 L20 8 L46 26 Z" fill="${fill}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M72 40 L80 8 L54 26 Z" fill="${fill}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+    </g>`;
+  }
+
+  function antennae(fill) {
+    return `<g class="cr-sprout">
+      <path d="M40 32 C34 18 28 12 22 9" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+      <path d="M60 32 C66 18 72 12 78 9" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="20" cy="8" r="6" fill="${fill}" stroke="${INK}" stroke-width="3.5"/>
+      <circle cx="80" cy="8" r="6" fill="${fill}" stroke="${INK}" stroke-width="3.5"/>
+    </g>`;
+  }
+
+  /* Wings sit behind the body so the face is never crowded. Two silhouettes:
+     broad and rounded for a moth, small and pinched for anything that buzzes. */
+  function wings(kind, fill) {
+    if (kind === 'buzz') {
+      return `<g class="cr-wings" opacity="0.9">
+        <ellipse cx="17" cy="52" rx="15" ry="9" fill="${fill}" stroke="${INK}" stroke-width="3" transform="rotate(-22 17 52)"/>
+        <ellipse cx="83" cy="52" rx="15" ry="9" fill="${fill}" stroke="${INK}" stroke-width="3" transform="rotate(22 83 52)"/>
+      </g>`;
+    }
+    /* Broad and clearing the body by a wide margin. Tucked in behind it the wings
+       read as small nubs and the creature stops being a moth. */
+    return `<g class="cr-wings" opacity="0.95">
+      <path d="M40 52 C10 26 -6 52 2 74 C10 92 30 84 40 68 Z" fill="${fill}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M60 52 C90 26 106 52 98 74 C90 92 70 84 60 68 Z" fill="${fill}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+    </g>`;
+  }
+
+  function tail(fill) {
+    return `<path class="cr-tail" d="M78 84 C94 82 98 66 90 58 C86 70 80 76 74 78 Z"
+      fill="${fill}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>`;
+  }
+
+  let uid = 0;
+
+  function stripes(fill, body, id) {
+    return `<clipPath id="${id}"><path d="${body}"/></clipPath>
+      <g clip-path="url(#${id})" fill="${fill}" opacity="0.95">
+        <path d="M8 66 H92 V74 H8 Z"/>
+        <path d="M8 84 H92 V96 H8 Z"/>
+      </g>`;
+  }
+
+  const CROWNS = { sprout, spines, ears, antennae };
+
   const BODIES = {
     /* A river-pebble bell: narrow crown, heavy base, so it sits rather than floats. */
     pebble: 'M50 30 C70 30 81 46 81 64 C81 82 68 93 50 93 C32 93 19 82 19 64 C19 46 30 30 50 30 Z',
@@ -65,6 +128,8 @@ const Critters = (() => {
   /** Draw one creature. `def.art` carries body, palette and features. */
   function draw(def) {
     const a = (def && def.art) || {};
+    uid += 1;
+    const clipId = `cr-clip-${uid}`;
     const body = BODIES[a.body] || BODIES.pebble;
     const skin = a.skin || '#f2fbf3';
     const shade = a.shade || '#cfead8';
@@ -72,12 +137,16 @@ const Critters = (() => {
     const cheek = a.cheek || '#ff9ec4';
     const glow = a.glow || '#b6f2c8';
 
+    const crown = CROWNS[a.crown || 'sprout'];
+
     return `<svg class="critter-svg" viewBox="0 0 100 100" aria-hidden="true">
       <ellipse class="cr-glow" cx="50" cy="62" rx="42" ry="40" fill="${glow}" opacity="0.32"/>
-      ${a.sprout === false ? '' : sprout(accent)}
+      ${a.wings ? wings(a.wings, a.wingFill || glow) : ''}
+      ${a.tail ? tail(a.accent2 || accent) : ''}
+      ${a.crown === 'none' ? '' : crown(accent)}
       <g class="cr-body">
         <path d="${body}" fill="${skin}" stroke="${INK}" stroke-width="4.5" stroke-linejoin="round"/>
-        <path d="${body}" fill="${shade}" opacity="0.5" style="clip-path: inset(66% 0 0 0)"/>
+        ${a.stripes ? stripes(a.stripe || shade, body, clipId) : ''}
         <path d="${body}" fill="none" stroke="${INK}" stroke-width="4.5" stroke-linejoin="round"/>
         ${a.speckles === false ? '' : speckles(shade)}
         ${blush(cheek)}

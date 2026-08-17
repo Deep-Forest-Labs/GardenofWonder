@@ -702,6 +702,10 @@ keepsakes on a slow clock.
 - **A creature is a character first and a mechanic a distant second** — a sim-test asserts every one
   has a name, a species, a hint, a line about itself and three moods of dialogue.
 
+**Six creatures**, each on a different bloom, spread across seed unlock levels 1 to 10: Pip
+(Bluebell), Bumble (Lavender), Bramble (Rose), Thistle (Marigold), Luna (Moonflower) and Ember
+(Starlit Iris). Roster and traits in [22-creatures.md](22-creatures.md#the-roster).
+
 **A creature is raised, not found.** It arrives at one star carrying a fifth of its trait and grows to
 five, and **the duplicate that raises it comes from the same bloom that attracted it** at an
 escalating count — Pip needs 5 / 15 / 45 / 135 / 405 lifetime Bluebells. That is what gives a low-tier

@@ -170,9 +170,19 @@ more than 1.35×.
 `CREATURE_TRAITS` and `HABITAT_SLOT_LEVELS` in `data.js`. Design in
 [22-creatures.md](22-creatures.md#traits-and-tending).
 
-| Creature | Trait | Pool | Value at ★5 |
-| --- | --- | --- | --- |
-| Pip | `mutationLuck` — Coaxes the Sky | chance | +0.25 to the catch multiplier |
+| Creature | Bloom | Trait | Pool | Value at ★5 |
+| --- | --- | --- | --- | --- |
+| Pip | Bluebell | `mutationLuck` — Coaxes the Sky | chance | +0.25 catch multiplier |
+| Bumble | Lavender | `keepsakeSpeed` — Busy Hands | utility | keepsake wait ÷ 2, floored at ÷4 |
+| Bramble | Rose | `packLuck` — Forager | chance | 0.02 pack chance per harvest |
+| Thistle | Marigold | `gemLuck` — Rummager | chance | ×1.6 gem chance |
+| Luna | Moonflower | `nightYield` — Moonlit | yield | ×1.3 at night only |
+| Ember | Starlit Iris | `offlineRate` — Lantern Keeper | utility | ×1.2 offline rate, inside the cap |
+
+**Luna is the only trait in the `yield` pool, and it is capped by the clock** — night is ~32% of the
+cycle, so ×1.3 at night is ≈+10% on average. That is the shape any future yield trait should copy:
+nominally large, structurally bounded by something the player does not control. Four unbounded +25%
+yield traits would be 2.44× on top of mastery, verbs, rarity and mutations.
 
 Habitat slots open at levels **1, 8, 14, 20**, so a player holds at most four tending creatures.
 

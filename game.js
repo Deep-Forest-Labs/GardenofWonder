@@ -377,6 +377,13 @@ const Game = (() => {
     return Math.max(0.3, 1 - neighbourVerbs(idx, 'keeper') * VT().keeperGrowth);
   }
 
+  /** Payout multiplier contributed by tending creatures. Kept apart from
+      verbPayoutMult so a creature and a verb never get mistaken for each other in
+      a balance pass, and so the yield pool stays countable in one place. */
+  function critterPayoutMult() {
+    return isNight() ? 1 + critterTrait('nightYield') : 1;
+  }
+
   /** Payout multiplier a plot earns from its own verb and its neighbours'. */
   function verbPayoutMult(idx) {
     const t = VT();
@@ -587,7 +594,8 @@ const Game = (() => {
 
   const offlineRate = () => Math.min(
     DATA.offline.maxRate,
-    DATA.offline.baseRate + state.upgrades.offlineRate * DATA.offline.ratePerLevel
+    (DATA.offline.baseRate + state.upgrades.offlineRate * DATA.offline.ratePerLevel)
+      * (1 + critterTrait('offlineRate'))
   );
   const offlineHours = () => Math.min(
     DATA.offline.maxHours,
@@ -1283,9 +1291,10 @@ const Game = (() => {
      turned up in your garden, go and get it" is a better beat than a number appearing in a wallet.
      Unlike the three badge procs this is always on: it is the album's only in-game source, so a
      player who has bought nothing still has to be able to find one. */
-  function rollCardPack() {
+  function rollCardPack(chance) {
     const forced = devProc('cardPack');
-    if (!forced && Math.random() >= DATA.packDropChance) return null;
+    const odds = chance === undefined ? DATA.packDropChance : chance;
+    if (!forced && (odds <= 0 || Math.random() >= odds)) return null;
     const open = [];
     state.grid.forEach((cell, i) => { if (!cell.locked && !cell.packDrop) open.push(i); });
     if (!open.length) return null;
@@ -1500,6 +1509,7 @@ const Game = (() => {
     const mastered = masteryMult(sdef.id);
     const payout = Math.round(
       yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * mastered * verbMult * mutMult
+      * critterPayoutMult()
     );
 
     state.credits += payout;
@@ -1520,7 +1530,9 @@ const Game = (() => {
       levelGrants = levelGrants.concat(addRep(repBonus));
     }
     const baseGem = gemChanceFor(sdef);
-    const gemChance = baseGem * (lanterns ? Math.pow(VT().lanternGemMult, lanterns) : 1);
+    const gemChance = baseGem
+      * (lanterns ? Math.pow(VT().lanternGemMult, lanterns) : 1)
+      * (1 + critterTrait('gemLuck'));
     let gemDrop = false;
     if (devTake('gem') || Math.random() < gemChance) { state.gems += 1; gemDrop = true; }
 
@@ -1556,6 +1568,13 @@ const Game = (() => {
     }
     noteQuest('harvest', sdef.id, 1);
     noteQuest('rarity', r.key, 1);
+    // A forager turns a pack up on a harvest. Same roll and same landing spot as
+    // the tap proc, so the album still only ever *receives* from the garden — it
+    // never lets the garden decide what is inside. The plot was cleared above, so
+    // this can land on the one just picked.
+    const foragerOdds = critterTrait('packLuck');
+    const foraged = foragerOdds > 0 ? rollCardPack(foragerOdds) : null;
+    if (foraged) payload.cardPack = foraged;
     if (almanac.first) noteQuest('discover', sdef.id, 1);
     // After recordHarvest, so the bloom that meets the threshold is the one
     // that brings the creature rather than the one after it.
@@ -1784,7 +1803,10 @@ const Game = (() => {
     if (!def || !home) return 0;
     const k = def.keepsake;
     const since = home.fed || home.since;
-    const earned = Math.floor((nowSeconds() - since) / k.every);
+    // Floored at a quarter of the authored wait, so no stack of helpers can turn
+    // keepsakes into a tap-to-print button.
+    const every = Math.max(k.every / 4, k.every / (1 + critterTrait('keepsakeSpeed')));
+    const earned = Math.floor((nowSeconds() - since) / every);
     return Math.max(0, Math.min(k.cap, home.gifts + earned));
   }
 
@@ -2411,7 +2433,7 @@ const Game = (() => {
     canCraft, startCraft, sell,
     critterById, critterHome, critterHere, crittersHome, critterProgress, critterReady,
     habitatSlots, habitatUsed, habitatFree, critterTending, crittersTending, setTending, critterTrait,
-    critterLevel, critterMaxed, critterGoal, critterGoalFor, critterTraitAt,
+    critterLevel, critterMaxed, critterGoal, critterGoalFor, critterTraitAt, critterPayoutMult,
     checkCritters, keepsakesWaiting, settleCritters, collectKeepsakes, petCritter,
     benchDef, benchTop, benchUnlocked, benchFirstFree, benchEntryTier, benchNeighbours,
     benchGroup, benchMergeOnce, benchAddToBasket, benchPlace, benchBank,

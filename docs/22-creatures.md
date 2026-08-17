@@ -1,8 +1,8 @@
 # Creatures
 
-**Status: built 2026-08-16.** One creature, end to end — Pip the Grove Spirit. Arrival, living in
-the garden, petting, keepsakes, traits and tending, **stars and growth**, a habitat block in the
-Almanac, save, and 80 sim-test assertions.
+**Status: built 2026-08-16.** **Six creatures**, arrival, living in the garden, petting, keepsakes,
+traits and tending, stars and growth, a habitat block in the Almanac, save, and 96 sim-test
+assertions.
 
 This is the first step of the **habitat direction** agreed 2026-08-16. Reasoning in
 [10-decision-log.md](10-decision-log.md).
@@ -170,13 +170,45 @@ silently swallow the rest.
 Numbers are placeholders. The shape — arrives weak, escalating cost per star, capped at five — is the
 part to keep.
 
-### Pip's trait
+### The roster
 
-| Trait | Pool | Effect at ★5 |
-| --- | --- | --- |
-| `mutationLuck` — *Coaxes the Sky* | chance | Plants are **25% more likely** to catch the weather |
+Six creatures, each on a different bloom and a different axis. Values are at ★5; a creature carries a
+fifth of that at ★1.
 
-At one star that is 5%, climbing a fifth per star.
+| Creature | Comes for | Trait | Pool | At ★5 |
+| --- | --- | --- | --- | --- |
+| **Pip** — Grove Spirit | Bluebell (Lv 1) | *Coaxes the Sky* | chance | +25% mutation catch chance |
+| **Bumble** — Gardenbee | Lavender (Lv 2) | *Busy Hands* | utility | Every creature's keepsakes arrive 100% faster |
+| **Bramble** — Hedgefox | Rose (Lv 3) | *Forager* | chance | 2% chance a harvest turns up a card pack |
+| **Thistle** — Hedgepig | Marigold (Lv 5) | *Rummager* | chance | +60% gem drop chance on harvest |
+| **Luna** — Moonmoth | Moonflower (Lv 9) | *Moonlit* | yield | Night harvests pay +30% |
+| **Ember** — Lampfly | Starlit Iris (Lv 10) | *Lantern Keeper* | utility | +20% offline earning rate |
+
+**Six distinct categories and only one in the `yield` pool**, both asserted. Three properties worth
+keeping as the roster grows:
+
+- **Every creature is on a different bloom**, and they are spread across seed unlock levels 1 to 10,
+  so creatures arrive gradually rather than all at once.
+- **Bumble buffs the other creatures**, which makes the loadout self-referential and immediately more
+  interesting than six parallel percentages.
+- **Luna is the only yield multiplier and it is structurally capped** — night is roughly 32% of the
+  clock, so +30% at night is about +10% on average, and the cap is something the player does not
+  control. That is the shape to copy for any future `yield` trait.
+
+Where each one lands:
+
+| Trait | Consumer |
+| --- | --- |
+| `mutationLuck` | `catchMultiplier()` — the choke point both mutation roll paths use |
+| `gemLuck` | the gem roll inside `harvest()`, alongside the Lantern verb. **Not** `gemChanceFor()`, which stays the base rate |
+| `packLuck` | `rollCardPack(chance)` from `harvest()` — the same landing spot as the tap proc, so the album still only *receives* from the garden |
+| `nightYield` | `critterPayoutMult()`, kept apart from `verbPayoutMult()` so a creature and a verb are never confused in a balance pass |
+| `offlineRate` | `offlineRate()`, inside the existing `maxRate` clamp so a creature can never push past the cap |
+| `keepsakeSpeed` | `keepsakesWaiting()`, floored at a quarter of the authored wait so no stack of helpers turns keepsakes into a print button |
+
+A sim-test asserts each of these six actually moves its consumer. **A trait wired to nothing is
+invisible until someone notices the number never changes**, which is the kind of bug that survives for
+months.
 
 Wired into **`catchMultiplier()`**, which is the single choke point both mutation roll paths already
 go through, so there is no second consumer to keep in sync. It raises the **chance and never the
@@ -218,7 +250,13 @@ Pip is **original work in the kodama archetype**, not a copy of one. The game sh
 the silhouette language is borrowed and the design is not: a sprout instead of a bare head, moss
 speckles, blush, and a saturated storybook palette.
 
-Three rules learned while drawing it:
+**One body, a vocabulary of features.** `crown` is `sprout | spines | ears | antennae`, plus optional
+`wings` (`moth` broad, `buzz` small), `tail`, `stripes` and a palette. Six creatures come out of that
+and a seventh is a data row. Only ever **one crown** per creature — two turns the silhouette to mush
+at thumbnail size, which is the whole test in
+[05-art-direction.md](05-art-direction.md).
+
+Five rules learned while drawing them:
 
 - **The sprout must clear the body.** Tucked lower, the crown swallows it and the creature reads as a
   generic ghost. The sprout is the entire reason it reads as *garden* spirit.
@@ -226,6 +264,12 @@ Three rules learned while drawing it:
   fault.
 - **Blush and an eye highlight are what keep a pale spirit friendly.** This game is storybook-bright,
   never haunted — see [05-art-direction.md](05-art-direction.md).
+- **Wings must clear the body by a wide margin.** Tucked in behind it they read as small nubs and a
+  moth stops being a moth.
+- **No shading band.** An `inset()` clip drew a hard horizontal seam across every creature, most
+  obvious on a light body. The house style is flat fills inside one thick outline, so the band was
+  off-style as well as an artifact. Stripes use a real `<clipPath>` with a unique id — an inline
+  `clip-path: path()` silently did nothing, which left the bee with no stripes at all.
 
 Motion is all CSS: a slow float, an irregular head-tilt every few seconds, a blink, a pulsing glow,
 and drifting spores. The tilt is the personality and it is worth protecting.
