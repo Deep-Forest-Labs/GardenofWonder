@@ -5,6 +5,41 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-16 — Retracting the trait-collision rule, and only tending pets on screen
+
+**A correction to an entry written the same day.** That entry said a creature trait must not share an
+effect category with a verb, on the grounds that the two would cancel out. **The owner pushed back and
+was right.** They stack, and stacking buffs is the pleasure of this genre — this project's own market
+doc cites Cookie Clicker's 36 synergy pairs approvingly, and Melvor and Egg Inc are built on deep
+stacks.
+
+**Where the reasoning went wrong:** the rule was imported from the verb system, where it is correct
+for a specific reason. A plot picks **one** verb, so two verbs sharing a category would make that
+choice meaningless. A loadout picks **three of N**, which is a different problem with a different
+answer.
+
+**What replaces it — the pool a trait stacks into.** Harvest payout is already seven multiplied terms
+and the mastery ladder is endless, so the only genuinely dangerous pool is one that multiplies that
+product. Every trait now declares `pool`: `capped` (a stat with a ceiling, free), `chance`
+(self-limiting, since contribution is `chance × (mult − 1)`), `utility` (off the curve), or `yield`
+(compounds — keep few and small). Four traits at +25% yield is 2.44× on top of mastery, verbs, rarity
+and mutations, and that is the number worth watching rather than any notion of collision.
+
+**Two assertions replace the retracted one, guarding what actually breaks:** the roster may not be all
+one kind of effect, because six creatures that all add a percentage turn choosing three into a ranking
+rather than a decision; and at most a third of the roster may sit in the `yield` pool.
+
+**Only tending creatures stand in the yard**, at the owner's call — four is the most the lawn holds
+before it reads as clutter. A resting creature leaves the screen but stays home and stays in the
+roster, one tap from returning. This also makes tending *visually* meaningful rather than a number in a
+panel.
+
+**Recorded as a direction, not built:** the owner wants a farmhouse or den where resting creatures
+live — visit them, feed them, swap the loadout there rather than in a list. That is the right eventual
+home for feeding and any relationship mechanic, and it is a much better surface than a list row.
+
+---
+
 ## 2026-08-16 — Creatures get traits, and a slot limit to make them a decision
 
 **Built:** one trait per creature, habitat slots, a tending toggle, and a **The Habitat** block in the

@@ -501,21 +501,24 @@ const BENCH = {
    Two hard constraints, both already enforced elsewhere and both easy to break
    by accident:
 
-   1. A trait must not share an effect CATEGORY with a verb. Verbs already own
-      growth, yield, rarity, gems, density, propagation and night, and a sim-test
-      asserts no two verbs collide. A trait on one of those axes would quietly
-      cancel a verb out. Unclaimed axes: mutation catch chance, offline rate and
-      duration, keepsake cadence, pack luck, combo decay.
-   2. Rotate categories as the roster grows — chance, then rate, then duration,
-      then a utility — per the rule in 17-market-and-positioning.md. Two
-      creatures that both add a percentage are one creature.
+   1. `pool` says what a trait stacks INTO, and that is the number that matters.
+      `capped` lands on a stat with a ceiling (crit, growth, combo) and is free.
+      `chance` is self-limiting, because contribution is chance x (mult - 1).
+      `utility` sits off the yield curve entirely. `yield` multiplies straight
+      into the harvest product, which already has seven terms and an endless
+      mastery ladder in it — those must stay few and small. Stacking is the point
+      of the genre; the yield pool is the only one that compounds dangerously.
+   2. Traits must differ in KIND, not avoid the axes verbs use. Stacking with a
+      verb is fine and good. What kills a loadout is six creatures that all add a
+      percentage, because then choosing three is a ranking rather than a decision.
 
    A trait is a small nudge on purpose. The creature is the reward; the trait is
    why you think about which one is out. */
 const CREATURE_TRAITS = {
   mutationLuck: {
     name: 'Coaxes the Sky',
-    category: 'chance',
+    category: 'weather',
+    pool: 'chance',
     icon: 'sparkle',
     desc: (v) => `Plants are ${Math.round(v * 100)}% more likely to catch the weather`
   }

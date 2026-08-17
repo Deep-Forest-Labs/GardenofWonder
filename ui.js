@@ -577,8 +577,11 @@
     return node;
   }
 
+  /* Only tending creatures stand in the yard. Resting ones are still home and
+     still in the Almanac roster — they are just not on screen, because four is
+     the most the lawn can hold before it reads as clutter. */
   function renderCritters() {
-    const home = Game.crittersHome();
+    const home = Game.crittersTending();
     home.forEach((def, i) => {
       let node = critterEls.get(def.id);
       if (!node) {

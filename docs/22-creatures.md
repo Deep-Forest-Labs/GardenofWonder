@@ -80,19 +80,43 @@ relationship.
 **Added 2026-08-16.** Creatures carry stats, because the owner wanted the roster to feel like pets
 with attributes rather than a gallery — swappable, and worth thinking about.
 
-Two rails this runs between, both already in the docs and both easy to fall off:
+**Depth is fine; RPG *framing* is the trap.**
+[17-market-and-positioning.md](17-market-and-positioning.md#what-to-avoid-entirely) says idle RPG has
+the worst install rate in mobile at 2.0 per 1,000 impressions. That is about how the game is
+*marketed*, not whether there is strategy underneath. Loadouts, yes. "RPG" on the store page, no.
 
-1. **Depth is fine; RPG *framing* is the trap.**
-   [17-market-and-positioning.md](17-market-and-positioning.md#what-to-avoid-entirely) says idle RPG
-   has the worst install rate in mobile at 2.0 per 1,000 impressions. That is about how the game is
-   *marketed*, not whether there is strategy underneath. Loadouts, yes. "RPG" on the store page, no.
-2. **A trait must not share an effect category with a verb.** Verbs already own growth, yield,
-   rarity, gems, density, propagation and night, and a sim-test asserts no two verbs collide. A trait
-   on one of those axes would quietly cancel a verb out. **Unclaimed axes:** mutation catch chance,
-   offline rate and duration, keepsake cadence, pack luck, combo decay.
+### Retraction: traits may share an axis with a verb
 
-A sim-test enforces both: no trait may sit on a verb category, and no two creatures may share a
-trait category — so the roster is forced to rotate rather than stacking percentages.
+**An earlier version of this section said a trait must not share an effect category with a verb,
+because the two would "cancel out". That was wrong and is retracted.** They stack, and stacking is
+the pleasure of the genre — this project's own market doc cites Cookie Clicker's 36 synergy pairs
+approvingly. The rule was imported from the wrong place: *verbs* may not share a category because a
+plot picks **one** verb, so two identical verbs would make that choice meaningless. A loadout picks
+**three of N**, which is a different problem.
+
+### What actually constrains a trait: the pool it stacks into
+
+Harvest payout is already seven multiplied terms —
+`yield × rarity × (1+globalCredits) × (1+pollination) × wonder × mastery × verb × mutation` — and the
+mastery ladder never ends. That product is where an idle economy quietly breaks, and it is the same
+reasoning that kept mutations as chance-not-payout in
+[18-mutations-and-weather.md](18-mutations-and-weather.md).
+
+So every trait declares a `pool`:
+
+| Pool | What it touches | Stack freely? |
+| --- | --- | --- |
+| `capped` | A stat with a ceiling — crit chance, growth floor, combo cap | **Yes.** The cap holds it |
+| `chance` | A roll — mutation catch, gem drop, double harvest | **Yes.** `chance × (mult−1)` stays small |
+| `utility` | Off the yield curve — keepsake speed, offline rate, information | **Yes** |
+| `yield` | Multiplies the harvest product directly | **Sparingly.** Four at +25% is 2.44× on top of everything else |
+
+Two sim-tests replace the retracted rule, and they guard what actually goes wrong:
+
+- **The roster may not be all one kind of effect.** Six creatures that all add a percentage make
+  choosing three a ranking rather than a decision. Once three or more traits exist, at least half must
+  be distinct categories.
+- **At most a third of the roster may sit in the `yield` pool.**
 
 ### The slot limit is the whole mechanic
 
@@ -100,12 +124,18 @@ trait category — so the roster is forced to rotate rather than stacking percen
 HABITAT_SLOT_LEVELS = [1, 8, 14, 20]   // slots = how many of these the level has passed
 ```
 
-**Every creature that has moved in stays in the garden and stays visible.** Only a few *tend* at a
-time, and only a tending creature's trait applies. Nothing is ever taken away, which is what keeps
-this cosy — but having more creatures than slots is what makes "which one is out" a decision, and
-that decision is the strategy layer.
+**Only tending creatures stand in the yard.** Four is the most the lawn holds before it reads as
+clutter, so a resting creature leaves the screen — but it is still home, still in the Almanac roster,
+and still one tap from coming back. Nothing is ever taken away, which is what keeps this cosy; having
+more creatures than slots is what makes "which three are out" a decision, and that decision is the
+strategy layer.
 
-A tending creature wears a leaf badge in the yard, so the state is legible without opening a panel.
+A tending creature wears a leaf badge, so the state is legible from the garden itself.
+
+**Where resting creatures live is an open design space and a good one.** The owner's instinct is a
+farmhouse or den you can visit — see them lounging, feed them, and swap the loadout there instead of
+in a list. That is the Neko Atsume yard applied to the bench half of the roster, and it is the natural
+home for feeding, naming and any relationship mechanic later.
 
 ### Pip's trait
 

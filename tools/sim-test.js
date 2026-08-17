@@ -2450,16 +2450,31 @@ G.load();
 check('but a deliberate rest is respected', !G.critterTending(PIP.id));
 check('a trait cannot outrun the slot table', G.critterTrait(PIP.trait.id) <= PIP.trait.value * G.habitatSlots());
 
-group('traits stay off the axes verbs already own');
-const VERB_CATEGORIES = ['growth', 'yield', 'rarity', 'gems', 'density', 'propagation', 'night'];
+/* Stacking is the point of the genre, so these do NOT forbid a trait from sharing
+   an axis with a verb — that stacks, and stacking is fine. What they guard is the
+   two things that actually go wrong: a roster where every creature does the same
+   KIND of thing (choosing three is then a ranking, not a decision), and too many
+   traits multiplying straight into the harvest product, which already has seven
+   terms and an endless mastery ladder in it. */
+group('traits are varied in kind, and the yield pool stays small');
+const POOLS = ['capped', 'chance', 'utility', 'yield'];
+const traitsUsed = CREATURES.filter((c) => c.trait).map((c) => CREATURE_TRAITS[c.trait.id]);
 check('every trait names a real entry', CREATURES.every((c) => !c.trait || CREATURE_TRAITS[c.trait.id]));
 check('every trait has a positive value', CREATURES.every((c) => !c.trait || c.trait.value > 0));
-check('no trait sits on a verb category', Object.values(CREATURE_TRAITS)
-  .every((t) => VERB_CATEGORIES.indexOf(t.category) === -1));
-check('no two creatures share a trait category', (() => {
-  const cats = CREATURES.filter((c) => c.trait).map((c) => CREATURE_TRAITS[c.trait.id].category);
-  return new Set(cats).size === cats.length;
-})());
+check('every trait declares a known pool', Object.values(CREATURE_TRAITS)
+  .every((t) => POOLS.indexOf(t.pool) !== -1));
+check('the roster is not all one kind of effect', (() => {
+  if (traitsUsed.length < 3) return true;               // too few to judge yet
+  const cats = new Set(traitsUsed.map((t) => t.category));
+  return cats.size >= Math.ceil(traitsUsed.length / 2);
+})(), `${new Set(traitsUsed.map((t) => t.category)).size} categories across ${traitsUsed.length} traits`);
+/* At most a third of the roster may multiply the harvest product directly. Four
+   creatures at +25% yield is 2.44x on top of mastery, verbs, rarity and
+   mutations — that is where an idle economy quietly breaks. */
+check('few traits multiply the harvest product', (() => {
+  const yields = traitsUsed.filter((t) => t.pool === 'yield').length;
+  return yields <= Math.max(1, Math.floor(traitsUsed.length / 3));
+})(), `${traitsUsed.filter((t) => t.pool === 'yield').length} of ${traitsUsed.length} in the yield pool`);
 check('every trait can describe itself', Object.values(CREATURE_TRAITS)
   .every((t) => t.name && typeof t.desc === 'function' && t.desc(0.25).length > 0));
 
