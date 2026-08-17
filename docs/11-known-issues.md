@@ -90,6 +90,22 @@ published to the same account would need a distinct key prefix.
 `navigator.vibrate` is unimplemented. Calls are wrapped in try/catch. iPhone players get no
 haptic feedback and there's no alternative.
 
+### `Icons.get()` falls back silently, and it hid two missing icons
+
+`Icons.get(name)` returns `LIB.sparkle` for an unknown name, so a typo renders a **plausible wrong
+glyph** rather than failing. Two icons — `gift` and `moon` — were referenced by creature traits and
+pairs for a whole session before anyone noticed they did not exist; the memento chip and Luna's trait
+were both quietly drawing a sparkle.
+
+**Fixed 2026-08-16.** Both icons were added, `Icons.has()` was introduced for an exact check, and the
+suite now asserts every icon named by `CREATURE_TRAITS`, `CREATURE_PAIRS`, `BENCH`, `DATA.upgrades`
+and `DATA.decor` really exists. The fallback itself is left in place — a missing glyph should not
+crash a panel — but it can no longer hide.
+
+**Note for whoever writes that kind of test next:** the obvious check —
+`Icons.get(name) !== Icons.get('nonsense')` — is wrong, because anything legitimately using `sparkle`
+is then indistinguishable from a mistake. It reported three false failures before `has()` existed.
+
 ## Structural
 
 ### ~~`ui.js` is doing too much~~ — split 2026-08-16

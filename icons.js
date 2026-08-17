@@ -160,6 +160,16 @@ const Icons = (() => {
       <path d="M10 2.8h4v6l4.4 7.6a2.6 2.6 0 0 1-2.2 4H7.8a2.6 2.6 0 0 1-2.2-4L10 8.8Z" fill="#e7f5ff"/>
       <path d="M7.4 14.4h9.2l1.8 2a2.6 2.6 0 0 1-2.2 4H7.8a2.6 2.6 0 0 1-2.2-4Z" fill="#8ce0ff"/>
       <path d="M9 2.8h6" stroke-width="2.2"/>`),
+    gift: S(`
+      <path d="M4 10.2h16V20H4Z" fill="#ffd6e0"/>
+      <path d="M2.8 6.6h18.4v3.6H2.8Z" fill="#ff8fab"/>
+      <path d="M12 6.6V20" stroke-width="2"/>
+      <path d="M12 6.6C10.4 3.6 6.8 3.4 6.8 5.4c0 1.3 2.1 1.7 5.2 1.2Z" fill="#ffe066" stroke-width="1.5"/>
+      <path d="M12 6.6c1.6-3 5.2-3.2 5.2-1.2 0 1.3-2.1 1.7-5.2 1.2Z" fill="#ffe066" stroke-width="1.5"/>`),
+    moon: S(`
+      <path d="M16.2 3.1A9 9 0 1 0 20.7 15 9.6 9.6 0 0 1 16.2 3.1Z" fill="#ffe9a8"/>
+      <circle cx="9.2" cy="9.4" r="1.4" fill="#f0d489" stroke-width="1.1"/>
+      <circle cx="8.2" cy="14.6" r="1" fill="#f0d489" stroke-width="1.1"/>`),
     petal: S(`
       <path d="M12 3.4c2.6 2.4 4 5 4 7.6a4 4 0 0 1-8 0c0-2.6 1.4-5.2 4-7.6Z" fill="#ff8fab"/>
       <path d="M12 11v9.4" stroke-width="2"/>
@@ -170,6 +180,11 @@ const Icons = (() => {
     return LIB[name] || LIB.sparkle;
   }
 
+  /** Exact, because get() falls back to `sparkle` — so a typo renders a
+      plausible wrong glyph instead of failing, and anything legitimately using
+      `sparkle` is indistinguishable from a mistake. */
+  const has = (name) => Object.prototype.hasOwnProperty.call(LIB, name);
+
   /** Swap every <span data-icon="x"> in a subtree for its SVG. */
   function hydrate(root = document) {
     root.querySelectorAll('[data-icon]').forEach((el) => {
@@ -179,5 +194,5 @@ const Icons = (() => {
     });
   }
 
-  return { get, hydrate };
+  return { get, has, hydrate };
 })();

@@ -45,6 +45,7 @@ const Game = (() => {
       bench: { cells: Array(BENCH.cols * BENCH.cols).fill(null), side: BENCH.startSide, basket: [], stock: {} },
       critters: {},
       pairsSeen: [],
+      mementos: {},
       luckyPacks: 0,
       prefs: { sfx: true, music: false },
       seen: { intro: false, plot: false, apiary: false },
@@ -169,6 +170,18 @@ const Game = (() => {
       state.flowers = parsed.flowers && typeof parsed.flowers === 'object' ? parsed.flowers : {};
       state.craft = Array.isArray(parsed.craft) ? parsed.craft : [];
       state.goods = parsed.goods && typeof parsed.goods === 'object' ? parsed.goods : {};
+      /* A count per keepsake, not a boolean, because anything that eventually
+         spends or crafts them needs quantities — the same rule the card album
+         follows. Unknown ids are dropped so a retired creature cannot leave a
+         ghost behind. */
+      state.mementos = {};
+      {
+        const m = parsed.mementos && typeof parsed.mementos === 'object' ? parsed.mementos : {};
+        CREATURES.forEach((def) => {
+          const n = Math.max(0, Math.floor(Number(m[def.keepsake.id]) || 0));
+          if (n > 0) state.mementos[def.keepsake.id] = n;
+        });
+      }
       state.pairsSeen = (Array.isArray(parsed.pairsSeen) ? parsed.pairsSeen : [])
         .filter((id) => CREATURE_PAIRS.some((p) => p.id === id));
       state.luckyPacks = Math.max(0, Number(parsed.luckyPacks) || 0);
@@ -1913,6 +1926,10 @@ const Game = (() => {
     const gems = (k.gems || 0) * n * (doubled ? PAIR_TUNING.oddsAndEndsMult : 1);
     state.credits += credits;
     state.gems += gems;
+    // The keepsake itself is kept, not just cashed in. Nothing spends these yet;
+    // they are a lifetime record so a future craft or display has something real
+    // to read — see docs/22-creatures.md.
+    state.mementos[k.id] = (state.mementos[k.id] || 0) + n;
     // The Delivery Round: what you picked up turns out to be a pack instead.
     let pack = 0;
     if (pairActive('deliveryround')) {
@@ -1927,10 +1944,14 @@ const Game = (() => {
     save();
     emit('currency');
     emit('critter', { def, collected: n, credits, gems, pack });
-    return { def, count: n, credits, gems, pack, doubled, name: k.name };
+    return { def, count: n, credits, gems, pack, doubled, name: k.name, memento: k.id, held: state.mementos[k.id] };
   }
 
   /** Tapping a creature is not a currency button — it just reacts. */
+  const mementoCount = (id) => state.mementos[id] || 0;
+  const mementoKinds = () => CREATURES.filter((c) => mementoCount(c.keepsake.id) > 0).length;
+  const mementoTotal = () => CREATURES.reduce((n, c) => n + mementoCount(c.keepsake.id), 0);
+
   function petCritter(id) {
     const def = critterById(id);
     if (!def || !critterHere(id)) return null;
@@ -2521,6 +2542,7 @@ const Game = (() => {
     habitatSlots, habitatUsed, habitatFree, critterTending, crittersTending, setTending, critterTrait,
     critterLevel, critterMaxed, critterGoal, critterGoalFor, critterTraitAt, critterPayoutMult,
     pairById, pairActive, activePairs, notePairs, nightbloomUpgrade,
+    mementoCount, mementoKinds, mementoTotal,
     checkCritters, keepsakesWaiting, settleCritters, collectKeepsakes, petCritter,
     benchDef, benchTop, benchUnlocked, benchFirstFree, benchEntryTier, benchNeighbours,
     benchGroup, benchMergeOnce, benchAddToBasket, benchPlace, benchBank,

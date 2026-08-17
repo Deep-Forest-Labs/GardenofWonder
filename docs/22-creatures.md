@@ -60,8 +60,34 @@ flower's `FLOWER_LINES`.
 ## Keepsakes
 
 ```js
-keepsake: { name: 'Mossy Pebble', every: 900, cap: 3, gems: 1, credits: 250 }
+keepsake: { id: 'mossy_pebble', name: 'Mossy Pebble', every: 900, cap: 3, gems: 1, credits: 250 }
 ```
+
+**The keepsake is kept, not just cashed in.** `state.mementos` holds a lifetime count per keepsake id
+— nothing spends them yet, but a name that evaporates on collection is decoration, and any future
+craft, display or trade needs quantities to read. Counts, not booleans, for the same reason the card
+album stores counts.
+
+**Ids are stable and separate from the display name**, so renaming *Someone Else's Button* can never
+orphan a save. A sim-test asserts they are unique and never collide with a card id.
+
+| Creature | Keepsake | Every | Cap | Pays |
+| --- | --- | --- | --- | --- |
+| Pip | Mossy Pebble | 15 min | 3 | 1 gem + 250 |
+| Thistle | Bent Nail | 20 min | 3 | 1 gem + 400 |
+| Bumble | Thimble of Honey | 20 min | 3 | 1 gem + 500 |
+| Bramble | Someone Else's Button | 25 min | 3 | 2 gems + 600 |
+| Luna | Wing Dust | 25 min | 3 | 2 gems + 700 |
+| Ember | Warm Pebble | 30 min | 3 | 2 gems + 900 |
+
+**Each is a small joke about its creature** — this is the Neko Atsume memento device recorded in
+[17-market-and-positioning.md](17-market-and-positioning.md). Bramble brings you things, not all of
+them hers, so hers is *Someone Else's Button*. Thistle digs constantly and forgets what he buried, so
+his is a *Bent Nail*. That is the whole reason they are named rather than being "+250 coins".
+
+**The coins and gems are the placeholder, not the memento.** Eventually the object should be the
+reward and the currency should shrink or go — held mementos are the thing a craft or a display shelf
+would read.
 
 Derived from **elapsed time against an absolute timestamp**, the same shape the hives already use, so
 time away counts for free and nothing needs replaying.

@@ -5,6 +5,43 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-16 — Keepsakes are kept, and an icon fallback that hid two mistakes
+
+**Built:** `state.mementos`, a lifetime count per keepsake id, shown on each creature's Almanac row.
+23 new assertions.
+
+**The owner spotted that the memento was named but not stored.** `collectKeepsakes()` turned it
+straight into coins and gems and the object itself evaporated, which made the name decoration. Six
+keepsakes each written as a small joke about their creature — *Someone Else's Button* because Bramble
+brings you things and not all of them are hers — and none of them existed after the tap.
+
+**Counts, not booleans**, for the same reason the card album stores counts: nothing spends mementos
+yet, but any future craft, display or trade needs quantities, and retrofitting a count onto a boolean
+after players have saves is the migration worth spending one line to avoid.
+
+**Keepsake ids are now separate from display names**, so renaming one can never orphan a save — the
+same lesson as quest ids. A test asserts they are unique and never collide with a card id.
+
+**Recorded as intent:** the coins and gems are the placeholder, not the memento. Eventually the object
+should be the reward and the currency should shrink, because a keepsake that pays 250 coins is a
+wallet top-up wearing a name.
+
+**A silent fallback hid two missing icons.** `Icons.get()` returns `sparkle` for an unknown name, so a
+typo renders a plausible wrong glyph rather than failing. `gift` and `moon` were referenced by
+creature traits and pairs for a whole session while quietly drawing sparkles. Both added,
+**`Icons.has()`** introduced for an exact check, and the suite now asserts every icon named by
+`CREATURE_TRAITS`, `CREATURE_PAIRS`, `BENCH`, `DATA.upgrades` and `DATA.decor` exists.
+
+*The obvious version of that test is wrong*, and it is worth recording because the next person will
+write it: comparing `Icons.get(name)` against `Icons.get('nonsense')` reports every legitimate use of
+`sparkle` as a failure. It produced three false positives before `has()` existed.
+
+**`BENCH.chain` carried an `icon` field nothing reads**, found by the same guard — the merge spike
+draws its own shapes. Dropped rather than authoring five speculative glyphs for a feature with no
+surface: dead data is worse than a missing icon.
+
+---
+
 ## 2026-08-16 — Eight named pairs, and slots moved earlier so they can be found
 
 **Built:** eight pairs, their eight consumers, a Companions block in the Almanac, a discovery banner,

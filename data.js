@@ -471,12 +471,12 @@ const BENCH = {
   bonusAt: 5,
   basketMax: 60,
   chain: [
-    { id: 'petal',   name: 'Petal',         icon: 'petal',    value: 10 },
-    { id: 'posy',    name: 'Posy',          icon: 'posy',     value: 45 },
-    { id: 'bouquet', name: 'Bouquet',       icon: 'bouquet',  value: 200 },
-    { id: 'basket',  name: 'Flower Basket', icon: 'basket',   value: 900 },
-    { id: 'wreath',  name: 'Wreath',        icon: 'wreath',   value: 4000 },
-    { id: 'crown',   name: 'Flower Crown',  icon: 'crown',    value: 18000 }
+    { id: 'petal',   name: 'Petal',         value: 10 },
+    { id: 'posy',    name: 'Posy',          value: 45 },
+    { id: 'bouquet', name: 'Bouquet',       value: 200 },
+    { id: 'basket',  name: 'Flower Basket', value: 900 },
+    { id: 'wreath',  name: 'Wreath',        value: 4000 },
+    { id: 'crown',   name: 'Flower Crown',  value: 18000 }
   ],
   /* What a harvest is worth to the bench scales with the seed, not flat per
      harvest. A Daisy cycles 65x faster than an Eternal Crown, so any flat rate
@@ -658,7 +658,7 @@ const CREATURES = [
     trait: { id: 'mutationLuck', value: 0.25 },
     /* Keepsakes accrue on a slow clock and cap, so an absence is a small gift
        waiting rather than a pile of homework. */
-    keepsake: { name: 'Mossy Pebble', every: 900, cap: 3, gems: 1, credits: 250 },
+    keepsake: { id: 'mossy_pebble', name: 'Mossy Pebble', every: 900, cap: 3, gems: 1, credits: 250 },
     art: {
       body: 'pebble',
       skin: '#f4fdf5',
@@ -682,7 +682,7 @@ const CREATURES = [
     hint: 'Sleeps under the marigolds. Refuses to explain why.',
     about: 'Digs constantly and remembers nothing about where.',
     trait: { id: 'gemLuck', value: 0.6 },
-    keepsake: { name: 'Bent Nail', every: 1200, cap: 3, gems: 1, credits: 400 },
+    keepsake: { id: 'bent_nail', name: 'Bent Nail', every: 1200, cap: 3, gems: 1, credits: 400 },
     art: {
       body: 'bean', crown: 'spines',
       skin: '#f7e2c8', shade: '#d9b78f', accent: '#a4713f', cheek: '#ff9ec4', glow: '#ffd8a8'
@@ -702,7 +702,7 @@ const CREATURES = [
     hint: 'Comes for the roses. Stays for the company, it says.',
     about: 'Brings you things. Not all of them are hers.',
     trait: { id: 'packLuck', value: 0.02 },
-    keepsake: { name: 'Someone Else\u2019s Button', every: 1500, cap: 3, gems: 2, credits: 600 },
+    keepsake: { id: 'lost_button', name: 'Someone Else\u2019s Button', every: 1500, cap: 3, gems: 2, credits: 600 },
     art: {
       body: 'bean', crown: 'ears', tail: true,
       skin: '#ffb27a', shade: '#e08b4e', accent: '#c96a2e', accent2: '#ffd9b8',
@@ -723,7 +723,7 @@ const CREATURES = [
     hint: 'Only ever seen near moonflowers, and only after dark.',
     about: 'Navigates by something that is not the moon.',
     trait: { id: 'nightYield', value: 0.3 },
-    keepsake: { name: 'Wing Dust', every: 1500, cap: 3, gems: 2, credits: 700 },
+    keepsake: { id: 'wing_dust', name: 'Wing Dust', every: 1500, cap: 3, gems: 2, credits: 700 },
     art: {
       body: 'pebble', crown: 'antennae', wings: 'moth',
       skin: '#e8e0ff', shade: '#bfb0e8', accent: '#b197fc', wingFill: '#cbb9ff',
@@ -744,7 +744,7 @@ const CREATURES = [
     hint: 'Drawn to starlit iris. Keeps the night shift.',
     about: 'Insists on carrying the light, badly.',
     trait: { id: 'offlineRate', value: 0.2 },
-    keepsake: { name: 'Warm Pebble', every: 1800, cap: 3, gems: 2, credits: 900 },
+    keepsake: { id: 'warm_pebble', name: 'Warm Pebble', every: 1800, cap: 3, gems: 2, credits: 900 },
     art: {
       body: 'pebble', crown: 'antennae', wings: 'buzz',
       skin: '#fff3c4', shade: '#f5cf6a', accent: '#ffb703', wingFill: '#fff0b3',
@@ -765,7 +765,7 @@ const CREATURES = [
     hint: 'Lavender. Obviously lavender. What else would it be.',
     about: 'Helps everyone else and never once sits down.',
     trait: { id: 'keepsakeSpeed', value: 1 },
-    keepsake: { name: 'Thimble of Honey', every: 1200, cap: 3, gems: 1, credits: 500 },
+    keepsake: { id: 'honey_thimble', name: 'Thimble of Honey', every: 1200, cap: 3, gems: 1, credits: 500 },
     art: {
       body: 'bean', crown: 'antennae', wings: 'buzz', stripes: true,
       skin: '#ffe066', shade: '#e6b800', accent: '#3d2a1c', stripe: '#4a3520',

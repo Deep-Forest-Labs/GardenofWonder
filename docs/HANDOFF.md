@@ -19,7 +19,9 @@ from quests and levels.
 >
 > **Six creatures**, each drawn by a different bloom across seed unlock levels 1–10: Pip (Bluebell),
 > Bumble (Lavender), Bramble (Rose), Thistle (Marigold), Luna (Moonflower), Ember (Starlit Iris). They
-> live on the lawn, react when tapped, and leave keepsakes on a slow clock. **This is the most direct
+> live on the lawn, react when tapped, and leave **keepsakes** on a slow clock — a named memento each,
+> written as a small joke about its creature, and **kept** in `state.mementos` rather than cashed
+> straight into currency, so a future craft or display has something real to read. **This is the most direct
 > answer the project has found to "why plant this flower":** Pip comes for bluebells and nothing else.
 >
 > **A creature is raised, not found.** It arrives at one star carrying a fifth of its trait and grows

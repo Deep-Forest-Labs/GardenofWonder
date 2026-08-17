@@ -20,7 +20,7 @@ globalThis.localStorage = {
 /* The game files are plain scripts that declare globals, so evaluate them and
    then re-export what they defined onto globalThis. */
 const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
-  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'CREATURE_PAIRS', 'PAIR_TUNING', 'flowerValue', 'Game'];
+  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'CREATURE_PAIRS', 'PAIR_TUNING', 'Icons', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -29,6 +29,7 @@ function loadScript(file) {
 }
 
 loadScript('data.js');
+loadScript('icons.js');
 loadScript('game.js');
 
 const G = globalThis.Game;
@@ -2769,6 +2770,79 @@ const PT = PAIR_TUNING;
   check('a keepsake can arrive as a pack', got2.pack > 0 && S.packs > packsBefore);
   restAll();
 })();
+
+group('a keepsake is kept, not just cashed in');
+G.reset();
+S.level = 20;
+const PIPK = G.critterById('pip').keepsake;
+bring('pip', 1);
+S.critters.pip.since = G.nowSeconds() - PIPK.every * 99;
+S.critters.pip.fed = 0;
+S.critters.pip.gifts = 0;
+check('nothing held before collecting', G.mementoCount(PIPK.id) === 0);
+const waiting = G.keepsakesWaiting('pip');
+const first = G.collectKeepsakes('pip');
+check('collecting keeps the memento', G.mementoCount(PIPK.id) === waiting, `held ${G.mementoCount(PIPK.id)}`);
+check('and reports what is held', first.memento === PIPK.id && first.held === waiting);
+S.critters.pip.since = G.nowSeconds() - PIPK.every * 99;
+S.critters.pip.fed = 0;
+S.critters.pip.gifts = 0;
+const more = G.keepsakesWaiting('pip');
+G.collectKeepsakes('pip');
+check('they accumulate rather than replace', G.mementoCount(PIPK.id) === waiting + more);
+check('kinds counts distinct keepsakes', G.mementoKinds() === 1);
+check('total counts every one held', G.mementoTotal() === waiting + more);
+check('an unknown memento holds nothing', G.mementoCount('not_a_thing') === 0);
+/* Nothing spends them yet, so the record must never go backwards — the same rule
+   as state.discovered. */
+G.petCritter('pip');
+check('petting does not spend one', G.mementoCount(PIPK.id) === waiting + more);
+
+group('mementos survive a save');
+G.saveNow();
+G.load();
+check('the count comes back', G.mementoCount(PIPK.id) === waiting + more);
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500,
+  mementos: { [PIPK.id]: 4, not_a_real_keepsake: 9, [G.critterById('luna').keepsake.id]: -3 }
+}));
+G.load();
+check('a real keepsake is kept', G.mementoCount(PIPK.id) === 4);
+check('an unknown one is dropped', G.mementoCount('not_a_real_keepsake') === 0);
+check('a negative count is dropped', G.mementoCount(G.critterById('luna').keepsake.id) === 0);
+localStorage.setItem('gw-save', JSON.stringify({ version: 3, credits: 500 }));
+G.load();
+check('a save from before mementos loads clean', G.mementoTotal() === 0);
+
+/* Icons.get() falls back to `sparkle` for an unknown name, so a typo renders a
+   plausible-looking wrong glyph rather than failing. Two icons were referenced
+   for a whole session before anyone noticed they did not exist. */
+group('every icon a data table names actually exists');
+const iconExists = (name) => Icons.has(name);
+check('a missing icon is detectable', !iconExists('__not_an_icon__'));
+check('and the fallback itself still counts as real', iconExists('sparkle'));
+check('every trait icon exists', Object.entries(CREATURE_TRAITS)
+  .every(([, t]) => iconExists(t.icon)),
+  Object.entries(CREATURE_TRAITS).filter(([, t]) => !iconExists(t.icon)).map(([k]) => k).join(', '));
+check('every pair icon exists', CREATURE_PAIRS.every((p) => iconExists(p.icon)),
+  CREATURE_PAIRS.filter((p) => !iconExists(p.icon)).map((p) => p.id).join(', '));
+check('every bench rung icon exists', BENCH.chain.every((c) => !c.icon || iconExists(c.icon)),
+  BENCH.chain.filter((c) => c.icon && !iconExists(c.icon)).map((c) => c.id).join(', '));
+check('every upgrade icon exists', Object.entries(DATA.upgrades)
+  .every(([, u]) => !u.icon || iconExists(u.icon)),
+  Object.entries(DATA.upgrades).filter(([, u]) => u.icon && !iconExists(u.icon)).map(([k]) => k).join(', '));
+check('every decor icon exists', DATA.decor.every((d) => iconExists(d.icon)),
+  DATA.decor.filter((d) => !iconExists(d.icon)).map((d) => d.id).join(', '));
+
+group('every keepsake is authored to be kept');
+check('each has a stable id', CREATURES.every((c) => c.keepsake.id));
+check('ids are unique', (() => {
+  const ids = CREATURES.map((c) => c.keepsake.id);
+  return new Set(ids).size === ids.length;
+})());
+check('an id never collides with a card id', CREATURES.every((c) => (
+  !ALBUM.sets.some((set) => set.cards.some((card) => card.id === c.keepsake.id))
+)));
 
 group('a pair is a discovery, recorded once');
 G.reset();

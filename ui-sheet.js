@@ -528,6 +528,7 @@
       }
 
       const level = Game.critterLevel(def.id);
+      const held = Game.mementoCount(def.keepsake.id);
       const goal = Game.critterGoal(def.id);
       const now = trait ? Game.critterTraitAt(def, level) : 0;
       const canTend = tending || Game.habitatFree() > 0;
@@ -545,6 +546,9 @@
           <span class="critter-note">${def.about}</span>
           ${trait ? `<span class="critter-trait">${Icons.get(trait.icon)}<b>${trait.name}:</b> ${trait.desc(now)}</span>` : ''}
           ${grow}
+          ${held > 0
+            ? `<span class="critter-memento">${Icons.get('gift')}${def.keepsake.name} <b>×${fmt(held)}</b></span>`
+            : `<span class="critter-memento none">${Icons.get('gift')}No ${def.keepsake.name} yet</span>`}
         </span>
         <button class="critter-toggle" data-tend="${def.id}" data-on="${tending ? '1' : '0'}"
           ${canTend ? '' : 'disabled'}>${tending ? 'Tending' : 'Resting'}</button>
@@ -627,7 +631,8 @@
       <div class="stat-block">
         <h3>${Icons.get('sparkle')} The Habitat</h3>
         <p class="stat-note">${Game.habitatUsed()} of ${Game.habitatSlots()} tending${
-          Game.habitatFree() > 0 ? '' : ' — rest one to swap another in'}</p>
+          Game.habitatFree() > 0 ? '' : ' — rest one to swap another in'}${
+          Game.mementoTotal() ? ` · ${fmt(Game.mementoTotal())} keepsakes kept` : ''}</p>
         ${critterRows()}
       </div>
       <div class="stat-block">
