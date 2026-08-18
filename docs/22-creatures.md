@@ -236,9 +236,9 @@ chip or a swipe up closes it. `hollow.js` draws the room and knows nothing about
   only the ones tending — the **leaf badge** in the Hollow is what says which, and the gem badge says
   who has a keepsake waiting. Tapping one pets it or collects, through the same `UI.tapCritter()` the
   garden uses, so there is one code path for the whole interaction.
-- **The Hollow has its own dock** — Feed, Pet, Loadout, Decorate. Loadout opens the Almanac. **Feed
-  and Decorate are honest about not existing** rather than doing something token: the buttons are
-  there because the shape of the screen depends on them, and they say so when tapped.
+- **The Hollow has its own dock** — Feed, Pet, Loadout, Decorate. **Feed and Decorate are honest
+  about not existing** rather than doing something token: the buttons are there because the shape of
+  the screen depends on them, and they say so when tapped.
 - **The garden's dock, rail and quest strip hide while the Hollow is up**, via `.in-hollow` on
   `#game`. The frame loop redraws the Hollow instead of the garden yard while it is open.
 - **The sky follows `Game.isNight()`**, so the room is lit by whichever light is actually outside.
@@ -269,8 +269,32 @@ All five came from playing it on a phone, and four are the kind a screenshot hid
 Two placements also had to move: the tending count sat over the crack, where the art is busy enough to
 swallow small white text, and the garden's leftmost creature spot sat under the burrow door.
 
-Still not built: chambers and sideways paging, a second level, feeding, decorating, and any way to
-change the loadout from inside the room rather than through the Almanac.
+### The loadout is chosen in the room, 2026-08-18
+
+**Pet and Loadout are modes, and a tap on a creature spends whichever is armed.** Loadout used to
+open the Almanac, which meant choosing the pets standing in front of you by leaving the room and
+reading a book about them. Now the dock button arms the mode, the armed button lights up, and
+tapping a creature sends it out or lets it rest.
+
+- **The room already had the display for this.** The leaf badge said who was tending before any of
+  this was built; loadout mode adds a ring around it and steps a resting creature back to half
+  opacity and low saturation. Nobody leaves — that is what keeps the slot limit cosy rather than
+  punitive.
+- **No toast for entering a mode.** The count line reads `3 of 3 tending · tap to swap` and the
+  dimming carries the rest. Toasts are for notable moments and the cap is two.
+- **The Almanac's Habitat block keeps its toggles.** It is still where an *unmet* creature and its
+  harvest progress live, and the Hollow can only show creatures that are already home. Two surfaces
+  onto one `Game.setTending()`, which is the same discipline `UI.tapCritter()` already follows.
+- **Nothing was added to the save.** Mode is a UI local, reset to Pet on exit.
+
+**A celebration cannot be centred on a hidden element.** Forming a pair from inside the Hollow fired
+its confetti and ring from the top-left corner, because both the `pair` and `critter` handlers were
+centred on `#garden` — and `.in-hollow` sets `display:none` on `.stage`, so `#garden` measures a
+0×0 rect. Both now go through one `critterStage()` helper that picks whichever screen is up. This
+was invisible until the Hollow became a place where the loadout can change; an automated harvest
+could always have brought a creature while the room was open.
+
+Still not built: chambers and sideways paging, a second level, feeding, and decorating.
 
 ### Stars — a creature is raised, not found
 

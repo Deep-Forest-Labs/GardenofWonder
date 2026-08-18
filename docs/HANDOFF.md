@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-16**
+Last updated: **2026-08-18**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -55,6 +55,14 @@ from quests and levels.
 > from one source and the art cannot drift. **Feed and Decorate are honest about not existing.**
 > Chambers, sideways paging and a second level are agreed but unbuilt. See
 > [22-creatures.md](22-creatures.md).
+>
+> **The loadout is now chosen in the room, 2026-08-18.** Pet and Loadout are **modes** on the
+> Hollow's dock and a tap on a creature spends whichever is armed — sending it out or letting it
+> rest, rather than opening the Almanac to do it. The Almanac's Habitat block keeps its toggles,
+> because it is the only place an *unmet* creature can live. Nothing was added to the save. The
+> change exposed a real bug: **a celebration centred on a hidden element fires from the top-left
+> corner**, because `.in-hollow` hides `.stage` and `#garden` then measures 0×0. Fixed for the
+> `pair` and `critter` handlers; the rule is in the traps below.
 
 > **The Potting Bench landed as simulation, 2026-08-16.** A merge board fed by the garden, and
 > **it is what replaces the Apothecary** — both turn garden output into goods the Market will want,
@@ -274,17 +282,18 @@ they live. See [22-creatures.md](22-creatures.md).
 
 The obvious next pieces, roughly in order:
 
-1. **Chambers and sideways paging in the Hollow.** Agreed and unbuilt. Swipe between rooms of three
-   or four rather than scrolling one long wall — more legible one-handed, gives each room character,
-   and it is the natural unit for decorating later. **One level first**; a second is a progression
-   reward once the roster needs it, because an empty second floor is worse than none.
-2. **Swap the loadout from inside the Hollow.** It is odd that the place the creatures live is not
-   where you choose them; today the Loadout button just opens the Almanac.
-3. **Feed and Decorate.** Both are in the Hollow dock and both say plainly that they are not built.
+1. ~~**Swap the loadout from inside the Hollow.**~~ **Done 2026-08-18.** Pet and Loadout are modes
+   on the Hollow's dock; a tap on a creature spends whichever is armed.
+2. **Feed and Decorate.** Both are in the Hollow dock and both say plainly that they are not built.
    Feeding is the obvious home for mementos, which are stored and currently spent on nothing.
-4. **More pairs, or a seventh creature.** Eight pairs of a possible fifteen. Any new trait must
+3. **More pairs, or a seventh creature.** Eight pairs of a possible fifteen. Any new trait must
    declare a `pool`, and the suite fails if the roster becomes all one kind of effect, if more than a
    third sits in `yield`, or if any creature ends up in fewer than two pairs.
+4. **Chambers and sideways paging in the Hollow.** Agreed and unbuilt — but **hold it until the
+   roster outgrows one room.** `Hollow.SPOTS` holds six positions and there are six creatures, so
+   paging today means swiping from a full room to an empty one, which is the same failure the
+   "one level first" rule already names for a second floor. It is the natural unit for decorating
+   later, so build it behind a seventh creature rather than ahead of one.
 5. **Flower breeding**, the second half of the direction. Cross two mature neighbours into a hybrid
    seed. It reuses the adjacency board and *generates* content rather than authoring it — but it
    changes the seed model, so it has a far bigger blast radius than creatures did.
@@ -418,7 +427,14 @@ by two agents that did not know about each other — competently and incompatibl
 state shapes for the same feature. Cloud agents push to `cursor/*` branches and may already have
 merged to `main` while your local tree still looks current. `git fetch` first.
 
-**The UI is five files sharing one global, and the sharing rule is load-order-sensitive.** A
+**A celebration centred on a hidden element fires from the top-left corner.** `.in-hollow` sets
+`display:none` on `.stage`, so `#garden` measures a 0×0 rect and `FX.centerOf()` returns the origin
+— no error, no warning, just confetti in the corner. Anything in `ui-events.js` that celebrates
+something the player can cause from more than one screen has to centre on the screen that is
+actually up; the `pair` and `critter` handlers go through `critterStage()` for exactly this. Found
+by forming Nightbloom from inside the Hollow and looking at the picture.
+
+**The UI is now six files sharing one global, and the sharing rule is load-order-sensitive.** A
 `ui-*` file may destructure the `ui-shared.js` primitives at the top (`const { $, S, el, fmt } =
 UI;`) because those exist as soon as `UI` does. It may **not** destructure anything another UI file
 attaches — `UI.toast`, `UI.openSheet`, `UI.plotEls` — because that file may not have loaded yet;
@@ -537,7 +553,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 512 assertions over the simulation layer
+node tools/sim-test.js          # 718 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

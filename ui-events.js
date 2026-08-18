@@ -8,6 +8,11 @@
 (() => {
   const { S, el, fmt, signed, rnd } = UI;
 
+  /* Where a celebration about creatures should land. The garden is hidden while
+     the Hollow is up, and a hidden element measures as a zero rect — so anything
+     centred on it fires from the top-left corner instead. */
+  const critterStage = () => FX.centerOf(UI.hollowOpen() ? el.hollow : el.garden);
+
   Game.on('wonder', ({ active }) => {
     if (active) {
       el.game.classList.add('wonder');
@@ -327,7 +332,7 @@
   Game.on('critter', ({ def, arrived, levelled, level }) => {
     if (!arrived && !levelled) return;
     UI.renderCritters();
-    const c = FX.centerOf(el.garden);
+    const c = critterStage();
     Sound.play('quest');
     UI.faceReact('wow');
     if (arrived) {
@@ -353,7 +358,7 @@
      attention once and never again. */
   Game.on('pair', ({ pair, first }) => {
     if (!first) return;
-    const c = FX.centerOf(el.garden);
+    const c = critterStage();
     FX.confetti(c.x, c.y, 24);
     FX.ring(c.x, c.y, '#8ce99a', 0.5, 130);
     Sound.play('quest');

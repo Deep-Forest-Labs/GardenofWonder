@@ -1895,6 +1895,14 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   padding:9px 9px calc(14px + env(safe-area-inset-bottom));
   background:linear-gradient(180deg,rgba(44,26,16,0),rgba(44,26,16,.2) 40%,rgba(44,26,16,.32));
 }
+/* Which verb a tap on a creature is currently spending. */
+.hollow-dock .dock-btn.on{background:linear-gradient(180deg,#fff8d6,#ffe066)}
+
+/* Loadout mode: who is out reads off the room rather than out of a panel, so a
+   resting creature steps back without leaving. */
+.in-loadout .hollow-pet{transition:opacity .2s ease, filter .2s ease}
+.in-loadout .hollow-pet:not(.tending){opacity:.5;filter:saturate(.45)}
+.in-loadout .hollow-leaf{box-shadow:0 0 0 3px rgba(140,233,154,.5), 0 2px 0 rgba(44,26,16,.35)}
 
 /* Motion emitted by hollow.js, named so it cannot collide with the garden's. */
 .hl-wisp{animation:hl-drift var(--dur,7s) ease-in-out infinite;animation-delay:var(--delay,0s);

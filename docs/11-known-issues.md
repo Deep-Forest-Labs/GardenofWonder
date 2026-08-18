@@ -164,8 +164,8 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 512 assertions over the
-economy, progression, saves and mastery. Everything above that line — the four `ui-*` files,
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 718 assertions over the
+economy, progression, saves and mastery. Everything above that line — the five `ui-*` files,
 layout, the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI
 regression has no net under it.

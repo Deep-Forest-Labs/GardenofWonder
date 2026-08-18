@@ -37,6 +37,7 @@ Read it before anything else if you're picking the project up cold.
 | [20-card-art-prompts.md](20-card-art-prompts.md) | You're generating card art externally and want the prompts, the style rules and how it gets wired in |
 | [21-potting-bench.md](21-potting-bench.md) | You're touching the merge bench — the chain, entry tier, cascade timing, the deadlock, or what replaced the Apothecary |
 | [22-creatures.md](22-creatures.md) | You're adding a creature, or touching attraction, keepsakes or the critter yard — the habitat direction |
+| [23-installable-pwa.md](23-installable-pwa.md) | You're touching `manifest.json`, `sw.js`, the icons, or you added a script file and need it to work offline |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).
@@ -47,9 +48,11 @@ A cozy mobile idle game. You tap a talking flower for coins and plant seeds in e
 arranged around it. Seeds grow on a timer, harvests roll a rarity multiplier, and you spend the
 proceeds on upgrades that make taps stronger, growth faster, and the whole loop automated.
 
-It is a static site: seven plain `<script>` tags, no build step, no dependencies, no images, and
-no audio files. All art is inline SVG and CSS. All sound is synthesized at runtime with the Web
-Audio API. It is deployed straight from the repository root to GitHub Pages.
+It is a static site: fourteen plain `<script>` tags, no build step, no dependencies, and no audio
+files. All art is inline SVG and CSS. All sound is synthesized at runtime with the Web Audio API.
+It is deployed straight from the repository root to GitHub Pages, and installs to a phone's home
+screen as a PWA that plays offline — see [23-installable-pwa.md](23-installable-pwa.md). The only
+binary files in the repository are the home screen icons in `icons/`.
 
 ## Keeping these docs current
 

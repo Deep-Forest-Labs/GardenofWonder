@@ -5,6 +5,55 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-18 — The loadout moved into the room, and a celebration fired from the corner
+
+**Built:** Pet and Loadout as modes in the Hollow's dock, a tap on a creature spending whichever is
+armed, and a fix for FX centred on a hidden element.
+
+**The odd part was going somewhere else to choose who stands here.** Loadout opened the Almanac —
+so the way to pick which pets are out was to leave the room they are standing in and read a book
+about them. The room already had every creature drawn, already had a leaf badge saying who was
+tending, and already routed taps through one handler. It was a surface waiting for a second verb.
+
+**Two verbs on the same target means a mode, not a second gesture.** Long-press, double-tap and
+drag were all available and all worse: each is undiscoverable, and the dock button that arms the
+mode is already on screen saying what it does. The armed button lights, the count line says
+`· tap to swap`, and resting creatures step back to half opacity. Which state you are in is
+readable without a tutorial.
+
+**No toast on entering the mode.** The first draft had one and it duplicated the count line
+verbatim. Toasts are for notable moments and the cap is two; arming a mode is neither.
+
+**The Almanac keeps its toggles rather than being replaced.** It is the only place an *unmet*
+creature and its harvest progress can live, and the Hollow can only show creatures already home.
+Two surfaces onto one `Game.setTending()` — the same shape `UI.tapCritter()` already uses for
+petting from either screen. Nothing new went into the save; the mode is a UI local.
+
+**The bug this exposed, and why it had been invisible.** Forming Nightbloom from inside the Hollow
+threw its confetti and its green ring at the top-left corner of the screen. Both the `pair` and
+`critter` handlers centre on `#garden`, and `.in-hollow` sets `display:none` on `.stage` — a hidden
+element measures as a 0×0 rect, so `FX.centerOf()` returns the origin and the celebration happens
+in the corner. Measured directly: `#garden` reads 0×0 while `#hollow` reads 375×812.
+
+It had never mattered because the loadout could only be changed from the Almanac, over the garden.
+It was reachable before this change though — automation harvests on the tick regardless of which
+screen is up, so a creature could always have arrived or gained a star while the room was open.
+Both handlers now go through one `critterStage()` helper. **The general rule worth keeping: a
+celebration must be centred on the screen that is actually up, and a zero rect is what a hidden
+element measures rather than an error anything reports.**
+
+**Docs corrected while in there.** `02-architecture.md` claimed eleven JavaScript files and its
+load-order table was missing `critters.js`, `hollow.js` and `ui-hollow.js`; `README.md` said seven
+`<script>` tags. There are fourteen. The table is the first thing a new agent reads before touching
+load order, so a gap in it is worse than most stale numbers.
+
+**Not covered by a sim-test, deliberately and unavoidably.** `tools/sim-test.js` cannot see a `ui-*`
+file. `setTending()` and the pair machinery underneath were already covered and still pass at 718;
+what is new here is entirely presentation, and it was verified by driving the real screen and
+looking at it.
+
+---
+
 ## 2026-08-16 — Keepsakes are kept, and an icon fallback that hid two mistakes
 
 **Built:** `state.mementos`, a lifetime count per keepsake id, shown on each creature's Almanac row.

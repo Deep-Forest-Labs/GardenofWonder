@@ -5,11 +5,12 @@
    see docs/02-architecture.md. Design in docs/22-creatures.md. */
 
 (() => {
-  const { $, S, el } = UI;
+  const { $, $$, S, el } = UI;
 
   const DOCK_H = 96;
   let open = false;
   let sceneSky = null;                 // the sky the current scene was drawn for
+  let mode = 'pet';                    // 'pet' | 'loadout' — what a tap on a creature means
   const petEls = new Map();            // creature id -> node, built once and kept
 
   /* The Hollow's own verbs. A per-place dock is also how places stop competing
@@ -89,6 +90,7 @@
       const giftEl = node.querySelector('.hollow-gift');
       if (leafEl.hidden === tending) leafEl.hidden = !tending;
       if (giftEl.hidden === gift) giftEl.hidden = !gift;
+      if (node.classList.contains('tending') !== tending) node.classList.toggle('tending', tending);
     });
 
     petEls.forEach((node, id) => {
@@ -98,9 +100,45 @@
     });
 
     $('#hollowEmpty').hidden = home.length > 0;
+    const count = `${Game.crittersTending().length} of ${Game.habitatSlots()} tending`;
     $('#hollowCount').textContent = home.length
-      ? `${Game.crittersTending().length} of ${Game.habitatSlots()} tending`
+      ? (mode === 'loadout' ? `${count} · tap to swap` : count)
       : '';
+  }
+
+  /** What a tap on a creature means. The room is where they live, so it is also
+      where the loadout is chosen — reaching for the Almanac to swap the pets
+      standing in front of you was the odd part. */
+  function setMode(next) {
+    if (mode === next) return;
+    mode = next;
+    el.hollow.classList.toggle('in-loadout', mode === 'loadout');
+    $$('[data-hollow]', el.hollow).forEach((b) => {
+      b.classList.toggle('on', b.dataset.hollow === mode);
+    });
+    syncTenants();
+  }
+
+  function tendTap(id) {
+    const def = Game.critterById(id);
+    const on = Game.critterTending(id);
+    if (!Game.setTending(id, !on)) {
+      UI.toast({
+        title: `Every slot is full`,
+        body: `Rest someone else first, then ${def.name} can come out.`,
+        art: Icons.get('sprout')
+      });
+      return;
+    }
+    Sound.play('tap');
+    const node = petEls.get(id);
+    if (node) {
+      const c = FX.centerOf(node);
+      if (on) FX.sparks(c.x, c.y, 6, '#cbb69c');
+      else { FX.sparks(c.x, c.y, 12, def.art.glow); FX.ring(c.x, c.y, '#8ce99a', 0.4, 60); }
+    }
+    syncTenants();
+    UI.renderCritters();
   }
 
   function render() {
@@ -124,6 +162,7 @@
   function exit() {
     if (!open) return;
     open = false;
+    setMode('pet');
     el.game.classList.remove('in-hollow');
     el.hollow.hidden = true;
     Sound.play('close');
@@ -131,9 +170,12 @@
   }
 
   function dockTap(id) {
-    if (id === 'loadout') { UI.openSheet('bonuses'); return; }
-    if (id === 'pet') {
-      UI.toast({ title: 'Tap a creature', body: 'Pet it, or collect what it left you.', art: Icons.get('sprout') });
+    /* Two ways to spend a tap on a creature, so which one is armed is a mode.
+       The count line and the dimmed resting creatures say which — a toast for
+       entering a mode would be noise, and the cap is two. */
+    if (id === 'loadout' || id === 'pet') {
+      setMode(mode === id ? 'pet' : id);
+      Sound.play('open');
       return;
     }
     /* Named because the screen's shape depends on them, and honest about not
@@ -155,7 +197,7 @@
       <p class="hollow-count" id="hollowCount"></p>
       <p class="hollow-empty" id="hollowEmpty" hidden>Nobody lives here yet.<br>Grow what they like and they will turn up.</p>
       <nav class="dock hollow-dock" id="hollowDock">${DOCK.map((d) => `
-        <button class="dock-btn" type="button" data-hollow="${d.id}">
+        <button class="dock-btn${d.id === mode ? ' on' : ''}" type="button" data-hollow="${d.id}">
           <span class="dock-ico">${Icons.get(d.icon)}</span>
           <span class="dock-label">${d.label}</span>
         </button>`).join('')}
@@ -170,8 +212,8 @@
       const n = e.target.closest('[data-critter]');
       if (!n) return;
       e.preventDefault();
-      UI.tapCritter(n.dataset.critter);
-      syncTenants();
+      if (mode === 'loadout') tendTap(n.dataset.critter);
+      else { UI.tapCritter(n.dataset.critter); syncTenants(); }
     }, { passive: false });
 
     /* Swipe DOWN to go up to the garden. Dragging down pulls the world down past

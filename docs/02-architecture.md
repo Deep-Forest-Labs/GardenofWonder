@@ -2,7 +2,7 @@
 
 ## Shape of the project
 
-Eleven JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
+Fourteen JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
 dependencies. Each file defines exactly one global and they load in dependency order as plain
 `<script>` tags.
 
@@ -16,17 +16,20 @@ reference globals defined above it.
 
 | # | File | Global | Depends on |
 | --- | --- | --- | --- |
-| 1 | `data.js` | `DATA`, `WONDER`, `FLOWER_LINES`, `PLOT_AUTOPLANTERS`, `MAX_RARITY_MULT` | nothing |
+| 1 | `data.js` | `DATA`, `WONDER`, `FLOWER_LINES`, `PLOT_AUTOPLANTERS`, `MAX_RARITY_MULT`, `CREATURES`, `CREATURE_TRAITS`, `CREATURE_PAIRS`, `BENCH` | nothing |
 | 2 | `flora.js` | `Flora` | `DATA` (at `injectDefs` time) |
-| 3 | `icons.js` | `Icons` | nothing |
-| 4 | `audio.js` | `Sound` | nothing |
-| 5 | `fx.js` | `FX` | nothing |
-| 6 | `game.js` | `Game` | `DATA`, `WONDER`, `PLOT_AUTOPLANTERS` |
-| 7 | `ui-shared.js` | `UI` | `Game`, the DOM |
-| 8 | `ui-scenery.js` | *(attaches to `UI`)* | `UI` |
-| 9 | `ui-sheet.js` | *(attaches to `UI`)* | `UI` |
-| 10 | `ui-events.js` | *(attaches nothing)* | `UI` |
-| 11 | `ui.js` | *(attaches to `UI`)* | everything above |
+| 3 | `critters.js` | `Critters` | nothing |
+| 4 | `hollow.js` | `Hollow` | nothing |
+| 5 | `icons.js` | `Icons` | nothing |
+| 6 | `audio.js` | `Sound` | nothing |
+| 7 | `fx.js` | `FX` | nothing |
+| 8 | `game.js` | `Game` | `DATA`, `WONDER`, `PLOT_AUTOPLANTERS`, `CREATURES` |
+| 9 | `ui-shared.js` | `UI` | `Game`, the DOM |
+| 10 | `ui-scenery.js` | *(attaches to `UI`)* | `UI` |
+| 11 | `ui-sheet.js` | *(attaches to `UI`)* | `UI` |
+| 12 | `ui-hollow.js` | *(attaches to `UI`)* | `UI`, `Hollow`, `Critters` |
+| 13 | `ui-events.js` | *(attaches nothing)* | `UI` |
+| 14 | `ui.js` | *(attaches to `UI`)* | everything above |
 
 The UI files touch the DOM on load, and only `ui.js` calls `boot()`. Every other file is inert
 until something calls into it.
@@ -78,8 +81,8 @@ progress goes through `Game.discoveredCount`, `discoveredOf`, `bestRarityOf` and
 the ladder formula stays in `game.js`. `Game.decorVal` was deleted in navigation phase 1 along with decor's stat
 bonuses — see [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
-`flora.js`, `icons.js`, `audio.js`, and `fx.js` are leaf utilities. They know nothing about the
-game — you hand them parameters and they produce SVG, sound, or particles.
+`flora.js`, `critters.js`, `hollow.js`, `icons.js`, `audio.js`, and `fx.js` are leaf utilities. They
+know nothing about the game — you hand them parameters and they produce SVG, sound, or particles.
 
 ## The event bus
 
@@ -159,6 +162,16 @@ that generation.
 head for a plot), `head()` (bloom only, for shop cards), `talkingFlower()`, and `injectDefs()`,
 which writes one hidden `<svg>` holding every gradient so blooms stay cheap to draw.
 
+**`critters.js`** — Turns a creature's `art` block into SVG, the same contract `flora.js` follows.
+One body and a vocabulary of features — `crown`, `wings`, `tail`, `stripes`, a palette — so a new
+creature is a data row rather than a drawing.
+
+**`hollow.js`** — Draws the room under the garden: walls, burrows, the crack, the wisps.
+`scene({ dockHeight, sky })` returns the SVG and `SPOTS` gives the creature positions **in the
+scene's own coordinates**, because it is drawn with `preserveAspectRatio="slice"` and a percentage
+of the container stops agreeing with a position in the art. `tools/hollow-spike.html` and the live
+screen both draw from here, so the art cannot drift between them.
+
 **`icons.js`** — Thirty-eight hand-built outlined SVG icons, every one of them referenced.
 `get(name)` falls back to `sparkle` for an unknown name, so a typo degrades instead of throwing;
 `hydrate(root)` replaces every `<span data-icon="…">` in a subtree. Static markup in
@@ -192,6 +205,12 @@ and HUD buttons that *open* it stay in `ui.js`, with the elements they sit on.
 It needs three things from `ui.js` — `UI.toast`, `UI.showBanner` and `UI.buildGarden` — and
 publishes `openSheet`, `closeSheet`, `renderSheet`, `sheetMode`, `setAwayReport`, `syncAfford`,
 `tickSheetTimers` and `CORE_UPGRADES`.
+
+**`ui-hollow.js`** — The Hollow screen: it places real creatures into `Hollow.SPOTS`, owns the
+room's own dock, and decides what a tap on a creature means. A tap is **modal** — Pet collects a
+keepsake or makes the creature react, Loadout sends it out or lets it rest — because the room is
+where the creatures live and so it is also where the loadout is chosen. Nodes are built once and
+only their badges change; rebuilding them restarts every float, tilt and glow.
 
 **`ui-events.js`** — The wiring from simulation events to what the player sees and hears. Every
 `Game.on(...)` subscription lives here, along with the animations only they trigger: the three
