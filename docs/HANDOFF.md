@@ -43,14 +43,25 @@ from quests and levels.
 > [22-creatures.md](22-creatures.md) and the top of [10-decision-log.md](10-decision-log.md). **The
 > build before all of this is tagged `v1-bench`**, recoverable with `git checkout v1-bench`.
 
+> **The Hollow opened, 2026-08-16.** A warm room *under* the garden, reached through a **burrow
+> mouth** at the bottom left of the stage, where every creature that has moved in actually lives. Its
+> own dock — Feed, Pet, Loadout, Decorate — because a per-place dock is also how places stop competing
+> for the five slots the garden dock caps at. **Swipe down to go back up**, which is the direction
+> every scroll already uses. `hollow.js` draws the room and knows nothing about the game, the same
+> contract `flora.js` and `critters.js` follow, so `tools/hollow-spike.html` and the live screen draw
+> from one source and the art cannot drift. **Feed and Decorate are honest about not existing.**
+> Chambers, sideways paging and a second level are agreed but unbuilt. See
+> [22-creatures.md](22-creatures.md).
+
 > **The Potting Bench landed as simulation, 2026-08-16.** A merge board fed by the garden, and
 > **it is what replaces the Apothecary** — both turn garden output into goods the Market will want,
 > and a timed craft bench is the worse version of merging. A harvest drops a chain item into a
 > **basket**, the player places it, and **three of a kind that end up orthogonally connected merge**
 > into the rung above. Six rungs, Petal through Flower Crown. **No surface exists yet** — Craft is
-> still the third dock tab and the bench fills its basket invisibly; the panel and the dock swap are
-> the next commit, split off because `tools/sim-test.js` cannot see a `ui-*` file and landing both
-> blind into a live game is how a working build breaks. Feel was settled first in a standalone spike
+> still the third dock tab and the bench fills its basket invisibly. The panel and the dock swap were
+> split off because `tools/sim-test.js` cannot see a `ui-*` file and landing both blind into a live
+> game is how a working build breaks — and then the habitat direction overtook it, so **the bench is
+> parked and undecided rather than in flight**. Feel was settled first in a standalone spike
 > at `tools/merge-spike.html`, which is still the fastest way to try it. See
 > [21-potting-bench.md](21-potting-bench.md).
 
@@ -253,31 +264,38 @@ as one piece rather than discovering it halfway through.
 
 ## The current task
 
-**The habitat direction is live and one creature deep.** Pip works end to end — arrival, living on
-the lawn, petting, keepsakes, save. The obvious next pieces, in order:
+**The habitat direction is live and six creatures deep.** Pip, Thistle, Bramble, Luna, Ember and
+Bumble all work end to end: attraction, arrival, stars, traits, tending, eight named pairs, keepsakes
+kept as mementos, and **the Hollow** — a room under the garden, reachable from a burrow mouth, where
+they live. See [22-creatures.md](22-creatures.md).
 
-1. **More pairs, or a seventh creature.** Eight pairs exist of a possible fifteen, so there is room
-   to author more without touching code. Any new one must stay off the `yield` pool and stay
-   categorical rather than "+X% more"; the suite enforces both, plus that every creature sits in at
-   least two pairs.
-3. **A den or farmhouse for resting creatures.** Resting pets now leave the screen, so they need
-   somewhere to *be* — visit them, feed them, and swap the loadout there rather than in a list row.
-   The owner's idea, and a much better surface than the Almanac block currently standing in for it.
-4. **Flower breeding**, the second half of the direction. Cross two mature neighbours into a hybrid
-   seed. It reuses the adjacency board and generates content rather than authoring it — but it
-   changes the seed model, so it has a much bigger blast radius than creatures did. Do it after the
-   roster proves out.
+The obvious next pieces, roughly in order:
+
+1. **Chambers and sideways paging in the Hollow.** Agreed and unbuilt. Swipe between rooms of three
+   or four rather than scrolling one long wall — more legible one-handed, gives each room character,
+   and it is the natural unit for decorating later. **One level first**; a second is a progression
+   reward once the roster needs it, because an empty second floor is worse than none.
+2. **Swap the loadout from inside the Hollow.** It is odd that the place the creatures live is not
+   where you choose them; today the Loadout button just opens the Almanac.
+3. **Feed and Decorate.** Both are in the Hollow dock and both say plainly that they are not built.
+   Feeding is the obvious home for mementos, which are stored and currently spent on nothing.
+4. **More pairs, or a seventh creature.** Eight pairs of a possible fifteen. Any new trait must
+   declare a `pool`, and the suite fails if the roster becomes all one kind of effect, if more than a
+   third sits in `yield`, or if any creature ends up in fewer than two pairs.
+5. **Flower breeding**, the second half of the direction. Cross two mature neighbours into a hybrid
+   seed. It reuses the adjacency board and *generates* content rather than authoring it — but it
+   changes the seed model, so it has a far bigger blast radius than creatures did.
 
 **Two things are deliberately parked, not abandoned.**
 
 **The Potting Bench** is built as simulation with **no surface at all** — Craft is still the third
 dock tab and the bench fills its basket invisibly. Under the habitat frame it is optional. Decide
-within a couple of sessions whether it gets a panel or gets deleted; dormant code nobody surfaces is
-what [11-known-issues.md](11-known-issues.md) exists to prevent. If it does ship, the remaining work
-is the panel in `ui-sheet.js` (port the drag from `tools/merge-spike.html`, and watch the sheet's own
-fling-to-dismiss fighting it), six chain icons, and the dock swap. **Do not remove the Craft quests
-when that tab goes** — they were repointed at the bench and keep their ids on purpose, and they carry
-98 of the ladder's 777 reputation ([21-potting-bench.md](21-potting-bench.md#quests)).
+soon whether it gets a panel or gets deleted; dormant code nobody surfaces is what
+[11-known-issues.md](11-known-issues.md) exists to prevent. If it ships, the remaining work is the
+panel in `ui-sheet.js` (port the drag from `tools/merge-spike.html`, and watch the sheet's own
+fling-to-dismiss fighting it) and the dock swap. **Do not remove the Craft quests when that tab
+goes** — they were repointed at the bench and keep their ids on purpose, and they carry 98 of the
+ladder's 777 reputation ([21-potting-bench.md](21-potting-bench.md#quests)).
 
 **The card album vs the creature roster is an open decision.** There are now two collection systems,
 and splitting Completion across two unrelated albums halves the pull of both. Creatures are coupled
@@ -287,21 +305,17 @@ deliberately rather than letting it drift.
 The Market as **customers who walk up to the garden fence** and the **world map** both remain good
 and both remain unbuilt.
 
-**The long-running open question — *does the garden's contents start mattering* — now has an
-answer.** It was handed first to Bloom Mastery, which could not deliver it (a percentage of an
-undifferentiated thing is still undifferentiated), and then to the Market, which is only half right:
-an order makes a flower *instrumentally* wanted, which is a quota to fill rather than desire.
+**The long-running open question — *does the garden's contents start mattering* — has an answer, and
+it is creatures.** Bloom Mastery could not deliver it (a percentage of an undifferentiated thing is
+still undifferentiated), and orders make a flower *instrumentally* wanted, which is a quota rather
+than desire. Verbs and adjacency were the previous best answer and are still good. But **Pip comes
+for bluebells and nothing else**, and raising a creature costs escalating harvests of *its own*
+bloom — which is also the first real answer to **"why would I ever plant a Daisy again."**
 
-The real answer is **per-plant unique verbs with adjacency effects** — one flower that buffs its
-neighbours at a cost to itself, one that suppresses weeds nearby, one that is immortal, one that pays
-out when it dies. The garden becomes a layout puzzle instead of a shopping list, and the eight plots
-ringing the flower are already the board for it. Full reasoning and the reference implementation are
-in [17-market-and-positioning.md](17-market-and-positioning.md#why-plant-this-flower).
-
-The diagnosis that goes with it: **this game is currently in the AdVenture Capitalist trap.** Every
-seed yields exactly 1.4× cost at Common across all nineteen tiers, differing only in throughput —
-charming, distinct-looking producers that all do the same thing. That pattern decays; see the market
-doc.
+The diagnosis that started all of it still stands as the thing to keep escaping: **every seed yields
+exactly 1.4× cost at Common across all nineteen tiers**, differing only in throughput. Charming,
+distinct-looking producers that all do the same thing is the AdVenture Capitalist decay pattern; see
+[17-market-and-positioning.md](17-market-and-positioning.md).
 
 The world map (navigation phase 2) stays paused. Don't start it without asking.
 
