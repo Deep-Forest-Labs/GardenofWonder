@@ -1713,6 +1713,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   .hollow-pet .cr-body, .hollow-pet .cr-sprout, .hollow-pet .cr-glow, .hollow-pet .cr-eye {
     animation: none;
   }
+  /* Loadout mode still dims a resting creature; it just stops fading into it. */
+  .in-loadout .hollow-pet { transition: none; }
 }
 
 /* ---------- the habitat, in the Almanac ---------- */
@@ -1764,10 +1766,45 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .critter-leaf[hidden]{display:none}
 .critter-leaf svg{width:12px;height:12px}
 
+/* ---------- feeding ---------- */
+.feed-row{flex-direction:column;align-items:stretch;gap:0}
+.feed-top{display:flex;align-items:center;gap:10px}
+.feed-row.fed{background:#fff2e0;box-shadow:inset 0 0 0 2px #ffa94d}
+/* The copy is one flex item, not three. Left as bare text nodes beside the
+   icon, each fragment became its own column and the line broke into a grid on
+   a narrow screen. */
+.food-state{display:flex;align-items:flex-start;gap:5px;font-size:11.5px;line-height:1.35;
+  color:var(--ink-soft,#7a6047)}
+.food-state svg{width:12px;height:12px;flex:0 0 12px;margin-top:1px}
+.food-state > span{flex:1;min-width:0}
+.food-state.on{color:var(--ink);font-weight:700}
+/* A grid rather than flex-wrap, so three always sit in one row at any width. */
+.food-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px}
+.food-btn{
+  min-width:0;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:7px 6px 6px;
+  border:3px solid var(--ink);border-radius:12px;
+  background:var(--paper);color:var(--ink);
+  font-family:inherit;cursor:pointer;
+  box-shadow:0 3px 0 rgba(44,26,16,.32);
+}
+.food-btn.affordable{background:linear-gradient(180deg,#fff8e8,#ffe9c4)}
+.food-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(44,26,16,.32)}
+.food-btn:disabled{opacity:.42;cursor:default;box-shadow:none}
+.food-ico{width:22px;height:22px}
+.food-ico svg{width:100%;height:100%;display:block}
+.food-name{font-size:11px;font-weight:800;line-height:1.1;text-align:center}
+.food-hours{font-size:10.5px;font-weight:700;color:var(--ink-soft,#7a6047)}
+.food-btn .price{margin-top:2px;align-self:center;padding:3px 7px;font-size:11px}
+
 /* ---------- creature stars and growth ---------- */
 .critter-stars{display:inline-flex;gap:1px;margin-left:6px;vertical-align:middle}
 .cr-star svg{width:11px;height:11px;display:block;color:#ffc94a}
 .cr-star.off{opacity:.26}
+/* The star a creature is working at while fed, which it has not been raised to. */
+.cr-star.fed svg{color:#ff922b}
+.cr-star.fed{filter:drop-shadow(0 0 3px rgba(255,169,77,.9))}
 .critter-grow{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-soft,#7a6047)}
 .critter-grow i{
   flex:0 0 62px;height:7px;border-radius:999px;
@@ -1857,14 +1894,15 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   font-size:10px;font-weight:800;color:#fff;white-space:nowrap;
   text-shadow:0 2px 0 rgba(44,26,16,.9);pointer-events:none;
 }
-.hollow-leaf,.hollow-gift{
+.hollow-leaf,.hollow-gift,.hollow-fed{
   position:absolute;width:22px;height:22px;display:grid;place-items:center;
   border:3px solid var(--ink);border-radius:999px;box-shadow:0 2px 0 rgba(44,26,16,.35);
 }
 .hollow-leaf{top:-4px;left:-4px;background:#8ce99a}
 .hollow-gift{top:-4px;right:-4px;background:#ffd43b}
-.hollow-leaf[hidden],.hollow-gift[hidden]{display:none}
-.hollow-leaf svg,.hollow-gift svg{width:12px;height:12px}
+.hollow-fed{bottom:-2px;right:-4px;background:#ffa94d}
+.hollow-leaf[hidden],.hollow-gift[hidden],.hollow-fed[hidden]{display:none}
+.hollow-leaf svg,.hollow-gift svg,.hollow-fed svg{width:12px;height:12px}
 
 .hollow-exit{
   position:absolute;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);

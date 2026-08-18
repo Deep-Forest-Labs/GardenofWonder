@@ -41,6 +41,81 @@ decision is made later, and it was not worth paying for now to find out.
 
 ---
 
+## 2026-08-18 — Feeding is a treat, not an upkeep, and it buys a star rather than a multiplier
+
+**Built:** three foods, `fedUntil` on each creature, a Feed panel on the Hollow's dock, and 42 new
+assertions. Design in [22-creatures.md](22-creatures.md#food-2026-08-18).
+
+**The owner's shape was an upkeep timer** — a pet goes *inactive* without food, and food tiers buy
+hours of being active, as a retention and monetization surface. The goals were right and are all
+delivered. **The direction of the baseline is what changed**, after a push-back that the owner
+accepted: a creature is always active, and food makes it *better* than normal for a while.
+
+**Why that mattered enough to argue about.** [22-creatures.md](22-creatures.md) already said it three
+times before food existed — "nothing is ever taken away", "losing one is punitive", and a returning
+player finding a creature idle is "the same class of harm as taking a seed away". An upkeep timer
+breaks all three. And the loop is *identical* either way: you come back because the boost lapsed
+rather than because the pet did, you buy the same food, on the same cadence. The only thing that
+moves is whether lapsing feels like losing something you raised.
+
+The research pointed the same way. **Finch** — the closest business analogue in
+[17-market-and-positioning.md](17-market-and-positioning.md), ~75% women, $30–40M ARR — gets D7 37%
+from **non-punitive streaks** specifically, and the same source warns that more than two streak
+nudges a week makes abandonment 41% more likely.
+
+*The honest counter-argument, recorded because it is a real one:* **Pocket Plants** is listed as the
+closest structural analogue in that same document and it does run on energy. But its energy gates
+**the player's own actions**, not whether the collection they built is alive. That is a different
+mechanic wearing a similar name.
+
+**Pairs deliberately ignore food.** They stay binary on tending. A pair blinking out because a timer
+lapsed would be exactly the failure the pair rules already name — "a bonus you cannot tell is active
+is not a bonus."
+
+**A star, not ×2, and the numbers are why.** Measured against the real roster, a flat double is safe
+for four creatures — the `pool` system is doing its job, `chance × (mult−1)` stays small, Bumble
+stays under the `k.every/4` floor, Ember stays inside `maxRate`. It is **not** safe for two. Luna is
+the only trait in the `yield` pool: ×2 takes her from +9.6% to **+19.2% average payout**, on a
+product that is already seven multiplied terms with an endless mastery ladder under it. Thistle at
+×2 doubles the faucet on the premium currency.
+
+One star is `(n+1)/n` — **×2.00 at one star, ×1.20 at five**. The boost shrinks exactly as the
+creature's absolute contribution grows, which is the opposite of how a flat multiplier behaves. It
+was also nearly free: `critterTraitAt()` already scales by star, so a fed creature computes one
+higher. **The ceiling had to move to `CREATURE_STARS + FED_STARS`** or a maxed creature would have
+been the one player state where feeding did nothing.
+
+**Food never advances the star a creature was raised to.** `critterLevel()` is what growth counts
+against and `critterWorkLevel()` is what traits read. Keeping those apart is what stops food becoming
+a second path to raising a creature — and the bloom-raises-its-own-creature rule is this project's
+best answer to "why would I ever plant a Daisy again". A sim-test asserts it.
+
+**Only a tending creature can be fed**, because traits are only read from tenders and feeding a
+rester would be a purchase that buys nothing. The panel says so and points at the Loadout mode.
+
+**Fed time caps at 24 hours, stated openly in the panel.** Without it one large purchase buys weeks
+and the loop stops existing. Egg, Inc. is cited in the market doc for exactly this: a stated cap
+reads as a rule, a hidden one reads as theft.
+
+*Rejected: mementos as the food currency.* That was the agent's proposal and the owner's counter was
+better. **Mementos buy decorations and skins for the Hollow** — a piece costing keepsakes from *two
+different creatures*, so decorating requires roster breadth rather than depth. The art already has a
+memento cubby waiting, and it is the *item-as-key* device the market doc files under Neko Atsume's
+26 rare cats. That is the next piece and it is agreed, not built.
+
+**Two traps, both of which cost real time.** `state.critters[id].fed` already existed and means the
+**keepsake clock**, so food needed `fedUntil` — writing into `fed` would have silently reset every
+keepsake timer in the game. And `tools/sim-test.js` keeps an **explicit `GLOBALS` whitelist**: a new
+`data.js` constant that is not on it comes back `undefined` inside `game.js`, throws inside `load()`,
+gets caught, and silently resets the save. The failure surfaced as an unrelated creature test.
+
+**Two things only the picture showed.** The three food buttons wrapped 2 + 1 because they were nested
+beside a 46px portrait; they now sit outside the text column as a three-column grid. And the fed
+star was appended *after* the five, which reads as a sixth star rather than one on loan — it now sits
+in the slot the creature is working at, and only a five-star creature grows a genuine sixth pip.
+
+---
+
 ## 2026-08-18 — The loadout moved into the room, and a celebration fired from the corner
 
 **Built:** Pet and Loadout as modes in the Hollow's dock, a tap on a creature spending whichever is

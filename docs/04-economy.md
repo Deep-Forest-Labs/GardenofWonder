@@ -482,6 +482,34 @@ in `Game.load()`).
 **Prices never escalate.** The fiftieth Butterfly Shrine still costs 1,000 coins. It lives in the
 Shop tab and is a pure currency sink with no effect on the simulation.
 
+## Creature food (added 2026-08-18)
+
+A coin sink, and one the economy needed. A fed creature works **one star above itself** until the
+food runs out; an unfed one works exactly as it always did. Design and the reasoning in
+[22-creatures.md](22-creatures.md).
+
+| Food | Adds | Cost | Per hour |
+| --- | --- | --- | --- |
+| Clover Nibble | 1 hour | 1,500 | 1,500 |
+| Petal Cake | 4 hours | 5,000 | 1,250 |
+| Honeypot | 12 hours | 12,000 | 1,000 |
+
+**The per-hour rate falls as the tier rises**, so committing to a longer stretch is the cheaper way
+to buy it, and a sim-test asserts that ordering. Fed time is capped at **24 hours** ahead
+(`FOOD_CAP_HOURS`), so no single purchase buys weeks of boost.
+
+**Why a star rather than a multiplier.** The obvious version was ×2 while fed, and it is safe for
+four of the six creatures because their traits sit in the `chance` and `utility` pools. It is not
+safe for two. Luna is the only trait in the `yield` pool and ×2 takes her from **+9.6% to +19.2%
+average payout**, on a harvest product that is already seven multiplied terms with an endless
+mastery ladder underneath. Thistle at ×2 doubles the drop rate on the **premium** currency. A star
+is `(n+1)/n`, which is ×2.00 at one star and **×1.20 at five** — self-limiting exactly where a flat
+multiplier is self-amplifying. `FED_STARS` in `data.js` is the one number to change.
+
+**Prices are placeholders and flat**, like everything else here. Whether they should scale with the
+creature's star is a live question — see the open questions in
+[22-creatures.md](22-creatures.md).
+
 ## Where the effect keys are read
 
 Useful when adding content — these strings are the entire vocabulary connecting decor and boosters

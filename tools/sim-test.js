@@ -20,7 +20,8 @@ globalThis.localStorage = {
 /* The game files are plain scripts that declare globals, so evaluate them and
    then re-export what they defined onto globalThis. */
 const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
-  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'CREATURE_PAIRS', 'PAIR_TUNING', 'Icons', 'flowerValue', 'Game'];
+  'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'CREATURE_PAIRS', 'PAIR_TUNING',
+  'CREATURE_FOOD', 'FED_STARS', 'FOOD_CAP_HOURS', 'Icons', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -2919,6 +2920,142 @@ check('each has arrival, idle and pet lines', CREATURES.every((c) => (
   c.lines && c.lines.arrive.length && c.lines.idle.length && c.lines.pet.length
 )));
 check('ids are unique', new Set(CREATURES.map((c) => c.id)).size === CREATURES.length);
+
+/* ---------------- food ----------------
+   A fed creature works one star above itself for a while. The load-bearing
+   property is the one the tests below spend the most assertions on: NOTHING
+   EVER SWITCHES OFF. An unfed creature works exactly as an unfed creature
+   always did, so a lapse is a return to normal rather than a pet gone quiet. */
+
+group('food lifts a creature by a star, and only while it lasts');
+G.reset();
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+G.checkCritters();
+S.credits = 1e6;
+const SNACK = CREATURE_FOOD[0];
+const baseTrait = G.critterTrait(PIP.trait.id);
+check('a creature starts unfed', !G.critterFed(PIP.id));
+check('and works at the star it was raised to', G.critterWorkLevel(PIP.id) === G.critterLevel(PIP.id));
+check('feeding it works', Boolean(G.feedCritter(PIP.id, SNACK.id)));
+check('it is now fed', G.critterFed(PIP.id));
+check('it works one star higher', G.critterWorkLevel(PIP.id) === G.critterLevel(PIP.id) + FED_STARS);
+const fedTrait = G.critterTrait(PIP.trait.id);
+check('the trait is worth a star more',
+  Math.abs(fedTrait - baseTrait * ((G.critterLevel(PIP.id) + FED_STARS) / G.critterLevel(PIP.id))) < 1e-9,
+  `base ${baseTrait} fed ${fedTrait}`);
+check('and it reaches the consumer', G.catchMultiplier(0) > 1 + baseTrait);
+check('the star it was RAISED to is untouched', G.critterLevel(PIP.id) === 1);
+
+group('food runs out, and nothing is switched off when it does');
+advance(SNACK.hours * 3600 + 60, 600);
+check('the clock ran out', !G.critterFed(PIP.id));
+check('it is still home', G.critterHere(PIP.id));
+check('it is still tending', G.critterTending(PIP.id));
+/* The whole design in one assertion: an unfed creature is a normal creature. */
+check('and its trait is back to exactly baseline',
+  Math.abs(G.critterTrait(PIP.trait.id) - baseTrait) < 1e-9);
+check('no time is owed', G.critterFedFor(PIP.id) === 0);
+
+group('a fully raised creature is still worth feeding');
+S.critters[PIP.id].level = CREATURE_STARS;
+const maxedBase = G.critterTrait(PIP.trait.id);
+check('a maxed creature gives the listed value', Math.abs(maxedBase - PIP.trait.value) < 1e-9);
+G.feedCritter(PIP.id, SNACK.id);
+const maxedFed = G.critterTrait(PIP.trait.id);
+/* Clamping the trait at the roster's star ceiling would have handed the most
+   invested player the only boost in the game that does nothing. */
+check('feeding it still does something', maxedFed > maxedBase);
+check('and it is worth exactly one more star',
+  Math.abs(maxedFed - PIP.trait.value * ((CREATURE_STARS + FED_STARS) / CREATURE_STARS)) < 1e-9);
+S.critters[PIP.id].level = 1;
+S.critters[PIP.id].fedUntil = 0;
+
+group('feeding costs, and refuses when it should');
+S.credits = SNACK.cost - 1;
+check('too poor is refused', G.feedCritter(PIP.id, SNACK.id) === null);
+check('and nothing was charged', S.credits === SNACK.cost - 1);
+check('and it is still unfed', !G.critterFed(PIP.id));
+S.credits = SNACK.cost;
+check('affording it works', Boolean(G.feedCritter(PIP.id, SNACK.id)));
+check('the cost was deducted', S.credits === 0);
+S.credits = 1e6;
+check('an unknown food is refused', G.feedCritter(PIP.id, 'nonsense') === null);
+check('a creature that is not home is refused', G.feedCritter('nobody', SNACK.id) === null);
+S.critters[PIP.id].fedUntil = 0;
+G.setTending(PIP.id, false);
+/* Only a tending creature's trait is ever read, so feeding a resting one would
+   be a purchase that buys nothing at all. */
+check('a resting creature cannot be fed', G.feedCritter(PIP.id, SNACK.id) === null);
+check('and was not charged for it', S.credits === 1e6);
+G.setTending(PIP.id, true);
+
+group('fed time is capped, so no purchase buys weeks of boost');
+G.reset();
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+G.checkCritters();
+S.credits = 1e9;
+const BIG = CREATURE_FOOD[CREATURE_FOOD.length - 1];
+let bought = 0;
+for (let i = 0; i < 40; i += 1) { if (G.feedCritter(PIP.id, BIG.id)) bought += 1; }
+check('the cap is reached and then holds', G.critterFedFor(PIP.id) <= G.foodCapSeconds() + 1);
+check('it stopped selling at the cap', bought < 40, `sold ${bought}`);
+check('a food that would add nothing reports zero', G.foodGain(PIP.id, BIG.id) === 0);
+check('and buying it is refused rather than charged', G.feedCritter(PIP.id, BIG.id) === null);
+
+group('food survives a save and time away');
+G.saveNow();
+G.load();
+check('it comes back fed', G.critterFed(PIP.id));
+check('with roughly the time it had', Math.abs(G.critterFedFor(PIP.id) - G.foodCapSeconds()) < 120);
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0,
+  discovered: { [PIP.attract.seed]: 99 },
+  critters: { [PIP.id]: { since: 1, level: 1, tending: true } }
+}));
+G.load();
+check('a save from before food loads unfed', !G.critterFed(PIP.id));
+check('and the creature still works', G.critterTrait(PIP.trait.id) > 0);
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0,
+  discovered: { [PIP.attract.seed]: 99 },
+  critters: { [PIP.id]: { since: 1, level: 1, tending: true, fedUntil: 4e12 } }
+}));
+G.load();
+check('an edited save cannot hold a boost forever',
+  G.critterFedFor(PIP.id) <= G.foodCapSeconds() + 1);
+
+group('food is authored, and stays off the parts that break an economy');
+check('every food has a name, hours and a cost',
+  CREATURE_FOOD.every((f) => f.name && f.hours > 0 && f.cost > 0 && f.desc));
+check('ids are unique', new Set(CREATURE_FOOD.map((f) => f.id)).size === CREATURE_FOOD.length);
+check('every food icon exists', CREATURE_FOOD.every((f) => Icons.has(f.icon)));
+check('the tiers escalate in both hours and cost', CREATURE_FOOD.every((f, i) => (
+  i === 0 || (f.hours > CREATURE_FOOD[i - 1].hours && f.cost > CREATURE_FOOD[i - 1].cost)
+)));
+/* A longer stretch has to be the cheaper way to buy it, or the tiers above the
+   first are a worse deal wearing a bigger number. */
+check('a longer stretch costs less per hour', CREATURE_FOOD.every((f, i) => (
+  i === 0 || f.cost / f.hours < CREATURE_FOOD[i - 1].cost / CREATURE_FOOD[i - 1].hours
+)));
+check('no food outlasts the cap on its own',
+  CREATURE_FOOD.every((f) => f.hours <= FOOD_CAP_HOURS));
+/* The reason food is a star rather than a flat multiplier. At five stars a flat
+   x2 would have doubled the only trait in the yield pool and doubled the gem
+   faucet; a star is x1.2 there and x2 only at one star, where the absolute
+   numbers are small. */
+check('the boost shrinks as a creature grows', (() => {
+  const lift = (lvl) => (lvl + FED_STARS) / lvl;
+  return lift(CREATURE_STARS) < lift(1) && lift(CREATURE_STARS) <= 1.25;
+})());
+check('food never advances the star a creature was raised to', (() => {
+  G.reset();
+  S.discovered[PIP.attract.seed] = PIP.attract.count;
+  G.checkCritters();
+  S.credits = 1e6;
+  const before = G.critterLevel(PIP.id);
+  G.feedCritter(PIP.id, CREATURE_FOOD[0].id);
+  return G.critterLevel(PIP.id) === before;
+})());
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

@@ -230,7 +230,7 @@ Before calling a change done:
 1. **Load at 390×844** with device emulation on.
 2. **Tap the flower ~20 times** — coins fly, combo ring fills, pitch climbs, face reacts.
 3. **Plant, hasten, harvest** a plot through all three growth stages.
-4. **Open all seven sheet panels.** Check nothing overflows or wraps badly.
+4. **Open every sheet panel** — Upgrades, Apiary, Craft, Shop, the seed picker, Quests, the Almanac, Feed, the album, a pack, Settings. Check nothing overflows or wraps badly.
 5. **Drag the sheet down** to dismiss.
 6. **Reload** and confirm progress persisted.
 7. **Summon a Wonder** from Settings and watch it start and end.

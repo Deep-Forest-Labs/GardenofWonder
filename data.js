@@ -647,6 +647,50 @@ const PAIR_TUNING = {
   deliveryChance: 0.2
 };
 
+/* Food. A fed creature works one star above itself for a while.
+
+   NOTHING EVER SWITCHES OFF. A creature that has not been fed works exactly as
+   it always did, so letting food lapse means going back to normal rather than
+   finding a pet you raised gone quiet. That direction is the whole design: the
+   cosy pillar is stated three times over in docs/22-creatures.md — "nothing is
+   ever taken away", "losing one is punitive", and a returning player finding a
+   creature idle is "the same class of harm as taking a seed away". An upkeep
+   timer that deactivates a pet breaks all three, and the retention loop is
+   identical either way — you come back because the boost lapsed, not because
+   the pet did.
+
+   A STAR RATHER THAN A FLAT MULTIPLIER, because a flat one is self-amplifying
+   and this is self-limiting. `critterTraitAt()` already scales a trait by star,
+   so a fed creature simply computes one higher: x2.00 at one star, x1.20 at
+   five. The boost shrinks exactly as the creature's absolute contribution
+   grows. A flat x2 would have doubled the only trait in the `yield` pool
+   (Luna, +9.6% -> +19.2% average payout) and doubled the gem faucet (Thistle),
+   which are the two places an idle economy quietly breaks. */
+const FED_STARS = 1;
+
+/* Fed time is capped and the panel says so openly — a stated cap reads as a
+   rule, a hidden one reads as theft. Without it a single large purchase buys
+   weeks of boost and the loop it exists to create stops existing. */
+const FOOD_CAP_HOURS = 24;
+
+/* Prices are placeholders like every other number in the economy, and flat
+   rather than scaling — see docs/04-economy.md. The per-hour rate falls as the
+   tier rises, so committing to a longer stretch is the cheaper way to buy it. */
+const CREATURE_FOOD = [
+  {
+    id: 'clover', name: 'Clover Nibble', hours: 1, cost: 1500, icon: 'clover',
+    desc: 'A mouthful of something green. Enough to get anyone going.'
+  },
+  {
+    id: 'petalcake', name: 'Petal Cake', hours: 4, cost: 5000, icon: 'petal',
+    desc: 'Pressed from the garden. Sweeter than it looks and stickier than it should be.'
+  },
+  {
+    id: 'honeypot', name: 'Honeypot', hours: 12, cost: 12000, icon: 'honey',
+    desc: 'The whole pot. Nobody is going to be hungry for a while.'
+  }
+];
+
 const CREATURES = [
   {
     id: 'pip',

@@ -56,6 +56,18 @@ from quests and levels.
 > Chambers, sideways paging and a second level are agreed but unbuilt. See
 > [22-creatures.md](22-creatures.md).
 >
+> **Feeding shipped, 2026-08-18.** Three foods bought with coins — Clover Nibble 1h/1,500, Petal
+> Cake 4h/5,000, Honeypot 12h/12,000 — from **Feed** on the Hollow's dock. **A fed creature works one
+> star above itself** until the food runs out. **Nothing ever switches off:** an unfed creature works
+> exactly as it always did, so a lapse is a return to normal rather than a pet gone quiet. The owner's
+> first shape was an upkeep timer that deactivated a pet; the goals were kept and the baseline was
+> inverted, because the cosy pillar is stated three times over in
+> [22-creatures.md](22-creatures.md) and the retention loop is identical either way. **A star rather
+> than a flat ×2**, because ×2 doubles the only trait in the `yield` pool (Luna, +9.6% → +19.2%
+> average payout) and doubles the gem faucet (Thistle); a star is ×2.00 at one and ×1.20 at five, so
+> it shrinks as the creature grows. Fed time caps at 24h, stated openly. **Food never advances the
+> star a creature was raised to** — that stays the bloom's job. 42 assertions.
+>
 > **The loadout is now chosen in the room, 2026-08-18.** Pet and Loadout are **modes** on the
 > Hollow's dock and a tap on a creature spends whichever is armed — sending it out or letting it
 > rest, rather than opening the Almanac to do it. The Almanac's Habitat block keeps its toggles,
@@ -284,17 +296,22 @@ The obvious next pieces, roughly in order:
 
 1. ~~**Swap the loadout from inside the Hollow.**~~ **Done 2026-08-18.** Pet and Loadout are modes
    on the Hollow's dock; a tap on a creature spends whichever is armed.
-2. **Feed and Decorate.** Both are in the Hollow dock and both say plainly that they are not built.
-   Feeding is the obvious home for mementos, which are stored and currently spent on nothing.
-3. **More pairs, or a seventh creature.** Eight pairs of a possible fifteen. Any new trait must
+2. ~~**Feed.**~~ **Done 2026-08-18.** Three coin-bought foods; a fed creature works one star above
+   itself. See above.
+3. **Decorate, and it is where mementos finally go.** Agreed with the owner 2026-08-18 and **not**
+   built: mementos buy **decorations and skins for the Hollow**, with a piece costing keepsakes from
+   *two different creatures*, so decorating requires roster breadth rather than depth. The art
+   already has a memento cubby waiting for it, and it is the *item-as-key* device in
+   [17-market-and-positioning.md](17-market-and-positioning.md). **This is the next piece.**
+4. **More pairs, or a seventh creature.** Eight pairs of a possible fifteen. Any new trait must
    declare a `pool`, and the suite fails if the roster becomes all one kind of effect, if more than a
    third sits in `yield`, or if any creature ends up in fewer than two pairs.
-4. **Chambers and sideways paging in the Hollow.** Agreed and unbuilt — but **hold it until the
+5. **Chambers and sideways paging in the Hollow.** Agreed and unbuilt — but **hold it until the
    roster outgrows one room.** `Hollow.SPOTS` holds six positions and there are six creatures, so
    paging today means swiping from a full room to an empty one, which is the same failure the
    "one level first" rule already names for a second floor. It is the natural unit for decorating
    later, so build it behind a seventh creature rather than ahead of one.
-5. **Flower breeding**, the second half of the direction. Cross two mature neighbours into a hybrid
+6. **Flower breeding**, the second half of the direction. Cross two mature neighbours into a hybrid
    seed. It reuses the adjacency board and *generates* content rather than authoring it — but it
    changes the seed model, so it has a far bigger blast radius than creatures did.
 
@@ -427,6 +444,16 @@ by two agents that did not know about each other — competently and incompatibl
 state shapes for the same feature. Cloud agents push to `cursor/*` branches and may already have
 merged to `main` while your local tree still looks current. `git fetch` first.
 
+**`state.critters[id].fed` is the keepsake clock, not whether a creature has been fed.** It records
+when the creature last handed a keepsake over, and it has meant that since creatures shipped. Food
+is `fedUntil`, a separate absolute timestamp. Writing food into `fed` silently resets every keepsake
+timer in the game, and nothing reports it.
+
+**`tools/sim-test.js` keeps an explicit `GLOBALS` whitelist, and a new `data.js` constant must join
+it.** Miss it and the constant reads `undefined` inside `game.js`, which throws inside `load()`,
+which is caught — so the save silently resets and the failure surfaces as some unrelated test
+several hundred assertions away. Cost a debugging pass on `CREATURE_FOOD`.
+
 **A celebration centred on a hidden element fires from the top-left corner.** `.in-hollow` sets
 `display:none` on `.stage`, so `#garden` measures a 0×0 rect and `FX.centerOf()` returns the origin
 — no error, no warning, just confetti in the corner. Anything in `ui-events.js` that celebrates
@@ -553,7 +580,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 718 assertions over the simulation layer
+node tools/sim-test.js          # 760 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

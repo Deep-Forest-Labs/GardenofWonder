@@ -609,8 +609,10 @@
       const tending = Game.critterTending(def.id);
       if (leaf.hidden === tending) leaf.hidden = !tending;
       // A grown creature glows brighter, so its star reads off the art itself
-      // rather than only out of a panel.
-      const lvl = Game.critterLevel(def.id);
+      // rather than only out of a panel. It reads the star the creature is
+      // *working* at, so a well-fed one is visibly brighter in the garden
+      // without needing a badge of its own.
+      const lvl = Game.critterWorkLevel(def.id);
       if (node.dataset.level !== String(lvl)) {
         node.dataset.level = String(lvl);
         node.style.setProperty('--lvl', (0.7 + lvl * 0.16).toFixed(2));

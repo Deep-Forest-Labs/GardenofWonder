@@ -294,7 +294,122 @@ centred on `#garden` — and `.in-hollow` sets `display:none` on `.stage`, so `#
 was invisible until the Hollow became a place where the loadout can change; an automated harvest
 could always have brought a creature while the room was open.
 
-Still not built: chambers and sideways paging, a second level, feeding, and decorating.
+Still not built: chambers and sideways paging, a second level, and decorating.
+
+## Food, 2026-08-18
+
+**A fed creature works one star above itself until the food runs out.** Three tiers, bought with
+coins, opened from **Feed** on the Hollow's dock.
+
+| Food | Adds | Costs |
+| --- | --- | --- |
+| Clover Nibble | 1 hour | 1,500 |
+| Petal Cake | 4 hours | 5,000 |
+| Honeypot | 12 hours | 12,000 |
+
+### Nothing ever switches off, and that is the whole design
+
+The owner's first shape for this was an upkeep timer — a pet goes **inactive** without food, and
+food buys hours of being active. The retention loop it wanted is real and it is now built. What
+changed is the direction of the baseline.
+
+**An unfed creature works exactly as an unfed creature always did.** A lapse means going back to
+normal, never finding a pet you raised gone quiet. That is not a preference; this document already
+said it three times before food existed:
+
+- "Nothing is ever taken away, which is what keeps this cosy."
+- "Losing one is punitive and the cosy pillar argues against it."
+- "A returning player finding their creature idle with no explanation is the same class of harm as
+  taking a seed away."
+
+The retention and the monetization are identical either way — you come back because the *boost*
+lapsed rather than because the *pet* did. What differs is whether lapsing feels like losing
+something. [17-market-and-positioning.md](17-market-and-positioning.md) points the same way: the
+closest business analogue is **Finch**, whose D7 37% is built on **non-punitive streaks**, with the
+same source warning that more than two streak nudges a week makes abandonment 41% more likely.
+
+There is a fair counter-argument and it is worth keeping on the page: **Pocket Plants** is listed
+as the closest structural analogue in that document and it does run on energy. But its energy gates
+*the player's own actions*, not whether the collection is alive.
+
+**Pairs deliberately do not care about food.** They stay binary on tending, so a pair can never
+blink out because a timer lapsed — which would be the exact failure the pair rules already name,
+"a bonus you cannot tell is active is not a bonus."
+
+### A star rather than a flat multiplier
+
+The obvious version was ×2 while fed. Measured against the real roster, that is safe for four
+creatures and genuinely dangerous for two:
+
+| creature | pool | at ★5 | flat ×2 | fed = ★6 |
+| --- | --- | --- | --- | --- |
+| Pip | chance | 25% | 50% | 30% |
+| Thistle | chance | 60% | **120%** | 72% |
+| Bramble | chance | 2% | 4% | 2.4% |
+| Luna | **yield** | 30% | **60%** | 36% |
+| Ember | utility | 20% | 40% | 24% |
+| Bumble | utility | 100% | 200% | 120% |
+
+The `pool` system already protects most of it — that is what it is for. Doubling a chance keeps
+`chance × (mult−1)` small, Bumble stays under the existing `k.every/4` floor in
+`keepsakesWaiting()`, and Ember sits inside the `maxRate` clamp. **Luna and Thistle are the two that
+matter**: Luna is the only trait in the `yield` pool, and at ×2 she goes from +9.6% to **+19.2%
+average payout** on a harvest product that is already seven multiplied terms with an endless mastery
+ladder underneath. Thistle at ×2 doubles the faucet on the **premium** currency.
+
+So food grants **one star**, which is self-limiting where a flat multiplier is self-amplifying:
+
+```
+★1 -> ★2   ×2.00      a fresh creature really does double
+★3 -> ★4   ×1.33
+★5 -> ★6   ×1.20      worst case Luna: +9.6% -> +11.5% average
+```
+
+The boost shrinks exactly as the creature's absolute contribution grows. It also costs almost
+nothing to build, because `critterTraitAt()` already scales a trait by star — a fed creature simply
+computes one higher. `FED_STARS` in `data.js` is the one number to change.
+
+**The ceiling is `CREATURE_STARS + FED_STARS`, not `CREATURE_STARS`.** Clamping at five would have
+handed the most invested player the only boost in the game that does nothing.
+
+**Food never advances the star a creature was raised to.** `critterLevel()` stays what growth counts
+against; `critterWorkLevel()` is what every trait reads. Keeping those separate is what stops food
+becoming a second path to raising a creature — and the bloom-raises-its-own-creature rule is this
+project's best answer to "why would I ever plant a Daisy again."
+
+### The rest of the rules
+
+- **Fed time caps at 24 hours** and the panel says so openly. Without a cap one large purchase buys
+  weeks of boost and the loop it exists to create stops existing. A stated cap reads as a rule; a
+  hidden one reads as theft.
+- **Only a tending creature can be fed.** Traits are only read from tenders, so feeding a resting
+  one would be a purchase that buys nothing. The panel says why, and the fix is one tap away in the
+  Hollow's Loadout mode.
+- **Derived from an absolute timestamp** (`fedUntil`), the same shape keepsakes and hives use, so
+  time away needs no replaying and nothing has to tick.
+- **Prices are placeholders**, flat rather than scaling, like every other number in the economy. The
+  per-hour rate falls as the tier rises, so a longer commitment is the cheaper way to buy it. Whether
+  the price should eventually scale with star or level is a real open question — see below.
+- **How it reads without a panel:** the garden's creature glow is driven by `critterWorkLevel()`, so
+  a fed creature is visibly brighter out in the yard. In the Hollow it wears a third badge. **Three
+  badges is the ceiling** — leaf for tending, gem for a keepsake waiting, clover for fed — and a
+  fourth would not be readable at that size.
+- **The lit star sits in the slot the creature is working at**, not appended after the row. Appended,
+  it reads as a sixth star rather than as one on loan. A five-star creature is the only case that
+  genuinely grows a sixth pip.
+
+### Two traps this landed on
+
+- **`state.critters[id].fed` already existed and means the keepsake clock** — when the creature last
+  handed one over. Food is `fedUntil`, and the two are unrelated despite the names. Writing food into
+  `fed` would silently reset every keepsake timer in the game.
+- **A new `data.js` global must be added to the `GLOBALS` whitelist in `tools/sim-test.js`.** It is
+  an explicit list, and a missing entry makes the constant `undefined` inside `game.js`, which throws
+  inside `load()`, which is caught — so the whole save silently resets and the failure surfaces
+  somewhere unrelated. `CREATURE_FOOD`, `FED_STARS` and `FOOD_CAP_HOURS` are now on it.
+
+Covered by **42 assertions**, and the one that matters most is that an unfed creature's trait returns
+to *exactly* baseline once the clock runs out.
 
 ### Stars — a creature is raised, not found
 
@@ -521,7 +636,8 @@ creature id, and an impossible gift count.
   screen with keepsake records or a roster count.
 - **Keepsakes pay coins and gems**, which is a placeholder. They should eventually pay something
   expressive rather than currency — see the memento device in
-  [17-market-and-positioning.md](17-market-and-positioning.md).
+  [17-market-and-positioning.md](17-market-and-positioning.md). **Held mementos now have an agreed
+  destination**: decorations for the Hollow, not food. See the open questions below.
 - **No interaction with weather, night or verbs.** A moth that only comes at night is one `attract`
   field away, and `Game.isNight()` already exists.
 
@@ -534,3 +650,11 @@ creature id, and an impossible gift count.
 - Does the roster become the collection spine in place of the card album? Two collections split the
   pull of both — see the decision log.
 - How many creatures per bloom? One-to-one is legible but caps the roster at 19.
+- **Should food prices scale?** They are flat, so a Honeypot stops mattering late. Scaling with the
+  creature's star is the obvious dial and it is self-balancing, but it also charges more for the
+  creature you invested most in. Decide it with the wider economy retune rather than alone.
+- **Mementos are still spent on nothing, and the answer is decorating, not feeding.** Agreed
+  2026-08-18: mementos buy **decorations and skins for the Hollow**, with a piece costing keepsakes
+  from *two different creatures* so decorating requires roster breadth. The art already has a memento
+  cubby waiting for it, and it is the *item-as-key* device in
+  [17-market-and-positioning.md](17-market-and-positioning.md). This is the next piece to build.

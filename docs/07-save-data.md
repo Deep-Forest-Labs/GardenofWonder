@@ -299,7 +299,7 @@ and `mutateAt` is untouched. It is its own top-level object.
 
 ```js
 critters: {
-  pip: { since, fed, gifts, met }   // one entry per creature that has moved in
+  pip: { since, fed, fedUntil, gifts, met, level, tending }   // one per creature that moved in
 }
 ```
 
@@ -335,6 +335,19 @@ not 0** — a save from before stars is a creature the player already earned.
 - **The total is trimmed to the current slot count**, walking `CREATURES` in order. The slot table can
   shrink in a balance pass and a save can be edited, so the overflow is dropped rather than handing
   out effects the game no longer grants.
+
+`fedUntil` (added 2026-08-18 with food) is **an absolute epoch second**, not a remaining duration,
+so time away needs no replaying and nothing has to tick. Two rules:
+
+- **It is clamped to `now + FOOD_CAP_HOURS`** on load. An edited save must not be able to hold a
+  boost forever, and the clamp is where that is enforced rather than at every read site.
+- **Absent means unfed**, which is simply a creature working at the star it was raised to. Nothing
+  is switched off by the absence, so a save from before food needs no migration at all.
+
+> **`fed` and `fedUntil` are unrelated despite the names.** `fed` is the **keepsake clock** — when
+> this creature last handed one over — and it has been there since creatures shipped. Writing food
+> into it would silently reset every keepsake timer in the game. This is the single easiest mistake
+> to make in this record.
 
 **Attraction stores nothing.** Progress is read live from `state.discovered`, which is already a
 lifetime record that never decrements — see [22-creatures.md](22-creatures.md).

@@ -79,6 +79,7 @@
         node.innerHTML = `${Critters.draw(def)}
           <span class="hollow-leaf" hidden>${Icons.get('sprout')}</span>
           <span class="hollow-gift" hidden>${Icons.get('gem')}</span>
+          <span class="hollow-fed" hidden>${Icons.get('clover')}</span>
           <span class="hollow-name">${def.name}</span>`;
         wrap.appendChild(node);
         petEls.set(def.id, node);
@@ -86,10 +87,13 @@
       // Only the badges change on a tick; touching anything else restarts motion.
       const tending = Game.critterTending(def.id);
       const gift = Game.keepsakesWaiting(def.id) > 0;
+      const fed = Game.critterFed(def.id);
       const leafEl = node.querySelector('.hollow-leaf');
       const giftEl = node.querySelector('.hollow-gift');
+      const fedEl = node.querySelector('.hollow-fed');
       if (leafEl.hidden === tending) leafEl.hidden = !tending;
       if (giftEl.hidden === gift) giftEl.hidden = !gift;
+      if (fedEl.hidden === fed) fedEl.hidden = !fed;
       if (node.classList.contains('tending') !== tending) node.classList.toggle('tending', tending);
     });
 
@@ -178,12 +182,13 @@
       Sound.play('open');
       return;
     }
-    /* Named because the screen's shape depends on them, and honest about not
+    if (id === 'feed') { setMode('pet'); UI.openSheet('feed'); return; }
+    /* Named because the screen's shape depends on it, and honest about not
        existing rather than doing something token. */
     UI.toast({
-      title: id === 'feed' ? 'Feeding is not built yet' : 'Decorating is not built yet',
+      title: 'Decorating is not built yet',
       body: 'The button is here so the shape of the screen is right.',
-      art: Icons.get(id === 'feed' ? 'honey' : 'decor')
+      art: Icons.get('decor')
     });
   }
 

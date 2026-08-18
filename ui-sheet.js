@@ -49,7 +49,7 @@
     const titles = {
       upgrades: 'Upgrades', apiary: 'Apiary', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
-      quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away',
+      quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
       album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
     };
     let title = titles[sheetMode] || '';
@@ -75,7 +75,7 @@
     const render = {
       upgrades: renderUpgrades, apiary: renderApiary, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
-      dev: renderDev, welcome: renderWelcome,
+      dev: renderDev, welcome: renderWelcome, feed: renderFeed,
       album: renderAlbum, cardset: renderCardSet, pack: renderPack
     }[sheetMode];
     el.sheetBody.innerHTML = render ? render() : '';
@@ -474,12 +474,20 @@
      named silhouette with its hint showing, because a locked thing you can see
      is a goal and a missing one is nothing. */
   /* Stars, not the word "level" — a glance should say how grown a creature is. */
-  function critterStars(level) {
+  /* A fed creature is working one star above itself, and the lit star sits in
+     the slot it is working at — appended after the row instead, it reads as a
+     sixth star rather than as "this one is on loan". A five-star creature is
+     the only case that genuinely grows a sixth pip. */
+  function critterStars(level, fed = false) {
     let out = '';
     for (let i = 1; i <= CREATURE_STARS; i += 1) {
-      out += `<span class="cr-star${i <= level ? '' : ' off'}">${Icons.get('star')}</span>`;
+      const on = i <= level;
+      const lent = fed && i === level + 1;
+      out += `<span class="cr-star${on ? '' : lent ? ' fed' : ' off'}">${Icons.get('star')}</span>`;
     }
-    return `<span class="critter-stars" aria-label="${level} of ${CREATURE_STARS} stars">${out}</span>`;
+    if (fed && level >= CREATURE_STARS) out += `<span class="cr-star fed">${Icons.get('star')}</span>`;
+    return `<span class="critter-stars" aria-label="${level} of ${CREATURE_STARS} stars${
+      fed ? ', well fed' : ''}">${out}</span>`;
   }
 
   /* Unformed pairs show both portraits with the effect hidden — a locked thing you
@@ -528,9 +536,10 @@
       }
 
       const level = Game.critterLevel(def.id);
+      const fed = Game.critterFed(def.id);
       const held = Game.mementoCount(def.keepsake.id);
       const goal = Game.critterGoal(def.id);
-      const now = trait ? Game.critterTraitAt(def, level) : 0;
+      const now = trait ? Game.critterTraitAt(def, Game.critterWorkLevel(def.id)) : 0;
       const canTend = tending || Game.habitatFree() > 0;
       const grow = goal
         ? `<span class="critter-grow">
@@ -542,7 +551,7 @@
       return `<div class="critter-row${tending ? ' tending' : ''}">
         <span class="critter-face">${Critters.draw(def)}</span>
         <span class="critter-copy">
-          <span class="critter-who">${def.name} <em>· ${def.species}</em>${critterStars(level)}</span>
+          <span class="critter-who">${def.name} <em>· ${def.species}</em>${critterStars(level, fed)}</span>
           <span class="critter-note">${def.about}</span>
           ${trait ? `<span class="critter-trait">${Icons.get(trait.icon)}<b>${trait.name}:</b> ${trait.desc(now)}</span>` : ''}
           ${grow}
@@ -554,6 +563,81 @@
           ${canTend ? '' : 'disabled'}>${tending ? 'Tending' : 'Resting'}</button>
       </div>`;
     }).join('');
+  }
+
+  /* `fmtTime` stops at minutes, which is right for a grow timer and useless for
+     a twelve-hour feed. */
+  function fmtSpan(sec) {
+    const s = Math.max(0, Math.round(sec));
+    if (s < 60) return `${s}s`;
+    if (s < 3600) return `${Math.round(s / 60)}m`;
+    const h = Math.floor(s / 3600);
+    const m = Math.round((s % 3600) / 60);
+    return m ? `${h}h ${m}m` : `${h}h`;
+  }
+
+  /* Feeding buys a star for a while and nothing more. A creature that has not
+     been fed works exactly as it always did — see docs/22-creatures.md, where
+     the reason that matters is stated at some length. */
+  function foodButtons(id) {
+    return CREATURE_FOOD.map((f) => {
+      const room = Game.foodGain(id, f.id) > 0;
+      const can = room && S.credits >= f.cost;
+      return `<button class="food-btn${can ? ' affordable' : ''}" data-feed="${f.id}" data-who="${id}"
+        ${room ? '' : 'disabled'} title="${f.desc}">
+        <span class="food-ico">${Icons.get(f.icon)}</span>
+        <span class="food-name">${f.name}</span>
+        <span class="food-hours">+${f.hours}h</span>
+        ${priceTag(f.cost, 'credits', can)}
+      </button>`;
+    }).join('');
+  }
+
+  function feedRows() {
+    const home = Game.crittersHome();
+    if (!home.length) {
+      return '<p class="stat-note">Nobody lives here yet. Grow what they like and they will turn up.</p>';
+    }
+    return home.map((def) => {
+      const tending = Game.critterTending(def.id);
+      const fed = Game.critterFed(def.id);
+      const level = Game.critterLevel(def.id);
+      const trait = def.trait ? CREATURE_TRAITS[def.trait.id] : null;
+      const now = trait ? Game.critterTraitAt(def, Game.critterWorkLevel(def.id)) : 0;
+
+      const status = !tending
+        ? '<span class="critter-note">Resting. Send it out in the Hollow to feed it.</span>'
+        : fed
+          ? `<span class="food-state on">${Icons.get('clock')}<span>Well fed for
+             <b data-span="${Math.round(Game.nowSeconds() + Game.critterFedFor(def.id))}">${
+               fmtSpan(Game.critterFedFor(def.id))}</b>
+             — working like ★${Game.critterWorkLevel(def.id)}</span></span>`
+          : `<span class="food-state">${Icons.get('clock')}<span>Not fed. Working like ★${level}, which is fine.</span></span>`;
+
+      /* The food buttons sit outside the text column so they get the row's full
+         width — nested beside a 46px portrait, three of them wrap to 2 + 1. */
+      return `<div class="critter-row feed-row${tending ? '' : ' dim'}${fed ? ' fed' : ''}">
+        <span class="feed-top">
+          <span class="critter-face">${Critters.draw(def)}</span>
+          <span class="critter-copy">
+            <span class="critter-who">${def.name} <em>· ${def.species}</em>${critterStars(level, fed)}</span>
+            ${trait ? `<span class="critter-trait">${Icons.get(trait.icon)}<b>${trait.name}:</b> ${trait.desc(now)}</span>` : ''}
+            ${status}
+          </span>
+        </span>
+        ${tending ? `<span class="food-row">${foodButtons(def.id)}</span>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function renderFeed() {
+    return `<div class="panel">
+      <p class="stat-note">A fed creature works <b>one star above itself</b> until the food runs
+        out. Nothing ever switches off — an unfed creature works exactly as it always did, so this
+        is a treat rather than an upkeep.</p>
+      <p class="stat-note">You can keep a creature fed up to <b>${FOOD_CAP_HOURS} hours</b> ahead.</p>
+      ${feedRows()}
+    </div>`;
   }
 
   function renderBonuses() {
@@ -1001,6 +1085,27 @@
       }
       return;
     }
+    /* Its own attribute rather than data-buy, for the same reason data-apiary
+       and data-craft have theirs — syncAfford() below keys off the kind. */
+    const feed = e.target.closest('[data-feed]');
+    if (feed) {
+      const got = Game.feedCritter(feed.dataset.who, feed.dataset.feed);
+      if (got) {
+        const c = FX.centerOf(feed);
+        FX.sparks(c.x, c.y, 12, got.def.art.glow);
+        FX.stars(c.x, c.y, 5, '#ffe066');
+        Sound.play('quest');
+        FX.haptic(10);
+        UI.toast({
+          title: `${got.def.name} is well fed`,
+          body: `Working like ★${Game.critterWorkLevel(got.def.id)} for ${fmtSpan(Game.critterFedFor(got.def.id))}.`,
+          art: Icons.get(got.food.icon)
+        });
+        renderSheet(false);
+        UI.renderCritters();
+      }
+      return;
+    }
     const claim = e.target.closest('[data-claim]');
     if (claim && claim.dataset.claim) {
       if (Game.claimQuest(claim.dataset.claim)) Sound.resume();
@@ -1196,6 +1301,11 @@
       const left = Number(n.dataset.countdown) - Game.nowSeconds();
       n.textContent = left > 0 ? fmtTime(left) : 'a moment';
     });
+    /* Hours-scale spans get their own attribute rather than sharing the one
+       above — `fmtTime` stops at minutes and would render a feed as "720m". */
+    $$('[data-span]', el.sheetBody).forEach((n) => {
+      n.textContent = fmtSpan(Number(n.dataset.span) - Game.nowSeconds());
+    });
   }
 
   /* refresh affordability styling without a full rebuild */
@@ -1217,6 +1327,15 @@
         price.classList.toggle('ok', can);
         price.classList.toggle('no', !can);
       }
+    });
+    $$('[data-feed]', el.sheetBody).forEach((node) => {
+      const f = Game.foodById(node.dataset.feed);
+      const room = Game.foodGain(node.dataset.who, node.dataset.feed) > 0;
+      const can = Boolean(f) && room && S.credits >= f.cost;
+      node.disabled = !room;
+      node.classList.toggle('affordable', can);
+      const price = $('.price', node);
+      if (price) { price.classList.toggle('ok', can); price.classList.toggle('no', !can); }
     });
     $$('[data-plant]', el.sheetBody).forEach((node) => {
       const s = Game.seedById(node.dataset.plant);

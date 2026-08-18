@@ -193,7 +193,13 @@ const Game = (() => {
           if (!r || !r.since) return;
           state.critters[def.id] = {
             since: Number(r.since) || nowSeconds(),
+            // `fed` is the keepsake clock — when this creature last handed one
+            // over. Food is `fedUntil`, and the two are unrelated despite the
+            // names; writing food into `fed` would reset every keepsake timer.
             fed: Number(r.fed) || 0,
+            // Clamped to the cap so an edited save cannot hold a boost forever.
+            fedUntil: Math.max(0, Math.min(nowSeconds() + FOOD_CAP_HOURS * 3600,
+              Number(r.fedUntil) || 0)),
             gifts: Math.max(0, Math.min(def.keepsake.cap, Number(r.gifts) || 0)),
             met: r.met !== false,
             // A save from before stars existed is a creature the player already
@@ -1806,14 +1812,18 @@ const Game = (() => {
       row: add the row, and any consumer already asking for that trait sees it. */
   /** `trait.value` is the value at full stars, so a creature contributes its share
       of that. A one-star arrival is a fifth as strong as the same creature raised. */
+  /** The ceiling is one star above the roster's, not the roster's, because a
+      fed five-star creature has to be worth feeding — clamping here would hand
+      the most invested player the only boost in the game that does nothing. */
   function critterTraitAt(def, level) {
     if (!def || !def.trait) return 0;
-    return (def.trait.value || 0) * (Math.max(1, Math.min(CREATURE_STARS, level)) / CREATURE_STARS);
+    const top = CREATURE_STARS + FED_STARS;
+    return (def.trait.value || 0) * (Math.max(1, Math.min(top, level)) / CREATURE_STARS);
   }
 
   function critterTrait(traitId) {
     return crittersTending().reduce((n, def) => (
-      def.trait && def.trait.id === traitId ? n + critterTraitAt(def, critterLevel(def.id)) : n
+      def.trait && def.trait.id === traitId ? n + critterTraitAt(def, critterWorkLevel(def.id)) : n
     ), 0);
   }
 
@@ -1826,6 +1836,56 @@ const Game = (() => {
 
   const critterLevel = (id) => (state.critters[id] ? state.critters[id].level || 1 : 0);
   const critterMaxed = (id) => critterLevel(id) >= CREATURE_STARS;
+
+  /* ---- food ----
+     A fed creature works one star above itself until the clock runs out, and an
+     unfed one works exactly as it always did. Derived from an absolute
+     timestamp, the same shape keepsakes and hives use, so time away needs no
+     replaying and nothing has to tick. */
+
+  const foodById = (id) => CREATURE_FOOD.find((f) => f.id === id) || null;
+  const critterFedUntil = (id) => (state.critters[id] ? state.critters[id].fedUntil || 0 : 0);
+  const critterFed = (id) => critterFedUntil(id) > nowSeconds();
+  const critterFedFor = (id) => Math.max(0, critterFedUntil(id) - nowSeconds());
+  const foodCapSeconds = () => FOOD_CAP_HOURS * 3600;
+
+  /** The star a creature is *working* at, which is what every trait reads.
+      `critterLevel()` stays the star it has actually been raised to, because
+      that is what growth counts against and food must never advance it. */
+  const critterWorkLevel = (id) => critterLevel(id) + (critterFed(id) ? FED_STARS : 0);
+
+  /** Seconds a given food would actually add, after the cap. Zero means the
+      button should be dead rather than the purchase failing — a cheat or a buy
+      that quietly does nothing reads as the feature being broken. */
+  function foodGain(id, foodId) {
+    const food = foodById(foodId);
+    if (!food || !critterHere(id)) return 0;
+    const from = Math.max(nowSeconds(), critterFedUntil(id));
+    return Math.max(0, Math.min(nowSeconds() + foodCapSeconds(), from + food.hours * 3600) - from);
+  }
+
+  function feedCritter(id, foodId) {
+    const def = critterById(id);
+    const food = foodById(foodId);
+    if (!def || !food || !critterHere(id)) return null;
+    // Only a tending creature's trait is ever read, so feeding a resting one
+    // would be a purchase that buys nothing.
+    if (!critterTending(id)) return null;
+    const gain = foodGain(id, foodId);
+    if (gain <= 0) return null;
+    if (state.credits < food.cost) {
+      emit('deny', { reason: 'credits', need: food.cost });
+      return null;
+    }
+    state.credits -= food.cost;
+    state.critters[id].fedUntil = Math.max(nowSeconds(), critterFedUntil(id)) + gain;
+    save();
+    emit('currency');
+    emit('purchase', { kind: 'food', key: foodId, cost: food.cost, def: food });
+    emit('critter', { def, fed: true, food, until: critterFedUntil(id) });
+    emit('panels');
+    return { def, food, gain, until: critterFedUntil(id) };
+  }
 
   /** Lifetime harvests needed to reach `level`. The same bloom raises the creature
       that attracted it, at an escalating count, so a low-tier seed keeps a reason
@@ -2541,6 +2601,7 @@ const Game = (() => {
     critterById, critterHome, critterHere, crittersHome, critterProgress, critterReady,
     habitatSlots, habitatUsed, habitatFree, critterTending, crittersTending, setTending, critterTrait,
     critterLevel, critterMaxed, critterGoal, critterGoalFor, critterTraitAt, critterPayoutMult,
+    foodById, critterFed, critterFedFor, critterWorkLevel, foodGain, feedCritter, foodCapSeconds,
     pairById, pairActive, activePairs, notePairs, nightbloomUpgrade,
     mementoCount, mementoKinds, mementoTotal,
     checkCritters, keepsakesWaiting, settleCritters, collectKeepsakes, petCritter,
