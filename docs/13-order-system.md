@@ -3,6 +3,10 @@
 **Status: specification, not built.** Structure is locked; numbers are placeholders pending the
 prototype. See [12-meta-layer-design.md](12-meta-layer-design.md) for the world it sits in.
 
+**Still wanted, 2026-08-16.** The habitat direction (creatures, the Hollow) arrived first, but the
+owner is explicit that orders and the production chain they sit on have not been dropped — the right
+way to fold them in simply has not been found yet. This remains a live design.
+
 ## Why this system exists
 
 Nothing else in the design consumes **multiple resources at once**. Without that, players optimise

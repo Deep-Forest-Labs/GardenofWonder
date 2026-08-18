@@ -13,9 +13,12 @@ seeds in eight plots, harvest with rarity multipliers, spend on badges and decor
 from quests and levels.
 
 > **Creatures arrived, and the direction changed, 2026-08-16.** The diagnosis was the owner's: the
-> world had a place and a character but **no inhabitants**. So the frame moved from *factory*
-> (garden → bench → market) to **habitat** — the garden is a place that becomes alive because of what
-> you plant.
+> world had a place and a character but **no inhabitants**. So **habitat** was added as a second frame
+> beside the production chain — the garden is a place that becomes alive because of what you plant.
+> **The chain is not cancelled:** garden → bench → market and the order system are still wanted, and
+> the owner was explicit about this on 2026-08-16. What is missing is the right way to fold them in,
+> not the appetite for them. Treat the parked Potting Bench and Market as **unsolved, never
+> rejected**.
 >
 > **Six creatures**, each drawn by a different bloom across seed unlock levels 1–10: Pip (Bluebell),
 > Bumble (Lavender), Bramble (Rose), Thistle (Marigold), Luna (Moonflower), Ember (Starlit Iris). They

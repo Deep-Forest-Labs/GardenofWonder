@@ -10,16 +10,26 @@ This is the first step of the **habitat direction** agreed 2026-08-16. Reasoning
 ## The reframe this belongs to
 
 Everything before this thought in **production chains** — garden makes flowers, bench makes goods,
-market consumes goods. That is Township, and it is not what this audience wants. The research in
-[17-market-and-positioning.md](17-market-and-positioning.md#who-this-game-is-for) says the likely
-audience is **69% female with Completion and Fantasy as the top two motivations**, and neither of
-those is "optimise a supply chain."
-
-**The garden is a place that becomes alive because of what you plant.** The reward for playing is
-that your garden gets more inhabited, not that a number gets bigger.
+market consumes goods. What creatures add is a second frame beside it: **the garden is a place that
+becomes alive because of what you plant**, and part of the reward for playing is that it gets more
+inhabited rather than only that a number gets bigger.
 
 The owner's diagnosis is what started it: the world had a *place* and a *character*, but no
 *inhabitants* — nothing lived there except the talking flower.
+
+### The production chain is not cancelled — clarified by the owner 2026-08-16
+
+An earlier version of this section said the chain "is not what this audience wants" and implied it had
+been abandoned. **That overstated it and the owner corrected it.** The garden → bench → market chain
+and the order system are still wanted; **what is missing is the right way to fold them in**, not the
+appetite for them. Read the parked status of the Potting Bench and the Market as *unsolved*, never as
+*rejected* — see [21-potting-bench.md](21-potting-bench.md) and
+[13-order-system.md](13-order-system.md), both of which remain live designs.
+
+What the research in [17-market-and-positioning.md](17-market-and-positioning.md#who-this-game-is-for)
+actually supports is narrower and worth keeping straight: the likely audience is **69% female with
+Completion and Fantasy as the top two motivations**, so a supply chain cannot be the *only* thing the
+game asks you to care about. It is an argument about emphasis, not a reason to delete a system.
 
 ## The rule that makes this worth building
 

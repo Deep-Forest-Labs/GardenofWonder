@@ -282,11 +282,16 @@ assertions. Design in [22-creatures.md](22-creatures.md).
 our main character."* The world had a place and a character but no inhabitants. Every system built
 in the previous month was a modifier on one verb, and nothing lived in the garden.
 
-**The reframe: this is a habitat, not a factory.** The whole design had been thinking in production
+**The reframe: habitat as well as factory.** *(Sharpened by the owner later the same day: the wording
+below overstated it. The production chain is **unsolved, not rejected** — see
+[22-creatures.md](22-creatures.md#the-production-chain-is-not-cancelled--clarified-by-the-owner-2026-08-16).
+The argument that follows is about what the game asks you to care about **first**, not about deleting
+a system.)* The whole design had been thinking in production
 chains — garden makes flowers, bench makes goods, market consumes goods. That is Township, in a
 crowded capital-heavy lane, and it is not what the research says this audience wants: the likely
 audience is **69% female with Completion and Fantasy as the top two motivations**, and neither is
-"optimise a supply chain." The garden should be a place that becomes alive because of what you plant.
+"optimise a supply chain" — which is an argument about emphasis, not a reason to cut the chain. The
+garden should also be a place that becomes alive because of what you plant.
 
 **Market evidence checked the same day, not recalled:**
 
