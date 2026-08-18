@@ -11,14 +11,24 @@ stay runnable by opening `index.html`. If a change would require a build, it's t
 **No dependencies.** The only external resource is the Baloo 2 web font, and the game degrades
 gracefully without it.
 
-**No binary assets.** No images, no audio files, no icon fonts. Generate SVG and synthesize sound.
-See [05-art-direction.md](05-art-direction.md).
+**No binary assets in the game.** No images, no audio files, no icon fonts. Generate SVG and
+synthesize sound. See [05-art-direction.md](05-art-direction.md).
+
+The single exception is `icons/` — the home screen icons the operating system requires, which
+cannot be SVG on iOS. They are packaging, not art: nothing in the game loads them, and
+`icons/icon.svg` remains the source they are rasterised from. See
+[23-installable-pwa.md](23-installable-pwa.md). Do not read this as permission to add a PNG to
+the game itself.
 
 **No `<script type="module">`.** Modules break under `file://`. Plain scripts and globals, loaded in
 dependency order.
 
 **Relative paths only.** No leading slashes anywhere. The game is served from a subpath on GitHub
 Pages (`/gardenwonder/`), so `/style.css` would 404.
+
+**A new script file must be added to `CORE` in `sw.js`.** That list is what gets precached for
+offline play. Miss it and the game still works online but fails to boot without a network. See
+[23-installable-pwa.md](23-installable-pwa.md).
 
 ## Layering
 

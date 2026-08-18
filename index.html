@@ -9,6 +9,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="Garden Wonder"/>
   <meta name="description" content="A cozy tap-and-grow garden full of talking flowers."/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml"/>
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
   <title>Garden Wonder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -136,5 +139,25 @@
   <script src="ui-hollow.js"></script>
   <script src="ui-events.js"></script>
   <script src="ui.js"></script>
+
+  <script>
+    /* Registers the service worker that makes the game installable and playable
+       offline. Skipped on localhost and file:// so local iteration never serves a
+       stale file — add ?sw to the URL when you want to exercise it locally. */
+    if ('serviceWorker' in navigator) {
+      var swLocal = ['localhost', '127.0.0.1', ''].indexOf(location.hostname) !== -1;
+      var swForce = location.search.indexOf('sw') !== -1;
+      if (!swLocal || swForce) {
+        addEventListener('load', function () {
+          navigator.serviceWorker.register('sw.js', { scope: './', updateViaCache: 'none' })
+            .catch(function () { /* offline play is a bonus, never a requirement */ });
+        });
+      } else {
+        navigator.serviceWorker.getRegistrations().then(function (rs) {
+          rs.forEach(function (r) { r.unregister(); });
+        });
+      }
+    }
+  </script>
 </body>
 </html>

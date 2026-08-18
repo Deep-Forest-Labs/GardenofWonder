@@ -4,7 +4,7 @@ A cozy tap-and-grow idle garden for phones. Plant seeds, tend a 3×3 planter box
 talking flower company while your harvesters do the boring parts.
 
 Everything is drawn with CSS and inline SVG, and every sound is synthesized with the Web Audio
-API — there are no image or audio files anywhere in this repo.
+API — the only binary files in the repo are the home screen icons in `icons/`.
 
 ## Play it
 
@@ -19,6 +19,17 @@ If your browser blocks local storage on `file://` URLs (Safari does), serve the 
 python3 -m http.server 8899
 # then open http://127.0.0.1:8899
 ```
+
+## Install it on a phone
+
+It's a PWA, so it installs to the home screen and plays with no network.
+
+- **iPhone:** open the link in Safari, then Share → *Add to Home Screen*.
+- **Android:** Chrome offers an install prompt, or Menu → *Install app*.
+
+Updates arrive on their own — the service worker is network-first, so an online player is always on
+the current build. If you add a script file, add it to `CORE` in `sw.js` or it will be missing
+offline. Details in [`docs/23-installable-pwa.md`](docs/23-installable-pwa.md).
 
 ## How it plays
 
@@ -54,6 +65,9 @@ Two currencies: coins from taps and harvests, and gems for premium decor.
 | `ui-sheet.js` | The bottom sheet and every panel that opens over the garden |
 | `ui-events.js` | Every `Game.on(...)` subscription — feedback for what the simulation reports |
 | `ui.js` | The garden, the talking flower, HUD, rail, input, the frame loop and boot |
+| `manifest.json` | Home screen name, colors and icons — what makes it installable |
+| `sw.js` | Service worker: offline play, network-first so players never get a stale build |
+| `icons/` | Home screen icons. `icon.svg` is the source; the PNGs are rasterised from it |
 | `legacy/` | The previous build (*Idle Garden Reborn*), kept for reference |
 | `docs/` | Full design and technical documentation |
 

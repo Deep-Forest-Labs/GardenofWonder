@@ -5,6 +5,42 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-18 — Installable and offline, with a worker that cannot strand anyone
+
+**Built:** `manifest.json`, `sw.js` and `icons/`, so the game installs to a home screen and plays
+with no network.
+
+**The default service worker recipe would have been a trap here.** Every tutorial teaches
+cache-first, because every tutorial assumes a build step that puts a content hash in the filename.
+This project has neither. `game.js` is `game.js` forever. Cache-first would have pinned each player
+to whatever build they happened to install, and the only way out would be remembering to bump a
+version constant on every push — which is exactly the kind of manual step that gets forgotten on
+push forty, by which point a silent population is playing a build from weeks ago and there is no
+way to tell.
+
+**So the worker is network-first, and the cache is a fallback rather than a source.** Online, it is
+as if the worker were not there. Offline, the game still boots. The property worth having is that
+`VERSION` is now housekeeping — it decides when stale caches are swept up, not whether anyone sees
+new code. Forgetting it costs nothing. A design that fails safe under human error beats one that is
+faster when maintained perfectly, on a project pushed several times a day.
+
+**The worker is not registered on localhost at all, and unregisters itself if found there.** The
+whole point was to add distribution without touching the daily loop of edit, reload, look. A worker
+serving stale files during development would have taxed every iteration forever to save a few
+hundred milliseconds for players. `?sw` opts in when the offline path itself needs testing.
+
+**The `icons/` PNGs break the no-binary-assets rule, knowingly.** iOS will not take an SVG for a
+home screen icon. They are packaging rather than art — no game code loads them, and `icon.svg`
+stays the source they are rasterised from, drawn with `flora.js`'s own petal path so it is not a
+second art style. `09-conventions.md` records the carve-out and says plainly that it does not
+generalise.
+
+**Not the App Store.** That is Capacitor, a build step, `node_modules`, a $99/year account and
+review latency. The PWA groundwork carries over to it whole, so nothing here is wasted if that
+decision is made later, and it was not worth paying for now to find out.
+
+---
+
 ## 2026-08-18 — The loadout moved into the room, and a celebration fired from the corner
 
 **Built:** Pet and Loadout as modes in the Hollow's dock, a tap on a creature spending whichever is
