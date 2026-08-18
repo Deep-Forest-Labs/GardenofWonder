@@ -601,7 +601,17 @@
     if (!home.length) {
       return '<p class="stat-note">Nobody lives here yet. Grow what they like and they will turn up.</p>';
     }
-    return home.map((def) => {
+    /* Tending first — they are the only ones that can be fed at all, so a resting
+       creature is dead weight at the top of the panel you came here to act in.
+       Deliberately NOT sorted by who needs feeding most: that order changes on
+       the very tap you just made, so the row you were looking at would jump away
+       the instant you fed it. This one only moves when the loadout does, which
+       happens on another screen. `sort` is stable, so each group keeps the
+       roster order the Almanac uses. */
+    const ordered = home.slice().sort((a, b) =>
+      Number(Game.critterTending(b.id)) - Number(Game.critterTending(a.id)));
+
+    return ordered.map((def) => {
       const tending = Game.critterTending(def.id);
       const fed = Game.critterFed(def.id);
       const level = Game.critterLevel(def.id);

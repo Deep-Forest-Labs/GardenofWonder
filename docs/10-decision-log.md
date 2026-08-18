@@ -41,6 +41,32 @@ decision is made later, and it was not worth paying for now to find out.
 
 ---
 
+## 2026-08-18 — The Feed panel lists tenders first, and pointedly does not sort by urgency
+
+**Built:** one stable sort in `feedRows()`.
+
+**Tending creatures go to the top** because a resting one cannot be fed at all, so it is dead weight
+at the top of the panel you opened in order to act.
+
+**The interesting half is what it deliberately does not do.** The obviously "better" sort is by who
+needs feeding most — asleep, then unfed, then well fed. That order is wrong here for one reason:
+**it changes on the very tap you just made.** Feed the sleeping creature at the top and its row
+jumps to third while your finger is still on it, and the next row slides up under where you tapped.
+Sorting a list by a property the list's own buttons mutate is how a panel becomes unusable, and it
+is worth remembering the next time a "sort by what needs attention" seems obvious.
+
+Tending is the right key precisely because it is **stable within this screen** — it only changes in
+the Hollow's Loadout mode, which is somewhere else. Verified by feeding the top row and confirming
+the order is byte-identical afterwards.
+
+`sort` is stable in modern JS, so each group keeps the roster order the Almanac already uses rather
+than inventing a second ordering for the same six creatures.
+
+**No sim-test:** `tools/sim-test.js` cannot see a `ui-*` file. Verified by driving the panel with
+the tended creatures deliberately last in roster order.
+
+---
+
 ## 2026-08-18 — Cheats for the sleep clocks, and the dead end they immediately found
 
 **Built:** Drain 1h / 4h / 24h, Send them to sleep, and Feed everyone, in the Developer tools panel

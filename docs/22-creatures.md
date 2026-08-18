@@ -445,6 +445,12 @@ project's best answer to "why would I ever plant a Daisy again."
 - **Only a tending creature can be fed.** Traits are only read from tenders, so feeding a resting
   one would be a purchase that buys nothing. The panel says why, and the fix is one tap away in the
   Hollow's Loadout mode. A **sleeping** one is the opposite case — waking it is the whole point.
+- **The Feed panel lists tending creatures first**, since resting ones cannot be fed at all and are
+  dead weight at the top of a panel you opened to act in. It is deliberately **not** sorted by who
+  needs feeding most: that order changes on the very tap you just made, so the row you were looking
+  at would jump away the instant you fed it. This order only moves when the loadout does, which
+  happens on another screen. The sort is stable, so each group keeps the roster order the Almanac
+  uses.
 - **Derived from absolute timestamps** (`fedUntil`, `awakeUntil`), the same shape keepsakes and
   hives use, so time away needs no replaying and nothing has to tick.
 - **Prices are placeholders**, flat rather than scaling, like every other number in the economy. The
