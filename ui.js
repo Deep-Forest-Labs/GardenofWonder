@@ -608,6 +608,11 @@
       const leaf = node.querySelector('.critter-leaf');
       const tending = Game.critterTending(def.id);
       if (leaf.hidden === tending) leaf.hidden = !tending;
+      /* Sleeping creatures stay on screen. Vanishing would be the "something
+         was taken away" feeling coming back in through the side door, and a
+         dozing pet is the reminder to feed it. */
+      const asleep = Game.critterAsleep(def.id);
+      if (node.classList.contains('asleep') !== asleep) node.classList.toggle('asleep', asleep);
       // A grown creature glows brighter, so its star reads off the art itself
       // rather than only out of a panel. It reads the star the creature is
       // *working* at, so a well-fed one is visibly brighter in the garden
@@ -655,6 +660,15 @@
       popWallet('credits');
       if (got.gems) popWallet('gems');
       renderCritters();
+      return;
+    }
+    /* A sleeping creature still hands over what it left — you are picking up a
+       keepsake, not waking it — but petting one has to say what is actually
+       wrong, or the tap reads as the creature having stopped responding. */
+    if (Game.critterAsleep(id)) {
+      Sound.play('tap');
+      FX.haptic(4);
+      sayText(critterLine(def, 'sleep'), true);
       return;
     }
     Game.petCritter(id);

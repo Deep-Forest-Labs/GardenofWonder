@@ -21,7 +21,7 @@ globalThis.localStorage = {
    then re-export what they defined onto globalThis. */
 const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
   'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'CREATURE_PAIRS', 'PAIR_TUNING',
-  'CREATURE_FOOD', 'FED_STARS', 'FOOD_CAP_HOURS', 'Icons', 'flowerValue', 'Game'];
+  'CREATURE_FOOD', 'FED_STARS', 'FOOD_CAP_HOURS', 'ARRIVAL_AWAKE_HOURS', 'Icons', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -2919,6 +2919,11 @@ check('each escalates toward its last star', CREATURES.every((c) => (
 check('each has arrival, idle and pet lines', CREATURES.every((c) => (
   c.lines && c.lines.arrive.length && c.lines.idle.length && c.lines.pet.length
 )));
+/* A sleeping creature has to say why it is not responding, in its own voice —
+   a tap that does nothing reads as the creature having broken. */
+check('each has something to say while asleep', CREATURES.every((c) => (
+  c.lines.sleep && c.lines.sleep.length
+)));
 check('ids are unique', new Set(CREATURES.map((c) => c.id)).size === CREATURES.length);
 
 /* ---------------- food ----------------
@@ -2946,17 +2951,124 @@ check('the trait is worth a star more',
 check('and it reaches the consumer', G.catchMultiplier(0) > 1 + baseTrait);
 check('the star it was RAISED to is untouched', G.critterLevel(PIP.id) === 1);
 
-group('food runs out, and nothing is switched off when it does');
+group('the boost runs out before the creature does');
+/* Every food's awake clock outlasts its boost, so the first thing to lapse is
+   only the star — the creature is still up and still working. */
 advance(SNACK.hours * 3600 + 60, 600);
-check('the clock ran out', !G.critterFed(PIP.id));
+check('the boost ran out', !G.critterFed(PIP.id));
+check('but it is still awake', !G.critterAsleep(PIP.id));
 check('it is still home', G.critterHere(PIP.id));
 check('it is still tending', G.critterTending(PIP.id));
-/* The whole design in one assertion: an unfed creature is a normal creature. */
-check('and its trait is back to exactly baseline',
+check('and still working', G.critterWorking(PIP.id));
+check('its trait is back to exactly baseline',
   Math.abs(G.critterTrait(PIP.trait.id) - baseTrait) < 1e-9);
-check('no time is owed', G.critterFedFor(PIP.id) === 0);
+check('no boost time is owed', G.critterFedFor(PIP.id) === 0);
+
+group('a creature that runs out of food falls asleep');
+/* The upkeep half, added 2026-08-18. A sleeping creature stops working — that is
+   deliberately punishing and it is the retention mechanic. What keeps it inside
+   a cosy game is that it is VISIBLE and one tap from being undone.
+
+   Set up from a food's own window rather than from the arrival grant, which is
+   already at the cap — a brand-new creature cannot be starved into sleeping
+   inside one food's worth of time, and that is deliberate. */
+S.critters[PIP.id].awakeUntil = G.nowSeconds() + SNACK.awake * 3600;
+advance(SNACK.awake * 3600 + 60, 600);
+check('it is asleep once the awake clock runs out', G.critterAsleep(PIP.id));
+check('and it contributes nothing', G.critterTrait(PIP.trait.id) === 0);
+check('which its consumer sees', G.catchMultiplier(0) === 1);
+check('it is not working', !G.critterWorking(PIP.id));
+/* Nothing is taken away — it is asleep, not gone. */
+check('but it is still home', G.critterHere(PIP.id));
+check('still tending', G.critterTending(PIP.id));
+check('and still holds its slot', G.habitatUsed() === 1);
+check('no awake time is owed', G.critterAwakeFor(PIP.id) === 0);
+check('it is listed as asleep', G.crittersAsleep().some((c) => c.id === PIP.id));
+
+group('feeding a sleeping creature wakes it');
+S.credits = 1e6;
+const woke = G.feedCritter(PIP.id, SNACK.id);
+check('the feed reports that it woke something', Boolean(woke) && woke.woke === true);
+check('it is awake again', !G.critterAsleep(PIP.id));
+check('it is working again', G.critterWorking(PIP.id));
+check('and back above baseline, because that food also fed it',
+  G.critterTrait(PIP.trait.id) > baseTrait);
+check('feeding an already awake one does not claim to have woken it',
+  G.feedCritter(PIP.id, SNACK.id).woke === false);
+
+group('sleep costs the trait and nothing else');
+G.reset();
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+G.checkCritters();
+S.credits = 1e6;
+/* Punishment on one axis is a mechanic; on two it is a tax. A lapsed player
+   should come back to a small gift waiting rather than to nothing at all —
+   and mementos are the currency the Hollow's decorating will read. */
+S.critters[PIP.id].awakeUntil = 0;
+S.critters[PIP.id].fed = G.nowSeconds() - K.every * 2;
+check('it is asleep', G.critterAsleep(PIP.id));
+check('and still leaves keepsakes while it sleeps', G.keepsakesWaiting(PIP.id) > 0);
+check('which can still be collected', Boolean(G.collectKeepsakes(PIP.id)));
+
+group('a pair goes quiet when half of it falls asleep');
+G.reset();
+unlockTo(HABITAT_SLOT_LEVELS[1]);
+const LUNA = G.critterById('luna');
+S.discovered[PIP.attract.seed] = 999;
+S.discovered[LUNA.attract.seed] = 999;
+G.checkCritters();
+G.setTending(PIP.id, true);
+G.setTending(LUNA.id, true);
+check('both are tending', G.critterTending(PIP.id) && G.critterTending(LUNA.id));
+check('so the pair is on', G.pairActive('nightbloom'));
+S.critters[LUNA.id].awakeUntil = 0;
+/* A pair switching off silently would be the exact failure the pair rules name.
+   It is legible here only because the creature is visibly asleep. */
+check('one asleep turns the pair off', !G.pairActive('nightbloom'));
+check('and the awake half still works', G.critterWorking(PIP.id));
+S.credits = 1e6;
+G.feedCritter(LUNA.id, SNACK.id);
+check('waking it brings the pair back', G.pairActive('nightbloom'));
+
+group('nobody wakes up to a room of sleepers they were not warned about');
+G.reset();
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+G.checkCritters();
+check('an arrival turns up awake', !G.critterAsleep(PIP.id));
+check('with the full arrival window',
+  Math.abs(G.critterAwakeFor(PIP.id) - ARRIVAL_AWAKE_HOURS * 3600) < 120);
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0,
+  discovered: { [PIP.attract.seed]: 99 },
+  critters: { [PIP.id]: { since: 1, level: 1, tending: true } }
+}));
+G.load();
+/* Absent means awake, the same rule `tending` follows — a save written before
+   sleeping existed must not open on a creature the game never warned about. */
+check('a save from before sleeping comes back awake', !G.critterAsleep(PIP.id));
+check('and working', G.critterWorking(PIP.id));
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0,
+  discovered: { [PIP.attract.seed]: 99 },
+  critters: { [PIP.id]: { since: 1, level: 1, tending: true, awakeUntil: 4e12 } }
+}));
+G.load();
+check('an edited save cannot stay awake forever',
+  G.critterAwakeFor(PIP.id) <= G.foodCapSeconds() + 1);
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0,
+  discovered: { [PIP.attract.seed]: 99 },
+  critters: { [PIP.id]: { since: 1, level: 1, tending: true, awakeUntil: 0 } }
+}));
+G.load();
+/* An explicit zero is a creature that genuinely ran out, and is respected. */
+check('but a creature that really did run out stays asleep', G.critterAsleep(PIP.id));
 
 group('a fully raised creature is still worth feeding');
+G.reset();
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+G.checkCritters();
+S.credits = 1e6;
 S.critters[PIP.id].level = CREATURE_STARS;
 const maxedBase = G.critterTrait(PIP.trait.id);
 check('a maxed creature gives the listed value', Math.abs(maxedBase - PIP.trait.value) < 1e-9);
@@ -3038,7 +3150,16 @@ check('a longer stretch costs less per hour', CREATURE_FOOD.every((f, i) => (
   i === 0 || f.cost / f.hours < CREATURE_FOOD[i - 1].cost / CREATURE_FOOD[i - 1].hours
 )));
 check('no food outlasts the cap on its own',
-  CREATURE_FOOD.every((f) => f.hours <= FOOD_CAP_HOURS));
+  CREATURE_FOOD.every((f) => f.hours <= FOOD_CAP_HOURS && f.awake <= FOOD_CAP_HOURS));
+/* The cheap food has to be "keep them going" and the dear one "keep them going
+   AND strong". If a boost ever outlasted the awake clock, a creature could be
+   asleep and well fed at the same time, which means nothing. */
+check('every food keeps a creature up for longer than it boosts it',
+  CREATURE_FOOD.every((f) => f.awake > f.hours));
+check('the awake ladder escalates too', CREATURE_FOOD.every((f, i) => (
+  i === 0 || f.awake > CREATURE_FOOD[i - 1].awake
+)));
+check('the cheapest food is still a real reprieve', CREATURE_FOOD[0].awake >= 4);
 /* The reason food is a star rather than a flat multiplier. At five stars a flat
    x2 would have doubled the only trait in the yield pool and doubled the gem
    faucet; a star is x1.2 there and x2 only at one star, where the absolute

@@ -41,7 +41,79 @@ decision is made later, and it was not worth paying for now to find out.
 
 ---
 
+## 2026-08-18 — Creatures sleep, and the sleeping face is what made an upkeep timer acceptable
+
+**Built:** a second clock. Food now keeps a creature **awake** (4 / 8 / 16 hours) as well as **well
+fed** (1 / 4 / 12). A creature whose awake clock runs out is **asleep** — shut eyes, Zs, no trait,
+no pair. 34 more assertions, 794 total.
+
+**This reverses the entry immediately below it, deliberately and at the owner's direction**, hours
+after it shipped. That entry argued nothing should ever switch off. The owner came back with the
+case for stakes: *"as much as I think we are a cozy game, we need to have some features that are
+somewhat punishing… the whole idea is retention and getting people to come back in."* That is
+correct and the previous entry under-weighted it — a game with no downside gives a returning player
+nothing to feel.
+
+**What changed the answer was not a compromise, it was the owner's presentation.** The objection had
+been that a pet going quiet reads as *something taken away*, which this project's own creature doc
+forbids in three places. **A pet that is visibly asleep does not read that way.** It is obviously
+reversible, it says what to do about it, and it is charming rather than punishing — Animal Crossing
+rather than an energy wall. The same mechanic in a different costume is a different mechanic.
+
+**So the sleeping art is load-bearing, not decoration.** Recorded plainly in
+[22-creatures.md](22-creatures.md) because it is the kind of thing a later optimisation pass would
+quietly break: if a creature ever stops working without *looking* asleep, this reverts to the
+version the cosy pillar rejects.
+
+**It also settled the pair problem rather than creating one.** A pair now needs both halves tending
+*and* awake, so pairs do go quiet. The rule says "a bonus you cannot tell is active is not a bonus"
+— and a visibly sleeping creature is precisely how you can tell. Sleep is the one thing allowed to
+switch a pair off, because it is the only thing that announces itself.
+
+**Punishment on one axis, not two.** A sleeping creature keeps its home, its slot, its place on
+screen, and **keeps leaving keepsakes**. A lapsed player comes back to a small gift waiting rather
+than to nothing — and mementos are the currency the Hollow's decorating will read, so stopping them
+would have taxed the same lapse twice.
+
+**The number was the argument, not the structure.** The owner sketched a one-hour active window. At
+that length a twice-daily player finds their pets asleep essentially every session, which is not
+pressure but a wall — and it is the version that earns resentment rather than habit. Offered 8/16/24
+and 4/8/16, the owner took the tighter one. **`awake` in `data.js` is the dial if it ever reads as a
+chore; never the prices.**
+
+*The counter-argument that was fairly raised and lost:* [17-market-and-positioning.md](17-market-and-positioning.md)
+cites **Finch** (~75% women, D7 37%) as getting its retention from *non-punitive* streaks, and warns
+that more than two streak nudges a week makes abandonment 41% more likely. That is a real caution
+and it now applies to notifications in the Unity port rather than to the mechanic itself. In the
+other direction, **Pocket Plants** is the closest structural analogue in that document and does run
+on energy — though its energy gates the player's own actions, not whether the collection is alive.
+
+**An arriving creature gets 24 hours free**, and so does a save written before sleeping existed —
+absent means awake, the same rule `tending` follows. Nobody meets their first pet and watches it
+fall asleep before learning food exists. Side effect worth knowing: the arrival grant equals the
+cap, so a new creature cannot be starved inside one food's worth of time.
+
+**Three art lessons, all found by looking rather than by a test.** A Z that starts at `opacity: 0`
+and fades in via keyframes is invisible wherever the animation does not run — the pack-badge trap,
+made again inside a file whose own comment warned about it. A *stroked* Z at 9px is a hairline that
+vanishes against dark earth, so they became filled glyphs inside one thick outline. And the corners
+of a creature belong to its badges, so the Zs had to rise clear above the viewBox rather than tuck
+beside the head.
+
+**And a formatting bug worth the line:** rounding hours and minutes separately renders 23h 59m 59s
+as **"23h 60m"**. Round to whole minutes first, then split.
+
+---
+
 ## 2026-08-18 — Feeding is a treat, not an upkeep, and it buys a star rather than a multiplier
+
+> **Half of this was overturned the same day — see the entry above.** The *boost* half stands
+> exactly as written: food buys a star, and the numbers here are still the reasoning for that. The
+> "nothing ever switches off" half was **reversed at the owner's direction**: creatures now also
+> have an awake clock and **do** go to sleep. The argument below under-weighted the case for stakes,
+> and what resolved it was the sleeping *presentation* rather than a compromise on the mechanic.
+> Kept unedited because the reasoning is still the reasoning, and the shape of the reversal is worth
+> being able to read.
 
 **Built:** three foods, `fedUntil` on each creature, a Feed panel on the Hollow's dock, and 42 new
 assertions. Design in [22-creatures.md](22-creatures.md#food-2026-08-18).

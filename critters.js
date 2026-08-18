@@ -24,6 +24,9 @@ const Critters = (() => {
     </g>`;
   }
 
+  /* Both pairs are always drawn and CSS picks one, so this file still knows
+     nothing about the game — it does not need to be told whether the creature
+     is asleep, and every screen that draws a creature gets the state for free. */
   function eyes(c) {
     const y = c.eyeY || 60;
     const rx = c.eyeRx || 7.5;
@@ -33,6 +36,37 @@ const Critters = (() => {
       <ellipse class="cr-eye" cx="63" cy="${y}" rx="${rx}" ry="${ry}" fill="${INK}"/>
       <circle cx="39.5" cy="${y - 3.5}" r="2.6" fill="#fff"/>
       <circle cx="65.5" cy="${y - 3.5}" r="2.6" fill="#fff"/>
+    </g>
+    <g class="cr-eyes-shut" fill="none" stroke="${INK}" stroke-width="3.6" stroke-linecap="round">
+      <path d="M30.5 ${y} q6.5 6 13 0"/>
+      <path d="M56.5 ${y} q6.5 6 13 0"/>
+    </g>`;
+  }
+
+  /* Three Zs drifting off a sleeping creature, in the same 0..100 space as the
+     body so they scale with it wherever it is drawn.
+
+     Drawn as filled glyphs inside one thick outline, not as a stroked squiggle.
+     A stroked Z at this size is a couple of hairlines and vanishes against dark
+     earth — and flat fill inside a heavy outline is the house style anyway.
+
+     They rise ABOVE the viewBox on purpose. The corners of a creature are where
+     its badges live — leaf, keepsake, well-fed — so a Z cluster tucked beside
+     the head disappears underneath one. Every screen that draws a creature gives
+     the SVG `overflow: visible`. */
+  function zGlyph(x, y, s, i) {
+    const t = s * 0.3;
+    const d = `M${x} ${y} H${x + s} V${y + t} L${x + t * 1.4} ${y + s - t} H${x + s} V${y + s}`
+      + ` H${x} V${y + s - t} L${x + s - t * 1.4} ${y + t} H${x} Z`;
+    return `<path class="cr-z" style="--i:${i}" d="${d}"/>`;
+  }
+
+  function zzz() {
+    return `<g class="cr-zzz" fill="#fffdf7" stroke="${INK}" stroke-width="3.2"
+      stroke-linejoin="round">
+      ${zGlyph(46, -8, 16, 0)}
+      ${zGlyph(64, -28, 19, 1)}
+      ${zGlyph(84, -50, 22, 2)}
     </g>`;
   }
 
@@ -153,6 +187,7 @@ const Critters = (() => {
         ${eyes(a)}
         <ellipse class="cr-mouth" cx="50" cy="78" rx="4.2" ry="5" fill="${INK}"/>
       </g>
+      ${zzz()}
     </svg>`;
   }
 

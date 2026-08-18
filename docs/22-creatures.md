@@ -296,45 +296,83 @@ could always have brought a creature while the room was open.
 
 Still not built: chambers and sideways paging, a second level, and decorating.
 
-## Food, 2026-08-18
+## Food, and the two clocks it runs — 2026-08-18
 
-**A fed creature works one star above itself until the food runs out.** Three tiers, bought with
-coins, opened from **Feed** on the Hollow's dock.
+Food does two separate things, and keeping them separate is the design.
 
-| Food | Adds | Costs |
-| --- | --- | --- |
-| Clover Nibble | 1 hour | 1,500 |
-| Petal Cake | 4 hours | 5,000 |
-| Honeypot | 12 hours | 12,000 |
+| Food | Keeps it **awake** | Keeps it **well fed** | Costs |
+| --- | --- | --- | --- |
+| Clover Nibble | 4 hours | 1 hour | 1,500 |
+| Petal Cake | 8 hours | 4 hours | 5,000 |
+| Honeypot | 16 hours | 12 hours | 12,000 |
 
-### Nothing ever switches off, and that is the whole design
+- **Awake** is upkeep. A creature whose awake clock has run out is **asleep** — eyes shut, Zs
+  drifting up, contributing no trait and forming no pair. This is the retention mechanic and it is
+  meant to have teeth.
+- **Well fed** is a boost on top: the creature works **one star above itself**.
 
-The owner's first shape for this was an upkeep timer — a pet goes **inactive** without food, and
-food buys hours of being active. The retention loop it wanted is real and it is now built. What
-changed is the direction of the baseline.
+Every food does both, and **the awake clock always outlasts the boost**, asserted. The cheap food is
+"keep them going"; the dear one is "keep them going *and* strong".
 
-**An unfed creature works exactly as an unfed creature always did.** A lapse means going back to
-normal, never finding a pet you raised gone quiet. That is not a preference; this document already
-said it three times before food existed:
+### How this landed, because the reasoning is the useful part
 
-- "Nothing is ever taken away, which is what keeps this cosy."
-- "Losing one is punitive and the cosy pillar argues against it."
-- "A returning player finding their creature idle with no explanation is the same class of harm as
-  taking a seed away."
+**The first pass had only the boost and nothing that ever switched off.** The owner asked for the
+upkeep half back the same day, and was right to: *"as much as I think we are a cozy game, we need to
+have some features that are somewhat punishing… the whole idea is retention and getting people to
+come back in."* A game with no stakes gives a returning player nothing to feel.
 
-The retention and the monetization are identical either way — you come back because the *boost*
-lapsed rather than because the *pet* did. What differs is whether lapsing feels like losing
-something. [17-market-and-positioning.md](17-market-and-positioning.md) points the same way: the
-closest business analogue is **Finch**, whose D7 37% is built on **non-punitive streaks**, with the
-same source warning that more than two streak nudges a week makes abandonment 41% more likely.
+**What resolved the objection was the presentation, not a compromise on the mechanic.** The
+argument against an upkeep timer was that this document says three separate times that nothing is
+ever taken away — "losing one is punitive", and a returning player finding a creature idle is "the
+same class of harm as taking a seed away". **A pet that is visibly *asleep* is not a pet that was
+taken away.** It is obviously reversible, it says what to do about it, and it is charming rather
+than punishing. That is the Animal Crossing register rather than the energy-wall register.
 
-There is a fair counter-argument and it is worth keeping on the page: **Pocket Plants** is listed
-as the closest structural analogue in that document and it does run on energy. But its energy gates
-*the player's own actions*, not whether the collection is alive.
+**So the sleeping art is not decoration on this feature — it is the load-bearing part of it.** If a
+creature ever stops working without *looking* asleep, the mechanic reverts to the version the cosy
+pillar rejects. Treat the shut eyes and the Zs as a requirement, not a flourish.
 
-**Pairs deliberately do not care about food.** They stay binary on tending, so a pair can never
-blink out because a timer lapsed — which would be the exact failure the pair rules already name,
-"a bonus you cannot tell is active is not a bonus."
+It also settles what would otherwise have broken the pair rules. **Pairs need both halves tending
+*and* awake**, so a pair does go quiet when someone falls asleep. That is fine here and only here:
+the rules say "a bonus you cannot tell is active is not a bonus", and a visibly sleeping creature is
+exactly how you can tell.
+
+### What sleep costs, and what it deliberately does not
+
+**Punishment on one axis is a mechanic; on two it is a tax.**
+
+- A sleeping creature contributes **no trait** and forms **no pair**. `critterWorking()` is the one
+  predicate for this — tending *and* awake — so a new consumer cannot forget half of it.
+- It is **still home, still tending, and still holds its habitat slot.** Nothing is taken away.
+- It **still leaves keepsakes.** A lapsed player comes back to a small gift waiting rather than to
+  nothing, and mementos are the currency the Hollow's decorating will read.
+- It **stays on screen**, asleep, in both the yard and the Hollow. Vanishing would be the
+  "something was taken away" feeling coming back in through the side door, and a dozing pet is the
+  reminder to feed it.
+- **Tapping one says so in its own voice** — every creature has `lines.sleep`, asserted. A tap that
+  did nothing would read as the creature having broken rather than as it being asleep.
+
+### The numbers, and where the dial is
+
+**4 / 8 / 16 hours awake is the tighter of two ladders the owner was offered** (the other was
+8 / 16 / 24). It means a daily player has to feed on their first check-in and a twice-daily player
+stays comfortably ahead. **If this ever reads as a chore rather than a habit, raise `awake` — never
+the prices.** The failure mode to watch for is a player who finds their pets asleep *every* time,
+because at that point it stops being pressure and becomes a wall.
+
+**An arriving creature gets `ARRIVAL_AWAKE_HOURS` (24) free**, and a save written before sleeping
+existed loads with the same grant. Nobody should meet their first pet and watch it fall asleep
+before they have learned food exists, and nobody should open the game to a room of sleepers it never
+warned them about. Note the side effect: the arrival grant equals the cap, so a brand-new creature
+cannot be starved inside one food's worth of time. That is deliberate.
+
+**Offline income is evaluated at the end of an absence**, so a creature that fell asleep while you
+were away is simply not helping when `reconcile()` runs. Ember's `offlineRate` is the trait this
+touches. It falls out of the closed-form rate for free and needs no replaying.
+
+**For the Unity port:** this mechanic wants notifications, and
+[17-market-and-positioning.md](17-market-and-positioning.md) is the ceiling to design against —
+more than two streak nudges a week makes abandonment 41% more likely.
 
 ### A star rather than a flat multiplier
 
@@ -384,19 +422,42 @@ project's best answer to "why would I ever plant a Daisy again."
   hidden one reads as theft.
 - **Only a tending creature can be fed.** Traits are only read from tenders, so feeding a resting
   one would be a purchase that buys nothing. The panel says why, and the fix is one tap away in the
-  Hollow's Loadout mode.
-- **Derived from an absolute timestamp** (`fedUntil`), the same shape keepsakes and hives use, so
-  time away needs no replaying and nothing has to tick.
+  Hollow's Loadout mode. A **sleeping** one is the opposite case — waking it is the whole point.
+- **Derived from absolute timestamps** (`fedUntil`, `awakeUntil`), the same shape keepsakes and
+  hives use, so time away needs no replaying and nothing has to tick.
 - **Prices are placeholders**, flat rather than scaling, like every other number in the economy. The
   per-hour rate falls as the tier rises, so a longer commitment is the cheaper way to buy it. Whether
   the price should eventually scale with star or level is a real open question — see below.
 - **How it reads without a panel:** the garden's creature glow is driven by `critterWorkLevel()`, so
-  a fed creature is visibly brighter out in the yard. In the Hollow it wears a third badge. **Three
-  badges is the ceiling** — leaf for tending, gem for a keepsake waiting, clover for fed — and a
-  fourth would not be readable at that size.
+  a fed creature is visibly brighter out in the yard, and a sleeping one wears shut eyes and Zs. In
+  the Hollow a fed creature also gets a third badge. **Three badges is the ceiling** — leaf for
+  tending, gem for a keepsake waiting, clover for fed — and a fourth would not be readable at that
+  size. Sleep is deliberately *not* a badge for this reason; it is the face.
 - **The lit star sits in the slot the creature is working at**, not appended after the row. Appended,
   it reads as a sixth star rather than as one on loan. A five-star creature is the only case that
   genuinely grows a sixth pip.
+
+### Drawing a sleeping creature
+
+`critters.js` **always draws both pairs of eyes and the Zs**, and CSS picks which show. The file
+still knows nothing about the game — it is never told whether a creature is asleep — and every
+screen that draws a creature gets the state for free, including `tools/hollow-spike.html`.
+
+Three things found by looking:
+
+- **A Z that only exists once a keyframe has run is invisible** anywhere the animation does not
+  play. The first pass started `.cr-z` at `opacity: 0` and faded it in — the same mistake already
+  recorded for the pack badge, made again in a file whose comment said not to. Visibility belongs to
+  the base style; the drift is the flourish.
+- **A stroked Z is a hairline and disappears against dark earth.** They are filled glyphs inside one
+  thick outline now, which is the house style anyway.
+- **The corners of a creature belong to its badges.** Tucked beside the head, the Zs sat underneath
+  the keepsake badge. They rise *above* the viewBox instead — every screen gives the creature SVG
+  `overflow: visible`.
+
+In a list row the Zs are hidden and only the shut eyes remain: they are sized to rise well clear of
+the art, which in a 46px portrait means drifting into the row above, and nothing in a list should be
+animating anyway.
 
 ### Two traps this landed on
 
@@ -406,10 +467,14 @@ project's best answer to "why would I ever plant a Daisy again."
 - **A new `data.js` global must be added to the `GLOBALS` whitelist in `tools/sim-test.js`.** It is
   an explicit list, and a missing entry makes the constant `undefined` inside `game.js`, which throws
   inside `load()`, which is caught — so the whole save silently resets and the failure surfaces
-  somewhere unrelated. `CREATURE_FOOD`, `FED_STARS` and `FOOD_CAP_HOURS` are now on it.
+  somewhere unrelated. `CREATURE_FOOD`, `FED_STARS`, `FOOD_CAP_HOURS` and `ARRIVAL_AWAKE_HOURS` are
+  now on it.
+- **Rounding a remainder separately produces "23h 60m".** The span formatter rounded hours and
+  minutes independently. Round to whole minutes first, then split.
 
-Covered by **42 assertions**, and the one that matters most is that an unfed creature's trait returns
-to *exactly* baseline once the clock runs out.
+Covered by **76 assertions**. The two that matter most: an unfed creature's trait returns to
+*exactly* baseline while it is still awake, and a sleeping one contributes exactly zero while
+staying home, tending, and still leaving keepsakes.
 
 ### Stars — a creature is raised, not found
 

@@ -570,9 +570,12 @@
   function fmtSpan(sec) {
     const s = Math.max(0, Math.round(sec));
     if (s < 60) return `${s}s`;
-    if (s < 3600) return `${Math.round(s / 60)}m`;
-    const h = Math.floor(s / 3600);
-    const m = Math.round((s % 3600) / 60);
+    /* Round to whole minutes FIRST. Rounding the remainder separately turns
+       23h 59m 59s into "23h 60m". */
+    const mins = Math.round(s / 60);
+    if (mins < 60) return `${mins}m`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
     return m ? `${h}h ${m}m` : `${h}h`;
   }
 
@@ -587,7 +590,7 @@
         ${room ? '' : 'disabled'} title="${f.desc}">
         <span class="food-ico">${Icons.get(f.icon)}</span>
         <span class="food-name">${f.name}</span>
-        <span class="food-hours">+${f.hours}h</span>
+        <span class="food-hours">${f.awake}h up · ★ ${f.hours}h</span>
         ${priceTag(f.cost, 'credits', can)}
       </button>`;
     }).join('');
@@ -605,22 +608,31 @@
       const trait = def.trait ? CREATURE_TRAITS[def.trait.id] : null;
       const now = trait ? Game.critterTraitAt(def, Game.critterWorkLevel(def.id)) : 0;
 
+      const asleep = Game.critterAsleep(def.id);
+      const upFor = `<b data-span="${Math.round(Game.nowSeconds() + Game.critterAwakeFor(def.id))}">${
+        fmtSpan(Game.critterAwakeFor(def.id))}</b>`;
       const status = !tending
         ? '<span class="critter-note">Resting. Send it out in the Hollow to feed it.</span>'
-        : fed
-          ? `<span class="food-state on">${Icons.get('clock')}<span>Well fed for
-             <b data-span="${Math.round(Game.nowSeconds() + Game.critterFedFor(def.id))}">${
-               fmtSpan(Game.critterFedFor(def.id))}</b>
-             — working like ★${Game.critterWorkLevel(def.id)}</span></span>`
-          : `<span class="food-state">${Icons.get('clock')}<span>Not fed. Working like ★${level}, which is fine.</span></span>`;
+        : asleep
+          ? `<span class="food-state out"><span>Fast asleep, and not working.
+             Feed it to wake it up.</span></span>`
+          : fed
+            ? `<span class="food-state on">${Icons.get('clock')}<span>Well fed for
+               <b data-span="${Math.round(Game.nowSeconds() + Game.critterFedFor(def.id))}">${
+                 fmtSpan(Game.critterFedFor(def.id))}</b>
+               — working like ★${Game.critterWorkLevel(def.id)}. Up for ${upFor}.</span></span>`
+            : `<span class="food-state">${Icons.get('clock')}<span>Up for ${upFor}, working like
+               ★${level}. Not well fed.</span></span>`;
 
       /* The food buttons sit outside the text column so they get the row's full
          width — nested beside a 46px portrait, three of them wrap to 2 + 1. */
-      return `<div class="critter-row feed-row${tending ? '' : ' dim'}${fed ? ' fed' : ''}">
+      return `<div class="critter-row feed-row${tending ? '' : ' dim'}${
+        asleep ? ' napping' : fed ? ' fed' : ''}">
         <span class="feed-top">
-          <span class="critter-face">${Critters.draw(def)}</span>
+          <span class="critter-face${asleep ? ' asleep' : ''}">${Critters.draw(def)}</span>
           <span class="critter-copy">
-            <span class="critter-who">${def.name} <em>· ${def.species}</em>${critterStars(level, fed)}</span>
+            <span class="critter-who">${def.name} <em>· ${def.species}</em>${
+              critterStars(level, fed && !asleep)}</span>
             ${trait ? `<span class="critter-trait">${Icons.get(trait.icon)}<b>${trait.name}:</b> ${trait.desc(now)}</span>` : ''}
             ${status}
           </span>
@@ -631,11 +643,15 @@
   }
 
   function renderFeed() {
+    const naps = Game.crittersAsleep().filter((d) => Game.critterTending(d.id)).length;
     return `<div class="panel">
-      <p class="stat-note">A fed creature works <b>one star above itself</b> until the food runs
-        out. Nothing ever switches off — an unfed creature works exactly as it always did, so this
-        is a treat rather than an upkeep.</p>
-      <p class="stat-note">You can keep a creature fed up to <b>${FOOD_CAP_HOURS} hours</b> ahead.</p>
+      ${naps ? `<p class="feed-alert">${Icons.get('clock')}<span>${
+        naps === 1 ? 'Someone has' : `${naps} of them have`} fallen asleep and stopped working.
+        Feed to wake ${naps === 1 ? 'them' : 'them all'} up.</span></p>` : ''}
+      <p class="stat-note">Food does two things. It keeps a creature <b>awake</b> — a sleeping one
+        does nothing at all — and it keeps it <b>well fed</b>, which makes it work
+        <b>one star above itself</b>. The awake half always lasts longer.</p>
+      <p class="stat-note">Either clock can run up to <b>${FOOD_CAP_HOURS} hours</b> ahead.</p>
       ${feedRows()}
     </div>`;
   }
@@ -1097,8 +1113,9 @@
         Sound.play('quest');
         FX.haptic(10);
         UI.toast({
-          title: `${got.def.name} is well fed`,
-          body: `Working like ★${Game.critterWorkLevel(got.def.id)} for ${fmtSpan(Game.critterFedFor(got.def.id))}.`,
+          title: got.woke ? `${got.def.name} is up again` : `${got.def.name} is well fed`,
+          body: `Working like ★${Game.critterWorkLevel(got.def.id)}, and awake for ${
+            fmtSpan(Game.critterAwakeFor(got.def.id))}.`,
           art: Icons.get(got.food.icon)
         });
         renderSheet(false);

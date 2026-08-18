@@ -1766,8 +1766,63 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .critter-leaf[hidden]{display:none}
 .critter-leaf svg{width:12px;height:12px}
 
+/* ---------- sleeping ----------
+   A pet that has run out of food is asleep, not gone. That distinction is the
+   whole reason an upkeep timer is survivable in a cosy game, so it has to READ
+   as sleeping: shut eyes, drifting Zs, and the creature still right there. */
+.cr-eyes-shut{display:none}
+.cr-zzz{display:none}
+.asleep .cr-eyes{display:none}
+.asleep .cr-eyes-shut{display:block}
+.asleep .cr-zzz{display:block}
+/* The idle personality stops; only the breath and the Zs keep moving. */
+.asleep .cr-body,.asleep .cr-sprout,.asleep .cr-eye,.asleep .cr-wings,.asleep .cr-tail{
+  animation:none !important
+}
+.asleep .cr-glow{animation:none;opacity:.16}
+.asleep .cr-mouth{opacity:.35}
+.asleep .critter-svg{animation:cr-breathe 3.6s ease-in-out infinite;transform-origin:50% 92%}
+@keyframes cr-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.028)}}
+/* Visible at rest, drifting as a flourish on top. A Z that only exists once a
+   keyframe has run is invisible anywhere the animation does not play — the same
+   rule the pack badge is on, and it caught this feature too. */
+.cr-z{
+  opacity:.9;transform-origin:50% 50%;
+  animation:cr-zfloat 3.2s ease-out infinite;
+  animation-delay:calc(var(--i) * 1.06s);
+}
+/* Never fades to nothing — three Zs that each vanish for most of the cycle read
+   as a flicker rather than as sleep. They drift; they do not blink out. */
+@keyframes cr-zfloat{
+  0%{opacity:.45;transform:translate(0,5px) scale(.86)}
+  30%{opacity:1;transform:translate(1px,1px) scale(1)}
+  100%{opacity:.4;transform:translate(5px,-9px) scale(1.06)}
+}
+/* Sleeping is a state, never something a keyframe has to finish to establish —
+   the same rule the pack badge is on. */
+@media (prefers-reduced-motion:reduce){
+  .cr-z{animation:none;opacity:.8}
+  .asleep .critter-svg{animation:none}
+}
+
 /* ---------- feeding ---------- */
+.feed-alert{
+  display:flex;align-items:flex-start;gap:7px;margin:0 0 10px;padding:9px 11px;
+  border:3px solid var(--ink);border-radius:14px;
+  background:linear-gradient(180deg,#e9e4ff,#d5cdf7);
+  font-size:12px;font-weight:700;line-height:1.35;color:var(--ink);
+  box-shadow:0 3px 0 rgba(44,26,16,.28);
+}
+.feed-alert svg{width:15px;height:15px;flex:0 0 15px;margin-top:1px}
 .feed-row{flex-direction:column;align-items:stretch;gap:0}
+.feed-row.napping{background:#eae6fb;box-shadow:inset 0 0 0 2px #b3a7e8}
+.food-state.out{color:var(--ink);font-weight:800}
+/* A sleeping portrait in a list row gets the shut eyes and nothing else. The Zs
+   rise well above the art on purpose, which in a 46px row means drifting up into
+   the row above — and nothing in a list should be animating anyway, since the
+   yard is where they are alive. The purple row and the copy carry it here. */
+.critter-face.asleep .critter-svg{animation:none}
+.critter-face.asleep .cr-zzz{display:none}
 .feed-top{display:flex;align-items:center;gap:10px}
 .feed-row.fed{background:#fff2e0;box-shadow:inset 0 0 0 2px #ffa94d}
 /* The copy is one flex item, not three. Left as bare text nodes beside the

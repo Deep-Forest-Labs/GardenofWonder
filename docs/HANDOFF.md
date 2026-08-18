@@ -56,17 +56,32 @@ from quests and levels.
 > Chambers, sideways paging and a second level are agreed but unbuilt. See
 > [22-creatures.md](22-creatures.md).
 >
-> **Feeding shipped, 2026-08-18.** Three foods bought with coins — Clover Nibble 1h/1,500, Petal
-> Cake 4h/5,000, Honeypot 12h/12,000 — from **Feed** on the Hollow's dock. **A fed creature works one
-> star above itself** until the food runs out. **Nothing ever switches off:** an unfed creature works
-> exactly as it always did, so a lapse is a return to normal rather than a pet gone quiet. The owner's
-> first shape was an upkeep timer that deactivated a pet; the goals were kept and the baseline was
-> inverted, because the cosy pillar is stated three times over in
-> [22-creatures.md](22-creatures.md) and the retention loop is identical either way. **A star rather
-> than a flat ×2**, because ×2 doubles the only trait in the `yield` pool (Luna, +9.6% → +19.2%
-> average payout) and doubles the gem faucet (Thistle); a star is ×2.00 at one and ×1.20 at five, so
-> it shrinks as the creature grows. Fed time caps at 24h, stated openly. **Food never advances the
-> star a creature was raised to** — that stays the bloom's job. 42 assertions.
+> **Feeding shipped, and creatures now sleep, 2026-08-18.** Three foods bought with coins from
+> **Feed** on the Hollow's dock, and each runs **two clocks**:
+>
+> | Food | Awake | Well fed | Cost |
+> | --- | --- | --- | --- |
+> | Clover Nibble | 4h | 1h | 1,500 |
+> | Petal Cake | 8h | 4h | 5,000 |
+> | Honeypot | 16h | 12h | 12,000 |
+>
+> **Awake is upkeep.** A creature whose awake clock runs out is **asleep** — shut eyes, Zs, no
+> trait, no pair — and that is deliberately punishing, because it is the retention mechanic.
+> **Well fed is a boost on top:** the creature works one star above itself.
+>
+> **The sleeping face is load-bearing, not decoration.** An upkeep timer is only survivable inside a
+> cosy game because a pet that is visibly *asleep* is obviously reversible and says what to do about
+> it, where a pet that silently stops working reads as something taken away. If a creature ever
+> stops working without looking asleep, this reverts to the version the cosy pillar rejects. It is
+> also what makes pairs going quiet acceptable — you can *see* why.
+>
+> **Punishment on one axis only:** a sleeping creature keeps its home, its slot, its place on
+> screen, and **keeps leaving keepsakes**. **A star rather than a flat ×2** for the boost, because
+> ×2 doubles the only trait in the `yield` pool (Luna, +9.6% → +19.2% average payout) and doubles
+> the gem faucet (Thistle); a star is ×2.00 at one and ×1.20 at five. **Food never advances the star
+> a creature was raised to** — that stays the bloom's job. Arrivals and pre-sleeping saves get 24h
+> free. **If the upkeep ever reads as a chore, raise `awake` in `data.js`, never the prices.**
+> 76 assertions.
 >
 > **The loadout is now chosen in the room, 2026-08-18.** Pet and Loadout are **modes** on the
 > Hollow's dock and a tap on a creature spends whichever is armed — sending it out or letting it
@@ -444,6 +459,16 @@ by two agents that did not know about each other — competently and incompatibl
 state shapes for the same feature. Cloud agents push to `cursor/*` branches and may already have
 merged to `main` while your local tree still looks current. `git fetch` first.
 
+**A visual state must never depend on a keyframe having run.** Already recorded for the pack badge,
+and it caught the sleeping Zs anyway — they started at `opacity: 0` and faded in, so they were
+invisible in any tab whose animation clock was not advancing. Visibility belongs to the base style;
+motion is the flourish on top. The corollary found at the same time: a *stroked* glyph a few pixels
+wide is a hairline that disappears against a dark background, and the house style of a flat fill
+inside one thick outline exists partly for this reason.
+
+**Rounding hours and minutes separately renders 23h 59m 59s as "23h 60m".** Round to whole minutes
+first, then split. Bit the feed panel's span formatter.
+
 **`state.critters[id].fed` is the keepsake clock, not whether a creature has been fed.** It records
 when the creature last handed a keepsake over, and it has meant that since creatures shipped. Food
 is `fedUntil`, a separate absolute timestamp. Writing food into `fed` silently resets every keepsake
@@ -580,7 +605,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 760 assertions over the simulation layer
+node tools/sim-test.js          # 794 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

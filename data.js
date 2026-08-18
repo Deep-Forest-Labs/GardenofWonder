@@ -647,47 +647,66 @@ const PAIR_TUNING = {
   deliveryChance: 0.2
 };
 
-/* Food. A fed creature works one star above itself for a while.
+/* Food, and the two clocks it runs.
 
-   NOTHING EVER SWITCHES OFF. A creature that has not been fed works exactly as
-   it always did, so letting food lapse means going back to normal rather than
-   finding a pet you raised gone quiet. That direction is the whole design: the
-   cosy pillar is stated three times over in docs/22-creatures.md — "nothing is
-   ever taken away", "losing one is punitive", and a returning player finding a
-   creature idle is "the same class of harm as taking a seed away". An upkeep
-   timer that deactivates a pet breaks all three, and the retention loop is
-   identical either way — you come back because the boost lapsed, not because
-   the pet did.
+   TWO AXES, DELIBERATELY, agreed with the owner 2026-08-18 after a first pass
+   that had only the boost:
 
-   A STAR RATHER THAN A FLAT MULTIPLIER, because a flat one is self-amplifying
-   and this is self-limiting. `critterTraitAt()` already scales a trait by star,
-   so a fed creature simply computes one higher: x2.00 at one star, x1.20 at
-   five. The boost shrinks exactly as the creature's absolute contribution
-   grows. A flat x2 would have doubled the only trait in the `yield` pool
-   (Luna, +9.6% -> +19.2% average payout) and doubled the gem faucet (Thistle),
-   which are the two places an idle economy quietly breaks. */
+     AWAKE  — upkeep. A creature whose awake clock has run out is ASLEEP: eyes
+              shut, Zs drifting up, contributing no trait and forming no pair.
+              This is the retention mechanic and it is meant to have teeth.
+     FED    — a boost on top. A well-fed creature works one star above itself.
+
+   THE PRESENTATION IS THE MECHANIC. A pet that is *asleep* is not a pet that was
+   taken away — it is obviously reversible, it says what to do about it, and it
+   is charming rather than punishing. That is what makes an upkeep timer
+   survivable inside a cosy game, and it is why the sleeping art is not
+   decoration on this feature but the load-bearing part of it. It also settles
+   what would otherwise break the pair rules: a pair switching off is fine as
+   long as you can SEE why, and a visibly sleeping creature is exactly that.
+
+   Every food does both, and the awake clock always outlasts the boost — the
+   cheap food is "keep them going", the dear one is "keep them going AND strong".
+
+   A STAR RATHER THAN A FLAT MULTIPLIER for the boost, because a flat one is
+   self-amplifying and this is self-limiting. `critterTraitAt()` already scales a
+   trait by star, so a fed creature simply computes one higher: x2.00 at one
+   star, x1.20 at five. A flat x2 would have doubled the only trait in the
+   `yield` pool (Luna, +9.6% -> +19.2% average payout) and doubled the gem faucet
+   (Thistle), which are the two places an idle economy quietly breaks. */
 const FED_STARS = 1;
 
-/* Fed time is capped and the panel says so openly — a stated cap reads as a
+/* Both clocks are capped and the panel says so openly — a stated cap reads as a
    rule, a hidden one reads as theft. Without it a single large purchase buys
-   weeks of boost and the loop it exists to create stops existing. */
+   weeks and the loop it exists to create stops existing. */
 const FOOD_CAP_HOURS = 24;
+
+/* What an arriving creature gets free, and what a save written before sleeping
+   existed comes back with. Nobody should meet their first pet and watch it fall
+   asleep before they have learned that food exists, and a returning player must
+   never open the game to a room of sleepers it never warned them about. */
+const ARRIVAL_AWAKE_HOURS = 24;
 
 /* Prices are placeholders like every other number in the economy, and flat
    rather than scaling — see docs/04-economy.md. The per-hour rate falls as the
-   tier rises, so committing to a longer stretch is the cheaper way to buy it. */
+   tier rises, so committing to a longer stretch is the cheaper way to buy it.
+
+   `awake` is the tighter of the two ladders the owner chose (4 / 8 / 16 rather
+   than 8 / 16 / 24): a daily player has to feed on their first check-in, and a
+   twice-daily player stays comfortably ahead. If this ever reads as a chore
+   rather than a habit, THIS is the dial — raise `awake`, never the prices. */
 const CREATURE_FOOD = [
   {
-    id: 'clover', name: 'Clover Nibble', hours: 1, cost: 1500, icon: 'clover',
-    desc: 'A mouthful of something green. Enough to get anyone going.'
+    id: 'clover', name: 'Clover Nibble', awake: 4, hours: 1, cost: 1500, icon: 'clover',
+    desc: 'A mouthful of something green. Enough to get anyone up and about.'
   },
   {
-    id: 'petalcake', name: 'Petal Cake', hours: 4, cost: 5000, icon: 'petal',
+    id: 'petalcake', name: 'Petal Cake', awake: 8, hours: 4, cost: 5000, icon: 'petal',
     desc: 'Pressed from the garden. Sweeter than it looks and stickier than it should be.'
   },
   {
-    id: 'honeypot', name: 'Honeypot', hours: 12, cost: 12000, icon: 'honey',
-    desc: 'The whole pot. Nobody is going to be hungry for a while.'
+    id: 'honeypot', name: 'Honeypot', awake: 16, hours: 12, cost: 12000, icon: 'honey',
+    desc: 'The whole pot. Nobody is going to be hungry for a good while.'
   }
 ];
 
@@ -715,7 +734,8 @@ const CREATURES = [
       arrive: ['...oh! Hello.', 'It tilts its head at you.', 'Something small has moved in.'],
       idle: ['It rattles softly.', 'It is watching a bee.', 'It has found a nice spot.', 'It sways with nothing in particular.'],
       pet: ['It wobbles happily.', 'It makes a tiny sound.', 'It leans into your finger.', 'It rattles, delighted.'],
-      gift: ['It left you something.', 'A small offering appears.', 'It seems very pleased with itself.']
+      gift: ['It left you something.', 'A small offering appears.', 'It seems very pleased with itself.'],
+      sleep: ['It is fast asleep.', 'A very small snore.', 'It does not stir at all.', 'Whatever it was thinking about, it is not thinking about it now.']
     }
   },
   {
@@ -735,7 +755,8 @@ const CREATURES = [
       arrive: ['It does not look up.', 'Something is snuffling about.', 'A small round shape arrives.'],
       idle: ['It is digging again.', 'It has forgotten what it buried.', 'It snuffles at a root.', 'It is asleep, probably.'],
       pet: ['It uncurls a little.', 'It huffs approvingly.', 'It leans on your finger.', 'It sneezes.'],
-      gift: ['It presents something it found.', 'It has been digging.', 'It looks extremely proud.']
+      gift: ['It presents something it found.', 'It has been digging.', 'It looks extremely proud.'],
+      sleep: ['Curled into a ball, fast asleep.', 'He snores like a much larger animal.', 'Whatever he buried will have to wait.', 'Not even a little.']
     }
   },
   {
@@ -756,7 +777,8 @@ const CREATURES = [
       arrive: ['She was already here, apparently.', 'A red shape settles by the fence.', 'She pretends not to have arrived.'],
       idle: ['She is watching the gate.', 'She has hidden something.', 'She yawns enormously.', 'She is pretending to sleep.'],
       pet: ['She permits it.', 'She thumps her tail once.', 'She leans, then pretends she did not.'],
-      gift: ['She drops something at your feet.', 'She found this. Somewhere.', 'She is very pleased with herself.']
+      gift: ['She drops something at your feet.', 'She found this. Somewhere.', 'She is very pleased with herself.'],
+      sleep: ['Asleep on a heap of her findings.', 'One ear twitches. That is all.', 'She is not getting up.', 'She has taken everything with her into the dream.']
     }
   },
   {
@@ -777,7 +799,8 @@ const CREATURES = [
       arrive: ['She circles once, then settles.', 'Something pale drifts in.', 'She arrives on no wind at all.'],
       idle: ['She is following a light that is not there.', 'Her wings are very still.', 'She drifts a little.', 'She prefers the dark side of the fence.'],
       pet: ['Her wings shiver.', 'She dusts your finger.', 'She holds very still, then lifts.'],
-      gift: ['She has left a little dust.', 'Something shimmers where she sat.', 'A small silver thing.']
+      gift: ['She has left a little dust.', 'Something shimmers where she sat.', 'A small silver thing.'],
+      sleep: ['Wings folded, fast asleep.', 'She is dreaming about a lamp.', 'Not even the moon is waking her.', 'Very still, for once.']
     }
   },
   {
@@ -798,7 +821,8 @@ const CREATURES = [
       arrive: ['A small light bobs over the fence.', 'He arrives, glowing faintly.', 'Something warm settles in.'],
       idle: ['He is on watch.', 'He dims, then remembers.', 'He is guarding something invisible.', 'He hums.'],
       pet: ['He glows brighter.', 'He bobs happily.', 'He warms your finger.'],
-      gift: ['He left something warm.', 'Still warm, in fact.', 'He is very proud of this one.']
+      gift: ['He left something warm.', 'Still warm, in fact.', 'He is very proud of this one.'],
+      sleep: ['Dimmed right down, asleep.', 'Barely glowing now.', 'The lantern is out.', 'He will light up again after something to eat.']
     }
   },
   {
@@ -819,7 +843,8 @@ const CREATURES = [
       arrive: ['She is already busy.', 'A round yellow blur arrives.', 'She does not stop to say hello.'],
       idle: ['She is helping. Somehow.', 'She has not stopped all day.', 'She checks on the others.', 'She is reorganising something.'],
       pet: ['She buzzes, briefly.', 'She allows exactly one pat.', 'She is far too busy for this.'],
-      gift: ['She left a little honey.', 'She made time for this.', 'It is still warm.']
+      gift: ['She left a little honey.', 'She made time for this.', 'It is still warm.'],
+      sleep: ['Even she has stopped.', 'Fast asleep, mid-errand.', 'The busiest one, out cold.', 'Nothing is getting done.']
     }
   }
 ];

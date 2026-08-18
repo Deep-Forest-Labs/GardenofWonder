@@ -299,7 +299,7 @@ and `mutateAt` is untouched. It is its own top-level object.
 
 ```js
 critters: {
-  pip: { since, fed, fedUntil, gifts, met, level, tending }   // one per creature that moved in
+  pip: { since, fed, fedUntil, awakeUntil, gifts, met, level, tending }   // one per creature home
 }
 ```
 
@@ -343,6 +343,15 @@ so time away needs no replaying and nothing has to tick. Two rules:
   boost forever, and the clamp is where that is enforced rather than at every read site.
 - **Absent means unfed**, which is simply a creature working at the star it was raised to. Nothing
   is switched off by the absence, so a save from before food needs no migration at all.
+
+`awakeUntil` (added 2026-08-18 with sleeping) is the upkeep clock, and also an absolute epoch
+second. Its backfill rule is the one that matters:
+
+- **Absent means AWAKE, with the full `ARRIVAL_AWAKE_HOURS` grant** — not asleep, and not zero. A
+  save written before sleeping existed must not open on a room of creatures the game never warned
+  anyone about, which is the same rule `tending` follows for the same reason.
+- **An explicit `0` is respected**, because that is a creature that genuinely ran out.
+- **Clamped to `now + FOOD_CAP_HOURS`**, so an edited save cannot stay awake forever.
 
 > **`fed` and `fedUntil` are unrelated despite the names.** `fed` is the **keepsake clock** — when
 > this creature last handed one over — and it has been there since creatures shipped. Writing food

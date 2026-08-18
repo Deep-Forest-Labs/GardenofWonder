@@ -200,6 +200,13 @@ const Game = (() => {
             // Clamped to the cap so an edited save cannot hold a boost forever.
             fedUntil: Math.max(0, Math.min(nowSeconds() + FOOD_CAP_HOURS * 3600,
               Number(r.fedUntil) || 0)),
+            /* Absent means AWAKE, not asleep. A save written before sleeping
+               existed must not open on a room of creatures the game never
+               warned anyone about — the same rule `tending` follows. */
+            awakeUntil: r.awakeUntil === undefined
+              ? nowSeconds() + ARRIVAL_AWAKE_HOURS * 3600
+              : Math.max(0, Math.min(nowSeconds() + FOOD_CAP_HOURS * 3600,
+                Number(r.awakeUntil) || 0)),
             gifts: Math.max(0, Math.min(def.keepsake.cap, Number(r.gifts) || 0)),
             met: r.met !== false,
             // A save from before stars existed is a creature the player already
@@ -1785,9 +1792,11 @@ const Game = (() => {
      alone. Binary on purpose: a bonus you cannot tell is active is not a bonus. */
 
   const pairById = (id) => CREATURE_PAIRS.find((p) => p.id === id) || null;
+  /* Both tending AND both awake. A pair going quiet because someone fell asleep
+     is fine precisely because you can see it — a sleeping creature says why. */
   const pairActive = (id) => {
     const p = pairById(id);
-    return Boolean(p) && p.of.every((c) => critterTending(c));
+    return Boolean(p) && p.of.every((c) => critterWorking(c));
   };
   const activePairs = () => CREATURE_PAIRS.filter((p) => pairActive(p.id));
 
@@ -1822,7 +1831,7 @@ const Game = (() => {
   }
 
   function critterTrait(traitId) {
-    return crittersTending().reduce((n, def) => (
+    return crittersWorking().reduce((n, def) => (
       def.trait && def.trait.id === traitId ? n + critterTraitAt(def, critterWorkLevel(def.id)) : n
     ), 0);
   }
@@ -1844,24 +1853,42 @@ const Game = (() => {
      replaying and nothing has to tick. */
 
   const foodById = (id) => CREATURE_FOOD.find((f) => f.id === id) || null;
+  const foodCapSeconds = () => FOOD_CAP_HOURS * 3600;
+
   const critterFedUntil = (id) => (state.critters[id] ? state.critters[id].fedUntil || 0 : 0);
   const critterFed = (id) => critterFedUntil(id) > nowSeconds();
   const critterFedFor = (id) => Math.max(0, critterFedUntil(id) - nowSeconds());
-  const foodCapSeconds = () => FOOD_CAP_HOURS * 3600;
+
+  const critterAwakeUntil = (id) => (state.critters[id] ? state.critters[id].awakeUntil || 0 : 0);
+  const critterAsleep = (id) => critterHere(id) && critterAwakeUntil(id) <= nowSeconds();
+  const critterAwakeFor = (id) => Math.max(0, critterAwakeUntil(id) - nowSeconds());
+  const crittersAsleep = () => CREATURES.filter((c) => critterAsleep(c.id));
+
+  /** Tending AND awake. Every trait and every pair reads this rather than
+      `critterTending()`, because a sleeping creature is not working — that is
+      the whole of the upkeep mechanic, and it lives in one predicate so a new
+      consumer cannot forget it. */
+  const critterWorking = (id) => critterTending(id) && !critterAsleep(id);
+  const crittersWorking = () => CREATURES.filter((c) => critterWorking(c.id));
 
   /** The star a creature is *working* at, which is what every trait reads.
       `critterLevel()` stays the star it has actually been raised to, because
       that is what growth counts against and food must never advance it. */
   const critterWorkLevel = (id) => critterLevel(id) + (critterFed(id) ? FED_STARS : 0);
 
-  /** Seconds a given food would actually add, after the cap. Zero means the
-      button should be dead rather than the purchase failing — a cheat or a buy
-      that quietly does nothing reads as the feature being broken. */
+  /** Seconds a given food would actually add to each clock, after the caps.
+      Zero on both means the button should be dead rather than the purchase
+      failing — a buy that quietly does nothing reads as a broken feature. */
   function foodGain(id, foodId) {
     const food = foodById(foodId);
     if (!food || !critterHere(id)) return 0;
-    const from = Math.max(nowSeconds(), critterFedUntil(id));
-    return Math.max(0, Math.min(nowSeconds() + foodCapSeconds(), from + food.hours * 3600) - from);
+    const now = nowSeconds();
+    const cap = now + foodCapSeconds();
+    const fedFrom = Math.max(now, critterFedUntil(id));
+    const wakeFrom = Math.max(now, critterAwakeUntil(id));
+    const fed = Math.max(0, Math.min(cap, fedFrom + food.hours * 3600) - fedFrom);
+    const awake = Math.max(0, Math.min(cap, wakeFrom + food.awake * 3600) - wakeFrom);
+    return Math.max(fed, awake);
   }
 
   function feedCritter(id, foodId) {
@@ -1869,22 +1896,28 @@ const Game = (() => {
     const food = foodById(foodId);
     if (!def || !food || !critterHere(id)) return null;
     // Only a tending creature's trait is ever read, so feeding a resting one
-    // would be a purchase that buys nothing.
+    // would be a purchase that buys nothing. A SLEEPING one is a different
+    // case entirely — waking it up is the whole point.
     if (!critterTending(id)) return null;
-    const gain = foodGain(id, foodId);
-    if (gain <= 0) return null;
+    if (foodGain(id, foodId) <= 0) return null;
     if (state.credits < food.cost) {
       emit('deny', { reason: 'credits', need: food.cost });
       return null;
     }
+    const now = nowSeconds();
+    const cap = now + foodCapSeconds();
+    const woke = critterAsleep(id);
     state.credits -= food.cost;
-    state.critters[id].fedUntil = Math.max(nowSeconds(), critterFedUntil(id)) + gain;
+    state.critters[id].fedUntil =
+      Math.min(cap, Math.max(now, critterFedUntil(id)) + food.hours * 3600);
+    state.critters[id].awakeUntil =
+      Math.min(cap, Math.max(now, critterAwakeUntil(id)) + food.awake * 3600);
     save();
     emit('currency');
     emit('purchase', { kind: 'food', key: foodId, cost: food.cost, def: food });
-    emit('critter', { def, fed: true, food, until: critterFedUntil(id) });
+    emit('critter', { def, fed: true, woke, food, until: critterFedUntil(id) });
     emit('panels');
-    return { def, food, gain, until: critterFedUntil(id) };
+    return { def, food, woke, until: critterFedUntil(id), awakeUntil: critterAwakeUntil(id) };
   }
 
   /** Lifetime harvests needed to reach `level`. The same bloom raises the creature
@@ -1924,7 +1957,10 @@ const Game = (() => {
         // Tend automatically when there is room: a first creature that did nothing
         // until the player found a toggle would read as broken.
         state.critters[def.id] = {
-          since: nowSeconds(), fed: 0, gifts: 0, met: false, level: 1, tending: habitatFree() > 0
+          since: nowSeconds(), fed: 0, gifts: 0, met: false, level: 1, tending: habitatFree() > 0,
+          // A generous free window, so nobody meets their first creature and
+          // watches it fall asleep before they know food exists.
+          fedUntil: 0, awakeUntil: nowSeconds() + ARRIVAL_AWAKE_HOURS * 3600
         };
         events.push({ def, arrived: true, level: 1 });
         return;
@@ -2602,6 +2638,7 @@ const Game = (() => {
     habitatSlots, habitatUsed, habitatFree, critterTending, crittersTending, setTending, critterTrait,
     critterLevel, critterMaxed, critterGoal, critterGoalFor, critterTraitAt, critterPayoutMult,
     foodById, critterFed, critterFedFor, critterWorkLevel, foodGain, feedCritter, foodCapSeconds,
+    critterAsleep, critterAwakeFor, crittersAsleep, critterWorking, crittersWorking,
     pairById, pairActive, activePairs, notePairs, nightbloomUpgrade,
     mementoCount, mementoKinds, mementoTotal,
     checkCritters, keepsakesWaiting, settleCritters, collectKeepsakes, petCritter,

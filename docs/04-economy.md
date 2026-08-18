@@ -484,19 +484,24 @@ Shop tab and is a pure currency sink with no effect on the simulation.
 
 ## Creature food (added 2026-08-18)
 
-A coin sink, and one the economy needed. A fed creature works **one star above itself** until the
-food runs out; an unfed one works exactly as it always did. Design and the reasoning in
-[22-creatures.md](22-creatures.md).
+A coin sink, and one the economy needed. Food runs **two clocks**: it keeps a creature **awake** (a
+sleeping one contributes nothing at all) and **well fed** (it works one star above itself). Design
+and the reasoning in [22-creatures.md](22-creatures.md).
 
-| Food | Adds | Cost | Per hour |
-| --- | --- | --- | --- |
-| Clover Nibble | 1 hour | 1,500 | 1,500 |
-| Petal Cake | 4 hours | 5,000 | 1,250 |
-| Honeypot | 12 hours | 12,000 | 1,000 |
+| Food | Awake | Well fed | Cost | Per awake hour |
+| --- | --- | --- | --- | --- |
+| Clover Nibble | 4 hours | 1 hour | 1,500 | 375 |
+| Petal Cake | 8 hours | 4 hours | 5,000 | 625 |
+| Honeypot | 16 hours | 12 hours | 12,000 | 750 |
 
-**The per-hour rate falls as the tier rises**, so committing to a longer stretch is the cheaper way
-to buy it, and a sim-test asserts that ordering. Fed time is capped at **24 hours** ahead
-(`FOOD_CAP_HOURS`), so no single purchase buys weeks of boost.
+**The per-*boost*-hour rate falls as the tier rises** (1,500 → 1,250 → 1,000), so committing to a
+longer stretch is the cheaper way to buy the star, and a sim-test asserts that ordering. The awake
+rate deliberately runs the other way — the cheap food is the efficient way to simply keep someone up,
+which is what stops the upkeep half from being a wall for a poor player.
+
+**Every food's awake window outlasts its boost**, asserted, or a creature could be asleep and well
+fed at once. Both clocks cap at **24 hours** ahead (`FOOD_CAP_HOURS`), so no single purchase buys
+weeks.
 
 **Why a star rather than a multiplier.** The obvious version was ×2 while fed, and it is safe for
 four of the six creatures because their traits sit in the `chance` and `utility` pools. It is not
