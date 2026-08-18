@@ -7,6 +7,12 @@ today the bench runs invisibly — harvests fill its basket and nothing shows it
 Prototyped first as a standalone feel spike at `tools/merge-spike.html`, which is still the fastest
 way to try the mechanic and is where the timings below were settled.
 
+**Parked, not rejected — 2026-08-16.** The habitat direction (creatures, the Hollow) arrived before
+this got a surface, and the handoff briefly read as though merge had been dropped. **It has not
+been.** The owner is explicit that garden → bench → market and the order system are still wanted, and
+that what is missing is the right way to fold them in. The simulation below is built and covered by
+the suite; it is waiting on a panel and a decision, not on a reprieve.
+
 ## What it is
 
 A merge board fed by the garden. A harvest drops one chain item into a **basket**; the player places
