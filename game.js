@@ -1860,7 +1860,12 @@ const Game = (() => {
   const critterFedFor = (id) => Math.max(0, critterFedUntil(id) - nowSeconds());
 
   const critterAwakeUntil = (id) => (state.critters[id] ? state.critters[id].awakeUntil || 0 : 0);
-  const critterAsleep = (id) => critterHere(id) && critterAwakeUntil(id) <= nowSeconds();
+  /* Only a TENDING creature can be asleep. A resting one contributes nothing
+     either way, and it cannot be fed — so letting it read as asleep would show
+     the player a problem with no way to act on it, which is the one thing an
+     upkeep mechanic must never do. A rested creature swapped back in with an
+     expired clock does wake up needing food, and the Feed panel says so. */
+  const critterAsleep = (id) => critterTending(id) && critterAwakeUntil(id) <= nowSeconds();
   const critterAwakeFor = (id) => Math.max(0, critterAwakeUntil(id) - nowSeconds());
   const crittersAsleep = () => CREATURES.filter((c) => critterAsleep(c.id));
 
@@ -2569,6 +2574,59 @@ const Game = (() => {
       const report = reconcile();
       emit('panels');
       return report;
+    },
+
+    /* Wind the creature clocks BACK rather than the world forward, so a four-hour
+       awake window can be watched running out without waiting four hours. This is
+       the real mechanism — sleeping is derived from `awakeUntil` against now, so
+       moving it is exactly what the passage of time does. */
+    drainCritters(hours) {
+      const back = Math.max(0, Number(hours) || 0) * 3600;
+      if (!back) return 0;
+      let n = 0;
+      CREATURES.forEach((def) => {
+        const home = critterHome(def.id);
+        if (!home) return;
+        /* Both clocks together. Every food's awake window outlasts its boost, so
+           asleep-but-still-well-fed is a state real play cannot reach, and a cheat
+           must not invent one. */
+        home.awakeUntil = Math.max(0, (home.awakeUntil || 0) - back);
+        home.fedUntil = Math.max(0, (home.fedUntil || 0) - back);
+        n += 1;
+      });
+      if (n) { save(); emit('panels'); }
+      return n;
+    },
+
+    /** Empty everyone's clocks this instant. Reads the clock rather than
+        `critterAsleep()`, which is about tenders — a rested creature still gets
+        drained, so swapping it in shows it needing food. */
+    sleepCritters() {
+      let n = 0;
+      CREATURES.forEach((def) => {
+        const home = critterHome(def.id);
+        if (!home || (!home.awakeUntil && !home.fedUntil)) return;
+        home.awakeUntil = 0;
+        home.fedUntil = 0;
+        n += 1;
+      });
+      if (n) { save(); emit('panels'); }
+      return n;
+    },
+
+    /** The way back: buy the best food for everyone tending, through the real
+        purchase path rather than by writing the clocks, so the wake-up beat and
+        the spend are the ones a player gets. */
+    feedCritters() {
+      const food = CREATURE_FOOD[CREATURE_FOOD.length - 1];
+      let n = 0;
+      CREATURES.forEach((def) => {
+        if (!critterTending(def.id)) return;
+        state.credits += food.cost;
+        if (feedCritter(def.id, food.id)) n += 1;
+        else state.credits -= food.cost;
+      });
+      return n;
     },
 
     /** Drop a pack onto a plot so the collect beat can be inspected without waiting on the roll. */

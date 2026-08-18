@@ -423,6 +423,8 @@ cheat exercises the feature it claims to test, and the animation seen is the one
 | Boost a tap proc | **Sticky toggle.** Holds Rain Dance, Bee Swarm or Lucky Ladybug at a 50% chance per tap, bypassing the badge level entirely |
 | Trigger now | Wonder Effect, one-shot |
 | Garden | Fill plots, ripen everything, add a hive |
+| Creature food clocks | Drain 1h / 4h / 24h, send everyone to sleep, feed everyone. Header shows how many tenders are down |
+| Simulate an absence | Winds the world back 3 / 6 / 12 / 24 hours and opens the real welcome-back scene |
 | Give | Gold, gems, levels |
 
 **The proc buttons are toggles, not one-shots.** A single forced fire meant reopening the panel for
@@ -430,6 +432,14 @@ every look at an animation; held at 50% per tap you can leave the sheet closed a
 boost is **additive on top of the badge rate and bypasses the level gate**, because testing Bee Swarm
 should not require buying Bee Swarm first — `procChance()` is the one place that decides, and it
 clamps at certainty.
+
+**The creature cheats wind the clocks *back* rather than the world forward**, which is the real
+mechanism and not an imitation of it: sleeping is derived from `awakeUntil` against now. Both clocks
+move together, because every food's awake window outlasts its boost and *asleep but still well fed*
+is a state real play cannot reach — a cheat must not invent one. **Feed everyone** goes through the
+real `feedCritter()` purchase path rather than writing the clocks. Without these, testing a
+four-hour awake window means waiting four hours. See
+[22-creatures.md](22-creatures.md#testing-it-without-waiting-four-hours).
 
 The weather hold and the proc boosts are sticky; everything else is one-shot. `clearAll()` drops the
 lot, and the panel lists whatever is currently armed at the top so a boost left on is never a

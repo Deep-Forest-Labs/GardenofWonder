@@ -352,6 +352,28 @@ exactly how you can tell.
 - **Tapping one says so in its own voice** — every creature has `lines.sleep`, asserted. A tap that
   did nothing would read as the creature having broken rather than as it being asleep.
 
+**Only a *tending* creature can be asleep.** A resting one contributes nothing either way, and
+**it cannot be fed** — so letting it read as asleep would show the player a problem with no way to
+act on it, which is the one thing an upkeep mechanic must never do. Found by driving the dev cheats:
+three resting creatures went to sleep and nothing could wake them. A rested creature swapped back in
+with an expired clock *does* wake up needing food, and the Feed panel says so. Asserted both ways —
+that a resting creature with an empty clock is not asleep, and that everyone listed as asleep is
+someone who can be fed.
+
+### Testing it without waiting four hours
+
+`Game.Dev` carries three cheats for this, in the Developer tools panel under **Creature food
+clocks**, which also shows a live count of how many tenders are down:
+
+- **Drain 1h / 4h / 24h** winds both clocks *back*. This is the real mechanism rather than a
+  simulation of it — sleeping is derived from `awakeUntil` against now, so moving it is exactly what
+  the passage of time does. Both clocks move together, because every food's awake window outlasts
+  its boost and *asleep but still well fed* is a state real play cannot reach.
+- **Send them to sleep** empties every clock at once. It drains resting creatures too, so swapping
+  one in shows it needing food.
+- **Feed everyone** is the way back, and it goes through the real `feedCritter()` purchase path
+  rather than writing the clocks, so the wake-up beat is the one a player gets.
+
 ### The numbers, and where the dial is
 
 **4 / 8 / 16 hours awake is the tighter of two ladders the owner was offered** (the other was
@@ -472,9 +494,10 @@ animating anyway.
 - **Rounding a remainder separately produces "23h 60m".** The span formatter rounded hours and
   minutes independently. Round to whole minutes first, then split.
 
-Covered by **76 assertions**. The two that matter most: an unfed creature's trait returns to
-*exactly* baseline while it is still awake, and a sleeping one contributes exactly zero while
-staying home, tending, and still leaving keepsakes.
+Covered by **97 assertions**. The three that matter most: an unfed creature's trait returns to
+*exactly* baseline while it is still awake, a sleeping one contributes exactly zero while staying
+home, tending, and still leaving keepsakes, and everyone the game shows as asleep is someone the
+player can actually wake.
 
 ### Stars — a creature is raised, not found
 

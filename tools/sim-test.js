@@ -3010,6 +3010,26 @@ check('it is asleep', G.critterAsleep(PIP.id));
 check('and still leaves keepsakes while it sleeps', G.keepsakesWaiting(PIP.id) > 0);
 check('which can still be collected', Boolean(G.collectKeepsakes(PIP.id)));
 
+group('a resting creature is never shown as asleep, because it cannot be woken');
+G.reset();
+unlockTo(HABITAT_SLOT_LEVELS[1]);
+S.discovered[PIP.attract.seed] = 999;
+S.discovered[G.critterById('luna').attract.seed] = 999;
+G.checkCritters();
+G.setTending(PIP.id, false);
+S.critters[PIP.id].awakeUntil = 0;
+/* Feeding needs a tender, so a resting creature reading as asleep would be a
+   problem the player is shown and cannot act on. */
+check('a resting creature with an empty clock is not asleep', !G.critterAsleep(PIP.id));
+check('and it is not listed among the sleepers',
+  !G.crittersAsleep().some((c) => c.id === PIP.id));
+check('it was not working anyway', !G.critterWorking(PIP.id));
+G.setTending(PIP.id, true);
+check('but swapping it back in does wake the problem up', G.critterAsleep(PIP.id));
+S.credits = 1e6;
+check('and now it can be fed', Boolean(G.feedCritter(PIP.id, CREATURE_FOOD[0].id)));
+check('which fixes it', !G.critterAsleep(PIP.id));
+
 group('a pair goes quiet when half of it falls asleep');
 G.reset();
 unlockTo(HABITAT_SLOT_LEVELS[1]);
@@ -3135,6 +3155,41 @@ localStorage.setItem('gw-save', JSON.stringify({
 G.load();
 check('an edited save cannot hold a boost forever',
   G.critterFedFor(PIP.id) <= G.foodCapSeconds() + 1);
+
+group('the dev cheats can put a creature to sleep and get it back');
+G.reset();
+unlockTo(HABITAT_SLOT_LEVELS[1]);
+S.discovered[PIP.attract.seed] = 999;
+S.discovered[G.critterById('luna').attract.seed] = 999;
+G.checkCritters();
+S.credits = 1e6;
+G.feedCritter(PIP.id, CREATURE_FOOD[0].id);
+const upBefore = G.critterAwakeFor(PIP.id);
+check('draining winds the clocks back', G.Dev.drainCritters(1) === G.crittersHome().length);
+check('by exactly the hour asked for', Math.abs((upBefore - G.critterAwakeFor(PIP.id)) - 3600) < 2);
+check('draining nothing is a no-op', G.Dev.drainCritters(0) === 0);
+check('it is still awake after a short drain', !G.critterAsleep(PIP.id));
+check('sending them to sleep works', G.Dev.sleepCritters() > 0);
+check('and every tender really is asleep', G.crittersTending().every((c) => G.critterAsleep(c.id)));
+check('so nothing is working', G.crittersWorking().length === 0);
+/* Every food outlasts its own boost, so asleep-and-still-well-fed is a state real
+   play cannot reach — a cheat must not invent one. */
+check('and none of them is somehow still well fed',
+  G.crittersHome().every((c) => !G.critterFed(c.id)));
+/* Everything the player can see asleep has to be something they can wake. */
+check('everyone asleep is someone who can be fed',
+  G.crittersAsleep().every((c) => G.critterTending(c.id)));
+check('sending them to sleep twice is a no-op', G.Dev.sleepCritters() === 0);
+check('feeding everyone wakes them', G.Dev.feedCritters() > 0);
+check('and they are up again', G.crittersTending().every((c) => !G.critterAsleep(c.id)));
+/* One Honeypot is 16h up and 12h fed against a 24h cap, so a second still has
+   room. It is the third that has nothing left to give. */
+check('a second helping still has room', G.Dev.feedCritters() > 0);
+check('and then the cap refuses another', G.Dev.feedCritters() === 0);
+/* Nothing is armed and nothing is sticky, so an unforced run afterwards behaves. */
+G.Dev.sleepCritters();
+G.Dev.feedCritters();
+check('nothing leaked into the clocks', G.critterAwakeFor(PIP.id) <= G.foodCapSeconds() + 1);
 
 group('food is authored, and stays off the parts that break an economy');
 check('every food has a name, hours and a cost',

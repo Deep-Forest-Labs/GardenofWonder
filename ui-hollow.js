@@ -109,7 +109,7 @@
     const count = `${Game.crittersTending().length} of ${Game.habitatSlots()} tending`;
     /* A sleeping creature is the one thing here that wants doing something
        about, so it outranks the tending count for the line. */
-    const naps = Game.crittersAsleep().filter((d) => Game.critterTending(d.id)).length;
+    const naps = Game.crittersAsleep().length;
     const line = naps
       ? `${naps === 1 ? 'Someone is' : `${naps} are`} asleep · Feed to wake them`
       : count;

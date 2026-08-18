@@ -41,6 +41,47 @@ decision is made later, and it was not worth paying for now to find out.
 
 ---
 
+## 2026-08-18 — Cheats for the sleep clocks, and the dead end they immediately found
+
+**Built:** Drain 1h / 4h / 24h, Send them to sleep, and Feed everyone, in the Developer tools panel
+under a header showing how many tenders are down. 21 more assertions, 815 total.
+
+**The ask was practical** — a four-hour awake window is untestable if you have to wait four hours.
+
+**They wind the clocks back rather than the world forward**, which matters for the same reason
+`simulateAway()` winds the world back rather than pushing `lastSeen`: sleeping is *derived* from
+`awakeUntil` against now, so moving that value is not a simulation of the passage of time, it **is**
+the passage of time. The panel's standing rule holds — every cheat forces the real code path — and
+**Feed everyone** goes further by running the actual `feedCritter()` purchase rather than writing
+the clocks, so the wake-up beat is the one a player gets.
+
+**Both clocks always move together.** Every food's awake window outlasts its boost, so *asleep but
+still well fed* is a state real play cannot reach, and a cheat that invented one would send someone
+chasing a bug that only the cheat can produce.
+
+**Then the cheats immediately found a real dead end, which is the point of building them.** Sending
+everyone to sleep put the three *resting* creatures to sleep too — and feeding requires a tending
+creature, so nothing could ever wake them. The Hollow showed three sleepers with no way to act on
+them.
+
+**So: only a tending creature can be asleep.** A resting one contributes nothing either way, so its
+awake clock is meaningless, and showing the player a problem they cannot act on is the one thing an
+upkeep mechanic must never do — it is the difference between pressure and a wall. A rested creature
+swapped back in with an expired clock *does* wake up needing food, which is coherent and gives the
+loadout swap a small honest cost. Asserted both ways: a resting creature with an empty clock is not
+asleep, and **everyone the game shows as asleep is someone the player can wake.**
+
+*Worth keeping as a general rule:* an upkeep state that the player cannot clear is not a mechanic,
+it is a bug wearing one. Any future thing that switches off should be checked against "and can they
+turn it back on from here?".
+
+**The deny messages are now per-cheat.** The panel's shared "that cheat needs something in the garden
+first" was written for the garden cheats and is simply wrong for these three — "they are all asleep
+already" and "nobody is tending, or they are all fed to the cap" say what actually happened. A cheat
+that quietly does nothing reads as the feature being broken; a cheat that lies about *why* is worse.
+
+---
+
 ## 2026-08-18 — Creatures sleep, and the sleeping face is what made an upkeep timer acceptable
 
 **Built:** a second clock. Food now keeps a creature **awake** (4 / 8 / 16 hours) as well as **well

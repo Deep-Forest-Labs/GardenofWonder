@@ -643,7 +643,7 @@
   }
 
   function renderFeed() {
-    const naps = Game.crittersAsleep().filter((d) => Game.critterTending(d.id)).length;
+    const naps = Game.crittersAsleep().length;
     return `<div class="panel">
       ${naps ? `<p class="feed-alert">${Icons.get('clock')}<span>${
         naps === 1 ? 'Someone has' : `${naps} of them have`} fallen asleep and stopped working.
@@ -1007,6 +1007,13 @@
         <button class="dev-btn" data-dev="card" data-arg="mythic">+1 mythical</button>
         <button class="dev-btn" data-dev="completeSet" data-arg="1">Complete a set</button>
         <button class="dev-btn" data-dev="dropPack" data-arg="1">Drop a pack in the garden</button>`)}
+      ${devRow(`Creature food clocks — ${Game.crittersAsleep().length} of ${
+        Game.crittersTending().length} tending are asleep`, `
+        <button class="dev-btn" data-dev="drain" data-arg="1">Drain 1h</button>
+        <button class="dev-btn" data-dev="drain" data-arg="4">Drain 4h</button>
+        <button class="dev-btn" data-dev="drain" data-arg="24">Drain 24h</button>
+        <button class="dev-btn warn" data-dev="sleep" data-arg="1">Send them to sleep</button>
+        <button class="dev-btn" data-dev="feedAll" data-arg="1">Feed everyone</button>`)}
       ${devRow('Simulate an absence', `
         <button class="dev-btn" data-dev="away" data-arg="3">3 hours</button>
         <button class="dev-btn" data-dev="away" data-arg="6">6 hours</button>
@@ -1026,6 +1033,7 @@
     const D = Game.Dev;
     let redraw = true;
     let ok = true;
+    let deny = 'That cheat needs something in the garden first.';
     switch (what) {
       case 'weather': D.setWeather(arg); break;
       case 'mutate': ok = Boolean(D.mutate(arg)); redraw = false; break;
@@ -1046,6 +1054,18 @@
         redraw = false;
         break;
       }
+      case 'drain':
+        ok = D.drainCritters(Number(arg) || 1) > 0;
+        deny = 'Nobody lives here yet.';
+        break;
+      case 'sleep':
+        ok = D.sleepCritters() > 0;
+        deny = 'They are all asleep already.';
+        break;
+      case 'feedAll':
+        ok = D.feedCritters() > 0;
+        deny = 'Nobody is tending, or they are all fed to the cap.';
+        break;
       case 'packs': Game.grantPacks(Number(arg) || 1); break;
       case 'card': {
         const got = D.grantCard(arg || null);
@@ -1073,7 +1093,7 @@
     if (!ok) {
       Sound.play('deny');
       FX.shake(4);
-      UI.toast({ title: 'Nothing to apply', body: 'That cheat needs something in the garden first.' });
+      UI.toast({ title: 'Nothing to apply', body: deny });
     } else {
       Sound.play(what === 'clear' ? 'close' : 'buy');
     }

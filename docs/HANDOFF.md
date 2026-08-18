@@ -81,7 +81,11 @@ from quests and levels.
 > the gem faucet (Thistle); a star is ×2.00 at one and ×1.20 at five. **Food never advances the star
 > a creature was raised to** — that stays the bloom's job. Arrivals and pre-sleeping saves get 24h
 > free. **If the upkeep ever reads as a chore, raise `awake` in `data.js`, never the prices.**
-> 76 assertions.
+>
+> **Only a *tending* creature can be asleep**, because a resting one cannot be fed — showing a
+> player a problem they cannot act on is the one thing an upkeep mechanic must never do. Found by
+> driving the new cheats. **Test it with the Developer tools:** *Creature food clocks* — Drain 1h /
+> 4h / 24h, Send them to sleep, Feed everyone. 97 assertions.
 >
 > **The loadout is now chosen in the room, 2026-08-18.** Pet and Loadout are **modes** on the
 > Hollow's dock and a tap on a creature spends whichever is armed — sending it out or letting it
@@ -459,6 +463,11 @@ by two agents that did not know about each other — competently and incompatibl
 state shapes for the same feature. Cloud agents push to `cursor/*` branches and may already have
 merged to `main` while your local tree still looks current. `git fetch` first.
 
+**An upkeep state the player cannot clear is a bug wearing a mechanic.** Sleeping applies only to
+*tending* creatures, because a resting one cannot be fed and would have shown as asleep forever with
+no way out. Anything future that switches off gets the same check: *and can they turn it back on
+from here?*
+
 **A visual state must never depend on a keyframe having run.** Already recorded for the pack badge,
 and it caught the sleeping Zs anyway — they started at `opacity: 0` and faded in, so they were
 invisible in any tab whose animation clock was not advancing. Visibility belongs to the base style;
@@ -605,7 +614,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 794 assertions over the simulation layer
+node tools/sim-test.js          # 815 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
