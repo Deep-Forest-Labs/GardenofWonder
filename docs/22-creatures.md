@@ -477,8 +477,16 @@ Three things found by looking:
   play. The first pass started `.cr-z` at `opacity: 0` and faded it in — the same mistake already
   recorded for the pack badge, made again in a file whose comment said not to. Visibility belongs to
   the base style; the drift is the flourish.
-- **A stroked Z is a hairline and disappears against dark earth.** They are filled glyphs inside one
-  thick outline now, which is the house style anyway.
+- **A stroked Z is a hairline and disappears against dark earth.** They are filled glyphs rather than
+  a stroked squiggle.
+- **Then outlined filled glyphs were too loud.** Seen on a real phone they read as three hard graphic
+  shapes stuck to a creature's head. They are now **solid white with no outline** — the one place the
+  house rule of "flat fill inside one thick outline" is deliberately broken, because a Z is a wisp
+  coming off a creature rather than a thing in the world. Smaller, softer, ~0.72 opacity.
+- **The motion has to be a zigzag, not a slide.** The first pass translated each Z out to one side
+  and scaled it up, which reads as a graphic being pushed rather than something drifting off a
+  sleeping animal. It now sways left, right, left over a slow 4.8s rise with **no scaling**, and the
+  three share one keyframe offset by negative delays so they form a stream rather than a pulse.
 - **The corners of a creature belong to its badges.** Tucked beside the head, the Zs sat underneath
   the keepsake badge. They rise *above* the viewBox instead — every screen gives the creature SVG
   `overflow: visible`.

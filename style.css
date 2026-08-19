@@ -54,7 +54,11 @@
 
 html,body{
   height:100%;margin:0;padding:0;
-  background:#7ec8f2;
+  /* The meadow, not the sky. Whatever the browser leaves uncovered is always at
+     the BOTTOM of the screen, where the game draws lawn — an installed PWA on
+     iOS showed a band of sky blue under the dock. Matching the grass makes a
+     stray strip invisible instead of wrong. */
+  background:#4fae54;
   font-family:var(--font);
   color:var(--ink);
   overflow:hidden;
@@ -67,6 +71,12 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 
 .game{
   position:fixed;inset:0;
+  /* A transform makes this a containing block, and iOS then resolves `inset: 0`
+     against a viewport that excludes the bottom safe area — so an installed PWA
+     ended short of the home indicator and showed the page background under the
+     dock. `dvh` measures the real thing. `height` wins over `bottom` here, which
+     is what we want. */
+  height:100dvh;
   overflow:hidden;
   transform:translate3d(var(--shake-x),var(--shake-y),0) rotate(var(--shake-r));
   will-change:transform;
@@ -1787,16 +1797,20 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    keyframe has run is invisible anywhere the animation does not play — the same
    rule the pack badge is on, and it caught this feature too. */
 .cr-z{
-  opacity:.9;transform-origin:50% 50%;
-  animation:cr-zfloat 3.2s ease-out infinite;
-  animation-delay:calc(var(--i) * 1.06s);
+  opacity:.72;transform-origin:50% 50%;
+  animation:cr-zfloat 4.8s ease-in-out infinite;
+  animation-delay:calc(var(--i) * -1.6s);
 }
-/* Never fades to nothing — three Zs that each vanish for most of the cycle read
-   as a flicker rather than as sleep. They drift; they do not blink out. */
+/* A zigzag rise, and no scaling. The first pass slid each Z out to one side and
+   grew it, which reads as a graphic being pushed rather than as something
+   drifting off a sleeping animal. Sway one way, then the other, then away. */
 @keyframes cr-zfloat{
-  0%{opacity:.45;transform:translate(0,5px) scale(.86)}
-  30%{opacity:1;transform:translate(1px,1px) scale(1)}
-  100%{opacity:.4;transform:translate(5px,-9px) scale(1.06)}
+  0%{opacity:0;transform:translate(0,3px)}
+  14%{opacity:.75}
+  32%{transform:translate(-3.5px,-6px)}
+  56%{transform:translate(3.5px,-13px)}
+  80%{opacity:.5;transform:translate(-2.5px,-20px)}
+  100%{opacity:0;transform:translate(1px,-27px)}
 }
 /* Sleeping is a state, never something a keyframe has to finish to establish —
    the same rule the pack badge is on. */

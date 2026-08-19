@@ -87,6 +87,13 @@ from quests and levels.
 > driving the new cheats. **Test it with the Developer tools:** *Creature food clocks* — Drain 1h /
 > 4h / 24h, Send them to sleep, Feed everyone. 97 assertions.
 >
+> **Two things a real phone found, 2026-08-18.** The sleeping **Zs** are now solid white with **no
+> outline**, smaller and slower, drifting in a zigzag with no scaling — outlined they read as hard
+> graphic shapes stuck to a creature's head. That is a **deliberate exception** to the house
+> outline rule, because a Z is a wisp rather than a thing in the world. And the **installed PWA**
+> ended short of the home indicator; `.game` now carries `height: 100dvh` and the page background is
+> meadow green rather than sky blue. See the traps below.
+>
 > **The loadout is now chosen in the room, 2026-08-18.** Pet and Loadout are **modes** on the
 > Hollow's dock and a tap on a creature spends whichever is armed — sending it out or letting it
 > rest, rather than opening the Almanac to do it. The Almanac's Habitat block keeps its toggles,
@@ -467,6 +474,14 @@ merged to `main` while your local tree still looks current. `git fetch` first.
 *tending* creatures, because a resting one cannot be fed and would have shown as asleep forever with
 no way out. Anything future that switches off gets the same check: *and can they turn it back on
 from here?*
+
+**`.game` needs `height: 100dvh`, not just `inset: 0`.** It carries a `transform` for the screen
+shake, which makes it a containing block — and an installed PWA on iOS then resolves `inset: 0`
+against a viewport that excludes the bottom safe area, ending the game short of the home indicator
+with a band of page background under the dock. The page background is also the **meadow green**
+rather than the sky, so anything left uncovered is invisible against the lawn instead of a band of
+the wrong colour. Neither is reproducible in the desktop preview, which reports `.game` covering
+exactly.
 
 **A visual state must never depend on a keyframe having run.** Already recorded for the pack badge,
 and it caught the sleeping Zs anyway — they started at `opacity: 0` and faded in, so they were

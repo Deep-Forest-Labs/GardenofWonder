@@ -41,6 +41,46 @@ decision is made later, and it was not worth paying for now to find out.
 
 ---
 
+## 2026-08-18 — Softer Zs, and a PWA that stopped short of the bottom of the phone
+
+Both found by the owner on a real installed app, and neither was visible anywhere else.
+
+**The sleeping Zs were too loud.** Outlined filled glyphs read on a phone as three hard graphic
+shapes stuck to a creature's head rather than as something drifting off a sleeping animal. They are
+now **solid white with no outline**, smaller, at 0.72 opacity — **the one place the house rule of
+"flat fill inside one thick outline" is deliberately broken**, because a Z is a wisp coming off a
+creature rather than a thing in the world. Recorded as an exception so nobody "fixes" it later.
+
+**And the motion was wrong in a way worth naming.** Each Z slid out to one side and scaled up, which
+reads as a graphic being *pushed*. It now sways left, right, left over a slow 4.8s rise with **no
+scaling at all**, and the three share one keyframe offset by *negative* delays so they are already
+staggered on the first frame and form a stream rather than a pulse. Verified by sampling the
+transform across the cycle rather than by eye: x runs 0 → −3.5 → +3.2 → −2.5 → +1 while y rises
+monotonically.
+
+*This is the third pass on this one small effect*, and every failure was invisible in code review:
+invisible at rest, then a hairline against dark earth, then too heavy on a phone. Small motion
+belongs in front of eyes early.
+
+**The installed PWA ended short of the home indicator.** `.game` is `position: fixed; inset: 0`, but
+it also carries a `transform` for the screen shake — which makes it a containing block, and iOS then
+resolved `inset: 0` against a viewport that excluded the bottom safe area. The result was a band of
+page background under the dock. It has an explicit **`height: 100dvh`** now, which measures the real
+viewport; `height` wins over `bottom`, and a browser that does not know `dvh` ignores the line and
+keeps the old behaviour, so it degrades safely.
+
+**The page background also moved from sky blue to meadow green**, which is the belt to that
+braces. Whatever a browser leaves uncovered is always at the *bottom* of the screen, and the bottom
+of this game is lawn — so a stray strip is now invisible instead of being a band of the wrong
+colour. Verified by faking a 46px uncovered strip and looking at it. The manifest's
+`background_color` stays sky blue, because that one is the launch splash rather than a runtime
+colour.
+
+**Neither could be reproduced locally**, which is the standing lesson: iOS standalone is a different
+layout environment, and the desktop preview reported `.game` covering the viewport exactly.
+
+---
+
 ## 2026-08-18 — The Feed panel lists tenders first, and pointedly does not sort by urgency
 
 **Built:** one stable sort in `feedRows()`.

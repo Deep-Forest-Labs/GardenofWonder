@@ -46,27 +46,28 @@ const Critters = (() => {
   /* Three Zs drifting off a sleeping creature, in the same 0..100 space as the
      body so they scale with it wherever it is drawn.
 
-     Drawn as filled glyphs inside one thick outline, not as a stroked squiggle.
-     A stroked Z at this size is a couple of hairlines and vanishes against dark
-     earth — and flat fill inside a heavy outline is the house style anyway.
+     Solid white and DELIBERATELY UNOUTLINED, which is the one place the house
+     rule of "flat fill inside one thick outline" is broken on purpose. These are
+     a wisp coming off a creature rather than a thing in the world, and outlined
+     at this size they read as three hard graphic shapes stuck to its head — the
+     owner called that out on a real phone. Small, soft and drifting is the note.
 
      They rise ABOVE the viewBox on purpose. The corners of a creature are where
      its badges live — leaf, keepsake, well-fed — so a Z cluster tucked beside
      the head disappears underneath one. Every screen that draws a creature gives
      the SVG `overflow: visible`. */
   function zGlyph(x, y, s, i) {
-    const t = s * 0.3;
+    const t = s * 0.34;   // heavier bar, since there is no outline holding it up
     const d = `M${x} ${y} H${x + s} V${y + t} L${x + t * 1.4} ${y + s - t} H${x + s} V${y + s}`
       + ` H${x} V${y + s - t} L${x + s - t * 1.4} ${y + t} H${x} Z`;
     return `<path class="cr-z" style="--i:${i}" d="${d}"/>`;
   }
 
   function zzz() {
-    return `<g class="cr-zzz" fill="#fffdf7" stroke="${INK}" stroke-width="3.2"
-      stroke-linejoin="round">
-      ${zGlyph(46, -8, 16, 0)}
-      ${zGlyph(64, -28, 19, 1)}
-      ${zGlyph(84, -50, 22, 2)}
+    return `<g class="cr-zzz" fill="#ffffff">
+      ${zGlyph(50, -2, 11, 0)}
+      ${zGlyph(64, -18, 13, 1)}
+      ${zGlyph(79, -36, 15, 2)}
     </g>`;
   }
 

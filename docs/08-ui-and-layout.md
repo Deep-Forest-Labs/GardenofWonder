@@ -62,6 +62,17 @@ From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
 
 - **Safe-area insets** are respected on every fixed edge via `env(safe-area-inset-*)`.
 - **`dvh`, not `vh`**, so the layout doesn't jump when mobile browser chrome slides away.
+- **`.game` carries an explicit `height: 100dvh` on top of `inset: 0`**, added 2026-08-18. It also
+  carries a `transform` for the screen shake, which makes it a containing block — and an installed
+  PWA on iOS then resolved `inset: 0` against a viewport that *excluded* the bottom safe area, so the
+  game ended short of the home indicator and showed a band of page background under the dock. `dvh`
+  measures the real thing. `height` deliberately wins over `bottom` here. A browser that does not
+  know `dvh` ignores the line and falls back to the old `inset: 0` behaviour, so it degrades safely.
+- **The page background is the meadow green (`#4fae54`), not the sky.** Anything the browser leaves
+  uncovered is always at the *bottom* of the screen, which is where the game draws lawn — so a stray
+  strip is invisible rather than a band of sky blue. This is the safety net behind the `dvh` fix, not
+  a substitute for it. Note the manifest's `background_color` is separately the sky blue, because
+  that one is the launch splash.
 - **`touch-action: manipulation`** on buttons removes the 300 ms double-tap delay.
 - **`-webkit-tap-highlight-color: transparent`** kills the grey flash on tap.
 - **`overscroll-behavior: none`** and `overflow: hidden` on the body prevent rubber-banding.
