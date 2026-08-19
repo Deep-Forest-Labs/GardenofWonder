@@ -340,6 +340,15 @@ const DATA = {
   masteryGemEvery: 5,
   masteryGemGrant: 1,
 
+  /* `paused: true` benches a quest without deleting it. The potting bench is
+     built in game.js but has no UI at all, so nothing a player can do reaches
+     the `merge` or `bank` tracks — these three could be handed out, could never
+     be finished, and held one of the three active slots forever. They stay here
+     with their tuning intact; drop the flag the day the bench gets a screen.
+
+     Each one has a live stand-in directly under it at the same rep and the same
+     rung, because the ladder is what carries a player to level 17 and benching
+     98 rep out of it would strand them three levels short of the Eternal Crown. */
   quests: [
     { id: 'q_tap_25',      text: 'Tap 25 times',            track: 'tap',     qty: 25,  rep: 5 },
     { id: 'q_plant_1',     text: 'Plant a seed',            track: 'plant',   qty: 1,   rep: 5 },
@@ -355,14 +364,16 @@ const DATA = {
     { id: 'q_hive_1',      text: 'Build a hive',            track: 'hive',    qty: 1,   rep: 14, reward: { boost: 'seedrush' } },
     { id: 'q_honey_3',     text: 'Fill 3 honey jars',       track: 'honey',   qty: 3,   rep: 16 },
     { id: 'q_harvest_10',  text: 'Harvest 10 blooms',       track: 'harvest', qty: 10,  rep: 16 },
-    { id: 'q_tea',         text: 'Merge a Posy',            track: 'merge',   key: 'posy',     qty: 1,  rep: 18, reward: { boost: 'golden' } },
+    { id: 'q_tea',         text: 'Merge a Posy',            track: 'merge',   key: 'posy',     qty: 1,  rep: 18, reward: { boost: 'golden' }, paused: true },
+    { id: 'q_discover_8',  text: 'Discover 8 species',      track: 'discover', qty: 8,  rep: 18, reward: { boost: 'golden' } },
     { id: 'q_charm_1',     text: 'Buy Lucky Charm',         track: 'upgrade', key: 'critChance', qty: 1, rep: 20 },
     { id: 'q_crit_1',      text: 'Land a crit',             track: 'crit',    qty: 1,   rep: 20, after: 'q_charm_1' },
     { id: 'q_rose_3',      text: 'Harvest 3 roses',         track: 'harvest', key: 'rose',     qty: 3,  rep: 20 },
     { id: 'q_lavender_3',  text: 'Harvest 3 lavender',      track: 'harvest', key: 'lavender', qty: 3,  rep: 22 },
     { id: 'q_rare',        text: 'Harvest a Rare bloom',    track: 'rarity',  key: 'rare',     qty: 1,  rep: 24, reward: { boost: 'fortune' } },
     { id: 'q_star_1',      text: 'Buy Star Strike',         track: 'upgrade', key: 'critMult', qty: 1,  rep: 24 },
-    { id: 'q_perfume',     text: 'Merge a Bouquet',         track: 'merge',   key: 'bouquet',  qty: 1,  rep: 32 },
+    { id: 'q_perfume',     text: 'Merge a Bouquet',         track: 'merge',   key: 'bouquet',  qty: 1,  rep: 32, paused: true },
+    { id: 'q_hold_60',     text: 'Hold the flower 60 times', track: 'hold',   qty: 60,  rep: 32 },
     { id: 'q_honey_8',     text: 'Fill 8 honey jars',       track: 'honey',   qty: 8,   rep: 36 },
     { id: 'q_epic',        text: 'Harvest an Epic bloom',   track: 'rarity',  key: 'epic',     qty: 1,  rep: 40, reward: { boost: 'fortune' } },
     { id: 'q_coil_1',      text: 'Buy Combo Coil',          track: 'upgrade', key: 'comboMeter', qty: 1, rep: 28 },
@@ -370,7 +381,8 @@ const DATA = {
     { id: 'q_harvest_25',  text: 'Harvest 25 blooms',       track: 'harvest', qty: 25,  rep: 42 },
     { id: 'q_plant_20',    text: 'Plant 20 seeds',          track: 'plant',   qty: 20,  rep: 44 },
     { id: 'q_peony_3',     text: 'Harvest 3 peonies',       track: 'harvest', key: 'peony',    qty: 3,  rep: 46 },
-    { id: 'q_craft_2',     text: 'Bank 5 bench goods',      track: 'bank',    qty: 5,   rep: 48 },
+    { id: 'q_craft_2',     text: 'Bank 5 bench goods',      track: 'bank',    qty: 5,   rep: 48, paused: true },
+    { id: 'q_honey_15',    text: 'Fill 15 honey jars',      track: 'honey',   qty: 15,  rep: 48 },
     { id: 'q_marigold_3',  text: 'Harvest 3 marigolds',     track: 'harvest', key: 'marigold', qty: 3,  rep: 42 },
     { id: 'q_harvest_40',  text: 'Harvest 40 blooms',       track: 'harvest', qty: 40,  rep: 46 },
     { id: 'q_discover_12', text: 'Discover 12 species',     track: 'discover', qty: 12, rep: 50 }

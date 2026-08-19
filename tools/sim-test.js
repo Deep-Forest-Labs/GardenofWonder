@@ -426,7 +426,11 @@ check('10 rep is level 2', G.levelFromRep(10) === 2);
 check('44 rep is level 3', G.levelFromRep(44) === 3);
 check('45 rep is level 4', G.levelFromRep(45) === 4);
 check('760 rep is level 17', G.levelFromRep(760) === 17);
-const ladderRep = DATA.quests.reduce((a, q) => a + q.rep, 0);
+/* Only the quests a player can actually be handed count. A paused quest is
+   still in DATA — summing it would let the ladder look complete while every
+   real player stalled short of the last seed. */
+const LIVE_QUESTS = DATA.quests.filter((q) => !q.paused);
+const ladderRep = LIVE_QUESTS.reduce((a, q) => a + q.rep, 0);
 check('the ladder reaches Eternal (level 17)', ladderRep >= 760, `sum ${ladderRep}`);
 
 group('seed unlocks follow the level');
@@ -540,6 +544,21 @@ check('the combo quest tracks peak combo, not tap count', S.quests.active[0].pro
    sell buttons ui.js renders are honey, wax and crafted goods. Both halves below
    earn their keep: the first catches a typo'd track, the second catches a track
    that exists but nothing can reach. */
+group('a paused quest is never handed out');
+G.reset();
+check('some quest is paused', DATA.quests.some((q) => q.paused));
+check('no paused quest is ever active',
+  !S.quests.active.some((q) => (DATA.quests.find((d) => d.id === q.id) || {}).paused));
+{
+  const paused = DATA.quests.find((q) => q.paused);
+  S.quests.active = [{ id: paused.id, progress: 0 }, { id: 'q_plant_1', progress: 0 }];
+  G.saveNow();
+  G.load();
+  check('a paused quest already in a save is dropped',
+    !S.quests.active.some((q) => q.id === paused.id));
+  check('the slot it held was refilled', S.quests.active.length === 3);
+}
+
 group('every quest track is one the game actually emits');
 const gameSrc = fs.readFileSync(path.join(ROOT, 'game.js'), 'utf8');
 const emitted = new Set([...gameSrc.matchAll(/noteQuest\(\s*'([a-z]+)'/g)].map((m) => m[1]));
@@ -2300,12 +2319,20 @@ check('merging up beats selling the parts', BENCH.chain.every((c, i) => (
 )));
 
 group('retiring the craft quests kept the ladder intact');
-const ladderNow = DATA.quests.reduce((a, q) => a + q.rep, 0);
+const ladderNow = LIVE_QUESTS.reduce((a, q) => a + q.rep, 0);
 check('the ladder still reaches Eternal (level 17)', ladderNow >= 760, `sum ${ladderNow}`);
 check('no quest still points at a craft recipe', !DATA.quests.some((q) => q.track === 'craft'));
 check('the bench quests name real chain rungs', DATA.quests
   .filter((q) => q.track === 'merge' || q.track === 'bank')
   .every((q) => !q.key || benchIds().includes(q.key)));
+/* The bench has no screen. Until it gets one, a live quest on either of its
+   tracks is a dead end that eats an active slot forever — which is exactly what
+   'Merge a Posy' did. This is the same shape as the sell-quest guard above. */
+const benchUI = /bench/i.test(fs.readFileSync(path.join(ROOT, 'ui-sheet.js'), 'utf8')
+  .replace(/On the bench[^`]*/g, ''));
+check('bench quests ship only once the bench has a UI',
+  benchUI || !LIVE_QUESTS.some((q) => q.track === 'merge' || q.track === 'bank'),
+  benchUI ? 'bench UI found' : 'no bench UI, so merge/bank quests must stay paused');
 
 /* ---------------- creatures ---------------- */
 

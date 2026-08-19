@@ -213,20 +213,24 @@ These are design constraints, not suggestions. A quest must:
 
 ### The starting ladder
 
-Thirty-three quests, authored in `DATA.quests`. Payouts climb from 5 to 50 so the ladder sums to
+Thirty-six quests authored in `DATA.quests`, of which **thirty-three are live** — the other three
+are paused (below). Payouts climb from 5 to 50 so the live ladder sums to
 **777**, which still lands on level 17 (Eternal Crown). Generic "buy an upgrade" rows were replaced
 with a buy-then-feel tutorial for each early tap upgrade, including Combo Coil (the follow-up is
 "Reach combo 55", which needs the cap the badge just bought). Two long-tail filler rows were
 dropped to keep the total near the seed gate.
 
-Plot unlocks are not quests. Discover quests were not added to the ladder — the Almanac
+Plot unlocks are not quests. **Discover quests were originally kept off the ladder** — the Almanac
 milestones already pay reputation for distinct species, and stacking a quest on the same beat
-would double-pay and blow the 777 total. Snapshot goals ("plant 4 plots at
-once", "own 5 badges", "fill a hive") stay out because counters start at zero when a quest
-becomes active.
+double-pays. Three are on it now (`q_discover_5`, `q_discover_8`, `q_discover_12`), each added as a
+replacement for a quest that had to come off, at that quest's exact reputation — so the double-pay
+happens but the 777 total does not move, which is the number the rule was protecting. Treat the
+double-pay as the price of a replacement rung, not as a licence to add discover quests freely.
+Snapshot goals ("plant 4 plots at once", "own 5 badges", "fill a hive") stay out because counters
+start at zero when a quest becomes active.
 
-| # | id | Text | track | key | qty | rep |
-| --- | --- | --- | --- | --- | --- | --- |
+| # | id | Text | track | key | qty | rep | |
+| --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `q_tap_25` | Tap 25 times | tap | | 25 | 5 |
 | 2 | `q_plant_1` | Plant a seed | plant | | 1 | 5 |
 | 3 | `q_harvest_1` | Harvest a bloom | harvest | | 1 | 5 |
@@ -241,14 +245,16 @@ becomes active.
 | 12 | `q_hive_1` | Build a hive | hive | | 1 | 14 |
 | 13 | `q_honey_3` | Fill 3 honey jars | honey | | 3 | 16 |
 | 14 | `q_harvest_10` | Harvest 10 blooms | harvest | | 10 | 16 |
-| 15 | `q_tea` | Merge a Posy | merge | posy | 1 | 18 |
+| 15 | ~~`q_tea`~~ | ~~Merge a Posy~~ | merge | posy | 1 | 18 | **paused** |
+| 15b | `q_discover_8` | Discover 8 species | discover | | 8 | 18 | stands in for `q_tea` |
 | 16 | `q_charm_1` | Buy Lucky Charm | upgrade | critChance | 1 | 20 |
 | 17 | `q_crit_1` | Land a crit | crit | | 1 | 20 |
 | 18 | `q_rose_3` | Harvest 3 roses | harvest | rose | 3 | 20 |
 | 19 | `q_lavender_3` | Harvest 3 lavender | harvest | lavender | 3 | 22 |
 | 20 | `q_rare` | Harvest a Rare bloom | rarity | rare | 1 | 24 |
 | 21 | `q_star_1` | Buy Star Strike | upgrade | critMult | 1 | 24 |
-| 22 | `q_perfume` | Merge a Bouquet | merge | bouquet | 1 | 32 |
+| 22 | ~~`q_perfume`~~ | ~~Merge a Bouquet~~ | merge | bouquet | 1 | 32 | **paused** |
+| 22b | `q_hold_60` | Hold the flower 60 times | hold | | 60 | 32 | stands in for `q_perfume` |
 | 23 | `q_honey_8` | Fill 8 honey jars | honey | | 8 | 36 |
 | 24 | `q_epic` | Harvest an Epic bloom | rarity | epic | 1 | 40 |
 | 25 | `q_coil_1` | Buy Combo Coil | upgrade | comboMeter | 1 | 28 |
@@ -256,7 +262,8 @@ becomes active.
 | 27 | `q_harvest_25` | Harvest 25 blooms | harvest | | 25 | 42 |
 | 28 | `q_plant_20` | Plant 20 seeds | plant | | 20 | 44 |
 | 29 | `q_peony_3` | Harvest 3 peonies | harvest | peony | 3 | 46 |
-| 30 | `q_craft_2` | Bank 5 bench goods | bank | | 5 | 48 |
+| 30 | ~~`q_craft_2`~~ | ~~Bank 5 bench goods~~ | bank | | 5 | 48 | **paused** |
+| 30b | `q_honey_15` | Fill 15 honey jars | honey | | 15 | 48 | stands in for `q_craft_2` |
 | 31 | `q_marigold_3` | Harvest 3 marigolds | harvest | marigold | 3 | 42 |
 | 32 | `q_harvest_40` | Harvest 40 blooms | harvest | | 40 | 46 |
 | 33 | `q_discover_12` | Discover 12 species | discover | | 12 | 50 |
@@ -270,13 +277,34 @@ quests count jars added to a hive (including Bee Swarm), not collected. Craft qu
 collection (`crafted`), not `startCraft`. Discover quests count the first harvest of a species, so
 they advance off `almanac.first` and never go backwards.
 
-**The three Apothecary quests were repointed at the bench, 2026-08-16**, when merge replaced
-crafting — see [21-potting-bench.md](21-potting-bench.md). They carry 98 of the ladder's 777
-reputation and the suite asserts the ladder still reaches level 17, so removing them was not an
-option; dropping them would also have jammed the strip on an uncompletable goal exactly as the sell
-quests below once did. **Their ids are kept on purpose, against the rule above**: a new id orphans
-any instance already sitting in a player's `quests.active`, and that orphan is the jam being avoided.
-Reputation, ordering and the 777 total are all unchanged.
+### Pausing a quest
+
+`paused: true` on a definition benches it. It is never handed out by `fillActive()`, never drawn as
+a daily by `rollDaily()`, and `ensureProgression()` strips any instance of it out of a save's
+`quests.active` on load — the same pruning path a deleted quest takes, so a player already stranded
+on one gets the slot back the next time the game opens. The definition stays in `DATA.quests` with
+its tuning intact, which is the point: `questById()` still resolves it, so a save that *completed*
+it before the pause is undisturbed. `Game.questPaused(def)` is the single predicate.
+
+The ladder count in the Quests panel and the level-17 assertion in `tools/sim-test.js` both filter
+to live quests. A paused quest that still counted would leave the panel permanently a few short of
+finished and let the suite call a ladder complete that no player can climb.
+
+**The three bench quests are paused as of 2026-08-19.** `q_tea`, `q_perfume` and `q_craft_2` were
+repointed from the Apothecary at the bench on 2026-08-16, but **the potting bench has no UI at all**
+— `benchMergeOnce()` and `benchBank()` exist in `game.js` and nothing in any `ui*.js` file calls
+them, so no player action can reach the `merge` or `bank` track. Handed out, they were exactly the
+jam the sell quests below caused: uncompletable, holding one of the three active slots forever, and
+`stripQuest()` renders `active[0]`, so the strip sat on "Merge a Posy 0/1" and never moved.
+
+Their ids are kept on purpose, against the rule above — but the orphan argument that kept them last
+time is what `ensureProgression()` now handles directly, so pausing is safe where deleting was not.
+Each has a **live stand-in directly under it at the same rung and the same reputation**
+(`q_discover_8`, `q_hold_60`, `q_honey_15`), because the ladder is what carries a player to level 17
+and benching 98 of its 777 reputation would have stranded them three levels short of Eternal Crown.
+A sim-test fails if a live quest appears on the `merge` or `bank` track before `ui-sheet.js` grows a
+bench panel — the same guard shape as the sell track. **Drop the `paused` flags the day the bench
+gets a screen**, and retire the three stand-ins with them if the total needs holding at 777.
 
 **The `sell` track carries no quests, deliberately.** `q_sell_5`, `q_sell_10` and `d_sell_3` were
 removed 2026-08-15: `sell()` only credits the track for `kind === 'flower'`, and `stockRow()` is
@@ -416,9 +444,10 @@ Eternal Crown at level 17, so the last rung is a late-game gift rather than a da
   That undercounts for old saves — harvested-and-spent blooms are gone from inventory — which
   is fine. Already-reached unclaimed milestones then pay, so a returning garden with five
   species in the pantry is not locked out of the 5-rung forever.
-- Discover quests were not added to the ladder. Milestones occupy that payout; a quest on the
-  same beat would double-pay and blow the 777 total. `noteQuest('discover')` is wired so a
-  future quest can read it without another harvest hook.
+- Discover quests were originally kept off the ladder. Milestones occupy that payout; a quest on
+  the same beat double-pays. The three that are on it (`q_discover_5`, `q_discover_8`,
+  `q_discover_12`) each replaced a quest that had to be removed or paused, at the same reputation,
+  so the 777 total the rule protects is unchanged.
 
 **Sim-test:** discovered count never decreases when flowers are spent; a milestone pays once;
 backfill from remaining flowers grants already-reached milestones on first load only.

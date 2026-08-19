@@ -875,9 +875,19 @@ const Game = (() => {
     return DATA.quests.find((q) => q.id === id) || DATA.dailies.find((q) => q.id === id) || null;
   }
 
+  /* A quest whose feature is not finished. It keeps its definition — so a save
+     that already completed it still resolves the id, and its tuning survives —
+     but it is never handed out and never occupies an active slot. See the note
+     over DATA.quests for which ones are benched and why. */
+  function questPaused(def) {
+    return !!(def && def.paused);
+  }
+
   function rollDaily(excludeId) {
-    const pool = DATA.dailies.filter((q) => q.id !== excludeId);
-    const pick = (pool.length ? pool : DATA.dailies)[Math.floor(Math.random() * (pool.length || DATA.dailies.length))];
+    const pool = DATA.dailies.filter((q) => q.id !== excludeId && !questPaused(q));
+    const back = DATA.dailies.filter((q) => !questPaused(q));
+    const use = pool.length ? pool : (back.length ? back : DATA.dailies);
+    const pick = use[Math.floor(Math.random() * use.length)];
     state.quests.daily = { id: pick.id, progress: 0, day: todayKey(), claimed: false };
   }
   function refreshDaily() {
@@ -891,6 +901,7 @@ const Game = (() => {
     const have = new Set(state.quests.active.map((q) => q.id));
     DATA.quests.forEach((def) => {
       if (state.quests.active.length >= 3) return;
+      if (questPaused(def)) return;
       if (done.has(def.id) || have.has(def.id)) return;
       if (def.after && !done.has(def.after)) return;
       state.quests.active.push({ id: def.id, progress: 0 });
@@ -907,12 +918,17 @@ const Game = (() => {
       state.quests.daily = { id: null, progress: 0, day: '', claimed: false };
     }
     if (typeof state.rep !== 'number' || !(state.rep >= 0)) state.rep = 0;
-    // Drop instances whose definition no longer exists. A retired quest left in
-    // `active` can never be claimed, so it holds one of the three slots forever
-    // and jams stripQuest(), which always shows active[0].
-    state.quests.active = state.quests.active.filter((q) => q && questById(q.id));
+    // Drop instances whose definition no longer exists, and instances of a quest
+    // that has since been paused. Either one can never be claimed, so it holds
+    // one of the three slots forever and jams stripQuest(), which always shows
+    // active[0] — that is what stranded players on 'Merge a Posy'.
+    state.quests.active = state.quests.active.filter((q) => {
+      const def = q && questById(q.id);
+      return !!def && !questPaused(def);
+    });
     const daily = state.quests.daily;
-    if (daily.id && !questById(daily.id) && !daily.claimed) daily.id = null; // forces a reroll below
+    const ddef = daily.id ? questById(daily.id) : null;
+    if (daily.id && !daily.claimed && (!ddef || questPaused(ddef))) daily.id = null; // forces a reroll below
     state.level = levelFromRep(state.rep);
     refreshDaily();
     fillActive();

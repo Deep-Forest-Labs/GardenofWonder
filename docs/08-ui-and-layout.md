@@ -60,19 +60,39 @@ The garden itself is a 3×3 grid; the centre cell holds the flower, the other ei
 From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
 `maximum-scale=1, user-scalable=no` to stop accidental pinch-zoom mid-tap.
 
-- **Safe-area insets** are respected on every fixed edge via `env(safe-area-inset-*)`.
+- **Safe-area insets are read through four `:root` variables**, not `env()` at each call site:
+  `--sat`, `--sar`, `--sab`, `--sal`, each `env(safe-area-inset-*, 0px)`. Nothing else in the
+  stylesheet may call `env()` directly. The reason is testing: `env()` cannot be simulated in a
+  desktop browser, so the notched-phone layout was unverifiable without an installed build on a real
+  handset — and that blind spot shipped the dead band under the dock twice. With the indirection,
+  overriding four numbers on `:root` puts the real inset layout on screen in the preview.
 - **`dvh`, not `vh`**, so the layout doesn't jump when mobile browser chrome slides away.
-- **`.game` carries an explicit `height: 100dvh` on top of `inset: 0`**, added 2026-08-18. It also
-  carries a `transform` for the screen shake, which makes it a containing block — and an installed
-  PWA on iOS then resolved `inset: 0` against a viewport that *excluded* the bottom safe area, so the
-  game ended short of the home indicator and showed a band of page background under the dock. `dvh`
-  measures the real thing. `height` deliberately wins over `bottom` here. A browser that does not
-  know `dvh` ignores the line and falls back to the old `inset: 0` behaviour, so it degrades safely.
-- **The page background is the meadow green (`#4fae54`), not the sky.** Anything the browser leaves
-  uncovered is always at the *bottom* of the screen, which is where the game draws lawn — so a stray
-  strip is invisible rather than a band of sky blue. This is the safety net behind the `dvh` fix, not
-  a substitute for it. Note the manifest's `background_color` is separately the sky blue, because
-  that one is the launch splash.
+- **`.game` height comes from `--app-h`, measured in JS**, `height: var(--app-h, 100dvh)` with a
+  plain `height: 100dvh` above it as the first-frame value. `sizeViewport()` in `ui.js` writes
+  `window.innerHeight` to `--app-h` on boot, on `resize` and twice around `orientationchange` (iOS
+  reports the pre-rotation height on the event itself). `.game` carries a `transform` for the screen
+  shake, which makes it a containing block, and an installed PWA on iOS resolved its box against a
+  viewport that *excluded* the bottom safe area — so the game ended short of the home indicator, the
+  lawn and its mown stripes simply stopped, and the dock floated above a band of bare page.
+  `height: 100dvh` was the 2026-08-18 attempt at this and **did not hold on a real installed app**;
+  `window.innerHeight` in standalone with `viewport-fit=cover` is the whole screen in CSS pixels,
+  safe areas included, so it is measured rather than asserted. Deliberately *not*
+  `visualViewport.height`, which shrinks for the keyboard and for pinch-zoom. A browser with neither
+  the var nor `dvh` falls back to `height: auto`, and `inset: 0` stretches it exactly as it always
+  did, so it degrades safely.
+- **The dock stops `--bottom-gap` short of the physical bottom**, defined as
+  `max(10px, calc(var(--sab) - 12px))`. Spending the whole bottom inset put 42px of dead lawn under
+  the dock on a notched phone; the full inset is sized for a swipe-up gesture area, and a row of
+  buttons nobody swipes from does not need all of it. The floor keeps a margin on a phone with no
+  inset at all. `.ui`, `.hollow-dock` and `.hollow-count` all key off it, so the garden and the
+  Hollow sit at the same height. The bottom **sheet** still pads by the full `--sab`, because its
+  content scrolls right up to the edge.
+- **The page background is the meadow, stripes and all** — `#4fae54` under the same 72°
+  `repeating-linear-gradient` that `.meadow` uses. Anything a browser leaves uncovered is always at
+  the *bottom* of the screen, which is where the game draws lawn, so a strip the game fails to reach
+  reads as more lawn rather than as the page showing through. This is the safety net under the
+  `--app-h` measurement, not a substitute for it. Note the manifest's `background_color` is
+  separately the sky blue, because that one is the launch splash.
 - **`touch-action: manipulation`** on buttons removes the 300 ms double-tap delay.
 - **`-webkit-tap-highlight-color: transparent`** kills the grey flash on tap.
 - **`overscroll-behavior: none`** and `overflow: hidden` on the body prevent rubber-banding.

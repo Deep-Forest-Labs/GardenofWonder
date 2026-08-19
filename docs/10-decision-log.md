@@ -5,6 +5,62 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-19 — The bench quests are paused, and the screen is measured rather than asserted
+
+**Changed:** `paused: true` on the three bench quests with three live stand-ins under them, and
+`.game` now sizes off a JS-measured `--app-h`.
+
+**A quest for a feature with no UI is the same bug as a quest on a track nothing emits.** The
+potting bench is fully built in `game.js` and reachable from nowhere — no `ui*.js` file calls
+`benchMergeOnce()` or `benchBank()`. `q_tea`, `q_perfume` and `q_craft_2` were repointed at it on
+2026-08-16 on the assumption a screen was coming, and in the meantime they did precisely what the
+retired sell quests did: took a slot, could never be completed, and jammed the strip on "Merge a
+Posy 0/1" because `stripQuest()` always renders `active[0]`. The guard that catches sell quests now
+catches these too.
+
+**Paused, not deleted, and the difference is the save.** Deleting a definition orphans any instance
+already in a player's `quests.active` — that orphan was the argument for repointing rather than
+removing last time. `ensureProgression()` already pruned unresolvable instances, so extending that
+prune to paused ones makes the flag safe where deletion was not: a stranded player gets the slot
+back on next load, and a player who *completed* the quest before the pause is untouched because
+`questById()` still resolves it. The tuning stays in the file for the day the bench ships.
+
+**Three stand-ins, because the ladder is load-bearing.** The three carry 98 of the ladder's 777
+reputation, and 777 is what lands level 17 and the Eternal Crown. Benching them without replacement
+would have stranded every player three levels short of the last seed — the sim-test would not have
+caught it, because it summed `DATA.quests` including the paused ones. That assertion now filters to
+live quests, which is the fix that matters more than the numbers: a suite that can call a ladder
+complete when no player can climb it is worse than no assertion. `q_discover_8`, `q_hold_60` and
+`q_honey_15` sit at the same rungs and the same reputation, on tracks a player can already reach.
+
+**`100dvh` was a guess and it was wrong.** Yesterday's fix for the band of page under the dock in
+the installed app assumed `dvh` measured the real screen. On a real installed iPhone it did not, and
+the same report came back. `window.innerHeight` in standalone with `viewport-fit=cover` is the whole
+screen in CSS pixels, safe areas included, so `sizeViewport()` writes it to `--app-h` and CSS uses
+it. Explicitly not `visualViewport.height`, which shrinks for the keyboard and pinch-zoom and would
+resize the scenery under both. `height: 100dvh` stays above it as the first frame's value, and a
+browser with neither falls back to `height: auto`, which `inset: 0` stretches exactly as before.
+
+**The deeper problem was that none of this could be looked at.** `env(safe-area-inset-*)` is always
+`0` in a desktop browser, so the notched layout was unverifiable outside an installed build on a
+real phone — which is how the same bug shipped twice. All four insets now come from `:root`
+variables and nothing else in the stylesheet calls `env()`, so overriding four numbers in the
+preview puts the real phone layout on screen. That indirection is the actual deliverable here; the
+height fix is what it made checkable.
+
+**The dock stops `max(10px, --sab - 12px)` short of the bottom, not the full inset.** Spending the
+whole 34px left a band of dead lawn under the buttons. The inset is sized for the swipe-up gesture
+area; a row of buttons nobody swipes from does not need all of it, and the floor keeps a margin on a
+phone with no inset. The bottom sheet still takes the full inset, because its content scrolls to the
+edge.
+
+**Rejected: extending the meadow past the bottom of `.game`.** It cannot work — `.game` clips, so
+nothing painted inside it can reach past where it ends. The body background carries the meadow's
+stripes instead, so a strip the game fails to reach reads as more lawn rather than as the page
+showing through. That is a safety net under the measurement, never a substitute for it.
+
+---
+
 ## 2026-08-18 — Installable and offline, with a worker that cannot strand anyone
 
 **Built:** `manifest.json`, `sw.js` and `icons/`, so the game installs to a home screen and plays

@@ -74,6 +74,18 @@ Fine for a single-player local game. It would matter if leaderboards were ever a
 
 ## Platform
 
+### The potting bench has no UI, and its quests are paused
+
+Everything in [21-potting-bench.md](21-potting-bench.md) — the chain, the merge, the basket, the
+banking escape hatch — is built in `game.js` and reachable from nowhere. No `ui*.js` file calls
+`benchMergeOnce()`, `benchPlace()` or `benchBank()`, so there is no board to drag on and the
+`merge` and `bank` quest tracks can never tick.
+
+`q_tea`, `q_perfume` and `q_craft_2` are `paused: true` as of 2026-08-19 for exactly that reason —
+handed out, they held one of three active slots forever and jammed the quest strip. Three live
+stand-ins carry their 98 reputation. **This is the placeholder to remove when the bench ships a
+screen**, along with the paused flags and the stand-ins.
+
 ### Safari blocks localStorage on `file://`
 
 Saves silently don't persist when the game is opened directly as a file in Safari. `setItem` is
@@ -84,6 +96,20 @@ fine. Documented in the README; serving over HTTP avoids it.
 
 Everything under `jonishua.github.io` shares storage. Not a problem today, but a second game
 published to the same account would need a distinct key prefix.
+
+### An installed PWA's real height cannot be read from CSS alone
+
+`.game` sizes off `--app-h`, written from `window.innerHeight` by `sizeViewport()` in `ui.js`,
+because `inset: 0` and then `height: 100dvh` both came up short of the home indicator on a real
+installed iOS app and left a band of bare page under the dock. The measurement is right, but it is
+a measurement — a browser that lies about `innerHeight`, or a viewport that changes without firing
+`resize` or `orientationchange`, would leave the lawn stopping early again. The striped body
+background is the safety net: a strip the game fails to reach still reads as lawn.
+
+Related and unfixable from the preview: **`env(safe-area-inset-*)` is always `0` in a desktop
+browser**, so no amount of local testing exercises the notched-phone layout. The four `:root`
+variables (`--sat`/`--sar`/`--sab`/`--sal`) exist so it can be simulated by overriding them —
+do that before believing a layout change is safe on a phone.
 
 ### Haptics are absent on iOS Safari
 

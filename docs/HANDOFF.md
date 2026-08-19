@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-18**
+Last updated: **2026-08-19**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -93,6 +93,17 @@ from quests and levels.
 > outline rule, because a Z is a wisp rather than a thing in the world. And the **installed PWA**
 > ended short of the home indicator; `.game` now carries `height: 100dvh` and the page background is
 > meadow green rather than sky blue. See the traps below.
+>
+> **What the phone found stayed found, 2026-08-19.** The PWA still ended short of the home
+> indicator — `height: 100dvh` was a guess about what `dvh` measures in standalone and it was wrong.
+> `.game` now sizes off **`--app-h`, written from `window.innerHeight`** by `sizeViewport()`. More
+> useful than the fix: **safe-area insets moved to four `:root` variables** so the notched layout can
+> finally be simulated in the preview, because `env()` reads `0` on a desktop and that is why this
+> shipped twice. The dock also stops `max(10px, --sab - 12px)` short of the bottom rather than the
+> whole inset, which was leaving a band of dead lawn under the buttons. And the **three bench quests
+> are paused** — they were being handed out for a merge board with no UI, jamming the strip exactly
+> as the retired sell quests once did. Three live stand-ins hold the ladder at 777. See the traps
+> below.
 >
 > **The loadout is now chosen in the room, 2026-08-18.** Pet and Loadout are **modes** on the
 > Hollow's dock and a tap on a creature spends whichever is armed — sending it out or letting it
@@ -348,9 +359,12 @@ dock tab and the bench fills its basket invisibly. Under the habitat frame it is
 soon whether it gets a panel or gets deleted; dormant code nobody surfaces is what
 [11-known-issues.md](11-known-issues.md) exists to prevent. If it ships, the remaining work is the
 panel in `ui-sheet.js` (port the drag from `tools/merge-spike.html`, and watch the sheet's own
-fling-to-dismiss fighting it) and the dock swap. **Do not remove the Craft quests when that tab
-goes** — they were repointed at the bench and keep their ids on purpose, and they carry 98 of the
-ladder's 777 reputation ([21-potting-bench.md](21-potting-bench.md#quests)).
+fling-to-dismiss fighting it) and the dock swap. **Its three quests are paused as of 2026-08-19** —
+`q_tea`, `q_perfume` and `q_craft_2` were being handed out for a board that does not exist, so they
+sat in the strip uncompletable. They keep their ids and their tuning, and three live stand-ins
+(`q_discover_8`, `q_hold_60`, `q_honey_15`) carry their 98 of the ladder's 777 reputation. **If the
+bench ships a screen, drop the `paused` flags and retire the stand-ins together** — one without the
+other moves the ladder off 777 ([21-potting-bench.md](21-potting-bench.md#quests)).
 
 **The card album vs the creature roster is an open decision.** There are now two collection systems,
 and splitting Completion across two unrelated albums halves the pull of both. Creatures are coupled
@@ -475,13 +489,30 @@ merged to `main` while your local tree still looks current. `git fetch` first.
 no way out. Anything future that switches off gets the same check: *and can they turn it back on
 from here?*
 
-**`.game` needs `height: 100dvh`, not just `inset: 0`.** It carries a `transform` for the screen
-shake, which makes it a containing block — and an installed PWA on iOS then resolves `inset: 0`
-against a viewport that excludes the bottom safe area, ending the game short of the home indicator
-with a band of page background under the dock. The page background is also the **meadow green**
-rather than the sky, so anything left uncovered is invisible against the lawn instead of a band of
-the wrong colour. Neither is reproducible in the desktop preview, which reports `.game` covering
-exactly.
+**`.game`'s height is measured in JS, and `100dvh` is not good enough.** It carries a `transform`
+for the screen shake, which makes it a containing block — and an installed PWA on iOS then resolves
+its box against a viewport that excludes the bottom safe area, ending the game short of the home
+indicator with the lawn stopping and a band of page under the dock. **`height: 100dvh` was tried on
+2026-08-18 and did not hold on a real installed app**; corrected 2026-08-19 to
+`height: var(--app-h, 100dvh)`, where `sizeViewport()` in `ui.js` writes `window.innerHeight` on
+boot, `resize` and twice around `orientationchange`. Not `visualViewport.height` — that shrinks for
+the keyboard and pinch-zoom. The `<body>` background is the meadow **and its stripes**, so anything
+left uncovered still reads as lawn. None of it reproduces in the desktop preview, which reports
+`.game` covering exactly.
+
+**`env(safe-area-inset-*)` is always `0` on the desktop, so never trust a preview on inset layout.**
+That blind spot shipped the band under the dock twice. All four insets now come from `:root`
+variables — `--sat`, `--sar`, `--sab`, `--sal` — and **nothing else in `style.css` may call `env()`
+directly**, so a phone's layout can be put on screen by overriding four numbers:
+`:root{--sat:59px;--sab:34px}` in the preview's devtools. Do that before believing a layout change.
+The dock keys off `--bottom-gap`, `max(10px, calc(var(--sab) - 12px))`, not the whole inset.
+
+**A quest for a feature with no UI jams the strip, and the bench is the live example.** `fillActive()`
+caps at three and `stripQuest()` always renders `active[0]`, so an uncompletable quest holds a slot
+forever and the strip never moves. `paused: true` on a definition is the escape hatch: never handed
+out, stripped from an existing save by `ensureProgression()`, definition and tuning kept. Anything
+that counts quests — the panel's "N left", the suite's level-17 assertion — **must filter to live
+quests**, or it will report a ladder complete that no player can climb.
 
 **A visual state must never depend on a keyframe having run.** Already recorded for the pack badge,
 and it caught the sleeping Zs anyway — they started at `opacity: 0` and faded in, so they were

@@ -457,7 +457,12 @@
     const dailyHtml = ddef && !daily.claimed
       ? questCard(daily, ddef, true)
       : `<p class="sheet-note">Today's quest is done. A new one arrives tomorrow.</p>`;
-    const left = DATA.quests.length - S.quests.done.length;
+    // Paused quests are never handed out, so counting them would leave the
+    // ladder permanently a few short of finished. Done ones can include a
+    // paused id from an older save, so subtract against the live list.
+    const live = DATA.quests.filter((q) => !q.paused);
+    const doneLive = live.filter((q) => S.quests.done.indexOf(q.id) !== -1).length;
+    const left = live.length - doneLive;
     const tail = lv >= 17
       ? 'No new seeds past level 17 until the Market opens. Reputation still fills the bar.'
       : `${left} quest${left === 1 ? '' : 's'} left on the ladder.`;

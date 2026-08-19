@@ -103,3 +103,22 @@ On 2026-08-18, against a live server and then a killed one:
 - **Offline:** with the server stopped, a full reload booted the game — `Game` and `Flora` live, nine
   plots rendered, HUD, scenery and the webfont all correct.
 - **Dev skip:** a plain `localhost` load left zero registrations.
+
+## Standalone is not the same viewport as the browser
+
+Installed, the game is the only thing on screen and there is no browser chrome to absorb a mistake —
+so the two layout bugs the PWA has produced both showed up as the game ending short of the home
+indicator, with the lawn stopping and page background under the dock. Neither reproduced in a
+desktop preview.
+
+- `.game` takes its height from `--app-h`, which `sizeViewport()` in `ui.js` writes from
+  `window.innerHeight`. `inset: 0` alone was wrong (2026-08-18) and `height: 100dvh` was still wrong
+  on a real installed app (2026-08-19). See
+  [08-ui-and-layout.md](08-ui-and-layout.md#mobile-specifics).
+- Safe-area insets come from four `:root` variables so the notched layout can be simulated in a
+  preview by overriding them. `env()` reads `0` on the desktop, which is why this class of bug keeps
+  reaching a real handset before anyone sees it.
+- `<body>` paints the meadow *and its stripes*, so anything left uncovered reads as more lawn.
+
+**Check a layout change against a phone with insets before shipping it.** The suite cannot see any
+of this — `tools/sim-test.js` is headless and never loads a stylesheet.

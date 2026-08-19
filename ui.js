@@ -74,6 +74,21 @@
 
   /** Keep the board a perfect square that fills whatever the stage row offers,
       less the strip reserved for the creature yard beneath it. */
+  /* The one number the whole layout hangs off. `.game` is fixed and carries the
+     shake transform, and an installed iOS PWA resolved its box against a
+     viewport that stopped short of the home indicator — the dock ended up above
+     a band of bare page and the lawn simply stopped. `100dvh` was supposed to
+     be the answer and was not, on a real installed app. `window.innerHeight` is
+     though: in standalone with viewport-fit=cover it is the whole screen in CSS
+     pixels, safe areas included, so we measure it and let CSS use it.
+
+     Deliberately NOT visualViewport.height — that shrinks for the keyboard and
+     for pinch-zoom, and the scenery must not resize under either. */
+  function sizeViewport() {
+    const h = Math.round(window.innerHeight || 0);
+    if (h > 0) document.documentElement.style.setProperty('--app-h', h + 'px');
+  }
+
   function sizeGarden() {
     const st = $('.stage');
     const r = st.getBoundingClientRect();
@@ -738,6 +753,7 @@
     Game.settleCritters();
     buildGarden();
     renderCritters();
+    sizeViewport();
     sizeGarden();
     if (window.ResizeObserver) new ResizeObserver(sizeGarden).observe($('.stage'));
     renderRail();
@@ -747,8 +763,13 @@
     el.game.addEventListener('pointermove', (e) => {
       if (e.pointerType === 'mouse' && flowerBtn) lookAt(e.clientX, e.clientY);
     });
-    window.addEventListener('resize', () => { sizeGarden(); placeCoach(); });
-    window.addEventListener('orientationchange', () => setTimeout(sizeGarden, 250));
+    window.addEventListener('resize', () => { sizeViewport(); sizeGarden(); placeCoach(); });
+    // iOS reports the pre-rotation height on the event itself, and again a beat
+    // later once the safe areas have swapped — so measure twice.
+    window.addEventListener('orientationchange', () => {
+      sizeViewport();
+      setTimeout(() => { sizeViewport(); sizeGarden(); }, 250);
+    });
     document.addEventListener('visibilitychange', () => { if (document.hidden) Game.saveNow(); });
     window.addEventListener('pagehide', () => Game.saveNow());
     // unlock audio on the very first interaction
