@@ -97,14 +97,26 @@ fine. Documented in the README; serving over HTTP avoids it.
 Everything under `jonishua.github.io` shares storage. Not a problem today, but a second game
 published to the same account would need a distinct key prefix.
 
+### An installed iOS app's window is shorter than the screen, and that is not fixable
+
+The window an installed PWA gets on iOS does not reach the bottom of the screen. iOS paints the
+strip below it, using the page's background colour. **Nothing in the page can draw there** — an
+attempt on 2026-08-20 to stretch `.game` to `screen.height` simply pushed the dock out of the window
+where it could not be tapped, and was reverted the same day.
+
+So the strip is made invisible rather than filled: the page background is the same flat `#4fae54`
+the lawn ends on, and nothing may draw a dark edge along the join (the vignette fades out, the
+meadow fades its stripes out over the last 44px, the closed bottom sheet no longer casts its
+shadow). What remains is the dock sitting higher above the physical bottom of the screen than a
+native tab bar would. That is the cost of the platform, not a bug in the layout — and it is worth
+re-checking against **Developer tools → Screen** on a handset before anyone tries again.
+
 ### An installed PWA's real height still cannot be read from CSS alone
 
-Three signals now agree on it rather than one — `inset: 0` on an untransformed `.game`, plus
-`--app-h` as a `min-height` floor from the largest of `innerHeight`, `clientHeight` and (installed
-iOS only) `screen`. That is belt and braces, not a proof: **nobody has yet identified why WebKit
-sized the box short**, only that both previous attempts were made while `.game` carried a transform
-and this one is not. If it comes back, the next thing to try is pinning the dock with its own
-`position: fixed` (see the 2026-08-20 decision-log entry for why that was not done first).
+Two readings of the window agree on it — `inset: 0` on an untransformed `.game`, plus `--app-h` as
+a `min-height` floor from the larger of `innerHeight` and `clientHeight`. Both describe the window,
+which is the only thing the page may size itself to; see the entry above for what happened when
+`screen` was trusted instead.
 
 What is no longer true is that a shortfall *looks* like a bug. The line across the bottom was never
 the missing pixels — it was the **closed bottom sheet's box-shadow** reaching up into the lawn and

@@ -5,6 +5,38 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-20 (later) — The window really is shorter than the screen, and that is the end of the argument
+
+**Changed:** `sizeViewport()` no longer consults `screen`. It maxes `innerHeight` and
+`clientHeight` — the window, and only the window.
+
+**It shipped, and it pushed the dock off the bottom of the window.** The reasoning in the entry
+below was that an installed app's window IS the screen, so a short `innerHeight` had to be WebKit
+under-reporting; the correction was gated on a non-zero bottom inset precisely to avoid the other
+case. On a real iPhone the gate did not hold — the inset is reported whether or not the window
+reaches the indicator — and `.game` grew past the bottom of the window, taking the dock with it.
+The owner's screenshot showed the buttons cut in half.
+
+**`innerHeight` was telling the truth the whole time.** The window an installed iOS app gets does
+not reach the bottom of the screen, iOS paints the strip below it, and no CSS reaches into ground
+the window does not own. Three rounds of this bug were spent looking for a browser that lied. None
+of them was.
+
+**The rule that comes out of it: never stretch the game past the window.** A band of lawn under the
+dock is a blemish. A dock nobody can tap is a dead app. The two failure directions are not
+comparable, and every future attempt at the bottom of the screen has to respect that asymmetry —
+which the `min-height` shape still does, because the browser's own `inset: 0` is now the only thing
+that can grow the box.
+
+**What is left is what should have been the whole fix.** The strip below the window is painted with
+the page's background colour, so it is made *invisible* rather than filled: flat `#4fae54` both
+sides, no stripes to fall out of phase, no vignette, no sheet shadow, nothing drawing a dark edge
+along the join. The dock still sits higher above the physical bottom than a native tab bar would.
+That is the platform, not the layout — and if it is ever to be closed, it will be by learning why
+the window is short, not by drawing outside it.
+
+---
+
 ## 2026-08-20 — The line at the bottom of the screen was a shadow, and the height was only half of it
 
 **Changed:** the shake transform moved from `.game` to a new `#world` wrapper, `--app-h` became

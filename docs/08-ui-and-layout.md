@@ -76,22 +76,23 @@ From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
   common factor was never tested until 2026-08-20. Nothing depends on `.game` being the transformed
   ancestor: the only `position: fixed` descendant in the stylesheet, `.bee-fly`, is appended to
   `document.body` and sits outside the game entirely.
-- **`--app-h` is a floor, not the height.** `.game` reads it as `min-height: var(--app-h, 0px)`, so
-  the box is the **taller** of what the browser says (`inset: 0`) and what JS measured. Whichever
-  signal is short, the other still reaches the bottom, and a stale, late or missing measurement can
-  only fail by doing nothing — the previous `height: var(--app-h)` made a bad measurement
-  authoritative. `sizeViewport()` in `ui.js` takes the largest of `window.innerHeight`,
-  `document.documentElement.clientHeight` and — only when `navigator.standalone === true` **and** the
-  window is as wide as the screen — the orientation-appropriate `screen` dimension, capped at 170px
-  of correction so only a safe-area-sized shortfall is ever fixed up. `navigator.standalone` rather
-  than the display-mode query on purpose: an installed *Android* app's `screen` includes the status
-  and navigation bars, and stretching to it would post the dock underneath them. In standalone it
-  also **holds the tallest reading** for the orientation, because iOS can report a short window
-  during the launch animation and then never fire `resize`; a browser tab is exempt, where the
-  window really does shrink when the toolbars come back. Measured on boot, again at 80/250/600/1200
-  ms, on `resize`, on `pageshow`, on becoming visible, and twice around `orientationchange` (iOS
-  reports the pre-rotation height on the event itself). Deliberately *not* `visualViewport.height`,
-  which shrinks for the keyboard and for pinch-zoom.
+- **`--app-h` is a floor, not the height, and it is the window and only the window.** `.game` reads
+  it as `min-height: var(--app-h, 0px)`, so the box is the taller of what the browser says
+  (`inset: 0`) and what JS measured — a stale, late or missing measurement can then only fail by
+  doing nothing, where the older `height: var(--app-h)` made a bad measurement authoritative.
+  `sizeViewport()` in `ui.js` maxes `window.innerHeight` and
+  `document.documentElement.clientHeight`, which are two readings of the same window. Measured on
+  boot, again at 80/250/600/1200 ms, on `resize`, on `pageshow`, on becoming visible, and twice
+  around `orientationchange` (iOS reports the pre-rotation height on the event itself). Deliberately
+  *not* `visualViewport.height`, which shrinks for the keyboard and for pinch-zoom.
+- **Never stretch the game past the window.** For a few hours on 2026-08-20 `sizeViewport()` also
+  consulted `screen`, on the theory that an installed app's window *is* the screen so a short
+  `innerHeight` had to be WebKit under-reporting. On a real iPhone it pushed the dock off the bottom
+  of the window, where nobody could tap it. **The window really is shorter than the screen there**,
+  iOS paints the strip below it, and no CSS reaches into ground the window does not own —
+  `innerHeight` was right the whole time. A band of lawn under the dock is a blemish; a dock nobody
+  can tap is a dead app. The strip is dealt with by making it invisible instead (see the page
+  background and the two rules under it).
 - **The dock stops `--bottom-gap` short of the physical bottom**, defined as
   `max(10px, calc(var(--sab) - 12px))`. Spending the whole bottom inset put 42px of dead lawn under
   the dock on a notched phone; the full inset is sized for a swipe-up gesture area, and a row of

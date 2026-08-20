@@ -72,88 +72,31 @@
     }
   }
 
-  /* The one number the whole layout hangs off, and the one this project has now
-     got wrong twice on a real installed iPhone: the height of the screen. CSS
-     reads it as `min-height` on `.game`, so everything here can only ever make
-     the box TALLER — a measurement that is late, stale or missing leaves the
-     browser's own `inset: 0` in charge rather than cutting the game short.
+  /* The one number the whole layout hangs off: how tall the window actually is.
+     CSS reads it as `min-height` on `.game`, alongside the browser's own
+     `inset: 0`, and the box is whichever of the two is taller.
 
-     Three signals, largest wins:
-       - `innerHeight`, which is the whole screen in a standalone app with
-         viewport-fit=cover — when it is reported after the launch animation.
-       - `documentElement.clientHeight`, the layout viewport, for the browsers
-         where the two disagree.
-       - `screen`, but only in an installed *iOS* app whose window reaches into
-         the home indicator (see `bottomInset()`), where the window IS the
-         screen. iOS does not swap `screen.width`/`height` on rotation, so the
-         dimension is picked by orientation rather than trusting `height`.
+     It is the window, and ONLY the window. On 2026-08-20 this also consulted
+     `screen`, on the theory that an installed app's window IS the screen and a
+     short `innerHeight` had to be WebKit under-reporting. Shipped to a real
+     iPhone, it pushed the dock clean off the bottom: the window there is
+     genuinely shorter than the screen, iOS paints the strip below it, and no
+     amount of CSS reaches into ground the window does not own. `innerHeight` was
+     telling the truth all along. **Never stretch the game past the window** —
+     a band of lawn under the dock is a blemish, a dock nobody can tap is a dead
+     app. The strip is handled by making it invisible instead: the page is the
+     same flat meadow green iOS fills it with, and nothing draws a dark edge
+     along the join. See 08-ui-and-layout.md.
 
-     Deliberately NOT visualViewport.height — that shrinks for the keyboard and
-     for pinch-zoom, and the scenery must not resize under either. */
-
-  /* Any shortfall we are correcting is safe-area sized. A screen that claims to
-     be more than this much taller than the window is a different situation —
-     an iPad in split view, a resizable window — and there innerHeight is right. */
-  const SAFE_SLACK = 170;
-  let tallest = 0;       // largest height seen so far, in this orientation
-  let tallestWide = false;
-  let insetProbe = null;
-
-  function standalone() {
-    return (window.matchMedia && matchMedia('(display-mode: standalone)').matches)
-      || navigator.standalone === true;
-  }
-
-  /* How far the window reaches into the home indicator, read back from `--sab`
-     rather than `env()` so overriding the four `:root` insets in a desktop
-     preview simulates this too. It is the one number that tells the two ways of
-     ending short apart. A window that OVERLAPS the indicator has an inset here,
-     which means it is full screen and a short `innerHeight` is the browser
-     under-reporting — worth correcting. A window with no inset does not reach
-     the bottom of the screen at all: iOS is painting the strip below it, and
-     stretching the game into ground the window does not own would post the dock
-     off-screen, which is worse than the band it was meant to fix. */
-  function bottomInset() {
-    if (!insetProbe) {
-      insetProbe = document.createElement('div');
-      insetProbe.setAttribute('aria-hidden', 'true');
-      insetProbe.style.cssText =
-        'position:absolute;left:-9999px;top:0;width:0;height:var(--sab,0px);pointer-events:none';
-      document.body.appendChild(insetProbe);
-    }
-    return Math.round(insetProbe.getBoundingClientRect().height);
-  }
-
+     `clientHeight` is in the max because the two disagree on some browsers, and
+     both describe the same window. Deliberately NOT visualViewport.height —
+     that shrinks for the keyboard and for pinch-zoom, and the scenery must not
+     resize under either. */
   function sizeViewport() {
-    const wide = window.innerWidth > window.innerHeight;
-    let h = Math.max(
+    const h = Math.max(
       Math.round(window.innerHeight || 0),
       Math.round(document.documentElement.clientHeight || 0)
     );
-    /* `navigator.standalone` rather than the display-mode query, because this
-       correction is only sound where the window is guaranteed to BE the screen.
-       An installed Android app is not: `screen` there includes the status and
-       navigation bars, and stretching to it would post the dock underneath them.
-       Matching widths is the same check one step further — an iPad window that
-       has been resized is not full screen either, and there innerHeight is
-       already right. */
-    if (navigator.standalone === true && window.screen && bottomInset() > 0) {
-      const sw = Math.round(screen.width || 0);
-      const sh = Math.round(screen.height || 0);
-      const scrW = wide ? Math.max(sw, sh) : Math.min(sw, sh);
-      const scrH = wide ? Math.min(sw, sh) : Math.max(sw, sh);
-      const full = scrW > 0 && Math.round(window.innerWidth) === scrW;
-      if (full && scrH > h && scrH - h <= SAFE_SLACK) h = scrH;
-    }
-    if (standalone()) {
-      /* An installed app cannot shrink without rotating, but it can be measured
-         mid-launch while iOS still reports a short window and then never fire a
-         resize — so hold the tallest reading rather than the latest one. A
-         browser tab is exempt: there the window really does shrink when the
-         toolbars come back. */
-      if (wide !== tallestWide) { tallest = 0; tallestWide = wide; }
-      if (h > tallest) tallest = h; else h = tallest;
-    }
     if (h > 0) document.documentElement.style.setProperty('--app-h', h + 'px');
   }
 

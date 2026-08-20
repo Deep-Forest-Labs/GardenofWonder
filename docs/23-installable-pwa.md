@@ -116,8 +116,9 @@ desktop preview.
   browser says and what JS measured. `inset: 0` alone was wrong (2026-08-18), `height: 100dvh` was
   still wrong (2026-08-19), and both were measured on a transformed box; the third attempt
   (2026-08-20) removes the transform and stops letting any single signal make the box *shorter*.
-  `sizeViewport()` in `ui.js` maxes `innerHeight`, `clientHeight` and, in an installed iOS app whose
-  window is as wide as the screen, `screen` itself. See
+  `sizeViewport()` in `ui.js` maxes `innerHeight` and `clientHeight` — the window, and only the
+  window. A fourth attempt the same day stretched to `screen.height` and **pushed the dock out of
+  the window on a real iPhone**; the window there is genuinely shorter than the screen. See
   [08-ui-and-layout.md](08-ui-and-layout.md#mobile-specifics).
 - Safe-area insets come from four `:root` variables so the notched layout can be simulated in a
   preview by overriding them. `env()` reads `0` on the desktop, which is why this class of bug keeps

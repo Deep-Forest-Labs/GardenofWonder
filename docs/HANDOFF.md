@@ -129,6 +129,14 @@ from quests and levels.
 > `env()` is `0` on a desktop and every round of this bug so far was diagnosed off a photograph.
 > See the traps below.
 >
+> **And the height half of it was wrong, 2026-08-20 (later).** Stretching `.game` to `screen.height`
+> shipped, and on a real iPhone it pushed the **dock out of the window** where it could not be
+> tapped. The window an installed iOS app gets is genuinely shorter than the screen; iOS paints the
+> strip below it; `innerHeight` was telling the truth through all three rounds of this. `--app-h` is
+> back to the window alone. **Never stretch the game past the window** — a band of lawn under the
+> dock is a blemish, a dock nobody can tap is a dead app. What fixes the *look* is the seam work
+> above, which stands: flat green both sides of the join and nothing casting a dark edge along it.
+>
 > **The loadout is now chosen in the room, 2026-08-18.** Pet and Loadout are **modes** on the
 > Hollow's dock and a tap on a creature spends whichever is armed — sending it out or letting it
 > rest, rather than opening the Almanac to do it. The Almanac's Habitat block keeps its toggles,
@@ -521,23 +529,22 @@ containing block, and that is the case WebKit is known to mis-size. As of 2026-0
 on **`#world` inside `.game`**, `.game` is a plain untransformed `position: fixed; inset: 0` box, and
 `--app-h` is a **`min-height` floor** under it rather than its height, so the box is the taller of
 the browser's answer and the JS measurement and a wrong measurement can only fail to help.
-`sizeViewport()` in `ui.js` maxes `innerHeight`, `documentElement.clientHeight` and — only when
-`navigator.standalone === true` and the window is as wide as the screen — `screen`'s own dimension,
-capped at 170px of correction; it also holds the tallest reading per orientation in standalone,
-because iOS can report a short window mid-launch and never fire `resize`. Not
-`visualViewport.height` — that shrinks for the keyboard and pinch-zoom. The `screen` correction is
-gated on the bottom inset being non-zero, because a window with *no* bottom inset genuinely stops
-above the home indicator — iOS paints the strip below it — and stretching there would post the dock
-onto ground the window cannot draw on. **Never put a transform back on `.game`, and never turn
-`--app-h` back into `height`.** The `<body>` background is the meadow
+`sizeViewport()` in `ui.js` maxes `innerHeight` and `documentElement.clientHeight` — **the window,
+and only the window**. Not `visualViewport.height`, which shrinks for the keyboard and pinch-zoom,
+and **not `screen`**: that was tried the same day, on the theory that an installed app's window is
+the screen, and it pushed the dock out of the window on a real iPhone. The window there really is
+shorter than the screen and iOS paints the strip below it. **Never stretch the game past the
+window, never put a transform back on `.game`, and never turn `--app-h` back into `height`.** The `<body>` background is the meadow
 flat `#4fae54`, and **nothing may draw a dark edge along the bottom of `.game`** — the vignette
 fades out, the meadow fades its stripes out over the last 44px, and the closed bottom sheet no
 longer casts its shadow up into the lawn, which is what was drawing the line all along. None of it
 reproduces in the desktop preview, which reports `.game` covering exactly — force
 `.game{height:772px}` there to see the failure, and **compare the RGB either side of the join rather
-than looking at it**. And read **Developer tools → Screen** on the handset before theorising:
-`window` shorter than `screen` *with* a bottom inset is the browser under-reporting; no bottom inset
-means the window really does stop short and wants the opposite fix.
+than looking at it**. And read **Developer tools → Screen** on the handset before theorising — one
+tap on the unlabelled dot beside the gem wallet. It prints `screen`, `window`, `clientHeight`, the
+game box, `--app-h` and both insets. `window` shorter than `screen` is the normal state of an
+installed iOS app, not a browser lying: **the inset being present does not mean the window reaches
+the indicator**, which is exactly the assumption that pushed the dock off the bottom.
 
 **`env(safe-area-inset-*)` is always `0` on the desktop, so never trust a preview on inset layout.**
 That blind spot shipped the band under the dock twice. All four insets now come from `:root`
