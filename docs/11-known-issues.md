@@ -97,14 +97,18 @@ fine. Documented in the README; serving over HTTP avoids it.
 Everything under `jonishua.github.io` shares storage. Not a problem today, but a second game
 published to the same account would need a distinct key prefix.
 
-### An installed PWA's real height cannot be read from CSS alone
+### An installed PWA's real height still cannot be read from CSS alone
 
-`.game` sizes off `--app-h`, written from `window.innerHeight` by `sizeViewport()` in `ui.js`,
-because `inset: 0` and then `height: 100dvh` both came up short of the home indicator on a real
-installed iOS app and left a band of bare page under the dock. The measurement is right, but it is
-a measurement — a browser that lies about `innerHeight`, or a viewport that changes without firing
-`resize` or `orientationchange`, would leave the lawn stopping early again. The striped body
-background is the safety net: a strip the game fails to reach still reads as lawn.
+Three signals now agree on it rather than one — `inset: 0` on an untransformed `.game`, plus
+`--app-h` as a `min-height` floor from the largest of `innerHeight`, `clientHeight` and (installed
+iOS only) `screen`. That is belt and braces, not a proof: **nobody has yet identified why WebKit
+sized the box short**, only that both previous attempts were made while `.game` carried a transform
+and this one is not. If it comes back, the next thing to try is pinning the dock with its own
+`position: fixed` (see the 2026-08-20 decision-log entry for why that was not done first).
+
+What is no longer true is that a shortfall *looks* like a bug: the vignette fades out before the
+lawn, so a game that ends early meets a page of the same flat meadow green and reads as lawn running
+off the bottom rather than as a cut.
 
 Related and unfixable from the preview: **`env(safe-area-inset-*)` is always `0` in a desktop
 browser**, so no amount of local testing exercises the notched-phone layout. The four `:root`

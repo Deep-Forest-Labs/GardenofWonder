@@ -111,14 +111,19 @@ so the two layout bugs the PWA has produced both showed up as the game ending sh
 indicator, with the lawn stopping and page background under the dock. Neither reproduced in a
 desktop preview.
 
-- `.game` takes its height from `--app-h`, which `sizeViewport()` in `ui.js` writes from
-  `window.innerHeight`. `inset: 0` alone was wrong (2026-08-18) and `height: 100dvh` was still wrong
-  on a real installed app (2026-08-19). See
+- `.game` is a plain fixed `inset: 0` box with **no transform** — the shake lives on `#world`
+  inside it — and `--app-h` is a `min-height` floor under it, so the box is the taller of what the
+  browser says and what JS measured. `inset: 0` alone was wrong (2026-08-18), `height: 100dvh` was
+  still wrong (2026-08-19), and both were measured on a transformed box; the third attempt
+  (2026-08-20) removes the transform and stops letting any single signal make the box *shorter*.
+  `sizeViewport()` in `ui.js` maxes `innerHeight`, `clientHeight` and, in an installed iOS app whose
+  window is as wide as the screen, `screen` itself. See
   [08-ui-and-layout.md](08-ui-and-layout.md#mobile-specifics).
 - Safe-area insets come from four `:root` variables so the notched layout can be simulated in a
   preview by overriding them. `env()` reads `0` on the desktop, which is why this class of bug keeps
   reaching a real handset before anyone sees it.
-- `<body>` paints the meadow *and its stripes*, so anything left uncovered reads as more lawn.
+- `<body>` paints the meadow *and its stripes*, so anything left uncovered reads as more lawn — and
+  the vignette fades out before the bottom, so the join has no dark edge to draw a line along.
 
 **Check a layout change against a phone with insets before shipping it.** The suite cannot see any
 of this — `tools/sim-test.js` is headless and never loads a stylesheet.

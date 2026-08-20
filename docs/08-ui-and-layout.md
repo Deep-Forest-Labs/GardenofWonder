@@ -67,19 +67,31 @@ From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
   handset — and that blind spot shipped the dead band under the dock twice. With the indirection,
   overriding four numbers on `:root` puts the real inset layout on screen in the preview.
 - **`dvh`, not `vh`**, so the layout doesn't jump when mobile browser chrome slides away.
-- **`.game` height comes from `--app-h`, measured in JS**, `height: var(--app-h, 100dvh)` with a
-  plain `height: 100dvh` above it as the first-frame value. `sizeViewport()` in `ui.js` writes
-  `window.innerHeight` to `--app-h` on boot, on `resize` and twice around `orientationchange` (iOS
-  reports the pre-rotation height on the event itself). `.game` carries a `transform` for the screen
-  shake, which makes it a containing block, and an installed PWA on iOS resolved its box against a
-  viewport that *excluded* the bottom safe area — so the game ended short of the home indicator, the
-  lawn and its mown stripes simply stopped, and the dock floated above a band of bare page.
-  `height: 100dvh` was the 2026-08-18 attempt at this and **did not hold on a real installed app**;
-  `window.innerHeight` in standalone with `viewport-fit=cover` is the whole screen in CSS pixels,
-  safe areas included, so it is measured rather than asserted. Deliberately *not*
-  `visualViewport.height`, which shrinks for the keyboard and for pinch-zoom. A browser with neither
-  the var nor `dvh` falls back to `height: auto`, and `inset: 0` stretches it exactly as it always
-  did, so it degrades safely.
+- **`.game` is an untransformed fixed box, and the shake moved into `.world`.** `.game` is
+  `position: fixed; inset: 0` with **no transform**; `#world` is the element inside it that carries
+  `translate3d(var(--shake-x), var(--shake-y), 0) rotate(var(--shake-r))` and wraps everything else.
+  A transform makes an element its own containing block, and *that* is the shape of box WebKit has
+  now sized short of the home indicator twice — first with `inset: 0` alone, then with
+  `height: 100dvh` (2026-08-18). Both attempts were made while `.game` was transformed, so the
+  common factor was never tested until 2026-08-20. Nothing depends on `.game` being the transformed
+  ancestor: the only `position: fixed` descendant in the stylesheet, `.bee-fly`, is appended to
+  `document.body` and sits outside the game entirely.
+- **`--app-h` is a floor, not the height.** `.game` reads it as `min-height: var(--app-h, 0px)`, so
+  the box is the **taller** of what the browser says (`inset: 0`) and what JS measured. Whichever
+  signal is short, the other still reaches the bottom, and a stale, late or missing measurement can
+  only fail by doing nothing — the previous `height: var(--app-h)` made a bad measurement
+  authoritative. `sizeViewport()` in `ui.js` takes the largest of `window.innerHeight`,
+  `document.documentElement.clientHeight` and — only when `navigator.standalone === true` **and** the
+  window is as wide as the screen — the orientation-appropriate `screen` dimension, capped at 170px
+  of correction so only a safe-area-sized shortfall is ever fixed up. `navigator.standalone` rather
+  than the display-mode query on purpose: an installed *Android* app's `screen` includes the status
+  and navigation bars, and stretching to it would post the dock underneath them. In standalone it
+  also **holds the tallest reading** for the orientation, because iOS can report a short window
+  during the launch animation and then never fire `resize`; a browser tab is exempt, where the
+  window really does shrink when the toolbars come back. Measured on boot, again at 80/250/600/1200
+  ms, on `resize`, on `pageshow`, on becoming visible, and twice around `orientationchange` (iOS
+  reports the pre-rotation height on the event itself). Deliberately *not* `visualViewport.height`,
+  which shrinks for the keyboard and for pinch-zoom.
 - **The dock stops `--bottom-gap` short of the physical bottom**, defined as
   `max(10px, calc(var(--sab) - 12px))`. Spending the whole bottom inset put 42px of dead lawn under
   the dock on a notched phone; the full inset is sized for a swipe-up gesture area, and a row of
@@ -93,6 +105,12 @@ From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
   reads as more lawn rather than as the page showing through. This is the safety net under the
   `--app-h` measurement, not a substitute for it. Note the manifest's `background_color` is
   separately the sky blue, because that one is the launch splash.
+- **The vignette stops before the lawn does** — `.vignette` is masked with
+  `linear-gradient(180deg, #000 0 74%, transparent 92%)`. It is what made a short box read as a
+  *cut* rather than as lawn: the page behind the game is flat meadow green, so a darkened game edge
+  meeting an undarkened page drew a hard horizontal line across the bottom of the screen. With the
+  fade, any strip the game fails to reach meets lawn of the same value and the join disappears into
+  the mown stripes.
 - **`touch-action: manipulation`** on buttons removes the 300 ms double-tap delay.
 - **`-webkit-tap-highlight-color: transparent`** kills the grey flash on tap.
 - **`overscroll-behavior: none`** and `overflow: hidden` on the body prevent rubber-banding.

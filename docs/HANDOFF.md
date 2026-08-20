@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-19**
+Last updated: **2026-08-20**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -104,6 +104,19 @@ from quests and levels.
 > are paused** — they were being handed out for a merge board with no UI, jamming the strip exactly
 > as the retired sell quests once did. Three live stand-ins hold the ladder at 777. See the traps
 > below.
+>
+> **Third time on the bottom of the screen, 2026-08-20.** The owner's phone still showed a hard
+> green line across the bottom with the dock floating above it, and the failure was reproduced in
+> the preview by forcing `.game` short — it looks exactly like the photograph. The mechanism was
+> never in doubt; **why WebKit sizes the box short still is.** So this pass stops guessing and makes
+> the layout survive being wrong: the **shake transform moved off `.game` onto a new `#world`
+> wrapper** (a transformed fixed box is the one thing both failed attempts had in common),
+> **`--app-h` became a `min-height` floor rather than the height** (so a bad measurement can only
+> fail to help, where before it overrode a browser that may have been right), **`sizeViewport()`
+> maxes three signals** instead of trusting `innerHeight` alone, and **the vignette fades out before
+> the lawn does** — which is what turned a shortfall into a *cut*, since the page behind the game
+> was already the same green. A game forced 80px short now reads as lawn running off the bottom.
+> See the traps below.
 >
 > **The loadout is now chosen in the room, 2026-08-18.** Pet and Loadout are **modes** on the
 > Hollow's dock and a tap on a creature spends whichever is armed — sending it out or letting it
@@ -489,16 +502,23 @@ merged to `main` while your local tree still looks current. `git fetch` first.
 no way out. Anything future that switches off gets the same check: *and can they turn it back on
 from here?*
 
-**`.game`'s height is measured in JS, and `100dvh` is not good enough.** It carries a `transform`
-for the screen shake, which makes it a containing block — and an installed PWA on iOS then resolves
-its box against a viewport that excludes the bottom safe area, ending the game short of the home
-indicator with the lawn stopping and a band of page under the dock. **`height: 100dvh` was tried on
-2026-08-18 and did not hold on a real installed app**; corrected 2026-08-19 to
-`height: var(--app-h, 100dvh)`, where `sizeViewport()` in `ui.js` writes `window.innerHeight` on
-boot, `resize` and twice around `orientationchange`. Not `visualViewport.height` — that shrinks for
-the keyboard and pinch-zoom. The `<body>` background is the meadow **and its stripes**, so anything
-left uncovered still reads as lawn. None of it reproduces in the desktop preview, which reports
-`.game` covering exactly.
+**The bottom of the screen has been fixed three times; treat it as unsolved, not solved.** An
+installed iPhone ends the game short of the home indicator, lawn stopping and page showing under the
+dock. `inset: 0` alone was short (2026-08-18), `height: 100dvh` was short (2026-08-19), and **both
+were measured while `.game` carried the shake transform** — a transform makes an element its own
+containing block, and that is the case WebKit is known to mis-size. As of 2026-08-20 the shake lives
+on **`#world` inside `.game`**, `.game` is a plain untransformed `position: fixed; inset: 0` box, and
+`--app-h` is a **`min-height` floor** under it rather than its height, so the box is the taller of
+the browser's answer and the JS measurement and a wrong measurement can only fail to help.
+`sizeViewport()` in `ui.js` maxes `innerHeight`, `documentElement.clientHeight` and — only when
+`navigator.standalone === true` and the window is as wide as the screen — `screen`'s own dimension,
+capped at 170px of correction; it also holds the tallest reading per orientation in standalone,
+because iOS can report a short window mid-launch and never fire `resize`. Not
+`visualViewport.height` — that shrinks for the keyboard and pinch-zoom. **Never put a transform back
+on `.game`, and never turn `--app-h` back into `height`.** The `<body>` background is the meadow
+**and its stripes** and the vignette now fades out before the bottom, so anything left uncovered
+reads as lawn instead of drawing a line. None of it reproduces in the desktop preview, which reports
+`.game` covering exactly — force `.game{height:772px}` there to see the failure.
 
 **`env(safe-area-inset-*)` is always `0` on the desktop, so never trust a preview on inset layout.**
 That blind spot shipped the band under the dock twice. All four insets now come from `:root`

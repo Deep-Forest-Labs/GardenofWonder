@@ -204,8 +204,10 @@ re-adding — a pattern used in several places.
 **Ambient idle motion.** Stems sway, leaves wave, clouds drift, stars twinkle, empty plots bob,
 affordable prices pulse. All slow, all looping, none demanding attention.
 
-**Shake for impact.** `FX.shake()` writes `--shake-x/y/r` on `#game`, which carries a
-`translate3d` and `rotate`. Magnitudes: 3 for a denial, 5 for Epic, 7 for a crit, 9 for
+**Shake for impact.** `FX.shake()` writes `--shake-x/y/r` on `#game`; the variables inherit to
+`#world` inside it, which is the element carrying the `translate3d` and `rotate`. The transform sits
+on the wrapper rather than on `#game` itself so `#game` stays an untransformed fixed box — see
+[08-ui-and-layout.md](08-ui-and-layout.md#mobile-specifics). Magnitudes: 3 for a denial, 5 for Epic, 7 for a crit, 9 for
 Legendary, 10 for a Wonder.
 
 ### Reduced motion

@@ -89,19 +89,28 @@ html,body{
 
 button{font-family:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
 
+/* The box the whole game is measured against, and the layout's one hard
+   requirement: it has to end exactly at the bottom of the screen. Two attempts
+   missed it on an installed iPhone — `inset: 0` alone, then `height: 100dvh` —
+   and both were made while this element carried the shake transform, which makes
+   it its own containing block and is the case WebKit gets wrong. So the shake
+   moved down to `.world` and this is a plain untransformed fixed box again.
+
+   `min-height` rather than `height` is the belt to that brace: the box is the
+   TALLER of what the browser says (`inset: 0`) and what JS measured (`--app-h`,
+   the largest of innerHeight, clientHeight and, in an installed app, the screen
+   itself). Whichever signal is short, the other one still reaches the bottom, and
+   a stale or missing measurement can only ever fail by doing nothing. */
 .game{
   position:fixed;inset:0;
-  /* A transform makes this a containing block, and iOS then resolves `inset: 0`
-     against a viewport that excludes the bottom safe area — so an installed PWA
-     ended short of the home indicator and showed the page background under the
-     dock. `dvh` was the first attempt and did not hold on a real installed app,
-     so the real screen height is measured in JS and written to --app-h; 100dvh
-     is only what the first frame uses before that runs. `height` wins over
-     `bottom` here, which is what we want. A browser with neither drops back to
-     height:auto, and inset:0 stretches it exactly as it always did. */
-  height:100dvh;
-  height:var(--app-h,100dvh);
+  min-height:var(--app-h,0px);
   overflow:hidden;
+}
+
+/* Everything that shakes. Sits inside the clip so the transform can never drag
+   the game's own edge off the screen. */
+.world{
+  position:absolute;inset:0;
   transform:translate3d(var(--shake-x),var(--shake-y),0) rotate(var(--shake-r));
   will-change:transform;
 }
@@ -216,9 +225,15 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   mask-image:linear-gradient(180deg,#000 0 74%,transparent 100%);
   -webkit-mask-image:linear-gradient(180deg,#000 0 74%,transparent 100%);
 }
+/* Darkens the edges of the world — but never the last stretch of lawn. The page
+   behind the game is flat meadow green, so any strip the game fails to reach has
+   to meet lawn of exactly that colour; a vignette running all the way down drew
+   the join as a hard line, which is what a short box looked like on a phone. */
 .vignette{
   position:absolute;inset:0;
   background:radial-gradient(130% 90% at 50% 42%, transparent 52%, rgba(30,20,50,.20) 100%);
+  mask-image:linear-gradient(180deg,#000 0 74%,transparent 92%);
+  -webkit-mask-image:linear-gradient(180deg,#000 0 74%,transparent 92%);
 }
 
 /* =========================================================

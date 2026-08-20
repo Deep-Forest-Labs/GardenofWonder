@@ -20,109 +20,115 @@
 </head>
 <body>
   <div class="game" id="game">
+    <!-- Everything the shake moves lives in .world, so .game itself stays an
+         untransformed fixed box. A transform on .game made it its own containing
+         block, and that is the shape of box iOS has twice sized short of the
+         home indicator. -->
+    <div class="world" id="world">
 
-    <!-- ============ PARALLAX SCENERY ============ -->
-    <div class="scenery" id="scenery" aria-hidden="true">
-      <div class="sky" id="sky"></div>
-      <div class="celestial" id="celestial"></div>
-      <div class="stars" id="stars"></div>
-      <div class="layer clouds-far" id="cloudsFar"></div>
-      <div class="layer hills-far"></div>
-      <div class="layer clouds-near" id="cloudsNear"></div>
-      <div class="layer hills-mid"></div>
-      <div class="layer hills-near"></div>
-      <div class="layer meadow"></div>
-      <div class="layer fence"></div>
-      <div class="vignette"></div>
-    </div>
-
-    <div class="wonder-veil" id="wonderVeil" aria-hidden="true"></div>
-    <canvas class="fx-canvas" id="fx" aria-hidden="true"></canvas>
-
-    <!-- ============ INTERFACE ============ -->
-    <div class="ui" id="ui">
-      <header class="hud">
-        <div class="wallets">
-          <div class="wallet" id="walletCredits"><span class="w-icon" data-icon="coin"></span><span class="w-num" id="credits">0</span></div>
-          <div class="wallet" id="walletGems"><span class="w-icon" data-icon="gem"></span><span class="w-num" id="gems">0</span></div>
-          <button class="dev-dot" id="btnDev" type="button" aria-label="Developer tools" tabindex="-1"></button>
-        </div>
-        <div class="hud-actions">
-          <button class="round-btn" id="btnAlbum" aria-label="Card album"><span data-icon="star"></span></button>
-          <button class="round-btn" id="btnBonuses" aria-label="Garden almanac and bonuses"><span data-icon="book"></span></button>
-          <button class="round-btn" id="btnSettings" aria-label="Settings"><span data-icon="gear"></span></button>
-        </div>
-      </header>
-
-      <button class="quest-strip" id="questStrip" type="button" aria-label="Current quest">
-        <span class="q-pip-wrap" id="qPipWrap">
-          <span class="q-pip-ring"></span>
-          <span class="q-pip" id="qPip">1</span>
-        </span>
-        <span class="q-bar">
-          <i id="qBar"></i>
-          <span class="q-bar-label">
-            <span class="q-text" id="qText">Tap 25 times</span>
-            <span class="q-count" id="qCount">0 / 25</span>
-          </span>
-        </span>
-        <span class="q-reward" id="qReward"></span>
-      </button>
-
-      <div class="rail" id="rail" aria-live="polite"></div>
-
-      <main class="stage" id="stage">
-        <div class="garden-frame">
-          <div class="garden" id="garden" aria-label="Your garden"></div>
-        </div>
-        <div class="critter-yard" id="critterYard" aria-label="Creatures living in your garden"></div>
-        <button class="burrow-door" id="burrowDoor" type="button" aria-label="Go down to the Hollow">
-          <span class="burrow-mouth"></span>
-          <span class="burrow-label">The Hollow</span>
-        </button>
-      </main>
-      <section class="hollow" id="hollow" aria-label="The Hollow" hidden></section>
-
-      <nav class="dock" id="dock" aria-label="Shops">
-        <button class="dock-btn" data-tab="upgrades">
-          <span class="dock-ico" data-icon="badge"></span>
-          <span class="dock-label">Upgrades</span>
-          <span class="dock-dot" hidden></span>
-        </button>
-        <button class="dock-btn" data-tab="apiary">
-          <span class="dock-ico" data-icon="hive"></span>
-          <span class="dock-label">Apiary</span>
-          <span class="dock-dot" hidden></span>
-        </button>
-        <button class="dock-btn" data-tab="craft">
-          <span class="dock-ico" data-icon="flask"></span>
-          <span class="dock-label">Craft</span>
-          <span class="dock-dot" hidden></span>
-        </button>
-        <button class="dock-btn" data-tab="shop">
-          <span class="dock-ico" data-icon="decor"></span>
-          <span class="dock-label">Shop</span>
-          <span class="dock-dot" hidden></span>
-        </button>
-      </nav>
-    </div>
-
-    <!-- ============ BOTTOM SHEET ============ -->
-    <div class="scrim" id="scrim" hidden></div>
-    <section class="sheet" id="sheet" aria-hidden="true" aria-label="Shop">
-      <div class="sheet-grip" id="sheetGrip"><span></span></div>
-      <div class="sheet-head">
-        <h2 id="sheetTitle">Upgrades</h2>
-        <button class="round-btn ghost" id="sheetClose" aria-label="Close"><span data-icon="close"></span></button>
+      <!-- ============ PARALLAX SCENERY ============ -->
+      <div class="scenery" id="scenery" aria-hidden="true">
+        <div class="sky" id="sky"></div>
+        <div class="celestial" id="celestial"></div>
+        <div class="stars" id="stars"></div>
+        <div class="layer clouds-far" id="cloudsFar"></div>
+        <div class="layer hills-far"></div>
+        <div class="layer clouds-near" id="cloudsNear"></div>
+        <div class="layer hills-mid"></div>
+        <div class="layer hills-near"></div>
+        <div class="layer meadow"></div>
+        <div class="layer fence"></div>
+        <div class="vignette"></div>
       </div>
-      <div class="sheet-tabs" id="sheetTabs"></div>
-      <div class="sheet-body" id="sheetBody"></div>
-    </section>
 
-    <!-- ============ OVERLAYS ============ -->
-    <div class="toasts" id="toasts" aria-live="polite"></div>
-    <div class="banner" id="banner" aria-hidden="true"></div>
-    <div class="coach" id="coach" hidden></div>
+      <div class="wonder-veil" id="wonderVeil" aria-hidden="true"></div>
+      <canvas class="fx-canvas" id="fx" aria-hidden="true"></canvas>
+
+      <!-- ============ INTERFACE ============ -->
+      <div class="ui" id="ui">
+        <header class="hud">
+          <div class="wallets">
+            <div class="wallet" id="walletCredits"><span class="w-icon" data-icon="coin"></span><span class="w-num" id="credits">0</span></div>
+            <div class="wallet" id="walletGems"><span class="w-icon" data-icon="gem"></span><span class="w-num" id="gems">0</span></div>
+            <button class="dev-dot" id="btnDev" type="button" aria-label="Developer tools" tabindex="-1"></button>
+          </div>
+          <div class="hud-actions">
+            <button class="round-btn" id="btnAlbum" aria-label="Card album"><span data-icon="star"></span></button>
+            <button class="round-btn" id="btnBonuses" aria-label="Garden almanac and bonuses"><span data-icon="book"></span></button>
+            <button class="round-btn" id="btnSettings" aria-label="Settings"><span data-icon="gear"></span></button>
+          </div>
+        </header>
+
+        <button class="quest-strip" id="questStrip" type="button" aria-label="Current quest">
+          <span class="q-pip-wrap" id="qPipWrap">
+            <span class="q-pip-ring"></span>
+            <span class="q-pip" id="qPip">1</span>
+          </span>
+          <span class="q-bar">
+            <i id="qBar"></i>
+            <span class="q-bar-label">
+              <span class="q-text" id="qText">Tap 25 times</span>
+              <span class="q-count" id="qCount">0 / 25</span>
+            </span>
+          </span>
+          <span class="q-reward" id="qReward"></span>
+        </button>
+
+        <div class="rail" id="rail" aria-live="polite"></div>
+
+        <main class="stage" id="stage">
+          <div class="garden-frame">
+            <div class="garden" id="garden" aria-label="Your garden"></div>
+          </div>
+          <div class="critter-yard" id="critterYard" aria-label="Creatures living in your garden"></div>
+          <button class="burrow-door" id="burrowDoor" type="button" aria-label="Go down to the Hollow">
+            <span class="burrow-mouth"></span>
+            <span class="burrow-label">The Hollow</span>
+          </button>
+        </main>
+        <section class="hollow" id="hollow" aria-label="The Hollow" hidden></section>
+
+        <nav class="dock" id="dock" aria-label="Shops">
+          <button class="dock-btn" data-tab="upgrades">
+            <span class="dock-ico" data-icon="badge"></span>
+            <span class="dock-label">Upgrades</span>
+            <span class="dock-dot" hidden></span>
+          </button>
+          <button class="dock-btn" data-tab="apiary">
+            <span class="dock-ico" data-icon="hive"></span>
+            <span class="dock-label">Apiary</span>
+            <span class="dock-dot" hidden></span>
+          </button>
+          <button class="dock-btn" data-tab="craft">
+            <span class="dock-ico" data-icon="flask"></span>
+            <span class="dock-label">Craft</span>
+            <span class="dock-dot" hidden></span>
+          </button>
+          <button class="dock-btn" data-tab="shop">
+            <span class="dock-ico" data-icon="decor"></span>
+            <span class="dock-label">Shop</span>
+            <span class="dock-dot" hidden></span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- ============ BOTTOM SHEET ============ -->
+      <div class="scrim" id="scrim" hidden></div>
+      <section class="sheet" id="sheet" aria-hidden="true" aria-label="Shop">
+        <div class="sheet-grip" id="sheetGrip"><span></span></div>
+        <div class="sheet-head">
+          <h2 id="sheetTitle">Upgrades</h2>
+          <button class="round-btn ghost" id="sheetClose" aria-label="Close"><span data-icon="close"></span></button>
+        </div>
+        <div class="sheet-tabs" id="sheetTabs"></div>
+        <div class="sheet-body" id="sheetBody"></div>
+      </section>
+
+      <!-- ============ OVERLAYS ============ -->
+      <div class="toasts" id="toasts" aria-live="polite"></div>
+      <div class="banner" id="banner" aria-hidden="true"></div>
+      <div class="coach" id="coach" hidden></div>
+    </div>
   </div>
 
   <script src="data.js"></script>

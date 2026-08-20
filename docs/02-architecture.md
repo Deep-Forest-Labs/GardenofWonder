@@ -182,7 +182,8 @@ are declarative recipes built from two primitives, `tone()` and `noise()`. Brows
 user gesture before audio starts, so `Sound.init()` is deferred to the first `pointerdown`.
 
 **`fx.js`** — One full-screen canvas plus a DOM layer for floating text. Particle emitters, a
-screen-shake driver that writes CSS variables on `#game`, and haptics. Reads
+screen-shake driver that writes CSS variables on `#game` (read by the `#world` wrapper's
+transform), and haptics. Reads
 `prefers-reduced-motion` once at init and thins or disables effects accordingly.
 
 **`game.js`** — The simulation. State, save/load/migration, economy math, purchases,

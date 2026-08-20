@@ -5,6 +5,62 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-20 — The third attempt at the bottom of the screen, and the first one that cannot make it worse
+
+**Changed:** the shake transform moved from `.game` to a new `#world` wrapper, `--app-h` became
+`min-height` instead of `height`, `sizeViewport()` takes the largest of three signals rather than
+trusting one, and the vignette now fades out before the lawn does.
+
+**Two fixes had already been shipped for this and the owner's phone still showed a hard green line
+across the bottom, with the dock floating above it.** The failure was reproduced in the preview by
+forcing `.game` short: it looks exactly like the photograph. So the mechanism was never in doubt —
+the box ends above the screen and the page shows through. What was in doubt was why, and the honest
+answer is that it still is: `inset: 0` came up short, then `height: 100dvh` came up short, and
+neither can be tested here.
+
+**So the fix is the one that does not need the diagnosis to be right.** Three changes, each
+independently sufficient, chosen because they fail in different directions:
+
+1. **The transform is the one thing both failed attempts had in common.** A transform makes an
+   element its own containing block, and a transformed fixed box is exactly the case WebKit is
+   known to mis-size against the viewport. `.game` carried the shake for no reason other than being
+   the outermost element, so the shake moved to `#world` inside it and `.game` is a plain fixed box
+   again. This is a new hypothesis, not a third guess at the same one.
+2. **`min-height` instead of `height` changes the failure direction.** The box is now the taller of
+   the browser's `inset: 0` and the JS measurement, so a wrong measurement can only fail to help —
+   where `height: var(--app-h)` made a short measurement authoritative and overrode a browser that
+   might have had it right all along. That was the real defect in yesterday's fix: it replaced a
+   signal rather than adding one.
+3. **`window.innerHeight` is no longer taken on its own.** It is maxed with
+   `documentElement.clientHeight` and, in an installed iOS app whose window is as wide as the
+   screen, with `screen`'s own dimension — capped at 170px of correction, so only a safe-area-sized
+   shortfall is ever fixed up. The gate is `navigator.standalone`, not the display-mode query,
+   because an installed *Android* app's `screen` includes the status and navigation bars and
+   stretching to it would post the dock underneath them. Measured again at 80/250/600/1200 ms and on
+   `pageshow`, because iOS can report a short window during the launch animation and then never fire
+   `resize` — and in standalone the tallest reading for the orientation is held, since an installed
+   app cannot shrink without rotating.
+
+**The vignette was what turned a shortfall into a *cut*.** The page behind the game is already flat
+meadow green with the same stripes, so the missing strip was never the wrong colour — but the
+vignette darkened the game's last few pixels and an undarkened page began right under them, drawing
+a hard horizontal line. It now fades to nothing over the bottom 74–92% of the screen, and in the
+preview a game forced 80px short reads as lawn running off the bottom rather than as a cut. That
+matters beyond this bug: the lawn no longer depends on the height being exactly right to look
+right.
+
+**Rejected: painting the lawn past the bottom of `.game`.** Still impossible for the reason recorded
+on 2026-08-19 — `.game` clips — and unclipping it would let the closed bottom sheet, which parks
+itself just below the game's bottom edge, show above the home indicator. Fading the vignette gets
+the same cohesion with nothing to unclip.
+
+**Rejected: pinning the dock with its own `position: fixed`.** It is what a native tab bar does and
+it would be immune to all of this, but the dock is row 5 of the grid that sizes the garden, so
+pulling it out of the flow means the stage no longer knows what space it has. Not worth it while
+three cheaper signals agree.
+
+---
+
 ## 2026-08-19 — The bench quests are paused, and the screen is measured rather than asserted
 
 **Changed:** `paused: true` on the three bench quests with three live stand-ins under them, and
