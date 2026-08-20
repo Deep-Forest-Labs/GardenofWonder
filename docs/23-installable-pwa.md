@@ -122,8 +122,11 @@ desktop preview.
 - Safe-area insets come from four `:root` variables so the notched layout can be simulated in a
   preview by overriding them. `env()` reads `0` on the desktop, which is why this class of bug keeps
   reaching a real handset before anyone sees it.
-- `<body>` paints the meadow *and its stripes*, so anything left uncovered reads as more lawn — and
-  the vignette fades out before the bottom, so the join has no dark edge to draw a line along.
+- `<body>` paints the meadow, flat `#4fae54`, so anything left uncovered reads as more lawn — and
+  **nothing may draw a dark edge above the join**: the vignette fades out before the bottom, the
+  meadow fades its stripes out over the last 44px, and the closed bottom sheet no longer casts its
+  shadow up into the lawn. iOS fills the strip below a short web view with this same colour, so a
+  flat lawn meeting it is invisible either way.
 
 **Check a layout change against a phone with insets before shipping it.** The suite cannot see any
 of this — `tools/sim-test.js` is headless and never loads a stylesheet.

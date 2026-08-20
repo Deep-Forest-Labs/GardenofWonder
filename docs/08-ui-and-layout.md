@@ -99,12 +99,25 @@ From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
   inset at all. `.ui`, `.hollow-dock` and `.hollow-count` all key off it, so the garden and the
   Hollow sit at the same height. The bottom **sheet** still pads by the full `--sab`, because its
   content scrolls right up to the edge.
-- **The page background is the meadow, stripes and all** — `#4fae54` under the same 72°
-  `repeating-linear-gradient` that `.meadow` uses. Anything a browser leaves uncovered is always at
-  the *bottom* of the screen, which is where the game draws lawn, so a strip the game fails to reach
-  reads as more lawn rather than as the page showing through. This is the safety net under the
-  `--app-h` measurement, not a substitute for it. Note the manifest's `background_color` is
-  separately the sky blue, because that one is the launch splash.
+- **The page background is the meadow, and deliberately flat** — `#4fae54`, no stripes. Anything a
+  browser leaves uncovered is always at the *bottom* of the screen, which is where the game draws
+  lawn, so a strip the game fails to reach reads as more lawn rather than as the page showing
+  through; iOS also fills the strip below a short web view with this colour. It carried the mown
+  stripes until 2026-08-20, which was worse than useless: a `repeating-linear-gradient` starts from
+  its own box, so the page's stripes could never line up with `.meadow`'s and the mismatch drew the
+  join as a line. `.meadow::after` now **fades its stripes out over the last 44px** instead, so flat
+  meets flat and there is nothing to see. This is the safety net under the `--app-h` measurement,
+  not a substitute for it. Note the manifest's `background_color` is separately the sky blue,
+  because that one is the launch splash.
+- **Nothing may paint a dark edge along the bottom of `.game`.** Two things did, and between them
+  they are what made a short box read as a *cut* rather than as lawn — the colours already matched,
+  it was the darkening above the join that drew the line. Both are fixed; check this rule before
+  adding any full-bleed overlay or bottom-anchored shadow.
+- **The bottom sheet only casts its shadow when open** — `box-shadow` moved from `.sheet` to
+  `.sheet.open`, with `box-shadow` added to the transition so it fades in with the slide. Parked, the
+  sheet sits just below the game's bottom edge, and `0 -8px 30px` from there painted a dark band up
+  across the lawn that `.game` then clipped square. Measured: with the sheet's shadow suppressed, the
+  pixels above and below a deliberately short game box are *identical*.
 - **The vignette stops before the lawn does** — `.vignette` is masked with
   `linear-gradient(180deg, #000 0 74%, transparent 92%)`. It is what made a short box read as a
   *cut* rather than as lawn: the page behind the game is flat meadow green, so a darkened game edge

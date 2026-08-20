@@ -5,11 +5,13 @@ not the diff — git already has the diff.
 
 ---
 
-## 2026-08-20 — The third attempt at the bottom of the screen, and the first one that cannot make it worse
+## 2026-08-20 — The line at the bottom of the screen was a shadow, and the height was only half of it
 
 **Changed:** the shake transform moved from `.game` to a new `#world` wrapper, `--app-h` became
 `min-height` instead of `height`, `sizeViewport()` takes the largest of three signals rather than
-trusting one, and the vignette now fades out before the lawn does.
+trusting one, the closed bottom sheet stopped casting its shadow, the page background went flat and
+the meadow fades its stripes out, the vignette fades out before the lawn does, and the dev panel
+gained a screen report.
 
 **Two fixes had already been shipped for this and the owner's phone still showed a hard green line
 across the bottom, with the dock floating above it.** The failure was reproduced in the preview by
@@ -48,6 +50,36 @@ a hard horizontal line. It now fades to nothing over the bottom 74–92% of the 
 preview a game forced 80px short reads as lawn running off the bottom rather than as a cut. That
 matters beyond this bug: the lawn no longer depends on the height being exactly right to look
 right.
+
+**The hard line was a box-shadow, and finding it needed pixels rather than eyes.** After the height
+work above, a game forced 80px short still showed a visible join in the preview — so the screenshot
+was decoded and the RGB values above and below the join compared. The lawn's last few pixels were
+`(75,156,75)` against the page's `(79,174,84)`, ramping darker toward the edge: a soft shadow, not a
+colour mismatch. Hiding layers one at a time found it in the **closed bottom sheet**, which parks
+just below the game's bottom edge and threw `0 -8px 30px rgba(44,26,16,.32)` back up into the lawn,
+where `.game` clipped it square. It now casts that shadow only when open. With it gone the two sides
+of the join are *pixel-identical*, and that is the measurement this bug should have been held to
+from the start — three fixes were shipped on the strength of looking at a photograph.
+
+**The colour was never the problem; the darkening above it was.** The same reasoning retired the
+page background's mown stripes, which could never line up with the meadow's because a repeating
+gradient starts from its own box — the meadow fades its own stripes out over the last 44px instead.
+Flat meets flat, whether what is below is the page behind a short game box or the strip iOS paints
+under a short web view.
+
+**A bottom inset of zero means the window does not own the bottom of the screen.** The `screen`
+correction is now gated on `--sab` being non-zero, read back through a probe element. The two ways
+of ending short look identical in a photograph and want opposite fixes: a window that *overlaps* the
+home indicator has a bottom inset, so a short `innerHeight` is the browser under-reporting and
+stretching is right; a window with *no* inset genuinely stops above the indicator, iOS is painting
+the strip below it, and stretching would post the dock into ground the window cannot draw on. Off a
+photograph there is no way to tell — hence the probe, and hence the report below.
+
+**The dev panel now says what the phone thinks its screen is.** `screen`, `window`, `clientHeight`,
+the game box, `--app-h`, both insets, display mode and DPR, on one line in Developer tools. `env()`
+is `0` on a desktop and an installed app has no console, so every previous round of this bug was
+diagnosed from a photograph. One screenshot of that line settles what three rounds of reasoning
+could not.
 
 **Rejected: painting the lawn past the bottom of `.game`.** Still impossible for the reason recorded
 on 2026-08-19 — `.game` clips — and unclipping it would let the closed bottom sheet, which parks

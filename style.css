@@ -71,14 +71,16 @@
 
 html,body{
   height:100%;margin:0;padding:0;
-  /* The meadow, not the sky, and the mown stripes too. Whatever a browser leaves
-     uncovered is always at the BOTTOM of the screen, where the game draws lawn —
-     an installed PWA on iOS showed a band of sky blue under the dock. This is
-     the same fill and the same stripe as .meadow, so a strip the game fails to
-     reach reads as more lawn rather than as the page showing through. It is a
-     safety net under the --app-h measurement, not a substitute for it. */
+  /* The meadow, and deliberately FLAT — the same #4fae54 the lawn ends on, with
+     no stripes. Whatever is left uncovered is always at the BOTTOM of the screen,
+     where the game draws lawn: an installed PWA on iOS showed a band of sky blue
+     under the dock, and iOS also fills the strip below a short web view with this
+     colour. It carried the mown stripes for a while, which was worse than useless
+     — a repeating gradient starts from its own box, so the page's stripes and the
+     meadow's could never line up and the mismatch drew the join as a line. The
+     meadow fades its own stripes out before it ends instead, so flat meets flat
+     and there is nothing to see. */
   background-color:#4fae54;
-  background-image:repeating-linear-gradient(72deg, rgba(255,255,255,.10) 0 6px, transparent 6px 18px);
   font-family:var(--font);
   color:var(--ink);
   overflow:hidden;
@@ -207,9 +209,16 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
     linear-gradient(180deg,#63c266 0 6px,#4fae54 6px 100%);
   box-shadow:inset 0 6px 0 rgba(255,255,255,.22);
 }
+/* Mown stripes, faded out over the last stretch of lawn. The fade is the whole
+   trick behind the bottom of the screen: below the lawn is flat #4fae54, whether
+   that is the page behind a short game box or the strip iOS paints under a short
+   web view, and flat can only meet flat invisibly. Anything textured down there
+   reads as a cut instead. */
 .meadow::after{
   content:'';position:absolute;inset:0;
   background:repeating-linear-gradient(72deg, rgba(255,255,255,.10) 0 6px, transparent 6px 18px);
+  mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
+  -webkit-mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
 }
 .fence{
   bottom:12%;height:56px;
@@ -987,13 +996,17 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   border:4px solid var(--ink);
   border-bottom:0;
   border-radius:28px 28px 0 0;
-  box-shadow:0 -8px 30px rgba(44,26,16,.32);
+  /* No shadow while it is parked. The closed sheet sits just below the game's
+     bottom edge, and a 30px upward blur from there painted a dark band across
+     the bottom of the lawn that `.game` then cut off square — the hard line the
+     bottom of the screen kept showing was this, not just the missing pixels
+     under it. It only casts a shadow when there is something to cast it onto. */
   transform:translateY(102%);
-  transition:transform .34s cubic-bezier(.22,1,.28,1);
+  transition:transform .34s cubic-bezier(.22,1,.28,1), box-shadow .34s ease;
   will-change:transform;
   padding-bottom:var(--sab);
 }
-.sheet.open{transform:translateY(0)}
+.sheet.open{transform:translateY(0);box-shadow:0 -8px 30px rgba(44,26,16,.32)}
 .sheet.dragging{transition:none}
 
 .sheet-grip{padding:9px 0 3px;display:grid;place-items:center;touch-action:none;cursor:grab}

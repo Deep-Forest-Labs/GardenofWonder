@@ -106,9 +106,18 @@ sized the box short**, only that both previous attempts were made while `.game` 
 and this one is not. If it comes back, the next thing to try is pinning the dock with its own
 `position: fixed` (see the 2026-08-20 decision-log entry for why that was not done first).
 
-What is no longer true is that a shortfall *looks* like a bug: the vignette fades out before the
-lawn, so a game that ends early meets a page of the same flat meadow green and reads as lawn running
-off the bottom rather than as a cut.
+What is no longer true is that a shortfall *looks* like a bug. The line across the bottom was never
+the missing pixels — it was the **closed bottom sheet's box-shadow** reaching up into the lawn and
+being clipped square by `.game`, with the vignette and the page's mismatched stripes adding to it.
+All three are gone, and a game forced 80px short now renders *pixel-identical* green on both sides
+of the join. Hold any future change to that bar: decode the screenshot and compare RGB, rather than
+looking at it.
+
+The other half is still open in a way a photograph cannot settle: a window can end short because the
+browser under-reports a full-screen window, or because the window really does stop above the home
+indicator with iOS painting the strip below. `sizeViewport()` tells them apart by the bottom inset
+and only stretches in the first case. **Read the screen report in Developer tools on the handset**
+before touching any of this.
 
 Related and unfixable from the preview: **`env(safe-area-inset-*)` is always `0` in a desktop
 browser**, so no amount of local testing exercises the notched-phone layout. The four `:root`

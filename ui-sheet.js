@@ -982,6 +982,38 @@
     return `<p class="dev-label">${label}</p><div class="dev-row">${buttons}</div>`;
   }
 
+  /* The numbers behind the bottom of the screen, because this bug has now been
+     diagnosed from photographs three times. `env()` is `0` on a desktop and an
+     installed app has no console, so the only way to see what a real phone
+     thinks its screen is, is to have the game say so out loud. Read it on the
+     handset and compare: `window` shorter than `screen` with a bottom inset
+     present means the browser is under-reporting a full-screen window; no bottom
+     inset means the window genuinely stops above the home indicator and iOS is
+     painting the strip below it. Those want opposite fixes. */
+  function screenReport() {
+    const de = document.documentElement;
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute;left:-9999px;top:0;width:0;height:var(--sab,0px)';
+    document.body.appendChild(probe);
+    const sab = Math.round(probe.getBoundingClientRect().height);
+    probe.style.height = 'var(--sat,0px)';
+    const sat = Math.round(probe.getBoundingClientRect().height);
+    probe.remove();
+    const box = document.getElementById('game').getBoundingClientRect();
+    const mode = (window.matchMedia && matchMedia('(display-mode: standalone)').matches)
+      ? 'standalone' : 'browser';
+    return [
+      `screen ${screen.width}×${screen.height}`,
+      `window ${window.innerWidth}×${window.innerHeight}`,
+      `client ${de.clientHeight}`,
+      `game ${Math.round(box.height)} (bottom ${Math.round(box.bottom)})`,
+      `--app-h ${getComputedStyle(de).getPropertyValue('--app-h').trim() || 'unset'}`,
+      `insets ${sat} / ${sab}`,
+      `${mode}${navigator.standalone === true ? ' · ios app' : ''}`,
+      `dpr ${window.devicePixelRatio}`
+    ].join(' · ');
+  }
+
   function renderDev() {
     const pending = Game.Dev.pending();
     const boosted = pending.boost || [];
@@ -1040,6 +1072,7 @@
         <button class="dev-btn" data-dev="level" data-arg="1">+1 level</button>
         <button class="dev-btn" data-dev="level" data-arg="5">+5 levels</button>`)}
       <button class="big-btn" data-dev="clear" data-arg="1">Clear everything armed</button>
+      ${devRow('Screen', `<p class="sheet-note">${screenReport()}</p>`)}
       <p class="sheet-note">Day phase ${(Game.dayPhase() * 100).toFixed(0)}% · ${Game.isNight() ? 'night' : 'day'} ·
       sky now ${Game.currentWeather().name}</p>`;
   }

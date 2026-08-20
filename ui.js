@@ -83,7 +83,8 @@
          viewport-fit=cover — when it is reported after the launch animation.
        - `documentElement.clientHeight`, the layout viewport, for the browsers
          where the two disagree.
-       - `screen`, but only in an installed *iOS* app, where the window IS the
+       - `screen`, but only in an installed *iOS* app whose window reaches into
+         the home indicator (see `bottomInset()`), where the window IS the
          screen. iOS does not swap `screen.width`/`height` on rotation, so the
          dimension is picked by orientation rather than trusting `height`.
 
@@ -96,10 +97,31 @@
   const SAFE_SLACK = 170;
   let tallest = 0;       // largest height seen so far, in this orientation
   let tallestWide = false;
+  let insetProbe = null;
 
   function standalone() {
     return (window.matchMedia && matchMedia('(display-mode: standalone)').matches)
       || navigator.standalone === true;
+  }
+
+  /* How far the window reaches into the home indicator, read back from `--sab`
+     rather than `env()` so overriding the four `:root` insets in a desktop
+     preview simulates this too. It is the one number that tells the two ways of
+     ending short apart. A window that OVERLAPS the indicator has an inset here,
+     which means it is full screen and a short `innerHeight` is the browser
+     under-reporting — worth correcting. A window with no inset does not reach
+     the bottom of the screen at all: iOS is painting the strip below it, and
+     stretching the game into ground the window does not own would post the dock
+     off-screen, which is worse than the band it was meant to fix. */
+  function bottomInset() {
+    if (!insetProbe) {
+      insetProbe = document.createElement('div');
+      insetProbe.setAttribute('aria-hidden', 'true');
+      insetProbe.style.cssText =
+        'position:absolute;left:-9999px;top:0;width:0;height:var(--sab,0px);pointer-events:none';
+      document.body.appendChild(insetProbe);
+    }
+    return Math.round(insetProbe.getBoundingClientRect().height);
   }
 
   function sizeViewport() {
@@ -115,7 +137,7 @@
        Matching widths is the same check one step further — an iPad window that
        has been resized is not full screen either, and there innerHeight is
        already right. */
-    if (navigator.standalone === true && window.screen) {
+    if (navigator.standalone === true && window.screen && bottomInset() > 0) {
       const sw = Math.round(screen.width || 0);
       const sh = Math.round(screen.height || 0);
       const scrW = wide ? Math.max(sw, sh) : Math.min(sw, sh);

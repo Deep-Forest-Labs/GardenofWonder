@@ -105,7 +105,7 @@ from quests and levels.
 > as the retired sell quests once did. Three live stand-ins hold the ladder at 777. See the traps
 > below.
 >
-> **Third time on the bottom of the screen, 2026-08-20.** The owner's phone still showed a hard
+> **The line at the bottom of the screen was a shadow, 2026-08-20.** The owner's phone still showed a hard
 > green line across the bottom with the dock floating above it, and the failure was reproduced in
 > the preview by forcing `.game` short — it looks exactly like the photograph. The mechanism was
 > never in doubt; **why WebKit sizes the box short still is.** So this pass stops guessing and makes
@@ -115,7 +115,18 @@ from quests and levels.
 > fail to help, where before it overrode a browser that may have been right), **`sizeViewport()`
 > maxes three signals** instead of trusting `innerHeight` alone, and **the vignette fades out before
 > the lawn does** — which is what turned a shortfall into a *cut*, since the page behind the game
-> was already the same green. A game forced 80px short now reads as lawn running off the bottom.
+> was already the same green.
+>
+> **And then the pixels were actually measured, which is what should have happened three rounds
+> ago.** With the height work in place a short box *still* showed a join, so the screenshot was
+> decoded: the lawn's last pixels were darker than the page's, ramping toward the edge. It was the
+> **closed bottom sheet's `box-shadow`**, parked just below the game's bottom edge and throwing a
+> 30px blur back up into the lawn for `.game` to clip square. It only casts a shadow when open now.
+> The page background also went **flat** — its mown stripes could never line up with the meadow's,
+> so the meadow fades its own out over the last 44px instead. A game forced 80px short is now
+> **pixel-identical** either side of the join. And **Developer tools has a screen report** —
+> `screen`, `window`, `clientHeight`, the game box, `--app-h`, both insets, display mode — because
+> `env()` is `0` on a desktop and every round of this bug so far was diagnosed off a photograph.
 > See the traps below.
 >
 > **The loadout is now chosen in the room, 2026-08-18.** Pet and Loadout are **modes** on the
@@ -514,11 +525,19 @@ the browser's answer and the JS measurement and a wrong measurement can only fai
 `navigator.standalone === true` and the window is as wide as the screen — `screen`'s own dimension,
 capped at 170px of correction; it also holds the tallest reading per orientation in standalone,
 because iOS can report a short window mid-launch and never fire `resize`. Not
-`visualViewport.height` — that shrinks for the keyboard and pinch-zoom. **Never put a transform back
-on `.game`, and never turn `--app-h` back into `height`.** The `<body>` background is the meadow
-**and its stripes** and the vignette now fades out before the bottom, so anything left uncovered
-reads as lawn instead of drawing a line. None of it reproduces in the desktop preview, which reports
-`.game` covering exactly — force `.game{height:772px}` there to see the failure.
+`visualViewport.height` — that shrinks for the keyboard and pinch-zoom. The `screen` correction is
+gated on the bottom inset being non-zero, because a window with *no* bottom inset genuinely stops
+above the home indicator — iOS paints the strip below it — and stretching there would post the dock
+onto ground the window cannot draw on. **Never put a transform back on `.game`, and never turn
+`--app-h` back into `height`.** The `<body>` background is the meadow
+flat `#4fae54`, and **nothing may draw a dark edge along the bottom of `.game`** — the vignette
+fades out, the meadow fades its stripes out over the last 44px, and the closed bottom sheet no
+longer casts its shadow up into the lawn, which is what was drawing the line all along. None of it
+reproduces in the desktop preview, which reports `.game` covering exactly — force
+`.game{height:772px}` there to see the failure, and **compare the RGB either side of the join rather
+than looking at it**. And read **Developer tools → Screen** on the handset before theorising:
+`window` shorter than `screen` *with* a bottom inset is the browser under-reporting; no bottom inset
+means the window really does stop short and wants the opposite fix.
 
 **`env(safe-area-inset-*)` is always `0` on the desktop, so never trust a preview on inset layout.**
 That blind spot shipped the band under the dock twice. All four insets now come from `:root`
