@@ -60,6 +60,19 @@ The garden itself is a 3×3 grid; the centre cell holds the flower, the other ei
 From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
 `maximum-scale=1, user-scalable=no` to stop accidental pinch-zoom mid-tap.
 
+- **`apple-mobile-web-app-status-bar-style` is `default`, and must stay that way.**
+  `black-translucent` is what a full-bleed design wants and it is a trap on iOS: it hands an
+  installed app a window the height of the screen *minus* the status bar and then pins that window
+  to the **top**, so the game drew under the clock and left a dead strip along the bottom that no
+  CSS can reach. Measured on an iPhone 16 Pro through the dev panel's screen report: screen 874,
+  window 812, insets 62/34 — the window was short by exactly the top inset, and the 34px bottom
+  inset was being reserved for a home indicator that was not even inside the window. `default` puts
+  the window *below* the status bar, where it reaches the bottom of the screen. The cost is the
+  status bar strip, which is drawn from `theme-color`; `updateSky()` writes the current sky colour
+  there on every tick so the strip tracks dawn, day and night rather than sitting sky-blue at
+  midnight. **Three rounds of layout work went into fixing this from inside the page and none of
+  them could have worked.**
+
 - **Safe-area insets are read through four `:root` variables**, not `env()` at each call site:
   `--sat`, `--sar`, `--sab`, `--sal`, each `env(safe-area-inset-*, 0px)`. Nothing else in the
   stylesheet may call `env()` directly. The reason is testing: `env()` cannot be simulated in a
@@ -100,6 +113,12 @@ From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
   inset at all. `.ui`, `.hollow-dock` and `.hollow-count` all key off it, so the garden and the
   Hollow sit at the same height. The bottom **sheet** still pads by the full `--sab`, because its
   content scrolls right up to the edge.
+- **The page background is `--page-fill`, and it tracks the bottom of the screen.** iOS paints any
+  strip below a short window with the page's background colour, so the page has to be whatever the
+  bottom of the screen is showing: the lawn normally, `--paper-2` while a sheet is open (set in
+  `openSheet`/`closeSheet`, the reset delayed 340ms so it does not flip green under a sheet still
+  sliding away). With the status bar style fixed there should be no strip left to paint — this is
+  the belt to that brace, and it costs two lines.
 - **The page background is the meadow, and deliberately flat** — `#4fae54`, no stripes. Anything a
   browser leaves uncovered is always at the *bottom* of the screen, which is where the game draws
   lawn, so a strip the game fails to reach reads as more lawn rather than as the page showing

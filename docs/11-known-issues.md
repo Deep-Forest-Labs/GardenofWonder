@@ -97,19 +97,19 @@ fine. Documented in the README; serving over HTTP avoids it.
 Everything under `jonishua.github.io` shares storage. Not a problem today, but a second game
 published to the same account would need a distinct key prefix.
 
-### An installed iOS app's window is shorter than the screen, and that is not fixable
+### ~~An installed iOS app's window is shorter than the screen~~ — fixed, and never a layout bug
 
-The window an installed PWA gets on iOS does not reach the bottom of the screen. iOS paints the
-strip below it, using the page's background colour. **Nothing in the page can draw there** — an
-attempt on 2026-08-20 to stretch `.game` to `screen.height` simply pushed the dock out of the window
-where it could not be tapped, and was reverted the same day.
+**Fixed 2026-08-20** by changing `apple-mobile-web-app-status-bar-style` from `black-translucent`
+to `default`. Translucent sizes the window to the screen minus the status bar and pins it to the
+top; the strip left over at the bottom is outside the window and unreachable from CSS. Four rounds
+of layout work went at this from inside the page. The one that helped was cosmetic — matching the
+strip's colour so it read as lawn.
 
-So the strip is made invisible rather than filled: the page background is the same flat `#4fae54`
-the lawn ends on, and nothing may draw a dark edge along the join (the vignette fades out, the
-meadow fades its stripes out over the last 44px, the closed bottom sheet no longer casts its
-shadow). What remains is the dock sitting higher above the physical bottom of the screen than a
-native tab bar would. That is the cost of the platform, not a bug in the layout — and it is worth
-re-checking against **Developer tools → Screen** on a handset before anyone tries again.
+Everything from those rounds stays, because it is all independently right: the page background
+follows the bottom of the screen, nothing draws a dark edge along the join, and `--app-h` never
+stretches the game past the window. **If the band ever comes back, read Developer tools → Screen
+first** — `window` shorter than `screen` by exactly the top inset is this bug, not a measurement
+problem.
 
 ### An installed PWA's real height still cannot be read from CSS alone
 

@@ -79,8 +79,12 @@ html,body{
      — a repeating gradient starts from its own box, so the page's stripes and the
      meadow's could never line up and the mismatch drew the join as a line. The
      meadow fades its own stripes out before it ends instead, so flat meets flat
-     and there is nothing to see. */
-  background-color:#4fae54;
+     and there is nothing to see.
+
+     It is a variable because iOS paints any strip below a short window with THIS
+     colour, so it has to be whatever the bottom of the screen is currently
+     showing — lawn normally, the sheet's paper while a sheet is open. */
+  background-color:var(--page-fill,#4fae54);
   font-family:var(--font);
   color:var(--ink);
   overflow:hidden;

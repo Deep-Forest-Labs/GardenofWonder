@@ -6,7 +6,15 @@
   <meta name="theme-color" content="#7ec8f2"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <!-- `default`, NOT `black-translucent`. Translucent hands an installed iOS app a
+       window the height of the screen MINUS the status bar and then pins it to the
+       top, so the game drew under the clock and left a dead strip along the bottom
+       that nothing in the page can reach — measured on an iPhone 16 Pro: screen
+       874, window 812, top inset 62. `default` puts the window below the status
+       bar instead, where it reaches the bottom of the screen and the dock can sit
+       where a dock belongs. The status bar strip takes `theme-color`, which
+       `updateSky()` keeps on the current sky. -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
   <meta name="apple-mobile-web-app-title" content="Garden Wonder"/>
   <meta name="description" content="A cozy tap-and-grow garden full of talking flowers."/>
   <link rel="manifest" href="manifest.json"/>

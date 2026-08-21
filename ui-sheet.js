@@ -20,12 +20,21 @@
   ];
   const SHOP_TABS = TABS.map((t) => t.id);
 
+  /* iOS paints anything below a short window with the page's background colour, so
+     the page has to be whatever the bottom of the screen is showing — otherwise an
+     open sheet ends in a strip of lawn. Harmless where the window does reach the
+     bottom, since nothing is left uncovered there. */
+  function setPageFill(color) {
+    document.documentElement.style.setProperty('--page-fill', color);
+  }
+
   function openSheet(mode, arg) {
     sheetMode = mode;
     sheetArg = arg;
     renderSheet(true);
     el.sheet.classList.add('open');
     el.sheet.setAttribute('aria-hidden', 'false');
+    setPageFill('#ffeecd');   // --paper-2, the colour the sheet ends on
     el.scrim.hidden = false;
     requestAnimationFrame(() => el.scrim.classList.add('show'));
     Sound.resume();
@@ -39,7 +48,13 @@
     el.sheet.style.transform = '';
     el.sheet.setAttribute('aria-hidden', 'true');
     el.scrim.classList.remove('show');
-    setTimeout(() => { if (!sheetMode) el.scrim.hidden = true; }, 300);
+    // Both wait out the slide — flipping the page back to lawn on the first frame
+    // would put a green strip under a sheet that is still on screen.
+    setTimeout(() => {
+      if (sheetMode) return;
+      el.scrim.hidden = true;
+      setPageFill('#4fae54');   // back to the lawn
+    }, 340);
     Sound.play('close');
   }
 

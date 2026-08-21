@@ -38,6 +38,10 @@
     r.setProperty('--star-op', (a.star + (b.star - a.star) * k).toFixed(2));
     r.setProperty('--sun-x', (a.sx + (b.sx - a.sx) * k).toFixed(1) + '%');
     r.setProperty('--sun-y', (a.sy + (b.sy - a.sy) * k).toFixed(1) + '%');
+    /* The status bar strip above an installed app is painted from `theme-color`,
+       and a fixed sky blue would sit over a midnight sky half the day. */
+    const theme = document.querySelector('meta[name="theme-color"]');
+    if (theme) theme.setAttribute('content', mix(a.s1, b.s1, k));
   }
 
   function buildClouds() {

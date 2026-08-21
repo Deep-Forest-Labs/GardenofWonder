@@ -137,6 +137,19 @@ from quests and levels.
 > dock is a blemish, a dock nobody can tap is a dead app. What fixes the *look* is the seam work
 > above, which stands: flat green both sides of the join and nothing casting a dark edge along it.
 >
+> **And then the phone was finally asked, 2026-08-20 (last).** The screen report added an hour
+> earlier said: `screen 402×874 · window 402×812 · insets 62 / 34`. The window is short by
+> **exactly the top inset** — this was never a browser lying about its height, it was
+> **`apple-mobile-web-app-status-bar-style: black-translucent`**, which sizes an installed app's
+> window to the screen minus the status bar and pins it to the top. The game got to draw under the
+> clock and lost the bottom of the screen for it. It is now **`default`**: the window sits below the
+> status bar and reaches the bottom, the dock lands over the home-indicator margin, and the sheet
+> reaches the bottom edge. The strip along the top takes `theme-color`, which `updateSky()` now
+> keeps on the current sky so it is not noon blue at midnight. **Four rounds of layout work went at
+> this from inside the page and none of them could have worked**; the fix that mattered was making
+> the app report its own numbers. `--page-fill` (the page background following the bottom of the
+> screen — lawn, or the sheet's paper) stays as the safety net.
+>
 > **The loadout is now chosen in the room, 2026-08-18.** Pet and Loadout are **modes** on the
 > Hollow's dock and a tap on a creature spends whichever is armed — sending it out or letting it
 > rest, rather than opening the Almanac to do it. The Almanac's Habitat block keeps its toggles,
@@ -521,9 +534,12 @@ merged to `main` while your local tree still looks current. `git fetch` first.
 no way out. Anything future that switches off gets the same check: *and can they turn it back on
 from here?*
 
-**The bottom of the screen has been fixed three times; treat it as unsolved, not solved.** An
-installed iPhone ends the game short of the home indicator, lawn stopping and page showing under the
-dock. `inset: 0` alone was short (2026-08-18), `height: 100dvh` was short (2026-08-19), and **both
+**The bottom of the screen was `black-translucent`, not the layout. Never set it back.**
+`apple-mobile-web-app-status-bar-style` is **`default`**, because translucent sizes an installed
+app's window to the screen minus the status bar and pins it to the top — leaving a strip along the
+bottom that no CSS can reach. Measured: `screen 402×874 · window 402×812 · insets 62/34` on an
+iPhone 16 Pro. Everything below was written while chasing this from inside the page; it is all still
+true and still load-bearing, but none of it was ever going to close the gap. `inset: 0` alone was short (2026-08-18), `height: 100dvh` was short (2026-08-19), and **both
 were measured while `.game` carried the shake transform** — a transform makes an element its own
 containing block, and that is the case WebKit is known to mis-size. As of 2026-08-20 the shake lives
 on **`#world` inside `.game`**, `.game` is a plain untransformed `position: fixed; inset: 0` box, and

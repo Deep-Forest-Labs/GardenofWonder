@@ -5,6 +5,42 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-20 (last) — It was the status bar style all along
+
+**Changed:** `apple-mobile-web-app-status-bar-style` from `black-translucent` to `default`,
+`theme-color` now tracks the sky, and the page background became `--page-fill`, which follows
+whatever the bottom of the screen is showing.
+
+**The screen report ended four rounds of guessing in one screenshot.** An iPhone 16 Pro reported
+`screen 402×874 · window 402×812 · insets 62 / 34`. The window is short by **exactly the top
+inset**, and the 34px bottom inset was being reserved for a home indicator that was not inside the
+window at all. That is not a browser lying about its height. It is `black-translucent`: iOS sizes
+the window to the screen minus the status bar and then pins it to the *top*, so the game gets to
+draw under the clock and loses the bottom of the screen in exchange.
+
+**Which means none of the previous three fixes could ever have worked.** Moving the shake
+transform, `min-height` over `height`, maxing three measurements — all of them describe the window,
+and the window was never the problem. The one that *did* help was cosmetic: making the strip
+invisible by matching its colour. The lesson is not "measure more carefully", it is **when a value
+cannot be fixed from inside the page, stop trying to fix it from inside the page** — and the way to
+find that out was to make the app report its own numbers, which took a fifth of the time all the
+reasoning did.
+
+**The trade is the top of the screen for the bottom of the screen, and the bottom wins.**
+`default` puts the window below the status bar. The sky no longer bleeds behind the clock, and the
+dock finally sits where a dock belongs, over the home indicator margin, with the sheet reaching the
+bottom edge. For an idle game where every interaction is in the bottom third, that is not a close
+call. The status bar strip is drawn from `theme-color`, so `updateSky()` writes the current sky
+colour there each tick rather than leaving a fixed noon blue over a midnight sky. One line reverts
+it if the owner would rather have the full-bleed top back.
+
+**`--page-fill` stays anyway.** iOS paints whatever is left uncovered with the page's background
+colour, so the page follows the bottom of the screen — lawn normally, the sheet's paper while a
+sheet is open. There should be nothing left to paint now, which is exactly when a cheap safety net
+is worth keeping.
+
+---
+
 ## 2026-08-20 (later) — The window really is shorter than the screen, and that is the end of the argument
 
 **Changed:** `sizeViewport()` no longer consults `screen`. It maxes `innerHeight` and

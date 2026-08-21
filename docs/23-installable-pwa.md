@@ -104,6 +104,30 @@ On 2026-08-18, against a live server and then a killed one:
   plots rendered, HUD, scenery and the webfont all correct.
 - **Dev skip:** a plain `localhost` load left zero registrations.
 
+## The status bar style decides whether the app reaches the bottom of the screen
+
+`apple-mobile-web-app-status-bar-style` is **`default`**. It looks like the boring choice next to
+`black-translucent`, and it is the one that works.
+
+`black-translucent` gives an installed app a window sized to the screen *minus* the status bar, then
+pins it to the top of the screen. The game draws under the clock — which is what you wanted — and
+the bottom of the screen is left outside the window entirely, filled by iOS with the page's
+background colour. Nothing in the page can draw there: `position: fixed`, `100dvh`, `inset: 0` and a
+JS-measured height all describe the *window*, and the window stops short.
+
+Measured on an iPhone 16 Pro, via Developer tools → Screen:
+
+| | |
+| --- | --- |
+| `screen` | 402 × 874 |
+| `window` | 402 × 812 |
+| insets (top / bottom) | 62 / 34 |
+
+The window is short by exactly the top inset, and the 34px bottom inset was being reserved for a
+home indicator that sat outside the window. With `default` the window is placed below the status
+bar, reaches the bottom of the screen, and the dock sits where a dock belongs. The strip along the
+top is drawn from `theme-color`, which `updateSky()` keeps on the current sky.
+
 ## Standalone is not the same viewport as the browser
 
 Installed, the game is the only thing on screen and there is no browser chrome to absorb a mistake —
