@@ -38,10 +38,30 @@
     r.setProperty('--star-op', (a.star + (b.star - a.star) * k).toFixed(2));
     r.setProperty('--sun-x', (a.sx + (b.sx - a.sx) * k).toFixed(1) + '%');
     r.setProperty('--sun-y', (a.sy + (b.sy - a.sy) * k).toFixed(1) + '%');
-    /* The status bar strip above an installed app is painted from `theme-color`,
-       and a fixed sky blue would sit over a midnight sky half the day. */
-    const theme = document.querySelector('meta[name="theme-color"]');
-    if (theme) theme.setAttribute('content', mix(a.s1, b.s1, k));
+    setThemeColor(mix(a.s1, b.s1, k));
+  }
+
+  /* The strip iOS draws above an installed app is painted from `theme-color`, and
+     it is the only pixel of that strip we control — the window itself starts below
+     it. So it carries the top of the sky, or it reads as a band of something else
+     stuck above the game.
+
+     Rewriting the attribute is not always enough: a browser that snapshotted the
+     value at launch keeps showing that snapshot while the sky moves on, which is a
+     stale sunset sitting over a midnight sky. Re-inserting the element is the
+     nudge that makes it re-read. Only on a visible change, since this runs every
+     0.6s and the sky moves in fractions of a channel. */
+  let themeNow = '';
+  function setThemeColor(rgb) {
+    if (rgb === themeNow) return;
+    const was = themeNow.match(/\d+/g);
+    const now = rgb.match(/\d+/g);
+    if (was && now && now.every((v, i) => Math.abs(v - was[i]) < 2)) return;
+    themeNow = rgb;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) return;
+    meta.setAttribute('content', rgb);
+    meta.parentNode.insertBefore(meta, meta.nextSibling);
   }
 
   function buildClouds() {

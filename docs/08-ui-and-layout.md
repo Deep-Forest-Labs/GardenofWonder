@@ -70,7 +70,10 @@ From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
   the window *below* the status bar, where it reaches the bottom of the screen. The cost is the
   status bar strip, which is drawn from `theme-color`; `updateSky()` writes the current sky colour
   there on every tick so the strip tracks dawn, day and night rather than sitting sky-blue at
-  midnight. **Three rounds of layout work went into fixing this from inside the page and none of
+  midnight. `setThemeColor()` **re-inserts the meta element** rather than only rewriting its
+  `content`, because a browser that snapshotted the value at launch otherwise keeps showing that
+  snapshot — a stale sunset over a midnight sky. It skips changes under two units per channel, since
+  it runs every 0.6s. **Three rounds of layout work went into fixing this from inside the page and none of
   them could have worked.**
 
 - **Safe-area insets are read through four `:root` variables**, not `env()` at each call site:

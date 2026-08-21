@@ -126,7 +126,13 @@ Measured on an iPhone 16 Pro, via Developer tools → Screen:
 The window is short by exactly the top inset, and the 34px bottom inset was being reserved for a
 home indicator that sat outside the window. With `default` the window is placed below the status
 bar, reaches the bottom of the screen, and the dock sits where a dock belongs. The strip along the
-top is drawn from `theme-color`, which `updateSky()` keeps on the current sky.
+top is drawn from `theme-color`, which `updateSky()` keeps on the current sky — re-inserting the
+meta element, not just rewriting it, so a snapshotted value cannot leave a stale sunset above a
+midnight sky.
+
+**Changing either meta needs the app deleted and re-added to the home screen.** iOS captured the old
+`black-translucent` at install and kept honouring it through force-quits; the owner confirmed a
+delete-and-re-add is what picked up the change.
 
 ## Standalone is not the same viewport as the browser
 
