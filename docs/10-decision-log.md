@@ -5,6 +5,59 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-20 — Keepsakes come from creatures that are out, and a tap opens the whole creature
+
+**Built:** keepsakes gated on tending, collecting removed from the Hollow, and a per-creature sheet
+that carries every verb. 11 new assertions, 834 total. The owner's call, and both halves are better
+than what they replace.
+
+**Only a creature that is out leaves anything.** A rester earns nothing while it is in. The reason
+this is more than a nerf: a decoration costs keepsakes from **two different creatures**, so gating
+supply on the loadout means **the roster has to be rotated to collect every kind**. That turns the
+loadout from a fixed optimum into something you revisit, which is the property the slot limit has
+been reaching for since it was built — and it lands right before mementos become a currency.
+
+**Nothing is lost by resting.** Earnings are banked when a creature goes in and handed back when it
+comes out, and the clock is stamped on both edges so the resting stretch is never credited later.
+Asserted in both directions, because the tempting cheap version — zero it on rest — would take
+something away, and this project does not do that.
+
+**A sleeping creature is still out, so it still leaves keepsakes.** The one-axis rule survives
+untouched: sleep costs the trait, not the mementos.
+
+**The Hollow stopped being a second harvesting screen.** It is where they live; the garden is where
+they work, and that is where you collect. The keepsake badge down there now means "there is
+something waiting for you upstairs", which always has somewhere to go because only a tender earns
+and a tender is in the garden by definition.
+
+**And the modes were a workaround, which the owner spotted.** Pet / Loadout / Feed as armed dock
+verbs existed because there was one tap target and several things to do with it. A **per-creature
+sheet** is the answer that does not make the player arm anything first: portrait, trait at its
+current value, awake and fed state, growth bar, keepsake status, out-or-rest, the three foods, a Pet
+button and the pairs it belongs to — everything about one creature in one place.
+
+**Loadout mode survives as a fast path**, deliberately. Swapping three creatures in a row should not
+be three sheets. It is the only mode left, and the dock's Pet button is now effectively its off
+switch — which is exactly the redundancy the owner predicted when they said to try this *before*
+taking the dock buttons away. That question is now answerable by looking at it rather than by
+argument, which was the point of the sequencing.
+
+**Petting replies inside the panel**, because the flower's speech bubble lives in the garden and is
+hidden while the Hollow is up. A line said through it would have landed nowhere — the same class of
+mistake as centring confetti on a hidden element.
+
+**Three sim-test fixtures assumed a rester still earns** and had to be corrected. One of them,
+`and it goes back when the helper rests`, was resting *both* creatures and would have passed for the
+wrong reason under the new rule; it now rests only the helper it is actually measuring.
+
+**Logged rather than fixed:** a creature that arrives with progress already banked shows a full
+growth bar at ★1 until the next harvest, because `checkCritters()` cannot arrive and grow on one
+call. Unreachable without a seeded save, and fixing it would let a creature arrive at ★3, which
+undoes a designed beat. See [11-known-issues.md](11-known-issues.md).
+
+---
+
+
 ## 2026-08-20 (last) — It was the status bar style all along
 
 **Changed:** `apple-mobile-web-app-status-bar-style` from `black-translucent` to `default`,

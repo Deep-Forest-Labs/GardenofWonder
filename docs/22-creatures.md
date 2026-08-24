@@ -102,6 +102,19 @@ would read.
 Derived from **elapsed time against an absolute timestamp**, the same shape the hives already use, so
 time away counts for free and nothing needs replaying.
 
+**Only a creature that is OUT leaves anything, from 2026-08-20.** A rester earns nothing while it is
+in. This is what makes the loadout decide memento income rather than only trait income — and because
+a decoration costs keepsakes from *two different creatures*, it means **the roster has to be rotated
+to collect every kind**. That turns the loadout from a fixed optimum into something you revisit,
+which is the property the slot limit was always reaching for.
+
+**Nothing is lost by resting.** What a creature had already earned is banked the moment it goes in
+and handed straight back when it comes out; the clock is stamped on both edges so the time spent
+resting is never credited later. Asserted in both directions.
+
+**A sleeping creature is still out, so it still leaves keepsakes.** Punishment on one axis: sleep
+costs the trait, not the mementos.
+
 **They cap.** Three waiting is a small gift; thirty is homework, and homework is what the cosy pillar
 exists to prevent. `settleCritters()` runs once on boot and rolls a capped creature's clock forward
 without paying out, so a creature that has been full for a week is not silently banking time it can
@@ -268,6 +281,28 @@ All five came from playing it on a phone, and four are the kind a screenshot hid
 
 Two placements also had to move: the tending count sat over the crack, where the art is busy enough to
 swallow small white text, and the garden's leftmost creature spot sat under the burrow door.
+
+### A tap on a creature opens everything you can do to it, 2026-08-20
+
+**The Hollow is where they live, not where they work.** Collecting a keepsake happens **up in the
+garden**, where the creature actually is when it is working. Down here it simply exists, and a tap
+opens its own panel instead.
+
+**One creature, one sheet.** Portrait, about line, trait at its current value, awake/fed state, the
+growth bar, what its keepsake is doing, an out-or-rest button, the three foods, a Pet button, and
+the pairs it belongs to. **Modes were a workaround** for having one tap target and several verbs;
+a per-creature sheet is the answer that does not ask the player to arm anything first.
+
+- **Loadout mode survives as a fast path**, because swapping three creatures in a row should not be
+  three sheets. It is the one mode left, and the dock's Pet button is now effectively its off switch.
+- **The dock is deliberately still there.** Feed still opens the roster-wide panel and Decorate is
+  still honest about not existing. Whether Feed and Pet have anything left to do once every verb
+  lives on the creature is the open question this change exists to answer — see the owner's note in
+  [10-decision-log.md](10-decision-log.md).
+- **The keepsake badge in the Hollow now means "there is something waiting for you upstairs."**
+  Only a tender earns, and a tender is in the garden, so the badge always has somewhere to go.
+- **Petting replies inside the panel.** The flower's speech bubble lives in the garden and is hidden
+  while the Hollow is up, so a line said through it would land nowhere.
 
 ### The loadout is chosen in the room, 2026-08-18
 

@@ -86,6 +86,8 @@
       }
       // Only the badges change on a tick; touching anything else restarts motion.
       const tending = Game.critterTending(def.id);
+      // Only a tender earns, and collecting happens in the garden — so this badge
+      // now reads "there is something waiting for you upstairs".
       const gift = Game.keepsakesWaiting(def.id) > 0;
       const fed = Game.critterFed(def.id);
       const asleep = Game.critterAsleep(def.id);
@@ -225,8 +227,13 @@
       const n = e.target.closest('[data-critter]');
       if (!n) return;
       e.preventDefault();
+      /* Down here a creature is at home, not at work. A tap opens everything you
+         can do with it rather than spending itself on whichever dock verb was
+         armed — collecting stays up in the garden, where the creature actually
+         is when it is working. Loadout mode keeps a direct toggle, because
+         swapping three in a row should not be three sheets. */
       if (mode === 'loadout') tendTap(n.dataset.critter);
-      else { UI.tapCritter(n.dataset.critter); syncTenants(); }
+      else UI.openSheet('critter', n.dataset.critter);
     }, { passive: false });
 
     /* Swipe DOWN to go up to the garden. Dragging down pulls the world down past

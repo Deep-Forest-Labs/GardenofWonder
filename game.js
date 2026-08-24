@@ -1789,6 +1789,10 @@ const Game = (() => {
     if (!home) return false;
     if (!on) {
       if (!home.tending) return false;
+      /* Bank what it earned before it goes in, so resting never costs anything,
+         and stamp the clock so the time it spends in is never credited later. */
+      home.gifts = keepsakesWaiting(id);
+      home.fed = nowSeconds();
       home.tending = false;
       save();
       emit('panels');
@@ -1797,6 +1801,8 @@ const Game = (() => {
     if (home.tending) return false;
     if (habitatFree() <= 0) return false;
     home.tending = true;
+    // Earning starts now, not from whenever this one last worked.
+    home.fed = nowSeconds();
     save();
     notePairs();
     emit('panels');
@@ -2009,6 +2015,12 @@ const Game = (() => {
     if (!def || !home) return 0;
     const k = def.keepsake;
     const cap = pairActive('pollination') ? Math.max(k.cap, PAIR_TUNING.pollinationCap) : k.cap;
+    /* Only a creature that is OUT leaves anything. A rester keeps whatever it had
+       banked when it went in and stops earning — which is what makes the loadout
+       decide memento income, and why the roster has to be rotated to collect
+       every kind. Nothing is lost: the bank is handed back the moment it is sent
+       out again. See docs/22-creatures.md. */
+    if (!home.tending) return Math.max(0, Math.min(cap, home.gifts));
     const since = home.fed || home.since;
     // Floored at a quarter of the authored wait, so no stack of helpers can turn
     // keepsakes into a tap-to-print button.

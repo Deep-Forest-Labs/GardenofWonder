@@ -2651,14 +2651,18 @@ restAll();
 // keepsakeSpeed -> everyone's keepsakes, including its own
 (() => {
   const pipK = G.critterById('pip').keepsake;
+  // Only a creature that is OUT earns, so the one being measured has to be out.
+  S.critters.pip.tending = true;
   S.critters.pip.since = G.nowSeconds() - pipK.every / 2;
   S.critters.pip.fed = 0;
   S.critters.pip.gifts = 0;
   check('half a wait yields nothing on its own', G.keepsakesWaiting('pip') === 0);
   S.critters.bumble.tending = true;
   check('a helper makes it arrive early', G.keepsakesWaiting('pip') >= 1);
-  restAll();
+  // Rest only the HELPER — resting Pip too would pass this for the wrong reason.
+  S.critters.bumble.tending = false;
   check('and it goes back when the helper rests', G.keepsakesWaiting('pip') === 0);
+  restAll();
 })();
 
 /* Every pair, proved on and proved off. The "off" half matters more than the
@@ -2734,8 +2738,8 @@ const PT = PAIR_TUNING;
   S.critters.pip.fed = 0;
   S.critters.pip.gifts = 0;
   restAll();
+  S.critters.pip.tending = true;   // a rester earns nothing to cap in the first place
   check('the normal cap holds', G.keepsakesWaiting('pip') === pipK.cap);
-  S.critters.pip.tending = true;
   S.critters.bumble.tending = true;
   check('the pair raises the cap', G.keepsakesWaiting('pip') === PT.pollinationCap);
   restAll();
@@ -2787,6 +2791,7 @@ const PT = PAIR_TUNING;
   restAll();
   S.critters.bramble.tending = true;
   S.critters.bumble.tending = true;
+  S.critters.pip.tending = true;   // a rester leaves nothing to collect
   S.critters.pip.since = G.nowSeconds() - G.critterById('pip').keepsake.every * 99;
   S.critters.pip.fed = 0;
   S.critters.pip.gifts = 0;
@@ -3182,6 +3187,48 @@ localStorage.setItem('gw-save', JSON.stringify({
 G.load();
 check('an edited save cannot hold a boost forever',
   G.critterFedFor(PIP.id) <= G.foodCapSeconds() + 1);
+
+group('only a creature that is out leaves keepsakes');
+G.reset();
+unlockTo(HABITAT_SLOT_LEVELS[1]);
+S.discovered[PIP.attract.seed] = 999;
+G.checkCritters();
+G.setTending(PIP.id, true);
+S.critters[PIP.id].fed = G.nowSeconds() - K.every * 2;
+S.critters[PIP.id].gifts = 0;
+const outEarns = G.keepsakesWaiting(PIP.id);
+check('a tender earns on the clock', outEarns >= 2, `got ${outEarns}`);
+
+/* Resting banks what was earned rather than binning it — nothing is ever taken
+   away — and stops the clock so the time spent in is never credited later. */
+G.setTending(PIP.id, false);
+check('resting keeps what it had already earned', G.keepsakesWaiting(PIP.id) === outEarns);
+advance(K.every * 5, 300);
+check('and earns nothing more while it rests', G.keepsakesWaiting(PIP.id) === outEarns);
+check('so a rester cannot be farmed by leaving it in',
+  G.keepsakesWaiting(PIP.id) < K.cap || outEarns >= K.cap);
+
+G.setTending(PIP.id, true);
+check('the bank comes straight back out with it', G.keepsakesWaiting(PIP.id) === outEarns);
+check('and the resting stretch was not credited', G.keepsakesWaiting(PIP.id) < K.cap
+  || outEarns >= K.cap);
+advance(K.every + 5, 60);
+check('the clock restarts from when it went out', G.keepsakesWaiting(PIP.id) === Math.min(K.cap, outEarns + 1));
+
+group('a sleeping creature is still out, so it still leaves keepsakes');
+G.reset();
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+G.checkCritters();
+S.credits = 1e6;
+S.critters[PIP.id].awakeUntil = 0;
+S.critters[PIP.id].fed = G.nowSeconds() - K.every * 2;
+S.critters[PIP.id].gifts = 0;
+check('it is asleep', G.critterAsleep(PIP.id));
+check('and not working', !G.critterWorking(PIP.id));
+/* Punishment on one axis. Sleep costs the trait; it does not cost the mementos,
+   which are the currency the Hollow's decorating reads. */
+check('but it still leaves keepsakes', G.keepsakesWaiting(PIP.id) >= 2);
+check('which can still be collected', Boolean(G.collectKeepsakes(PIP.id)));
 
 group('the dev cheats can put a creature to sleep and get it back');
 G.reset();

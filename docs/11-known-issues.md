@@ -51,6 +51,22 @@ because panel copy is the owner's call.
 
 *Where:* `ui-sheet.js` `renderBonuses()`.
 
+### A creature that arrives with progress already banked shows a full growth bar at ★1
+
+`checkCritters()` returns immediately after a creature moves in, so it cannot arrive **and** grow on
+the same call. Its panel then reads e.g. `24 / 24 Rose to ★2` while it is still ★1, until the next
+harvest catches it up.
+
+**Unreachable in normal play, which is why it is here rather than fixed.** `checkCritters()` runs on
+every harvest, so the arrival threshold is crossed at exactly the authored count. `discovered` cannot
+jump while away either, because offline income is a closed-form rate and never replays harvests. It
+takes a seeded save or a dev cheat to bank progress ahead of an arrival.
+
+Fixing it means falling through to the growth loop after an arrival, which would let a creature
+**arrive at ★3** — and arriving small is a designed beat, not an accident
+([22-creatures.md](22-creatures.md#stars--a-creature-is-raised-not-found)). Worth deciding
+deliberately rather than as a side effect.
+
 ### `harvestsThisSession` is not per session
 
 It's saved and never reset, making it a lifetime counter. The name will mislead. Behaviour is
@@ -215,7 +231,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 815 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 834 assertions over the
 economy, progression, saves and mastery. Everything above that line — the six `ui-*` files,
 layout, the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI

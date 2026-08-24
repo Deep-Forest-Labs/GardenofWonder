@@ -65,12 +65,17 @@
       upgrades: 'Upgrades', apiary: 'Apiary', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
       quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
+      critter: '',
       album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
     };
     let title = titles[sheetMode] || '';
     if (sheetMode === 'cardset') {
       const set = ALBUM.sets.find((x) => x.id === sheetArg);
       if (set) title = set.name;
+    }
+    if (sheetMode === 'critter') {
+      const c = Game.critterById(sheetArg);
+      if (c) title = c.name;
     }
     el.sheetTitle.textContent = title;
 
@@ -90,7 +95,7 @@
     const render = {
       upgrades: renderUpgrades, apiary: renderApiary, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
-      dev: renderDev, welcome: renderWelcome, feed: renderFeed,
+      dev: renderDev, welcome: renderWelcome, feed: renderFeed, critter: renderCritter,
       album: renderAlbum, cardset: renderCardSet, pack: renderPack
     }[sheetMode];
     el.sheetBody.innerHTML = render ? render() : '';
@@ -614,6 +619,107 @@
         ${priceTag(f.cost, 'credits', can)}
       </button>`;
     }).join('');
+  }
+
+  /* One creature, and everything you can do to it. Tapping a pet in the Hollow
+     opens this rather than spending the tap on whichever dock verb was armed —
+     modes were a workaround for having one tap target and several verbs, and a
+     sheet is the answer that does not make the player arm anything first. */
+  function renderCritter() {
+    const def = Game.critterById(sheetArg);
+    if (!def || !Game.critterHere(def.id)) return '<p class="stat-note">Nobody by that name lives here.</p>';
+    const id = def.id;
+    const tending = Game.critterTending(id);
+    const asleep = Game.critterAsleep(id);
+    const fed = Game.critterFed(id);
+    const level = Game.critterLevel(id);
+    const trait = def.trait ? CREATURE_TRAITS[def.trait.id] : null;
+    const now = trait ? Game.critterTraitAt(def, Game.critterWorkLevel(id)) : 0;
+    const goal = Game.critterGoal(id);
+    const seed = Game.seedById(def.attract.seed);
+    const held = Game.mementoCount(def.keepsake.id);
+    const waiting = Game.keepsakesWaiting(id);
+    const canTend = tending || Game.habitatFree() > 0;
+
+    const state = !tending
+      ? `<span class="food-state"><span>Resting at home. It earns nothing and leaves nothing
+         while it is in.</span></span>`
+      : asleep
+        ? '<span class="food-state out"><span>Fast asleep, and not working. Feed it to wake it up.</span></span>'
+        : `<span class="food-state${fed ? ' on' : ''}">${Icons.get('clock')}<span>Up for
+           <b data-span="${Math.round(Game.nowSeconds() + Game.critterAwakeFor(id))}">${
+             fmtSpan(Game.critterAwakeFor(id))}</b>${fed
+             ? `, well fed for <b data-span="${Math.round(Game.nowSeconds() + Game.critterFedFor(id))}">${
+                 fmtSpan(Game.critterFedFor(id))}</b> — working like ★${Game.critterWorkLevel(id)}.`
+             : `, working like ★${level}. Not well fed.`}</span></span>`;
+
+    const grow = goal
+      ? `<span class="critter-grow">
+           <i style="transform:scaleX(${Math.min(1, goal.have / goal.qty).toFixed(3)})"></i>
+           <span>${fmt(Math.min(goal.have, goal.qty))} / ${fmt(goal.qty)} ${seed ? seed.name : ''} to ★${goal.level}</span>
+         </span>`
+      : '<span class="critter-note">Fully grown.</span>';
+
+    /* Keepsakes are collected out in the garden, where the creature is actually
+       working. Down here it is at home and simply exists — so this says what is
+       waiting and where, rather than offering a button that would make the
+       Hollow a second harvesting screen. */
+    const keep = !tending
+      ? `<span class="critter-memento${held ? '' : ' none'}">${Icons.get('gift')}${
+          def.keepsake.name} <b>×${fmt(held)}</b> kept</span>`
+      : waiting
+        ? `<span class="critter-memento">${Icons.get('gift')}<b>${waiting} ${def.keepsake.name}</b>
+           waiting — tap it up in the garden</span>`
+        : `<span class="critter-memento none">${Icons.get('gift')}${def.keepsake.name} <b>×${
+            fmt(held)}</b> kept</span>`;
+
+    const pairs = CREATURE_PAIRS.filter((p) => p.of.indexOf(id) !== -1);
+
+    return `<div class="panel critter-panel">
+      <div class="cp-head${asleep ? ' asleep' : ''}">
+        <span class="cp-face${asleep ? ' asleep' : ''}">${Critters.draw(def)}</span>
+        <span class="cp-who">
+          <b>${def.name}</b><em>${def.species}</em>
+          ${critterStars(level, fed && !asleep)}
+        </span>
+      </div>
+      <p class="cp-about">${def.about}</p>
+      ${trait ? `<span class="critter-trait">${Icons.get(trait.icon)}<b>${trait.name}:</b> ${trait.desc(now)}</span>` : ''}
+      ${state}
+      ${grow}
+      ${keep}
+
+      <h3>${Icons.get('star')} Out or resting</h3>
+      <p class="stat-note">${Game.habitatUsed()} of ${Game.habitatSlots()} tending${
+        canTend ? '' : ' — rest someone else to bring this one out'}. Only a creature that is out
+        works, and only one that is out leaves keepsakes.</p>
+      <button class="big-btn" data-tend="${id}" data-on="${tending ? '1' : '0'}"
+        ${canTend ? '' : 'disabled'}>${tending ? 'Send it home to rest' : 'Send it out to tend'}</button>
+
+      <h3>${Icons.get('honey')} Feed</h3>
+      ${tending
+        ? `<span class="food-row">${foodButtons(id)}</span>`
+        : '<p class="stat-note">Send it out first — food is for a creature that is working.</p>'}
+
+      <h3>${Icons.get('sprout')} Say hello</h3>
+      <button class="big-btn" data-pet="${id}">Pet ${def.name}</button>
+      <p class="cp-said" id="cpSaid">${def.lines.idle[0]}</p>
+
+      ${pairs.length ? `<h3>${Icons.get('clover')} Companions</h3>${pairs.map((pair) => {
+        const on = Game.pairActive(pair.id);
+        const seen = S.pairsSeen.indexOf(pair.id) !== -1;
+        const other = Game.critterById(pair.of.find((x) => x !== id));
+        return `<div class="pair-row${on ? ' on' : ''}${seen ? '' : ' dim'}">
+          <span class="pair-faces"><span class="pair-face${
+            Game.critterHere(other.id) ? '' : ' unmet'}">${Critters.draw(other)}</span></span>
+          <span class="pair-copy">
+            <span class="pair-name">${seen ? pair.name : '???'}${on ? '<em>active</em>' : ''}</span>
+            <span class="pair-note">${seen ? pair.desc : `Have both of them tending to find out.`}</span>
+            <span class="pair-who">with ${other.name}</span>
+          </span>
+        </div>`;
+      }).join('')}` : ''}
+    </div>`;
   }
 
   function feedRows() {
@@ -1181,6 +1287,37 @@
         Sound.play('tap');
         renderSheet(false);
         UI.renderCritters();
+        if (UI.hollowOpen()) UI.renderHollow();
+      } else {
+        Sound.play('deny');
+        UI.toast({
+          title: 'Every slot is full',
+          body: 'Rest someone else first, then this one can come out.',
+          art: Icons.get('sprout')
+        });
+      }
+      return;
+    }
+
+    /* Petting pays nothing and never has. A creature you tap for currency is a
+       button; one that just reacts is a pet. */
+    const pet = e.target.closest('[data-pet]');
+    if (pet) {
+      const def = Game.petCritter(pet.dataset.pet);
+      if (def) {
+        const c = FX.centerOf(pet);
+        FX.sparks(c.x, c.y, 10, def.art.glow);
+        Sound.play('tap');
+        FX.haptic(8);
+        /* The flower's speech bubble lives in the garden and is hidden while the
+           Hollow is up, so the reply lands in the panel instead of nowhere. */
+        const said = $('#cpSaid', el.sheetBody);
+        if (said) {
+          said.textContent = UI.critterLine(def, Game.critterAsleep(def.id) ? 'sleep' : 'pet');
+          said.classList.remove('pop'); void said.offsetWidth; said.classList.add('pop');
+        }
+        const face = $('.cp-face', el.sheetBody);
+        if (face) { face.classList.remove('bop'); void face.offsetWidth; face.classList.add('bop'); }
       }
       return;
     }

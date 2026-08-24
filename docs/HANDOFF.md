@@ -87,6 +87,19 @@ from quests and levels.
 > driving the new cheats. **Test it with the Developer tools:** *Creature food clocks* — Drain 1h /
 > 4h / 24h, Send them to sleep, Feed everyone. 97 assertions.
 >
+> **A tap opens the whole creature, and only creatures that are out leave keepsakes, 2026-08-20.**
+> Tapping a pet in the Hollow opens **its own sheet** — trait, awake and fed state, growth, keepsake
+> status, out-or-rest, the three foods, a Pet button and its pairs. Modes were a workaround for one
+> tap target and several verbs. **Loadout mode survives as a fast path** for swapping several in a
+> row, and **the dock is still there on purpose** so the question "does Feed or Pet still have a job"
+> can be answered by looking rather than by argument.
+>
+> **Collecting happens in the garden, not the Hollow** — they live down there, they work up here.
+> And **only a tending creature earns a keepsake**: a rester banks what it had and stops earning,
+> getting it all back when it comes out. Since a decoration costs keepsakes from *two different
+> creatures*, this is what makes the roster worth rotating. A **sleeping** creature is still out, so
+> it still earns — sleep costs the trait, not the mementos.
+>
 > **Two things a real phone found, 2026-08-18.** The sleeping **Zs** are now solid white with **no
 > outline**, smaller and slower, drifting in a zigzag with no scaling — outlined they read as hard
 > graphic shapes stuck to a creature's head. That is a **deliberate exception** to the house
@@ -722,7 +735,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 815 assertions over the simulation layer
+node tools/sim-test.js          # 834 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

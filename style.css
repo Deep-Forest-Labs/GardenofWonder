@@ -1875,6 +1875,47 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   .asleep .critter-svg{animation:none}
 }
 
+/* ---------- one creature, and everything you can do to it ---------- */
+.critter-panel h3{
+  display:flex;align-items:center;gap:7px;
+  margin:16px 0 7px;font-size:14px;font-weight:800;color:var(--ink);
+}
+.critter-panel h3 svg{width:16px;height:16px;flex:0 0 16px}
+.cp-head{
+  display:flex;align-items:center;gap:12px;
+  padding:10px;margin-bottom:8px;
+  border:3px solid var(--ink);border-radius:16px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2,#f3e4c6));
+}
+.cp-head.asleep{background:linear-gradient(180deg,#f2eeff,#e2dbf8)}
+.cp-face{flex:0 0 64px;width:64px;height:64px}
+.cp-face svg{width:100%;height:100%;overflow:visible}
+/* A portrait is not the yard — it holds still until you pet it. */
+.cp-face .cr-body,.cp-face .cr-sprout,.cp-face .cr-glow,.cp-face .cr-eye,
+.cp-face .cr-wings,.cp-face .cr-tail,.cp-face .cr-z{animation:none}
+.cp-face.asleep .cr-zzz{display:none}
+.cp-face.bop .critter-svg{animation:critter-bop .42s cubic-bezier(.34,1.56,.64,1)}
+.cp-who{display:flex;flex-direction:column;gap:1px;min-width:0}
+.cp-who b{font-size:19px;font-weight:800;line-height:1.1;color:var(--ink)}
+.cp-who em{font-style:normal;font-size:12px;font-weight:700;color:var(--ink-soft,#7a6047)}
+.cp-who .critter-stars{margin:3px 0 0}
+.cp-about{margin:0 0 8px;font-size:12.5px;line-height:1.45;color:var(--ink-soft,#7a6047)}
+.cp-said{
+  margin:8px 0 0;padding:9px 13px;
+  border:3px solid var(--ink);border-radius:16px;
+  background:var(--paper);
+  font-size:12.5px;font-weight:700;line-height:1.4;color:var(--ink);
+}
+.cp-said.pop{animation:cpSaid .38s cubic-bezier(.34,1.56,.64,1)}
+@keyframes cpSaid{0%{transform:scale(.94);opacity:.4}100%{transform:none;opacity:1}}
+.critter-panel .critter-trait,
+.critter-panel .critter-grow,
+.critter-panel .critter-memento,
+.critter-panel .food-state{margin-bottom:6px}
+@media (prefers-reduced-motion:reduce){
+  .cp-said.pop,.cp-face.bop .critter-svg{animation:none}
+}
+
 /* ---------- feeding ---------- */
 .feed-alert{
   display:flex;align-items:flex-start;gap:7px;margin:0 0 10px;padding:9px 11px;
