@@ -179,6 +179,11 @@ and border — that overlap is the whole effect and anything that clips the shee
 
 Only the creature panel uses it so far; `renderSheet()` clears it for every other mode.
 
+**It is hidden whenever `.sheet` lacks `.open`, in CSS.** The art rides the sheet's transform, and a
+closed sheet parks just below the bottom edge — so the art, which sits *above* the sheet's top edge,
+ended up just above the screen's bottom edge with a creature's head over the dock. Keeping the rule
+declarative means no close path, drag-dismiss included, can forget it.
+
 ### Input uses pointer events
 
 `pointerdown`, not `click`, on the flower and plots — `click` waits for release and makes rapid

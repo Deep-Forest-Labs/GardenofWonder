@@ -1890,6 +1890,15 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   pointer-events:none;
 }
 .sheet-art[hidden]{display:none}
+/* Tied to the sheet being OPEN, not to a JS call. The art rides the sheet's
+   transform, and a closed sheet parks just below the bottom edge — which put a
+   creature's head over the dock until this existed. Declarative, so no close
+   path can forget it. */
+.sheet-art{opacity:1;transition:opacity .16s ease}
+.sheet:not(.open) .sheet-art{
+  opacity:0;visibility:hidden;
+  transition:opacity .14s ease, visibility 0s .14s;
+}
 .sheet-art::before{
   content:'';position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
   width:290px;height:220px;border-radius:50%;
@@ -1933,30 +1942,55 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:linear-gradient(180deg,#fffdf7,var(--paper-3,#f7e7c4));
   box-shadow:0 3px 0 rgba(44,26,16,.22);
 }
-.cp-grow-top{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  font-size:12px;font-weight:700;color:var(--ink-soft,#7a6047);
+/* bloom · bar · star — a sentence made of pictures, read left to right. */
+.cp-grow-row{display:flex;align-items:center;gap:9px}
+.cp-bloom{
+  flex:0 0 42px;width:42px;height:42px;
+  display:grid;place-items:center;
+  border:3px solid var(--ink);border-radius:50%;
+  background:radial-gradient(circle at 36% 30%, #fffdf7, var(--paper-3,#f7e7c4));
+  box-shadow:0 3px 0 rgba(44,26,16,.24);
 }
-.cp-grow-top b{color:var(--ink)}
+.cp-bloom .bloom{width:30px;height:30px;display:block}
+.cp-grow-cap{
+  margin-top:6px;text-align:center;
+  font-size:12px;font-weight:800;letter-spacing:.03em;color:var(--ink-soft,#7a6047);
+}
 .cp-grow-goal{
+  flex:0 0 auto;
   display:inline-flex;align-items:center;gap:3px;
-  padding:2px 9px 2px 6px;border:2.5px solid var(--ink);border-radius:999px;
+  padding:4px 11px 4px 8px;border:3px solid var(--ink);border-radius:999px;
   background:linear-gradient(180deg,#fff8d6,#ffd43b);
-  font-size:13px;font-weight:800;color:var(--ink);
+  font-size:14px;font-weight:800;color:var(--ink);
+  box-shadow:0 3px 0 rgba(44,26,16,.24);
 }
-.cp-grow-goal svg{width:13px;height:13px;color:#f59f00}
+.cp-grow-goal svg{width:15px;height:15px;color:#f59f00}
 .cp-bar{
-  margin-top:7px;height:16px;border:3px solid var(--ink);border-radius:999px;
+  position:relative;flex:1;min-width:0;
+  height:26px;border:3px solid var(--ink);border-radius:999px;
   background:#e3d6bd;overflow:hidden;
 }
 .cp-bar i{
   display:block;height:100%;
   background:linear-gradient(180deg,#b2f2bb,#51cf66);
-  box-shadow:inset 0 -4px 0 rgba(44,26,16,.14);
+  box-shadow:inset 0 -5px 0 rgba(44,26,16,.14);
   transition:width .4s cubic-bezier(.22,1,.28,1);
 }
+/* The count sits IN the bar, where the eye already is. Outlined so it stays
+   legible over both the filled and the empty half. */
+/* The count sits IN the bar, where the eye already is. Dark ink with a white
+   halo rather than the house white-on-ink outline: at 13px those eight offset
+   copies crowd the glyphs into mud, and a halo stays legible over both the
+   green fill and the pale track. */
+.cp-bar-num{
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-size:13px;font-weight:800;line-height:1;color:var(--ink);
+  letter-spacing:.02em;
+  text-shadow:0 1px 0 rgba(255,255,255,.95),0 -1px 0 rgba(255,255,255,.8),
+              1px 0 0 rgba(255,255,255,.8),-1px 0 0 rgba(255,255,255,.8);
+  pointer-events:none;
+}
 .cp-grow.maxed .cp-bar i{background:linear-gradient(180deg,#ffe9a8,#ffc93c)}
-.cp-grow-num{margin-top:5px;font-size:11.5px;font-weight:700;color:var(--ink-soft,#7a6047)}
 
 /* Each fact in its own chip, so the panel reads as a character card rather than
    as a paragraph of state. */

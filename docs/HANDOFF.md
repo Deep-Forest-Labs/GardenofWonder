@@ -87,6 +87,13 @@ from quests and levels.
 > driving the new cheats. **Test it with the Developer tools:** *Creature food clocks* — Drain 1h /
 > 4h / 24h, Send them to sleep, Feed everyone. 97 assertions.
 >
+> **The panel's growth row is bloom → bar → star, 2026-08-20.** No "Growing on X" line: the real
+> bloom is drawn in a token on the left (`Flora.head()`), the count sits *inside* the bar, and the
+> star being climbed toward is on the right. **The owner's standing note is that more iconography
+> beats more sentences everywhere in this game** — this row is the worked example. The breakout art
+> is hidden by CSS whenever the sheet lacks `.open`, because it rides the sheet's transform and a
+> closed sheet left a creature's head sitting over the dock.
+>
 > **Gestures, one-tap pets, and a panel that stands the creature on it, 2026-08-20.**
 > **Swipe up in the garden to go down to the Hollow**, swipe down to come back. The swipe only
 > starts on the *background* — plots and the flower act on `pointerdown` and would fire on the way

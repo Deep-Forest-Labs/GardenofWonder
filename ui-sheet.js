@@ -664,20 +664,36 @@
                  fmtSpan(Game.critterFedFor(id))}</b> — working like ★${Game.critterWorkLevel(id)}.`
              : `, working like ★${level}. Not well fed.`}</span></span>`;
 
-    /* The growth bar is the one number a player watches climb, so it gets to be
-       the biggest thing in the panel rather than a 7px sliver of trim. */
+    /* The one number a player watches climb, so it gets to be the biggest thing
+       in the panel rather than a 7px sliver of trim.
+
+       Read left to right it is a sentence made of pictures: this bloom, this far
+       along, toward this star. The bloom itself does the naming, so there is no
+       "Growing on ..." line above it — the caption only has to say which flower,
+       and the count lives inside the bar where the eye already is. */
+    const bloom = seed ? `<span class="cp-bloom">${Flora.head(seed, 34)}</span>` : '';
     const grow = goal
       ? `<div class="cp-grow">
-           <div class="cp-grow-top">
-             <span>Growing on <b>${seed ? seed.name : 'blooms'}</b></span>
+           <div class="cp-grow-row">
+             ${bloom}
+             <div class="cp-bar">
+               <i style="width:${(Math.min(1, goal.have / goal.qty) * 100).toFixed(1)}%"></i>
+               <span class="cp-bar-num">${fmt(Math.min(goal.have, goal.qty))} / ${fmt(goal.qty)}</span>
+             </div>
              <span class="cp-grow-goal">${Icons.get('star')}${goal.level}</span>
            </div>
-           <div class="cp-bar"><i style="width:${(Math.min(1, goal.have / goal.qty) * 100).toFixed(1)}%"></i></div>
-           <div class="cp-grow-num">${fmt(Math.min(goal.have, goal.qty))} / ${fmt(goal.qty)} harvested</div>
+           <div class="cp-grow-cap">${seed ? seed.name : 'Blooms'} harvested</div>
          </div>`
-      : `<div class="cp-grow maxed"><div class="cp-grow-top"><span>Fully grown</span>
-           <span class="cp-grow-goal">${Icons.get('star')}${CREATURE_STARS}</span></div>
-           <div class="cp-bar"><i style="width:100%"></i></div></div>`;
+      : `<div class="cp-grow maxed">
+           <div class="cp-grow-row">
+             ${bloom}
+             <div class="cp-bar">
+               <i style="width:100%"></i>
+               <span class="cp-bar-num">Fully grown</span>
+             </div>
+             <span class="cp-grow-goal">${Icons.get('star')}${CREATURE_STARS}</span>
+           </div>
+         </div>`;
 
     /* Keepsakes are collected out in the garden, where the creature is actually
        working. Down here it is at home and simply exists — so this says what is

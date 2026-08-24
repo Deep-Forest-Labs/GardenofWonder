@@ -333,11 +333,27 @@ creature's own `art.glow`. Note the creature art leaves ~7% empty below the body
 viewBox, so the overlap has to swallow that before it starts eating actual body.
 
 The panel around it is a **character card, not a form**: the name in the game's existing `.outlined`
-display type with the species beneath it, a big star row, the growth bar promoted from a 7px sliver
-to the largest element on the screen with a star-goal pill, and every fact in its own chunky chip.
+display type with the species beneath it, a big star row, and every fact in its own chunky chip.
 **The palette stays paper and botanical** — the reference that prompted this is a dark-blue
 sci-fi chrome, and borrowing its layout ideas is right where borrowing its colours would put a
-different game's skin on this one.
+different game's skin on this one. The owner confirmed that call.
+
+**The growth row is a sentence made of pictures**, read left to right: **the bloom itself** in a
+round token, then the bar with the count **inside** it, then the star being climbed toward. There is
+deliberately no "Growing on Moonflower" line above it — the bloom does the naming, the caption
+underneath only has to say which flower, and nobody needs to be told that a progress bar is
+progress. The standing note from the owner is that **more iconography beats more sentences
+everywhere in this game**, and this row is the worked example.
+
+Two small things that matter in it: the count sits in the bar because that is where the eye already
+is, and it is dark ink with a **white halo** rather than the house white-on-ink outline — at 13px
+those eight offset copies crowd the glyphs into mud, where a halo stays clean over both the filled
+and the empty half.
+
+**The art is hidden by CSS whenever the sheet is not `.open`**, not by a JS call on the close path.
+It rides the sheet's transform, and a closed sheet parks just below the bottom edge — which left a
+creature's head sitting over the dock. Tying it to the class means no future close path can forget
+it.
 
 ### The loadout is chosen in the room, 2026-08-18
 

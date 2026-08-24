@@ -5,6 +5,38 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-20 (later) — A head over the dock, and a progress row made of pictures
+
+**The bug: the breakout art stayed on screen after the sheet closed.** It is positioned *above* the
+sheet's top edge and rides the sheet's transform — and a closed sheet parks just below the bottom of
+the screen, which put the creature's head neatly over the dock. Found by the owner on a phone.
+
+**Fixed in CSS, tied to `.sheet.open`, rather than in the close path.** There is more than one way
+out of a sheet — the close button, the scrim, drag-to-dismiss, opening a different mode — and a rule
+that lives on the class cannot be forgotten by whichever one gets added next. It fades rather than
+snapping, with `visibility` delayed behind the fade.
+
+**The growth row stopped being a sentence and became pictures.** The owner's note: *"I don't think
+you need a line that says Growing on Moonflower. People will automatically know that they're
+levelling it… the more iconography and visuals we can add throughout the game, the better."* Right on
+both counts, and the second half is the more useful instruction.
+
+So the row now reads left to right as **bloom → bar → star**: the actual flower in a round token,
+the count *inside* the bar, and the star being climbed toward on the right. `Flora.head()` already
+existed for shop cards and draws the real bloom, so the icon is never a stand-in for the flower —
+it *is* the flower. The caption underneath is the one thing a picture cannot say: which flower.
+
+**A typography note worth keeping.** The count in the bar started as the house style — white text in
+an ink outline, eight offset shadow copies. At 13px that crowds the glyphs into mud. It is dark ink
+with a **white halo** instead, which stays legible over both the green fill and the pale track. The
+house outline is for display sizes; small numbers on a busy ground want the inverse.
+
+**And the palette stayed put.** The owner confirmed the earlier call not to borrow the reference's
+dark-blue chrome. Layout ideas travel between games; colour does not.
+
+---
+
+
 ## 2026-08-20 — Swipe between the two places, one tap does the right thing, and the pet stands on the sheet
 
 Three asks from the owner, now that the game is an installed app and there is no browser chrome to
