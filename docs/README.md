@@ -38,6 +38,7 @@ Read it before anything else if you're picking the project up cold.
 | [21-potting-bench.md](21-potting-bench.md) | You're touching the merge bench — the chain, entry tier, cascade timing, the deadlock, or what replaced the Apothecary |
 | [22-creatures.md](22-creatures.md) | You're adding a creature, or touching attraction, keepsakes or the critter yard — the habitat direction |
 | [23-installable-pwa.md](23-installable-pwa.md) | You're touching `manifest.json`, `sw.js`, the icons, or you added a script file and need it to work offline |
+| [24-remote-sessions.md](24-remote-sessions.md) | You're working on the game from a phone or the web, without the Mac — the clone-and-push loop, `tools/probe.js`, and why a remote session works on a branch |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

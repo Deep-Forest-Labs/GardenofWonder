@@ -24,7 +24,10 @@ DOM; `ui.js` never does economy math.
 
 ## Verifying
 
-Run `node tools/sim-test.js` and `node --check` on every file you touched. Add sim-test coverage for
+Run `node tools/sim-test.js` and `node --check` on every file you touched.
+`node tools/probe.js shot:after` screenshots the running game in headless Chrome when you cannot
+open it yourself — see [docs/24-remote-sessions.md](docs/24-remote-sessions.md), which also covers
+why a session working from a phone commits to a branch rather than `main`. Add sim-test coverage for
 anything you changed in the economy — the suite is the cheapest check in the project and it should
 grow with the game.
 

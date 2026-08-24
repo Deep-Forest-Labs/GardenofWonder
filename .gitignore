@@ -28,6 +28,9 @@ node_modules/
 .env
 .env.local
 
+# Headless screenshot output from tools/probe.js
+.probe/
+
 # Scratch / personal — never commit
 _to_delete/
 docs/feedback.md

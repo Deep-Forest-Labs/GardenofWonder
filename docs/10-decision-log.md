@@ -217,6 +217,47 @@ showing through. That is a safety net under the measurement, never a substitute 
 
 ---
 
+## 2026-08-19 — A remote session can see the game, on a branch
+
+**Built:** `tools/probe.js` and `docs/24-remote-sessions.md`, so the game can be worked on from a
+phone while the Mac is closed.
+
+**The constraint that shaped this is that a cloud session has no eyes.** It clones the repository
+into a Linux container, which is fine for a project with no build step and no dependencies — but
+this is a game whose whole point is how it looks and feels, and every previous verification loop
+ended with a person opening `index.html` and looking. Without a replacement for that, a remote
+session can only change code it cannot check, which is the worst way to touch a layout.
+
+**So the probe drives Chrome directly rather than through a library.** Playwright is the obvious
+answer and it is one `npm install` away, except that it is a dependency in a project whose first
+non-negotiable is not having any, and the container's registry refuses it anyway. Node 22 ships a
+WebSocket client, and Chrome speaks the DevTools Protocol over one, so the whole thing is about
+three hundred lines and adds nothing to the repository's surface. It also runs unchanged on the
+Mac, which was not the goal but means it works as a local screenshot tool too.
+
+**Taps are touch events aimed at a selector's centre, not synthetic clicks.** The game listens for
+touch, and a probe that exercised a different code path than a player would be worse than no probe
+— it would be a check that passes while the thing it claims to verify is broken.
+
+**An unrecognised step is an error.** A no-op would mean a mistyped `tap:` silently produced a
+screenshot of an untouched game, and the session would report a fix that was never exercised. The
+failure mode of a verification tool matters more than its convenience.
+
+**Remote sessions work on a branch, and this is the part worth remembering.** The repository root
+is what GitHub Pages serves, and `sw.js` is network-first by deliberate design, so a push to `main`
+is in front of installed players almost immediately. That property is exactly right when someone is
+at a desk and has just looked at the change on a real phone. It is exactly wrong when the change
+was verified only by Chromium-on-Linux, which knows nothing about iOS Safari, sticky positioning,
+viewport units or audio. A branch costs one command and puts a person between the container and the
+audience.
+
+**The token is pasted per session and never stored.** A fine-grained token scoped to this one
+repository, in a container that is destroyed at the end of the session, is a small enough blast
+radius to be worth the convenience. Writing it into a file to save the paste would have put a
+credential in a repository that deploys itself publicly.
+
+---
+
 ## 2026-08-18 — Installable and offline, with a worker that cannot strand anyone
 
 **Built:** `manifest.json`, `sw.js` and `icons/`, so the game installs to a home screen and plays
