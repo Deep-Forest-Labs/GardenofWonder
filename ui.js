@@ -455,6 +455,39 @@
     UI.enterHollow();
   });
 
+  /* Swipe UP in the garden to go DOWN to the Hollow, the mirror of the swipe
+     down that comes back. Dragging up pulls the world up past you, the same
+     direction any scroll uses.
+
+     It only starts on the BACKGROUND — sky, lawn, the margins. Plots and the
+     flower act on `pointerdown` and have already fired by the time a drag is
+     recognisable, so a swipe begun on one would plant or harvest on its way out.
+     Making them wait for `pointerup` instead would fix that and cost the tap
+     latency the whole core loop is built on, which is a far worse trade. The
+     burrow door is still the discoverable way in; this is the fast path. */
+  const NAV_SWIPE = 70;
+  const noSwipe = '.plot,.flower-btn,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,[data-critter],.burrow-door,.coach';
+  let navY0 = null;
+  let navX0 = null;
+  el.game.addEventListener('pointerdown', (e) => {
+    navY0 = null;
+    if (UI.hollowOpen() || UI.sheetMode()) return;
+    if (e.target.closest(noSwipe)) return;
+    navY0 = e.clientY;
+    navX0 = e.clientX;
+  });
+  el.game.addEventListener('pointerup', (e) => {
+    if (navY0 === null) return;
+    const dy = navY0 - e.clientY;
+    const dx = Math.abs(e.clientX - navX0);
+    navY0 = null;
+    // Vertical, and clearly so — a diagonal drag should not navigate.
+    if (dy > NAV_SWIPE && dy > dx) {
+      noteActivity();
+      UI.enterHollow();
+    }
+  });
+
   el.critterYard.addEventListener('pointerdown', (e) => {
     const node = e.target.closest('[data-critter]');
     if (!node) return;
@@ -690,19 +723,10 @@
       renderCritters();
       return;
     }
-    /* A sleeping creature still hands over what it left — you are picking up a
-       keepsake, not waking it — but petting one has to say what is actually
-       wrong, or the tap reads as the creature having stopped responding. */
-    if (Game.critterAsleep(id)) {
-      Sound.play('tap');
-      FX.haptic(4);
-      sayText(critterLine(def, 'sleep'), true);
-      return;
-    }
-    Game.petCritter(id);
-    Sound.play('tap');
-    FX.haptic(8);
-    sayText(critterLine(def, 'pet'));
+    /* Nothing to collect, so the tap opens everything you can do with this one
+       instead. Walking down to the Hollow to feed a creature that is standing
+       right in front of you was the long way round. */
+    UI.openSheet('critter', id);
   }
 
   function frame(now) {

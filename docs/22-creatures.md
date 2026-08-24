@@ -282,6 +282,26 @@ All five came from playing it on a phone, and four are the kind a screenshot hid
 Two placements also had to move: the tending count sat over the crack, where the art is busy enough to
 swallow small white text, and the garden's leftmost creature spot sat under the burrow door.
 
+### Tapping a pet in the garden, and swiping between the two places — 2026-08-20
+
+**A tap on a creature in the garden collects what it left, and opens its panel when there is
+nothing to collect.** One target, two jobs, and the right one every time — the collect is what you
+came for when there is a badge, and when there is not, the thing you probably want is to feed it.
+Walking down to the Hollow to feed a creature standing in front of you was the long way round.
+
+**Swipe up in the garden to go down to the Hollow**, mirroring the swipe down that comes back.
+Dragging up pulls the world up past you, the same direction any scroll uses.
+
+**The swipe only starts on the background** — sky, lawn, the margins beside the board. Plots and the
+flower act on `pointerdown` and have already fired by the time a drag is recognisable, so a swipe
+begun on one would plant or harvest on its way out. Making them wait for `pointerup` would fix that
+and cost the tap latency the entire core loop is built on, which is a far worse trade. The burrow
+mouth is still the discoverable way in; the swipe is the fast path for someone who knows.
+
+Both swipes require the gesture to be **vertical and clearly so** (`dy > dx`), so a diagonal drag
+does nothing. The Hollow's exit gained the same start-target guard at the same time: dragging down
+off a creature there used to open its sheet *and* leave the room.
+
 ### A tap on a creature opens everything you can do to it, 2026-08-20
 
 **The Hollow is where they live, not where they work.** Collecting a keepsake happens **up in the
@@ -303,6 +323,21 @@ a per-creature sheet is the answer that does not ask the player to arm anything 
   Only a tender earns, and a tender is in the garden, so the badge always has somewhere to go.
 - **Petting replies inside the panel.** The flower's speech bubble lives in the garden and is hidden
   while the Hollow is up, so a line said through it would land nowhere.
+
+**The creature stands on the sheet, 2026-08-20.** Its art breaks out **above** the panel's top edge,
+sunk far enough in that its body disappears behind the paper — a creature that only touches the top
+edge reads as a sticker, one whose body is cut off by the panel reads as standing there. It is
+absolutely positioned on `.sheet` rather than in the scrolling body, so it rides the open/close
+transform and then holds still while the body scrolls, and it carries a radial glow in the
+creature's own `art.glow`. Note the creature art leaves ~7% empty below the body inside its own
+viewBox, so the overlap has to swallow that before it starts eating actual body.
+
+The panel around it is a **character card, not a form**: the name in the game's existing `.outlined`
+display type with the species beneath it, a big star row, the growth bar promoted from a 7px sliver
+to the largest element on the screen with a star-goal pill, and every fact in its own chunky chip.
+**The palette stays paper and botanical** — the reference that prompted this is a dark-blue
+sci-fi chrome, and borrowing its layout ideas is right where borrowing its colours would put a
+different game's skin on this one.
 
 ### The loadout is chosen in the room, 2026-08-18
 

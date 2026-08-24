@@ -37,6 +37,7 @@ const UI = (() => {
     sheetTabs: $('#sheetTabs'),
     sheetTitle: $('#sheetTitle'),
     sheetGrip: $('#sheetGrip'),
+    sheetArt: $('#sheetArt'),
     scrim: $('#scrim'),
     toasts: $('#toasts'),
     banner: $('#banner'),

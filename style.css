@@ -1875,7 +1875,105 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   .asleep .critter-svg{animation:none}
 }
 
+/* ---------- the sheet's breakout art ----------
+   Whoever the panel is about stands ON the sheet rather than being filed inside
+   it. Absolutely positioned on `.sheet` and not in the scrolling body, so it
+   rides the open/close transform and then holds still while the body scrolls. */
+.sheet-art{
+  /* Sunk well into the sheet, not perched on it. A creature that only touches
+     the top edge reads as a sticker; one whose body disappears behind the panel
+     reads as standing there. The creature art also leaves ~7% empty below the
+     body inside its own viewBox, so the overlap has to cover that first. */
+  position:absolute;left:0;right:0;bottom:calc(100% - 52px);
+  height:168px;z-index:1;
+  display:grid;place-items:end center;
+  pointer-events:none;
+}
+.sheet-art[hidden]{display:none}
+.sheet-art::before{
+  content:'';position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+  width:290px;height:220px;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 58%, var(--cg,#b6f2c8) 0%, transparent 64%);
+  opacity:.72;
+}
+.sheet-art svg{
+  position:relative;width:182px;height:182px;overflow:visible;
+  filter:drop-shadow(0 8px 0 rgba(44,26,16,.2));
+  animation:cp-hover 4.4s ease-in-out infinite;
+}
+@keyframes cp-hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+/* Asleep is asleep everywhere. It should not be hovering, and the Zs belong to
+   the room, not to a portrait the size of a face. */
+.sheet-art.asleep svg{animation:none}
+.sheet-art.asleep .cr-zzz{display:none}
+@media (prefers-reduced-motion:reduce){ .sheet-art svg{animation:none} }
+@media (max-height:700px){
+  .sheet-art{height:124px;bottom:calc(100% - 40px)}
+  .sheet-art svg{width:136px;height:136px}
+  .sheet-art::before{width:210px;height:165px;bottom:10px}
+}
+
 /* ---------- one creature, and everything you can do to it ---------- */
+.cp-plate{text-align:center;margin:2px 0 10px;padding-top:6px}
+.cp-name{
+  margin:0;font-size:clamp(26px,7.4vw,34px);font-weight:800;letter-spacing:.02em;line-height:1.05;
+}
+.cp-species{
+  margin:1px 0 0;font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-soft,#7a6047);
+}
+.cp-plate .critter-stars{margin:6px 0 0;gap:3px}
+.cp-plate .cr-star svg{width:19px;height:19px}
+.cp-plate.asleep .cp-name{opacity:.75}
+
+/* The one number a player watches climb, given room to be watched. */
+.cp-grow{
+  margin:0 0 10px;padding:10px 12px 11px;
+  border:3px solid var(--ink);border-radius:16px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-3,#f7e7c4));
+  box-shadow:0 3px 0 rgba(44,26,16,.22);
+}
+.cp-grow-top{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:12px;font-weight:700;color:var(--ink-soft,#7a6047);
+}
+.cp-grow-top b{color:var(--ink)}
+.cp-grow-goal{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:2px 9px 2px 6px;border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fff8d6,#ffd43b);
+  font-size:13px;font-weight:800;color:var(--ink);
+}
+.cp-grow-goal svg{width:13px;height:13px;color:#f59f00}
+.cp-bar{
+  margin-top:7px;height:16px;border:3px solid var(--ink);border-radius:999px;
+  background:#e3d6bd;overflow:hidden;
+}
+.cp-bar i{
+  display:block;height:100%;
+  background:linear-gradient(180deg,#b2f2bb,#51cf66);
+  box-shadow:inset 0 -4px 0 rgba(44,26,16,.14);
+  transition:width .4s cubic-bezier(.22,1,.28,1);
+}
+.cp-grow.maxed .cp-bar i{background:linear-gradient(180deg,#ffe9a8,#ffc93c)}
+.cp-grow-num{margin-top:5px;font-size:11.5px;font-weight:700;color:var(--ink-soft,#7a6047)}
+
+/* Each fact in its own chip, so the panel reads as a character card rather than
+   as a paragraph of state. */
+.cp-cards{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
+.cp-card{
+  padding:9px 11px;border:3px solid var(--ink);border-radius:14px;
+  background:var(--paper-2,#f3e4c6);
+}
+.cp-card.bad{background:#eae6fb;box-shadow:inset 0 0 0 2px #b3a7e8}
+.cp-card-k{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);
+}
+.cp-card-k svg{width:15px;height:15px;flex:0 0 15px}
+.cp-card-v{display:block;margin-top:3px;font-size:12.5px;line-height:1.4;color:var(--ink-soft,#7a6047)}
+.cp-card .critter-memento,.cp-card .food-state{margin:0}
+
 .critter-panel h3{
   display:flex;align-items:center;gap:7px;
   margin:16px 0 7px;font-size:14px;font-weight:800;color:var(--ink);

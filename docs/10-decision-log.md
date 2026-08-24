@@ -5,6 +5,56 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-20 — Swipe between the two places, one tap does the right thing, and the pet stands on the sheet
+
+Three asks from the owner, now that the game is an installed app and there is no browser chrome to
+fight over the gestures.
+
+**Swipe up in the garden to go down to the Hollow**, mirroring the swipe down that already comes
+back. The interesting part is what it cannot do: **plots and the flower act on `pointerdown`**, so a
+swipe begun on one has already planted or harvested by the time it is recognisable as a drag. Making
+them wait for `pointerup` would fix it and cost the tap latency the entire core loop is built on —
+which is why the swipe only starts on the *background*, and the burrow mouth stays as the
+discoverable entrance. Both swipes also require `dy > dx`, so a diagonal drag does nothing.
+
+That guard exposed the same latent problem in the Hollow, which had none: **dragging down off a
+creature there opened its sheet *and* left the room.** Fixed at the same time, same rule.
+
+**A tap on a creature in the garden collects, or opens its panel when there is nothing to collect.**
+One target, two jobs, and the right one every time — the collect is what you came for when a badge
+is showing, and when there is not, the thing you probably want is to feed it. The owner's framing is
+the one to keep: *"if you tap a pet, the experience should be as friendly as possible, allowing them
+to do what they need to do with that pet instead of traveling to the Hollow."*
+
+**And the panel stopped being a form.** The owner's note was that the screens read plain and
+technical and that the progress bar in particular felt small and boring, with a Clash Royale card
+screen as the reference. What transferred:
+
+- **The creature breaks out above the sheet's top edge**, sunk far enough that its body disappears
+  behind the paper. A creature that only *touches* the edge reads as a sticker; one the panel cuts
+  off reads as standing there. It lives on `.sheet`, not in the scrolling body, so it rides the
+  open/close transform and then holds still.
+- **The growth bar was promoted from a 7px sliver of trim to the largest element on the screen**,
+  with a star-goal pill on it. It is the one number a player watches climb.
+- **The name is in the game's own `.outlined` display type**, with the species under it and a big
+  star row — a nameplate rather than a title bar. The sheet's chrome title is now empty for this
+  mode, which also killed the earlier triple-naming.
+- **Every fact is its own chunky chip** rather than a paragraph of state.
+
+**What deliberately did not transfer is the palette.** The reference is dark-blue sci-fi chrome.
+Borrowing its *layout* ideas is right; borrowing its colours would put another game's skin on a
+storybook botanical one, and tonal coherence is the cheapest competitive advantage this project has
+([17-market-and-positioning.md](17-market-and-positioning.md)).
+
+**A measurement trap worth recording:** the art looked clipped at the creature's chin, and it was
+not. `overflow` was `visible`, nothing was painting over it, and probing with a translucent sheet
+background showed the body drawing correctly on top. The real problem was that the art was too
+small and barely overlapped, so it read as perched rather than standing. **Twenty minutes went into
+proving a clipping bug that did not exist** — the picture was right and the diagnosis was wrong.
+
+---
+
+
 ## 2026-08-20 — Keepsakes come from creatures that are out, and a tap opens the whole creature
 
 **Built:** keepsakes gated on tending, collecting removed from the Hollow, and a per-creature sheet

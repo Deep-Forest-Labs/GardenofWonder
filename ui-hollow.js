@@ -240,10 +240,22 @@
        you, which is the same direction any scroll uses — swiping up to rise reads
        backwards once you actually try it. */
     let y0 = null;
-    el.hollow.addEventListener('pointerdown', (e) => { y0 = e.clientY; });
-    el.hollow.addEventListener('pointerup', (e) => {
-      if (y0 !== null && e.clientY - y0 > 70) exit();
+    let x0 = 0;
+    el.hollow.addEventListener('pointerdown', (e) => {
       y0 = null;
+      /* Creatures and the dock act on the way down, so a drag begun on one has
+         already opened a sheet or toggled a slot — leaving would then do two
+         things at once. Same rule as the garden's swipe up. */
+      if (e.target.closest('[data-critter],.dock,.hollow-exit')) return;
+      y0 = e.clientY;
+      x0 = e.clientX;
+    });
+    el.hollow.addEventListener('pointerup', (e) => {
+      if (y0 === null) return;
+      const dy = e.clientY - y0;
+      const dx = Math.abs(e.clientX - x0);
+      y0 = null;
+      if (dy > 70 && dy > dx) exit();
     });
 
     window.addEventListener('resize', () => { if (open) place(); });

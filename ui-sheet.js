@@ -73,10 +73,7 @@
       const set = ALBUM.sets.find((x) => x.id === sheetArg);
       if (set) title = set.name;
     }
-    if (sheetMode === 'critter') {
-      const c = Game.critterById(sheetArg);
-      if (c) title = c.name;
-    }
+
     el.sheetTitle.textContent = title;
 
     if (SHOP_TABS.includes(sheetMode)) {
@@ -98,6 +95,20 @@
       dev: renderDev, welcome: renderWelcome, feed: renderFeed, critter: renderCritter,
       album: renderAlbum, cardset: renderCardSet, pack: renderPack
     }[sheetMode];
+    /* Whoever the sheet is about stands on top of it. Only the creature panel
+       uses this so far; anything else clears it. */
+    const star = sheetMode === 'critter' ? Game.critterById(sheetArg) : null;
+    if (star && Game.critterHere(star.id)) {
+      const asleep = Game.critterAsleep(star.id);
+      el.sheetArt.style.setProperty('--cg', star.art.glow || '#b6f2c8');
+      el.sheetArt.className = `sheet-art${asleep ? ' asleep' : ''}`;
+      el.sheetArt.innerHTML = Critters.draw(star);
+      el.sheetArt.hidden = false;
+    } else if (!el.sheetArt.hidden) {
+      el.sheetArt.hidden = true;
+      el.sheetArt.innerHTML = '';
+    }
+
     el.sheetBody.innerHTML = render ? render() : '';
     el.sheetBody.scrollTop = keep;
   }
@@ -653,12 +664,20 @@
                  fmtSpan(Game.critterFedFor(id))}</b> — working like ★${Game.critterWorkLevel(id)}.`
              : `, working like ★${level}. Not well fed.`}</span></span>`;
 
+    /* The growth bar is the one number a player watches climb, so it gets to be
+       the biggest thing in the panel rather than a 7px sliver of trim. */
     const grow = goal
-      ? `<span class="critter-grow">
-           <i style="transform:scaleX(${Math.min(1, goal.have / goal.qty).toFixed(3)})"></i>
-           <span>${fmt(Math.min(goal.have, goal.qty))} / ${fmt(goal.qty)} ${seed ? seed.name : ''} to ★${goal.level}</span>
-         </span>`
-      : '<span class="critter-note">Fully grown.</span>';
+      ? `<div class="cp-grow">
+           <div class="cp-grow-top">
+             <span>Growing on <b>${seed ? seed.name : 'blooms'}</b></span>
+             <span class="cp-grow-goal">${Icons.get('star')}${goal.level}</span>
+           </div>
+           <div class="cp-bar"><i style="width:${(Math.min(1, goal.have / goal.qty) * 100).toFixed(1)}%"></i></div>
+           <div class="cp-grow-num">${fmt(Math.min(goal.have, goal.qty))} / ${fmt(goal.qty)} harvested</div>
+         </div>`
+      : `<div class="cp-grow maxed"><div class="cp-grow-top"><span>Fully grown</span>
+           <span class="cp-grow-goal">${Icons.get('star')}${CREATURE_STARS}</span></div>
+           <div class="cp-bar"><i style="width:100%"></i></div></div>`;
 
     /* Keepsakes are collected out in the garden, where the creature is actually
        working. Down here it is at home and simply exists — so this says what is
@@ -675,19 +694,22 @@
 
     const pairs = CREATURE_PAIRS.filter((p) => p.of.indexOf(id) !== -1);
 
+    /* A nameplate rather than a title bar. The creature itself is standing above
+       the sheet, so this says who that is in the game's own display type. */
     return `<div class="panel critter-panel">
-      <div class="cp-head${asleep ? ' asleep' : ''}">
-        <span class="cp-face${asleep ? ' asleep' : ''}">${Critters.draw(def)}</span>
-        <span class="cp-who">
-          <b>${def.name}</b><em>${def.species}</em>
-          ${critterStars(level, fed && !asleep)}
-        </span>
+      <div class="cp-plate${asleep ? ' asleep' : ''}">
+        <h2 class="cp-name outlined">${def.name}</h2>
+        <p class="cp-species">${def.species}</p>
+        ${critterStars(level, fed && !asleep)}
       </div>
       <p class="cp-about">${def.about}</p>
-      ${trait ? `<span class="critter-trait">${Icons.get(trait.icon)}<b>${trait.name}:</b> ${trait.desc(now)}</span>` : ''}
-      ${state}
       ${grow}
-      ${keep}
+      <div class="cp-cards">
+        ${trait ? `<div class="cp-card"><span class="cp-card-k">${Icons.get(trait.icon)}${trait.name}</span>
+          <span class="cp-card-v">${trait.desc(now)}</span></div>` : ''}
+        <div class="cp-card${asleep ? ' bad' : ''}">${state}</div>
+        <div class="cp-card">${keep}</div>
+      </div>
 
       <h3>${Icons.get('star')} Out or resting</h3>
       <p class="stat-note">${Game.habitatUsed()} of ${Game.habitatSlots()} tending${

@@ -87,6 +87,15 @@ from quests and levels.
 > driving the new cheats. **Test it with the Developer tools:** *Creature food clocks* — Drain 1h /
 > 4h / 24h, Send them to sleep, Feed everyone. 97 assertions.
 >
+> **Gestures, one-tap pets, and a panel that stands the creature on it, 2026-08-20.**
+> **Swipe up in the garden to go down to the Hollow**, swipe down to come back. The swipe only
+> starts on the *background* — plots and the flower act on `pointerdown` and would fire on the way
+> out, and making them wait for `pointerup` would cost the tap latency the core loop is built on.
+> **Tapping a creature in the garden collects, or opens its panel if there is nothing to collect**,
+> so feeding never needs a trip downstairs. And the creature's art now **breaks out above the top of
+> the sheet**, with the growth bar promoted to the biggest thing on the screen and every fact in its
+> own chip. The palette stays paper and botanical on purpose.
+>
 > **A tap opens the whole creature, and only creatures that are out leave keepsakes, 2026-08-20.**
 > Tapping a pet in the Hollow opens **its own sheet** — trait, awake and fed state, growth, keepsake
 > status, out-or-rest, the three foods, a Pet button and its pairs. Modes were a workaround for one
@@ -541,6 +550,12 @@ Things that cost real time to discover. None are visible from a casual read.
 by two agents that did not know about each other — competently and incompatibly, with different
 state shapes for the same feature. Cloud agents push to `cursor/*` branches and may already have
 merged to `main` while your local tree still looks current. `git fetch` first.
+
+**A gesture cannot be added over controls that act on `pointerdown`.** Plots and the flower fire the
+moment you touch them, by design — `click` waits for release and makes rapid tapping feel laggy. So
+a swipe begun on one has already planted or harvested before it is recognisable as a drag, and the
+garden's swipe-up therefore only starts on the background. Do not "fix" this by moving those
+handlers to `pointerup`; the tap latency is load-bearing.
 
 **An upkeep state the player cannot clear is a bug wearing a mechanic.** Sleeping applies only to
 *tending* creatures, because a resting one cannot be fed and would have shown as asleep forever with

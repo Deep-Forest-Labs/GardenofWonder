@@ -123,6 +123,10 @@
       <!-- ============ BOTTOM SHEET ============ -->
       <div class="scrim" id="scrim" hidden></div>
       <section class="sheet" id="sheet" aria-hidden="true" aria-label="Shop">
+        <!-- Breaks out ABOVE the sheet's top edge, so whoever the panel is about
+             is standing on it rather than filed inside it. Absolutely positioned
+             on the sheet, not in the scrolling body, so it stays put. -->
+        <div class="sheet-art" id="sheetArt" aria-hidden="true" hidden></div>
         <div class="sheet-grip" id="sheetGrip"><span></span></div>
         <div class="sheet-head">
           <h2 id="sheetTitle">Upgrades</h2>

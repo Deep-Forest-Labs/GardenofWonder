@@ -152,6 +152,33 @@ From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
 - **`overscroll-behavior: none`** and `overflow: hidden` on the body prevent rubber-banding.
 - **`user-select: none`** everywhere, since the whole screen is a tap target.
 
+### Navigating between the garden and the Hollow
+
+**Swipe up in the garden to go down; swipe down in the Hollow to come back.** Both drag the world
+past you in the direction a scroll would. The burrow mouth stays as the discoverable entrance.
+
+Two rules keep the gestures from fighting the game:
+
+- **A swipe only counts if it starts on the background.** Plots, the flower, the docks, the rail,
+  the quest strip, the HUD, the sheet and the creatures all act on `pointerdown` and have already
+  fired by the time a drag is recognisable — so a swipe begun on one would plant, harvest or open a
+  panel on its way out. Waiting for `pointerup` instead would cost the tap latency the core loop is
+  built on. The exclusion list lives next to the handler in `ui.js`.
+- **It must be vertical and clearly so** (`dy > 70` and `dy > dx`), so a diagonal drag does nothing.
+
+Worth knowing for the installed app: **do not require a swipe to start at the very bottom edge**,
+which is the iOS home gesture.
+
+### The sheet's breakout art
+
+`#sheetArt` sits **inside `.sheet` but positioned above its top edge**, so whoever a panel is about
+stands on it rather than being filed inside it. It is on the sheet and not in `.sheet-body`, which
+means it rides the open/close transform and then holds still while the body scrolls. `.sheet` is
+`overflow: visible` and the art carries `z-index: 1`, so it paints over the sheet's own background
+and border — that overlap is the whole effect and anything that clips the sheet would kill it.
+
+Only the creature panel uses it so far; `renderSheet()` clears it for every other mode.
+
 ### Input uses pointer events
 
 `pointerdown`, not `click`, on the flower and plots — `click` waits for release and makes rapid
