@@ -44,6 +44,7 @@ const Game = (() => {
       goods: {},
       bench: { cells: Array(BENCH.cols * BENCH.cols).fill(null), side: BENCH.startSide, basket: [], stock: {} },
       critters: {},
+      stand: { slots: Array(STAND.slots).fill(null), nextAt: Array(STAND.slots).fill(0), seq: 0, delivered: 0, skipped: 0 },
       pairsSeen: [],
       mementos: {},
       luckyPacks: 0,
@@ -168,6 +169,20 @@ const Game = (() => {
       state.apiary.honey = state.apiary.honey && typeof state.apiary.honey === 'object' ? state.apiary.honey : {};
       state.apiary.wax = Number(state.apiary.wax) || 0;
       state.flowers = parsed.flowers && typeof parsed.flowers === 'object' ? parsed.flowers : {};
+      /* The Stand's arrays are fixed-length and indexed by slot, so a save from
+         before it existed — or from a build with a different slot count — has to
+         be resized rather than merged. An order referencing a good or customer
+         that no longer exists is dropped, and the slot simply refills. */
+      state.stand = Object.assign(d.stand, parsed.stand && typeof parsed.stand === 'object' ? parsed.stand : {});
+      state.stand.slots = Array.from({ length: STAND.slots }, (_, i) => {
+        const o = Array.isArray(state.stand.slots) ? state.stand.slots[i] : null;
+        if (!o || !goodById(o.good) || !customerById(o.customer) || !Array.isArray(o.needs)) return null;
+        o.slot = i;
+        return o;
+      });
+      state.stand.nextAt = Array.from({ length: STAND.slots },
+        (_, i) => (Array.isArray(state.stand.nextAt) ? Number(state.stand.nextAt[i]) || 0 : 0));
+      state.stand.seq = Number(state.stand.seq) || 0;
       state.craft = Array.isArray(parsed.craft) ? parsed.craft : [];
       state.goods = parsed.goods && typeof parsed.goods === 'object' ? parsed.goods : {};
       /* A count per keepsake, not a boolean, because anything that eventually
@@ -2319,6 +2334,285 @@ const Game = (() => {
     return total;
   }
 
+  /* ---------------- the Garden Stand ---------------- */
+
+  /* The order queue. Demand, which is the one thing this game has never had —
+     every system so far produces, and nothing wanted any of it.
+
+     Two rules from docs/13-order-system.md are load-bearing and both are
+     asserted in tools/sim-test.js: an order NEVER asks for something the player
+     cannot currently produce, and delivering ALWAYS beats selling the contents.
+     Break either and the board becomes a wall instead of a goal. */
+
+  const standTierDefs = () => STAND.tiers;
+  const standTierAt = (rep) => {
+    let out = STAND.tiers[0];
+    STAND.tiers.forEach((t) => { if (rep >= t.rep) out = t; });
+    return out;
+  };
+  const standTier = () => standTierAt(state.rep);
+
+  /* What the player can actually grow right now. Keyed off seed unlocks rather
+     than the pantry: an order for a bloom you own none of is a goal, an order
+     for a bloom you cannot unlock is a wall. */
+  const standFlowerPool = () => DATA.seeds.filter((sd) => seedUnlocked(sd.id)).map((sd) => sd.id);
+
+  /* Honey needs a hive to exist at all, and a named jar needs a bloom that can
+     fill it. `wildHoney` is deliberately excluded — "Wildflower Honey" as an
+     order line reads as filler, and a named jar is the entire point. */
+  const standHoneyPool = () => (hiveCount() > 0 ? standFlowerPool() : []);
+
+  function standPoolFor(kind) {
+    return kind === 'honey' ? standHoneyPool() : standFlowerPool();
+  }
+
+  /* A good is offerable only if every one of its lines can be filled from a
+     distinct member of its pool. This is the anti-frustration rule in one
+     function, and everything upstream of it just filters. */
+  function standGoodOffered(good) {
+    if (!good) return false;
+    const want = {};
+    good.needs.forEach((n) => {
+      const kind = n.pool === 'honey' ? 'honey' : 'flower';
+      want[kind] = (want[kind] || 0) + (n.any ? 0 : 1);
+      if (n.any) want[kind] = Math.max(want[kind], 1);
+    });
+    return Object.keys(want).every((kind) => standPoolFor(kind).length >= want[kind]);
+  }
+
+  const standGoodsAt = (tier) => GOODS.filter((g) => g.tier <= tier && standGoodOffered(g));
+
+  const standUnitValue = (kind, of) =>
+    (kind === 'honey' ? APIARY.honeyValue(of) : flowerValue(of));
+
+  /* A wild line ("a handful of whatever's blooming") names nothing, so it cannot
+     be priced at generation time — the player might hand over daisies or
+     Eternals. The card therefore quotes the FLOOR: the cheapest bloom they could
+     legally fill it with. standDeliver() then re-prices against what was really
+     spent and pays the larger of the two, so a wild line can be generous but
+     never a swindle, and dumping expensive blooms into one gains nothing because
+     the multiplier is identical either way. */
+  function standFloorUnit(kind) {
+    const pool = standPoolFor(kind);
+    if (!pool.length) return standUnitValue(kind, null);
+    return Math.min(...pool.map((id) => standUnitValue(kind, id)));
+  }
+
+  /* Reward maths. `varietyBonus` is the thumb on the scale that makes a
+     multi-line order worth more than the sum of its parts — the reason an order
+     spanning several blooms is the interesting one to fill. */
+  function standPrice(needs, tierDef) {
+    let base = 0;
+    needs.forEach((n) => {
+      const unit = n.any ? standFloorUnit(n.kind) : standUnitValue(n.kind, n.of);
+      base += unit * n.qty * (n.any ? STAND.wildBonus : 1);
+    });
+    const variety = 1 + STAND.varietyBonus * Math.max(0, needs.length - 1);
+    return {
+      coins: Math.max(1, Math.round(base * tierDef.mult * variety)),
+      rep: Math.max(1, Math.round(tierDef.repPay * needs.length))
+    };
+  }
+
+  /* Deliberately biased toward blooms the player has actually grown, so the
+     board reads as "someone noticed your garden" rather than a random quota.
+     Never a hard filter, or a new seed would never be asked for. */
+  function standPickFrom(pool, taken) {
+    const free = pool.filter((id) => !taken.includes(id));
+    const from = free.length ? free : pool;
+    const known = from.filter((id) => (state.discovered[id] || 0) > 0);
+    const bag = known.length && Math.random() < 0.75 ? known : from;
+    return bag[Math.floor(Math.random() * bag.length)];
+  }
+
+  function standRoll(range) {
+    const lo = range[0];
+    const hi = range[1];
+    return lo + Math.floor(Math.random() * (hi - lo + 1));
+  }
+
+  function standBuildOrder(good, tierDef, avoid) {
+    const taken = [];
+    const needs = [];
+    for (const n of good.needs) {
+      const kind = n.pool === 'honey' ? 'honey' : 'flower';
+      const pool = standPoolFor(kind);
+      if (!pool.length) return null;
+      if (n.any) {
+        needs.push({ kind, of: null, any: true, qty: standRoll(n.qty) });
+      } else {
+        // Steer off blooms the other slots are already asking for, so the board
+        // does not demand the same thing three times.
+        const shy = pool.filter((id) => !avoid.includes(id) && !taken.includes(id));
+        const of = shy.length ? standPickFrom(shy, []) : standPickFrom(pool, taken);
+        taken.push(of);
+        needs.push({ kind, of, any: false, qty: standRoll(n.qty) });
+      }
+    }
+    const pay = standPrice(needs, tierDef);
+    state.stand.seq += 1;
+    return {
+      id: 'o' + state.stand.seq,
+      good: good.id,
+      customer: standPickCustomer(tierDef.tier),
+      needs,
+      coins: pay.coins,
+      rep: pay.rep,
+      at: nowSeconds()
+    };
+  }
+
+  function standPickCustomer(tier) {
+    const eligible = CUSTOMERS.filter((c) => c.minTier <= tier);
+    const here = standOrders().map((o) => o.customer);
+    const free = eligible.filter((c) => !here.includes(c.id));
+    const bag = free.length ? free : eligible;
+    return bag[Math.floor(Math.random() * bag.length)].id;
+  }
+
+  function standGenerate(slot) {
+    const tierDef = standTier();
+    const pool = standGoodsAt(tierDef.tier);
+    if (!pool.length) return null;
+    // Bias toward the top of what is unlocked, so the board grows up with the
+    // player instead of staying full of posies forever.
+    const here = standOrders().map((o) => o.good);
+    const fresh = pool.filter((g) => !here.includes(g.id));
+    const bag = fresh.length ? fresh : pool;
+    const good = bag[Math.floor(Math.random() * bag.length)];
+    const avoid = standOrders().flatMap((o) => o.needs.map((n) => n.of).filter(Boolean));
+    const order = standBuildOrder(good, tierDef, avoid);
+    if (order) {
+      order.slot = slot;
+      state.stand.slots[slot] = order;
+      state.stand.nextAt[slot] = 0;
+    }
+    return order;
+  }
+
+  const standOrders = () => state.stand.slots.filter(Boolean);
+  const standOrderAt = (slot) => state.stand.slots[slot] || null;
+
+  const standHave = (need) => (need.kind === 'honey'
+    ? (need.any ? honeyTotal() : (state.apiary.honey[need.of] || 0))
+    : (need.any ? flowerTotal() : (state.flowers[need.of] || 0)));
+
+  const standNeedMet = (need) => standHave(need) >= need.qty;
+  const standCanDeliver = (order) => Boolean(order) && order.needs.every(standNeedMet);
+
+  /* Progress across the whole order, for a bar that means something at a glance. */
+  function standProgress(order) {
+    if (!order) return 0;
+    let want = 0;
+    let got = 0;
+    order.needs.forEach((n) => {
+      want += n.qty;
+      got += Math.min(n.qty, standHave(n));
+    });
+    return want ? got / want : 0;
+  }
+
+  /* Returns the raw value of what it actually spent, so delivery can re-price a
+     wild line against reality. */
+  function standTakeNeed(need) {
+    let spent = 0;
+    if (need.kind === 'honey') {
+      if (!need.any) {
+        state.apiary.honey[need.of] -= need.qty;
+        if (!state.apiary.honey[need.of]) delete state.apiary.honey[need.of];
+        return APIARY.honeyValue(need.of) * need.qty;
+      }
+      let left = need.qty;
+      // sortedByValue is ascending, so this spends the cheapest first — an "any"
+      // line must never quietly eat the rare jar being saved for a named order.
+      for (const id of sortedByValue(state.apiary.honey, APIARY.honeyValue)) {
+        if (left <= 0) break;
+        const take = Math.min(left, state.apiary.honey[id]);
+        state.apiary.honey[id] -= take;
+        if (!state.apiary.honey[id]) delete state.apiary.honey[id];
+        left -= take;
+        spent += APIARY.honeyValue(id) * take;
+      }
+      return spent;
+    }
+    if (!need.any) {
+      state.flowers[need.of] -= need.qty;
+      if (!state.flowers[need.of]) delete state.flowers[need.of];
+      return flowerValue(need.of) * need.qty;
+    }
+    let left = need.qty;
+    for (const id of sortedByValue(state.flowers, flowerValue)) {
+      if (left <= 0) break;
+      const take = Math.min(left, state.flowers[id]);
+      state.flowers[id] -= take;
+      if (!state.flowers[id]) delete state.flowers[id];
+      left -= take;
+      spent += flowerValue(id) * take;
+    }
+    return spent;
+  }
+
+  function standDeliver(slot) {
+    const order = standOrderAt(slot);
+    if (!standCanDeliver(order)) return null;
+    const tierDef = standTierAt(state.rep);
+    let spent = 0;
+    order.needs.forEach((need) => {
+      // The wild discount has to survive the re-price, or quoting a floor would
+      // hand it straight back and "any" would become the best line in the game.
+      spent += standTakeNeed(need) * (need.any ? STAND.wildBonus : 1);
+    });
+    // Re-price against what was really handed over, and pay the better of the
+    // two. The card's number is a floor the player can trust, never a ceiling.
+    const variety = 1 + STAND.varietyBonus * Math.max(0, order.needs.length - 1);
+    const worth = Math.round(spent * tierDef.mult * variety);
+    const paid = Math.max(order.coins, worth);
+    order.paid = paid;
+    state.credits += paid;
+    const grants = addRep(order.rep);
+    state.stand.slots[slot] = null;
+    state.stand.nextAt[slot] = nowSeconds() + STAND.refill;
+    state.stand.delivered += 1;
+    noteQuest('order', order.good, 1);
+    save();
+    emit('currency');
+    emit('panels');
+    emit('order', { order, grants, paid });
+    return { order, grants, paid };
+  }
+
+  /* Skipping is free and always available. Township's rule, and the single most
+     load-bearing line in the order spec: it turns "I do not have that" from a
+     wall into a choice. Never price the refresh. */
+  function standSkip(slot) {
+    const order = standOrderAt(slot);
+    if (!order) return false;
+    state.stand.slots[slot] = null;
+    state.stand.nextAt[slot] = nowSeconds() + STAND.refill;
+    state.stand.skipped += 1;
+    save();
+    emit('panels');
+    emit('orderSkip', { order });
+    return true;
+  }
+
+  const standRefillIn = (slot) =>
+    (state.stand.slots[slot] ? 0 : Math.max(0, (state.stand.nextAt[slot] || 0) - nowSeconds()));
+
+  /* Derived from an absolute timestamp, like every other clock in this game, so
+     time away counts for free and nothing has to be replayed. */
+  function processStand() {
+    const now = nowSeconds();
+    let changed = false;
+    for (let i = 0; i < STAND.slots; i += 1) {
+      if (state.stand.slots[i]) continue;
+      if (!state.stand.nextAt[i]) { state.stand.nextAt[i] = now; }
+      if (state.stand.nextAt[i] <= now && standGenerate(i)) changed = true;
+    }
+    if (changed) emit('panels');
+    return changed;
+  }
+
   /* ---------------- shop ---------------- */
   const HOLD_INTERVAL_MIN = 180; // floor, ms — never faster than a fast manual tap
   const HOLD_INTERVAL_STEP = 60; // ms shaved off per level
@@ -2491,6 +2785,7 @@ const Game = (() => {
     processAutoPlant();
     produceHoney(now);
     processCraft(now);
+    processStand();
     refreshDaily();
   }
 
@@ -2723,6 +3018,9 @@ const Game = (() => {
     benchDef, benchTop, benchUnlocked, benchFirstFree, benchEntryTier, benchNeighbours,
     benchGroup, benchMergeOnce, benchAddToBasket, benchPlace, benchBank,
     benchExpand, benchExpandCost, benchUsed, benchCapacity, benchStockOf,
+    standTier, standTierAt, standTierDefs, standOrders, standOrderAt, standGoodsAt, standGoodOffered,
+    standFlowerPool, standHoneyPool, standHave, standNeedMet, standCanDeliver, standProgress,
+    standPrice, standUnitValue, standFloorUnit, standGenerate, standDeliver, standSkip, standRefillIn, processStand,
     tick, progressOf, remainingOf,
     wonderActive, wonderMult, startWonder, comboMult,
     UPGRADE_EFFECTS,

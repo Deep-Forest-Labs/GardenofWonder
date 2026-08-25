@@ -917,3 +917,147 @@ const FLOWER_LINES = {
   mutation: ['Something changed out there!', 'That bloom looks different...', 'Well, would you look at that.'],
   wonder: ['WONDERRRR!', 'Everything is upside-down lovely!', 'Grab it all!']
 };
+
+/* ---------------- the Garden Stand ----------------
+
+   The order queue, as a place on the world map where customers walk up and
+   wait. Design in docs/25-world-map.md, catalogue in docs/26-goods-catalog.md,
+   engine spec in docs/13-order-system.md.
+
+   The load-bearing idea, from every survivor in this market: nobody cares what
+   the good IS. Gossip Harbor grosses nine figures a month selling chowder. The
+   customer is the story and the good is a token, which is why every good here
+   carries the ONE LINE its customer speaks — a good that cannot fill `line` has
+   no business in the catalogue. */
+
+const STAND = {
+  slots: 3,                 // three reads at a glance on a phone; six later, off rep
+  refill: 100,              // seconds an empty slot takes to fill, delivered or skipped
+  varietyBonus: 0.14,       // per line item beyond the first — the thumb on the scale
+  wildBonus: 0.9,           // an "any flowers" line pays less; it asks for nothing in particular
+
+  /* Orders must always beat selling their contents, or the whole engine is
+     optional. The lowest multiplier here is the floor that guarantees it, and
+     tools/sim-test.js asserts the property rather than the number. */
+  tiers: [
+    { tier: 1, rep: 0,    mult: 1.55, repPay: 4 },
+    { tier: 2, rep: 60,   mult: 1.85, repPay: 7 },
+    { tier: 3, rep: 220,  mult: 2.20, repPay: 11 },
+    { tier: 4, rep: 600,  mult: 2.60, repPay: 16 }
+  ]
+};
+
+/* A good is a shape an order takes, not an item in a bag. A Bouquet is "three
+   roses and two bluebells, wrapped" — there is no bouquet object anywhere, which
+   is exactly why the Stand can launch with no crafting system under it. Anything
+   with a `chain` is a bench rung and arrives when the bench gets its surface. */
+const GOODS = [
+  {
+    id: 'posy', name: 'Posy', family: 'florist', tier: 1, icon: 'petal',
+    line: 'Just a little something for the table.',
+    needs: [{ pool: 'flower', qty: [2, 3] }]
+  },
+  {
+    id: 'handful', name: 'Garden Handful', family: 'florist', tier: 1, icon: 'petal',
+    line: "A handful of whatever's blooming — surprise me.",
+    needs: [{ pool: 'flower', any: true, qty: [3, 5] }]
+  },
+  {
+    id: 'jar', name: 'Honey Jar', family: 'honey', tier: 2, icon: 'honey',
+    line: 'One jar, and mind which flowers it came from.',
+    needs: [{ pool: 'honey', qty: [1, 2] }]
+  },
+  {
+    id: 'bouquet', name: 'Bouquet', family: 'florist', tier: 2, icon: 'petal',
+    line: 'Something bright for the front window.',
+    needs: [{ pool: 'flower', qty: [2, 4] }, { pool: 'flower', qty: [2, 3] }]
+  },
+  {
+    id: 'sickbed', name: 'Get-Well Basket', family: 'florist', tier: 3, icon: 'gift',
+    line: "He's been poorly. Flowers and honey, I think.",
+    needs: [{ pool: 'flower', qty: [3, 4] }, { pool: 'honey', qty: [1, 2] }]
+  },
+  {
+    id: 'flight', name: 'Honey Flight', family: 'honey', tier: 3, icon: 'honey',
+    line: 'Two different jars. I want to taste them side by side.',
+    needs: [{ pool: 'honey', qty: [1, 2] }, { pool: 'honey', qty: [1, 2] }]
+  },
+  {
+    id: 'bridal', name: 'Bridal Bouquet', family: 'florist', tier: 3, icon: 'petal',
+    line: "She's getting married on Saturday. No pressure.",
+    needs: [{ pool: 'flower', qty: [3, 4] }, { pool: 'flower', qty: [2, 3] }, { pool: 'flower', qty: [2, 3] }]
+  },
+  {
+    id: 'wreath', name: 'Door Wreath', family: 'florist', tier: 4, icon: 'clover',
+    line: 'For the door. Everyone will see it, so make it good.',
+    needs: [{ pool: 'flower', qty: [4, 6] }, { pool: 'flower', qty: [3, 5] }, { pool: 'honey', qty: [1, 1] }]
+  },
+  {
+    id: 'grand', name: 'The Village Show', family: 'florist', tier: 4, icon: 'star',
+    line: 'The judges are coming. I am putting my name on this.',
+    needs: [{ pool: 'flower', qty: [4, 6] }, { pool: 'flower', qty: [4, 5] }, { pool: 'flower', qty: [3, 4] }]
+  }
+];
+
+/* Recurring customers with names, faces and opinions are what turn "submit 3
+   lavender" into a small relationship — the Gossip Harbor lesson. Portrait specs
+   are read by customers.js, which knows nothing about the game. */
+const CUSTOMERS = [
+  {
+    id: 'nan', name: 'Nan Bramble', minTier: 1,
+    art: { skin: '#f4d0b0', hair: '#e8e4dd', style: 'bun', clothes: '#8fb8e8', accent: '#ffd6e8', hat: null },
+    lines: {
+      greet: ['My knees are bad but my eyes are fine.', 'You always did have the good soil.'],
+      waiting: ['No rush, dear. I have all afternoon.', 'I will just sit here, shall I.'],
+      delivered: ['Oh, that IS lovely.', 'You are a treasure. Do not argue.']
+    }
+  },
+  {
+    id: 'tobin', name: 'Tobin', minTier: 1,
+    art: { skin: '#e8b990', hair: '#7a4a28', style: 'mop', clothes: '#ffd23f', accent: '#57c15b', hat: null },
+    lines: {
+      greet: ['I saved up ALL my coins.', "It's for my mum. Don't tell her."],
+      waiting: ['Is it ready is it ready is it ready', 'I can wait. I am very patient.'],
+      delivered: ['WOW. She is going to cry!', 'Best one ever. I mean it.']
+    }
+  },
+  {
+    id: 'marigold', name: 'Miss Marigold', minTier: 2,
+    art: { skin: '#f0c9a8', hair: '#c96b3f', style: 'braid', clothes: '#a06cd5', accent: '#fff7e1', hat: null },
+    lines: {
+      greet: ['I have a very particular idea in mind.', 'Let us see if you can manage it.'],
+      waiting: ['Standards, that is all I ask.', 'I am not impatient. I am punctual.'],
+      delivered: ['Hm. Yes. That will do nicely.', 'I shall recommend you. Sparingly.']
+    }
+  },
+  {
+    id: 'bram', name: 'Bram the Baker', minTier: 2,
+    art: { skin: '#c98a5e', hair: '#3d2a1a', style: 'cap', clothes: '#fff7e1', accent: '#ff8fa3', hat: '#ffffff' },
+    lines: {
+      greet: ['Flour on everything. Ignore it.', 'Trade you. I have got buns.'],
+      waiting: ['My oven is on, so — soonish?', 'Take your time. The dough is proving.'],
+      delivered: ['That smells better than my kitchen.', 'Beautiful. Now come and eat something.']
+    }
+  },
+  {
+    id: 'wren', name: 'Wren', minTier: 3,
+    art: { skin: '#a9714b', hair: '#241a14', style: 'short', clothes: '#4bb257', accent: '#ffc94a', hat: null },
+    lines: {
+      greet: ['Three villages over, they told me about you.', 'I travel light. This is worth the weight.'],
+      waiting: ['I am not going anywhere. Not yet.', 'The road will wait an hour.'],
+      delivered: ['Now that is worth carrying.', 'I will tell them you are the real thing.']
+    }
+  },
+  {
+    id: 'hollis', name: 'Old Hollis', minTier: 3,
+    art: { skin: '#e3c4a0', hair: '#cfcabf', style: 'beard', clothes: '#c99a68', accent: '#ffd23f', hat: '#e8d5b0' },
+    lines: {
+      greet: ['Bees told me you were busy.', 'I kept hives before you kept anything.'],
+      waiting: ['Patience is the whole trade, lad.', 'A hive taught me waiting.'],
+      delivered: ['Aye. That is done properly.', 'The bees chose well.']
+    }
+  }
+];
+
+const goodById = (id) => GOODS.find((g) => g.id === id) || null;
+const customerById = (id) => CUSTOMERS.find((c) => c.id === id) || null;

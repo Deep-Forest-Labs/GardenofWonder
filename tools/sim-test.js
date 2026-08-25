@@ -21,7 +21,8 @@ globalThis.localStorage = {
    then re-export what they defined onto globalThis. */
 const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
   'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'CREATURE_PAIRS', 'PAIR_TUNING',
-  'CREATURE_FOOD', 'FED_STARS', 'FOOD_CAP_HOURS', 'ARRIVAL_AWAKE_HOURS', 'FED_THRESHOLD_HOURS', 'Icons', 'flowerValue', 'Game'];
+  'CREATURE_FOOD', 'FED_STARS', 'FOOD_CAP_HOURS', 'ARRIVAL_AWAKE_HOURS', 'FED_THRESHOLD_HOURS',
+  'STAND', 'GOODS', 'CUSTOMERS', 'goodById', 'customerById', 'Icons', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -3332,6 +3333,313 @@ check('food never advances the star a creature was raised to', (() => {
   const before = G.critterLevel(PIP.id);
   G.feedCritter(PIP.id, CREATURE_FOOD[0].id);
   return G.critterLevel(PIP.id) === before;
+})());
+
+/* ---------------- the Garden Stand ---------------- */
+group('The Garden Stand');
+
+/* Every good must carry the one line its customer speaks. This is the catalogue
+   rule from docs/26-goods-catalog.md made mechanical: the good is a token, the
+   customer is the story, and a good that cannot fill `line` is a spreadsheet row
+   wearing a name. */
+check('every good has a name, a family, a tier and a line',
+  GOODS.every((g) => g.id && g.name && g.family && g.tier >= 1 && g.line && g.line.length > 8));
+check('good ids are unique', new Set(GOODS.map((g) => g.id)).size === GOODS.length);
+check('every good asks for something', GOODS.every((g) => g.needs.length >= 1 && g.needs.length <= 4));
+check('every quantity range is sane',
+  GOODS.every((g) => g.needs.every((n) => n.qty[0] >= 1 && n.qty[1] >= n.qty[0])));
+check('every customer has a name, a face and three kinds of line',
+  CUSTOMERS.every((c) => c.name && c.art && c.art.skin && c.lines.greet.length
+    && c.lines.waiting.length && c.lines.delivered.length));
+check('customer ids are unique', new Set(CUSTOMERS.map((c) => c.id)).size === CUSTOMERS.length);
+/* A tier the player can reach with nobody in it would generate an order with no
+   face on it. */
+check('every tier has at least one customer and one good',
+  STAND.tiers.every((t) => CUSTOMERS.some((c) => c.minTier <= t.tier) && GOODS.some((g) => g.tier <= t.tier)));
+check('tiers climb in both rep and pay', STAND.tiers.every((t, i, a) =>
+  i === 0 || (t.rep > a[i - 1].rep && t.mult > a[i - 1].mult && t.repPay > a[i - 1].repPay)));
+
+const standReset = (level = 1) => {
+  G.reset();
+  unlockTo(level);
+  S.stand.slots = Array(STAND.slots).fill(null);
+  S.stand.nextAt = Array(STAND.slots).fill(0);
+};
+
+/* The rule that keeps the board from becoming a wall. Checked against the whole
+   pool at several levels, because "cannot produce" changes as seeds unlock. */
+check('an order never asks for a seed the player has not unlocked', (() => {
+  for (const level of [1, 3, 8, 14, 20]) {
+    standReset(level);
+    const allowed = G.standFlowerPool();
+    for (let n = 0; n < 60; n += 1) {
+      S.stand.slots = Array(STAND.slots).fill(null);
+      const o = G.standGenerate(0);
+      if (!o) continue;
+      for (const need of o.needs) {
+        if (need.any) continue;
+        if (!allowed.includes(need.of)) return false;
+      }
+    }
+  }
+  return true;
+})());
+
+/* Honey has a harder gate than a flower: with no hive there is no honey at all,
+   so an order asking for a jar is uncompletable rather than merely slow. */
+check('with no hives, no order asks for honey', (() => {
+  standReset(20);
+  S.apiary.hives = [];
+  for (let n = 0; n < 80; n += 1) {
+    S.stand.slots = Array(STAND.slots).fill(null);
+    const o = G.standGenerate(0);
+    if (o && o.needs.some((need) => need.kind === 'honey')) return false;
+  }
+  return true;
+})());
+check('a hive puts honey back on the board', (() => {
+  standReset(20);
+  S.credits = 1e9;
+  G.buyHive();
+  for (let n = 0; n < 120; n += 1) {
+    S.stand.slots = Array(STAND.slots).fill(null);
+    const o = G.standGenerate(0);
+    if (o && o.needs.some((need) => need.kind === 'honey')) return true;
+  }
+  return false;
+})());
+
+/* The other load-bearing rule: fulfilling must always beat selling the contents,
+   or players bypass the engine entirely. Asserted as a property across every
+   good at every tier, not as a number. */
+check('a named order always pays more than selling its contents', (() => {
+  standReset(20);
+  S.credits = 1e9;
+  G.buyHive();
+  for (let n = 0; n < 200; n += 1) {
+    S.stand.slots = Array(STAND.slots).fill(null);
+    const o = G.standGenerate(0);
+    if (!o || o.needs.some((need) => need.any)) continue;
+    const raw = o.needs.reduce((sum, need) => sum + G.standUnitValue(need.kind, need.of) * need.qty, 0);
+    if (o.coins <= raw) return false;
+  }
+  return true;
+})());
+
+/* A wild line names nothing, so its card price is a floor and delivery re-prices
+   against what was actually handed over. The property to hold is the same one —
+   the player is never better off selling — and it has to survive the worst case,
+   which is a pantry holding nothing but the most valuable bloom in the game. */
+check('a wild line never pays less than selling what it took', (() => {
+  standReset(20);
+  const dearest = G.standFlowerPool()
+    .slice().sort((a, b) => G.standUnitValue('flower', b) - G.standUnitValue('flower', a))[0];
+  for (const stock of [G.standFlowerPool()[0], dearest]) {
+    for (let n = 0; n < 60; n += 1) {
+      S.stand.slots = Array(STAND.slots).fill(null);
+      const o = G.standGenerate(0);
+      if (!o || !o.needs.every((need) => need.any && need.kind === 'flower')) continue;
+      S.flowers = {};
+      S.credits = 0;
+      const qty = o.needs.reduce((a, need) => a + need.qty, 0);
+      S.flowers[stock] = qty;
+      const raw = G.standUnitValue('flower', stock) * qty;
+      const res = G.standDeliver(0);
+      if (!res || S.credits <= raw) return false;
+    }
+  }
+  return true;
+})());
+
+/* The floor on the card must be a floor, not a guess that can come in high. */
+check('the card price is never more than the delivery pays', (() => {
+  standReset(20);
+  for (let n = 0; n < 80; n += 1) {
+    S.stand.slots = Array(STAND.slots).fill(null);
+    const o = G.standGenerate(0);
+    if (!o || o.needs.some((need) => need.kind === 'honey')) continue;
+    S.flowers = {};
+    o.needs.forEach((need) => {
+      const id = need.of || G.standFlowerPool()[0];
+      S.flowers[id] = (S.flowers[id] || 0) + need.qty;
+    });
+    const quoted = o.coins;
+    const res = G.standDeliver(0);
+    if (!res || res.paid < quoted) return false;
+  }
+  return true;
+})());
+
+/* Cheapest-first, so a wild line cannot quietly eat the rare bloom being saved
+   for a named order. This was backwards once and the sort direction is the whole
+   bug — sortedByValue is ascending. */
+check('a wild line spends the cheapest blooms first', (() => {
+  standReset(20);
+  const pool = G.standFlowerPool().slice()
+    .sort((a, b) => G.standUnitValue('flower', a) - G.standUnitValue('flower', b));
+  const cheap = pool[0];
+  const dear = pool[pool.length - 1];
+  for (let n = 0; n < 120; n += 1) {
+    S.stand.slots = Array(STAND.slots).fill(null);
+    const o = G.standGenerate(0);
+    if (!o || !o.needs.every((need) => need.any && need.kind === 'flower')) continue;
+    const qty = o.needs.reduce((a, need) => a + need.qty, 0);
+    S.flowers = {};
+    S.flowers[cheap] = qty;
+    S.flowers[dear] = 2;
+    G.standDeliver(0);
+    return (S.flowers[dear] || 0) === 2 && !(S.flowers[cheap] > 0);
+  }
+  return false;
+})());
+
+check('a multi-line order beats the same goods asked for singly', (() => {
+  const t = STAND.tiers[0];
+  const one = G.standPrice([{ kind: 'flower', of: 'daisy', qty: 4 }], t);
+  const two = G.standPrice([
+    { kind: 'flower', of: 'daisy', qty: 2 }, { kind: 'flower', of: 'tulip', qty: 2 }
+  ], t);
+  return two.coins > one.coins && two.rep > one.rep;
+})());
+
+check('a board of three does not ask for the same bloom three times', (() => {
+  standReset(20);
+  let collisions = 0;
+  for (let round = 0; round < 40; round += 1) {
+    S.stand.slots = Array(STAND.slots).fill(null);
+    for (let i = 0; i < STAND.slots; i += 1) G.standGenerate(i);
+    const named = G.standOrders().flatMap((o) => o.needs.map((n) => n.of).filter(Boolean));
+    const counts = {};
+    named.forEach((id) => { counts[id] = (counts[id] || 0) + 1; });
+    if (Object.values(counts).some((c) => c >= 3)) collisions += 1;
+  }
+  return collisions === 0;
+})());
+
+check('two slots do not show the same customer', (() => {
+  standReset(20);
+  for (let round = 0; round < 40; round += 1) {
+    S.stand.slots = Array(STAND.slots).fill(null);
+    for (let i = 0; i < STAND.slots; i += 1) G.standGenerate(i);
+    const who = G.standOrders().map((o) => o.customer);
+    if (new Set(who).size !== who.length) return false;
+  }
+  return true;
+})());
+
+/* Delivery: spends exactly what was asked, pays exactly what was promised. */
+const fillFor = (order) => order.needs.forEach((need) => {
+  const pool = need.kind === 'honey' ? G.standHoneyPool() : G.standFlowerPool();
+  const floor = pool.slice().sort((a, b) =>
+    G.standUnitValue(need.kind, a) - G.standUnitValue(need.kind, b))[0];
+  const id = need.of || floor;
+  if (need.kind === 'honey') S.apiary.honey[id] = (S.apiary.honey[id] || 0) + need.qty;
+  else S.flowers[id] = (S.flowers[id] || 0) + need.qty;
+});
+
+check('an order cannot be delivered without the goods', (() => {
+  standReset(6);
+  S.flowers = {};
+  const o = G.standGenerate(0);
+  return o && !G.standCanDeliver(o) && G.standDeliver(0) === null;
+})());
+
+/* Filled from the cheapest bloom in the pool, which is exactly what the card
+   quoted, so the re-price must land on the quoted number rather than above it —
+   this is what catches the wild discount being handed back at delivery. */
+check('delivering pays the coins and the reputation on the card', (() => {
+  for (let n = 0; n < 40; n += 1) {
+    standReset(6);
+    S.flowers = {};
+    S.apiary.honey = {};
+    S.credits = 0;
+    const o = G.standGenerate(0);
+    if (!o) return false;
+    fillFor(o);
+    const rep0 = S.rep;
+    const res = G.standDeliver(0);
+    if (!res) return false;
+    if (S.credits !== res.paid) return false;
+    if (res.paid !== o.coins) return false;
+    if (S.rep !== rep0 + o.rep) return false;
+  }
+  return true;
+})());
+
+check('delivering spends exactly the goods asked for', (() => {
+  standReset(6);
+  S.flowers = {};
+  const o = G.standGenerate(0);
+  fillFor(o);
+  // one spare of everything, which must survive
+  o.needs.forEach((n) => { if (!n.any && n.kind === 'flower') S.flowers[n.of] += 1; });
+  const spares = o.needs.filter((n) => !n.any && n.kind === 'flower').length;
+  G.standDeliver(0);
+  return G.flowerTotal() === spares;
+})());
+
+check('a delivered slot empties and refills on a timer', (() => {
+  standReset(6);
+  S.flowers = {};
+  const o = G.standGenerate(0);
+  fillFor(o);
+  G.standDeliver(0);
+  if (G.standOrderAt(0)) return false;
+  if (!(G.standRefillIn(0) > 0)) return false;
+  advance(STAND.refill + 2);
+  return Boolean(G.standOrderAt(0));
+})());
+
+/* The single most load-bearing line in the order spec: skipping is free and
+   always available, which turns "I do not have that" from a wall into a choice. */
+check('any order can be skipped, for nothing', (() => {
+  standReset(6);
+  S.flowers = {};
+  S.credits = 0;
+  S.gems = 0;
+  const o = G.standGenerate(0);
+  const ok = G.standSkip(0);
+  return ok && !G.standOrderAt(0) && S.credits === 0 && S.gems === 0 && G.standRefillIn(0) > 0;
+})());
+
+check('the board fills itself up to its slot count', (() => {
+  standReset(6);
+  advance(STAND.refill + 2);
+  return G.standOrders().length === STAND.slots;
+})());
+
+check('progress reads across every line of an order', (() => {
+  standReset(6);
+  S.flowers = {};
+  S.apiary.honey = {};
+  const o = G.standGenerate(0);
+  if (G.standProgress(o) !== 0) return false;
+  fillFor(o);
+  return Math.abs(G.standProgress(o) - 1) < 1e-9;
+})());
+
+/* A save written before the Stand existed must not throw, and must not resurrect
+   an order whose good or customer has since been renamed away. */
+check('a save from before the Stand loads clean', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  delete raw.stand;
+  globalThis.localStorage.setItem('gardenwonder.save', JSON.stringify(raw));
+  G.load();
+  return Array.isArray(S.stand.slots) && S.stand.slots.length === STAND.slots
+    && S.stand.slots.every((x) => x === null);
+})());
+
+check('an order for a good that no longer exists is dropped', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.stand = {
+    slots: [{ id: 'o1', good: 'ghost_good', customer: 'nan', needs: [], coins: 5, rep: 1 }, null, null],
+    nextAt: [0, 0, 0], seq: 1, delivered: 0, skipped: 0
+  };
+  globalThis.localStorage.setItem('gardenwonder.save', JSON.stringify(raw));
+  G.load();
+  return S.stand.slots[0] === null;
 })());
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
