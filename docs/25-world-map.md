@@ -125,6 +125,97 @@ coming from exactly this pattern, it is the map's honest revenue argument.
 - **Match-3 minigames** (Township's second engine). Already rejected 2026-08-14 for the level
   treadmill; merge replaced it.
 
+## What a place is allowed to be
+
+**Added 2026-08-25 (later), after the owner played Cats & Soup.** This is the rule the rest of the
+map has to obey, and it is more important than any individual place.
+
+### The Cats & Soup lesson is structural, not visual
+
+Cats & Soup puts a soup pot in the middle and stations around it. The stations **do not each make
+their own soup** — chopping makes *the* soup worth more. That is a shipped, cozy, commercially
+proven version of the rule [12-meta-layer-design.md](12-meta-layer-design.md) already calls
+mandatory: a graph where every region produces raw material for one market leaves the regions
+**parallel**, and players simply farm whichever pays best.
+
+So it confirms the existing design rather than replacing it. What it adds is a **fourth structural
+type** the docs did not have.
+
+### The four types
+
+Every place on the map must be exactly one of these, and **the map must never hold two of the same
+type in a row.** (Same logic as the "no two adjacent unlockables share an effect category" rule in
+[17-market-and-positioning.md](17-market-and-positioning.md).)
+
+| Type | Does | Examples |
+| --- | --- | --- |
+| **Producer** | Makes a raw material on a clock | The Garden (blooms), The Orchard (fruit) |
+| **Transformer** | Turns materials into goods | The Potting Shed (the merge board) |
+| **Consumer** | Wants goods and pays for them | The Garden Stand (orders) |
+| **Amplifier** | Makes nothing; makes another place better | Pollination from the hives |
+
+**The amplifier is the type that turns a list of buildings into a system**, and this project already
+shipped one without naming it: hives do not only make honey, they lift every harvest in the garden.
+
+### The not-a-clone test
+
+Before any new place is built, it must pass all three:
+
+1. **What structural type is it, and is the place next to it a different type?**
+2. **If it is a producer, what makes it not the garden?** A different *clock* or a different
+   *output family* counts. A different sprite does not.
+3. **Could its job be done by adding to an existing place instead?** If yes, do that.
+
+### Creatures are the labour — the station idea
+
+The owner's read of Cats & Soup: cats are assigned to stations, and the station's value depends on
+who is working it. Garden Wonder already has the whole apparatus — six creatures with traits,
+stars, food, sleep, eight pairs, and a slot-limited loadout — and it currently has nowhere to point
+it, because `setTending(id, on)` is a boolean: a creature is *out* or *resting*. There was only ever
+one place to be out in.
+
+**On a map with places, that boolean becomes a location.** `home.tending = true` becomes
+`home.at = 'meadow'`. One field, and:
+
+- every place's output depends on **who you station there**
+- the roster becomes worth growing, because more places means more slots
+- the loadout stops being a fixed optimum and becomes something you revisit
+- pairs acquire a spatial question — must two partners work the same place?
+
+**The guardrail, without which this fails: a place must work with nobody stationed at it.** A
+creature makes a place *better*, never possible. Early on there are two habitat slots and several
+places, and if an unstaffed place produces nothing the map is a row of dead buildings — which is
+the same failure the "an upkeep state the player cannot clear" trap already names.
+
+**Not built, and deliberately not next.** Traits and the eight pairs were balanced against a single
+garden, so this has a real blast radius. Ship a second place first, see whether the map reads as a
+system, then decide.
+
+## The places, and what each one does
+
+Settled 2026-08-25. The map keeps the shape it already has; this is what fills it.
+
+| Place | Type | What it does | Why it is not a second garden |
+| --- | --- | --- | --- |
+| **The Garden** | Producer | Blooms, verbs, mutations, the tap loop | The high-interaction place, and it stays that way |
+| **The Potting Shed** | Transformer | The merge board, feeding Stand orders | Turns things into other things |
+| **The Garden Stand** | Consumer | Orders — **built** | Wants things |
+| **The Orchard** | Producer, *long clock* | Fruit on overnight timers, feeding preserves | Eight hours against twelve seconds |
+| **The Wild Meadow** | Producer **+ amplifier** | The hives come home: honey follows what blooms, pollination lifts every harvest | Its output depends on what is planted *elsewhere* |
+| **The Ridge** | Producer, *time-gated* | **The Night Garden.** Only wakes after dark; Moonflower and Starlit Iris; Luna and Ember live here | It is a clock, not a crop |
+
+**The Potting Shed is a building beside the garden, not a bought parcel.** It is a shed. It unlocks
+on reputation rather than coins, like everything else the Stand gates.
+
+**The Orchard is where collect-all belongs.** Long timers and low interaction make it *designed* to
+be tapped from the map without going in — which turns "the map collects the boring half, the garden
+keeps the interesting half" from a per-region toggle into a property of how a place is designed.
+That is the better version of the rule.
+
+**The Ridge as the Night Garden** gives the game the one hook it completely lacks: a reason to open
+the app at a *different time of day*. It reuses the epoch clock that already exists, homes two
+creatures, and finally makes Nightbell a place rather than a footnote.
+
 ## The map inventory
 
 What belongs on the map, in the order it should arrive. Phases are separately shippable; each one

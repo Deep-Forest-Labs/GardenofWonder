@@ -61,11 +61,27 @@ Ranked by confidence, which is also the build order.
 Tap, plant, harvest on timers. Two-to-five-minute cadence. The heartbeat, and the thing that is
 always ready when the app opens. Home of the talking flower and the emotional centre of the game.
 
-### 2. The Apiary — *honey, wax, pollination* — **demoted 2026-08-14, no longer a region**
+### 2. The Apiary — *honey, wax, pollination* — **demoted 2026-08-14, returning as a place 2026-08-25**
 
-> **This is no longer a region.** Bees fold into the Garden as an **adjacency effect** — a flower
-> that attracts them, a lift to neighbouring plots, honey as an occasional drop. The dock tab goes.
-> Reasoning in [10-decision-log.md](10-decision-log.md).
+> **It is a PLACE again — the Wild Meadow — but not a parallel production chain.** Read the
+> demotion below carefully, because the part that was wrong and the part that was right are
+> different things.
+>
+> **What 2026-08-14 objected to, and it still stands:** honey as a *second economy sitting beside
+> the first*, farmed instead of the garden. A region that is another faucet makes regions parallel,
+> which is the failure this whole document exists to prevent.
+>
+> **What has changed:** the map now exists, and
+> [25-world-map.md](25-world-map.md#what-a-place-is-allowed-to-be) names a structural type the
+> 2026-08-14 pass did not have — the **amplifier**. The hives are the game's existing example of
+> one: pollination lifts *every harvest in the garden*, and honey's variety is decided by what is
+> planted there. That is the opposite of a parallel faucet — its output depends on another place.
+>
+> So the Wild Meadow is a producer **and** an amplifier, and it is the cheapest region the project
+> will ever ship, because the simulation is already built and currently sits behind a dock tab
+> everyone agrees should not exist. The dock tab still goes; it becomes a place.
+>
+> **The Apothecary stays folded.** The Potting Bench replaced it, and that decision is untouched.
 >
 > The argument below was that honey-follows-bloom makes the garden's *contents* matter. That
 > instinct was right and the mechanism was wrong: it makes contents matter to a **second** economy

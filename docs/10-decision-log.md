@@ -5,6 +5,65 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (design) — Places get a taxonomy, and the amplifier gets its name
+
+**The owner played Cats & Soup and read it correctly.** The lesson is not the ring of stations
+around a soup pot — it is that **the stations do not each make their own soup.** Chopping makes
+*the* soup worth more. That is a shipped, cozy, commercially proven version of the rule
+[12-meta-layer-design.md](12-meta-layer-design.md) has called mandatory since it was written:
+regions that all produce raw material for one market are **parallel**, and players farm whichever
+pays best.
+
+So it confirms the design. What it adds is **a fourth structural type**: producer, transformer,
+consumer, and now **amplifier** — a place that makes nothing and makes another place better.
+Naming it matters, because the amplifier is what turns a row of buildings into a system, and
+**this project already shipped one without knowing it**: pollination.
+
+**The taxonomy is now a rule with a test**, in
+[25-world-map.md](25-world-map.md#what-a-place-is-allowed-to-be): every place is exactly one type,
+no two of the same type in a row, and before anything is built — what type is it, what makes it
+not the garden (a different *clock* or *output family* counts, a different sprite does not), and
+could an existing place do the job instead.
+
+**The six places are settled.** Garden (producer), Potting Shed (transformer, a building beside the
+garden rather than a bought parcel — it is a shed), Garden Stand (consumer, built), Orchard
+(producer on an overnight clock), Wild Meadow (producer *and* amplifier), Ridge (**the Night
+Garden** — time-gated).
+
+**Two of those are better than they look.** The Orchard is where **collect-all belongs** — long
+timers and low interaction make it *designed* to be tapped from the map, which turns "the map
+collects the boring half" from a per-region toggle into a property of how a place is designed. And
+the Night Garden gives the game the single hook it completely lacks: **a reason to open the app at
+a different time of day**, reusing the epoch clock that already exists.
+
+### The apiary comes back, and the demotion was only half wrong
+
+2026-08-14 cut the Apiary as a region because honey was a *second economy beside the first*. That
+objection stands and is not being relitigated. What changed is that the map exists and the
+amplifier type is now named: the hives' output depends on what is planted in the garden, and
+pollination lifts every harvest there. **That is the opposite of a parallel faucet.** So the Wild
+Meadow returns as a *place*, the dock tab still dies, and the Apothecary stays folded into the
+bench. It is also the cheapest region the project will ever ship, because the simulation is already
+built.
+
+### Creatures as labour — agreed, and deliberately not next
+
+The owner's other read of Cats & Soup: cats are assigned to stations. Garden Wonder has the entire
+apparatus — traits, stars, food, sleep, eight pairs, a slot-limited loadout — pointed at nothing,
+because `setTending(id, on)` is a boolean. There was only ever one place to be *out* in.
+
+**On a map with places that boolean becomes a location**, and one field buys an enormous amount:
+every place's output depends on who is stationed there, the roster becomes worth growing, and the
+loadout stops being a fixed optimum. **The guardrail: a place must work with nobody stationed at
+it.** A creature makes a place better, never possible — otherwise two habitat slots and four places
+is a map of dead buildings, which is the "upkeep state the player cannot clear" trap wearing a
+different hat.
+
+**Not built next, on purpose.** Traits and the eight pairs were balanced against one garden. Ship a
+second place, see whether the map reads as a system, then decide.
+
+---
+
 ## 2026-08-25 (build 2) — The map frame lands, and the Stand moves onto the lane
 
 **The game is three places on one axis now.** Swipe down from the garden and the camera pulls back

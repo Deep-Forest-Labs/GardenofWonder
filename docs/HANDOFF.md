@@ -61,6 +61,33 @@ from quests and levels.
 > design what a AAA team would build, ship incrementally, with the not-a-clone bar standing per
 > garden.
 >
+> **Places got a taxonomy, 2026-08-25 (design).** The owner played Cats & Soup and read the right
+> lesson: the stations around the soup pot **do not each make their own soup** — they make *the*
+> soup worth more. That names a fourth structural type the docs lacked. Every place on the map is
+> now exactly one of **producer / transformer / consumer / amplifier**, no two of the same type in a
+> row, and there is a three-question not-a-clone test before anything gets built. **The amplifier is
+> what turns a row of buildings into a system, and this project already shipped one without naming
+> it: pollination.**
+>
+> **The six places are settled:** Garden (producer) · Potting Shed (transformer, a *building beside
+> the garden*, not a bought parcel) · Garden Stand (consumer, built) · Orchard (producer, overnight
+> clock — **and the natural home for collect-all**) · Wild Meadow (producer **+ amplifier**) ·
+> The Ridge (**the Night Garden**, time-gated — the one hook the game completely lacks, a reason to
+> open the app at a different time of day). See
+> [25-world-map.md](25-world-map.md#what-a-place-is-allowed-to-be).
+>
+> **The apiary comes back as a place, and the 2026-08-14 demotion was only half wrong.** What it
+> objected to — honey as a second economy beside the first — still stands. What changed is that the
+> amplifier type is now named: the hives' output depends on what is planted in the garden and
+> pollination lifts every harvest there, which is the opposite of a parallel faucet. The dock tab
+> still dies. The Apothecary stays folded into the bench.
+>
+> **Creatures as labour is agreed and deliberately NOT next.** `setTending(id, on)` is a boolean
+> because there was only ever one place to be out in; on a map it becomes `home.at = 'meadow'`, and
+> one field makes every place depend on who is stationed there. **Guardrail: a place must work with
+> nobody stationed at it** — a creature makes it better, never possible. Held because traits and the
+> eight pairs were balanced against one garden.
+>
 > **The world map is BUILT, 2026-08-25.** Swipe down from the garden and the camera pulls back to a
 > world you drag around with a finger: the garden **showing whatever is actually planted in it**,
 > the Hollow's burrow, the **Garden Stand on the lane**, and three parcels of land you cannot buy
@@ -577,16 +604,22 @@ and the build is **MVP-first** — plain map, functional Stand, polish later.
 
 **The MVP is done.** The Stand and the map frame both ship. What comes next, roughly in order:
 
-1. **Play it and judge the feel** — the rubric is in
+1. **The Wild Meadow** — the apiary comes home as a place. The cheapest region the project will
+   ever ship: the hive simulation is already built and sitting in a dock tab everyone agrees should
+   not exist. Kills the tab, gives the map its second producer, and teaches the amplifier type.
+   **This is the current task.**
+2. **Play it and judge the feel** — the rubric is in
    [25-world-map.md](25-world-map.md#the-mvp-decided-2026-08-25--build-plain-test-the-feel-polish-as-we-go).
    The load-bearing question: *does checking the Stand pull you back into planting something
    specific?* If not, the order generation weights are wrong before anything else is.
-2. **Collect-all**, gated on a region being fully automated, with the 2× rewarded video on it —
-   the map's honest revenue argument and the reason the drone becomes an unlock.
-3. **Buying land**, off Stand reputation, which turns the three refusing parcels into the
-   progression gate they are drawn to be.
-4. **The Potting Shed surface**, which the goods decision already settled: every crafted family is
+3. **Collect-all**, gated on a region being fully automated, with the 2× rewarded video on it —
+   the map's honest revenue argument and the reason the drone becomes an unlock. **The Orchard is
+   its natural home**, being long-clock and low-interaction by design.
+4. **Buying land**, off Stand reputation, which turns the refusing parcels into the progression
+   gate they are drawn to be.
+5. **The Potting Shed surface**, which the goods decision already settled: every crafted family is
    a merge chain on the bench, and the prototype Craft tab retires when it lands.
+6. **Creature stations**, once the map has proved it reads as a system.
 
 **Resolved by the goods decision:** the bench ships a surface (every crafted family is a merge
 chain on it), and the prototype Craft tab retires when it does.
