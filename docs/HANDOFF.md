@@ -74,6 +74,10 @@ from quests and levels.
 > oldest question — **you plant moonflower because the moonflower jar slot is empty**, which is
 > desire where an order is a quota.
 >
+> **The HUD is up in every room as of 2026-08-25** — garden, Hollow, meadow and map. The meadow's
+> pollination and jar counts sit below it, and the shelf count is gone from the strip because the
+> dock already has a button for it.
+>
 > **The meadow is the QUIET place, on purpose.** The garden owns the tapping, the combo and the
 > noise. Nothing here flashes or counts down and the only motion is drift; two competing tap loops
 > would make both worse. Hold that line.
@@ -831,6 +835,18 @@ inside one thick outline exists partly for this reason.
 
 **Rounding hours and minutes separately renders 23h 59m 59s as "23h 60m".** Round to whole minutes
 first, then split. Bit the feed panel's span formatter.
+
+**`.ui` is a stacking context, so nothing inside it can climb above a place layer.** It is
+`z-index: 20`; raising `.hud`'s own z-index does nothing. The HUD shows in every room because the
+place layers sit **under** `.ui` (Hollow 5, HUD 6, meadow 12, map 14) — and because `.ui` then
+covers the screen, it takes `pointer-events: none` while a layer is open or it eats every tap meant
+for the room. **Anything a place draws along its top edge must clear ~62px + `--sat`**, or it lands
+under the wallets. See [08-ui-and-layout.md](08-ui-and-layout.md#the-hud-is-always-up).
+
+**Never recreate a node that a post-layout pass positions.** The meadow rebuilt its hives and
+keepers from `innerHTML` every slow tick and `place()` sized them a frame later, so each drew once
+per tick at its natural size — on a phone, pets flashing in and out. Build once, update in place,
+like `renderPlots()` and the Hollow's `petEls`.
 
 **A test that passes for the wrong reason is worse than no test.** The sim-suite was writing its
 injected saves to `'gardenwonder.save'`; the real key is **`gw-save`**. `load()` therefore reported a

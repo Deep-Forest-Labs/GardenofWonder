@@ -5,6 +5,45 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (build 5) — The HUD stops disappearing, and the pets stop flashing
+
+**Three things off a photograph, which is how the real bugs in this project have always been
+found.**
+
+**The pets flashed in and out every few seconds, one frame at a time.** The meadow rebuilt its hive
+and keeper nodes from `innerHTML` on every slow tick, and `place()` gave them their real geometry
+on the *next* frame — so every 0.6 seconds each one drew once at its natural size. The fix is the
+rule [09-conventions.md](09-conventions.md) already states and this file forgot: **cache before you
+write.** Nodes are built once and updated in place, which is also exactly what the Hollow's `petEls`
+map has been doing all along.
+
+**The HUD is now up everywhere — and it never was, including in the Hollow.** The owner's call, and
+it is right: you should always see your coins and reach your settings whatever room you are in.
+
+The interesting part is why the obvious fix fails. **`.ui` is `z-index: 20`, which makes it a
+stacking context**, so nothing inside it can paint above a sibling layer with a higher number —
+raising `.hud`'s own z-index does nothing at all. The place layers went **under** `.ui` instead
+(meadow 12, map 14, Hollow 5, HUD 6), and while a layer is open `.ui` takes `pointer-events: none`
+with the HUD taking `auto`, or it would swallow every tap meant for the room beneath it. Recorded
+in [08-ui-and-layout.md](08-ui-and-layout.md#the-hud-is-always-up).
+
+**Two things then collided with the HUD** and moved down: the Hollow's exit hint and the meadow's
+status strip. Anything a place draws along its top edge has to clear ~62px plus the safe-area inset.
+
+**And the strip lost a number.** The shelf count was up there next to a dock button that opens the
+shelf — the owner cut it, correctly: *a number that already has a button is not worth a slot.*
+
+### The gold coins were not going to the pollination pill
+
+Asked, and worth writing down because it looked like a feature. `FX.setMagnet('coin',
+el.walletCredits)` makes every coin particle fly to the **coin wallet**, which lives at the top-left
+of the HUD. The HUD was hidden under the meadow layer, and the meadow's own status strip happened to
+sit exactly where the wallet would have been — so the coins appeared to fly *into the pollination
+readout*. Two bugs wearing each other's coat. With the HUD visible the motion reads correctly, and
+the strip has moved out from under it.
+
+---
+
 ## 2026-08-25 (build 4) — The Wild Meadow becomes somewhere you go
 
 **The owner's brief: it should feel like travelling into a feature, not opening a panel** — and it

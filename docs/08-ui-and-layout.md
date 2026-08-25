@@ -457,3 +457,42 @@ finished over.
 
 `.in-map` hides the stage, dock, rail and quest strip, exactly as `.in-hollow` does — and both hide
 coach marks, because a coach mark points at something in the garden that is now covered.
+
+## The HUD is always up
+
+**Decided 2026-08-25.** The wallets, the Almanac and Settings show in **every** place — garden,
+Hollow, meadow, map. You should always be able to see what you have and reach your settings
+whatever room you are standing in.
+
+**Why it was not, and why the obvious fix does not work.** `.ui` is `z-index: 20`, which makes it a
+**stacking context** — so nothing inside it, including `.hud`, can ever paint above a sibling layer
+with a higher z-index. Raising the HUD's own z-index does nothing. The place layers had to go
+**under** `.ui` instead:
+
+| Layer | z-index |
+| --- | --- |
+| `.hollow` (inside `.ui`) | 5 |
+| `.hud` (inside `.ui`) | 6 |
+| `.meadow-layer` | 12 |
+| `.map-layer` | 14 |
+| `.ui` | 20 |
+| `.fx-canvas` | 40 |
+| `.scrim` / `.sheet` | 45 / 50 |
+
+`.ui` then covers the whole screen above the map and the meadow, so while either is open it takes
+`pointer-events: none` and the HUD takes `auto` — everything else in `.ui` is already hidden by
+`.in-map` / `.in-meadow`.
+
+**Anything a place puts along its own top edge must clear the HUD** — roughly 62px plus `--sat`.
+Both the Hollow's exit hint and the meadow's status strip collided with the wallets before they
+were moved down.
+
+## A room's nodes are built once, not every tick
+
+The meadow's hives and keepers were rebuilt from `innerHTML` on every slow tick and then given
+their real geometry by `place()` on the *next* frame — so every 0.6s each one drew for exactly one
+frame at its natural size. On a phone that reads as pets flashing in and out.
+
+**Build the nodes once, keep them, and update in place**, the same rule `renderPlots()` follows and
+the same shape the Hollow's `petEls` map already uses. Anything positioned by a post-layout pass
+must never be recreated on a timer.

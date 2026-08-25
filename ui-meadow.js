@@ -88,51 +88,95 @@
 
   /* ---------------- the bank ---------------- */
 
-  function spotHtml(sp, i) {
-    const hive = Game.hiveAt(sp.id);
-    const jars = hive ? hive.jars.length : 0;
-    const cap = hive ? Game.hiveCapacity(hive) : 0;
-    const full = hive && jars >= cap;
-    const cost = Game.nextHiveCost();
-    const can = S.credits >= cost;
-    if (!hive) {
-      return `<button class="mw-spot empty${can ? ' affordable' : ''}" data-spot="${sp.id}"
-        type="button" aria-label="${sp.name}, ${fmt(cost)} coins">
-        ${Meadow.spotMark()}
-        <span class="mw-spot-tag">${sp.name}</span>
-      </button>`;
-    }
-    return `<button class="mw-spot has${jars ? ' ready' : ''}${full ? ' full' : ''}"
-      data-spot="${sp.id}" type="button" aria-label="${sp.name}, ${jars} jars">
-      ${Meadow.hive(sp.tint)}
-      <span class="mw-spot-tag">${sp.name}</span>
-      ${jars ? `<span class="mw-jar-badge">${jars}</span>` : ''}
-    </button>`;
+  /* Nodes are built ONCE and then updated in place. Rebuilding them on the slow
+     tick meant every hive and every keeper was recreated unsized, drew for one
+     frame at its natural size, and only got its real geometry from place() on
+     the next frame — which is exactly the "pets flashing in and out every few
+     seconds" the owner photographed. Same rule renderPlots() already follows:
+     cache what was written and only touch the DOM on a real change. */
+  const spotEls = new Map();
+  const keeperEls = new Map();
+
+  function buildBank() {
+    spotEls.clear();
+    keeperEls.clear();
+    const bank = $('#meadowBank');
+    const bench = $('#meadowKeepers');
+    bank.innerHTML = '';
+    bench.innerHTML = '';
+    MEADOW.spots.forEach((sp) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mw-spot';
+      b.dataset.spot = sp.id;
+      b.dataset.look = '';
+      bank.appendChild(b);
+      spotEls.set(sp.id, b);
+    });
+    Meadow.KEEPERS.forEach((k, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mw-keeper';
+      b.dataset.keeperSlot = String(i);
+      b.dataset.look = '';
+      bench.appendChild(b);
+      keeperEls.set(i, b);
+    });
   }
 
-  function keeperHtml(i) {
-    const id = Game.keepers()[i];
-    const def = id ? Game.critterById(id) : null;
-    if (!def) {
-      return `<button class="mw-keeper empty" data-keeper-slot="${i}" type="button"
-        aria-label="Empty keeper spot">${ico('sprout')}</button>`;
+  function syncSpot(sp) {
+    const node = spotEls.get(sp.id);
+    if (!node) return;
+    const hive = Game.hiveAt(sp.id);
+    const jars = hive ? hive.jars.length : 0;
+    const full = hive && jars >= Game.hiveCapacity(hive);
+    const can = S.credits >= Game.nextHiveCost();
+
+    // The art only changes when a spot goes from empty to kept.
+    const look = hive ? 'hive' : 'mark';
+    if (node.dataset.look !== look) {
+      node.dataset.look = look;
+      node.innerHTML = (hive ? Meadow.hive(sp.tint) : Meadow.spotMark())
+        + `<span class="mw-spot-tag">${sp.name}</span>`
+        + '<span class="mw-jar-badge" hidden></span>';
     }
-    const asleep = Game.critterAsleep(id);
-    return `<button class="mw-keeper${asleep ? ' asleep' : ''}" data-keeper-slot="${i}"
-      data-keeper="${id}" type="button" aria-label="${def.name}">
-      ${Critters.draw(def)}
-      <span class="mw-keeper-tag">${def.name}</span>
-    </button>`;
+    node.className = hive
+      ? `mw-spot has${jars ? ' ready' : ''}${full ? ' full' : ''}`
+      : `mw-spot empty${can ? ' affordable' : ''}`;
+    node.setAttribute('aria-label', hive
+      ? `${sp.name}, ${jars} jars`
+      : `${sp.name}, ${fmt(Game.nextHiveCost())} coins`);
+    const badge = $('.mw-jar-badge', node);
+    if (badge) {
+      badge.hidden = !jars;
+      if (jars) badge.textContent = jars;
+    }
+  }
+
+  function syncKeeper(i) {
+    const node = keeperEls.get(i);
+    if (!node) return;
+    const id = Game.keepers()[i] || '';
+    const def = id ? Game.critterById(id) : null;
+    if (node.dataset.look !== id) {
+      node.dataset.look = id;
+      node.innerHTML = def
+        ? `${Critters.draw(def)}<span class="mw-keeper-tag">${def.name}</span>`
+        : ico('sprout');
+      if (def) node.dataset.keeper = id; else delete node.dataset.keeper;
+    }
+    node.className = def
+      ? `mw-keeper${Game.critterAsleep(id) ? ' asleep' : ''}`
+      : 'mw-keeper empty';
+    node.setAttribute('aria-label', def ? def.name : 'Empty keeper spot');
   }
 
   function render() {
     if (!open) return;
     syncScene();
-
-    const bank = $('#meadowBank');
-    bank.innerHTML = MEADOW.spots.map(spotHtml).join('');
-
-    $('#meadowKeepers').innerHTML = Meadow.KEEPERS.map((k, i) => keeperHtml(i)).join('');
+    if (!spotEls.size) buildBank();
+    MEADOW.spots.forEach(syncSpot);
+    Meadow.KEEPERS.forEach((k, i) => syncKeeper(i));
 
     /* Bees exist because hives do. With none kept, the meadow is quiet — which
        is the whole reason buying the first hive feels like something. */
@@ -150,13 +194,19 @@
       swarm.innerHTML = out;
     }
 
+    /* Only the two numbers that say what this place is DOING to the rest of the
+       game. The shelf has its own dock button, so its count was noise up here —
+       and this strip sits below the HUD now rather than on top of it. */
     const waiting = Game.jarsWaiting();
-    const pol = Game.pollination();
-    $('#meadowNote').innerHTML = Game.hiveCount()
-      ? `<span>${ico('sprout')}Pollination <b>+${Math.round(pol * 100)}%</b></span>
-         <span>${ico('honey')}<b>${waiting}</b> waiting</span>
-         <span>${ico('book')}<b>${Game.shelfFilled()}</b>/${Game.shelfTotal()}</span>`
+    const note = Game.hiveCount()
+      ? `<span>${ico('sprout')}Pollination <b>+${Math.round(Game.pollination() * 100)}%</b></span>
+         <span>${ico('honey')}<b>${waiting}</b> waiting</span>`
       : '<span>Set a hive on the bank and the bees will find the garden.</span>';
+    const noteEl = $('#meadowNote');
+    if (noteEl.dataset.look !== note) {
+      noteEl.dataset.look = note;
+      noteEl.innerHTML = note;
+    }
 
     $$('[data-dock]', el.meadow).forEach((b) => {
       b.classList.toggle('on', b.dataset.dock === mode);
@@ -248,6 +298,7 @@
     open = true;
     el.game.classList.add('in-meadow');
     el.meadow.hidden = false;
+    buildBank();
     render();
     requestAnimationFrame(place);
     Sound.play('open');
