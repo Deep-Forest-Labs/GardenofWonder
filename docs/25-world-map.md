@@ -204,6 +204,12 @@ Settled 2026-08-25. The map keeps the shape it already has; this is what fills i
 | **The Wild Meadow** | Producer **+ amplifier** | The hives come home — **built 2026-08-25**: honey follows what blooms, pollination lifts every harvest | Its output depends on what is planted *elsewhere* |
 | **The Ridge** | Producer, *time-gated* | **The Night Garden.** Only wakes after dark; Moonflower and Starlit Iris; Luna and Ember live here | It is a clock, not a crop |
 
+**The Wild Meadow is a full room as of 2026-08-25** — five named hive spots, a keeper bank, the
+Honey Shelf, drifting bees and a swarm. See
+[03-systems.md](03-systems.md#the-wild-meadow). It is also where the creature-station idea got its
+first, deliberately small outing: two keeper slots in **one** place rather than a rework of the
+whole map.
+
 **The Wild Meadow is not bought, because it is meadow.** It stands open from the first visit and
 putting a hive in it is what makes it yours — an empty meadow **invites**, where a locked parcel
 refuses. Locked land is for the Orchard and the Ridge. It draws however many hives are actually

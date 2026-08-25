@@ -67,6 +67,7 @@
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
       quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
       critter: '', stand: '', order: '',
+      keepers: 'Keepers', shelf: 'The Honey Shelf', stores: 'Stores',
       album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
     };
     let title = titles[sheetMode] || '';
@@ -95,6 +96,7 @@
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
       dev: renderDev, welcome: renderWelcome, feed: renderFeed, critter: renderCritter,
       stand: renderStand, order: renderOrder,
+      keepers: renderKeepers, shelf: renderShelf, stores: renderStores,
       album: renderAlbum, cardset: renderCardSet, pack: renderPack
     }[sheetMode];
     /* Whoever the sheet is about stands on top of it — a creature, or now the
@@ -314,6 +316,69 @@
       ${cards}
       ${buy}
       <p class="sheet-note" style="margin-top:16px">Stores</p>
+      ${stock || '<p class="sheet-note">Nothing in the pantry yet.</p>'}`;
+  }
+
+  /* ---- the meadow's panels ----
+     The room does the buying and collecting, because those are things you do to
+     a place you are standing in. These three are the paperwork: who is working,
+     what you have made, and what you can sell. */
+
+  function renderKeepers() {
+    const slots = Game.keeperSlots();
+    const now = Game.keepers();
+    const out = Game.crittersTending();
+    const rows = out.map((def) => {
+      const on = Game.isKeeper(def.id);
+      const asleep = Game.critterAsleep(def.id);
+      const bee = def.affinity === 'meadow';
+      const lift = Math.round(Game.critterWorkLevel(def.id) * MEADOW.keeperSpeedPerStar
+        * (bee ? MEADOW.affinityMult : 1) * 100);
+      return `<button class="keeper-row${on ? ' on' : ''}" data-keep="${def.id}" type="button">
+        <span class="keeper-face${asleep ? ' asleep' : ''}">${Critters.draw(def)}</span>
+        <span class="keeper-copy">
+          <span class="card-title">${def.name}${bee ? ' <i class="keeper-bee">belongs here</i>' : ''}</span>
+          <span class="card-sub">${asleep ? 'Asleep — no work until fed' : `Hives run +${lift}% faster`}</span>
+        </span>
+        <span class="keeper-pick">${on ? Icons.get('check') : ''}</span>
+      </button>`;
+    }).join('');
+
+    return `<p class="sheet-note">The hives work on their own. A keeper just makes them quicker —
+        ${now.length}/${slots} spots filled.</p>
+      ${rows || '<p class="sheet-note">Nobody is out in the garden to send over.</p>'}
+      ${out.length && !Game.keepersFree() && now.length < out.length
+        ? '<p class="sheet-note">The bank is full. Tap someone on it to send them back.</p>' : ''}`;
+  }
+
+  /* The Honey Shelf: one slot per bloom, in the game's own seed order, coloured
+     from the flower it came from. A silhouette for what you have not made yet —
+     the standard collection pull, and the reason to plant a specific seed. */
+  function renderShelf() {
+    const filled = Game.shelfFilled();
+    const total = Game.shelfTotal();
+    const jars = DATA.seeds.map((sd) => {
+      const has = Game.shelfHas(sd.id);
+      const n = Game.shelfCount(sd.id);
+      return `<div class="shelf-slot${has ? ' has' : ''}" title="${APIARY.honeyName(sd.id)}">
+        <span class="shelf-jar">${has ? UI.meadowJar(sd.id) : Icons.get('honey')}</span>
+        <span class="shelf-name">${has ? sd.name : '???'}</span>
+        ${has && n > 1 ? `<span class="shelf-n">${fmt(n)}</span>` : ''}
+      </div>`;
+    }).join('');
+    return `<p class="sheet-note">Every bloom makes its own honey. Plant it, keep a hive, and the
+        jar turns up here — <b>${filled}</b> of ${total} so far.</p>
+      <div class="shelf-bar"><i style="width:${Math.round((filled / total) * 100)}%"></i></div>
+      <div class="shelf-grid">${jars}</div>`;
+  }
+
+  function renderStores() {
+    const honeys = Object.keys(S.apiary.honey).sort((a, b) => APIARY.honeyValue(b) - APIARY.honeyValue(a));
+    const stock = honeys.map((t) =>
+      stockRow(honeyIco(t), APIARY.honeyName(t), S.apiary.honey[t], APIARY.honeyValue(t), 'honey', t)
+    ).join('') + (S.apiary.wax ? stockRow(Icons.get('wax'), 'Beeswax', S.apiary.wax, APIARY.waxValue, 'wax', 'wax') : '');
+    return `<p class="sheet-note">Jars keep. The Stand pays better than selling, so hold anything
+        someone might ask for.</p>
       ${stock || '<p class="sheet-note">Nothing in the pantry yet.</p>'}`;
   }
 
@@ -1575,6 +1640,25 @@
       if (Game.standSkip(Number(shoo.dataset.skiporder))) {
         Sound.play('tap');
         UI.openSheet('stand');
+      }
+      return;
+    }
+
+    const keep = e.target.closest('[data-keep]');
+    if (keep) {
+      const id = keep.dataset.keep;
+      const on = Game.isKeeper(id);
+      if (Game.setKeeper(id, !on)) {
+        Sound.play('tap');
+        renderSheet(false);
+        if (UI.meadowOpen()) UI.renderMeadow();
+      } else {
+        Sound.play('deny');
+        UI.toast({
+          title: 'The bank is full',
+          body: 'Take someone off the hives first.',
+          art: Icons.get('sprout')
+        });
       }
       return;
     }

@@ -22,7 +22,8 @@ globalThis.localStorage = {
 const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPLANTERS', 'MAX_RARITY_MULT', 'FLOWER_LINES',
   'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'CREATURE_PAIRS', 'PAIR_TUNING',
   'CREATURE_FOOD', 'FED_STARS', 'FOOD_CAP_HOURS', 'ARRIVAL_AWAKE_HOURS', 'FED_THRESHOLD_HOURS',
-  'STAND', 'GOODS', 'CUSTOMERS', 'goodById', 'customerById', 'Icons', 'flowerValue', 'Game'];
+  'STAND', 'GOODS', 'CUSTOMERS', 'goodById', 'customerById',
+  'MEADOW', 'meadowSpot', 'Icons', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -41,6 +42,11 @@ const unlockTo = (level) => {
   S.rep = G.cumulativeRep(level);
   S.level = level;
 };
+
+/* The real key game.js writes to. Guessing it wrong makes every save test pass
+   vacuously — load() simply reports a fresh game and the assertions all hold
+   against default state. Cost three green tests that were testing nothing. */
+const SAVE_KEY = 'gw-save';
 
 let pass = 0;
 let fail = 0;
@@ -3633,7 +3639,7 @@ check('a save from before the Stand loads clean', (() => {
   G.reset();
   const raw = JSON.parse(JSON.stringify(S));
   delete raw.stand;
-  globalThis.localStorage.setItem('gardenwonder.save', JSON.stringify(raw));
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
   G.load();
   return Array.isArray(S.stand.slots) && S.stand.slots.length === STAND.slots
     && S.stand.slots.every((x) => x === null);
@@ -3646,9 +3652,199 @@ check('an order for a good that no longer exists is dropped', (() => {
     slots: [{ id: 'o1', good: 'ghost_good', customer: 'nan', needs: [], coins: 5, rep: 1 }, null, null],
     nextAt: [0, 0, 0], seq: 1, delivered: 0, skipped: 0
   };
-  globalThis.localStorage.setItem('gardenwonder.save', JSON.stringify(raw));
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
   G.load();
   return S.stand.slots[0] === null;
+})());
+
+/* ---------------- the Wild Meadow ---------------- */
+group('The Wild Meadow');
+
+check('every spot has a name, a look and a description',
+  MEADOW.spots.every((sp) => sp.id && sp.name && sp.tint && sp.desc && sp.desc.length > 10));
+check('spot ids are unique', new Set(MEADOW.spots.map((sp) => sp.id)).size === MEADOW.spots.length);
+/* If two spots did the same thing, "where?" stops being a question and buying a
+   hive goes back to being a purchase. */
+check('no two spots do the same thing', (() => {
+  const sig = MEADOW.spots.map((sp) => `${sp.speed}|${sp.cap}|${sp.wax}|${sp.pollen}|${sp.rare}`);
+  return new Set(sig).size === sig.length;
+})());
+check('exactly one spot is the fast one', MEADOW.spots.filter((sp) => sp.speed < 1).length === 1);
+check('every spot is worth buying', MEADOW.spots.every((sp) =>
+  sp.speed < 1 || sp.cap > 0 || sp.wax > 0 || sp.pollen > 0 || sp.rare > 0));
+check('exactly one creature belongs to the meadow',
+  CREATURES.filter((c) => c.affinity === 'meadow').length === 1);
+
+const meadowReset = () => {
+  G.reset();
+  S.credits = 1e9;
+  clearGarden();
+  S.grid.forEach((c, i) => { if (i < 4) { c.seed = 'daisy'; c.plantedAt = G.nowSeconds(); c.grow = 9e9; } });
+};
+
+check('a hive lands on the spot it was bought for', (() => {
+  meadowReset();
+  return G.buyHive('willow') && Boolean(G.hiveAt('willow')) && G.spotTaken('willow');
+})());
+check('a taken spot cannot be bought twice', (() => {
+  meadowReset();
+  G.buyHive('sun');
+  const before = G.hiveCount();
+  return !G.buyHive('sun') && G.hiveCount() === before;
+})());
+check('buying with no spot named takes the first free one', (() => {
+  meadowReset();
+  G.buyHive();
+  return G.hiveCount() === 1 && Boolean(G.hiveAt(MEADOW.spots[0].id));
+})());
+check('the bank fills and then refuses', (() => {
+  meadowReset();
+  MEADOW.spots.forEach((sp) => G.buyHive(sp.id));
+  return G.hiveCount() === MEADOW.spots.length && G.hivesFull() && !G.buyHive();
+})());
+
+check('the sunny spot really is faster than the shaded one', (() => {
+  meadowReset();
+  G.buyHive('sun');
+  G.buyHive('willow');
+  return G.hiveInterval(G.hiveAt('sun')) < G.hiveInterval(G.hiveAt('willow'));
+})());
+check('the stump really does hold more', (() => {
+  meadowReset();
+  G.buyHive('sun');
+  G.buyHive('stump');
+  return G.hiveCapacity(G.hiveAt('stump')) > G.hiveCapacity(G.hiveAt('sun'));
+})());
+check('the rise really does pollinate harder', (() => {
+  meadowReset();
+  G.buyHive('sun');
+  const plain = G.pollination();
+  meadowReset();
+  G.buyHive('rise');
+  return G.pollination() > plain;
+})());
+
+/* The guardrail from docs/25-world-map.md, asserted rather than intended: the
+   meadow has to work with nobody standing on it. */
+check('the hives work with no keeper standing on them', (() => {
+  meadowReset();
+  G.buyHive('sun');
+  advance(APIARY.interval * 2 + 4);
+  return G.jarsWaiting() > 0;
+})());
+check('a keeper makes the hives faster', (() => {
+  meadowReset();
+  G.buyHive('sun');
+  const alone = G.hiveInterval(G.hiveAt('sun'));
+  S.discovered.bluebell = 999;
+  G.checkCritters();
+  G.setTending('pip', true);
+  G.setKeeper('pip', true);
+  return G.isKeeper('pip') && G.hiveInterval(G.hiveAt('sun')) < alone;
+})());
+check('the meadow creature is worth more here than any other', (() => {
+  const speedWith = (def) => {
+    meadowReset();
+    S.discovered[def.attract.seed] = 99999;
+    G.checkCritters();
+    G.setTending(def.id, true);
+    G.setKeeper(def.id, true);
+    return G.keeperSpeed();
+  };
+  const bee = CREATURES.find((c) => c.affinity === 'meadow');
+  const other = CREATURES.find((c) => c.affinity !== 'meadow');
+  return speedWith(bee) > speedWith(other);
+})());
+check('a resting creature cannot keep the hives', (() => {
+  meadowReset();
+  S.discovered.bluebell = 999;
+  G.checkCritters();
+  G.setTending('pip', false);
+  return !G.setKeeper('pip', true) && !G.isKeeper('pip');
+})());
+check('a creature sent to rest stops keeping', (() => {
+  meadowReset();
+  S.discovered.bluebell = 999;
+  G.checkCritters();
+  G.setTending('pip', true);
+  G.setKeeper('pip', true);
+  G.setTending('pip', false);
+  return !G.isKeeper('pip') && G.keeperSpeed() === 0;
+})());
+/* Asleep is asleep everywhere — the same rule the garden already follows. */
+check('a sleeping keeper does no work but keeps its place', (() => {
+  meadowReset();
+  S.discovered.bluebell = 999;
+  G.checkCritters();
+  G.setTending('pip', true);
+  G.setKeeper('pip', true);
+  S.critters.pip.fedUntil = 0;
+  return G.critterAsleep('pip') && G.isKeeper('pip') && G.keeperSpeed() === 0;
+})());
+check('the keeper bank has a limit', (() => {
+  meadowReset();
+  unlockTo(20);
+  CREATURES.forEach((c) => { S.discovered[c.attract.seed] = 99999; });
+  G.checkCritters();
+  CREATURES.forEach((c) => G.setTending(c.id, true));
+  CREATURES.forEach((c) => G.setKeeper(c.id, true));
+  return G.keepers().length === MEADOW.keeperSlots;
+})());
+
+/* The shelf: a lifetime record of every variety, one slot per bloom. */
+check('the shelf starts empty and fills as varieties are made', (() => {
+  meadowReset();
+  if (G.shelfFilled() !== 0) return false;
+  G.buyHive('sun');
+  advance(APIARY.interval * 3 + 4);
+  return G.shelfHas('daisy') && G.shelfFilled() === 1 && G.shelfCount('daisy') > 0;
+})());
+check('the shelf counts, it does not just remember', (() => {
+  meadowReset();
+  G.buyHive('sun');
+  advance(APIARY.interval * 2 + 4);
+  const first = G.shelfCount('daisy');
+  G.collectAllHives();
+  advance(APIARY.interval * 2 + 4);
+  return G.shelfCount('daisy') > first;
+})());
+check('the shelf never records wildflower honey', (() => {
+  meadowReset();
+  clearGarden();
+  G.buyHive('sun');
+  advance(APIARY.interval * 3 + 4);
+  return G.jarsWaiting() > 0 && G.shelfFilled() === 0;
+})());
+check('the shelf has a slot for every seed in the game',
+  G.shelfTotal() === DATA.seeds.length && MEADOW.shelfSize === DATA.seeds.length);
+
+/* Saves from before the meadow: every hive must come out of load() on its own
+   spot, or a hive draws nowhere with no error anywhere. */
+check('hives from a save with no spots are given spots', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.apiary = { hives: [{ at: 0, jars: [] }, { at: 0, jars: [] }], honey: {}, wax: 0 };
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  const spots = S.apiary.hives.map((h) => h.spot);
+  return spots.length === 2 && spots.every(Boolean) && new Set(spots).size === 2;
+})());
+check('two hives claiming one spot do not both keep it', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.apiary = { hives: [{ at: 0, jars: [], spot: 'sun' }, { at: 0, jars: [], spot: 'sun' }], honey: {}, wax: 0 };
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  const spots = S.apiary.hives.map((h) => h.spot);
+  return new Set(spots).size === spots.length;
+})());
+check('a keeper who is not a real creature is dropped on load', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.apiary = { hives: [], honey: {}, wax: 0, shelf: {}, keepers: ['ghost', 'ghost'] };
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return S.apiary.keepers.length === 0;
 })());
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

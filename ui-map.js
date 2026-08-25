@@ -238,7 +238,7 @@
       leave();
       if (where === 'hollow') UI.enterHollow();
       else if (where === 'stand') UI.openSheet('stand');
-      else if (where === 'meadow') UI.openSheet('apiary');
+      else if (where === 'meadow') UI.enterMeadow();
     }, DIVE_MS);
   }
 

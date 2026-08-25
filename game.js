@@ -38,7 +38,7 @@ const Game = (() => {
       setsClaimed: [],
       stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
       wonder: { until: 0, last: 0 },
-      apiary: { hives: [], honey: {}, wax: 0 },
+      apiary: { hives: [], honey: {}, wax: 0, shelf: {}, keepers: [] },
       flowers: {},
       craft: [],
       goods: {},
@@ -168,6 +168,28 @@ const Game = (() => {
       state.apiary.hives = Array.isArray(state.apiary.hives) ? state.apiary.hives : [];
       state.apiary.honey = state.apiary.honey && typeof state.apiary.honey === 'object' ? state.apiary.honey : {};
       state.apiary.wax = Number(state.apiary.wax) || 0;
+      state.apiary.shelf = state.apiary.shelf && typeof state.apiary.shelf === 'object' ? state.apiary.shelf : {};
+      state.apiary.keepers = Array.isArray(state.apiary.keepers) ? state.apiary.keepers : [];
+      /* Hives predate spots, so a save from before them has none. Hand out the
+         free spots in order — every hive must have one or it falls off the bank
+         with no error anywhere, and two hives sharing a spot would stack. */
+      {
+        const used = [];
+        state.apiary.hives.forEach((h) => {
+          if (h.spot && meadowSpot(h.spot) && !used.includes(h.spot)) { used.push(h.spot); return; }
+          const free = MEADOW.spots.find((sp) => !used.includes(sp.id));
+          h.spot = free ? free.id : null;
+          if (h.spot) used.push(h.spot);
+        });
+        // More hives than spots can only come from a save made before the cap
+        // changed; drop the homeless ones rather than drawing them nowhere.
+        state.apiary.hives = state.apiary.hives.filter((h) => h.spot);
+      }
+      /* A keeper who is no longer a real creature, or is resting, is dropped —
+         the getter filters anyway, but a stale id would sit in the save forever. */
+      state.apiary.keepers = state.apiary.keepers
+        .filter((id, i, a) => critterById(id) && a.indexOf(id) === i)
+        .slice(0, MEADOW.keeperSlots);
       state.flowers = parsed.flowers && typeof parsed.flowers === 'object' ? parsed.flowers : {};
       /* The Stand's arrays are fixed-length and indexed by slot, so a save from
          before it existed — or from a build with a different slot count — has to
@@ -1690,24 +1712,114 @@ const Game = (() => {
     return payload;
   }
 
-  /* ---------------- apiary ---------------- */
-  const hiveCount = () => state.apiary.hives.length;
-  const pollination = () => hiveCount() * APIARY.pollination;
-  const nextHiveCost = () => APIARY.hiveCost(hiveCount());
-  const hivesFull = () => hiveCount() >= APIARY.maxHives;
+  /* ---------------- the Wild Meadow ---------------- */
 
-  function buyHive() {
+  const hiveCount = () => state.apiary.hives.length;
+  const nextHiveCost = () => MEADOW.hiveCost(hiveCount());
+  const hivesFull = () => hiveCount() >= MEADOW.spots.length;
+
+  const hiveAt = (spotId) => state.apiary.hives.find((h) => h.spot === spotId) || null;
+  const spotTaken = (spotId) => Boolean(hiveAt(spotId));
+  const spotsFree = () => MEADOW.spots.filter((sp) => !spotTaken(sp.id));
+
+  /* Pollination is per-spot now — Top of the Rise can see the whole garden. */
+  function pollination() {
+    return state.apiary.hives.reduce((n, h) => {
+      const sp = meadowSpot(h.spot);
+      return n + APIARY.pollination + (sp ? sp.pollen : 0);
+    }, 0);
+  }
+
+  /* ---- keepers: creatures stationed on the hives ----
+     Scoped to this one place on purpose. A keeper is a creature that is already
+     OUT — it keeps working the garden as well — so stationing costs nothing yet
+     and the scarcity is the slot count. The real trade arrives when a second
+     place wants keepers and the same creature cannot be in both.
+
+     The guardrail from docs/25-world-map.md: the meadow works with nobody
+     stationed. A keeper makes it better, never possible. */
+  const keeperSlots = () => MEADOW.keeperSlots;
+  const keepers = () => (state.apiary.keepers || []).filter((id) => critterTending(id));
+  const isKeeper = (id) => keepers().includes(id);
+  const keepersFree = () => Math.max(0, keeperSlots() - keepers().length);
+
+  function setKeeper(id, on) {
+    if (!Array.isArray(state.apiary.keepers)) state.apiary.keepers = [];
+    const at = state.apiary.keepers.indexOf(id);
+    if (!on) {
+      if (at < 0) return false;
+      state.apiary.keepers.splice(at, 1);
+      save();
+      emit('panels');
+      return true;
+    }
+    if (at >= 0) return false;
+    // A resting creature cannot work, and a full bank has to be cleared first.
+    if (!critterTending(id) || !keepersFree()) return false;
+    state.apiary.keepers.push(id);
+    save();
+    emit('panels');
+    return true;
+  }
+
+  /** How much faster the hives run for who is standing on them. */
+  function keeperSpeed() {
+    let bonus = 0;
+    keepers().forEach((id) => {
+      const def = critterById(id);
+      if (!def) return;
+      // Asleep is asleep everywhere: a sleeping creature keeps its slot and does
+      // no work, exactly as it does in the garden.
+      if (critterAsleep(id)) return;
+      const mult = def.affinity === 'meadow' ? MEADOW.affinityMult : 1;
+      bonus += critterWorkLevel(id) * MEADOW.keeperSpeedPerStar * mult;
+    });
+    return bonus;
+  }
+
+  const hiveInterval = (h) => {
+    const sp = meadowSpot(h && h.spot);
+    const base = APIARY.interval * (sp ? sp.speed : 1);
+    return Math.max(5, base / (1 + keeperSpeed()));
+  };
+  const hiveCapacity = (h) => {
+    const sp = meadowSpot(h && h.spot);
+    return APIARY.capacity + (sp ? sp.cap : 0);
+  };
+
+  function buyHive(spotId) {
     if (hivesFull()) return false;
+    // No spot named means the first free one, so old call sites still work.
+    const sp = spotId ? meadowSpot(spotId) : spotsFree()[0];
+    if (!sp || spotTaken(sp.id)) return false;
     const cost = nextHiveCost();
     if (state.credits < cost) { emit('deny', { reason: 'credits', need: cost }); return false; }
     state.credits -= cost;
-    state.apiary.hives.push({ at: nowSeconds(), jars: [] });
+    state.apiary.hives.push({ at: nowSeconds(), jars: [], spot: sp.id });
     save();
     emit('currency');
-    emit('purchase', { kind: 'hive', cost });
+    emit('purchase', { kind: 'hive', cost, spot: sp.id });
     emit('panels');
     noteQuest('hive', null, 1);
     return true;
+  }
+
+  /* ---- the honey shelf ----
+     A lifetime record of every variety ever produced, one slot per bloom. It is
+     a count and not a boolean, for the same reason mementos and cards are: a
+     shelf that only knows yes/no can never say how much. */
+  const shelfCount = (seedId) => (state.apiary.shelf || {})[seedId] || 0;
+  const shelfHas = (seedId) => shelfCount(seedId) > 0;
+  const shelfFilled = () => DATA.seeds.filter((sd) => shelfHas(sd.id)).length;
+  const shelfTotal = () => DATA.seeds.length;
+
+  function noteShelf(type) {
+    if (!type || type === APIARY.wildHoney) return false;
+    if (!state.apiary.shelf || typeof state.apiary.shelf !== 'object') state.apiary.shelf = {};
+    const first = !state.apiary.shelf[type];
+    state.apiary.shelf[type] = (state.apiary.shelf[type] || 0) + 1;
+    if (first) emit('shelf', { seed: type, filled: shelfFilled(), total: shelfTotal() });
+    return first;
   }
 
   /** Seeds currently in the ground — the pool a new jar draws its variety from. */
@@ -1725,21 +1837,58 @@ const Game = (() => {
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
+  /* Under the Willow's bees "come back with the strange stuff" — a spot with
+     `rare` re-rolls and keeps the less common bloom, which is the only way the
+     garden's contents can bias a jar beyond simple presence. */
+  function sampleFor(h, pool) {
+    const sp = meadowSpot(h && h.spot);
+    const first = sampleBloom(pool);
+    if (!sp || !sp.rare || Math.random() >= sp.rare) return first;
+    const second = sampleBloom(pool);
+    const worth = (id) => APIARY.honeyValue(id);
+    return worth(second) > worth(first) ? second : first;
+  }
+
   function produceHoney(now) {
     if (!hiveCount()) return;
     const pool = bloomPool();
     let produced = 0;
+    let swarm = false;
     state.apiary.hives.forEach((h) => {
       if (typeof h.at !== 'number' || h.at > now) h.at = now;
       if (!Array.isArray(h.jars)) h.jars = [];
-      while (h.jars.length < APIARY.capacity && now - h.at >= APIARY.interval) {
-        h.at += APIARY.interval;
-        h.jars.push(sampleBloom(pool));
+      const cap = hiveCapacity(h);
+      const step = hiveInterval(h);
+      while (h.jars.length < cap && now - h.at >= step) {
+        h.at += step;
+        const type = sampleFor(h, pool);
+        h.jars.push(type);
+        noteShelf(type);
         produced += 1;
+        if (Math.random() < MEADOW.swarmChance) swarm = true;
       }
       // A full hive stops the clock rather than banking jars it cannot hold.
-      if (h.jars.length >= APIARY.capacity) h.at = now;
+      if (h.jars.length >= cap) h.at = now;
     });
+
+    /* The meadow's small Wonder: the whole bank fills at once. Rare, free, and
+       purely a gift — nothing is lost if the player never sees it happen. */
+    if (swarm) {
+      let extra = 0;
+      state.apiary.hives.forEach((h) => {
+        const cap = hiveCapacity(h);
+        while (h.jars.length < cap) {
+          const type = sampleFor(h, pool);
+          h.jars.push(type);
+          noteShelf(type);
+          extra += 1;
+        }
+        h.at = now;
+      });
+      produced += extra;
+      if (extra) emit('swarm', { jars: extra });
+    }
+
     if (produced) {
       save();
       emit('panels');
@@ -3009,6 +3158,9 @@ const Game = (() => {
     tapFlower, decayCombo, plant, unlockPlot, hasten, harvest, critChanceNow,
     buyUpgrade, buyDecor, activateBoost,
     hiveCount, pollination, nextHiveCost, hivesFull, buyHive,
+    hiveAt, spotTaken, spotsFree, hiveInterval, hiveCapacity,
+    keeperSlots, keepers, isKeeper, keepersFree, setKeeper, keeperSpeed,
+    shelfCount, shelfHas, shelfFilled, shelfTotal,
     collectHive, collectAllHives, jarsWaiting, honeyTotal, flowerTotal,
     canCraft, startCraft, sell,
     critterById, critterHome, critterHere, crittersHome, critterProgress, critterReady,

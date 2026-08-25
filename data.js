@@ -853,6 +853,11 @@ const CREATURES = [
     id: 'bumble',
     name: 'Bumble',
     species: 'Gardenbee',
+    /* Every place gets one creature who belongs there, and a Gardenbee belongs in
+       the meadow. Doubling her keeper bonus is the item-as-key device from
+       docs/17-market-and-positioning.md pointed at a character instead of a
+       shop SKU: you do not want "a keeper", you want Bumble on the hives. */
+    affinity: 'meadow',
     attract: { seed: 'lavender', count: 7, growth: 3 },
     hint: 'Lavender. Obviously lavender. What else would it be.',
     about: 'Helps everyone else and never once sits down.',
@@ -1066,3 +1071,58 @@ const CUSTOMERS = [
 
 const goodById = (id) => GOODS.find((g) => g.id === id) || null;
 const customerById = (id) => CUSTOMERS.find((c) => c.id === id) || null;
+
+/* ---------------- the Wild Meadow ----------------
+
+   Design in docs/25-world-map.md. The meadow is a producer AND an amplifier —
+   honey follows what blooms in the garden, and pollination lifts every harvest
+   there. That dependence on another place is what stops it being a second
+   faucet, and it is why the Apiary came back as a place after being demoted.
+
+   The rule this data exists to serve: buying a hive should be a CHOICE, not a
+   purchase. Each spot on the bank does something different, so hive number two
+   asks "where?" rather than "yes?". Deliberately NOT adjacency — that is the
+   garden's mechanic, and copying it here would make the meadow a second garden. */
+
+const MEADOW = {
+  keeperSlots: 2,          // creatures you can station on the hives
+  keeperSpeedPerStar: 0.04,
+  affinityMult: 2,         // a creature whose affinity is 'meadow' counts double
+  swarmChance: 0.02,       // per jar produced, every hive fills at once
+  shelfSize: 19,           // one slot per bloom species
+
+  /* Spots are drawn on the bank in this order and bought in any order. `speed`
+     multiplies the interval, so lower is faster. */
+  spots: [
+    {
+      id: 'sun', name: 'Sun Bank', tint: '#ffd23f',
+      desc: 'Full sun all afternoon. The bees hardly stop.',
+      speed: 0.72, cap: 0, wax: 0, pollen: 0, rare: 0
+    },
+    {
+      id: 'clover', name: 'Clover Patch', tint: '#8ce99a',
+      desc: 'Knee-deep in clover. Wax everywhere.',
+      speed: 1, cap: 0, wax: 0.35, pollen: 0, rare: 0
+    },
+    {
+      id: 'stump', name: 'Old Stump', tint: '#c99a68',
+      desc: 'Hollow and roomy. They keep going long after the others stop.',
+      speed: 1.08, cap: 4, wax: 0, pollen: 0, rare: 0
+    },
+    {
+      id: 'willow', name: 'Under the Willow', tint: '#a06cd5',
+      desc: 'Shaded and slow, and they come back with the strange stuff.',
+      speed: 1.35, cap: 0, wax: 0, pollen: 0, rare: 0.5
+    },
+    {
+      id: 'rise', name: 'Top of the Rise', tint: '#ff8fa3',
+      desc: 'They can see the whole garden from up here.',
+      speed: 1.15, cap: 0, wax: 0, pollen: 0.07, rare: 0
+    }
+  ],
+
+  /* Escalating, like every other repeat purchase in the game. */
+  hiveCost: (owned) => Math.round(2500 * Math.pow(2, owned))
+};
+
+const meadowSpot = (id) => MEADOW.spots.find((s) => s.id === id) || null;

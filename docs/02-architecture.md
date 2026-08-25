@@ -292,3 +292,14 @@ origin.** Moving `transform-origin` to the place being dived into breaks the pan
 first build shipped wrong. The dive therefore animates the *camera*, not the origin, and the
 transition is switched on only for the rise and the dive — a transition left on during a drag makes
 every pan lag a third of a second behind the finger.
+
+## `meadow.js` and `ui-meadow.js`
+
+Added 2026-08-25, and they follow the Hollow's split exactly. `meadow.js` draws the room —
+**parameters in, SVG out, knows nothing about the game** — and owns `SPOTS`, `KEEPERS`, `VIEW` and
+the sizes. `ui-meadow.js` puts the real hives, keepers and jars into those coordinates.
+
+**The scene is drawn with `slice`**, so it is cropped on any screen that is not its design size and
+a percentage of the container stops agreeing with a position in the art. `place()` maps scene
+coordinates to pixels through `getScreenCTM()` — the same fix the Hollow already needed for its
+creature spots, and the same one any future room will.

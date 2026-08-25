@@ -963,3 +963,64 @@ breakout a creature uses.
 expressions and CSS picks one, the same contract the sleeping creatures use — so a customer whose
 order you can already fill is *smiling at you from the queue* before you read a word. Every bloom
 asked for is drawn with the real `Flora.head()`, never named in prose.
+
+## The Wild Meadow
+
+**Built 2026-08-25.** The Apiary, promoted from a dock tab to a place you travel into. It is a
+**producer and an amplifier** — honey follows what blooms in the garden, and pollination lifts every
+harvest there. Design in [25-world-map.md](25-world-map.md), art contract in
+[02-architecture.md](02-architecture.md).
+
+**It is the quiet place.** The garden owns the tapping, the combo and the noise. Nothing in the
+meadow flashes or counts down and the only motion is drift — if it ever grew its own tap loop the
+two would compete for the same attention and both would get worse.
+
+### Five spots, and buying a hive is a choice
+
+`MEADOW.spots` — five named places on the bank, each doing something different, so hive number two
+asks *where?* rather than *yes?*. Deliberately **not** adjacency: that is the garden's mechanic and
+copying it here would make the meadow a second garden.
+
+| Spot | Does |
+| --- | --- |
+| Sun Bank | Fastest jars (×0.72 interval) |
+| Clover Patch | +35% wax |
+| Old Stump | Holds 4 more jars before the bees stop |
+| Under the Willow | Slower, but re-rolls toward your rarer blooms |
+| Top of the Rise | +7% pollination on top of the base |
+
+A sim-test asserts **no two spots do the same thing** and that every one is worth buying.
+
+### Keepers
+
+Up to `MEADOW.keeperSlots` (2) creatures can be stationed on the hives, speeding every one by
+**4% per star** — doubled for a creature whose `affinity` is `'meadow'`. Bumble is the Gardenbee and
+the only one, which is the *item-as-key* device pointed at a character: you do not want "a keeper",
+you want Bumble on the hives.
+
+**A keeper must already be tending**, keeps working the garden as well, and stops keeping the moment
+it is sent to rest. **A sleeping keeper holds its place and does no work** — asleep is asleep
+everywhere.
+
+**The guardrail, asserted rather than intended: the hives work with nobody stationed on them.** A
+keeper makes the meadow better, never possible. Otherwise two slots and several places is a map of
+dead buildings.
+
+### The Honey Shelf
+
+`state.apiary.shelf` is a **lifetime count per bloom** — one slot per seed in the game, filled the
+first time that variety is produced. Wildflower honey is never recorded, because a jar with no bloom
+behind it is not a variety.
+
+This is the cheapest Completion track the project has: the 19 seeds were already a ready-made album.
+More importantly it is the clearest answer yet to *why plant this flower* — **you plant moonflower
+because the moonflower jar slot is empty**, which is desire rather than a quota.
+
+Jars are drawn tinted from the bloom, but **mixed toward amber rather than taking the petal colour
+outright** — Daisy's petals are pure white, and a white jar on a pale shelf is indistinguishable
+from an empty slot.
+
+### The swarm
+
+`MEADOW.swarmChance` (2% per jar produced) fills **every** hive at once. Rare, free, and purely a
+gift — nothing is lost if a player never sees it. The meadow's own small Wonder.

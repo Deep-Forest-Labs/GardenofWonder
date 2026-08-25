@@ -61,7 +61,27 @@ from quests and levels.
 > design what a AAA team would build, ship incrementally, with the not-a-clone bar standing per
 > garden.
 >
-> **The Wild Meadow is BUILT, 2026-08-25.** The hives came home: the Apiary is a *place* on the map
+> **The Wild Meadow is a FULL ROOM, 2026-08-25.** You travel into it like the Hollow: five **named
+> hive spots** on a bank (Sun Bank fastest, Clover Patch wax, Old Stump capacity, Under the Willow
+> rare-skewed, Top of the Rise pollination) so buying a hive asks *where?* rather than *yes?*; a
+> **keeper bank** where two creatures stand and speed the hives, doubled for **Bumble**, the only
+> creature with `affinity: 'meadow'`; the **Honey Shelf** — one slot per bloom, filled the first time
+> that variety is made; bees that only exist because hives do; and a 2% **swarm** that fills every
+> hive at once. Its own dock: Collect · Keepers · Shelf · Stores. See
+> [03-systems.md](03-systems.md#the-wild-meadow).
+>
+> **The Shelf is the piece that matters.** It is the clearest answer the project has found to its
+> oldest question — **you plant moonflower because the moonflower jar slot is empty**, which is
+> desire where an order is a quota.
+>
+> **The meadow is the QUIET place, on purpose.** The garden owns the tapping, the combo and the
+> noise. Nothing here flashes or counts down and the only motion is drift; two competing tap loops
+> would make both worse. Hold that line.
+>
+> **The keeper bank is the creature-station idea scoped to one place** rather than a map-wide
+> rework, and its guardrail is a sim-test: **the hives work with nobody standing on them.**
+>
+> **Earlier the same day — the hives came home:** the Apiary is a *place* on the map
 > and its dock tab is gone. It draws however many hives you actually keep, and bees drift only once
 > there is a hive to have come out of. **It is not a locked parcel — it is meadow**, open from the
 > first visit, and putting a hive in it is what makes it yours; an empty meadow invites where a
@@ -613,18 +633,23 @@ and the build is **MVP-first** — plain map, functional Stand, polish later.
 **The MVP is done.** The Stand and the map frame both ship. What comes next, roughly in order:
 
 1. ~~**The Wild Meadow**~~ — **done 2026-08-25.**
-2. **Play it and judge the feel** — the rubric is in
+2. **The Orchard** — the long-clock producer, and the natural home for collect-all. It is also the
+   first place that will want its own keeper slots, which is when the creature-station question
+   stops being scoped to one room.
+3. **Play it and judge the feel** — the rubric is in
    [25-world-map.md](25-world-map.md#the-mvp-decided-2026-08-25--build-plain-test-the-feel-polish-as-we-go).
    The load-bearing question: *does checking the Stand pull you back into planting something
    specific?* If not, the order generation weights are wrong before anything else is.
-3. **Collect-all**, gated on a region being fully automated, with the 2× rewarded video on it —
+4. **Collect-all**, gated on a region being fully automated, with the 2× rewarded video on it —
    the map's honest revenue argument and the reason the drone becomes an unlock. **The Orchard is
    its natural home**, being long-clock and low-interaction by design.
-4. **Buying land**, off Stand reputation, which turns the refusing parcels into the progression
+5. **Buying land**, off Stand reputation, which turns the refusing parcels into the progression
    gate they are drawn to be.
-5. **The Potting Shed surface**, which the goods decision already settled: every crafted family is
+6. **The Potting Shed surface**, which the goods decision already settled: every crafted family is
    a merge chain on the bench, and the prototype Craft tab retires when it lands.
-6. **Creature stations**, once the map has proved it reads as a system.
+7. **Creature stations across the whole map**, now that the meadow has proved the shape in one
+   room. Traits and the eight pairs are still balanced against a single garden, so this is the piece
+   with the real blast radius.
 
 **Resolved by the goods decision:** the bench ships a surface (every crafted family is a merge
 chain on it), and the prototype Craft tab retires when it does.
@@ -806,6 +831,13 @@ inside one thick outline exists partly for this reason.
 
 **Rounding hours and minutes separately renders 23h 59m 59s as "23h 60m".** Round to whole minutes
 first, then split. Bit the feed panel's span formatter.
+
+**A test that passes for the wrong reason is worse than no test.** The sim-suite was writing its
+injected saves to `'gardenwonder.save'`; the real key is **`gw-save`**. `load()` therefore reported a
+*fresh game* every time, and three save/migration tests passed **vacuously** against default state
+for as long as they existed. Found only because a new migration test failed inexplicably. The suite
+now has one `SAVE_KEY` constant — and the lesson generalises: a migration test must assert something
+that is **false** on a fresh save, or it is testing nothing.
 
 **Never memoise against a node you also replace.** `syncScene()` skips redrawing the map's backdrop
 unless the sky changed, so drifting clouds are not restarted every tick — but `build()` replaces the

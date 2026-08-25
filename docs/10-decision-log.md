@@ -5,6 +5,63 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (build 4) — The Wild Meadow becomes somewhere you go
+
+**The owner's brief: it should feel like travelling into a feature, not opening a panel** — and it
+does not need to be as deep as the garden. Five ideas went in and all five shipped.
+
+**1. It is a place.** Full screen, its own dock, the Hollow's architecture exactly: `meadow.js`
+draws the room and knows nothing about the game, `ui-meadow.js` puts the real hives in it.
+
+**2. Five named spots, so buying a hive is a choice.** Sun Bank (fastest), Clover Patch (wax), Old
+Stump (holds more), Under the Willow (slower, skews rare), Top of the Rise (pollination). Hive
+number two asks *where?* rather than *yes?*. **Deliberately not adjacency** — that is the garden's
+mechanic and copying it would have made the meadow a second garden, which is the exact thing the
+place taxonomy exists to prevent. A sim-test asserts no two spots do the same thing.
+
+**3. The Honey Shelf, which is the one worth arguing for.** One slot per bloom, filled the first
+time that variety is made. The 19 seeds were always a ready-made album — but the real prize is that
+it is the clearest answer yet to the project's oldest question: **you plant moonflower because the
+moonflower jar slot is empty.** That is desire, where an order is a quota.
+
+**4. Bees that exist because hives do.** With none kept the meadow is silent, which is what makes
+buying the first hive land. Plus a 2% **swarm** that fills every hive at once — rare, free, purely a
+gift.
+
+**5. The keeper bank**, which is the Cats & Soup station idea scoped to one place instead of the
+whole map. Two slots, 4% faster per star, doubled for a creature whose `affinity` is `'meadow'` —
+and **Bumble the Gardenbee is the only one**, which is item-as-key pointed at a character rather
+than a shop SKU. You do not want "a keeper", you want Bumble on the hives.
+
+**The guardrail is asserted, not intended: the hives work with nobody standing on them.** A keeper
+makes the meadow better, never possible.
+
+### One thing pushed back on
+
+The meadow stays **quiet**. The garden owns the tapping, the combo and the noise; nothing in the
+meadow flashes or counts down and the only motion is drift. Bees you *may* tap would be fine, bees
+you *must* tap would be a second job, and two competing tap loops make both worse.
+
+### Bugs, and one that had been hiding
+
+**The save key in the test suite was wrong**, and it had been wrong since the Stand shipped. Three
+save/migration tests were passing **vacuously** — `load()` reported a fresh game and every
+assertion held against default state. Found only because a new migration test failed for a reason
+that made no sense. `SAVE_KEY` is now a constant in the suite. *A test that passes for the wrong
+reason is worse than no test.*
+
+**Two art bugs, both only visible in a picture.** The willow was drawn in the same mid green as the
+bank behind it, so only its ink outline showed and it read as a floating ring; then, fixed as a flat
+ellipse with fronds beneath, it read as a mushroom — or a table with legs, which is the failure the
+Hollow's moss drips already documented. It has a lumpy crown now. And **honey jars taking the
+petal colour outright made Daisy's jar white**, indistinguishable from an empty shelf slot; the
+bloom now tints an amber base instead.
+
+**And the bees all launched from the same point**, so six of them flew as one clump, which reads as
+a bug rather than as a meadow.
+
+---
+
 ## 2026-08-25 (build 3) — The hives come home, and a tab dies the right way
 
 **The Wild Meadow is a place now**, and the Apiary tab is gone. This is the cheapest region the

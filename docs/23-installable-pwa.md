@@ -162,5 +162,5 @@ desktop preview.
 **Check a layout change against a phone with insets before shipping it.** The suite cannot see any
 of this — `tools/sim-test.js` is headless and never loads a stylesheet.
 
-**`customers.js`, then `overworld.js` and `ui-map.js`, joined `CORE`; `VERSION` is now 3, 2026-08-25.** A new script file that is not
+**`customers.js`, then `overworld.js` and `ui-map.js`, then `meadow.js` and `ui-meadow.js`, joined `CORE`; `VERSION` is now 4, 2026-08-25.** A new script file that is not
 in that list works online and fails to boot offline — the trap this document exists to prevent.

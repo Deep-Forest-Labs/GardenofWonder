@@ -2583,3 +2583,149 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   66%{transform:translate(-10px,-4px)}
 }
 @media (prefers-reduced-motion:reduce){ .ow-bee{animation:none} }
+
+/* =========================================================
+   THE WILD MEADOW
+   The quiet place. The garden is the tapping and the combo; nothing in here
+   flashes or counts down, and the only motion is drift. See meadow.js.
+   ========================================================= */
+.meadow-layer{position:absolute;inset:0;z-index:38;overflow:hidden;background:#8ed36b}
+.meadow-layer[hidden]{display:none}
+.meadow-scene-host{position:absolute;inset:0}
+.meadow-scene-host svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.in-meadow .stage,.in-meadow #dock,.in-meadow .rail,.in-meadow .quest-strip{display:none}
+.in-meadow .coach{display:none}
+
+/* ---- the bank ---- */
+.mw-bank,.mw-keeper-bank{position:absolute;inset:0;pointer-events:none}
+.mw-spot,.mw-keeper{
+  position:absolute;padding:0;border:0;background:none;line-height:0;
+  pointer-events:auto;cursor:pointer;font-family:inherit;
+  transition:transform .12s cubic-bezier(.34,1.56,.64,1);
+}
+.mw-spot svg,.mw-keeper svg{width:100%;height:100%;overflow:visible;display:block}
+.mw-spot:active,.mw-keeper:active{transform:scale(.93)}
+/* An empty spot is quiet until you can afford it — then it invites. */
+.mw-spot.empty{opacity:.62}
+.mw-spot.empty.affordable{opacity:1;animation:mwInvite 2.6s ease-in-out infinite}
+@keyframes mwInvite{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.mw-spot.ready{animation:mwReady 2.2s ease-in-out infinite}
+@keyframes mwReady{0%,100%{transform:translateY(0) rotate(0)}
+  25%{transform:translateY(-3px) rotate(-1.5deg)}75%{transform:translateY(-3px) rotate(1.5deg)}}
+
+.mw-spot-tag,.mw-keeper-tag{
+  position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);
+  padding:2px 9px;border:2.5px solid var(--ink,#2c1a10);border-radius:999px;
+  background:rgba(255,247,225,.94);font-size:10.5px;font-weight:800;white-space:nowrap;
+  line-height:1.35;box-shadow:0 2px 0 rgba(44,26,16,.28);pointer-events:none;
+}
+.mw-jar-badge{
+  position:absolute;top:-8px;right:-8px;min-width:26px;height:26px;
+  display:grid;place-items:center;border:3.5px solid var(--ink,#2c1a10);border-radius:999px;
+  background:#ffc94a;font-size:13px;font-weight:800;line-height:1;
+  box-shadow:0 3px 0 rgba(44,26,16,.3);pointer-events:none;
+}
+.mw-spot.full .mw-jar-badge{background:#ff8fa3}
+
+/* ---- keepers ---- */
+.mw-keeper.empty{
+  display:grid;place-items:center;border:4px dashed rgba(44,26,16,.4);border-radius:22px;
+  background:rgba(255,247,225,.4);opacity:.75;
+}
+.mw-keeper.empty svg{width:44%;height:44%;opacity:.55}
+.mw-keeper.asleep{opacity:.72}
+
+/* ---- bees ---- */
+.mw-bees{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.mw-bee{
+  position:absolute;left:var(--x,14%);top:var(--y,46%);width:30px;height:24px;display:block;
+  animation:mwBee var(--dur,9s) linear infinite;animation-delay:calc(var(--i,0) * -1.7s);
+}
+.mw-bee svg{width:100%;height:100%;display:block;overflow:visible}
+/* A long lazy loop across the bank. Never a straight line — a bee that flies
+   straight reads as a projectile. */
+@keyframes mwBee{
+  0%{transform:translate(0,0) rotate(0)}
+  20%{transform:translate(90px,-42px) rotate(6deg)}
+  42%{transform:translate(186px,10px) rotate(-4deg)}
+  60%{transform:translate(232px,-34px) rotate(5deg)}
+  80%{transform:translate(126px,-70px) rotate(-6deg)}
+  100%{transform:translate(0,0) rotate(0)}
+}
+
+.mw-note{
+  position:absolute;left:10px;right:10px;top:calc(var(--sat,0px) + 10px);
+  display:flex;flex-wrap:wrap;justify-content:center;gap:6px;pointer-events:none;
+}
+.mw-note span{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 11px;
+  border:3px solid var(--ink,#2c1a10);border-radius:999px;background:rgba(255,247,225,.94);
+  font-size:11.5px;font-weight:800;box-shadow:0 3px 0 rgba(44,26,16,.26);
+}
+.mw-note svg{width:14px;height:14px}
+
+.mw-exit{
+  position:absolute;left:50%;bottom:calc(96px + 8px);transform:translateX(-50%);
+  display:flex;align-items:center;gap:7px;padding:5px 13px;
+  border:3px solid var(--ink,#2c1a10);border-radius:999px;background:rgba(255,247,225,.9);
+  font-size:11.5px;font-weight:800;box-shadow:0 3px 0 rgba(44,26,16,.26);pointer-events:none;
+}
+.mw-exit i{width:0;height:0;border:5px solid transparent;border-top-color:var(--ink,#2c1a10);
+  animation:coachBob .9s ease-in-out infinite}
+
+.mw-dock{
+  position:absolute;left:0;right:0;bottom:0;height:96px;
+  padding:9px 9px calc(var(--bottom-gap,16px));
+  background:linear-gradient(180deg,rgba(44,26,16,0),rgba(44,26,16,.2) 40%,rgba(44,26,16,.32));
+}
+.mw-dock .dock-btn.on{background:linear-gradient(180deg,#fff3c4,#ffe9a8)}
+
+/* ---- the panels ---- */
+.keeper-row{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:8px;
+  padding:8px 11px;border:4px solid var(--ink,#2c1a10);border-radius:18px;background:#fff7e1;
+  box-shadow:0 4px 0 rgba(44,26,16,.3);font-family:inherit;color:inherit;cursor:pointer;
+}
+.keeper-row:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(44,26,16,.3)}
+.keeper-row.on{background:#fff3c4}
+.keeper-face{width:52px;flex:0 0 52px;line-height:0}
+.keeper-face svg{width:100%;height:auto;overflow:visible}
+.keeper-face.asleep{opacity:.6}
+.keeper-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.keeper-bee{font-style:normal;font-size:10px;padding:1px 7px;border-radius:999px;
+  border:2px solid var(--ink,#2c1a10);background:#ffd23f;margin-left:5px;vertical-align:middle}
+.keeper-pick{width:26px;flex:0 0 26px}
+.keeper-pick svg{width:100%;height:100%}
+
+.shelf-bar{height:12px;border:3px solid var(--ink,#2c1a10);border-radius:999px;
+  background:#e8d5b0;overflow:hidden;margin:0 0 12px}
+.shelf-bar i{display:block;height:100%;background:#ffc94a;transition:width .3s ease}
+.shelf-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.shelf-slot{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 4px 6px;border:3px solid var(--ink,#2c1a10);border-radius:14px;
+  background:#f2e3c6;opacity:.55;
+}
+.shelf-slot.has{background:#fff7e1;opacity:1}
+.shelf-jar{width:38px;height:44px;line-height:0}
+.shelf-jar svg{width:100%;height:100%;display:block}
+/* Unfilled slots show the jar shape only — the silhouette pull. */
+.shelf-slot:not(.has) .shelf-jar svg{filter:grayscale(1) brightness(.75);opacity:.5}
+.shelf-name{font-size:9.5px;font-weight:800;line-height:1.15;text-align:center}
+.shelf-n{position:absolute;top:-6px;right:-4px;min-width:20px;height:20px;
+  display:grid;place-items:center;border:2.5px solid var(--ink,#2c1a10);border-radius:999px;
+  background:#ffc94a;font-size:10px;font-weight:800}
+
+@media (prefers-reduced-motion:reduce){
+  .mw-bee,.mw-spot.empty.affordable,.mw-spot.ready,.mw-exit i,
+  .mw-cloud,.mw-blade,.mw-flower,.mw-frond{animation:none}
+}
+/* Scene drift — slow enough to read as air moving, never as motion. */
+.mw-cloud{animation:drift var(--dur,58s) linear infinite}
+.mw-blade{transform-box:fill-box;transform-origin:bottom center;
+  animation:mwSway 5.2s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.6s)}
+@keyframes mwSway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+.mw-flower{transform-box:fill-box;transform-origin:bottom center;
+  animation:mwSway 6.4s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.9s)}
+.mw-frond{transform-box:fill-box;transform-origin:top center;
+  animation:mwSway 7.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.5s)}
