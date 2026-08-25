@@ -59,11 +59,17 @@ from quests and levels.
 > scrollable world** (pan with a finger at map altitude; the vertical swipe stays as the altitude
 > gesture; the spike's fixed two-stop camera is superseded on this), and **the ceiling is open** —
 > design what a AAA team would build, ship incrementally, with the not-a-clone bar standing per
-> garden. The open thread is the **goods catalog** — whether botanical goods are enough — and
-> [25-world-map.md](25-world-map.md#the-goods-catalog--is-botanical-enough) carries the three
-> recommendations with probabilities: deep botanical catalog (~75%), cottage crops via the Orchard
-> (~60%), no barn (~35% it earns its place). **The Florist family (bouquets — multi-flower order
-> lines, no crafting needed) is the Stand's launch catalog.**
+> garden.
+>
+> **The goods are decided, 2026-08-25 (latest): deep botanical catalog plus cottage crops, no
+> barn.** Specified in **[26-goods-catalog.md](26-goods-catalog.md)** — six families, three
+> production shapes (order-shapes, producers, merge chains on the bench), the crop list with one
+> small wheat patch as the whole grain concession, and the one-line test made structural as a
+> `line` field on every good. **The Florist family (bouquets — multi-flower order lines, no
+> crafting needed) plus named honeys is the Stand's launch catalog.** Crops never enter the
+> flower garden. And **the map goes MVP-first**: phases A+B at spike-level art, dock migration
+> deferred, the Stand as the only functional new thing, with the feel rubric and sim-first rule
+> in [25-world-map.md](25-world-map.md#the-mvp-decided-2026-08-25--build-plain-test-the-feel-polish-as-we-go).
 
 > **Creatures arrived, and the direction changed, 2026-08-16.** The diagnosis was the owner's: the
 > world had a place and a character but **no inhabitants**. So **habitat** was added as a second frame
@@ -531,20 +537,18 @@ exactly 1.4× cost at Common across all nineteen tiers**, differing only in thro
 distinct-looking producers that all do the same thing is the AdVenture Capitalist decay pattern; see
 [17-market-and-positioning.md](17-market-and-positioning.md).
 
-**The world map is the direction, and it is in a design pass before any more of it is built.**
+**The world map is the direction, the design pass is complete, and the MVP is cleared to build.**
 The spike stands as the art and camera reference. [25-world-map.md](25-world-map.md) is the design
-document: the researched map inventory is **frame → Garden Stand (the order queue as a place, the
-anchor) → Potting Shed surface → two-to-four specialized garden biomes**, with collect-all gated on
-automation throughout. Do not start building map phases until the owner has made the three calls
-listed at the top of this file and in that document's phase D and "later, or never" sections.
+document — inventory **frame → Garden Stand → Potting Shed surface → specialized biomes**, plus
+the MVP scope — and [26-goods-catalog.md](26-goods-catalog.md) is the goods spec.
 
-**Settled 2026-08-25:** the Stand builds first after the frame; the map pans freely at map
-altitude; the ceiling is open with the not-a-clone bar per garden. **Still open:** the goods
-catalog decision (deep botanical vs. + cottage crops vs. + a barn — recommendations and
-probabilities in [25-world-map.md](25-world-map.md#the-goods-catalog--is-botanical-enough)), and
-the bench — the research strengthens the case that it ships a surface on the map rather than being
-deleted, because merge + orders is the top-grossing casual shape of 2026 and both halves already
-exist in this repo.
+**Settled 2026-08-25:** the Stand builds first; the map pans freely at map altitude; the ceiling
+is open with the not-a-clone bar per garden; goods are deep-botanical plus cottage crops, no barn;
+and the build is **MVP-first** — plain map, functional Stand, polish later. **The next work is the
+MVP**, and the right first slice is simulation: order generation and delivery in `game.js` under
+`tools/sim-test.js` (anti-frustration rules as invariants), then the map frame and the Stand UI.
+**Resolved by the goods decision:** the bench ships a surface (every crafted family is a merge
+chain on it), and the prototype Craft tab retires when it does.
 
 **A caution recorded so it stays visible.** The map manufactures collection moments, and a 2×
 rewarded video on a collect-all is the best-converting placement in casual — Kolibri takes roughly
@@ -911,15 +915,15 @@ stale line here costs them real time before they have any way to know it is wron
 > well fed, hungry, or asleep — and a tap on a creature opens its own panel. Read
 > `docs/22-creatures.md` end to end and the top few entries of `docs/10-decision-log.md`.
 >
-> **What's next is the world map.** Swipe down from the garden to pull back to a world where the
-> garden, the Hollow's burrow and locked parcels of land all sit in one side-on scene — so the game
-> becomes one vertical ladder, map → garden → Hollow. Try `tools/map-spike.html` first; it is the
-> camera, the composition and the new dock in one file. **The dock is meta now, the map is
-> navigation, and upgrades stay in the garden** — Friends · Cards · (World) · Quests · Shop, with
-> the world on a raised centre button. The agreed order is: the empty map, then the Market as
-> location two, then collect-all gated on automation. **Two rules to hold:** no region may be a
-> second garden, and the map collects the boring half while the garden keeps the interesting half.
-> Read the top of `docs/10-decision-log.md` and `docs/15-navigation-and-ia.md`.
+> **What's next is the world map MVP.** Swipe down from the garden to pull back to a freely
+> scrollable world — the game becomes one altitude ladder, map → garden → Hollow. The design pass
+> is done: `docs/25-world-map.md` (map inventory, MVP scope, feel rubric) and
+> `docs/26-goods-catalog.md` (goods families, cottage crops, no barn) are the spec; try
+> `tools/map-spike.html` for the art and camera reference. **Build plain and sim-first**: order
+> generation in `game.js` under the test suite, then the map frame, then the Garden Stand running
+> Florist bouquet orders and named honeys. Polish and the meta dock come later. **Two rules to
+> hold:** no region may be a second garden, and the map collects the boring half while the garden
+> keeps the interesting half. Read the top of `docs/10-decision-log.md` first.
 >
 > **Decorate is still agreed and still unbuilt** — mementos have had no sink since August 18. Check
 > with me before starting anything else; the Potting Bench is also still a live option.

@@ -3,6 +3,12 @@
 **Status: specification, not built.** Structure is locked; numbers are placeholders pending the
 prototype. See [12-meta-layer-design.md](12-meta-layer-design.md) for the world it sits in.
 
+**Confirmed and named, 2026-08-25.** The order board is **the Garden Stand**, a place on the world
+map's lane where customers visibly queue — confirmed as the first thing built after the map frame
+([25-world-map.md](25-world-map.md)). It launches on **Florist order-shapes (bouquets — multi-flower
+line items needing no crafting) and named honeys**; the full catalog and its rollout live in
+[26-goods-catalog.md](26-goods-catalog.md).
+
 **Still wanted, 2026-08-16.** The habitat direction (creatures, the Hollow) arrived first, but the
 owner is explicit that orders and the production chain they sit on have not been dropped — the right
 way to fold them in simply has not been found yet. This remains a live design.

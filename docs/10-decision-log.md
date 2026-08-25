@@ -5,6 +5,39 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (latest) — The goods are decided, and the map goes MVP-first
+
+**The owner picked recommendations 1 and 2 and rejected 3, ending the goods question the same day
+it opened.** The catalog goes deep and botanical — six families, specified in
+[26-goods-catalog.md](26-goods-catalog.md) — and cottage crops are admitted as inputs:
+strawberries, bramble berries, mint, chamomile, apples, elderflower, pumpkin, and **one small
+wheat patch** as the entire grain concession. **No barn, no chickens, ever-ish**: re-raised and
+re-rejected, the creatures are this game's animals, and the cut list in
+[12-meta-layer-design.md](12-meta-layer-design.md) now says so twice.
+
+**Three shapes of production, zero new systems.** Bouquets are *order-shapes* — a multi-flower
+line item with a ribbon, no item, no crafting code — which is what lets the Stand launch on the
+Florist family plus named honeys with nothing new built underneath. Everything else is a merge
+chain on the Potting Bench, one chain per family, which retires the prototype `CRAFT_RECIPES`
+two-slot bench when the surface ships. **Crops never enter the flower garden** — no seed-model
+change, no verb or attraction interactions; they live in their own beds and patches on the map,
+and the currency policy grows by one row ("garden produce, by variety"), not eight.
+
+**The `line` field is the one-line test made structural.** Every good carries the sentence its
+customer speaks ("Moonflower Tea — for sleep."); a good that can't fill the field doesn't enter
+the catalog. Cheap to write, and it is where the captivation actually lives.
+
+**And the map goes MVP-first, on the owner's instruction:** build it plain — spike-level art, no
+dock migration, no polish — to test whether the *feel* holds, and spend the effort on features.
+The MVP is phases A+B: the pan camera, the altitude swipes, the cross-fade, the burrow, locked
+parcels that show a price, and **the Garden Stand as the only functional new thing** (order steps
+1–2, Florist + honey). A feel rubric went into [25-world-map.md](25-world-map.md) so "does it feel
+good" is testable — the key line: *does checking the Stand pull you back into planting something
+specific.* If not, the order weights are wrong before anything else is. Simulation first: order
+generation and delivery land in `game.js` under `tools/sim-test.js` before any UI exists.
+
+---
+
 ## 2026-08-25 (last) — The map becomes a scrollable world, the Stand is confirmed, and the goods question opens
 
 **Three answers from the owner, the same day as the research.** The **Garden Stand is confirmed as

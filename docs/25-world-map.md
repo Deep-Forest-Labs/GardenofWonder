@@ -167,6 +167,33 @@ with its own clock and its own creatures. Candidates, cheapest first:
 The count is open-ended as the team grows; what is fixed is that each addition passes the
 not-a-clone bar, and that they arrive one at a time as the order economy needs supply breadth.
 
+### The MVP, decided 2026-08-25 — build plain, test the feel, polish as we go
+
+The owner's call: **a very simple MVP of the map, even if it doesn't look great, to test whether
+the game feels good — effort goes into the features, and the map gets polished as we go.** The
+MVP is phases A and B together, at spike-level art:
+
+1. **The camera.** Free pan with a finger at map altitude, clamped to the world's edges. Swipe
+   down from the garden pulls back to the map; swipe up (or tap the garden) dives in, ending in
+   the cross-fade to the real garden screen. Reuse the spike's art wholesale — no art pass.
+2. **The places.** The garden thumbnail, the burrow mouth, two or three locked parcels showing a
+   price (buying can stub to "not yet"), and **the Garden Stand, which is the only functional new
+   thing**: steps 1–2 of [13-order-system.md](13-order-system.md#build-order) — three visible
+   slots, hand-authored then template-generated orders, **Florist order-shapes and named honeys
+   only** ([26-goods-catalog.md](26-goods-catalog.md)), paying coins and starting reputation.
+3. **The dock, deferred.** The meta dock (Friends · Cards · World · Quests · Shop) arrives with
+   the map's polish pass, not the MVP — each current tab leaves only when its map home exists, so
+   Apiary and Craft stay put for now and nothing breaks. The MVP's map is reached by swipe and by
+   a plain button.
+4. **What "feels good" means, so the test has a rubric.** Can you pull back, read the Stand, fill
+   an order from the garden and be back tapping in under a minute; does the altitude swipe feel
+   like one world rather than a menu; does checking the Stand pull you back into planting
+   something specific. If the third one fails, the order generation weights are wrong before
+   anything else is.
+5. **Sim coverage before UI.** Order generation and delivery live in `game.js` behind
+   `tools/sim-test.js` first — the anti-frustration rules (never ask for the unproducible, orders
+   beat selling raws) are exactly the kind of invariant the suite exists to hold.
+
 ### Later, or never
 
 - **Wheat, corn, barns, chickens** — see finding 4. Open call, recommended against.
@@ -175,6 +202,11 @@ not-a-clone bar, and that they arrive one at a time as the order economy needs s
 - **A second currency per region** (Idle Miner's continents) — no, until prestige design demands it.
 
 ## The goods catalog — is botanical enough?
+
+**Decided 2026-08-25: recommendations 1 and 2 below are adopted, recommendation 3 is rejected.**
+The catalog is now specified in **[26-goods-catalog.md](26-goods-catalog.md)** — six families,
+three production shapes, the cottage-crop list, and the rollout tied to the map phases. The
+reasoning below is kept as the record of why.
 
 The owner's sharpest question, 2026-08-25: *are teas, honey, preserves, perfumes and bouquets
 enough? Does that tell a captivating story? What if people don't care about perfume?*

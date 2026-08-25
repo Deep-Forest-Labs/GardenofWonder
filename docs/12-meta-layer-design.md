@@ -181,7 +181,7 @@ Casual players fall off a cliff past four or five tracked quantities. Keep the t
 
 | Tier | Members |
 | --- | --- |
-| Raw materials | Flowers (by variety), Seeds, Rare Seeds, Honey (by variety), Wax |
+| Raw materials | Flowers (by variety), Seeds, Rare Seeds, Honey (by variety), Wax, Garden produce (by variety — the cottage crops, added 2026-08-25, see [26-goods-catalog.md](26-goods-catalog.md)) |
 | Crafted goods | Perfume, Tea, Preserves, Candles, Salve |
 | Soft currency | Coins |
 | Hard currency | Gems |
@@ -197,6 +197,8 @@ whimsical, but it's a stretch — leave it.
 
 **Chickens and eggs.** Not bad, just generic. Pulls toward Hay Day, where this game cannot win.
 Bees deliver the same production fantasy while reinforcing what makes the game distinct.
+**Re-raised and re-rejected 2026-08-25** — the creatures are the game's animals, and animal
+produce, if ever wanted, comes from them ([26-goods-catalog.md](26-goods-catalog.md)).
 
 **Pachinko.** Too shallow to carry a region. Fine later as a *reward delivery* device — a plinko
 drop for a daily bonus is cheap and satisfying.
