@@ -87,6 +87,15 @@ from quests and levels.
 > driving the new cheats. **Test it with the Developer tools:** *Creature food clocks* — Drain 1h /
 > 4h / 24h, Send them to sleep, Feed everyone. 97 assertions.
 >
+> **Food runs ONE clock, 2026-08-20.** A creature is **well fed** above 3h remaining (works a star
+> up), **awake but hungry** above zero, and **asleep** at nothing. Clover 4h, Petal Cake 8h,
+> Honeypot 16h. It was two clocks until the panel asked for one bar — and merging them lost nothing,
+> because the second was only ever carrying the gap between them. **The threshold is a warning line,
+> not a target:** at three quarters up, no single food reaches it from empty and the buff would only
+> exist by stacking. One side effect kept on purpose — **an arrival now lands well fed for its first
+> 21 hours**, which teaches the buffed state before it lapses. Saves migrate by taking the larger of
+> the old pair.
+>
 > **The creature panel is ordered by what you came to do, 2026-08-20.** Who it is → what it does →
 > how grown it is → **Feed and every action with it**. A sleeping creature must never need a scroll
 > to reach the food that wakes it: at 375×812 the food buttons end 518px into a 582px body and the
@@ -560,6 +569,11 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 Things that cost real time to discover. None are visible from a casual read.
 
+**After removing a method from `Game`, grep the `ui-*` files for it.** `tools/sim-test.js` cannot see
+a `ui-*` file, so a UI call to a method that no longer exists passes every test and throws the moment
+a player opens that panel. Collapsing the two food clocks left two live call sites to
+`Game.critterAwakeFor` — the roster Feed panel and the post-feed toast — with a fully green suite.
+
 **Never measure sheet contents with `getBoundingClientRect()` while the sheet is opening.** `.sheet`
 carries a `translateY` transition, so absolute positions read hundreds of pixels off — and in an
 automated tab that transition can freeze part-way and never settle, so waiting does not help.
@@ -770,7 +784,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 834 assertions over the simulation layer
+node tools/sim-test.js          # 837 assertions over the simulation layer
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```

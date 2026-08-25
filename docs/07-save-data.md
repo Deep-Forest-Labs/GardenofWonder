@@ -299,7 +299,7 @@ and `mutateAt` is untouched. It is its own top-level object.
 
 ```js
 critters: {
-  pip: { since, fed, fedUntil, awakeUntil, gifts, met, level, tending }   // one per creature home
+  pip: { since, fed, fedUntil, gifts, met, level, tending }   // one per creature that moved in
 }
 ```
 
@@ -344,14 +344,19 @@ so time away needs no replaying and nothing has to tick. Two rules:
 - **Absent means unfed**, which is simply a creature working at the star it was raised to. Nothing
   is switched off by the absence, so a save from before food needs no migration at all.
 
-`awakeUntil` (added 2026-08-18 with sleeping) is the upkeep clock, and also an absolute epoch
-second. Its backfill rule is the one that matters:
+`fedUntil` is the **one fullness clock**, an absolute epoch second. Above `FED_THRESHOLD_HOURS`
+remaining the creature is well fed, above zero it is awake, at zero it is asleep. Three rules:
 
-- **Absent means AWAKE, with the full `ARRIVAL_AWAKE_HOURS` grant** — not asleep, and not zero. A
-  save written before sleeping existed must not open on a room of creatures the game never warned
-  anyone about, which is the same rule `tending` follows for the same reason.
-- **An explicit `0` is respected**, because that is a creature that genuinely ran out.
-- **Clamped to `now + FOOD_CAP_HOURS`**, so an edited save cannot stay awake forever.
+- **It is clamped to `now + FOOD_CAP_HOURS`** on load. An edited save must not be able to hold a
+  boost forever, and the clamp is where that is enforced rather than at every read site.
+- **Absent means the full `ARRIVAL_AWAKE_HOURS` grant** — not asleep, and not zero. A save from
+  before any of this must not open on a room of creatures the game never warned anyone about, which
+  is the same rule `tending` follows for the same reason. An explicit `0` is respected, because that
+  is a creature that genuinely ran out.
+- **It absorbed `awakeUntil` on 2026-08-20.** There were two clocks, and `awakeUntil` was always the
+  longer — so the surviving field takes `max(fedUntil, awakeUntil)` and the old one is dropped. The
+  migration lives in the backfill and needs no version bump, because a save carrying both still
+  loads to the right place.
 
 > **`fed` and `fedUntil` are unrelated despite the names.** `fed` is the **keepsake clock** — when
 > this creature last handed one over — and it has been there since creatures shipped. Writing food

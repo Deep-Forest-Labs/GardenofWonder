@@ -659,15 +659,26 @@ const PAIR_TUNING = {
   deliveryChance: 0.2
 };
 
-/* Food, and the two clocks it runs.
+/* Food, and the ONE clock it runs.
 
-   TWO AXES, DELIBERATELY, agreed with the owner 2026-08-18 after a first pass
-   that had only the boost:
+   A creature has a single fullness clock. Where it stands decides everything:
 
-     AWAKE  — upkeep. A creature whose awake clock has run out is ASLEEP: eyes
-              shut, Zs drifting up, contributing no trait and forming no pair.
-              This is the retention mechanic and it is meant to have teeth.
-     FED    — a boost on top. A well-fed creature works one star above itself.
+     above FED_THRESHOLD_HOURS  ->  WELL FED. Works one star above itself.
+     above zero                 ->  awake and working, but hungry.
+     zero                       ->  ASLEEP. Contributes nothing at all.
+
+   IT WAS TWO CLOCKS UNTIL 2026-08-20, and collapsing them lost nothing. Every
+   food's awake window already outlasted its boost by roughly a fixed margin, so
+   the second clock was carrying one number — that margin — at the cost of a
+   second bar, a second timestamp and a second thing to keep in sync. As one
+   clock the old invariant "a food always keeps a creature up longer than it
+   boosts it" stops being a rule anyone has to assert and becomes arithmetic.
+
+   THE THRESHOLD IS A WARNING LINE, NOT A TARGET. It sits low on the bar (3h of
+   24, an eighth of the way up) so a creature is well fed for most of its meal
+   and the band underneath is the strip where the buff has lapsed and sleep is
+   coming. Set high instead, it would be a wall: at three quarters of the bar NO
+   single food reaches it, and the buff would only ever exist by stacking.
 
    THE PRESENTATION IS THE MECHANIC. A pet that is *asleep* is not a pet that was
    taken away — it is obviously reversible, it says what to do about it, and it
@@ -677,9 +688,6 @@ const PAIR_TUNING = {
    what would otherwise break the pair rules: a pair switching off is fine as
    long as you can SEE why, and a visibly sleeping creature is exactly that.
 
-   Every food does both, and the awake clock always outlasts the boost — the
-   cheap food is "keep them going", the dear one is "keep them going AND strong".
-
    A STAR RATHER THAN A FLAT MULTIPLIER for the boost, because a flat one is
    self-amplifying and this is self-limiting. `critterTraitAt()` already scales a
    trait by star, so a fed creature simply computes one higher: x2.00 at one
@@ -688,36 +696,40 @@ const PAIR_TUNING = {
    (Thistle), which are the two places an idle economy quietly breaks. */
 const FED_STARS = 1;
 
-/* Both clocks are capped and the panel says so openly — a stated cap reads as a
+/* Hours of fullness remaining above which a creature is WELL FED. Chosen to
+   reproduce the tuning the two-clock version already had: Clover kept its token
+   1h of boost, Petal Cake and Honeypot came out a shade more generous. */
+const FED_THRESHOLD_HOURS = 3;
+
+/* The clock is capped and the panel says so openly - a stated cap reads as a
    rule, a hidden one reads as theft. Without it a single large purchase buys
    weeks and the loop it exists to create stops existing. */
 const FOOD_CAP_HOURS = 24;
 
-/* What an arriving creature gets free, and what a save written before sleeping
+/* What an arriving creature gets free, and what a save written before this
    existed comes back with. Nobody should meet their first pet and watch it fall
    asleep before they have learned that food exists, and a returning player must
    never open the game to a room of sleepers it never warned them about. */
 const ARRIVAL_AWAKE_HOURS = 24;
 
 /* Prices are placeholders like every other number in the economy, and flat
-   rather than scaling — see docs/04-economy.md. The per-hour rate falls as the
-   tier rises, so committing to a longer stretch is the cheaper way to buy it.
+   rather than scaling - see docs/04-economy.md.
 
-   `awake` is the tighter of the two ladders the owner chose (4 / 8 / 16 rather
+   `hours` is the tighter of the two ladders the owner chose (4 / 8 / 16 rather
    than 8 / 16 / 24): a daily player has to feed on their first check-in, and a
    twice-daily player stays comfortably ahead. If this ever reads as a chore
-   rather than a habit, THIS is the dial — raise `awake`, never the prices. */
+   rather than a habit, THIS is the dial - raise `hours`, never the prices. */
 const CREATURE_FOOD = [
   {
-    id: 'clover', name: 'Clover Nibble', awake: 4, hours: 1, cost: 1500, icon: 'clover',
+    id: 'clover', name: 'Clover Nibble', hours: 4, cost: 1500, icon: 'clover',
     desc: 'A mouthful of something green. Enough to get anyone up and about.'
   },
   {
-    id: 'petalcake', name: 'Petal Cake', awake: 8, hours: 4, cost: 5000, icon: 'petal',
+    id: 'petalcake', name: 'Petal Cake', hours: 8, cost: 5000, icon: 'petal',
     desc: 'Pressed from the garden. Sweeter than it looks and stickier than it should be.'
   },
   {
-    id: 'honeypot', name: 'Honeypot', awake: 16, hours: 12, cost: 12000, icon: 'honey',
+    id: 'honeypot', name: 'Honeypot', hours: 16, cost: 12000, icon: 'honey',
     desc: 'The whole pot. Nobody is going to be hungry for a good while.'
   }
 ];

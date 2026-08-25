@@ -354,6 +354,15 @@ The count is dark ink with a **white halo** rather than the house white-on-ink o
 those eight offset copies crowd the glyphs into mud, where a halo stays clean over both the filled
 and the empty half.
 
+**The star's own stroke needed thinning for a number to live in it.** `Icons.get('star')` is drawn
+with a 2px stroke in a 24-unit box, which at 46px is a fat band the digit ran straight into. The
+token overrides `stroke-width` in CSS and the number carries the same white halo, so it separates
+from the gold as well as from the outline.
+
+**The food buttons are the food.** A 52px token with what it gives you stamped on the corner
+(`+4h`), then the name, then the price — icon first, words second, and one clock means one number
+to stamp.
+
 ### The order of the panel is the design, 2026-08-20
 
 Priority, top to bottom, set by the owner: **who it is → what it does → how grown it is → everything
@@ -371,14 +380,21 @@ this panel: at 375×812 the food buttons end 518px into a 582px body, and the ou
 579px. Both are above the fold with almost nothing to spare, so a new block above them pushes the
 cure for the problem off screen.
 
-**Two meters, because a number is not a picture.** *Awake* and *Well fed* both run to the same 24h
-cap, so they are directly comparable — and the point of drawing them rather than printing a
-timestamp is that you can see **how much of one a Honeypot actually buys**. Feeding a sleeping
-creature a Clover Nibble moves Awake to 17% and Well fed to 4%; a Honeypot on top takes them to 83%
-and 54%. The Awake meter turns urgent and reads `Asleep` at zero.
+**One meter with a pip on it**, since there is one clock. The pip marks where the star lapses:
+above it *Well fed*, below it *Getting hungry*, at nothing *Asleep* — and the header names whichever
+of the three it is, so the pip does not have to. **The pip is marked with a star rather than a
+word**, because labelling it "Well fed" said the same thing twice on one bar and read as a caption
+for the whole bar instead of for the line.
 
-The sleep alert above them is **one line**, because the Awake meter already says *Asleep* — the alert
-only has to add the part a meter cannot, which is what to do about it.
+Watching it work is the point: at 8% the creature is hungry and 2 stars; a Clover Nibble puts it to
+25%, the third star lights and the trait moves 40% → 60%; a Honeypot takes it to 92%.
+
+**The skill and its level are one box**, because the star *is* the trait getting stronger — two
+cards said less and crowded more. **A box worth counting is a box worth removing**; the panel had
+drifted to six of them.
+
+**"Out or resting" lives outside Feed.** It is a different verb, and it was only up there because
+everything actionable had been swept under one heading.
 
 **The art is hidden by CSS whenever the sheet is not `.open`**, not by a JS call on the close path.
 It rides the sheet's transform, and a closed sheet parks just below the bottom edge — which left a
@@ -412,25 +428,54 @@ could always have brought a creature while the room was open.
 
 Still not built: chambers and sideways paging, a second level, and decorating.
 
-## Food, and the two clocks it runs — 2026-08-18
+## Food, and the one clock it runs — 2026-08-20
 
-Food does two separate things, and keeping them separate is the design.
+A creature has a **single fullness clock**, capped at 24 hours. Where it stands decides everything:
 
-| Food | Keeps it **awake** | Keeps it **well fed** | Costs |
+| The clock | The creature |
+| --- | --- |
+| above **3h** (`FED_THRESHOLD_HOURS`) | **Well fed.** Works one star above itself |
+| above zero | Awake and working, but hungry |
+| zero | **Asleep.** Contributes nothing at all |
+
+| Food | Adds | Of which boost | Costs |
 | --- | --- | --- | --- |
-| Clover Nibble | 4 hours | 1 hour | 1,500 |
-| Petal Cake | 8 hours | 4 hours | 5,000 |
-| Honeypot | 16 hours | 12 hours | 12,000 |
+| Clover Nibble | 4 hours | 1h | 1,500 |
+| Petal Cake | 8 hours | 5h | 5,000 |
+| Honeypot | 16 hours | 13h | 12,000 |
 
-- **Awake** is upkeep. A creature whose awake clock has run out is **asleep** — eyes shut, Zs
-  drifting up, contributing no trait and forming no pair. This is the retention mechanic and it is
-  meant to have teeth.
-- **Well fed** is a boost on top: the creature works **one star above itself**.
+### It was two clocks until 2026-08-20, and merging them lost nothing
 
-Every food does both, and **the awake clock always outlasts the boost**, asserted. The cheap food is
-"keep them going"; the dear one is "keep them going *and* strong".
+`awakeUntil` and `fedUntil` ran side by side, and every food's awake window already outlasted its
+boost by roughly a fixed margin. **The second clock was carrying one number — that margin — at the
+cost of a second bar, a second timestamp and a second thing to keep in sync.**
 
-### How this landed, because the reasoning is the useful part
+As one clock, the old rule *"a food always keeps a creature up longer than it boosts it"* stops being
+something a sim-test has to assert and becomes arithmetic: the gap is the threshold, every time.
+
+**The threshold is a warning line, not a target.** It sits low — 3 hours of 24, an eighth of the way
+up the bar — so a creature is well fed for most of a meal and the band underneath is the strip where
+the star has lapsed and sleep is coming. The owner's instinct was to put it at three quarters; the
+arithmetic ruled that out, because **at 18h no single food reaches it from empty** and the buff would
+only ever exist by stacking. At 3h the tuning the two-clock version already had is reproduced almost
+exactly.
+
+**One consequence worth knowing: an arrival now lands well fed.** The arrival grant is a full clock,
+and a full clock is above the line — so a new creature is buffed for its first 21 hours. That is a
+good accident and it is being kept: the player *sees* the buffed state, watches it lapse, and now
+knows what food buys. The alternative under one clock is a short grant, which reintroduces exactly
+the "opened the game to a sleeping first pet" problem the grant exists to prevent.
+
+**Cost per hour runs two ways, and both are deliberate.** Per hour of *boost* it falls with the tier
+(1,500 → 1,000 → 923), so the dear food is the cheaper way to stay buffed. Per hour of plain
+*fullness* it rises (375 → 625 → 750), so **the cheap food stays the efficient way to simply keep
+someone awake** and being broke can never strand a creature. Both are asserted.
+
+**The save migrates by taking the larger of the pair.** `awakeUntil` was always the longer clock, so
+the surviving `fedUntil` takes `max(fedUntil, awakeUntil)` and the old field is dropped. Absent still
+means the full arrival grant.
+
+### How this landed, because the reasoning is the useful part### How this landed, because the reasoning is the useful part
 
 **The first pass had only the boost and nothing that ever switched off.** The owner asked for the
 upkeep half back the same day, and was right to: *"as much as I think we are a cozy game, we need to
@@ -482,7 +527,7 @@ someone who can be fed.
 clocks**, which also shows a live count of how many tenders are down:
 
 - **Drain 1h / 4h / 24h** winds both clocks *back*. This is the real mechanism rather than a
-  simulation of it — sleeping is derived from `awakeUntil` against now, so moving it is exactly what
+  simulation of it — sleeping is derived from `fedUntil` against now, so moving it is exactly what
   the passage of time does. Both clocks move together, because every food's awake window outlasts
   its boost and *asleep but still well fed* is a state real play cannot reach.
 - **Send them to sleep** empties every clock at once. It drains resting creatures too, so swapping
@@ -567,8 +612,8 @@ project's best answer to "why would I ever plant a Daisy again."
   at would jump away the instant you fed it. This order only moves when the loadout does, which
   happens on another screen. The sort is stable, so each group keeps the roster order the Almanac
   uses.
-- **Derived from absolute timestamps** (`fedUntil`, `awakeUntil`), the same shape keepsakes and
-  hives use, so time away needs no replaying and nothing has to tick.
+- **Derived from one absolute timestamp** (`fedUntil`), the same shape keepsakes and hives use, so
+  time away needs no replaying and nothing has to tick.
 - **Prices are placeholders**, flat rather than scaling, like every other number in the economy. The
   per-hour rate falls as the tier rises, so a longer commitment is the cheaper way to buy it. Whether
   the price should eventually scale with star or level is a real open question — see below.

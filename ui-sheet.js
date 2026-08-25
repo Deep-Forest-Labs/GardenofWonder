@@ -618,15 +618,17 @@
   /* Feeding buys a star for a while and nothing more. A creature that has not
      been fed works exactly as it always did — see docs/22-creatures.md, where
      the reason that matters is stated at some length. */
+  /* The food is the button. A big token with what it gives you stamped on it,
+     then the name, then the price — icon first, words second, which is the note
+     the owner keeps coming back to. One clock means one number to stamp. */
   function foodButtons(id) {
     return CREATURE_FOOD.map((f) => {
       const room = Game.foodGain(id, f.id) > 0;
       const can = room && S.credits >= f.cost;
       return `<button class="food-btn${can ? ' affordable' : ''}" data-feed="${f.id}" data-who="${id}"
         ${room ? '' : 'disabled'} title="${f.desc}">
-        <span class="food-ico">${Icons.get(f.icon)}</span>
+        <span class="food-ico">${Icons.get(f.icon)}<b>+${f.hours}h</b></span>
         <span class="food-name">${f.name}</span>
-        <span class="food-hours">${f.awake}h up · ★ ${f.hours}h</span>
         ${priceTag(f.cost, 'credits', can)}
       </button>`;
     }).join('');
@@ -652,11 +654,11 @@
     const waiting = Game.keepsakesWaiting(id);
     const canTend = tending || Game.habitatFree() > 0;
 
-    /* The level, read left to right as a sentence made of pictures: this bloom,
-       this far along, toward this star. The bar is as tall as the tokens beside
-       it so the count and the caption stack INSIDE it — the caption fills the
-       void next to a 26px bar instead of costing the panel another row. */
-    const meterPct = (sec) => Math.min(100, (sec / Game.foodCapSeconds()) * 100).toFixed(1);
+    /* ONE box for the skill and its level, because they are the same thing — the
+       star IS the trait getting stronger, so two cards said less and crowded
+       more. Read left to right the row is a sentence made of pictures: this
+       bloom, this far along, toward this star. The bar is as tall as the tokens
+       beside it so the count and the caption stack INSIDE it. */
     const bloom = seed ? `<span class="cp-token">${Flora.head(seed, 34)}</span>` : '';
     const starToken = (n) => `<span class="cp-token cp-goal">${Icons.get('star')}<b>${n}</b></span>`;
     const grow = goal
@@ -680,29 +682,31 @@
            ${starToken(CREATURE_STARS)}
          </div>`;
 
-    /* Two clocks, two meters. Both run to the same 24h cap, so they are directly
-       comparable — and the point of drawing them is to see how far a feed gets
-       you rather than to read a timestamp and do the arithmetic yourself. */
-    const meters = `<div class="cp-meters">
-      <div class="cp-meter${asleep ? ' out' : ''}">
-        <span class="cp-meter-k">${Icons.get('clock')}Awake</span>
-        <div class="cp-mbar"><i style="width:${meterPct(Game.critterAwakeFor(id))}%"></i></div>
-        <span class="cp-meter-v">${asleep ? 'Asleep' : fmtSpan(Game.critterAwakeFor(id))}</span>
-      </div>
-      <div class="cp-meter fed${fed ? ' on' : ''}">
-        <span class="cp-meter-k">${Icons.get('star')}Well fed</span>
-        <div class="cp-mbar"><i style="width:${meterPct(Game.critterFedFor(id))}%"></i></div>
-        <span class="cp-meter-v">${fed ? fmtSpan(Game.critterFedFor(id)) : 'No'}</span>
-      </div>
+    const skill = `<div class="cp-skill">
+      ${trait ? `<span class="cp-card-k">${Icons.get(trait.icon)}${trait.name}</span>
+        <span class="cp-card-v">${trait.desc(now)}</span>` : ''}
+      ${grow}
     </div>`;
 
-    const alert = asleep
-      /* One line, because the Awake meter below already says "Asleep" — this only
-         has to add the part the meter cannot: what to do about it. Named rather
-         than pronouned, since the roster is a mix of he, she and it and that
-         lives in each creature's own authored lines. */
-      ? `<p class="cp-alert">${Icons.get('clock')}<span>Not working — a meal wakes ${def.name} up.</span></p>`
-      : '';
+    /* ONE meter, because there is one clock. The pip marks where the star lapses:
+       above it a creature is well fed and works a star up, below it it is awake
+       but hungry, at nothing it is asleep. The pip sits LOW on purpose — that
+       makes the band under it a warning strip rather than a bar to climb. */
+    const cap = Game.foodCapSeconds();
+    const left = Game.critterFedFor(id);
+    const pipPct = (Game.fedThresholdSeconds() / cap) * 100;
+    const meter = `<div class="cp-fuel${asleep ? ' out' : fed ? ' on' : ' low'}">
+      <div class="cp-fuel-top">
+        <span class="cp-fuel-k">${Icons.get(fed ? 'star' : 'clock')}${
+          asleep ? 'Asleep' : fed ? 'Well fed' : 'Getting hungry'}</span>
+        <span class="cp-fuel-v">${asleep ? `A meal wakes ${def.name} up` : `${fmtSpan(left)} left`}</span>
+      </div>
+      <div class="cp-fuel-bar">
+        <i style="width:${Math.min(100, (left / cap) * 100).toFixed(1)}%"></i>
+        <span class="cp-pip" style="left:${pipPct.toFixed(1)}%"
+          title="Above this line it works a star higher">${Icons.get('star')}</span>
+      </div>
+    </div>`;
 
     const keep = !tending
       ? `<span class="critter-memento${held ? '' : ' none'}">${Icons.get('gift')}${
@@ -725,18 +729,16 @@
         ${critterStars(level, fed && !asleep)}
       </div>
 
-      ${trait ? `<div class="cp-card cp-trait"><span class="cp-card-k">${Icons.get(trait.icon)}${trait.name}</span>
-        <span class="cp-card-v">${trait.desc(now)}</span></div>` : ''}
-
-      ${grow}
+      ${skill}
 
       <h3>${Icons.get('honey')} Feed</h3>
-      ${alert}
-      ${tending ? meters : ''}
+      ${tending ? meter : ''}
       ${tending
         ? `<span class="food-row">${foodButtons(id)}</span>`
         : '<p class="stat-note">Resting at home. It earns nothing and leaves nothing while it is in — send it out and food will do something.</p>'}
-      <button class="big-btn${tending ? ' quiet' : ''}" data-tend="${id}" data-on="${tending ? '1' : '0'}"
+
+      <h3>${Icons.get('star')} Out or resting</h3>
+      <button class="big-btn quiet" data-tend="${id}" data-on="${tending ? '1' : '0'}"
         ${canTend ? '' : 'disabled'}>${tending ? 'Send it home to rest' : 'Send it out to tend'}</button>
       <p class="stat-note cp-slots">${Game.habitatUsed()} of ${Game.habitatSlots()} tending${
         canTend ? '' : ' — rest someone else to bring this one out'}</p>
@@ -790,20 +792,20 @@
       const now = trait ? Game.critterTraitAt(def, Game.critterWorkLevel(def.id)) : 0;
 
       const asleep = Game.critterAsleep(def.id);
-      const upFor = `<b data-span="${Math.round(Game.nowSeconds() + Game.critterAwakeFor(def.id))}">${
-        fmtSpan(Game.critterAwakeFor(def.id))}</b>`;
+      // One clock: the same number is how long it stays up AND how long the star
+      // lasts, separated only by the threshold.
+      const leftFor = `<b data-span="${Math.round(Game.nowSeconds() + Game.critterFedFor(def.id))}">${
+        fmtSpan(Game.critterFedFor(def.id))}</b>`;
       const status = !tending
         ? '<span class="critter-note">Resting. Send it out in the Hollow to feed it.</span>'
         : asleep
           ? `<span class="food-state out"><span>Fast asleep, and not working.
              Feed it to wake it up.</span></span>`
           : fed
-            ? `<span class="food-state on">${Icons.get('clock')}<span>Well fed for
-               <b data-span="${Math.round(Game.nowSeconds() + Game.critterFedFor(def.id))}">${
-                 fmtSpan(Game.critterFedFor(def.id))}</b>
-               — working like ★${Game.critterWorkLevel(def.id)}. Up for ${upFor}.</span></span>`
-            : `<span class="food-state">${Icons.get('clock')}<span>Up for ${upFor}, working like
-               ★${level}. Not well fed.</span></span>`;
+            ? `<span class="food-state on">${Icons.get('star')}<span>Well fed — working like
+               ★${Game.critterWorkLevel(def.id)}, ${leftFor} of food left.</span></span>`
+            : `<span class="food-state">${Icons.get('clock')}<span>Getting hungry — ${leftFor} left,
+               working like ★${level}.</span></span>`;
 
       /* The food buttons sit outside the text column so they get the row's full
          width — nested beside a 46px portrait, three of them wrap to 2 + 1. */
@@ -1379,8 +1381,8 @@
         FX.haptic(10);
         UI.toast({
           title: got.woke ? `${got.def.name} is up again` : `${got.def.name} is well fed`,
-          body: `Working like ★${Game.critterWorkLevel(got.def.id)}, and awake for ${
-            fmtSpan(Game.critterAwakeFor(got.def.id))}.`,
+          body: `Working like ★${Game.critterWorkLevel(got.def.id)}, with ${
+            fmtSpan(Game.critterFedFor(got.def.id))} of food left.`,
           art: Icons.get(got.food.icon)
         });
         renderSheet(false);

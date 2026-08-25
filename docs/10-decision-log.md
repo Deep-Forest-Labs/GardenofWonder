@@ -5,6 +5,67 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-20 (last) — Two clocks become one, and the panel loses three boxes
+
+**The complaint was that the screen had too many boxes**, and it was right — the creature panel had
+drifted to six. Four merges came out of it, and one of them turned out to be a simulation change
+rather than a layout one.
+
+**The skill and its level are one box now**, because the star *is* the trait getting stronger.
+Splitting them said less and crowded more. That is the general lesson: **a box worth counting is a
+box worth removing.**
+
+**And the two food meters became one clock.** The owner asked to merge the bars with a pip on them
+marking "well fed" — which cannot be done honestly in the UI alone, because `awakeUntil` and
+`fedUntil` were independent and a single pip position would have been a lie at two of the three food
+tiers. So the *simulation* merged instead: **one fullness clock, well fed above a threshold, awake
+above zero, asleep at nothing.**
+
+This lost nothing. Every food's awake window already outlasted its boost by roughly a fixed margin,
+so the second clock was carrying one number — that margin — at the cost of a second bar, a second
+timestamp and a second thing to keep in sync. The old invariant *"a food keeps a creature up longer
+than it boosts it"* stopped being a rule to assert and became arithmetic.
+
+**Where the pip goes was settled by arithmetic, not taste.** The owner suggested three quarters up.
+At 18h of a 24h cap **no single food reaches it from empty**, so the buff would only ever exist by
+stacking — a wall rather than a line. At **3h** the tuning the two-clock version already had is
+reproduced almost exactly (Clover keeps its token 1h of boost; Petal and Honeypot come out a shade
+more generous). A low pip also reads better: the band underneath becomes a warning strip rather than
+a climb.
+
+**An accident worth keeping:** the arrival grant is a full clock, and a full clock is above the line,
+so a new creature now arrives **well fed for its first 21 hours**. That is good onboarding — you see
+the buffed state, watch it lapse, and learn what food buys. The alternative under one clock is a
+short grant, which reintroduces the sleeping-first-pet problem the grant exists to prevent.
+
+**Cost per hour now runs two ways and both are asserted.** Per hour of *boost* it falls with the tier
+(1,500 → 1,000 → 923); per hour of plain *fullness* it rises (375 → 625 → 750). The second is
+deliberate: the cheap food stays the efficient way to simply keep someone awake, so being broke can
+never strand a creature.
+
+**Ten sim-test fixtures had to change, and every one of them for the same reason:** an arrival is
+now well fed, so anything measuring an unbuffed trait had to spend that first. A `hungry()` helper
+sets the clock to exactly the threshold — awake, not buffed — which is the baseline state that used
+to be free.
+
+*Two assertions became better in the process.* "No boost time is owed" was meaningless under one
+clock; it now asserts the structural property that the leftover is **exactly the threshold band**.
+And the per-hour test now measures boost hours, which is what the premium actually buys.
+
+**Smaller things from the same note.** The star token's own stroke was thinned so the number inside
+it stops colliding with the outline. The food buttons became the food: a 52px token with `+4h`
+stamped on the corner, name under, price under that — icon first, words second. The pip is marked
+with a **star rather than the words "Well fed"**, which the header already says. And *Out or resting*
+moved back outside Feed, where it belongs.
+
+**A real bug the grep caught, not the tests:** the roster-wide Feed panel and the post-feed toast
+both still called `Game.critterAwakeFor`, which no longer exists. `tools/sim-test.js` cannot see a
+`ui-*` file, so nothing failed — the panel would simply have thrown when opened. **After removing a
+`Game` method, grep the UI for it.**
+
+---
+
+
 ## 2026-08-20 (last) — The creature panel is ordered by what you came to do
 
 **The complaint was concrete and correct:** *"the pet might be asleep, and I have to scroll down
