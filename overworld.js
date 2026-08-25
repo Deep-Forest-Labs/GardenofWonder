@@ -42,13 +42,16 @@ const Overworld = (() => {
   const PLACES = {
     garden: { x: 770, y: 560, w: 260, h: 360 },
     hollow: { x: 500, y: 1010, w: 180, h: 168 },
-    stand:  { x: 1120, y: 990, w: 214, h: 194 }
+    stand:  { x: 1120, y: 990, w: 214, h: 194 },
+    /* The meadow is not bought — it is meadow. It stands open from the start and
+       putting a hive in it is what makes it yours, so it INVITES where a locked
+       parcel refuses. Locked land is for the Orchard and the Ridge. */
+    meadow: { x: 1420, y: 690, w: 230, h: 190 }
   };
 
   const PARCELS = [
-    { id: 'orchard', name: 'The Orchard',  x: 220,  y: 760, w: 190, h: 150 },
-    { id: 'meadow',  name: 'Wild Meadow',  x: 1450, y: 720, w: 190, h: 150 },
-    { id: 'ridge',   name: 'The Ridge',    x: 830,  y: 250, w: 186, h: 142 }
+    { id: 'orchard', name: 'The Orchard', x: 220, y: 760, w: 190, h: 150 },
+    { id: 'ridge',   name: 'The Ridge',   x: 830, y: 250, w: 186, h: 142 }
   ];
 
   function clouds(c) {
@@ -207,6 +210,45 @@ const Overworld = (() => {
     </svg>`;
   }
 
+  /** The Wild Meadow: wildflowers, and however many hives are actually kept. */
+  function meadow(hives) {
+    const n = Math.max(0, Math.min(4, hives || 0));
+    let boxes = '';
+    const spots = [[74, 118], [150, 106], [40, 92], [186, 132]];
+    for (let i = 0; i < n; i += 1) {
+      const [x, y] = spots[i];
+      boxes += `<g transform="translate(${x} ${y})">
+        <ellipse cx="0" cy="30" rx="30" ry="8" fill="rgba(44,26,16,.16)"/>
+        <rect x="-25" y="-2" width="50" height="32" rx="5" fill="#e8c07a" stroke="${INK}" stroke-width="5"/>
+        <rect x="-27" y="-20" width="54" height="20" rx="5" fill="#f0d59a" stroke="${INK}" stroke-width="5"/>
+        <rect x="-30" y="-34" width="60" height="16" rx="5" fill="#e8c07a" stroke="${INK}" stroke-width="5"/>
+        <circle cx="0" cy="14" r="5" fill="${INK}"/>
+      </g>`;
+    }
+    let flowers = '';
+    [[24, 158, '#ffd6e8'], [110, 168, '#ffe066'], [202, 162, '#c9b6ff'],
+     [62, 172, '#ffe066'], [162, 176, '#ffd6e8']].forEach(([x, y, col]) => {
+      flowers += `<g transform="translate(${x} ${y})">
+        <path d="M0,10 L0,-4" stroke="#4bb257" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="0" cy="-8" r="8" fill="${col}" stroke="${INK}" stroke-width="4"/></g>`;
+    });
+    /* Bees only when there is a hive to have come out of. */
+    let bees = '';
+    if (n) {
+      [[196, 60], [56, 46], [136, 36]].forEach(([x, y], i) => {
+        bees += `<g class="ow-bee" style="--i:${i}" transform="translate(${x} ${y})">
+          <ellipse cx="0" cy="0" rx="7" ry="5.5" fill="#ffd23f" stroke="${INK}" stroke-width="3"/>
+          <path d="M-2,-4 L-2,4 M2,-4 L2,4" stroke="${INK}" stroke-width="2.4"/>
+          <ellipse cx="-1" cy="-6" rx="5" ry="3" fill="#fff" opacity=".85" stroke="${INK}" stroke-width="2"/></g>`;
+      });
+    }
+    return `<svg viewBox="0 0 230 190" class="ow-art">
+      <path d="M6,150 C6,120 40,104 115,104 C190,104 224,120 224,150 C224,172 170,182 115,182
+        C60,182 6,172 6,150 Z" fill="#8ed36b" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+      ${boxes}${flowers}${bees}
+    </svg>`;
+  }
+
   /* Land you do not own is overgrown ground behind a signpost. The spike tried an
      isometric diamond first and it read as a mountain — this scene is side-on, so
      unowned land has to be side-on too, and it has to look CLEARABLE rather than
@@ -231,5 +273,5 @@ const Overworld = (() => {
     </svg>`;
   }
 
-  return { scene, gardenBoard, burrow, stand, parcel, PLACES, PARCELS, CELLS, W, H, INK };
+  return { scene, gardenBoard, burrow, stand, meadow, parcel, PLACES, PARCELS, CELLS, W, H, INK };
 })();

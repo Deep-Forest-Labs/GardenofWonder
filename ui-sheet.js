@@ -12,9 +12,10 @@
   let sheetArg = null;
   let seedSort = 'tier';
 
+  /* What wears the shop's tab pills. The Apiary left on 2026-08-25 — it is the
+     Wild Meadow, a place on the map, and a place must not also be a tab. */
   const TABS = [
     { id: 'upgrades', label: 'Upgrades' },
-    { id: 'apiary', label: 'Apiary' },
     { id: 'craft', label: 'Craft' },
     { id: 'shop', label: 'Shop' }
   ];
@@ -62,7 +63,7 @@
     if (!sheetMode) return;
     const keep = resetScroll ? 0 : el.sheetBody.scrollTop;
     const titles = {
-      upgrades: 'Upgrades', apiary: 'Apiary', craft: 'Apothecary', shop: 'Shop',
+      upgrades: 'Upgrades', apiary: 'The Wild Meadow', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
       quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
       critter: '', stand: '', order: '',

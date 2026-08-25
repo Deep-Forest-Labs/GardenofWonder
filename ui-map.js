@@ -102,9 +102,12 @@
 
   /* ---------------- building the world ---------------- */
 
+  /* Only redraws when the sky actually changes — rebuilding the scene every tick
+     restarts every drifting cloud. `build()` has to clear the memo, because it
+     replaces the element this was memoising against. */
   function syncScene() {
     const sky = skyNow();
-    if (sceneSky === sky) return;
+    if (sceneSky === sky && $('#owScene').firstChild) return;
     sceneSky = sky;
     $('#owScene').innerHTML = Overworld.scene({ sky });
   }
@@ -127,6 +130,7 @@
   }
 
   function build() {
+    sceneSky = null;                 // the node this was memoising against is gone
     el.map.innerHTML = `
       <div class="ow-world" id="owWorld" style="width:${Overworld.W}px;height:${Overworld.H}px">
         <div class="ow-scene" id="owScene"></div>
@@ -137,6 +141,7 @@
         <div class="ow-place ow-stand" id="owStand" data-go="stand" style="${box(Overworld.PLACES.stand)}">
           ${Overworld.stand()}<span class="ow-tag">The Stand</span>
         </div>
+        <div class="ow-place ow-meadow" id="owMeadow" data-go="meadow" style="${box(Overworld.PLACES.meadow)}"></div>
         ${Overworld.PARCELS.map((p) => `<div class="ow-parcel" data-parcel="${p.id}" style="${box(p)}">
           ${Overworld.parcel(p)}<span class="ow-tag locked">${p.name}</span>
         </div>`).join('')}
@@ -151,18 +156,27 @@
     $('#owGarden').innerHTML = `${Overworld.gardenBoard()}${gardenBlooms()}
       <span class="ow-tag">The Garden</span>`;
 
-    const ready = Game.standOrders().filter((o) => Game.standCanDeliver(o)).length;
-    const stand = $('#owStand');
-    let badge = $('.ow-badge', stand);
-    if (ready && !badge) {
+    /* The meadow shows however many hives are actually kept, so an empty one
+       reads as an invitation rather than a locked box. */
+    $('#owMeadow').innerHTML = `${Overworld.meadow(Game.hiveCount())}
+      <span class="ow-tag">Wild Meadow</span>`;
+
+    badgeOn($('#owStand'), Game.standOrders().filter((o) => Game.standCanDeliver(o)).length);
+    badgeOn($('#owMeadow'), Game.jarsWaiting());
+  }
+
+  /** One count bubble per place, created on first need and reused after. */
+  function badgeOn(place, n) {
+    if (!place) return;
+    let badge = $('.ow-badge', place);
+    if (!n && !badge) return;
+    if (!badge) {
       badge = document.createElement('span');
       badge.className = 'ow-badge';
-      stand.appendChild(badge);
+      place.appendChild(badge);
     }
-    if (badge) {
-      badge.textContent = ready;
-      badge.hidden = !ready;
-    }
+    badge.textContent = n;
+    badge.hidden = !n;
   }
 
   /* ---------------- enter, dive, leave ---------------- */
@@ -224,6 +238,7 @@
       leave();
       if (where === 'hollow') UI.enterHollow();
       else if (where === 'stand') UI.openSheet('stand');
+      else if (where === 'meadow') UI.openSheet('apiary');
     }, DIVE_MS);
   }
 

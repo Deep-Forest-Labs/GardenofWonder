@@ -201,8 +201,13 @@ Settled 2026-08-25. The map keeps the shape it already has; this is what fills i
 | **The Potting Shed** | Transformer | The merge board, feeding Stand orders | Turns things into other things |
 | **The Garden Stand** | Consumer | Orders — **built** | Wants things |
 | **The Orchard** | Producer, *long clock* | Fruit on overnight timers, feeding preserves | Eight hours against twelve seconds |
-| **The Wild Meadow** | Producer **+ amplifier** | The hives come home: honey follows what blooms, pollination lifts every harvest | Its output depends on what is planted *elsewhere* |
+| **The Wild Meadow** | Producer **+ amplifier** | The hives come home — **built 2026-08-25**: honey follows what blooms, pollination lifts every harvest | Its output depends on what is planted *elsewhere* |
 | **The Ridge** | Producer, *time-gated* | **The Night Garden.** Only wakes after dark; Moonflower and Starlit Iris; Luna and Ember live here | It is a clock, not a crop |
+
+**The Wild Meadow is not bought, because it is meadow.** It stands open from the first visit and
+putting a hive in it is what makes it yours — an empty meadow **invites**, where a locked parcel
+refuses. Locked land is for the Orchard and the Ridge. It draws however many hives are actually
+kept, wildflowers always, and bees only once there is a hive for them to have come out of.
 
 **The Potting Shed is a building beside the garden, not a bought parcel.** It is a shed. It unlocks
 on reputation rather than coins, like everything else the Stand gates.

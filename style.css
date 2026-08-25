@@ -2573,3 +2573,13 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   .ow-world.animating{transition:none}
   .ow-bloom.ripe,.ow-badge,.ow-hint i{animation:none}
 }
+
+/* Bees only drift when there is a hive for them to have come from. */
+.ow-bee{animation:owBee 3.4s ease-in-out infinite;animation-delay:calc(var(--i,0) * .7s);
+  transform-box:fill-box;transform-origin:center}
+@keyframes owBee{
+  0%,100%{transform:translate(0,0)}
+  33%{transform:translate(14px,-9px)}
+  66%{transform:translate(-10px,-4px)}
+}
+@media (prefers-reduced-motion:reduce){ .ow-bee{animation:none} }

@@ -61,6 +61,14 @@ from quests and levels.
 > design what a AAA team would build, ship incrementally, with the not-a-clone bar standing per
 > garden.
 >
+> **The Wild Meadow is BUILT, 2026-08-25.** The hives came home: the Apiary is a *place* on the map
+> and its dock tab is gone. It draws however many hives you actually keep, and bees drift only once
+> there is a hive to have come out of. **It is not a locked parcel — it is meadow**, open from the
+> first visit, and putting a hive in it is what makes it yours; an empty meadow invites where a
+> locked parcel refuses. The dock is now `Upgrades · World · Craft · Shop`, and **the rule for the
+> rest of the migration is: a tab leaves when its map home exists, and not before.** Craft keeps its
+> slot until the Potting Shed lands.
+>
 > **Places got a taxonomy, 2026-08-25 (design).** The owner played Cats & Soup and read the right
 > lesson: the stations around the soup pot **do not each make their own soup** — they make *the*
 > soup worth more. That names a fourth structural type the docs lacked. Every place on the map is
@@ -604,10 +612,7 @@ and the build is **MVP-first** — plain map, functional Stand, polish later.
 
 **The MVP is done.** The Stand and the map frame both ship. What comes next, roughly in order:
 
-1. **The Wild Meadow** — the apiary comes home as a place. The cheapest region the project will
-   ever ship: the hive simulation is already built and sitting in a dock tab everyone agrees should
-   not exist. Kills the tab, gives the map its second producer, and teaches the amplifier type.
-   **This is the current task.**
+1. ~~**The Wild Meadow**~~ — **done 2026-08-25.**
 2. **Play it and judge the feel** — the rubric is in
    [25-world-map.md](25-world-map.md#the-mvp-decided-2026-08-25--build-plain-test-the-feel-polish-as-we-go).
    The load-bearing question: *does checking the Stand pull you back into planting something
@@ -801,6 +806,11 @@ inside one thick outline exists partly for this reason.
 
 **Rounding hours and minutes separately renders 23h 59m 59s as "23h 60m".** Round to whole minutes
 first, then split. Bit the feed panel's span formatter.
+
+**Never memoise against a node you also replace.** `syncScene()` skips redrawing the map's backdrop
+unless the sky changed, so drifting clouds are not restarted every tick — but `build()` replaces the
+element it was memoising against, and the second visit to the map drew a blank green field with no
+error anywhere. The check now tests the node as well as the value.
 
 **A camera translate and a moved `transform-origin` cannot both be used.**
 `translate(-camX*s, -camY*s) scale(s)` puts world point (camX, camY) at the top-left of the screen,

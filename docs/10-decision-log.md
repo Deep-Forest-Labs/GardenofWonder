@@ -5,6 +5,35 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (build 3) — The hives come home, and a tab dies the right way
+
+**The Wild Meadow is a place now**, and the Apiary tab is gone. This is the cheapest region the
+project will ever ship: the hive simulation, pollination and honey-follows-bloom were all built
+months ago and sitting behind a dock tab everyone agreed should not exist. Moving them cost an art
+function, a hit target and four lines of wiring.
+
+**It is not a locked parcel, because it is meadow.** It stands open from the first visit, and
+putting a hive in it is what makes it yours. An empty meadow **invites**; a locked parcel refuses.
+That distinction is worth keeping — locked land is for the Orchard and the Ridge, which are
+genuinely bought.
+
+**It draws the truth.** However many hives are actually kept appear as boxes, and **bees only drift
+when there is a hive for them to have come out of.** Same principle as the garden thumbnail showing
+what is really planted: the map is a picture of your game, not a picture of the game.
+
+**The rule this establishes, and it now governs the two remaining tabs:** *a tab leaves when its map
+home exists, and not before.* Craft keeps its slot until the Potting Shed lands; removing it first
+would strand a live system with nowhere to live. The dock is `Upgrades · World · Craft · Shop`, and
+the World button carries the attention dot for **every** place — an order you can fill, or jars
+waiting in the meadow.
+
+**One real bug, and it is a nasty little pattern.** `syncScene()` memoises the backdrop against the
+sky so drifting clouds are not restarted every tick — but `build()` replaces the element it was
+memoising against, so the second visit to the map drew a blank green field. Memoising against a
+node you also replace is the trap; the check now tests the node as well as the sky.
+
+---
+
 ## 2026-08-25 (design) — Places get a taxonomy, and the amplifier gets its name
 
 **The owner played Cats & Soup and read it correctly.** The lesson is not the ring of stations

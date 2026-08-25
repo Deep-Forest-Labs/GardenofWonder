@@ -604,8 +604,10 @@
     const canBrew = Object.keys(S.goods).length > 0 || CRAFT_RECIPES.some((r) => Game.canCraft(r));
     /* A face is waiting and you can already fill their order — the one signal
        that should pull a player back into planting something specific. */
+    /* The world button carries every place's attention: an order you can fill,
+       or jars waiting in the meadow. */
     const canGive = Game.standOrders().some((o) => Game.standCanDeliver(o));
-    const map = { upgrades: canUpgrade, apiary: canHive, craft: canBrew, shop: canDecor, world: canGive };
+    const map = { upgrades: canUpgrade, craft: canBrew, shop: canDecor, world: canGive || canHive };
     $$('.dock-btn', el.dock).forEach((b) => {
       const dot = $('.dock-dot', b);
       const show = map[b.dataset.tab] && UI.sheetMode() !== b.dataset.tab;

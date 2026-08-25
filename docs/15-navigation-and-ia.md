@@ -244,11 +244,13 @@ copy of the garden is a thumbnail that only ever has to read at map distance.
 
 Done when: every region is reachable from the map and none from the dock.
 
-**Shipped 2026-08-25.** The map, the ladder, the dive, the Stand on the lane, three locked parcels.
+**Shipped 2026-08-25.** The map, the ladder, the dive, the Stand on the lane, locked parcels, and
+**the Wild Meadow** — the Apiary's tab died the day the meadow existed, which is the pattern every
+remaining tab follows: *a tab leaves when its map home exists, and not before.* The dock is now
+`Upgrades · World · Craft · Shop`.
 The dock's fifth slot is a single **World** button — travel, not a sheet — which is the
-discoverable way in for anyone who has not found the swipe. **Apiary and Craft keep their tabs for
-now**: a tab only leaves when its map home exists, and removing them first would strand two live
-systems. The full meta dock (Friends · Cards · World · Quests · Shop) arrives with the polish pass.
+discoverable way in for anyone who has not found the swipe. **Craft keeps its tab for now** — it leaves when the Potting Shed
+lands on the map, and removing it first would strand a live system. The full meta dock (Friends · Cards · World · Quests · Shop) arrives with the polish pass.
 
 **The dock's column count now follows its button count** (`grid-auto-flow: column`). It was pinned
 at four, so a fifth tab wrapped onto a second row and covered the lawn.
