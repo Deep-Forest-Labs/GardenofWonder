@@ -1032,7 +1032,7 @@ const CUSTOMERS = [
   },
   {
     id: 'bram', name: 'Bram the Baker', minTier: 2,
-    art: { skin: '#c98a5e', hair: '#3d2a1a', style: 'cap', clothes: '#fff7e1', accent: '#ff8fa3', hat: '#ffffff' },
+    art: { skin: '#c98a5e', hair: '#fdfdfa', style: 'cap', clothes: '#7fb3e8', accent: '#fff7e1', hat: null },
     lines: {
       greet: ['Flour on everything. Ignore it.', 'Trade you. I have got buns.'],
       waiting: ['My oven is on, so — soonish?', 'Take your time. The dough is proving.'],
@@ -1050,7 +1050,7 @@ const CUSTOMERS = [
   },
   {
     id: 'hollis', name: 'Old Hollis', minTier: 3,
-    art: { skin: '#e3c4a0', hair: '#cfcabf', style: 'beard', clothes: '#c99a68', accent: '#ffd23f', hat: '#e8d5b0' },
+    art: { skin: '#e3c4a0', hair: '#f2f0ea', style: 'beard', clothes: '#8a6a45', accent: '#ffd23f', hat: '#e0be8c' },
     lines: {
       greet: ['Bees told me you were busy.', 'I kept hives before you kept anything.'],
       waiting: ['Patience is the whole trade, lad.', 'A hive taught me waiting.'],

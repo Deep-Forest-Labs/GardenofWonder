@@ -2326,3 +2326,12 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 @media (prefers-reduced-motion: reduce){
   .hl-wisp,.hl-shaft,.hl-dust,.hl-glow,.hollow-exit i{animation:none}
 }
+
+/* ---------------- customers ----------------
+   Three expressions are always in the markup and these rules pick one, the same
+   contract the sleeping creatures use. Base state is the greeting face. */
+.cu-eyes-happy, .cu-mouth-happy, .cu-eyes-wait, .cu-mouth-wait { display: none; }
+.is-waiting .cu-eyes, .is-waiting .cu-mouth { display: none; }
+.is-waiting .cu-eyes-wait, .is-waiting .cu-mouth-wait { display: block; }
+.is-happy .cu-eyes, .is-happy .cu-mouth { display: none; }
+.is-happy .cu-eyes-happy, .is-happy .cu-mouth-happy { display: block; }
