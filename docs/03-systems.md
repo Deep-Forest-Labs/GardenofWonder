@@ -903,3 +903,63 @@ Settings also contains three developer affordances that ship to players: grant 5
 summon a Wonder Effect, and reset the save. Reset is two-step — the first tap arms it,
 and it disarms itself after 4 seconds. The two grant buttons have no such guard. See
 [11-known-issues.md](11-known-issues.md).
+
+## The Garden Stand — orders
+
+**Built 2026-08-25.** The demand side: a queue of customers who walk up wanting something, which
+is the first system in the game that *consumes* what everything else produces. Design in
+[13-order-system.md](13-order-system.md), catalogue in [26-goods-catalog.md](26-goods-catalog.md),
+its place in the world in [25-world-map.md](25-world-map.md).
+
+**Three slots.** Each holds an order or a refill timer (`STAND.refill`, 100s). Delivered or
+skipped, a slot empties and refills on an absolute timestamp, so time away counts for free.
+
+**An order is a good, a customer and some line items.** A *good* is a shape an order takes, not an
+item in a bag — a Bouquet is "three roses and two bluebells", and no bouquet object exists
+anywhere. That is what lets the Stand run with no crafting system under it.
+
+| Field | Notes |
+| --- | --- |
+| `good` | Which good from `GOODS`; carries the name, icon and the one line its customer speaks |
+| `customer` | Which face from `CUSTOMERS`; never two of the same on one board |
+| `needs` | 1–3 line items, each `{ kind, of, any, qty }` — `of` is a specific bloom or honey |
+| `coins`, `rep` | Priced at generation; `coins` is a **floor**, see below |
+
+**Generation obeys two rules, and both are sim-test invariants.**
+
+1. **Never ask for what the player cannot produce.** Flower lines draw only from unlocked seeds;
+   honey lines only exist once a hive does. An order for a bloom you cannot unlock is a wall, not
+   a goal.
+2. **Delivering always beats selling the contents.** `STAND.tiers[].mult` starts at 1.55, and the
+   suite asserts the property rather than the number.
+
+Generation also steers away from blooms the other slots already want, biases toward blooms the
+player has actually grown (75% of the time, never a hard filter or a new seed would never be
+asked for), and gives every slot a different face.
+
+**A wild line cannot be priced when it is written.** "A handful of whatever's blooming" names
+nothing, and the player might hand over daisies or Eternals. So the card quotes the **floor** — the
+cheapest bloom that could legally fill it — and `standDeliver()` re-prices against what actually
+crossed the counter, paying the larger. The wild discount (`STAND.wildBonus`, 0.9) applies to both
+sides, or quoting a floor would hand it straight back and "any" would become the best line in the
+game. Wild lines spend **cheapest-first**, so they can never eat the rare bloom being saved for a
+named order.
+
+**Skipping is free and always available.** No gems, no cost, just the same refill timer. This is
+the single most load-bearing rule in the order spec: it turns "I do not have that" from a wall into
+a choice, and a stuck board is an uninstall.
+
+**Reputation comes from here**, which is what will eventually buy land on the world map.
+`standDeliver()` emits its own `levelup` — `addRep()` returns the grants but does not announce
+them, and every caller has to.
+
+### The surface
+
+Two sheet modes. **`stand`** is the queue: one row per slot, and the customer's face is the biggest
+thing on the row. **`order`** is one customer, standing on the sheet through the same `.sheet-art`
+breakout a creature uses.
+
+**Mood is carried on the face, not in a label.** `Customers.draw()` always emits all three
+expressions and CSS picks one, the same contract the sleeping creatures use — so a customer whose
+order you can already fill is *smiling at you from the queue* before you read a word. Every bloom
+asked for is drawn with the real `Flora.head()`, never named in prose.

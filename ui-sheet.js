@@ -65,7 +65,7 @@
       upgrades: 'Upgrades', apiary: 'Apiary', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
       quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
-      critter: '',
+      critter: '', stand: '', order: '',
       album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
     };
     let title = titles[sheetMode] || '';
@@ -93,16 +93,26 @@
       upgrades: renderUpgrades, apiary: renderApiary, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
       dev: renderDev, welcome: renderWelcome, feed: renderFeed, critter: renderCritter,
+      stand: renderStand, order: renderOrder,
       album: renderAlbum, cardset: renderCardSet, pack: renderPack
     }[sheetMode];
-    /* Whoever the sheet is about stands on top of it. Only the creature panel
-       uses this so far; anything else clears it. */
+    /* Whoever the sheet is about stands on top of it — a creature, or now the
+       customer waiting at the Stand. Same device, same reason: a subject you can
+       see is a subject you care about, where a header is just a label. */
     const star = sheetMode === 'critter' ? Game.critterById(sheetArg) : null;
+    const guest = sheetMode === 'order' ? Game.standOrderAt(Number(sheetArg)) : null;
     if (star && Game.critterHere(star.id)) {
       const asleep = Game.critterAsleep(star.id);
       el.sheetArt.style.setProperty('--cg', star.art.glow || '#b6f2c8');
       el.sheetArt.className = `sheet-art${asleep ? ' asleep' : ''}`;
       el.sheetArt.innerHTML = Critters.draw(star);
+      el.sheetArt.hidden = false;
+    } else if (guest && customerById(guest.customer)) {
+      const who = customerById(guest.customer);
+      const glad = Game.standCanDeliver(guest);
+      el.sheetArt.style.setProperty('--cg', who.art.accent || '#ffd6e8');
+      el.sheetArt.className = `sheet-art guest ${glad ? 'is-happy' : 'is-waiting'}`;
+      el.sheetArt.innerHTML = Customers.draw(who);
       el.sheetArt.hidden = false;
     } else if (!el.sheetArt.hidden) {
       el.sheetArt.hidden = true;
@@ -825,6 +835,138 @@
     }).join('');
   }
 
+  /* ---------------- the Garden Stand ----------------
+
+     The queue, and then one customer at a time. Deliberately NOT a list of order
+     cards: the person is the story and the goods are the token, so a face is the
+     largest thing on every row and tapping one opens them the way tapping a
+     creature opens it.
+
+     Every bloom asked for is drawn with the real Flora.head(), never named in
+     prose — the owner's standing note that iconography beats sentences, and the
+     reason an order reads at a glance. */
+
+  const standNeedArt = (need, size) => {
+    if (need.any) return `<span class="on-mixed">${Icons.get('petal')}</span>`;
+    if (need.kind === 'honey') return `<span class="on-jar">${Icons.get('honey')}</span>`;
+    const sd = Game.seedById(need.of);
+    return sd ? Flora.head(sd, size) : Icons.get('petal');
+  };
+
+  const standNeedName = (need) => {
+    if (need.any) return 'Any blooms';
+    if (need.kind === 'honey') return APIARY.honeyName(need.of);
+    const sd = Game.seedById(need.of);
+    return sd ? sd.name : need.of;
+  };
+
+  /* One line item as a token: the thing itself, big, with have-of-want stamped
+     across the bottom and a tick when it is covered. */
+  function standNeedChip(need, size) {
+    const have = Game.standHave(need);
+    const done = have >= need.qty;
+    return `<div class="on-chip${done ? ' done' : ''}">
+      <div class="on-chip-art">${standNeedArt(need, size)}</div>
+      <div class="on-chip-count">${done ? Icons.get('check') : `${fmt(Math.min(have, need.qty))}/`}${done ? '' : fmt(need.qty)}</div>
+      <div class="on-chip-name">${standNeedName(need)}</div>
+      <b class="on-chip-qty">${need.qty}</b>
+    </div>`;
+  }
+
+  const standFaceFor = (order) => {
+    const c = customerById(order.customer);
+    return c ? Customers.draw(c) : '';
+  };
+
+  /* Waiting vs. ready is carried on the face, not in a label. A customer whose
+     order you can fill is already smiling at you from the queue, which is the
+     whole reason the expressions exist. */
+  const standMoodClass = (order) => (Game.standCanDeliver(order) ? 'is-happy' : 'is-waiting');
+
+  function standRow(slot) {
+    const order = Game.standOrderAt(slot);
+    if (!order) {
+      const left = Game.standRefillIn(slot);
+      return `<div class="on-row empty">
+        <div class="on-empty-art">${Icons.get('clock')}</div>
+        <div class="on-empty-copy">
+          <b>Someone is on their way</b>
+          <span>${fmtSpan(left)}</span>
+        </div>
+      </div>`;
+    }
+    const c = customerById(order.customer);
+    const good = goodById(order.good);
+    const ready = Game.standCanDeliver(order);
+    const pct = Math.round(Game.standProgress(order) * 100);
+    return `<button class="on-row${ready ? ' ready' : ''}" data-order="${slot}">
+      <div class="on-face ${standMoodClass(order)}">${standFaceFor(order)}</div>
+      <div class="on-main">
+        <div class="on-who">${c ? c.name : ''}</div>
+        <div class="on-good">${Icons.get(good ? good.icon : 'petal')}<span>${good ? good.name : ''}</span></div>
+        <div class="on-chips">${order.needs.map((n) => standNeedChip(n, 30)).join('')}</div>
+        <div class="on-bar"><i style="width:${pct}%"></i></div>
+      </div>
+      <div class="on-pay">
+        <span class="on-coins">${Icons.get('coin')}${fmt(order.coins)}</span>
+        <span class="on-rep">${Icons.get('star')}${order.rep}</span>
+        ${ready ? '<span class="on-go">Ready</span>' : ''}
+      </div>
+    </button>`;
+  }
+
+  function renderStand() {
+    const tier = Game.standTier();
+    const rows = [];
+    for (let i = 0; i < STAND.slots; i += 1) rows.push(standRow(i));
+    const ready = Game.standOrders().filter((o) => Game.standCanDeliver(o)).length;
+    return `<div class="on-head">
+        <div class="on-head-copy">
+          <b>The Garden Stand</b>
+          <span>${ready ? `${ready} ready to hand over` : 'Grow what they ask for.'}</span>
+        </div>
+        <span class="on-tier">${Icons.get('star')}Tier ${tier.tier}</span>
+      </div>
+      <div class="on-list">${rows.join('')}</div>
+      <p class="on-foot">Nobody minds waiting, and turning someone away costs nothing.</p>`;
+  }
+
+  /* One customer, standing on the sheet. Same device as the creature panel, and
+     for the same reason — a person you can see is a person you want to please. */
+  function renderOrder() {
+    const slot = Number(sheetArg);
+    const order = Game.standOrderAt(slot);
+    if (!order) return '<p class="on-foot">They have gone home.</p>';
+    const c = customerById(order.customer);
+    const good = goodById(order.good);
+    const ready = Game.standCanDeliver(order);
+    const pct = Math.round(Game.standProgress(order) * 100);
+    const mood = ready ? 'delivered' : 'waiting';
+    const line = ready
+      ? UI.pickLine(c.lines.greet, order.id)
+      : UI.pickLine(c.lines.waiting, order.id);
+
+    return `<div class="on-plate">
+        <h2 class="on-name">${c.name}</h2>
+        <p class="on-said" id="onSaid">${line}</p>
+      </div>
+      <div class="on-want">
+        <div class="on-want-head">${Icons.get(good.icon)}<b>${good.name}</b></div>
+        <p class="on-line">${good.line}</p>
+        <div class="on-chips big">${order.needs.map((n) => standNeedChip(n, 46)).join('')}</div>
+        <div class="on-bar big"><i style="width:${pct}%"></i></div>
+      </div>
+      <div class="on-pays">
+        <span class="on-coins">${Icons.get('coin')}${fmt(order.coins)}</span>
+        <span class="on-rep">${Icons.get('star')}${order.rep} rep</span>
+      </div>
+      <button class="big-btn${ready ? ' go' : ' off'}" data-deliver="${slot}"${ready ? '' : ' disabled'}>
+        ${ready ? 'Hand it over' : 'Still growing'}
+      </button>
+      <button class="ghost-btn" data-skiporder="${slot}">Not today &middot; free</button>
+      <p class="on-foot" data-mood="${mood}">A new face turns up ${fmtSpan(STAND.refill)} after this one leaves.</p>`;
+  }
+
   function renderFeed() {
     const naps = Game.crittersAsleep().length;
     return `<div class="panel">
@@ -1390,6 +1532,52 @@
       }
       return;
     }
+    /* Open one customer from the queue. Its own attribute, like every other
+       purchase-adjacent control, because syncAfford()'s final else treats an
+       unrecognised [data-buy] as a booster and throws. */
+    const openOrder = e.target.closest('[data-order]');
+    if (openOrder) {
+      Sound.play('tap');
+      UI.openSheet('order', Number(openOrder.dataset.order));
+      return;
+    }
+
+    const give = e.target.closest('[data-deliver]');
+    if (give) {
+      const slot = Number(give.dataset.deliver);
+      const order = Game.standOrderAt(slot);
+      const res = Game.standDeliver(slot);
+      if (!res) { Sound.play('deny'); return; }
+      const who = customerById(order.customer);
+      const good = goodById(order.good);
+      /* The payoff beat: they light up, hearts, coins, and their thank-you in
+         their own words. An order that just decrements a counter is a form. */
+      const c = FX.centerOf(give);
+      FX.stars(c.x, c.y, 8, '#ffe066');
+      FX.sparks(c.x, c.y, 16, who ? who.art.accent : '#ffd6e8');
+      FX.coins(c.x, c.y, 10);
+      Sound.play('quest');
+      FX.haptic(14);
+      UI.toast({
+        title: who ? UI.pickLine(who.lines.delivered, order.id) : 'Delivered',
+        body: `${good ? good.name : 'Order'} &middot; +${fmt(res.paid)} coins, +${order.rep} rep`,
+        art: Icons.get(good ? good.icon : 'gift')
+      });
+      UI.openSheet('stand');
+      return;
+    }
+
+    /* Free, always. The single most load-bearing rule in the order spec — it is
+       what turns "I do not have that" from a wall into a choice. */
+    const shoo = e.target.closest('[data-skiporder]');
+    if (shoo) {
+      if (Game.standSkip(Number(shoo.dataset.skiporder))) {
+        Sound.play('tap');
+        UI.openSheet('stand');
+      }
+      return;
+    }
+
     const claim = e.target.closest('[data-claim]');
     if (claim && claim.dataset.claim) {
       if (Game.claimQuest(claim.dataset.claim)) Sound.resume();

@@ -1,6 +1,9 @@
 # The Goods Catalog and Cottage Crops
 
-**Status: design, decided 2026-08-25. Nothing here is built.** This documents the two
+**Status: partly built, 2026-08-25.** The **Florist** and **Honey Jars** families ship with the
+Garden Stand — as order-shapes and producer output, needing no crafting system. The other four
+families are design until the Potting Bench gets its surface. Mechanic in
+[03-systems.md](03-systems.md#the-garden-stand--orders). This documents the two
 recommendations the owner adopted from the research in [25-world-map.md](25-world-map.md):
 **build the botanical catalog deep** (goods, chains, characterful customers) and **admit cottage
 crops** as inputs. The third recommendation — a barn with generic animals — was **rejected**;
@@ -45,22 +48,39 @@ families compete for the same harvest, and the family is the unit orders draw fr
 price band, T1 cheapest; the crafted-beats-ingredients ≥1.35× invariant in `tools/sim-test.js`
 applies to every rung.
 
-### 1. The Florist — *flowers only* — **launch family, ships with the Stand**
+### 1. The Florist — *flowers only* — **built, ships with the Stand**
 
-| Good | Shape | Tier |
+As shipped in `GOODS`. Every one is an **order-shape** — no item exists anywhere, which is why the
+Stand needed no crafting system under it.
+
+| Good | Asks for | Tier |
 | --- | --- | --- |
-| Posy | Order-shape: 3 flowers, any | T1 |
-| Bouquet | Order-shape: 4–6 named flowers | T2 |
-| Bridal Bouquet | Order-shape: high-rarity named flowers | T3 |
-| Dried Wreath | Bench rung | T3 |
-| Flower Crown | Bench chain top rung — already exists | T4 |
-| Seed Packet | Bench rung; also the item-as-key hook | T2 |
+| Buttonhole | 1 named bloom ×1–2 | T1 |
+| Posy | 1 named bloom ×2–3 | T1 |
+| Garden Handful | *any* blooms ×3–5 | T1 |
+| Bouquet | 2 named blooms | T2 |
+| Get-Well Basket | 1 named bloom + 1 named honey | T3 |
+| Bridal Bouquet | 3 named blooms | T3 |
+| Door Wreath | 2 named blooms + 1 named honey | T4 |
+| The Village Show | 3 named blooms, larger counts | T4 |
 
-### 2. The Honey Jars — *hives + what blooms* — **built, needs only order templates**
+**Two tier-1 goods was not enough.** Three slots drawing from two goods repeats on every board, and
+tier 1 is the first thing a new player sees — hence the Buttonhole, and a sim-test asserting every
+tier fields at least `STAND.slots` goods *and* customers.
+
+Still design, arriving with the bench: Dried Wreath, Flower Crown (the merge chain's existing top
+rung) and Seed Packet.
+
+### 2. The Honey Jars — *hives + what blooms* — **built, ships with the Stand**
 
 Honey of each bloom (Bluebell, Lavender, Rose, Moonflower…), T2; Beeswax T1 (input to the
 Chandler goods in the Apothecary). A named honey in an order is the whole point — "wildflower
-honey" is filler, "moonflower honey, for sleep" is the game.
+honey" is filler, "moonflower honey, for sleep" is the game, and `APIARY.wildHoney` is deliberately
+excluded from order generation for exactly that reason. Shipped goods: **Honey Jar** (T2, 1 named
+honey) and **Honey Flight** (T3, two different jars side by side).
+
+**A honey line only exists once a hive does** — with no hive it is uncompletable rather than merely
+slow, which is a harder gate than an unplanted flower. Asserted in both directions.
 
 ### 3. The Tea Shelf — *flowers + herbs* — with the Herb Row
 

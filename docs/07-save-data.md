@@ -365,3 +365,23 @@ remaining the creature is well fed, above zero it is awake, at zero it is asleep
 
 **Attraction stores nothing.** Progress is read live from `state.discovered`, which is already a
 lifetime record that never decrements — see [22-creatures.md](22-creatures.md).
+
+## `state.stand` — the Garden Stand
+
+Added 2026-08-25.
+
+```js
+stand: {
+  slots:  [order|null, order|null, order|null],  // fixed length, indexed by slot
+  nextAt: [0, 0, 0],                             // absolute epoch seconds a slot refills
+  seq: 0, delivered: 0, skipped: 0
+}
+```
+
+**The arrays are fixed-length and positional, so they are resized on load rather than merged.**
+`Object.assign` would keep a three-slot array from an older build even if `STAND.slots` changed,
+and a sparse or short array indexes to `undefined` in `processStand()`. `load()` rebuilds both to
+`STAND.slots` length.
+
+**An order naming a good or customer that no longer exists is dropped**, and the slot simply
+refills. Renaming a good id therefore costs nothing — the same rule keepsake ids follow.

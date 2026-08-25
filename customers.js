@@ -110,10 +110,15 @@ const Customers = (() => {
     const style = HAIR[a.style] ? a.style : 'short';
     const h = HAIR[style](hair);
 
-    /* The viewBox starts ABOVE the origin on purpose. Buns, caps and hat brims all
-       draw above the head, and a portrait cropped at the hairline reads as a
-       mistake rather than a framing choice. */
-    return `<svg class="customer-svg" viewBox="0 -18 100 136" aria-hidden="true">
+    /* The viewBox starts ABOVE the origin on purpose — buns, caps and hat brims
+       all draw above the head, and a portrait cropped at the hairline reads as a
+       mistake rather than a framing choice.
+
+       It also runs BELOW the shoulders. The sheet sinks this art ~52px into the
+       panel so the subject stands on it rather than sitting on it like a sticker,
+       and without empty space down there the sink eats the name plate instead.
+       The creature art leaves the same margin for the same reason. */
+    return `<svg class="customer-svg" viewBox="0 -18 100 154" aria-hidden="true">
       <g class="cu-body">
         <path d="M16 118 C16 96 30 84 50 84 C70 84 84 96 84 118 Z"
           fill="${clothes}" stroke="${INK}" stroke-width="4.5" stroke-linejoin="round"/>

@@ -2569,7 +2569,11 @@ const Game = (() => {
     const paid = Math.max(order.coins, worth);
     order.paid = paid;
     state.credits += paid;
+    /* addRep() hands back the level grants but does not announce them — every
+       caller emits its own, and a delivery that levelled you up in silence would
+       lose the biggest moment in the game. */
     const grants = addRep(order.rep);
+    if (grants.length) emit('levelup', { from: grants[0].level - 1, to: state.level, grants });
     state.stand.slots[slot] = null;
     state.stand.nextAt[slot] = nowSeconds() + STAND.refill;
     state.stand.delivered += 1;

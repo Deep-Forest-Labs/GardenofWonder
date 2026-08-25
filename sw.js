@@ -10,14 +10,14 @@
    still gets to garden, and forgetting to bump VERSION below strands nobody — the
    version only controls when old caches get swept up. */
 
-const VERSION = 1;
+const VERSION = 2;
 const CACHE = `gw-v${VERSION}`;
 const FONTS = 'gw-fonts';
 const NET_TIMEOUT = 4000;   // slow network -> fall back to cache rather than hang
 
 const CORE = [
   './', './index.html', './style.css', './manifest.json',
-  './data.js', './flora.js', './critters.js', './hollow.js', './icons.js',
+  './data.js', './flora.js', './critters.js', './customers.js', './hollow.js', './icons.js',
   './audio.js', './fx.js', './game.js',
   './ui-shared.js', './ui-scenery.js', './ui-sheet.js', './ui-hollow.js',
   './ui-events.js', './ui.js',

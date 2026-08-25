@@ -5,6 +5,79 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (build) — The Garden Stand ships its simulation and its faces
+
+**The first system in this game that *wants* anything.** Everything built so far produces —
+flowers, honey, keepsakes, cards — and nothing consumed any of it. Three slots, a queue of
+customers, orders generated from goods and delivered for coins and reputation.
+[03-systems.md](03-systems.md) has the mechanic, [07-save-data.md](07-save-data.md) the state.
+
+**Simulation first, on purpose.** Generation, pricing, delivery and skipping all landed in
+`game.js` under 27 new sim-test assertions before a single pixel existed, because the two
+anti-frustration rules are properties rather than intentions: *never ask for what the player cannot
+produce*, and *delivering always beats selling the contents*. Both are asserted across the whole
+goods pool at several levels, not spot-checked.
+
+**The bug worth recording: a wild line cannot be priced when it is written.** "A handful of
+whatever's blooming" names nothing, so the same card could be filled with daisies or with Eternals.
+The first version priced it at a hardcoded fallback and the invariant test caught it immediately.
+The fix is that **the card quotes a floor and delivery re-prices against what actually crossed the
+counter**, paying the larger — generous, and exploit-free because the multiplier is identical either
+way. Then the *second* version handed the wild discount back at delivery, which made "any" strictly
+the best line in the game; that one surfaced as a **flaky test**, failing roughly one run in three,
+which is exactly the failure mode this project has a standing rule about. Both halves of the
+discount now match.
+
+**And the same fix caught a third bug by reading its own comment.** The wild-line spend loop said
+"spend the cheapest first" and did the opposite — `sortedByValue` is ascending and it had been
+reversed. A wild order would quietly have eaten the rare bloom a player was saving for a named one.
+
+**Two content invariants came out of playing it, not from the spec.** A fresh board showed the same
+face twice, because tier 1 had two eligible customers for three slots; then it showed the same
+*good* twice for the same reason. Both are now asserted — **every tier must field at least
+`STAND.slots` customers and goods** — because the tier-1 board is the first thing a new player ever
+sees and a duplicate reads as a bug rather than as a small village. Miss Marigold moved to tier 1
+and a Buttonhole was written.
+
+### The surface: a queue of people, not a list of orders
+
+The owner's note going in was that the creature panel's breakout portrait "adds a lot of life to
+the slide-ups", and that new features must not become static menus. So the Stand reuses that exact
+device: **the customer stands on the sheet** through the same `.sheet-art` element, and the queue
+puts the face first on every row.
+
+**Mood is carried on the face rather than in a label.** `customers.js` always draws all three
+expressions and CSS picks one — the sleeping-creature contract — so a customer whose order you can
+already fill is *smiling at you from the queue* before you read anything. That one property is what
+makes the board scannable without text, and it is the owner's standing "iconography over sentences"
+note applied to a screen full of state. Every bloom asked for is drawn with the real
+`Flora.head()`.
+
+**Three art bugs, all found only by looking.** Heads clipped, because buns and hat brims draw above
+the origin and the viewBox started at 0. A baker wore a cap *and* a hat in near-identical whites.
+And a beard covered the mouth — which takes away the one thing a portrait is for.
+
+**Two layout bugs, both fixed by measuring rather than eyeballing.** The bust overflowed its
+container *downward* and landed its shoulders on the customer's own name: an SVG taller than its
+box does not get pushed up by `place-items:end`. Setting `height:100%;width:auto` then drew a head
+three times the size of the panel, because **`width:auto` on an SVG resolves to 100% of its
+container, not to the viewBox aspect**. Both dimensions are now stated, and the customer viewBox
+carries empty space below the shoulders the way the creature art does, so the sink eats that first.
+
+**A pre-existing bug surfaced on the way:** a coach mark points at something in the garden, so an
+open sheet has covered the thing it points at — it was floating over the panel's own title. Now
+hidden declaratively off `.sheet.open`, like `.sheet-art`, so no close path can forget it.
+
+**`UI.pickLine()` is deterministic on purpose.** The sheet re-renders on every currency change, and
+a random pick made customers stutter through their whole script while you watched.
+
+**Entry is an interim dock tab.** The Stand is a *place* and belongs on the world map; it sits in
+the dock only until the map frame exists, the same shortcut Apiary and Craft took. Its dock dot
+lights when an order is fillable — the one signal meant to pull a player back into planting
+something specific.
+
+---
+
 ## 2026-08-25 (latest) — The goods are decided, and the map goes MVP-first
 
 **The owner picked recommendations 1 and 2 and rejected 3, ending the goods question the same day

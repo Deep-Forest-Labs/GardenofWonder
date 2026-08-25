@@ -3354,8 +3354,17 @@ check('every customer has a name, a face and three kinds of line',
 check('customer ids are unique', new Set(CUSTOMERS.map((c) => c.id)).size === CUSTOMERS.length);
 /* A tier the player can reach with nobody in it would generate an order with no
    face on it. */
-check('every tier has at least one customer and one good',
-  STAND.tiers.every((t) => CUSTOMERS.some((c) => c.minTier <= t.tier) && GOODS.some((g) => g.tier <= t.tier)));
+/* Enough faces to fill the board without repeating one. Fewer customers than
+   slots forces a duplicate, which reads as a bug rather than as a small village
+   — and the tier-1 board is the first thing a new player ever sees. */
+check('every tier can fill the whole board with different faces',
+  STAND.tiers.every((t) => CUSTOMERS.filter((c) => c.minTier <= t.tier).length >= STAND.slots));
+/* Same reasoning as the faces, one notch softer: a repeated good with a
+   different customer and different blooms still reads, but three slots drawing
+   from two goods repeats every single time, and tier 1 is the first board a new
+   player ever sees. */
+check('every tier has enough goods to fill the board',
+  STAND.tiers.every((t) => GOODS.filter((g) => g.tier <= t.tier).length >= STAND.slots));
 check('tiers climb in both rep and pay', STAND.tiers.every((t, i, a) =>
   i === 0 || (t.rep > a[i - 1].rep && t.mult > a[i - 1].mult && t.repPay > a[i - 1].repPay)));
 

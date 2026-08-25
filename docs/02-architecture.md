@@ -254,3 +254,19 @@ talking flower are independent of the HUD and the rail. It is not worth doing ye
 Sheet panels return HTML strings that are assigned with `innerHTML`. This is concise and fast
 enough, but it means **any content interpolated into a panel must be trusted**. All current
 content comes from `data.js`. If player-supplied text ever reaches a panel, escape it.
+
+## `customers.js`
+
+Added 2026-08-25, alongside the Garden Stand. Same contract as `flora.js` and `critters.js`:
+**parameters in, SVG out, and it knows nothing about the game.** A customer is a palette and a hair
+style, so a new villager is a data row in `CUSTOMERS` rather than a drawing.
+
+Drawn **head-and-shoulders**, because the portrait's job is to break out above the top of a sheet
+the way a creature's does, and a bust reads at that size where a whole body becomes a smudge. Its
+viewBox deliberately extends **above** the origin (buns, caps and hat brims draw up there) and
+**below** the shoulders (the sheet sinks the art ~52px into the panel, and without that margin the
+sink lands on the name plate).
+
+`draw()` always emits **all three expressions** — greeting, waiting, delivered — and CSS picks one,
+the same contract the sleeping creatures use. That is why the file never has to be told whether an
+order is filled, and why every screen that draws a customer gets the reaction for free.

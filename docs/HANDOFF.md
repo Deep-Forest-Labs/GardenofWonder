@@ -61,6 +61,19 @@ from quests and levels.
 > design what a AAA team would build, ship incrementally, with the not-a-clone bar standing per
 > garden.
 >
+> **The Garden Stand is BUILT, 2026-08-25.** Simulation and surface both. Three slots, generated
+> orders, delivery, free skipping, refill clocks, reputation — and **the first system in this game
+> that wants anything**, since everything before it only produced. 27 new sim-test assertions hold
+> the two anti-frustration rules as invariants. The surface reuses the creature panel's breakout:
+> **the customer stands on the sheet**, and in the queue the face is the biggest thing on the row,
+> carrying ready-or-waiting as an *expression* rather than a label. Entry is an **interim dock tab**
+> until the map frame exists. See [03-systems.md](03-systems.md#the-garden-stand--orders),
+> [07-save-data.md](07-save-data.md) and the top of [10-decision-log.md](10-decision-log.md).
+>
+> **Three traps came out of it and are in the list below:** a line item that names nothing cannot be
+> priced when it is written; `width:auto` on an SVG is 100% of its container, not the viewBox
+> aspect; and a tier with fewer customers or goods than slots repeats itself on the board.
+>
 > **The goods are decided, 2026-08-25 (latest): deep botanical catalog plus cottage crops, no
 > barn.** Specified in **[26-goods-catalog.md](26-goods-catalog.md)** — six families, three
 > production shapes (order-shapes, producers, merge chains on the bench), the crop list with one
@@ -544,9 +557,16 @@ the MVP scope — and [26-goods-catalog.md](26-goods-catalog.md) is the goods sp
 
 **Settled 2026-08-25:** the Stand builds first; the map pans freely at map altitude; the ceiling
 is open with the not-a-clone bar per garden; goods are deep-botanical plus cottage crops, no barn;
-and the build is **MVP-first** — plain map, functional Stand, polish later. **The next work is the
-MVP**, and the right first slice is simulation: order generation and delivery in `game.js` under
-`tools/sim-test.js` (anti-frustration rules as invariants), then the map frame and the Stand UI.
+and the build is **MVP-first** — plain map, functional Stand, polish later.
+
+**The Stand is done — simulation, panel, customers and all.** What remains of the MVP is **the map
+frame**: the world box, free panning at map altitude, the swipe ladder (map → garden → Hollow), the
+cross-fade hand-off into the existing garden screen, the burrow, locked parcels showing a price,
+and **moving the Stand out of the dock onto the lane where it belongs**.
+`tools/map-spike.html` is the art and camera reference and its findings still stand — the dive ends
+in a cross-fade, not a zoom that keeps going. After the frame: collect-all gated on automation with
+the 2× rewarded video on it.
+
 **Resolved by the goods decision:** the bench ships a surface (every crafted family is a merge
 chain on it), and the prototype Craft tab retires when it does.
 
@@ -727,6 +747,29 @@ inside one thick outline exists partly for this reason.
 
 **Rounding hours and minutes separately renders 23h 59m 59s as "23h 60m".** Round to whole minutes
 first, then split. Bit the feed panel's span formatter.
+
+**A line item that names nothing cannot be priced when it is written.** The Stand's "any blooms"
+line could be filled with daisies or with Eternals, so a price fixed at generation is either a
+swindle or an exploit. The card quotes a **floor** and `standDeliver()` re-prices against what
+actually crossed the counter, paying the larger — and the wild discount has to be applied on *both*
+sides or "any" becomes the best line in the game. That second half shipped broken and surfaced as a
+**flaky test failing one run in three**, not as a visible bug. Anything future that prices an
+unnamed quantity needs the same treatment.
+
+**`width:auto` on an SVG is 100% of its container, not the viewBox aspect.** It drew a customer's
+head three times the size of the panel. State both dimensions. And an SVG *taller* than its
+container is not pushed up by `place-items:end` — it overflows downward, which put a portrait's
+shoulders on top of the name underneath it. The customer viewBox now carries empty space below the
+shoulders the way the creature art does, so the sheet's sink eats that first. Both were found by
+measuring with `getBoundingClientRect()`; neither was obvious from looking.
+
+**A tier with fewer customers or goods than `STAND.slots` repeats itself on the board**, which reads
+as a bug rather than as a small village — and tier 1 is the first thing a new player ever sees. Both
+counts are asserted per tier. Anything that adds a tier has to add faces and goods with it.
+
+**A coach mark points at something in the garden, so an open sheet has covered it.** It floated over
+the Stand panel's own title. Hidden declaratively off `.sheet.open`, like `.sheet-art` — never from
+a JS close path, which can be forgotten.
 
 **`state.critters[id].fed` is the keepsake clock, not whether a creature has been fed.** It records
 when the creature last handed a keepsake over, and it has meant that since creatures shipped. Food

@@ -598,7 +598,10 @@
     });
     const canHive = Game.jarsWaiting() > 0 || (!Game.hiveCount() && S.credits >= Game.nextHiveCost());
     const canBrew = Object.keys(S.goods).length > 0 || CRAFT_RECIPES.some((r) => Game.canCraft(r));
-    const map = { upgrades: canUpgrade, apiary: canHive, craft: canBrew, shop: canDecor };
+    /* A face is waiting and you can already fill their order — the one signal
+       that should pull a player back into planting something specific. */
+    const canGive = Game.standOrders().some((o) => Game.standCanDeliver(o));
+    const map = { upgrades: canUpgrade, apiary: canHive, craft: canBrew, shop: canDecor, stand: canGive };
     $$('.dock-btn', el.dock).forEach((b) => {
       const dot = $('.dock-dot', b);
       const show = map[b.dataset.tab] && UI.sheetMode() !== b.dataset.tab;

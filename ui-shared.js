@@ -68,8 +68,18 @@ const UI = (() => {
   const pct = (v, d = 0) => `${(v * 100).toFixed(d)}%`;
   const signed = (v, d = 0) => `${v > 0 ? '+' : ''}${(v * 100).toFixed(d)}%`;
   const rnd = (a, b) => a + Math.random() * (b - a);
+  /* Pick a line from a list, the SAME line every time for a given key. The sheet
+     re-renders on every currency change, so a random pick would make a customer
+     stutter through their whole script while you watched. */
+  function pickLine(list, key) {
+    if (!list || !list.length) return '';
+    let h = 0;
+    const k = String(key || '');
+    for (let i = 0; i < k.length; i += 1) h = (h * 31 + k.charCodeAt(i)) >>> 0;
+    return list[h % list.length];
+  }
   /* Rarity mastery goals count that rarity or better; the plus carries that. */
   const MASTERY_TRACK = { total: 'total', rare: 'Rare+', epic: 'Epic+' };
 
-  return { $, $$, S, el, fmt, fmtTime, pct, signed, rnd, MASTERY_TRACK };
+  return { $, $$, S, el, fmt, fmtTime, pct, signed, rnd, pickLine, MASTERY_TRACK };
 })();

@@ -952,7 +952,14 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .speech.show{opacity:1;transform:translate(-50%,0) scale(1)}
 
 /* ---------- dock ---------- */
-.dock{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+/* Columns follow the number of buttons rather than being pinned at four, or a
+   fifth tab wraps onto a second row and covers the lawn. The IA doc's hard cap
+   is five; past that the labels stop fitting and something has to leave. */
+.dock{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+.dock:has(.dock-btn:nth-child(5)){gap:5px}
+.dock:has(.dock-btn:nth-child(5)) .dock-label{font-size:10px;letter-spacing:-.01em}
+.dock:has(.dock-btn:nth-child(5)) .dock-ico{width:22px;height:22px}
+.dock:has(.dock-btn:nth-child(5)) .dock-btn{padding:6px 2px 5px}
 .dock-btn{
   position:relative;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
@@ -971,6 +978,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 @media (min-width:420px){
   .dock-ico{width:26px;height:26px}
   .dock-label{font-size:12px}
+  .dock:has(.dock-btn:nth-child(5)) .dock-ico{width:24px;height:24px}
+  .dock:has(.dock-btn:nth-child(5)) .dock-label{font-size:11px}
 }
 .dock-dot{
   position:absolute;top:-6px;right:-4px;
@@ -1395,6 +1404,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   box-shadow:0 4px 0 var(--ink-2);
 }
 @keyframes coachBob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+/* A coach mark points at something in the garden, so an open sheet has covered
+   the thing it is pointing at — it was floating over the panel's own title.
+   Declarative and keyed off the sheet being open, like .sheet-art, so no close
+   path can forget it. The coach follows the sheet in the DOM, hence `~`. */
+.sheet.open ~ .coach{display:none}
 
 /* =========================================================
    RESPONSIVE
@@ -2335,3 +2349,143 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .is-waiting .cu-eyes-wait, .is-waiting .cu-mouth-wait { display: block; }
 .is-happy .cu-eyes, .is-happy .cu-mouth { display: none; }
 .is-happy .cu-eyes-happy, .is-happy .cu-mouth-happy { display: block; }
+
+/* ---------------- the Garden Stand ----------------
+   A queue of people, not a list of orders. The face is the biggest thing on a
+   row on purpose: the customer is the story and the goods are the token. */
+.on-head{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+.on-head-copy{flex:1;min-width:0}
+.on-head-copy b{display:block;font-size:19px;line-height:1.1}
+.on-head-copy span{display:block;font-size:12px;color:var(--ink-soft,#7a6047)}
+.on-tier{
+  display:inline-flex;align-items:center;gap:4px;padding:5px 11px;
+  border:3px solid var(--ink,#2c1a10);border-radius:999px;background:#fff7e1;
+  font-size:12px;font-weight:800;box-shadow:0 3px 0 rgba(44,26,16,.28);white-space:nowrap;
+}
+.on-tier svg{width:15px;height:15px}
+
+.on-list{display:flex;flex-direction:column;gap:10px}
+.on-row{
+  display:flex;align-items:stretch;gap:9px;width:100%;text-align:left;
+  padding:8px 9px;border:4px solid var(--ink,#2c1a10);border-radius:18px;
+  background:#fff7e1;box-shadow:0 4px 0 rgba(44,26,16,.32);
+  font-family:inherit;color:inherit;cursor:pointer;
+}
+.on-row:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(44,26,16,.32)}
+/* Ready is carried by the card lighting up AND by the customer's face, so it
+   reads before any text does. */
+.on-row.ready{background:#fff3c4;border-color:#2c1a10}
+.on-row.empty{opacity:.72;cursor:default;align-items:center;gap:12px}
+.on-row.empty:active{transform:none;box-shadow:0 4px 0 rgba(44,26,16,.32)}
+.on-empty-art svg{width:30px;height:30px;opacity:.7}
+.on-empty-copy b{display:block;font-size:14px}
+.on-empty-copy span{font-size:12px;color:var(--ink-soft,#7a6047)}
+
+.on-face{
+  width:54px;flex:0 0 54px;align-self:flex-start;
+  border:3px solid var(--ink,#2c1a10);border-radius:14px;overflow:hidden;
+  background:#e8f4ff;line-height:0;
+}
+.on-face svg{width:100%;height:auto;display:block}
+.on-row.ready .on-face{background:#fff0c9}
+
+.on-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.on-who{font-size:14.5px;font-weight:800;line-height:1.1}
+.on-good{display:flex;align-items:center;gap:5px;font-size:11.5px;
+  color:var(--ink-soft,#7a6047);text-transform:uppercase;letter-spacing:.05em}
+.on-good svg{width:14px;height:14px}
+
+.on-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:1px}
+.on-chip{position:relative;width:38px;text-align:center}
+.on-chips.big .on-chip{width:60px}
+.on-chip-art{
+  width:38px;height:38px;display:grid;place-items:center;line-height:0;
+  border:3px solid var(--ink,#2c1a10);border-radius:12px;background:#f7ead1;
+}
+.on-chips.big .on-chip-art{width:60px;height:60px;border-radius:16px}
+.on-chip-art svg{width:80%;height:80%;overflow:visible}
+.on-chip.done .on-chip-art{background:#d3f9d8}
+/* The count sits ON the token rather than beside it — one glance, one object. */
+.on-chip-count{
+  position:absolute;left:50%;top:30px;transform:translateX(-50%);
+  display:inline-flex;align-items:center;gap:1px;
+  padding:1px 5px;border:2.5px solid var(--ink,#2c1a10);border-radius:999px;
+  background:#fff7e1;font-size:10px;font-weight:800;line-height:1.25;white-space:nowrap;
+}
+.on-chips.big .on-chip-count{top:50px;font-size:12px;padding:2px 7px;border-width:3px}
+.on-chip-count svg{width:11px;height:11px}
+.on-chip.done .on-chip-count{background:#8ce99a}
+.on-chip-name{display:none}
+.on-chips.big .on-chip-name{
+  display:block;margin-top:9px;font-size:10px;line-height:1.15;
+  color:var(--ink-soft,#7a6047);
+}
+.on-chip-qty{display:none}
+
+.on-bar{
+  height:8px;border:2.5px solid var(--ink,#2c1a10);border-radius:999px;
+  background:#e8d5b0;overflow:hidden;margin-top:2px;
+}
+.on-bar.big{height:13px;border-width:3px;margin-top:8px}
+.on-bar i{display:block;height:100%;background:#8ce99a;transition:width .25s ease}
+.on-row.ready .on-bar i{background:#ffd23f}
+
+.on-pay{
+  flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:3px;
+}
+.on-coins,.on-rep{display:inline-flex;align-items:center;gap:3px;font-size:12.5px;font-weight:800}
+.on-coins svg,.on-rep svg{width:15px;height:15px}
+.on-rep{color:var(--ink-soft,#7a6047);font-size:11.5px}
+.on-go{
+  margin-top:2px;padding:2px 8px;border:2.5px solid var(--ink,#2c1a10);border-radius:999px;
+  background:#8ce99a;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;
+}
+.on-foot{margin:12px 2px 0;font-size:11.5px;color:var(--ink-soft,#7a6047);line-height:1.5}
+
+/* ---------- one customer ---------- */
+.on-plate{text-align:center;margin:0 0 10px;padding-top:4px}
+.on-name{margin:0;font-size:clamp(24px,6.8vw,31px);font-weight:800;line-height:1.05}
+.on-said{
+  display:inline-block;margin:7px 0 0;padding:7px 13px;
+  border:3px solid var(--ink,#2c1a10);border-radius:16px;background:#fff7e1;
+  font-size:13px;line-height:1.35;box-shadow:0 3px 0 rgba(44,26,16,.26);
+}
+.on-said.pop{animation:on-pop .3s ease}
+@keyframes on-pop{0%{transform:scale(.9)}60%{transform:scale(1.05)}100%{transform:scale(1)}}
+
+.on-want{
+  border:4px solid var(--ink,#2c1a10);border-radius:18px;background:#fff7e1;
+  padding:10px 12px 12px;box-shadow:0 4px 0 rgba(44,26,16,.3);margin-bottom:10px;
+}
+.on-want-head{display:flex;align-items:center;gap:7px;font-size:16px}
+.on-want-head svg{width:20px;height:20px}
+.on-line{margin:4px 0 9px;font-size:12.5px;font-style:italic;color:var(--ink-soft,#7a6047);line-height:1.4}
+
+.on-pays{display:flex;justify-content:center;gap:14px;margin:0 0 10px}
+.on-pays .on-coins{font-size:16px}
+.on-pays .on-coins svg{width:19px;height:19px}
+.on-pays .on-rep{font-size:14px}
+
+.big-btn.go{background:#8ce99a}
+.big-btn.off{opacity:.55}
+.ghost-btn{
+  display:block;width:100%;margin-top:8px;padding:9px;
+  border:3px dashed var(--ink,#2c1a10);border-radius:14px;background:transparent;
+  font-family:inherit;font-weight:800;font-size:12.5px;color:var(--ink-soft,#7a6047);cursor:pointer;
+}
+.ghost-btn:active{transform:translateY(2px)}
+
+/* The customer standing on the sheet is a bust — taller than it is wide, where a
+   creature is square. It has to be sized by HEIGHT and kept inside the box: an
+   SVG taller than its container overflows downward past the sheet's top edge,
+   and its shoulders land on the customer's own name. Measured, not guessed. */
+/* Both dimensions stated. `width:auto` on an SVG resolves to 100% of its
+   container rather than to the viewBox aspect, which drew a head three times the
+   size of the panel. 100:154 is the customer viewBox. */
+.sheet-art.guest{height:196px;place-items:end center}
+.sheet-art.guest svg{width:127px;height:196px;animation:none}
+.sheet-art.guest::before{width:210px;height:165px}
+@media (max-height:700px){
+  .sheet-art.guest{height:140px}
+  .sheet-art.guest svg{width:91px;height:140px}
+}

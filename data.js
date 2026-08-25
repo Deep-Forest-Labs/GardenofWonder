@@ -963,6 +963,11 @@ const GOODS = [
     needs: [{ pool: 'flower', any: true, qty: [3, 5] }]
   },
   {
+    id: 'buttonhole', name: 'Buttonhole', family: 'florist', tier: 1, icon: 'petal',
+    line: 'One good bloom, for my coat.',
+    needs: [{ pool: 'flower', qty: [1, 2] }]
+  },
+  {
     id: 'jar', name: 'Honey Jar', family: 'honey', tier: 2, icon: 'honey',
     line: 'One jar, and mind which flowers it came from.',
     needs: [{ pool: 'honey', qty: [1, 2] }]
@@ -1022,7 +1027,7 @@ const CUSTOMERS = [
     }
   },
   {
-    id: 'marigold', name: 'Miss Marigold', minTier: 2,
+    id: 'marigold', name: 'Miss Marigold', minTier: 1,
     art: { skin: '#f0c9a8', hair: '#c96b3f', style: 'braid', clothes: '#a06cd5', accent: '#fff7e1', hat: null },
     lines: {
       greet: ['I have a very particular idea in mind.', 'Let us see if you can manage it.'],
