@@ -455,9 +455,9 @@
     UI.enterHollow();
   });
 
-  /* Swipe UP in the garden to go DOWN to the Hollow, the mirror of the swipe
-     down that comes back. Dragging up pulls the world up past you, the same
-     direction any scroll uses.
+  /* The vertical ladder: MAP above, garden here, HOLLOW below. One rule for all
+     of it — swipe DOWN pulls the camera back, swipe UP goes in. So from the
+     garden, up is the Hollow and down is the map.
 
      It only starts on the BACKGROUND — sky, lawn, the margins. Plots and the
      flower act on `pointerdown` and have already fired by the time a drag is
@@ -471,7 +471,7 @@
   let navX0 = null;
   el.game.addEventListener('pointerdown', (e) => {
     navY0 = null;
-    if (UI.hollowOpen() || UI.sheetMode()) return;
+    if (UI.hollowOpen() || UI.mapOpen() || UI.sheetMode()) return;
     if (e.target.closest(noSwipe)) return;
     navY0 = e.clientY;
     navX0 = e.clientX;
@@ -482,10 +482,10 @@
     const dx = Math.abs(e.clientX - navX0);
     navY0 = null;
     // Vertical, and clearly so — a diagonal drag should not navigate.
-    if (dy > NAV_SWIPE && dy > dx) {
-      noteActivity();
-      UI.enterHollow();
-    }
+    if (Math.abs(dy) <= NAV_SWIPE || Math.abs(dy) <= dx) return;
+    noteActivity();
+    if (dy > 0) UI.enterHollow();
+    else UI.enterMap('garden');
   });
 
   el.critterYard.addEventListener('pointerdown', (e) => {
@@ -510,6 +510,10 @@
   el.dock.addEventListener('click', (e) => {
     const b = e.target.closest('.dock-btn');
     if (!b) return;
+    /* Every other tab is a sheet. The world is a PLACE, so it travels rather
+       than opening a panel — the discoverable way in for anyone who has not
+       found the swipe yet. */
+    if (b.dataset.tab === 'world') { UI.closeSheet(); UI.enterMap('garden'); return; }
     if (UI.sheetMode() === b.dataset.tab) UI.closeSheet();
     else UI.openSheet(b.dataset.tab);
   });
@@ -601,7 +605,7 @@
     /* A face is waiting and you can already fill their order — the one signal
        that should pull a player back into planting something specific. */
     const canGive = Game.standOrders().some((o) => Game.standCanDeliver(o));
-    const map = { upgrades: canUpgrade, apiary: canHive, craft: canBrew, shop: canDecor, stand: canGive };
+    const map = { upgrades: canUpgrade, apiary: canHive, craft: canBrew, shop: canDecor, world: canGive };
     $$('.dock-btn', el.dock).forEach((b) => {
       const dot = $('.dock-dot', b);
       const show = map[b.dataset.tab] && UI.sheetMode() !== b.dataset.tab;
@@ -759,7 +763,9 @@
     slowAcc += dt;
     if (slowAcc >= 0.6) {
       slowAcc = 0;
-      if (UI.hollowOpen && UI.hollowOpen()) UI.renderHollow(); else renderCritters();
+      if (UI.mapOpen()) UI.renderMap();
+      else if (UI.hollowOpen && UI.hollowOpen()) UI.renderHollow();
+      else renderCritters();
       updateDockDots();
       refreshCoach();
       UI.updateSky();

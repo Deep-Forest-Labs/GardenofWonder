@@ -270,3 +270,25 @@ sink lands on the name plate).
 `draw()` always emits **all three expressions** — greeting, waiting, delivered — and CSS picks one,
 the same contract the sleeping creatures use. That is why the file never has to be told whether an
 order is filled, and why every screen that draws a customer gets the reaction for free.
+
+## `overworld.js` and `ui-map.js`
+
+Added 2026-08-25. `overworld.js` follows the same contract as `flora.js`, `critters.js` and
+`hollow.js` — **parameters in, SVG out, knows nothing about the game** — and owns the world's
+coordinates: `W`, `H`, `PLACES`, `PARCELS` and `CELLS`. A landmark has one set of numbers, and the
+UI reads them to position its own layers, so art and hit targets cannot drift apart.
+
+**It is deliberately not called `Map`.** That is a JS built-in and `ui-hollow.js` already uses
+`new Map()`.
+
+`ui-map.js` is the camera and the input. The one identity the whole file rests on:
+
+```
+transform: translate(-camX * s, -camY * s) scale(s)   with transform-origin: 0 0
+```
+
+That puts world point `(camX, camY)` at the top-left of the screen — **and it only holds from the
+origin.** Moving `transform-origin` to the place being dived into breaks the pan, which is how the
+first build shipped wrong. The dive therefore animates the *camera*, not the origin, and the
+transition is switched on only for the rise and the dive — a transition left on during a drag makes
+every pan lag a third of a second behind the finger.

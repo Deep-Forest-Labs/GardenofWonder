@@ -5,6 +5,55 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (build 2) — The map frame lands, and the Stand moves onto the lane
+
+**The game is three places on one axis now.** Swipe down from the garden and the camera pulls back
+to a world you can drag around: the garden with whatever is actually planted in it, the Hollow's
+burrow, the Garden Stand on the lane, and three parcels of land you cannot buy yet. Swipe up, or
+tap a place, and you dive into it. `overworld.js` draws the scene under the usual
+knows-nothing-about-the-game contract; `ui-map.js` is the camera.
+
+**The Stand stopped being a dock tab the day the lane existed.** It is a place, it was only ever in
+the dock as a shortcut, and the fifth slot is now a single **World** button — travel rather than a
+panel, and the discoverable way in for anyone who has not found the swipe. Apiary and Craft keep
+their tabs until their own map homes exist; removing them first would strand two live systems.
+
+### Three things the build got wrong, and what they teach
+
+**The first world was too small, so it was not a map.** 1240×900 at one pixel per unit put the
+garden across 69% of the screen — that is the garden seen from slightly further away, not a world.
+The fix was not a camera setting: **the landmarks have to be small against the world**, so the world
+grew to 1800×1500 and the camera fits its height to the screen and pans its width. That axis choice
+is deliberate — a side-on world is landscape and a phone is portrait, and fitting the height means
+there is never a band of nothing above or below.
+
+**`transform-origin` and a camera translate cannot both be used.**
+`translate(-camX*s, -camY*s) scale(s)` puts world point (camX, camY) at the top-left of the screen,
+and **that identity only holds with the origin at 0 0**. Setting the origin to the place being
+dived into — which looked like the obvious way to zoom toward something — broke the pan and pushed
+the whole world off screen. The dive now animates the *camera*, not the origin.
+
+**Labels are UI, not art, so they must counter-scale out of the world transform.** At map altitude
+a 13px name rendered at 7px and the map could not be read. Names and badges now divide by the
+camera scale.
+
+Two smaller ones worth keeping: the transition has to be switched **off** during a drag, or every
+pan lags a third of a second behind the finger; and on the map a drag is a pan, so only a gesture
+that moved under 12px counts as a tap — otherwise panning across the world keeps opening whatever
+it finishes over.
+
+**The spike's finding held all the way through.** The dive does not keep zooming into the garden;
+it scales toward the place, cross-fades, and hands off to the screen that already exists. The map's
+garden is a thumbnail — and because it draws `S.grid`, **it shows what you actually planted**, with
+ripe blooms bobbing. That was cheap and it is the thing that makes the map feel like yours rather
+than like a menu.
+
+**Deliberately not built yet:** collect-all. It is gated on automation by design and belongs after
+the frame has been played; buying land is likewise a refusal with a toast for now, since reputation
+tiers are the gate and the Stand only started paying reputation today.
+
+---
+
 ## 2026-08-25 (build) — The Garden Stand ships its simulation and its faces
 
 **The first system in this game that *wants* anything.** Everything built so far produces —

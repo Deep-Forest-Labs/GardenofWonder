@@ -2489,3 +2489,87 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   .sheet-art.guest{height:140px}
   .sheet-art.guest svg{width:91px;height:140px}
 }
+
+/* =========================================================
+   THE OVERWORLD
+   The map is a LAYER ABOVE the garden, not a scene the garden lives inside —
+   see the note at the top of ui-map.js. Panning is plain translation at one CSS
+   pixel per world unit; the only scale in the file is the dive.
+   ========================================================= */
+.map-layer{
+  position:absolute;inset:0;z-index:40;overflow:hidden;
+  background:#4fae54;touch-action:none;
+  opacity:1;transition:opacity .18s ease;
+}
+.map-layer[hidden]{display:none}
+.map-layer.fading{opacity:0}
+/* Origin pinned at 0 0 — `translate(-camX*s,-camY*s) scale(s)` only puts world
+   point (camX,camY) at the top-left of the screen from there. Moving the origin
+   to whatever is being dived into breaks the pan, which is how this shipped
+   wrong once. The dive animates the CAMERA, not the origin. */
+.ow-world{
+  position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;
+  transform:translate3d(var(--ow-tx,0),var(--ow-ty,0),0) scale(var(--ow-s,1));
+  transition:none;
+}
+/* Panning must never animate, or every drag lags a third of a second behind —
+   so the transition is switched ON only for the rise and the dive. */
+.ow-world.animating{transition:transform .42s cubic-bezier(.22,.85,.3,1)}
+
+.ow-scene{position:absolute;inset:0}
+.ow-scene svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+.ow-place,.ow-parcel{position:absolute;cursor:pointer}
+.ow-place svg,.ow-parcel svg{width:100%;height:100%;display:block;overflow:visible}
+.ow-place:active,.ow-parcel:active{filter:brightness(1.06)}
+.ow-bloom{position:absolute;width:54px;height:54px;transform:translate(-50%,-50%);line-height:0}
+.ow-bloom svg{width:100%;height:100%;overflow:visible}
+/* A ripe plot is worth spotting from up here. */
+.ow-bloom.ripe{animation:owRipe 1.9s ease-in-out infinite}
+@keyframes owRipe{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-54%) scale(1.08)}}
+
+/* Labels and badges are UI, not art, so they counter-scale out of the world's
+   transform and stay the same size on screen however far back the camera is.
+   Without this a name is 7px at map altitude and nobody can read the map. */
+.ow-tag{
+  position:absolute;left:50%;bottom:-14px;
+  transform-origin:50% 0;
+  transform:translateX(-50%) scale(calc(1 / var(--ow-s,1)));
+  padding:3px 11px;border:3px solid var(--ink,#2c1a10);border-radius:999px;
+  background:#fff7e1;font-size:13px;font-weight:800;white-space:nowrap;
+  box-shadow:0 3px 0 rgba(44,26,16,.3);pointer-events:none;
+}
+.ow-tag.locked{background:#e8d5b0;color:var(--ink-soft,#7a6047)}
+.ow-badge{
+  position:absolute;top:-10px;right:-6px;min-width:28px;height:28px;
+  transform-origin:100% 0;transform:scale(calc(1 / var(--ow-s,1)));
+  display:grid;place-items:center;border:4px solid var(--ink,#2c1a10);border-radius:999px;
+  background:#ff6b6b;color:#fff;font-size:15px;font-weight:800;
+  box-shadow:0 3px 0 rgba(44,26,16,.35);animation:tagPop 1.1s ease-in-out infinite;
+  pointer-events:none;
+}
+.ow-parcel.nope{animation:owNope .38s ease}
+@keyframes owNope{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+.ow-hint{
+  position:absolute;left:50%;bottom:calc(var(--bottom-gap,12px) + 8px);transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;padding:6px 14px;
+  border:3px solid var(--ink,#2c1a10);border-radius:999px;background:rgba(255,247,225,.94);
+  font-size:12px;font-weight:800;box-shadow:0 3px 0 rgba(44,26,16,.28);
+  pointer-events:none;white-space:nowrap;
+}
+.ow-hint i{
+  width:0;height:0;border:6px solid transparent;border-bottom-color:var(--ink,#2c1a10);
+  animation:coachBob .9s ease-in-out infinite;
+}
+
+/* The map owns the screen while it is up, the same way the Hollow does. */
+.in-map .stage,.in-map #dock,.in-map .rail,.in-map .quest-strip{display:none}
+/* A coach mark points at something in the garden, and the map has covered it —
+   same rule as an open sheet. */
+.in-map .coach{display:none}
+
+@media (prefers-reduced-motion:reduce){
+  .ow-world.animating{transition:none}
+  .ow-bloom.ripe,.ow-badge,.ow-hint i{animation:none}
+}

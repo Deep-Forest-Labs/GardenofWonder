@@ -1,7 +1,9 @@
 # The World Map — Research and Design
 
-**Status: research and design, 2026-08-25. Nothing here is built except `tools/map-spike.html`,
-which is the agreed art and camera reference.** Companion documents:
+**Status: the MVP is BUILT, 2026-08-25.** Phases A and B both ship: the world, the pan camera, the
+swipe ladder, the dive, the Hollow's burrow, three locked parcels, and **the Garden Stand as a stall
+on the lane**. `overworld.js` draws the scene, `ui-map.js` drives the camera,
+`tools/map-spike.html` stays as the design reference. Phases C and D below are still design. Companion documents:
 [12-meta-layer-design.md](12-meta-layer-design.md) for the world this map serves,
 [13-order-system.md](13-order-system.md) for the order engine,
 [15-navigation-and-ia.md](15-navigation-and-ia.md) for the dock-is-meta reframe,
@@ -128,18 +130,29 @@ coming from exactly this pattern, it is the map's honest revenue argument.
 What belongs on the map, in the order it should arrive. Phases are separately shippable; each one
 is judged before the next starts.
 
-### Phase A — the frame *(spike done, build next)*
+### Phase A — the frame — **BUILT 2026-08-25**
 
-The camera, the swipe ladder (map → garden → Hollow), the meta dock
-(Friends · Cards · World · Quests · Shop), the garden thumbnail with cross-fade hand-off, the
-burrow mouth, and **three locked silhouettes with prices**. Nothing new to *do* — the frame kills
-the dead Apiary/Craft tabs, creates the store screenshot, and puts the aspiration surface on
-screen before content exists to fill it.
+The world (`overworld.js`, 1800×1500 in its own units), free panning, the swipe ladder, the dive,
+the garden thumbnail **showing what is actually planted**, the burrow, the Stand on the lane, and
+three locked parcels that refuse with a toast. What shipped differently from the sketch:
 
-### Phase B — the Garden Stand *(the anchor)*
+- **The world's height is fitted to the screen and its width is panned.** A side-on world is
+  landscape and a phone is portrait, so width is the axis with something to explore — and fitting
+  height means there is never a band of nothing above or below.
+- **The landmarks had to be small against the world.** The first build used a 1240×900 world at 1:1
+  and the garden filled 69% of the screen: that is not a map, it is the garden seen from slightly
+  further away. The world grew to 1800×1500 and the camera fits it.
+- **Labels and badges counter-scale out of the world transform.** They are UI, not art. At map
+  altitude a name rendered at 7px and the map could not be read.
+- **The meta dock is still deferred.** One `World` button replaced the interim `Stand` tab, which is
+  the discoverable way in for anyone who has not found the swipe. Apiary and Craft stay until their
+  map homes exist.
 
-The order queue as a **place**: a stand at the lane's edge where customers visibly walk up and
-wait. The lane in the spike art already leads here. Build order inside it follows
+### Phase B — the Garden Stand — **BUILT 2026-08-25**
+
+The order queue as a **place**: a stall on the lane where customers queue, reached by diving into
+it from the map. It carries a badge counting orders you can already fill. Mechanic in
+[03-systems.md](03-systems.md#the-garden-stand--orders). Build order inside it follows
 [13-order-system.md](13-order-system.md): three slots, flowers-only orders first, then honey, then
 crafted goods as the bench comes online. This is where reputation starts, and reputation is what
 buys land — which makes the Stand the engine that sells the map's own parcels.

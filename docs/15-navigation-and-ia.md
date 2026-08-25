@@ -223,7 +223,7 @@ menu.
   version-gated migration (schema v2 → v3) in `Game.load()`; they keep the item as a cosmetic
   record.
 
-### Phase 2 — Build the world map
+### Phase 2 — Build the world map — **BUILT 2026-08-25**
 
 - A zoomed-out scene containing the garden and whatever regions still exist as locations. **Note,
   2026-08-14: the apiary and apothecary are no longer regions** — they fold into garden adjacency.
@@ -243,6 +243,15 @@ twice. So the camera move ends in a **cross-fade to the existing garden screen**
 copy of the garden is a thumbnail that only ever has to read at map distance.
 
 Done when: every region is reachable from the map and none from the dock.
+
+**Shipped 2026-08-25.** The map, the ladder, the dive, the Stand on the lane, three locked parcels.
+The dock's fifth slot is a single **World** button — travel, not a sheet — which is the
+discoverable way in for anyone who has not found the swipe. **Apiary and Craft keep their tabs for
+now**: a tab only leaves when its map home exists, and removing them first would strand two live
+systems. The full meta dock (Friends · Cards · World · Quests · Shop) arrives with the polish pass.
+
+**The dock's column count now follows its button count** (`grid-auto-flow: column`). It was pinned
+at four, so a fifth tab wrapped onto a second row and covered the lawn.
 
 ### Phase 1.5 — Interim dock *(new, 2026-08-14, ahead of the map)*
 

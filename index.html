@@ -107,12 +107,12 @@
             <span class="dock-label">Apiary</span>
             <span class="dock-dot" hidden></span>
           </button>
-          <!-- Interim entry point. The Stand is a PLACE and belongs on the world
-               map; it sits in the dock only until the map frame exists, the same
-               shortcut Apiary and Craft took. See docs/25-world-map.md. -->
-          <button class="dock-btn" data-tab="stand">
-            <span class="dock-ico" data-icon="gift"></span>
-            <span class="dock-label">Stand</span>
+          <!-- The way to the world, for anyone who has not found the swipe. The
+               Stand is not a tab any more — it is a stall on the lane, reached
+               by going out to the map. See docs/25-world-map.md. -->
+          <button class="dock-btn" data-tab="world">
+            <span class="dock-ico" data-icon="grid"></span>
+            <span class="dock-label">World</span>
             <span class="dock-dot" hidden></span>
           </button>
           <button class="dock-btn" data-tab="craft">
@@ -147,6 +147,7 @@
       <!-- ============ OVERLAYS ============ -->
       <div class="toasts" id="toasts" aria-live="polite"></div>
       <div class="banner" id="banner" aria-hidden="true"></div>
+      <div class="map-layer" id="map" aria-label="The world" hidden></div>
       <div class="coach" id="coach" hidden></div>
     </div>
   </div>
@@ -155,6 +156,7 @@
   <script src="flora.js"></script>
   <script src="critters.js"></script>
   <script src="customers.js"></script>
+  <script src="overworld.js"></script>
   <script src="hollow.js"></script>
   <script src="icons.js"></script>
   <script src="audio.js"></script>
@@ -164,6 +166,7 @@
   <script src="ui-scenery.js"></script>
   <script src="ui-sheet.js"></script>
   <script src="ui-hollow.js"></script>
+  <script src="ui-map.js"></script>
   <script src="ui-events.js"></script>
   <script src="ui.js"></script>
 

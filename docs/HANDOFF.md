@@ -61,6 +61,22 @@ from quests and levels.
 > design what a AAA team would build, ship incrementally, with the not-a-clone bar standing per
 > garden.
 >
+> **The world map is BUILT, 2026-08-25.** Swipe down from the garden and the camera pulls back to a
+> world you drag around with a finger: the garden **showing whatever is actually planted in it**,
+> the Hollow's burrow, the **Garden Stand on the lane**, and three parcels of land you cannot buy
+> yet. Swipe up, or tap a place, to dive in. The game is now **three places on one axis** — map,
+> garden, Hollow — with one rule: **down pulls the camera back, up goes in.**
+> `overworld.js` draws the scene (knows nothing about the game), `ui-map.js` is the camera. The
+> Stand left the dock for the lane, and the fifth dock slot is a single **World** button — travel,
+> not a panel — for anyone who has not found the swipe. Apiary and Craft keep their tabs until their
+> own map homes exist. See [25-world-map.md](25-world-map.md),
+> [08-ui-and-layout.md](08-ui-and-layout.md#the-vertical-ladder) and the top of
+> [10-decision-log.md](10-decision-log.md).
+>
+> **Not built yet, on purpose:** collect-all (gated on automation, and it belongs after the frame
+> has been played) and actually buying land (reputation tiers gate it, and the Stand only started
+> paying reputation the same day).
+>
 > **The Garden Stand is BUILT, 2026-08-25.** Simulation and surface both. Three slots, generated
 > orders, delivery, free skipping, refill clocks, reputation — and **the first system in this game
 > that wants anything**, since everything before it only produced. 27 new sim-test assertions hold
@@ -559,13 +575,18 @@ the MVP scope — and [26-goods-catalog.md](26-goods-catalog.md) is the goods sp
 is open with the not-a-clone bar per garden; goods are deep-botanical plus cottage crops, no barn;
 and the build is **MVP-first** — plain map, functional Stand, polish later.
 
-**The Stand is done — simulation, panel, customers and all.** What remains of the MVP is **the map
-frame**: the world box, free panning at map altitude, the swipe ladder (map → garden → Hollow), the
-cross-fade hand-off into the existing garden screen, the burrow, locked parcels showing a price,
-and **moving the Stand out of the dock onto the lane where it belongs**.
-`tools/map-spike.html` is the art and camera reference and its findings still stand — the dive ends
-in a cross-fade, not a zoom that keeps going. After the frame: collect-all gated on automation with
-the 2× rewarded video on it.
+**The MVP is done.** The Stand and the map frame both ship. What comes next, roughly in order:
+
+1. **Play it and judge the feel** — the rubric is in
+   [25-world-map.md](25-world-map.md#the-mvp-decided-2026-08-25--build-plain-test-the-feel-polish-as-we-go).
+   The load-bearing question: *does checking the Stand pull you back into planting something
+   specific?* If not, the order generation weights are wrong before anything else is.
+2. **Collect-all**, gated on a region being fully automated, with the 2× rewarded video on it —
+   the map's honest revenue argument and the reason the drone becomes an unlock.
+3. **Buying land**, off Stand reputation, which turns the three refusing parcels into the
+   progression gate they are drawn to be.
+4. **The Potting Shed surface**, which the goods decision already settled: every crafted family is
+   a merge chain on the bench, and the prototype Craft tab retires when it lands.
 
 **Resolved by the goods decision:** the bench ships a surface (every crafted family is a merge
 chain on it), and the prototype Craft tab retires when it does.
@@ -747,6 +768,24 @@ inside one thick outline exists partly for this reason.
 
 **Rounding hours and minutes separately renders 23h 59m 59s as "23h 60m".** Round to whole minutes
 first, then split. Bit the feed panel's span formatter.
+
+**A camera translate and a moved `transform-origin` cannot both be used.**
+`translate(-camX*s, -camY*s) scale(s)` puts world point (camX, camY) at the top-left of the screen,
+and **that identity only holds with `transform-origin: 0 0`.** Setting the origin to the place being
+dived into — the obvious-looking way to zoom toward something — broke the pan and pushed the world
+off screen. `ui-map.js` animates the *camera* instead. Two more from the same file: the transition
+must be **off** during a drag or every pan lags a third of a second behind the finger, and a gesture
+only counts as a tap under 12px of movement, or panning keeps opening whatever it finishes over.
+
+**Anything drawn inside the map's world transform is scaled by the camera, including text.** Labels
+and badges are UI, not art: at map altitude a 13px name renders at 7px. They counter-scale with
+`scale(calc(1 / var(--ow-s)))`. The corollary is the composition rule that cost a rebuild —
+**landmarks have to be small against the world**, or the "map" is just the garden seen from slightly
+further away. The first world was 1240×900 and the garden covered 69% of the screen.
+
+**The dock's columns follow its button count.** It was pinned at `repeat(4, ...)`, so a fifth tab
+wrapped onto a second row and covered the lawn. `grid-auto-flow: column` instead — and the IA doc's
+hard cap of five still stands, because past that the labels stop fitting.
 
 **A line item that names nothing cannot be priced when it is written.** The Stand's "any blooms"
 line could be filled with daisies or with Eternals, so a price fixed at generation is either a
@@ -958,15 +997,14 @@ stale line here costs them real time before they have any way to know it is wron
 > well fed, hungry, or asleep — and a tap on a creature opens its own panel. Read
 > `docs/22-creatures.md` end to end and the top few entries of `docs/10-decision-log.md`.
 >
-> **What's next is the world map MVP.** Swipe down from the garden to pull back to a freely
+> **The world map MVP is built and the next job is judging it.** Swipe down from the garden to pull back to a freely
 > scrollable world — the game becomes one altitude ladder, map → garden → Hollow. The design pass
-> is done: `docs/25-world-map.md` (map inventory, MVP scope, feel rubric) and
-> `docs/26-goods-catalog.md` (goods families, cottage crops, no barn) are the spec; try
-> `tools/map-spike.html` for the art and camera reference. **Build plain and sim-first**: order
-> generation in `game.js` under the test suite, then the map frame, then the Garden Stand running
-> Florist bouquet orders and named honeys. Polish and the meta dock come later. **Two rules to
-> hold:** no region may be a second garden, and the map collects the boring half while the garden
-> keeps the interesting half. Read the top of `docs/10-decision-log.md` first.
+> is done and shipped: `docs/25-world-map.md` (map inventory, feel rubric) and
+> `docs/26-goods-catalog.md` (goods families, cottage crops, no barn) are the spec. Swipe down from
+> the garden for the map, up for the Hollow. Next: judge the feel, then collect-all gated on
+> automation, then buying land off reputation. **Two rules to hold:** no region may be a second
+> garden, and the map collects the boring half while the garden keeps the interesting half. Read the
+> top of `docs/10-decision-log.md` first.
 >
 > **Decorate is still agreed and still unbuilt** — mementos have had no sink since August 18. Check
 > with me before starting anything else; the Potting Bench is also still a live option.

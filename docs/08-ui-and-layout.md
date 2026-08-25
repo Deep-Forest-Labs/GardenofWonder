@@ -434,3 +434,26 @@ Missing, and worth knowing before claiming accessibility:
 - **No screen-reader narration of the garden.** A blind player gets no plot states.
 - **Colour is the only channel for rarity.** No shape or text differentiation.
 - Contrast has not been formally audited.
+
+## The vertical ladder
+
+Since 2026-08-25 the game is three places stacked on one axis, with one rule:
+
+```
+   THE MAP        swipe DOWN from the garden
+   THE GARDEN     you start here
+   THE HOLLOW     swipe UP from the garden
+```
+
+**Down pulls the camera back, up goes in.** From the map, swiping up dives to the garden; from the
+Hollow, swiping down comes back up. One gesture, one metaphor, and no dock slot spent on
+navigation.
+
+The garden's swipe still **only starts on the background** — plots and the flower act on
+`pointerdown` and would fire on the way out, and making them wait for `pointerup` would cost the tap
+latency the core loop is built on. On the map a drag is a pan, so only a gesture that moved less
+than 12px counts as a tap; otherwise panning across the world would keep opening whatever it
+finished over.
+
+`.in-map` hides the stage, dock, rail and quest strip, exactly as `.in-hollow` does — and both hide
+coach marks, because a coach mark points at something in the garden that is now covered.
