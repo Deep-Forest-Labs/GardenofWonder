@@ -53,9 +53,17 @@ from quests and levels.
 > and lives in **[25-world-map.md](25-world-map.md)**: what Hay Day, Township, Gossip Harbor,
 > FarmVille's corpse, Grow a Garden and Egg Inc actually prove, the map inventory in phases
 > (frame → **Garden Stand** with a visible customer queue → Potting Shed surface → specialized
-> garden *biomes*, not clones), and a probability ranking. Three calls are the owner's to make
-> before building: biomes vs. many identical gardens, whether generic crops/livestock enter the
-> world (recommended against, twice now), and confirming the Stand as the anchor build.
+> garden *biomes*), and a probability ranking.
+>
+> **The owner answered the same day: the Stand is confirmed first**, the **map is a freely
+> scrollable world** (pan with a finger at map altitude; the vertical swipe stays as the altitude
+> gesture; the spike's fixed two-stop camera is superseded on this), and **the ceiling is open** —
+> design what a AAA team would build, ship incrementally, with the not-a-clone bar standing per
+> garden. The open thread is the **goods catalog** — whether botanical goods are enough — and
+> [25-world-map.md](25-world-map.md#the-goods-catalog--is-botanical-enough) carries the three
+> recommendations with probabilities: deep botanical catalog (~75%), cottage crops via the Orchard
+> (~60%), no barn (~35% it earns its place). **The Florist family (bouquets — multi-flower order
+> lines, no crafting needed) is the Stand's launch catalog.**
 
 > **Creatures arrived, and the direction changed, 2026-08-16.** The diagnosis was the owner's: the
 > world had a place and a character but **no inhabitants**. So **habitat** was added as a second frame
@@ -530,11 +538,13 @@ anchor) → Potting Shed surface → two-to-four specialized garden biomes**, wi
 automation throughout. Do not start building map phases until the owner has made the three calls
 listed at the top of this file and in that document's phase D and "later, or never" sections.
 
-**What is still open:** biomes vs. many identical gardens; generic crops and livestock (chickens
-were cut 2026-08-14, re-raised by the owner 2026-08-25, recommendation unchanged); and the bench —
-the research strengthens the case that it ships a surface on the map rather than being deleted,
-because merge + orders is the top-grossing casual shape of 2026 and both halves already exist in
-this repo.
+**Settled 2026-08-25:** the Stand builds first after the frame; the map pans freely at map
+altitude; the ceiling is open with the not-a-clone bar per garden. **Still open:** the goods
+catalog decision (deep botanical vs. + cottage crops vs. + a barn — recommendations and
+probabilities in [25-world-map.md](25-world-map.md#the-goods-catalog--is-botanical-enough)), and
+the bench — the research strengthens the case that it ships a surface on the map rather than being
+deleted, because merge + orders is the top-grossing casual shape of 2026 and both halves already
+exist in this repo.
 
 **A caution recorded so it stays visible.** The map manufactures collection moments, and a 2×
 rewarded video on a collect-all is the best-converting placement in casual — Kolibri takes roughly

@@ -16,6 +16,23 @@ with chickens, and a place where a line of customers waits for perfume, a dozen 
 roses. Collect a finished garden with one tap. The question asked: what does the market say has the
 highest probability of success, and what exactly should be on this map?
 
+### Answered the same day, after the research
+
+Three calls came back from the owner on 2026-08-25:
+
+- **The Garden Stand is confirmed as the first thing built after the map frame.** Demand before
+  supply.
+- **The map is a scrollable world, not a phone-shaped screen.** Pan freely with a finger at map
+  altitude, the way Township and Hay Day do. The vertical swipe survives as the *altitude* gesture
+  — swipe down from the garden to pull back to the map, swipe up on a place to dive in — but at
+  map height the camera is loose. The spike's fixed two-stop camera is superseded on this point.
+- **The ceiling is open.** The owner's instruction: think what a AAA team would build — the team
+  will grow, so live-ops capacity is not the constraint to design against. This matches the
+  standing rule from 2026-08-14 ("don't let the vision be too small that it hurts us later"):
+  **design the whole map, build it incrementally.** Many gardens is the long-run picture; the
+  *quality bar* stands — every garden added must be mechanically its own place, because the clone
+  version decays regardless of team size.
+
 ## What the market says, in numbers
 
 The farming-adjacent market splits into four families. The numbers below are the load-bearing facts.
@@ -136,8 +153,9 @@ resolves the bench's parked-with-no-surface status honestly, and un-pauses its t
 
 ### Phase D — specialized gardens, one at a time
 
-The owner's many-gardens instinct, shaped by finding 2. Each is garden-shaped but mechanically its
-own place, with its own clock and its own creatures. Candidates, cheapest first:
+The owner's many-gardens instinct, with finding 2 as the quality bar rather than a cap: the map is
+designed to hold many gardens eventually, and each one added must be mechanically its own place,
+with its own clock and its own creatures. Candidates, cheapest first:
 
 | Biome | Identity — what makes it not a clone |
 | --- | --- |
@@ -146,8 +164,8 @@ own place, with its own clock and its own creatures. Candidates, cheapest first:
 | **The Wild Meadow** | The bee layer — hives live here, honey follows what blooms, pollination drifts to adjacent parcels. Resolves the apiary question: **a place on the map, not a dock tab**, keeping the 2026-08-14 demotion's spirit (no separate production chain) while giving bees a home. |
 | **The Greenhouse** | Controlled weather: the mutation-farming garden. Gems' "call a sky" verb becomes architecture. |
 
-Ten gardens is not the plan; two to four *different* ones, arriving as the economy needs supply
-breadth, is.
+The count is open-ended as the team grows; what is fixed is that each addition passes the
+not-a-clone bar, and that they arrive one at a time as the order economy needs supply breadth.
 
 ### Later, or never
 
@@ -155,6 +173,57 @@ breadth, is.
 - **Map decoration layer** — validated (decoration is a top motivation for this audience), but it
   arrives after the Hollow's Decorate proves the memento economy.
 - **A second currency per region** (Idle Miner's continents) — no, until prestige design demands it.
+
+## The goods catalog — is botanical enough?
+
+The owner's sharpest question, 2026-08-25: *are teas, honey, preserves, perfumes and bouquets
+enough? Does that tell a captivating story? What if people don't care about perfume?*
+
+**The honest answer from the comparables: nobody cares about the noun.** Gossip Harbor grosses
+$100M a month selling chowder and picnic baskets; Travel Town sells hammers and hairbrushes; Cats
+& Soup sells soup. Hay Day's eggs are not loved because they are eggs. What players care about is
+**who is asking, whether the request reads in one line, and whether filling it felt like making
+something.** The category is a token; the customer is the story. The test for any good:
+
+> **Can a customer ask for it in one line, and does the player smile?**
+> "A dozen eggs" passes. "A jar of moonflower honey — for sleep" passes *better*, because only
+> this game can sell it.
+
+**The catalog is also far bigger than five nouns.** The cottage/farmers-market vocabulary, all of
+it inside the existing fiction — and the card album already believes in these goods (the *Sweet
+Things* set is literally Elderflower Cordial, Bramble Jam, Rosehip Syrup, First Honey, The Secret
+Recipe):
+
+| Family | Examples | Inputs | Notes |
+| --- | --- | --- | --- |
+| **The Florist** | Bouquets, wreaths, flower crowns, dried arrangements, seed packets | Flowers only | **Cheapest family and the Stand's launch catalog** — a bouquet is a multi-flower order line with a ribbon, no crafting system needed. Flower Crown is already the bench chain's top rung. |
+| **The Honey Jars** | Bluebell honey, lavender honey, moonflower honey | Hives + what blooms | The honey-follows-bloom rule, already built. |
+| **The Tea Shelf** | Lavender tea, rose tea, moonflower tea, chamomile | Flowers + herbs | Moonflower tea wants night harvests — a good with a *time* identity. |
+| **Preserves & Sweets** | Bramble jam, rosehip syrup, elderflower cordial, candied petals, honey cake | Berries + fruit + honey | Needs cottage crops (below). |
+| **The Apothecary** | Rose perfume, lavender salve, beeswax candles, pressed-flower soap | Flowers + wax | The premium tier — top of the price ladder. |
+| **The Bakery** *(optional)* | Honey biscuits, lavender shortbread, apple pie | One grain + orchard fruit | The most *familiar* family; only exists if a grain crop is admitted. |
+
+### Top three recommendations, with probability of success
+
+Asked for directly, so stated directly. Probability here means "this carries the order economy and
+players engage with it," judged from the comparables.
+
+**1. Depth through chains and customers, not new categories — build the botanical catalog out to
+30–60 goods across the families above. Probability: high, ~75%.** Every good is a data row; the
+captivation comes from characterful recurring customers (the Gossip Harbor lesson) and the flower
+narrating them. This is the do-first because it requires nothing new to be true about the world.
+
+**2. Admit cottage crops — berries, herbs, orchard fruit, a pumpkin patch, and at most one grain.
+Probability: ~60% that the catalog needs them, high that they fit.** "Crops yes" done in the
+game's voice: strawberries, mint and apples read *cottage garden*; wheat-and-corn monoculture
+reads industrial and drags toward Hay Day's field. The Orchard biome doubles as the source, so
+this costs one biome, not a new system. This is the recommended answer to "is botanical enough" —
+it widens inputs enormously (jam, cordial, pie, shortbread) without leaving the fiction.
+
+**3. Animal produce stays with the creatures. Probability that a barn adds more than it costs:
+~35%.** If orders ever want "a dozen eggs," the tonally-owned version is creature produce —
+named characters already deliver goods (keepsakes) on clocks. Revisit only if playtests show
+customers asking for familiar animal goods and players missing them; do not build it on spec.
 
 ## Probability ranking
 

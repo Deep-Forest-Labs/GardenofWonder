@@ -5,6 +5,33 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (last) — The map becomes a scrollable world, the Stand is confirmed, and the goods question opens
+
+**Three answers from the owner, the same day as the research.** The **Garden Stand is confirmed as
+the first build after the map frame** — demand before supply, no dissent. The **map stops being a
+phone-shaped screen**: pan freely with a finger at map altitude, Township-style; the vertical swipe
+survives as the altitude gesture (down to pull back, up to dive in) but the spike's fixed two-stop
+camera is superseded. And the **ceiling is open** — the owner's instruction is to design what a AAA
+team would build, because the team will grow; live-ops capacity is not the constraint to design
+against. That is the 2026-08-14 "don't cap the vision" rule applied to the map: design the whole
+world, build it incrementally. Many gardens is the long-run picture; **the not-a-clone bar stands
+per garden**, because parallel identical boards decay at any team size.
+
+**The sharpest question of the session was about the goods, and it got a direct answer in
+[25-world-map.md](25-world-map.md#the-goods-catalog--is-botanical-enough).** *Are teas, honey,
+preserves, perfume and bouquets enough — what if nobody cares about perfume?* The comparables say
+nobody cares about the noun anywhere: Gossip Harbor sells chowder at $100M a month; the customer is
+the story and the good is a token. The test recorded: **can a customer ask for it in one line, and
+does the player smile.** Three recommendations with probabilities went into the doc: build the
+botanical catalog deep (~75%), admit *cottage* crops — berries, herbs, orchard fruit, at most one
+grain, sourced from the Orchard biome (~60% needed, high fit), and keep animal produce with the
+creatures rather than a barn (~35% a barn adds more than it costs). **The Florist family is the
+Stand's launch catalog** — a bouquet is a multi-flower order line with a ribbon, needing no
+crafting system at all. Also noted: the card album already believes in these goods — the *Sweet
+Things* set is Elderflower Cordial, Bramble Jam, Rosehip Syrup, First Honey.
+
+---
+
 ## 2026-08-25 (later) — The map pauses for a design pass, and the research answers three questions
 
 **The owner's call, made the same day the spike shipped:** keep the spike as the art and camera
