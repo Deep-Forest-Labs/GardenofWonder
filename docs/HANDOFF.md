@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-20**
+Last updated: **2026-08-24**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -814,24 +814,49 @@ Two multipliers:
 
 ## Briefing a new agent
 
-Paste something like this into a fresh chat:
+Paste this into a fresh chat. Keep it current — it is the first thing the next agent sees, and a
+stale line here costs them real time before they have any way to know it is wrong.
 
-> I'm building a mobile idle/casual game called Garden Wonder. The repo is my workspace root and
-> it's fully documented in `docs/`.
+> I'm building a mobile idle/casual game called Garden Wonder. It's a static site — no build step,
+> no dependencies — deployed straight from the repo root to GitHub Pages, and it's fully documented
+> in `docs/`.
 >
-> Read `docs/HANDOFF.md` first, then `docs/README.md` for the index. Before writing any code, read
-> `docs/09-conventions.md` and `docs/02-architecture.md`, and note the "Traps in this codebase"
-> section of the handoff.
+> **The repo is a subdirectory of my workspace, not the workspace root:** open
+> `Ghost Garden/Ghost Garden`. (`garden-polish` beside it is a second worktree on the `polish`
+> branch; `ghostgarden` is an empty leftover.) Run `git fetch` and check `git status` before you
+> start — other sessions work in this tree.
 >
-> Your task is in `docs/HANDOFF.md`. All five progression phases, including Bloom Mastery, are
-> built — see `docs/16-progression-and-quests.md`. Do not build the world map.
+> Read `docs/HANDOFF.md` first, then `docs/README.md` for the index. Before writing any code read
+> `docs/09-conventions.md` and `docs/02-architecture.md`, and the **"Traps in this codebase"**
+> section of the handoff — it will save you hours.
 >
-> I'm the designer; an engineer is porting to Unity. Goal is modest revenue, small scope, two-person
-> team. I want you as a design advisor as well as an implementer — push back on scope creep and tell
-> me when an idea is a bad one.
+> **Where the game is now:** the habitat direction. Six creatures with traits, stars, eight named
+> pairs and keepsakes, living in **the Hollow** under the garden. Food runs one fullness clock —
+> well fed, hungry, or asleep — and a tap on a creature opens its own panel. Read
+> `docs/22-creatures.md` end to end and the top few entries of `docs/10-decision-log.md`.
+>
+> **What's next is Decorate:** mementos finally get spent, on decorations for the Hollow, with a
+> piece costing keepsakes from two different creatures. Agreed and unbuilt. Check with me before
+> starting anything else — the Potting Bench and the Market are both live options too.
+>
+> **How I work.** I'm the designer; an engineer ports to Unity. Two people, modest revenue goal,
+> deliberately small scope. I want you as a **design advisor as much as an implementer** — push back
+> on scope creep, tell me plainly when an idea is bad, and correct me when I'm wrong. Several of the
+> best decisions here came from exactly that.
+>
+> - **Show me pictures.** Screenshot what you build and look at it critically yourself first. Real
+>   bugs here have only ever been visible in an image, and more only on a real phone.
+> - **Push after every change.** I test on my phone from the live URL.
+> - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
+>   same commit. That has kept this project coherent across a very long run; please hold it.
+> - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
+>   whole class of flaky tests caused by unpinned `Math.random`.
+> - **Spike the feel before building the system.** `tools/merge-spike.html` and
+>   `tools/hollow-spike.html` both saved real time.
+> - **More iconography, fewer sentences.** A standing note, and the thing I keep asking for.
 
 The point of the docs is that this briefing is short. If a new agent needs more than that, a
-document is missing.
+document is missing — write the document rather than lengthening this.
 
 ## Maintaining this file
 
