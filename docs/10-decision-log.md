@@ -5,6 +5,44 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (later) — The map pauses for a design pass, and the research answers three questions
+
+**The owner's call, made the same day the spike shipped:** keep the spike as the art and camera
+reference, but design the whole map before building any more of it. The framing sharpened to
+**"a new-age FarmVille — incremental, idle, and a tapper"**, with three concrete ideas on the
+table: many flower gardens collected with one tap, fields and a barn (wheat, corn, chickens, eggs),
+and a line of customers waiting for goods. A market research pass was asked for and done —
+the result is [25-world-map.md](25-world-map.md), and three answers came out of it.
+
+**The customer line is the anchor, and it should be built first.** Every survivor in every family
+of this market runs an order queue — Hay Day's truck and boat, Township's trains, the merge games'
+customer queues at $100M/month, and FarmVille 2's order board, which is the only thing keeping the
+last FarmVille alive at ~$500K/month twelve years on. The owner's "gift store with a line" is
+[13-order-system.md](13-order-system.md), already specified, and it becomes **the Garden Stand**:
+a place on the lane where customers visibly queue.
+
+**Many gardens survive as a few biomes, not ten clones.** Nobody at the top runs N identical
+parallel boards: Hay Day and Township are one farm with many *different* buildings, Grow a Garden
+is one garden, Egg Inc's farms are sequential. Ten same-shaped flower gardens is the AdVenture
+Capitalist decay pattern at map scale. The shaped version keeps the owner's instinct: **two to
+four specialized gardens** — Orchard (overnight timers), Night Garden (the epoch clock as a
+place), Wild Meadow (the bees' home, resolving the apiary question as a *place* without reviving
+its separate chain), Greenhouse (controlled weather, the mutation farm).
+
+**Wheat, corn and chickens are recommended against, and the recommendation was made once already.**
+The 2026-08-14 tonal decision cut them; the research reconfirms it — generic farm content moves the
+game onto Hay Day's field, and **the creatures are already this game's livestock**: named producers
+with food, sleep and keepsakes. A barn of generic hens beside a burrow of characters would split
+the animal fantasy and cheapen the half with names. The owner re-raised it, so it stays an open
+call rather than a settled one.
+
+**One finding was better than expected: the market's hottest shape is already in the repo.**
+Gossip Harbor ($1.2B lifetime, +172% YoY) is merge + customer orders + drip story. This project
+has a built merge simulation with no surface, a specified order system, and a talking flower.
+The bench's parked status should end with a surface on the map, feeding Stand orders.
+
+---
+
 ## 2026-08-25 — The dock stops being navigation, and the map becomes it
 
 **The owner's call, and it settles a tension the IA doc has carried since 2026-08-05.** The dock was

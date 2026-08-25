@@ -46,6 +46,16 @@ from quests and levels.
 > and ask for things", already specified in [13-order-system.md](13-order-system.md). See the top of
 > [10-decision-log.md](10-decision-log.md) and
 > [15-navigation-and-ia.md](15-navigation-and-ia.md).
+>
+> **And then the build paused for a design pass, 2026-08-25 (later).** The owner kept the spike as
+> the art reference and asked for the whole map to be designed first, against market research —
+> the framing is **"a new-age FarmVille: incremental, idle, and a tapper."** The research is done
+> and lives in **[25-world-map.md](25-world-map.md)**: what Hay Day, Township, Gossip Harbor,
+> FarmVille's corpse, Grow a Garden and Egg Inc actually prove, the map inventory in phases
+> (frame → **Garden Stand** with a visible customer queue → Potting Shed surface → specialized
+> garden *biomes*, not clones), and a probability ranking. Three calls are the owner's to make
+> before building: biomes vs. many identical gardens, whether generic crops/livestock enter the
+> world (recommended against, twice now), and confirming the Stand as the anchor build.
 
 > **Creatures arrived, and the direction changed, 2026-08-16.** The diagnosis was the owner's: the
 > world had a place and a character but **no inhabitants**. So **habitat** was added as a second frame
@@ -513,16 +523,18 @@ exactly 1.4× cost at Common across all nineteen tiers**, differing only in thro
 distinct-looking producers that all do the same thing is the AdVenture Capitalist decay pattern; see
 [17-market-and-positioning.md](17-market-and-positioning.md).
 
-**The world map is no longer paused.** As of 2026-08-25 it is the agreed direction and the spike is
-built. The order settled with the owner is: **spike (done) → the empty map → the Market as location
-two → collect-all gated on automation → a third region only after those have been played.** The
-"empty map" step is deliberate — the frame, the swipe, the garden thumbnail, the burrow, and three
-locked silhouettes, with nothing new to *do* up there. It kills the two dead dock tabs, creates the
-store screenshot and creates the aspiration surface before any content is built to fill it.
+**The world map is the direction, and it is in a design pass before any more of it is built.**
+The spike stands as the art and camera reference. [25-world-map.md](25-world-map.md) is the design
+document: the researched map inventory is **frame → Garden Stand (the order queue as a place, the
+anchor) → Potting Shed surface → two-to-four specialized garden biomes**, with collect-all gated on
+automation throughout. Do not start building map phases until the owner has made the three calls
+listed at the top of this file and in that document's phase D and "later, or never" sections.
 
-**What is still open:** whether the apiary and the crafting bench come back as *places* (the
-2026-08-14 demotion folded both into garden adjacency, and the owner's sketch put them back on the
-map), and the region order after the Market.
+**What is still open:** biomes vs. many identical gardens; generic crops and livestock (chickens
+were cut 2026-08-14, re-raised by the owner 2026-08-25, recommendation unchanged); and the bench —
+the research strengthens the case that it ships a surface on the map rather than being deleted,
+because merge + orders is the top-grossing casual shape of 2026 and both halves already exist in
+this repo.
 
 **A caution recorded so it stays visible.** The map manufactures collection moments, and a 2×
 rewarded video on a collect-all is the best-converting placement in casual — Kolibri takes roughly
