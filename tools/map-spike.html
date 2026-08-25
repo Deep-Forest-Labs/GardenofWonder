@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The world map — camera spike</title>
+<style>
+  :root { --paper: #f7ead1; --ink: #2c1a10; --shadow: 0 4px 0 rgba(44,26,16,.35); }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(--ink);
+    font-family: 'Baloo 2', ui-rounded, 'Trebuchet MS', system-ui, sans-serif; font-weight: 700; }
+  body { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 10px 40px; }
+
+  header { width: 100%; max-width: 390px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  h1 { font-size: 15px; margin: 0; flex: 1 0 100%; }
+  .pill { border: 3px solid var(--ink); border-radius: 999px; background: #e8d5b0;
+    padding: 4px 10px; font-size: 11.5px; box-shadow: var(--shadow); cursor: pointer;
+    font-family: inherit; font-weight: 700; color: var(--ink); }
+  .pill[data-on="1"] { background: #ffc94a; }
+  .pill:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(44,26,16,.35); }
+
+  /* A real phone, so the composition is judged at the shape it ships in. */
+  #phone { width: 100%; max-width: 390px; aspect-ratio: 390 / 844; position: relative;
+    border: 5px solid var(--ink); border-radius: 34px; overflow: hidden; box-shadow: var(--shadow);
+    background: #4fae54; touch-action: none; user-select: none; }
+
+  /* The whole world is one box the camera moves over. Two stops, one transform. */
+  #cam { position: absolute; left: 0; top: 0; width: 780px; height: 1688px;
+    transform-origin: 0 0; transition: transform .58s cubic-bezier(.22,.85,.3,1); }
+  #cam.snap { transition: none; }
+  #cam > svg.world { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* Regions sit over the backdrop as their own boxes, the way the garden already does. */
+  .region { position: absolute; cursor: pointer; }
+  .region > svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  /* Not `.bloom` — `Flora.head()` already emits that class on the svg it returns. */
+  .plot-bloom { position: absolute; width: 62px; height: 62px; transform: translate(-50%, -50%); }
+  .plot-bloom svg { width: 100%; height: 100%; overflow: visible; }
+  /* Icons.get() returns a whole <svg>, so it is placed as an HTML layer, never nested in one. */
+  .padlock { position: absolute; left: 50%; top: 27%; width: 40px; height: 40px;
+    transform: translate(-50%, -50%); }
+  .padlock svg { width: 100%; height: 100%; }
+  .talker { position: absolute; width: 88px; transform: translate(-50%, -58%); line-height: 0; }
+  .talker svg { width: 100%; overflow: visible; }
+  .critter { position: absolute; width: 58px; transform: translate(-50%, -50%); line-height: 0; }
+  .critter svg { width: 100%; overflow: visible; }
+  .critter .cr-glow { opacity: .4; }
+
+  /* Locked land. The silhouette is the pull — you can see what you do not own yet. */
+  .parcel { position: absolute; cursor: pointer; }
+  .parcel > svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .parcel.shake { animation: nope .38s ease; }
+  @keyframes nope { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); } }
+
+  /* Collect-all. Drawn in world space so it scales away when you dive in — it belongs to the map. */
+  .bubble { position: absolute; display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px 8px 10px; border: 5px solid var(--ink); border-radius: 999px;
+    background: #fff7e1; font-size: 26px; line-height: 1; box-shadow: 0 7px 0 rgba(44,26,16,.4);
+    transform: translate(-50%, -50%); cursor: pointer; white-space: nowrap;
+    animation: bob 2.6s ease-in-out infinite; }
+  .bubble svg { width: 30px; height: 30px; }
+  .bubble.pop { animation: pop .34s ease forwards; pointer-events: none; }
+  @keyframes bob { 0%,100% { transform: translate(-50%,-50%); } 50% { transform: translate(-50%,-62%); } }
+  @keyframes pop { to { transform: translate(-50%,-130%) scale(.5); opacity: 0; } }
+
+  /* Chrome is pinned to the phone, never to the world — it does not move with the camera. */
+  .chrome { position: absolute; inset: 0; pointer-events: none; }
+  .chrome > * { pointer-events: auto; }
+
+  .hud { position: absolute; top: 12px; left: 10px; right: 10px; display: flex; gap: 8px; }
+  .wallet { display: flex; align-items: center; gap: 6px; padding: 5px 13px 5px 6px;
+    border: 3px solid var(--ink); border-radius: 999px; background: #fff7e1; font-size: 13px;
+    box-shadow: 0 3px 0 rgba(44,26,16,.35); }
+  .wallet svg { width: 20px; height: 20px; }
+  .spacer { flex: 1; }
+
+  .hint { position: absolute; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 7px; padding: 5px 13px;
+    border: 3px solid var(--ink); border-radius: 999px; background: rgba(255,247,225,.92);
+    font-size: 11.5px; box-shadow: 0 3px 0 rgba(44,26,16,.28); }
+  .hint.top { top: 56px; }
+  .hint i { display: block; width: 0; height: 0; border: 5px solid transparent; }
+  .hint.top i { border-top-color: var(--ink); animation: nudge-dn 2.4s ease-in-out infinite; }
+  @keyframes nudge-dn { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+
+  /* The dock the owner specified: meta destinations, with the world on the centre pedestal. */
+  .dock { position: absolute; left: 0; right: 0; bottom: 0; height: 104px;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 10px 8px 18px;
+    background: linear-gradient(180deg, rgba(44,26,16,0), rgba(44,26,16,.22) 45%, rgba(44,26,16,.34)); }
+  .dock button { position: relative; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3px; border: 3px solid var(--ink); border-radius: 16px;
+    background: #fff7e1; color: var(--ink); font-family: inherit; font-weight: 800; font-size: 10px;
+    cursor: pointer; box-shadow: 0 3px 0 rgba(44,26,16,.4); padding: 6px 2px; }
+  .dock button:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(44,26,16,.4); }
+  .dock svg { width: 21px; height: 21px; }
+  .dock .badge { position: absolute; top: -7px; right: -5px; min-width: 17px; height: 17px;
+    border: 2.5px solid var(--ink); border-radius: 999px; background: #ff6b6b; color: #fff;
+    font-size: 9.5px; line-height: 12px; text-align: center; }
+  .dock .soon { opacity: .45; }
+  /* The centre pedestal — bigger, raised, and the only round one. */
+  .dock button.world { align-self: end; width: 72px; height: 72px; justify-self: center;
+    border-radius: 999px; border-width: 4px; background: #ffc94a; font-size: 10.5px;
+    box-shadow: 0 5px 0 rgba(44,26,16,.45); transform: translateY(-14px); }
+  .dock button.world:active { transform: translateY(-11px); box-shadow: 0 2px 0 rgba(44,26,16,.45); }
+  .dock button.world svg { width: 28px; height: 28px; }
+  .dock button.world[data-on="1"] { background: #8ed36b; }
+
+  #note { width: 100%; max-width: 390px; font-size: 12px; color: #7a6047; line-height: 1.55; }
+  #note b { color: var(--ink); }
+
+  .cloud { animation: drift var(--dur,42s) linear infinite; }
+  @keyframes drift { from { transform: translateX(-140px); } to { transform: translateX(920px); } }
+  @media (prefers-reduced-motion: reduce) {
+    #cam, .bubble, .cloud, .hint i { animation: none; transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The world map — camera spike (390 × 844)</h1>
+  <button class="pill" id="viewBtn">map view</button>
+  <button class="pill" id="nightBtn">daytime</button>
+  <button class="pill" id="bubbleBtn" data-on="1">collect</button>
+  <button class="pill" id="lockBtn" data-on="1">locked land</button>
+  <button class="pill" id="chromeBtn" data-on="1">chrome</button>
+</header>
+
+<div id="phone">
+  <div id="cam"></div>
+  <div class="chrome" id="chrome"></div>
+</div>
+
+<p id="note">
+<b>Swipe down to pull back, swipe up to go in</b> — the same rule the Hollow already uses, so the
+whole game is one vertical ladder: map, garden, Hollow. Tap the garden to dive in; tap a locked
+parcel to see it refuse. The camera is one CSS transform over one world box.
+<br><br>
+<b>What this spike found:</b> the dive cannot land on the real garden. That screen is its own
+composition — sky, quest strip, plots as tappable cards, the burrow door — and rebuilding it inside
+a world box would mean maintaining the garden twice. So the map is a <b>layer above the existing
+garden</b>, and the end of the dive is a cross-fade, not a zoom that keeps going. The garden below
+is a stand-in for where that hand-off happens.
+</p>
+
+<script src="../data.js"></script>
+<script src="../icons.js"></script>
+<script src="../flora.js"></script>
+<script src="../critters.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const INK = '#2c1a10';
+  const W = 780, H = 1688;                 // the world, in its own pixels
+  const cam = document.getElementById('cam');
+  const chromeEl = document.getElementById('chrome');
+  const phone = document.getElementById('phone');
+
+  /* Two camera stops. The garden one is a scale and a centring, not a different scene —
+     that is the whole thing this spike exists to check. */
+  const STOPS = {
+    map:    { s: 0.5,  cx: 390, cy: 844 },
+    garden: { s: 1.28, cx: 380, cy: 800 }
+  };
+
+  const SKY = {
+    day:   { hi: '#8fd8ff', lo: '#d9f2ff', hill: '#7cc86a', hillDeep: '#5faf52',
+             lawn: '#7fd07f', lawnDeep: '#63c063', lane: '#e0c08a', laneEdge: '#c39c63',
+             cloud: '#ffffff', cloudOp: .9 },
+    night: { hi: '#2b2f63', lo: '#4a4f8f', hill: '#3f7a44', hillDeep: '#2f5f36',
+             lawn: '#4d9a58', lawnDeep: '#3d8049', lane: '#a98d63', laneEdge: '#7d6544',
+             cloud: '#b9c2e8', cloudOp: .5 }
+  };
+
+  const state = { view: 'map', night: false, bubbles: true, locked: true, chrome: true };
+
+  const ico = (n) => (typeof Icons !== 'undefined' ? Icons.get(n) : '');
+  const seed = (id) => (typeof DATA !== 'undefined' ? DATA.seeds.find((s) => s.id === id) : null);
+
+  /* ---------------------------------------------------------------- backdrop */
+
+  function clouds(c) {
+    let out = '';
+    [[90, 120, .9, 46], [430, 210, .68, 62], [640, 96, .8, 54]].forEach(([x, y, k, dur], i) => {
+      out += `<g class="cloud" style="--dur:${dur}s" transform="translate(${x} ${y}) scale(${k})">
+        <path d="M0,0 a44,44 0 0 1 74,-22 a52,52 0 0 1 88,10 a38,38 0 0 1 2,12 Z"
+          fill="${c.cloud}" opacity="${c.cloudOp}" transform="translate(${-i * 30} 0)"/></g>`;
+    });
+    return out;
+  }
+
+  function stripes(c) {
+    let out = '';
+    for (let y = 1480; y < H; y += 74) {
+      out += `<rect x="0" y="${y}" width="${W}" height="34" fill="${c.lawnDeep}" opacity=".34"/>`;
+    }
+    return out;
+  }
+
+  /* The fence is what says "this land is yours" at map distance — the board alone is furniture. */
+  function fence() {
+    const posts = [];
+    for (let x = 208; x <= 556; x += 58) {
+      posts.push(`<rect x="${x}" y="958" width="15" height="38" rx="5"
+        fill="#e0be8c" stroke="${INK}" stroke-width="4.5"/>`);
+    }
+    return `<g><path d="M204,972 L568,972 M204,986 L568,986"
+      stroke="#c99a68" stroke-width="8" stroke-linecap="round"/>${posts.join('')}</g>`;
+  }
+
+  /* Incidental scenery. Without it the space between landmarks reads as a diagram, not a place. */
+  function scenery(c) {
+    const tree = (x, y, k) => `<g transform="translate(${x} ${y}) scale(${k})">
+      <ellipse cx="0" cy="46" rx="40" ry="11" fill="rgba(44,26,16,.15)"/>
+      <rect x="-9" y="4" width="18" height="44" rx="7" fill="#8a5a33" stroke="${INK}" stroke-width="5"/>
+      <circle cx="0" cy="-16" r="44" fill="${c.hillDeep}" stroke="${INK}" stroke-width="6"/>
+      <circle cx="-19" cy="-30" r="26" fill="${c.hill}"/></g>`;
+    const tuft = (x, y, col) => `<g transform="translate(${x} ${y})">
+      <path d="M-24,12 C-24,-10 -13,-20 0,-20 C13,-20 24,-10 24,12 Z" fill="${c.hillDeep}" opacity=".5"/>
+      <circle cx="-13" cy="-20" r="11" fill="${col}" stroke="${INK}" stroke-width="4.5"/>
+      <circle cx="13" cy="-14" r="9" fill="${col}" stroke="${INK}" stroke-width="4.5"/></g>`;
+    const bird = (x, y) => `<path d="M${x},${y} q9,-9 18,0 q9,-9 18,0" fill="none"
+      stroke="${INK}" stroke-width="4.5" stroke-linecap="round" opacity=".55"/>`;
+
+    const trees = [[104, 622, 1], [700, 590, .92], [148, 1024, 1.05], [726, 972, .95],
+                   [72, 1252, 1.1], [250, 1512, 1.15], [604, 1546, 1.0]]
+      .map(([x, y, k]) => tree(x, y, k)).join('');
+    const tufts = [[300, 1010, '#ffd6e8'], [560, 1046, '#ffe066'], [200, 1310, '#ffd6e8'],
+                   [500, 1268, '#c9b6ff'], [660, 1236, '#ffe066'], [96, 900, '#ffe066'],
+                   [400, 1560, '#c9b6ff'], [124, 1448, '#ffd6e8'], [706, 1470, '#ffe066']]
+      .map(([x, y, col]) => tuft(x, y, col)).join('');
+    return `<g>${bird(196, 246)}${bird(252, 286)}${bird(586, 202)}${trees}${tufts}</g>`;
+  }
+
+  function backdrop() {
+    const c = SKY[state.night ? 'night' : 'day'];
+    return `<svg class="world" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="mp-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="${c.hi}"/><stop offset="1" stop-color="${c.lo}"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="${W}" height="470" fill="url(#mp-sky)"/>
+      ${clouds(c)}
+      <path d="M0,430 C120,318 250,330 360,388 C470,446 600,324 780,364 L780,500 L0,500 Z"
+        fill="${c.hillDeep}"/>
+      <path d="M0,510 C140,432 300,474 430,452 C560,430 680,482 780,452 L780,600 L0,600 Z"
+        fill="${c.hill}"/>
+      <rect x="0" y="560" width="${W}" height="${H - 560}" fill="${c.lawn}"/>
+      ${stripes(c)}
+      ${scenery(c)}
+      ${fence(c)}
+      <path d="M-20,1268 C160,1208 250,1362 430,1332 C600,1304 660,1394 800,1362 L800,1458
+        C660,1490 600,1400 430,1428 C250,1458 160,1306 -20,1366 Z"
+        fill="${c.lane}" stroke="${c.laneEdge}" stroke-width="6"/>
+    </svg>`;
+  }
+
+  /* ---------------------------------------------------------------- regions */
+
+  /* The garden, drawn at the scale it already ships at: a fenced board of nine. */
+  function gardenRegion() {
+    const board = `<svg viewBox="0 0 260 360">
+      <rect x="4" y="86" width="252" height="248" rx="22" fill="#8a5a33" stroke="${INK}" stroke-width="7"/>
+      <rect x="14" y="96" width="232" height="228" rx="16" fill="#a3703f"/>
+      ${[0, 1, 2].map((r) => [0, 1, 2].map((k) => {
+        if (r === 1 && k === 1) return '';
+        const x = 24 + k * 74, y = 106 + r * 74;
+        return `<rect x="${x}" y="${y}" width="66" height="66" rx="12"
+          fill="#7d4f2c" stroke="${INK}" stroke-width="4.5"/>`;
+      }).join('')).join('')}
+      <path d="M0,86 L260,86" stroke="${INK}" stroke-width="0"/>
+      ${[0, 1, 2, 3, 4, 5, 6].map((i) => `<circle cx="${18 + i * 38}" cy="86" r="15"
+        fill="#57c15b" stroke="${INK}" stroke-width="4"/>`).join('')}
+    </svg>`;
+
+    /* Plot centres as a fraction of the board, so a bloom lands in a cell rather than near one. */
+    const cell = (r, k) => ({ x: ((24 + k * 74 + 33) / 260) * 100, y: ((106 + r * 74 + 33) / 360) * 100 });
+    const blooms = [['daisy', 0, 0], ['bluebell', 0, 1], ['tulip', 0, 2], ['rose', 1, 0],
+                    ['marigold', 1, 2], ['lavender', 2, 0], ['moonflower', 2, 2]]
+      .map(([id, r, k]) => {
+        const s = seed(id);
+        if (!s) return '';
+        const c2 = cell(r, k);
+        return `<div class="plot-bloom" style="left:${c2.x}%;top:${c2.y}%">${Flora.head(s, 58)}</div>`;
+      }).join('');
+
+    return `<div class="region" data-go="garden" style="left:250px;top:600px;width:260px;height:360px">
+      ${board}
+      ${blooms}
+      <div class="talker" style="left:50.4%;top:48.9%">${Flora.talkingFlower()}</div>
+    </div>`;
+  }
+
+  /* The Hollow is not a parcel — it is the doorway you already have, seen from further away. */
+  function hollowRegion() {
+    const pip = (typeof CREATURES !== 'undefined') ? CREATURES.find((c) => c.id === 'pip') : null;
+    return `<div class="region" data-go="hollow" style="left:300px;top:1108px;width:180px;height:168px">
+      <svg viewBox="0 0 190 176">
+        <ellipse cx="95" cy="150" rx="92" ry="26" fill="rgba(44,26,16,.16)"/>
+        <path d="M6,150 C6,84 40,44 95,44 C150,44 184,84 184,150 Z"
+          fill="#a3703f" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/>
+        <path d="M20,150 C20,96 48,64 95,64 C142,64 170,96 170,150 Z" fill="#b8834c"/>
+        <path d="M6,150 C6,120 24,96 60,88 C40,110 32,128 30,150 Z" fill="#8ed36b"/>
+        <path d="M184,150 C184,120 166,96 130,88 C150,110 158,128 160,150 Z" fill="#8ed36b"/>
+        <path d="M58,152 C58,110 72,92 95,92 C118,92 132,110 132,152 Z"
+          fill="#3b2415" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M66,152 C66,118 77,104 95,104 C113,104 124,118 124,152 Z" fill="#1e120a"/>
+      </svg>
+      ${pip ? `<div class="critter" style="left:20%;top:86%">${Critters.draw(pip)}</div>` : ''}
+    </div>`;
+  }
+
+  /* The Market: a consumer, not a second producer. The one region worth building first. */
+  function marketRegion() {
+    return `<div class="region" data-go="market" style="left:536px;top:1124px;width:214px;height:194px">
+      <svg viewBox="0 0 214 194">
+        <ellipse cx="107" cy="176" rx="98" ry="22" fill="rgba(44,26,16,.16)"/>
+        <rect x="26" y="88" width="162" height="86" rx="10" fill="#e8d5b0" stroke="${INK}" stroke-width="7"/>
+        <rect x="26" y="88" width="162" height="20" fill="#c9ab7d"/>
+        <path d="M10,88 L34,34 L180,34 L204,88 Z" fill="#ff8fa3" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/>
+        ${[0, 1, 2, 3].map((i) => `<path d="M${44 + i * 42},34 L${20 + i * 42},88 L${44 + i * 42},88 Z"
+          fill="#fff7e1"/>`).join('')}
+        <path d="M10,88 L204,88" stroke="${INK}" stroke-width="7"/>
+        <rect x="98" y="8" width="18" height="30" fill="#a3703f" stroke="${INK}" stroke-width="5"/>
+        <circle cx="107" cy="10" r="13" fill="#ffc94a" stroke="${INK}" stroke-width="5"/>
+        ${[[62, 132], [107, 132], [152, 132]].map(([x, y]) => `<rect x="${x - 17}" y="${y - 17}"
+          width="34" height="34" rx="7" fill="#ffd6a5" stroke="${INK}" stroke-width="4.5"/>`).join('')}
+      </svg>
+    </div>`;
+  }
+
+  /* ---------------------------------------------------------------- locked land */
+
+  const PARCELS = [
+    { id: 'orchard', x: 20,  y: 716, w: 190, h: 150, price: '4,500',  label: 'Orchard' },
+    { id: 'meadow',  x: 570, y: 700, w: 190, h: 150, price: '12,000', label: 'Wild Meadow' },
+    { id: 'ridge',   x: 300, y: 316, w: 186, h: 142, price: '40,000', label: 'The Ridge' }
+  ];
+
+  /* Land you do not own reads as a roped-off patch of ground — never as scenery, or it stops
+     asking to be bought. */
+  function parcel(p) {
+    const W2 = p.w, H2 = p.h;
+    return `<div class="parcel" data-parcel="${p.id}" style="left:${p.x}px;top:${p.y}px;width:${W2}px;height:${H2}px">
+      <svg viewBox="0 0 ${W2} ${H2}">
+        <ellipse cx="${W2 / 2}" cy="${H2 - 16}" rx="${W2 / 2 - 8}" ry="16" fill="rgba(44,26,16,.16)"/>
+        <path d="M12,${H2 - 18} C12,${H2 * 0.52} 30,${H2 * 0.3} 52,${H2 * 0.34}
+          C60,${H2 * 0.14} 92,${H2 * 0.1} 104,${H2 * 0.3}
+          C132,${H2 * 0.2} ${W2 - 16},${H2 * 0.3} ${W2 - 12},${H2 - 18} Z"
+          fill="#4a7c46" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M34,${H2 - 20} C40,${H2 * 0.6} 68,${H2 * 0.52} 84,${H2 * 0.62}"
+          fill="none" stroke="#3d6a3a" stroke-width="6" stroke-linecap="round"/>
+        <path d="M${W2 - 40},${H2 - 20} C${W2 - 48},${H2 * 0.6} ${W2 - 74},${H2 * 0.5} ${W2 - 92},${H2 * 0.6}"
+          fill="none" stroke="#3d6a3a" stroke-width="6" stroke-linecap="round"/>
+        <rect x="${W2 / 2 - 7}" y="${H2 * 0.30}" width="14" height="${H2 * 0.66}" rx="5"
+          fill="#a3703f" stroke="${INK}" stroke-width="5"/>
+        <rect x="${W2 / 2 - 40}" y="${H2 * 0.12}" width="80" height="54" rx="12"
+          fill="#e8d5b0" stroke="${INK}" stroke-width="6"/>
+      </svg>
+      <div class="padlock">${ico('lock')}</div>
+      <div class="bubble" style="left:50%;top:92%;font-size:21px;padding:6px 13px 6px 8px">
+        ${ico('coin')}<span>${p.price}</span>
+      </div>
+    </div>`;
+  }
+
+  /* ---------------------------------------------------------------- collect-all */
+
+  /* Only regions the player has fully automated get one. That is what makes the drone an
+     unlock rather than a percentage. */
+  const BUBBLES = [
+    { x: 380, y: 648,  amount: '18.4K', icon: 'coin' },
+    { x: 643, y: 1092, amount: '3',     icon: 'gift' }
+  ];
+
+  const bubble = (b) => `<div class="bubble" data-collect="1" style="left:${b.x}px;top:${b.y}px">
+    ${ico(b.icon)}<span>${b.amount}</span></div>`;
+
+  /* ---------------------------------------------------------------- chrome */
+
+  const worldGlyph = `<svg viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2.4"
+    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M2.4 16.5 C6 12 8.4 14.4 12 10.2 C15 6.6 18.6 8.4 21.6 5.4" fill="none"/>
+    <path d="M2.4 20.4 C6 16.2 9 18 12 14.4 C15 10.8 18.6 12.6 21.6 9.6" fill="none"/>
+    <circle cx="16.8" cy="4.2" r="2.4" fill="#ff8fa3"/></svg>`;
+
+  const DOCK = [
+    { icon: 'hand',  label: 'Friends', soon: true },
+    { icon: 'cards', label: 'Cards',   badge: 3 },
+    { world: true },
+    { icon: 'book',  label: 'Quests',  badge: 1 },
+    { icon: 'gift',  label: 'Shop' }
+  ];
+
+  function chrome() {
+    if (!state.chrome) return '';
+    const onMap = state.view === 'map';
+    const dock = DOCK.map((d) => {
+      if (d.world) {
+        return `<button type="button" class="world" data-go="${onMap ? 'garden' : 'map'}"
+          data-on="${onMap ? '1' : ''}">${worldGlyph}<span>${onMap ? 'Garden' : 'Map'}</span></button>`;
+      }
+      return `<button type="button" class="${d.soon ? 'soon' : ''}">${ico(d.icon)}<span>${d.label}</span>${
+        d.badge ? `<span class="badge">${d.badge}</span>` : ''}</button>`;
+    }).join('');
+
+    const hint = onMap
+      ? '<div class="hint top"><span>Swipe up, or tap the garden, to go in</span></div>'
+      : '<div class="hint top"><i></i><span>Swipe down for the map</span></div>';
+
+    return `<div class="hud">
+        <div class="wallet">${ico('coin')}<span>412K</span></div>
+        <div class="wallet">${ico('gem')}<span>26</span></div>
+        <div class="spacer"></div>
+        <div class="wallet">${ico('gear')}</div>
+      </div>
+      ${hint}
+      <nav class="dock">${dock}</nav>`;
+  }
+
+  /* ---------------------------------------------------------------- render */
+
+  function place(snap) {
+    const st = STOPS[state.view];
+    const tx = 195 - st.cx * st.s;
+    const ty = 422 - st.cy * st.s;
+    if (snap) cam.classList.add('snap');
+    cam.style.transform = `translate(${tx}px, ${ty}px) scale(${st.s})`;
+    if (snap) requestAnimationFrame(() => cam.classList.remove('snap'));
+  }
+
+  function render(snap) {
+    cam.innerHTML = backdrop()
+      + gardenRegion()
+      + hollowRegion()
+      + marketRegion()
+      + (state.locked ? PARCELS.map(parcel).join('') : '')
+      + (state.bubbles && state.view === 'map' ? BUBBLES.map(bubble).join('') : '');
+    chromeEl.innerHTML = chrome();
+    place(snap);
+    document.getElementById('viewBtn').textContent = state.view + ' view';
+  }
+
+  function go(view) {
+    if (state.view === view) return;
+    state.view = view;
+    render();
+  }
+
+  /* ---------------------------------------------------------------- input */
+
+  phone.addEventListener('click', (e) => {
+    const pop = e.target.closest('[data-collect]');
+    if (pop) { pop.classList.add('pop'); return; }
+    const bad = e.target.closest('[data-parcel]');
+    if (bad) { bad.classList.remove('shake'); void bad.offsetWidth; bad.classList.add('shake'); return; }
+    const go2 = e.target.closest('[data-go]');
+    if (!go2) return;
+    const to = go2.dataset.go;
+    go(to === 'map' ? 'map' : 'garden');
+  });
+
+  /* Swipe DOWN pulls the camera back, swipe UP goes in — one rule for the whole ladder. */
+  const NAV_SWIPE = 70;
+  let y0 = null, x0 = null;
+  phone.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.dock,.hud,.bubble')) { y0 = null; return; }
+    y0 = e.clientY; x0 = e.clientX;
+  });
+  phone.addEventListener('pointerup', (e) => {
+    if (y0 === null) return;
+    const dy = e.clientY - y0;
+    const dx = Math.abs(e.clientX - x0);
+    y0 = null;
+    if (Math.abs(dy) < NAV_SWIPE || Math.abs(dy) < dx) return;
+    go(dy > 0 ? 'map' : 'garden');
+  });
+
+  /* ---------------------------------------------------------------- toggles */
+
+  document.getElementById('viewBtn').addEventListener('click', () => {
+    go(state.view === 'map' ? 'garden' : 'map');
+  });
+  document.getElementById('nightBtn').addEventListener('click', (e) => {
+    state.night = !state.night;
+    e.currentTarget.dataset.on = state.night ? '1' : '';
+    e.currentTarget.textContent = state.night ? 'night' : 'daytime';
+    render(true);
+  });
+  [['bubbleBtn', 'bubbles'], ['lockBtn', 'locked'], ['chromeBtn', 'chrome']].forEach(([id, key]) => {
+    document.getElementById(id).addEventListener('click', (e) => {
+      state[key] = !state[key];
+      e.currentTarget.dataset.on = state[key] ? '1' : '';
+      render(true);
+    });
+  });
+
+  if (typeof Flora !== 'undefined' && Flora.injectDefs) Flora.injectDefs();
+  render(true);
+})();
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-24**
+Last updated: **2026-08-25**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -11,6 +11,41 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 `main` at the repository root. It is a single-screen idle garden — tap a talking flower, plant
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
+
+> **The world map is the direction now, and the dock changed with it, 2026-08-25.** The owner's
+> call: **the dock is meta, the map is navigation, and upgrades stay in the garden.** The dock is
+> heading for **Friends · Cards · (World) · Quests · Shop** with the world on a raised centre
+> pedestal — the shape large mobile casual games converge on. A region never gets a dock slot again;
+> Apiary and Craft were always a prototype shortcut. **Friends is a reserved slot, not a feature** —
+> it is a backend, and this is two people with no server. A goods market is a *place* on the map;
+> the IAP **Shop** is a *meta destination* in the dock, and real money still appears in exactly one
+> place.
+>
+> **The gesture was already free.** `ui.js` binds swipe-*up* in the garden to the Hollow and leaves
+> swipe-down unbound, so the map lands on the one free gesture and the whole game becomes one
+> vertical ladder: **map → garden → Hollow**. Not a pinch.
+>
+> **`tools/map-spike.html` is built and is the fastest way to try it** — a camera over one world
+> box, two stops, one CSS transform, toggles for night, collect bubbles, locked land and chrome.
+> **What it found changes the build plan: the dive cannot keep zooming until the garden fills the
+> screen.** A phone is 2.16:1 and a parcel is roughly square, so no scale both fills the frame and
+> keeps the neighbours out — and more decisively, the garden is *its own composition* (sky, quest
+> strip, plots as tappable cards, the burrow door) and rebuilding it inside a world box means
+> maintaining the garden twice. **So the map is a layer above the existing garden and the dive ends
+> in a cross-fade.** The map's garden is a thumbnail that only has to read at map distance.
+>
+> **Two rules taken from the design pass, and they are the guardrails:** **no region may be a second
+> garden** — every location is a producer, a transformer or a consumer, or the map becomes the
+> AdVenture Capitalist trap one level up. And **the map collects the boring half, the garden keeps
+> the interesting half** — one-tap collect pays coins and raw flowers, while mutations, rarity,
+> keepsakes, packs and the tap loop still require going in, so the map serves the 40-second session
+> and the garden the 7-minute one. **"Completed" means fully automated:** a region only shows a
+> collect-all bubble once its planter and drone are owned, which makes the drone an unlock rather
+> than a percentage. **The Market is the right second location** because it is a *consumer* and
+> therefore structurally unlike the garden — and it is the owner's own "gift store where people come
+> and ask for things", already specified in [13-order-system.md](13-order-system.md). See the top of
+> [10-decision-log.md](10-decision-log.md) and
+> [15-navigation-and-ia.md](15-navigation-and-ia.md).
 
 > **Creatures arrived, and the direction changed, 2026-08-16.** The diagnosis was the owner's: the
 > world had a place and a character but **no inhabitants**. So **habitat** was added as a second frame
@@ -429,7 +464,9 @@ The obvious next pieces, roughly in order:
    built: mementos buy **decorations and skins for the Hollow**, with a piece costing keepsakes from
    *two different creatures*, so decorating requires roster breadth rather than depth. The art
    already has a memento cubby waiting for it, and it is the *item-as-key* device in
-   [17-market-and-positioning.md](17-market-and-positioning.md). **This is the next piece.**
+   [17-market-and-positioning.md](17-market-and-positioning.md). **Still agreed, still unbuilt, and
+   now queued behind the map** — mementos have had no sink since 2026-08-18 and this is the piece
+   that closes that loop.
 4. **More pairs, or a seventh creature.** Eight pairs of a possible fifteen. Any new trait must
    declare a `pool`, and the suite fails if the roster becomes all one kind of effect, if more than a
    third sits in `yield`, or if any creature ends up in fewer than two pairs.
@@ -476,7 +513,24 @@ exactly 1.4× cost at Common across all nineteen tiers**, differing only in thro
 distinct-looking producers that all do the same thing is the AdVenture Capitalist decay pattern; see
 [17-market-and-positioning.md](17-market-and-positioning.md).
 
-The world map (navigation phase 2) stays paused. Don't start it without asking.
+**The world map is no longer paused.** As of 2026-08-25 it is the agreed direction and the spike is
+built. The order settled with the owner is: **spike (done) → the empty map → the Market as location
+two → collect-all gated on automation → a third region only after those have been played.** The
+"empty map" step is deliberate — the frame, the swipe, the garden thumbnail, the burrow, and three
+locked silhouettes, with nothing new to *do* up there. It kills the two dead dock tabs, creates the
+store screenshot and creates the aspiration surface before any content is built to fill it.
+
+**What is still open:** whether the apiary and the crafting bench come back as *places* (the
+2026-08-14 demotion folded both into garden adjacency, and the owner's sketch put them back on the
+map), and the region order after the Market.
+
+**A caution recorded so it stays visible.** The map manufactures collection moments, and a 2×
+rewarded video on a collect-all is the best-converting placement in casual — Kolibri takes roughly
+60% of Idle Miner Tycoon's revenue from that pattern. That is a real argument for the *first*
+region and not for six. The closest cozy comparable, **Cats & Soup, does roughly $300K/month on
+10M+ Play installs**, and **Terrarium: Garden Idle earns ~$9K/month on 11M installs** — reach
+without a reason to spend. Building a bigger map does not move this game toward the first number;
+distribution does. See [17-market-and-positioning.md](17-market-and-positioning.md).
 
 ## What comes after
 
@@ -835,9 +889,18 @@ stale line here costs them real time before they have any way to know it is wron
 > well fed, hungry, or asleep — and a tap on a creature opens its own panel. Read
 > `docs/22-creatures.md` end to end and the top few entries of `docs/10-decision-log.md`.
 >
-> **What's next is Decorate:** mementos finally get spent, on decorations for the Hollow, with a
-> piece costing keepsakes from two different creatures. Agreed and unbuilt. Check with me before
-> starting anything else — the Potting Bench and the Market are both live options too.
+> **What's next is the world map.** Swipe down from the garden to pull back to a world where the
+> garden, the Hollow's burrow and locked parcels of land all sit in one side-on scene — so the game
+> becomes one vertical ladder, map → garden → Hollow. Try `tools/map-spike.html` first; it is the
+> camera, the composition and the new dock in one file. **The dock is meta now, the map is
+> navigation, and upgrades stay in the garden** — Friends · Cards · (World) · Quests · Shop, with
+> the world on a raised centre button. The agreed order is: the empty map, then the Market as
+> location two, then collect-all gated on automation. **Two rules to hold:** no region may be a
+> second garden, and the map collects the boring half while the garden keeps the interesting half.
+> Read the top of `docs/10-decision-log.md` and `docs/15-navigation-and-ia.md`.
+>
+> **Decorate is still agreed and still unbuilt** — mementos have had no sink since August 18. Check
+> with me before starting anything else; the Potting Bench is also still a live option.
 >
 > **How I work.** I'm the designer; an engineer ports to Unity. Two people, modest revenue goal,
 > deliberately small scope. I want you as a **design advisor as much as an implementer** — push back
@@ -851,8 +914,8 @@ stale line here costs them real time before they have any way to know it is wron
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
 >   whole class of flaky tests caused by unpinned `Math.random`.
-> - **Spike the feel before building the system.** `tools/merge-spike.html` and
->   `tools/hollow-spike.html` both saved real time.
+> - **Spike the feel before building the system.** `tools/merge-spike.html`,
+>   `tools/hollow-spike.html` and `tools/map-spike.html` all saved real time.
 > - **More iconography, fewer sentences.** A standing note, and the thing I keep asking for.
 
 The point of the docs is that this briefing is short. If a new agent needs more than that, a

@@ -2,7 +2,9 @@
 
 **Status: phase 1 built, phases 2–5 specified but not built.** This is the agreed target structure
 for the game's navigation. Decided 2026-08-05; reasoning in
-[10-decision-log.md](10-decision-log.md).
+[10-decision-log.md](10-decision-log.md). **The dock's purpose was reframed by the owner
+2026-08-25** — read the next section first, since it supersedes the target structure below where
+the two disagree.
 
 Read alongside [08-ui-and-layout.md](08-ui-and-layout.md) for how the current UI is put together and
 [12-meta-layer-design.md](12-meta-layer-design.md) for the world this navigation has to serve.
@@ -35,6 +37,42 @@ tabs were a deliberate prototype shortcut and are not meant to survive.
 **Can you say what it is for in one word, and does no other tab do that?**
 
 Apply this before adding anything. "Badges" and "Decor" both fail it today.
+
+## The dock is meta, the map is navigation
+
+**Decided by the owner 2026-08-25, and it supersedes the target structure below where they
+conflict.** The dock was always a temporary shape — Apiary, Craft and Shop were built as tabs
+because there was nowhere else to put them, not because a place belongs in a menu.
+
+The shape it is heading for is the one every large mobile casual game converges on:
+
+```
+│ Friends │ Cards │ ( WORLD ) │ Quests │ Shop │
+```
+
+| Slot | One word | Contains |
+| --- | --- | --- |
+| **Friends** | *Social* | Invites and whatever social exists. **Reserve the slot; do not build it** — it is a backend, not a button, and this is a two-person team with no server. |
+| **Cards** | *Collection* | The card sets and albums. |
+| **World** | *Where* | The centre pedestal — raised, round, larger than the rest. Takes you to the map, and from the map into a place. |
+| **Quests** | *Goals* | Quests, levels, reputation, the Almanac, the creature roster — the progression surface. |
+| **Shop** | *Money* | Gems, IAP, remove-ads, starter packs. |
+
+Three rules follow, and they are the whole point of the change:
+
+**Navigation is the map, never the dock.** The apiary, the crafting bench and every future region
+are reached by pulling back to the world and going in. A region never gets a dock slot again.
+
+**Upgrades stay in the garden.** They act on the garden, so they live where the garden is. This is
+the same conclusion phase 4 below reached from the other direction — the dock cannot hold both
+meta destinations and per-place controls, and the per-place ones lose.
+
+**Real money appears in Shop and nowhere else.** A goods market or trading post is a *place* and
+belongs on the map; the IAP shop is a *meta destination* and belongs in the dock. They share a word
+and are not the same thing.
+
+The centre pedestal is not decoration. It is what makes the dock read as meta at a glance: four
+flat destinations and one raised button that means *play*.
 
 ## Target structure
 
@@ -190,9 +228,19 @@ menu.
 - A zoomed-out scene containing the garden and whatever regions still exist as locations. **Note,
   2026-08-14: the apiary and apothecary are no longer regions** — they fold into garden adjacency.
   See [12-meta-layer-design.md](12-meta-layer-design.md).
-- Tapping a location moves the camera to it; a back or pinch gesture returns to the map.
-- Land parcels purchasable on the map.
+- **Swipe down to pull back, swipe up to go in.** Not a pinch. The garden already binds swipe-up to
+  the Hollow (`ui.js`), and swipe-down is free, which makes the whole game one vertical ladder:
+  **map → garden → Hollow**. One gesture, one metaphor, no dock tab.
+- Land parcels purchasable on the map, drawn as silhouettes with a price. The silhouette is the
+  pull — you buy land you have been looking at.
 - Regions leave the dock.
+
+**The map is a layer above the garden, not a scene the garden lives inside.** Found in
+`tools/map-spike.html` on 2026-08-25: the dive cannot simply keep zooming until the garden fills
+the screen. The garden is its own composition — sky, quest strip, plots as tappable cards, the
+burrow door, the HUD — and rebuilding it inside a world box would mean maintaining the garden
+twice. So the camera move ends in a **cross-fade to the existing garden screen**, and the map's
+copy of the garden is a thumbnail that only ever has to read at map distance.
 
 Done when: every region is reachable from the map and none from the dock.
 

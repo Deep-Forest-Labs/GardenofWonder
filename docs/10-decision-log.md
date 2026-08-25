@@ -5,6 +5,85 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 — The dock stops being navigation, and the map becomes it
+
+**The owner's call, and it settles a tension the IA doc has carried since 2026-08-05.** The dock was
+never meant to be a menu of places — Apiary, Craft and Shop became tabs because there was nowhere
+else to put them. The shape it is heading for is the one large mobile casual games converge on:
+**Friends · Cards · (World) · Quests · Shop**, with the world on a raised centre pedestal.
+
+**The dock is meta; the map is navigation; upgrades stay in the garden.** Three rules, and the third
+is phase 4 of [15-navigation-and-ia.md](15-navigation-and-ia.md) arrived at from the other
+direction — a dock cannot hold both meta destinations and per-place controls, and the per-place ones
+are the ones that lose. A region never gets a dock slot again.
+
+**One clarification applied rather than asked about:** a goods market or trading post is a *place*
+and goes on the map; the IAP shop is a *meta destination* and stays in the dock. They share a word.
+The standing rule that real money appears in exactly one place is unaffected.
+
+**Friends is a reserved slot, not a feature.** Two people, no server. Drawing it greyed in the spike
+is how the bar's proportions get judged without anyone committing to build a backend.
+
+### The gesture was already free
+
+**Swipe down, not pinch.** `ui.js` binds swipe-*up* in the garden to the Hollow and leaves swipe-down
+unbound, so the map slots onto the ladder that already exists: **map → garden → Hollow**, one axis,
+one metaphor. The owner's instinct ("scroll their finger down") landed on the one free gesture in
+the game.
+
+### What the spike found, which changes the build plan
+
+`tools/map-spike.html` — a camera over one world box, two stops, one CSS transform.
+
+**The dive cannot keep zooming until the garden fills the screen.** A phone is 2.16:1 and a garden
+parcel is roughly square, so a pure camera zoom either crops the parcel or leaves its neighbours in
+frame; there is no scale that does neither. More decisively, the garden screen is *its own
+composition* — sky, quest strip, plots as tappable cards, the burrow door, the HUD — and rebuilding
+it inside a world box would mean maintaining the garden twice.
+
+So **the map is a layer above the existing garden**, and the camera move ends in a cross-fade to the
+screen that already exists. The map's copy of the garden is a thumbnail that only ever has to read
+at map distance. This is the difference between a week of work and a rewrite, and it was worth the
+spike to find.
+
+**Two art findings, both only visible in a picture.** Locked land drawn as an isometric diamond is
+wrong in a side-on scene — it reads as a mountain. Overgrown ground behind a signpost reads as land
+you could clear, stays side-on, and asks to be bought. And a map with nothing between its landmarks
+reads as a *diagram*: trees, tufts and birds are not polish here, they are what makes the space a
+place. Both were rejected versions before the current one.
+
+### The direction, and the pushback that shaped it
+
+The owner's sketch was a map of many areas each harvesting a different resource, with a completed
+area collectable in one tap without entering it. Two objections were raised and both stand:
+
+**N areas that differ only in theme and rate is the AdVenture Capitalist trap one level up** — the
+same disease [17-market-and-positioning.md](17-market-and-positioning.md) already diagnoses in
+nineteen seeds that all yield 1.4× cost. The rule taken from it: **no region may be a second
+garden.** Every location is a producer, a transformer, or a consumer.
+
+**"You never have to go in again" deletes the game's only advantage.** Craft and juice are what this
+game has; a screen of collect-all bubbles is a screen where no tap answers. The line drawn instead:
+**the map collects the boring half, the garden keeps the interesting half** — one tap pays coins and
+raw flowers, while mutations, rarity, keepsakes, packs and the tap loop still require going in. The
+map then serves the 40-second session and the garden the 7-minute one, which is the session shape
+the research already calls for.
+
+**"Completed" is defined as fully automated.** There is no completion in a game with endless Bloom
+Mastery. A region shows a collect-all bubble only when its planter and drone are owned — which turns
+buying the drone into unlocking a convenience rather than another percentage, and is a far better
+upgrade than anything currently in the shop.
+
+**The Market is the right second location**, because it is a *consumer* and therefore structurally
+unlike the garden. It is also the goal generator, the reputation source and the liveops surface, and
+it is already specified in [13-order-system.md](13-order-system.md). The owner's own framing — "a
+gift store where people come and ask for things" — is that document.
+
+**Still open:** whether the apiary and the crafting bench return as places (the 2026-08-14 demotion
+put both into garden adjacency), and the region order after the Market.
+
+---
+
 ## 2026-08-20 (last) — Two clocks become one, and the panel loses three boxes
 
 **The complaint was that the screen had too many boxes**, and it was right — the creature panel had
