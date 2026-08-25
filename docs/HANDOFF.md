@@ -87,6 +87,13 @@ from quests and levels.
 > driving the new cheats. **Test it with the Developer tools:** *Creature food clocks* — Drain 1h /
 > 4h / 24h, Send them to sleep, Feed everyone. 97 assertions.
 >
+> **The creature panel is ordered by what you came to do, 2026-08-20.** Who it is → what it does →
+> how grown it is → **Feed and every action with it**. A sleeping creature must never need a scroll
+> to reach the food that wakes it: at 375×812 the food buttons end 518px into a 582px body and the
+> rest button at 579px, so **anything added above them pushes the cure off screen**. Two meters —
+> *Awake* and *Well fed*, both to the same 24h cap — so you can see what a Honeypot actually buys
+> before you buy it.
+>
 > **The panel's growth row is bloom → bar → star, 2026-08-20.** No "Growing on X" line: the real
 > bloom is drawn in a token on the left (`Flora.head()`), the count sits *inside* the bar, and the
 > star being climbed toward is on the right. **The owner's standing note is that more iconography
@@ -552,6 +559,12 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 ## Traps in this codebase
 
 Things that cost real time to discover. None are visible from a casual read.
+
+**Never measure sheet contents with `getBoundingClientRect()` while the sheet is opening.** `.sheet`
+carries a `translateY` transition, so absolute positions read hundreds of pixels off — and in an
+automated tab that transition can freeze part-way and never settle, so waiting does not help.
+Measure **relative to `#sheetBody`**, which is transform-independent. This produced two wrong
+diagnoses in one session, including a fold check that claimed content was off screen when it was not.
 
 **Check `git branch -r` before starting a specified phase.** Phase 4 was built twice, in parallel,
 by two agents that did not know about each other — competently and incompatibly, with different

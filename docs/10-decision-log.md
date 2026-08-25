@@ -5,6 +5,53 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-20 (last) — The creature panel is ordered by what you came to do
+
+**The complaint was concrete and correct:** *"the pet might be asleep, and I have to scroll down
+through a lot of stuff to even tap on the things to feed."* A panel whose cure for its own alarm is
+below the fold is a broken panel.
+
+**The order the owner set, and it is now the design:** who it is → what it does → how grown it is →
+everything you might have opened this to do. The trait moved up to sit directly under the stars,
+because "what does this pet actually do" is the question the panel exists to answer, and Feed moved
+up with every action attached to it, out-or-rest included.
+
+**The number that has to stay true:** at 375×812 the food buttons end 518px into a 582px body and
+the rest button at 579px. Both clear the fold with almost nothing spare, and getting the second one
+there took ~20px of trimmed padding. **Anything added above them pushes the cure off screen** —
+that is now written into the creature doc as the thing to re-check.
+
+**Two meters, because a number is not a picture.** The owner asked for a bar showing how fed a
+creature is, "so we can see how far we are from making the pet feel well fed and buffed". Awake and
+Well fed both run to the same 24h cap, so they sit under each other and compare directly. The value
+of drawing them rather than printing a timestamp is immediate: a Clover Nibble on a sleeping
+creature fills Awake to 17% and Well fed to 4%; a Honeypot takes them to 83% and 54%. You can see
+what a purchase buys before you make it.
+
+That made the sleep alert redundant at its old length — the Awake meter already reads `Asleep`, so
+the alert shrank to one line carrying only what a meter cannot say, which is what to do about it.
+
+**The level row was rebuilt from a pencil sketch**, and the sketch was right about all three things:
+a **rounded-square** bloom token rather than a circle, the **number inside the star** rather than
+beside it, and the caption living *inside* the bar's own height. That last one is the real idea — a
+short bar leaves vertical void next to a 50px token, so making the bar as tall as the tokens and
+stacking `60 / 63` over `LAVENDER HARVESTED` inside it fills the void instead of costing another
+row. Iconography that pays for itself in space rather than spending it.
+
+**A slip worth recording:** the sleep alert briefly picked a pronoun by comparing the creature's
+name against a list. The roster is a mix of he, she and it, that already lives in each creature's
+authored lines, and a name check in the UI would have been a second place to keep it right and a
+first place to get it wrong. It says the creature's name instead.
+
+**And a measurement trap, twice in one session:** `getBoundingClientRect()` on anything inside the
+sheet is useless while the open transition is running, and in an automated tab that transition can
+freeze part-way and never finish. It read the food buttons 660px lower than they render. Measure
+**relative to `#sheetBody`** instead — that is transform-independent and it is what the fold check
+above is based on.
+
+---
+
+
 ## 2026-08-20 (later) — A head over the dock, and a progress row made of pictures
 
 **The bug: the breakout art stayed on screen after the sheet closed.** It is positioned *above* the

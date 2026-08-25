@@ -652,53 +652,58 @@
     const waiting = Game.keepsakesWaiting(id);
     const canTend = tending || Game.habitatFree() > 0;
 
-    const state = !tending
-      ? `<span class="food-state"><span>Resting at home. It earns nothing and leaves nothing
-         while it is in.</span></span>`
-      : asleep
-        ? '<span class="food-state out"><span>Fast asleep, and not working. Feed it to wake it up.</span></span>'
-        : `<span class="food-state${fed ? ' on' : ''}">${Icons.get('clock')}<span>Up for
-           <b data-span="${Math.round(Game.nowSeconds() + Game.critterAwakeFor(id))}">${
-             fmtSpan(Game.critterAwakeFor(id))}</b>${fed
-             ? `, well fed for <b data-span="${Math.round(Game.nowSeconds() + Game.critterFedFor(id))}">${
-                 fmtSpan(Game.critterFedFor(id))}</b> — working like ★${Game.critterWorkLevel(id)}.`
-             : `, working like ★${level}. Not well fed.`}</span></span>`;
-
-    /* The one number a player watches climb, so it gets to be the biggest thing
-       in the panel rather than a 7px sliver of trim.
-
-       Read left to right it is a sentence made of pictures: this bloom, this far
-       along, toward this star. The bloom itself does the naming, so there is no
-       "Growing on ..." line above it — the caption only has to say which flower,
-       and the count lives inside the bar where the eye already is. */
-    const bloom = seed ? `<span class="cp-bloom">${Flora.head(seed, 34)}</span>` : '';
+    /* The level, read left to right as a sentence made of pictures: this bloom,
+       this far along, toward this star. The bar is as tall as the tokens beside
+       it so the count and the caption stack INSIDE it — the caption fills the
+       void next to a 26px bar instead of costing the panel another row. */
+    const meterPct = (sec) => Math.min(100, (sec / Game.foodCapSeconds()) * 100).toFixed(1);
+    const bloom = seed ? `<span class="cp-token">${Flora.head(seed, 34)}</span>` : '';
+    const starToken = (n) => `<span class="cp-token cp-goal">${Icons.get('star')}<b>${n}</b></span>`;
     const grow = goal
       ? `<div class="cp-grow">
-           <div class="cp-grow-row">
-             ${bloom}
-             <div class="cp-bar">
-               <i style="width:${(Math.min(1, goal.have / goal.qty) * 100).toFixed(1)}%"></i>
-               <span class="cp-bar-num">${fmt(Math.min(goal.have, goal.qty))} / ${fmt(goal.qty)}</span>
-             </div>
-             <span class="cp-grow-goal">${Icons.get('star')}${goal.level}</span>
+           ${bloom}
+           <div class="cp-bar">
+             <i style="width:${(Math.min(1, goal.have / goal.qty) * 100).toFixed(1)}%"></i>
+             <span class="cp-bar-text">
+               <b>${fmt(Math.min(goal.have, goal.qty))} / ${fmt(goal.qty)}</b>
+               <em>${seed ? seed.name : 'Blooms'} harvested</em>
+             </span>
            </div>
-           <div class="cp-grow-cap">${seed ? seed.name : 'Blooms'} harvested</div>
+           ${starToken(goal.level)}
          </div>`
       : `<div class="cp-grow maxed">
-           <div class="cp-grow-row">
-             ${bloom}
-             <div class="cp-bar">
-               <i style="width:100%"></i>
-               <span class="cp-bar-num">Fully grown</span>
-             </div>
-             <span class="cp-grow-goal">${Icons.get('star')}${CREATURE_STARS}</span>
+           ${bloom}
+           <div class="cp-bar">
+             <i style="width:100%"></i>
+             <span class="cp-bar-text"><b>Fully grown</b><em>Nothing left to ask for</em></span>
            </div>
+           ${starToken(CREATURE_STARS)}
          </div>`;
 
-    /* Keepsakes are collected out in the garden, where the creature is actually
-       working. Down here it is at home and simply exists — so this says what is
-       waiting and where, rather than offering a button that would make the
-       Hollow a second harvesting screen. */
+    /* Two clocks, two meters. Both run to the same 24h cap, so they are directly
+       comparable — and the point of drawing them is to see how far a feed gets
+       you rather than to read a timestamp and do the arithmetic yourself. */
+    const meters = `<div class="cp-meters">
+      <div class="cp-meter${asleep ? ' out' : ''}">
+        <span class="cp-meter-k">${Icons.get('clock')}Awake</span>
+        <div class="cp-mbar"><i style="width:${meterPct(Game.critterAwakeFor(id))}%"></i></div>
+        <span class="cp-meter-v">${asleep ? 'Asleep' : fmtSpan(Game.critterAwakeFor(id))}</span>
+      </div>
+      <div class="cp-meter fed${fed ? ' on' : ''}">
+        <span class="cp-meter-k">${Icons.get('star')}Well fed</span>
+        <div class="cp-mbar"><i style="width:${meterPct(Game.critterFedFor(id))}%"></i></div>
+        <span class="cp-meter-v">${fed ? fmtSpan(Game.critterFedFor(id)) : 'No'}</span>
+      </div>
+    </div>`;
+
+    const alert = asleep
+      /* One line, because the Awake meter below already says "Asleep" — this only
+         has to add the part the meter cannot: what to do about it. Named rather
+         than pronouned, since the roster is a mix of he, she and it and that
+         lives in each creature's own authored lines. */
+      ? `<p class="cp-alert">${Icons.get('clock')}<span>Not working — a meal wakes ${def.name} up.</span></p>`
+      : '';
+
     const keep = !tending
       ? `<span class="critter-memento${held ? '' : ' none'}">${Icons.get('gift')}${
           def.keepsake.name} <b>×${fmt(held)}</b> kept</span>`
@@ -710,36 +715,37 @@
 
     const pairs = CREATURE_PAIRS.filter((p) => p.of.indexOf(id) !== -1);
 
-    /* A nameplate rather than a title bar. The creature itself is standing above
-       the sheet, so this says who that is in the game's own display type. */
+    /* Order is the design here. Who it is, what it does, how grown it is, and
+       then everything you might have opened this to DO — a sleeping creature
+       should never need a scroll to reach the food that wakes it. */
     return `<div class="panel critter-panel">
       <div class="cp-plate${asleep ? ' asleep' : ''}">
         <h2 class="cp-name outlined">${def.name}</h2>
         <p class="cp-species">${def.species}</p>
         ${critterStars(level, fed && !asleep)}
       </div>
-      <p class="cp-about">${def.about}</p>
-      ${grow}
-      <div class="cp-cards">
-        ${trait ? `<div class="cp-card"><span class="cp-card-k">${Icons.get(trait.icon)}${trait.name}</span>
-          <span class="cp-card-v">${trait.desc(now)}</span></div>` : ''}
-        <div class="cp-card${asleep ? ' bad' : ''}">${state}</div>
-        <div class="cp-card">${keep}</div>
-      </div>
 
-      <h3>${Icons.get('star')} Out or resting</h3>
-      <p class="stat-note">${Game.habitatUsed()} of ${Game.habitatSlots()} tending${
-        canTend ? '' : ' — rest someone else to bring this one out'}. Only a creature that is out
-        works, and only one that is out leaves keepsakes.</p>
-      <button class="big-btn" data-tend="${id}" data-on="${tending ? '1' : '0'}"
-        ${canTend ? '' : 'disabled'}>${tending ? 'Send it home to rest' : 'Send it out to tend'}</button>
+      ${trait ? `<div class="cp-card cp-trait"><span class="cp-card-k">${Icons.get(trait.icon)}${trait.name}</span>
+        <span class="cp-card-v">${trait.desc(now)}</span></div>` : ''}
+
+      ${grow}
 
       <h3>${Icons.get('honey')} Feed</h3>
+      ${alert}
+      ${tending ? meters : ''}
       ${tending
         ? `<span class="food-row">${foodButtons(id)}</span>`
-        : '<p class="stat-note">Send it out first — food is for a creature that is working.</p>'}
+        : '<p class="stat-note">Resting at home. It earns nothing and leaves nothing while it is in — send it out and food will do something.</p>'}
+      <button class="big-btn${tending ? ' quiet' : ''}" data-tend="${id}" data-on="${tending ? '1' : '0'}"
+        ${canTend ? '' : 'disabled'}>${tending ? 'Send it home to rest' : 'Send it out to tend'}</button>
+      <p class="stat-note cp-slots">${Game.habitatUsed()} of ${Game.habitatSlots()} tending${
+        canTend ? '' : ' — rest someone else to bring this one out'}</p>
+
+      <h3>${Icons.get('gift')} Keepsakes</h3>
+      <div class="cp-card">${keep}</div>
 
       <h3>${Icons.get('sprout')} Say hello</h3>
+      <p class="cp-about">${def.about}</p>
       <button class="big-btn" data-pet="${id}">Pet ${def.name}</button>
       <p class="cp-said" id="cpSaid">${def.lines.idle[0]}</p>
 
@@ -759,6 +765,7 @@
       }).join('')}` : ''}
     </div>`;
   }
+
 
   function feedRows() {
     const home = Game.crittersHome();

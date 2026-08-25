@@ -1923,7 +1923,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 
 /* ---------- one creature, and everything you can do to it ---------- */
-.cp-plate{text-align:center;margin:2px 0 10px;padding-top:6px}
+.cp-plate{text-align:center;margin:0 0 8px;padding-top:4px}
 .cp-name{
   margin:0;font-size:clamp(26px,7.4vw,34px);font-weight:800;letter-spacing:.02em;line-height:1.05;
 }
@@ -1931,66 +1931,112 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   margin:1px 0 0;font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink-soft,#7a6047);
 }
-.cp-plate .critter-stars{margin:6px 0 0;gap:3px}
+.cp-plate .critter-stars{margin:4px 0 0;gap:3px}
 .cp-plate .cr-star svg{width:19px;height:19px}
 .cp-plate.asleep .cp-name{opacity:.75}
 
-/* The one number a player watches climb, given room to be watched. */
+/* The level, laid out as the owner sketched it: a rounded-square bloom token,
+   a bar tall enough to stack the count AND its caption inside, and the star with
+   its number IN it rather than beside it. The caption filling the bar's own
+   height is the point — beside a short bar it would have cost another row. */
 .cp-grow{
-  margin:0 0 10px;padding:10px 12px 11px;
-  border:3px solid var(--ink);border-radius:16px;
+  display:flex;align-items:center;gap:9px;
+  margin:0 0 10px;padding:8px;
+  border:3px solid var(--ink);border-radius:18px;
   background:linear-gradient(180deg,#fffdf7,var(--paper-3,#f7e7c4));
   box-shadow:0 3px 0 rgba(44,26,16,.22);
 }
-/* bloom · bar · star — a sentence made of pictures, read left to right. */
-.cp-grow-row{display:flex;align-items:center;gap:9px}
-.cp-bloom{
-  flex:0 0 42px;width:42px;height:42px;
+.cp-token{
+  flex:0 0 50px;width:50px;height:50px;position:relative;
   display:grid;place-items:center;
-  border:3px solid var(--ink);border-radius:50%;
-  background:radial-gradient(circle at 36% 30%, #fffdf7, var(--paper-3,#f7e7c4));
-  box-shadow:0 3px 0 rgba(44,26,16,.24);
+  border:3px solid var(--ink);border-radius:14px;
+  background:radial-gradient(circle at 36% 28%, #fffdf7, var(--paper-3,#f7e7c4));
+  box-shadow:0 3px 0 rgba(44,26,16,.2);
 }
-.cp-bloom .bloom{width:30px;height:30px;display:block}
-.cp-grow-cap{
-  margin-top:6px;text-align:center;
-  font-size:12px;font-weight:800;letter-spacing:.03em;color:var(--ink-soft,#7a6047);
+.cp-token .bloom{width:34px;height:34px;display:block}
+/* The number lives inside the star. Two glyphs at most, so it always fits. */
+.cp-goal{background:linear-gradient(180deg,#fff8d6,#ffe9a8)}
+.cp-goal svg{width:42px;height:42px;display:block}
+.cp-goal b{
+  position:absolute;inset:0;display:grid;place-items:center;
+  padding-top:2px;font-size:17px;font-weight:800;line-height:1;color:var(--ink);
 }
-.cp-grow-goal{
-  flex:0 0 auto;
-  display:inline-flex;align-items:center;gap:3px;
-  padding:4px 11px 4px 8px;border:3px solid var(--ink);border-radius:999px;
-  background:linear-gradient(180deg,#fff8d6,#ffd43b);
-  font-size:14px;font-weight:800;color:var(--ink);
-  box-shadow:0 3px 0 rgba(44,26,16,.24);
-}
-.cp-grow-goal svg{width:15px;height:15px;color:#f59f00}
 .cp-bar{
   position:relative;flex:1;min-width:0;
-  height:26px;border:3px solid var(--ink);border-radius:999px;
+  height:50px;border:3px solid var(--ink);border-radius:14px;
   background:#e3d6bd;overflow:hidden;
 }
 .cp-bar i{
   display:block;height:100%;
   background:linear-gradient(180deg,#b2f2bb,#51cf66);
-  box-shadow:inset 0 -5px 0 rgba(44,26,16,.14);
+  box-shadow:inset 0 -6px 0 rgba(44,26,16,.13);
   transition:width .4s cubic-bezier(.22,1,.28,1);
 }
-/* The count sits IN the bar, where the eye already is. Outlined so it stays
-   legible over both the filled and the empty half. */
-/* The count sits IN the bar, where the eye already is. Dark ink with a white
-   halo rather than the house white-on-ink outline: at 13px those eight offset
-   copies crowd the glyphs into mud, and a halo stays legible over both the
-   green fill and the pale track. */
-.cp-bar-num{
-  position:absolute;inset:0;display:grid;place-items:center;
-  font-size:13px;font-weight:800;line-height:1;color:var(--ink);
-  letter-spacing:.02em;
+.cp-bar-text{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;
+  pointer-events:none;text-align:center;padding:0 6px;
+}
+/* Dark ink with a white halo, not the house white-on-ink outline: at this size
+   the eight offset copies crowd the glyphs into mud, and a halo stays clean
+   over both the filled and the empty half. */
+.cp-bar-text b{
+  font-size:15px;font-weight:800;line-height:1;color:var(--ink);letter-spacing:.02em;
   text-shadow:0 1px 0 rgba(255,255,255,.95),0 -1px 0 rgba(255,255,255,.8),
               1px 0 0 rgba(255,255,255,.8),-1px 0 0 rgba(255,255,255,.8);
-  pointer-events:none;
+}
+.cp-bar-text em{
+  font-style:normal;font-size:9.5px;font-weight:800;line-height:1.1;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--ink);opacity:.66;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  text-shadow:0 1px 0 rgba(255,255,255,.8);
 }
 .cp-grow.maxed .cp-bar i{background:linear-gradient(180deg,#ffe9a8,#ffc93c)}
+
+/* Two clocks, two meters, both running to the same 24h cap so they can be read
+   against each other. Drawing them is the point: a number tells you when the
+   boost ends, a bar tells you how much of one a Honeypot would actually buy. */
+.cp-meters{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.cp-meter{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;
+  padding:7px 10px;border:3px solid var(--ink);border-radius:14px;
+  background:var(--paper-2,#f3e4c6);
+}
+.cp-meter-k{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);
+}
+.cp-meter-k svg{width:14px;height:14px;flex:0 0 14px}
+.cp-mbar{height:12px;border:2.5px solid var(--ink);border-radius:999px;background:#e3d6bd;overflow:hidden}
+.cp-mbar i{
+  display:block;height:100%;background:linear-gradient(180deg,#b2f2bb,#51cf66);
+  transition:width .4s cubic-bezier(.22,1,.28,1);
+}
+.cp-meter.fed .cp-mbar i{background:linear-gradient(180deg,#ffe9a8,#ffc93c)}
+.cp-meter-v{
+  font-size:11.5px;font-weight:800;color:var(--ink-soft,#7a6047);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+/* Empty and urgent. The one meter that means the creature has stopped working. */
+.cp-meter.out{background:#eae6fb;box-shadow:inset 0 0 0 2px #b3a7e8}
+.cp-meter.out .cp-meter-v{color:var(--ink)}
+.cp-meter.on .cp-meter-v{color:var(--ink)}
+
+/* The thing you opened the panel to fix, said once and above the buttons. */
+.cp-alert{
+  display:flex;align-items:flex-start;gap:7px;margin:0 0 8px;padding:8px 11px;
+  border:3px solid var(--ink);border-radius:14px;
+  background:linear-gradient(180deg,#e9e4ff,#d5cdf7);
+  font-size:12.5px;font-weight:700;line-height:1.35;color:var(--ink);
+  box-shadow:0 3px 0 rgba(44,26,16,.24);
+}
+.cp-alert svg{width:15px;height:15px;flex:0 0 15px;margin-top:1px}
+.cp-slots{margin:7px 0 0;text-align:center}
+.critter-panel .big-btn.quiet{
+  background:linear-gradient(180deg,#fffdf7,var(--paper-3,#f7e7c4));
+  font-size:14px;
+}
+.cp-trait{margin-bottom:8px}
 
 /* Each fact in its own chip, so the panel reads as a character card rather than
    as a paragraph of state. */
@@ -2010,7 +2056,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 
 .critter-panel h3{
   display:flex;align-items:center;gap:7px;
-  margin:16px 0 7px;font-size:14px;font-weight:800;color:var(--ink);
+  margin:12px 0 6px;font-size:14px;font-weight:800;color:var(--ink);
 }
 .critter-panel h3 svg{width:16px;height:16px;flex:0 0 16px}
 .cp-head{

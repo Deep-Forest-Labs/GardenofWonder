@@ -338,17 +338,47 @@ display type with the species beneath it, a big star row, and every fact in its 
 sci-fi chrome, and borrowing its layout ideas is right where borrowing its colours would put a
 different game's skin on this one. The owner confirmed that call.
 
-**The growth row is a sentence made of pictures**, read left to right: **the bloom itself** in a
-round token, then the bar with the count **inside** it, then the star being climbed toward. There is
-deliberately no "Growing on Moonflower" line above it — the bloom does the naming, the caption
-underneath only has to say which flower, and nobody needs to be told that a progress bar is
-progress. The standing note from the owner is that **more iconography beats more sentences
-everywhere in this game**, and this row is the worked example.
+**The growth row is a sentence made of pictures**, read left to right and drawn from the owner's
+sketch: **the bloom itself** in a rounded-square token, then the bar, then **the star with its
+number inside it** — combined, the way other games do it, rather than a star icon sitting next to a
+number. There is deliberately no "Growing on Moonflower" line above it: the bloom does the naming
+and nobody needs telling that a progress bar is progress. The standing note from the owner is that
+**more iconography beats more sentences everywhere in this game**, and this row is the worked
+example.
 
-Two small things that matter in it: the count sits in the bar because that is where the eye already
-is, and it is dark ink with a **white halo** rather than the house white-on-ink outline — at 13px
+**The bar is as tall as the tokens beside it, so the count and the caption stack inside it.** That
+is the whole trick — a short bar leaves vertical void next to a 50px token, and putting
+`60 / 63` over `LAVENDER HARVESTED` fills that void instead of costing the panel another row.
+
+The count is dark ink with a **white halo** rather than the house white-on-ink outline: at this size
 those eight offset copies crowd the glyphs into mud, where a halo stays clean over both the filled
 and the empty half.
+
+### The order of the panel is the design, 2026-08-20
+
+Priority, top to bottom, set by the owner: **who it is → what it does → how grown it is → everything
+you might have opened this to do.**
+
+1. The creature, standing on the sheet.
+2. Name, species, stars.
+3. **The trait** — what this pet actually does, promoted above everything else.
+4. **The level row**, as above.
+5. **Feed**, and every action with it.
+
+**A sleeping creature must never need a scroll to reach the food that wakes it.** That was the
+complaint that prompted the reorder, and it is the thing to re-check whenever anything is added to
+this panel: at 375×812 the food buttons end 518px into a 582px body, and the out-or-rest button at
+579px. Both are above the fold with almost nothing to spare, so a new block above them pushes the
+cure for the problem off screen.
+
+**Two meters, because a number is not a picture.** *Awake* and *Well fed* both run to the same 24h
+cap, so they are directly comparable — and the point of drawing them rather than printing a
+timestamp is that you can see **how much of one a Honeypot actually buys**. Feeding a sleeping
+creature a Clover Nibble moves Awake to 17% and Well fed to 4%; a Honeypot on top takes them to 83%
+and 54%. The Awake meter turns urgent and reads `Asleep` at zero.
+
+The sleep alert above them is **one line**, because the Awake meter already says *Asleep* — the alert
+only has to add the part a meter cannot, which is what to do about it.
 
 **The art is hidden by CSS whenever the sheet is not `.open`**, not by a JS call on the close path.
 It rides the sheet's transform, and a closed sheet parks just below the bottom edge — which left a
