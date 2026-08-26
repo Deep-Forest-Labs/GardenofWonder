@@ -249,12 +249,36 @@ Behaviour:
 - Re-rendering preserves `scrollTop` unless the mode changed, so buying an upgrade doesn't jump you
   back to the top of a long list.
 
+### The plant picker row
+
+A `seeds` row is a shelf item, not a table row. Left to right: a circular art badge tinted from the
+seed's own bloom, then name plus verb chip, then the stat pills, then the trait note if the seed
+carries a verb, then the green go button.
+
+```
+( ෆ )  Bluebell  KEEPER
+       ( 180 ) ( 24s ) ( 252–2,016 )              ( ↑ )
+       [ Neighbouring plots grow 15% faster. ]
+```
+
+**Everything in the row has to be decision-relevant, and the trait note is the most decision-relevant
+thing in it.** The flavour line was cut on 2026-08-26 and now lives only in the Almanac — the two
+were saying the same thing in two registers, and the prose was the half that could not be acted on.
+A row is roughly a third shorter for it, which is the point: the garden screen is calm because it
+shows nine objects and one number, and the picker should read as a shelf of nine objects rather than
+a table of fifty-six facts.
+
+The row carries the full card material — 3px ink, `0 4px 0 var(--ink-2)`, and since 2026-08-26 the
+`0 8px 14px rgba(44,26,16,.24)` contact shadow the plot has, so rows sit *above* the paper rather
+than on it. The press collapses the lip and tightens the shadow together.
+
 ### The Almanac seed row
 
-The `bonuses` panel lists all nineteen seeds. A grown row is two lines; an ungrown row is one.
+The `bonuses` panel lists all nineteen seeds. A grown row is three lines; an ungrown row is two.
 
 ```
 🌼  Daisy                       LEGENDARY   ×512
+    Swift starter bloom; perfect for keeping early plots busy.
     Tier 13 · 512 / 1,000 total  ▓▓▓▓▓░░░    +60%
 ```
 
@@ -262,11 +286,17 @@ The top line is three columns and no sentence — bloom and name, best rarity, l
 name flexes and ellipsises; rarity and count are fixed width so the columns line up down the list.
 The rarity label is tinted per tier (`.r-rare` / `.r-epic` / `.r-legend`); Common stays grey.
 
-The second line is the **current mastery goal only**, never the rest of the ladder: tier number,
+The middle line is `.seed-desc` — the seed's flavour text, which lives **here and nowhere else**.
+It moved out of the plant picker on 2026-08-26: a line that carries no decision is weight on a
+screen where every row is a decision, and the Almanac is the reference page where a player has come
+to read rather than to choose. Ungrown rows keep it, since the name and the bloom are already shown
+and the copy spoils nothing.
+
+The last line is the **current mastery goal only**, never the rest of the ladder: tier number,
 progress against the goal, a thin bar, and the yield earned so far. A gem pip sits beside the goal
 text when the tier being climbed is a fifth one, so the reward is visible before it lands. Ungrown
-rows keep the bloom and name, show a dash in both columns, dim to 45%, and get no second line —
-the first harvest starts the climb toward tier 1.
+rows show a dash in both columns, dim to 45%, and get no goal line — the first harvest starts the
+climb toward tier 1.
 
 `ui.js` reads `Game.masteryGoal(id)`, `Game.masteryOf(id)` and `Game.masteryMult(id)` and does no
 ladder arithmetic of its own. Track labels are UI copy, in `MASTERY_TRACK`: `Rare+` and `Epic+`,

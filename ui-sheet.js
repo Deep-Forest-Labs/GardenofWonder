@@ -463,7 +463,6 @@
               <span class="stat good">${Icons.get('coin')}${fmt(s.yield)}–${fmt(max)}</span>
               ${drops.join('')}
             </span>
-            <span class="seed-desc">${s.desc}</span>
             ${verbNote(s)}
           </span>
           <span class="seed-go">Level ${s.unlockLevel}</span>
@@ -479,7 +478,6 @@
             <span class="stat good">${Icons.get('coin')}${fmt(s.yield)}–${fmt(max)}</span>
             ${drops.join('')}
           </span>
-          <span class="seed-desc">${s.desc}</span>
           ${verbNote(s)}
         </span>
         <span class="seed-go">${Icons.get(can ? 'sprout' : 'lock')}</span>
@@ -1041,6 +1039,7 @@
       if (!goal || !rdef) {
         return `<div class="almanac-row dim">
           <div class="almanac-row-top">${head}<span class="r">—</span><span class="c">—</span></div>
+          <span class="seed-desc">${s.desc}</span>
         </div>`;
       }
       const fill = goal.qty ? Math.max(0, Math.min(1, goal.have / goal.qty)) : 0;
@@ -1051,6 +1050,7 @@
           <span class="r r-${rdef.key}">${rdef.label}</span>
           <span class="c">×${fmt(n)}</span>
         </div>
+        <span class="seed-desc">${s.desc}</span>
         <div class="almanac-row-goal">
           <span class="g">Tier ${goal.tier} · ${fmt(goal.have)} / ${fmt(goal.qty)} ${MASTERY_TRACK[goal.track]}${gemTier ? `<span class="gem-pip">${Icons.get('gem')}</span>` : ''}</span>
           <i class="mastery-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${goal.qty}" aria-valuenow="${Math.min(goal.have, goal.qty)}" aria-label="${s.name} mastery tier ${goal.tier}"><b style="transform:scaleX(${fill})"></b></i>

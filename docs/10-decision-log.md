@@ -5,6 +5,39 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 — The flavour line moved to the Almanac, because the picker is for choosing
+
+**Every seed row said the same thing twice in two registers.** *"Shaded blossom that rewards patient
+gardeners"* and *"Neighbouring plots grow 15% faster"* are one fact at two volumes, and only one of
+them can be acted on. The picker was carrying seven facts a row across eight rows — around fifty-six
+on one screen — against the garden's nine objects and one number. Restyling thirty pills to be
+louder without cutting anything would only have produced a loud dense screen.
+
+**Cutting the prose was the right half to cut, and the reasoning is not "less is more".** The trait
+note carries a decision; the flavour line carries a mood. A screen a player opens *to choose* should
+hold what changes the choice, and a screen they open *to read* should hold the rest. The Almanac is
+already that reading screen — it renders every bloom at 22px next to a lifetime count and a mastery
+ladder — so the copy did not get deleted, it got filed. Ungrown rows keep it too, since the name and
+the bloom are already visible there and there is nothing to spoil.
+
+**The row lost about a third of its height and all of its grey at once.** That was the second reason:
+the flavour line was the last `opacity: .7` text on the screen, and two lines of washed-out prose per
+row was doing more damage to the sheet's calm than the pills were. Its one surviving rule now uses
+`var(--ink-soft)` at full opacity, which is the colour it should always have been.
+
+**`.seed-row` gained the plot's contact shadow.** It had the correct lip and no `0 8px 14px` under
+it, so rows sat *on* the paper instead of above it — the fifth layer of the recipe missing from an
+object that has the other five. The press now collapses the lip and tightens the shadow together,
+the way `.plot:active` does, rather than dropping the lip and leaving the object's shadow where it
+was.
+
+**Rejected: keeping the description behind a tap or a long-press.** It is a real pattern and it is
+the wrong one here — a disclosure control is a new affordance to teach, on the one screen where the
+whole row is already a button, in order to reach copy nobody needs at the moment of choosing.
+Rejected too: showing it only for undiscovered seeds as a lure. That inverts the information — the
+seeds you know least about would be the ones described most, and the picker would get chattier
+exactly where a player is least equipped to act on it.
+
 ## 2026-08-26 (fix) — Thirty grey smudges were most of why the seed sheet read as a spec table
 
 **`.stat` was `rgba(44,26,16,.07)` with no border and no lip.** Three or four to a row, eight rows

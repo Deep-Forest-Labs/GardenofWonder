@@ -1126,10 +1126,10 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   padding:9px 11px;margin-bottom:9px;
   background:linear-gradient(180deg,#fff,#fff5e2);
   border:3px solid var(--ink);border-radius:var(--r-md);
-  box-shadow:0 4px 0 var(--ink-2);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
   transition:transform .09s ease, box-shadow .09s ease;
 }
-.seed-row:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink-2)}
+.seed-row:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink-2), 0 4px 8px rgba(44,26,16,.22)}
 .seed-row[disabled]{filter:grayscale(.6) opacity(.6)}
 .seed-row.gated{filter:grayscale(.7) opacity(.72);pointer-events:none}
 .seed-row.gated .seed-go{font-size:11px;font-weight:900;opacity:.85;white-space:nowrap}
@@ -1170,7 +1170,9 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .stat svg{width:12px;height:12px}
 .stat.good{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
 .stat.gem{background:linear-gradient(180deg,#cdeeff,var(--gem))}
-.seed-desc{font-size:11px;font-weight:600;opacity:.7;margin-top:3px;line-height:1.25}
+/* Flavour, and it lives in the Almanac rather than the picker — a line that
+   carries no decision is weight on a screen where every row is a decision. */
+.seed-desc{display:block;margin-top:2px;font-size:11px;font-weight:600;line-height:1.3;color:var(--ink-soft)}
 
 /* A verb is a different kind of fact from cost and yield, so it gets its own colour and never
    sits inside .seed-stats. */
