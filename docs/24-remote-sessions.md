@@ -47,6 +47,30 @@ loudly instead of silently skipping a tap. It exits non-zero if the page threw.
 The screenshots are worth attaching to the session so the owner can check a layout fix from a
 phone without getting to a desk. `.probe/` is ignored by git.
 
+**To screenshot a screen that needs progress, seed the running game — never the save.** Most of the
+interesting screens are gated: the plant picker greys nineteen seeds at level 1, and the creature
+panel renders "Nobody by that name lives here" until somebody has moved in. The obvious move is to
+write a hand-made save into `localStorage` and reload, and it does not work. `load()` wraps the
+whole parse-and-migrate in one `try`, and on any exception it **warns and returns a fresh state** —
+so a save that is subtly wrong gives you a level-1 garden, a clean probe report, and no clue. Reach
+through `Game.state` on the already-loaded page instead:
+
+```bash
+# .probe/seed.js sets Game.state directly, then emits 'currency' / 'grid' / 'panels'
+node tools/probe.js \
+  "eval:fetch('.probe/seed.js').then(r=>r.text()).then(t=>eval(t))" wait:1200 \
+  shot:garden "eval:UI.openSheet('seeds',0)" wait:800 shot:seeds
+```
+
+No reload, so `load()` never sees anything hand-written, and the state is exactly what the game
+would have built. `UI.openSheet(mode, arg)` opens any panel directly; `UI.enterHollow()`,
+`UI.enterMeadow()` and `UI.enterMap()` open the places.
+
+**`probe.js` reports console *errors*, and a warning is not an error.** It listens for
+`Runtime.exceptionThrown` and for `consoleAPICalled` with `type === 'error'` only, so every
+`console.warn` in the game is invisible to it — including `Save load failed`, which is the one you
+most want to see. "no console errors" means no errors, not no problems.
+
 **What it will not tell you.** Nothing about audio, because there is no output device. Nothing
 about real touch feel, momentum or the bottom sheet's drag. Nothing about iOS Safari, which is the
 platform this game is actually played on and the one most likely to disagree — a change to sticky
