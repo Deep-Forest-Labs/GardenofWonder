@@ -442,8 +442,21 @@ floor to fall on.
 
 ### The check to run before calling any screen done
 
-Screenshot it next to the garden at the same size and ask three questions:
+Not from memory. Put the new screen **next to the garden at the same size**, on a phone-shaped
+viewport, and answer these five out loud. A screen that fails any of them is not done, however
+finished the logic is. `node tools/probe.js` will take all the shots at one viewport if you cannot
+open the game yourself — see [24-remote-sessions.md](24-remote-sessions.md).
 
-1. **Can I see the board against the world?** If the body colour is the world's colour, no.
-2. **Does every surface have a lip and a gradient?** A flat fill is a placeholder.
-3. **Is anything floating?** Everything sits on something.
+1. **Can I see the board against the world?** Desaturate both. If the container's body colour is the
+   same value as the ground it sits on, the screen reads as flat in any palette. Change the body
+   colour, not the detail.
+2. **Does every surface have a gradient and an opaque lip?** A flat fill is a placeholder. A
+   translucent lip is a drop shadow pretending to be a lip. **Search the diff for `0 3px 0 rgba(`
+   before you push.**
+3. **Is anything floating?** Every object sits on ground that exists inside its own container, with
+   its contact shadow drawn onto that ground.
+4. **Is every number in a cream pill with a contour?** Naked text on a coloured surface, and grey
+   text on cream, are the same bug.
+5. **Did I invent a value?** A new radius, a new border width, a new brown, a new easing curve. If
+   yes, either use an existing one or add yours to this document with the reason. Silent additions
+   are how a style guide becomes fiction.

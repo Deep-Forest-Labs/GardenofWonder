@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-25**
+Last updated: **2026-08-26**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -12,6 +12,33 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **THE VISUAL STANDARD IS WRITTEN DOWN AND ENFORCED, 2026-08-26.** The garden screen was audited
+> against every other screen and the drift was counted rather than guessed: 46 translucent lips
+> against 39 solid ones, `--ink-soft` used 23 times and declared nowhere, 9 `var()` fallbacks holding
+> the wrong colour, and the creature panel's *asleep* state painted in the Epic purple. **The art was
+> not degrading; the rules were.** Seven fixes shipped that day, one commit each — the token
+> declared, every box-shadow lip made opaque, lips and the full six-layer recipe added to the
+> creature panel, `.stat` and `.verb-note` given the house material, the seed sheet's flavour line
+> filed in the Almanac, the seed badges tinted from their own `art.c1`, and *asleep* repainted as
+> **drained** rather than as a rarity.
+>
+> **[05-art-direction.md](05-art-direction.md) is now the enforceable version of that** — the recipe
+> on paper as well as on soil, the lip ladder, the rule that a lip is never translucent, the rule
+> that a state takes the value out of a surface before it takes a new hue, and the white-veil trick
+> that derives a pale surface from a saturated token without adding a hex. The palette names 22
+> colours. `style.css` still holds 147.
+>
+> **The geometry sweep is deliberately NOT done** — 16 radii and 11 border widths remain, and the
+> reasoning for leaving them is in [11-known-issues.md](11-known-issues.md#visual-standard). It is
+> its own pass because moving a radius moves layout and moves how a `:active` travel lines up with
+> its lip; bundling it with a colour change makes any regression impossible to bisect.
+>
+> **The highest-leverage item left on the whole page is that nothing enforces any of this.** A
+> pre-commit check on four things — a raw hex outside `:root`, a radius outside the allowed set, a
+> `box-shadow` with zero blur and an `rgba()` colour, an undeclared custom property — would have
+> caught every item the audit counted. The rules did not fail because anyone disagreed with them.
+> They failed because nothing noticed.
+>
 > **The world map is the direction now, and the dock changed with it, 2026-08-25.** The owner's
 > call: **the dock is meta, the map is navigation, and upgrades stay in the garden.** The dock is
 > heading for **Friends · Cards · (World) · Quests · Shop** with the world on a raised centre
@@ -811,7 +838,7 @@ merge.
 
 ## Known problems worth knowing immediately
 
-Full list in [11-known-issues.md](11-known-issues.md). The two that affect design decisions:
+Full list in [11-known-issues.md](11-known-issues.md). The three that affect design decisions:
 
 - ~~**Endgame seeds have lower gem chances than a Daisy.**~~ **Fixed 2026-08-15.** Gem chance is now
   derived from grow time, so gems per hour is flat across all nineteen seeds and gem income tracks
@@ -821,6 +848,11 @@ Full list in [11-known-issues.md](11-known-issues.md). The two that affect desig
   2026-08-14: leave them.** The audience is friends, their sessions are not clean data, and the game
   has no analytics either way. Revisit before any real external audience; don't re-raise it before
   then.
+- **Nothing enforces the visual standard.** Every rule in
+  [05-art-direction.md](05-art-direction.md) is script-checkable except taste, and none of it is
+  checked. That is how `--ink-soft` reached 23 uses without ever being declared, and it is why the
+  drift will come back the moment nobody is looking at it. See
+  [11-known-issues.md](11-known-issues.md#visual-standard).
 
 That inversion was inherited from the frozen economy port; it is fixed. What remains from the port is
 the Orchid throughput dip and the identical Aurora/Celestial rates.
@@ -828,6 +860,14 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 ## Traps in this codebase
 
 Things that cost real time to discover. None are visible from a casual read.
+
+**A state modifier that sets `box-shadow` silently deletes the lip.** `box-shadow` is one property,
+so `.cp-card.bad { box-shadow: inset 0 0 0 2px #… }` overrides the base rule's
+`0 3px 0 var(--ink-2)` entirely. Every component in this game carries its lip in `box-shadow`, and
+every "add a coloured ring for a state" edit is therefore a lip deletion unless the lip is restated
+in the modifier. It bites hardest where it matters most: the affected rules are the *states* — fed,
+hungry, napping — so the object loses its material in exactly the moments a player is looking at it.
+Grep the modifier for `box-shadow` before adding one, and restate the lip.
 
 **A place layer sits OUTSIDE `.ui`, and `.ui` is the only thing that makes this a phone game on a
 desktop.** `.ui` is `max-width: 560px; margin: 0 auto`; `.hollow` is inside it and inherits that,

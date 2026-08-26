@@ -173,6 +173,70 @@ crash a panel — but it can no longer hide.
 `Icons.get(name) !== Icons.get('nonsense')` — is wrong, because anything legitimately using `sparkle`
 is then indistinguishable from a mistake. It reported three false failures before `has()` existed.
 
+## Visual standard
+
+The Garden Standard audit of 2026-08-26 measured the drift off `style.css` at 8393738. Seven items
+were fixed that day — see [10-decision-log.md](10-decision-log.md) — and the enforced values are in
+[05-art-direction.md](05-art-direction.md). These are what it found and nobody has fixed yet.
+
+### The radius and border sweep is deferred, deliberately
+
+`style.css` still carries **16 distinct corner radii** in a system documented as having three
+(12 / 18 / 26, plus `999px` and `50%`), and **11 distinct border widths** from `1.5px` to `11px` in
+a system whose rule is "3px ink on everything". `border-radius:14px` alone appears 13 times.
+
+**Left out of the 2026-08-26 pass on purpose.** Every other item in that pass was a material change
+that could be verified by eye against the garden. Radius and border are *geometry*: changing them
+moves layout, changes how a `:active` travel lines up against its lip, and touches nearly every
+component at once — so it is its own pass, with its own screenshots, and it should not be bundled
+with a colour change where a regression would be impossible to bisect.
+
+When it happens, do it in the order the ladder is used, not file order: chips and small badges to 12,
+cards / plots / dock to 18, the board to 26, and everything already at `999px` or `50%` left alone.
+
+### Raw hex where a token exists
+
+`#2c1a10` is written out **32 times** instead of `var(--ink)`, and `style.css` holds **147 distinct
+hex values** against the 22 the palette names. Nobody chose most of them; they accreted. The ink can
+never be adjusted globally while this is true, which undoes the reason for having tokens at all.
+
+### `.card-desc` is the last `opacity: .7` description text
+
+`.seed-desc`, `.cp-about` and `.cp-card-v` all use `var(--ink-soft)` at full opacity now.
+`.card-desc` still uses opacity, which drags the text toward whatever surface is behind it — so it
+gets washier as the panel gets lighter, and it is the first thing to fail on a phone in sunlight.
+One-line fix, left because nothing else in the album was being touched.
+
+*Where:* `style.css`, `.card-desc`.
+
+### `.quest-card` has the seed row's material but not its contact shadow
+
+Same 3px ink, same gradient, same `0 4px 0 var(--ink-2)` lip. `.seed-row` gained
+`0 8px 14px rgba(44,26,16,.24)` on 2026-08-26 and `.quest-card` did not, so two rows built from the
+same recipe now sit at different heights above the paper. Give it the same shadow next time the
+quest panel is open on the bench.
+
+### Some creature-panel CSS is unreachable
+
+`.cp-head` (with `.cp-head.asleep`), `.cp-who` and `.cp-cards` are styled but no `ui-*.js` emits
+them, and the `.bad` modifier on `.cp-card` is never applied either. `renderCritter()` builds
+`.cp-plate`, `.cp-skill`, `.cp-card`, `.cp-said`, `.cp-about` and the fuel meter, and nothing else.
+
+They were given the 2026-08-26 lip and repalette along with the live rules rather than deleted,
+because the last "delete the unused thing" call in this repo was wrong by merge time — the `petal`
+icon was correctly dead when the polish branch was cut and load-bearing on `main` before the merge
+landed. Confirm against **both** branches, and against data-driven references, before removing any
+of it.
+
+### Nothing enforces any of this
+
+Every rule in [05-art-direction.md](05-art-direction.md) is checkable by a script except taste: a
+raw hex outside `:root`, a radius outside the allowed set, a `box-shadow` with zero blur and an
+`rgba()` colour, an undeclared custom property. A pre-commit check on those four would have caught
+every item the 2026-08-26 audit counted, including `--ink-soft`, which was undefined long enough to
+be used 23 times. **The rules did not fail because anyone disagreed with them. They failed because
+nothing noticed.** This is the single highest-leverage item on this page.
+
 ## Structural
 
 ### ~~`ui.js` is doing too much~~ — split 2026-08-16
