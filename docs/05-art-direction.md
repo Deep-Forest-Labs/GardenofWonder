@@ -314,6 +314,33 @@ can see which half is missing.
 The board itself adds one more: `repeating-linear-gradient(96deg, …)` grain over the body gradient.
 A surface with no texture at all reads as a placeholder.
 
+**The recipe on paper.** The alphas above are tuned for soil, and they do not transfer: white at
+`.16` vanishes on cream, and black at `.10` over cream resolves to the same grey-tan the translucent
+lip did. A cream surface keeps the geometry exactly and warms the colours — the blemish positions,
+radii and rim offsets are the plot's, unchanged. From `.food-btn`:
+
+```css
+background:
+  radial-gradient(circle at 26% 22%, rgba(255,255,255,.55) 0 12%, transparent 13%),
+  radial-gradient(circle at 72% 62%, rgba(44,26,16,.05) 0 9%, transparent 10%),
+  linear-gradient(180deg,#fffdf7 0%, var(--paper) 72%, var(--paper-2) 100%);
+box-shadow:
+  inset 0 5px 0 rgba(255,255,255,.5),
+  inset 0 -7px 0 rgba(44,26,16,.07),
+  0 3px 0 var(--ink-2),
+  0 6px 10px rgba(44,26,16,.18);
+```
+
+`0 6px 10px rgba(44,26,16,.18)` is the contact shadow that goes with a 3px lip — the same pair the
+wallet uses. A 4px lip takes `0 8px 14px rgba(44,26,16,.24)`, and the board's 9px lip takes
+`0 18px 26px rgba(44,26,16,.3)`. Lip and contact shadow scale together or the object looks like it
+is hovering at the wrong height.
+
+**A state modifier that sets `box-shadow` has to restate the lip.** `.cp-card.bad`,
+`.feed-row.napping` and `.feed-row.fed` each add an inset ring, and `box-shadow` is one property —
+writing the ring alone silently deletes the lip for exactly the states a player is most likely to be
+looking at.
+
 ### 3. Objects must be anchored, not floated
 
 Every plant in the garden sits on a soil line with a shadow under it. The meadow's tenders sit in

@@ -2063,6 +2063,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   margin-bottom:10px;padding:10px 11px;
   border:3px solid var(--ink);border-radius:18px;
   background:var(--paper-2);
+  box-shadow:0 3px 0 var(--ink-2);
 }
 .cp-skill .cp-card-v{margin-bottom:9px}
 .cp-skill .cp-grow{margin:0;border-width:3px}
@@ -2073,8 +2074,9 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .cp-card{
   padding:9px 11px;border:3px solid var(--ink);border-radius:14px;
   background:var(--paper-2);
+  box-shadow:0 3px 0 var(--ink-2);
 }
-.cp-card.bad{background:#eae6fb;box-shadow:inset 0 0 0 2px #b3a7e8}
+.cp-card.bad{background:#eae6fb;box-shadow:inset 0 0 0 2px #b3a7e8, 0 3px 0 var(--ink-2)}
 .cp-card-k{
   display:flex;align-items:center;gap:6px;
   font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);
@@ -2093,6 +2095,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   padding:10px;margin-bottom:8px;
   border:3px solid var(--ink);border-radius:16px;
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2);
 }
 .cp-head.asleep{background:linear-gradient(180deg,#f2eeff,#e2dbf8)}
 .cp-face{flex:0 0 64px;width:64px;height:64px}
@@ -2112,6 +2115,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   border:3px solid var(--ink);border-radius:16px;
   background:var(--paper);
   font-size:12.5px;font-weight:700;line-height:1.4;color:var(--ink);
+  box-shadow:0 3px 0 var(--ink-2);
 }
 .cp-said.pop{animation:cpSaid .38s cubic-bezier(.34,1.56,.64,1)}
 @keyframes cpSaid{0%{transform:scale(.94);opacity:.4}100%{transform:none;opacity:1}}
@@ -2133,7 +2137,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .feed-alert svg{width:15px;height:15px;flex:0 0 15px;margin-top:1px}
 .feed-row{flex-direction:column;align-items:stretch;gap:0}
-.feed-row.napping{background:#eae6fb;box-shadow:inset 0 0 0 2px #b3a7e8}
+.feed-row.napping{background:#eae6fb;box-shadow:inset 0 0 0 2px #b3a7e8, 0 3px 0 var(--ink-2)}
 .food-state.out{color:var(--ink);font-weight:800}
 /* A sleeping portrait in a list row gets the shut eyes and nothing else. The Zs
    rise well above the art on purpose, which in a 46px row means drifting up into
@@ -2142,7 +2146,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .critter-face.asleep .critter-svg{animation:none}
 .critter-face.asleep .cr-zzz{display:none}
 .feed-top{display:flex;align-items:center;gap:10px}
-.feed-row.fed{background:#fff2e0;box-shadow:inset 0 0 0 2px #ffa94d}
+.feed-row.fed{background:#fff2e0;box-shadow:inset 0 0 0 2px #ffa94d, 0 3px 0 var(--ink-2)}
 /* The copy is one flex item, not three. Left as bare text nodes beside the
    icon, each fragment became its own column and the line broke into a grid on
    a narrow screen. */
@@ -2153,17 +2157,43 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .food-state.on{color:var(--ink);font-weight:700}
 /* A grid rather than flex-wrap, so three always sit in one row at any width. */
 .food-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px}
+/* The only buy buttons on this panel, so they get the whole house recipe rather
+   than a border and a fill: body gradient, two blemishes, two inset rims, the
+   lip, the contact shadow, the ink. On cream the blemish and rim alphas are the
+   paper set — black at .10 over cream is a grey smudge, which is the exact
+   material mistake this recipe exists to prevent. */
 .food-btn{
   min-width:0;
   display:flex;flex-direction:column;align-items:center;gap:5px;
   padding:9px 6px 8px;
   border:3px solid var(--ink);border-radius:14px;
-  background:var(--paper);color:var(--ink);
+  background:
+    radial-gradient(circle at 26% 22%, rgba(255,255,255,.55) 0 12%, transparent 13%),
+    radial-gradient(circle at 72% 62%, rgba(44,26,16,.05) 0 9%, transparent 10%),
+    linear-gradient(180deg,#fffdf7 0%,var(--paper) 72%,var(--paper-2) 100%);
+  color:var(--ink);
   font-family:inherit;cursor:pointer;
-  box-shadow:0 3px 0 var(--ink-2);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.5),
+    inset 0 -7px 0 rgba(44,26,16,.07),
+    0 3px 0 var(--ink-2),
+    0 6px 10px rgba(44,26,16,.18);
+  transition:transform .08s ease, box-shadow .08s ease;
 }
-.food-btn.affordable{background:linear-gradient(180deg,#fff8e8,#ffe9c4)}
-.food-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink-2)}
+.food-btn.affordable{
+  background:
+    radial-gradient(circle at 26% 22%, rgba(255,255,255,.55) 0 12%, transparent 13%),
+    radial-gradient(circle at 72% 62%, rgba(44,26,16,.05) 0 9%, transparent 10%),
+    linear-gradient(180deg,#fff8e8 0%,var(--paper-2) 72%,#ffe9c4 100%);
+}
+.food-btn:active{
+  transform:translateY(3px);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.5),
+    inset 0 -7px 0 rgba(44,26,16,.07),
+    0 0 0 var(--ink-2),
+    0 3px 6px rgba(44,26,16,.25);
+}
 .food-btn:disabled{opacity:.42;cursor:default;box-shadow:none}
 /* The food IS the button. A big token with what it gives you stamped on the
    corner, then the name, then the price — icon first, words second. */

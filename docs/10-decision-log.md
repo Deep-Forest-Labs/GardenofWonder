@@ -5,6 +5,39 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 (fix) — The creature panel had the shapes and not the material
+
+**`.cp-skill`, `.cp-card`, `.cp-head` and `.cp-said` were a 3px ink border around a flat fill.**
+Structurally the panel is the best information design in the game — the art broken out over the
+sheet's top edge, the level bar tall enough to stack a count and a caption, the number inside the
+star rather than beside it. It read as a form anyway, because four of its six boxes were the only
+surfaces in the game with no side wall. They now carry `0 3px 0 var(--ink-2)`, which is the height
+the ladder gives a box that size.
+
+**The three state modifiers had to be edited with them, and this is the trap worth naming.**
+`.cp-card.bad`, `.feed-row.napping` and `.feed-row.fed` each set `box-shadow` to an inset ring.
+`box-shadow` is one property, so adding a lip to the base rule would have given every card a lip
+*except* the ones a player is most likely to be staring at — the hungry one and the sleeping one. The
+rule is now in `05-art-direction.md`: a modifier that writes `box-shadow` restates the lip.
+
+**The feed cards got the whole recipe rather than a lip, because they are buy buttons.** They are
+the only things on the panel that spend currency and they were a flat `var(--paper)` fill — the same
+material as the label boxes around them, which is precisely the wrong signal. All six layers now,
+plus a press that collapses the lip fully at `translateY(3px)` and tightens the contact shadow to
+`0 3px 6px`, matching `.round-btn`.
+
+**The blemish and rim alphas had to be retuned for cream, and that is a documented variant rather
+than a new invention.** The plot's `rgba(255,255,255,.16)` highlight is invisible on `#fff8e7`, and
+its `rgba(0,0,0,.10)` dirt mark over cream resolves to the same grey-tan as the translucent lip did
+— the identical mistake one layer down. The geometry is the plot's, unchanged: same blemish
+positions, same radii, same rim offsets. Only the colours warm up. The meadow already did this for
+stone with `--cob-*`, so a per-surface alpha set is the established pattern, not a new one.
+
+**Rejected: gradients on the other four boxes in the same pass.** A flat fill inside a 3px contour
+with a solid lip is a legitimate material in this system — `.tab` is exactly that and it is canon.
+The four boxes needed a side wall, not a rebuild, and pushing further would have made a fifteen-
+minute change into a redesign of a panel whose layout is already right.
+
 ## 2026-08-26 (fix) — The translucent lip was most of what "the art is degrading" meant
 
 **Counted at 8393738: forty-six zero-blur `rgba(44,26,16,…)` shadows against thirty-nine solid
