@@ -341,6 +341,32 @@ is hovering at the wrong height.
 writing the ring alone silently deletes the lip for exactly the states a player is most likely to be
 looking at.
 
+### Every number lives in a cream pill
+
+This is the fourth value tier doing its job. A number is never set loose on a coloured surface and
+never set in grey on cream — it goes in a capsule with an ink contour and a lip, and the capsule is
+what makes it legible against sky, lawn, soil or paper without changing anything about the number.
+
+| Pill | Border | Lip | Body |
+| --- | --- | --- | --- |
+| `.stat` — cost, grow time | `2px var(--ink)` | `0 2px 0 var(--ink-2)` | `#fffdf7 → var(--paper-2)` |
+| `.stat.good` — yield range | `2px var(--ink)` | `0 2px 0 var(--ink-2)` | `#d3f9d8 → #8ce99a` |
+| `.stat.gem` — gem chance | `2px var(--ink)` | `0 2px 0 var(--ink-2)` | `#cdeeff → var(--gem)` |
+| `.price` | `2.5px var(--ink)` | `0 2px 0 var(--ink-2)` | `#fff → var(--paper-3)`, `.ok` green, `.no` red |
+| `.chip`, `.lock-cost` | `2.5px var(--ink)` | `0 2px 0 var(--ink-2)` | `#fffdf7 → var(--paper-2)` |
+
+A good/affordable state is the same green in both families, so green means *yes* everywhere rather
+than meaning one thing on a price and another on a yield.
+
+**`.verb-note` is an object, not a rule in a margin.** A flat band with a `border-left` accent is a
+web pattern; it made the trait — the most decision-relevant fact in a seed row — the least
+interesting thing in it. It now takes the house material at radius 12, and the verb's own tint is
+its *body* rather than a stripe, veiled under
+`linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.58))` so ink stays legible across
+every tint in `DATA.verbs`. The veil is what lets a saturated token be used as a pale surface
+without a second hex per verb: the chip stays solid tint, the note is the same hue washed out, and
+the pairing reads as one fact said twice at two volumes.
+
 ### 3. Objects must be anchored, not floated
 
 Every plant in the garden sits on a soil line with a shadow under it. The meadow's tenders sit in

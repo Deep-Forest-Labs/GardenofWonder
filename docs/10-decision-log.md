@@ -5,6 +5,38 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 (fix) — Thirty grey smudges were most of why the seed sheet read as a spec table
+
+**`.stat` was `rgba(44,26,16,.07)` with no border and no lip.** Three or four to a row, eight rows
+deep — around thirty flat elements on one screen, in a game whose fourth value tier is *every number
+lives in a cream pill with a contour*. That is not a small inconsistency; it is the single rule the
+HUD is built on, suspended for the one screen that shows the most numbers. They now take
+`2px var(--ink)` and `0 2px 0 var(--ink-2)`, and the fill is the cream gradient rather than a
+percentage of ink, because 7% ink on cream is grey and grey on cream reads as disabled.
+
+**`.stat.good` takes the green `.price.ok` already uses, deliberately and not coincidentally.** Green
+should mean *yes* in one voice — affordable on a price, generous on a yield — so both are
+`#d3f9d8 → #8ce99a`. `.stat.gem` follows into `#cdeeff → var(--gem)` for the same reason: the gem
+colour is already spoken for, so the pill should wear it rather than a translucent wash of it.
+
+**`.verb-note` needed a different argument than the pills did.** Its problem was not only material —
+a flat band with a `border-left` accent is a *web* pattern, and it made the most decision-relevant
+fact in the row look like the least interesting one. The verb's tint is now the note's body instead
+of a stripe down its side, under a white veil that pales any tint to a legible surface. That solves
+a real constraint cheaply: `DATA.verbs` carries seven saturated tints, ink on `#6f7bff` is a
+marginal contrast, and adding a second pale hex per verb would have doubled the palette to fix a
+rendering problem. One veil, seven verbs, no new tokens. Its radius drops 9 → 12, removing the
+fourteenth radius in a system documented as having three.
+
+**Rejected: `color-mix()` for the veil.** It is the obvious modern answer and it would read better in
+the source, but it is the sort of thing that silently degrades to nothing on an older phone, and the
+project's whole deal is that it runs from a file with no build step and no polyfills. A stacked
+white gradient over a solid colour does the same job with no support question to answer.
+
+**Rejected: leaving `.stat` alone and only cutting rows.** Density is the other half of this screen's
+problem and it is handled separately, but a loud fix and a quiet cut have to land in that order —
+restyle first and the row's real weight is visible, cut first and you are guessing.
+
 ## 2026-08-26 (fix) — The creature panel had the shapes and not the material
 
 **`.cp-skill`, `.cp-card`, `.cp-head` and `.cp-said` were a 3px ink border around a flat fill.**
