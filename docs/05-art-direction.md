@@ -32,7 +32,8 @@ new CSS.
 | Role | Variable | Value |
 | --- | --- | --- |
 | Ink (outlines, text) | `--ink` | `#2c1a10` |
-| Ink, softer | `--ink-2` | `#5a3a1f` |
+| Ink, softer — every lip on paper | `--ink-2` | `#5a3a1f` |
+| Ink, secondary text | `--ink-soft` | `#7a6047` |
 | Paper (panels) | `--paper` | `#fff8e7` |
 | Paper, mid | `--paper-2` | `#ffeecd` |
 | Paper, deep | `--paper-3` | `#ffe0ad` |
@@ -49,6 +50,16 @@ new CSS.
 | Rare | `--rare` | `#4dabf7` |
 | Epic | `--epic` | `#b197fc` |
 | Legendary | `--legend` | `#ffd43b` |
+
+`--ink-soft` is the colour for descriptive text on paper — the second line of a card, a trait note, a
+caption. It is deliberately not `opacity` on `--ink`: opacity drags text toward whatever surface is
+behind it, so the same rule gets washier as the panel gets lighter and fails first in sunlight. A
+dimmer colour holds its edge at any lightness and can be contrast-checked.
+
+**Never write a hex fallback inside `var()`.** `var(--paper-2,#f3e4c6)` shipped nine times with a
+fallback that was not `--paper-2`; it was harmless only because the variable always resolved, and it
+was a wrong value sitting in the source waiting to be copied. If a variable might not resolve, that
+is a bug to fix at the declaration, not to paper over at the use.
 
 The three rarity colours are load-bearing and consistent everywhere — particles, plot auras, toast
 borders, floating text. A player learns blue/purple/gold once.

@@ -8,6 +8,7 @@
   /* ink + paper */
   --ink:#2c1a10;
   --ink-2:#5a3a1f;
+  --ink-soft:#7a6047;
   --paper:#fff8e7;
   --paper-2:#ffeecd;
   --paper-3:#ffe0ad;
@@ -1804,12 +1805,12 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 
 /* ---------- the habitat, in the Almanac ---------- */
-.stat-note{margin:0 0 8px;font-size:12px;color:var(--ink-soft,#7a6047)}
+.stat-note{margin:0 0 8px;font-size:12px;color:var(--ink-soft)}
 .critter-row{
   display:flex;align-items:center;gap:10px;
   padding:8px;margin-bottom:6px;
   border:3px solid var(--ink);border-radius:14px;
-  background:var(--paper-2,#f3e4c6);
+  background:var(--paper-2);
 }
 .critter-row.tending{background:#e6f7e2;box-shadow:inset 0 0 0 2px #8ce99a}
 .critter-row.dim{opacity:.62}
@@ -1824,8 +1825,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .critter-row .cr-eye{animation:none}
 .critter-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .critter-who{font-size:14px;font-weight:800;color:var(--ink)}
-.critter-who em{font-style:normal;font-weight:700;font-size:12px;color:var(--ink-soft,#7a6047)}
-.critter-note{font-size:11.5px;color:var(--ink-soft,#7a6047);line-height:1.35}
+.critter-who em{font-style:normal;font-weight:700;font-size:12px;color:var(--ink-soft)}
+.critter-note{font-size:11.5px;color:var(--ink-soft);line-height:1.35}
 .critter-trait{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink);line-height:1.3}
 .critter-trait svg{width:13px;height:13px;flex:0 0 13px}
 .critter-trait b{white-space:nowrap}
@@ -1949,7 +1950,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .cp-species{
   margin:1px 0 0;font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-  color:var(--ink-soft,#7a6047);
+  color:var(--ink-soft);
 }
 .cp-plate .critter-stars{margin:4px 0 0;gap:3px}
 .cp-plate .cr-star svg{width:19px;height:19px}
@@ -1963,14 +1964,14 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   display:flex;align-items:center;gap:9px;
   margin:0;padding:8px;
   border:3px solid var(--ink);border-radius:18px;
-  background:linear-gradient(180deg,#fffdf7,var(--paper-3,#f7e7c4));
+  background:linear-gradient(180deg,#fffdf7,var(--paper-3));
   box-shadow:0 3px 0 rgba(44,26,16,.22);
 }
 .cp-token{
   flex:0 0 50px;width:50px;height:50px;position:relative;
   display:grid;place-items:center;
   border:3px solid var(--ink);border-radius:14px;
-  background:radial-gradient(circle at 36% 28%, #fffdf7, var(--paper-3,#f7e7c4));
+  background:radial-gradient(circle at 36% 28%, #fffdf7, var(--paper-3));
   box-shadow:0 3px 0 rgba(44,26,16,.2);
 }
 .cp-token .bloom{width:34px;height:34px;display:block}
@@ -2025,7 +2026,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .cp-fuel{
   margin-bottom:9px;padding:9px 11px 10px;
   border:3px solid var(--ink);border-radius:16px;
-  background:linear-gradient(180deg,#fffdf7,var(--paper-3,#f7e7c4));
+  background:linear-gradient(180deg,#fffdf7,var(--paper-3));
   box-shadow:0 3px 0 rgba(44,26,16,.22);
 }
 .cp-fuel-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px}
@@ -2034,7 +2035,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);
 }
 .cp-fuel-k svg{width:15px;height:15px;flex:0 0 15px}
-.cp-fuel-v{font-size:11.5px;font-weight:800;color:var(--ink-soft,#7a6047);white-space:nowrap}
+.cp-fuel-v{font-size:11.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap}
 .cp-fuel-bar{
   position:relative;height:22px;
   border:3px solid var(--ink);border-radius:999px;background:#e3d6bd;
@@ -2061,7 +2062,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .cp-skill{
   margin-bottom:10px;padding:10px 11px;
   border:3px solid var(--ink);border-radius:18px;
-  background:var(--paper-2,#f3e4c6);
+  background:var(--paper-2);
 }
 .cp-skill .cp-card-v{margin-bottom:9px}
 .cp-skill .cp-grow{margin:0;border-width:3px}
@@ -2071,7 +2072,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .cp-cards{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
 .cp-card{
   padding:9px 11px;border:3px solid var(--ink);border-radius:14px;
-  background:var(--paper-2,#f3e4c6);
+  background:var(--paper-2);
 }
 .cp-card.bad{background:#eae6fb;box-shadow:inset 0 0 0 2px #b3a7e8}
 .cp-card-k{
@@ -2079,7 +2080,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);
 }
 .cp-card-k svg{width:15px;height:15px;flex:0 0 15px}
-.cp-card-v{display:block;margin-top:3px;font-size:12.5px;line-height:1.4;color:var(--ink-soft,#7a6047)}
+.cp-card-v{display:block;margin-top:3px;font-size:12.5px;line-height:1.4;color:var(--ink-soft)}
 .cp-card .critter-memento,.cp-card .food-state{margin:0}
 
 .critter-panel h3{
@@ -2091,7 +2092,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   display:flex;align-items:center;gap:12px;
   padding:10px;margin-bottom:8px;
   border:3px solid var(--ink);border-radius:16px;
-  background:linear-gradient(180deg,#fffdf7,var(--paper-2,#f3e4c6));
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
 }
 .cp-head.asleep{background:linear-gradient(180deg,#f2eeff,#e2dbf8)}
 .cp-face{flex:0 0 64px;width:64px;height:64px}
@@ -2103,9 +2104,9 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .cp-face.bop .critter-svg{animation:critter-bop .42s cubic-bezier(.34,1.56,.64,1)}
 .cp-who{display:flex;flex-direction:column;gap:1px;min-width:0}
 .cp-who b{font-size:19px;font-weight:800;line-height:1.1;color:var(--ink)}
-.cp-who em{font-style:normal;font-size:12px;font-weight:700;color:var(--ink-soft,#7a6047)}
+.cp-who em{font-style:normal;font-size:12px;font-weight:700;color:var(--ink-soft)}
 .cp-who .critter-stars{margin:3px 0 0}
-.cp-about{margin:0 0 8px;font-size:12.5px;line-height:1.45;color:var(--ink-soft,#7a6047)}
+.cp-about{margin:0 0 8px;font-size:12.5px;line-height:1.45;color:var(--ink-soft)}
 .cp-said{
   margin:8px 0 0;padding:9px 13px;
   border:3px solid var(--ink);border-radius:16px;
@@ -2146,7 +2147,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    icon, each fragment became its own column and the line broke into a grid on
    a narrow screen. */
 .food-state{display:flex;align-items:flex-start;gap:5px;font-size:11.5px;line-height:1.35;
-  color:var(--ink-soft,#7a6047)}
+  color:var(--ink-soft)}
 .food-state svg{width:12px;height:12px;flex:0 0 12px;margin-top:1px}
 .food-state > span{flex:1;min-width:0}
 .food-state.on{color:var(--ink);font-weight:700}
@@ -2170,7 +2171,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   position:relative;width:52px;height:52px;
   display:grid;place-items:center;
   border:3px solid var(--ink);border-radius:14px;
-  background:radial-gradient(circle at 34% 28%, #fffdf7, var(--paper-3,#f7e7c4));
+  background:radial-gradient(circle at 34% 28%, #fffdf7, var(--paper-3));
 }
 .food-ico svg{width:34px;height:34px;display:block}
 .food-ico b{
@@ -2189,7 +2190,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 /* The star a creature is working at while fed, which it has not been raised to. */
 .cr-star.fed svg{color:#ff922b}
 .cr-star.fed{filter:drop-shadow(0 0 3px rgba(255,169,77,.9))}
-.critter-grow{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-soft,#7a6047)}
+.critter-grow{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-soft)}
 .critter-grow i{
   flex:0 0 62px;height:7px;border-radius:999px;
   background:#8ce99a;border:2px solid var(--ink);
@@ -2212,7 +2213,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   display:flex;align-items:center;gap:10px;
   padding:8px;margin-bottom:6px;
   border:3px solid var(--ink);border-radius:14px;
-  background:var(--paper-2,#f3e4c6);
+  background:var(--paper-2);
 }
 .pair-row.on{background:#e6f7e2;box-shadow:inset 0 0 0 2px #8ce99a}
 .pair-row.dim{opacity:.6}
@@ -2230,11 +2231,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   padding:1px 6px;border-radius:999px;background:#8ce99a;
   border:2px solid var(--ink);vertical-align:middle;
 }
-.pair-note{font-size:11.5px;color:var(--ink-soft,#7a6047);line-height:1.35}
-.pair-who{font-size:10.5px;color:var(--ink-soft,#7a6047);opacity:.8}
+.pair-note{font-size:11.5px;color:var(--ink-soft);line-height:1.35}
+.pair-who{font-size:10.5px;color:var(--ink-soft);opacity:.8}
 .critter-memento{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink);line-height:1.3}
 .critter-memento svg{width:12px;height:12px;flex:0 0 12px}
-.critter-memento.none{color:var(--ink-soft,#7a6047);opacity:.7}
+.critter-memento.none{color:var(--ink-soft);opacity:.7}
 
 /* ============ the way down to the Hollow ============ */
 /* A visible mouth in the ground teaches the place exists; the swipe out of it is
@@ -2363,7 +2364,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .on-head{display:flex;align-items:center;gap:10px;margin:0 0 10px}
 .on-head-copy{flex:1;min-width:0}
 .on-head-copy b{display:block;font-size:19px;line-height:1.1}
-.on-head-copy span{display:block;font-size:12px;color:var(--ink-soft,#7a6047)}
+.on-head-copy span{display:block;font-size:12px;color:var(--ink-soft)}
 .on-tier{
   display:inline-flex;align-items:center;gap:4px;padding:5px 11px;
   border:3px solid var(--ink,#2c1a10);border-radius:999px;background:#fff7e1;
@@ -2386,7 +2387,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .on-row.empty:active{transform:none;box-shadow:0 4px 0 rgba(44,26,16,.32)}
 .on-empty-art svg{width:30px;height:30px;opacity:.7}
 .on-empty-copy b{display:block;font-size:14px}
-.on-empty-copy span{font-size:12px;color:var(--ink-soft,#7a6047)}
+.on-empty-copy span{font-size:12px;color:var(--ink-soft)}
 
 .on-face{
   width:54px;flex:0 0 54px;align-self:flex-start;
@@ -2399,7 +2400,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .on-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .on-who{font-size:14.5px;font-weight:800;line-height:1.1}
 .on-good{display:flex;align-items:center;gap:5px;font-size:11.5px;
-  color:var(--ink-soft,#7a6047);text-transform:uppercase;letter-spacing:.05em}
+  color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em}
 .on-good svg{width:14px;height:14px}
 
 .on-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:1px}
@@ -2425,7 +2426,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .on-chip-name{display:none}
 .on-chips.big .on-chip-name{
   display:block;margin-top:9px;font-size:10px;line-height:1.15;
-  color:var(--ink-soft,#7a6047);
+  color:var(--ink-soft);
 }
 .on-chip-qty{display:none}
 
@@ -2442,12 +2443,12 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .on-coins,.on-rep{display:inline-flex;align-items:center;gap:3px;font-size:12.5px;font-weight:800}
 .on-coins svg,.on-rep svg{width:15px;height:15px}
-.on-rep{color:var(--ink-soft,#7a6047);font-size:11.5px}
+.on-rep{color:var(--ink-soft);font-size:11.5px}
 .on-go{
   margin-top:2px;padding:2px 8px;border:2.5px solid var(--ink,#2c1a10);border-radius:999px;
   background:#8ce99a;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;
 }
-.on-foot{margin:12px 2px 0;font-size:11.5px;color:var(--ink-soft,#7a6047);line-height:1.5}
+.on-foot{margin:12px 2px 0;font-size:11.5px;color:var(--ink-soft);line-height:1.5}
 
 /* ---------- one customer ---------- */
 .on-plate{text-align:center;margin:0 0 10px;padding-top:4px}
@@ -2466,7 +2467,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .on-want-head{display:flex;align-items:center;gap:7px;font-size:16px}
 .on-want-head svg{width:20px;height:20px}
-.on-line{margin:4px 0 9px;font-size:12.5px;font-style:italic;color:var(--ink-soft,#7a6047);line-height:1.4}
+.on-line{margin:4px 0 9px;font-size:12.5px;font-style:italic;color:var(--ink-soft);line-height:1.4}
 
 .on-pays{display:flex;justify-content:center;gap:14px;margin:0 0 10px}
 .on-pays .on-coins{font-size:16px}
@@ -2478,7 +2479,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .ghost-btn{
   display:block;width:100%;margin-top:8px;padding:9px;
   border:3px dashed var(--ink,#2c1a10);border-radius:14px;background:transparent;
-  font-family:inherit;font-weight:800;font-size:12.5px;color:var(--ink-soft,#7a6047);cursor:pointer;
+  font-family:inherit;font-weight:800;font-size:12.5px;color:var(--ink-soft);cursor:pointer;
 }
 .ghost-btn:active{transform:translateY(2px)}
 
@@ -2546,7 +2547,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:#fff7e1;font-size:13px;font-weight:800;white-space:nowrap;
   box-shadow:0 3px 0 rgba(44,26,16,.3);pointer-events:none;
 }
-.ow-tag.locked{background:#e8d5b0;color:var(--ink-soft,#7a6047)}
+.ow-tag.locked{background:#e8d5b0;color:var(--ink-soft)}
 .ow-badge{
   position:absolute;top:-10px;right:-6px;min-width:28px;height:28px;
   transform-origin:100% 0;transform:scale(calc(1 / var(--ow-s,1)));
@@ -2957,7 +2958,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .build-art svg{width:100%;height:auto;overflow:visible}
 .build-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .build-helps{
-  font-size:10.5px;font-weight:800;color:var(--ink-soft,#7a6047);
+  font-size:10.5px;font-weight:800;color:var(--ink-soft);
   text-transform:uppercase;letter-spacing:.04em;
 }
 .build-helps.on{color:#3f9950}

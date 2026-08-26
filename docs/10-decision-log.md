@@ -5,6 +5,33 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 (fix) — `--ink-soft` was a real colour that got into the game by accident
+
+**A visual audit of `style.css` at 8393738 counted `var(--ink-soft, #7a6047)` twenty-three times and
+found the variable declared nowhere.** Every one of those rules silently took the fallback, so the
+game has had a second ink colour for months and nobody ever chose it. It is on the creature panel,
+the critter cards, the onboarding copy and the overworld tags — all of the descriptive text on
+paper, which is exactly the job a secondary ink should have.
+
+**Declared rather than deleted.** The alternative was to rewrite all twenty-three rules onto
+`--ink-2`, which is the lip colour and too dark and too close to the heading weight to read as
+secondary, or onto `opacity` on `--ink`, which is the pattern this pass exists to remove — opacity
+drags text toward the surface behind it, so the same rule gets washier as the panel gets lighter.
+The accidental colour was the right colour. It is now `--ink-soft: #7a6047` in `:root` and in the
+palette table, and the palette is nineteen names instead of eighteen.
+
+**The hex fallbacks came out with it.** Once the token exists, `var(--ink-soft, #7a6047)` is the hex
+written twenty-three more times in a file whose rule is "write the variable, never the hex". The
+`--paper-2` and `--paper-3` fallbacks were worse than redundant: `var(--paper-2, #f3e4c6)` against a
+real value of `#ffeecd`, and `var(--paper-3, #f7e7c4)` against `#ffe0ad`. Nine occurrences, both
+wrong, harmless only because the variables always resolved — a wrong value sitting in the source
+waiting for the next author to copy it out of a `var()` and into a fill.
+
+**Rejected: keeping fallbacks defensively.** A `var()` fallback is a second definition of the colour,
+maintained in a place nobody looks, and it converts a loud failure (nothing renders) into a quiet one
+(it renders the wrong colour). If a custom property can fail to resolve, that is a bug at the
+declaration. The rule is now written into `05-art-direction.md`: no hex inside `var()`.
+
 ## 2026-08-25 (fix) — The meadow was not built for a phone, and everything else followed from that
 
 **The owner put the two screens side by side again and the list was blunt: the buttons do not line
