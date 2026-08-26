@@ -43,6 +43,7 @@ Read it before anything else if you're picking the project up cold.
 | [26-goods-catalog.md](26-goods-catalog.md) | You're adding a good, a crop, or an order family — the six families, the three production shapes, the one-line test, and the rollout — **design, not built** |
 | [27-design-audit.md](27-design-audit.md) | You want the honest state of the design as a whole — what is strong, what is redundant, what is missing, what should be cut, and in what order to settle it — **audit and recommendation, not decision** |
 | [28-the-loop.md](28-the-loop.md) | You want to know what a session is, what the player's job is after automation, and what is scarce — and why merge moves to the centre while the garden stays the home screen — **proposal, not built** |
+| [29-direction-and-odds.md](29-direction-and-odds.md) | You are deciding what game this is, or whether the genre is too crowded to enter — four directions with the odds on each, what the four distribution channels actually reward, and why the hook shipped by accident — **analysis, not the game** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

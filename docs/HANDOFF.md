@@ -12,6 +12,49 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **FOUR DIRECTIONS PRICED, AND THE HOOK TURNS OUT TO HAVE SHIPPED BY ACCIDENT, 2026-08-26.** The
+> owner asked whether the genre is too saturated to enter, and what it would actually take to
+> succeed. **[29-direction-and-odds.md](29-direction-and-odds.md)** answers it, and rejects the
+> framing first: **1,087 idle games in 2026 earned ~$3.97M combined — about $3,650 each.** That is
+> not a saturated market, it is **a market full of games nobody could find**, which is good news for
+> a team whose advantage is craft. The genuinely saturated case is Merge-2, crowded with *funded*
+> competitors rather than bad ones. **The real question is whether a category rewards craft or
+> rewards spend.**
+>
+> **Three of the four distribution channels open to two people with no UA — community posts,
+> platform editorial, clips — are closed to a merge board**, and all four reward the same two things.
+> **Does the direction produce a sentence, and a five-second video?** The project has craft and
+> neither, which is exactly the Terrarium warning: 11M installs, ~$9K/month.
+>
+> **The four, priced** (base = $3–5K/mo, breakout = >$20K/mo): **A finish the plan 30% / 7%** —
+> safest, most likely invisible. **B the merge pivot 12% / 3%** — highest ceiling, worst odds from
+> here, strands most of what is built. **C the Shared Sky 40% / 15% — recommended.** **D the
+> incremental-depth reposition 35% / 10%** — Magic Research made ~$400K from essentially two posts on
+> r/incremental_games. **A, C and D are not exclusive; only B is a fork.**
+>
+> **The finding: `DATA.weather` runs on wall-clock epoch time**, chosen on 2026-08-15 so offline
+> reconciliation could resolve a past slot. The consequence nobody drew — **every player in the world
+> is under the same sky at the same moment, and the sky is computable forwards too, so the game can
+> print a forecast.** Not "it might rain." *"Wonderfall at 6:42."* Wonderfall is 0.5% of 60-second
+> slots: roughly **seven times a day, worldwide, simultaneously**, on the rarest mutation tier.
+>
+> **That is a synchronous global event with no server, no accounts and no friend graph.** It supplies
+> the missing sentence, the missing reason to open the app, a notification that is *news* rather than
+> guilt, the missing clip, and the missing reason planting is a **timing** decision. **And it names
+> an identity five shipped systems already share:** the epoch day/night cycle, weather, mutations,
+> Nightbell, and the Ridge — all of them *the world has a clock and you play against it*.
+>
+> **Two weaknesses recorded, not glossed:** with no server the shared sky can be asserted but not
+> demonstrated (the forecast is real and free; a read-only counter is the cheapest server anyone has
+> specified), and a uniform global slot clock gives a player in the wrong timezone fewer good skies
+> while awake — **check this before it ships.**
+>
+> **Four of the five things any direction needs are missing:** a one-sentence hook; **D7 above ~15%**,
+> now an ASO input and the only free algorithmic lift, needing dailies, streaks, notifications and a
+> designed session; one live-ops-free monetization lever (all three specced, none built); and a
+> distribution date — **Wholesome Direct is annual, June, free to submit, next window roughly nine
+> months out.**
+
 > **MERGE MOVES TO THE CENTRE, AND THE GARDEN STAYS THE HOME SCREEN, 2026-08-26 (proposal).** The
 > owner played Gossip Harbor, agreed the bench is underutilised, and floated the full pivot — *"maybe
 > The Little Garden is secondary."* **[28-the-loop.md](28-the-loop.md)** is the answer: **yes to
@@ -713,9 +756,14 @@ buttons stay). **Two are deferred by the owner** as their own conversations: wha
 what survives one, and the launch content bill of materials — the second of which the economy
 retune needs as a target.
 
-**Next, once item 0 is ruled on: item 1, the spine.** It now carries the merge decision's
-downstream questions — which gesture reaches the bench, whether the roster or the Almanac is the
-collection asked to be finished, and how a wide creature roster survives a four-slot habitat cap.
+**The live question is which direction, not which item.** [29-direction-and-odds.md](29-direction-and-odds.md)
+recommends **C, the Shared Sky** — direction A with the epoch clock made into the point, and D taken
+as a free second audience rather than a pivot. **Nothing below should be built until that is ruled
+on**, because C changes what retention, the ceiling and the FTUE are *for*.
+
+**Then item 1, the spine.** It carries the merge decision's downstream questions — which gesture
+reaches the bench, whether the roster or the Almanac is the collection asked to be finished, and how
+a wide creature roster survives a four-slot habitat cap.
 
 The build state below is unchanged and still accurate.
 

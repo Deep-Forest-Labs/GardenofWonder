@@ -5,6 +5,87 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 (strategy) — Four directions priced, and the hook turns out to have shipped by accident
+
+**The owner's question, asked directly:** *am I entering a genre so saturated the game cannot stick
+out, or should I focus on the idle incremental tapper — and what would it take to build something
+that succeeds?* The analysis is [29-direction-and-odds.md](29-direction-and-odds.md).
+
+**The framing was rejected first.** Saturation is not the problem. **1,087 idle/clicker games in 2026
+earned ~$3.97M combined — about $3,650 each.** That is not a saturated market; it is a market full of
+games nobody could find, and it is *good* news for a team whose advantage is craft, because the
+median competitor is not competing. The genuinely saturated case is Merge-2, which is crowded with
+**funded** competitors rather than bad ones. So the useful question is not crowded / not-crowded but
+**does this category reward craft or reward spend** — and idle, cosy and farming-sim reward craft.
+
+**The selection criterion that follows:** three of the four distribution channels available to two
+people with no UA budget — community posts, platform editorial, clips — are closed to a merge board,
+and all four reward the same two things. **Does the direction produce a sentence, and a five-second
+video?** The project currently has craft and neither of those, which is exactly the Terrarium: Garden
+Idle warning: 11M installs, ~$9K/month. Reach without a reason.
+
+### The four, priced (base = $3–5K/mo; breakout = >$20K/mo)
+
+**A — finish the plan: 30% / 7%.** Safest, most likely to be a real small business, most likely to be
+invisible. Cats & Soup's $300K/month arrives with Netflix distribution attached.
+**B — the merge pivot: 12% / 3%.** Highest theoretical ceiling, worst odds from this position;
+strands the garden, the tap loop, the creatures, the weather and the mutations, and requires energy.
+Priced rather than dismissed so the shape of the bet is visible.
+**C — the Shared Sky: 40% / 15%. Recommended.**
+**D — the incremental-depth reposition: 35% / 10%.** Magic Research made ~$400K in twelve months
+from essentially two posts on r/incremental_games, and this game already has more systems depth than
+most incrementals — currently half-hidden by the cosy framing.
+
+**A, C and D are not mutually exclusive.** A is the plan, C is the hook A lacks, D is an audience A
+could also serve. Only B is a fork.
+
+### The finding: the hook shipped on 2026-08-15 as a convenience
+
+`DATA.weather` runs on **wall-clock epoch time**, chosen so that offline reconciliation could resolve
+any past slot. The consequence nobody drew: **every player in the world is under the same sky at the
+same moment**, and the sky is computable forwards as well as backwards — so the game can print a
+**forecast**. Not "it might rain." *"Wonderfall at 6:42."* Wonderfall is 0.5% of 60-second slots, so
+it lands roughly seven times a day, worldwide, simultaneously, and it is the rarest mutation tier in
+the game.
+
+**That is a synchronous global event with no server, no accounts and no friend graph** — the three
+things this team does not have. It supplies the missing sentence (*everyone's garden shares one sky,
+and you can read the forecast*), the missing reason to open the app, a notification that is news
+rather than guilt (doc 17's warning is about **streak** nudges, and this is not one), the missing
+clip, and the missing reason planting is a *timing* decision rather than a shopping list.
+
+**And it names an identity five built systems already share and nobody had connected:** the epoch
+day/night cycle, weather, mutations, Nightbell's night multiplier and the Ridge / Night Garden are
+all *the world has a clock and you play against it*.
+
+**Two weaknesses recorded rather than glossed.** Without a server the game can *assert* a shared sky
+and cannot *demonstrate* it — no "1,204 gardens are in this storm" counter; the forecast is real and
+needs no server, and a read-only counter is the cheapest server anyone has specified, worth costing
+rather than blocking on. And a uniform global slot clock gives a player in the wrong timezone fewer
+good skies while awake, which needs checking before it ships.
+
+### What it takes regardless of direction, and four of the five are missing
+
+A one-sentence hook; **D7 above ~15%**, which is now an ASO input and therefore the only free
+algorithmic lift available — and which needs dailies, streaks, notifications and a designed session,
+none of which exist; **one monetization lever needing no live-ops** (rewarded video, piggy bank,
+content pack — all specced, none built); **a distribution date to build toward** — Wholesome Direct
+is annual, June, free to submit, 5M+ views in 2025, next window roughly nine months out; and scope
+discipline, which is Sneaky Sasquatch against Palia.
+
+### Rejected
+
+**Choosing by genre.** The question was asked as one and it is not one; at this scale distribution
+decides, and doc 25 already said so — *"building a bigger map does not move this game toward the
+first number; distribution does."* **Treating the merge pivot as unthinkable** — it is priced, and
+its odds are bad from here rather than bad in the abstract. **Adding a social system to get the
+shared feeling** — the epoch clock already delivers it for free, and a friend graph is a backend.
+**Treating D as a pivot** rather than a second audience C happens to serve, since a public forecast
+you optimise against is what the incremental crowd wants and a shared sky is what the cosy crowd
+posts about.
+
+---
+
 ## 2026-08-26 (design) — Merge moves to the centre, and the garden stays the home screen
 
 **The owner answered the audit's five questions, and two of the answers change the shape of the
