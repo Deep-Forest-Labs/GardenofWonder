@@ -218,6 +218,19 @@ The first real use of `version`-gated migration. When decor became cosmetic (nav
 `load()` then sets `state.version = 3` unconditionally, same pattern as the old hardcoded `2`. This
 is the template for the next schema change that alters meaning rather than just adding a field.
 
+## Meadow land (added 2026-08-25)
+
+`state.apiary.locked` is a **fixed-length boolean array**, one per cell, exactly like
+`state.apiary.cells`. It is positional, so `load()` rebuilds it to length rather than merging — a
+short or sparse array indexes to `undefined` everywhere downstream.
+
+Two rules in the migration, and the second is the one worth remembering:
+
+- A save that predates the gates has no `locked` key, so empty land goes back behind the level
+  table.
+- **A cell that already holds something is never re-locked.** Taking back ground a player has built
+  on is the one migration that is always wrong, whatever the new table says.
+
 ## Weather and mutation fields (added 2026-08-15)
 
 Two new **per-cell grid fields** and one top-level field:

@@ -3689,7 +3689,19 @@ const meadowReset = () => {
   G.reset();
   S.credits = 1e9;
   clearGarden();
+  /* Open the land. Everything below this line is about hives, tenders and
+     adjacency, not about the gate — and a new per-cell field that this helper
+     does not know about is exactly how the garden's `clearGarden()` has leaked
+     state between tests three times now. */
+  S.apiary.locked = Array(MEADOW.cells).fill(false);
   S.grid.forEach((c, i) => { if (i < 4) { c.seed = 'daisy'; c.plantedAt = G.nowSeconds(); c.grow = 9e9; } });
+};
+
+/* A meadow with its gates intact, for the tests that are about the gates. */
+const meadowGated = () => {
+  G.reset();
+  S.credits = 1e9;
+  clearGarden();
 };
 
 check('a hive lands on the cell it was placed in', (() => {
@@ -3705,6 +3717,69 @@ check('the board fills and then refuses', (() => {
   meadowReset();
   for (let i = 0; i < MEADOW.cells; i += 1) G.placeHive(i);
   return G.hiveCount() === MEADOW.cells && G.boardFull() && !G.placeHive(0);
+})());
+/* Locked land. The garden's two-stage gate restated on the second board: reach
+   the level, then pay the coins. Same rule, so it is learned once. */
+check('the meadow opens with its gated cells locked', (() => {
+  meadowGated();
+  const want = MEADOW.cellUnlockLevel.map((lv) => lv > 1);
+  return S.apiary.locked.length === MEADOW.cells
+    && S.apiary.locked.every((v, i) => v === want[i]);
+})());
+check('every cell has an unlock level and a price', (() => {
+  if (MEADOW.cellUnlockLevel.length !== MEADOW.cells) return false;
+  for (let i = 0; i < MEADOW.cells; i += 1) {
+    if (!(G.cellUnlockLevel(i) >= 1)) return false;
+    if (!(G.cellUnlockCost(i) > 0)) return false;
+  }
+  return true;
+})());
+check('a new player can act on the first visit', (() => {
+  meadowGated();
+  // At least one cell must be open at level 1, or the room refuses everyone.
+  return !G.cellLocked(0) && G.cellAvailable(0) && G.placeHive(0);
+})());
+check('locked land refuses a hive and a tender', (() => {
+  meadowGated();
+  const i = MEADOW.cellUnlockLevel.findIndex((lv) => lv > 1);
+  return G.cellLocked(i) && !G.placeHive(i) && !G.placeTender(i, 'sun') && !G.cellAt(i);
+})());
+check('a cell below its level cannot be bought at any price', (() => {
+  meadowGated();
+  const i = MEADOW.cellUnlockLevel.findIndex((lv) => lv > 1);
+  unlockTo(1);
+  S.credits = 1e9;
+  return !G.cellAvailable(i) && !G.unlockCell(i) && G.cellLocked(i);
+})());
+check('a cell at its level still costs coins', (() => {
+  meadowGated();
+  const i = MEADOW.cellUnlockLevel.findIndex((lv) => lv > 1);
+  unlockTo(G.cellUnlockLevel(i));
+  S.credits = G.cellUnlockCost(i) - 1;
+  return G.cellAvailable(i) && !G.unlockCell(i) && G.cellLocked(i);
+})());
+check('paying opens the cell and charges exactly once', (() => {
+  meadowGated();
+  const i = MEADOW.cellUnlockLevel.findIndex((lv) => lv > 1);
+  unlockTo(G.cellUnlockLevel(i));
+  const cost = G.cellUnlockCost(i);
+  S.credits = cost;
+  const ok = G.unlockCell(i);
+  return ok && !G.cellLocked(i) && S.credits === 0 && !G.unlockCell(i);
+})());
+check('an opened cell can then be built on', (() => {
+  meadowGated();
+  const i = MEADOW.cellUnlockLevel.findIndex((lv) => lv > 1);
+  unlockTo(20);
+  S.credits = 1e9;
+  return G.unlockCell(i) && G.placeHive(i) && G.cellIsHive(i);
+})());
+check('a piece cannot be moved onto locked land', (() => {
+  meadowGated();
+  S.credits = 1e9;
+  const i = MEADOW.cellUnlockLevel.findIndex((lv) => lv > 1);
+  G.placeHive(0);
+  return !G.moveCell(0, i) && G.cellIsHive(0) && !G.cellAt(i);
 })());
 check('a tender is not a hive', (() => {
   meadowReset();
@@ -3908,6 +3983,37 @@ check('a short or sparse board comes back full length', (() => {
   globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
   G.load();
   return S.apiary.cells.length === MEADOW.cells && G.hiveCount() === 1 && G.cellIsHive(1);
+})());
+check('a save from before the gates keeps land it had built on', (() => {
+  G.reset();
+  const i = MEADOW.cellUnlockLevel.findIndex((lv) => lv > 1);
+  const raw = JSON.parse(JSON.stringify(S));
+  delete raw.apiary.locked;
+  raw.apiary.cells = Array(MEADOW.cells).fill(null);
+  raw.apiary.cells[i] = { kind: 'hive', at: 0, jars: [] };
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  // Ground a player has built on is never taken back.
+  return G.cellIsHive(i) && !G.cellLocked(i);
+})());
+check('a save from before the gates re-locks land it never used', (() => {
+  G.reset();
+  const i = MEADOW.cellUnlockLevel.findIndex((lv) => lv > 1);
+  const raw = JSON.parse(JSON.stringify(S));
+  delete raw.apiary.locked;
+  raw.apiary.cells = Array(MEADOW.cells).fill(null);
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return G.cellLocked(i) && S.apiary.locked.length === MEADOW.cells;
+})());
+check('an unlocked cell stays unlocked across a save', (() => {
+  G.reset();
+  const i = MEADOW.cellUnlockLevel.findIndex((lv) => lv > 1);
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.apiary.locked = Array(MEADOW.cells).fill(false);
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return !G.cellLocked(i);
 })());
 check('a tender that no longer exists is dropped on load', (() => {
   G.reset();

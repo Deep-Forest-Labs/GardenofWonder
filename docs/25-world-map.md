@@ -168,6 +168,10 @@ terrace** whose cells are **cobbles**, not a wooden planter holding soil; its bo
 **dry-stone wall** with coping stones stood on end, not a painted fence; its grass is **unmown with
 seed heads**, where the garden's lawn has neat stripes. Same structure, different place.
 
+**Land is bought the same way in every place, 2026-08-25.** The meadow's cells gate on a level and
+then a price, exactly as the garden's plots do, with the same chips and the same refusal. A place
+may differ in its verb and its material; it should not differ in how you acquire the ground.
+
 **The material carries the verb, 2026-08-25.** Soil is right for something temporary — dug, planted,
 harvested, cleared. Cobbles are a floor somebody laid and left, which is what "place it once and it
 stays" looks like. This is also what finally separated the board from the world: the first build put

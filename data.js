@@ -1092,6 +1092,14 @@ const MEADOW = {
   swarmChance: 0.02,
   shelfSize: 19,
 
+  /* Land is bought exactly the way the garden's plots are — a level gate you
+     have to reach, and then a coin price — so the two boards teach one rule
+     rather than two. The table mirrors the shape of DATA.plotUnlockLevel and
+     the gates sit later, because the meadow is somewhere you travel to once the
+     garden is already running. Every number here is provisional. */
+  cellUnlockLevel: [1, 1, 1, 1, 5, 8, 11, 14],
+  cellUnlockCost: (idx) => 1200 + 900 * (idx + 1),
+
   /* The board is the SAME GRAMMAR as the garden — a frame floating in the scene,
      the talking flower in the middle, eight cells around it — and a DIFFERENT
      VERB. Garden cells are temporary: plant, grow, harvest, empty, over and over.

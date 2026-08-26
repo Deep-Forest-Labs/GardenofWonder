@@ -310,6 +310,21 @@ something dense rather than as sticks planted in mid-air. `grassBand()` draws a 
 blades, then a lighter front mat over their feet, and the wall is drawn *between* two bands so it
 stands in the grass instead of wearing it.
 
+### Draw the scene at the size the room really is
+
+A room's backdrop is composed against a phone — 390×844 — and it is tempting to render that
+composition with `preserveAspectRatio="slice"` and let it crop. **It does not crop, it scales.** A
+1440-wide window covers a 390-wide viewBox by multiplying everything by 3.7, so the grass became a
+hedge, the willow filled a third of the screen and the wall fell off the bottom entirely. It read as
+a prototype, and the cause was one attribute.
+
+So `Meadow.scene()` takes the room's **measured** width and height and draws 1:1 into them, and
+`syncScene()` memoises on the size as well as the sky so a resize redraws. Everything inside is
+positioned relatively: the sun and the clouds as fractions of the width, the hills and the horizon
+as fractions of the height, the willow offset from the *right edge* and the horizon, and blade
+counts scaled by `w / n` so density stays constant instead of stretching. This is the same job the
+garden's CSS scenery layers do for free by being CSS.
+
 ### Nothing stands on a shadow
 
 A dark contact shadow on a dark floor is invisible, which is why objects dropped on the cobbles

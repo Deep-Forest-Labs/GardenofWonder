@@ -1,5 +1,24 @@
 # UI and Layout
 
+## This is a phone game, and the layout says so
+
+**The game is composed at phone size and a desktop window shows that same phone column, centred.**
+`.ui` is `max-width: 560px; margin: 0 auto` — that one line is what keeps the garden looking
+deliberate on a laptop instead of stretched. The scenery behind it is full-bleed and bleeds out to
+the window edges; only the *interface* is capped.
+
+**A place layer sits OUTSIDE `.ui` and inherits none of this.** `.hollow` is inside `.ui` and gets
+it for free; `.meadow-layer` and `.map-layer` are siblings of `.ui` at `#world` level, because they
+have to paint under it. So **every room built as a layer must re-state the column itself** — the
+same cap, the same padding, the same rows. The meadow shipped without it and was the only screen in
+the game whose dock ran the full width of a desktop window; next to the garden it read as a
+different, worse game. `.mw-ui` is the worked example.
+
+The same rule governs the art: **a room's scene must be drawn at the size the room actually
+measures.** The meadow's backdrop was composed at 390×844 and rendered with
+`preserveAspectRatio="slice"`, so a 1440-wide window scaled every blade of grass by nearly four.
+See [05-art-direction.md](05-art-direction.md#draw-the-scene-at-the-size-the-room-really-is).
+
 ## The layout contract
 
 One screen, never scrolling, never zooming. The garden owns as much of it as possible. Anything

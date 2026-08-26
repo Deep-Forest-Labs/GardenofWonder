@@ -38,7 +38,8 @@ const Game = (() => {
       setsClaimed: [],
       stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
       wonder: { until: 0, last: 0 },
-      apiary: { cells: Array(MEADOW.cells).fill(null), honey: {}, wax: 0, shelf: {}, keepers: [] },
+      apiary: { cells: Array(MEADOW.cells).fill(null), locked: MEADOW.cellUnlockLevel.map((lv) => lv > 1),
+        honey: {}, wax: 0, shelf: {}, keepers: [] },
       flowers: {},
       craft: [],
       goods: {},
@@ -190,6 +191,17 @@ const Game = (() => {
         }
         state.apiary.cells = out;
         delete state.apiary.hives;
+
+        /* Locked land is rebuilt to length the same way. A cell that already
+           holds something is never re-locked — taking back ground a player has
+           built on is the one migration that is always wrong. Empty land from a
+           save that predates the gates does go back behind them. */
+        const lockSrc = Array.isArray(parsed.apiary && parsed.apiary.locked)
+          ? parsed.apiary.locked : null;
+        state.apiary.locked = Array.from({ length: MEADOW.cells }, (_, i) => {
+          if (out[i]) return false;
+          return lockSrc ? !!lockSrc[i] : (MEADOW.cellUnlockLevel[i] || 1) > 1;
+        });
       }
       /* A keeper who is no longer a real creature, or is resting, is dropped —
          the getter filters anyway, but a stale id would sit in the save forever. */
@@ -1735,6 +1747,38 @@ const Game = (() => {
   const boardFull = () => !emptyCells().length;
 
   const nextHiveCost = () => MEADOW.hive.cost(hiveCount());
+
+  /* ---- locked land ----
+     The garden's two-stage gate, restated: reach the level, then pay the coins.
+     `plotUnlockLevel` / `plotAvailable` / `unlockPlot` are the models. */
+  const cellUnlockLevel = (idx) => (MEADOW.cellUnlockLevel || [])[idx] || 1;
+  const cellUnlockCost = (idx) => Math.round(MEADOW.cellUnlockCost(idx));
+  const cellAvailable = (idx) => levelFromRep(state.rep) >= cellUnlockLevel(idx);
+  const cellLocked = (idx) => !!(state.apiary.locked || [])[idx];
+
+  function unlockCell(idx) {
+    if (idx < 0 || idx >= MEADOW.cells || !cellLocked(idx)) return false;
+    if (!cellAvailable(idx)) {
+      emit('deny', { reason: 'level', need: cellUnlockLevel(idx), idx });
+      return false;
+    }
+    const cost = cellUnlockCost(idx);
+    if (state.credits < cost) {
+      emit('deny', { reason: 'credits', need: cost, idx });
+      return false;
+    }
+    state.credits -= cost;
+    state.apiary.locked[idx] = false;
+    save();
+    emit('currency');
+    /* Its own event, not the garden's `unlock`: that handler centres its
+       confetti on a plot node, and in the meadow the garden is display:none —
+       which is the documented way to fire a celebration from the top-left
+       corner of the screen. */
+    emit('cellUnlock', { idx, cost });
+    emit('panels');
+    return true;
+  }
   const nextTenderCost = (id) => {
     const t = meadowTender(id);
     return t ? t.cost(tenderCount(id)) : 0;
@@ -1815,7 +1859,7 @@ const Game = (() => {
   const hiveWax = (i) => Math.min(0.95, APIARY.waxChance + hiveBonus(i).wax);
 
   function placeHive(i) {
-    if (cellAt(i) || i < 0 || i >= MEADOW.cells) return false;
+    if (cellAt(i) || i < 0 || i >= MEADOW.cells || cellLocked(i)) return false;
     const cost = nextHiveCost();
     if (state.credits < cost) { emit('deny', { reason: 'credits', need: cost }); return false; }
     state.credits -= cost;
@@ -1830,7 +1874,7 @@ const Game = (() => {
 
   function placeTender(i, id) {
     const t = meadowTender(id);
-    if (!t || cellAt(i) || i < 0 || i >= MEADOW.cells) return false;
+    if (!t || cellAt(i) || i < 0 || i >= MEADOW.cells || cellLocked(i)) return false;
     const cost = nextTenderCost(id);
     if (state.credits < cost) { emit('deny', { reason: 'credits', need: cost }); return false; }
     state.credits -= cost;
@@ -1847,6 +1891,7 @@ const Game = (() => {
      opposite of what the cosy pillar asks for. Two filled cells swap. */
   function moveCell(from, to) {
     if (from === to || from < 0 || to < 0 || from >= MEADOW.cells || to >= MEADOW.cells) return false;
+    if (cellLocked(from) || cellLocked(to)) return false;
     const a2 = cellAt(from);
     if (!a2) return false;
     const b2 = cellAt(to);
@@ -3213,6 +3258,7 @@ const Game = (() => {
     tapFlower, decayCombo, plant, unlockPlot, hasten, harvest, critChanceNow,
     buyUpgrade, buyDecor, activateBoost,
     hiveCount, pollination, nextHiveCost, nextTenderCost, hivesFull,
+    cellUnlockLevel, cellUnlockCost, cellAvailable, cellLocked, unlockCell,
     cells, cellAt, cellIsHive, hiveCells, tenderCount, emptyCells, boardFull,
     meadowNeighbours, hiveBonus, placeHive, placeTender, moveCell,
     hiveInterval, hiveCapacity, hiveWax,

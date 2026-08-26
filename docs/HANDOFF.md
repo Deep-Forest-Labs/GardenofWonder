@@ -676,6 +676,36 @@ keeper stand whose icon had never rendered, both meadow clouds swept off the top
 since the screen shipped, and a reduced-motion block that lost the cascade to the rules it was
 meant to cancel.
 
+**Then a second pass, the same day, on the owner's note that it still did not line up — and the
+cause named the rule the docs were missing: *this is a phone game, and the garden looks right
+because it is built for one.*** `.ui` is `max-width: 560px; margin: 0 auto`, and **a place layer
+sits outside `.ui` and inherits none of it**. The Hollow is inside `.ui` and got it for free; the
+meadow and the map are siblings of `.ui` because they paint *under* the HUD, so the meadow was the
+only screen in the game running the full width of a desktop window. It now re-states the column
+itself as `.mw-ui` — same cap, same padding, same rows. **Scenery is full-bleed, interface is
+capped**, and any future room does the same. See
+[08-ui-and-layout.md](08-ui-and-layout.md#this-is-a-phone-game-and-the-layout-says-so).
+
+**The backdrop was doing the same thing in SVG.** It was composed at 390×844 and drawn with
+`preserveAspectRatio="slice"`, which does not crop to fit — it *scales* to cover, so a 1440-wide
+window multiplied every blade of grass by 3.7. The scene is now drawn 1:1 into the room's measured
+box. "Too busy" was one attribute, not a decoration problem.
+
+**Also in that pass:** the keepers left scene coordinates for the garden's own yard (a flex row in
+the `.stage` padding, so a whole class of `getScreenCTM()` bugs went with them); the empty cell is a
+dashed **rounded square** with a plus, the garden's `plantSpot` idiom, not an oval; and **the swipe
+out of the room now starts anywhere on the board.** It had worked only on the slivers of scene
+either side, which on a phone is most of the screen unreachable — the meadow's cells act on `click`
+rather than `pointerdown`, so a drag may begin on one and withhold the click at the end.
+
+**The meadow has locked land, 2026-08-25.** Cells 0–3 open; the rest gate at levels **5, 8, 11, 14**
+and then cost **5,700 / 6,600 / 7,500 / 8,400**. `cellUnlockLevel` / `cellAvailable` / `cellLocked`
+/ `unlockCell` mirror the garden's plot functions line for line and the cell wears the same
+two-stage chip, because a second board teaching a second acquisition rule is the clone trap arriving
+through the back door. **Every number is provisional** and belongs in the full retune. Buying fires
+its own `cellUnlock` event — the garden's `unlock` centres confetti on a plot node, and in the
+meadow the garden is `display:none`. 12 new sim-test assertions, at 914.
+
 **The MVP is done.** The Stand and the map frame both ship. What comes next, roughly in order:
 
 1. ~~**The Wild Meadow**~~ — **done 2026-08-25**, art included.
@@ -798,6 +828,30 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 ## Traps in this codebase
 
 Things that cost real time to discover. None are visible from a casual read.
+
+**A place layer sits OUTSIDE `.ui`, and `.ui` is the only thing that makes this a phone game on a
+desktop.** `.ui` is `max-width: 560px; margin: 0 auto`; `.hollow` is inside it and inherits that,
+but `.meadow-layer` and `.map-layer` are siblings at `#world` level because they paint under the
+HUD. A room built as a layer that does not re-state the column is the only screen in the game that
+fills a laptop window, and it will read as a different, worse game beside the garden. Scenery
+full-bleed, interface capped.
+
+**`preserveAspectRatio="slice"` does not crop to fit — it scales to cover.** A backdrop composed at
+390×844 and sliced into a 1440-wide window is drawn at 3.7×: grass becomes a hedge, a tree fills a
+third of the screen, and the thing you wanted at the bottom is off it. Draw a room's scene at the
+size the room actually measures, memoise on that size so a resize redraws, and position everything
+as a fraction of it.
+
+**A gesture may begin on a control that acts on `click`; it may not on one that acts on
+`pointerdown`.** This is the whole distinction. The meadow's cells are click-driven, so a swipe can
+start on one and simply withhold the click at the end — and it has to, because excluding them left
+the swipe working only on the slivers of scene either side of the board. The flower is
+pointerdown-driven and stays excluded; that tap latency is load-bearing.
+
+**A backtick inside an HTML comment terminates the template literal it is written in.** Commenting
+`.ui` as a code span inside a `build()` template turned the rest of the markup into a tagged
+template call, and the error surfaced as `"<div class=…" is not a function` at load. Use plain
+prose in markup comments.
 
 **An inset box-shadow paints UNDER an element's content.** Give a surface an opaque child — a
 floor, a fill, a full-bleed SVG — and its `inset` lit top edge and shaded bottom vanish, silently
@@ -1200,6 +1254,12 @@ stale line here costs them real time before they have any way to know it is wron
 > against a creature. **Screenshot any new screen next to the garden at the same size before calling
 > it done** — and pick its material to say what its verb is, the way the meadow's cobbles say
 > "permanent" against the garden's soil.
+>
+> **This is a phone game.** Compose at 390×844 and let a desktop window show that same column
+> centred — `.ui` caps the interface at 560px and the scenery bleeds out behind it. **A place layer
+> sits outside `.ui` and inherits none of that, so a new room must re-state the column itself**, and
+> its scene must be drawn at the size the room really measures rather than sliced from a phone-sized
+> viewBox. Both mistakes shipped in the meadow and both read as "it looks like a prototype."
 >
 > **Your job is the next place: the Orchard** — the long-clock producer, and the natural home for
 > collect-all. It is also the first place that will want its own keeper slots. Read

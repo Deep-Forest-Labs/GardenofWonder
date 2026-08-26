@@ -984,6 +984,22 @@ cleared; a cobbled floor is laid once and left. Skinning the two boards differen
 separates the meadow from the green world it stands in — see
 [05-art-direction.md](05-art-direction.md#the-material-recipe--why-the-garden-looks-finished-and-the-meadow-does-not).
 
+### Locked land
+
+**The garden's gate, restated (2026-08-25).** Cells 0–3 are open from the first visit; the rest sit
+behind a level and then a price, and a locked cell shows the same two-stage chip a locked plot does
+— `Lv 8` until you reach it, then the coin cost. `Game.cellUnlockLevel` / `cellAvailable` /
+`cellLocked` / `unlockCell` mirror `plotUnlockLevel` / `plotAvailable` / `unlockPlot` line for line,
+deliberately: one rule learned once carries across both boards.
+
+Locked land refuses a hive, refuses a tender, and refuses to be the destination of a move. Numbers
+are in [04-economy.md](04-economy.md#meadow-land-added-2026-08-25) and the saved field is in
+[07-save-data.md](07-save-data.md#meadow-land-added-2026-08-25).
+
+**Buying it fires `cellUnlock`, not the garden's `unlock`.** That handler centres its confetti on a
+plot node, and in the meadow the garden is `display:none` — a 0×0 rect, which is the documented way
+to fire a celebration from the top-left corner of the screen.
+
 ### Hives and tenders
 
 A cell holds a **hive** or a **tender**. Hives make honey. Tenders make nothing at all and improve

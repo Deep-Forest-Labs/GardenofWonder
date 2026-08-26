@@ -5,6 +5,58 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (fix) — The meadow was not built for a phone, and everything else followed from that
+
+**The owner put the two screens side by side again and the list was blunt: the buttons do not line
+up, the background is too busy, it reads as a prototype.** Then the sentence that named the cause:
+*"we're building this for mobile. The reason why the garden looks so good is it's made for mobile."*
+Every item on the list turned out to be one omission wearing four costumes.
+
+**`.ui` is `max-width: 560px; margin: 0 auto`, and a place layer is not inside `.ui`.** That single
+line is what makes the garden a phone column centred in a laptop window. The Hollow sits inside
+`.ui` and inherited it without anyone noticing; the meadow and the map are siblings of `.ui` at
+`#world` level, because a room has to paint *under* the HUD. So the meadow was the only screen in
+the game running the full width of a desktop window — a dock three times the garden's, a board a
+third too big, and cobbles scaled up with it. **The rule is now written down: a room built as a
+layer re-states the column itself.**
+
+**And the scene was doing the same thing in SVG.** The backdrop was composed at 390×844 and drawn
+with `preserveAspectRatio="slice"`, which does not crop to fit — it *scales* to cover. A 1440-wide
+window multiplied every blade of grass by 3.7. The scene is now drawn 1:1 into the room's measured
+box with everything positioned as fractions of it. **"Busy" was never a decoration problem; it was
+one attribute.**
+
+**Rejected: capping the layer itself.** Constraining `.meadow-layer` would have capped the scenery
+too, and the garden's sky, hills and fence deliberately bleed to the window edges. The split is
+scenery full-bleed, interface capped — which is what the garden already does and what nobody had
+had to state before, because until the map there was only one room outside `.ui`.
+
+**The keepers stopped being scene-positioned, and that is a simplification worth keeping.** They had
+been mapped from scene coordinates through `getScreenCTM()`, which was correct only while the scene
+and the layer were the same box. Once the board became a centred column they belonged to the column,
+so they are now a flex row in the yard — the same yard the garden reserves as `.stage` padding so a
+creature never stands on a plot. A whole class of coordinate bugs went with it.
+
+**The swipe out of the room was a hidden control.** Excluding cells from the gesture had left it
+working only on the slivers of scene either side of the board, which on a phone is most of the
+screen unreachable. The distinction that makes it safe: **the meadow's cells act on `click`, not on
+`pointerdown`**, so a drag may begin on one and simply withhold the click at the end. The flower
+still cannot start a swipe — it pays on pointerdown and that latency is load-bearing.
+
+**Locked land, and why it is the garden's logic rather than a new one.** The owner asked for a level
+gate and a coin gate and said the values could be settled later. The values are provisional; the
+*shape* is not. `cellUnlockLevel` / `cellAvailable` / `cellLocked` / `unlockCell` mirror the garden's
+plot functions line for line, and the cell wears the same two-stage chip — the level until you reach
+it, then the price. A second board teaching a second acquisition rule would be the clone trap
+arriving through the back door.
+
+**One migration decision worth recording: ground a player has built on is never taken back.** A save
+that predates the gates keeps every cell that holds something and re-locks only empty land. The
+alternative — grandfathering everything open — would have meant the owner never saw the feature on
+their own save, and the alternative to *that* would have been taking hives off people.
+
+---
+
 ## 2026-08-25 (art) — The meadow is cobbles on a stone terrace, and the material is the verb
 
 **The owner put the two screens side by side and called it: "night and day."** The diagnosis was

@@ -34,7 +34,13 @@ const Meadow = (() => {
     }
   };
 
+  /* The size the composition was drawn against. The scene is now rendered at
+     whatever the room actually measures, so this is a REFERENCE, not a viewport:
+     things anchored to an edge are offset by the difference. Slicing a 390-wide
+     composition into a 1500-wide window scaled every blade of grass by four and
+     is what made this screen read as a prototype. */
   const VIEW = { width: 390, height: 844 };
+  const HORIZON = Math.round(VIEW.height * 0.26);
 
   /* The board's own furniture. The scene is composed like the garden's — sky,
      ground, a boundary, pets, dock — but every piece of furniture is different,
@@ -48,16 +54,18 @@ const Meadow = (() => {
   const KEEPERS = [{ x: 122, y: 612 }, { x: 268, y: 612 }];
   const KEEPER_SIZE = 70;
 
-  function sky(c, h) {
-    return `<rect x="0" y="0" width="${VIEW.width}" height="${h}" fill="url(#mw-sky)"/>
-      <circle cx="316" cy="86" r="46" fill="${c.sunGlow}" opacity=".5"/>
-      <circle cx="316" cy="86" r="30" fill="${c.sun}"/>`;
+  function sky(c, w, h) {
+    const sx = Math.round(w * 0.9);
+    const sy = Math.round(h * 0.45);
+    return `<rect x="0" y="0" width="${w}" height="${h}" fill="url(#mw-sky)"/>
+      <circle cx="${sx}" cy="${sy}" r="46" fill="${c.sunGlow}" opacity=".5"/>
+      <circle cx="${sx}" cy="${sy}" r="30" fill="${c.sun}"/>`;
   }
 
-  function clouds(c) {
-    return [[46, 120, 1, -19], [236, 70, 0.72, -44], [300, 168, 0.56, -8]]
-      .map(([x, y, k, delay], i) => `
-        <g transform="translate(${x} ${y}) scale(${k})">
+  function clouds(c, w, horizon) {
+    return [[0.12, 0.55, 1, -19], [0.6, 0.32, 0.72, -44], [0.77, 0.77, 0.56, -8]]
+      .map(([fx, fy, k, delay], i) => `
+        <g transform="translate(${Math.round(w * fx)} ${Math.round(horizon * fy)}) scale(${k})">
           <g class="mw-cloud" style="--dur:${56 + i * 15}s;--delay:${delay}s">
             <path d="M0,0 a34,34 0 0 1 58,-18 a40,40 0 0 1 68,8 a30,30 0 0 1 2,10 Z"
               fill="#fff" opacity=".8"/></g>
@@ -115,13 +123,16 @@ const Meadow = (() => {
     </g>`;
   }
 
-  function wildflowers(c) {
+  function wildflowers(c, w, top, bottom) {
+    const span = Math.max(40, bottom - top);
     const set = [
-      [28, 476, '#ffd6e8'], [356, 470, '#c9b6ff'], [58, 566, '#ffe066'],
-      [332, 578, '#ffd6e8'], [18, 640, '#c9b6ff'], [368, 636, '#ffe066']
+      [0.05, 0.62, '#ffd6e8'], [0.95, 0.58, '#c9b6ff'], [0.13, 0.8, '#ffe066'],
+      [0.88, 0.84, '#ffd6e8'], [0.03, 0.97, '#c9b6ff'], [0.97, 0.94, '#ffe066'],
+      [0.27, 0.93, '#ffe066'], [0.72, 0.96, '#ffd6e8'], [0.45, 0.99, '#c9b6ff']
     ];
-    return set.map(([x, y, col], i) => `
-      <g class="mw-flower" style="--i:${i % 5}" transform="translate(${x} ${y})">
+    return set.map(([fx, fy, col], i) => `
+      <g class="mw-flower" style="--i:${i % 5}"
+        transform="translate(${Math.round(w * fx)} ${Math.round(top + span * fy)})">
         <path d="M0,14 L0,-2" stroke="#4bb257" stroke-width="4.5" stroke-linecap="round"/>
         <circle cx="0" cy="-8" r="9" fill="${col}" stroke="${INK}" stroke-width="4"/>
         <circle cx="0" cy="-8" r="3" fill="#fff7e1"/></g>`).join('');
@@ -151,7 +162,7 @@ const Meadow = (() => {
   /* The willow the shaded spot sits under, so that spot's name means something.
      Its crown must be DARKER than the bank behind it — drawn in the mid green it
      disappeared and only the ink outline showed, which read as a floating ring. */
-  function willow(c) {
+  function willow(c, w, horizon) {
     let fronds = '';
     for (let i = 0; i < 13; i += 1) {
       const t = (i - 6) / 6;
@@ -162,7 +173,7 @@ const Meadow = (() => {
         d="M${x},${from} C${x - 6},${from + 30} ${x + 6},${drop - 22} ${x - 3},${drop}"
         fill="none" stroke="${c.willowDeep}" stroke-width="6.5" stroke-linecap="round"/>`;
     }
-    return `<g>
+    return `<g transform="translate(${(w - VIEW.width).toFixed(0)} ${(horizon - HORIZON).toFixed(0)})">
       <rect x="332" y="382" width="22" height="92" rx="9" fill="#8a5a33" stroke="${INK}" stroke-width="5"/>
       ${fronds}
       <path d="${blob(342, 356, 76, 44, 11, 0.9)}" fill="${c.willow}" stroke="${INK}"
@@ -179,7 +190,7 @@ const Meadow = (() => {
        three times: at 46px a course crossed the screen in eight stones and read
        as a row of pills. A stone is measured against the creature standing next
        to it — the keeper is the ruler. */
-    const courses = [15, 13, 16, 14];
+    const courses = [15, 13, 16];
     const step = 21;
     const tones = [c.stoneLit, c.stone, c.stoneDeep];
     let cope = '';
@@ -257,11 +268,10 @@ const Meadow = (() => {
   /** An empty cell: a bare socket in the cobbles, waiting for something. */
   function emptyCell() {
     return `<svg viewBox="0 0 100 100" class="mw-cell-art" aria-hidden="true">
-      <ellipse cx="50" cy="57" rx="24" ry="17" fill="rgba(16,10,6,.5)"/>
-      <ellipse cx="50" cy="55" rx="22" ry="15" fill="var(--cob-socket)"/>
-      <ellipse class="mw-socket-ring" cx="50" cy="55" rx="22" ry="15" fill="none"
-        stroke="rgba(255,247,225,.5)" stroke-width="3" stroke-dasharray="6 6"/>
-      <path d="M50,63 L50,47 M42,55 h16" stroke="rgba(255,247,225,.66)" stroke-width="4.6"
+      <rect x="33" y="38" width="34" height="34" rx="11" fill="rgba(16,10,6,.3)"/>
+      <rect class="mw-socket-ring" x="33" y="37" width="34" height="34" rx="11" fill="none"
+        stroke="rgba(255,233,201,.85)" stroke-width="2.8" stroke-dasharray="6 5.4"/>
+      <path d="M50,45 v18 M41,54 h18" stroke="rgba(255,233,201,.9)" stroke-width="3.2"
         stroke-linecap="round"/>
     </svg>`;
   }
@@ -405,7 +415,11 @@ const Meadow = (() => {
     const dock = o.dockHeight || 0;
     const c = SKIES[o.sky === 'moon' ? 'moon' : 'sun'];
     const horizon = Math.round(h * 0.26);
+    const wallTop = h - dock - 54;
+    const dense = (per) => Math.max(12, Math.round(w / per));
 
+    /* Drawn 1:1 at the room's real size, so `slice` has nothing left to scale.
+       The viewBox and the pixel box agree by construction. */
     return `<svg class="meadow-scene" viewBox="0 0 ${w} ${h}"
       preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
@@ -418,8 +432,8 @@ const Meadow = (() => {
         </radialGradient>
       </defs>
 
-      ${sky(c, horizon + 40)}
-      ${clouds(c)}
+      ${sky(c, w, horizon + 40)}
+      ${clouds(c, w, horizon)}
 
       <path d="M0,${horizon + 10} C90,${horizon - 32} 190,${horizon + 6} 270,${horizon - 18}
         C320,${horizon - 32} 360,${horizon - 6} ${w},${horizon - 20}
@@ -432,16 +446,16 @@ const Meadow = (() => {
         L${w},${h} L0,${h} Z" fill="${c.bank}"/>
       <rect x="0" y="0" width="${w}" height="${h}" fill="url(#mw-warm)"/>
 
-      ${willow(c)}
-      ${grassBand(c, horizon + 104, w, { band: 14, tall: 24, n: 26, back: true })}
-      ${wildflowers(c)}
+      ${willow(c, w, horizon)}
+      ${grassBand(c, horizon + 104, w, { band: 14, tall: 24, n: dense(15), back: true })}
+      ${wildflowers(c, w, horizon + 150, wallTop - 40)}
 
       <!-- The wall stands IN the grass: a band behind it, the wall, then a
            denser band at its foot. Grass drawn over the whole stone face was
            the single worst thing on this screen. -->
-      ${grassBand(c, h - dock - 84, w, { band: 16, tall: 26, n: 28, back: true })}
-      ${wall(c, h - dock - 72, w)}
-      ${grassBand(c, h - dock - 8, w, { band: 30, tall: 22, n: 36 })}
+      ${grassBand(c, wallTop - 10, w, { band: 16, tall: 24, n: dense(14), back: true })}
+      ${wall(c, wallTop, w)}
+      ${grassBand(c, h - dock - 2, w, { band: 26, tall: 20, n: dense(11) })}
     </svg>`;
   }
 

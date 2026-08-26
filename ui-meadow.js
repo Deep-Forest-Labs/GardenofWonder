@@ -20,7 +20,7 @@
 
   const DOCK_H = 96;
   let open = false;
-  let sceneSky = null;
+  let sceneSky = null;               // sky + measured size, so a resize redraws
   let mode = 'visit';                 // 'visit' | 'move'
   let moving = -1;                    // cell picked up in move mode
 
@@ -54,35 +54,25 @@
 
   /* ---------------- scene ---------------- */
 
+  /* The scene is drawn at the room's REAL size, not at the 390x844 the art was
+     composed against — sliced into a desktop window that composition scaled by
+     four and the grass alone read as a hedge. So the sky has to be rebuilt when
+     the window changes shape, and memoised against the size as well as the sky
+     or every resize event throws the whole backdrop away. */
   function syncScene() {
-    const sky = skyNow();
     const host = $('#meadowScene');
-    if (sceneSky === sky && host.firstChild) return;
-    sceneSky = sky;
+    if (!host) return;
+    const sky = skyNow();
+    const r = el.meadow.getBoundingClientRect();
+    const w = Math.max(320, Math.round(r.width));
+    const h = Math.max(480, Math.round(r.height));
+    const dockEl = $('.mw-dock', el.meadow);
+    const dock = dockEl ? Math.max(0, Math.round(r.bottom - dockEl.getBoundingClientRect().top)) : DOCK_H;
+    const key = `${sky}|${w}|${h}|${dock}`;
+    if (sceneSky === key && host.firstChild) return;
+    sceneSky = key;
     el.meadow.dataset.sky = sky;
-    host.innerHTML = Meadow.scene({
-      width: Meadow.VIEW.width, height: Meadow.VIEW.height, dockHeight: DOCK_H, sky
-    });
-  }
-
-  /** Keepers stand in scene coordinates, so they need the mapping the Hollow's
-      creatures already use — the scene is drawn with `slice`, and a percentage
-      of the container stops agreeing with a position in the art. */
-  function placeKeepers() {
-    const svg = $('.meadow-scene', el.meadow);
-    if (!svg || !svg.getScreenCTM) return;
-    const m = svg.getScreenCTM();
-    if (!m) return;
-    const box = el.meadow.getBoundingClientRect();
-    $$('[data-keeper-slot]', el.meadow).forEach((node, i) => {
-      const pt = Meadow.KEEPERS[i];
-      if (!pt) return;
-      const w = Meadow.KEEPER_SIZE * m.a;
-      node.style.width = `${w}px`;
-      node.style.height = `${w}px`;
-      node.style.left = `${pt.x * m.a + m.e - box.left - w / 2}px`;
-      node.style.top = `${pt.y * m.d + m.f - box.top - w / 2}px`;
-    });
+    host.innerHTML = Meadow.scene({ width: w, height: h, dockHeight: dock, sky });
   }
 
   /** A perfect square in whatever the stage row offers — the garden's rule. */
@@ -94,6 +84,9 @@
     const side = Math.max(120, Math.floor(Math.min(r.width, r.height)));
     board.style.width = `${side}px`;
     board.style.height = `${side}px`;
+    // A keeper is measured against the board, so the two never drift apart.
+    const bank = $('#meadowKeepers');
+    if (bank) bank.style.setProperty('--keeper-size', `${Math.round(side * 0.2)}px`);
   }
 
   /* ---------------- the board ---------------- */
@@ -128,13 +121,15 @@
          standing on them does. Keeping them in their own child means a hive
          going down does not redraw the ground it lands on. */
       b.innerHTML = `<span class="mw-cell-floor">${Meadow.cobbleFloor(i)}</span>
-        <span class="mw-cell-obj"></span><span class="mw-jar-badge" hidden></span>`;
+        <span class="mw-cell-obj"></span>
+        <span class="mw-lock">${ico('lock')}<span class="mw-lock-cost"></span></span>
+        <span class="mw-jar-badge" hidden></span>`;
       board.appendChild(b);
       cellEls.set(i, b);
     }
     const bench = $('#meadowKeepers');
     bench.innerHTML = '';
-    Meadow.KEEPERS.forEach((k, i) => {
+    for (let i = 0; i < Game.keeperSlots(); i += 1) {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'mw-keeper';
@@ -146,7 +141,7 @@
         <span class="mw-keeper-obj"></span>`;
       bench.appendChild(b);
       keeperEls.set(i, b);
-    });
+    }
     UI.bindFlower($('#meadowFlower'));
   }
 
@@ -154,11 +149,13 @@
     const node = cellEls.get(i);
     if (!node) return;
     const c = Game.cellAt(i);
-    const look = c ? (c.kind === 'hive' ? 'hive' : `t:${c.type}`) : 'empty';
+    const locked = Game.cellLocked(i);
+    const look = locked ? 'locked' : (c ? (c.kind === 'hive' ? 'hive' : `t:${c.type}`) : 'empty');
     if (node.dataset.look !== look) {
       node.dataset.look = look;
       const art = $('.mw-cell-obj', node);
-      if (!c) art.innerHTML = Meadow.emptyCell();
+      if (locked) art.innerHTML = '';
+      else if (!c) art.innerHTML = Meadow.emptyCell();
       else if (c.kind === 'hive') art.innerHTML = Meadow.hive();
       else {
         const t = meadowTender(c.type);
@@ -167,6 +164,23 @@
     }
     let cls = 'mw-cell';
     const badge = $('.mw-jar-badge', node);
+    /* The garden's two-stage read, restated: below the level it names the level,
+       at the level it names the price. */
+    if (locked) {
+      const gated = !Game.cellAvailable(i);
+      const cost = Game.cellUnlockCost(i);
+      cls += gated ? ' locked gated' : ' locked';
+      if (!gated && S.credits >= cost) cls += ' can';
+      const chip = $('.mw-lock-cost', node);
+      const label = gated ? `Lv ${Game.cellUnlockLevel(i)}` : `${ico('coin')}<span>${fmt(cost)}</span>`;
+      if (chip && chip.dataset.look !== label) { chip.dataset.look = label; chip.innerHTML = label; }
+      node.className = cls;
+      if (badge) badge.hidden = true;
+      node.setAttribute('aria-label', gated
+        ? `Locked land, reaches level ${Game.cellUnlockLevel(i)}`
+        : `Locked land, ${fmt(cost)} coins`);
+      return;
+    }
     if (!c) cls += S.credits >= Game.nextHiveCost() ? ' empty can' : ' empty';
     else if (c.kind === 'hive') {
       const jars = c.jars.length;
@@ -207,7 +221,7 @@
     syncScene();
     if (!cellEls.size) buildBoard();
     for (let i = 0; i < MEADOW.cells; i += 1) syncCell(i);
-    Meadow.KEEPERS.forEach((k, i) => syncKeeper(i));
+    for (let i = 0; i < Game.keeperSlots(); i += 1) syncKeeper(i);
 
     // Bees exist because hives do. An empty board is a silent meadow.
     const want = Math.min(6, Game.hiveCount() * 2);
@@ -235,7 +249,7 @@
       const dot = $('.dock-dot', b);
       if (dot) dot.hidden = !(b.dataset.dock === 'collect' && waiting > 0);
     });
-    requestAnimationFrame(() => { sizeBoard(); placeKeepers(); });
+    requestAnimationFrame(sizeBoard);
   }
 
   /* ---------------- verbs ---------------- */
@@ -245,6 +259,21 @@
 
     /* Moving is free, and it is a mode rather than a drag: the same shape the
        Hollow's Loadout uses, and a drag would fight the swipe out to the map. */
+    if (Game.cellLocked(i)) {
+      if (!Game.cellAvailable(i)) {
+        const p = FX.centerOf(cellEls.get(i));
+        FX.float(p.x, p.y, `Level ${Game.cellUnlockLevel(i)}`, '');
+        Sound.play('deny');
+        return;
+      }
+      if (!Game.unlockCell(i)) {
+        const p = FX.centerOf(cellEls.get(i));
+        FX.float(p.x, p.y, `Need ${fmt(Game.cellUnlockCost(i))}`, '');
+      }
+      render();
+      return;
+    }
+
     if (mode === 'move') {
       if (moving < 0) {
         if (!c) { Sound.play('deny'); return; }
@@ -343,7 +372,7 @@
     el.meadow.hidden = false;
     buildBoard();
     render();
-    requestAnimationFrame(() => { sizeBoard(); placeKeepers(); });
+    requestAnimationFrame(sizeBoard);
     Sound.play('open');
     UI.hideCoach();
   }
@@ -363,25 +392,30 @@
     el.meadow.innerHTML = `
       <div class="meadow-scene-host" id="meadowScene"></div>
       <div class="mw-bees" id="meadowBees" aria-hidden="true"></div>
-      <div class="mw-note" id="meadowNote"></div>
-      <main class="mw-stage">
-        <div class="mw-frame" id="meadowFrame">
-          <div class="mw-board" id="meadowBoard" aria-label="The hive bank"></div>
-        </div>
-      </main>
-      <!-- Outside the stage on purpose: keepers are positioned in SCENE
-           coordinates against the layer, and nesting them in a padded, offset
-           box silently shifted every one of them. -->
-      <div class="mw-keeper-bank" id="meadowKeepers" aria-label="Keepers"></div>
-      <div class="mw-exit"><i></i><span>Swipe down for the map</span></div>
-      <nav class="dock mw-dock">${DOCK.map((d) => `
+      <!-- One column, capped and centred exactly as the .ui grid is, because a
+           place layer sits outside .ui and inherits none of it. Without this the
+           meadow is the only screen in the game that fills a desktop window. -->
+      <div class="mw-ui">
+        <div class="mw-note" id="meadowNote"></div>
+        <main class="mw-stage">
+          <div class="mw-frame" id="meadowFrame">
+            <div class="mw-board" id="meadowBoard" aria-label="The hive bank"></div>
+          </div>
+          <!-- The yard the stage reserves, the way the garden reserves one so a
+               creature never stands on a plot. -->
+          <div class="mw-keeper-bank" id="meadowKeepers" aria-label="Keepers"></div>
+        </main>
+        <div class="mw-exit"><i></i><span>Swipe down for the map</span></div>
+        <nav class="dock mw-dock">${DOCK.map((d) => `
         <button class="dock-btn" type="button" data-dock="${d.id}">
           <span class="dock-ico">${ico(d.icon)}</span>
           <span class="dock-label">${d.label}</span>
           <span class="dock-dot" hidden></span>
-        </button>`).join('')}</nav>`;
+        </button>`).join('')}</nav>
+      </div>`;
 
     el.meadow.addEventListener('click', (e) => {
+      if (dragged) { dragged = false; return; }
       const cell = e.target.closest('[data-cell]');
       if (cell) { tapCell(Number(cell.dataset.cell)); return; }
       const slot = e.target.closest('[data-keeper-slot]');
@@ -390,13 +424,24 @@
       if (dock) dockTap(dock.dataset.dock);
     });
 
-    /* Swipe down goes back out to the map. Cells, the flower and the dock all
-       act on the way down, so a drag begun on one has already spent itself. */
+    /* Swipe down goes back out to the map.
+
+       The board covers nearly the whole room, so excluding cells from the
+       gesture left it working only on the slivers of scene either side — which
+       is not a gesture, it is a hidden control. Cells and keeper stands act on
+       `click`, NOT on pointerdown, so a drag may safely start on one and simply
+       withhold the click at the end. The flower, the dock and the exit chip stay
+       out: the flower pays on pointerdown and that tap latency is load-bearing.
+
+       See the traps in docs/HANDOFF.md — this is the same distinction that lets
+       the garden's swipe start on the background but never on a plot. */
     let y0 = null;
     let x0 = null;
+    let dragged = false;
     el.meadow.addEventListener('pointerdown', (e) => {
       y0 = null;
-      if (e.target.closest('[data-cell],[data-keeper-slot],.dock,.mw-exit,.flower-btn')) return;
+      dragged = false;
+      if (e.target.closest('.dock,.mw-exit,.flower-btn')) return;
       y0 = e.clientY;
       x0 = e.clientX;
     });
@@ -405,13 +450,15 @@
       const dy = e.clientY - y0;
       const dx = Math.abs(e.clientX - x0);
       y0 = null;
-      if (dy > 70 && dy > dx) { leave(); UI.enterMap('meadow'); }
+      if (dy > 70 && dy > dx) { dragged = true; leave(); UI.enterMap('meadow'); return; }
+      // Anything that moved is a drag that fell short, never a tap on a cell.
+      if (Math.abs(dy) > 14 || dx > 14) dragged = true;
     });
 
     window.addEventListener('resize', () => {
       if (!open) return;
       sizeBoard();
-      placeKeepers();
+      syncScene();
     });
   }
 
@@ -422,4 +469,5 @@
   UI.meadowOpen = () => open;
   UI.renderMeadow = render;
   UI.meadowJar = jarFor;
+  UI.meadowCellEl = (i) => cellEls.get(i) || null;
 })();

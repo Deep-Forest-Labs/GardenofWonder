@@ -304,6 +304,21 @@ The Land Deed badge is the bulk alternative — 2,000 for the first two *opened*
 for the next two — but it cannot skip a plot the level bar has not opened yet. At level 1 it
 reads Maxed. Once every plot is open it maxes for good, and it is still the only badge that can.
 
+## Meadow land (added 2026-08-25)
+
+```
+cost(index) = 1,200 + 900 × (index + 1)
+```
+
+The garden's gate, restated on the second board so the rule is learned once: reach the level, then
+pay the coins. Cells 0–3 start open. Cells 4–8 gate at levels **5, 8, 11 and 14** and then cost
+**5,700, 6,600, 7,500, 8,400** — 28,200 to open the whole meadow.
+
+They sit above the garden's plots (1,900–2,800) because the meadow is somewhere you travel to once
+the garden is already running, and a hive on the land costs 2,200 more on top. **Every number here
+is provisional** and belongs in the full retune with everything else; what is not provisional is the
+*shape* — a level bar you cannot buy past, then a price.
+
 ## Badge prices
 
 All badges are bought with coins. Price is `round(base × scale^level)`, so the first purchase

@@ -434,6 +434,21 @@
     }
   });
 
+  /* The meadow's land has its own event because the garden's `unlock` handler
+     centres on a plot node, and in the meadow the garden is display:none — a
+     0x0 rect, and confetti from the top-left corner. */
+  Game.on('cellUnlock', ({ idx }) => {
+    const node = UI.meadowCellEl && UI.meadowCellEl(idx);
+    if (node) {
+      const c = FX.centerOf(node);
+      FX.confetti(c.x, c.y, 22);
+      FX.ring(c.x, c.y, '#8ce99a', 0.6, 120);
+    }
+    Sound.play('unlock');
+    FX.haptic([15, 30, 15]);
+    UI.toast({ title: 'Land cleared!', body: 'Room for another hive', art: Icons.get('sprout') });
+  });
+
   Game.on('deny', () => {
     Sound.play('deny');
     FX.shake(3, 0.16);
