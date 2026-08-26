@@ -454,7 +454,7 @@
       if (s.gemChance) drops.push(`<span class="stat gem">${Icons.get('gem')}${pct(s.gemChance, 1)}</span>`);
       if (locked) {
         return `<div class="seed-row gated">
-          <span class="seed-art">${Flora.head(s, 40)}</span>
+          <span class="seed-art" style="--art:${s.art.c1}">${Flora.head(s, 40)}</span>
           <span>
             <span class="seed-name">${s.name}${verbChip(s)}</span>
             <span class="seed-stats">
@@ -469,7 +469,7 @@
         </div>`;
       }
       return `<button class="seed-row" data-plant="${s.id}" ${can ? '' : 'disabled'}>
-        <span class="seed-art">${Flora.head(s, 40)}</span>
+        <span class="seed-art" style="--art:${s.art.c1}">${Flora.head(s, 40)}</span>
         <span>
           <span class="seed-name">${s.name}${verbChip(s)}</span>
           <span class="seed-stats">

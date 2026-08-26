@@ -367,6 +367,16 @@ every tint in `DATA.verbs`. The veil is what lets a saturated token be used as a
 without a second hex per verb: the chip stays solid tint, the note is the same hue washed out, and
 the pairing reads as one fact said twice at two volumes.
 
+**The white veil is the general answer to "I need a pale version of a colour I already have".**
+`.seed-art` uses it too — the plant picker's art badges were a fixed `#fff → #e8f7e3` mint, so
+nineteen identical discs ran down the left edge of the list and killed the scan. They now take the
+seed's own `art.c1` as the body under
+`radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6))`, which keeps the
+old highlight exactly where it was and pales every petal colour — from `#4c6ef5` to `#e03131` — to a
+disc the bloom's ink outline still reads against. Nineteen seeds, nineteen hues, no new tokens. The
+alternative was a hand-picked pale hex per seed, which is nineteen more colours in a palette already
+carrying 149 by accident.
+
 ### 3. Objects must be anchored, not floated
 
 Every plant in the garden sits on a soil line with a shadow under it. The meadow's tenders sit in

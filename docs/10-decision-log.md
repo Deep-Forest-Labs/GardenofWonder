@@ -5,6 +5,30 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 — Nineteen seeds, nineteen badge colours, and no new hexes to maintain
+
+**The picker's art badges were all the same mint-white disc.** `#fff → #e8f7e3`, nineteen times down
+the left edge of a scrolling list, which is the column the eye actually uses to find a row. The
+blooms inside them differ, but at 40px inside a 54px circle the disc is what registers first and it
+was saying nothing. The badge now takes the seed's own `art.c1` — the deep petal colour that already
+drives its gradients — so the left edge runs the hue wheel in tier order.
+
+**The white radial became a veil rather than a fill, which is what makes this free.** `c1` values are
+fully saturated by design: `#4c6ef5`, `#e03131`, `#d6336c`. Painting one straight into a badge would
+put a 3px ink bloom on a mid-dark disc and lose the outline. Laying
+`rgba(255,255,255,.95) → rgba(255,255,255,.6)` over it instead pales any hue to a legible surface
+while leaving the highlight at 34% 28% exactly where it was, so the badge is the same object it
+always was with the colour swapped in underneath.
+
+**Rejected: a hand-picked pale hex per seed.** It gives finer control over each badge and it costs
+nineteen new colours in a stylesheet that already accumulated 149 by accident, plus a second value
+to remember every time a seed's art is retuned. The veil derives from what is already in `data.js`,
+so a seed that changes colour changes its badge with it and nobody has to notice.
+
+**Daisy stays white and that is correct, not a bug.** Its `c1` is `#ffffff`, so its badge is the one
+that does not tint — which is a truthful reading of a white flower rather than an exception to work
+around.
+
 ## 2026-08-26 — The flavour line moved to the Almanac, because the picker is for choosing
 
 **Every seed row said the same thing twice in two registers.** *"Shaded blossom that rewards patient

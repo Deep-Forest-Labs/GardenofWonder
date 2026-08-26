@@ -1148,10 +1148,16 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .quest-card .q-meta{min-width:0}
 .quest-card .q-meta .seed-name{display:block}
 .quest-card .q-prog{flex:none;font-weight:900;font-variant-numeric:tabular-nums;font-size:13px}
+/* Tinted from the seed's own c1, so nineteen badges down the left edge run the
+   hue wheel instead of being nineteen identical mint discs. The white radial is
+   a veil rather than a fill: it pales any petal colour to a legible disc while
+   keeping the highlight where it was, so no seed needs a second hex. */
 .seed-art{
   width:54px;height:54px;flex:none;border-radius:50%;
   display:grid;place-items:center;
-  background:radial-gradient(circle at 34% 28%, #fff, #e8f7e3);
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)),
+    var(--art,#e8f7e3);
   border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2);
 }
 .seed-name{font-size:15px;font-weight:800;line-height:1.15}
