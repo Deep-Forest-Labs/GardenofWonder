@@ -223,3 +223,70 @@ a gentle rotate-and-scale bob on the garden, and a spinning rainbow halo behind 
 five staggered confetti waves, a full-screen banner, and a rail countdown chip.
 
 It is intentionally the loudest thing in the game and the only moment that breaks the calm palette.
+
+## The material recipe — why the garden looks finished and the meadow does not
+
+**Diagnosed 2026-08-25 by putting the two screens side by side at the same size.** The owner's
+words: *"the garden looks so much better than the meadow — night and day."* It is right, and the
+difference is not talent or time. It is three specific, copyable things.
+
+### 1. Value and hue separation is the whole game
+
+The garden reads instantly because it has **four separated tiers**:
+
+| Tier | In the garden |
+| --- | --- |
+| Ink | 3–4px `--ink` outline on everything |
+| Dark body | The board — brown, on a green world |
+| Mid body | The plots — a lighter brown inside the darker board |
+| Light chips | Cream/paper pills for prices, gems, locks |
+
+**The meadow is green cells, in a green board, on green ground.** No figure, no ground. That single
+fact accounts for most of the gap, and no amount of extra detail fixes it — the board needs a body
+colour that is *not* the colour of the world it sits in. Turf on a **stone or earth** body is the
+obvious answer: it stays a meadow, and it separates.
+
+### 2. Every surface is built from the same five-layer recipe
+
+This is the house material, and it is written down here because it is the thing that makes a flat
+shape read as an object. From `.plot`:
+
+```css
+background:
+  radial-gradient(circle at 26% 22%, rgba(255,255,255,.16) 0 12%, transparent 13%),  /* highlight */
+  radial-gradient(circle at 72% 62%, rgba(0,0,0,.10) 0 9%, transparent 10%),          /* dirt mark */
+  linear-gradient(180deg, var(--soil), var(--soil-d) 72%, var(--soil-dd));            /* body */
+box-shadow:
+  inset 0 5px 0 rgba(255,255,255,.16),    /* lit top edge */
+  inset 0 -7px 0 rgba(0,0,0,.18),         /* shaded bottom edge */
+  0 4px 0 var(--soil-dd),                 /* THE LIP — a solid, unblurred edge */
+  0 8px 14px rgba(44,26,16,.24);          /* soft contact shadow */
+```
+
+**The unblurred `0 4px 0` lip is the single most important line.** It is what makes everything in
+this game look moulded rather than drawn, and it is why the plots feel pressable. The meadow's cells
+have a flat `rgba()` fill and no lip at all, which is why they read as empty rectangles.
+
+The board itself adds one more: `repeating-linear-gradient(96deg, …)` grain over the body gradient.
+A surface with no texture at all reads as a placeholder.
+
+### 3. Objects must be anchored, not floated
+
+Every plant in the garden sits on a soil line with a shadow under it. The meadow's tenders sit in
+the middle of an empty cell with a soft ellipse beneath — they float. Anything placed in a cell
+needs **ground inside the cell** to stand on.
+
+### The scale trap
+
+Also found in the comparison: the meadow's dry-stone wall is drawn with stones roughly three times
+too large, so it reads as clip art rather than as a wall, and its grass is a handful of thin sticks
+where it wants to be dense and soft. **Check a new prop against a creature standing next to it** —
+the keeper is the ruler.
+
+### The check to run before calling any screen done
+
+Screenshot it next to the garden at the same size and ask three questions:
+
+1. **Can I see the board against the world?** If the body colour is the world's colour, no.
+2. **Does every surface have a lip and a gradient?** A flat fill is a placeholder.
+3. **Is anything floating?** Everything sits on something.

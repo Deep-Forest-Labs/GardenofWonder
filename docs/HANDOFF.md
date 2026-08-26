@@ -653,7 +653,18 @@ the MVP scope — and [26-goods-catalog.md](26-goods-catalog.md) is the goods sp
 is open with the not-a-clone bar per garden; goods are deep-botanical plus cottage crops, no barn;
 and the build is **MVP-first** — plain map, functional Stand, polish later.
 
-**The MVP is done.** The Stand and the map frame both ship. What comes next, roughly in order:
+**The next task is the VISUAL GAP between the garden and the meadow.** The owner's call,
+2026-08-25: put the two screens side by side and they are night and day, and the meadow has to reach
+the garden's standard. **The diagnosis is already done and is specific** — see
+[05-art-direction.md](05-art-direction.md#the-material-recipe--why-the-garden-looks-finished-and-the-meadow-does-not).
+In short: the garden separates into four value tiers (ink / dark board / mid plots / cream chips)
+while the meadow is green cells in a green board on green ground; every garden surface is built from
+a five-layer recipe whose **unblurred `0 4px 0` lip** is what makes it look moulded; and the
+meadow's pieces float instead of standing on ground. The stone wall is also drawn about three times
+too large.
+
+**The MVP is done.** The Stand and the map frame both ship. What comes after the art pass, roughly
+in order:
 
 1. ~~**The Wild Meadow**~~ — **done 2026-08-25.**
 2. **The Orchard** — the long-clock producer, and the natural home for collect-all. It is also the
@@ -1125,22 +1136,28 @@ stale line here costs them real time before they have any way to know it is wron
 > `docs/09-conventions.md` and `docs/02-architecture.md`, and the **"Traps in this codebase"**
 > section of the handoff — it will save you hours.
 >
-> **Where the game is now:** the habitat direction. Six creatures with traits, stars, eight named
-> pairs and keepsakes, living in **the Hollow** under the garden. Food runs one fullness clock —
-> well fed, hungry, or asleep — and a tap on a creature opens its own panel. Read
-> `docs/22-creatures.md` end to end and the top few entries of `docs/10-decision-log.md`.
+> **Where the game is now.** The garden is the core loop: tap a talking flower, plant nineteen
+> seeds in eight plots, harvest with rarity and mutations. Six **creatures** with traits, stars,
+> pairs and keepsakes live in **the Hollow** under it. Above it there is now a **world map** you
+> pull back to — swipe down from the garden, swipe up to go in — holding the garden, the Hollow's
+> burrow, the **Garden Stand** (customers queue up wanting bouquets and named honeys, and pay coins
+> and reputation) and the **Wild Meadow** (a board of hives and tenders that make honey and
+> pollinate the garden). Read `docs/25-world-map.md`, `docs/03-systems.md` and the top few entries
+> of `docs/10-decision-log.md`.
 >
-> **The world map MVP is built and the next job is judging it.** Swipe down from the garden to pull back to a freely
-> scrollable world — the game becomes one altitude ladder, map → garden → Hollow. The design pass
-> is done and shipped: `docs/25-world-map.md` (map inventory, feel rubric) and
-> `docs/26-goods-catalog.md` (goods families, cottage crops, no barn) are the spec. Swipe down from
-> the garden for the map, up for the Hollow. Next: judge the feel, then collect-all gated on
-> automation, then buying land off reputation. **Two rules to hold:** no region may be a second
-> garden, and the map collects the boring half while the garden keeps the interesting half. Read the
-> top of `docs/10-decision-log.md` first.
+> **THE HOUSE RULE, and the most useful sentence in the docs: share the grammar, never share the
+> verb.** Every place is the same frame — a square board floating in a scene, the talking flower in
+> the middle, tappable cells around it, pets underneath, dock below — so nobody has to learn a
+> second screen. What differs is the verb: garden cells are planted and emptied, meadow cells are
+> placed and permanent.
 >
-> **Decorate is still agreed and still unbuilt** — mementos have had no sink since August 18. Check
-> with me before starting anything else; the Potting Bench is also still a live option.
+> **Your job is the visual gap.** Screenshot the garden and the Wild Meadow side by side at the same
+> size. They are night and day, and the meadow has to reach the garden's standard. **The diagnosis
+> is already written for you** in
+> `docs/05-art-direction.md` → "The material recipe" — value separation, the five-layer surface
+> recipe whose unblurred `0 4px 0` lip does most of the work, anchoring, and a scale trap in the
+> stone wall. Do not re-derive it; apply it, and screenshot the result next to the garden before
+> calling anything done.
 >
 > **How I work.** I'm the designer; an engineer ports to Unity. Two people, modest revenue goal,
 > deliberately small scope. I want you as a **design advisor as much as an implementer** — push back
@@ -1149,13 +1166,16 @@ stale line here costs them real time before they have any way to know it is wron
 >
 > - **Show me pictures.** Screenshot what you build and look at it critically yourself first. Real
 >   bugs here have only ever been visible in an image, and more only on a real phone.
+> - **Drive real input for anything gestural.** A synthetic `PointerEvent` has no live pointer, so
+>   it silently skips branches a real mouse hits — that is how a map where nothing was tappable
+>   passed every automated test. See the traps.
 > - **Push after every change.** I test on my phone from the live URL.
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`.
-> - **Spike the feel before building the system.** `tools/merge-spike.html`,
->   `tools/hollow-spike.html` and `tools/map-spike.html` all saved real time.
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 902 assertions.
+> - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
+>   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.
 > - **More iconography, fewer sentences.** A standing note, and the thing I keep asking for.
 
 The point of the docs is that this briefing is short. If a new agent needs more than that, a
