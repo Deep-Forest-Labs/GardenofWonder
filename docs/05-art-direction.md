@@ -37,6 +37,9 @@ new CSS.
 | Paper (panels) | `--paper` | `#fff8e7` |
 | Paper, mid | `--paper-2` | `#ffeecd` |
 | Paper, deep | `--paper-3` | `#ffe0ad` |
+| Drained paper | `--paper-dim` | `#ebe5d9` |
+| Drained paper, mid | `--paper-dim-2` | `#d8d0c0` |
+| Drained edge | `--paper-dim-edge` | `#bcb0a0` |
 | Grass | `--grass` | `#5cc45c` |
 | Grass, shadow | `--grass-d` | `#3f9d45` |
 | Grass, light | `--grass-l` | `#8fe08a` |
@@ -63,6 +66,20 @@ is a bug to fix at the declaration, not to paper over at the use.
 
 The three rarity colours are load-bearing and consistent everywhere — particles, plot auras, toast
 borders, floating text. A player learns blue/purple/gold once.
+
+**So a rarity colour may never be borrowed for something that is not a rarity.** The creature
+panel's *asleep* state used to paint a lavender field — `#f2eeff → #e2dbf8`, with `#eae6fb` and
+`#b3a7e8` alongside — which is the Epic family wearing a different hat. It was repainted on
+2026-08-26. A state is not a tier, and a player who has learned that purple means Epic will read a
+sleeping creature as a rare one for as long as the colour says so.
+
+`--paper-dim` is what a state uses instead: the interface's own paper with the warmth taken out and
+the value dropped. *Asleep, out of food, stopped working* should read as **drained** — the same
+surface, tired — and desaturating what is already there says that without spending a hue. It is on
+`.cp-fuel.out`, `.cp-head.asleep`, `.feed-row.napping`, `.feed-alert` and `.cp-card.bad`. The rule
+generalises: **when a state needs a colour, take the value out of the surface it is already on
+before you reach for a new hue.** The meadow's locked land does the same thing with
+`filter: saturate(.3)`.
 
 Sky colours (`--sky1` through `--sky3`, `--sun-c`, `--star-op`, `--sun-x`, `--sun-y`) are written
 from JavaScript every 0.6 s and must not be hardcoded.

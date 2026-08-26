@@ -13,6 +13,13 @@
   --paper-2:#ffeecd;
   --paper-3:#ffe0ad;
 
+  /* Drained: asleep, out of food, stopped working. The interface's own paper
+     with the warmth taken out, because "asleep" is a state and blue/purple/gold
+     are a rarity vocabulary a player has already learned. */
+  --paper-dim:#ebe5d9;
+  --paper-dim-2:#d8d0c0;
+  --paper-dim-edge:#bcb0a0;
+
   /* nature */
   --grass:#5cc45c;
   --grass-d:#3f9d45;
@@ -2063,7 +2070,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   transition:width .4s cubic-bezier(.22,1,.28,1);
 }
 .cp-fuel.on .cp-fuel-bar i{background:linear-gradient(180deg,#ffe9a8,#ffc93c)}
-.cp-fuel.out{background:linear-gradient(180deg,#f2eeff,#e2dbf8)}
+.cp-fuel.out{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2))}
 .cp-fuel.out .cp-fuel-v{color:var(--ink)}
 /* The line, marked with the thing it grants rather than with a word. The header
    already names the state — repeating "Well fed" under the bar said it twice and
@@ -2093,7 +2100,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:var(--paper-2);
   box-shadow:0 3px 0 var(--ink-2);
 }
-.cp-card.bad{background:#eae6fb;box-shadow:inset 0 0 0 2px #b3a7e8, 0 3px 0 var(--ink-2)}
+.cp-card.bad{background:var(--paper-dim);box-shadow:inset 0 0 0 2px var(--paper-dim-edge), 0 3px 0 var(--ink-2)}
 .cp-card-k{
   display:flex;align-items:center;gap:6px;
   font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);
@@ -2114,7 +2121,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
   box-shadow:0 3px 0 var(--ink-2);
 }
-.cp-head.asleep{background:linear-gradient(180deg,#f2eeff,#e2dbf8)}
+.cp-head.asleep{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2))}
 .cp-face{flex:0 0 64px;width:64px;height:64px}
 .cp-face svg{width:100%;height:100%;overflow:visible}
 /* A portrait is not the yard — it holds still until you pet it. */
@@ -2148,13 +2155,13 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .feed-alert{
   display:flex;align-items:flex-start;gap:7px;margin:0 0 10px;padding:9px 11px;
   border:3px solid var(--ink);border-radius:14px;
-  background:linear-gradient(180deg,#e9e4ff,#d5cdf7);
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
   font-size:12px;font-weight:700;line-height:1.35;color:var(--ink);
   box-shadow:0 3px 0 var(--ink-2);
 }
 .feed-alert svg{width:15px;height:15px;flex:0 0 15px;margin-top:1px}
 .feed-row{flex-direction:column;align-items:stretch;gap:0}
-.feed-row.napping{background:#eae6fb;box-shadow:inset 0 0 0 2px #b3a7e8, 0 3px 0 var(--ink-2)}
+.feed-row.napping{background:var(--paper-dim);box-shadow:inset 0 0 0 2px var(--paper-dim-edge), 0 3px 0 var(--ink-2)}
 .food-state.out{color:var(--ink);font-weight:800}
 /* A sleeping portrait in a list row gets the shut eyes and nothing else. The Zs
    rise well above the art on purpose, which in a 46px row means drifting up into

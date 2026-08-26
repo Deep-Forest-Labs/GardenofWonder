@@ -5,6 +5,40 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 (fix) — "Asleep" was wearing Epic's colour, and purple is spoken for
+
+**The creature panel painted a sleeping creature lavender: `#f2eeff → #e2dbf8`, with `#eae6fb` and
+`#b3a7e8` on the cards beside it.** That is the `--epic` family — `#b197fc` — at a different
+lightness. Rarity colour in this game is a vocabulary, not a mood: a player learns blue / purple /
+gold once and then trusts it across particles, plot auras, toast borders and floating text. Spending
+purple on a *state* quietly teaches them that a hungry creature is a rare one, and the cost lands
+somewhere else entirely — on the next Epic drop, which now has to compete with a food timer for the
+meaning of the colour.
+
+**The replacement had to say "drained", and drained is a value change, not a hue change.** A creature
+that has run out of food is not alarming and it is not special; it has gone quiet. The right reading
+is the same surface, tired — so `--paper-dim` (`#ebe5d9`), `--paper-dim-2` (`#d8d0c0`) and
+`--paper-dim-edge` (`#bcb0a0`) are the interface's own cream with the saturation pulled out and the
+value dropped. Nothing new enters the palette's *hue* budget; three names enter its value budget,
+which is the cheaper of the two.
+
+**Three tokens rather than five inline hexes, because this state appears in five places.**
+`.cp-fuel.out`, `.cp-head.asleep`, `.feed-row.napping`, `.feed-alert` and `.cp-card.bad` all read
+from the same names now, so the next state that needs to look drained has somewhere to point rather
+than a hex to copy.
+
+**Rejected: `filter: saturate(.3)` on the panel, the way locked meadow land does it.** It is the
+tidiest expression of exactly this idea and it desaturates the element's *children* too — which on
+`.cp-head` means the creature's portrait and its star row, and on a feed row means the food icons.
+A drained background with a full-colour creature asleep on it is the correct picture; a fully
+desaturated card is a disabled one, and a sleeping creature is not disabled — it is right there and
+one meal from waking. That distinction is the whole reason an upkeep timer is survivable in a cosy
+game, so it is worth three tokens to keep it.
+
+**Rejected: a blue or grey from outside the rarity set.** Blue is `--rare`, grey belongs to
+`.price.maxed`, and either would have been a fourth thing for a colour to mean. Taking the value out
+of a surface the player is already looking at needs no new meaning taught at all.
+
 ## 2026-08-26 — Nineteen seeds, nineteen badge colours, and no new hexes to maintain
 
 **The picker's art badges were all the same mint-white disc.** `#fff → #e8f7e3`, nineteen times down
