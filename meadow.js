@@ -20,14 +20,16 @@ const Meadow = (() => {
       hi: '#9fdcff', lo: '#eaf7ff', sun: '#fff3c4', sunGlow: '#ffe9a8',
       far: '#8cbf62', farDeep: '#6fa54e', bank: '#a8cf6a', bankDeep: '#8ab455',
       willow: '#4f9a52', willowDeep: '#3d7f43', willowLit: '#63b155',
-      stone: '#d9cfc0', stoneLit: '#eae2d6', moss: '#8ab455',
+      stone: '#bfae95', stoneLit: '#d3c4a9', stoneDeep: '#9a8870', moss: '#8ab455',
+      turf: '#63a94a', turfDeep: '#4a8b3b', turfLit: '#8fc95d',
       seed: '#e8d08a'
     },
     moon: {
       hi: '#2b2f63', lo: '#5a5f9c', sun: '#e8eeff', sunGlow: '#b9c2e8',
       far: '#3f6e42', farDeep: '#2f5636', bank: '#57764a', bankDeep: '#465f3c',
       willow: '#2f6136', willowDeep: '#254e2c', willowLit: '#3b7742',
-      stone: '#8f8a80', stoneLit: '#a9a49a', moss: '#4a6b3c',
+      stone: '#7f7a70', stoneLit: '#948f84', stoneDeep: '#66625a', moss: '#4a6b3c',
+      turf: '#3c6b3a', turfDeep: '#2c5230', turfLit: '#4f8544',
       seed: '#9c8f68'
     }
   };
@@ -40,8 +42,11 @@ const Meadow = (() => {
      unmown grass instead of mown stripes, and warm bleached green instead of the
      garden's bright lawn. Same structure, different place. */
 
-  const KEEPERS = [{ x: 128, y: 640 }, { x: 262, y: 640 }];
-  const KEEPER_SIZE = 78;
+  /* The keepers stand on the bank between the board and the wall. Sitting them
+     at the wall's own height put a pale slab across its top course, which read
+     as a stone lid rather than as somebody standing in front of it. */
+  const KEEPERS = [{ x: 122, y: 612 }, { x: 268, y: 612 }];
+  const KEEPER_SIZE = 70;
 
   function sky(c, h) {
     return `<rect x="0" y="0" width="${VIEW.width}" height="${h}" fill="url(#mw-sky)"/>
@@ -50,30 +55,64 @@ const Meadow = (() => {
   }
 
   function clouds(c) {
-    return [[54, 118, 1], [242, 66, 0.72]].map(([x, y, k], i) => `
-      <g class="mw-cloud" style="--dur:${58 + i * 14}s" transform="translate(${x} ${y}) scale(${k})">
-        <path d="M0,0 a34,34 0 0 1 58,-18 a40,40 0 0 1 68,8 a30,30 0 0 1 2,10 Z"
-          fill="#fff" opacity=".82"/></g>`).join('');
+    return [[46, 120, 1, -19], [236, 70, 0.72, -44], [300, 168, 0.56, -8]]
+      .map(([x, y, k, delay], i) => `
+        <g transform="translate(${x} ${y}) scale(${k})">
+          <g class="mw-cloud" style="--dur:${56 + i * 15}s;--delay:${delay}s">
+            <path d="M0,0 a34,34 0 0 1 58,-18 a40,40 0 0 1 68,8 a30,30 0 0 1 2,10 Z"
+              fill="#fff" opacity=".8"/></g>
+        </g>`).join('');
   }
 
   /* Unmown grass with seed heads on it — the single clearest signal that nobody
-     mows here, where the garden's lawn has neat stripes. */
-  function grass(c, y, w, n, tall) {
+     mows here, where the garden's lawn has neat stripes.
+
+     It is a MAT with blades growing out of it, and that is the whole lesson of
+     this function. The first version was tall thin strokes scattered across the
+     full height of whatever stood behind them, and over the dry-stone wall it
+     read as a broken comb laid on the stones rather than as grass growing at
+     their foot. Grass is a mass first and blades second: the mat hides every
+     blade's base, so the blades read as the top of something dense instead of
+     as sticks planted in mid-air. */
+  function grassBand(c, y, w, opts) {
+    const o = opts || {};
+    const band = o.band || 26;
+    const tall = o.tall || 34;
+    const n = o.n || Math.round(w / 11);
+    const lo = o.back ? c.turfDeep : c.turf;
+    const hi = o.back ? c.turf : c.turfLit;
+
+    /* A soft bumpy top edge. A straight line reads as a painted stripe. */
+    const mat = (top, depth, fill, bump) => {
+      const step = 26;
+      let d = `M-6,${(top + depth).toFixed(1)} L-6,${top.toFixed(1)}`;
+      for (let i = 0; i * step < w + 12; i += 1) {
+        d += ` q${(step / 2).toFixed(1)},${(-bump - (i % 3) * 2.5).toFixed(1)} ${step},0`;
+      }
+      return `<path d="${d} L${w + 6},${(top + depth).toFixed(1)} Z" fill="${fill}"/>`;
+    };
+
     let blades = '';
     for (let i = 0; i < n; i += 1) {
-      const x = -8 + i * (w / n) + (i % 3) * 5;
-      const h = tall * (0.7 + (i % 4) * 0.16);
-      const lean = i % 2 ? 10 : -10;
-      const tipX = x + lean * 1.6;
+      const x = -6 + i * ((w + 12) / n) + (i % 3) * 3;
+      const h = tall * (0.52 + (i % 5) * 0.13);
+      const lean = (i % 2 ? 8 : -8) * (0.7 + (i % 3) * 0.2);
+      const tipX = x + lean * 1.5;
       const tipY = y - h;
       blades += `<g class="mw-blade" style="--i:${i % 7}">
-        <path d="M${x},${y + 30} C${x},${y} ${x + lean},${y - h / 2} ${tipX},${tipY}"
-          fill="none" stroke="${c.bankDeep}" stroke-width="5.5" stroke-linecap="round"/>
-        ${i % 3 === 0 ? `<ellipse cx="${tipX.toFixed(1)}" cy="${tipY.toFixed(1)}" rx="4" ry="8"
-          fill="${c.seed}" transform="rotate(${lean} ${tipX.toFixed(1)} ${tipY.toFixed(1)})"/>` : ''}
+        <path d="M${x.toFixed(1)},${(y + 10).toFixed(1)} C${x.toFixed(1)},${(y - h * 0.3).toFixed(1)} ${(x + lean).toFixed(1)},${(y - h * 0.66).toFixed(1)} ${tipX.toFixed(1)},${tipY.toFixed(1)}"
+          fill="none" stroke="${i % 3 === 1 ? hi : lo}" stroke-width="${(3.6 + (i % 3) * 0.5).toFixed(1)}"
+          stroke-linecap="round"/>
+        ${i % 4 === 0 ? `<ellipse cx="${tipX.toFixed(1)}" cy="${tipY.toFixed(1)}" rx="3.2" ry="6.5"
+          fill="${c.seed}" transform="rotate(${lean.toFixed(1)} ${tipX.toFixed(1)} ${tipY.toFixed(1)})"/>` : ''}
       </g>`;
     }
-    return `<g>${blades}</g>`;
+
+    return `<g>
+      ${mat(y - 4, band + 12, lo, 7)}
+      ${blades}
+      ${mat(y + 5, band, hi, 5)}
+    </g>`;
   }
 
   function wildflowers(c) {
@@ -136,44 +175,128 @@ const Meadow = (() => {
      Uneven courses and moss in the joints — the whole point is that nobody
      built this last summer. */
   function wall(c, y, w) {
+    /* Stone size is the whole trick, and the first pass got it wrong by about
+       three times: at 46px a course crossed the screen in eight stones and read
+       as a row of pills. A stone is measured against the creature standing next
+       to it — the keeper is the ruler. */
+    const courses = [15, 13, 16, 14];
+    const step = 21;
+    const tones = [c.stoneLit, c.stone, c.stoneDeep];
+    let cope = '';
+    for (let i = -1; i < Math.ceil(w / 15) + 1; i += 1) {
+      const cw = 10 + ((i * 2) % 3) * 2;
+      const ch = 16 + ((i * 3) % 4) * 3;
+      cope += `<rect x="${i * 15 + (i % 2) * 1.5}" y="${y - ch + 4}" width="${cw}" height="${ch}"
+        rx="4" fill="${tones[(i + (i % 2) * 2) % 3]}" stroke="${INK}" stroke-width="2.6"/>`;
+    }
     let stones = '';
-    const rows = [[0, 26], [1, 21], [0, 17]];
-    rows.forEach(([off, h], r) => {
-      const top = y + r * 19;
-      for (let i = -1; i < Math.ceil(w / 46) + 1; i += 1) {
-        const sw = 38 + ((i + r) % 3) * 12;
-        const x = i * 46 + (off ? 23 : 0) + ((i + r) % 2) * 4;
-        stones += `<rect x="${x}" y="${top}" width="${sw}" height="${h}" rx="9"
-          fill="${r % 2 ? c.stoneLit : c.stone}" stroke="${INK}" stroke-width="4.5"/>`;
+    let top = y;
+    courses.forEach((h, r) => {
+      for (let i = -1; i < Math.ceil(w / step) + 1; i += 1) {
+        const sw = step - 5 + ((i * 3 + r) % 4) * 3;
+        const dy = ((i + r * 2) % 3) - 1;
+        const dh = ((i * 2 + r) % 3) - 1;
+        const x = i * step + (r % 2) * 10 + ((i + r * 2) % 2) * 1.5;
+        stones += `<rect x="${x.toFixed(1)}" y="${top + dy}" width="${sw}" height="${h + dh}"
+          rx="${4 + ((i + r) % 3)}"
+          fill="${tones[(i * 2 + r * 2 + (i % 3)) % 3]}" stroke="${INK}" stroke-width="2.6"/>`;
       }
+      top += h + 2;
     });
+    /* Moss in the joints, never on a stone face — it is damp collecting in the
+       gaps, and a patch sitting on top of a stone reads as lichen paint. */
     let moss = '';
-    [40, 150, 236, 330].forEach((x, i) => {
-      moss += `<path d="M${x},${y + 4} q10,-9 21,0 q9,7 -3,9 q-13,2 -18,-9 Z"
-        fill="${c.moss}" opacity=".9" transform="translate(0 ${(i % 2) * 19})"/>`;
+    [26, 88, 147, 209, 268, 331].forEach((x, i) => {
+      const my = y + 12 + (i % 3) * 21;
+      moss += `<path d="${blob(x, my, 11, 4.5, 7, i * 1.7)}" fill="${c.moss}" opacity=".85"/>`;
     });
-    return `<g>${stones}${moss}</g>`;
+    return `<g>${stones}${cope}${moss}</g>`;
   }
 
-  /** An empty cell on the board: pressed turf ringed with small stones. */
+  /* The floor of a cell, and the piece that says what the verb is.
+
+     The garden's plots are SOIL — dug, planted, harvested, emptied — and that
+     is the right material for something temporary. A meadow cell is permanent:
+     you set a hive down once and it stays. So the meadow's cells are COBBLES, a
+     surface somebody laid and left. Sharing the board and differing in the
+     material is the house rule working exactly as intended — same grammar,
+     different verb — and it is also what finally separates this board from the
+     green world it sits in, which no amount of detail on a green cell could.
+
+     Colours come from custom properties rather than the sky table, so night
+     recolours every cell without any of them being rebuilt. */
+  function cobbleFloor(seed) {
+    const s = seed || 0;
+    let stones = '';
+    for (let r = 0; r < 7; r += 1) {
+      const y = 2 + r * 16;
+      const off = (r + s) % 2 ? 9 : 0;
+      for (let i = -1; i < 6; i += 1) {
+        const x = i * 18 + 9 + off;
+        const tone = ((i + 6) + r * 2 + s) % 3;
+        const rx = 9.4 + ((i + 6 + r + s) % 3) * 0.8;
+        const ry = 7.4 + (((i + 6) * 2 + r + s) % 3) * 0.5;
+        stones += `<path d="${blob(x, y, rx, ry, 7, i + r * 2 + s)}" fill="var(--cob-${tone + 1})"/>
+          <path d="${blob(x - rx * 0.18, y - ry * 0.34, rx * 0.54, ry * 0.32, 7, i + r)}"
+            fill="var(--cob-lit)"/>`;
+      }
+    }
+    /* Moss collects in the joints. Two or three per cell — enough that the
+       surface is old, few enough that it is still a floor. */
+    let moss = '';
+    [[18, 26], [72, 42], [36, 74], [90, 90], [9, 58]].forEach(([mx, my], i) => {
+      if ((i + s) % 3 === 2) return;
+      moss += `<path d="${blob(mx, my, 6, 3.2, 7, i + s * 1.3)}" fill="var(--cob-moss)" opacity=".55"/>`;
+    });
+    return `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect x="-2" y="-2" width="104" height="104" fill="var(--cob-joint)"/>
+      ${stones}${moss}
+    </svg>`;
+  }
+
+  /** An empty cell: a bare socket in the cobbles, waiting for something. */
   function emptyCell() {
     return `<svg viewBox="0 0 100 100" class="mw-cell-art" aria-hidden="true">
-      <ellipse cx="50" cy="58" rx="34" ry="24" fill="rgba(44,26,16,.13)"/>
-      ${[0, 1, 2, 3, 4, 5].map((i) => {
-        const a = (Math.PI * 2 * i) / 6 - 0.4;
-        const x = 50 + Math.cos(a) * 36;
-        const y = 58 + Math.sin(a) * 25;
-        return `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="9" ry="7"
-          fill="#d9cfc0" stroke="${INK}" stroke-width="4"/>`;
-      }).join('')}
-      <path d="M50,66 L50,40 M38,46 h24" stroke="${INK}" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+      <ellipse cx="50" cy="57" rx="24" ry="17" fill="rgba(16,10,6,.5)"/>
+      <ellipse cx="50" cy="55" rx="22" ry="15" fill="var(--cob-socket)"/>
+      <ellipse class="mw-socket-ring" cx="50" cy="55" rx="22" ry="15" fill="none"
+        stroke="rgba(255,247,225,.5)" stroke-width="3" stroke-dasharray="6 6"/>
+      <path d="M50,63 L50,47 M42,55 h16" stroke="rgba(255,247,225,.66)" stroke-width="4.6"
+        stroke-linecap="round"/>
     </svg>`;
+  }
+
+  /* The ground a keeper stands on. A creature with nothing under it floats, and
+     a soft ellipse is not ground — it is a shadow with no floor to fall on. */
+  function keeperSpot() {
+    return `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <ellipse cx="50" cy="84" rx="33" ry="12" fill="rgba(16,10,6,.3)"/>
+      <ellipse cx="50" cy="81" rx="32" ry="11" fill="var(--mw-tread)"/>
+      <ellipse cx="47" cy="78" rx="20" ry="5" fill="rgba(255,250,238,.13)"/>
+      ${[19, 33, 66, 81].map((x, i) => `<path d="M${x},${88 - (i % 2) * 3}
+        q${i % 2 ? 4 : -4},-10 ${i % 2 ? 7 : -7},-1" fill="none" stroke="var(--mw-tuft)"
+        stroke-width="4.4" stroke-linecap="round"/>`).join('')}
+    </svg>`;
+  }
+
+  /* Everything that stands in a cell stands on a worn pad. A piece dropped
+     straight onto the setts floats, and its own shadow cannot rescue it — a
+     dark shadow on a dark floor is invisible, which is exactly why the first
+     meadow's objects looked pasted on. The pad is the ground; the shadow on top
+     of it is the contact. */
+  function pad(cx, cy, rx) {
+    return `<ellipse cx="${cx}" cy="${cy + 2}" rx="${rx + 2}" ry="${(rx * 0.33).toFixed(1)}"
+        fill="rgba(255,250,238,.1)"/>
+      <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${(rx * 0.3).toFixed(1)}" fill="var(--cob-pad)"/>
+      <ellipse cx="${cx - 2}" cy="${cy - 2}" rx="${(rx * 0.6).toFixed(1)}" ry="${(rx * 0.15).toFixed(1)}"
+        fill="rgba(255,250,238,.12)"/>`;
   }
 
   /** A hive on the board. */
   function hive() {
     return `<svg viewBox="0 0 100 100" class="mw-hive-art" aria-hidden="true">
-      <ellipse cx="50" cy="86" rx="34" ry="10" fill="rgba(44,26,16,.2)"/>
+      ${pad(50, 86, 33)}
+      <ellipse cx="50" cy="85" rx="26" ry="7" fill="rgba(20,12,7,.34)"/>
       <rect x="18" y="54" width="64" height="30" rx="7" fill="#e8c07a" stroke="${INK}" stroke-width="5"/>
       <rect x="14" y="34" width="72" height="24" rx="7" fill="#f0d59a" stroke="${INK}" stroke-width="5"/>
       <rect x="11" y="16" width="78" height="22" rx="8" fill="#e8c07a" stroke="${INK}" stroke-width="5"/>
@@ -184,18 +307,20 @@ const Meadow = (() => {
   /* One drawing per tender. They must read at a glance as DIFFERENT OBJECTS —
      a board of five recoloured squares is a spreadsheet with a hedge round it. */
   const TENDERS = {
-    sun: (t) => `<ellipse cx="50" cy="82" rx="32" ry="9" fill="rgba(44,26,16,.18)"/>
-      <path d="M18,80 C14,52 30,34 52,34 C74,34 88,50 84,80 Z"
-        fill="#d9cfc0" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>
-      <path d="M30,74 C28,56 38,46 52,46" fill="none" stroke="#b8ab98" stroke-width="6" stroke-linecap="round"/>
-      <circle cx="66" cy="22" r="13" fill="${t}" stroke="${INK}" stroke-width="4.5"/>
-      ${[0, 1, 2, 3, 4].map((i) => {
-        const a = (Math.PI * 2 * i) / 5 - 1;
-        return `<path d="M${(66 + Math.cos(a) * 17).toFixed(1)},${(22 + Math.sin(a) * 17).toFixed(1)}
-          L${(66 + Math.cos(a) * 24).toFixed(1)},${(22 + Math.sin(a) * 24).toFixed(1)}"
-          stroke="${t}" stroke-width="5" stroke-linecap="round"/>`;
-      }).join('')}`,
-    clover: (t) => `<ellipse cx="50" cy="84" rx="34" ry="9" fill="rgba(44,26,16,.16)"/>
+    sun: (t) => `${pad(50, 82, 31)}
+      <ellipse cx="50" cy="81" rx="24" ry="6.5" fill="rgba(20,12,7,.3)"/>
+      <path d="${blob(50, 60, 32, 23, 9, 1.2)}" fill="#cdb98f" stroke="${INK}"
+        stroke-width="5" stroke-linejoin="round"/>
+      <path d="M22,66 C34,78 68,80 79,70 C77,80 64,84 50,84 C34,84 24,76 22,66 Z"
+        fill="#a68d63" opacity=".8"/>
+      <path d="${blob(43, 48, 19, 9, 8, 2.4)}" fill="#e6d5ac"/>
+      <path d="M60,54 C68,56 72,62 71,68" fill="none" stroke="#a68d63" stroke-width="3.4"
+        stroke-linecap="round" opacity=".75"/>
+      ${[30, 50, 70].map((x, i) => `<path d="M${x},${30 - i % 2 * 4}
+        c-5,-6 5,-10 0,-16" fill="none" stroke="${t}" stroke-width="4.5"
+        stroke-linecap="round" opacity=".95"/>`).join('')}`,
+    clover: (t) => `${pad(50, 84, 33)}
+      <ellipse cx="50" cy="83" rx="26" ry="6.5" fill="rgba(20,12,7,.3)"/>
       ${[[30, 62, 1], [50, 52, 1.25], [70, 64, 1]].map(([x, y, k]) => `
         <g transform="translate(${x} ${y}) scale(${k})">
           <path d="M0,22 L0,4" stroke="#3f9950" stroke-width="5" stroke-linecap="round"/>
@@ -203,30 +328,47 @@ const Meadow = (() => {
           <circle cx="9" cy="-6" r="10" fill="${t}" stroke="${INK}" stroke-width="4"/>
           <circle cx="0" cy="-18" r="10" fill="${t}" stroke="${INK}" stroke-width="4"/>
         </g>`).join('')}`,
-    stump: (t) => `<ellipse cx="50" cy="84" rx="34" ry="9" fill="rgba(44,26,16,.18)"/>
-      <path d="M22,80 L26,40 C26,32 74,32 74,40 L78,80 Z"
-        fill="${t}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>
-      <ellipse cx="50" cy="40" rx="24" ry="10" fill="#e0be8c" stroke="${INK}" stroke-width="5"/>
-      <ellipse cx="50" cy="40" rx="13" ry="5" fill="none" stroke="#b58a5c" stroke-width="3.5"/>
+    stump: (t) => `${pad(50, 84, 33)}
+      <ellipse cx="50" cy="83" rx="26" ry="6.5" fill="rgba(20,12,7,.3)"/>
+      <path d="M20,82 C18,74 24,72 26,74 L26,42 C26,34 74,34 74,42 L74,74
+        C77,71 83,74 80,82 Z" fill="${t}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>
+      ${[36, 50, 64].map((x, i) => `<path d="M${x},${52 + i % 2 * 4} L${x + 1},${74 - i % 2 * 3}"
+        fill="none" stroke="#9c6f42" stroke-width="3.6" stroke-linecap="round" opacity=".8"/>`).join('')}
+      <ellipse cx="50" cy="42" rx="24" ry="10" fill="#e0be8c" stroke="${INK}" stroke-width="5"/>
+      <ellipse cx="50" cy="42" rx="14.5" ry="5.6" fill="none" stroke="#b58a5c" stroke-width="3.2"/>
+      <ellipse cx="50" cy="42" rx="6" ry="2.4" fill="none" stroke="#b58a5c" stroke-width="2.6"/>
       <path d="M74,58 q14,-6 16,-18 q-16,2 -18,14 Z" fill="#57c15b" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`,
-    willow: (t) => `<ellipse cx="50" cy="86" rx="30" ry="8" fill="rgba(44,26,16,.16)"/>
-      <rect x="42" y="46" width="16" height="40" rx="6" fill="#8a5a33" stroke="${INK}" stroke-width="5"/>
-      ${[0, 1, 2, 3, 4].map((i) => {
-        const x = 50 + (i - 2) * 15;
-        return `<path d="M${x},44 C${x - 4},58 ${x + 4},66 ${x - 2},76"
-          fill="none" stroke="#3d7f43" stroke-width="5.5" stroke-linecap="round"/>`;
-      }).join('')}
-      <path d="${blob(50, 36, 36, 22, 9, 1.4)}" fill="${t}" stroke="${INK}"
+    willow: (t) => `${pad(50, 86, 29)}
+      <ellipse cx="50" cy="85" rx="22" ry="6.5" fill="rgba(20,12,7,.3)"/>
+      <path d="M45,84 L44,50 q0,-6 7,-6 q7,0 7,6 L57,84 Z" fill="#8a5a33"
+        stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>
+      <path d="${blob(50, 34, 29, 22, 11, 1.4)}" fill="${t}" stroke="${INK}"
         stroke-width="5" stroke-linejoin="round"/>
-      <path d="${blob(38, 29, 15, 8, 7, 2.6)}" fill="#c9a3f5"/>`,
-    foxglove: (t) => `<ellipse cx="50" cy="86" rx="30" ry="8" fill="rgba(44,26,16,.16)"/>
-      ${[[34, 1], [50, 1.2], [66, 0.9]].map(([x, k]) => `
-        <g transform="translate(${x} 0) scale(${k})">
-          <path d="M0,84 L0,34" stroke="#3f9950" stroke-width="5" stroke-linecap="round"/>
-          ${[0, 1, 2, 3].map((i) => `<ellipse cx="${i % 2 ? 7 : -7}" cy="${38 + i * 12}" rx="8" ry="6"
-            fill="${t}" stroke="${INK}" stroke-width="3.5"/>`).join('')}
-          <ellipse cx="0" cy="30" rx="7" ry="8" fill="${t}" stroke="${INK}" stroke-width="3.5"/>
-        </g>`).join('')}`
+      <path d="${blob(40, 26, 13, 7, 7, 2.6)}" fill="#c9a3f5"/>
+      ${[0, 1, 2, 3, 4, 5, 6].map((i) => {
+        const x = 50 + (i - 3) * 11;
+        const from = 44 + Math.abs(i - 3) * 3;
+        const drop = from + 30 - Math.abs(i - 3) * 5;
+        return `<path d="M${x},${from} C${x - 5},${from + 12} ${x + 5},${drop - 10} ${x - 2},${drop}"
+          fill="none" stroke="${i % 2 ? '#3d7f43' : '#5aa85e'}" stroke-width="4.6"
+          stroke-linecap="round"/>`;
+      }).join('')}`,
+    foxglove: (t) => `${pad(50, 86, 29)}
+      <ellipse cx="50" cy="85" rx="22" ry="6.5" fill="rgba(20,12,7,.3)"/>
+      ${[[32, 30, 5], [50, 16, 5], [68, 34, 4]].map(([x, top, sw]) => `
+        <path d="M${x},84 C${x - 3},64 ${x + 3},48 ${x},${top}" fill="none" stroke="#3f9950"
+          stroke-width="${sw}" stroke-linecap="round"/>
+        ${[0, 1, 2, 3, 4].map((i) => {
+          const cy = top + 13 + i * 12;
+          const r = 4.6 + i * 0.7;
+          if (cy > 78) return '';
+          const side = i % 2 ? 1 : -1;
+          const cx = x + side * (r + 1.5);
+          return `<ellipse cx="${cx.toFixed(1)}" cy="${cy}" rx="${r.toFixed(1)}"
+            ry="${(r * 1.32).toFixed(1)}" fill="${t}" stroke="${INK}" stroke-width="3.2"
+            transform="rotate(${side * 22} ${cx.toFixed(1)} ${cy})"/>`;
+        }).join('')}
+        <ellipse cx="${x}" cy="${top}" rx="5.4" ry="6.2" fill="${t}" stroke="${INK}" stroke-width="3.4"/>`).join('')}`
   };
 
   function tender(id, tint) {
@@ -291,12 +433,18 @@ const Meadow = (() => {
       <rect x="0" y="0" width="${w}" height="${h}" fill="url(#mw-warm)"/>
 
       ${willow(c)}
-      ${grass(c, Math.round(h * 0.52), w, 20, 46)}
+      ${grassBand(c, horizon + 104, w, { band: 14, tall: 24, n: 26, back: true })}
       ${wildflowers(c)}
-      ${wall(c, h - dock - 96, w)}
-      ${grass(c, h - dock - 84, w, 24, 40)}
+
+      <!-- The wall stands IN the grass: a band behind it, the wall, then a
+           denser band at its foot. Grass drawn over the whole stone face was
+           the single worst thing on this screen. -->
+      ${grassBand(c, h - dock - 84, w, { band: 16, tall: 26, n: 28, back: true })}
+      ${wall(c, h - dock - 72, w)}
+      ${grassBand(c, h - dock - 8, w, { band: 30, tall: 22, n: 36 })}
     </svg>`;
   }
 
-  return { scene, emptyCell, hive, tender, jar, bee, wall, KEEPERS, KEEPER_SIZE, VIEW, INK };
+  return { scene, cobbleFloor, emptyCell, keeperSpot, hive, tender, jar, bee, wall,
+    KEEPERS, KEEPER_SIZE, VIEW, INK };
 })();

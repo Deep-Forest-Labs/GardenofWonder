@@ -77,8 +77,16 @@ from quests and levels.
 > **Moving is free** — buying costs, rearranging never does. The **flower stands in the middle and
 > pays exactly what it pays in the garden**; `UI.flowerBtn()` returns whichever flower is on screen,
 > which is what makes every tap effect fire in the right room. The skin still differs: a dry-stone
-> wall instead of a fence, unmown grass with seed heads instead of mown stripes, turf on a stone lip
-> instead of a wooden planter.
+> wall instead of a fence, unmown grass with seed heads instead of mown stripes, and an old **stone
+> terrace with cobbled cells** instead of a wooden planter holding soil.
+>
+> **The art pass landed, 2026-08-25, and the material turned out to be where the verb lives.** Soil
+> is right for something temporary — dug, planted, harvested, cleared. Cobbles are a floor somebody
+> laid and left, which is what "place it once and it stays" looks like. It also fixes the thing that
+> made this screen read as a different game: a green board on green ground had no figure and no
+> ground, and the terrace gives the meadow the garden's own four tiers — ink, light body, dark
+> cells, cream chips. See [05-art-direction.md](05-art-direction.md#the-material-recipe--why-the-garden-looks-finished-and-the-meadow-does-not)
+> and the top of [10-decision-log.md](10-decision-log.md).
 >
 > **Earlier the same day, and superseded in layout only —** You travel into it like the Hollow: five **named
 > hive spots** on a bank (Sun Bank fastest, Clover Patch wax, Old Stump capacity, Under the Willow
@@ -653,20 +661,24 @@ the MVP scope — and [26-goods-catalog.md](26-goods-catalog.md) is the goods sp
 is open with the not-a-clone bar per garden; goods are deep-botanical plus cottage crops, no barn;
 and the build is **MVP-first** — plain map, functional Stand, polish later.
 
-**The next task is the VISUAL GAP between the garden and the meadow.** The owner's call,
-2026-08-25: put the two screens side by side and they are night and day, and the meadow has to reach
-the garden's standard. **The diagnosis is already done and is specific** — see
-[05-art-direction.md](05-art-direction.md#the-material-recipe--why-the-garden-looks-finished-and-the-meadow-does-not).
-In short: the garden separates into four value tiers (ink / dark board / mid plots / cream chips)
-while the meadow is green cells in a green board on green ground; every garden surface is built from
-a five-layer recipe whose **unblurred `0 4px 0` lip** is what makes it look moulded; and the
-meadow's pieces float instead of standing on ground. The stone wall is also drawn about three times
-too large.
+~~**The next task is the VISUAL GAP between the garden and the meadow.**~~ **Done 2026-08-25.**
+The meadow is now a light warm-stone terrace with **dark cobbled cells**, running the garden's own
+four tiers (ink / light body / dark cells / cream chips) and the full five-layer recipe including
+the unblurred lip. Everything in a cell stands on a worn pad, keepers stand on a trodden patch, the
+dry-stone wall is at a third of its old stone size and capped with coping stones, and the grass is a
+soft mat with blades out of it drawn at the wall's *foot* rather than across its face. The material
+was chosen to carry the verb: soil is temporary, cobbles are permanent. See
+[05-art-direction.md](05-art-direction.md#the-material-recipe--why-the-garden-looks-finished-and-the-meadow-does-not)
+and the top of [10-decision-log.md](10-decision-log.md).
 
-**The MVP is done.** The Stand and the map frame both ship. What comes after the art pass, roughly
-in order:
+**Three shipped-and-invisible bugs came out of the same pass** and are in the traps below: an empty
+keeper stand whose icon had never rendered, both meadow clouds swept off the top of the viewBox
+since the screen shipped, and a reduced-motion block that lost the cascade to the rules it was
+meant to cancel.
 
-1. ~~**The Wild Meadow**~~ — **done 2026-08-25.**
+**The MVP is done.** The Stand and the map frame both ship. What comes next, roughly in order:
+
+1. ~~**The Wild Meadow**~~ — **done 2026-08-25**, art included.
 2. **The Orchard** — the long-clock producer, and the natural home for collect-all. It is also the
    first place that will want its own keeper slots, which is when the creature-station question
    stops being scoped to one room.
@@ -786,6 +798,36 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 ## Traps in this codebase
 
 Things that cost real time to discover. None are visible from a casual read.
+
+**An inset box-shadow paints UNDER an element's content.** Give a surface an opaque child — a
+floor, a fill, a full-bleed SVG — and its `inset` lit top edge and shaded bottom vanish, silently
+and with no error. Half the house material recipe disappeared from the meadow's cells this way. The
+edges have to ride an overlay above the child, which is what `.mw-cell::after` is for.
+
+**A CSS `transform` REPLACES an SVG `transform` attribute, it does not compose with it.** Animating
+the same `<g>` that carried `transform="translate(x y)"` sent both of the meadow's clouds to y=0 and
+off the top of the viewBox — they had been invisible since the screen shipped, in a sky that just
+looked empty. Position on an outer group and animate an inner one. Related: `vw` inside an SVG
+resolves against the page, not the viewBox, so a keyframe written for a DOM element is not portable
+into SVG.
+
+**A `prefers-reduced-motion` block must come AFTER every rule it cancels.** A media query adds no
+specificity, so a reduced-motion `animation:none` sitting above the animation it targets loses the
+cascade and does nothing. The meadow's clouds, blades and fronds kept moving with the preference on,
+and the block *looked* correct in review the whole time.
+
+**Initialising a `dataset.look` cache to `''` breaks any state whose key is also `''`.** An empty
+keeper stand's id is the empty string, so `node.dataset.look !== id` was never true and the sprout
+marking a free stand had never once been drawn. Seed the cache with something no state can produce.
+
+**A dark contact shadow on a dark surface is not a contact shadow.** It is invisible, and the object
+floats anyway. Anything standing on the meadow's cobbles gets a lighter **pad** first and its shadow
+on top of that — the pad is the ground, the shadow is the contact. The same applies to any future
+dark board.
+
+**`[hidden]` loses to any later rule that sets `display`.** `.mw-jar-badge` declares `display:grid`,
+so a badge that was correctly marked hidden still painted — an empty yellow pill on all eight cells.
+Every class that sets `display` needs its own `[hidden]{display:none}` companion.
 
 **After removing a method from `Game`, grep the `ui-*` files for it.** `tools/sim-test.js` cannot see
 a `ui-*` file, so a UI call to a method that no longer exists passes every test and throws the moment
@@ -1151,13 +1193,18 @@ stale line here costs them real time before they have any way to know it is wron
 > second screen. What differs is the verb: garden cells are planted and emptied, meadow cells are
 > placed and permanent.
 >
-> **Your job is the visual gap.** Screenshot the garden and the Wild Meadow side by side at the same
-> size. They are night and day, and the meadow has to reach the garden's standard. **The diagnosis
-> is already written for you** in
-> `docs/05-art-direction.md` → "The material recipe" — value separation, the five-layer surface
-> recipe whose unblurred `0 4px 0` lip does most of the work, anchoring, and a scale trap in the
-> stone wall. Do not re-derive it; apply it, and screenshot the result next to the garden before
-> calling anything done.
+> **The meadow's art pass is done (2026-08-25) and its lesson is the standing bar for every room
+> that comes after.** `docs/05-art-direction.md` → "The material recipe" is now a worked example,
+> not a diagnosis: four value tiers, the five-layer surface recipe whose unblurred `0 4px 0` lip
+> does most of the work, everything standing on ground rather than on a shadow, and props measured
+> against a creature. **Screenshot any new screen next to the garden at the same size before calling
+> it done** — and pick its material to say what its verb is, the way the meadow's cobbles say
+> "permanent" against the garden's soil.
+>
+> **Your job is the next place: the Orchard** — the long-clock producer, and the natural home for
+> collect-all. It is also the first place that will want its own keeper slots. Read
+> `docs/25-world-map.md` for what a place is allowed to be, and hold the three-question not-a-clone
+> test before building anything.
 >
 > **How I work.** I'm the designer; an engineer ports to Unity. Two people, modest revenue goal,
 > deliberately small scope. I want you as a **design advisor as much as an implementer** — push back

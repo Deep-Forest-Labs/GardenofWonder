@@ -241,10 +241,21 @@ The garden reads instantly because it has **four separated tiers**:
 | Mid body | The plots — a lighter brown inside the darker board |
 | Light chips | Cream/paper pills for prices, gems, locks |
 
-**The meadow is green cells, in a green board, on green ground.** No figure, no ground. That single
-fact accounts for most of the gap, and no amount of extra detail fixes it — the board needs a body
-colour that is *not* the colour of the world it sits in. Turf on a **stone or earth** body is the
-obvious answer: it stays a meadow, and it separates.
+**The meadow was green cells, in a green board, on green ground.** No figure, no ground. That single
+fact accounted for most of the gap, and no amount of extra detail fixes it — the board needs a body
+colour that is *not* the colour of the world it sits in.
+
+**Answered 2026-08-25: the terrace is stone and the cells are cobbles.** The meadow now runs the
+same four tiers as the garden — ink, a light warm-stone board, dark cobbled cells, cream chips —
+so the hue jump does the board-against-world work and value does the cells-against-board work,
+exactly as brown-on-green does in the garden. The tokens live on `.meadow-layer` as custom
+properties (`--mw-stone-*`, `--cob-*`), which is also what lets night recolour every cell without
+one of them being rebuilt.
+
+**And the material is where the verb lives.** Soil is the right body for something temporary — you
+dig it, plant it, clear it. Cobbles are a floor somebody laid and left, which is what a permanent
+placement wants. Sharing the board and differing in the material is the house rule working as
+intended: same grammar, different verb, now said in the surface rather than in a label.
 
 ### 2. Every surface is built from the same five-layer recipe
 
@@ -265,7 +276,13 @@ box-shadow:
 
 **The unblurred `0 4px 0` lip is the single most important line.** It is what makes everything in
 this game look moulded rather than drawn, and it is why the plots feel pressable. The meadow's cells
-have a flat `rgba()` fill and no lip at all, which is why they read as empty rectangles.
+had a flat `rgba()` fill and no lip at all, which is why they read as empty rectangles; `.mw-cell`
+now carries the whole recipe and presses with the same `translateY(3px)` the plots use.
+
+**One trap comes with it.** An inset box-shadow paints *under* an element's content, so a cell with
+an opaque floor child loses its lit top edge and shaded bottom entirely. Those two lines have to
+ride an overlay above the floor — `.mw-cell::after` — or the recipe is only half applied and nobody
+can see which half is missing.
 
 The board itself adds one more: `repeating-linear-gradient(96deg, …)` grain over the body gradient.
 A surface with no texture at all reads as a placeholder.
@@ -278,10 +295,28 @@ needs **ground inside the cell** to stand on.
 
 ### The scale trap
 
-Also found in the comparison: the meadow's dry-stone wall is drawn with stones roughly three times
-too large, so it reads as clip art rather than as a wall, and its grass is a handful of thin sticks
-where it wants to be dense and soft. **Check a new prop against a creature standing next to it** —
-the keeper is the ruler.
+Also found in the comparison: the meadow's dry-stone wall was drawn with stones roughly three times
+too large, so it read as clip art rather than as a wall. **Check a new prop against a creature
+standing next to it** — the keeper is the ruler. The courses are now 21px on a 390px screen, and a
+row of **coping stones stood on end** caps them: without it, level courses of similar stones read as
+brickwork, and no amount of jitter in the courses fixes that.
+
+### Grass is a mass first and blades second
+
+The meadow's grass was thin tall strokes scattered across the full height of whatever stood behind
+them, and over the wall it read as a broken comb laid on the stones. **A grass band is a soft mat
+with blades growing out of it** — the mat hides every blade's base, so the blades read as the top of
+something dense rather than as sticks planted in mid-air. `grassBand()` draws a darker back mat, the
+blades, then a lighter front mat over their feet, and the wall is drawn *between* two bands so it
+stands in the grass instead of wearing it.
+
+### Nothing stands on a shadow
+
+A dark contact shadow on a dark floor is invisible, which is why objects dropped on the cobbles
+still floated. Every piece in a cell now sits on a **worn pad** — a lighter disc in the setts — with
+its shadow drawn on top of that. The pad is the ground; the shadow is the contact. Keepers get the
+same treatment with a trodden patch, because a soft ellipse under a creature is a shadow with no
+floor to fall on.
 
 ### The check to run before calling any screen done
 

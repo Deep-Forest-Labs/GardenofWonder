@@ -5,6 +5,51 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (art) — The meadow is cobbles on a stone terrace, and the material is the verb
+
+**The owner put the two screens side by side and called it: "night and day."** The diagnosis was
+already written in [05-art-direction.md](05-art-direction.md); this entry records what was chosen to
+answer it, and the one decision that was not in the diagnosis.
+
+**The board is stone and the cells are cobbles — the owner's call, and it is better than "turf on
+earth."** The diagnosis only demanded a body colour that is not the world's colour. Cobbles do that
+and one more thing: they say what the verb is. Soil is the right material for something temporary —
+you dig it, plant it, harvest it, clear it. A cobbled floor is something somebody laid and left,
+which is exactly "place it once and it stays." **Sharing the board and differing in the material is
+the house rule working in the surface rather than in a label**, and it means the two rooms can never
+be confused even in a thumbnail.
+
+**Rejected: making the meadow's cells lighter than its board.** The garden runs a light-mid board
+with darker plots inside it, and inverting that in the second room would have cost the thing the
+whole exercise was for — one ladder of values a player learns once. The meadow now runs the same
+four tiers: ink, light warm stone, dark cobbles, cream chips.
+
+**Rejected: a status colour per cell state.** The old board repainted the whole cell for empty,
+hive, tender and ready. **A cell is a place, not a status light** — the cobbles now read the same in
+every state and what changes is the thing standing on them, with the "you can afford this" invite
+moved onto the empty socket. Ringing all eight cells at once had turned the board back into the
+wireframe the art pass existed to kill.
+
+**The grass lesson is the one worth carrying.** The owner's second complaint — the grass over the
+wall "looked horrible" — was not a colour problem. Grass had been drawn as tall thin strokes spread
+across the whole face of the wall, which reads as a comb laid on the stones. **Grass is a mass first
+and blades second:** a soft mat with blades growing out of it, and the mat hides every base. The
+wall is now drawn *between* two bands so it stands in the grass rather than wearing it, and it is
+capped with coping stones stood on end, without which four level courses of similar stones read as
+brickwork whatever you do to them.
+
+**Three bugs surfaced only because the art was being looked at closely**, and all three had been
+shipped and invisible: an empty keeper stand initialised `dataset.look` to `''`, which is also an
+empty slot's id, so the sprout marking a free stand had never once been drawn; the meadow's clouds
+animated the same group that carried their `transform` attribute, and a CSS transform *replaces* a
+presentation attribute, so both clouds were swept to y=0 and off the top of the viewBox since the
+screen shipped; and the reduced-motion block sat above the rules it cancels, where a media query
+adds no specificity and therefore loses the cascade — the clouds, blades and fronds kept moving with
+reduced motion on. **None of these is findable from a test. All three were findable from a
+screenshot**, which is the argument for looking at the picture before calling anything done.
+
+---
+
 ## 2026-08-25 (fix) — Tapping a place on the map did nothing, for two reasons at once
 
 **The owner's report was the whole diagnosis: on a desktop mouse, tapping Wild Meadow would not

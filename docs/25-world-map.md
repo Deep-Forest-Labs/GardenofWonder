@@ -163,10 +163,16 @@ Farming against building, on one board shape. Township runs both on one screen a
 them. **This does not contradict the not-a-clone rule** — sharing a frame is cohesion, sharing a
 verb is the clone.
 
-**The skin must change even though the frame does not.** The meadow's board is turf held by a stone
-lip, not a wooden planter; its boundary is a **dry-stone wall**, not a painted fence; its grass is
-**unmown with seed heads**, where the garden's lawn has neat stripes; and its green is warmer and
-more bleached, because the garden is tended and this is not. Same structure, different place.
+**The skin must change even though the frame does not.** The meadow's board is an old **stone
+terrace** whose cells are **cobbles**, not a wooden planter holding soil; its boundary is a
+**dry-stone wall** with coping stones stood on end, not a painted fence; its grass is **unmown with
+seed heads**, where the garden's lawn has neat stripes. Same structure, different place.
+
+**The material carries the verb, 2026-08-25.** Soil is right for something temporary — dug, planted,
+harvested, cleared. Cobbles are a floor somebody laid and left, which is what "place it once and it
+stays" looks like. This is also what finally separated the board from the world: the first build put
+a green board on green ground and no amount of detail could rescue it. See
+[05-art-direction.md](05-art-direction.md#the-material-recipe--why-the-garden-looks-finished-and-the-meadow-does-not).
 
 **The talking flower stands in the middle of every board.** It is the game's voice and its core
 verb, and a tap pays exactly what it pays in the garden — the same loop reachable everywhere, not a

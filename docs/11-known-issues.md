@@ -21,6 +21,14 @@ backwards and still worth fixing; the seed is just no longer strictly pointless.
 Both 10.00 net/s. Celestial costs 33% more for the same rate — purely a convenience upgrade. Not
 necessarily wrong, but not obviously intentional either.
 
+### The meadow crowds itself on a short viewport
+
+At roughly 640px tall the scene is cropped by `slice` while the exit chip stays pinned to the layer
+bottom, so "Swipe down for the map" lands across the keeper stands. It predates the 2026-08-25 art
+pass and that pass slightly improved it — the keepers used to sit lower still — but it is not fixed.
+The honest options are hiding the chip on short screens, which removes the only hint for leaving the
+room, or anchoring it to the scene rather than to the layer. Neither is obviously right yet.
+
 ## Correctness
 
 ### Cheat buttons ship to players — kept on purpose, for now

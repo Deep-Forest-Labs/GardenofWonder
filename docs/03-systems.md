@@ -978,6 +978,12 @@ its own dock. Garden cells are planted and emptied; meadow cells are **placed an
 **It is the quiet place.** Nothing flashes or counts down and the only motion is drift. The flower
 in the middle pays coins exactly as it does in the garden — the same loop, not a second one.
 
+**The material says the verb, 2026-08-25.** The board is a light warm-stone terrace and its cells
+are dark **cobbles**, where the garden is a wooden planter holding dark soil. Soil is dug and
+cleared; a cobbled floor is laid once and left. Skinning the two boards differently is also what
+separates the meadow from the green world it stands in — see
+[05-art-direction.md](05-art-direction.md#the-material-recipe--why-the-garden-looks-finished-and-the-meadow-does-not).
+
 ### Hives and tenders
 
 A cell holds a **hive** or a **tender**. Hives make honey. Tenders make nothing at all and improve

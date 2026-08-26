@@ -59,6 +59,7 @@
     const host = $('#meadowScene');
     if (sceneSky === sky && host.firstChild) return;
     sceneSky = sky;
+    el.meadow.dataset.sky = sky;
     host.innerHTML = Meadow.scene({
       width: Meadow.VIEW.width, height: Meadow.VIEW.height, dockHeight: DOCK_H, sky
     });
@@ -123,6 +124,11 @@
       b.className = 'mw-cell';
       b.dataset.cell = String(i);
       b.dataset.look = '';
+      /* The cobbles are the cell's floor and never change; only the thing
+         standing on them does. Keeping them in their own child means a hive
+         going down does not redraw the ground it lands on. */
+      b.innerHTML = `<span class="mw-cell-floor">${Meadow.cobbleFloor(i)}</span>
+        <span class="mw-cell-obj"></span><span class="mw-jar-badge" hidden></span>`;
       board.appendChild(b);
       cellEls.set(i, b);
     }
@@ -133,7 +139,11 @@
       b.type = 'button';
       b.className = 'mw-keeper';
       b.dataset.keeperSlot = String(i);
-      b.dataset.look = '';
+      /* Not '' — an empty slot's id IS '', so the look never differed and the
+         sprout that marks a free stand has never once been drawn. */
+      b.dataset.look = '?';
+      b.innerHTML = `<span class="mw-keeper-ground">${Meadow.keeperSpot()}</span>
+        <span class="mw-keeper-obj"></span>`;
       bench.appendChild(b);
       keeperEls.set(i, b);
     });
@@ -147,21 +157,24 @@
     const look = c ? (c.kind === 'hive' ? 'hive' : `t:${c.type}`) : 'empty';
     if (node.dataset.look !== look) {
       node.dataset.look = look;
-      if (!c) node.innerHTML = Meadow.emptyCell();
-      else if (c.kind === 'hive') node.innerHTML = `${Meadow.hive()}<span class="mw-jar-badge" hidden></span>`;
+      const art = $('.mw-cell-obj', node);
+      if (!c) art.innerHTML = Meadow.emptyCell();
+      else if (c.kind === 'hive') art.innerHTML = Meadow.hive();
       else {
         const t = meadowTender(c.type);
-        node.innerHTML = Meadow.tender(c.type, t ? t.tint : '#8ce99a');
+        art.innerHTML = Meadow.tender(c.type, t ? t.tint : '#8ce99a');
       }
     }
     let cls = 'mw-cell';
+    const badge = $('.mw-jar-badge', node);
     if (!c) cls += S.credits >= Game.nextHiveCost() ? ' empty can' : ' empty';
     else if (c.kind === 'hive') {
       const jars = c.jars.length;
       cls += ` hive${jars ? ' ready' : ''}${jars >= Game.hiveCapacity(i) ? ' full' : ''}`;
-      const badge = $('.mw-jar-badge', node);
-      if (badge) { badge.hidden = !jars; if (jars) badge.textContent = jars; }
+      if (jars) badge.textContent = jars;
+      badge.hidden = !jars;
     } else cls += ' tender';
+    if (!c || c.kind !== 'hive') badge.hidden = true;
     if (mode === 'move') cls += moving === i ? ' picked' : ' movable';
     node.className = cls;
 
@@ -178,7 +191,7 @@
     const def = id ? Game.critterById(id) : null;
     if (node.dataset.look !== id) {
       node.dataset.look = id;
-      node.innerHTML = def
+      $('.mw-keeper-obj', node).innerHTML = def
         ? `${Critters.draw(def)}<span class="mw-keeper-tag">${def.name}</span>`
         : ico('sprout');
       if (def) node.dataset.keeper = id; else delete node.dataset.keeper;
@@ -200,7 +213,7 @@
     const want = Math.min(6, Game.hiveCount() * 2);
     const swarm = $('#meadowBees');
     if (swarm.childElementCount !== want) {
-      const starts = [[16, 40], [58, 26], [30, 58], [70, 48], [44, 32], [22, 52]];
+      const starts = [[14, 62], [60, 54], [28, 72], [72, 64], [44, 58], [20, 70]];
       let out = '';
       for (let i = 0; i < want; i += 1) {
         const [x, y] = starts[i % starts.length];

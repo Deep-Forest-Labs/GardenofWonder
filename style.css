@@ -2602,7 +2602,47 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    The quiet place. The garden is the tapping and the combo; nothing in here
    flashes or counts down, and the only motion is drift. See meadow.js.
    ========================================================= */
-.meadow-layer{position:absolute;inset:0;z-index:12;overflow:hidden;background:#8ed36b}
+.meadow-layer{
+  position:absolute;inset:0;z-index:12;overflow:hidden;background:#8ed36b;
+  /* The meadow's own material palette, and the reason this screen finally
+     separates from the world it stands in. The garden reads because it puts a
+     BROWN board on a green field; the meadow put a green board on a green field
+     and no amount of detail could rescue that. So the terrace is stone and the
+     cells are cobbles — see docs/05-art-direction.md, "The material recipe". */
+  --mw-stone-1:#d8c8a8;
+  --mw-stone-2:#b09c7c;
+  --mw-stone-3:#8c775c;
+  --mw-stone-lip:#6b5942;
+  --cob-joint:#3d352c;
+  --cob-1:#726554;
+  --cob-2:#80735f;
+  --cob-3:#615647;
+  --cob-lit:rgba(255,250,238,.16);
+  --cob-moss:#5c7f3e;
+  --cob-socket:#40352b;
+  --cob-pad:#a2978a;
+  --cob-lip:#241e18;
+  --mw-tread:#8a7550;
+  --mw-tuft:#4a8b3b;
+}
+/* Night takes the warmth out of the stone rather than only the light. */
+.meadow-layer[data-sky="moon"]{
+  --mw-stone-1:#8e8878;
+  --mw-stone-2:#6f6a5d;
+  --mw-stone-3:#575246;
+  --mw-stone-lip:#413d34;
+  --cob-joint:#2a2520;
+  --cob-1:#4e4a42;
+  --cob-2:#57534a;
+  --cob-3:#433f38;
+  --cob-lit:rgba(226,236,255,.1);
+  --cob-moss:#415c33;
+  --cob-socket:#2c261f;
+  --cob-pad:#6b6459;
+  --cob-lip:#171310;
+  --mw-tread:#4e442f;
+  --mw-tuft:#2c5230;
+}
 .meadow-layer[hidden]{display:none}
 .meadow-scene-host{position:absolute;inset:0}
 .meadow-scene-host svg{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -2611,10 +2651,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 
 /* ---- the board ----
    Same grammar as the garden: a square frame floating in the scene with the
-   flower in the middle. Different skin — turf and stone rather than a planter. */
+   flower in the middle, built from the same five layers. Different skin — an
+   old stone terrace rather than a wooden planter. */
 .mw-stage{
   position:absolute;left:0;right:0;
-  top:calc(var(--sat,0px) + 104px);bottom:calc(96px + 8px);
+  top:calc(var(--sat,0px) + 104px);bottom:calc(96px + 56px);
   display:grid;grid-template-rows:minmax(0,1fr) auto;gap:6px;
   padding:0 12px 4px;pointer-events:none;
 }
@@ -2626,34 +2667,81 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   grid-template-rows:repeat(3,minmax(0,1fr));
   gap:var(--gap);padding:calc(var(--gap) * .85);
   border:4px solid var(--ink);border-radius:26px;
-  background:linear-gradient(180deg,#a8cf6a,#8ab455);
-  box-shadow:0 8px 0 rgba(44,26,16,.34), 0 14px 22px rgba(44,26,16,.22);
+  background:
+    repeating-linear-gradient(96deg, rgba(255,255,255,.035) 0 3px, transparent 3px 21px),
+    linear-gradient(180deg,var(--mw-stone-1) 0%,var(--mw-stone-2) 44%,var(--mw-stone-3) 100%);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.3),
+    inset 0 -9px 0 rgba(0,0,0,.18),
+    0 9px 0 var(--mw-stone-lip),
+    0 18px 26px rgba(44,26,16,.3);
 }
-/* A stone lip along the bottom, so the board reads as turf held by a wall
-   rather than as a wooden tray. */
-.mw-board::after{
-  content:'';position:absolute;left:8px;right:8px;bottom:-11px;height:16px;
-  border:4px solid var(--ink);border-radius:0 0 20px 20px;
-  background:#d9cfc0;z-index:-1;
+/* Long grass pushing up over the terrace, where the garden's planter gets a
+   neat mown fringe. Same device, wilder hand. */
+.mw-board::before{
+  content:'';position:absolute;left:4%;right:4%;top:-12px;height:15px;
+  background:
+    radial-gradient(ellipse 52% 100% at 50% 100%, #4a8b3b 0 86%, transparent 92%),
+    radial-gradient(ellipse 62% 64% at 50% 100%, var(--grass-d) 0 86%, transparent 92%);
+  background-size:21px 15px, 30px 10px;
+  background-position:0 0, 10px 5px;
+  background-repeat:repeat-x;
+  opacity:.92;pointer-events:none;
 }
+
+/* The house material recipe, from docs/05-art-direction.md: body gradient, lit
+   top edge, shaded bottom edge, an UNBLURRED lip, soft contact shadow. The lip
+   is what makes a shape read as moulded rather than drawn, and the meadow's
+   cells had a flat rgba() fill and none of it. */
 .mw-cell{
-  position:relative;padding:0;border:4px solid var(--ink);border-radius:16px;
-  background:rgba(120,150,80,.5);line-height:0;cursor:pointer;
-  font-family:inherit;overflow:visible;
-  transition:transform .12s cubic-bezier(.34,1.56,.64,1), background .2s ease;
+  position:relative;padding:0;border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,var(--cob-joint) 0%,var(--cob-lip) 100%);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.14),
+    inset 0 -7px 0 rgba(0,0,0,.22),
+    0 4px 0 var(--cob-lip),
+    0 8px 14px rgba(44,26,16,.26);
+  line-height:0;cursor:pointer;font-family:inherit;overflow:visible;isolation:isolate;
+  transition:transform .1s ease, box-shadow .1s ease;
+}
+.mw-cell:active{
+  transform:translateY(3px);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.14), inset 0 -7px 0 rgba(0,0,0,.22),
+    0 1px 0 var(--cob-lip), 0 4px 8px rgba(44,26,16,.22);
 }
 .mw-cell svg{width:100%;height:100%;display:block;overflow:visible}
-.mw-cell:active{transform:scale(.94)}
-.mw-cell.empty{background:rgba(120,150,80,.42);border-style:dashed}
-.mw-cell.empty.can{background:rgba(255,247,225,.4);animation:mwInvite 2.8s ease-in-out infinite}
-@keyframes mwInvite{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.mw-cell.hive{background:rgba(255,247,225,.55)}
-.mw-cell.tender{background:rgba(255,247,225,.32)}
-.mw-cell.ready{background:#fff3c4;animation:mwReady 2.2s ease-in-out infinite}
+.mw-cell-floor{
+  position:absolute;inset:0;z-index:0;
+  border-radius:calc(var(--r-md) - 3px);overflow:hidden;
+}
+.mw-cell-floor svg{overflow:hidden}
+.mw-cell-obj{position:absolute;inset:0;z-index:1}
+.mw-cell::after{
+  content:'';position:absolute;inset:0;z-index:2;pointer-events:none;
+  border-radius:calc(var(--r-md) - 3px);
+  background:
+    radial-gradient(circle at 26% 20%, rgba(255,255,255,.13) 0 13%, transparent 14%),
+    radial-gradient(circle at 74% 66%, rgba(0,0,0,.13) 0 10%, transparent 11%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.15), inset 0 -8px 0 rgba(0,0,0,.28);
+}
+
+/* A cell is a PLACE, not a status light, so the cobbles read the same in every
+   state and what changes is the thing standing on them. */
+.mw-cell.empty.can .mw-socket-ring{animation:mwInvite 2.6s ease-in-out infinite}
+@keyframes mwInvite{0%,100%{opacity:.5}50%{opacity:1}}
+.mw-cell.ready{
+  box-shadow:
+    inset 0 0 0 2px rgba(255,201,74,.5),
+    inset 0 5px 0 rgba(255,255,255,.14),
+    inset 0 -7px 0 rgba(0,0,0,.22),
+    0 4px 0 var(--cob-lip),
+    0 8px 14px rgba(44,26,16,.26);
+}
+.mw-cell.ready .mw-cell-obj{animation:mwReady 2.2s ease-in-out infinite}
 @keyframes mwReady{0%,100%{transform:translateY(0) rotate(0)}
   25%{transform:translateY(-3px) rotate(-1.5deg)}75%{transform:translateY(-3px) rotate(1.5deg)}}
 .mw-cell.movable{outline:3px dashed rgba(255,247,225,.85);outline-offset:-9px}
-.mw-cell.picked{outline:4px solid #ffd23f;outline-offset:-8px;transform:scale(.94)}
+.mw-cell.picked{outline:4px solid #ffd23f;outline-offset:-8px;transform:translateY(3px)}
 
 .mw-flower{
   grid-column:2;grid-row:2;position:relative;pointer-events:auto;
@@ -2662,14 +2750,15 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .mw-flower svg{width:100%;height:auto;overflow:visible}
 
 .mw-jar-badge{
-  position:absolute;top:-9px;right:-9px;min-width:26px;height:26px;
+  position:absolute;top:-9px;right:-9px;min-width:26px;height:26px;z-index:3;
   display:grid;place-items:center;border:3.5px solid var(--ink,#2c1a10);border-radius:999px;
   background:#ffc94a;font-size:13px;font-weight:800;line-height:1;
   box-shadow:0 3px 0 rgba(44,26,16,.3);pointer-events:none;
 }
+.mw-jar-badge[hidden]{display:none}
 .mw-cell.full .mw-jar-badge{background:#ff8fa3}
 
-/* ---- keepers ---- *//* ---- keepers ---- */
+/* ---- keepers ---- */
 /* Keepers stand in SCENE coordinates, placed by JS against the layer — so the
    bank must be the layer's own absolute box, never nested in a padded one. */
 .mw-keeper-bank{position:absolute;inset:0;pointer-events:none;z-index:2}
@@ -2680,20 +2769,27 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .mw-keeper svg{width:100%;height:100%;overflow:visible;display:block}
 .mw-keeper:active{transform:scale(.93)}
+/* A creature with nothing under it floats, and a soft ellipse is a shadow with
+   no floor to fall on. Every keeper gets a flagstone to stand on. */
+.mw-keeper-ground{position:absolute;inset:0;z-index:0}
+.mw-keeper-obj{position:absolute;inset:-8% 0 12%;z-index:1}
 .mw-keeper-tag{
-  position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);
+  position:absolute;left:50%;bottom:-19px;transform:translateX(-50%);
   padding:2px 9px;border:2.5px solid var(--ink,#2c1a10);border-radius:999px;
   background:rgba(255,247,225,.94);font-size:10.5px;font-weight:800;white-space:nowrap;
   line-height:1.35;box-shadow:0 2px 0 rgba(44,26,16,.28);pointer-events:none;
 }
-.mw-keeper.empty{
-  display:grid;place-items:center;border:4px dashed rgba(44,26,16,.4);border-radius:22px;
-  background:rgba(255,247,225,.4);opacity:.75;
+.mw-keeper.empty::after{
+  content:'';position:absolute;left:15%;right:15%;top:63%;height:29%;
+  border:3px dashed rgba(255,247,225,.62);border-radius:999px;pointer-events:none;
 }
-.mw-keeper.empty svg{width:44%;height:44%;opacity:.55}
+.mw-keeper.empty .mw-keeper-obj{display:grid;place-items:end center;padding-bottom:26%;opacity:.8}
+.mw-keeper.empty .mw-keeper-obj svg{width:34%;height:34%}
 .mw-keeper.asleep{opacity:.72}
 
 /* ---- bees ---- */
+/* Behind the board on purpose: a bee that passes behind the terrace reads as
+   depth, where one drawn over a cell just hides what is in it. */
 .mw-bees{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .mw-bee{
   position:absolute;left:var(--x,14%);top:var(--y,46%);width:30px;height:24px;display:block;
@@ -2774,12 +2870,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   display:grid;place-items:center;border:2.5px solid var(--ink,#2c1a10);border-radius:999px;
   background:#ffc94a;font-size:10px;font-weight:800}
 
-@media (prefers-reduced-motion:reduce){
-  .mw-bee,.mw-cell.empty.can,.mw-cell.ready,.mw-exit i,
-  .mw-cloud,.mw-blade,.mw-flower,.mw-frond{animation:none}
-}
 /* Scene drift — slow enough to read as air moving, never as motion. */
-.mw-cloud{animation:drift var(--dur,58s) linear infinite}
+/* Drift in user units: `vw` inside an SVG resolves against the page rather than
+   the viewBox, so the scenery keyframe cannot be reused here. */
+@keyframes mwDrift{from{transform:translateX(-150px)}to{transform:translateX(540px)}}
+.mw-cloud{animation:mwDrift var(--dur,58s) linear infinite;animation-delay:var(--delay,0s)}
 .mw-blade{transform-box:fill-box;transform-origin:bottom center;
   animation:mwSway 5.2s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.6s)}
 @keyframes mwSway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
@@ -2787,6 +2882,14 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   animation:mwSway 6.4s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.9s)}
 .mw-frond{transform-box:fill-box;transform-origin:top center;
   animation:mwSway 7.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.5s)}
+
+/* A media query adds no specificity, so this has to come AFTER every rule it
+   cancels. Sitting above them it lost the cascade, and the clouds, blades and
+   fronds kept moving with reduced motion on. */
+@media (prefers-reduced-motion:reduce){
+  .mw-bee,.mw-socket-ring,.mw-cell.ready .mw-cell-obj,.mw-exit i,
+  .mw-cloud,.mw-blade,.mw-flower,.mw-frond{animation:none}
+}
 
 /* ---- the build picker ---- */
 .build-row{
