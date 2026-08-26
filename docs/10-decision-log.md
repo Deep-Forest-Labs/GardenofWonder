@@ -5,6 +5,86 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 (design) — A design audit, and four arguments with the brief that framed it
+
+**The owner asked for an audit before a plan, and named eight known gaps rather than letting them
+be rediscovered.** All eight are real. The audit is
+[27-design-audit.md](27-design-audit.md); this records the positions it took and what it rejected,
+because those are the parts nobody can reconstruct from the document later.
+
+**The game has a spine, and it is reputation.** One number, earned never spent, no XP, level as its
+display, and the curve pre-aligned to the order tiers. What is missing is not a spine — it is that
+**the spine has no vertebrae past level 17**, because the things it was going to gate are unbuilt.
+So "which collection is the spine" was **rejected as the first question**: a collection is not a
+progression track anywhere this game is drawing from, it is a retention surface hung off one.
+Monopoly Go's spine is the dice loop. The answerable question is *which collection is the player
+asked to finish, and what happens to the others.*
+
+**There are five collections and a half, not three.** Card album, creature roster, Honey Shelf,
+species Almanac, Bloom Mastery, and mementos with no sink. **Three of them are the same table** —
+Shelf, Almanac and Mastery are all keyed on the same nineteen seeds and are three screens rendering
+three columns of one spreadsheet. Folding them into one nineteen-row Almanac is the cheapest
+structural improvement in the project and it makes *why plant this flower* answerable five ways on
+a single row.
+
+**"Idle or tapper" was rejected as a false binary** — the docs already answer it twice (the map
+serves the 40-second session, the garden the 7-minute one) and no title at this scale is a pure
+tapper. The real question hiding behind it is better: **what is the player's job when they open the
+app?** Today it is tap and re-plant, and both are designed to be automated away.
+
+**Nothing in this game is scarce, and that is upstream of the ceiling.** Every seed returns 2.212×
+cost in expectation, there is no bad purchase, and outside creature hunger nothing can go backwards.
+A pillar against *punishment* has been read as a pillar against *stakes*. The ceiling is a symptom;
+scarcity is the cause — so **a new item 0 was put ahead of the owner's list**: what a session is,
+what the player's job is after automation, and what is scarce. The sleeping face is the proof the
+game can carry a stake cosily, and it has been used exactly once.
+
+**Monetization was split in two and the halves moved apart.** Architecture — what is sold, what is
+never sold, which surfaces exist — is cheap and constrains the economy, so it stays early. SKUs and
+prices move *after* the retune, because a piggy bank cannot be priced against coins that are about
+to change and a 2× collect-all video cannot be placed before collect-all exists.
+
+### What the audit recommends cutting, and the counter-cases it recorded
+
+**The Honey Shelf as a screen** (fold to a column — high confidence). **Seasonal card albums**
+(keep the pack opening and the spawning proc, cut the cadence — high confidence, and two documents
+already argue for it: doc 19 calls a season "a subscription to your own output" and doc 15 says
+"do not over-invest"). **The Greenhouse** from the biome list (its stated purpose is farming
+mutations, which attacks the one income share the suite holds under test — free to cut, unbuilt).
+**Bloom Mastery bounded rather than deleted**, because being endless is what makes prestige
+unsolvable.
+
+**And the merge bench, which deliberately relitigates 2026-08-16.** The reason offered: that
+decision was made when the bench was going to be the project's *only* meta system, and it is now one
+of six places behind two navigations. Merge is a core loop, not a side room — Gossip Harbor grosses
+$100M a month because merge *is* the game. The Stand already proved the transformer role does not
+need a crafting system, since an order-shape bouquet is three roses and two bluebells and no bouquet
+object exists. A timed production queue is the cheaper fill and it answers the retention gap
+directly, being a reason to come back at a specific time. **The counter-case is recorded rather than
+dismissed:** the simulation is written and tested, four of six goods families are specced as merge
+chains, and the market genuinely favours merge+orders right now. The honest alternative is that
+merge **moves to the centre** and becomes the second core screen — a bigger decision than it looks.
+
+### Rejected
+
+**Rewriting docs 17 and 25.** Both hold up; the audit extends them and lists what has gone stale
+instead. **Redoing the market research.** **Proposing new systems** — the brief asked for cuts and
+consolidation first and the audit found no gap that a new system fixes better than a consolidation
+does. **Treating "reputation gates almost nothing" as a contradiction** — level gates and coins pay,
+consistently, on both boards already built; that model is right and the gap is only that the map's
+parcels still refuse.
+
+### Seven stale claims found in the docs, listed in the audit
+
+Status lines and "locked decisions" go stale faster than body text, because a later session adds a
+section rather than retracting one. Doc 13 still says "not built" and the Stand shipped; doc 12
+still lists the Apothecary as a region, still specifies an eight-hour flat offline cap, still
+locks in storage caps that have never existed, and still defers a "Critter Grove" that shipped as
+the creature roster; doc 15 presents three dock layouts as current; doc 22 says "only one creature"
+and there are six. **Same failure as the visual standard, and the same cause: nothing enforces it.**
+
+---
+
 ## 2026-08-26 (fix) — "Asleep" was wearing Epic's colour, and purple is spoken for
 
 **The creature panel painted a sleeping creature lavender: `#f2eeff → #e2dbf8`, with `#eae6fb` and

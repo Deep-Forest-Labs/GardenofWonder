@@ -41,6 +41,7 @@ Read it before anything else if you're picking the project up cold.
 | [24-remote-sessions.md](24-remote-sessions.md) | You're working on the game from a phone or the web, without the Mac — the clone-and-push loop, `tools/probe.js`, and why a remote session works on a branch |
 | [25-world-map.md](25-world-map.md) | You're working on the world map — what the farming market says, what belongs on the map and in what order, and why it is not ten gardens — **research and design, not built** |
 | [26-goods-catalog.md](26-goods-catalog.md) | You're adding a good, a crop, or an order family — the six families, the three production shapes, the one-line test, and the rollout — **design, not built** |
+| [27-design-audit.md](27-design-audit.md) | You want the honest state of the design as a whole — what is strong, what is redundant, what is missing, what should be cut, and in what order to settle it — **audit and recommendation, not decision** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

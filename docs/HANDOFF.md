@@ -12,6 +12,47 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **THE DESIGN WAS AUDITED AS A WHOLE, 2026-08-26, and the audit argues with its own brief.** The
+> owner asked for an audit before a plan and named eight known gaps rather than letting them be
+> rediscovered. All eight are real. **[27-design-audit.md](27-design-audit.md)** is the document;
+> four of its positions change what should be settled first.
+>
+> **The game has a spine and it is reputation** — one number, earned never spent, no XP, the curve
+> pre-aligned to the order tiers. What is missing is that **the spine has no vertebrae past level
+> 17**, because the things it was going to gate are unbuilt. So *"which collection is the spine"* is
+> the wrong first question: a collection is a retention surface hung off a progression track, never
+> the track itself.
+>
+> **There are five collections and a half, not three** — card album, creature roster, Honey Shelf,
+> species Almanac, Bloom Mastery, and mementos with no sink. **Three of them are the same table**,
+> all keyed on the same nineteen seeds. Folding them into **one nineteen-row Almanac** (species ·
+> best rarity · lifetime count · honey made · creature raised) is the cheapest structural
+> improvement available and it answers *why plant this flower* five ways on one row.
+>
+> **Nothing in this game is scarce, and that is upstream of the ceiling.** Every seed returns
+> 2.212× cost in expectation and outside creature hunger nothing can go backwards. A pillar against
+> *punishment* has been read as a pillar against *stakes*. **The sleeping face is the proof the game
+> can carry a stake cosily, and it has been used exactly once.** So a new **item 0** goes ahead of
+> the owner's list: what a session is, what the player's job is after automation, and what is
+> scarce.
+>
+> **The order the audit proposes:** 0 the loop and scarcity → 1 the spine (one collection to finish,
+> the rest demoted) → 2 the ceiling, which **must rule on Bloom Mastery** → 3 retention, dailies and
+> the Night Garden → 4 monetization *architecture* → 5 the economy retune *and* SKU pricing → 6
+> FTUE. Monetization is **split**: what is sold is cheap and constrains the economy; what it costs
+> cannot be priced against placeholder coins.
+>
+> **What it recommends cutting:** the Honey Shelf as a screen, the card album's *seasonal cadence*
+> (keep the pack opening), the Greenhouse from the biome list, and Bloom Mastery's endlessness. And
+> **it deliberately relitigates the merge bench** — merge is a core loop, not a side room, and the
+> Stand already proved the transformer role needs no crafting system. The counter-case is recorded
+> in the audit rather than dismissed.
+>
+> **Seven stale claims in `docs/` are listed there too.** Doc 13 still says "not built" and the
+> Stand shipped; doc 12 still lists the Apothecary as a region and defers a "Critter Grove" that
+> shipped as the creature roster; doc 15 shows three dock layouts as current; doc 22 says "only one
+> creature." Same failure as the visual standard, same cause — **nothing enforces it.**
+
 > **THE VISUAL STANDARD IS WRITTEN DOWN AND ENFORCED, 2026-08-26.** The garden screen was audited
 > against every other screen and the drift was counted rather than guessed: 46 translucent lips
 > against 39 solid ones, `--ink-soft` used 23 times and declared nowhere, 9 `var()` fallbacks holding
@@ -614,6 +655,16 @@ and those levels have nothing to grant, so a seed-count change is also a progres
 as one piece rather than discovering it halfway through.
 
 ## The current task
+
+**Design, not build: settling the six items in [27-design-audit.md](27-design-audit.md#the-order-to-settle-things-in).**
+The audit is recommendation, not decision — the owner rules on each item and the outcome lands in
+[10-decision-log.md](10-decision-log.md). **Five questions in the audit are genuinely the
+owner's** and block work below them: how many creatures eventually (six is not a collection; one
+per bloom caps at nineteen and matches the Almanac exactly), whether merge is kept / moved to the
+centre / replaced, whether a season clears the garden and what survives it, the launch content
+bill of materials, and whether the cheat buttons still ship.
+
+The build state below is unchanged and still accurate.
 
 **The habitat direction is live and six creatures deep.** Pip, Thistle, Bramble, Luna, Ember and
 Bumble all work end to end: attraction, arrival, stars, traits, tending, eight named pairs, keepsakes

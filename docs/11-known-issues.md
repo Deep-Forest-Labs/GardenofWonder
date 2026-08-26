@@ -304,3 +304,35 @@ regression has no net under it.
 **This bit during the `ui.js` split.** The suite stays green through a change that breaks the plant
 picker, because it never loads a DOM. A UI change has to be played, panel by panel, or it is not
 checked at all.
+
+## Documentation
+
+### Seven stale claims in `docs/`, found by the 2026-08-26 design audit
+
+Listed in full in [27-design-audit.md](27-design-audit.md#stale-documentation-found-during-the-audit).
+Left unfixed on purpose: several of them sit in sections the pending design decisions will rewrite
+anyway, and correcting a paragraph that is about to be replaced is churn. The two that mislead
+hardest and should be fixed regardless of what gets decided:
+
+- **[13-order-system.md](13-order-system.md) opens "Status: specification, not built."** The Garden
+  Stand shipped 2026-08-25. A cold session reading top-down will believe the order system does not
+  exist.
+- **[12-meta-layer-design.md](12-meta-layer-design.md) locked decisions** still specify a flat
+  eight-hour offline cap (superseded by the two-axis 25% / 4h model) and "storage caps on raw
+  materials, generous and upgradeable" — which has never existed in any build.
+
+**The pattern is the point.** Status lines and "locked decisions" go stale faster than body text,
+because a later session adds a new section rather than retracting an old one. Body text usually
+gets its retraction; headers rarely do.
+
+### Nothing enforces a design rule the way `sim-test.js` enforces an economy rule
+
+The suite holds the economy's invariants beautifully — never ask for the unproducible, delivering
+beats selling, hives work unstaffed, no pair touches the yield pool. Nothing holds the design ones,
+and every one of them is script-checkable: the place taxonomy (no two adjacent places of the same
+type), the goods catalog's one-line test (every good has a `line` field), "no two adjacent
+unlockables share an effect category", and the currency policy's "adding anything to this list
+requires removing something else."
+
+Same shape as [the visual standard](#nothing-enforces-any-of-this), same cause, and the same fix
+would work: a check that fails, rather than a rule everyone agrees with and nobody notices breaking.
