@@ -29,7 +29,8 @@ Settings contains "Grant 50 Gems", "Grant 1,000,000 Gold", and "Summon a Wonder 
 These were development/testing affordances and are live on the public site. Unlike reset, they have
 no confirmation.
 
-**Decided 2026-08-14: leave them.** The audience is friends and buddies, their sessions are not being
+**Decided 2026-08-14: leave them, and reconfirmed by the owner 2026-08-26** — the playtest group is
+still a small circle of friends. The audience is friends and buddies, their sessions are not being
 treated as clean playtest data, and the buttons are the fastest way to reach high-currency states.
 The game has no analytics either way, so a cheated run and a genuine one are already
 indistinguishable.

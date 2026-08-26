@@ -5,6 +5,104 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 (design) — Merge moves to the centre, and the garden stays the home screen
+
+**The owner answered the audit's five questions, and two of the answers change the shape of the
+game.** The proposal is [28-the-loop.md](28-the-loop.md); this records the argument, because the
+argument is the part that will be needed again.
+
+**The owner played Gossip Harbor and agreed merge is underutilised** — *"maybe The Little Garden is
+secondary. Maybe this turns into a game that's more like Gossip Harbor, and we just have some extra
+features like the garden and the pets. I don't know."* The advisor's answer is **yes to merge
+central, no to a merge game**, and it goes further than the current plan in every respect except
+that one.
+
+**What the owner actually liked contains three things and only one is about merge.** In their
+words: *"you spawn items while you're merging, and then you see the orders appear up top as you
+play."* A generator you act on; **demand rendered on top of supply**; visible progress while you
+play. The middle one is load-bearing and it is a **layout** insight, not a genre one — Garden
+Wonder currently puts its demand *two navigations* from its supply, which is why the map MVP's own
+rubric question (*does checking the Stand pull you back into planting something specific*)
+structurally cannot pass.
+
+### Why the garden stays home
+
+**Merge core loops monetize on energy**, and energy is rejected twice already as the anti-cosy
+pattern. Gossip Harbor, Merge Mansion, Travel Town and Family Island are all energy-gated, because
+a merge board is infinitely playable and the developer sells the right to play it. Remove energy
+and the shape has no engine under it.
+
+**A merge core loop carries the content treadmill that killed the match-3 plan.** Merge was chosen
+over match-3 because match-3's authored level treadmill is unsustainable for two people. That holds
+while merge is a side board; promote it to the core and the treadmill arrives with it, because a
+merge board with nothing to spend on is a board you abandon. **The board is the cheap half of a
+merge game; the task ladder is the expensive half, and it never stops.**
+
+**And it trades the only differentiated asset for the most commoditized screen in mobile.** Doc 17
+names the moat as Mario Wonder juice on an idle garden and lists Merge-2 in *avoid entirely* as a
+Century Games / Moon Active capital war. **You cannot out-spend Century Games; you can out-craft
+them. Merge rewards spend, cosy rewards craft** — and the free distribution this project can
+actually reach (Wholesome Direct, r/incremental_games, r/CozyGamers) is closed to a merge game.
+
+### The four changes proposed instead
+
+**The order queue comes to the garden** — three customer faces above the plots, the Stand's existing
+simulation rendered where the planting decision is made. The Stand survives as the place you go to
+deliver; what moves is the *ask*. **The bench becomes the second screen, not the sixth place**, one
+gesture from the garden with the same strip above it. **The bench is the job that never automates**
+— the garden automates by design, the bench cannot, and that is the answer to *what is the player's
+job after automation*, which is the hole the missing ceiling, session shape and retention plan are
+all three views of. And **the generator is the garden, never an energy meter**: harvests drop chain
+items (already built), `basketMax` caps the bank, board space caps the hand, and *"board space is
+the only sink that scales with how automated the garden already is"* turns out to have been written
+for a purpose nobody had identified yet.
+
+**The consequence nobody had noticed:** a harvest's bench rung is
+`seedBucket[seed] + rarityBump[rarity]`, so **rarity and mutations already decide the quality of the
+merge board**. Legendary stops being a bigger number and becomes a better hand. That is the
+strongest answer the project has had to *why does the garden still matter*, and it needed no design
+at all — only noticing that two shipped systems already touch.
+
+### Scarcity gets a rule
+
+The audit found nothing in the game is scarce and that this is upstream of the missing ceiling.
+The rule proposed: **scarcity in a cosy game is space and attention — never permission, and never
+progress.** You may run out of room and out of hands; you may never run out of the right to play,
+and nothing earned may be taken away. It is checkable, and it is exactly why an upkeep clock passes
+and an energy meter does not: hunger costs a creature's *work* and is visibly reversible, energy
+costs you the *game*.
+
+Four of the five scarcities already exist (board space, habitat slots, plot adjacency, the awake
+clock); the fifth is the Night Garden's time-of-day gate, which is scarcity of *opportunity*.
+
+### Three session shapes, finally specified
+
+Three documents described a session and none specified one. Now: the **40-second check** at map
+altitude where no decision is required and the rewarded video belongs; the **7-minute sit-down**
+across garden and bench, where every beat is a decision and the order strip is the thread that
+turns six systems into one errand; and the **30-second return** for one specific finished thing,
+which is what notifications serve.
+
+### The owner's other answers
+
+**Creatures: many, and eventually bred.** The current model — attracted by a bloom, raised by
+duplicate harvests of that bloom — stays as the acquisition verb, and a hatchery is wanted long-run.
+Recorded as direction; the roster's shape is item 1. **Seasons and the content bill of materials
+are both deferred** by the owner as separate conversations. **The cheat buttons stay**, reconfirmed
+2026-08-26 — the audience is still a small group of friends playtesting, which is the condition
+[11-known-issues.md](11-known-issues.md) already names.
+
+### Rejected
+
+**The full pivot** — garden demoted, merge board as home. **Energy in any form**, including a soft
+one on a generator; there is no version that is a little bit of both. **Leaving the bench on the map
+as a sixth place** — it is the second screen or it is nothing, and ten days of it sitting unbuilt
+behind two navigations is the evidence. **A second generator on the bench itself**, which would work
+and would immediately make the garden optional. **Adding any new mechanic to fill the
+after-automation hole** — the cheapest fix was a system already built and carrying no job.
+
+---
+
 ## 2026-08-26 (design) — A design audit, and four arguments with the brief that framed it
 
 **The owner asked for an audit before a plan, and named eight known gaps rather than letting them

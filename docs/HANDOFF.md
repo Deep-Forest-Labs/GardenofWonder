@@ -12,6 +12,55 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **MERGE MOVES TO THE CENTRE, AND THE GARDEN STAYS THE HOME SCREEN, 2026-08-26 (proposal).** The
+> owner played Gossip Harbor, agreed the bench is underutilised, and floated the full pivot — *"maybe
+> The Little Garden is secondary."* **[28-the-loop.md](28-the-loop.md)** is the answer: **yes to
+> merge central, no to a merge game**, and it goes further than the current plan in every respect
+> except that one.
+>
+> **What the owner liked contains three things and only one is about merge** — a generator you act
+> on, **demand rendered on top of supply**, and visible progress while you play. The middle one is
+> load-bearing and it is a *layout* insight: this game puts its demand **two navigations from its
+> supply**, which is why the map MVP's own rubric question — *does checking the Stand pull you back
+> into planting something specific* — structurally cannot pass.
+>
+> **Three reasons the garden stays home.** Merge core loops **monetize on energy** (Gossip Harbor,
+> Merge Mansion, Travel Town, Family Island all are) and energy is already rejected twice as the
+> anti-cosy pattern; a merge core loop carries **the same content treadmill that killed the match-3
+> plan**, because the board is the cheap half of a merge game and the task ladder is the expensive
+> half; and it trades the one differentiated asset for the most commoditized screen in mobile —
+> doc 17 lists Merge-2 under *avoid entirely*. **You cannot out-spend Century Games; you can
+> out-craft them.**
+>
+> **Four changes, no new genre.** The **order queue comes to the garden** — three customer faces
+> above the plots, the Stand's existing simulation rendered where the planting decision is made. The
+> **bench becomes the second screen, not the sixth place**, one gesture away with the same strip
+> above it. **The bench is the job that never automates** — the garden automates by design, the bench
+> cannot, and that is the answer to *what is the player's job after automation*, which is the hole
+> the missing ceiling, session shape and retention plan are all three views of. And **the generator
+> is the garden, never an energy meter**: harvests already drop chain items, `basketMax` caps the
+> bank, board space caps the hand.
+>
+> **The consequence nobody had noticed:** a harvest's bench rung is
+> `seedBucket[seed] + rarityBump[rarity]`, so **rarity and mutations already decide the quality of
+> the merge board.** Legendary stops being a bigger number and becomes a better hand — the strongest
+> answer yet to *why does the garden still matter*, needing no design, only noticing that two
+> shipped systems already touch.
+>
+> **Scarcity gets a rule:** *space and attention, never permission and never progress.* You may run
+> out of room and out of hands; you may never run out of the right to play, and nothing earned may
+> be taken away. Four of the five scarcities already exist — board space, habitat slots, plot
+> adjacency, the awake clock — and the fifth is the Night Garden's time-of-day gate.
+>
+> **Three session shapes are specified at last:** the 40-second check at map altitude (no decision
+> required, and where the rewarded video belongs), the 7-minute sit-down across garden and bench,
+> and the 30-second return for one finished thing.
+>
+> **Also settled by the owner, 2026-08-26:** creatures go **wide** — many of them, attracted by
+> blooms as now, with a hatchery or breeding wanted long-run; **seasons and the content bill of
+> materials are deferred** as separate conversations; and **the cheat buttons stay**, reconfirmed,
+> since the audience is still friends playtesting.
+
 > **THE DESIGN WAS AUDITED AS A WHOLE, 2026-08-26, and the audit argues with its own brief.** The
 > owner asked for an audit before a plan and named eight known gaps rather than letting them be
 > rediscovered. All eight are real. **[27-design-audit.md](27-design-audit.md)** is the document;
@@ -657,12 +706,16 @@ as one piece rather than discovering it halfway through.
 ## The current task
 
 **Design, not build: settling the six items in [27-design-audit.md](27-design-audit.md#the-order-to-settle-things-in).**
-The audit is recommendation, not decision — the owner rules on each item and the outcome lands in
-[10-decision-log.md](10-decision-log.md). **Five questions in the audit are genuinely the
-owner's** and block work below them: how many creatures eventually (six is not a collection; one
-per bloom caps at nineteen and matches the Almanac exactly), whether merge is kept / moved to the
-centre / replaced, whether a season clears the garden and what survives it, the launch content
-bill of materials, and whether the cheat buttons still ship.
+Item 0 is drafted — [28-the-loop.md](28-the-loop.md) — and awaits the owner's ruling on the one
+thing it argues against: the full Gossip Harbor pivot. **Three of the audit's five questions are
+answered** (merge moves to the centre; creatures go wide with breeding wanted long-run; the cheat
+buttons stay). **Two are deferred by the owner** as their own conversations: what a season is and
+what survives one, and the launch content bill of materials — the second of which the economy
+retune needs as a target.
+
+**Next, once item 0 is ruled on: item 1, the spine.** It now carries the merge decision's
+downstream questions — which gesture reaches the bench, whether the roster or the Almanac is the
+collection asked to be finished, and how a wide creature roster survives a four-slot habitat cap.
 
 The build state below is unchanged and still accurate.
 
