@@ -63,11 +63,11 @@
     if (!sheetMode) return;
     const keep = resetScroll ? 0 : el.sheetBody.scrollTop;
     const titles = {
-      upgrades: 'Upgrades', apiary: 'The Wild Meadow', craft: 'Apothecary', shop: 'Shop',
+      upgrades: 'Upgrades', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
       quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
       critter: '', stand: '', order: '',
-      keepers: 'Keepers', shelf: 'The Honey Shelf', stores: 'Stores',
+      keepers: 'Keepers', shelf: 'The Honey Shelf', stores: 'Stores', build: 'What goes here?',
       album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
     };
     let title = titles[sheetMode] || '';
@@ -92,11 +92,11 @@
     }
 
     const render = {
-      upgrades: renderUpgrades, apiary: renderApiary, craft: renderCraft, shop: renderShop,
+      upgrades: renderUpgrades, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
       dev: renderDev, welcome: renderWelcome, feed: renderFeed, critter: renderCritter,
       stand: renderStand, order: renderOrder,
-      keepers: renderKeepers, shelf: renderShelf, stores: renderStores,
+      keepers: renderKeepers, shelf: renderShelf, stores: renderStores, build: renderBuild,
       album: renderAlbum, cardset: renderCardSet, pack: renderPack
     }[sheetMode];
     /* Whoever the sheet is about stands on top of it — a creature, or now the
@@ -240,89 +240,53 @@
     </div>`;
   }
 
-  function renderApiary() {
-    const hives = S.apiary.hives;
-    const waiting = Game.jarsWaiting();
-
-    if (!hives.length) {
-      const cost = Game.nextHiveCost();
-      const can = S.credits >= cost;
-      return `<p class="sheet-note">Bees gather nectar from whatever is blooming right now — plant
-        lavender and you get lavender honey. Every hive also pollinates the garden.</p>
-        <button class="card wide ${can ? 'affordable' : ''}" data-apiary="buy">
-          <div class="card-top">
-            <span class="card-badge">${Icons.get('hive')}</span>
-            <span>
-              <span class="card-title">Set up your first hive</span>
-              <span class="card-sub">A jar every ${fmtTime(APIARY.interval)} · +${pct(APIARY.pollination)} garden yield</span>
-            </span>
-          </div>
-          <span class="card-desc">Holds ${APIARY.capacity} jars before the bees knock off. Collect to keep them working.</span>
-          ${priceTag(cost, 'credits', can)}
-        </button>`;
-    }
-
-    const cards = hives.map((h, i) => {
-      const full = h.jars.length >= APIARY.capacity;
-      const next = full ? 0 : h.at + APIARY.interval;
-      const names = h.jars.length
-        ? [...new Set(h.jars.map((j) => APIARY.honeyName(j)))].join(', ')
-        : 'Empty — the bees are out.';
-      return `<div class="hive ${h.jars.length ? 'has' : ''}">
-        <div class="hive-top">
-          <span class="hive-ico">${Icons.get('hive')}</span>
-          <span class="hive-info">
-            <span class="card-title">Hive ${i + 1}</span>
-            <span class="card-sub">${names}</span>
-          </span>
-          <span class="hive-count">${h.jars.length}/${APIARY.capacity}</span>
-        </div>
-        <div class="jars">${
-          Array.from({ length: APIARY.capacity }, (_, j) =>
-            `<span class="jar ${j < h.jars.length ? 'on' : ''}">${j < h.jars.length ? honeyIco(h.jars[j]) : ''}</span>`
-          ).join('')
-        }</div>
-        <div class="hive-foot">
-          <span class="card-sub">${full ? 'Full — collect to restart' : `Next jar in <b data-countdown="${next}">${fmtTime(Math.max(0, next - Game.nowSeconds()))}</b>`}</span>
-          <button class="mini go" data-apiary="collect" data-i="${i}" ${h.jars.length ? '' : 'disabled'}>Collect</button>
-        </div>
-      </div>`;
-    }).join('');
-
-    const cost = Game.nextHiveCost();
-    const can = S.credits >= cost;
-    const buy = Game.hivesFull()
-      ? '<p class="sheet-note">Every hive the meadow can hold is yours.</p>'
-      : `<button class="card wide ${can ? 'affordable' : ''}" data-apiary="buy">
-          <div class="card-top">
-            <span class="card-badge">${Icons.get('hive')}</span>
-            <span>
-              <span class="card-title">Another hive</span>
-              <span class="card-sub">+${pct(APIARY.pollination)} garden yield</span>
-            </span>
-          </div>
-          ${priceTag(cost, 'credits', can)}
-        </button>`;
-
-    const honeys = Object.keys(S.apiary.honey).sort((a, b) => APIARY.honeyValue(b) - APIARY.honeyValue(a));
-    const stock = honeys.map((t) =>
-      stockRow(honeyIco(t), APIARY.honeyName(t), S.apiary.honey[t], APIARY.honeyValue(t), 'honey', t)
-    ).join('') + (S.apiary.wax ? stockRow(Icons.get('wax'), 'Beeswax', S.apiary.wax, APIARY.waxValue, 'wax', 'wax') : '');
-
-    return `
-      <p class="sheet-note">Pollination is giving every harvest <b>+${pct(Game.pollination())}</b>.
-        ${waiting ? `<b>${waiting}</b> jar${waiting > 1 ? 's' : ''} waiting.` : ''}</p>
-      ${waiting > 1 ? '<button class="wide-btn" data-apiary="all">Collect every hive</button>' : ''}
-      ${cards}
-      ${buy}
-      <p class="sheet-note" style="margin-top:16px">Stores</p>
-      ${stock || '<p class="sheet-note">Nothing in the pantry yet.</p>'}`;
-  }
-
   /* ---- the meadow's panels ----
      The room does the buying and collecting, because those are things you do to
      a place you are standing in. These three are the paperwork: who is working,
      what you have made, and what you can sell. */
+
+  /* What you can put on an empty meadow cell. Every option shows what it would
+     do FOR ITS NEIGHBOURS, because that is the decision — not what it is, but
+     what it is next to. */
+  function renderBuild() {
+    const cell = Number(sheetArg);
+    const near = Game.meadowNeighbours(cell);
+    const nearHives = near.filter((n) => Game.cellIsHive(n)).length;
+
+    const hiveCost = Game.nextHiveCost();
+    const canHive = S.credits >= hiveCost;
+    const rows = [`<button class="build-row${canHive ? ' affordable' : ''}" data-build="hive"
+        data-cell="${cell}" type="button">
+        <span class="build-art">${Meadow.hive()}</span>
+        <span class="build-copy">
+          <span class="card-title">Hive</span>
+          <span class="card-sub">${MEADOW.hive.desc}</span>
+        </span>
+        ${priceTag(hiveCost, 'credits', canHive)}
+      </button>`];
+
+    MEADOW.tenders.forEach((t) => {
+      const cost = Game.nextTenderCost(t.id);
+      const can = S.credits >= cost;
+      const helps = nearHives
+        ? `Helps ${nearHives} hive${nearHives > 1 ? 's' : ''} from here`
+        : 'Nothing beside it yet';
+      rows.push(`<button class="build-row${can ? ' affordable' : ''}" data-build="${t.id}"
+        data-cell="${cell}" type="button">
+        <span class="build-art">${Meadow.tender(t.id, t.tint)}</span>
+        <span class="build-copy">
+          <span class="card-title">${t.name}</span>
+          <span class="card-sub">${t.desc}</span>
+          <span class="build-helps${nearHives ? ' on' : ''}">${helps}</span>
+        </span>
+        ${priceTag(cost, 'credits', can)}
+      </button>`);
+    });
+
+    return `<p class="sheet-note">Hives make the honey. Everything else makes the hives it
+        <b>touches</b> better — so where you put a thing matters as much as what it is.</p>
+      ${rows.join('')}`;
+  }
 
   function renderKeepers() {
     const slots = Game.keeperSlots();
@@ -1467,7 +1431,8 @@
       case 'wonder': Game.startWonder(); redraw = false; break;
       case 'fill': ok = D.fillGarden() > 0; break;
       case 'ripen': ok = D.ripenAll() > 0; break;
-      case 'hive': S.credits += Game.nextHiveCost(); ok = Game.buyHive(); break;
+      case 'hive': { const free = Game.emptyCells(); S.credits += Game.nextHiveCost();
+        ok = free.length ? Game.placeHive(free[0]) : false; break; }
       case 'gold': S.credits += 1e6; Game.save(); Game.emit('currency'); break;
       case 'gems': S.gems += 50; Game.save(); Game.emit('currency'); break;
       case 'level': D.grantLevels(Number(arg) || 1); break;
@@ -1644,6 +1609,19 @@
       return;
     }
 
+    const build = e.target.closest('[data-build]');
+    if (build) {
+      const cell = Number(build.dataset.cell);
+      const what = build.dataset.build;
+      const ok = what === 'hive' ? Game.placeHive(cell) : Game.placeTender(cell, what);
+      if (!ok) { Sound.play('deny'); FX.shake(4); return; }
+      Sound.play('buy');
+      FX.haptic(12);
+      UI.closeSheet();
+      if (UI.meadowOpen()) UI.renderMeadow();
+      return;
+    }
+
     const keep = e.target.closest('[data-keep]');
     if (keep) {
       const id = keep.dataset.keep;
@@ -1666,33 +1644,6 @@
     const claim = e.target.closest('[data-claim]');
     if (claim && claim.dataset.claim) {
       if (Game.claimQuest(claim.dataset.claim)) Sound.resume();
-      return;
-    }
-    const api = e.target.closest('[data-apiary]');
-    if (api) {
-      const what = api.dataset.apiary;
-      if (what === 'buy') {
-        if (Game.buyHive()) {
-          const c = FX.centerOf(api);
-          FX.sparks(c.x, c.y, 14, '#ffc93c');
-          FX.ring(c.x, c.y, '#ffe066', 0.5, 80);
-          Sound.play('buy');
-        } else { Sound.play('deny'); FX.shake(4); }
-      } else {
-        const got = what === 'all' ? Game.collectAllHives() : [Game.collectHive(Number(api.dataset.i))].filter(Boolean);
-        const jars = got.reduce((a, r) => a + r.jars.length, 0);
-        const wax = got.reduce((a, r) => a + r.wax, 0);
-        if (jars) {
-          const c = FX.centerOf(api);
-          FX.coins(c.x, c.y, Math.min(12, jars * 2));
-          Sound.play('coin');
-          UI.toast({
-            title: `${jars} jar${jars > 1 ? 's' : ''} collected`,
-            body: wax ? `and ${wax} beeswax` : 'straight to the pantry',
-            art: Icons.get('honey')
-          });
-        }
-      }
       return;
     }
     const craft = e.target.closest('[data-craft]');

@@ -6,6 +6,7 @@
   /* ============ garden ============ */
   const plotEls = [];
   let flowerBtn = null;
+  let guestFlower = null;   // a flower standing in some other room
   let speechEl = null;
   let comboRing = null;
 
@@ -244,12 +245,15 @@
 
   let faceTimer = null;
   function faceReact(mood) {
-    flowerBtn.classList.remove('bounce');
-    void flowerBtn.offsetWidth;
-    flowerBtn.classList.add('bounce');
-    flowerBtn.classList.toggle('squint', mood === 'crit');
-    flowerBtn.classList.toggle('happy', mood === 'happy');
-    const mouth = $('.tf-mouth-path', flowerBtn);
+    // Whichever flower is actually on screen — it reacts wherever it stands.
+    const face = guestFlower || flowerBtn;
+    if (!face) return;
+    face.classList.remove('bounce');
+    void face.offsetWidth;
+    face.classList.add('bounce');
+    face.classList.toggle('squint', mood === 'crit');
+    face.classList.toggle('happy', mood === 'happy');
+    const mouth = $('.tf-mouth-path', face);
     if (mouth) {
       const shapes = {
         idle: 'M-8,10 Q0,17 8,10',
@@ -261,7 +265,7 @@
       clearTimeout(faceTimer);
       faceTimer = setTimeout(() => {
         mouth.setAttribute('d', shapes.idle);
-        flowerBtn.classList.remove('squint');
+        face.classList.remove('squint');
       }, 340);
     }
   }
@@ -281,7 +285,7 @@
     const stopHold = () => {
       if (holdTimer) { clearInterval(holdTimer); holdTimer = null; }
     };
-    flowerBtn.addEventListener('pointerdown', (e) => {
+    const onDown = (e) => {
       e.preventDefault();
       Sound.resume();
       lookAt(e.clientX, e.clientY);
@@ -292,10 +296,30 @@
       // changes what a single tap is worth.
       stopHold();
       holdTimer = setInterval(() => Game.tapFlower(true), S.tap.holdInterval);
-    }, { passive: false });
-    ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) => {
-      flowerBtn.addEventListener(evt, stopHold);
-    });
+    };
+    const wire = (node) => {
+      if (!node) return;
+      node.addEventListener('pointerdown', onDown, { passive: false });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) => {
+        node.addEventListener(evt, stopHold);
+      });
+    };
+    wire(flowerBtn);
+
+    /* The flower is the game's voice AND its core verb, and it now stands in
+       more than one room. A place with its own flower hands it over here, so a
+       tap pays exactly what it pays in the garden — the same loop, reachable
+       everywhere, not a second minigame. `flowerBtn()` is what every tap effect
+       centres on, so this is also what makes the coins, the crit ring and the
+       face reaction fire in the right place. */
+    UI.bindFlower = (node) => {
+      stopHold();
+      if (node && !node.dataset.wired) {
+        node.dataset.wired = '1';
+        wire(node);
+      }
+      guestFlower = node || null;
+    };
   }
 
   /* ============ HUD ============ */
@@ -929,7 +953,9 @@
   UI.noteActivity = noteActivity;
   UI.plotEls = plotEls;
   /* A function, not the node: buildGarden() throws the flower away and makes a new one. */
-  UI.flowerBtn = () => flowerBtn;
+  /* Whichever flower the player can actually see. Every tap effect centres on
+     this, so it has to follow them between rooms. */
+  UI.flowerBtn = () => guestFlower || flowerBtn;
   UI.sayText = sayText;
   UI.renderCritters = renderCritters;
   UI.tapCritter = tapCritter;

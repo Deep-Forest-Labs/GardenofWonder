@@ -1,13 +1,19 @@
-/* Garden Wonder — the Wild Meadow: the hive bank you travel into.
+/* Garden Wonder — the Wild Meadow: a board on a hillside nobody mows.
 
-   Draws from meadow.js, which knows nothing about the game, and puts the real
-   hives, keepers and jars into its spots. Reaches the rest of the UI through the
-   `UI` global — see docs/02-architecture.md. Design in docs/25-world-map.md.
+   Draws from meadow.js, which knows nothing about the game. Reaches the rest of
+   the UI through the `UI` global — see docs/02-architecture.md. Design in
+   docs/25-world-map.md.
 
-   The room's job is to make a producer feel like a PLACE. What does that:
-   spots that are visibly empty until you buy them, bees that only exist because
-   a hive does, jars that carry the colour of the bloom they came from, and a
-   bank at the bottom where your creatures actually stand. */
+   THE RULE THIS FILE EXISTS TO KEEP, from the owner, 2026-08-25: share the
+   grammar, never share the verb. The frame is the garden's — a board floating in
+   a scene, the talking flower in the middle, eight cells around it, pets at the
+   bottom, dock below — so anyone who has played the garden already knows where
+   to look and what is tappable. The VERB is different: garden cells are
+   temporary (plant, grow, harvest, empty) and meadow cells are permanent (place
+   a thing once and it stays). Farming against building, on one board shape.
+
+   The first version of this room was a diorama — objects scattered over a
+   hillside, each learned by tapping it — and it read as a different game. */
 
 (() => {
   const { $, $$, S, el, fmt } = UI;
@@ -15,38 +21,35 @@
   const DOCK_H = 96;
   let open = false;
   let sceneSky = null;
-  let mode = 'visit';                 // 'visit' | 'keepers' — what a tap means
+  let mode = 'visit';                 // 'visit' | 'move'
+  let moving = -1;                    // cell picked up in move mode
 
   const DOCK = [
     { id: 'collect', icon: 'honey', label: 'Collect' },
+    { id: 'move', icon: 'hand', label: 'Move' },
     { id: 'keepers', icon: 'sprout', label: 'Keepers' },
-    { id: 'shelf', icon: 'book', label: 'Shelf' },
-    { id: 'stores', icon: 'coin', label: 'Stores' }
+    { id: 'shelf', icon: 'book', label: 'Shelf' }
   ];
 
   const skyNow = () => (Game.isNight() ? 'moon' : 'sun');
   const ico = (n) => Icons.get(n);
 
-  /* A jar takes the colour of the bloom it came from — the honey-follows-bloom
-     rule made visible. But it has to read as HONEY first: Daisy's petals are pure
-     white, and a white jar on a pale shelf is indistinguishable from an empty
-     slot. So the bloom TINTS an amber base rather than replacing it. */
+  /* A jar takes the colour of the bloom it came from, but has to read as HONEY
+     first: Daisy's petals are pure white, and a white jar is indistinguishable
+     from an empty shelf slot. The bloom TINTS an amber base. */
   const AMBER = [255, 176, 42];
   function mixAmber(hex, k) {
     const h = String(hex || '').replace('#', '');
     if (h.length !== 6) return `rgb(${AMBER.join(',')})`;
     const to = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
-    const out = to.map((v, i) => Math.round(AMBER[i] * (1 - k) + v * k));
-    return `rgb(${out.join(',')})`;
-  }
-  function jarColours(seedId) {
-    const sd = Game.seedById(seedId);
-    if (!sd) return { fill: 'rgb(255,176,42)', glow: '#ffe9a8' };
-    return { fill: mixAmber(sd.art.c1, 0.55), glow: mixAmber(sd.art.c2 || sd.art.c1, 0.3) };
+    return `rgb(${to.map((v, i) => Math.round(AMBER[i] * (1 - k) + v * k)).join(',')})`;
   }
   const jarFor = (seedId) => {
-    const c = jarColours(seedId);
-    return Meadow.jar(c.fill, c.glow);
+    const sd = Game.seedById(seedId);
+    return Meadow.jar(
+      sd ? mixAmber(sd.art.c1, 0.55) : 'rgb(255,176,42)',
+      sd ? mixAmber(sd.art.c2 || sd.art.c1, 0.3) : '#ffe9a8'
+    );
   };
 
   /* ---------------- scene ---------------- */
@@ -61,58 +64,70 @@
     });
   }
 
-  /** Map a point in the scene's own coordinates to a pixel in the container.
-      The scene is drawn with `slice`, so it is cropped on any screen that is not
-      its design size — a percentage of the container stops agreeing with a
-      position in the art. Same problem the Hollow already solved. */
-  function place() {
+  /** Keepers stand in scene coordinates, so they need the mapping the Hollow's
+      creatures already use — the scene is drawn with `slice`, and a percentage
+      of the container stops agreeing with a position in the art. */
+  function placeKeepers() {
     const svg = $('.meadow-scene', el.meadow);
     if (!svg || !svg.getScreenCTM) return;
     const m = svg.getScreenCTM();
     if (!m) return;
     const box = el.meadow.getBoundingClientRect();
-    const put = (node, pt, size) => {
-      const w = size * m.a;
+    $$('[data-keeper-slot]', el.meadow).forEach((node, i) => {
+      const pt = Meadow.KEEPERS[i];
+      if (!pt) return;
+      const w = Meadow.KEEPER_SIZE * m.a;
       node.style.width = `${w}px`;
       node.style.height = `${w}px`;
       node.style.left = `${pt.x * m.a + m.e - box.left - w / 2}px`;
       node.style.top = `${pt.y * m.d + m.f - box.top - w / 2}px`;
-    };
-    $$('[data-spot]', el.meadow).forEach((node, i) => {
-      if (Meadow.SPOTS[i]) put(node, Meadow.SPOTS[i], Meadow.HIVE_SIZE);
-    });
-    $$('[data-keeper-slot]', el.meadow).forEach((node, i) => {
-      if (Meadow.KEEPERS[i]) put(node, Meadow.KEEPERS[i], Meadow.KEEPER_SIZE);
     });
   }
 
-  /* ---------------- the bank ---------------- */
+  /** A perfect square in whatever the stage row offers — the garden's rule. */
+  function sizeBoard() {
+    const frame = $('#meadowFrame');
+    const board = $('#meadowBoard');
+    if (!frame || !board) return;
+    const r = frame.getBoundingClientRect();
+    const side = Math.max(120, Math.floor(Math.min(r.width, r.height)));
+    board.style.width = `${side}px`;
+    board.style.height = `${side}px`;
+  }
 
-  /* Nodes are built ONCE and then updated in place. Rebuilding them on the slow
-     tick meant every hive and every keeper was recreated unsized, drew for one
-     frame at its natural size, and only got its real geometry from place() on
-     the next frame — which is exactly the "pets flashing in and out every few
-     seconds" the owner photographed. Same rule renderPlots() already follows:
-     cache what was written and only touch the DOM on a real change. */
-  const spotEls = new Map();
+  /* ---------------- the board ---------------- */
+
+  const cellEls = new Map();
   const keeperEls = new Map();
 
-  function buildBank() {
-    spotEls.clear();
+  /* Built ONCE and updated in place. Rebuilding on the slow tick recreated every
+     node unsized for a frame, which is what made the pets flash. */
+  function buildBoard() {
+    cellEls.clear();
     keeperEls.clear();
-    const bank = $('#meadowBank');
-    const bench = $('#meadowKeepers');
-    bank.innerHTML = '';
-    bench.innerHTML = '';
-    MEADOW.spots.forEach((sp) => {
+    const board = $('#meadowBoard');
+    board.innerHTML = '';
+    for (let i = 0; i < MEADOW.cells; i += 1) {
+      // The flower takes the middle of the 3x3, exactly as it does in the garden.
+      if (i === 4) {
+        const f = document.createElement('button');
+        f.type = 'button';
+        f.className = 'flower-btn mw-flower';
+        f.id = 'meadowFlower';
+        f.setAttribute('aria-label', 'Tap the talking flower');
+        f.innerHTML = Flora.talkingFlower();
+        board.appendChild(f);
+      }
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'mw-spot';
-      b.dataset.spot = sp.id;
+      b.className = 'mw-cell';
+      b.dataset.cell = String(i);
       b.dataset.look = '';
-      bank.appendChild(b);
-      spotEls.set(sp.id, b);
-    });
+      board.appendChild(b);
+      cellEls.set(i, b);
+    }
+    const bench = $('#meadowKeepers');
+    bench.innerHTML = '';
     Meadow.KEEPERS.forEach((k, i) => {
       const b = document.createElement('button');
       b.type = 'button';
@@ -122,35 +137,38 @@
       bench.appendChild(b);
       keeperEls.set(i, b);
     });
+    UI.bindFlower($('#meadowFlower'));
   }
 
-  function syncSpot(sp) {
-    const node = spotEls.get(sp.id);
+  function syncCell(i) {
+    const node = cellEls.get(i);
     if (!node) return;
-    const hive = Game.hiveAt(sp.id);
-    const jars = hive ? hive.jars.length : 0;
-    const full = hive && jars >= Game.hiveCapacity(hive);
-    const can = S.credits >= Game.nextHiveCost();
-
-    // The art only changes when a spot goes from empty to kept.
-    const look = hive ? 'hive' : 'mark';
+    const c = Game.cellAt(i);
+    const look = c ? (c.kind === 'hive' ? 'hive' : `t:${c.type}`) : 'empty';
     if (node.dataset.look !== look) {
       node.dataset.look = look;
-      node.innerHTML = (hive ? Meadow.hive(sp.tint) : Meadow.spotMark())
-        + `<span class="mw-spot-tag">${sp.name}</span>`
-        + '<span class="mw-jar-badge" hidden></span>';
+      if (!c) node.innerHTML = Meadow.emptyCell();
+      else if (c.kind === 'hive') node.innerHTML = `${Meadow.hive()}<span class="mw-jar-badge" hidden></span>`;
+      else {
+        const t = meadowTender(c.type);
+        node.innerHTML = Meadow.tender(c.type, t ? t.tint : '#8ce99a');
+      }
     }
-    node.className = hive
-      ? `mw-spot has${jars ? ' ready' : ''}${full ? ' full' : ''}`
-      : `mw-spot empty${can ? ' affordable' : ''}`;
-    node.setAttribute('aria-label', hive
-      ? `${sp.name}, ${jars} jars`
-      : `${sp.name}, ${fmt(Game.nextHiveCost())} coins`);
-    const badge = $('.mw-jar-badge', node);
-    if (badge) {
-      badge.hidden = !jars;
-      if (jars) badge.textContent = jars;
-    }
+    let cls = 'mw-cell';
+    if (!c) cls += S.credits >= Game.nextHiveCost() ? ' empty can' : ' empty';
+    else if (c.kind === 'hive') {
+      const jars = c.jars.length;
+      cls += ` hive${jars ? ' ready' : ''}${jars >= Game.hiveCapacity(i) ? ' full' : ''}`;
+      const badge = $('.mw-jar-badge', node);
+      if (badge) { badge.hidden = !jars; if (jars) badge.textContent = jars; }
+    } else cls += ' tender';
+    if (mode === 'move') cls += moving === i ? ' picked' : ' movable';
+    node.className = cls;
+
+    const t = c && c.kind === 'tender' ? meadowTender(c.type) : null;
+    node.setAttribute('aria-label', c
+      ? (c.kind === 'hive' ? `Hive, ${c.jars.length} jars` : (t ? t.name : 'Tender'))
+      : `Empty plot, ${fmt(Game.nextHiveCost())} coins for a hive`);
   }
 
   function syncKeeper(i) {
@@ -174,18 +192,15 @@
   function render() {
     if (!open) return;
     syncScene();
-    if (!spotEls.size) buildBank();
-    MEADOW.spots.forEach(syncSpot);
+    if (!cellEls.size) buildBoard();
+    for (let i = 0; i < MEADOW.cells; i += 1) syncCell(i);
     Meadow.KEEPERS.forEach((k, i) => syncKeeper(i));
 
-    /* Bees exist because hives do. With none kept, the meadow is quiet — which
-       is the whole reason buying the first hive feels like something. */
+    // Bees exist because hives do. An empty board is a silent meadow.
     const want = Math.min(6, Game.hiveCount() * 2);
     const swarm = $('#meadowBees');
     if (swarm.childElementCount !== want) {
-      /* Each starts somewhere different. Sharing a start point makes six bees
-         fly as one clump, which reads as a bug rather than as a meadow. */
-      const starts = [[16, 44], [58, 30], [30, 62], [70, 52], [44, 36], [22, 56]];
+      const starts = [[16, 40], [58, 26], [30, 58], [70, 48], [44, 32], [22, 52]];
       let out = '';
       for (let i = 0; i < want; i += 1) {
         const [x, y] = starts[i % starts.length];
@@ -194,68 +209,75 @@
       swarm.innerHTML = out;
     }
 
-    /* Only the two numbers that say what this place is DOING to the rest of the
-       game. The shelf has its own dock button, so its count was noise up here —
-       and this strip sits below the HUD now rather than on top of it. */
     const waiting = Game.jarsWaiting();
     const note = Game.hiveCount()
       ? `<span>${ico('sprout')}Pollination <b>+${Math.round(Game.pollination() * 100)}%</b></span>
          <span>${ico('honey')}<b>${waiting}</b> waiting</span>`
-      : '<span>Set a hive on the bank and the bees will find the garden.</span>';
+      : '<span>Put a hive on the bank and the bees will find the garden.</span>';
     const noteEl = $('#meadowNote');
-    if (noteEl.dataset.look !== note) {
-      noteEl.dataset.look = note;
-      noteEl.innerHTML = note;
-    }
+    if (noteEl.dataset.look !== note) { noteEl.dataset.look = note; noteEl.innerHTML = note; }
 
     $$('[data-dock]', el.meadow).forEach((b) => {
       b.classList.toggle('on', b.dataset.dock === mode);
       const dot = $('.dock-dot', b);
       if (dot) dot.hidden = !(b.dataset.dock === 'collect' && waiting > 0);
     });
-    requestAnimationFrame(place);
+    requestAnimationFrame(() => { sizeBoard(); placeKeepers(); });
   }
 
   /* ---------------- verbs ---------------- */
 
-  function tapSpot(spotId) {
-    const sp = meadowSpot(spotId);
-    if (!sp) return;
-    const hive = Game.hiveAt(spotId);
+  function tapCell(i) {
+    const c = Game.cellAt(i);
 
-    if (!hive) {
-      const cost = Game.nextHiveCost();
-      if (Game.buyHive(spotId)) {
-        const node = $(`[data-spot="${spotId}"]`, el.meadow);
-        const c = FX.centerOf(node);
-        FX.sparks(c.x, c.y, 16, sp.tint);
-        FX.stars(c.x, c.y, 6, '#ffe066');
-        Sound.play('quest');
-        FX.haptic(12);
-        UI.toast({ title: sp.name, body: sp.desc, art: ico('hive') });
-        render();
-      } else {
-        Sound.play('deny');
-        UI.toast({
-          title: `${sp.name} — ${fmt(cost)}`,
-          body: sp.desc,
-          art: ico('hive')
-        });
+    /* Moving is free, and it is a mode rather than a drag: the same shape the
+       Hollow's Loadout uses, and a drag would fight the swipe out to the map. */
+    if (mode === 'move') {
+      if (moving < 0) {
+        if (!c) { Sound.play('deny'); return; }
+        moving = i;
+        Sound.play('tap');
+      } else if (moving === i) {
+        moving = -1;
+        Sound.play('tap');
+      } else if (Game.moveCell(moving, i)) {
+        moving = -1;
+        Sound.play('buy');
+        FX.haptic(8);
       }
+      render();
       return;
     }
 
-    const got = Game.collectHive(Game.state.apiary.hives.indexOf(hive));
-    if (!got) {
-      // Nothing to take yet: say what the spot is for instead of refusing silently.
+    if (!c) { UI.openSheet('build', i); return; }
+
+    if (c.kind === 'tender') {
+      const t = meadowTender(c.type);
       Sound.play('tap');
-      UI.toast({ title: sp.name, body: sp.desc, art: ico('hive') });
+      if (t) UI.toast({ title: t.name, body: t.desc, art: ico('sprout') });
       return;
     }
-    const node = $(`[data-spot="${spotId}"]`, el.meadow);
-    const c = FX.centerOf(node);
-    FX.coins(c.x, c.y, Math.min(12, got.jars.length + 2));
-    FX.sparks(c.x, c.y, 12, sp.tint);
+
+    const got = Game.collectHive(i);
+    if (!got) {
+      // Nothing to take yet — say what its neighbours are doing for it instead.
+      Sound.play('tap');
+      const helped = Game.meadowNeighbours(i)
+        .map((n) => Game.cellAt(n))
+        .filter((x) => x && x.kind === 'tender').length;
+      UI.toast({
+        title: 'Hive',
+        body: helped
+          ? `${helped} neighbour${helped > 1 ? 's helping' : ' helping'} — a jar every ${UI.fmtTime(Game.hiveInterval(i))}.`
+          : `A jar every ${UI.fmtTime(Game.hiveInterval(i))}. Put something beside it.`,
+        art: ico('hive')
+      });
+      return;
+    }
+    const node = cellEls.get(i);
+    const ctr = FX.centerOf(node);
+    FX.coins(ctr.x, ctr.y, Math.min(12, got.jars.length + 2));
+    FX.sparks(ctr.x, ctr.y, 12, '#ffc94a');
     Sound.play('collect');
     FX.haptic(8);
     render();
@@ -275,20 +297,26 @@
   }
 
   function dockTap(id) {
+    if (id === 'move') {
+      mode = mode === 'move' ? 'visit' : 'move';
+      moving = -1;
+      Sound.play('open');
+      render();
+      return;
+    }
     if (id === 'collect') {
       const got = Game.collectAllHives();
-      if (!got || !got.jars) { Sound.play('deny'); return; }
-      const c = FX.centerOf($('#meadowBank', el.meadow));
-      FX.coins(c.x, c.y, 14);
-      FX.stars(c.x, c.y, 8, '#ffe066');
+      if (!got || !got.length) { Sound.play('deny'); return; }
+      const ctr = FX.centerOf($('#meadowBoard', el.meadow));
+      FX.coins(ctr.x, ctr.y, 14);
+      FX.stars(ctr.x, ctr.y, 8, '#ffe066');
       Sound.play('collect');
       FX.haptic(10);
       render();
       return;
     }
     if (id === 'keepers') { UI.openSheet('keepers'); return; }
-    if (id === 'shelf') { UI.openSheet('shelf'); return; }
-    if (id === 'stores') { UI.openSheet('stores'); return; }
+    if (id === 'shelf') UI.openSheet('shelf');
   }
 
   /* ---------------- enter / leave ---------------- */
@@ -296,11 +324,13 @@
   function enter() {
     if (open) return;
     open = true;
+    mode = 'visit';
+    moving = -1;
     el.game.classList.add('in-meadow');
     el.meadow.hidden = false;
-    buildBank();
+    buildBoard();
     render();
-    requestAnimationFrame(place);
+    requestAnimationFrame(() => { sizeBoard(); placeKeepers(); });
     Sound.play('open');
     UI.hideCoach();
   }
@@ -311,6 +341,7 @@
     mode = 'visit';
     el.game.classList.remove('in-meadow');
     el.meadow.hidden = true;
+    UI.bindFlower(null);
   }
 
   /* ---------------- build ---------------- */
@@ -319,9 +350,16 @@
     el.meadow.innerHTML = `
       <div class="meadow-scene-host" id="meadowScene"></div>
       <div class="mw-bees" id="meadowBees" aria-hidden="true"></div>
-      <div class="mw-bank" id="meadowBank"></div>
-      <div class="mw-keeper-bank" id="meadowKeepers"></div>
       <div class="mw-note" id="meadowNote"></div>
+      <main class="mw-stage">
+        <div class="mw-frame" id="meadowFrame">
+          <div class="mw-board" id="meadowBoard" aria-label="The hive bank"></div>
+        </div>
+      </main>
+      <!-- Outside the stage on purpose: keepers are positioned in SCENE
+           coordinates against the layer, and nesting them in a padded, offset
+           box silently shifted every one of them. -->
+      <div class="mw-keeper-bank" id="meadowKeepers" aria-label="Keepers"></div>
       <div class="mw-exit"><i></i><span>Swipe down for the map</span></div>
       <nav class="dock mw-dock">${DOCK.map((d) => `
         <button class="dock-btn" type="button" data-dock="${d.id}">
@@ -331,22 +369,21 @@
         </button>`).join('')}</nav>`;
 
     el.meadow.addEventListener('click', (e) => {
-      const spot = e.target.closest('[data-spot]');
-      if (spot) { tapSpot(spot.dataset.spot); return; }
+      const cell = e.target.closest('[data-cell]');
+      if (cell) { tapCell(Number(cell.dataset.cell)); return; }
       const slot = e.target.closest('[data-keeper-slot]');
       if (slot) { tapKeeperSlot(Number(slot.dataset.keeperSlot)); return; }
       const dock = e.target.closest('[data-dock]');
       if (dock) dockTap(dock.dataset.dock);
     });
 
-    /* Swipe down goes back out to the map — the same rule the whole ladder
-       uses. Hives and the dock act on the way down, so a drag begun on one has
-       already spent itself and leaving would do two things at once. */
+    /* Swipe down goes back out to the map. Cells, the flower and the dock all
+       act on the way down, so a drag begun on one has already spent itself. */
     let y0 = null;
     let x0 = null;
     el.meadow.addEventListener('pointerdown', (e) => {
       y0 = null;
-      if (e.target.closest('[data-spot],[data-keeper-slot],.dock,.mw-exit')) return;
+      if (e.target.closest('[data-cell],[data-keeper-slot],.dock,.mw-exit,.flower-btn')) return;
       y0 = e.clientY;
       x0 = e.clientX;
     });
@@ -358,7 +395,11 @@
       if (dy > 70 && dy > dx) { leave(); UI.enterMap('meadow'); }
     });
 
-    window.addEventListener('resize', () => { if (open) place(); });
+    window.addEventListener('resize', () => {
+      if (!open) return;
+      sizeBoard();
+      placeKeepers();
+    });
   }
 
   build();

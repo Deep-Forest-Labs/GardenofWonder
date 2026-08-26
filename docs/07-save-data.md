@@ -386,25 +386,26 @@ and a sparse or short array indexes to `undefined` in `processStand()`. `load()`
 **An order naming a good or customer that no longer exists is dropped**, and the slot simply
 refills. Renaming a good id therefore costs nothing — the same rule keepsake ids follow.
 
-## `state.apiary` grows — spots, keepers, the shelf
+## `state.apiary` — the meadow board
 
-Added 2026-08-25.
+Rewritten 2026-08-25 when the meadow became a board.
 
 ```js
 apiary: {
-  hives: [{ at, jars: [], spot: 'sun' }],   // spot is a MEADOW.spots id
+  cells: Array(8),          // null | { kind:'hive', at, jars:[] } | { kind:'tender', type }
   honey: {}, wax: 0,
-  shelf: { daisy: 12, ... },                // lifetime count per bloom
-  keepers: ['bumble']                       // creature ids stationed on the hives
+  shelf: { daisy: 12 },     // lifetime count per bloom
+  keepers: ['bumble']       // creature ids stationed at the bottom
 }
 ```
 
-**Every hive must come out of `load()` on its own spot.** Hives predate spots, so old saves have
-none — `load()` hands out the free ones in order, drops any hive it cannot seat, and de-duplicates
-two hives claiming the same spot. A hive with no spot draws nowhere and throws nothing, which is
-the worst kind of bug.
+**Cells are positional, so the array is rebuilt to length on load rather than merged.** A short or
+sparse one indexes to `undefined` everywhere downstream and nothing throws.
 
-**Keepers are filtered on load** to real creature ids, de-duplicated, and clamped to
-`MEADOW.keeperSlots`. `Game.keepers()` filters again at read time to creatures that are actually
-tending, so a creature sent to rest stops keeping without anything having to remember to update the
-array.
+**A save from before the board carries `hives` instead**, a plain list. `load()` seats each one on a
+cell in order so nobody loses a hive they paid for, then deletes the old key. A tender whose type no
+longer exists is dropped to `null`.
+
+**Keepers are filtered on load** to real creature ids, de-duplicated and clamped to
+`MEADOW.keeperSlots`; `Game.keepers()` filters again at read time to creatures actually tending, so
+a creature sent to rest stops keeping without anything having to remember.

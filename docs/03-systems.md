@@ -966,61 +966,62 @@ asked for is drawn with the real `Flora.head()`, never named in prose.
 
 ## The Wild Meadow
 
-**Built 2026-08-25.** The Apiary, promoted from a dock tab to a place you travel into. It is a
-**producer and an amplifier** — honey follows what blooms in the garden, and pollination lifts every
-harvest there. Design in [25-world-map.md](25-world-map.md), art contract in
-[02-architecture.md](02-architecture.md).
+**Built 2026-08-25, rebuilt as a board the same day.** The Apiary, promoted from a dock tab to a
+place you travel into. It is a **producer and an amplifier** — honey follows what blooms in the
+garden, and pollination lifts every harvest there.
 
-**It is the quiet place.** The garden owns the tapping, the combo and the noise. Nothing in the
-meadow flashes or counts down and the only motion is drift — if it ever grew its own tap loop the
-two would compete for the same attention and both would get worse.
+**It uses the garden's grammar and a different verb** — see
+[25-world-map.md](25-world-map.md#share-the-grammar-never-share-the-verb). A square board floating
+in the scene, the talking flower in the middle, **eight cells** around it, keepers at the bottom,
+its own dock. Garden cells are planted and emptied; meadow cells are **placed and permanent**.
 
-### Five spots, and buying a hive is a choice
+**It is the quiet place.** Nothing flashes or counts down and the only motion is drift. The flower
+in the middle pays coins exactly as it does in the garden — the same loop, not a second one.
 
-`MEADOW.spots` — five named places on the bank, each doing something different, so hive number two
-asks *where?* rather than *yes?*. Deliberately **not** adjacency: that is the garden's mechanic and
-copying it here would make the meadow a second garden.
+### Hives and tenders
 
-| Spot | Does |
+A cell holds a **hive** or a **tender**. Hives make honey. Tenders make nothing at all and improve
+only the hives they **touch**, using the garden's own adjacency table (`MEADOW_NEIGHBOURS` is
+`PLOT_NEIGHBOURS`), so the rule a player learned there is not taught twice.
+
+| Tender | Does, to neighbouring hives |
 | --- | --- |
-| Sun Bank | Fastest jars (×0.72 interval) |
-| Clover Patch | +35% wax |
-| Old Stump | Holds 4 more jars before the bees stop |
-| Under the Willow | Slower, but re-rolls toward your rarer blooms |
-| Top of the Rise | +7% pollination on top of the base |
+| Sun Trap | Jars arrive faster (interval ×0.78) |
+| Clover Bed | +40% wax |
+| Old Stump | +3 jars before the bees stop |
+| Willow Shade | Slightly slower, but re-rolls toward rarer blooms |
+| Foxglove Bank | +5% pollination each |
 
-A sim-test asserts **no two spots do the same thing** and that every one is worth buying.
+**That is the whole build decision.** Eight hives is maximum raw output with no multipliers; two
+hives ringed by tenders is few-but-excellent; everything between is a real choice. Sim-tests assert
+that no two tenders do the same thing, that a non-adjacent tender does nothing, that two stack, and
+that speed is clamped so a wall of Sun Traps can never drive the interval to zero.
+
+**Moving is free.** Buying a piece costs; rearranging it never does — a board you are punished for
+experimenting with is the opposite of the cosy pillar. Two filled cells swap. It is a *mode* on the
+dock rather than a drag, because a drag would fight the swipe out to the map.
 
 ### Keepers
 
-Up to `MEADOW.keeperSlots` (2) creatures can be stationed on the hives, speeding every one by
-**4% per star** — doubled for a creature whose `affinity` is `'meadow'`. Bumble is the Gardenbee and
-the only one, which is the *item-as-key* device pointed at a character: you do not want "a keeper",
-you want Bumble on the hives.
+Up to `MEADOW.keeperSlots` (2) creatures stand at the bottom and speed **every** hive by 4% per
+star — doubled for a creature whose `affinity` is `'meadow'`. Bumble is the Gardenbee and the only
+one, which is *item-as-key* pointed at a character: you do not want "a keeper", you want Bumble.
 
-**A keeper must already be tending**, keeps working the garden as well, and stops keeping the moment
-it is sent to rest. **A sleeping keeper holds its place and does no work** — asleep is asleep
-everywhere.
-
-**The guardrail, asserted rather than intended: the hives work with nobody stationed on them.** A
-keeper makes the meadow better, never possible. Otherwise two slots and several places is a map of
-dead buildings.
+A keeper must already be tending, keeps working the garden too, stops keeping the moment it rests,
+and **a sleeping keeper holds its place and does no work**. **The guardrail, asserted rather than
+intended: the hives work with nobody stationed on them.**
 
 ### The Honey Shelf
 
-`state.apiary.shelf` is a **lifetime count per bloom** — one slot per seed in the game, filled the
-first time that variety is produced. Wildflower honey is never recorded, because a jar with no bloom
-behind it is not a variety.
+`state.apiary.shelf` is a **lifetime count per bloom** — one slot per seed, filled the first time
+that variety is produced. Wildflower honey is never recorded, because a jar with no bloom behind it
+is not a variety.
 
-This is the cheapest Completion track the project has: the 19 seeds were already a ready-made album.
-More importantly it is the clearest answer yet to *why plant this flower* — **you plant moonflower
-because the moonflower jar slot is empty**, which is desire rather than a quota.
-
-Jars are drawn tinted from the bloom, but **mixed toward amber rather than taking the petal colour
-outright** — Daisy's petals are pure white, and a white jar on a pale shelf is indistinguishable
-from an empty slot.
+The cheapest Completion track the project has, and the clearest answer yet to *why plant this
+flower*: **you plant moonflower because the moonflower jar slot is empty.** Jars are tinted from
+the bloom but **mixed toward amber** — Daisy's petals are pure white, and a white jar is
+indistinguishable from an empty slot.
 
 ### The swarm
 
-`MEADOW.swarmChance` (2% per jar produced) fills **every** hive at once. Rare, free, and purely a
-gift — nothing is lost if a player never sees it. The meadow's own small Wonder.
+`MEADOW.swarmChance` (2% per jar produced) fills **every** hive at once. Rare, free, purely a gift.

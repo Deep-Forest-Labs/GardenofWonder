@@ -38,7 +38,7 @@ const Game = (() => {
       setsClaimed: [],
       stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
       wonder: { until: 0, last: 0 },
-      apiary: { hives: [], honey: {}, wax: 0, shelf: {}, keepers: [] },
+      apiary: { cells: Array(MEADOW.cells).fill(null), honey: {}, wax: 0, shelf: {}, keepers: [] },
       flowers: {},
       craft: [],
       goods: {},
@@ -165,25 +165,31 @@ const Game = (() => {
       DATA.boosters.forEach((b) => {
         if (typeof state.boostInv[b.id] !== 'number' || state.boostInv[b.id] < 0) state.boostInv[b.id] = 0;
       });
-      state.apiary.hives = Array.isArray(state.apiary.hives) ? state.apiary.hives : [];
       state.apiary.honey = state.apiary.honey && typeof state.apiary.honey === 'object' ? state.apiary.honey : {};
       state.apiary.wax = Number(state.apiary.wax) || 0;
       state.apiary.shelf = state.apiary.shelf && typeof state.apiary.shelf === 'object' ? state.apiary.shelf : {};
       state.apiary.keepers = Array.isArray(state.apiary.keepers) ? state.apiary.keepers : [];
-      /* Hives predate spots, so a save from before them has none. Hand out the
-         free spots in order — every hive must have one or it falls off the bank
-         with no error anywhere, and two hives sharing a spot would stack. */
+      /* The board replaced a plain list of hives on 2026-08-25. A save from
+         before it carries `hives`; seat each one on a cell in order so nobody
+         loses a hive they paid for. Cells are positional, so the array is
+         rebuilt to length rather than merged — a short or sparse one indexes to
+         `undefined` everywhere downstream. */
       {
-        const used = [];
-        state.apiary.hives.forEach((h) => {
-          if (h.spot && meadowSpot(h.spot) && !used.includes(h.spot)) { used.push(h.spot); return; }
-          const free = MEADOW.spots.find((sp) => !used.includes(sp.id));
-          h.spot = free ? free.id : null;
-          if (h.spot) used.push(h.spot);
+        const old = Array.isArray(parsed.apiary && parsed.apiary.hives) ? parsed.apiary.hives : null;
+        const src = Array.isArray(state.apiary.cells) ? state.apiary.cells : [];
+        const out = Array.from({ length: MEADOW.cells }, (_, i) => {
+          const c = src[i];
+          if (!c || !c.kind) return null;
+          if (c.kind === 'tender') return meadowTender(c.type) ? c : null;
+          return { kind: 'hive', at: Number(c.at) || nowSeconds(), jars: Array.isArray(c.jars) ? c.jars : [] };
         });
-        // More hives than spots can only come from a save made before the cap
-        // changed; drop the homeless ones rather than drawing them nowhere.
-        state.apiary.hives = state.apiary.hives.filter((h) => h.spot);
+        if (old && old.length && !out.some(Boolean)) {
+          old.slice(0, MEADOW.cells).forEach((h, i) => {
+            out[i] = { kind: 'hive', at: Number(h.at) || nowSeconds(), jars: Array.isArray(h.jars) ? h.jars : [] };
+          });
+        }
+        state.apiary.cells = out;
+        delete state.apiary.hives;
       }
       /* A keeper who is no longer a real creature, or is resting, is dropped —
          the getter filters anyway, but a stale id would sit in the save forever. */
@@ -1244,11 +1250,12 @@ const Game = (() => {
     const plotIdx = (DATA.plotUnlockLevel || []).findIndex((lv, i) => i > 3 && lv === level);
     if (plotIdx >= 0) out.plot = plotIdx;
     if (grant.hive) {
-      if (hiveCount() < APIARY.maxHives) {
-        state.apiary.hives.push({ at: nowSeconds(), jars: [] });
+      const free = emptyCells();
+      if (free.length) {
+        state.apiary.cells[free[0]] = { kind: 'hive', at: nowSeconds(), jars: [] };
         out.hive = true;
       } else {
-        const extra = APIARY.hiveCost(0);
+        const extra = MEADOW.hive.cost(0);
         state.credits += extra;
         out.coins += extra;
       }
@@ -1395,12 +1402,12 @@ const Game = (() => {
   function rollBeeSwarm() {
     const forced = devProc('beeSwarm');
     if (!forced && Math.random() >= procChance('beeSwarm')) return null;
-    const openHives = [];
-    state.apiary.hives.forEach((h, i) => { if (h.jars.length < APIARY.capacity) openHives.push(i); });
+    const openHives = hiveCells().filter((i) => state.apiary.cells[i].jars.length < hiveCapacity(i));
     if (!openHives.length) return null;
     const i = openHives[Math.floor(Math.random() * openHives.length)];
     const variety = sampleBloom(bloomPool());
-    state.apiary.hives[i].jars.push(variety);
+    state.apiary.cells[i].jars.push(variety);
+    noteShelf(variety);
     noteQuest('honey', variety, 1);
     return { hive: i, variety };
   }
@@ -1714,29 +1721,54 @@ const Game = (() => {
 
   /* ---------------- the Wild Meadow ---------------- */
 
-  const hiveCount = () => state.apiary.hives.length;
-  const nextHiveCost = () => MEADOW.hiveCost(hiveCount());
-  const hivesFull = () => hiveCount() >= MEADOW.spots.length;
+  /* A board of eight cells around the flower, same shape as the garden and a
+     different verb: these pieces are PLACED, not planted, and they stay. A cell
+     holds a hive or a tender, and a tender improves only the hives it touches. */
 
-  const hiveAt = (spotId) => state.apiary.hives.find((h) => h.spot === spotId) || null;
-  const spotTaken = (spotId) => Boolean(hiveAt(spotId));
-  const spotsFree = () => MEADOW.spots.filter((sp) => !spotTaken(sp.id));
+  const cells = () => state.apiary.cells;
+  const cellAt = (i) => (state.apiary.cells[i] || null);
+  const cellIsHive = (i) => { const c = cellAt(i); return Boolean(c && c.kind === 'hive'); };
+  const hiveCells = () => state.apiary.cells.map((c, i) => (c && c.kind === 'hive' ? i : -1)).filter((i) => i >= 0);
+  const hiveCount = () => hiveCells().length;
+  const tenderCount = (id) => state.apiary.cells.filter((c) => c && c.kind === 'tender' && (!id || c.type === id)).length;
+  const emptyCells = () => state.apiary.cells.map((c, i) => (c ? -1 : i)).filter((i) => i >= 0);
+  const boardFull = () => !emptyCells().length;
 
-  /* Pollination is per-spot now — Top of the Rise can see the whole garden. */
-  function pollination() {
-    return state.apiary.hives.reduce((n, h) => {
-      const sp = meadowSpot(h.spot);
-      return n + APIARY.pollination + (sp ? sp.pollen : 0);
-    }, 0);
+  const nextHiveCost = () => MEADOW.hive.cost(hiveCount());
+  const nextTenderCost = (id) => {
+    const t = meadowTender(id);
+    return t ? t.cost(tenderCount(id)) : 0;
+  };
+  const hivesFull = () => boardFull();
+
+  const meadowNeighbours = (i) => MEADOW_NEIGHBOURS[i] || [];
+
+  /* Everything a hive's neighbours are doing for it, summed. This is the whole
+     mechanic: a hive on its own is plain, and what is next to it is the build. */
+  function hiveBonus(i) {
+    const out = { speed: 0, cap: 0, wax: 0, pollen: 0, rare: 0 };
+    meadowNeighbours(i).forEach((n) => {
+      const c = cellAt(n);
+      if (!c || c.kind !== 'tender') return;
+      const t = meadowTender(c.type);
+      if (!t) return;
+      out.speed += t.speed;
+      out.cap += t.cap;
+      out.wax += t.wax;
+      out.pollen += t.pollen;
+      out.rare += t.rare;
+    });
+    return out;
   }
 
-  /* ---- keepers: creatures stationed on the hives ----
-     Scoped to this one place on purpose. A keeper is a creature that is already
-     OUT — it keeps working the garden as well — so stationing costs nothing yet
-     and the scarcity is the slot count. The real trade arrives when a second
-     place wants keepers and the same creature cannot be in both.
+  function pollination() {
+    return hiveCells().reduce((n, i) => n + APIARY.pollination + hiveBonus(i).pollen, 0);
+  }
 
-     The guardrail from docs/25-world-map.md: the meadow works with nobody
+  /* ---- keepers: creatures stationed on the meadow ----
+     Scoped to this one place on purpose. A keeper is a creature that is already
+     OUT — it keeps working the garden as well — so the scarcity is the slot
+     count. The guardrail from docs/25-world-map.md: the meadow works with nobody
      stationed. A keeper makes it better, never possible. */
   const keeperSlots = () => MEADOW.keeperSlots;
   const keepers = () => (state.apiary.keepers || []).filter((id) => critterTending(id));
@@ -1754,7 +1786,6 @@ const Game = (() => {
       return true;
     }
     if (at >= 0) return false;
-    // A resting creature cannot work, and a full bank has to be cleared first.
     if (!critterTending(id) || !keepersFree()) return false;
     state.apiary.keepers.push(id);
     save();
@@ -1762,52 +1793,71 @@ const Game = (() => {
     return true;
   }
 
-  /** How much faster the hives run for who is standing on them. */
   function keeperSpeed() {
     let bonus = 0;
     keepers().forEach((id) => {
       const def = critterById(id);
-      if (!def) return;
-      // Asleep is asleep everywhere: a sleeping creature keeps its slot and does
-      // no work, exactly as it does in the garden.
-      if (critterAsleep(id)) return;
+      if (!def || critterAsleep(id)) return;
       const mult = def.affinity === 'meadow' ? MEADOW.affinityMult : 1;
       bonus += critterWorkLevel(id) * MEADOW.keeperSpeedPerStar * mult;
     });
     return bonus;
   }
 
-  const hiveInterval = (h) => {
-    const sp = meadowSpot(h && h.spot);
-    const base = APIARY.interval * (sp ? sp.speed : 1);
+  /* Neighbours change the interval; keepers change it again on top. Clamped so a
+     wall of Sun Traps can never drive it to nothing. */
+  const hiveInterval = (i) => {
+    const b = hiveBonus(i);
+    const base = APIARY.interval * Math.max(0.35, 1 + b.speed);
     return Math.max(5, base / (1 + keeperSpeed()));
   };
-  const hiveCapacity = (h) => {
-    const sp = meadowSpot(h && h.spot);
-    return APIARY.capacity + (sp ? sp.cap : 0);
-  };
+  const hiveCapacity = (i) => APIARY.capacity + hiveBonus(i).cap;
+  const hiveWax = (i) => Math.min(0.95, APIARY.waxChance + hiveBonus(i).wax);
 
-  function buyHive(spotId) {
-    if (hivesFull()) return false;
-    // No spot named means the first free one, so old call sites still work.
-    const sp = spotId ? meadowSpot(spotId) : spotsFree()[0];
-    if (!sp || spotTaken(sp.id)) return false;
+  function placeHive(i) {
+    if (cellAt(i) || i < 0 || i >= MEADOW.cells) return false;
     const cost = nextHiveCost();
     if (state.credits < cost) { emit('deny', { reason: 'credits', need: cost }); return false; }
     state.credits -= cost;
-    state.apiary.hives.push({ at: nowSeconds(), jars: [], spot: sp.id });
+    state.apiary.cells[i] = { kind: 'hive', at: nowSeconds(), jars: [] };
     save();
     emit('currency');
-    emit('purchase', { kind: 'hive', cost, spot: sp.id });
+    emit('purchase', { kind: 'hive', cost, cell: i });
     emit('panels');
     noteQuest('hive', null, 1);
     return true;
   }
 
-  /* ---- the honey shelf ----
-     A lifetime record of every variety ever produced, one slot per bloom. It is
-     a count and not a boolean, for the same reason mementos and cards are: a
-     shelf that only knows yes/no can never say how much. */
+  function placeTender(i, id) {
+    const t = meadowTender(id);
+    if (!t || cellAt(i) || i < 0 || i >= MEADOW.cells) return false;
+    const cost = nextTenderCost(id);
+    if (state.credits < cost) { emit('deny', { reason: 'credits', need: cost }); return false; }
+    state.credits -= cost;
+    state.apiary.cells[i] = { kind: 'tender', type: id };
+    save();
+    emit('currency');
+    emit('purchase', { kind: 'tender', cost, cell: i, type: id });
+    emit('panels');
+    return true;
+  }
+
+  /* Moving is FREE. What costs money is buying the piece; a board you cannot
+     rearrange is a puzzle you are punished for experimenting with, which is the
+     opposite of what the cosy pillar asks for. Two filled cells swap. */
+  function moveCell(from, to) {
+    if (from === to || from < 0 || to < 0 || from >= MEADOW.cells || to >= MEADOW.cells) return false;
+    const a2 = cellAt(from);
+    if (!a2) return false;
+    const b2 = cellAt(to);
+    state.apiary.cells[to] = a2;
+    state.apiary.cells[from] = b2;
+    save();
+    emit('panels');
+    return true;
+  }
+
+  /* ---- the honey shelf ---- */
   const shelfCount = (seedId) => (state.apiary.shelf || {})[seedId] || 0;
   const shelfHas = (seedId) => shelfCount(seedId) > 0;
   const shelfFilled = () => DATA.seeds.filter((sd) => shelfHas(sd.id)).length;
@@ -1840,13 +1890,15 @@ const Game = (() => {
   /* Under the Willow's bees "come back with the strange stuff" — a spot with
      `rare` re-rolls and keeps the less common bloom, which is the only way the
      garden's contents can bias a jar beyond simple presence. */
-  function sampleFor(h, pool) {
-    const sp = meadowSpot(h && h.spot);
+  /* A hive beside Willow Shade "comes back with the strange stuff" — it re-rolls
+     and keeps the better bloom, which is the only way a neighbour can bias what
+     ends up in the jar rather than just how fast it arrives. */
+  function sampleFor(i, pool) {
+    const rare = hiveBonus(i).rare;
     const first = sampleBloom(pool);
-    if (!sp || !sp.rare || Math.random() >= sp.rare) return first;
+    if (!rare || Math.random() >= rare) return first;
     const second = sampleBloom(pool);
-    const worth = (id) => APIARY.honeyValue(id);
-    return worth(second) > worth(first) ? second : first;
+    return APIARY.honeyValue(second) > APIARY.honeyValue(first) ? second : first;
   }
 
   function produceHoney(now) {
@@ -1854,14 +1906,15 @@ const Game = (() => {
     const pool = bloomPool();
     let produced = 0;
     let swarm = false;
-    state.apiary.hives.forEach((h) => {
+    hiveCells().forEach((i) => {
+      const h = state.apiary.cells[i];
       if (typeof h.at !== 'number' || h.at > now) h.at = now;
       if (!Array.isArray(h.jars)) h.jars = [];
-      const cap = hiveCapacity(h);
-      const step = hiveInterval(h);
+      const cap = hiveCapacity(i);
+      const step = hiveInterval(i);
       while (h.jars.length < cap && now - h.at >= step) {
         h.at += step;
-        const type = sampleFor(h, pool);
+        const type = sampleFor(i, pool);
         h.jars.push(type);
         noteShelf(type);
         produced += 1;
@@ -1871,14 +1924,15 @@ const Game = (() => {
       if (h.jars.length >= cap) h.at = now;
     });
 
-    /* The meadow's small Wonder: the whole bank fills at once. Rare, free, and
+    /* The meadow's small Wonder: the whole board fills at once. Rare, free, and
        purely a gift — nothing is lost if the player never sees it happen. */
     if (swarm) {
       let extra = 0;
-      state.apiary.hives.forEach((h) => {
-        const cap = hiveCapacity(h);
+      hiveCells().forEach((i) => {
+        const h = state.apiary.cells[i];
+        const cap = hiveCapacity(i);
         while (h.jars.length < cap) {
-          const type = sampleFor(h, pool);
+          const type = sampleFor(i, pool);
           h.jars.push(type);
           noteShelf(type);
           extra += 1;
@@ -1898,13 +1952,14 @@ const Game = (() => {
   }
 
   function collectHive(i) {
-    const h = state.apiary.hives[i];
-    if (!h || !h.jars.length) return null;
+    const h = cellAt(i);
+    if (!h || h.kind !== 'hive' || !h.jars.length) return null;
     const jars = h.jars.slice();
+    const waxChance = hiveWax(i);
     let wax = 0;
     jars.forEach((type) => {
       state.apiary.honey[type] = (state.apiary.honey[type] || 0) + 1;
-      if (Math.random() < APIARY.waxChance) wax += 1;
+      if (Math.random() < waxChance) wax += 1;
     });
     state.apiary.wax += wax;
     h.jars = [];
@@ -1920,13 +1975,13 @@ const Game = (() => {
 
   function collectAllHives() {
     const out = [];
-    state.apiary.hives.forEach((h, i) => { if (h.jars.length) { const r = collectHive(i); if (r) out.push(r); } });
+    hiveCells().forEach((i) => { const r = collectHive(i); if (r) out.push(r); });
     return out;
   }
 
   const honeyTotal = () => Object.values(state.apiary.honey).reduce((a, b) => a + b, 0);
   const flowerTotal = () => Object.values(state.flowers).reduce((a, b) => a + b, 0);
-  const jarsWaiting = () => state.apiary.hives.reduce((a, h) => a + h.jars.length, 0);
+  const jarsWaiting = () => hiveCells().reduce((a, i) => a + state.apiary.cells[i].jars.length, 0);
 
   /* ---------------- creatures ----------------
 
@@ -3042,7 +3097,7 @@ const Game = (() => {
         cell.plantedAt -= back;
         if (cell.mutateAt) cell.mutateAt -= back;
       });
-      state.apiary.hives.forEach((h) => { h.at -= back; });
+      hiveCells().forEach((i) => { state.apiary.cells[i].at -= back; });
       state.lastSeen = nowSeconds() - back;
       const report = reconcile();
       emit('panels');
@@ -3157,8 +3212,10 @@ const Game = (() => {
     plotUnlockCost, upgradePrice, upgradeMaxed, decorCount,
     tapFlower, decayCombo, plant, unlockPlot, hasten, harvest, critChanceNow,
     buyUpgrade, buyDecor, activateBoost,
-    hiveCount, pollination, nextHiveCost, hivesFull, buyHive,
-    hiveAt, spotTaken, spotsFree, hiveInterval, hiveCapacity,
+    hiveCount, pollination, nextHiveCost, nextTenderCost, hivesFull,
+    cells, cellAt, cellIsHive, hiveCells, tenderCount, emptyCells, boardFull,
+    meadowNeighbours, hiveBonus, placeHive, placeTender, moveCell,
+    hiveInterval, hiveCapacity, hiveWax,
     keeperSlots, keepers, isKeeper, keepersFree, setKeeper, keeperSpeed,
     shelfCount, shelfHas, shelfFilled, shelfTotal,
     collectHive, collectAllHives, jarsWaiting, honeyTotal, flowerTotal,

@@ -141,6 +141,38 @@ mandatory: a graph where every region produces raw material for one market leave
 So it confirms the existing design rather than replacing it. What it adds is a **fourth structural
 type** the docs did not have.
 
+### Share the grammar, never share the verb
+
+**Added 2026-08-25 (later), and it is the most useful sentence in this document.**
+
+The owner's note: the Wild Meadow *felt like a different game*. It was built as a **diorama** —
+objects scattered over a hillside, each one learned by tapping it — where the garden is a **board**:
+a square frame floating in a scene, a character in the middle, tappable cells around it, pets
+underneath, dock below. That is not "the garden's layout". It is **Garden Wonder's layout
+language**, and a place that abandons it makes the player learn a second screen for no reason.
+
+So every place shares the **grammar**. What must differ is the **verb**:
+
+| | Garden | Wild Meadow |
+| --- | --- | --- |
+| Cells are | **Temporary** — plant, grow, harvest, empty | **Permanent** — place it once, it stays |
+| The decision is | *What do I plant?* — constant, high frequency | *What goes where?* — rare, high stakes |
+| Adjacency is | Transient, recalculated every planting | A **static puzzle** you solve, then revisit |
+
+Farming against building, on one board shape. Township runs both on one screen and nobody confuses
+them. **This does not contradict the not-a-clone rule** — sharing a frame is cohesion, sharing a
+verb is the clone.
+
+**The skin must change even though the frame does not.** The meadow's board is turf held by a stone
+lip, not a wooden planter; its boundary is a **dry-stone wall**, not a painted fence; its grass is
+**unmown with seed heads**, where the garden's lawn has neat stripes; and its green is warmer and
+more bleached, because the garden is tended and this is not. Same structure, different place.
+
+**The talking flower stands in the middle of every board.** It is the game's voice and its core
+verb, and a tap pays exactly what it pays in the garden — the same loop reachable everywhere, not a
+second minigame. `UI.flowerBtn()` returns whichever flower is currently on screen, which is what
+makes the coins, the crit ring and the face reaction all fire in the right room.
+
 ### The four types
 
 Every place on the map must be exactly one of these, and **the map must never hold two of the same

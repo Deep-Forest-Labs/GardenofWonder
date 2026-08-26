@@ -1085,44 +1085,70 @@ const customerById = (id) => CUSTOMERS.find((c) => c.id === id) || null;
    garden's mechanic, and copying it here would make the meadow a second garden. */
 
 const MEADOW = {
-  keeperSlots: 2,          // creatures you can station on the hives
+  cells: 8,                // the ring around the flower, same shape as the garden
+  keeperSlots: 2,
   keeperSpeedPerStar: 0.04,
-  affinityMult: 2,         // a creature whose affinity is 'meadow' counts double
-  swarmChance: 0.02,       // per jar produced, every hive fills at once
-  shelfSize: 19,           // one slot per bloom species
+  affinityMult: 2,
+  swarmChance: 0.02,
+  shelfSize: 19,
 
-  /* Spots are drawn on the bank in this order and bought in any order. `speed`
-     multiplies the interval, so lower is faster. */
-  spots: [
+  /* The board is the SAME GRAMMAR as the garden — a frame floating in the scene,
+     the talking flower in the middle, eight cells around it — and a DIFFERENT
+     VERB. Garden cells are temporary: plant, grow, harvest, empty, over and over.
+     Meadow cells are permanent: you place a thing once and it stays. Farming
+     against building, on one board shape, which is how the two places stay
+     distinct while the game stays legible. See docs/25-world-map.md. */
+
+  hive: {
+    name: 'Hive', tint: '#e8c07a',
+    desc: 'Bees work whatever is blooming in the garden.',
+    line: 'Bees work whatever is blooming in the garden.',
+    cost: (owned) => Math.round(2200 * Math.pow(1.9, owned))
+  },
+
+  /* Tenders make nothing on their own. They improve the hives they TOUCH, which
+     is what turns eight cells into a layout puzzle rather than a shopping list —
+     eight hives is maximum raw output with no multipliers, two hives ringed by
+     tenders is few-but-excellent, and everything between is a real build.
+
+     Adjacency is orthogonal, exactly like the garden's, so the rule a player
+     already learned there carries over without being taught twice. */
+  tenders: [
     {
-      id: 'sun', name: 'Sun Bank', tint: '#ffd23f',
-      desc: 'Full sun all afternoon. The bees hardly stop.',
-      speed: 0.72, cap: 0, wax: 0, pollen: 0, rare: 0
+      id: 'sun', name: 'Sun Trap', tint: '#ffd23f',
+      desc: 'A stone that holds the afternoon. Neighbouring hives work faster.',
+      speed: -0.22, cap: 0, wax: 0, pollen: 0, rare: 0,
+      cost: (owned) => Math.round(1800 * Math.pow(1.8, owned))
     },
     {
-      id: 'clover', name: 'Clover Patch', tint: '#8ce99a',
-      desc: 'Knee-deep in clover. Wax everywhere.',
-      speed: 1, cap: 0, wax: 0.35, pollen: 0, rare: 0
+      id: 'clover', name: 'Clover Bed', tint: '#8ce99a',
+      desc: 'Knee-deep clover. Neighbouring hives leave more wax.',
+      speed: 0, cap: 0, wax: 0.4, pollen: 0, rare: 0,
+      cost: (owned) => Math.round(1500 * Math.pow(1.8, owned))
     },
     {
       id: 'stump', name: 'Old Stump', tint: '#c99a68',
-      desc: 'Hollow and roomy. They keep going long after the others stop.',
-      speed: 1.08, cap: 4, wax: 0, pollen: 0, rare: 0
+      desc: 'Room to spare. Neighbouring hives hold more before they stop.',
+      speed: 0, cap: 3, wax: 0, pollen: 0, rare: 0,
+      cost: (owned) => Math.round(2000 * Math.pow(1.8, owned))
     },
     {
-      id: 'willow', name: 'Under the Willow', tint: '#a06cd5',
-      desc: 'Shaded and slow, and they come back with the strange stuff.',
-      speed: 1.35, cap: 0, wax: 0, pollen: 0, rare: 0.5
+      id: 'willow', name: 'Willow Shade', tint: '#a06cd5',
+      desc: 'Cool and quiet. Neighbouring hives come back with the strange stuff.',
+      speed: 0.1, cap: 0, wax: 0, pollen: 0, rare: 0.45,
+      cost: (owned) => Math.round(3200 * Math.pow(1.8, owned))
     },
     {
-      id: 'rise', name: 'Top of the Rise', tint: '#ff8fa3',
-      desc: 'They can see the whole garden from up here.',
-      speed: 1.15, cap: 0, wax: 0, pollen: 0.07, rare: 0
+      id: 'foxglove', name: 'Foxglove Bank', tint: '#ff8fa3',
+      desc: 'Spires the bees can see from the garden. Neighbouring hives pollinate harder.',
+      speed: 0.06, cap: 0, wax: 0, pollen: 0.05, rare: 0,
+      cost: (owned) => Math.round(2600 * Math.pow(1.8, owned))
     }
-  ],
-
-  /* Escalating, like every other repeat purchase in the game. */
-  hiveCost: (owned) => Math.round(2500 * Math.pow(2, owned))
+  ]
 };
 
-const meadowSpot = (id) => MEADOW.spots.find((s) => s.id === id) || null;
+/* The garden's own adjacency table, reused rather than re-derived — the ring is
+   the same eight cells around a centre, so the rule is the same rule. */
+const MEADOW_NEIGHBOURS = [[1, 3], [0, 2], [1, 4], [0, 5], [2, 7], [3, 6], [5, 7], [6, 4]];
+
+const meadowTender = (id) => MEADOW.tenders.find((t) => t.id === id) || null;

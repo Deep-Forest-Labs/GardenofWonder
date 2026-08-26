@@ -61,7 +61,26 @@ from quests and levels.
 > design what a AAA team would build, ship incrementally, with the not-a-clone bar standing per
 > garden.
 >
-> **The Wild Meadow is a FULL ROOM, 2026-08-25.** You travel into it like the Hollow: five **named
+> **THE HOUSE RULE, 2026-08-25: share the grammar, never share the verb.** The owner's note was
+> that the meadow *felt like a different game* — it had been built as a **diorama** where the garden
+> is a **board**: a square frame floating in a scene, the talking flower in the middle, tappable
+> cells around it, pets underneath, dock below. That is Garden Wonder's **layout language**, and
+> every place uses it. What must differ is the **verb**: garden cells are *temporary* (plant, grow,
+> harvest, empty) and meadow cells are *permanent* (place it once, it stays). Farming against
+> building, on one board shape. **Sharing a frame is cohesion; sharing a verb is the clone** the
+> place taxonomy exists to prevent. See
+> [25-world-map.md](25-world-map.md#share-the-grammar-never-share-the-verb).
+>
+> **The Wild Meadow is that board now.** Eight cells holding **hives** (make honey) or **tenders**
+> (make nothing; improve only the hives they *touch*, on the garden's own adjacency table). Eight
+> hives is max raw output with no multipliers; two hives ringed by tenders is few-but-excellent.
+> **Moving is free** — buying costs, rearranging never does. The **flower stands in the middle and
+> pays exactly what it pays in the garden**; `UI.flowerBtn()` returns whichever flower is on screen,
+> which is what makes every tap effect fire in the right room. The skin still differs: a dry-stone
+> wall instead of a fence, unmown grass with seed heads instead of mown stripes, turf on a stone lip
+> instead of a wooden planter.
+>
+> **Earlier the same day, and superseded in layout only —** You travel into it like the Hollow: five **named
 > hive spots** on a bank (Sun Bank fastest, Clover Patch wax, Old Stump capacity, Under the Willow
 > rare-skewed, Top of the Rise pollination) so buying a hive asks *where?* rather than *yes?*; a
 > **keeper bank** where two creatures stand and speed the hives, doubled for **Bumble**, the only
@@ -854,6 +873,16 @@ injected saves to `'gardenwonder.save'`; the real key is **`gw-save`**. `load()`
 for as long as they existed. Found only because a new migration test failed inexplicably. The suite
 now has one `SAVE_KEY` constant — and the lesson generalises: a migration test must assert something
 that is **false** on a fresh save, or it is testing nothing.
+
+**Anything positioned in scene coordinates must be a child of what those coordinates measure
+from.** The meadow's keeper bank was nested in the padded stage while `placeKeepers()` computed
+`left`/`top` against the *layer*, so every keeper landed in the wrong place. Same family as the
+`getScreenCTM()` rule: the maths was right and the container was not.
+
+**Replacing a block of CSS between two comment markers takes everything in between.** Rewriting the
+meadow's bank rules silently removed `.mw-keeper-bank` and `.mw-keeper`, so the keepers lost
+`position: absolute` and stacked in the corner while JS went on writing coordinates that did
+nothing. Grep for the class names after any block replacement.
 
 **Never memoise against a node you also replace.** `syncScene()` skips redrawing the map's backdrop
 unless the sky changed, so drifting clouds are not restarted every tick — but `build()` replaces the

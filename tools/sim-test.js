@@ -23,7 +23,7 @@ const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPL
   'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'CREATURE_PAIRS', 'PAIR_TUNING',
   'CREATURE_FOOD', 'FED_STARS', 'FOOD_CAP_HOURS', 'ARRIVAL_AWAKE_HOURS', 'FED_THRESHOLD_HOURS',
   'STAND', 'GOODS', 'CUSTOMERS', 'goodById', 'customerById',
-  'MEADOW', 'meadowSpot', 'Icons', 'flowerValue', 'Game'];
+  'MEADOW', 'MEADOW_NEIGHBOURS', 'meadowTender', 'Icons', 'flowerValue', 'Game'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -85,11 +85,11 @@ check('harvesting still pays credits', S.credits > 0);
 
 group('hives');
 check('none at the start', G.hiveCount() === 0);
-check('the first costs 2,500', G.nextHiveCost() === 2500);
-S.credits = 2500;
-check('buying one works', G.buyHive() === true);
+check('the first costs 2,200', G.nextHiveCost() === 2200);
+S.credits = 2200;
+check('placing one works', G.placeHive(0) === true);
 check('the cost was deducted', S.credits === 0);
-check('the next one costs double', G.nextHiveCost() === 5000);
+check('the next one costs more', G.nextHiveCost() > 2200);
 check('each gives 8% pollination', Math.abs(G.pollination() - APIARY.pollination) < 1e-9);
 
 group('honey variety follows what is blooming');
@@ -97,32 +97,32 @@ S.credits = 1e6;
 unlockTo(2);
 G.plant(1, G.seedById('lavender'));
 advance(APIARY.interval * 2 + 5);
-const jars = S.apiary.hives[0].jars;
+const jars = G.cellAt(0).jars;
 check('jars are produced on the interval', jars.length >= 2, `got ${jars.length}`);
 check('they take the planted variety', jars.every((j) => j === 'lavender'), JSON.stringify(jars));
 
 group('a hive stops when it is full');
 advance(APIARY.interval * 10);
-check(`caps at ${APIARY.capacity} jars`, S.apiary.hives[0].jars.length === APIARY.capacity,
-  `got ${S.apiary.hives[0].jars.length}`);
+check(`caps at ${APIARY.capacity} jars`, G.cellAt(0).jars.length === APIARY.capacity,
+  `got ${G.cellAt(0).jars.length}`);
 
 group('collecting');
 const collected = G.collectHive(0);
 check('returns what was in the hive', collected && collected.jars.length === APIARY.capacity);
 check('honey is banked by variety', S.apiary.honey.lavender === APIARY.capacity, JSON.stringify(S.apiary.honey));
-check('the hive is emptied', S.apiary.hives[0].jars.length === 0);
+check('the hive is emptied', G.cellAt(0).jars.length === 0);
 check('lavender honey is worth 182', APIARY.honeyValue('lavender') === 182);
 
 group('variety is fixed at production, so it cannot be gamed');
 S.apiary.honey = {};
 clearGarden();
 advance(APIARY.interval * 3);
-const wildJars = S.apiary.hives[0].jars.slice();
+const wildJars = G.cellAt(0).jars.slice();
 unlockTo(17);
 G.plant(0, G.seedById('eternal'));
 check('an empty garden gives wildflower honey', wildJars.every((j) => j === 'wild'), JSON.stringify(wildJars));
 check('planting later does not upgrade waiting jars',
-  JSON.stringify(S.apiary.hives[0].jars) === JSON.stringify(wildJars));
+  JSON.stringify(G.cellAt(0).jars) === JSON.stringify(wildJars));
 
 group('pollination raises harvest payouts');
 clearGarden();
@@ -135,7 +135,10 @@ const payoutWith = (hives) => {
   clearMastery();                       // mastery climbs as a run proceeds and would drift the result
   S.wonder = { until: 0, last: 0 };
   S.boosters = {};
-  S.apiary.hives = Array.from({ length: hives }, () => ({ at: clock, jars: [] }));
+  // Plain hives on the board with no tenders anywhere near them, so pollination
+  // is the only thing this measures.
+  S.apiary.cells = Array(MEADOW.cells).fill(null);
+  for (let i = 0; i < hives; i += 1) S.apiary.cells[i] = { kind: 'hive', at: clock, jars: [] };
   Math.random = () => 0.5;
   S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '' };
   const p = G.harvest(0).payout;
@@ -221,7 +224,9 @@ check('the bench comes back', S.craft.length === 1);
 group('a save from before the Apiary still loads');
 store['gw-save'] = JSON.stringify({ version: 2, credits: 999, grid: S.grid, upgrades: S.upgrades });
 G.load();
-check('apiary defaults are filled in', Array.isArray(S.apiary.hives) && S.apiary.hives.length === 0);
+check('apiary defaults are filled in',
+  Array.isArray(S.apiary.cells) && S.apiary.cells.length === MEADOW.cells
+  && S.apiary.cells.every((c) => c === null));
 check('flower inventory defaults in', S.flowers && typeof S.flowers === 'object');
 check('the bench defaults in', Array.isArray(S.craft));
 check('existing progress is untouched', S.credits === 999);
@@ -358,19 +363,19 @@ group('Bee Swarm fills a jar in an open hive');
 S.credits = 1e9;
 clearGarden();
 G.plant(0, G.seedById('daisy'));
-G.buyHive();
+G.placeHive(G.emptyCells()[0]);
 check('hive purchased', G.hiveCount() === 1);
 check('starts unmaxed', G.upgradeMaxed('beeSwarm') === false);
 
 for (let i = 0; i < 400; i += 1) G.tapFlower();
-check('unowned badge never fills a jar', S.apiary.hives[0].jars.length === 0, `got ${S.apiary.hives[0].jars.length}`);
+check('unowned badge never fills a jar', G.cellAt(0).jars.length === 0, `got ${G.cellAt(0).jars.length}`);
 
 let beeLevel = 0;
 while (!G.upgradeMaxed('beeSwarm') && beeLevel < 100) { G.buyUpgrade('beeSwarm'); beeLevel += 1; }
 check('five levels reach the 1% cap', beeLevel === 5, `took ${beeLevel} levels`);
 
 for (let i = 0; i < 3000; i += 1) G.tapFlower(); // p=0.01(fail all)^3000 is effectively impossible
-const swarmJars = S.apiary.hives[0].jars;
+const swarmJars = G.cellAt(0).jars;
 check('maxed badge fills at least one jar', swarmJars.length > 0, `got ${swarmJars.length}`);
 check('jar variety matches what is blooming', swarmJars.every((j) => j === 'daisy'), JSON.stringify(swarmJars));
 check('a hive never overflows its capacity', swarmJars.length <= APIARY.capacity, `got ${swarmJars.length}`);
@@ -3415,7 +3420,7 @@ check('with no hives, no order asks for honey', (() => {
 check('a hive puts honey back on the board', (() => {
   standReset(20);
   S.credits = 1e9;
-  G.buyHive();
+  G.placeHive(G.emptyCells()[0]);
   for (let n = 0; n < 120; n += 1) {
     S.stand.slots = Array(STAND.slots).fill(null);
     const o = G.standGenerate(0);
@@ -3430,7 +3435,7 @@ check('a hive puts honey back on the board', (() => {
 check('a named order always pays more than selling its contents', (() => {
   standReset(20);
   S.credits = 1e9;
-  G.buyHive();
+  G.placeHive(G.emptyCells()[0]);
   for (let n = 0; n < 200; n += 1) {
     S.stand.slots = Array(STAND.slots).fill(null);
     const o = G.standGenerate(0);
@@ -3660,18 +3665,23 @@ check('an order for a good that no longer exists is dropped', (() => {
 /* ---------------- the Wild Meadow ---------------- */
 group('The Wild Meadow');
 
-check('every spot has a name, a look and a description',
-  MEADOW.spots.every((sp) => sp.id && sp.name && sp.tint && sp.desc && sp.desc.length > 10));
-check('spot ids are unique', new Set(MEADOW.spots.map((sp) => sp.id)).size === MEADOW.spots.length);
-/* If two spots did the same thing, "where?" stops being a question and buying a
-   hive goes back to being a purchase. */
-check('no two spots do the same thing', (() => {
-  const sig = MEADOW.spots.map((sp) => `${sp.speed}|${sp.cap}|${sp.wax}|${sp.pollen}|${sp.rare}`);
+check('every tender has a name, a look and a description',
+  MEADOW.tenders.every((t) => t.id && t.name && t.tint && t.desc && t.desc.length > 10));
+check('tender ids are unique', new Set(MEADOW.tenders.map((t) => t.id)).size === MEADOW.tenders.length);
+/* If two tenders did the same thing, "where does this go" stops being a
+   question and the board goes back to being a shopping list. */
+check('no two tenders do the same thing', (() => {
+  const sig = MEADOW.tenders.map((t) => `${t.speed}|${t.cap}|${t.wax}|${t.pollen}|${t.rare}`);
   return new Set(sig).size === sig.length;
 })());
-check('exactly one spot is the fast one', MEADOW.spots.filter((sp) => sp.speed < 1).length === 1);
-check('every spot is worth buying', MEADOW.spots.every((sp) =>
-  sp.speed < 1 || sp.cap > 0 || sp.wax > 0 || sp.pollen > 0 || sp.rare > 0));
+check('every tender is worth placing', MEADOW.tenders.every((t) =>
+  t.speed < 0 || t.cap > 0 || t.wax > 0 || t.pollen > 0 || t.rare > 0));
+check('the board is the same shape as the garden',
+  MEADOW.cells === 8 && MEADOW_NEIGHBOURS.length === 8);
+/* Adjacency has to be mutual, or a tender would help a hive that does not know
+   it is being helped. */
+check('adjacency is symmetric', MEADOW_NEIGHBOURS.every((list, i) =>
+  list.every((n) => MEADOW_NEIGHBOURS[n].includes(i))));
 check('exactly one creature belongs to the meadow',
   CREATURES.filter((c) => c.affinity === 'meadow').length === 1);
 
@@ -3682,65 +3692,127 @@ const meadowReset = () => {
   S.grid.forEach((c, i) => { if (i < 4) { c.seed = 'daisy'; c.plantedAt = G.nowSeconds(); c.grow = 9e9; } });
 };
 
-check('a hive lands on the spot it was bought for', (() => {
+check('a hive lands on the cell it was placed in', (() => {
   meadowReset();
-  return G.buyHive('willow') && Boolean(G.hiveAt('willow')) && G.spotTaken('willow');
+  return G.placeHive(2) && G.cellIsHive(2) && G.hiveCount() === 1;
 })());
-check('a taken spot cannot be bought twice', (() => {
+check('a taken cell cannot be built on twice', (() => {
   meadowReset();
-  G.buyHive('sun');
-  const before = G.hiveCount();
-  return !G.buyHive('sun') && G.hiveCount() === before;
+  G.placeHive(2);
+  return !G.placeHive(2) && !G.placeTender(2, 'sun') && G.hiveCount() === 1;
 })());
-check('buying with no spot named takes the first free one', (() => {
+check('the board fills and then refuses', (() => {
   meadowReset();
-  G.buyHive();
-  return G.hiveCount() === 1 && Boolean(G.hiveAt(MEADOW.spots[0].id));
+  for (let i = 0; i < MEADOW.cells; i += 1) G.placeHive(i);
+  return G.hiveCount() === MEADOW.cells && G.boardFull() && !G.placeHive(0);
 })());
-check('the bank fills and then refuses', (() => {
+check('a tender is not a hive', (() => {
   meadowReset();
-  MEADOW.spots.forEach((sp) => G.buyHive(sp.id));
-  return G.hiveCount() === MEADOW.spots.length && G.hivesFull() && !G.buyHive();
-})());
-
-check('the sunny spot really is faster than the shaded one', (() => {
-  meadowReset();
-  G.buyHive('sun');
-  G.buyHive('willow');
-  return G.hiveInterval(G.hiveAt('sun')) < G.hiveInterval(G.hiveAt('willow'));
-})());
-check('the stump really does hold more', (() => {
-  meadowReset();
-  G.buyHive('sun');
-  G.buyHive('stump');
-  return G.hiveCapacity(G.hiveAt('stump')) > G.hiveCapacity(G.hiveAt('sun'));
-})());
-check('the rise really does pollinate harder', (() => {
-  meadowReset();
-  G.buyHive('sun');
-  const plain = G.pollination();
-  meadowReset();
-  G.buyHive('rise');
-  return G.pollination() > plain;
+  G.placeTender(0, 'sun');
+  return G.hiveCount() === 0 && G.tenderCount('sun') === 1 && !G.cellIsHive(0);
 })());
 
-/* The guardrail from docs/25-world-map.md, asserted rather than intended: the
-   meadow has to work with nobody standing on it. */
-check('the hives work with no keeper standing on them', (() => {
+/* The mechanic, asserted: a hive on its own is plain, and what is NEXT TO IT is
+   the build. Cell 1's neighbours are 0 and 2. */
+check('a lone hive gets no help', (() => {
   meadowReset();
-  G.buyHive('sun');
+  G.placeHive(1);
+  const b = G.hiveBonus(1);
+  return b.speed === 0 && b.cap === 0 && b.wax === 0 && b.pollen === 0 && b.rare === 0;
+})());
+check('a Sun Trap beside a hive speeds it up', (() => {
+  meadowReset();
+  G.placeHive(1);
+  const alone = G.hiveInterval(1);
+  G.placeTender(0, 'sun');
+  return G.hiveInterval(1) < alone;
+})());
+check('a tender that is NOT adjacent does nothing', (() => {
+  meadowReset();
+  G.placeHive(1);
+  const alone = G.hiveInterval(1);
+  // 5 is not a neighbour of 1
+  G.placeTender(5, 'sun');
+  return !MEADOW_NEIGHBOURS[1].includes(5) && G.hiveInterval(1) === alone;
+})());
+check('two tenders stack on the hive between them', (() => {
+  meadowReset();
+  G.placeHive(1);
+  G.placeTender(0, 'sun');
+  const one = G.hiveInterval(1);
+  G.placeTender(2, 'sun');
+  return G.hiveInterval(1) < one;
+})());
+check('an Old Stump beside a hive gives it room', (() => {
+  meadowReset();
+  G.placeHive(1);
+  const alone = G.hiveCapacity(1);
+  G.placeTender(0, 'stump');
+  return G.hiveCapacity(1) > alone;
+})());
+check('a Foxglove Bank beside a hive pollinates harder', (() => {
+  meadowReset();
+  G.placeHive(1);
+  const alone = G.pollination();
+  G.placeTender(0, 'foxglove');
+  return G.pollination() > alone;
+})());
+check('a Clover Bed beside a hive gives it wax', (() => {
+  meadowReset();
+  G.placeHive(1);
+  const alone = G.hiveWax(1);
+  G.placeTender(0, 'clover');
+  return G.hiveWax(1) > alone && G.hiveWax(1) <= 1;
+})());
+/* A wall of Sun Traps must not drive the interval to nothing. */
+check('speed is clamped however many neighbours help', (() => {
+  meadowReset();
+  G.placeHive(1);
+  G.placeTender(0, 'sun');
+  G.placeTender(2, 'sun');
+  return G.hiveInterval(1) >= APIARY.interval * 0.3;
+})());
+
+/* Moving is FREE. A board you are punished for experimenting with is the
+   opposite of what the cosy pillar asks for. */
+check('a piece can be moved for nothing', (() => {
+  meadowReset();
+  G.placeHive(0);
+  const coins = S.credits;
+  return G.moveCell(0, 5) && G.cellIsHive(5) && !G.cellAt(0) && S.credits === coins;
+})());
+check('moving onto a filled cell swaps them', (() => {
+  meadowReset();
+  G.placeHive(0);
+  G.placeTender(1, 'sun');
+  G.moveCell(0, 1);
+  return G.cellIsHive(1) && G.cellAt(0).kind === 'tender';
+})());
+check('a hive keeps its jars when it moves', (() => {
+  meadowReset();
+  G.placeHive(0);
+  advance(APIARY.interval * 2 + 4);
+  const jars = G.cellAt(0).jars.length;
+  G.moveCell(0, 6);
+  return jars > 0 && G.cellAt(6).jars.length === jars;
+})());
+
+/* The guardrail from docs/25-world-map.md, asserted rather than intended. */
+check('the hives work with nobody stationed on them', (() => {
+  meadowReset();
+  G.placeHive(0);
   advance(APIARY.interval * 2 + 4);
   return G.jarsWaiting() > 0;
 })());
-check('a keeper makes the hives faster', (() => {
+check('a keeper makes every hive faster', (() => {
   meadowReset();
-  G.buyHive('sun');
-  const alone = G.hiveInterval(G.hiveAt('sun'));
+  G.placeHive(0);
+  const alone = G.hiveInterval(0);
   S.discovered.bluebell = 999;
   G.checkCritters();
   G.setTending('pip', true);
   G.setKeeper('pip', true);
-  return G.isKeeper('pip') && G.hiveInterval(G.hiveAt('sun')) < alone;
+  return G.isKeeper('pip') && G.hiveInterval(0) < alone;
 })());
 check('the meadow creature is worth more here than any other', (() => {
   const speedWith = (def) => {
@@ -3771,7 +3843,6 @@ check('a creature sent to rest stops keeping', (() => {
   G.setTending('pip', false);
   return !G.isKeeper('pip') && G.keeperSpeed() === 0;
 })());
-/* Asleep is asleep everywhere — the same rule the garden already follows. */
 check('a sleeping keeper does no work but keeps its place', (() => {
   meadowReset();
   S.discovered.bluebell = 999;
@@ -3795,13 +3866,13 @@ check('the keeper bank has a limit', (() => {
 check('the shelf starts empty and fills as varieties are made', (() => {
   meadowReset();
   if (G.shelfFilled() !== 0) return false;
-  G.buyHive('sun');
+  G.placeHive(0);
   advance(APIARY.interval * 3 + 4);
   return G.shelfHas('daisy') && G.shelfFilled() === 1 && G.shelfCount('daisy') > 0;
 })());
 check('the shelf counts, it does not just remember', (() => {
   meadowReset();
-  G.buyHive('sun');
+  G.placeHive(0);
   advance(APIARY.interval * 2 + 4);
   const first = G.shelfCount('daisy');
   G.collectAllHives();
@@ -3811,37 +3882,46 @@ check('the shelf counts, it does not just remember', (() => {
 check('the shelf never records wildflower honey', (() => {
   meadowReset();
   clearGarden();
-  G.buyHive('sun');
+  G.placeHive(0);
   advance(APIARY.interval * 3 + 4);
   return G.jarsWaiting() > 0 && G.shelfFilled() === 0;
 })());
 check('the shelf has a slot for every seed in the game',
   G.shelfTotal() === DATA.seeds.length && MEADOW.shelfSize === DATA.seeds.length);
 
-/* Saves from before the meadow: every hive must come out of load() on its own
-   spot, or a hive draws nowhere with no error anywhere. */
-check('hives from a save with no spots are given spots', (() => {
+/* Saves from before the board: hives were a plain list, and nobody may lose one
+   they paid for. Cells are positional, so the array is rebuilt to length. */
+check('hives from a save with no board are seated on cells', (() => {
   G.reset();
   const raw = JSON.parse(JSON.stringify(S));
-  raw.apiary = { hives: [{ at: 0, jars: [] }, { at: 0, jars: [] }], honey: {}, wax: 0 };
+  delete raw.apiary.cells;
+  raw.apiary.hives = [{ at: 0, jars: ['daisy'] }, { at: 0, jars: [] }];
   globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
   G.load();
-  const spots = S.apiary.hives.map((h) => h.spot);
-  return spots.length === 2 && spots.every(Boolean) && new Set(spots).size === 2;
+  return S.apiary.cells.length === MEADOW.cells && G.hiveCount() === 2
+    && S.apiary.cells.filter(Boolean).length === 2;
 })());
-check('two hives claiming one spot do not both keep it', (() => {
+check('a short or sparse board comes back full length', (() => {
   G.reset();
   const raw = JSON.parse(JSON.stringify(S));
-  raw.apiary = { hives: [{ at: 0, jars: [], spot: 'sun' }, { at: 0, jars: [], spot: 'sun' }], honey: {}, wax: 0 };
+  raw.apiary.cells = [null, { kind: 'hive', at: 0, jars: [] }];
   globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
   G.load();
-  const spots = S.apiary.hives.map((h) => h.spot);
-  return new Set(spots).size === spots.length;
+  return S.apiary.cells.length === MEADOW.cells && G.hiveCount() === 1 && G.cellIsHive(1);
+})());
+check('a tender that no longer exists is dropped on load', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.apiary.cells = Array(MEADOW.cells).fill(null);
+  raw.apiary.cells[0] = { kind: 'tender', type: 'ghost_tender' };
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return S.apiary.cells[0] === null;
 })());
 check('a keeper who is not a real creature is dropped on load', (() => {
   G.reset();
   const raw = JSON.parse(JSON.stringify(S));
-  raw.apiary = { hives: [], honey: {}, wax: 0, shelf: {}, keepers: ['ghost', 'ghost'] };
+  raw.apiary.keepers = ['ghost', 'ghost'];
   globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
   G.load();
   return S.apiary.keepers.length === 0;

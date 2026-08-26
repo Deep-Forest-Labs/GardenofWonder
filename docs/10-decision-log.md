@@ -5,6 +5,57 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (build 6) — The meadow becomes a board, and the game gets a grammar
+
+**The owner's note, and it was right: the Wild Meadow felt like a different game.** It had been
+built as a **diorama** — objects scattered over a hillside, each learned by tapping it — where the
+garden is a **board**: a square frame floating in a scene, a character in the middle, tappable cells
+around it, pets underneath, dock below.
+
+That is not the garden's layout. It is **Garden Wonder's layout language**, and a place that walks
+away from it makes the player learn a second screen for nothing.
+
+**The rule that came out of it is the most useful sentence in these docs:
+share the grammar, never share the verb.** Sharing a frame is cohesion; sharing a verb is the clone
+the place taxonomy exists to prevent. Garden cells are *temporary* — plant, grow, harvest, empty,
+constantly. Meadow cells are *permanent* — place a thing once and it stays. Farming against
+building, on one board shape, which is what Township does on a single screen without anyone
+confusing the two.
+
+**So the five named spots became five placeable tenders**, which is a much better use of that
+content: a fixed menu of locations turned into a spatial decision. Hives make honey; tenders make
+nothing and improve only the hives they **touch**, using the garden's own adjacency table. Eight
+hives is maximum raw output with no multipliers, two hives ringed by tenders is few-but-excellent,
+and everything between is a real build — the "layout puzzle rather than a shopping list" this
+project has praised about Cookie Clicker's garden since the first strategy pass.
+
+**Moving is free.** Buying a piece costs money; rearranging never does, because a board you are
+punished for experimenting with is the opposite of the cosy pillar. It is a *mode* on the dock
+rather than a drag, since a drag would fight the swipe out to the map.
+
+**The flower now stands in the middle of every board and pays exactly what it always paid.**
+`UI.flowerBtn()` returns whichever flower is on screen, which is what makes the coins, the crit
+ring and the face reaction fire in the right room — the same loop reachable everywhere, and
+explicitly *not* the second tap minigame that was argued against.
+
+**The skin had to change even though the frame did not**, and the owner asked for this
+specifically: a **dry-stone wall** instead of a painted fence, **unmown grass with seed heads**
+instead of mown stripes, turf held by a stone lip instead of a wooden planter, and a warmer, more
+bleached green — because the garden is tended and this is not.
+
+### Two bugs worth keeping
+
+**A block replacement swallowed rules it was not meant to touch.** Rewriting the CSS between two
+comment markers removed `.mw-keeper-bank` and `.mw-keeper` along with the dead spot rules, so the
+keepers lost `position: absolute` and stacked in the corner — with JS still dutifully writing
+`left` and `top` that did nothing.
+
+**And the keeper bank was nested inside the padded stage**, so coordinates computed against the
+*layer* were applied inside a box that starts somewhere else. Anything positioned in scene
+coordinates has to be a child of the thing those coordinates are measured from.
+
+---
+
 ## 2026-08-25 (build 5) — The HUD stops disappearing, and the pets stop flashing
 
 **Three things off a photograph, which is how the real bugs in this project have always been
