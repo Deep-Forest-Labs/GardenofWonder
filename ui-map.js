@@ -149,17 +149,33 @@
       <div class="ow-hint"><i></i><span>Drag to look around &middot; tap a place to go in</span></div>`;
   }
 
-  /** Re-draw only what changes: the garden's blooms and the Stand's badge. */
+  /* Re-draw only what CHANGED. Rewriting a place's innerHTML on the slow tick
+     destroys and recreates the very element the player is pressing, so a tap
+     begun before a rebuild has no target left by the time it is released — the
+     map simply refused to open anything, and tapping fast "worked" only by
+     landing inside the gap between two rebuilds. Same trap as the flashing pets:
+     never recreate a node on a timer. */
   function render() {
     if (!open) return;
     syncScene();
-    $('#owGarden').innerHTML = `${Overworld.gardenBoard()}${gardenBlooms()}
-      <span class="ow-tag">The Garden</span>`;
+
+    const garden = $('#owGarden');
+    const gLook = S.grid.map((c) => (c && !c.locked && c.seed ? `${c.seed}${c.ready ? '!' : ''}` : '-')).join(',');
+    if (garden.dataset.look !== gLook) {
+      garden.dataset.look = gLook;
+      garden.innerHTML = `${Overworld.gardenBoard()}${gardenBlooms()}
+        <span class="ow-tag">The Garden</span>`;
+    }
 
     /* The meadow shows however many hives are actually kept, so an empty one
        reads as an invitation rather than a locked box. */
-    $('#owMeadow').innerHTML = `${Overworld.meadow(Game.hiveCount())}
-      <span class="ow-tag">Wild Meadow</span>`;
+    const meadow = $('#owMeadow');
+    const mLook = String(Game.hiveCount());
+    if (meadow.dataset.look !== mLook) {
+      meadow.dataset.look = mLook;
+      meadow.innerHTML = `${Overworld.meadow(Game.hiveCount())}
+        <span class="ow-tag">Wild Meadow</span>`;
+    }
 
     badgeOn($('#owStand'), Game.standOrders().filter((o) => Game.standCanDeliver(o)).length);
     badgeOn($('#owMeadow'), Game.jarsWaiting());
@@ -249,16 +265,27 @@
 
     el.map.addEventListener('pointerdown', (e) => {
       if (e.target.closest('.ow-hint')) return;
+      /* Resolve what was pressed NOW, as ids rather than nodes. `pointerup`
+         cannot be trusted to tell us: `setPointerCapture` retargets it to the
+         map, and a node replaced mid-gesture leaves a detached element whose
+         `closest()` walks up to nothing. */
+      const goEl = e.target.closest('[data-go]');
+      const parcelEl = e.target.closest('[data-parcel]');
       drag = {
         id: e.pointerId,
         x: e.clientX, y: e.clientY,
         camX: cam.x, camY: cam.y,
-        moved: 0, t: Date.now()
+        go: goEl ? goEl.dataset.go : null,
+        parcel: parcelEl ? parcelEl.dataset.parcel : null,
+        moved: 0
       };
-      /* Capture keeps a drag alive when the finger leaves the layer. It throws if
-         the pointer is already gone, which must not abort the gesture — panning
-         still works without it. */
-      try { el.map.setPointerCapture(e.pointerId); } catch (err) { /* no live pointer */ }
+      /* NO setPointerCapture. It keeps a drag alive when the pointer leaves the
+         layer — which a full-screen layer barely needs — and it costs far more
+         than it gives: capture RETARGETS every later pointer event to the
+         capturing element, so `pointerup` arrives claiming the map itself was
+         pressed and nothing on it can ever be opened. That is why tapping a
+         place did nothing on a desktop mouse. The ids resolved above are what
+         the release reads instead. */
     });
 
     el.map.addEventListener('pointermove', (e) => {
@@ -274,6 +301,7 @@
       const dx = e.clientX - drag.x;
       const dy = e.clientY - drag.y;
       const moved = drag.moved;
+      const hit = drag;
       drag = null;
 
       /* A drag is a drag. Only a gesture that barely moved counts as a tap, or
@@ -285,13 +313,15 @@
         return;
       }
 
-      const parcel = e.target.closest('[data-parcel]');
-      if (parcel) {
-        parcel.classList.remove('nope');
-        void parcel.offsetWidth;
-        parcel.classList.add('nope');
+      if (hit.parcel) {
+        const parcel = $(`[data-parcel="${hit.parcel}"]`, el.map);
+        if (parcel) {
+          parcel.classList.remove('nope');
+          void parcel.offsetWidth;
+          parcel.classList.add('nope');
+        }
         Sound.play('deny');
-        const def = Overworld.PARCELS.find((p) => p.id === parcel.dataset.parcel);
+        const def = Overworld.PARCELS.find((p) => p.id === hit.parcel);
         UI.toast({
           title: def ? def.name : 'Not yet',
           body: 'Land opens up as the Stand builds your reputation.',
@@ -299,8 +329,7 @@
         });
         return;
       }
-      const go = e.target.closest('[data-go]');
-      if (go) dive(go.dataset.go);
+      if (hit.go) dive(hit.go);
     });
 
     el.map.addEventListener('pointercancel', () => { drag = null; });

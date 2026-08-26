@@ -5,6 +5,42 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-25 (fix) — Tapping a place on the map did nothing, for two reasons at once
+
+**The owner's report was the whole diagnosis: on a desktop mouse, tapping Wild Meadow would not
+open it, but tapping fast several times sometimes worked.** "Sometimes, if I tap really fast, it
+works" is the signature of a target that keeps disappearing — and there were two independent causes.
+
+**One: the map rebuilt its places on a timer.** `renderMap()` rewrote `#owGarden` and `#owMeadow`
+`innerHTML` on every slow tick, so the element under the cursor was destroyed and recreated every
+0.6 seconds. A press that began before a rebuild had no target left by the time it was released.
+Tapping fast "worked" purely by landing inside the gap. **This is the same trap as the flashing
+pets, in a file that had not been fixed with them** — never recreate a node on a timer. Both places
+now memoise against a signature and only rewrite when something actually changed.
+
+**Two: `setPointerCapture` retargets every later pointer event to the capturing element.** So
+`pointerup` arrived claiming that the map itself had been pressed, and `e.target.closest('[data-go]')`
+found nothing. The capture existed to keep a drag alive when the pointer leaves the layer — which a
+full-screen layer barely needs — and it cost far more than it gave. **It is gone.**
+
+**The gesture now resolves what was pressed at `pointerdown`, as ids rather than nodes**, and the
+release reads those. That is immune to both causes at once: a retargeted release still knows what
+was pressed, and so does a press whose node has since been replaced (a detached element's
+`closest()` walks up to nothing, so keeping the node would not have been enough).
+
+### Why the tests did not catch it
+
+**Synthetic `PointerEvent`s have no live pointer, so `setPointerCapture` throws** — and the call was
+wrapped in a `try/catch` that swallowed it. Every automated tap therefore took a code path no real
+mouse ever takes, and passed. The regression check that matters is now the one that dispatches
+`pointerdown` on the target and `pointerup` on the LAYER, reproducing the retarget on purpose.
+
+**The lesson is general: a synthetic input test can silently avoid the very branch that breaks real
+input.** When a gesture works in automation and fails on a device, suspect the difference between
+the two rather than the logic in between.
+
+---
+
 ## 2026-08-25 (build 6) — The meadow becomes a board, and the game gets a grammar
 
 **The owner's note, and it was right: the Wild Meadow felt like a different game.** It had been

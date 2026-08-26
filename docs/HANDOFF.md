@@ -874,6 +874,19 @@ for as long as they existed. Found only because a new migration test failed inex
 now has one `SAVE_KEY` constant — and the lesson generalises: a migration test must assert something
 that is **false** on a fresh save, or it is testing nothing.
 
+**`setPointerCapture` RETARGETS every later pointer event to the capturing element**, so
+`pointerup` arrives claiming the capturing element was pressed and `e.target.closest(...)` finds
+nothing on it. It made tapping a place on the world map do nothing on a desktop mouse. The map no
+longer captures at all, and **a gesture resolves what was pressed at `pointerdown`, as ids rather
+than nodes** — which also survives the node being replaced mid-gesture, where keeping a reference
+would not (a detached element's `closest()` walks up to nothing).
+
+**A synthetic input test can silently avoid the branch that breaks real input.** Synthetic
+`PointerEvent`s have no live pointer, so `setPointerCapture` throws and the `try/catch` swallowed
+it — every automated tap took a path no real mouse takes, and passed. When a gesture works in
+automation and fails on a device, suspect the difference between the two. The check that matters
+dispatches `pointerdown` on the target and `pointerup` on the LAYER, reproducing the retarget.
+
 **Anything positioned in scene coordinates must be a child of what those coordinates measure
 from.** The meadow's keeper bank was nested in the padded stage while `placeKeepers()` computed
 `left`/`top` against the *layer*, so every keeper landed in the wrong place. Same family as the
