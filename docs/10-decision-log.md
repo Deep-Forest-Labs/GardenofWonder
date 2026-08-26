@@ -5,6 +5,41 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 (fix) — The translucent lip was most of what "the art is degrading" meant
+
+**Counted at 8393738: forty-six zero-blur `rgba(44,26,16,…)` shadows against thirty-nine solid
+`var(--ink-2)` lips.** The wrong one was in the majority, and it had got there one defensible edit
+at a time — every new panel since the garden wrote `0 3px 0 rgba(44,26,16,.22)` because it looks
+right in isolation and nobody was comparing it to a plot.
+
+**It is not a subtle difference; it is a material difference.** A lip is the object's extruded side
+wall, so it has to be opaque and it has to be the object's own dark. Twenty-two per cent ink over
+cream resolves to a desaturated grey-tan, which is not a side wall at all — it is a drop shadow, and
+a drop shadow says "this is a graphic printed on a page" where a side wall says "this is a thing you
+could pick up". Same geometry, opposite claim. Thirty-nine of them are now `var(--ink-2)`, at their
+existing heights, and the ladder is written into `05-art-direction.md` so the height stays a size
+signal rather than a taste decision.
+
+**Every drifted lip turned out to be on paper, so none needed `--soil-dd`.** The rule covers both —
+`--ink-2` on paper, `--soil-dd` on soil, `#6b4423` under the board — but the soil surfaces are the
+garden's, and the garden never drifted. That is the whole finding restated: the drift is in
+everything built *after* the screen the standard was measured off.
+
+**Seven were left translucent on purpose, and this is the part a future grep will re-flag.** The
+same pattern appears in `.talker` and `.sheet-art svg` as `filter: drop-shadow(0 6px 0 rgba(…))` and
+in `.outlined`, `.hollow-name`, `.hollow-count`, `.hollow-empty` and `.burrow-label` as a text
+skirt. Those are not lips. They are shadows a character or a letterform casts *onto the surface
+below*, they fall on lawn and soil at least as often as on paper, and an opaque `--ink-2` under a
+white numeral on green would read as a second outline in the wrong colour. **The test is what the
+shadow is attached to, not what the shadow looks like:** an object's own edge is opaque, a shadow
+cast on something else is not.
+
+**Rejected: normalising the opacities instead.** The forty-six spanned `.2` to `.4` and picking one
+value would have made the drift consistent rather than absent — a tidy grey-tan lip is still a grey-
+tan lip. Rejected too: sweeping the heights at the same time. Several are load-bearing against a
+`:active` travel that has to match them, and changing colour and geometry in one commit would make
+any regression impossible to bisect.
+
 ## 2026-08-26 (fix) — `--ink-soft` was a real colour that got into the game by accident
 
 **A visual audit of `style.css` at 8393738 counted `var(--ink-soft, #7a6047)` twenty-three times and

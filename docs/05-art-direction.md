@@ -290,6 +290,22 @@ this game look moulded rather than drawn, and it is why the plots feel pressable
 had a flat `rgba()` fill and no lip at all, which is why they read as empty rectangles; `.mw-cell`
 now carries the whole recipe and presses with the same `translateY(3px)` the plots use.
 
+**A lip is never translucent.** It is the object's own extruded side wall, so it is opaque and it is
+the object's own dark: `var(--ink-2)` on paper, `var(--soil-dd)` on soil, `#6b4423` under the board.
+`0 3px 0 rgba(44,26,16,.22)` is the same geometry and a different material — over cream, 22% ink
+resolves to a desaturated grey-tan, and the surface stops reading as moulded and starts reading as a
+web page with a drop shadow. Enforced 2026-08-26 across all 39 box-shadow lips that had drifted.
+**A `box-shadow` with a zero blur and an `rgba()` colour is always the bug.**
+
+The heights are a ladder, and a lip height is a size signal rather than a taste decision: 2px on a
+chip, 3px on a pill or badge, 4px on a card or plot, 5px on the dock, 9px under the whole board. A
+3px lip on a full-width panel makes the panel look small; a 5px lip on a chip makes it look broken.
+
+**The exception is a shadow that is not a lip.** `.talker` and `.sheet-art svg` cast
+`drop-shadow(0 6px 0 rgba(…))` and `.outlined` carries a `0 4px 0` text skirt. Those fall *onto the
+surface below* rather than describing an object's own edge, they land on soil and lawn as often as
+on paper, and they stay translucent so the ground shows through them.
+
 **One trap comes with it.** An inset box-shadow paints *under* an element's content, so a cell with
 an opaque floor child loses its lit top edge and shaded bottom entirely. Those two lines have to
 ride an overlay above the floor — `.mw-cell::after` — or the recipe is only half applied and nobody
