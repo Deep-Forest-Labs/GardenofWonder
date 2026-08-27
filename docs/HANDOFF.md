@@ -12,6 +12,37 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **THE PIVOT TO PRESTIGE, 2026-08-26 — and the retune is unblocked.** The owner's call after the
+> direction analysis: **focus on the garden as is and design a real incremental prestige** —
+> restart, a currency, permanent points. **[30-prestige-directions.md](30-prestige-directions.md)**
+> prices five systems; this is **direction D executed**, and the map, Stand, meadow and bench are
+> *parked, not deleted* — the Gardens Ladder idea re-sequences the map from geography into
+> progression later.
+>
+> **Two structural findings gate everything.** The economy is **bounded** — ×1.53/tier, then flat at
+> ~1.48M/hour forever — and a bounded economy cannot prestige: no deceleration, and a
+> lifetime-earnings currency pays the same in run nine as in run two. The recommended fix is
+> cosy-native rather than genre-standard: **the season ages** — growth slows as the year ripens into
+> autumn, so prestige timing lives in the art, not in a derivative. And **the one-number rule must
+> bend**: lifetime reputation never resets and stays the meta-track; the *season's level* (rep
+> earned this season) is what gates the seed ladder, so the ladder is **reclimbed, not extended** —
+> which dissolves the audit's "no vertebrae past 17" problem.
+>
+> **The recommendation: The Turning Year + Seed Saving as one system (~45/15, the best base odds
+> priced so far).** Full seasonal prestige, the turn *invited never forced*, permanent upgrades
+> named **Perennials**, and the prestige currency an **Heirloom Seed** whose properties are
+> inherited from how the season was actually played — the breeding feature the owner wants, arriving
+> as the prestige payout. Hold the Gardens Ladder as the long-run ceiling; Fallow Beds and the
+> Compost Heap are texture, not spines.
+>
+> **A never-resets list is proposed as sim-test material:** creatures, the Hollow, lifetime Almanac
+> records, cards, gems, mementos, lifetime reputation. Badges, coins, plots above four, boosts,
+> season level and Bloom Mastery reset — the strongest argument yet for capping mastery.
+>
+> **And the owner ruled the same day: *"we can retune the economy. The economy is already
+> broken."*** The retune is no longer deferred — it is part of the prestige work, because the
+> consuming system the deferral was waiting for is the prestige loop itself.
+
 > **FOUR DIRECTIONS PRICED, AND THE HOOK TURNS OUT TO HAVE SHIPPED BY ACCIDENT, 2026-08-26.** The
 > owner asked whether the genre is too saturated to enter, and what it would actually take to
 > succeed. **[29-direction-and-odds.md](29-direction-and-odds.md)** answers it, and rejects the
@@ -756,14 +787,19 @@ buttons stay). **Two are deferred by the owner** as their own conversations: wha
 what survives one, and the launch content bill of materials — the second of which the economy
 retune needs as a target.
 
-**The live question is which direction, not which item.** [29-direction-and-odds.md](29-direction-and-odds.md)
-recommends **C, the Shared Sky** — direction A with the epoch clock made into the point, and D taken
-as a free second audience rather than a pivot. **Nothing below should be built until that is ruled
-on**, because C changes what retention, the ceiling and the FTUE are *for*.
+**The direction is chosen: prestige, garden-first.** The owner picked the incremental-depth lane
+([30-prestige-directions.md](30-prestige-directions.md)) and unblocked the economy retune in the
+same breath. **The current task is the full spec of The Turning Year + Seed Saving** — season
+aging as the decelerator, the split-level reputation resolution, the never-resets list as
+sim-tests, Perennials, and the heirloom property budget — **with the economy retune scoped inside
+it**, not after it. Four questions in doc 30 are the owner's: how long year one feels, whether
+plots stay bought, where the heirloom lives on screen, and whether the turn interacts with the
+shared sky.
 
-**Then item 1, the spine.** It carries the merge decision's downstream questions — which gesture
-reaches the bench, whether the roster or the Almanac is the collection asked to be finished, and how
-a wide creature roster survives a four-slot habitat cap.
+**Parked by this pivot, not deleted:** the map build-out, the Stand's expansion, the meadow's next
+pieces, the bench surface, and the merge-central layout work in [28-the-loop.md](28-the-loop.md).
+The order strip and the Shared Sky both survive as compatible later work; the Gardens Ladder is
+where the map returns.
 
 The build state below is unchanged and still accurate.
 

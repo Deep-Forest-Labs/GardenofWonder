@@ -5,6 +5,71 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-26 (strategy) — The pivot to prestige, two structural findings, and the retune unblocked
+
+**The owner's pivot, made after sitting with the direction analysis:** focus on the garden as is and
+design a real incremental prestige — restart or restart halfway, a currency, permanent points that
+make each run faster. Rethinking coins, upgrades and the level system is explicitly on the table.
+The analysis is [30-prestige-directions.md](30-prestige-directions.md); named there as **direction D
+from [29-direction-and-odds.md](29-direction-and-odds.md) executed** — the map, the Stand, the
+meadow and the bench are *parked, not deleted*, and two of the five ideas show where they return.
+
+**Finding one: the economy is bounded, and a bounded economy cannot prestige.** Measured, not
+estimated: seed costs span 2,000× over 19 tiers (×1.53/tier) and endgame income is **flat at
+~1.48M/hour forever** once badges cap. Prestige needs a run that *decelerates* — this curve
+flattens into a wall, so the "prestige at 10–20% of peak speed" heuristic never fires and a
+lifetime-earnings currency pays the same per hour in run nine as in run two. Two ways out were
+named, and the recommendation takes the second: reshape the economy exponential (genre-standard,
+drags every number), or **make the season decelerate instead of the costs** — the run slows because
+the year ages into autumn, which is cosy-native and puts prestige timing in the art rather than in
+a derivative.
+
+**Finding two: the one-number rule meets prestige and one of them must bend.** If reputation never
+resets, nothing re-locks and a fresh start begins with all nineteen seeds — no ladder to reclimb.
+If it resets, "earned never spent, never lost" breaks and the Stand loses its floor. **Resolution:
+split what the number displays, not the number** — lifetime reputation never resets and stays the
+meta-track; the *season's level* derives from reputation earned this season and is what gates the
+seed ladder. One field, no second currency, and the audit's "no vertebrae past 17" problem
+dissolves because the ladder is reclimbed rather than extended.
+
+**A standing never-resets list was proposed for sim-test:** creatures, the Hollow, lifetime Almanac
+records, cards, gems, mementos, lifetime reputation. Coins, plots above four, badges, boosts,
+season level and **Bloom Mastery** reset — which is the strongest argument yet for the audit's
+mastery cap, since a bounded ladder can convert to a permanent bonus at season's end and an endless
+one can only be confiscated.
+
+**The five, priced** (base $3–5K/mo / breakout >$20K/mo): **1 The Turning Year 40/12** — full
+prestige, season-aging as the decelerator, permanent upgrades named **Perennials** because the
+metaphor explains persistence without a tutorial sentence. **2 Seed Saving 35/15** — the prestige
+currency is an **Heirloom Seed** whose properties are inherited from how the season was actually
+played; it is the breeding feature the owner already wants, arriving as the prestige payout.
+**3 The Gardens Ladder 30/10** — Egg Inc's sequential ascent, and the parked map places become the
+later rungs, so the garden-only focus re-sequences the map rather than deleting it. **4 Fallow
+Beds 25/6** — "restart halfway" literally, per-bed; rejected as spine because partial resets never
+produce the fresh start that is most of why prestige retains. **5 The Compost Heap 20/5** —
+sacrifice as continuous prestige; rejected as spine (no re-climb), kept as the first mechanic where
+a harvest has two mutually exclusive uses.
+
+**Recommendation: build 1+2 as one system (combined ~45/15, the best base odds priced so far), hold
+3 as the long-run ceiling, fold 4 and 5 in later as texture.** The turn is *invited, never forced*
+— autumn makes it obviously right — which answers the owner's "forced players to restart" framing
+with the cosy version of the same pressure.
+
+**And the retune is unblocked by the owner, same day:** *"we can retune the economy. The economy is
+already broken."* The deferral's original condition — an economy is tuned against the systems that
+consume it — is now satisfied the only way that matters: the consuming system is the prestige loop,
+and it is being designed first.
+
+### Rejected
+
+**Bolting prestige onto the frozen port** — finding one is why. **Resetting reputation** — the
+spine's trust rule is worth more than the simplicity. **Fallow Beds or Compost as the spine** — both
+are texture. **A global season clock** — the Shared Sky composes with per-player years, but the turn
+must stay the player's own, or prestige loses authorship. **Treating the garden-only focus as
+abandoning the map** — the Gardens Ladder is the map re-sequenced from geography into progression.
+
+---
+
 ## 2026-08-26 (strategy) — Four directions priced, and the hook turns out to have shipped by accident
 
 **The owner's question, asked directly:** *am I entering a genre so saturated the game cannot stick
