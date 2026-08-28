@@ -32,8 +32,13 @@ from quests and levels.
 > [03-systems.md](03-systems.md#the-garden-year--the-engine-simulation-only) for the engine,
 > [07-save-data.md](07-save-data.md#the-garden-year-added-2026-08-29) for the save shape and
 > migration, and the 2026-08-29 build entry in [10-decision-log.md](10-decision-log.md) for the
-> judgement calls (the Tally's cumulative tier-reading is flagged there for the owner). Phase 2
-> begins at the wireframe gate, in its own session, after the verdict.
+> judgement calls. **The independent review is in (2026-08-29, the review entry in the log):
+> spec fidelity 10/10, the suite's 1,051/0 reproduced, the Tally's cumulative reading RATIFIED
+> (it is arithmetic), and phase 1 APPROVED on two conditions** — a phase-1.1 patch closing the
+> one fresh-mutation escape (M09: the grandfather migration lacks its negative assertion), and
+> **the owner's ruling on the mint**, where the review's four measured variants recommend the
+> cumulative shape (B) and prove veterancy must be deleted rather than capped. Phase 2 begins at
+> the wireframe gate, in its own session, after both.
 >
 > **THE GARDEN YEAR IS DOCUMENTED FOR BUILD, 2026-08-29.** The brainstorm ended and the owner said
 > go. **[32-the-garden-year.md](32-the-garden-year.md)** is the master design — four seasonal

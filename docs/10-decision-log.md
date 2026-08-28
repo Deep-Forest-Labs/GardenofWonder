@@ -5,6 +5,68 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (review) — Phase 1 passes its independent review, with one escape and one ruling to make
+
+**The strategy session reviewed the builder's phase 1 without reusing its gauntlet** — four
+independent auditors: a line-by-line spec-fidelity check, eight *fresh* mutations the builder's
+critics had not tried, four exploit-fix variants driven through the real engine, and a
+docs-truth pass that walked the five-minute test script against the actual dev-tools code.
+
+**Spec fidelity: ten of ten MATCH, zero deviations.** Every doc-33 constant sits in `data.js` at
+its documented value; both Turn gates hold; the partition, the in-flight rules, the
+once-per-lifetime unlocks, crops-are-not-flowers and the 1.4× curve (Century Bloom included) are
+all implemented as written. The suite's 1,051/0 was reproduced independently, repeatedly. **The
+builder's work is approved** — this is what implementing a finished spec looks like, including
+the correct refusal to tune the exploit away without a ruling.
+
+**Fresh mutations: seven of eight caught, one escape.** M09: gut the grandfather migration so
+*every* seed unlocks free on any pre-Year save, and all 1,051 assertions stay green — the
+bill-13b group asserts only positives (a rich save keeps what it had) and never the negative (a
+modest save must NOT receive the ladder). The probe made it concrete: a 400-coin, rep-5 save
+loads with 3/19 seeds on the real engine and 19/19 — Eternal Crown included, a 98.5M unlock,
+free — on the mutant. **One negative assertion closes it; phase 1.1's first task.**
+
+**The Tally's tier-reading is ratified, not just flagged:** cumulative is the only reading that
+reproduces doc 33's own "47 → ×1.25" example and reaches the ×2.0 cap the doc says a maxed year
+hits (+138% summed and clamped, against +69% for highest-tier-only). The builder implemented an
+ambiguous table correctly; the flag in doc 33 is resolved.
+
+**The exploit ruling, prepared for the owner with the variants measured rather than argued.**
+Baseline verified at ~25–32× casual's Saved Seeds by day 10–12. **A (dials: minCoins 500K,
+veterancy capped) fails at 3.5–4×** — sqrt-of-this-year is superadditive under splitting and
+dials only re-price the split. **D (minCoins ratcheting ×1.6 per Turn) fails at 1.2–1.5×** and
+adds the worst cosy violation on the table: a player who turned often early owes a
+permanently-ratcheted multi-million floor forever. **C (cumulative + capped veterancy) is the
+decisive control: re-attaching ANY per-turn multiplier to a split-neutral base re-arms the
+exploit at 1.3–1.4× — veterancy must be deleted, not capped.** **B (the cumulative mint,
+Cookie Clicker's heavenly-chip shape) is the only variant that kills the exploit, and it kills
+it by construction:** the mintable pool depends on lifetime earnings only, so no cadence can
+out-mint another on the base — casual *beats* turn-spam on seeds while spam burns 35 Turns —
+and the Tally graduates from garnish to the economic teacher, since full well-played years
+(~×1.3–1.6) out-score spam years (~×1.0–1.2). B's honest cost, named so phase 4 owns it: under
+the play model's income plateau, late pouches thin (real income grows through petals, unlocks
+and Fall, which the model under-represents — but mintK-vs-petal-cost calibration is explicitly
+phase 4's chair). **Recommendation to the owner: adopt B — lifetime accumulator, mint the
+increment, tally on top, veterancy deleted.**
+
+**Docs-truth: one should-fix and three notes, all applied or filed.** The known-issues note
+overstated the exploit's late-turn mint ~2.5× (~1,100 claimed, ~380–440 real — corrected, with
+the correction owned in place: the exploit needs no exaggeration); the windfall's "all eight"
+wording now carries the Century exception inline where the rule is stated, not just in the
+bill; the measured-envelope tilde-band and the pre-existing `seen.apiary` doc gap are noted for
+the next doc pass.
+
+### Rejected
+
+**Approving unconditionally** — the M09 escape is real and cheap to close; conditions are the
+review doing its job. **Ruling on the mint in this session** — the builder escalated it as the
+owner's call and it is one: it changes the game's core formula. The recommendation is as strong
+as the evidence allows; the ruling is not mine. **Re-running the builder's own mutants** — the
+point of an independent review is fresh attacks; theirs were verified once by their own
+re-runs, and the one hole found was in territory they never probed.
+
+---
+
 ## 2026-08-29 (gauntlet) — Phase 1's critics: 29 findings, 20 confirmed, and one genuine economy break
 
 **The doc-34 gauntlet ran as a 33-agent adversarial workflow** — four independent critics

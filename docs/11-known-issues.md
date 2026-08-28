@@ -55,8 +55,10 @@ on coins too, from Turn 1, not just on banked seeds). Two mechanisms stack:
 
 1. **The mint favours splitting.** `sqrt(coinsEarned)` makes four 100K years mint ~2.6× one
    400K year, and the uncapped `(1 + 0.2 × turns)` veterancy term compounds with turn count —
-   by turn ~55 a 100K year pays ~1,100 seeds, clearing doc 33's whole ~525–679K sink runway
-   ("months of headroom") in weeks.
+   by turn ~55 a 100K year pays ~380–440 seeds (the pacing tool's own transcript shows Turn 55
+   paying 440 on a 119K year), still clearing doc 33's ~525–679K sink runway ("months of
+   headroom") in weeks. *(The first version of this note said ~1,100 — a ~2.5× overstatement
+   caught by the phase-1 independent review; the exploit needs no exaggeration.)*
 2. **Fall beds launder the doomed wallet.** Fall rightly survives the Turn, so gold that is
    about to zero converts freely into growing crops that pay into the NEXT year's meter —
    eight apples pay 806K per 8-hour fill, one windfall apple alone clears the 100K floor, and

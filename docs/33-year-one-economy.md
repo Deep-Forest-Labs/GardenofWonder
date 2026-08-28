@@ -117,8 +117,9 @@ land one line at a time, each adding to a bonus that multiplies the base, **summ
 `state.year.stats`** — never a lifetime record, never anything spendable. **A line the year
 scored zero on does not appear**; the Tally only celebrates.
 
-**The built reading (phase 1, flagged for the owner's review): tier bonuses within a line
-ACCUMULATE.** 47 orders pays tier 1 and tier 2 together, +25% — which is exactly doc 32's own
+**Tier bonuses within a line ACCUMULATE — ratified by the phase-1 review, 2026-08-29,** because
+it is arithmetic rather than taste: only the cumulative reading reproduces this document's own
+worked example and reaches its own cap. 47 orders pays tier 1 and tier 2 together, +25% — which is exactly doc 32's own
 "Orders filled: 47 → ×1.25!" example — a maxed year sums to +138% and genuinely hits the ×2.0
 cap, and a typical mid-game year lands the quoted ~×1.35. The alternative reading
 (highest-tier-only) caps out at ×1.69 and can never reach the cap this document says a maxed
@@ -228,9 +229,11 @@ cottage list — beds and trees, never field rows:
 | Apple (tree) | 48,000 | 8 h | 67,200 | The overnight anchor |
 | Wheat (one patch) | 20,000 | 4 h | 28,000 | The entire grain concession |
 
-**The windfall rule** (`DATA.fall.windfall = 0.5`): harvesting a Fall bed whose **all eight
-plots are planted and ripe** pays **+50% on the whole bed** — all eight, so a single-strawberry
-board cannot fish for it; the fill-cycle resets when the bed empties. One knob, one legible rule,
+**The windfall rule** (`DATA.fall.windfall = 0.5`): harvesting a Fall bed whose **every
+windfall-eligible plot is planted and ripe** pays **+50% on the whole bed** — all of them, so a
+single-strawberry board cannot fish for it; the fill-cycle resets when the bed empties. A plot
+holding the Century Bloom stands outside the bed's count (it neither blocks nor collects the
+windfall), so "all eight" means all eight *unless one of them is the fortnight plant*. One knob, one legible rule,
 and it is what makes Fall an appointment rather than a chore. Fall plants gate on gold prices
 only in v1 — no unlock walls inside Fall until its list grows.
 
@@ -307,7 +310,7 @@ the launch six ship).
    `seedUnlocks` only.
 10. Petal effects reach `passiveIncomeRate()` (offline mirrors online).
 11. Unlock prices are charged once per lifetime; the Turn never re-charges one.
-12. The windfall pays only when all eight Fall plots are planted and ripe, once per bed fill,
+12. The windfall pays only when every windfall-eligible Fall plot is planted and ripe, once per bed fill,
     and a growing Century Bloom neither blocks nor collects it.
 13. Migration is idempotent and grants mastery-conversion seeds exactly once.
 14. Tally lines read only `state.year.stats`; the summed bonus clamps at `tallyCap`; a
