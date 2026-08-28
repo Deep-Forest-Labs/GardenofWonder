@@ -248,6 +248,17 @@ heavily on the turn-policy knob (measured envelope: day ~1.5 at 252K to day ~5.3
 doc 33's day 2.7–3.3 at 390K inside it), because income accelerates through the walls where
 the doc's flat model did not. Recorded as a phase-4 calibration question, not tuned around.
 
+> **Two of those four "verdicts" did not survive, and the correction is owned here rather than
+> left standing** (2026-08-29, rounds 1–2 and phase 1.1). **The daisy-rush claim was wrong**:
+> the tool's rush strategy was handicapped and its verdict ignored Saved Seeds minted, which is
+> the currency the shape actually wins — the real finding is the escalated seeds-only exploit in
+> [11-known-issues.md](11-known-issues.md). **The 12/12 petal band was a frozen-calibration
+> artifact**: with the tap-rate bug fixed and automation in the model, the band now holds on
+> roughly half of Turns, and the tool marks it OK/CHECK instead of printing a bare count. The
+> other two held, and the year-one figure improved into doc 33's documented band once the model
+> bought the game's automation. The lesson worth keeping: **a pacing model's verdicts are only
+> as good as the strategies it is willing to play against itself.**
+
 ### Rejected
 
 **Rounding `coinsEarned` per grant** — the mint rounds once at the end; per-grant rounding
