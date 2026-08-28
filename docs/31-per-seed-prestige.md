@@ -1,6 +1,9 @@
 # Per-Seed Prestige — the owner's design, pressure-tested
 
-**Status: analysis and recommendation, 2026-08-29.** The owner's concrete prestige design, put
+**Status: analysis, 2026-08-29 — executed the same day.** The design this pressure test shaped is
+now **[32-the-garden-year.md](32-the-garden-year.md)** with numbers in
+[33-year-one-economy.md](33-year-one-economy.md); this document remains the record of the evidence,
+the refutations, and the invariants audit. Original framing: The owner's concrete prestige design, put
 through a four-angle pressure test (genre comparables with sources, a full repo-invariants audit,
 a simulated economy model, and an adversarial critique that also attacked the advisor's fixes),
 plus adversarial verification of the two highest-stakes claims — **both of which were partly

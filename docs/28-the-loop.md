@@ -1,6 +1,9 @@
 # The Loop — what a session is, what the player's job is, and what is scarce
 
-**Status: proposal, 2026-08-26.** Item 0 of the sequence in
+**Status: proposal, 2026-08-26 — superseded in part, 2026-08-29.** The prestige pivot parked the
+bench-as-second-screen plan; what survives into [32-the-garden-year.md](32-the-garden-year.md) is the
+demand-on-top-of-supply layout lesson (the order strip over the garden), the scarcity rule, and the
+three session shapes. Original framing: Item 0 of the sequence in
 [27-design-audit.md](27-design-audit.md#the-order-to-settle-things-in). It exists because
 everything below it — the spine, the ceiling, retention, monetization, the retune — is
 unanswerable until this is settled, and because the owner asked directly for the merge feature to

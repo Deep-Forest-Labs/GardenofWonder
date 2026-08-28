@@ -12,6 +12,30 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **THE GARDEN YEAR IS DOCUMENTED FOR BUILD, 2026-08-29.** The brainstorm ended and the owner said
+> go. **[32-the-garden-year.md](32-the-garden-year.md)** is the master design — four seasonal
+> gardens on one horizontal swipe strip replacing the world map (Summer home · Fall at Turn 1 ·
+> Winter ~3 · Spring ~6), the Turn as prestige (invited never forced, clears fast annuals in the
+> main garden only, never kills a running long timer), Saved Seeds minted once per Turn from the
+> year's earnings, and flower mastery as **petals** on the Almanac's own rows (Rich Bloom + Quick
+> Sprout everywhere, one signature each, six authored at launch, chance skills as countdowns).
+> **[33-year-one-economy.md](33-year-one-economy.md)** is the retune riding inside slice A: unlock
+> prices carry the spread (seed 3 = 150K, ×1.6/tier — per-plant spreads cannot wall while 1.4×
+> holds), the mint formula, petal prices, Fall's eight plants and the +50% windfall rule, the
+> Century Bloom, migration, and a 13-item sim-test bill.
+>
+> **Orders stay, and are promoted** — the owner's call ("that was always a fun system"): the Stand
+> becomes the perennial reputation engine behind an extended level ladder, entered from an order
+> strip above the plots rather than a map trip. **Doc 30's season-level split retires** — nothing
+> re-locks, so one lifetime reputation track survives untouched. **Old Bloom Mastery retires into
+> petals** with a one-time conversion grant. **Badges stay run-scoped** (the rebuild ritual);
+> **drone and harvesters stay parked** for their own conversation.
+>
+> **Build slices, each judged before the next:** A) the Turn + petals + unlock prices + Fall at
+> background-swap art, with the retune and sim-tests; B) the launch six signatures; C) Winter;
+> D) the order strip and the ladder past 17; E) Spring. The map and its World button stay until
+> the year strip ships — a tab leaves when its home exists.
+
 > **PER-SEED PRESTIGE IS THE DESIGN, 2026-08-29 — pressure-tested, two of the advisor's own claims
 > refuted on the way.** The owner committed: incremental idle tapper on the garden engine, seeds
 > spread far apart, prestige at the seed-3 wall, and the spend as **permanent upgrade trees per
@@ -828,13 +852,13 @@ buttons stay). **Two are deferred by the owner** as their own conversations: wha
 what survives one, and the launch content bill of materials — the second of which the economy
 retune needs as a target.
 
-**The design is chosen: per-seed prestige ([31-per-seed-prestige.md](31-per-seed-prestige.md)),
-on doc 30's chassis, with the retune scoped inside it.** The current task is turning doc 31 into
-the buildable spec: the turn-of-season path over the never-resets partition (sim-tested field by
-field), the unlock-price table, the spine + first five signature branches, the pity-counter
-framing for chance axes, the creature away-tending floor, the repeatable seasonal quest ladder,
-and the conversion accumulator that never reads `state.discovered`. The blocker table in doc 31
-lists the seven decisions that gate the build.
+**The spec exists: build slice A of the Garden Year.** [32-the-garden-year.md](32-the-garden-year.md)
+is the design, [33-year-one-economy.md](33-year-one-economy.md) the numbers, and slice A is the
+whole first task: the year state and mint (earnings-accumulator, never balance, cheat grants
+excluded), the Turn path over the never-resets partition, petals' shared skills on the Almanac
+rows, unlock prices on seeds 3+, and Fall at background-swap art with the windfall rule — all
+under the 13-item sim-test bill in doc 33 before any UI. Simulation first, the Stand's own
+pattern.
 
 **Parked by this pivot, not deleted:** the map build-out, the Stand's expansion, the meadow's next
 pieces, the bench surface, and the merge-central layout work in [28-the-loop.md](28-the-loop.md).

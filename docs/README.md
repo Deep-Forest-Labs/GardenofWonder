@@ -46,6 +46,8 @@ Read it before anything else if you're picking the project up cold.
 | [29-direction-and-odds.md](29-direction-and-odds.md) | You are deciding what game this is, or whether the genre is too crowded to enter — four directions with the odds on each, what the four distribution channels actually reward, and why the hook shipped by accident — **analysis, not the game** |
 | [30-prestige-directions.md](30-prestige-directions.md) | You're designing the prestige system — five priced options, why a bounded economy cannot prestige, how the one-number rule bends, and what never resets — **analysis and recommendation, not built** |
 | [31-per-seed-prestige.md](31-per-seed-prestige.md) | You're building the prestige system — the per-seed upgrade design pressure-tested: the currency formula, the unlock-price spread, the wall size, the tree surface rules, and the 25 invariants it touches — **the current design, not built** |
+| [32-the-garden-year.md](32-the-garden-year.md) | You're building the Year — the seasonal world, the Turn, Saved Seeds, petals, orders-in-the-year, the never-resets partition, and the build slices — **the master design, decided 2026-08-29, not built** |
+| [33-year-one-economy.md](33-year-one-economy.md) | You're tuning or building the Year's numbers — unlock prices, the mint, petal costs and effects, the launch six signatures, Fall's plants, migration, and the sim-test bill — **specification, not built** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

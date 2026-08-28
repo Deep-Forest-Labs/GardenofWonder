@@ -5,6 +5,59 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (design) — The Garden Year is the design, documented for build
+
+**The owner said go**, after four brainstorm rounds: the seasonal world, the Turn, Saved Seeds and
+flower mastery become the game's shape, orders stay in, and the economy retune rides inside the
+first slice. The design is **[32-the-garden-year.md](32-the-garden-year.md)**, the numbers are
+**[33-year-one-economy.md](33-year-one-economy.md)**; this entry records what was decided in the
+brainstorm and the three calls the documentation made that were not explicitly the owner's.
+
+**Decided by the owner across 2026-08-28/29:** four seasonal gardens on one horizontal swipe strip
+replace the world map (Summer home, Fall at Turn 1, Winter ~3, Spring ~6); art ships as a
+background swap per season; the Turn clears fast annuals in the main garden only and never kills a
+running long timer; the year is the player's own calendar, invited never forced; badges stay the
+inside-the-year game and reset for the rebuild ritual; the drone and harvesters are parked for
+their own conversation; the mint counts the year's earnings rather than the leftover balance (the
+two-wallet rule, accepted after the hoarding walkthrough); every flower carries Rich Bloom + Quick
+Sprout + one signature; and **orders stay** — the owner's words, "that was always a fun system."
+
+**The documentation's three calls, flagged for the owner rather than silently made:**
+
+**One lifetime reputation track — doc 30's season-level split retires.** The split existed because
+seeds were going to re-lock each year. The unlock-price model removed the re-lock, so nothing
+needs a second ladder: rep stays lifetime and earned-never-spent (the spine intact), the level
+ladder re-authors past 17 with orders as the perennial faucet, and the re-climb inside a year is
+purely economic — a veteran blasting back to their best seed in minutes is the fun, exactly as in
+every comparable. This also closes the audit's "no vertebrae past 17" without resetting anything.
+
+**Old Bloom Mastery retires into petals.** Two permanent per-seed yield ladders on one flower is
+the stacking failure the pool discipline exists to prevent. Lifetime counts stay (creatures and
+the Almanac read them); existing tiers convert to a one-time Saved Seeds grant.
+
+**Orders become load-bearing, not just kept.** They are the repeatable reputation engine every
+re-authored level past 17 hangs off — the role doc 13 assigned them on the day it was written,
+finally cashed in — and their entry moves from a map trip to an order strip above the plots, the
+demand-on-top-of-supply lesson surviving from the merge-central proposal even though the
+bench-as-second-screen plan is parked.
+
+**Also settled while documenting:** doc 30's season-aging growth-slowdown is superseded — the
+deceleration comes from the unlock walls and the aging is visual only, keyed to the year-meter,
+which doubles as the pouch preview (the AdCap angels-if-reset pattern). The Fall windfall rule
+(+50% on a fully-ripe bed) is the season's one twist and one knob. The Century Bloom (14 days,
+survives every Turn) is the design's screenshot. Cheated gold is excluded from the mint so the
+friend-testers keep their buttons without contaminating pacing data.
+
+### Rejected
+
+**A third currency or any gold→seed→petal chain** — petals are purchases, not currency; there is
+exactly one conversion, once per Turn. **Season-level regating of seeds** — two gates on one seed
+double-walls the re-climb the design wants fast. **Authoring all nineteen signatures now** — six
+at launch, waves after. **Winter's plant list now** — slice C's job. **Designing Spring's breeding
+now** — slice E's job, deliberately.
+
+---
+
 ## 2026-08-29 (design) — Per-seed prestige is the design, after a pressure test that refuted two of the advisor's own claims
 
 **The owner committed to the direction and brought a concrete mechanism:** an incremental idle
