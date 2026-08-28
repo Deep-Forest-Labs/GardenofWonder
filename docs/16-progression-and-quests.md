@@ -118,9 +118,14 @@ hidden.
 
 ### Level rewards
 
-**Seed level-gates retire with the Year build, 2026-08-29.** `unlockLevel` on seeds goes away —
-seeds gate on one-time gold unlock prices instead
-([33-year-one-economy.md](33-year-one-economy.md)). Plot, habitat and meadow level gates stay.
+**Seed level-gates RETIRED with the Year build's phase 1, 2026-08-29.** Seeds gate on one-time
+gold unlock prices ([33-year-one-economy.md](33-year-one-economy.md)); `seedUnlocked()` reads
+`state.seedUnlocks`, saves are grandfathered (anything discovered or level-passed stays free),
+and the `unlockLevel` field survives in the data only for migrations and the picker's interim
+"Level *n*" label until phase 2 ships the unlock rows. Plot, habitat and meadow level gates
+stay — plots 5–8 additionally wait for the first Turn. Level-ups no longer announce seeds, so
+the bullet list below describes the RETIRED design; the ladder's freed rewards re-author in
+slice D.
 
 Every level grants something. The primary lever is **seeds**. Plots are the other.
 
@@ -253,8 +258,10 @@ start at zero when a quest becomes active.
 | 15b | `q_discover_8` | Discover 8 species | discover | | 8 | 18 | stands in for `q_tea` |
 | 16 | `q_charm_1` | Buy Lucky Charm | upgrade | critChance | 1 | 20 |
 | 17 | `q_crit_1` | Land a crit | crit | | 1 | 20 |
-| 18 | `q_rose_3` | Harvest 3 roses | harvest | rose | 3 | 20 |
-| 19 | `q_lavender_3` | Harvest 3 lavender | harvest | lavender | 3 | 22 |
+| 18 | ~~`q_rose_3`~~ | ~~Harvest 3 roses~~ | harvest | rose | 3 | 20 | **paused** — behind the 338K unlock wall |
+| 18b | `q_daisy_15` | Harvest 15 daisies | harvest | daisy | 15 | 20 | stands in for `q_rose_3` |
+| 19 | ~~`q_lavender_3`~~ | ~~Harvest 3 lavender~~ | harvest | lavender | 3 | 22 | **paused** — marginal in year one |
+| 19b | `q_tulip_8` | Harvest 8 tulips | harvest | tulip | 8 | 22 | stands in for `q_lavender_3` |
 | 20 | `q_rare` | Harvest a Rare bloom | rarity | rare | 1 | 24 |
 | 21 | `q_star_1` | Buy Star Strike | upgrade | critMult | 1 | 24 |
 | 22 | ~~`q_perfume`~~ | ~~Merge a Bouquet~~ | merge | bouquet | 1 | 32 | **paused** |
@@ -265,10 +272,12 @@ start at zero when a quest becomes active.
 | 26 | `q_combo_55` | Reach combo 55 | combo | | 55 | 30 |
 | 27 | `q_harvest_25` | Harvest 25 blooms | harvest | | 25 | 42 |
 | 28 | `q_plant_20` | Plant 20 seeds | plant | | 20 | 44 |
-| 29 | `q_peony_3` | Harvest 3 peonies | harvest | peony | 3 | 46 |
+| 29 | ~~`q_peony_3`~~ | ~~Harvest 3 peonies~~ | harvest | peony | 3 | 46 | **paused** — unreachable in year one |
+| 29b | `q_plant_30` | Plant 30 seeds | plant | | 30 | 46 | stands in for `q_peony_3` |
 | 30 | ~~`q_craft_2`~~ | ~~Bank 5 bench goods~~ | bank | | 5 | 48 | **paused** |
 | 30b | `q_honey_15` | Fill 15 honey jars | honey | | 15 | 48 | stands in for `q_craft_2` |
-| 31 | `q_marigold_3` | Harvest 3 marigolds | harvest | marigold | 3 | 42 |
+| 31 | ~~`q_marigold_3`~~ | ~~Harvest 3 marigolds~~ | harvest | marigold | 3 | 42 | **paused** — unreachable in year one |
+| 31b | `q_harvest_30` | Harvest 30 blooms | harvest | | 30 | 42 | stands in for `q_marigold_3` |
 | 32 | `q_harvest_40` | Harvest 40 blooms | harvest | | 40 | 46 |
 | 33 | `q_discover_12` | Discover 12 species | discover | | 12 | 50 |
 

@@ -12,6 +12,23 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **PHASE 1 OF THE GARDEN YEAR IS BUILT, 2026-08-29 — the engine, as pure simulation, awaiting
+> the owner's verdict.** The whole prestige loop runs headlessly under the live game, which looks
+> and plays identically: `Game.credit()` as the single earnings faucet (cheats and refunds
+> flagged out of the mint), one-time seed unlock prices with the level-gates retired and a
+> grandfather migration, petals (Rich Bloom / Quick Sprout) live in harvest and offline income,
+> the atomic `Game.turnYear()` over the full never-resets partition, Fall's board with the
+> windfall and the Century Bloom as simulation, Bloom Mastery retired into a one-time Saved
+> Seeds conversion, the four quest re-keys at a held 777, and Developer-tools drivers to feel a
+> whole year in five minutes. The doc-33 sim-test bill (items 1–6, 8–18) is genuinely asserted —
+> the suite grew to **1,043 assertions**, clean across twelve consecutive runs — and
+> `tools/year-sim.js` drives casual-play pacing through the real `game.js`. See
+> [03-systems.md](03-systems.md#the-garden-year--the-engine-simulation-only) for the engine,
+> [07-save-data.md](07-save-data.md#the-garden-year-added-2026-08-29) for the save shape and
+> migration, and the 2026-08-29 build entry in [10-decision-log.md](10-decision-log.md) for the
+> judgement calls (the Tally's cumulative tier-reading is flagged there for the owner). Phase 2
+> begins at the wireframe gate, in its own session, after the verdict.
+>
 > **THE GARDEN YEAR IS DOCUMENTED FOR BUILD, 2026-08-29.** The brainstorm ended and the owner said
 > go. **[32-the-garden-year.md](32-the-garden-year.md)** is the master design — four seasonal
 > gardens on one horizontal swipe strip replacing the world map (Summer home · Fall at Turn 1 ·
@@ -849,9 +866,13 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 **The build is phased and gated: [34-build-plan.md](34-build-plan.md).** Slice A splits into four
 owner-reviewed phases (engine → ceremony → Fall and the strip → tuning), each built by a fresh
 session from the paste-ready prompt in that doc, each ending in a critic gauntlet and a
-five-minute phone test script before the owner's verdict gates the next. **Phase 1 has not
-started.** If you are a builder session, your prompt told you your phase — doc 34 is your scope,
-and the design conversation lives elsewhere: where docs 32/33 are silent, ask, don't invent.
+five-minute phone test script before the owner's verdict gates the next. **Phase 1 is BUILT and
+awaiting the owner's verdict** — the engine as simulation, the bill asserted, the game visually
+unchanged; the five-minute script is at the end of the phase-1 session's handoff and drives
+Developer tools → the Garden Year rows. **Phase 2 does not start until the verdict, and starts
+at the wireframe gate** (`tools/turn-spike.html`, owner-approved before any UI code). If you are
+a builder session, your prompt told you your phase — doc 34 is your scope, and the design
+conversation lives elsewhere: where docs 32/33 are silent, ask, don't invent.
 
 **The spec itself: slice A of the Garden Year.** [32-the-garden-year.md](32-the-garden-year.md)
 is the design, [33-year-one-economy.md](33-year-one-economy.md) the numbers, and slice A is the
@@ -1428,13 +1449,31 @@ go backwards when the player crafts. Backfill on load uses remaining flowers as 
 which undercounts old saves on purpose. `state.rarityCounts` is the same kind of record for
 mastery and has the same rule.
 
-**Mastery silently perturbs any sim-test that measures a harvest multiplier.** It multiplies
-harvest payout and climbs as a run proceeds, so a test averaging thousands of harvests to isolate
-some *other* multiplier has to reset the ladder first — and resetting `state.mastery` alone is not
-enough, because the ladder reads `state.discovered`, so the next run restarts tier 1 with
-thousands of harvests already banked and jumps several tiers on its first harvest. `clearMastery()`
-in the suite clears all three. This broke the pollination and decor ratio tests the moment mastery
-landed, and the failure looks like a balance regression rather than a test artifact.
+**Mastery no longer perturbs harvest measurements — but PETALS now can.** The old trap (the
+climbing mastery ladder drifting any averaged-harvest test) died when `masteryMult()` retired
+with the Garden Year; `clearMastery()` survives in the suite because `discovered` still drives
+creatures and quests. The successor trap is `state.petals`: Rich Bloom multiplies every harvest
+of its flower and Quick Sprout changes baked grow times, so a test measuring some *other*
+multiplier must not inherit petals from an earlier test — `G.reset()` clears them, but a rig
+that writes state by hand does not.
+
+**`state.credits += x` is banned in favour of `Game.credit(x, {cheat, refund})`.** The Year's
+mint reads `state.year.coinsEarned`, which only `credit()` writes — a raw wallet grant either
+silently misses the meter (an earnings faucet that mints nothing) or, flagged wrongly, mints
+Saved Seeds from a cheat. Spending stays plain subtraction. Sim-test bill item 4 exists to catch
+exactly this; the dev gold buttons route through `Dev.grantGold`.
+
+**`turnYear()` is the only legal prestige path, and it is atomic on purpose.** It collects,
+banks, mints, blesses, clears and rolls over in one commit ending in `saveNow()`. Never reuse
+the Settings reset as a prestige, and never "improve" the Turn by splitting it — a Turn that can
+half-happen is corrupted saves at the worst possible moment. Bill item 1's partition test also
+fails the suite if a new `defaultState()` field is not classified as cleared-or-surviving, which
+is deliberate: classify it when you add it.
+
+**`state.fall.grid` is positional, like the meadow's cells and the Stand's slots.** Rebuilt to
+`DATA.fall.plots` length on load, never merged. And Fall crops are NOT flowers: they must never
+touch rarity, mutations, gems, `discovered`, the pantry or the bench — the windfall is their
+whole juice, and several sim-tests assert the separation.
 
 **`.seed-row` is the plant picker's button, not a generic row.** Reusing it for the Almanac wrapped
 every row in a card treatment and collapsed the columns onto one overflowing line. The Almanac's
@@ -1483,7 +1522,8 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 837 assertions over the simulation layer
+node tools/sim-test.js          # 1,043 assertions over the simulation layer
+node tools/year-sim.js 12 both  # the Garden Year's pacing model — measures, asserts nothing
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
@@ -1558,10 +1598,12 @@ stale line here costs them real time before they have any way to know it is wron
 > its scene must be drawn at the size the room really measures rather than sliced from a phone-sized
 > viewBox. Both mistakes shipped in the meadow and both read as "it looks like a prototype."
 >
-> **Your job is slice A of the Garden Year** — the Turn, the mint, petals, unlock prices and Fall.
-> Read `docs/32-the-garden-year.md` (the design) and `docs/33-year-one-economy.md` (the numbers,
-> including the sim-test bill that lands before any UI). The one rule above all others there:
-> a season is a speed and a rule, never a re-skin.
+> **The work in flight is slice A of the Garden Year** — the Turn, the mint, petals, unlock
+> prices and Fall. Read `docs/32-the-garden-year.md` (the design), `docs/33-year-one-economy.md`
+> (the numbers) and `docs/34-build-plan.md` (the phases). **Phase 1 — the whole engine as
+> simulation — is built and under review; phase 2 (the ceremony's UI) starts at the wireframe
+> gate after my verdict.** The one rule above all others there: a season is a speed and a rule,
+> never a re-skin.
 >
 > **How I work.** I'm the designer; an engineer ports to Unity. Two people, modest revenue goal,
 > deliberately small scope. I want you as a **design advisor as much as an implementer** — push back
@@ -1577,7 +1619,8 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 902 assertions.
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,043 assertions,
+>   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.
 > - **More iconography, fewer sentences.** A standing note, and the thing I keep asking for.

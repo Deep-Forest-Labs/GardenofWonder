@@ -7,7 +7,7 @@
 | Mechanism | `localStorage`, JSON |
 | Current key | `gw-save` |
 | Legacy key | `igr-save` (*Idle Garden Reborn*) |
-| Schema version | `3` |
+| Schema version | `4` (the Garden Year — mastery's meaning changed from live ladder to frozen record) |
 
 Saves are scoped to the browser origin, so a GitHub Pages deployment shares storage with anything
 else published under the same `github.io` account. Progress does not sync between devices and is
@@ -17,7 +17,7 @@ lost if the player clears site data.
 
 ```js
 {
-  version: 3,
+  version: 4,
   credits: 100,
   tickets: 0,                 // kept so old saves parse; zeroed after conversion
   gems: 0,
@@ -422,3 +422,64 @@ longer exists is dropped to `null`.
 **Keepers are filtered on load** to real creature ids, de-duplicated and clamped to
 `MEADOW.keeperSlots`; `Game.keepers()` filters again at read time to creatures actually tending, so
 a creature sent to rest stops keeping without anything having to remember.
+
+## The Garden Year (added 2026-08-29)
+
+Six new top-level fields, all in `defaultState()` **and** re-merged individually in `load()`:
+
+```js
+year: {
+  number: 1,                    // which year is being played, 1-based
+  coinsEarned: 0,               // the mint's whole input — written ONLY by credit(), never decremented
+  turnsCompleted: 0,            // gates Fall (fallTurn), plots 5–8 (plotTurnGate), the veterancy bonus
+  stats: {                      // the Tally's counters: year-scoped, zeroed at the Turn
+    orders: 0, windfalls: 0, species: 0,
+    speciesSeen: {},            // seedId -> true, so a species counts once per year
+    legendaries: 0, bestCombo: 0
+  }
+},
+savedSeeds: 0,                  // the forever money; minted at the Turn, spent on petals, never reset
+petals: {},                     // seedId -> { rich, quick, sig }; clamped to the shared caps on load
+seedUnlocks: {},                // seedId -> true; one-time gold prices, permanent across Turns
+blessed: [],                    // [{ seed, year }] — provenance of every Turn's free petal
+fall: {
+  grid: [ /* DATA.fall.plots cells */ { seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false } ],
+  bedPaid: false                // the windfall's once-per-fill latch
+}
+```
+
+Rules that matter:
+
+- **`fall.grid` is positional** and rebuilt to `DATA.fall.plots` length on load, like the meadow's
+  cells and the Stand's slots. A plant id that no longer exists drops to an empty cell; a second
+  Century Bloom (an edited save) is dropped; timestamps get the main grid's sanitisation (a
+  pre-epoch `plantedAt` ripens now, a future one clamps).
+- **`petals` entries are clamped** to the shared caps and unknown seed ids are dropped;
+  `seedUnlocks` keeps only real seed ids; `blessed` keeps only real seeds.
+- **`year.stats.species` is recomputed from `speciesSeen`** on load, so the pair can never drift
+  apart.
+- **`coinsEarned` may be fractional** and survives as a Number; it is compared, never displayed
+  raw.
+
+### The Year migration — `migrateYear()`, keyed on the missing `year` key
+
+A save from before the Year enters it mid-flight, exactly once (the `boostInv` presence
+pattern):
+
+1. **Grandfather unlocks.** Any seed with `discovered[id] > 0`, or whose old `unlockLevel` the
+   save's level had already passed, is marked unlocked free — nobody loses a seed they could
+   plant. This runs *after* `migrateProgression()` and the backfills, so a pre-rep save gets its
+   level first and the counts it is judged by are the repaired ones.
+2. **Convert Bloom Mastery.** The recorded counts first earn whatever tiers they had reached
+   (the old backfill's advance, run one last time), then the whole ladder converts:
+   `round(DATA.year.masteryConvert × totalTiers)` Saved Seeds, silent. The tiers stay in
+   `state.mastery` as a frozen record. A second load neither advances nor converts again.
+3. **`coinsEarned` starts at zero** — no lifetime coin figure exists anywhere in the save, so
+   there is nothing honest to backfill from. The meter simply starts low.
+4. **Nothing owned is re-locked**: open plots stay open (the Turn gate only refuses *purchases*
+   while `turnsCompleted < plotTurnGate`), and `version` is stamped `4`.
+
+**The Turn is not the Settings reset.** `turnYear()` is a selective, atomic path over the
+partition in [32-the-garden-year.md](32-the-garden-year.md#what-the-turn-clears-and-what-it-never-touches);
+the `gw-save` wipe remains what it always was. Sim-test bill item 1 asserts the partition field
+by field and fails the suite if a future save field is not classified as cleared-or-surviving.

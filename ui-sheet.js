@@ -1354,6 +1354,23 @@
     ].join(' · ');
   }
 
+  /* The Year at a glance, for the phase-1 review — the meter pill and the
+     ceremony sheet arrive in phase 2, so this line is where the owner reads
+     the mint until then. */
+  function yearReport() {
+    const p = Game.Dev.projectTurn();
+    const lines = p.tally.lines.map((l) => `${l.label} ${l.count} +${Math.round(l.bonus * 100)}%`).join(' · ');
+    return `year ${S.year.number}, turn ${p.turnsCompleted} · earned ${fmt(Math.floor(p.coinsEarned))} / ${fmt(p.minCoins)}
+      · projects ${fmt(p.pouch)} seeds (base ${p.base.toFixed(1)} × tally ${p.tally.mult.toFixed(2)}${lines ? ` — ${lines}` : ''})
+      · ${p.ready ? 'THE TURN IS READY' : 'not yet ready'}`;
+  }
+
+  function petalReport() {
+    const d = Game.petalsOf('daisy');
+    return `${fmt(S.savedSeeds)} Saved Seeds · Daisy R${d.rich}/Q${d.quick}
+      · next ${fmt(Game.petalCost('daisy', 'rich'))} / ${fmt(Game.petalCost('daisy', 'quick'))}`;
+  }
+
   function renderDev() {
     const pending = Game.Dev.pending();
     const boosted = pending.boost || [];
@@ -1411,6 +1428,20 @@
         <button class="dev-btn" data-dev="gems" data-arg="1">+50 gems</button>
         <button class="dev-btn" data-dev="level" data-arg="1">+1 level</button>
         <button class="dev-btn" data-dev="level" data-arg="5">+5 levels</button>`)}
+      ${devRow(`The Garden Year — ${yearReport()}`, `
+        <button class="dev-btn" data-dev="yearEarn" data-arg="25000">Earn +25K</button>
+        <button class="dev-btn" data-dev="yearEarn" data-arg="100000">Earn +100K</button>
+        <button class="dev-btn" data-dev="yearEarn" data-arg="400000">Earn +400K</button>
+        <button class="dev-btn" data-dev="yearStats" data-arg="1">A good year's Tally</button>
+        <button class="dev-btn warn" data-dev="yearTurn" data-arg="1">Run the Turn (bless Daisy)</button>`)}
+      ${devRow(`Petals — ${petalReport()}`, `
+        <button class="dev-btn" data-dev="yearSeeds" data-arg="50">+50 Saved Seeds</button>
+        <button class="dev-btn" data-dev="petalBuy" data-arg="rich">Daisy: Rich Bloom</button>
+        <button class="dev-btn" data-dev="petalBuy" data-arg="quick">Daisy: Quick Sprout</button>`)}
+      ${devRow(`Fall — ${Game.fallOpen() ? 'open' : `opens at Turn ${DATA.year.fallTurn}`}`, `
+        <button class="dev-btn" data-dev="fallFill" data-arg="1">Fill the bed</button>
+        <button class="dev-btn" data-dev="fallRipen" data-arg="1">Ripen the bed</button>
+        <button class="dev-btn" data-dev="fallHarvestAll" data-arg="1">Harvest the bed</button>`)}
       <button class="big-btn" data-dev="clear" data-arg="1">Clear everything armed</button>
       ${devRow('Screen', `<p class="sheet-note">${screenReport()}</p>`)}
       <p class="sheet-note">Day phase ${(Game.dayPhase() * 100).toFixed(0)}% · ${Game.isNight() ? 'night' : 'day'} ·
@@ -1431,9 +1462,9 @@
       case 'wonder': Game.startWonder(); redraw = false; break;
       case 'fill': ok = D.fillGarden() > 0; break;
       case 'ripen': ok = D.ripenAll() > 0; break;
-      case 'hive': { const free = Game.emptyCells(); S.credits += Game.nextHiveCost();
+      case 'hive': { const free = Game.emptyCells(); D.grantGold(Game.nextHiveCost());
         ok = free.length ? Game.placeHive(free[0]) : false; break; }
-      case 'gold': S.credits += 1e6; Game.save(); Game.emit('currency'); break;
+      case 'gold': D.grantGold(1e6); break;
       case 'gems': S.gems += 50; Game.save(); Game.emit('currency'); break;
       case 'level': D.grantLevels(Number(arg) || 1); break;
       case 'away': {
@@ -1474,6 +1505,56 @@
         break;
       }
       case 'dropPack': ok = Boolean(D.dropPack()); redraw = false; break;
+      case 'yearEarn': D.driveYear(Number(arg) || 0); break;
+      case 'yearStats':
+        D.setYearStats({ orders: 12, windfalls: 4, species: 6, legendaries: 2, bestCombo: 55 });
+        break;
+      case 'yearTurn': {
+        const turn = D.runTurn('daisy');
+        ok = Boolean(turn);
+        deny = 'The Turn is not ready — earn the year first.';
+        if (ok) {
+          const lines = turn.tally.lines.map((l) => `${l.label}: ${l.count} → +${Math.round(l.bonus * 100)}%`);
+          UI.toast({
+            title: `The year turned — ${fmt(turn.pouch)} Saved Seeds`,
+            body: `Tally ×${turn.tally.mult.toFixed(2)}${lines.length ? ' · ' + lines.join(' · ') : ''}${turn.blessed ? ' · blessed: daisy' : ''}`,
+            art: Icons.get('sprout')
+          });
+          UI.buildGarden();
+        }
+        break;
+      }
+      case 'yearSeeds': D.grantSeeds(Number(arg) || 50); break;
+      case 'petalBuy':
+        ok = Game.buyPetal('daisy', arg);
+        deny = 'Not enough Saved Seeds, or the skill is at its cap.';
+        break;
+      case 'fallFill':
+        ok = D.fillFall() > 0;
+        deny = Game.fallOpen() ? 'The bed is already full.' : 'Fall opens at the first Turn.';
+        break;
+      case 'fallRipen':
+        ok = D.ripenFall() > 0;
+        deny = 'Nothing is growing in Fall.';
+        break;
+      case 'fallHarvestAll': {
+        let paid = 0;
+        let windfell = false;
+        S.fall.grid.forEach((c, i) => {
+          const r = Game.fallHarvest(i);
+          if (r) { paid += r.payout; windfell = windfell || r.windfall; }
+        });
+        ok = paid > 0;
+        deny = 'Nothing in Fall is ripe.';
+        if (ok) {
+          UI.toast({
+            title: windfell ? 'Windfall!' : 'Fall harvest',
+            body: `+${fmt(paid)} gold${windfell ? ' — the whole bed paid +50%' : ''}`,
+            art: Icons.get('coin')
+          });
+        }
+        break;
+      }
       case 'clear': D.clearAll(); break;
       default: ok = false;
     }
@@ -1744,8 +1825,10 @@
         Sound.play('coin');
         UI.toast({ title: 'Pockets filled!', body: '+50 gems', art: Icons.get('gem') });
       } else if (a === 'cheatGold') {
-        S.credits += 1000000;
-        Game.save(); Game.emit('currency'); Game.emit('panels');
+        /* Through the flagged faucet, so cheated gold never reaches the
+           year's earnings accumulator — the mint must stay clean. */
+        Game.Dev.grantGold(1000000);
+        Game.emit('panels');
         Sound.play('coin');
         UI.toast({ title: 'Pockets filled!', body: '+1,000,000 gold', art: Icons.get('coin') });
       } else if (a === 'wonder') {

@@ -5,6 +5,51 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## The Garden Year — phase 1's deliberate seams (2026-08-29)
+
+The engine shipped with no UI, so several truths are temporarily invisible or mislabelled.
+All of these resolve in phases 2–3; they are listed so nobody "fixes" them early or is
+surprised on a fresh save.
+
+### The seed picker's locked rows still say "Level N"
+
+`renderSeeds()` renders a locked seed's chip from the retired `unlockLevel` field, but the
+gate is now a one-time gold price — a fresh save sees "Level 1" on a Bluebell that actually
+wants 150K gold. The owner's grandfathered save sees nothing locked, so the live game reads
+unchanged. Phase 2 ships the real unlock rows. Same family: a year-gated plot's chip and
+deny toast still say "Lv 3" while the true refusal is "no Turn yet", and the level-up toast
+no longer announces seeds (they are not level-gated), which shortens levels 2–17's fanfare
+until the ladder re-authors in slice D.
+
+### The Almanac still renders the frozen mastery ladder
+
+`masteryGoal()` answers with the tier the save was on, forever, and the yield chip reads
+"+0%" because `masteryMult()` retired. Honest but odd-looking. Phase 2 replaces the row with
+petal tracks.
+
+### The Tally's tier-reading needs the owner's confirmation
+
+Phase 1 implemented **cumulative tiers** (the reasoning and the contradicting examples are in
+the 2026-08-29 build entry of [10-decision-log.md](10-decision-log.md) and flagged inline in
+[33-year-one-economy.md](33-year-one-economy.md#the-tally)). If the owner rules the other
+way, `projectedTally()` is one line and three doc numbers change.
+
+### `q_discover_5` straddles the year boundary on a fresh save
+
+Discover quests read lifetime `discovered` and survive the Turn, so they resolve across
+years rather than jamming — but a fresh save's `q_discover_5` (rep 12) will hold an active
+slot from mid-year-one until rose unlocks in year two. Doc 33 re-keyed exactly four quests
+and deliberately not this one. Watch it in the first playtest.
+
+### Turning often is seed-optimal, and the veterancy knob rewards it
+
+`sqrt(coinsEarned)` makes four 100K years mint roughly twice a single 400K year, and the
+`(1 + 0.2 × turns)` veterancy bonus compounds with turn count — `tools/year-sim.js`'s
+turn-at-the-gate strategy banks more Saved Seeds than wall-riding (it still loses on coins
+and on petals-that-matter, which is why the daisy rush stays dead). Nothing exploitable in
+year one, but the optimal cadence is "turn at exactly 100K", which may not be the ritual the
+design wants. A phase-4 question with `minCoins`, `veterancy` and `mintK` as the dials.
+
 ## Balance
 
 ### Orchid is a throughput trap — half fixed

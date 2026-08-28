@@ -38,9 +38,16 @@ loadScript('game.js');
 const G = globalThis.Game;
 const S = G.state;
 
+/* Put the save where a level-N player would be. Seeds stopped unlocking on
+   the level bar with the Garden Year, so the helper also marks paid every
+   unlock a player of that era would have owned — the tests that say
+   "a level-17 veteran" still mean what they meant. */
 const unlockTo = (level) => {
   S.rep = G.cumulativeRep(level);
   S.level = level;
+  DATA.seeds.forEach((s) => {
+    if ((s.unlockLevel || 1) <= level && G.seedUnlockPrice(s.id) > 0) S.seedUnlocks[s.id] = true;
+  });
 };
 
 /* The real key game.js writes to. Guessing it wrong makes every save test pass
@@ -445,24 +452,37 @@ const LIVE_QUESTS = DATA.quests.filter((q) => !q.paused);
 const ladderRep = LIVE_QUESTS.reduce((a, q) => a + q.rep, 0);
 check('the ladder reaches Eternal (level 17)', ladderRep >= 760, `sum ${ladderRep}`);
 
-group('seed unlocks follow the level');
+group('seed unlocks are one-time prices, not levels');
 G.reset();
-check('level 1 unlocks exactly three seeds', DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length === 3);
-check('daisy is plantable at level 1', G.seedUnlocked('daisy') === true);
-check('lavender is not', G.seedUnlocked('lavender') === false);
+check('a fresh game holds exactly two free seeds', DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length === 2);
+check('daisy and tulip are the free pair', G.seedUnlocked('daisy') && G.seedUnlocked('tulip'));
+check('bluebell is the first wall, at 150K', !G.seedUnlocked('bluebell') && G.seedUnlockPrice('bluebell') === 150000);
+check('the ladder compounds at ×1.5', G.seedUnlockPrice('lavender') === 225000
+  && G.seedUnlockPrice('rose') === Math.round(150000 * 1.5 * 1.5), `${G.seedUnlockPrice('rose')}`);
+check('the top seed lands near 98.5M', Math.abs(G.seedUnlockPrice('eternal') / 98526528 - 1) < 0.001,
+  `${G.seedUnlockPrice('eternal')}`);
 S.credits = 1e6;
-check('a gated seed cannot be planted', G.plant(0, G.seedById('lavender')) === false && !S.grid[0].seed);
-unlockTo(17);
-check('level 17 unlocks all nineteen', DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length === 19);
-check('eternal is plantable at 17', G.plant(0, G.seedById('eternal')) === true);
+check('a walled seed cannot be planted', G.plant(0, G.seedById('bluebell')) === false && !S.grid[0].seed);
+check('a level says nothing about it any more', (() => { S.rep = G.cumulativeRep(17); S.level = 17;
+  return !G.seedUnlocked('bluebell'); })());
+S.credits = 149999;
+check('the unlock refuses short a coin', G.unlockSeed('bluebell') === false && !G.seedUnlocked('bluebell'));
+S.credits = 150000;
+check('it charges exactly the price', G.unlockSeed('bluebell') === true && S.credits === 0);
+check('and the seed is plantable forever after', (S.credits = 1e6, G.plant(0, G.seedById('bluebell')) === true));
+check('a second unlock is refused, never re-charged', (S.credits = 1e6, G.unlockSeed('bluebell') === false && S.credits === 1e6));
+check('skipping ahead is allowed and priced the same', (S.credits = 5e6,
+  G.unlockSeed('moonflower') === true && S.credits === 5e6 - G.seedUnlockPrice('moonflower')));
 
-group('plots open on the level bar, then cost gold');
+group('plots open on the level bar, then cost gold — after the first Turn');
 G.reset();
 S.credits = 1e6;
 check('plot 5 is gated at level 1', G.unlockPlot(4) === false && S.grid[4].locked);
 check('Land Deed is maxed until a plot opens', G.upgradeMaxed('plotExpansion') === true);
 unlockTo(3);
-check('plot 5 is buyable at level 3', G.unlockPlot(4) === true && S.grid[4].locked === false);
+check('year one refuses plot 5 even at level 3', G.unlockPlot(4) === false && S.grid[4].locked);
+S.year.turnsCompleted = 1;
+check('plot 5 is buyable at level 3 once a Turn is complete', G.unlockPlot(4) === true && S.grid[4].locked === false);
 check('Land Deed still cannot skip to plot 6', G.upgradeMaxed('plotExpansion') === true);
 unlockTo(6);
 check('Land Deed can buy the next opened plot', G.upgradeMaxed('plotExpansion') === false);
@@ -474,7 +494,11 @@ S.credits = 1e9;
 clearGarden();
 S.upgrades.plot1Harvester = 19;
 G.tick(0.1);
-check('a maxed harvester still plants an unlocked seed', S.grid[0].seed === 'bluebell', `got ${S.grid[0].seed}`);
+check('a maxed harvester plants the best FREE seed on a fresh save', S.grid[0].seed === 'tulip', `got ${S.grid[0].seed}`);
+S.grid[0] = { locked: false, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0, packDrop: false };
+G.unlockSeed('bluebell');
+G.tick(0.1);
+check('a paid unlock widens what it plants', S.grid[0].seed === 'bluebell', `got ${S.grid[0].seed}`);
 
 group('quest counters listen to events, not inventory');
 G.reset();
@@ -662,6 +686,13 @@ const saveOf = (extra) => {
   delete base.rep;
   delete base.level;
   delete base.quests;
+  /* These saves predate the Garden Year as well as the rep track. */
+  delete base.year;
+  delete base.savedSeeds;
+  delete base.petals;
+  delete base.seedUnlocks;
+  delete base.blessed;
+  delete base.fall;
   Object.assign(base, extra);
   return base;
 };
@@ -830,8 +861,7 @@ Math.random = rngRarity;
 group('almanac milestones pay once');
 G.reset();
 S.credits = 1e6;
-S.rep = G.cumulativeRep(3);
-S.level = 3;
+unlockTo(3);
 S.discovered = { daisy: 1, tulip: 1, bluebell: 1, lavender: 1 };
 S.almanacClaimed = [];
 const gemsBefore = S.gems;
@@ -889,7 +919,7 @@ check('the decade pattern keeps going', goalStr(11) === 'total:500' && goalStr(1
   `${goalStr(11)} / ${goalStr(13)}`);
 check('an undiscovered seed has no goal', G.masteryGoal('daisy') === null);
 
-group('mastery tiers pay themselves and lift that seed only');
+group('the mastery ladder is retired — frozen, silent, and flat');
 G.reset();
 S.credits = 1e9;
 clearGarden();
@@ -903,22 +933,19 @@ const harvestDaisies = (n) => {
   }
   return last;
 };
-check('a fresh seed starts at 1.0×', G.masteryMult('daisy') === 1 && G.masteryOf('daisy') === 0);
+check('a fresh seed reads 1.0×', G.masteryMult('daisy') === 1 && G.masteryOf('daisy') === 0);
 const ninth = harvestDaisies(9);
-check('nine harvests do not reach tier 1', G.masteryOf('daisy') === 0 && ninth.mastery.length === 0);
-check('the goal reads back as tier 1 of 10 total', JSON.stringify(G.masteryGoal('daisy'))
-  === JSON.stringify({ tier: 1, track: 'total', qty: 10, have: 9 }), JSON.stringify(G.masteryGoal('daisy')));
 const tenthDaisy = harvestDaisies(1);
-check('the tenth harvest completes tier 1', G.masteryOf('daisy') === 1 && tenthDaisy.mastery.length === 1);
-check('the completing harvest was paid at the old rate', tenthDaisy.payout === ninth.payout,
+check('the tenth harvest no longer completes a tier', G.masteryOf('daisy') === 0 && tenthDaisy.mastery.length === 0);
+check('the payout is flat across the old tier boundary', tenthDaisy.payout === ninth.payout,
   `${ninth.payout} then ${tenthDaisy.payout}`);
-check('the tier moved the multiplier', Math.abs(G.masteryMult('daisy') - 1.05) < 1e-9,
-  `${G.masteryMult('daisy')}`);
-const eleventh = harvestDaisies(1);
-check('the next harvest is paid at the new rate',
-  eleventh.payout === Math.round(ninth.payout * 1.05), `${ninth.payout} then ${eleventh.payout}`);
-check('a tier pays once and does not re-pay', eleventh.mastery.length === 0 && G.masteryOf('daisy') === 1);
-check('another seed is untouched', G.masteryOf('tulip') === 0 && G.masteryMult('tulip') === 1);
+check('a recorded tier is a record, not a multiplier', (() => {
+  S.mastery.daisy = 7;
+  const flat = G.masteryMult('daisy') === 1;
+  const paid = harvestDaisies(1).payout;
+  S.mastery.daisy = 0;
+  return flat && paid === ninth.payout;
+})());
 Math.random = rngMastery;
 
 group('rarity tiers count that rarity or better');
@@ -936,42 +963,21 @@ S.mastery.daisy = 3;                       // tier 4: 2 Epic or better
 check('a Rare does not count toward an Epic goal', G.masteryGoal('daisy').have === 3,
   JSON.stringify(G.masteryGoal('daisy')));
 
-group('one harvest can cross more than one tier');
+group('retirement means no harvest ever advances or pays the ladder again');
 G.reset();
-S.credits = 1e9;
 clearGarden();
-S.discovered.daisy = 24;
-S.rarityCounts.daisy = { rare: 3, epic: 0, legend: 0 };
+const rngRetired = Math.random;
+Math.random = () => 0.9;                   // misses the 5% harvest gem drop
+S.discovered.daisy = 1e9;                  // counts that would once have crossed many tiers at once
+S.rarityCounts.daisy = { rare: 1e9, epic: 1e9, legend: 0 };
 S.mastery.daisy = 0;
-const rngCross = Math.random;
-Math.random = () => 0.75;                  // a Rare: 70 common / 20 rare on the table
+const gemsBeforeRetired = S.gems;
 S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false };
-const crossing = G.harvest(0);
-Math.random = rngCross;
-check('the roll was a Rare', crossing.rarity.key === 'rare', crossing.rarity.key);
-check('it paid tiers 1, 2 and 3 at once', crossing.mastery.map((t) => t.tier).join(',') === '1,2,3',
-  JSON.stringify(crossing.mastery.map((t) => t.tier)));
-check('the multiplier moved by all three', Math.abs(G.masteryMult('daisy') - 1.15) < 1e-9,
-  `${G.masteryMult('daisy')}`);
-
-group('gems land on every fifth tier and nowhere else');
-G.reset();
-clearGarden();
-const gemTiers = [];
-for (let t = 1; t <= 12; t += 1) {
-  G.state.mastery.daisy = t - 1;
-  G.state.discovered.daisy = 1e9;
-  G.state.rarityCounts.daisy = { rare: 1e9, epic: 1e9, legend: 0 };
-  const gemsBefore = S.gems;
-  S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false };
-  const res = G.harvest(0);
-  const tierPaid = res.mastery.find((x) => x.tier === t);
-  if (tierPaid && tierPaid.gems > 0) gemTiers.push(t);
-  check(`tier ${t} gem grant matches the rule`,
-    (t % DATA.masteryGemEvery === 0) === Boolean(tierPaid && tierPaid.gems > 0)
-    && (!tierPaid || S.gems >= gemsBefore));
-}
-check('only tiers 5 and 10 paid a gem', gemTiers.join(',') === '5,10', gemTiers.join(','));
+const retiredHarvest = G.harvest(0);
+Math.random = rngRetired;
+check('the tiers stay where the record left them', G.masteryOf('daisy') === 0);
+check('the payload carries no mastery moment', retiredHarvest.mastery.length === 0);
+check('no mastery gem is ever paid again', S.gems === gemsBeforeRetired, `${S.gems} vs ${gemsBeforeRetired}`);
 
 group('mastery records are lifetime, not inventory');
 G.reset();
@@ -994,17 +1000,24 @@ S.apiary.wax = 5;
 G.startCraft('tea');
 check('crafting does not decrease rarityCounts', JSON.stringify(G.rarityCountsOf('daisy')) === countsBeforeSpend);
 
-group('mastery backfill is bounded by bestRarity and pays no gems');
+group('mastery backfill is bounded by bestRarity, and an old save converts once');
 G.reset();
 const priorMastery = JSON.parse(JSON.stringify(S));
 delete priorMastery.mastery;
 delete priorMastery.rarityCounts;
+/* A genuine pre-Year save: none of the Year's keys exist on it. */
+delete priorMastery.year;
+delete priorMastery.savedSeeds;
+delete priorMastery.petals;
+delete priorMastery.seedUnlocks;
+delete priorMastery.blessed;
+delete priorMastery.fall;
 priorMastery.discovered = { daisy: 500, tulip: 500, bluebell: 1 };
 priorMastery.bestRarity = { daisy: 'common', tulip: 'rare', bluebell: 'legend' };
 priorMastery.gems = 0;
 priorMastery.flowers = {};
 store['gw-save'] = JSON.stringify(priorMastery);
-G.load();
+const masteryLoaded = G.load();
 check('a common-only seed is credited no rarities',
   JSON.stringify(G.rarityCountsOf('daisy')) === JSON.stringify({ rare: 0, epic: 0, legend: 0 }),
   JSON.stringify(G.rarityCountsOf('daisy')));
@@ -1014,16 +1027,24 @@ check('a Rare-best seed is credited rares but never epics',
 check('an estimate never exceeds the harvests that happened',
   G.rarityCountsOf('bluebell').rare + G.rarityCountsOf('bluebell').epic
   + G.rarityCountsOf('bluebell').legend <= 1, JSON.stringify(G.rarityCountsOf('bluebell')));
-check('backfilled tiers still grant the yield', G.masteryOf('daisy') > 0 && G.masteryMult('daisy') > 1,
-  `${G.masteryOf('daisy')} tiers`);
-check('a common-only seed stalls on its first rarity tier', G.masteryOf('daisy') === 1,
-  `${G.masteryOf('daisy')} tiers`);
-check('rarity credit carries a Rare-best seed further', G.masteryOf('tulip') > G.masteryOf('daisy'),
-  `${G.masteryOf('tulip')} vs ${G.masteryOf('daisy')}`);
-check('backfill pays no gems', S.gems === 0, `${S.gems}`);
+/* The old build's counts still earn their tiers on the way out the door, and
+   the whole ladder converts to Saved Seeds — 2 per tier, silently. */
+check('the earned tiers are credited before converting', G.masteryOf('daisy') === 1
+  && G.masteryOf('tulip') > G.masteryOf('daisy'),
+  `daisy ${G.masteryOf('daisy')}, tulip ${G.masteryOf('tulip')}`);
+const convertedTiers = DATA.seeds.reduce((n, s) => n + G.masteryOf(s.id), 0);
+check('the conversion grants 2 Saved Seeds per tier', masteryLoaded.yearGrant
+  && masteryLoaded.yearGrant.grant === 2 * convertedTiers
+  && S.savedSeeds === masteryLoaded.yearGrant.grant,
+  JSON.stringify(masteryLoaded.yearGrant));
+check('the retired multiplier stays flat regardless', G.masteryMult('tulip') === 1);
+check('backfill and conversion pay no gems', S.gems === 0, `${S.gems}`);
 const masteryBefore = G.masteryOf('tulip');
-G.load();
-check('a second load does not advance again', G.masteryOf('tulip') === masteryBefore);
+const seedsBefore = S.savedSeeds;
+const secondLoad = G.load();
+check('a second load neither advances nor converts again',
+  G.masteryOf('tulip') === masteryBefore && S.savedSeeds === seedsBefore && secondLoad.yearGrant == null,
+  JSON.stringify(secondLoad.yearGrant));
 G.reset();
 
 /* ---------------- verbs and adjacency ---------------- */
@@ -2407,6 +2428,7 @@ G.reset();
 clearGarden();
 clearMastery();
 S.credits = 1e9;
+S.seedUnlocks[PIP.attract.seed] = true;   // Pip's bluebell sits behind the first unlock wall now
 S.discovered[PIP.attract.seed] = PIP.attract.count - 1;
 const seedDef = G.seedById(PIP.attract.seed);
 S.grid[0].locked = false;
@@ -4032,6 +4054,568 @@ check('a keeper who is not a real creature is dropped on load', (() => {
   G.load();
   return S.apiary.keepers.length === 0;
 })());
+
+/* ================= THE GARDEN YEAR — the doc-33 sim-test bill =================
+
+   Items 1–6 and 8–18 of docs/33-year-one-economy.md, landed with slice A's
+   phase 1. Item 7 (Storm-Kissed's mutation share) waits for slice B, when the
+   signature exists. Where a bill item is already asserted by an older group
+   (the 1.4x curve, gems-per-hour flatness), the group here covers the part
+   the Year added. */
+
+/* Deep-equal via JSON — every field in this save is JSON round-trippable. */
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const freshCell = () => ({ locked: false, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0, packDrop: false });
+
+group('bill 1 — the never-resets partition, field by field');
+/* Generated from the rule: EVERYTHING not named in the clears column survives
+   verbatim. The rig puts something non-default in every field, the Turn runs
+   with no blessing and nothing in flight, and every top-level key must land
+   in exactly one of the two lists — a future field that joins the save
+   without joining a list fails the completeness check at the bottom. */
+G.reset();
+clearGarden();
+S.credits = 500000;
+S.gems = 7;
+S.decor = [{ id: 'gnome' }];
+S.boosters = { bloom: clock + 900 };
+S.boostInv = { bloom: 2, seedrush: 1, fortune: 0, golden: 0 };
+S.weatherCall = { id: 'rain', from: clock - 10, until: clock + 200 };
+S.cards = { firstlight_0: 2 };
+S.packs = 3;
+S.setsClaimed = [];
+S.stats = { totalTaps: 41, totalCrits: 3, totalHarvests: 29, wonders: 1 };
+S.wonder = { until: 0, last: clock - 500 };
+S.apiary.cells[0] = { kind: 'hive', at: clock, jars: ['daisy'] };
+S.apiary.honey = { daisy: 2 };
+S.apiary.wax = 3;
+S.apiary.shelf = { daisy: 1 };
+S.flowers = { daisy: 4 };
+S.craft = [{ id: 'tea', doneAt: clock + 999 }];
+S.goods = { tea: 1 };
+S.bench.basket = [0];
+S.bench.cells[0] = { tier: 1 };
+S.bench.stock = { posy: 1 };
+S.critters.pip = { since: clock - 5000, fed: clock - 100, fedUntil: clock + 3600, gifts: 1, met: true, level: 2, tending: true };
+S.pairsSeen = ['nightbloom'];
+S.mementos = { mossy_pebble: 2 };
+S.luckyPacks = 1;
+S.seen = { intro: true, plot: true, apiary: true };
+S.harvestsThisSession = 29;
+S.lastSeen = clock - 60;
+unlockTo(8);
+S.quests.active = [{ id: 'q_tap_25', progress: 7 }];
+S.quests.done = ['q_plant_1'];
+S.discovered = { daisy: 30, tulip: 4, bluebell: 6 };
+S.bestRarity = { daisy: 'rare' };
+S.almanacClaimed = [];
+S.mastery = { daisy: 2 };
+S.rarityCounts = { daisy: { rare: 3, epic: 0, legend: 0 } };
+S.savedSeeds = 40;
+S.petals = { daisy: { rich: 1, quick: 0, sig: 0 } };
+S.blessed = [{ seed: 'daisy', year: 1 }];
+S.year = {
+  number: 2, coinsEarned: 250000, turnsCompleted: 1,
+  stats: { orders: 12, windfalls: 1, species: 2, speciesSeen: { daisy: true, tulip: true }, legendaries: 1, bestCombo: 60 }
+};
+/* A veteran garden: every plot open, one annual growing (not ready). */
+S.grid.forEach((c, i) => { S.grid[i] = freshCell(); });
+S.grid[2] = { ...freshCell(), seed: 'daisy', plantedAt: clock, grow: 9999 };
+S.upgrades.tapPower = 2; S.tap.power = 3;
+S.upgrades.critChance = 1; S.tap.critChance = 0.06;
+S.upgrades.comboMeter = 1; S.tap.comboMax = 60;
+S.tap.combo = 12;
+/* Fall mid-flight: a crop and the Century Bloom, both growing. */
+S.fall.grid[0] = { seed: 'strawberry', plantedAt: clock - 100, grow: 1200, ready: false, windfall: false };
+S.fall.grid[5] = { seed: 'century', plantedAt: clock - 86400, grow: 1209600, ready: false, windfall: false };
+S.fall.bedPaid = false;
+
+const yrBefore = JSON.parse(JSON.stringify(S));
+const yrExpectedPouch = Math.round(
+  DATA.year.mintK * Math.sqrt(yrBefore.year.coinsEarned)
+  * (1 + DATA.year.veterancy * yrBefore.year.turnsCompleted)
+  * (() => { const t = G.projectedTally(); return t.mult; })()
+);
+const yrTurn = G.turnYear(null);
+check('the Turn ran', Boolean(yrTurn));
+
+const SURVIVES = ['version', 'gems', 'tickets', 'decor', 'boosters', 'weatherCall', 'cards', 'packs',
+  'setsClaimed', 'stats', 'wonder', 'apiary', 'flowers', 'craft', 'goods', 'bench', 'critters',
+  'pairsSeen', 'mementos', 'luckyPacks', 'prefs', 'seen', 'quests', 'rep', 'level', 'discovered',
+  'bestRarity', 'almanacClaimed', 'mastery', 'rarityCounts', 'seedUnlocks', 'petals', 'blessed',
+  'fall', 'harvestsThisSession', 'lastSeen'];
+const CLEARS = ['credits', 'grid', 'upgrades', 'tap', 'boostInv', 'stand', 'year', 'savedSeeds'];
+SURVIVES.forEach((k) => {
+  check(`\`${k}\` survives the Turn verbatim`, same(S[k], yrBefore[k]),
+    `${JSON.stringify(S[k]).slice(0, 80)} vs ${JSON.stringify(yrBefore[k]).slice(0, 80)}`);
+});
+check('every field of the save is classified — no key dodges the partition',
+  same(Object.keys(S).sort(), [...SURVIVES, ...CLEARS].sort()),
+  Object.keys(S).filter((k) => !SURVIVES.includes(k) && !CLEARS.includes(k)).join(','));
+check('gold zeroes to the fresh purse, after the mint', S.credits === 100);
+check('the mint paid exactly the projection', S.savedSeeds === yrBefore.savedSeeds + yrExpectedPouch
+  && yrTurn.pouch === yrExpectedPouch, `${S.savedSeeds} vs ${yrBefore.savedSeeds} + ${yrExpectedPouch}`);
+check('every badge is wiped', Object.values(S.upgrades).every((v) => v === 0));
+check('the tap fields re-derive from the wiped badges',
+  S.tap.power === 1 && S.tap.critChance === 0.05 && S.tap.critMult === 10
+  && S.tap.comboMax === 50 && S.tap.holdInterval === 900);
+check('the combo zeroes with the board', S.tap.combo === 0);
+check('the boost inventory clears; the running boost survives on its own clock',
+  Object.values(S.boostInv).every((v) => v === 0) && S.boosters.bloom === yrBefore.boosters.bloom);
+check('the growing annual is forfeit and every plot stands empty',
+  S.grid.every((c) => !c.seed && !c.packDrop && !c.mutation));
+check('plots 5–8 close; plots 1–4 stay open',
+  S.grid.every((c, i) => c.locked === (i > 3)));
+check('the year rolls over', S.year.number === 3 && S.year.turnsCompleted === 2
+  && S.year.coinsEarned === 0);
+check('bill 15 — the Tally counters zero at the Turn',
+  same(S.year.stats, { orders: 0, windfalls: 0, species: 0, speciesSeen: {}, legendaries: 0, bestCombo: 0 }));
+check('the Stand\'s lifetime counters survive', S.stand.delivered === yrBefore.stand.delivered
+  && S.stand.skipped === yrBefore.stand.skipped);
+
+group('bill 2 — the Turn kills no running timer, and nothing in flight is eaten silently');
+check('the Fall crop\'s clock is untouched', same(S.fall.grid[0], yrBefore.fall.grid[0]));
+check('the Century Bloom\'s clock is untouched', same(S.fall.grid[5], yrBefore.fall.grid[5]));
+G.reset();
+clearGarden();
+S.year.coinsEarned = 200000;
+S.year.turnsCompleted = 1;   // a veteran, so Fall is open for the timer half
+S.fall.grid[3] = { seed: 'apple', plantedAt: clock - 50, grow: 28800, ready: false, windfall: false };
+S.grid[0] = { ...freshCell(), seed: 'daisy', plantedAt: clock - 100, grow: 10, ready: true };
+S.grid[1] = { ...freshCell(), seed: 'tulip', plantedAt: clock, grow: 9999 };
+S.grid[4].packDrop = true;
+const rngTurn = Math.random;
+Math.random = () => 0.5;   // the auto-collect lands Common, no gem, no Wonder, no procs
+const packsBeforeTurn = S.packs;
+const inFlight = G.turnYear(null);
+Math.random = rngTurn;
+check('the ready bloom auto-collected', inFlight.collected === 1);
+check('it paid into the year BEFORE the mint', inFlight.pouch === Math.round(
+  DATA.year.mintK * Math.sqrt(200000 + G.seedById('daisy').yield) * (1 + DATA.year.veterancy * 1)),
+  `pouch ${inFlight.pouch}`);
+check('the plot-parked pack was banked, never destroyed',
+  S.packs === packsBeforeTurn + 1 && inFlight.bankedPacks === 1);
+check('the growing tulip was forfeit — the one stated cost', !S.grid[1].seed);
+check('the mid-grow apple kept its clock', S.fall.grid[3].seed === 'apple'
+  && S.fall.grid[3].plantedAt === clock - 50);
+
+group('bill 3 — the mint reads earnings, never balance');
+const mintRigFor = (spendEverything) => {
+  G.reset();
+  clearGarden();
+  S.year.coinsEarned = 300000;
+  S.credits = 300000;
+  if (spendEverything) {
+    while (S.credits >= G.upgradePrice('tapPower')) G.buyUpgrade('tapPower');
+  }
+  const r = G.turnYear(null);
+  return r.pouch;
+};
+const pouchHoarded = mintRigFor(false);
+const pouchSpent = mintRigFor(true);
+check('a spend-everything-then-Turn run pouches identically', pouchHoarded === pouchSpent && pouchHoarded > 0,
+  `${pouchHoarded} vs ${pouchSpent}`);
+
+group('bill 4 — credit() is the single tested faucet, and cheats never reach it');
+G.reset();
+clearGarden();
+const earnedNow = () => S.year.coinsEarned;
+let yrMark = earnedNow();
+const rngFaucet = Math.random;
+Math.random = () => 0.5;
+const tapPaid = G.tapFlower().gain;
+check('a tap earns into the year', earnedNow() === yrMark + tapPaid, `${earnedNow()} vs ${yrMark + tapPaid}`);
+S.grid[0] = { ...freshCell(), seed: 'daisy', plantedAt: clock - 100, grow: 10, ready: true };
+yrMark = earnedNow();
+const harvestPaid = G.harvest(0).payout;
+check('a harvest earns into the year', earnedNow() === yrMark + harvestPaid);
+Math.random = rngFaucet;
+S.flowers = { daisy: 2 };
+yrMark = earnedNow();
+const soldFor = G.sell('flower', 'daisy', true);
+check('a sale earns into the year', earnedNow() === yrMark + soldFor);
+S.quests.active = [{ id: 'q_harvest_1', progress: 1 }, { id: 'q_plant_1', progress: 1 }];
+S.quests.done = [];
+S.rep = 0; S.level = 1;
+yrMark = earnedNow();
+G.claimQuest('q_harvest_1');
+G.claimQuest('q_plant_1');   // ten rep total: the level-up pays its coin grant
+check('quest gold and the level-up coins earn into the year',
+  S.level === 2 && earnedNow() === yrMark + DATA.levelCoinGrant * 2,
+  `${earnedNow()} vs ${yrMark + DATA.levelCoinGrant * 2}`);
+yrMark = earnedNow();
+S.critters.pip = { since: clock - 1e6, fed: clock - 1e6, fedUntil: clock + 3600, gifts: 3, met: true, level: 1, tending: true };
+const keepsakePay = G.collectKeepsakes('pip');
+check('keepsakes earn into the year', keepsakePay && earnedNow() === yrMark + keepsakePay.credits);
+/* The offline grant in reconcile() routes through the same faucet. */
+S.upgrades.autoHarvest = 1;
+S.upgrades.plot1Harvester = 1;
+S.grid[0] = { ...freshCell() };
+yrMark = earnedNow();
+S.lastSeen = clock - 3600;
+const wokeUp = G.reconcile();
+check('the offline grant earns into the year', wokeUp && wokeUp.earned > 0
+  && earnedNow() === yrMark + wokeUp.earned, JSON.stringify(wokeUp && wokeUp.earned));
+/* And the cheats do not. */
+yrMark = earnedNow();
+const creditsBeforeCheat = S.credits;
+G.Dev.grantGold(1e6);
+check('cheated gold lands in the wallet', S.credits === creditsBeforeCheat + 1e6);
+check('cheated gold never reaches the mint', earnedNow() === yrMark);
+S.tap.holdInterval = 180;   // the floor: Quick Grip's effect refuses, and the price refunds
+S.credits = 1e6;
+yrMark = earnedNow();
+check('a refunded purchase is not income', G.buyUpgrade('holdSpeed') === false
+  && S.credits === 1e6 && earnedNow() === yrMark);
+yrMark = earnedNow();
+G.Dev.feedCritters();
+check('the feed-everyone cheat stays off the mint', earnedNow() === yrMark);
+check('the year driver IS earning, by design', (G.Dev.driveYear(500), earnedNow() === yrMark + 500));
+
+group('bill 5 — yield = cost × 1.4 for every seed, Fall\'s included; petals leave the curve alone');
+check('all nineteen flowers hold the curve', DATA.seeds.every((s) => s.yield === Math.round(s.cost * 1.4)));
+check('all nine Fall plants hold the curve', DATA.fall.plants.every((p) => p.yield === Math.round(p.cost * 1.4)));
+G.reset();
+clearGarden();
+S.savedSeeds = 1e6;
+const daisyYieldBefore = G.seedById('daisy').yield;
+G.buyPetal('daisy', 'rich');
+G.buyPetal('daisy', 'rich');
+check('buying petals never edits seed.yield', G.seedById('daisy').yield === daisyYieldBefore);
+const rngPetal = Math.random;
+Math.random = () => 0.5;
+S.grid[0] = { ...freshCell(), seed: 'daisy', plantedAt: clock - 100, grow: 10, ready: true };
+const petalPaid = G.harvest(0).payout;
+Math.random = rngPetal;
+check('two Rich Bloom petals pay exactly +60% at harvest',
+  petalPaid === Math.round(daisyYieldBefore * 1.6), `${petalPaid} vs ${Math.round(daisyYieldBefore * 1.6)}`);
+check('the petal cost ladder matches the formula: daisy 15, seed 10 ≈ 426, seed 19 ≈ 12K',
+  G.petalCost('tulip', 'rich') === Math.round(15 * 1.45)
+  && G.petalCost(DATA.seeds[9].id, 'rich') === Math.round(15 * Math.pow(1.45, 9))
+  && G.petalCost('eternal', 'rich') === Math.round(15 * Math.pow(1.45, 18)),
+  `${G.petalCost(DATA.seeds[9].id, 'rich')} / ${G.petalCost('eternal', 'rich')}`);
+check('a signature petal would price at ×0.6 of the shared formula',
+  G.petalCost('daisy', 'sig') === Math.round(15 * 0.6));
+check('the shared skills cap at five petals', (() => {
+  for (let i = 0; i < 9; i += 1) G.buyPetal('daisy', 'rich');
+  return G.petalsOf('daisy').rich === 5 && G.buyPetal('daisy', 'rich') === false;
+})());
+
+group('bill 6 — gems stay flat and untouched by the Year');
+G.reset();
+const gemBefore = DATA.seeds.map((s) => G.gemChanceFor(s));
+S.savedSeeds = 1e6;
+G.buyPetal('daisy', 'rich');
+G.buyPetal('daisy', 'quick');
+check('no petal changes any gem chance', DATA.seeds.every((s, i) => G.gemChanceFor(s) === gemBefore[i]));
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+const gemsBeforeFall = S.gems;
+for (let i = 0; i < DATA.fall.plots; i += 1) G.fallPlant(i, 'strawberry');
+S.fall.grid.forEach((c) => { if (c.seed) c.plantedAt = clock - c.grow - 1; });
+G.processFall(clock);
+for (let i = 0; i < DATA.fall.plots; i += 1) G.fallHarvest(i);
+check('a whole Fall bed drops no gems', S.gems === gemsBeforeFall);
+
+group('bill 8 — Quick Sprout at cap, Sprinklers, a Keeper wall and Seed Rush hold the 0.3 floor');
+G.reset();
+clearGarden();
+S.credits = 1e9;
+S.savedSeeds = 1e9;
+S.seedUnlocks.bluebell = true;
+for (let i = 0; i < 5; i += 1) G.buyPetal('daisy', 'quick');
+S.upgrades.autoWater = 10;
+S.boostInv.seedrush = 1;
+G.activateBoost('seedrush');
+G.plant(1, G.seedById('bluebell'));
+G.plant(3, G.seedById('bluebell'));
+G.plant(0, G.seedById('daisy'));
+const floorRatio = S.grid[0].grow / G.seedById('daisy').grow;
+check('the whole stack clamps at the floor, never through it',
+  floorRatio >= 0.3 - 1e-12, `${floorRatio}`);
+check('and the clamp binds exactly at 0.3 for this stack', Math.abs(floorRatio - 0.3) < 1e-12, `${floorRatio}`);
+S.boosters = {};
+
+group('bill 9 — the Turn regenerates every Stand slot from the unlock pool');
+G.reset();
+clearGarden();
+unlockTo(17);
+S.apiary.cells[0] = { kind: 'hive', at: clock, jars: [] };
+S.year.coinsEarned = 200000;
+for (let i = 0; i < STAND.slots; i += 1) G.standGenerate(i);
+/* Strand an order naming a bloom, then shrink the unlock pool to prove the
+   regenerated board draws only from what the fresh year can grow. */
+S.seedUnlocks = { bluebell: true };
+G.turnYear(null);
+check('all three slots hold fresh orders', S.stand.slots.every(Boolean));
+check('no order names a bloom outside the unlock pool', S.stand.slots.every((o) =>
+  o.needs.every((n) => n.any || ['daisy', 'tulip', 'bluebell'].includes(n.of))),
+  JSON.stringify(S.stand.slots.map((o) => o.needs.map((n) => n.of))));
+
+group('bill 10 — petal effects reach passiveIncomeRate(), so offline mirrors online');
+G.reset();
+clearGarden();
+S.upgrades.autoHarvest = 1;
+S.upgrades.plot2Harvester = 2;   // plants up to tulip on plot 2
+const rateBefore = G.passiveIncomeRate();
+check('the rig earns while away at all', rateBefore > 0, `${rateBefore}`);
+S.savedSeeds = 1e9;
+G.buyPetal('tulip', 'rich');
+const rateRich = G.passiveIncomeRate();
+const tulip = G.seedById('tulip');
+const rarityMean = DATA.rarity.reduce((a, r) => a + r.w * r.m, 0) / DATA.rarity.reduce((a, r) => a + r.w, 0);
+const expectRich = (tulip.yield * rarityMean * 1.3 - tulip.cost) / tulip.grow;
+check('Rich Bloom lifts the offline rate by exactly its harvest share',
+  Math.abs(rateRich - expectRich) < 1e-9, `${rateRich} vs ${expectRich}`);
+G.buyPetal('tulip', 'quick');
+const rateQuick = G.passiveIncomeRate();
+const expectQuick = (tulip.yield * rarityMean * 1.3 - tulip.cost) / (tulip.grow * 0.94);
+check('Quick Sprout shortens the offline cycle too',
+  Math.abs(rateQuick - expectQuick) < 1e-9, `${rateQuick} vs ${expectQuick}`);
+
+group('bill 11 — an unlock is charged once per lifetime; the Turn never re-charges');
+G.reset();
+clearGarden();
+S.credits = 150000;
+S.year.coinsEarned = 200000;
+G.unlockSeed('bluebell');
+check('the unlock spent the wallet', S.credits === 0);
+G.turnYear(null);
+check('the unlock survives the Turn', G.seedUnlocked('bluebell') === true);
+S.credits = 1e6;
+check('and can never be charged again', G.unlockSeed('bluebell') === false && S.credits === 1e6);
+
+group('bill 12 — the windfall pays for a full ripe bed, once per fill');
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+for (let i = 0; i < DATA.fall.plots; i += 1) G.fallPlant(i, 'strawberry');
+/* Seven ripe of eight: no windfall. */
+for (let i = 0; i < 7; i += 1) S.fall.grid[i].plantedAt = clock - 9999;
+G.processFall(clock);
+check('seven of eight ripe arms nothing', S.year.stats.windfalls === 0
+  && S.fall.grid.every((c) => !c.windfall));
+S.fall.grid[7].plantedAt = clock - 9999;
+G.processFall(clock);
+check('the eighth ripening arms the whole bed, once', S.year.stats.windfalls === 1
+  && S.fall.grid.every((c) => c.windfall));
+const strawberry = G.fallPlantById('strawberry');
+const windfallPay = G.fallHarvest(0);
+check('a windfall harvest pays +50% exactly',
+  windfallPay.windfall && windfallPay.payout === Math.round(strawberry.yield * 1.5), `${windfallPay.payout}`);
+check('a replant mid-collection joins the next fill, not this one',
+  (G.fallPlant(0, 'strawberry'), !S.fall.grid[0].windfall));
+S.fall.grid[0].plantedAt = clock - 9999;
+G.processFall(clock);
+check('re-ripening cannot re-arm a paid bed', S.year.stats.windfalls === 1);
+const plainPay0 = G.fallHarvest(0);
+check('and the replanted plot pays plain', !plainPay0.windfall
+  && plainPay0.payout === strawberry.yield, `${plainPay0.payout}`);
+for (let i = 1; i < DATA.fall.plots; i += 1) G.fallHarvest(i);
+check('an emptied bed resets the cycle', S.fall.bedPaid === false);
+for (let i = 0; i < DATA.fall.plots; i += 1) G.fallPlant(i, 'strawberry');
+S.fall.grid.forEach((c) => { c.plantedAt = clock - 9999; });
+G.processFall(clock);
+check('the next full fill arms a second windfall', S.year.stats.windfalls === 2);
+for (let i = 0; i < DATA.fall.plots; i += 1) G.fallHarvest(i);
+
+group('bill 12b — a growing Century Bloom neither blocks nor collects the windfall');
+check('only one Century Bloom may grow', G.fallPlant(0, 'century')
+  && G.fallPlant(1, 'century') === false);
+for (let i = 1; i < DATA.fall.plots; i += 1) G.fallPlant(i, 'strawberry');
+S.fall.grid.forEach((c, i) => { if (i > 0) c.plantedAt = clock - 9999; });
+G.processFall(clock);
+check('seven crops around a growing Century still windfall', S.year.stats.windfalls === 3
+  && !S.fall.grid[0].windfall);
+const centuryDef = G.fallPlantById('century');
+S.fall.grid[0].plantedAt = clock - centuryDef.grow - 1;
+G.processFall(clock);
+const centuryPay = G.fallHarvest(0);
+check('the Century Bloom pays its own enormous plain price, never the windfall',
+  centuryPay.century && !centuryPay.windfall && centuryPay.payout === centuryDef.yield,
+  `${centuryPay.payout}`);
+
+group('Fall crops are not flowers');
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+S.quests.active = [{ id: 'q_harvest_1', progress: 0 }, { id: 'q_daisy_5', progress: 0 }];
+S.quests.done = [];
+const yrFlowersBefore = JSON.stringify(S.flowers);
+const yrBasketBefore = S.bench.basket.length;
+G.fallPlant(0, 'strawberry');
+S.fall.grid[0].plantedAt = clock - 9999;
+const cropPaid = G.fallHarvest(0);
+check('a crop pays coins and earns into the year', cropPaid.payout === 2800);
+check('it writes no discovery and drops no bloom', !S.discovered.strawberry
+  && JSON.stringify(S.flowers) === yrFlowersBefore && S.bench.basket.length === yrBasketBefore);
+check('it counts a generic harvest quest', S.quests.active.find((q) => q.id === 'q_harvest_1').progress === 1);
+check('it can never count a keyed flower quest', S.quests.active.find((q) => q.id === 'q_daisy_5').progress === 0);
+check('fall plants gate on gold alone in v1 — no unlock walls inside Fall',
+  (S.credits = 3500, G.fallPlant(1, 'mint') === true));
+
+group('bill 14 — the Tally reads year counters, tiers accumulate, and the cap holds');
+G.reset();
+/* The design doc’s own example: 47 orders lands tiers 1 and 2 → ×1.25. */
+G.Dev.setYearStats({ orders: 47 });
+let tally = G.projectedTally();
+check('47 orders pays +25%, the doc’s ×1.25', tally.lines.length === 1
+  && Math.abs(tally.lines[0].bonus - 0.25) < 1e-9 && Math.abs(tally.mult - 1.25) < 1e-9,
+  JSON.stringify(tally));
+G.Dev.setYearStats({ orders: 7 });
+tally = G.projectedTally();
+check('a line below its first tier renders nothing and adds nothing',
+  tally.lines.length === 0 && tally.mult === 1, JSON.stringify(tally));
+G.Dev.setYearStats({ orders: 50, windfalls: 15, species: 15, legendaries: 8, bestCombo: 80 });
+tally = G.projectedTally();
+check('a maxed year sums past the cap and clamps at ×2.0 exactly',
+  tally.mult === DATA.year.tallyCap && tally.sum > 1, `sum ${tally.sum}, mult ${tally.mult}`);
+
+group('bill 15 — the Tally never reads a lifetime record');
+G.reset();
+S.stats = { totalTaps: 1e6, totalCrits: 1e5, totalHarvests: 1e6, wonders: 50 };
+S.discovered = {}; DATA.seeds.forEach((s) => { S.discovered[s.id] = 1e6; });
+S.rarityCounts = {}; DATA.seeds.forEach((s) => { S.rarityCounts[s.id] = { rare: 1e5, epic: 1e4, legend: 1e3 }; });
+S.stand.delivered = 1e4;
+tally = G.projectedTally();
+check('a lifetime of records with a zeroed year scores nothing',
+  tally.lines.length === 0 && tally.mult === 1, JSON.stringify(tally));
+check('species counts the year, not the almanac', (() => {
+  const rng = Math.random; Math.random = () => 0.5;
+  S.credits = 1e9;
+  S.grid[0] = { ...freshCell(), seed: 'daisy', plantedAt: clock - 100, grow: 10, ready: true };
+  G.harvest(0);
+  Math.random = rng;
+  return S.year.stats.species === 1 && S.year.stats.speciesSeen.daisy === true;
+})());
+check('a second harvest of the same species counts once', (() => {
+  const rng = Math.random; Math.random = () => 0.5;
+  S.grid[0] = { ...freshCell(), seed: 'daisy', plantedAt: clock - 100, grow: 10, ready: true };
+  G.harvest(0);
+  Math.random = rng;
+  return S.year.stats.species === 1;
+})());
+check('a legendary harvest counts the Tally’s counter', (() => {
+  G.Dev.armRarity('legend');
+  S.grid[0] = { ...freshCell(), seed: 'daisy', plantedAt: clock - 100, grow: 10, ready: true };
+  G.harvest(0);
+  return S.year.stats.legendaries === 1;
+})());
+check('a tap writes the best combo', (() => {
+  S.tap.combo = 30;
+  G.tapFlower();
+  return S.year.stats.bestCombo === 31;
+})());
+
+group('bill 16 — the blessing writes exactly one Rich Bloom petal, once per Turn');
+G.reset();
+clearGarden();
+S.year.coinsEarned = 200000;
+const blessTurn = G.turnYear('tulip');
+check('the chosen flower gained one free petal', G.petalsOf('tulip').rich === 1
+  && blessTurn.blessed === 'tulip');
+check('provenance is kept, at the year that blessed it',
+  S.blessed.length === 1 && S.blessed[0].seed === 'tulip' && S.blessed[0].year === 1,
+  JSON.stringify(S.blessed));
+S.year.coinsEarned = 200000;
+const badBless = G.turnYear('never_a_seed');
+check('an unknown flower blesses nothing, and the Turn still runs',
+  badBless && badBless.blessed === null && S.blessed.length === 1);
+S.petals.rose = { rich: 5, quick: 0, sig: 0 };
+S.seedUnlocks.rose = true;
+S.year.coinsEarned = 200000;
+const capBless = G.turnYear('rose');
+check('a capped skill cannot be blessed past its cap',
+  capBless && capBless.blessed === null && G.petalsOf('rose').rich === 5);
+
+group('bill 17 — the Turn refuses below either gate, and cheap Turns stay closed');
+G.reset();
+clearGarden();
+G.Dev.setYearStats({ orders: 50, windfalls: 15, species: 15, legendaries: 8, bestCombo: 80 });
+S.year.coinsEarned = 99999;
+check('a rich Tally cannot carry a year under the coins floor',
+  G.turnReady() === false && G.turnYear('daisy') === null);
+S.year.coinsEarned = 100000;
+check('the floor itself passes', G.turnReady() === true);
+const savedMinCoins = DATA.year.minCoins;
+DATA.year.minCoins = 0;
+G.Dev.setYearStats({ orders: 0, windfalls: 0, species: 0, legendaries: 0, bestCombo: 0 });
+S.year.coinsEarned = 5000;
+check('the projected-mint gate refuses on its own', G.turnReady() === false,
+  `pouch ${G.projectedMint().pouch}`);
+S.year.coinsEarned = 12000;
+check('and passes at ten projected seeds', G.turnReady() === true
+  && G.projectedMint().pouch >= DATA.year.minSeeds, `pouch ${G.projectedMint().pouch}`);
+DATA.year.minCoins = savedMinCoins;
+S.year.coinsEarned = 150000;
+G.turnYear(null);
+check('the moment after a Turn the gates are shut again', G.turnReady() === false);
+S.year.coinsEarned = 8000;   // where the seeds-only gate once let the daisy rush in
+check('the old daisy-rush entry point stays shut', G.turnReady() === false);
+
+group('bill 18 — plots 5–8 refuse purchase in year one, and nothing owned is re-locked');
+G.reset();
+unlockTo(12);
+S.credits = 1e9;
+check('every high plot refuses while no Turn is complete',
+  [4, 5, 6, 7].every((i) => G.unlockPlot(i) === false && S.grid[i].locked));
+S.year.turnsCompleted = 1;
+check('one Turn opens the ladder at the same level gates',
+  [4, 5, 6, 7].every((i) => G.unlockPlot(i) === true && !S.grid[i].locked));
+/* A migrated save that already owned them keeps them: the pre-Year fixture
+   carries open plots and zero Turns, and load() must not re-lock ground. */
+G.reset();
+const plotSave = JSON.parse(JSON.stringify(S));
+['year', 'savedSeeds', 'petals', 'seedUnlocks', 'blessed', 'fall'].forEach((k) => { delete plotSave[k]; });
+plotSave.grid.forEach((c) => { c.locked = false; });
+plotSave.stats = { totalTaps: 5, totalCrits: 0, totalHarvests: 2, wonders: 0 };
+globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(plotSave));
+G.load();
+check('a migrated save keeps every plot it owned', S.grid.every((c) => !c.locked)
+  && S.year.turnsCompleted === 0);
+
+group('the Year survives a save round trip');
+G.reset();
+S.year = { number: 3, coinsEarned: 123456.78, turnsCompleted: 2,
+  stats: { orders: 4, windfalls: 1, species: 2, speciesSeen: { daisy: true, tulip: true }, legendaries: 1, bestCombo: 44 } };
+S.savedSeeds = 77;
+S.petals = { daisy: { rich: 2, quick: 1, sig: 0 } };
+S.seedUnlocks = { bluebell: true, lavender: true };
+S.blessed = [{ seed: 'daisy', year: 1 }, { seed: 'bluebell', year: 2 }];
+S.fall.grid[2] = { seed: 'pumpkin', plantedAt: clock - 500, grow: 10800, ready: false, windfall: false };
+S.fall.bedPaid = true;
+G.saveNow();
+const yrRound = JSON.parse(JSON.stringify(S));
+G.load();
+check('year, pouch, petals, unlocks, blessings and Fall all come back',
+  same(S.year, yrRound.year) && S.savedSeeds === 77
+  && same(S.petals, yrRound.petals) && same(S.seedUnlocks, yrRound.seedUnlocks)
+  && same(S.blessed, yrRound.blessed) && S.fall.grid[2].seed === 'pumpkin'
+  && S.fall.bedPaid === true);
+check('a junk Fall plant is dropped on load, not crashed on', (() => {
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.fall.grid[0] = { seed: 'ghost_crop', plantedAt: 1, grow: 1 };
+  raw.fall.grid[3] = { seed: 'century', plantedAt: clock, grow: 1209600 };
+  raw.fall.grid[4] = { seed: 'century', plantedAt: clock, grow: 1209600 };
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return S.fall.grid[0].seed === null && S.fall.grid[3].seed === 'century' && S.fall.grid[4].seed === null;
+})());
+G.reset();
+
+group('the quest ladder holds 777 with the four wall-collider re-keys');
+const liveLadder = DATA.quests.filter((q) => !q.paused);
+check('the live ladder still totals 777', liveLadder.reduce((a, q) => a + q.rep, 0) === 777,
+  `${liveLadder.reduce((a, q) => a + q.rep, 0)}`);
+[['q_rose_3', 'q_daisy_15'], ['q_lavender_3', 'q_tulip_8'],
+  ['q_marigold_3', 'q_harvest_30'], ['q_peony_3', 'q_plant_30']].forEach(([oldId, standIn]) => {
+  const oldQ = DATA.quests.find((q) => q.id === oldId);
+  const newQ = DATA.quests.find((q) => q.id === standIn);
+  check(`${oldId} is benched and ${standIn} carries its ${oldQ.rep} rep`,
+    oldQ.paused === true && newQ && !newQ.paused && newQ.rep === oldQ.rep);
+  check(`${standIn} needs nothing behind an unlock wall`,
+    !newQ.key || ['daisy', 'tulip', 'bluebell'].includes(newQ.key));
+});
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

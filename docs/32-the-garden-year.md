@@ -1,6 +1,9 @@
 # The Garden Year
 
-**Status: the design, decided 2026-08-29. Nothing here is built.** This is the master document for
+**Status: the design, decided 2026-08-29. The simulation engine (phase 1 of
+[34-build-plan.md](34-build-plan.md)) is BUILT — the Turn, the mint, the Tally, petals, unlock
+prices and Fall all run headlessly under the live game; every surface here is still unbuilt.**
+This is the master document for
 the game's new shape — the seasonal world, the Turn (prestige), Saved Seeds, flower mastery, and
 how orders, creatures and every existing system sit inside it. Numbers live in
 **[33-year-one-economy.md](33-year-one-economy.md)**; every one of them ships in `data.js`,

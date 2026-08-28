@@ -20,8 +20,26 @@ const Game = (() => {
     };
     PLOT_AUTOPLANTERS.forEach(({ key }) => { upgrades[key] = 0; });
     return {
-      version: 3,
+      version: 4,
       credits: 100,
+      /* The Garden Year. `coinsEarned` is the mint's whole input: a
+         lifetime-this-year accumulator written only by credit(), never
+         decremented, zeroed at the Turn. `stats` are the Tally's counters —
+         year-scoped, never lifetime, never spendable. */
+      year: {
+        number: 1,
+        coinsEarned: 0,
+        turnsCompleted: 0,
+        stats: { orders: 0, windfalls: 0, species: 0, speciesSeen: {}, legendaries: 0, bestCombo: 0 }
+      },
+      savedSeeds: 0,
+      petals: {},
+      seedUnlocks: {},
+      blessed: [],
+      fall: {
+        grid: Array(DATA.fall.plots).fill(0).map(() => ({ seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false })),
+        bedPaid: false
+      },
       tickets: 0,
       gems: 0,
       tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50, holdInterval: 900 },
@@ -65,6 +83,19 @@ const Game = (() => {
   const state = defaultState();
   let lastAutoHarvest = 0;
 
+  /* The single credit faucet. Every grant routes through here so the year's
+     earnings accumulator counts by construction and no future faucet can
+     silently miss it. `cheat` (the dev buttons) and `refund` (migrations,
+     failed purchases) skip the accumulator: testers keep their buttons, the
+     pacing data stays clean, and a refund was never income. Spending stays a
+     plain subtraction — the mint reads earnings, never balance. */
+  function credit(amount, opts) {
+    const n = Math.max(0, amount || 0);
+    state.credits += n;
+    if (!opts || (!opts.cheat && !opts.refund)) state.year.coinsEarned += n;
+    return n;
+  }
+
   /* ---------------- save / load ---------------- */
   let saveQueued = false;
   function save() {
@@ -106,7 +137,7 @@ const Game = (() => {
     });
     state.decor = owned.map((d) => ({ id: d.id }));
     if (!count) return null;
-    state.credits += refund.credits;
+    credit(refund.credits, { refund: true });
     state.gems += refund.gems;
     state.tickets += refund.tickets;
     return { ...refund, count };
@@ -120,6 +151,32 @@ const Game = (() => {
     const gems = Math.round(tickets / 5);
     state.gems += gems;
     return { tickets, gems };
+  }
+
+  /** A save from before the Garden Year enters it mid-flight, exactly once —
+      keyed on the missing `year` key, the boostInv pattern. Two rules:
+      nobody loses a seed they could already plant (discovered, or passed its
+      old level gate, is grandfathered free), and old Bloom Mastery tiers
+      convert to a one-time Saved Seeds grant, silently. `coinsEarned` starts
+      at zero on purpose: no lifetime coin figure exists anywhere in the save,
+      so there is nothing honest to backfill from. Runs after the backfills so
+      the counts it reads are the repaired ones. */
+  function migrateYear(parsed) {
+    if (parsed.year && typeof parsed.year === 'object') return null;
+    const lv = levelFromRep(state.rep);
+    DATA.seeds.forEach((s, i) => {
+      if (i < YEAR().freeSeeds) return;
+      if ((state.discovered[s.id] || 0) > 0 || (s.unlockLevel || 1) <= lv) {
+        state.seedUnlocks[s.id] = true;
+      }
+    });
+    /* Credit the tiers the recorded counts had already earned before
+       converting — an old save stalled mid-ladder gets its honest total. */
+    DATA.seeds.forEach((s) => advanceMastery(s.id, false));
+    const tiers = DATA.seeds.reduce((n, s) => n + masteryOf(s.id), 0);
+    const grant = Math.round((YEAR().masteryConvert || 0) * tiers);
+    state.savedSeeds += grant;
+    return { grant, tiers, unlocked: Object.keys(state.seedUnlocks).length };
   }
 
   function load() {
@@ -325,7 +382,7 @@ const Game = (() => {
       );
       const decorRefund = migrateDecor(parsed.version || 1);
       const ticketGrant = migrateTickets(parsed);
-      state.version = 3;
+      state.version = 4;
       lastAutoHarvest = 0;
 
       if (typeof state.upgrades.plot1Gardener === 'number') {
@@ -349,6 +406,75 @@ const Game = (() => {
       if (typeof state.packs !== 'number') state.packs = 0;
       if (!Array.isArray(state.setsClaimed)) state.setsClaimed = [];
 
+      /* The Garden Year's nested state, each field rebuilt defensively —
+         a save from before the Year has none of it and comes back on the
+         defaults, then migrateYear() below grandfathers what it had earned. */
+      {
+        const y = parsed.year && typeof parsed.year === 'object' ? parsed.year : {};
+        const ys = y.stats && typeof y.stats === 'object' ? y.stats : {};
+        const count = (v) => Math.max(0, Math.round(Number(v) || 0));
+        const speciesSeen = {};
+        if (ys.speciesSeen && typeof ys.speciesSeen === 'object') {
+          DATA.seeds.forEach((s) => { if (ys.speciesSeen[s.id]) speciesSeen[s.id] = true; });
+        }
+        state.year = {
+          number: Math.max(1, count(y.number) || 1),
+          coinsEarned: Math.max(0, Number(y.coinsEarned) || 0),
+          turnsCompleted: count(y.turnsCompleted),
+          stats: {
+            orders: count(ys.orders),
+            windfalls: count(ys.windfalls),
+            species: Object.keys(speciesSeen).length,
+            speciesSeen,
+            legendaries: count(ys.legendaries),
+            bestCombo: count(ys.bestCombo)
+          }
+        };
+        state.savedSeeds = Math.max(0, Number(parsed.savedSeeds) || 0);
+        state.petals = {};
+        const pp = parsed.petals && typeof parsed.petals === 'object' ? parsed.petals : {};
+        DATA.seeds.forEach((s) => {
+          const r = pp[s.id];
+          if (!r || typeof r !== 'object') return;
+          const rec = {
+            rich: Math.min(DATA.petals.shared.rich.cap, count(r.rich)),
+            quick: Math.min(DATA.petals.shared.quick.cap, count(r.quick)),
+            sig: count(r.sig)
+          };
+          if (rec.rich || rec.quick || rec.sig) state.petals[s.id] = rec;
+        });
+        state.seedUnlocks = {};
+        const su = parsed.seedUnlocks && typeof parsed.seedUnlocks === 'object' ? parsed.seedUnlocks : {};
+        DATA.seeds.forEach((s) => { if (su[s.id]) state.seedUnlocks[s.id] = true; });
+        state.blessed = (Array.isArray(parsed.blessed) ? parsed.blessed : [])
+          .filter((b) => b && DATA.seeds.some((s) => s.id === b.seed))
+          .map((b) => ({ seed: b.seed, year: Math.max(1, count(b.year) || 1) }));
+        /* Fall's grid is positional, so it is rebuilt to length like every
+           positional array in this save. A plant id that no longer exists is
+           dropped; a second Century Bloom (an edited save) is dropped too. */
+        const f = parsed.fall && typeof parsed.fall === 'object' ? parsed.fall : {};
+        const fg = Array.isArray(f.grid) ? f.grid : [];
+        let centuries = 0;
+        state.fall = {
+          grid: Array.from({ length: DATA.fall.plots }, (_, i) => {
+            const c = fg[i];
+            const def = c && c.seed ? DATA.fall.plants.find((p) => p.id === c.seed) : null;
+            if (!def) return { seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false };
+            if (def.century && ++centuries > 1) {
+              return { seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false };
+            }
+            return {
+              seed: def.id,
+              plantedAt: Number(c.plantedAt) || 0,
+              grow: Number(c.grow) > 0 ? Number(c.grow) : def.grow,
+              ready: false,
+              windfall: Boolean(c.windfall)
+            };
+          }),
+          bedPaid: Boolean(f.bedPaid)
+        };
+      }
+
       const now = nowSeconds();
       state.grid.forEach((cell) => {
         if (!cell) return;
@@ -364,6 +490,18 @@ const Game = (() => {
           cell.plantedAt = now;
         }
       });
+      /* Fall's clocks get the main grid's sanitisation rules: a pre-epoch
+         timestamp reads as elapsed-seconds corruption and ripens now, a
+         future one is a clock change and clamps. */
+      state.fall.grid.forEach((cell) => {
+        if (!cell.seed) return;
+        if (typeof cell.grow !== 'number' || cell.grow <= 0) cell.grow = 1;
+        if (typeof cell.plantedAt !== 'number' || cell.plantedAt <= 0 || cell.plantedAt < 1e8) {
+          cell.plantedAt = now - cell.grow;
+        } else if (cell.plantedAt > now + 1e5) {
+          cell.plantedAt = now;
+        }
+      });
       let progressionGrant = null;
       if (!Object.prototype.hasOwnProperty.call(parsed, 'rep')) {
         progressionGrant = migrateProgression();
@@ -371,13 +509,17 @@ const Game = (() => {
       ensureProgression();
       backfillDiscovered();
       const almanacGrant = grantAlmanacMilestones();
-      // Silent by design: a backfilled tier grants its yield but has no moment to celebrate.
+      // Silent by design: a backfilled record has no moment to celebrate.
       const masteryBackfill = backfillMastery();
+      // After the backfills, which give a legacy save the honest counts the
+      // grandfather rules and the mastery conversion read.
+      const yearGrant = migrateYear(parsed);
       if (migrated || decorRefund || progressionGrant || ticketGrant
-        || almanacGrant.paid.length || masteryBackfill.changed) saveNow();
+        || almanacGrant.paid.length || masteryBackfill.changed || yearGrant) saveNow();
       return {
         migrated, fresh: false, decorRefund, progressionGrant, ticketGrant,
-        almanacGrant: almanacGrant.paid.length ? almanacGrant : null
+        almanacGrant: almanacGrant.paid.length ? almanacGrant : null,
+        yearGrant
       };
     } catch (err) {
       console.warn('Save load failed', err);
@@ -733,10 +875,10 @@ const Game = (() => {
       const maxSeedIndex = Math.min(level - 1, highestUnlockedSeedIndex(), DATA.seeds.length - 1);
       if (maxSeedIndex < 0) return;
       const seed = DATA.seeds[maxSeedIndex];
-      const grow = seed.grow * growModifier() * keeperModifier(idx);
+      const grow = plantGrowth(seed, idx);
       if (grow <= 0) return;
       const gross = seed.yield * EXPECTED_RARITY_MULT * yieldBonus
-        * masteryMult(seed.id) * verbPayoutMult(idx);
+        * petalMult(seed.id) * verbPayoutMult(idx);
       const perCycle = Math.max(0, gross - seed.cost);
       const rate = 1 / grow;
       cycles += rate;
@@ -778,7 +920,7 @@ const Game = (() => {
 
     const earned = away >= WELCOME_MIN_AWAY ? offlineEarnings(away) : { coins: 0, capped: false };
     if (earned.coins > 0) {
-      state.credits += earned.coins;
+      credit(earned.coins);
       emit('currency');
     }
 
@@ -903,17 +1045,53 @@ const Game = (() => {
     return Math.max(0, (Number(rep) || 0) - cumulativeRep(lv));
   }
 
+  /* Kept for migrations and the seed picker's interim label. Retired as a
+     gate since the Garden Year: levels stop gating seeds, one-time unlock
+     prices gate them instead — see seedUnlocked() below. */
   function seedUnlockLevel(id) {
     const s = typeof id === 'string' ? seedById(id) : id;
     return (s && s.unlockLevel) || 1;
   }
+
+  /* ---------------- seed unlocks — where the spread lives ----------------
+
+     Each seed from #3 up carries a one-time gold unlock price, permanent
+     across Turns. This is the wall the whole prestige loop is timed against:
+     per-plant spreads cannot wall while yield = 1.4x cost holds, so the
+     spread lives here. Skipping ahead is allowed — the sim showed it is
+     strictly dominated, so the sequence needs no enforcement. */
+  const YEAR = () => DATA.year;
+  const seedIndexOf = (id) => DATA.seeds.findIndex((s) => s.id === id);
+
+  function seedUnlockPrice(id) {
+    const i = seedIndexOf(id);
+    if (i < YEAR().freeSeeds) return 0;
+    return Math.round(YEAR().unlockBase * Math.pow(YEAR().unlockRatio, i - YEAR().freeSeeds));
+  }
   function seedUnlocked(id) {
-    return seedUnlockLevel(id) <= levelFromRep(state.rep);
+    const i = seedIndexOf(id);
+    if (i < 0) return false;
+    if (i < YEAR().freeSeeds) return true;
+    return state.seedUnlocks[id] === true;
+  }
+  function unlockSeed(id) {
+    if (seedIndexOf(id) < 0 || seedUnlocked(id)) return false;
+    const price = seedUnlockPrice(id);
+    if (state.credits < price) {
+      emit('deny', { reason: 'credits', need: price });
+      return false;
+    }
+    state.credits -= price;
+    state.seedUnlocks[id] = true;
+    save();
+    emit('currency');
+    emit('seedUnlock', { id, price });
+    emit('panels');
+    return true;
   }
   function highestUnlockedSeedIndex() {
-    const lv = levelFromRep(state.rep);
     let max = -1;
-    DATA.seeds.forEach((s, i) => { if ((s.unlockLevel || 1) <= lv) max = i; });
+    DATA.seeds.forEach((s, i) => { if (seedUnlocked(s.id)) max = i; });
     return max;
   }
 
@@ -921,8 +1099,77 @@ const Game = (() => {
     const table = DATA.plotUnlockLevel || [];
     return table[idx] || 1;
   }
+  /* Plots 5–8 also wait for the first Turn, so year one is played on four
+     plots and Turn 1's gift is Fall AND a bigger garden. Owned plots are
+     never re-locked by this — the gate only refuses a purchase. */
   function plotAvailable(idx) {
+    if (plotUnlockLevel(idx) > 1 && state.year.turnsCompleted < YEAR().plotTurnGate) return false;
     return levelFromRep(state.rep) >= plotUnlockLevel(idx);
+  }
+
+  /* ---------------- flower mastery — petals ----------------
+
+     Saved Seeds buy petals on a flower's Almanac card. Two shared skills on
+     every flower (Rich Bloom, Quick Sprout), a signature slot that ships with
+     slice B. Effects apply as a multiplier off the yield curve, the
+     masteryMult pattern — seed.yield is never edited, and there is no gem
+     skill and never will be. */
+  const PETALS = () => DATA.petals;
+
+  function petalsOf(id) {
+    const p = state.petals[id];
+    return {
+      rich: (p && p.rich) || 0,
+      quick: (p && p.quick) || 0,
+      sig: (p && p.sig) || 0
+    };
+  }
+
+  /** Price of the NEXT petal of a skill on a flower. */
+  function petalCost(id, skill) {
+    const i = seedIndexOf(id);
+    if (i < 0) return 0;
+    const owned = petalsOf(id)[skill] || 0;
+    return Math.round(
+      PETALS().base
+      * Math.pow(PETALS().seedRatio, i)
+      * Math.pow(PETALS().petalRatio, owned)
+      * (skill === 'sig' ? PETALS().signatureMult : 1)
+    );
+  }
+
+  function buyPetal(id, skill) {
+    /* Signatures arrive with slice B — nothing to buy on that track yet. */
+    if (skill !== 'rich' && skill !== 'quick') return false;
+    if (seedIndexOf(id) < 0) return false;
+    if (petalsOf(id)[skill] >= PETALS().shared[skill].cap) return false;
+    const cost = petalCost(id, skill);
+    if (state.savedSeeds < cost) {
+      emit('deny', { reason: 'seeds', need: cost });
+      return false;
+    }
+    state.savedSeeds -= cost;
+    if (!state.petals[id]) state.petals[id] = { rich: 0, quick: 0, sig: 0 };
+    state.petals[id][skill] += 1;
+    save();
+    emit('currency');
+    emit('petal', { id, skill, count: state.petals[id][skill], cost });
+    emit('panels');
+    return true;
+  }
+
+  /** Rich Bloom: applied at harvest and in passiveIncomeRate(), same commit. */
+  const petalMult = (id) => 1 + petalsOf(id).rich * PETALS().shared.rich.value;
+  /** Quick Sprout: baked in at plant time, like every growth bonus. */
+  const petalGrowMult = (id) => Math.max(0, 1 - petalsOf(id).quick * PETALS().shared.quick.value);
+
+  /* The whole growth stack in one place — sprinklers and boosts, Keepers,
+     Quick Sprout — clamped so the combined modifier can never fall through
+     the 0.3 floor however the pieces are tuned. Both the planting path and
+     passiveIncomeRate() read this, so offline always mirrors online. */
+  function plantGrowth(seedDef, idx) {
+    return seedDef.grow
+      * Math.max(0.3, growModifier() * keeperModifier(idx) * petalGrowMult(seedDef.id));
   }
 
   function todayKey() {
@@ -1050,7 +1297,7 @@ const Game = (() => {
 
   function applyReward(reward) {
     if (!reward) return;
-    if (reward.credits) state.credits += reward.credits;
+    if (reward.credits) credit(reward.credits);
     if (reward.gems) state.gems += reward.gems;
     if (reward.boost) giveBoost(reward.boost);
   }
@@ -1159,7 +1406,12 @@ const Game = (() => {
   }
 
   const masteryOf = (id) => state.mastery[id] || 0;
-  const masteryMult = (id) => 1 + (DATA.masteryYieldPerTier || 0) * masteryOf(id);
+  /* Old Bloom Mastery retired into petals with the Garden Year. The tiers a
+     save had earned converted once into Saved Seeds (migrateYear) and the
+     ladder froze: it no longer climbs, pays no gems, and multiplies nothing.
+     The recorded tiers stay as a lifetime record; petalMult() is the live
+     per-seed multiplier now. */
+  const masteryMult = () => 1;
 
   function masteryGoal(id) {
     if (!((state.discovered[id] || 0) > 0)) return null;
@@ -1200,16 +1452,14 @@ const Game = (() => {
       state.rarityCounts[seedId] = c;
     }
     const granted = grantAlmanacMilestones();
-    // Counts are recorded before the ladder is walked, so one harvest can cross
-    // more than one tier.
-    const mastery = advanceMastery(seedId, true);
     return {
       first,
       count: state.discovered[seedId],
       best: state.bestRarity[seedId],
       milestones: granted.paid,
       levelGrants: granted.levelGrants,
-      mastery
+      // The mastery ladder is retired — nothing advances it any more.
+      mastery: []
     };
   }
 
@@ -1245,20 +1495,19 @@ const Game = (() => {
       state.rarityCounts[id] = c;
       changed = true;
     });
-    const granted = [];
-    DATA.seeds.forEach((s) => {
-      const tiers = advanceMastery(s.id, false);
-      if (tiers.length) granted.push({ id: s.id, tiers: tiers.length });
-    });
-    return { changed: changed || granted.length > 0, granted };
+    /* The ladder itself no longer advances here — the estimate exists so
+       creatures, the Almanac and the one-time mastery conversion in
+       migrateYear() have honest counts to read. */
+    return { changed, granted: [] };
   }
   function grantLevel(level) {
     const coins = (DATA.levelCoinGrant || 20) * level;
-    state.credits += coins;
+    credit(coins);
     const grant = (DATA.levelGrants && DATA.levelGrants[level]) || {};
+    // `seed` stays in the shape but is never filled: levels stopped unlocking
+    // seeds when the Garden Year's one-time prices took the gate over, and a
+    // level-up toast announcing a seed it did not unlock would be a lie.
     const out = { level, coins, seed: null, plot: null, hive: false, decor: null, gems: 0, boost: null };
-    const seed = DATA.seeds.find((s) => s.unlockLevel === level);
-    if (seed) out.seed = seed;
     const plotIdx = (DATA.plotUnlockLevel || []).findIndex((lv, i) => i > 3 && lv === level);
     if (plotIdx >= 0) out.plot = plotIdx;
     if (grant.hive) {
@@ -1268,7 +1517,7 @@ const Game = (() => {
         out.hive = true;
       } else {
         const extra = MEADOW.hive.cost(0);
-        state.credits += extra;
+        credit(extra);
         out.coins += extra;
       }
     }
@@ -1493,8 +1742,9 @@ const Game = (() => {
     gain *= comboMult();
     state.stats.totalTaps += 1;
     const rounded = Math.round(gain);
-    state.credits += rounded;
+    credit(rounded);
     state.tap.combo = Math.min(state.tap.comboMax, state.tap.combo + 1);
+    if (state.tap.combo > state.year.stats.bestCombo) state.year.stats.bestCombo = state.tap.combo;
     const sparked = tryWonder(WONDER.tapChance);
     const rainDance = rollRainDance();
     const beeSwarm = rollBeeSwarm();
@@ -1531,7 +1781,7 @@ const Game = (() => {
       ...cell,
       seed: seedDef.id,
       plantedAt: nowSeconds(),
-      grow: seedDef.grow * growModifier() * keeperModifier(idx),
+      grow: plantGrowth(seedDef, idx),
       aura: '',
       mutation: null,
       mutateAt: 0
@@ -1642,14 +1892,16 @@ const Game = (() => {
       );
     const yieldBase = sdef.yield * r.m;
     const yieldBonus = 1 + boostVal('globalCredits');
-    // Read before recordHarvest: the harvest that completes a tier is paid at the old rate.
-    const mastered = masteryMult(sdef.id);
+    /* Petals multiply here and in passiveIncomeRate(), never seed.yield —
+       the masteryMult pattern, inherited when the old ladder retired. */
     const payout = Math.round(
-      yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * mastered * verbMult * mutMult
+      yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * petalMult(sdef.id) * verbMult * mutMult
       * critterPayoutMult()
     );
 
-    state.credits += payout;
+    credit(payout);
+    if (r.key === 'legend') state.year.stats.legendaries += 1;
+    noteYearSpecies(sdef.id);
     // The bloom itself is kept as a crafting ingredient, on top of the credits.
     state.flowers[sdef.id] = (state.flowers[sdef.id] || 0) + 1;
     // ...and lands in the bench basket, never straight onto the bench, so an
@@ -2314,7 +2566,7 @@ const Game = (() => {
     const credits = (k.credits || 0) * n;
     const doubled = id === 'thistle' && pairActive('oddsandends');
     const gems = (k.gems || 0) * n * (doubled ? PAIR_TUNING.oddsAndEndsMult : 1);
-    state.credits += credits;
+    credit(credits);
     state.gems += gems;
     // The keepsake itself is kept, not just cashed in. Nothing spends these yet;
     // they are a lifetime record so a future craft or display has something real
@@ -2574,7 +2826,7 @@ const Game = (() => {
     else { state.goods[key] -= qty; if (!state.goods[key]) delete state.goods[key]; }
 
     const total = unit * qty;
-    state.credits += total;
+    credit(total);
     save();
     emit('currency');
     emit('panels');
@@ -2817,7 +3069,8 @@ const Game = (() => {
     const worth = Math.round(spent * tierDef.mult * variety);
     const paid = Math.max(order.coins, worth);
     order.paid = paid;
-    state.credits += paid;
+    credit(paid);
+    state.year.stats.orders += 1;
     /* addRep() hands back the level grants but does not announce them — every
        caller emits its own, and a delivery that levelled you up in silence would
        lose the biggest moment in the game. */
@@ -2864,6 +3117,262 @@ const Game = (() => {
     }
     if (changed) emit('panels');
     return changed;
+  }
+
+  /* ---------------- Fall — the hour-class garden ----------------
+
+     Opens at Turn 1. The garden's own grammar — eight plots, the flower in
+     the middle — on a different clock class and a different twist: the bed
+     pays together. Crops are NOT flowers: no rarity, no mutations, no gems,
+     no `discovered`, no pantry, no bench. The windfall is Fall's juice.
+
+     Phase 1 ships this as pure simulation; the board renders in phase 3. */
+
+  const FALL = () => DATA.fall;
+  const fallPlantById = (id) => FALL().plants.find((p) => p.id === id) || null;
+  const fallOpen = () => state.year.turnsCompleted >= YEAR().fallTurn;
+  const fallCell = (i) => state.fall.grid[i] || null;
+  const fallCellIsCentury = (c) => {
+    const d = c && c.seed ? fallPlantById(c.seed) : null;
+    return Boolean(d && d.century);
+  };
+  const fallCenturyGrowing = () => state.fall.grid.some(fallCellIsCentury);
+
+  /* The bed, for windfall purposes: every plot except one holding a Century
+     Bloom. A 14-day plant must not park the windfall, so it neither blocks
+     nor collects it. */
+  const fallBedCells = () => state.fall.grid.filter((c) => !fallCellIsCentury(c));
+
+  function fallPlant(idx, plantId) {
+    if (!fallOpen()) return false;
+    const def = fallPlantById(plantId);
+    const cell = fallCell(idx);
+    if (!def || !cell || cell.seed) return false;
+    /* One Century Bloom at a time — it is a showpiece, not a strategy. */
+    if (def.century && fallCenturyGrowing()) return false;
+    if (state.credits < def.cost) {
+      emit('deny', { reason: 'credits', need: def.cost });
+      return false;
+    }
+    state.credits -= def.cost;
+    cell.seed = def.id;
+    cell.plantedAt = nowSeconds();
+    cell.grow = def.grow;
+    cell.ready = false;
+    cell.windfall = false;
+    save();
+    emit('currency');
+    emit('fallPlant', { idx, plant: def });
+    return true;
+  }
+
+  /** Arm the windfall the moment the whole bed stands planted and ripe.
+      Marks land per-cell so a plot replanted mid-collection joins the next
+      fill, not this one — and `bedPaid` holds until the bed empties, which is
+      what makes the windfall once per fill. */
+  function checkFallWindfall() {
+    if (state.fall.bedPaid) return false;
+    const bed = fallBedCells();
+    if (!bed.length || !bed.every((c) => c.seed && c.ready)) return false;
+    bed.forEach((c) => { c.windfall = true; });
+    state.fall.bedPaid = true;
+    state.year.stats.windfalls += 1;
+    save();
+    emit('windfall', { plots: bed.length });
+    return true;
+  }
+
+  function processFall(now) {
+    let ripened = false;
+    state.fall.grid.forEach((cell, i) => {
+      if (!cell.seed) { cell.ready = false; return; }
+      const was = cell.ready;
+      cell.ready = now - cell.plantedAt >= cell.grow;
+      if (cell.ready && !was) { ripened = true; emit('fallReady', { idx: i }); }
+    });
+    if (ripened) checkFallWindfall();
+  }
+
+  function fallHarvest(idx) {
+    const cell = fallCell(idx);
+    if (!cell || !cell.seed) return null;
+    const def = fallPlantById(cell.seed);
+    if (!def || nowSeconds() - cell.plantedAt < cell.grow) return null;
+    cell.ready = true;
+    /* A bed that completed while the tab was shut still pays — arm before paying. */
+    checkFallWindfall();
+    const windfall = Boolean(cell.windfall) && !def.century;
+    const payout = Math.round(def.yield * (windfall ? 1 + FALL().windfall : 1));
+    credit(payout);
+    cell.seed = null;
+    cell.plantedAt = 0;
+    cell.grow = 0;
+    cell.ready = false;
+    cell.windfall = false;
+    /* The fill-cycle resets when the bed empties. */
+    if (fallBedCells().every((c) => !c.seed)) state.fall.bedPaid = false;
+    save();
+    emit('currency');
+    const payload = { idx, payout, plant: def, windfall, century: Boolean(def.century) };
+    emit('fallHarvest', payload);
+    /* Crops count generic harvest tracks and nothing else — a keyed quest
+       names a flower, and a crop id can never match one. */
+    noteQuest('harvest', def.id, 1);
+    return payload;
+  }
+
+  /* ---------------- the Turn — prestige ----------------
+
+     The year's whole earnings mint Saved Seeds, once, at the Turn. Invited
+     never forced: two gates decide when the invitation stands, and nothing
+     ever turns the year for you. Design in docs/32-the-garden-year.md,
+     numbers in docs/33-year-one-economy.md. */
+
+  /** Species-this-year counter for the Tally. Year-scoped on purpose — the
+      Tally must never read a lifetime record. */
+  function noteYearSpecies(seedId) {
+    const s = state.year.stats;
+    if (s.speciesSeen[seedId]) return;
+    s.speciesSeen[seedId] = true;
+    s.species += 1;
+  }
+
+  /** The Tally: each line reads one year-scoped counter, tier bonuses within
+      a line accumulate, lines sum, and the multiplier clamps at tallyCap. A
+      line that scored no bonus is not returned at all — the Tally only
+      celebrates, so there is no "×1.00, you failed" row to render. */
+  function projectedTally() {
+    const s = state.year.stats;
+    const lines = [];
+    let sum = 0;
+    (YEAR().tally || []).forEach((line) => {
+      const count = Math.max(0, Number(s[line.stat]) || 0);
+      let bonus = 0;
+      let tier = 0;
+      (line.tiers || []).forEach((t) => { if (count >= t.at) { bonus += t.bonus; tier += 1; } });
+      if (!tier) return;
+      lines.push({ id: line.id, label: line.label, count, bonus, tier });
+      sum += bonus;
+    });
+    return { lines, sum, mult: Math.min(YEAR().tallyCap, 1 + sum) };
+  }
+
+  /** What the Turn would mint right now. Reads the earnings accumulator and
+      nothing else — never the balance, so spending is provably seed-neutral. */
+  function projectedMint() {
+    const tally = projectedTally();
+    const base = YEAR().mintK * Math.sqrt(Math.max(0, state.year.coinsEarned))
+      * (1 + YEAR().veterancy * state.year.turnsCompleted);
+    return { base, tally, pouch: Math.round(base * tally.mult) };
+  }
+
+  /** Both gates: projected mint AND a coins floor. The floor is what keeps
+      many-cheap-Turns-a-day unprofitable. */
+  function turnReady() {
+    return projectedMint().pouch >= YEAR().minSeeds
+      && state.year.coinsEarned >= YEAR().minCoins;
+  }
+
+  /** The Turn, atomic: collect, bank, mint, bless, clear, roll over, save —
+      in one commit, so a Turn can never half-happen. Everything not cleared
+      here survives verbatim; that rule generates sim-test bill item 1. */
+  function turnYear(blessedId) {
+    if (!turnReady()) return null;
+    const now = nowSeconds();
+
+    /* In-flight rules, so nothing is ever silently eaten. A ready bloom is
+       auto-collected through the real harvest path and paid into the year
+       BEFORE the mint; an unopened pack is banked; a growing annual is the
+       one thing the Turn takes, and the ask says so before it happens. */
+    let collected = 0;
+    state.grid.forEach((cell, idx) => {
+      if (cell.locked || !cell.seed) return;
+      if (now - cell.plantedAt >= cell.grow && harvest(idx)) collected += 1;
+    });
+    let bankedPacks = 0;
+    state.grid.forEach((cell) => {
+      if (!cell.packDrop) return;
+      cell.packDrop = false;
+      state.packs += 1;
+      bankedPacks += 1;
+    });
+
+    /* The mint. */
+    const minted = projectedMint();
+    state.savedSeeds += minted.pouch;
+
+    /* The blessing: one free Rich Bloom petal on a chosen flower, written
+       like any bought petal, recorded for provenance. */
+    let blessed = null;
+    if (blessedId && seedIndexOf(blessedId) >= 0
+      && petalsOf(blessedId).rich < PETALS().shared.rich.cap) {
+      if (!state.petals[blessedId]) state.petals[blessedId] = { rich: 0, quick: 0, sig: 0 };
+      state.petals[blessedId].rich += 1;
+      state.blessed.push({ seed: blessedId, year: state.year.number });
+      blessed = blessedId;
+    }
+
+    /* The clears — the fast annuals in the main garden only. Fall, Winter
+       and every running long timer anywhere are never touched. Plots 5–8
+       close for the gold rebuy; a still-locked plot just stays locked. */
+    state.grid.forEach((cell, idx) => {
+      state.grid[idx] = {
+        locked: cell.locked || plotUnlockLevel(idx) > 1,
+        seed: null, plantedAt: 0, grow: 0, ready: false, aura: '',
+        luckyBug: false, mutation: null, mutateAt: 0, packDrop: false
+      };
+    });
+
+    const d = defaultState();
+    /* Gold zeroes to the fresh-game purse — after the mint, which read
+       earnings and so never cared what was left in the wallet. */
+    state.credits = d.credits;
+    /* Every badge resets; the rebuild is the ritual. The tap fields those
+       badges had written are re-derived immediately after the wipe, and the
+       combo zeroes with the board. An active boost or called sky is left to
+       expire on its own clock; the held inventory clears. */
+    Object.keys(state.upgrades).forEach((k) => { state.upgrades[k] = 0; });
+    state.tap.power = d.tap.power;
+    state.tap.critChance = d.tap.critChance;
+    state.tap.critMult = d.tap.critMult;
+    state.tap.comboMax = d.tap.comboMax;
+    state.tap.holdInterval = d.tap.holdInterval;
+    state.tap.combo = 0;
+    DATA.boosters.forEach((b) => { state.boostInv[b.id] = 0; });
+    lastAutoHarvest = 0;
+
+    /* The year rolls over before the Stand refills, so the fresh slots are
+       generated against the new year's truth. */
+    state.year.number += 1;
+    state.year.turnsCompleted += 1;
+    state.year.coinsEarned = 0;
+    state.year.stats = d.year.stats;
+
+    /* Every slot regenerates so no standing order names a bloom the fresh
+       year cannot yet grow — the pool reads seedUnlocks, which survive. */
+    for (let i = 0; i < STAND.slots; i += 1) {
+      state.stand.slots[i] = null;
+      state.stand.nextAt[i] = now;
+      standGenerate(i);
+    }
+
+    saveNow();
+    emit('currency');
+    emit('grid');
+    emit('panels');
+    const payload = {
+      pouch: minted.pouch,
+      base: minted.base,
+      tally: minted.tally,
+      blessed,
+      collected,
+      bankedPacks,
+      year: state.year.number,
+      turnsCompleted: state.year.turnsCompleted,
+      fallOpens: state.year.turnsCompleted === YEAR().fallTurn
+    };
+    emit('turn', payload);
+    return payload;
   }
 
   /* ---------------- shop ---------------- */
@@ -2927,7 +3436,7 @@ const Game = (() => {
     if (state.credits < cost) { emit('deny', { reason: 'credits', need: cost }); return false; }
     state.credits -= cost;
     const ok = UPGRADE_EFFECTS[key]();
-    if (ok === false) { state.credits += cost; return false; }
+    if (ok === false) { credit(cost, { refund: true }); return false; }
     save();
     emit('currency');
     emit('purchase', { kind: 'upgrade', key, cost });
@@ -3039,6 +3548,7 @@ const Game = (() => {
     produceHoney(now);
     processCraft(now);
     processStand();
+    processFall(now);
     refreshDaily();
   }
 
@@ -3190,7 +3700,7 @@ const Game = (() => {
       let n = 0;
       CREATURES.forEach((def) => {
         if (!critterTending(def.id)) return;
-        state.credits += food.cost;
+        credit(food.cost, { cheat: true });
         if (feedCritter(def.id, food.id)) n += 1;
         else state.credits -= food.cost;
       });
@@ -3239,6 +3749,101 @@ const Game = (() => {
       return set;
     },
 
+    /* ---- the Garden Year's drivers ----
+       Every one forces the real path: grants go through credit(), the Turn
+       runs turnYear(), petals are bought with buyPetal(). The one deliberate
+       split: grantGold is a CHEAT (gold only, the meter does not move) while
+       driveYear simulates legitimate earning (gold AND the meter), which is
+       how a whole year is driven in five minutes without contaminating what
+       "cheated gold never reaches the mint" is protecting. */
+
+    /** The cheat buttons' faucet. Flagged, so the pouch never sees it. */
+    grantGold(n) {
+      credit(Math.max(0, Math.round(Number(n) || 0)), { cheat: true });
+      save();
+      emit('currency');
+      return state.credits;
+    },
+
+    /** Simulate the year having EARNED this much — the meter driver. */
+    driveYear(coins) {
+      credit(Math.max(0, Math.round(Number(coins) || 0)));
+      save();
+      emit('currency');
+      return state.year.coinsEarned;
+    },
+
+    /** Write the Tally's counters directly, to inspect lines and tiers. */
+    setYearStats(stats) {
+      const s = state.year.stats;
+      ['orders', 'windfalls', 'species', 'legendaries', 'bestCombo'].forEach((k) => {
+        if (stats && typeof stats[k] === 'number') s[k] = Math.max(0, Math.round(stats[k]));
+      });
+      save();
+      return { ...s };
+    },
+
+    /** The whole projection at a glance, gates included. */
+    projectTurn() {
+      const p = projectedMint();
+      return {
+        ...p,
+        ready: turnReady(),
+        coinsEarned: state.year.coinsEarned,
+        minSeeds: YEAR().minSeeds,
+        minCoins: YEAR().minCoins,
+        turnsCompleted: state.year.turnsCompleted
+      };
+    },
+
+    /** Run the Turn through the one real path. */
+    runTurn(blessedId) {
+      const r = turnYear(blessedId);
+      if (r) emit('panels');
+      return r;
+    },
+
+    /** Saved Seeds for petal testing, outside the mint on purpose. */
+    grantSeeds(n) {
+      state.savedSeeds += Math.max(0, Math.round(Number(n) || 0));
+      save();
+      emit('currency');
+      emit('panels');
+      return state.savedSeeds;
+    },
+
+    /** Wind Fall's clocks back so the bed ripens now — the ripenAll shape. */
+    ripenFall() {
+      let n = 0;
+      state.fall.grid.forEach((cell) => {
+        if (!cell.seed || cell.ready) return;
+        cell.plantedAt = nowSeconds() - cell.grow - 1;
+        n += 1;
+      });
+      if (n) {
+        processFall(nowSeconds());
+        save();
+        emit('panels');
+      }
+      return n;
+    },
+
+    /** Fill Fall's open plots with the cheapest crop, paid for, so the
+        windfall cycle can be driven end to end. */
+    fillFall() {
+      if (!fallOpen()) return 0;
+      const cheapest = FALL().plants.filter((p) => !p.century)
+        .reduce((a, b) => (a.cost <= b.cost ? a : b));
+      let n = 0;
+      state.fall.grid.forEach((cell, idx) => {
+        if (cell.seed) return;
+        credit(cheapest.cost, { cheat: true });
+        if (fallPlant(idx, cheapest.id)) n += 1;
+        else state.credits -= cheapest.cost;
+      });
+      return n;
+    },
+
     clearAll() {
       dev.rarity = null;
       dev.gem = false;
@@ -3253,6 +3858,12 @@ const Game = (() => {
 
   return {
     state, on, emit, load, save, saveNow, reset, nowSeconds,
+    credit,
+    seedUnlockPrice, unlockSeed,
+    petalsOf, petalCost, buyPetal, petalMult, petalGrowMult,
+    fallOpen, fallPlantById, fallCell, fallCenturyGrowing, fallPlant, fallHarvest,
+    processFall, checkFallWindfall,
+    projectedTally, projectedMint, turnReady, turnYear,
     seedById, activeBoost, boostVal, growModifier, rollRarity,
     plotUnlockCost, upgradePrice, upgradeMaxed, decorCount,
     tapFlower, decayCombo, plant, unlockPlot, hasten, harvest, critChanceNow,

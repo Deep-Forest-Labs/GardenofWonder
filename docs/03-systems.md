@@ -831,38 +831,109 @@ pays once. A save with leftover flowers backfills `discovered` on load and grant
 already-reached unclaimed rungs. Numbers and the UI are in
 [16-progression-and-quests.md](16-progression-and-quests.md#phase-4--the-almanac-as-a-completion-goal).
 
-## Bloom Mastery
+## Bloom Mastery — retired into petals
 
-Every grown seed carries its own endless ladder, generated rather than authored. The goal repeats
-every four tiers — total harvests, Rare-or-better, total, Epic-or-better — and each track walks a
-1 / 2.5 / 5 decade pattern forever, so tier 1 is 10 total and tier 10 is 20 Rare-or-better.
-`masteryTierGoal(tier)` is the pure formula; `masteryGoal(id)` is the per-seed getter the Almanac
-row reads.
+**The ladder froze with the Garden Year's phase 1 (2026-08-29).** Two permanent per-seed yield
+ladders on one flower is the exact stacking failure the trait-pool discipline exists to prevent,
+so the endless +5%-per-tier ladder retired when petals arrived: `masteryMult()` now returns 1,
+no harvest ever advances a tier or pays a mastery gem again, and the `mastery` event never
+fires. The live per-seed multiplier is `petalMult()` — see
+[the Garden Year engine](#the-garden-year--the-engine-simulation-only) below.
 
-Progress comes from two lifetime records and never from inventory. Totals use
-`state.discovered[id]`; rarity tracks sum `state.rarityCounts[id]`, which holds rare, epic and
-legend counts per seed. **Rarity goals count that rarity or better**, matching `questMatches()` —
-an Epic advances a Rare goal. Legendary is deliberately not a tier: at 2% it would stall a
-sequential ladder behind a coin flip.
+What stays, deliberately: `state.mastery` keeps the tiers a save had earned as a lifetime
+record, and the two counts the ladder read — `state.discovered` and `state.rarityCounts` —
+keep recording exactly as before, because creatures, the Almanac and quests read them.
+`masteryTierGoal()` / `masteryGoal()` still answer, frozen, for the Almanac row until phase 2
+replaces that row with petals. `backfillMastery()` survives as the `rarityCounts` estimator
+for old saves (clamped by `bestRarity`, never exceeding recorded harvests, no gems), because
+the one-time mastery conversion needs honest counts to read.
 
-Each completed tier permanently adds **+5% to that seed's harvest yield**, added and not
-compounded, and nothing else — no reputation, and a gem only on every fifth tier. Tiers auto-pay
-the moment the count crosses, like Almanac milestones; there is no claim tap, because nineteen
-endless ladders would become an inbox of unclaimed gifts. A single harvest can cross more than one
-tier, so `advanceMastery()` loops, and the harvest that completes a tier is paid at the **old**
-multiplier — `masteryMult()` is read before `recordHarvest()` runs. Taps, flower sale prices and
-craft inputs are untouched.
+**The conversion:** a save from before the Year converts its tiers once, on first load —
+`round(DATA.year.masteryConvert × totalTiers)` Saved Seeds, silent, keyed on the missing
+`year` key. See [07-save-data.md](07-save-data.md#the-garden-year-added-2026-08-29).
 
-One `mastery` event fires per harvest that paid anything, listing every tier crossed. Old saves
-never recorded `rarityCounts`, so `backfillMastery()` estimates it from the drop-table weights in
-`DATA.rarity`, clamped by `bestRarity` so a rarity the player has provably never hit is never
-credited, and capped so the estimate never exceeds the harvests that actually happened. Backfilled
-tiers grant their yield but pay no gems and fire no toasts — the gem belongs to a moment of
-completion, and a backfill has none.
+The retired design is preserved in
+[16-progression-and-quests.md](16-progression-and-quests.md#phase-5--bloom-mastery) for the
+record; the sim-suite trap about mastery perturbing harvest measurements died with the
+multiplier.
 
-Numbers are in [04-economy.md](04-economy.md#bloom-mastery), the surface in
-[08-ui-and-layout.md](08-ui-and-layout.md#the-almanac-seed-row), the reasoning in
-[16-progression-and-quests.md](16-progression-and-quests.md#phase-5--bloom-mastery).
+## The Garden Year — the engine (simulation only)
+
+**Phase 1 of [34-build-plan.md](34-build-plan.md), built 2026-08-29 — the whole prestige
+simulation with no UI beyond Developer tools.** The design is
+[32-the-garden-year.md](32-the-garden-year.md), every number
+[33-year-one-economy.md](33-year-one-economy.md); this section is what exists in `game.js`.
+The live game looks and plays identically while the year accrues silently underneath it.
+
+**`Game.credit(amount, {cheat, refund})` is the single credit faucet.** Every grant —
+taps, harvests, orders, sales, keepsakes, quest gold, level coins, the offline grant in
+`reconcile()` — routes through it, so `state.year.coinsEarned` (the mint's whole input)
+counts by construction. `cheat: true` (the dev gold buttons) and `refund: true` (migrations,
+failed purchases) skip the accumulator. **A raw `state.credits +=` anywhere is a bug** —
+sim-test bill item 4 hunts them.
+
+**Seed unlocks:** seeds 3+ carry a one-time gold price, `DATA.year.unlockBase ×
+unlockRatio^(n−3)` (150K at ×1.5), permanent across Turns, stored in `state.seedUnlocks`.
+`unlockSeed(id)` charges once and can never charge again; skipping ahead is legal (the sim
+proved it dominated). Levels stopped gating seeds; `unlockLevel` stays in the data only for
+migrations and the picker's interim label. Plots 5–8 additionally refuse purchase until
+`turnsCompleted >= DATA.year.plotTurnGate` — year one is played on four plots, and migrated
+saves keep whatever they owned.
+
+**Petals:** `state.petals[seedId] = { rich, quick, sig }`, bought with Saved Seeds via
+`buyPetal(id, skill)` at `DATA.petals` prices. Rich Bloom multiplies harvests through
+`petalMult()` — applied in `harvest()` **and** `passiveIncomeRate()`, the masteryMult
+pattern, never touching `seed.yield`. Quick Sprout shortens growth through
+`petalGrowMult()`, baked in at plant time like every growth bonus. `plantGrowth()` is the
+one place the whole growth stack (sprinklers, boosts, Keepers, Quick Sprout) combines, and
+it clamps the product at the 0.3 floor. Signatures wait for slice B; `buyPetal` refuses
+`sig` until then.
+
+**The Tally and the mint:** `state.year.stats` carries the year-scoped counters — orders,
+windfalls, species (with a `speciesSeen` map so each flower counts once), legendaries,
+bestCombo — written where the events happen and never read from lifetime records.
+`projectedTally()` walks `DATA.year.tally`: tier bonuses within a line **accumulate**
+(47 orders pays tiers 1 and 2 together, +25% — the doc's own ×1.25 example), lines sum,
+and the multiplier clamps at `tallyCap`. A line that scored no bonus is not returned at
+all. `projectedMint()` is `mintK × sqrt(coinsEarned) × (1 + veterancy × turnsCompleted) ×
+tally`, and `turnReady()` demands both gates: projected mint ≥ `minSeeds` AND
+`coinsEarned ≥ minCoins`.
+
+**`turnYear(blessedId)` is atomic** — collect, bank, mint, bless, clear, roll over,
+`saveNow()`, in one commit. In-flight rules first: ready blooms auto-collect through the
+real `harvest()` (paid into the year before the mint), plot-parked packs bank into
+`state.packs`, and a growing annual is forfeit — the one stated cost. The blessing writes
+one free Rich Bloom petal (below cap, real flowers only) and records
+`{ seed, year }` in `state.blessed`. The clears are exactly doc 32's table: the main
+grid empties, plots 5–8 close, gold zeroes to the fresh purse, every badge wipes with the
+tap fields re-derived immediately, the combo and boost inventory zero, the Stand's slots
+all regenerate against the fresh year (`nextAt = now`, pool = `seedUnlocks`), and
+`state.year` rolls over. Everything else survives verbatim — sim-test bill item 1 asserts
+that field by field and fails if a future save field dodges classification.
+
+**Fall, as simulation:** `state.fall.grid` is eight cells (`DATA.fall.plots`) of
+`{ seed, plantedAt, grow, ready, windfall }` — the main grid's shape minus the mutation
+and pack fields. `fallPlant` / `processFall` / `fallHarvest` run the board; crops pay
+`yield` flat — no rarity, no mutations, no gems, no `discovered`, no pantry, no bench —
+and count only generic `harvest` quest tracks. **The windfall** arms the moment every
+non-Century plot stands planted and ripe: each cell is marked, `bedPaid` locks the fill,
+`stats.windfalls` counts one, and marked harvests pay ×1.5 until the bed empties and the
+cycle resets. The **Century Bloom** is data-flagged `century: true`: one growing at a
+time, excluded from the bed math (it neither blocks nor collects a windfall), and like
+every running long timer it survives the Turn untouched. Fall opens at
+`turnsCompleted >= DATA.year.fallTurn`; nothing renders until phase 3.
+
+**Developer drivers** (the phase-1 review surface): the dev sheet's Garden Year rows show
+the live projection — year, earnings against the floor, base × tally → pouch, gate status
+— with Earn +25K/+100K/+400K (`Dev.driveYear`, real earnings), a canned mid-game Tally
+(`Dev.setYearStats`), Run the Turn (`Dev.runTurn`, blessing Daisy), Saved Seeds and petal
+purchases through the real `buyPetal`, and Fill/Ripen/Harvest the Fall bed. `Dev.grantGold`
+is the cheat faucet — wallet only, never the meter — and the Settings gold button routes
+through it.
+
+`tools/year-sim.js` drives whole simulated days of casual play through the real `game.js`
+and reports against doc 33's pacing targets; `tools/sim-test.js` carries the 18-item bill
+(item 7 waits for slice B).
 
 ## Onboarding
 

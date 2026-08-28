@@ -1,6 +1,12 @@
 # The Year-One Economy — the retune
 
-**Status: specification, 2026-08-29. Nothing here is built.** The numbers for
+**Status: specification 2026-08-29; the ENGINE HALF IS BUILT — phase 1 landed the same day.**
+Every number below now lives in `data.js` (`DATA.year`, `DATA.petals`, `DATA.fall`),
+`Game.credit()` is wired through every faucet, and sim-test bill items 1–6 and 8–18 are
+asserted in `tools/sim-test.js` (item 7 waits for slice B). What is built is simulation only —
+the surfaces arrive in phases 2–3. See
+[03-systems.md](03-systems.md#the-garden-year--the-engine-simulation-only) for the engine as
+it exists. The numbers for
 [32-the-garden-year.md](32-the-garden-year.md), and the economy retune the owner unblocked
 ("the economy is already broken"). **Every value here is provisional, lives in `data.js`, and is
 remote-config-ready** — the two standing rules. Where a number came from the simulated pacing
@@ -92,6 +98,14 @@ land one line at a time, each adding to a bonus that multiplies the base, **summ
 `state.year.stats`** — never a lifetime record, never anything spendable. **A line the year
 scored zero on does not appear**; the Tally only celebrates.
 
+**The built reading (phase 1, flagged for the owner's review): tier bonuses within a line
+ACCUMULATE.** 47 orders pays tier 1 and tier 2 together, +25% — which is exactly doc 32's own
+"Orders filled: 47 → ×1.25!" example — a maxed year sums to +138% and genuinely hits the ×2.0
+cap, and a typical mid-game year lands the quoted ~×1.35. The alternative reading
+(highest-tier-only) caps out at ×1.69 and can never reach the cap this document says a maxed
+year hits, so cumulative is what `projectedTally()` implements. A line whose counter is below
+its first tier is not rendered and adds nothing — that is what "scored zero" means in code.
+
 | Line | Counter | Tier 1 | Tier 2 | Tier 3 |
 | --- | --- | --- | --- | --- |
 | Orders filled | `stats.orders` | 10 → +10% | 25 → +15% | 50 → +25% |
@@ -169,7 +183,13 @@ gated ~370–410K (the sim reaches lavender only on a perfect year) — all four
 quest that *sometimes* jams is the same bug on a timer — left
 alone they are the documented strip-jam (the sell-quest failure, third time around). Re-key each
 to a seeds-1–3 or verb-agnostic goal at the same reputation, the established stand-in pattern,
-and hold the total at 777. The four meadow-dependent quests (`q_hive_1`, `q_honey_3/8/15`,
+and hold the total at 777. **Done in phase 1:** the four are `paused: true` with stand-ins
+directly under each — `q_daisy_15` (20), `q_tulip_8` (22), `q_harvest_30` (42), `q_plant_30`
+(46) — and a sim-test holds the live ladder at 777. The keyed discover quests
+(`q_discover_5/8/12`) stay live on purpose: `discovered` is lifetime and quests survive the
+Turn, so they resolve across years rather than jamming forever — but `q_discover_5` will sit
+in a slot from mid-year-one until year two's rose unlock, which is worth an eye at the first
+playtest. The four meadow-dependent quests (`q_hive_1`, `q_honey_3/8/15`,
 114 rep) stay live because the meadow stays reachable from Summer's edge from day one — re-check
 the moment the meadow's entry point moves.
 
@@ -214,7 +234,9 @@ mutation and pack fields.
 time **14 days**, survives every Turn (a running long timer is never killed), blooms once with
 the game's loudest celebration short of a Wonder. **Ships in slice A with Fall** (owner-confirmed
 2026-08-29); plantable in a Fall plot, excluded from the bed-ripeness math so it never parks the
-windfall, one growing at a time. Numbers deliberately absurd and data-tagged.
+windfall, one growing at a time. Numbers deliberately absurd and data-tagged. **Phase 1 shipped
+it at cost 2M / yield 2.8M** — the 1.4× curve held on purpose so the wall never comes from a
+worse ratio, the absurdity carried by scale and the fortnight; retune freely in phase 4.
 
 Winter's list (5–6 plants, 12–48 h clocks) follows in slice C; do not author it now.
 

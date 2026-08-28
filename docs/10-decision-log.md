@@ -5,6 +5,68 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (build) — Phase 1: the Garden Year's engine ships as pure simulation
+
+**The whole prestige loop now runs headlessly under the live game** — `Game.credit()` as the
+single faucet, one-time seed unlock prices, petals with both shared skills live in the payout
+and offline paths, the atomic `turnYear()`, Fall's board with the windfall state machine and
+the Century Bloom, the mastery retirement and conversion, the four quest re-keys, and the
+doc-33 sim-test bill (items 1–6 and 8–18) genuinely asserted — the suite grew 908 → 1,043 and
+runs clean twelve times in a row. The engine choices worth recording:
+
+**The Tally's tiers accumulate within a line.** Doc 33's table read either way, and its two
+worked examples contradicted each other — but only the cumulative reading reproduces doc 32's
+"47 orders → ×1.25", reaches the ×2.0 cap a maxed year is said to hit (+138% summed, clamped),
+and lands the quoted ~×1.35 mid-game year. Highest-tier-only tops out at ×1.69 and can never
+touch the cap. Implemented cumulative, flagged in doc 33 for the owner to veto. "A line the
+year scored zero on" means *scored no bonus*: a counter below its first tier renders nothing —
+rendering "Orders: 7 → +0%" would be the ×1.00-you-failed row the cosy rule forbids.
+
+**The windfall is per-cell marks plus a bed latch.** Arming stamps every ripe bed cell when
+the last one ripens; `bedPaid` holds until the bed empties. This makes "once per fill"
+structural — a plot replanted mid-collection joins the *next* fill because it never got a
+mark, and re-ripening cannot re-arm a paid bed. A single armed-flag would have paid new
+plants planted into a half-collected bed.
+
+**The growth floor moved onto the product.** Quick Sprout at cap stacked with Sprinklers,
+Seed Rush and a Keeper wall multiplies to 0.294 — through the 0.3 floor the two existing
+clamps only guarded separately. `plantGrowth()` clamps the combined stack, both at plant time
+and in `passiveIncomeRate()`, so bill item 8 is enforced by construction and today's
+behaviour is untouched (the clamp only binds under petals).
+
+**The Century Bloom holds the 1.4× curve at 2M/2.8M.** "Deliberately absurd" is carried by
+scale and the fortnight, not by a better ratio — bill item 5 stays one rule with no
+exception, and phase 4 can retune the magnitude freely.
+
+**`credit()` skips the accumulator for refunds as well as cheats.** A failed purchase
+refunding through the earnings counter would mint seeds from a no-op; a migration refund
+would mint them from history. Neither was ever income.
+
+**The blessing refuses politely.** An unknown flower or a capped Rich Bloom blesses nothing
+and the Turn still runs — the ceremony's one choice must never be able to brick the Turn.
+`state.blessed` records the year that blessed, before the rollover.
+
+**`tools/year-sim.js` models a casual player, and the model is the sensitive part.** The
+four verdicts that hold across every model variant tried: petals per Turn sit in the 2–5 band
+(12/12 in the frozen calibration), the daisy-rush shape loses on both coins and petals, the
+first wall reads as several times lifetime earnings on day one, and a 400K year pays ~63 base
+seeds — doc 33's "60–65" to the digit. The first-Turn *day* and year-one *coins* depend
+heavily on the turn-policy knob (measured envelope: day ~1.5 at 252K to day ~5.3 at 1.7M,
+doc 33's day 2.7–3.3 at 390K inside it), because income accelerates through the walls where
+the doc's flat model did not. Recorded as a phase-4 calibration question, not tuned around.
+
+### Rejected
+
+**Rounding `coinsEarned` per grant** — the mint rounds once at the end; per-grant rounding
+would drift the accumulator from the wallet. **Letting Fall crops count keyed quests or
+plant-tracks** — doc 33 says generic harvest tracks and nothing else; crops stay out of every
+flower system including quest keys. **A second Tally knob for the tier-reading** — one
+documented reading, one owner question, no config surface for an unsettled rule. **Re-keying
+`q_discover_5`** — doc 33 names exactly four quests; discover quests span years by design
+(lifetime counter, quests survive the Turn), logged as a playtest watch item instead.
+
+---
+
 ## 2026-08-29 (process, later) — The wireframe gate
 
 **The owner's addition to the build plan, before any builder starts:** a UI phase now begins with

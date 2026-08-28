@@ -429,56 +429,34 @@ Paid once when distinct species harvested crosses the rung. Numbers live in
 | 15 | 40 | 3 | Fortune Aura |
 | 19 | 50 | 5 | Golden Popups |
 
-## Bloom Mastery
+## Bloom Mastery — retired 2026-08-29, petals in its place
 
-Every grown seed gets an endless Almanac ladder. Each completed tier adds **+5%** to that seed's
-harvest yield, added not compounded, so tier 10 is +50% and tier 20 is +100%. One gem every fifth
-tier and nothing on the other four. No reputation — the level curve is aligned to Market order
-tiers and cannot absorb an endless faucet.
+The endless ladder froze with the Garden Year's phase 1: `masteryMult()` returns 1, tiers no
+longer advance, and the every-fifth-tier gem is gone. Earned tiers converted once into Saved
+Seeds (`DATA.year.masteryConvert = 2` per tier, silent, on first load). `masteryYieldPerTier`,
+`masteryGemEvery` and `masteryGemGrant` remain in `data.js` as dead knobs until phase 2 removes
+the Almanac's frozen ladder row; nothing reads them in anger. The per-seed multiplier is now
+**Rich Bloom** — see [33-year-one-economy.md](33-year-one-economy.md#petals--prices-and-effects)
+for petal prices and effects, and
+[03-systems.md](03-systems.md#the-garden-year--the-engine-simulation-only) for the mechanics.
 
-| Number | `DATA` key | Value |
-| --- | --- | --- |
-| Yield per tier | `masteryYieldPerTier` | 0.05 |
-| Gem cadence | `masteryGemEvery` | 5 |
-| Gems per paying tier | `masteryGemGrant` | 1 |
-
-The ladder is generated, not authored — see
-[03-systems.md](03-systems.md#bloom-mastery). The first ten tiers:
-
-| Tier | Goal | Expected harvests | Pays |
-| --- | --- | --- | --- |
-| 1 | 10 total | 10 | +5% |
-| 2 | 4 Rare or better | ~13 | +5% |
-| 3 | 25 total | 25 | +5% |
-| 4 | 2 Epic or better | ~20 | +5% |
-| 5 | 50 total | 50 | +5%, 1 gem |
-| 6 | 10 Rare or better | ~33 | +5% |
-| 7 | 100 total | 100 | +5% |
-| 8 | 5 Epic or better | ~50 | +5% |
-| 9 | 250 total | 250 | +5% |
-| 10 | 20 Rare or better | ~67 | +5%, 1 gem |
-
-**The gem cadence is a ceiling, not a dial.** Anything a tier pays is multiplied by nineteen
-flowers and the ladder never ends. At 1 per fifth tier a player who reaches tier 10 across the
-collection earns 38 gems — one Lantern Tree. An escalating 1-to-5 reward on every tier would be
-roughly 570, which is more than twice the 250-gem Gnome of Fortune and empties the gem shop
-several times over.
-
-**Mastery scales the yield, so it inflates coins uniformly and does not re-rank the seeds.** A
-tier is worth 5% of whatever that flower already pays: 3 coins on a Daisy, 7,000 on an Eternal
-Crown. Cheap seeds climb far faster in wall-clock time — a Daisy matures 65× quicker than an
-Eternal Crown — but 65× the harvests is only about eleven extra tiers, or +55%, against a 31×
-gap in coins per second. Mastery is a depth reward and a coin faucet, not a rebalancing lever;
-see the 2026-08-14 entry in [10-decision-log.md](10-decision-log.md).
-
-Harvest payout, with mastery:
+Harvest payout, with petals:
 
 ```
-payout = round(seed.yield × rarity.m × (1 + globalCredits) × (1 + pollination) × wonder × masteryMult)
-masteryMult = 1 + DATA.masteryYieldPerTier × (state.mastery[id] || 0)
+payout = round(seed.yield × rarity.m × (1 + globalCredits) × (1 + pollination) × wonder
+               × petalMult × verbMult × mutationMult × critterMult)
+petalMult = 1 + petals.rich × DATA.petals.shared.rich.value      // +30% per petal, cap 5
 ```
 
-Taps, flower sale prices and craft inputs are untouched.
+Taps, flower sale prices and craft inputs are untouched — exactly the rule mastery followed.
+The old ladder's numbers are preserved in
+[16-progression-and-quests.md](16-progression-and-quests.md#phase-5--bloom-mastery) for the
+record.
+
+**The Year's own numbers live in [33-year-one-economy.md](33-year-one-economy.md)** — seed
+unlock prices (the spread), the mint, the Tally tiers, petal pricing, Fall's plant list and
+the windfall — all under `DATA.year`, `DATA.petals` and `DATA.fall`, remote-config-ready.
+This document stays the reference for everything the Year did not touch.
 
 ## Decor
 

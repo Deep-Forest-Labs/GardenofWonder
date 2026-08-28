@@ -306,8 +306,115 @@ const DATA = {
     { id: 'golden',   name: 'Golden Popups', dur: 30,   icon: 'coin',    tint: '#ffc93c', effects: { globalCredits: 0.25 },             desc: '+25% credits from all sources for 30s.' }
   ],
 
-  /* Indices 0–3 start open. The rest become buyable at these levels, then cost gold. */
+  /* Indices 0–3 start open. The rest become buyable at these levels, then cost gold.
+     Since the Garden Year they also wait for the first Turn — see year.plotTurnGate. */
   plotUnlockLevel: [1, 1, 1, 1, 3, 6, 9, 12],
+
+  /* ---------------- THE GARDEN YEAR ----------------
+     The prestige loop. Design in docs/32-the-garden-year.md, every number
+     justified in docs/33-year-one-economy.md. All of it remote-config-ready.
+
+     The mint reads state.year.coinsEarned — a lifetime-this-year accumulator
+     that spending never decrements — through Game.credit(), the single faucet.
+     Cheat grants carry { cheat: true } and never reach it. */
+  year: {
+    /* Which Turn opens each season's gate. Fall is Turn 1's gift. */
+    fallTurn: 1,
+    winterTurn: 3,
+    springTurn: 6,
+
+    /* One-time seed unlock prices, permanent across Turns — the whole spread
+       lives here since per-plant spreads cannot wall while 1.4x holds.
+       unlock(seed n) = unlockBase x unlockRatio^(n - freeSeeds - 1); the first
+       freeSeeds seeds are free. The ratio was x1.6 for a day and the full sim
+       failed it — see docs/33. Tune the ratio LAST, after petal pricing. */
+    unlockBase: 150000,
+    unlockRatio: 1.5,
+    freeSeeds: 2,
+
+    /* The mint: base = mintK x sqrt(coinsEarnedThisYear) x (1 + veterancy x
+       turnsCompleted), then the Tally multiplies it. mintK is the counter-knob
+       if playtest tallies run hot. */
+    mintK: 0.1,
+    veterancy: 0.2,
+
+    /* The Turn's two gates: projected mint >= minSeeds AND coinsEarned >=
+       minCoins. The coins floor is what keeps many-cheap-Turns-a-day
+       unprofitable — the seeds-only gate was reached at ~8K coins and enabled
+       a daisy petal rush 36% faster than intended play. */
+    minSeeds: 10,
+    minCoins: 100000,
+
+    /* Plots 5–8 refuse purchase until this many Turns are complete, so year
+       one is played on four plots and Turn 1's gift is Fall AND a bigger
+       garden. A migrated save keeps whatever plots it already owned. */
+    plotTurnGate: 1,
+
+    /* Old Bloom Mastery's one-time conversion: Saved Seeds per ladder tier. */
+    masteryConvert: 2,
+
+    /* The Tally. Each line reads a year-scoped counter in state.year.stats —
+       never a lifetime record, never anything spendable. Tier bonuses within a
+       line ACCUMULATE (47 orders pays tiers 1 and 2 together: +25%, the x1.25
+       in the design doc's own example), lines sum, and the multiplier clamps
+       at tallyCap. A line that scored no bonus does not appear — the Tally
+       only celebrates. */
+    tallyCap: 2.0,
+    tally: [
+      { id: 'orders',      label: 'Orders filled',           stat: 'orders',      tiers: [{ at: 10, bonus: 0.10 }, { at: 25, bonus: 0.15 }, { at: 50, bonus: 0.25 }] },
+      { id: 'windfalls',   label: 'Full-bed windfalls',      stat: 'windfalls',   tiers: [{ at: 3,  bonus: 0.05 }, { at: 8,  bonus: 0.10 }, { at: 15, bonus: 0.15 }] },
+      { id: 'species',     label: 'Species grown this year', stat: 'species',     tiers: [{ at: 5,  bonus: 0.05 }, { at: 10, bonus: 0.08 }, { at: 15, bonus: 0.12 }] },
+      { id: 'legendaries', label: 'Legendary blooms',        stat: 'legendaries', tiers: [{ at: 1,  bonus: 0.05 }, { at: 3,  bonus: 0.08 }, { at: 8,  bonus: 0.12 }] },
+      { id: 'combo',       label: 'Best combo',              stat: 'bestCombo',   tiers: [{ at: 50, bonus: 0.03 }, { at: 80, bonus: 0.05 }] }
+    ]
+  },
+
+  /* Flower mastery — petals, bought with Saved Seeds on the Almanac's rows.
+     petalCost(seed n, petal p) = base x seedRatio^(n-1) x petalRatio^(p-1),
+     signatures x signatureMult. Priced so every Turn affords a similar 2–5
+     petals forever: petal costs compound at 1.25/level while the pouch grows
+     ~1.2–1.26/cycle — tune those two together or not at all. The launch
+     values (base 5, x1.3/seed) failed the full sim on both pacing checks. */
+  petals: {
+    base: 15,
+    seedRatio: 1.45,
+    petalRatio: 1.25,
+    signatureMult: 0.6,
+    /* The two shared skills on every flower, deliberately boring so there is
+       never a wrong way to spend. Effects are additive per petal and apply as
+       a multiplier off the yield curve — seed.yield is never edited. */
+    shared: {
+      rich:  { name: 'Rich Bloom',   cap: 5, value: 0.30 },
+      quick: { name: 'Quick Sprout', cap: 5, value: 0.06 }
+    }
+  },
+
+  /* Fall — the hour-class garden behind Turn 1's gate. Crops are NOT flowers:
+     no rarity, no mutations, no gems, never written to `discovered`; they
+     count generic harvest quest tracks and that is all. Kept wholly separate
+     from DATA.seeds so nothing drags them through the flower systems.
+     yield = cost x 1.4 holds for every plant here too.
+
+     The windfall is Fall's juice: harvesting a bed whose every plot is
+     planted and ripe pays +50% on the whole bed, once per fill — the
+     fill-cycle resets when the bed empties. The Century Bloom is the
+     showpiece: numbers deliberately absurd, excluded from the bed-ripeness
+     math, one growing at a time, and it survives every Turn. */
+  fall: {
+    plots: 8,
+    windfall: 0.5,
+    plants: [
+      { id: 'strawberry',   name: 'Strawberry',    cost: 2000,    grow: 1200,    yield: 2800 },
+      { id: 'mint',         name: 'Mint',          cost: 3500,    grow: 2100,    yield: 4900 },
+      { id: 'chamomile',    name: 'Chamomile',     cost: 5500,    grow: 3000,    yield: 7700 },
+      { id: 'brambleberry', name: 'Bramble Berry', cost: 9000,    grow: 5400,    yield: 12600 },
+      { id: 'pumpkin',      name: 'Pumpkin',       cost: 16000,   grow: 10800,   yield: 22400 },
+      { id: 'elderflower',  name: 'Elderflower',   cost: 28000,   grow: 18000,   yield: 39200 },
+      { id: 'apple',        name: 'Apple',         cost: 48000,   grow: 28800,   yield: 67200 },
+      { id: 'wheat',        name: 'Wheat',         cost: 20000,   grow: 14400,   yield: 28000 },
+      { id: 'century',      name: 'Century Bloom', cost: 2000000, grow: 1209600, yield: 2800000, century: true }
+    ]
+  },
 
   levelCoinGrant: 20,
   harvestRepEvery: 10,
@@ -348,7 +455,16 @@ const DATA = {
 
      Each one has a live stand-in directly under it at the same rep and the same
      rung, because the ladder is what carries a player to level 17 and benching
-     98 rep out of it would strand them three levels short of the Eternal Crown. */
+     98 rep out of it would strand them three levels short of the Eternal Crown.
+
+     THE GARDEN YEAR benches four more the same way (docs/33-year-one-economy.md):
+     seed unlock prices replaced level gates, and a year earns ~370–410K, so
+     q_peony_3 and q_marigold_3 name seeds genuinely unreachable in year one
+     while q_lavender_3 and q_rose_3 are marginal — a quest that *sometimes*
+     jams is the same bug on a timer. Each has a seeds-1–3 or verb-agnostic
+     stand-in directly under it at the same rep, holding the ladder at 777.
+     Their keys stay honest goals from year two on; unbench them only if the
+     unlock walls ever move below them. */
   quests: [
     { id: 'q_tap_25',      text: 'Tap 25 times',            track: 'tap',     qty: 25,  rep: 5 },
     { id: 'q_plant_1',     text: 'Plant a seed',            track: 'plant',   qty: 1,   rep: 5 },
@@ -368,8 +484,10 @@ const DATA = {
     { id: 'q_discover_8',  text: 'Discover 8 species',      track: 'discover', qty: 8,  rep: 18, reward: { boost: 'golden' } },
     { id: 'q_charm_1',     text: 'Buy Lucky Charm',         track: 'upgrade', key: 'critChance', qty: 1, rep: 20 },
     { id: 'q_crit_1',      text: 'Land a crit',             track: 'crit',    qty: 1,   rep: 20, after: 'q_charm_1' },
-    { id: 'q_rose_3',      text: 'Harvest 3 roses',         track: 'harvest', key: 'rose',     qty: 3,  rep: 20 },
-    { id: 'q_lavender_3',  text: 'Harvest 3 lavender',      track: 'harvest', key: 'lavender', qty: 3,  rep: 22 },
+    { id: 'q_rose_3',      text: 'Harvest 3 roses',         track: 'harvest', key: 'rose',     qty: 3,  rep: 20, paused: true },
+    { id: 'q_daisy_15',    text: 'Harvest 15 daisies',      track: 'harvest', key: 'daisy',    qty: 15, rep: 20 },
+    { id: 'q_lavender_3',  text: 'Harvest 3 lavender',      track: 'harvest', key: 'lavender', qty: 3,  rep: 22, paused: true },
+    { id: 'q_tulip_8',     text: 'Harvest 8 tulips',        track: 'harvest', key: 'tulip',    qty: 8,  rep: 22 },
     { id: 'q_rare',        text: 'Harvest a Rare bloom',    track: 'rarity',  key: 'rare',     qty: 1,  rep: 24, reward: { boost: 'fortune' } },
     { id: 'q_star_1',      text: 'Buy Star Strike',         track: 'upgrade', key: 'critMult', qty: 1,  rep: 24 },
     { id: 'q_perfume',     text: 'Merge a Bouquet',         track: 'merge',   key: 'bouquet',  qty: 1,  rep: 32, paused: true },
@@ -380,10 +498,12 @@ const DATA = {
     { id: 'q_combo_55',    text: 'Reach combo 55',          track: 'combo',   qty: 55,  rep: 30, after: 'q_coil_1', reward: { boost: 'bloom' } },
     { id: 'q_harvest_25',  text: 'Harvest 25 blooms',       track: 'harvest', qty: 25,  rep: 42 },
     { id: 'q_plant_20',    text: 'Plant 20 seeds',          track: 'plant',   qty: 20,  rep: 44 },
-    { id: 'q_peony_3',     text: 'Harvest 3 peonies',       track: 'harvest', key: 'peony',    qty: 3,  rep: 46 },
+    { id: 'q_peony_3',     text: 'Harvest 3 peonies',       track: 'harvest', key: 'peony',    qty: 3,  rep: 46, paused: true },
+    { id: 'q_plant_30',    text: 'Plant 30 seeds',          track: 'plant',   qty: 30,  rep: 46 },
     { id: 'q_craft_2',     text: 'Bank 5 bench goods',      track: 'bank',    qty: 5,   rep: 48, paused: true },
     { id: 'q_honey_15',    text: 'Fill 15 honey jars',      track: 'honey',   qty: 15,  rep: 48 },
-    { id: 'q_marigold_3',  text: 'Harvest 3 marigolds',     track: 'harvest', key: 'marigold', qty: 3,  rep: 42 },
+    { id: 'q_marigold_3',  text: 'Harvest 3 marigolds',     track: 'harvest', key: 'marigold', qty: 3,  rep: 42, paused: true },
+    { id: 'q_harvest_30',  text: 'Harvest 30 blooms',       track: 'harvest', qty: 30,  rep: 42 },
     { id: 'q_harvest_40',  text: 'Harvest 40 blooms',       track: 'harvest', qty: 40,  rep: 46 },
     { id: 'q_discover_12', text: 'Discover 12 species',     track: 'discover', qty: 12, rep: 50 }
   ],
