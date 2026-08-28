@@ -885,8 +885,41 @@ is the design, [33-year-one-economy.md](33-year-one-economy.md) the numbers, and
 whole first task: the year state and mint (earnings-accumulator, never balance, cheat grants
 excluded), the Turn path over the never-resets partition, petals' shared skills on the Almanac
 rows, unlock prices on seeds 3+, and Fall at background-swap art with the windfall rule — all
-under the 13-item sim-test bill in doc 33 before any UI. Simulation first, the Stand's own
-pattern.
+under the sim-test bill in doc 33 before any UI. Simulation first, the Stand's own pattern.
+
+### The five-minute phase-1 test: feel a whole year from Developer tools
+
+Everything below is one panel: tap the unlabelled dot beside the gem wallet, scroll to **The
+Garden Year**. Nothing here has a surface yet — you are judging *numbers*, and the row's
+header line is the meter until phase 2 draws it.
+
+1. **Watch the meter fill.** Tap **Earn +100K**, then **+400K**. The header re-reads each time:
+   earned-so-far against the 100K floor, then `base × tally → pouch`, then whether the Turn is
+   ready. Note that **+1M gold** (in *Give*, above) moves the wallet and **not** the meter —
+   that is cheated gold staying out of the mint, deliberately.
+2. **Hit the wall.** In *Petals*, tap **Unlock the next seed**. Bluebell wants **150,000** —
+   the first wall, and the number to judge: on day one it should read as impossible. Pay it, and
+   it is paid forever (it survives every Turn).
+3. **Turn the year.** Tap **A good year's Tally** (a canned mid-game year), then **Run the Turn
+   (bless Daisy)**. The toast is the ceremony's content without its theatre: the pouch, the
+   Tally's multiplier, and every line that scored — *Orders filled: 12 → +10%*, and so on. A
+   line the year scored nothing on simply does not appear.
+4. **Spend the pouch.** *Petals* now shows Saved Seeds and Daisy's next two prices. Buy **Rich
+   Bloom** and **Quick Sprout** a few times and watch the price ladder climb — 2–5 petals per
+   Turn is the intended feel.
+5. **Check the never-resets list held.** Your gems, cards, packs, creatures, the Hollow,
+   reputation, level and the Almanac are all untouched; your gold is back to 100, the badges are
+   gone to be rebought, and plots 5–8 have closed for the rebuy. The Turn is what took them, and
+   the spec says so.
+6. **Fall is open now** (it unlocks at Turn 1). *Fall* → **Fill the bed** → **Ripen the bed** →
+   **Harvest the bed**: eight crops, and the windfall pays **+50% on the whole bed** because
+   every plot was planted and ripe. That is the appointment Fall is built around.
+
+**The one question waiting on you:** turning often is currently the optimal play — a player who
+turns at every 100K gate out-mints and out-earns one who rides the year to its wall. It is
+measured, reproducible (`node tools/year-sim.js 12 all`), and the dials are all data
+(`minCoins`, `veterancy`, `mintK`). See the open decision in
+[11-known-issues.md](11-known-issues.md).
 
 **Parked by this pivot, not deleted:** the map build-out, the Stand's expansion, the meadow's next
 pieces, the bench surface, and the merge-central layout work in [28-the-loop.md](28-the-loop.md).
