@@ -5,6 +5,80 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (design) — Per-seed prestige is the design, after a pressure test that refuted two of the advisor's own claims
+
+**The owner committed to the direction and brought a concrete mechanism:** an incremental idle
+tapper on the garden engine, seeds spread far apart, prestige at the seed-3 wall, and the spend as
+**permanent upgrade trees per individual seed** — value, speed, mutation, gem, pack, proc, with the
+drone eventually moving into a flower's path. The analysis is
+[31-per-seed-prestige.md](31-per-seed-prestige.md), built on a four-agent pressure test
+(comparables with sources, a 25-invariant repo audit, a simulated economy model, an adversarial
+critique instructed to attack the advisor's fixes too) plus adversarial verification of the two
+highest-stakes claims.
+
+**The verdict: the core is right.** Per-seed trees are the strongest concrete answer yet to the
+oldest finding in the project — nineteen seeds that differ only in throughput — and they are
+doc 30's Seed Saving idea arrived at independently in a more buildable form: authored trees
+instead of generated heirloom properties, same save-your-seeds fantasy. **Priced: ~20/5 as
+literally described, ~45/12 with four surgeries.**
+
+**Both verification passes refuted the advisor, and the record keeps the refutations.** The claim
+that no successful game converts unspent balance at reset is FALSE — Antimatter Dimensions does it
+at every layer — but the two conditions that make it safe there (hyper-exponential production,
+conversion damped to powers like x^(1/308)) do not hold in a flat-income game with linear
+conversion, and the simulation quantified the difference: buying a 25K plot an hour before reset
+costs **15.5% of the run's prestige income** under leftover-balance and gains +1% under
+sqrt-of-lifetime. The claim that a weeks-long first wall always churns is ALSO false as stated —
+Cookie Clicker takes days-to-weeks, Egg Inc's first prestige lands around day 19–23, Melvor has no
+prestige at all — but the surviving kernel is sharper than the original claim: every counterexample
+climbs its wall on **visibly accelerating income**, and the owner's wall under the 1.4× rule is a
+**flat-income savings grind**, which is the actual churn shape. Wall length is tunable; flatness at
+the wall is not.
+
+**The structural finding that changes the economy: no per-plant price spread can create a wall
+while yield = 1.4× cost holds** — the whole 19-tier ladder self-finances in about six active
+minutes, and multiplying ratios multiplies minutes. The spread must live in **one-time per-seed
+unlock prices, permanent across prestiges** (150K for seed 3, ×1.6 per tier, seed 19 ≈ 277M),
+which keeps the 1.4× invariant and everything tuned against it untouched. And the unlock gate
+reconciles the level system instead of gutting it, using the two-stage chip shipped twice already:
+**season level opens the seed's slot, the unlock price buys it** — levels keep their vertebrae.
+
+**The fatal-rated attack that survived its own steelman: 19 trees × 6 axes is a 114-knob
+allocation exam** delivered at the moment the player's garden was just cleared, aimed at an
+audience selected for low decision fatigue — and no successful idle ships a per-generator ×
+multi-axis permanent matrix (the hits keep the permanent layer to one global currency; Idle
+Miner's per-mine permanence is one axis, six steps). The fixes keep the owner's structure:
+checklist not allocation (everything maxes, no wrong order, surfaced as the Almanac's nineteen
+rows — the audit's consolidation arriving with a purpose); a shared spine plus one signature
+branch, authored for only the first five or six seeds at v1; **chance axes sold as pity countdowns**
+("every 12th harvest mutates → every 10th") because a permanent RNG percentage is the least
+legible purchase a game can sell; **no per-seed gem axis ever** — it is the exact override
+mechanism the 2026-08-15 faucet fix deleted, on the premium currency; a **global automation floor
+with the creatures tending the garden while you are away** (per-seed drone upgrades raise the
+rate), because a drone buried in one tree means the longest run of the game has zero offline
+income; and one ceremonial choice at the turn, not an exam.
+
+**The invariants audit returned 25 touched rules, seven blockers**, now tabled in doc 31: the
+spendable-tallies corruption (harvest counts feeding conversion must be a separate accumulator or
+creatures de-star), the quest ladder having no rep fuel on run 2+ (`quests.done` never resets),
+the meadow-dependent quests jamming during the hold (114 rep needs stand-ins), the barren first
+run (daisy and tulip carry no verb and no creature — move Pip or accept it), Bloom Mastery
+absorbed rather than stacked, upgrades applied via the masteryMult pattern in the same commit as
+`passiveIncomeRate()`, and **cheat buttons now minting permanent progression** — cheats stay per
+the owner's standing call, but cheated coins must be excluded from conversion or the playtest
+pacing data is contaminated.
+
+### Rejected
+
+**Leftover-balance conversion**, with the honest counterexample on the record. **The weeks-long
+first wall**, likewise — it returns legitimately at prestige 6+, where Egg Inc proves veterans
+accept it; the first wall is 150K, which *feels* six-times-impossible on day one and breaks on day
+2–3. **Per-plant price spreads** — structurally impossible. **Free allocation across 114 knobs.**
+**Nineteen hand-authored signatures at v1.** **Gems anywhere near the conversion** — gems buying
+permanent per-seed power is gems buying outcomes.
+
+---
+
 ## 2026-08-26 (strategy) — The pivot to prestige, two structural findings, and the retune unblocked
 
 **The owner's pivot, made after sitting with the direction analysis:** focus on the garden as is and

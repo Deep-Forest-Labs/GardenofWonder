@@ -1,6 +1,12 @@
 # Prestige Directions — five systems, priced
 
-**Status: analysis and recommendation, 2026-08-26.** The owner's pivot: focus on **the garden as
+**Status: analysis, 2026-08-26 — partly superseded 2026-08-29.** The owner chose a concrete
+mechanism three days later: **per-seed permanent upgrade trees**, which is idea 2 (Seed Saving)
+arrived at independently in authored rather than generated form, on idea 1's chassis. The current
+design is **[31-per-seed-prestige.md](31-per-seed-prestige.md)**; this document remains the record
+of the option space and the two structural problems, both of which doc 31 inherits and resolves.
+
+The original framing: the owner's pivot — focus on **the garden as
 is**, and design a real incremental-idle prestige system — restart (or restart halfway), earn a
 currency, spend it on permanent points that make the next run faster. Rethinking coins, upgrades,
 and possibly the level system is on the table.

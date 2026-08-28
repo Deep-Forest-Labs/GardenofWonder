@@ -12,6 +12,47 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **PER-SEED PRESTIGE IS THE DESIGN, 2026-08-29 — pressure-tested, two of the advisor's own claims
+> refuted on the way.** The owner committed: incremental idle tapper on the garden engine, seeds
+> spread far apart, prestige at the seed-3 wall, and the spend as **permanent upgrade trees per
+> seed** (value, speed, mutation, gem, pack, proc; the drone eventually per-seed).
+> **[31-per-seed-prestige.md](31-per-seed-prestige.md)** is the analysis — a four-agent pressure
+> test plus adversarial verification. Verdict: **the core is right** — it is the strongest concrete
+> answer yet to "nineteen seeds that differ only in throughput," and it is doc 30's Seed Saving in
+> authored form. Priced **~20/5 as literally described, ~45/12 with four surgeries.**
+>
+> **The structural finding: no per-plant price spread can create a wall while yield = 1.4× cost
+> holds** — the whole ladder self-finances in ~6 active minutes. The spread lives in **one-time
+> per-seed unlock prices, permanent across prestiges** (seed 3 = 150K, ×1.6/tier, seed 19 ≈ 277M),
+> gated by the shipped two-stage chip: **season level opens the slot, the unlock price buys it** —
+> so levels keep their vertebrae.
+>
+> **The four surgeries:** currency is **sqrt of lifetime-earned this run**, never leftover balance
+> (Antimatter Dimensions is the honest counterexample, and the conditions that save it there —
+> hyper-exponential income, x^(1/308) damping — do not hold here; the simulated hoarding penalty is
+> 15.5% of a run's prestige income per late purchase). The first wall **feels** six-times-impossible
+> on day one and breaks day 2–3 (weeks-long walls return legitimately at prestige 6+ — Egg Inc's
+> first prestige is day 19–23, but every long-wall comparable climbs on visibly accelerating
+> income, and this wall under 1.4× would be a flat savings grind, which is the actual churn shape).
+> The trees are **a checklist, not an allocation exam** — 114 free knobs at the moment the garden
+> was just cleared is the fatal-rated attack that survived its own steelman: shared spine + one
+> signature branch, five or six authored signatures at v1, **chance axes sold as pity countdowns**,
+> **no per-seed gem axis ever** (it is the deleted 2026-08-15 override mechanism returning, on the
+> premium currency), one ceremonial choice at the turn. And **automation gets a global floor — the
+> creatures tend the garden while you are away** — with per-seed drone upgrades raising the rate,
+> because a drone buried in one tree gives the longest run of the game zero offline income.
+>
+> **The invariants audit returned 25 touched rules, 7 blockers**, tabled in doc 31 — the spendable-
+> tallies corruption (a conversion that reads `state.discovered` de-stars creatures; use a separate
+> accumulator), the quest ladder's empty rep fuel on run 2+, the meadow quests jamming during the
+> hold (114 rep needs stand-ins), the barren first run (daisy+tulip carry no verb and no creature),
+> Bloom Mastery absorbed not stacked, upgrades applied via the masteryMult pattern into
+> `passiveIncomeRate()` in the same commit, and **cheat buttons now minting permanent progression**
+> — cheats stay, but cheated coins must sit outside the conversion or playtest pacing data is
+> contaminated. Provisional numbers (all data): points = 0.1·√(runCoins)·(1+0.2·prestiges); tree
+> level price 5×1.3^(seed−1)×1.25^level, +30%/level; first turn day 2–3, ~10 prestiges, all seeds
+> ~day 31.
+
 > **THE PIVOT TO PRESTIGE, 2026-08-26 — and the retune is unblocked.** The owner's call after the
 > direction analysis: **focus on the garden as is and design a real incremental prestige** —
 > restart, a currency, permanent points. **[30-prestige-directions.md](30-prestige-directions.md)**
@@ -787,14 +828,13 @@ buttons stay). **Two are deferred by the owner** as their own conversations: wha
 what survives one, and the launch content bill of materials — the second of which the economy
 retune needs as a target.
 
-**The direction is chosen: prestige, garden-first.** The owner picked the incremental-depth lane
-([30-prestige-directions.md](30-prestige-directions.md)) and unblocked the economy retune in the
-same breath. **The current task is the full spec of The Turning Year + Seed Saving** — season
-aging as the decelerator, the split-level reputation resolution, the never-resets list as
-sim-tests, Perennials, and the heirloom property budget — **with the economy retune scoped inside
-it**, not after it. Four questions in doc 30 are the owner's: how long year one feels, whether
-plots stay bought, where the heirloom lives on screen, and whether the turn interacts with the
-shared sky.
+**The design is chosen: per-seed prestige ([31-per-seed-prestige.md](31-per-seed-prestige.md)),
+on doc 30's chassis, with the retune scoped inside it.** The current task is turning doc 31 into
+the buildable spec: the turn-of-season path over the never-resets partition (sim-tested field by
+field), the unlock-price table, the spine + first five signature branches, the pity-counter
+framing for chance axes, the creature away-tending floor, the repeatable seasonal quest ladder,
+and the conversion accumulator that never reads `state.discovered`. The blocker table in doc 31
+lists the seven decisions that gate the build.
 
 **Parked by this pivot, not deleted:** the map build-out, the Stand's expansion, the meadow's next
 pieces, the bench surface, and the merge-central layout work in [28-the-loop.md](28-the-loop.md).
