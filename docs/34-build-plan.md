@@ -46,6 +46,28 @@ the builder session — doc 32/33 are the spec, and where they are silent the bu
 than invents; and the game on `main` must stay playable after every push, which is why phase 1
 is simulation-only.
 
+## The wireframe gate — before any UI phase writes UI code
+
+**Owner-required, 2026-08-29: a UI phase begins with a full layout pass of every screen it will
+touch, and the owner approves it before a line of UI code is written.** The house already has
+the right vehicle — the spike (`tools/map-spike.html`, `merge-spike`, `hollow-spike`,
+`customer-spike` all "saved real time," per the standing note). So:
+
+1. **The builder's first deliverable is a spike** — `tools/turn-spike.html` (phase 2),
+   `tools/fall-spike.html` (phase 3) — a static page, no game dependencies, showing **every
+   screen and state the phase touches** at 390×844, with real proportions, placeholder content,
+   and every new element placed. It obeys [08-ui-and-layout.md](08-ui-and-layout.md)'s rules
+   (the 560px column, the pinned row grid, the sheet grammar) at wireframe fidelity — layout is
+   the question here, polish is the build's job.
+2. **Self-review before showing:** the builder checks the spike against doc 08's layout rules
+   and flags every deviation or open layout question *as a question*, not a decision.
+3. **Push, then stop.** The spike is reachable from the live URL on the owner's phone. The
+   handoff names each screen, the layout decisions made, and the questions raised. **No UI code
+   until the owner approves.**
+4. **The owner's annotations go verbatim into the build.** The approved spike becomes the
+   reference the visual-fidelity critic later judges the built UI against — first for layout,
+   then doc 05 for finish.
+
 ## The phases
 
 | Phase | Ships | The owner reviews | Slice |
@@ -87,22 +109,40 @@ earned, do 2–5 petals per Turn feel right on paper.
 
 ### Phase 2 — The ceremony
 
-The meter pill (third HUD pill, projection on tap, the re-invite), the `turn` sheet mode built
-on the welcome-back scene's pattern — the ask, the blessing picker, **the Tally as theatre**
-(base count-up, lines slamming in one at a time, the cap, the zero-line rule as presentation),
-the gate reveal beat (pointing at phase 3's gates; in phase 2 it lands on Summer's spring
-return), petal rows and buy chips on the Almanac, unlock rows in the seed picker, the
-`--season-tint` aging. Visual critic mandatory: this phase is the game's biggest new surface
-and it must pass doc 05 rule-by-rule, on a phone screenshot, before the owner sees it.
+**Begins at the wireframe gate: `tools/turn-spike.html`, owner-approved before any UI code.**
+The spike must show every screen and state:
+
+1. The HUD with the third pill — mystery-meter state (pre-Turn-1) and banked-seeds state, with
+   the tap-for-projection affordance.
+2. The Turn sheet, all four beats as separate frames: the ask, the blessing picker, **the Tally
+   sequence** (base count-up, lines landing, the total), and the spring return.
+3. An Almanac row with petal tracks and buy chips — empty pre-Turn-1 state and a mid-progress
+   state.
+4. A seed-picker locked row wearing the unlock price, and the moment after unlocking.
+5. The `--season-tint` aging at three points of the year.
+
+Then the build: the meter pill, the `turn` sheet mode on the welcome-back scene's pattern, the
+Tally as theatre (zero-line rule as presentation), petal rows, unlock rows, the tint. Visual
+critic mandatory — this is the game's biggest new surface and it must pass doc 05 rule-by-rule,
+on a phone screenshot, before the owner sees it.
 
 ### Phase 3 — Fall and the strip
 
-The horizontal swipe (background-start, `dx > dy`, mirroring the vertical rules), hedge gates
-with their padlock chips, Fall's board on the garden grammar **with the talking flower in the
-middle**, the eight crops, the windfall (all eight planted and ripe), the Century Bloom, the
-map + `overworld.js` + camera retirement, and the World→Stand dock button swap. Grammar critic
-mandatory: Fall must read as *the garden in another season*, not a second game — the meadow's
-lesson, re-run.
+**Begins at the wireframe gate: `tools/fall-spike.html`, owner-approved before any UI code.**
+The spike must show:
+
+1. Summer with the strip's presence legible (how a player discovers sideways exists — edge
+   affordance, gate peek, or the World button's replacement).
+2. A hedge gate up close: the padlock chip, the turn label, the drifting particle.
+3. Fall's board: the flower in the middle, eight plots, the crop picker, a windfall-ready bed
+   (all eight ripe — how that state announces itself), and the windfall pop.
+4. The Century Bloom growing (day 3 of 14 — what the wait *looks* like).
+5. The dock with the Stand button where World was.
+
+Then the build: the horizontal swipe (background-start, `dx > dy`, mirroring the vertical
+rules), the gates, Fall's board and crops, the windfall, the Century Bloom, the map +
+`overworld.js` + camera retirement, the dock swap. Grammar critic mandatory: Fall must read as
+*the garden in another season*, not a second game — the meadow's lesson, re-run.
 
 ### Phase 4 — The tuning pass
 
@@ -120,49 +160,58 @@ never squeezed into the end of a build phase.
 ```
 ultracode
 
-You are the builder for Phase 1 of the Garden Year — the simulation layer of the
-biggest change this game has made. You implement a finished spec; you do not
-redesign it.
+You are the builder for Phase 1 of the Garden Year — the simulation engine of
+the biggest change this game has made. You implement a finished spec; you do
+not redesign it.
 
-Open the repo at Ghost Garden/Ghost Garden (it is a subdirectory of the
-workspace, not the root). Run git fetch and git status first — other sessions
-work in this tree. The game deploys from main to GitHub Pages and the owner
-tests from the live URL, so push after every change and keep the game playable
-after every push.
+Open the repo at Ghost Garden/Ghost Garden (a subdirectory of the workspace,
+not the root). Run git fetch and git status first — other sessions work in this
+tree. The game deploys from main to GitHub Pages and the owner tests from the
+live URL: push after every change, and the game must look and play identically
+after every push — Phase 1 is simulation only, and the year accrues silently
+under the live game.
 
-Read, in order: docs/HANDOFF.md (state and traps — read "Traps in this codebase"
-fully), docs/09-conventions.md (before your first line of code),
-docs/32-the-garden-year.md (the design), docs/33-year-one-economy.md (every
-number, and the sim-test bill that is your definition of done),
-docs/34-build-plan.md (your phase: Phase 1, including its hard out-of-scope
-list). AGENTS.md defines "done" — the docs must be true again in the same
-commit, all five steps.
+Read, in order:
+1. docs/HANDOFF.md — where everything stands; read "Traps in this codebase" in full
+2. docs/09-conventions.md — before your first line of code
+3. docs/32-the-garden-year.md — the design
+4. docs/33-year-one-economy.md — every number, and the 18-item sim-test bill
+   that is your definition of done (items 1-6 and 8-18 are yours; item 7 waits
+   for Phase 5)
+5. docs/34-build-plan.md — your exact scope ("Phase 1 — The engine", including
+   its hard out-of-scope list) and the gauntlet you must run before handing off
 
-Your scope is docs/34-build-plan.md "Phase 1 — The engine", exactly: simulation
-only, no UI beyond Developer-tools drivers, and the live game must look and play
-identically while the year accrues silently underneath. Every number ships in
-data.js. The sim-test bill in docs/33 (items 1-6 and 8-18) is the acceptance
-test: node tools/sim-test.js, run several times — the repo has a documented
-class of flaky tests from unpinned Math.random, and a flaky suite is a failing
-suite.
+Non-negotiables: every number lives in data.js, remote-config-ready; no UI
+beyond Developer-tools drivers; docs updated per AGENTS.md's five steps in the
+same commit as the code; node tools/sim-test.js run several times per change —
+the repo documents a class of flaky tests from unpinned Math.random, and a
+flaky suite is a failing suite.
 
-When implementation is complete, run the gauntlet from docs/34-build-plan.md
-before writing your handoff: an adversarial multi-agent critique with
-independent critics for invariant coverage (every bill item genuinely asserted),
-partition completeness (the Turn's clears vs the full field list in
-docs/07-save-data.md), and economy pacing (drive a headless year through the
-real game.js and check the doc 33 targets: first Turn ~day 2.7-3.3 of casual
-play, ~370-410K first-year coins with plots 5-8 year-gated, 2-5 petals per Turn
-through Turn 12, and the daisy-rush check in bill item 17). Fix what they find
-and re-run until a clean round.
+Key numbers as of 2026-08-29 (docs/33 is authoritative wherever anything
+differs): unlock(3) = 150K at x1.5/tier; mint = 0.1·sqrt(coinsEarned) ·
+(1 + 0.2·turns) · tally, tally summed then capped at x2.0; the Turn requires
+projected mint >= 10 AND coinsEarned >= 100K; petals cost
+15 · 1.45^(seed-1) · 1.25^(petal-1), signatures x0.6; plots 5-8 require
+turnsCompleted >= 1 (migrated saves keep what they own); cheated gold never
+reaches coinsEarned.
 
-Where docs 32/33 are silent, ask the owner rather than invent — you are the
-builder, the design conversation lives in another session. End with the
-five-step docs handoff per AGENTS.md, and a five-minute cheat-driven test
-script the owner can run from Developer tools to feel a whole year: earn, hit
-the wall, Turn, watch the Tally numbers, spend petals, confirm the never-resets
-list held. Then stop and wait for the owner's review — Phase 2 does not start
-in your session.
+When implementation is complete, run the gauntlet from docs/34 before your
+handoff: an adversarial multi-agent critique with independent critics for
+invariant coverage (all 17 slice-A bill items genuinely asserted, not just
+written), partition completeness (the Turn's clears vs the full field list in
+docs/07-save-data.md), and economy pacing (a headless year driven through the
+real game.js: first Turn ~day 2.7-3.3 of casual play, ~370-410K first-year
+coins, 2-5 petals per Turn through Turn 12, and the daisy-rush shape
+unprofitable per bill item 17). Fix findings and re-run until a clean round.
+
+Where docs 32/33 are silent, ask the owner instead of inventing — the design
+conversation lives in another session. End with the five-step docs handoff per
+AGENTS.md, and a five-minute test script the owner can run from Developer
+tools to feel a whole year: earn, hit the wall, Turn, watch the Tally, spend
+petals, confirm the never-resets list held. Then stop and wait for the owner's
+review. Phase 2 does not start in your session — and when it starts in its
+own, it begins at the wireframe gate in docs/34, with owner-approved layouts
+before any UI code.
 ```
 
 ### Phase 2–4 prompts — the template
@@ -170,10 +219,13 @@ in your session.
 Identical preamble (ultracode, repo location, git hygiene, reading order, AGENTS.md), then:
 
 > Your scope is docs/34-build-plan.md "Phase N — …", exactly. The previous phase is merged and
-> reviewed; do not reopen it. Run the gauntlet for your phase — for UI phases that includes the
-> visual-fidelity critic (screenshots via tools/probe.js judged rule-by-rule against
-> docs/05-art-direction.md) and the grammar critic. End with the five-step handoff, a
-> five-minute phone test script, and stop for the owner's review.
+> reviewed; do not reopen it. **If your phase touches UI, your first deliverable is the
+> wireframe gate**: the phase's spike showing every screen and state, pushed, with your layout
+> questions raised as questions — then stop for the owner's approval before any UI code. Run the
+> gauntlet for your phase — for UI phases that includes the visual-fidelity critic (screenshots
+> via tools/probe.js judged first against the approved spike for layout, then rule-by-rule
+> against docs/05-art-direction.md for finish) and the grammar critic. End with the five-step
+> handoff, a five-minute phone test script, and stop for the owner's review.
 
 Write the phase-specific prompt fresh at kickoff — after a review, the owner's notes from phase
 N−1 go into phase N's prompt verbatim, which is what makes the review loop real.

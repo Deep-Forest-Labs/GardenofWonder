@@ -5,6 +5,32 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (process, later) — The wireframe gate
+
+**The owner's addition to the build plan, before any builder starts:** a UI phase now begins with
+a **full layout pass of every screen it will touch, approved by the owner before a line of UI
+code is written.** The vehicle is the house's own spike tradition — `tools/turn-spike.html` for
+phase 2 and `tools/fall-spike.html` for phase 3, static pages at 390×844 obeying doc 08's layout
+rules at wireframe fidelity, pushed so the owner reviews them from the live URL on a phone. The
+builder's layout questions are raised *as questions*, the owner's annotations go verbatim into
+the build, and **the approved spike becomes the reference the visual-fidelity critic later judges
+the built UI against** — layout first, doc 05 finish second. Phase 2's spike must show the meter
+pill in both states, all four ceremony beats including the Tally sequence, the Almanac petal
+rows in empty and mid states, the unlock rows, and the season tint at three points of the year;
+phase 3's must show how a player *discovers* the strip exists, a hedge gate up close, Fall's
+board with a windfall-ready bed, the Century Bloom mid-wait, and the dock swap. The Phase 1
+prompt was also rewritten clean with the retuned numbers inline, so a builder cannot implement
+the superseded values from a stale paste.
+
+### Rejected
+
+**Wireframes as documents** — a markdown layout description cannot be judged on a phone; the
+spike is the wireframe. **Gating phase 1 on wireframes** — it ships no UI by design. **Letting
+the builder resolve its own layout questions** — the entire point of the gate is that layout
+decisions reach the owner while they still cost nothing.
+
+---
+
 ## 2026-08-29 (tuning) — The full-model sim reports late, fails four checks, and saves the loop
 
 **The economy verifier presumed lost to the session-limit outage finished after all**, having
