@@ -3297,7 +3297,10 @@ const Game = (() => {
       bankedPacks += 1;
     });
 
-    /* The mint. */
+    /* The mint. `earnedThisYear` is captured here — after the auto-collect,
+       before the rollover — because it is the number the ceremony's count-up
+       rolls from and the pacing tools report. */
+    const earnedThisYear = state.year.coinsEarned;
     const minted = projectedMint();
     state.savedSeeds += minted.pouch;
 
@@ -3364,6 +3367,7 @@ const Game = (() => {
       pouch: minted.pouch,
       base: minted.base,
       tally: minted.tally,
+      earned: earnedThisYear,
       blessed,
       collected,
       bankedPacks,

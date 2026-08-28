@@ -1437,7 +1437,8 @@
       ${devRow(`Petals — ${petalReport()}`, `
         <button class="dev-btn" data-dev="yearSeeds" data-arg="50">+50 Saved Seeds</button>
         <button class="dev-btn" data-dev="petalBuy" data-arg="rich">Daisy: Rich Bloom</button>
-        <button class="dev-btn" data-dev="petalBuy" data-arg="quick">Daisy: Quick Sprout</button>`)}
+        <button class="dev-btn" data-dev="petalBuy" data-arg="quick">Daisy: Quick Sprout</button>
+        <button class="dev-btn" data-dev="unlockSeed" data-arg="1">Unlock the next seed (pays gold)</button>`)}
       ${devRow(`Fall — ${Game.fallOpen() ? 'open' : `opens at Turn ${DATA.year.fallTurn}`}`, `
         <button class="dev-btn" data-dev="fallFill" data-arg="1">Fill the bed</button>
         <button class="dev-btn" data-dev="fallRipen" data-arg="1">Ripen the bed</button>
@@ -1549,10 +1550,19 @@
         if (ok) {
           UI.toast({
             title: windfell ? 'Windfall!' : 'Fall harvest',
-            body: `+${fmt(paid)} gold${windfell ? ' — the whole bed paid +50%' : ''}`,
+            body: `+${fmt(paid)} gold${windfell ? ` — the whole bed paid +${Math.round(DATA.fall.windfall * 100)}%` : ''}`,
             art: Icons.get('coin')
           });
         }
+        break;
+      }
+      case 'unlockSeed': {
+        const next = DATA.seeds.find((s) => !Game.seedUnlocked(s.id));
+        ok = Boolean(next) && Game.unlockSeed(next.id);
+        deny = next
+          ? `${next.name} wants ${fmt(Game.seedUnlockPrice(next.id))} gold — the wall is the point.`
+          : 'Every seed is already unlocked.';
+        if (ok) UI.toast({ title: 'Seed unlocked', body: `${next.name} is plantable forever now`, art: Icons.get('sprout') });
         break;
       }
       case 'clear': D.clearAll(); break;

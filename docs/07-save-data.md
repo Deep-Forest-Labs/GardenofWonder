@@ -21,15 +21,21 @@ lost if the player clears site data.
   credits: 100,
   tickets: 0,                 // kept so old saves parse; zeroed after conversion
   gems: 0,
-  tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50 },
+  tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50, holdInterval: 900 },
   grid: [ /* 8 cells */
     { locked: false, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '' }
   ],
   upgrades: {
-    tapPower: 0, critChance: 0, critMult: 0, comboMeter: 0,
-    plotExpansion: 0, autoWater: 0, autoHarvest: 0,
+    tapPower: 0, holdSpeed: 0, critChance: 0, critMult: 0, comboMeter: 0,
+    rainDance: 0, beeSwarm: 0, ladybug: 0,
+    plotExpansion: 0, autoWater: 0, autoHarvest: 0, offlineRate: 0, offlineHours: 0,
     plot1Harvester: 0, /* … through plot8Harvester */
   },
+  flowers: {},                // spendable bloom pantry, seedId -> count — harvest() banks one per
+                              // bloom; crafting, selling and Stand deliveries spend it. NOT the
+                              // lifetime record (that is `discovered`).
+  craft: [],                  // in-flight apothecary jobs, { id, doneAt }
+  goods: {},                  // finished craft goods, id -> count
   decor: [ { id: 'gnome' } ],   // one entry per copy owned, cosmetic only since v3
   boosters: { bloom: 1735689600.123 },                          // id → absolute expiry, epoch seconds
   boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },   // held copies, not yet activated

@@ -21,8 +21,14 @@ from quests and levels.
 > windfall and the Century Bloom as simulation, Bloom Mastery retired into a one-time Saved
 > Seeds conversion, the four quest re-keys at a held 777, and Developer-tools drivers to feel a
 > whole year in five minutes. The doc-33 sim-test bill (items 1–6, 8–18) is genuinely asserted —
-> the suite grew to **1,043 assertions**, clean across twelve consecutive runs — and
-> `tools/year-sim.js` drives casual-play pacing through the real `game.js`. See
+> the suite grew to **1,051 assertions**, clean across repeated runs and hardened by the
+> gauntlet's own mutation tests — and `tools/year-sim.js` drives casual-play pacing through the
+> real `game.js`. **The gauntlet ran (33 agents, 20 confirmed findings, all fixed or escalated —
+> see the two 2026-08-29 entries in [10-decision-log.md](10-decision-log.md)) and left ONE OPEN
+> OWNER DECISION: the cheap-Turn cadence is strictly profitable at the spec constants (bill item
+> 17's economic half — sqrt-splitting, uncapped veterancy, Turn-surviving Fall beds;
+> `node tools/year-sim.js 12 all` reproduces it and exits non-zero until the data changes; dials
+> are `minCoins` / `veterancy` / `mintK`).** See
 > [03-systems.md](03-systems.md#the-garden-year--the-engine-simulation-only) for the engine,
 > [07-save-data.md](07-save-data.md#the-garden-year-added-2026-08-29) for the save shape and
 > migration, and the 2026-08-29 build entry in [10-decision-log.md](10-decision-log.md) for the
@@ -1522,8 +1528,8 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,043 assertions over the simulation layer
-node tools/year-sim.js 12 both  # the Garden Year's pacing model — measures, asserts nothing
+node tools/sim-test.js          # 1,051 assertions over the simulation layer
+node tools/year-sim.js 12 all   # the pacing model — exits non-zero while the cheap-Turn exploit stands
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
@@ -1619,7 +1625,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,043 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,051 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

@@ -679,7 +679,7 @@ globalThis.localStorage.setItem('gw-save', JSON.stringify(freshSave));
 G.load();
 check('a save with no play at all still onboards', S.seen.intro === false && S.seen.plot === false);
 
-group('grandfather migration keeps seeds you could already use');
+group('bill 13b — grandfather migration keeps seeds you could already use');
 G.reset();
 const saveOf = (extra) => {
   const base = JSON.parse(JSON.stringify(S));
@@ -1000,7 +1000,7 @@ S.apiary.wax = 5;
 G.startCraft('tea');
 check('crafting does not decrease rarityCounts', JSON.stringify(G.rarityCountsOf('daisy')) === countsBeforeSpend);
 
-group('mastery backfill is bounded by bestRarity, and an old save converts once');
+group('bill 13 — mastery backfill is bounded by bestRarity, and an old save converts exactly once');
 G.reset();
 const priorMastery = JSON.parse(JSON.stringify(S));
 delete priorMastery.mastery;
@@ -4077,38 +4077,49 @@ G.reset();
 clearGarden();
 S.credits = 500000;
 S.gems = 7;
+S.tickets = 5;
 S.decor = [{ id: 'gnome' }];
 S.boosters = { bloom: clock + 900 };
 S.boostInv = { bloom: 2, seedrush: 1, fortune: 0, golden: 0 };
 S.weatherCall = { id: 'rain', from: clock - 10, until: clock + 200 };
 S.cards = { firstlight_0: 2 };
 S.packs = 3;
-S.setsClaimed = [];
+S.setsClaimed = ['firstlight'];
 S.stats = { totalTaps: 41, totalCrits: 3, totalHarvests: 29, wonders: 1 };
-S.wonder = { until: 0, last: clock - 500 };
+S.wonder = { until: clock + 10, last: clock - 500 };
 S.apiary.cells[0] = { kind: 'hive', at: clock, jars: ['daisy'] };
 S.apiary.honey = { daisy: 2 };
 S.apiary.wax = 3;
 S.apiary.shelf = { daisy: 1 };
+S.apiary.keepers = ['pip'];
 S.flowers = { daisy: 4 };
 S.craft = [{ id: 'tea', doneAt: clock + 999 }];
 S.goods = { tea: 1 };
 S.bench.basket = [0];
 S.bench.cells[0] = { tier: 1 };
 S.bench.stock = { posy: 1 };
+S.bench.side = 5;
 S.critters.pip = { since: clock - 5000, fed: clock - 100, fedUntil: clock + 3600, gifts: 1, met: true, level: 2, tending: true };
 S.pairsSeen = ['nightbloom'];
 S.mementos = { mossy_pebble: 2 };
 S.luckyPacks = 1;
+S.prefs = { sfx: false, music: true };
 S.seen = { intro: true, plot: true, apiary: true };
 S.harvestsThisSession = 29;
 S.lastSeen = clock - 60;
+S.stand.delivered = 6;
+S.stand.skipped = 2;
 unlockTo(8);
 S.quests.active = [{ id: 'q_tap_25', progress: 7 }];
 S.quests.done = ['q_plant_1'];
+/* Doc 32's never-touched column promises "the daily quest keeps its day" —
+   so the rig carries a LIVE daily, mid-progress, on today's real key. */
+S.quests.daily = { id: DATA.dailies[0].id, progress: 3, day: (() => {
+  const d2 = new Date(); return d2.getFullYear() + '-' + (d2.getMonth() + 1) + '-' + d2.getDate();
+})(), claimed: false };
 S.discovered = { daisy: 30, tulip: 4, bluebell: 6 };
 S.bestRarity = { daisy: 'rare' };
-S.almanacClaimed = [];
+S.almanacClaimed = [5];
 S.mastery = { daisy: 2 };
 S.rarityCounts = { daisy: { rare: 3, epic: 0, legend: 0 } };
 S.savedSeeds = 40;
@@ -4144,14 +4155,18 @@ const SURVIVES = ['version', 'gems', 'tickets', 'decor', 'boosters', 'weatherCal
   'pairsSeen', 'mementos', 'luckyPacks', 'prefs', 'seen', 'quests', 'rep', 'level', 'discovered',
   'bestRarity', 'almanacClaimed', 'mastery', 'rarityCounts', 'seedUnlocks', 'petals', 'blessed',
   'fall', 'harvestsThisSession', 'lastSeen'];
-const CLEARS = ['credits', 'grid', 'upgrades', 'tap', 'boostInv', 'stand', 'year', 'savedSeeds'];
+/* CHANGED, not "cleared": doc 32's never-touched column means never reset or
+   decreased — savedSeeds sits here because the mint WRITES it (upward, by
+   exactly the projection, asserted below), and petals/blessed sit in SURVIVES
+   only because this run passes no blessing (bill 16 covers the blessing). */
+const CHANGED_BY_THE_TURN = ['credits', 'grid', 'upgrades', 'tap', 'boostInv', 'stand', 'year', 'savedSeeds'];
 SURVIVES.forEach((k) => {
   check(`\`${k}\` survives the Turn verbatim`, same(S[k], yrBefore[k]),
     `${JSON.stringify(S[k]).slice(0, 80)} vs ${JSON.stringify(yrBefore[k]).slice(0, 80)}`);
 });
 check('every field of the save is classified — no key dodges the partition',
-  same(Object.keys(S).sort(), [...SURVIVES, ...CLEARS].sort()),
-  Object.keys(S).filter((k) => !SURVIVES.includes(k) && !CLEARS.includes(k)).join(','));
+  same(Object.keys(S).sort(), [...SURVIVES, ...CHANGED_BY_THE_TURN].sort()),
+  Object.keys(S).filter((k) => !SURVIVES.includes(k) && !CHANGED_BY_THE_TURN.includes(k)).join(','));
 check('gold zeroes to the fresh purse, after the mint', S.credits === 100);
 check('the mint paid exactly the projection', S.savedSeeds === yrBefore.savedSeeds + yrExpectedPouch
   && yrTurn.pouch === yrExpectedPouch, `${S.savedSeeds} vs ${yrBefore.savedSeeds} + ${yrExpectedPouch}`);
@@ -4200,12 +4215,22 @@ check('the mid-grow apple kept its clock', S.fall.grid[3].seed === 'apple'
   && S.fall.grid[3].plantedAt === clock - 50);
 
 group('bill 3 — the mint reads earnings, never balance');
+/* The spend arm hits EVERY coin sink — badges, a seed unlock, plantings, a
+   hive, a Fall crop — so a regression that decremented coinsEarned in any of
+   them would break the pouch identity, not just the tapPower path. */
 const mintRigFor = (spendEverything) => {
   G.reset();
   clearGarden();
   S.year.coinsEarned = 300000;
+  S.year.turnsCompleted = 1;      // both arms: Fall open, veterancy identical
   S.credits = 300000;
   if (spendEverything) {
+    G.unlockSeed('bluebell');                             // 150,000
+    G.plant(0, G.seedById('daisy'));
+    G.plant(1, G.seedById('tulip'));
+    G.plant(2, G.seedById('bluebell'));
+    G.placeHive(0);                                       // 2,200
+    G.fallPlant(0, 'strawberry');                         // 2,000
     while (S.credits >= G.upgradePrice('tapPower')) G.buyUpgrade('tapPower');
   }
   const r = G.turnYear(null);
@@ -4213,7 +4238,7 @@ const mintRigFor = (spendEverything) => {
 };
 const pouchHoarded = mintRigFor(false);
 const pouchSpent = mintRigFor(true);
-check('a spend-everything-then-Turn run pouches identically', pouchHoarded === pouchSpent && pouchHoarded > 0,
+check('a spend-through-every-sink-then-Turn run pouches identically', pouchHoarded === pouchSpent && pouchHoarded > 0,
   `${pouchHoarded} vs ${pouchSpent}`);
 
 group('bill 4 — credit() is the single tested faucet, and cheats never reach it');
@@ -4240,9 +4265,51 @@ S.rep = 0; S.level = 1;
 yrMark = earnedNow();
 G.claimQuest('q_harvest_1');
 G.claimQuest('q_plant_1');   // ten rep total: the level-up pays its coin grant
-check('quest gold and the level-up coins earn into the year',
+check('the level-up coins earn into the year',
   S.level === 2 && earnedNow() === yrMark + DATA.levelCoinGrant * 2,
   `${earnedNow()} vs ${yrMark + DATA.levelCoinGrant * 2}`);
+/* Actual quest GOLD rides applyReward — only the dailies carry reward.credits,
+   so the faucet has to be tested through one or it is tested through nothing. */
+const dailyDef = DATA.dailies[0];
+S.quests.daily = { id: dailyDef.id, progress: dailyDef.qty, day: (() => {
+  const d2 = new Date(); return d2.getFullYear() + '-' + (d2.getMonth() + 1) + '-' + d2.getDate();
+})(), claimed: false };
+yrMark = earnedNow();
+const lvBeforeDaily = S.level;
+check('daily quest gold earns into the year', (() => {
+  const paid = G.claimQuest(dailyDef.id);
+  let levelCoins = 0;
+  for (let L = lvBeforeDaily + 1; L <= S.level; L += 1) levelCoins += DATA.levelCoinGrant * L;
+  return Boolean(paid) && earnedNow() === yrMark + dailyDef.reward.credits + levelCoins;
+})(), `${earnedNow()} vs ${yrMark} + ${dailyDef.reward.credits}`);
+/* The Stand — doc 33 names orders in the faucet list, so a delivery must be
+   watched reaching the mint, and its Tally counter must move off the real
+   event rather than only ever off Dev.setYearStats. */
+S.flowers = { daisy: 3 };
+S.rep = 0; S.level = 1;   // four rep cannot level, so the delta below is the delivery alone
+S.stand.slots[0] = {
+  id: 'o_bill4', good: 'posy', customer: 'nan', slot: 0, at: clock,
+  needs: [{ kind: 'flower', of: 'daisy', any: false, qty: 2 }], coins: 500, rep: 4
+};
+yrMark = earnedNow();
+const ordersMark = S.year.stats.orders;
+const deliveredBill4 = G.standDeliver(0);
+check('a Stand delivery earns into the year', deliveredBill4
+  && earnedNow() === yrMark + deliveredBill4.paid,
+  `${earnedNow()} vs ${yrMark} + ${deliveredBill4 && deliveredBill4.paid}`);
+check('and counts the Tally\'s orders line off the real event',
+  S.year.stats.orders === ordersMark + 1);
+/* Fall — the newest faucet, and the one phases 2–3 will touch. */
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+G.fallPlant(0, 'strawberry');
+S.fall.grid[0].plantedAt = clock - 9999;
+yrMark = earnedNow();
+const fallBill4 = G.fallHarvest(0);
+check('a Fall harvest earns into the year', fallBill4
+  && earnedNow() === yrMark + fallBill4.payout,
+  `${earnedNow()} vs ${yrMark} + ${fallBill4 && fallBill4.payout}`);
+S.year.turnsCompleted = 0;
 yrMark = earnedNow();
 S.critters.pip = { since: clock - 1e6, fed: clock - 1e6, fedUntil: clock + 3600, gifts: 3, met: true, level: 1, tending: true };
 const keepsakePay = G.collectKeepsakes('pip');
@@ -4346,8 +4413,13 @@ for (let i = 0; i < STAND.slots; i += 1) G.standGenerate(i);
 /* Strand an order naming a bloom, then shrink the unlock pool to prove the
    regenerated board draws only from what the fresh year can grow. */
 S.seedUnlocks = { bluebell: true };
+const staleOrderIds = S.stand.slots.filter(Boolean).map((o) => o.id);
 G.turnYear(null);
-check('all three slots hold fresh orders', S.stand.slots.every(Boolean));
+check('all three slots hold fresh orders — every pre-Turn order is gone', S.stand.slots.every(Boolean)
+  && S.stand.slots.every((o) => !staleOrderIds.includes(o.id)),
+  JSON.stringify(S.stand.slots.map((o) => o && o.id)));
+check('the refill clocks are live, never parked in the future',
+  S.stand.nextAt.every((t) => t <= G.nowSeconds()), JSON.stringify(S.stand.nextAt));
 check('no order names a bloom outside the unlock pool', S.stand.slots.every((o) =>
   o.needs.every((n) => n.any || ['daisy', 'tulip', 'bluebell'].includes(n.of))),
   JSON.stringify(S.stand.slots.map((o) => o.needs.map((n) => n.of))));
@@ -4380,7 +4452,7 @@ S.credits = 150000;
 S.year.coinsEarned = 200000;
 G.unlockSeed('bluebell');
 check('the unlock spent the wallet', S.credits === 0);
-G.turnYear(null);
+check('the Turn actually ran', Boolean(G.turnYear(null)));
 check('the unlock survives the Turn', G.seedUnlocked('bluebell') === true);
 S.credits = 1e6;
 check('and can never be charged again', G.unlockSeed('bluebell') === false && S.credits === 1e6);
@@ -4400,9 +4472,12 @@ G.processFall(clock);
 check('the eighth ripening arms the whole bed, once', S.year.stats.windfalls === 1
   && S.fall.grid.every((c) => c.windfall));
 const strawberry = G.fallPlantById('strawberry');
+const yrBeforeWindfall = S.year.coinsEarned;
 const windfallPay = G.fallHarvest(0);
 check('a windfall harvest pays +50% exactly',
   windfallPay.windfall && windfallPay.payout === Math.round(strawberry.yield * 1.5), `${windfallPay.payout}`);
+check('and the windfall earns into the year',
+  S.year.coinsEarned === yrBeforeWindfall + windfallPay.payout);
 check('a replant mid-collection joins the next fill, not this one',
   (G.fallPlant(0, 'strawberry'), !S.fall.grid[0].windfall));
 S.fall.grid[0].plantedAt = clock - 9999;
@@ -4430,10 +4505,13 @@ check('seven crops around a growing Century still windfall', S.year.stats.windfa
 const centuryDef = G.fallPlantById('century');
 S.fall.grid[0].plantedAt = clock - centuryDef.grow - 1;
 G.processFall(clock);
+const yrBeforeCentury = S.year.coinsEarned;
 const centuryPay = G.fallHarvest(0);
 check('the Century Bloom pays its own enormous plain price, never the windfall',
   centuryPay.century && !centuryPay.windfall && centuryPay.payout === centuryDef.yield,
   `${centuryPay.payout}`);
+check('and the Century payout earns into the year',
+  S.year.coinsEarned === yrBeforeCentury + centuryPay.payout);
 
 group('Fall crops are not flowers');
 G.reset();
@@ -4445,8 +4523,10 @@ const yrFlowersBefore = JSON.stringify(S.flowers);
 const yrBasketBefore = S.bench.basket.length;
 G.fallPlant(0, 'strawberry');
 S.fall.grid[0].plantedAt = clock - 9999;
+const yrBeforeCrop = S.year.coinsEarned;
 const cropPaid = G.fallHarvest(0);
-check('a crop pays coins and earns into the year', cropPaid.payout === 2800);
+check('a crop pays coins and earns into the year', cropPaid.payout === 2800
+  && S.year.coinsEarned === yrBeforeCrop + 2800);
 check('it writes no discovery and drops no bloom', !S.discovered.strawberry
   && JSON.stringify(S.flowers) === yrFlowersBefore && S.bench.basket.length === yrBasketBefore);
 check('it counts a generic harvest quest', S.quests.active.find((q) => q.id === 'q_harvest_1').progress === 1);

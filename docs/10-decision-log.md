@@ -5,6 +5,60 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (gauntlet) — Phase 1's critics: 29 findings, 20 confirmed, and one genuine economy break
+
+**The doc-34 gauntlet ran as a 33-agent adversarial workflow** — four independent critics
+(invariant coverage, partition completeness, economy pacing, spec fidelity), every finding then
+handed to a verifier instructed to refute it. Nine were refuted; twenty survived, several by
+mutation testing (the verifiers edited scratch copies of `game.js` and watched the suite stay
+green). What was fixed the same day:
+
+**The suite's faucet coverage had real holes.** Mutating `standDeliver`, `fallHarvest` or
+`applyReward` from `credit()` to a raw wallet write left all 1,043 assertions green — the exact
+regression class bill item 4 exists to catch. The bill-4 group now watches a real Stand delivery,
+a daily quest's gold, and a Fall harvest reach `coinsEarned` (and the Tally's orders counter move
+off the real event); the bill-1 rig now carries non-default values in every surviving field it
+asserts (tickets, prefs, a live daily quest, claimed sets and milestones, Stand lifetime
+counters, a stationed keeper, a widened bench), so "survives verbatim" can actually fail; bill 3
+spends through every coin sink, bill 9 asserts fresh order ids and live refill clocks, and the
+migration groups carry the bill-13 tag. All eight of the gauntlet's surviving mutants are now
+caught; the suite stands at 1,051.
+
+**The pacing tool had a model bug and a dishonest verdict.** The tap loop played 1.8 taps/sec
+where its knob said 0.8 (`for (t < 0.8)` runs once, plus the fractional roll — fixed to
+floor+fraction), and the daisy-rush verdict compared only coins and petals, ignoring Saved Seeds
+minted — the actual prestige currency, which rush was winning in the tool's own printout while
+it declared "unprofitable: YES". year-sim now plays Fall, buys post-Turn plots, blesses the
+cheapest uncapped flower, prints its unlock diary, plays an honest `smart` strategy (normal play,
+turn at the gate, wallet dumped into Fall beds first), and **exits non-zero when any cheap-Turn
+shape beats casual** — which it currently does; see below.
+
+**The one genuine economy break: bill item 17's economic half is false at the spec constants.**
+Confirmed and quantified by the critics with the real engine: sqrt-splitting plus uncapped
+veterancy plus Turn-surviving Fall beds make turn-at-every-100K strictly dominant (~35× the
+seeds, more gold, ~8 Turns/day). The engine is faithful to docs 32/33; the constants are the
+owner's. Recorded as an open owner decision in [11-known-issues.md](11-known-issues.md) and
+flagged inline in doc 33 — phase 1 does not retune, and the tool fails loudly until the ruling.
+
+**Disclosure fixes:** docs/11 now states plainly that a fresh save is hard-capped at 2 seeds and
+4 plots until phase 2 (with a new dev-tools "Unlock the next seed" driver so the wall can be
+felt during review), doc 33's two headline pacing claims carry the shipped tool's measured
+envelope beside the design-session numbers, doc 32's never-touched column got its precise
+reading (never reset or decreased — the mint and blessing only add), doc 07's state shape
+gained the fields it had drifted past (flowers, craft, goods, holdInterval, the proc badges),
+and the dev windfall toast reads its percentage from `DATA.fall.windfall`.
+
+### Rejected
+
+**Making the suite assert rush-unprofitability** — it would assert a falsehood at current
+constants; the claim lives in year-sim's exit code where it can go green the day the data
+changes. **Retuning minCoins/veterancy/mintK in phase 1** — the builder implements a finished
+spec; the exploit is documented, measured, reproducible on demand, and waiting on the owner.
+**Trusting the critics' word** — every fix above was re-verified by re-running the critics'
+own mutations against the repaired suite; all eight are caught.
+
+---
+
 ## 2026-08-29 (build) — Phase 1: the Garden Year's engine ships as pure simulation
 
 **The whole prestige loop now runs headlessly under the live game** — `Game.credit()` as the

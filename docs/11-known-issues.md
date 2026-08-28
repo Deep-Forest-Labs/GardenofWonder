@@ -11,15 +11,21 @@ The engine shipped with no UI, so several truths are temporarily invisible or mi
 All of these resolve in phases 2–3; they are listed so nobody "fixes" them early or is
 surprised on a fresh save.
 
-### The seed picker's locked rows still say "Level N"
+### A FRESH save is hard-capped at 2 of 19 seeds and 4 of 8 plots until phase 2
 
-`renderSeeds()` renders a locked seed's chip from the retired `unlockLevel` field, but the
-gate is now a one-time gold price — a fresh save sees "Level 1" on a Bluebell that actually
-wants 150K gold. The owner's grandfathered save sees nothing locked, so the live game reads
-unchanged. Phase 2 ships the real unlock rows. Same family: a year-gated plot's chip and
-deny toast still say "Lv 3" while the true refusal is "no Turn yet", and the level-up toast
-no longer announces seeds (they are not level-gated), which shortens levels 2–17's fanfare
-until the ladder re-authors in slice D.
+Say it plainly (the gauntlet's spec critic caught the soft version of this note): with no
+unlock surface shipped, a brand-new save on the live site can never plant past Tulip and can
+never buy plots 5–8 or run a Turn from the game's own UI — `Game.unlockSeed()` has no caller
+outside Developer tools (a **"Unlock the next seed" dev button** exists precisely so the wall
+can be paid and *felt* during review), and the Turn exists only behind the dev sheet. The
+owner's grandfathered save sees nothing locked, so the live game reads unchanged **for
+migrated saves only** — confirm every live tester is on one before phase 2, or warn them.
+
+The label seams, same family: `renderSeeds()` still chips a locked seed with the retired
+`unlockLevel` ("Level 1" on a Bluebell that actually wants 150K gold), a year-gated plot's
+chip and deny toast still say "Lv 3" while the true refusal is "no Turn yet", and the
+level-up toast no longer announces seeds, which shortens levels 2–17's fanfare until the
+ladder re-authors in slice D. Phase 2 ships the real unlock rows.
 
 ### The Almanac still renders the frozen mastery ladder
 
@@ -41,14 +47,27 @@ years rather than jamming — but a fresh save's `q_discover_5` (rep 12) will ho
 slot from mid-year-one until rose unlocks in year two. Doc 33 re-keyed exactly four quests
 and deliberately not this one. Watch it in the first playtest.
 
-### Turning often is seed-optimal, and the veterancy knob rewards it
+### OPEN OWNER DECISION: the cheap-Turn cadence is strictly profitable — bill item 17's economic half is false at the current constants
 
-`sqrt(coinsEarned)` makes four 100K years mint roughly twice a single 400K year, and the
-`(1 + 0.2 × turns)` veterancy bonus compounds with turn count — `tools/year-sim.js`'s
-turn-at-the-gate strategy banks more Saved Seeds than wall-riding (it still loses on coins
-and on petals-that-matter, which is why the daisy rush stays dead). Nothing exploitable in
-year one, but the optimal cadence is "turn at exactly 100K", which may not be the ritual the
-design wants. A phase-4 question with `minCoins`, `veterancy` and `mintK` as the dials.
+The phase-1 gauntlet confirmed this with the real engine, and it is worse than the first
+version of this note claimed (both of that note's mitigations were refuted — the shape wins
+on coins too, from Turn 1, not just on banked seeds). Two mechanisms stack:
+
+1. **The mint favours splitting.** `sqrt(coinsEarned)` makes four 100K years mint ~2.6× one
+   400K year, and the uncapped `(1 + 0.2 × turns)` veterancy term compounds with turn count —
+   by turn ~55 a 100K year pays ~1,100 seeds, clearing doc 33's whole ~525–679K sink runway
+   ("months of headroom") in weeks.
+2. **Fall beds launder the doomed wallet.** Fall rightly survives the Turn, so gold that is
+   about to zero converts freely into growing crops that pay into the NEXT year's meter —
+   eight apples pay 806K per 8-hour fill, one windfall apple alone clears the 100K floor, and
+   a single fill can finance ~8 consecutive Turns.
+
+Measured over 12 modeled days (`node tools/year-sim.js 12 all`, which now plays these shapes
+honestly and **exits non-zero while the exploit stands**): normal-play-but-turn-at-every-gate
+mints ~35× the wall-rider's Saved Seeds AND out-earns it in gold, at ~8 Turns/day. The engine
+implements the spec faithfully — the dials are `minCoins`, a `veterancy` cap, and `mintK` in
+`DATA.year`, and the ruling is the owner's, scheduled with phase 4 (or sooner as a pure data
+change if the ritual matters before then).
 
 ## Balance
 

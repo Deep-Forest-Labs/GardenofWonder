@@ -60,6 +60,11 @@ the knobs interact: **tune the unlock ratio *last*, after petal pricing** — wi
 (below), ~×1.45 may be needed to hit the day-25–40 window. Phase 4's job. What survives
 unchanged: first Turn on day ~2.7–3.3, the first wall reading as "six times everything I've
 earned," and deliberately-long walls arriving naturally from Turn 6+ where veterans expect them.
+*(Phase 1's own pacing tool does not reproduce the first two numbers exactly — its casual model
+lands the first Turn at day ~1.5–1.8 on ~250K, with doc 33's band inside the measured envelope
+of the turn-policy knob; the divergence is play-model sensitivity, catalogued in the 2026-08-29
+build entry of [10-decision-log.md](10-decision-log.md), and re-baselining it against a real
+playtest is part of phase 4.)*
 The same sim confirmed **skipping unlocks is strictly dominated** (saving for seed 10 directly
 reaches it eight days *later* than climbing), so the sequence needs no enforcement.
 
@@ -80,10 +85,24 @@ coins floor exists because the full-model sim found the seeds-only gate is reach
 enabling a **daisy petal rush** — several Turns a day into cheap Daisy petals, 36% faster to the
 first million than intended play. One number closes it (verified).
 
+> **PHASE 1's GAUNTLET FALSIFIED THE ECONOMIC HALF OF THIS, 2026-08-29 — an owner decision is
+> open.** The gates hold exactly as specified (sim-tested), but the *cadence* they permit is
+> strictly profitable: `sqrt(coinsEarned)` means four 100K years mint ~2.6× one 400K year, the
+> uncapped veterancy term compounds with turn count, and **Fall beds — which rightly survive the
+> Turn — let the doomed pre-Turn wallet be converted into next-year income** (eight apples pay
+> 806K per 8-hour fill; one windfall apple alone clears the 100K floor). Measured through the
+> real engine over 12 modeled days: a player who plays normally but turns at every 100K gate
+> mints **~35× the Saved Seeds of the wall-riding player and out-earns them in gold**, at ~8
+> Turns/day. `node tools/year-sim.js 12 all` reproduces this and **exits non-zero until it is
+> resolved**. The dials are `minCoins`, `veterancy` (a cap?), and `mintK` — the owner's call,
+> scheduled with phase 4; the engine implements this spec faithfully in the meantime.
+
 **Plots 5–8 cannot be bought in year one** — `turnsCompleted ≥ 1` joins their existing level
 gates, so the first year is played on four plots and **Turn 1's gift grows: Fall, and the right
 to a bigger garden.** The sim demanded this too: at 9.4K for four plots that double income, year
-one earned ~800K and broke the documented pacing; gated, it earns **~370–410K (verified)** and
+one earned ~800K and broke the documented pacing; gated, it earns **~370–410K (verified by the
+2026-08-29 design-session model; phase 1's shipped tool measures ~250K under its own casual
+model — see the note above)** and
 every downstream number holds. A migrated save keeps whatever plots it already opened for its
 current year — nothing a player owns is ever re-locked.
 

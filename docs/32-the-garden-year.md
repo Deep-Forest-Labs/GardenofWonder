@@ -173,6 +173,12 @@ Every row of this table is a sim-test. The Turn is a **new, selective path** —
 (`gw-save` wipe) is not a prestige and must never be reused as one
 ([07-save-data.md](07-save-data.md)).
 
+*Reading the right column precisely: "never touched" means never reset or decreased. The Turn
+necessarily WRITES three of the listed fields upward — the mint adds to Saved Seeds, and the
+blessing adds one petal and one `state.blessed` record — and the sim-test partition accounts for
+that: `savedSeeds` sits with the changed-by-the-Turn fields (asserted to grow by exactly the
+projection), while petals and blessings are asserted through the blessing's own bill item.*
+
 ## Saved Seeds — the two-wallet rule
 
 **Gold is the year's money; Saved Seeds are the forever money.** Neither buys the other's things,
