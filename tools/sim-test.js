@@ -714,6 +714,48 @@ globalThis.localStorage.setItem('gw-save', JSON.stringify(saveOf({
 })));
 G.load();
 check('a planted high-tier seed with an empty wallet is not taken away', G.seedUnlocked('moonflower') === true);
+
+/* Both grandfather arms, separated — and the NEGATIVE, which is the half that
+   makes the rule mean anything. Doc 33: "any seed with `discovered[id] > 0`,
+   or whose old `unlockLevel` the save's level had already passed, is marked
+   unlocked free". The two cases above both migrate a save whose LEVEL clears
+   the seed, so the discovered arm was riding on the level arm; and nothing
+   asserted that a save WITHOUT the evidence keeps its walls. A migration that
+   simply unlocked everything would have satisfied every positive check here.
+   (This is the escape the 2026-08-29 independent review found — M09.) */
+G.reset();
+globalThis.localStorage.setItem('gw-save', JSON.stringify(saveOf({
+  rep: 0, level: 1, credits: 50,
+  discovered: { moonflower: 3 },
+  stats: { totalTaps: 3, totalCrits: 0, totalHarvests: 3, wonders: 0 }
+})));
+G.load();
+check('the discovered arm alone grandfathers a grown seed at level 1',
+  G.seedUnlocked('moonflower') === true);
+check('and a seed with NEITHER evidence stays walled',
+  G.seedUnlocked('eternal') === false && G.seedUnlocked('rose') === false,
+  JSON.stringify(Object.keys(S.seedUnlocks)));
+/* Bluebell IS grandfathered here, and correctly: its retired `unlockLevel` was
+   1, so a level-1 save could always plant it and the Year must not take it
+   away. That is the level arm doing its job, not leakage. */
+check('the level-1 grandfather is exactly the old level-1 catalogue',
+  ['daisy', 'tulip', 'bluebell'].every((id) => G.seedUnlocked(id)));
+
+G.reset();
+globalThis.localStorage.setItem('gw-save', JSON.stringify(saveOf({
+  rep: G.cumulativeRep(5), level: 5, credits: 400,
+  discovered: { daisy: 12, tulip: 2 },
+  stats: { totalTaps: 30, totalCrits: 1, totalHarvests: 14, wonders: 0 }
+})));
+G.load();
+check('a modest save is NOT handed the whole ladder', (() => {
+  const owned = DATA.seeds.filter((s) => G.seedUnlocked(s.id)).map((s) => s.id);
+  /* Level 5 clears unlockLevel 1–5 (daisy…rose); everything above stays walled. */
+  return owned.length < DATA.seeds.length && !G.seedUnlocked('eternal')
+    && !G.seedUnlocked('moonflower') && G.seedUnlocked('daisy');
+})(), DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length + '/19 unlocked');
+check('and the walls it kept still cost their documented price',
+  G.seedUnlockPrice('eternal') === Math.round(150000 * Math.pow(1.5, 16)));
 G.reset();
 
 group('tickets convert to gems once and boosts are earned');
@@ -4069,78 +4111,107 @@ const freshCell = () => ({ locked: false, seed: null, plantedAt: 0, grow: 0, rea
 
 group('bill 1 — the never-resets partition, field by field');
 /* Generated from the rule: EVERYTHING not named in the clears column survives
-   verbatim. The rig puts something non-default in every field, the Turn runs
-   with no blessing and nothing in flight, and every top-level key must land
-   in exactly one of the two lists — a future field that joins the save
-   without joining a list fails the completeness check at the bottom. */
-G.reset();
-clearGarden();
-S.credits = 500000;
-S.gems = 7;
-S.tickets = 5;
-S.decor = [{ id: 'gnome' }];
-S.boosters = { bloom: clock + 900 };
-S.boostInv = { bloom: 2, seedrush: 1, fortune: 0, golden: 0 };
-S.weatherCall = { id: 'rain', from: clock - 10, until: clock + 200 };
-S.cards = { firstlight_0: 2 };
-S.packs = 3;
-S.setsClaimed = ['firstlight'];
-S.stats = { totalTaps: 41, totalCrits: 3, totalHarvests: 29, wonders: 1 };
-S.wonder = { until: clock + 10, last: clock - 500 };
-S.apiary.cells[0] = { kind: 'hive', at: clock, jars: ['daisy'] };
-S.apiary.honey = { daisy: 2 };
-S.apiary.wax = 3;
-S.apiary.shelf = { daisy: 1 };
-S.apiary.keepers = ['pip'];
-S.flowers = { daisy: 4 };
-S.craft = [{ id: 'tea', doneAt: clock + 999 }];
-S.goods = { tea: 1 };
-S.bench.basket = [0];
-S.bench.cells[0] = { tier: 1 };
-S.bench.stock = { posy: 1 };
-S.bench.side = 5;
-S.critters.pip = { since: clock - 5000, fed: clock - 100, fedUntil: clock + 3600, gifts: 1, met: true, level: 2, tending: true };
-S.pairsSeen = ['nightbloom'];
-S.mementos = { mossy_pebble: 2 };
-S.luckyPacks = 1;
-S.prefs = { sfx: false, music: true };
-S.seen = { intro: true, plot: true, apiary: true };
-S.harvestsThisSession = 29;
-S.lastSeen = clock - 60;
-S.stand.delivered = 6;
-S.stand.skipped = 2;
-unlockTo(8);
-S.quests.active = [{ id: 'q_tap_25', progress: 7 }];
-S.quests.done = ['q_plant_1'];
-/* Doc 32's never-touched column promises "the daily quest keeps its day" —
-   so the rig carries a LIVE daily, mid-progress, on today's real key. */
-S.quests.daily = { id: DATA.dailies[0].id, progress: 3, day: (() => {
-  const d2 = new Date(); return d2.getFullYear() + '-' + (d2.getMonth() + 1) + '-' + d2.getDate();
-})(), claimed: false };
-S.discovered = { daisy: 30, tulip: 4, bluebell: 6 };
-S.bestRarity = { daisy: 'rare' };
-S.almanacClaimed = [5];
-S.mastery = { daisy: 2 };
-S.rarityCounts = { daisy: { rare: 3, epic: 0, legend: 0 } };
-S.savedSeeds = 40;
-S.petals = { daisy: { rich: 1, quick: 0, sig: 0 } };
-S.blessed = [{ seed: 'daisy', year: 1 }];
-S.year = {
-  number: 2, coinsEarned: 250000, turnsCompleted: 1,
-  stats: { orders: 12, windfalls: 1, species: 2, speciesSeen: { daisy: true, tulip: true }, legendaries: 1, bestCombo: 60 }
-};
-/* A veteran garden: every plot open, one annual growing (not ready). */
-S.grid.forEach((c, i) => { S.grid[i] = freshCell(); });
-S.grid[2] = { ...freshCell(), seed: 'daisy', plantedAt: clock, grow: 9999 };
-S.upgrades.tapPower = 2; S.tap.power = 3;
-S.upgrades.critChance = 1; S.tap.critChance = 0.06;
-S.upgrades.comboMeter = 1; S.tap.comboMax = 60;
-S.tap.combo = 12;
-/* Fall mid-flight: a crop and the Century Bloom, both growing. */
-S.fall.grid[0] = { seed: 'strawberry', plantedAt: clock - 100, grow: 1200, ready: false, windfall: false };
-S.fall.grid[5] = { seed: 'century', plantedAt: clock - 86400, grow: 1209600, ready: false, windfall: false };
-S.fall.bedPaid = false;
+   verbatim. The rig puts something NON-DEFAULT in every field it asserts —
+   including every badge key and every tap field, so the wipe and the
+   re-derivation bite key by key rather than on the three a lazier rig would
+   dirty — and every top-level key must land in exactly one of the two lists,
+   so a future field that joins the save without joining a list fails the
+   completeness check at the bottom.
 
+   The rig is a FUNCTION because the partition has to be proved twice. The
+   Turn's in-flight arm (auto-collect, pack-banking) runs before the mint, so
+   a sweep that keeps that arm inert cannot see a wipe inside it — the second
+   sweep below runs the same partition with a ready bloom and a parked pack. */
+const buildTurnRig = (inFlight) => {
+  G.reset();
+  clearGarden();
+  S.credits = 500000;
+  S.gems = 7;
+  S.tickets = 5;
+  S.decor = [{ id: 'gnome' }];
+  S.boosters = { bloom: clock + 900 };
+  S.boostInv = { bloom: 2, seedrush: 1, fortune: 0, golden: 0 };
+  S.weatherCall = { id: 'rain', from: clock - 10, until: clock + 200 };
+  S.cards = { firstlight_0: 2 };
+  S.packs = 3;
+  S.setsClaimed = ['firstlight'];
+  S.stats = { totalTaps: 41, totalCrits: 3, totalHarvests: 29, wonders: 1 };
+  S.wonder = { until: clock + 10, last: clock - 500 };
+  S.apiary.cells[0] = { kind: 'hive', at: clock, jars: ['daisy'] };
+  S.apiary.honey = { daisy: 2 };
+  S.apiary.wax = 3;
+  S.apiary.shelf = { daisy: 1 };
+  S.apiary.keepers = ['pip'];
+  /* Paid-for ground: a gated cell bought open, so `apiary.locked` carries a
+     value a wipe would visibly change. */
+  S.apiary.locked = MEADOW.cellUnlockLevel.map((lv, i) => (i === 4 ? false : lv > 1));
+  S.flowers = { daisy: 4 };
+  S.craft = [{ id: 'tea', doneAt: clock + 999 }];
+  S.goods = { tea: 1 };
+  S.bench.basket = [0];
+  S.bench.cells[0] = { tier: 1 };
+  S.bench.stock = { posy: 1 };
+  S.bench.side = 5;
+  S.critters.pip = { since: clock - 5000, fed: clock - 100, fedUntil: clock + 3600, gifts: 1, met: true, level: 2, tending: true };
+  S.pairsSeen = ['nightbloom'];
+  S.mementos = { mossy_pebble: 2 };
+  S.luckyPacks = 1;
+  S.prefs = { sfx: false, music: true };
+  S.seen = { intro: true, plot: true, apiary: true };
+  /* 25, not 29: the in-flight sweep's auto-collect must not land on the
+     every-tenth-harvest reputation drip, which would move rep and level for a
+     reason that has nothing to do with the partition. */
+  S.harvestsThisSession = 25;
+  S.lastSeen = clock - 60;
+  S.stand.delivered = 6;
+  S.stand.skipped = 2;
+  unlockTo(8);
+  S.quests.active = [{ id: 'q_tap_25', progress: 7 }];
+  S.quests.done = ['q_plant_1'];
+  /* Doc 32's never-touched column promises "the daily quest keeps its day" —
+     so the rig carries a LIVE daily, mid-progress, on today's real key. */
+  S.quests.daily = { id: DATA.dailies[0].id, progress: 3, day: (() => {
+    const d2 = new Date(); return d2.getFullYear() + '-' + (d2.getMonth() + 1) + '-' + d2.getDate();
+  })(), claimed: false };
+  S.discovered = { daisy: 30, tulip: 4, bluebell: 6 };
+  S.bestRarity = { daisy: 'rare' };
+  S.almanacClaimed = [5];
+  S.mastery = { daisy: 2 };
+  S.rarityCounts = { daisy: { rare: 3, epic: 0, legend: 0 } };
+  S.savedSeeds = 40;
+  S.petals = { daisy: { rich: 1, quick: 0, sig: 0 } };
+  S.blessed = [{ seed: 'daisy', year: 1 }];
+  S.year = {
+    number: 2, coinsEarned: 250000, turnsCompleted: 1,
+    stats: { orders: 12, windfalls: 1, species: 2, speciesSeen: { daisy: true, tulip: true }, legendaries: 1, bestCombo: 60 }
+  };
+  /* A veteran garden: every plot open, one annual growing (not ready). */
+  S.grid.forEach((c, i) => { S.grid[i] = freshCell(); });
+  S.grid[2] = { ...freshCell(), seed: 'daisy', plantedAt: clock, grow: 9999 };
+  /* EVERY badge owned, and every tap field off its default, so `every badge is
+     wiped` and `the tap fields re-derive` cannot pass on the strength of the
+     keys the rig happened to leave alone. holdSpeed and critMult matter most:
+     their only durable effect lives in tap.holdInterval / tap.critMult, so a
+     Turn that wiped the badges without re-deriving those would hand out a free
+     permanent maxed hold speed and crit multiplier. */
+  Object.keys(S.upgrades).forEach((k, i) => { S.upgrades[k] = 1 + (i % 3); });
+  S.tap = { power: 7, critChance: 0.21, critMult: 26, combo: 12, comboMax: 90, holdInterval: 420 };
+  /* Fall mid-flight: a crop and the Century Bloom, both growing, on a bed
+     whose windfall latch is CLOSED and whose cells carry their marks — the
+     state that makes "once per fill" structural, and the state a Turn must
+     not quietly reset. */
+  S.fall.grid[0] = { seed: 'strawberry', plantedAt: clock - 100, grow: 1200, ready: false, windfall: true };
+  S.fall.grid[5] = { seed: 'century', plantedAt: clock - 86400, grow: 1209600, ready: false, windfall: false };
+  S.fall.bedPaid = true;
+  if (inFlight) {
+    /* The in-flight arm, live: a ready bloom to auto-collect, a parked pack to
+       bank, and the growing annual above to forfeit. */
+    S.grid[0] = { ...freshCell(), seed: 'daisy', plantedAt: clock - 100, grow: 10, ready: true };
+    S.grid[4].packDrop = true;
+  }
+};
+
+buildTurnRig(false);
 const yrBefore = JSON.parse(JSON.stringify(S));
 const yrExpectedPouch = Math.round(
   DATA.year.mintK * Math.sqrt(yrBefore.year.coinsEarned)
@@ -4188,6 +4259,52 @@ check('bill 15 — the Tally counters zero at the Turn',
 check('the Stand\'s lifetime counters survive', S.stand.delivered === yrBefore.stand.delivered
   && S.stand.skipped === yrBefore.stand.skipped);
 
+group('bill 1b — the same partition, on a Turn whose in-flight arm actually runs');
+/* The sweep above proves the partition on a Turn that collects nothing. The
+   in-flight arm — auto-collect, pack-banking — runs BEFORE the mint and
+   touches the save, so it needs its own sweep or a wipe in there is invisible.
+   The auto-collected harvest legitimately writes a few lifetime records; they
+   are NAMED here rather than excused by a loose comparison, and everything
+   else must still survive verbatim. */
+buildTurnRig(true);
+const flightBefore = JSON.parse(JSON.stringify(S));
+/* The payout is read off the real harvest event rather than recomputed here —
+   the rig is a veteran garden (a hive pollinating, a Rich Bloom petal, a
+   Wonder running), and duplicating that product in the test would assert the
+   economy against itself. */
+let daisyPay = 0;
+G.on('harvest', (p) => { daisyPay = p.payout; });
+const rngFlight = Math.random;
+Math.random = () => 0.5;   // common rarity, no gem, no new Wonder, no pack proc
+const flightTurn = G.turnYear(null);
+Math.random = rngFlight;
+/* What the auto-collected harvest and the pack-banking are ALLOWED to move. */
+const HARVEST_WRITES = ['flowers', 'bench', 'stats', 'harvestsThisSession', 'discovered', 'quests', 'packs'];
+check('the in-flight arm really ran', Boolean(flightTurn) && flightTurn.collected === 1
+  && flightTurn.bankedPacks === 1, JSON.stringify(flightTurn && { c: flightTurn.collected, p: flightTurn.bankedPacks }));
+SURVIVES.filter((k) => !HARVEST_WRITES.includes(k)).forEach((k) => {
+  check(`\`${k}\` survives an in-flight Turn verbatim`, same(S[k], flightBefore[k]),
+    `${JSON.stringify(S[k]).slice(0, 80)} vs ${JSON.stringify(flightBefore[k]).slice(0, 80)}`);
+});
+check('the collected bloom was paid into the year BEFORE the mint',
+  flightTurn.earned === flightBefore.year.coinsEarned + daisyPay,
+  `${flightTurn.earned} vs ${flightBefore.year.coinsEarned} + ${daisyPay}`);
+check('and the pouch is minted from that larger number', flightTurn.pouch === Math.round(
+  DATA.year.mintK * Math.sqrt(flightBefore.year.coinsEarned + daisyPay)
+  * (1 + DATA.year.veterancy * flightBefore.year.turnsCompleted) * flightTurn.tally.mult),
+  `${flightTurn.pouch}`);
+check('the banked pack is added, never destroyed', S.packs === flightBefore.packs + 1);
+check('the lifetime records the harvest wrote only grew',
+  S.discovered.daisy === flightBefore.discovered.daisy + 1
+  && S.stats.totalHarvests === flightBefore.stats.totalHarvests + 1
+  && S.flowers.daisy === flightBefore.flowers.daisy + 1);
+check('the badges still wipe and the tap fields still re-derive on this path',
+  Object.values(S.upgrades).every((v) => v === 0)
+  && S.tap.power === 1 && S.tap.critChance === 0.05 && S.tap.critMult === 10
+  && S.tap.comboMax === 50 && S.tap.holdInterval === 900 && S.tap.combo === 0);
+check('and Fall\'s latch and marks are untouched by an in-flight Turn',
+  S.fall.bedPaid === true && S.fall.grid[0].windfall === true);
+
 group('bill 2 — the Turn kills no running timer, and nothing in flight is eaten silently');
 check('the Fall crop\'s clock is untouched', same(S.fall.grid[0], yrBefore.fall.grid[0]));
 check('the Century Bloom\'s clock is untouched', same(S.fall.grid[5], yrBefore.fall.grid[5]));
@@ -4205,9 +4322,15 @@ const packsBeforeTurn = S.packs;
 const inFlight = G.turnYear(null);
 Math.random = rngTurn;
 check('the ready bloom auto-collected', inFlight.collected === 1);
-check('it paid into the year BEFORE the mint', inFlight.pouch === Math.round(
-  DATA.year.mintK * Math.sqrt(200000 + G.seedById('daisy').yield) * (1 + DATA.year.veterancy * 1)),
-  `pouch ${inFlight.pouch}`);
+/* Assert the GOLD, not the pouch: at 200K the rounded pouch does not move
+   until roughly +12,500 coins, so predicting it from sqrt(200000 + yield) is
+   arithmetically identical to sqrt(200000) and would pass with the
+   auto-collect's payout thrown away entirely. `earned` is captured inside the
+   Turn after the collect loop and before the rollover, so it is the direct
+   witness for "paid into the year BEFORE the mint". */
+check('it paid into the year BEFORE the mint',
+  inFlight.earned === 200000 + G.seedById('daisy').yield,
+  `${inFlight.earned} vs ${200000 + G.seedById('daisy').yield}`);
 check('the plot-parked pack was banked, never destroyed',
   S.packs === packsBeforeTurn + 1 && inFlight.bankedPacks === 1);
 check('the growing tulip was forfeit — the one stated cost', !S.grid[1].seed);
@@ -4222,8 +4345,10 @@ const mintRigFor = (spendEverything) => {
   G.reset();
   clearGarden();
   S.year.coinsEarned = 300000;
-  S.year.turnsCompleted = 1;      // both arms: Fall open, veterancy identical
+  S.year.turnsCompleted = 1;      // both arms: Fall open, plots buyable, veterancy identical
   S.credits = 300000;
+  S.rep = G.cumulativeRep(14);    // both arms: the level gates on plots and meadow land are open
+  S.level = 14;
   if (spendEverything) {
     G.unlockSeed('bluebell');                             // 150,000
     G.plant(0, G.seedById('daisy'));
@@ -4231,6 +4356,11 @@ const mintRigFor = (spendEverything) => {
     G.plant(2, G.seedById('bluebell'));
     G.placeHive(0);                                       // 2,200
     G.fallPlant(0, 'strawberry');                         // 2,000
+    G.unlockPlot(4);                                      // plot land
+    G.unlockCell(4);                                      // meadow land
+    G.placeTender(1, 'sun');                              // a meadow piece
+    G.benchExpand();                                      // the bench
+    G.buyDecor('shrine');                                 // a coin-priced cosmetic
     while (S.credits >= G.upgradePrice('tapPower')) G.buyUpgrade('tapPower');
   }
   const r = G.turnYear(null);
@@ -4338,6 +4468,17 @@ yrMark = earnedNow();
 G.Dev.feedCritters();
 check('the feed-everyone cheat stays off the mint', earnedNow() === yrMark);
 check('the year driver IS earning, by design', (G.Dev.driveYear(500), earnedNow() === yrMark + 500));
+/* The last credit() call site: a level's hive grant landing on a full meadow
+   pays coins instead. A real faucet on a real path, and the only one the rest
+   of this group does not drive. */
+S.apiary.cells = S.apiary.cells.map(() => ({ kind: 'tender', type: 'sun' }));
+S.rep = G.cumulativeRep(17); S.level = 17;
+yrMark = earnedNow();
+const hiveGrantLevel = Number(Object.keys(DATA.levelGrants).find((L) => DATA.levelGrants[L].hive));
+G.Dev.grantLevels(hiveGrantLevel - 17);
+check('the hive-overflow coin payout earns into the year',
+  hiveGrantLevel > 0 && S.level >= hiveGrantLevel && earnedNow() > yrMark,
+  `level ${hiveGrantLevel}, earned +${earnedNow() - yrMark}`);
 
 group('bill 5 — yield = cost × 1.4 for every seed, Fall\'s included; petals leave the curve alone');
 check('all nineteen flowers hold the curve', DATA.seeds.every((s) => s.yield === Math.round(s.cost * 1.4)));
@@ -4367,6 +4508,22 @@ check('the shared skills cap at five petals', (() => {
   for (let i = 0; i < 9; i += 1) G.buyPetal('daisy', 'rich');
   return G.petalsOf('daisy').rich === 5 && G.buyPetal('daisy', 'rich') === false;
 })());
+/* The sink runway, derived from the constants rather than quoted from the
+   design session — doc 33's own preamble asks that its simulated figures be
+   re-run as sim-tests once the values land in data. Pin it so the docs and
+   the data cannot drift apart again. */
+const petalSink = DATA.seeds.reduce((total, s, i) => {
+  let n = 0;
+  ['rich', 'quick'].forEach((k) => {
+    for (let p = 0; p < DATA.petals.shared[k].cap; p += 1) {
+      n += Math.round(DATA.petals.base * Math.pow(DATA.petals.seedRatio, i)
+        * Math.pow(DATA.petals.petalRatio, p));
+    }
+  });
+  return total + n;
+}, 0);
+check('the whole shared-skill sink is ~636K Saved Seeds, as documented',
+  Math.abs(petalSink - 636378) < 500, `${petalSink.toLocaleString()}`);
 
 group('bill 6 — gems stay flat and untouched by the Year');
 G.reset();
@@ -4458,6 +4615,19 @@ S.credits = 1e6;
 check('and can never be charged again', G.unlockSeed('bluebell') === false && S.credits === 1e6);
 
 group('bill 12 — the windfall pays for a full ripe bed, once per fill');
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+/* The PLANTED half of "all eight planted and ripe", asserted in its own right:
+   seven crops, every one of them ripe, one plot empty. Ripeness alone is not
+   the rule, and this must not be left to some other group's rig happening to
+   leave a bed part-empty. */
+for (let i = 0; i < DATA.fall.plots - 1; i += 1) G.fallPlant(i, 'strawberry');
+S.fall.grid.forEach((c) => { if (c.seed) c.plantedAt = clock - 9999; });
+G.processFall(clock);
+check('seven ripe crops and one EMPTY plot arm nothing', S.year.stats.windfalls === 0
+  && S.fall.grid.every((c) => !c.windfall), JSON.stringify(S.fall.grid.map((c) => c.seed)));
+for (let i = 0; i < DATA.fall.plots; i += 1) G.fallHarvest(i);
 G.reset();
 S.year.turnsCompleted = 1;
 S.credits = 1e9;
@@ -4613,8 +4783,15 @@ G.reset();
 clearGarden();
 G.Dev.setYearStats({ orders: 50, windfalls: 15, species: 15, legendaries: 8, bestCombo: 80 });
 S.year.coinsEarned = 99999;
+/* A refused Turn must leave the save byte-identical. This is the one path a
+   player can invoke freely and repeatedly below both gates, so a blessing
+   written on it would be an ungated free-petal faucet. */
+const refusedBefore = JSON.parse(JSON.stringify(S));
 check('a rich Tally cannot carry a year under the coins floor',
   G.turnReady() === false && G.turnYear('daisy') === null);
+check('and a refused Turn changes nothing at all — no petal, no mint, no wipe',
+  same(S, refusedBefore),
+  Object.keys(S).filter((k) => !same(S[k], refusedBefore[k])).join(',') || 'identical');
 S.year.coinsEarned = 100000;
 check('the floor itself passes', G.turnReady() === true);
 const savedMinCoins = DATA.year.minCoins;

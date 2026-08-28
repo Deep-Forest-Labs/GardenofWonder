@@ -21,7 +21,7 @@ from quests and levels.
 > windfall and the Century Bloom as simulation, Bloom Mastery retired into a one-time Saved
 > Seeds conversion, the four quest re-keys at a held 777, and Developer-tools drivers to feel a
 > whole year in five minutes. The doc-33 sim-test bill (items 1–6, 8–18) is genuinely asserted —
-> the suite grew to **1,051 assertions**, clean across repeated runs and hardened by the
+> the suite grew to **1,096 assertions**, clean across repeated runs and hardened by the
 > gauntlet's own mutation tests — and `tools/year-sim.js` drives casual-play pacing through the
 > real `game.js`. **The gauntlet ran (33 agents, 20 confirmed findings, all fixed or escalated —
 > see the two 2026-08-29 entries in [10-decision-log.md](10-decision-log.md)) and left ONE OPEN
@@ -37,8 +37,18 @@ from quests and levels.
 > (it is arithmetic), and phase 1 APPROVED on two conditions** — a phase-1.1 patch closing the
 > one fresh-mutation escape (M09: the grandfather migration lacks its negative assertion), and
 > **the owner's ruling on the mint**, where the review's four measured variants recommend the
-> cumulative shape (B) and prove veterancy must be deleted rather than capped. Phase 2 begins at
-> the wireframe gate, in its own session, after both.
+> cumulative shape (B) and prove veterancy must be deleted rather than capped.
+>
+> **PHASE 1.1 IS DONE — condition 1 is closed.** M09 is dead (three cases now separate the
+> migration's two grandfather arms and assert the negative), round 2 of the builder's gauntlet
+> is answered (21 confirmed findings, two of them blockers about rigs that never exercised the
+> path they covered), and the suite is at **1,096 assertions**, every fix mutation-proven 16 of
+> 16. Two findings changed what we know: the pacing model had never bought the game's
+> automation, so **the exploit is a SEEDS-ONLY break — normal play out-earns the turn-spam
+> cadence on gold by ~2.7×** (which narrows the dials to the mint's shape and corroborates the
+> review's recommendation), and with automation modelled the tool **reproduces doc 33's
+> 370–410K first year for the first time**. **Only the owner's ruling on the mint is
+> outstanding.** Phase 2 begins at the wireframe gate, in its own session, after it.
 >
 > **THE GARDEN YEAR IS DOCUMENTED FOR BUILD, 2026-08-29.** The brainstorm ended and the owner said
 > go. **[32-the-garden-year.md](32-the-garden-year.md)** is the master design — four seasonal
@@ -50,7 +60,7 @@ from quests and levels.
 > **[33-year-one-economy.md](33-year-one-economy.md)** is the retune riding inside slice A: unlock
 > prices carry the spread (seed 3 = 150K, ×1.5/tier — retuned from ×1.6 by the 2026-08-29 full
 > sim; per-plant spreads cannot wall while 1.4× holds), the mint formula, petal prices, Fall's eight plants and the +50% windfall rule, the
-> Century Bloom, migration, and a 13-item sim-test bill.
+> Century Bloom, migration, and an 18-item sim-test bill.
 >
 > **Orders stay, and are promoted** — the owner's call ("that was always a fun system"): the Stand
 > becomes the perennial reputation engine behind an extended level ladder, entered from an order
@@ -902,9 +912,12 @@ header line is the meter until phase 2 draws it.
    earned-so-far against the 100K floor, then `base × tally → pouch`, then whether the Turn is
    ready. Note that **+1M gold** (in *Give*, above) moves the wallet and **not** the meter —
    that is cheated gold staying out of the mint, deliberately.
-2. **Hit the wall.** In *Petals*, tap **Unlock the next seed**. Bluebell wants **150,000** —
-   the first wall, and the number to judge: on day one it should read as impossible. Pay it, and
-   it is paid forever (it survives every Turn).
+2. **Hit the wall.** In *Petals*, tap **Unlock the next seed**. On a **fresh** save Bluebell
+   wants **150,000** — the first wall, and the number to judge: on day one it should read as
+   impossible. Pay it, and it is paid forever (it survives every Turn). **On your own save this
+   button will say "Every seed is already unlocked"** — migration grandfathered everything you
+   had earned, which is correct and deliberate. To feel the wall as a new player meets it, open
+   the game in a private window and run these steps there.
 3. **Turn the year.** Tap **A good year's Tally** (a canned mid-game year), then **Run the Turn
    (bless Daisy)**. The toast is the ceremony's content without its theatre: the pouch, the
    Tally's multiplier, and every line that scored — *Orders filled: 12 → +10%*, and so on. A
@@ -1566,7 +1579,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,051 assertions over the simulation layer
+node tools/sim-test.js          # 1,096 assertions over the simulation layer
 node tools/year-sim.js 12 all   # the pacing model — exits non-zero while the cheap-Turn exploit stands
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
@@ -1663,7 +1676,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,051 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,096 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

@@ -352,7 +352,9 @@ earlier in the day. An unclaimed daily expires at midnight; the ladder never exp
 - Claiming pays rep exactly once and moves the quest to `done`.
 - Migration: a save with 100,000 credits and no `rep` keeps access to every seed it could afford;
   a planted high-tier seed with an empty wallet is also kept.
-- Seed unlock: at level 1 exactly three seeds are plantable; at level 17 all nineteen are.
+- Seed unlock: **retired with the Garden Year** — at level 1 exactly *two* seeds are plantable
+  and the rest gate on one-time gold unlock prices, not on levels. The suite asserts the price
+  ladder, the once-per-lifetime charge, and both grandfather arms of the migration instead.
 - Plot 5 is gated at level 1 and buyable at level 3; Land Deed cannot skip a plot the level has
   not opened.
 - A maxed harvester still plants only an unlocked seed.
@@ -675,20 +677,30 @@ re-estimated, so a second load changes nothing.
 the moment of completion and a backfill has no moment; it also keeps a migration from dumping
 gems into nineteen flowers at once.
 
-### Sim-test
+### Sim-test — the RETIRED coverage, and what replaced it
 
-- A tier auto-pays once and the yield multiplier moves with it.
-- The completing harvest uses the old multiplier; the next harvest of that seed uses the new one.
-- One harvest that crosses two tiers pays both.
-- Rarity goals count that rarity or better.
-- `rarityCounts` never decreases when flowers are spent.
-- Backfill never credits a rarity above `bestRarity`, and pays no gems.
-- Gems land on tiers 5 and 10 and nowhere else.
-- `masteryTierGoal(1)` through `masteryTierGoal(10)` match the table above, and the decade pattern
-  keeps going past it.
-- Backfill is idempotent — a second load advances nothing further.
+**These assertions described the live ladder and are gone with it (2026-08-29).** They are kept
+here so the retired design is legible, not as a description of the suite:
 
-All eight are in `tools/sim-test.js`, which now runs 837 assertions.
+- ~~A tier auto-pays once and the yield multiplier moves with it.~~
+- ~~The completing harvest uses the old multiplier; the next harvest of that seed uses the new
+  one.~~
+- ~~One harvest that crosses two tiers pays both.~~
+- ~~Gems land on tiers 5 and 10 and nowhere else.~~
+- Rarity goals count that rarity or better. *(Still true — `masteryGoal()` answers, frozen.)*
+- `rarityCounts` never decreases when flowers are spent. *(Still asserted — creatures and the
+  Almanac read it.)*
+- Backfill never credits a rarity above `bestRarity`, and pays no gems. *(Still asserted, and it
+  now feeds the one-time Saved Seeds conversion.)*
+- `masteryTierGoal(1)` through `masteryTierGoal(10)` match the table above. *(Still asserted as
+  a frozen table.)*
+- Backfill is idempotent — a second load advances nothing further. *(Now bill item 13: the
+  migration converts exactly once.)*
+
+What replaced the retired half: the ladder is asserted **flat** — no harvest advances a tier,
+pays a mastery gem, or moves a multiplier — and petals carry the per-seed yield instead. See
+[33-year-one-economy.md](33-year-one-economy.md) and the `bill 13` groups in
+`tools/sim-test.js`, which now runs 1,096 assertions.
 
 **Trap the build found:** mastery multiplies harvest payout and climbs as a run proceeds, so any
 sim-test measuring a *different* harvest multiplier over thousands of harvests has to reset the

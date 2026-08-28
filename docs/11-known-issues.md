@@ -27,6 +27,21 @@ chip and deny toast still say "Lv 3" while the true refusal is "no Turn yet", an
 level-up toast no longer announces seeds, which shortens levels 2–17's fanfare until the
 ladder re-authors in slice D. Phase 2 ships the real unlock rows.
 
+**And a MIGRATED save is not behaviourally unchanged either — three real differences**, so
+"the live game plays identically" is retired as a claim (it holds for the *look*, not the
+behaviour):
+
+1. **Harvest yield drops by 5% × mastery tiers** on every flower, the moment the save loads —
+   the accepted Bloom Mastery regression logged on 2026-08-29. The 2-seeds-per-tier conversion
+   pays into a currency with no spend surface until phase 2, so the compensation is invisible
+   for now.
+2. **Plots 5–8 refuse purchase** until the first Turn, and the Land Deed badge reads *Maxed* at
+   level 0 while that is true.
+3. **The dev "Unlock the next seed" button finds nothing to sell** on a fully grandfathered
+   save (it reports "Every seed is already unlocked"), and on a partly-grandfathered one it
+   offers whatever seed is next — not necessarily Bluebell at 150K. **To feel the first wall as
+   step 2 of the review script describes it, use a fresh save in a private window.**
+
 ### The Almanac still renders the frozen mastery ladder
 
 `masteryGoal()` answers with the tier the save was on, forever, and the yield chip reads
@@ -49,14 +64,19 @@ and deliberately not this one. Watch it in the first playtest.
 
 ### OPEN OWNER DECISION: the cheap-Turn cadence is strictly profitable — bill item 17's economic half is false at the current constants
 
-The phase-1 gauntlet confirmed this with the real engine, and it is worse than the first
-version of this note claimed (both of that note's mitigations were refuted — the shape wins
-on coins too, from Turn 1, not just on banked seeds). Two mechanisms stack:
+The phase-1 gauntlet confirmed this with the real engine. **It is a SEEDS-ONLY break** — round
+2 of the gauntlet found the pacing model had never bought the game's automation, so offline
+income was identically zero for every strategy; with the drone, the harvesters and the two
+offline badges in the model, **normal play out-earns the cadence in gold by ~2.7×** (42.3M vs
+15.5M by day 10) while still losing to it on Saved Seeds by ~20×. The gold half of this note's
+earlier claim is withdrawn; the seeds half is confirmed and is the whole problem. **That
+narrows the dials: the mint's shape (`mintK`, `veterancy`) is the lever, not the coins floor.**
+Two mechanisms stack:
 
 1. **The mint favours splitting.** `sqrt(coinsEarned)` makes four 100K years mint ~2.6× one
    400K year, and the uncapped `(1 + 0.2 × turns)` veterancy term compounds with turn count —
    by turn ~55 a 100K year pays ~380–440 seeds (the pacing tool's own transcript shows Turn 55
-   paying 440 on a 119K year), still clearing doc 33's ~525–679K sink runway ("months of
+   paying 440 on a 119K year), still clearing the 636K shared-skill sink runway ("months of
    headroom") in weeks. *(The first version of this note said ~1,100 — a ~2.5× overstatement
    caught by the phase-1 independent review; the exploit needs no exaggeration.)*
 2. **Fall beds launder the doomed wallet.** Fall rightly survives the Turn, so gold that is
@@ -65,11 +85,19 @@ on coins too, from Turn 1, not just on banked seeds). Two mechanisms stack:
    a single fill can finance ~8 consecutive Turns.
 
 Measured over 12 modeled days (`node tools/year-sim.js 12 all`, which now plays these shapes
-honestly and **exits non-zero while the exploit stands**): normal-play-but-turn-at-every-gate
-mints ~35× the wall-rider's Saved Seeds AND out-earns it in gold, at ~8 Turns/day. The engine
-implements the spec faithfully — the dials are `minCoins`, a `veterancy` cap, and `mintK` in
-`DATA.year`, and the ruling is the owner's, scheduled with phase 4 (or sooner as a pure data
-change if the ritual matters before then).
+honestly, buys the automation, and **exits non-zero while the exploit stands**):
+normal-play-but-turn-at-every-gate mints **~20× the wall-rider's Saved Seeds** at ~8 Turns/day,
+while **losing to it on gold ~2.7×**. The engine implements the spec faithfully — the ruling is
+the owner's, scheduled with phase 4 (or sooner as a pure data change if the ritual matters
+before then).
+
+**The strategy session has since measured four fixes and recommends one** — see the 2026-08-29
+review entry in [10-decision-log.md](10-decision-log.md): dials alone fail at 3.5–4×, a
+ratcheting floor fails at 1.2–1.5× and punishes turn-loving players forever, **any** per-turn
+multiplier on a split-neutral base re-arms the break (so veterancy must be *deleted*, not
+capped), and **the cumulative mint — lifetime accumulator, mint the increment, Tally on top —
+is the only shape that kills it by construction.** That ruling is the second of the two
+conditions phase 1's review left open; the first (a missing migration assertion) is closed.
 
 ## Balance
 
@@ -362,7 +390,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 837 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,096 assertions over the
 economy, progression, saves and mastery. Everything above that line — the six `ui-*` files,
 layout, the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI

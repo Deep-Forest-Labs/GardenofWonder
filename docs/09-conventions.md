@@ -89,8 +89,14 @@ Animate `transform` and `opacity`. Avoid animating layout properties.
 ## Playbook: add a seed
 
 1. Append to `DATA.seeds` in `data.js`. **Keep `yield` at exactly `cost × 1.4`** — see
-   [04-economy.md](04-economy.md). Set `unlockLevel` so the seed picker can grey it until that
-   garden level.
+   [04-economy.md](04-economy.md). **Seeds no longer gate on levels** (the Garden Year retired
+   that, 2026-08-29): a new seed lands at the end of the ladder and prices at
+   `DATA.year.unlockBase × unlockRatio^(index − freeSeeds)`, which at index 19 is ~147M gold.
+   `unlockLevel` is still worth setting — migrations read it to grandfather old saves, and the
+   picker still shows it until phase 2 ships the unlock rows — but it gates nothing. If the new
+   seed should be reachable, price it deliberately; **until phase 2 there is no unlock surface
+   in the game, so a fresh save cannot buy it at all** (Developer tools → *Unlock the next
+   seed*).
 2. Write the `art` block. Pick an existing `shape`, or add a recipe to `rings()` / `customHead()` in
    `flora.js`.
 3. **Leave `gemChance` alone.** It is derived from grow time (`grow × 0.0005`, capped at 50%) so
@@ -103,7 +109,8 @@ Animate `transform` and `opacity`. Avoid animating layout properties.
 6. **Bump the last `DATA.almanacMilestones` `at` to the new `DATA.seeds.length`.** Completing the
    collection is "every seed", not a frozen 19.
 
-Nothing else needs touching — the seed picker, Almanac and harvester ceilings all read the array.
+Nothing else needs touching — the seed picker, Almanac and harvester ceilings all read the
+array — but note the unlock price above is what decides whether the seed is *reachable*.
 
 A seed may also carry a `verb` — see the next playbook. Most don't, and that's fine.
 

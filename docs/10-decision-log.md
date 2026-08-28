@@ -5,6 +5,83 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (phase 1.1) — The review's condition closed, round 2 of the gauntlet answered, and the exploit turns out to be seeds-only
+
+**Phase 1.1 is the patch the independent review made a condition of its approval, plus round 2
+of the builder's own gauntlet** (four fresh critics, 39 agents, 21 confirmed findings after
+adversarial verification). The suite went 1,051 → 1,096 and every fix was mutation-proven: 16
+regressions introduced into scratch copies, 16 caught.
+
+**Condition 1 is closed — M09, the grandfather migration's missing negative.** The review found
+that gutting `migrateYear()` so *every* seed unlocks free on any pre-Year save left all 1,051
+assertions green: bill 13b asserted only positives, so nothing said a modest save must NOT
+receive the ladder. Three cases now separate the two arms and assert the negative — the
+discovered arm alone at level 1, a seed with neither evidence staying walled, and a 400-coin
+rep-5 save getting exactly its old level-5 catalogue rather than all nineteen. Both mutants die.
+
+**Round 2's own blockers, both about rigs that never exercised the path they claimed to cover.**
+Bill 1 proved the partition only on a Turn that collected nothing — the in-flight arm
+(auto-collect, pack-banking) runs *before* the mint, so 19 of 20 wipes in there passed. The rig
+is now a function run twice, the second time with a ready bloom, a parked pack and a growing
+annual; the harvest's legitimate lifetime writes are named in a list rather than excused by a
+loose comparison. And bill 2's "paid into the year BEFORE the mint" was arithmetically blind:
+it predicted the pouch from `sqrt(200000 + 70)`, which rounds to the same integer as
+`sqrt(200000)` — the auto-collect's gold could vanish entirely and the assertion held. It now
+asserts the gold through the Turn's own `earned` field. Same family, all fixed: bill 1's rig
+left 18 of 21 badge keys and two tap fields at defaults (a Turn sparing the drone, the
+harvesters or the proc badges passed; so did dropping the `critMult` and `holdInterval`
+re-derivations, which would hand out a permanent free maxed crit and hold speed), bill 3 spent
+through one sink of six, a refused Turn was never asserted to leave the save alone, and the
+windfall's "all eight *planted*" half was only covered by another group's rig by accident.
+
+**The pacing tool never bought the game's automation, and that changed the exploit's shape.**
+`MODEL.badges` omitted the drone, the harvesters and both offline badges, and
+`passiveIncomeRate()` short-circuits to zero without a drone — so the model measured an idle
+game with its idle half switched off, and bill item 10 had no pacing evidence behind it at all.
+With automation in: **casual now out-earns the turn-spam cadence on gold by ~2.7×** (42.3M vs
+15.5M by day 10) while still losing to it on Saved Seeds by ~20×. **The exploit is a seeds-only
+break** — the gold half of the earlier disclosure is withdrawn, which narrows the owner's dials
+to the mint's shape rather than the coins floor, and independently corroborates the strategy
+session's recommendation of the cumulative mint. The same fix moved year one to 370K / 409K /
+312K across three runs, **reproducing doc 33's 370–410K band from the shipped engine for the
+first time**; the first Turn still lands at day ~1.75–1.9 against a documented 2.7–3.3, which
+is turn-policy sensitivity and stays phase 4's.
+
+**Numbers recomputed rather than quoted.** The petal sink is **636,378** Saved Seeds for the
+shared skills (the whole sink reachable in phase 1) and **725,067** with signatures — not the
+design session's ~525K/~679K estimates, which predate the constants landing. A sim-test now
+pins it, which is what doc 33's own preamble asked for.
+
+**Docs-truth, the half the critics were right to be pedantic about.** Doc 32's Tally worked
+example — the block a phase-2 builder builds the ceremony from — disagreed with the engine on
+four of its five lines, and its species line was unreachable under *either* tier-reading;
+corrected to what `projectedTally()` produces, with the one always-correct line (47 orders →
+×1.25) called out as the evidence that settles cumulative. Doc 32's petal rule 4 and doc 33's
+guardrail both claimed Quick Sprout is "bounded well inside" the 0.3 floor when the truth is
+that the stack reaches 0.294 and `plantGrowth()` clamps it — restated, with the last-petal
+waste logged for phase 4. "The live game looks and plays identically" is retired as a claim: it
+holds for the *look*, and docs 03 and 11 now name the three behavioural differences a migrated
+save actually gets. Plus the mechanical ones: `docs/README.md` still told a cold reader all
+three Year docs were unbuilt, the add-a-seed playbook still produced a seed no player could
+plant, three docs still quoted 837 assertions, HANDOFF still said a 13-item bill, doc 16
+presented retired mastery coverage as live, and doc 03's driver list omitted the unlock button
+the review script points the owner at.
+
+**And the review script's step 2 does not work on the owner's own save** — the "Unlock the next
+seed" button finds nothing to sell once migration has grandfathered everything. The script now
+says so and sends the owner to a private window to feel the wall as a new player meets it.
+
+### Rejected
+
+**Re-tuning the mint now that the exploit is better understood** — it is still the owner's
+ruling, and the recommendation on the table is the strategy session's, measured across four
+variants. **Sizing Quick Sprout to sit inside the 0.3 floor** — that is a tuning decision with
+a pacing cost, and phase 4 owns it; phase 1.1 documents the clamp truthfully instead.
+**Deleting doc 16's retired mastery sim-test list** — struck through and annotated instead, so
+the retired design stays legible next to what replaced it.
+
+---
+
 ## 2026-08-29 (review) — Phase 1 passes its independent review, with one escape and one ruling to make
 
 **The strategy session reviewed the builder's phase 1 without reusing its gauntlet** — four

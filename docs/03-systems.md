@@ -863,7 +863,12 @@ multiplier.
 simulation with no UI beyond Developer tools.** The design is
 [32-the-garden-year.md](32-the-garden-year.md), every number
 [33-year-one-economy.md](33-year-one-economy.md); this section is what exists in `game.js`.
-The live game looks and plays identically while the year accrues silently underneath it.
+The live game is **visually** unchanged while the year accrues silently underneath it — no new
+surface, no new art. It is not *behaviourally* identical, and the difference is documented
+rather than glossed: a migrated save loses the retired Bloom Mastery multiplier (an accepted
+regression, logged 2026-08-29), plots 5–8 refuse purchase until the first Turn, and a fresh
+save cannot pass Tulip because the unlock rows arrive in phase 2. All three are listed in
+[11-known-issues.md](11-known-issues.md#the-garden-year--phase-1s-deliberate-seams-2026-08-29).
 
 **`Game.credit(amount, {cheat, refund})` is the single credit faucet.** Every grant —
 taps, harvests, orders, sales, keepsakes, quest gold, level coins, the offline grant in
@@ -927,7 +932,9 @@ every running long timer it survives the Turn untouched. Fall opens at
 the live projection — year, earnings against the floor, base × tally → pouch, gate status
 — with Earn +25K/+100K/+400K (`Dev.driveYear`, real earnings), a canned mid-game Tally
 (`Dev.setYearStats`), Run the Turn (`Dev.runTurn`, blessing Daisy), Saved Seeds and petal
-purchases through the real `buyPetal`, and Fill/Ripen/Harvest the Fall bed. `Dev.grantGold`
+purchases through the real `buyPetal`, **Unlock the next seed** (`Game.unlockSeed` through the
+real charge path, so the gold wall can be paid and felt), and Fill/Ripen/Harvest the Fall bed.
+`Dev.grantGold`
 is the cheat faucet — wallet only, never the meter — and the Settings gold button routes
 through it.
 

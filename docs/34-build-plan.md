@@ -72,7 +72,7 @@ the right vehicle — the spike (`tools/map-spike.html`, `merge-spike`, `hollow-
 
 | Phase | Ships | The owner reviews | Slice |
 | --- | --- | --- | --- |
-| **1 — The engine** — **BUILT 2026-08-29, awaiting the owner's verdict** | Year state, `credit()`, the mint + Tally math, `turnYear()`, unlock prices, petal effects, quest re-keys, migration, dev-tools drivers, **the whole sim-test bill** (items 1–6, 8–18 asserted; suite at 1,051) | Numbers, via a cheat-driven year — no UI yet | A (sim half) |
+| **1 — The engine** — **BUILT 2026-08-29, awaiting the owner's verdict** | Year state, `credit()`, the mint + Tally math, `turnYear()`, unlock prices, petal effects, quest re-keys, migration, dev-tools drivers, **the whole sim-test bill** (items 1–6, 8–18 asserted; suite at 1,096) | Numbers, via a cheat-driven year — no UI yet | A (sim half) |
 | **2 — The ceremony** | The meter pill, the Turn sheet with the arcade Tally, the blessing, petal rows on the Almanac, unlock rows in the seed picker, the season tint | Plays a full year on the phone; *gift or loss?* | A (surface half) |
 | **3 — Fall and the strip** | The horizontal season strip, hedge gates, Fall's board + eight crops + windfall + Century Bloom, map retirement, the Stand's dock entry | Turn 1 → the gate opens → a Fall day | A (world half) |
 | **4 — The tuning pass** | Play-derived retune of every knob against the doc 33 targets, FTUE beats, flower lines, celebration polish | Day 1–3 pacing on a fresh save; the wall's *feeling* | A (polish) |

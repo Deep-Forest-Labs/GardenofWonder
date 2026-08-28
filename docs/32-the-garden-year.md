@@ -125,17 +125,27 @@ Five beats, about a minute, one decision:
    score**. The base count-up rolls from the year's whole earnings (sublinear mint, doc 33) —
    then the year's achievements slam in one line at a time, each raising the multiplier:
 
-   > *Orders filled: 47 → ×1.25!*
-   > *Full-bed windfalls: 12 → +10%!*
-   > *Species grown this year: 9 → +8%!*
-   > *Legendary blooms: 4 → +8%!*
-   > *Best combo: 85 → +5%!*
+   > *Orders filled: 47 → +25%!*
+   > *Full-bed windfalls: 12 → +15%!*
+   > *Species grown this year: 9 → +5%!*
+   > *Legendary blooms: 4 → +13%!*
+   > *Best combo: 85 → +8%!*
+   >
+   > *…the year scored ×1.66.*
 
    Every line reads a **year-scoped counter** in `state.year.stats` (never lifetime, never
    spendable), the bonuses **add** and the sum multiplies the base, **capped at ×2.0**
    (`DATA.year.tallyCap`), and the lines are data (`DATA.year.tally`). **The cosy rule: a line
    the year scored zero on simply does not appear.** The Tally only celebrates — there is no
    "×1.00, you failed" row, ever. Tiers and bonuses in doc 33.
+
+   *(The bonuses above were corrected on 2026-08-29 to the numbers `projectedTally()` actually
+   produces at those counts. As first written, four of the five disagreed with doc 33's tier
+   table and the species line — "9 → +8%" — was unreachable under any reading, since nine
+   species sits between the 5-species and 10-species rungs. The one line that was always right,
+   "47 orders → ×1.25", is the worked example that settles the cumulative tier-reading: 47
+   clears both the 10 and 25 rungs, and only adding them reaches ×1.25. Phase 2 builds the
+   ceremony from this block, so it now matches the engine line for line.)*
 5. **The gate opens.** Spring returns to Summer — and on the early turns, a hedge gate lifts:
    Fall at turn 1, Winter around turn 3, Spring around turn 6. **The reset pays in places first
    and numbers second**, which is the whole reason this design beats a plain prestige.
@@ -227,8 +237,13 @@ whole story lives (species, best rarity, lifetime count, honey, creature, petals
 3. **Mutation-touching signatures respect the catch/payout split and carry a data cap** (the
    Luna pattern: nominally large, structurally bounded), so the tested 20–30% mutation income
    band survives petals at cap.
-4. **Quick Sprout's total is bounded well inside the 0.3 growth-modifier floor** when stacked
-   with Sprinklers, Keepers and Seed Rush.
+4. **The whole growth stack is clamped at the 0.3 growth-modifier floor**, in one place —
+   `plantGrowth()` — so no combination of Quick Sprout, Sprinklers, Keepers and Seed Rush can
+   fall through it. *(Corrected 2026-08-29: this rule used to say Quick Sprout was sized to sit
+   "well inside" the floor. It is not — at cap in that full stack the product reaches 0.294 and
+   the clamp binds, which means the last petal delivers about three quarters of its advertised
+   effect. Phase 4 owns the choice between resizing the skill and accepting the clamp; a
+   sim-test pins the clamp either way.)*
 
 ### Old Bloom Mastery retires
 

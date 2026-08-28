@@ -87,7 +87,14 @@ const MODEL = {
   tapsPerSecond: 0.8,              // bursty casual tapping, not a held grind
   checkEverySeconds: 8,            // how often the player looks at the plots at all
   badgeWalletShare: 0.05,          // buy a badge when it costs under this share of the wallet
-  badges: ['tapPower', 'critChance', 'comboMeter', 'autoWater', 'critMult', 'plotExpansion'],
+  /* The automation badges are in the list on purpose: without the drone,
+     passiveIncomeRate() short-circuits to zero and the model measures an idle
+     game with its idle half switched off — every offline gap in the run pays
+     nothing, and bill item 10 (petals reach passiveIncomeRate) has no pacing
+     evidence behind it. The harvesters are what the drone collects from. */
+  badges: ['tapPower', 'critChance', 'comboMeter', 'autoWater', 'critMult', 'plotExpansion',
+    'autoHarvest', 'offlineRate', 'offlineHours',
+    'plot1Harvester', 'plot2Harvester', 'plot3Harvester', 'plot4Harvester'],
   wallReachDays: 1.2,              // the wall is "in reach" within this many days of trailing income
   minYearHours: 12                 // never turn a year younger than this (casual only)
 };
@@ -298,9 +305,18 @@ const report = (r) => {
     console.log('\n  — against the doc-33 targets (model-sensitive; see the header) —');
     console.log(`  first Turn day 2.7–3.3:   ${t1 ? t1.day.toFixed(2) : 'never'} ${t1 && t1.day >= 2.7 && t1.day <= 3.3 ? 'OK' : 'CHECK'}`);
     console.log(`  year one 370–410K:        ${t1 ? t1.earned.toLocaleString() : '-'} ${t1 && t1.earned >= 370000 && t1.earned <= 410000 ? 'OK' : 'CHECK'}`);
+    /* Doc 33 makes this claim in its own voice — "every Turn affords a similar
+       2–5 petals forever" — and it is the only live signal on the pair of
+       exponents that document says must be tuned together. It gets the same
+       OK/CHECK treatment as the two above; a majority of Turns in band is the
+       bar, because the count is lumpy by nature. */
     const early = r.turns.slice(0, 12);
     const inBand = early.filter((t) => t.petals >= 2 && t.petals <= 5).length;
-    console.log(`  2–5 petals per Turn:      ${early.map((t) => t.petals).join(',')} (${inBand}/${early.length} in band)`);
+    const ok = early.length && inBand / early.length >= 0.5;
+    console.log(`  2–5 petals per Turn:      ${early.map((t) => t.petals).join(',')} (${inBand}/${early.length} in band) ${ok ? 'OK' : 'CHECK'}`);
+    if (early.length < 12) {
+      console.log(`  note: casual completed ${early.length} Turns in ${days} days — doc 33's "through Turn 12" needs a longer run to exercise.`);
+    }
   }
   return r;
 };
@@ -326,6 +342,11 @@ if (strategy === 'all') {
   if (beats.length) {
     console.log('  VERDICT: FAIL — a cheap-Turn cadence is profitable against normal play.');
     console.log('  This is the spec-level exploit on record (docs/11-known-issues.md, docs/33).');
+    const goldToo = rows.slice(1).some(({ s }) => s.cumEarned > c.cumEarned);
+    console.log(goldToo
+      ? '  It wins on GOLD as well as seeds — the strongest form of the break.'
+      : '  It is a SEEDS-ONLY break: normal play out-earns it in gold, so the mint shape\n'
+        + '  (mintK / veterancy) is the dial, not the coins floor.');
     console.log('  The dials are minCoins / veterancy / mintK in DATA.year — the owner\'s call.');
     process.exitCode = 1;
   } else {

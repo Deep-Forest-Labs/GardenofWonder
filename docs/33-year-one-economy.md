@@ -60,11 +60,13 @@ the knobs interact: **tune the unlock ratio *last*, after petal pricing** — wi
 (below), ~×1.45 may be needed to hit the day-25–40 window. Phase 4's job. What survives
 unchanged: first Turn on day ~2.7–3.3, the first wall reading as "six times everything I've
 earned," and deliberately-long walls arriving naturally from Turn 6+ where veterans expect them.
-*(Phase 1's own pacing tool does not reproduce the first two numbers exactly — its casual model
-lands the first Turn at day ~1.5–1.8 on ~250K, with doc 33's band inside the measured envelope
-of the turn-policy knob; the divergence is play-model sensitivity, catalogued in the 2026-08-29
-build entry of [10-decision-log.md](10-decision-log.md), and re-baselining it against a real
-playtest is part of phase 4.)*
+*(Phase 1's own pacing tool reproduces the **year-one figure** once its model buys the game's
+automation — three runs at 370K / 409K / 312K against the 370–410K band — but lands the
+**first Turn at day ~1.75–1.9**, earlier than 2.7–3.3. The remaining gap is turn-policy
+sensitivity: the tool's casual player turns when the next wall is more than ~1.2 days of income
+away, and doc 33's band sits inside the measured envelope of that knob. Catalogued in the
+2026-08-29 entries of [10-decision-log.md](10-decision-log.md); re-baselining against a real
+playtest is phase 4's.)*
 The same sim confirmed **skipping unlocks is strictly dominated** (saving for seed 10 directly
 reaches it eight days *later* than climbing), so the sequence needs no enforcement.
 
@@ -92,17 +94,21 @@ first million than intended play. One number closes it (verified).
 > Turn — let the doomed pre-Turn wallet be converted into next-year income** (eight apples pay
 > 806K per 8-hour fill; one windfall apple alone clears the 100K floor). Measured through the
 > real engine over 12 modeled days: a player who plays normally but turns at every 100K gate
-> mints **~35× the Saved Seeds of the wall-riding player and out-earns them in gold**, at ~8
-> Turns/day. `node tools/year-sim.js 12 all` reproduces this and **exits non-zero until it is
-> resolved**. The dials are `minCoins`, `veterancy` (a cap?), and `mintK` — the owner's call,
-> scheduled with phase 4; the engine implements this spec faithfully in the meantime.
+> mints **~20× the Saved Seeds of the wall-riding player** at ~8 Turns/day — while **losing to
+> them on gold by ~2.7×**, so this is a **seeds-only break** and the mint's shape is the dial,
+> not the coins floor. `node tools/year-sim.js 12 all` reproduces it and **exits non-zero until
+> it is resolved**. The strategy session's review has since measured four fixes and recommends
+> **the cumulative mint** (lifetime accumulator, mint the increment, Tally on top, veterancy
+> deleted — any per-turn multiplier on a split-neutral base re-arms the break); see the
+> 2026-08-29 review entry in [10-decision-log.md](10-decision-log.md). **The ruling is the
+> owner's**; the engine implements this spec faithfully in the meantime.
 
 **Plots 5–8 cannot be bought in year one** — `turnsCompleted ≥ 1` joins their existing level
 gates, so the first year is played on four plots and **Turn 1's gift grows: Fall, and the right
 to a bigger garden.** The sim demanded this too: at 9.4K for four plots that double income, year
-one earned ~800K and broke the documented pacing; gated, it earns **~370–410K (verified by the
-2026-08-29 design-session model; phase 1's shipped tool measures ~250K under its own casual
-model — see the note above)** and
+one earned ~800K and broke the documented pacing; gated, it earns **~370–410K — verified twice
+over: by the 2026-08-29 design-session model, and independently by phase 1's shipped pacing tool
+once its play model buys the game's automation (370K / 409K / 312K across three runs)** — and
 every downstream number holds. A migrated save keeps whatever plots it already opened for its
 current year — nothing a player owns is ever re-locked.
 
@@ -145,10 +151,15 @@ petal costs compound at 1.25/level while the pouch grows ~1.2–1.26/cycle, so *
 a similar 2–5 petals forever**, spread across a widening catalog. These two knobs are the pacing
 dials; tune them together or not at all.
 
-Sink runway (simulated): maxing every shared skill to petal 12-equivalent across the catalog
-costs ~525K seeds against ~1.8K/day at the endgame faucet — months of headroom before any deep
-petal, with `L20+` catalogs effectively aspirational. The sink stays ahead of the faucet without
-any petal being individually out of reach.
+Sink runway, **recomputed from the shipped constants (2026-08-29, phase 1) rather than from the
+design session's estimate**: maxing both shared skills on all nineteen flowers costs
+**636,378 Saved Seeds** — that is the entire sink reachable in phase 1, since `buyPetal()`
+refuses signatures until slice B, which add **88,689** for a full total of **725,067**. (The
+design session's ~525K and ~679K were estimates from before the values landed; a sim-test now
+pins the 636K figure so the docs and the data cannot drift apart again — doc 33's own preamble
+asks for exactly that.) Against ~1.8K/day at the endgame faucet that is months of headroom
+before any deep petal, with `L20+` catalogs effectively aspirational. The sink stays ahead of
+the faucet without any petal being individually out of reach.
 
 ## Petals — prices and effects
 
@@ -162,13 +173,13 @@ migrate up the ladder — early petals on new flowers stay the best value — bu
 is priced to outlast the faucet. **The launch values (base 5, ×1.3/seed) failed the full-model
 sim on both pacing checks:** turns paid 7–10 petals instead of 2–5, and the entire sink was
 consumed by **day ~56, at which point Turns stop paying for anything and the prestige loop
-dies.** At base 15 / ×1.45 the sim centres the 2–5 band and the sink (~679K seeds total) is
-still uncleared at day 180 — the Turn button stays alive for months, which is the whole point.
+dies.** At base 15 / ×1.45 the sim centres the 2–5 band and the sink (**725K seeds total** as
+shipped — see the recomputation above) is still uncleared at day 180 — the Turn button stays alive for months, which is the whole point.
 
 | Skill | Petals | Effect per petal | Guardrail |
 | --- | --- | --- | --- |
 | **Rich Bloom** (all flowers) | 5 | +30% harvest value, additive per petal (+150% at cap) | Applied as `petalMult` at harvest and in `passiveIncomeRate()`, same commit; never edits `seed.yield` |
-| **Quick Sprout** (all flowers) | 5 | −6% grow time, additive (−30% at cap) | Total stack with Sprinklers + Keeper + Seed Rush asserted above the 0.3 floor |
+| **Quick Sprout** (all flowers) | 5 | −6% grow time, additive (−30% at cap) | Combined stack clamped at the 0.3 floor in `plantGrowth()`, asserted — at cap in that stack the clamp binds |
 | **Signature** (per flower) | 1–3 | Authored, below | Chance skills are countdowns with data caps; no gem skill exists |
 
 ### The launch six signatures
