@@ -20,8 +20,8 @@ from quests and levels.
 > year's earnings, and flower mastery as **petals** on the Almanac's own rows (Rich Bloom + Quick
 > Sprout everywhere, one signature each, six authored at launch, chance skills as countdowns).
 > **[33-year-one-economy.md](33-year-one-economy.md)** is the retune riding inside slice A: unlock
-> prices carry the spread (seed 3 = 150K, ×1.6/tier — per-plant spreads cannot wall while 1.4×
-> holds), the mint formula, petal prices, Fall's eight plants and the +50% windfall rule, the
+> prices carry the spread (seed 3 = 150K, ×1.5/tier — retuned from ×1.6 by the 2026-08-29 full
+> sim; per-plant spreads cannot wall while 1.4× holds), the mint formula, petal prices, Fall's eight plants and the +50% windfall rule, the
 > Century Bloom, migration, and a 13-item sim-test bill.
 >
 > **Orders stay, and are promoted** — the owner's call ("that was always a fun system"): the Stand

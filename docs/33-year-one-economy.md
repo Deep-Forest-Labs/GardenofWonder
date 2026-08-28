@@ -34,24 +34,28 @@ self-finances in ~6 active minutes), so the spread lives here.
 
 ```
 unlock(3) = 150,000
-unlock(n) = 150,000 × 1.6^(n−3)      // DATA.year.unlockBase, DATA.year.unlockRatio
+unlock(n) = 150,000 × 1.5^(n−3)      // DATA.year.unlockBase, DATA.year.unlockRatio
 ```
 
 | Seed | Unlock | Seed | Unlock |
 | --- | --- | --- | --- |
-| 1 Daisy | free | 11 Moonflower | ~6.4M |
-| 2 Tulip | free | 13 Aurora Bloom | ~16.5M |
-| 3 Bluebell | 150K | 15 Nebula Orchid | ~42.2M |
-| 5 Rose | 384K | 17 Aurora Crown | ~108M |
-| 7 Marigold | 983K | 19 Eternal Crown | ~277M |
-| 9 Sun Lotus | 2.5M | | |
+| 1 Daisy | free | 11 Moonflower | ~3.8M |
+| 2 Tulip | free | 13 Aurora Bloom | ~8.7M |
+| 3 Bluebell | 150K | 15 Nebula Orchid | ~19.5M |
+| 5 Rose | ~338K | 17 Aurora Crown | ~43.8M |
+| 7 Marigold | ~759K | 19 Eternal Crown | ~98.5M |
+| 9 Sun Lotus | ~1.7M | | |
 
-Simulated pacing at ×1.6 with petals compounding: **first Turn on day 2–3 of casual play (~6
-sessions), ~10 Turns total, all nineteen seeds by ~day 31, averaging 1.7 unlocks per Turn.**
-Sensitivity: ×1.5 compresses to ~3 weeks; ×1.8 stalls below one seed per Turn. The first wall
-reads as "six times everything I've earned" on day one — impossible as a *feeling* — and breaks
-inside the mobile genre's first-prestige window. Deliberately-weeks walls arrive naturally
-around Turn 6+, where veterans expect them.
+**The ratio was ×1.6 for one day and the full-model simulation (2026-08-29) failed it:** because
+gold resets at the Turn, a 277M top unlock must be earned *inside a single year* against
+~30–40M/day late income — seeds 15–19 became 5–11-day grind-years and all nineteen landed on day
+~67, double the target. At **×1.5** (seed 19 ≈ 98.5M) the sim lands all nineteen at ~day 46, and
+the knobs interact: **tune the unlock ratio *last*, after petal pricing** — with petals repriced
+(below), ~×1.45 may be needed to hit the day-25–40 window. Phase 4's job. What survives
+unchanged: first Turn on day ~2.7–3.3, the first wall reading as "six times everything I've
+earned," and deliberately-long walls arriving naturally from Turn 6+ where veterans expect them.
+The same sim confirmed **skipping unlocks is strictly dominated** (saving for seed 10 directly
+reaches it eight days *later* than climbing), so the sequence needs no enforcement.
 
 **Levels stop gating seeds.** `unlockLevel` on seeds retires; the two-stage gate becomes
 *unlock price once, afford the plant price always*. Plots, habitat slots and meadow cells keep
@@ -62,12 +66,23 @@ their lifetime-level gates. The level ladder's freed rewards are re-authored bel
 ```
 base  = DATA.year.mintK × sqrt(coinsEarnedThisYear) × (1 + DATA.year.veterancy × turnsCompleted)
 pouch = round( base × tally )                      // tally ∈ [1.0, DATA.year.tallyCap]
-mintK = 0.1     veterancy = 0.2     minSeeds = 10     tallyCap = 2.0     // all under DATA.year
+mintK = 0.1   veterancy = 0.2   minSeeds = 10   minCoins = 100,000   tallyCap = 2.0   // DATA.year
 ```
 
-First Turn pays **~61 base seeds on a typical ~370K-coin first year** (the pacing sim's figure —
-an earlier draft misquoted the coin total), times a modest first-year tally. The blessing grants
-**one free petal** on a chosen flower, outside the pouch.
+**The Turn requires both gates: projected mint ≥ `minSeeds` AND `coinsEarned ≥ minCoins`.** The
+coins floor exists because the full-model sim found the seeds-only gate is reached at ~8K coins,
+enabling a **daisy petal rush** — several Turns a day into cheap Daisy petals, 36% faster to the
+first million than intended play. One number closes it (verified).
+
+**Plots 5–8 cannot be bought in year one** — `turnsCompleted ≥ 1` joins their existing level
+gates, so the first year is played on four plots and **Turn 1's gift grows: Fall, and the right
+to a bigger garden.** The sim demanded this too: at 9.4K for four plots that double income, year
+one earned ~800K and broke the documented pacing; gated, it earns **~370–410K (verified)** and
+every downstream number holds. A migrated save keeps whatever plots it already opened for its
+current year — nothing a player owns is ever re-locked.
+
+First Turn pays **~60–65 base seeds on that ~370–410K first year**, times a modest first-year
+tally. The blessing grants **one free petal** on a chosen flower, outside the pouch.
 
 ### The Tally
 
@@ -85,8 +100,10 @@ scored zero on does not appear**; the Tally only celebrates.
 | Legendary blooms | `stats.legendaries` | 1 → +5% | 3 → +8% | 8 → +12% |
 | Best combo | `stats.bestCombo` | 50 → +3% | 80 → +5% | — |
 
-A typical mid-game year lands ~×1.35; a maxed year hits the ×2.0 cap. `mintK` is the counter-knob
-if playtest tallies run hot — the Tally redistributes the pouch toward playing *well and
+A typical mid-game year lands ~×1.35; a maxed year hits the ×2.0 cap — and the full-model sim
+verified the balance: a player who maxes the Tally every year reaches the endgame **18% faster**
+than one who ignores it entirely, which is exactly the "optional but delightful" band (past ~35%
+it would read as mandatory). `mintK` is the counter-knob if playtest tallies run hot — the Tally redistributes the pouch toward playing *well and
 variedly*; it must never be the difference between progressing and not. The tiers rotate effect
 categories deliberately: demand (orders), Fall's ritual (windfalls), breadth (species), luck
 celebrated (legendaries), and the tap loop (combo). The two growth exponents that must stay matched:
@@ -102,12 +119,17 @@ any petal being individually out of reach.
 ## Petals — prices and effects
 
 ```
-petalCost(seed n, petal p) = round( 5 × 1.3^(n−1) × 1.25^(p−1) )     // shared skills
+petalCost(seed n, petal p) = round( 15 × 1.45^(n−1) × 1.25^(p−1) )     // shared skills
 signature petals cost ×0.6 of the same formula
 ```
 
-Daisy's first petal: 5 seeds. Seed 10's first: ~53. Seed 19's first: ~561. Purchases naturally
-migrate up the ladder — fresh high-tier flowers have cheap early petals on expensive bases.
+Daisy's first petal: 15 seeds. Seed 10's first: ~425. Seed 19's first: ~12K. Purchases still
+migrate up the ladder — early petals on new flowers stay the best value — but the whole catalog
+is priced to outlast the faucet. **The launch values (base 5, ×1.3/seed) failed the full-model
+sim on both pacing checks:** turns paid 7–10 petals instead of 2–5, and the entire sink was
+consumed by **day ~56, at which point Turns stop paying for anything and the prestige loop
+dies.** At base 15 / ×1.45 the sim centres the 2–5 band and the sink (~679K seeds total) is
+still uncleared at day 180 — the Turn button stays alive for months, which is the whole point.
 
 | Skill | Petals | Effect per petal | Guardrail |
 | --- | --- | --- | --- |
@@ -141,8 +163,10 @@ cell, gem pinches. Sketch lives here until built; the rule that matters: **every
 something, and no two adjacent levels grant the same category.**
 
 Year one's quest ladder keeps its 777 total and its tutorial role, **but four quests collide
-with the unlock walls and must be re-keyed in slice A**: `q_lavender_3`, `q_rose_3`, `q_peony_3`
-and `q_marigold_3` name seeds behind 240K–983K unlocks, unreachable in a ~370K first year — left
+with the unlock walls and must be re-keyed in slice A**: `q_peony_3` and `q_marigold_3` name
+seeds genuinely unreachable in year one, and `q_lavender_3` and `q_rose_3` are marginal at the
+gated ~370–410K (the sim reaches lavender only on a perfect year) — all four re-key, because a
+quest that *sometimes* jams is the same bug on a timer — left
 alone they are the documented strip-jam (the sell-quest failure, third time around). Re-key each
 to a seeds-1–3 or verb-agnostic goal at the same reputation, the established stand-in pattern,
 and hold the total at 777. The four meadow-dependent quests (`q_hive_1`, `q_honey_3/8/15`,
@@ -173,7 +197,15 @@ only in v1 — no unlock walls inside Fall until its list grows.
 
 **Crops are not flowers** ([32-the-garden-year.md](32-the-garden-year.md#falls-board-specified)):
 no rarity, no mutations, no gem drops, never written to `discovered`; they count generic
-`harvest` quest tracks. `DATA.fall = { windfall, plants: […] }` is **wholly separate from
+`harvest` quest tracks.
+
+**A measured caution on Fall's ceiling:** the sim has Fall competitive when it opens (~0.6× of
+Summer's rate, windfall play ×2.75 over lazy harvesting — both as designed) but **fading to
+~0.2× by the time Summer's ladder reaches its teens**, because the crop list is fixed while
+Summer scales. Partly intended — Winter takes the long-clock baton at Turn ~3 — but if playtest
+shows Fall dead by Turn 6, the remedy is a `DATA.fall.scale` yield knob tuned in phase 4.
+**Letting crops roll rarity was considered and rejected**: it reverses "crops are not flowers"
+for a tuning problem one knob can solve. `DATA.fall = { windfall, plants: […] }` is **wholly separate from
 `DATA.seeds`** — appending crops to the seed array would drag them through rarity, gems,
 mutations, verbs and the Almanac. `state.fall.grid` mirrors the main grid's cell shape minus the
 mutation and pack fields.
@@ -214,7 +246,7 @@ Re-price only on playtest evidence, and log it.
 ## The sim-test bill
 
 The suite grows with slice A; these are the invariants, most inherited from the audit. Items
-1–6 and 8–16 land with slice A; item 7 lands with slice B (Storm-Kissed does not exist before
+1–6 and 8–18 land with slice A; item 7 lands with slice B (Storm-Kissed does not exist before
 the launch six ship).
 
 1. The never-resets partition, asserted field by field across a Turn — generated from the rule
@@ -241,3 +273,7 @@ the launch six ship).
     zero-scored line contributes nothing and renders nothing.
 15. `state.year.stats` counters zero at the Turn and never read lifetime records.
 16. The blessing writes exactly one Rich Bloom petal, once per Turn.
+17. The Turn refuses below either gate — `minSeeds` projected or `minCoins` earned — and the
+    daisy-rush shape (many cheap Turns in one day) stays unprofitable against normal play.
+18. Plots 5–8 refuse purchase while `turnsCompleted = 0`, except on a migrated save that already
+    owned them — nothing owned is ever re-locked.

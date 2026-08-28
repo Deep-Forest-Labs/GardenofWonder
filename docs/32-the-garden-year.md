@@ -90,8 +90,10 @@ confirmed as a default, revisit after one playtest.
 A meter, visible from the first session, fills as the year is played. **The meter is the pouch:**
 it shows the Saved Seeds the year has grown so far, and it doubles as the season's visual clock —
 as it fills, Summer's palette ripens toward autumn (one `--season-tint` overlay on the scenery,
-composed like the weather tint — purely visual, no state). The Turn unlocks at a small minimum
-(`DATA.year.minSeeds`) and is **invited, never forced**: the calendar never turns it for you, the
+composed like the weather tint — purely visual, no state). The Turn unlocks behind two small gates —
+projected mint ≥ `DATA.year.minSeeds` **and** the year has earned `DATA.year.minCoins` (the
+coins floor is what keeps many-cheap-Turns-a-day unprofitable) — and is **invited, never
+forced**: the calendar never turns it for you, the
 meter never stops you from playing on, and the word "reset" appears nowhere in the game.
 
 **Where the meter lives:** a third HUD pill beside the two wallets — the HUD is up in every room,
@@ -148,7 +150,7 @@ Owner-decided 2026-08-29: **the Turn clears the fast annuals in the main garden 
 | Summer's planted plots — see the in-flight rules below | **Any running long timer, anywhere** — Winter sleepers, a mid-grow Century Bloom. A reset that eats a two-week plant is the one unforgivable version of this |
 | Gold — zeroed to `defaultState`'s 100 starting coins, after the mint | Saved Seeds, petals, seed **unlocks** (one-time prices stay paid) |
 | **Every key in `state.upgrades`** — the tap badges, the three procs, Sprinklers, Land Deed, the drone and all eight harvesters. The rebuild is the ritual, and `tap.power` / `comboMax` / crit fields are **re-derived immediately after the wipe** | Creatures, stars, the Hollow and everything in it; food clocks run on real time throughout |
-| Plots 5–8 close (gold rebuy; plots 1–4 stay open; lifetime level gates are long met) | Lifetime reputation and level; the Almanac's lifetime records (`discovered`, `bestRarity`, `rarityCounts`) |
+| Plots 5–8 close (gold rebuy from Turn 1 on — **they cannot be bought at all in year one**, so Turn 1's gift is Fall *and* the right to a bigger garden; migrated saves keep what they owned) | Lifetime reputation and level; the Almanac's lifetime records (`discovered`, `bestRarity`, `rarityCounts`) |
 | Boost inventory; the combo zeroes with the board; an *active* boost or called sky simply expires on its own clock | Cards, packs, gems, mementos, decorations |
 | The Stand's open slots (all of them) regenerate with `nextAt = now`, drawing flower lines from `seedUnlocks` only — no order may name a bloom the fresh year cannot yet grow | Fall / Winter / Spring gardens and their contents; `quests.active` keep their progress; the daily quest keeps its day |
 | `state.year` rolls over: `coinsEarned` and `stats` zero, `number` increments | Everything not named in the clears column survives verbatim — that is the rule sim-test 1 is generated from |

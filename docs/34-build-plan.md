@@ -70,11 +70,12 @@ early.
 `Game.credit(amount, {cheat, refund})` wired through every faucet; the mint with the Tally
 (counters, tiers, cap, zero-line rule); atomic `Game.turnYear(blessedId)` over the full
 partition including the in-flight rules; unlock prices (charged once ever) with the seed
-`unlockLevel` retirement and grandfather migration; petal effects via `petalMult` at harvest and
+`unlockLevel` retirement and grandfather migration; the two Turn gates (`minSeeds`, `minCoins`)
+and the plots-5–8 year gate; petal effects via `petalMult` at harvest and
 in `passiveIncomeRate()`; Bloom Mastery retirement + conversion grant; the four quest re-keys at
 held reputation; Fall's plants and windfall **as simulation** (the board state machine, no
 rendering); Century Bloom rules; dev-tools drivers (drive a year's earnings, force the meter,
-run a Turn, inspect the Tally). **The entire sim-test bill, items 1–6 and 8–16.**
+run a Turn, inspect the Tally). **The entire sim-test bill, items 1–6 and 8–18.**
 
 **Out of scope, hard:** any visible UI beyond dev tools; the ceremony sheet; the strip; Fall's
 rendering; art of any kind. The live game must look and play identically after every phase-1
@@ -140,7 +141,7 @@ commit, all five steps.
 Your scope is docs/34-build-plan.md "Phase 1 — The engine", exactly: simulation
 only, no UI beyond Developer-tools drivers, and the live game must look and play
 identically while the year accrues silently underneath. Every number ships in
-data.js. The sim-test bill in docs/33 (items 1-6 and 8-16) is the acceptance
+data.js. The sim-test bill in docs/33 (items 1-6 and 8-18) is the acceptance
 test: node tools/sim-test.js, run several times — the repo has a documented
 class of flaky tests from unpinned Math.random, and a flaky suite is a failing
 suite.
@@ -150,9 +151,10 @@ before writing your handoff: an adversarial multi-agent critique with
 independent critics for invariant coverage (every bill item genuinely asserted),
 partition completeness (the Turn's clears vs the full field list in
 docs/07-save-data.md), and economy pacing (drive a headless year through the
-real game.js and check the doc 33 targets: first Turn ~day 2-3 of casual play,
-~370K first-year coins, 2-5 petals per Turn through Turn 12). Fix what they
-find and re-run until a clean round.
+real game.js and check the doc 33 targets: first Turn ~day 2.7-3.3 of casual
+play, ~370-410K first-year coins with plots 5-8 year-gated, 2-5 petals per Turn
+through Turn 12, and the daisy-rush check in bill item 17). Fix what they find
+and re-run until a clean round.
 
 Where docs 32/33 are silent, ask the owner rather than invent — you are the
 builder, the design conversation lives in another session. End with the

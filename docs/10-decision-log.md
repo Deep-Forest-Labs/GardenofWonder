@@ -5,6 +5,63 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (tuning) — The full-model sim reports late, fails four checks, and saves the loop
+
+**The economy verifier presumed lost to the session-limit outage finished after all**, having
+driven a session-by-session year model through the documented numbers — and it earned the wait:
+of nine checks, two passed, three were partial, and **four failed**, one fatally. Every verdict
+is applied to [33-year-one-economy.md](33-year-one-economy.md) before any builder implements the
+old values.
+
+**The fatal one: the prestige loop died at week eight.** At petal base 5 / ×1.3 per seed, Turns
+paid 7–10 petals instead of 2–5 and the entire sink was consumed by day ~56 — after which a Turn
+buys nothing and the game's engine stops. **Repriced to base 15 / ×1.45**: the 2–5 band centres
+and the sink (~679K seeds) is uncleared at day 180. The knob that looked like taste was the one
+keeping the Turn button alive.
+
+**The unlock ratio was wrong for a subtle reason:** gold resets at the Turn, so seed 19's 277M
+had to be earned *inside one year* against ~30–40M/day — the endgame became 5–11-day grind-years
+and all nineteen landed at day ~67. **×1.6 → ×1.5** (seed 19 ≈ 98.5M, all-19 ≈ day 46), with the
+recorded instruction that the knobs interact and **the unlock ratio is tuned last**, in phase 4,
+after petal pricing — the sim's own cross-check showed repriced petals slow income enough that
+~×1.45 may be the landing spot.
+
+**Two exploits, one fix each.** The seeds-only Turn gate was reached at ~8K coins, enabling a
+**daisy petal rush** — many cheap Turns a day, 36% faster to the first million; a **coins floor
+joins the gate** (`minCoins = 100K`, verified robust where petal repricing alone was not). And
+year one earned ~800K instead of ~370K because plots 5–8 cost 9.4K and double income; **plots
+5–8 now require `turnsCompleted ≥ 1`** — which also makes Turn 1's gift bigger: Fall, *and* the
+right to a larger garden. Migrated saves keep what they owned; nothing is ever re-locked.
+
+**What passed, recorded because passes are evidence too:** the growth-floor stack (0.375 > 0.3
+with everything at cap); **the Tally lands in the exact band it was designed for** — a player who
+maxes it every year finishes 18% faster than one who ignores it, optional-but-delightful, not
+mandatory; and **skipping unlocks is strictly dominated** (saving for seed 10 directly arrives
+eight days later than climbing), so the sequence needs no enforcement code at all.
+
+**Fall's fade is measured and half-intended:** competitive at opening (~0.6× Summer, windfall
+×2.75 over lazy play), fading toward ~0.2× as Summer's ladder reaches its teens. Winter takes
+the long-clock baton at Turn ~3 by design; if playtest shows Fall dead by Turn 6 the remedy is a
+`DATA.fall.scale` yield knob in phase 4. **The sim's suggestion of rarity-for-crops was
+rejected** — it reverses "crops are not flowers" to solve a tuning problem one knob can solve.
+
+**The quest re-key survives with sharper reasoning:** at the gated ~370–410K, peony and marigold
+stay unreachable and lavender and rose become *marginal* — reachable only on a perfect year. All
+four still re-key, because a quest that sometimes jams is the same bug on a timer.
+
+Sim-test bill grows to 18 (the two gates; the plots year-gate); docs 32 and 34 and the HANDOFF
+carry the new numbers; phase 1's prompt targets are corrected in doc 34.
+
+### Rejected
+
+**Rarity on Fall crops** (above). **Shipping the documented values and tuning in phase 4** — the
+dead-at-week-8 sink is not a tuning miss, it is a structural failure the builder must not
+implement. **Trusting the earlier pressure-test sim over this one** — the first model simulated
+the formulas; this one simulated the *player*, sessions and offline batches and Turn policy
+included, and where they disagree the fuller model wins.
+
+---
+
 ## 2026-08-29 (process) — The build gets phases, a gauntlet, and a prompt per builder
 
 **The owner asked for the build to start — in phases they can review, with critics reviewing the
