@@ -4,6 +4,10 @@
 wrong — they exist so the prototype has something to run, and will be replaced once the
 Garden ↔ Apiary loop has been played.
 
+**For the Garden Year build (2026-08-29), the operative numbers live in
+[33-year-one-economy.md](33-year-one-economy.md).** This skeleton's raw < crafted < order
+invariant chain and the unit-cost model remain the record for goods and orders.
+
 Do not treat any value here as tuned. Tuning happens after the prototype, deliberately, against
 observed session behaviour.
 

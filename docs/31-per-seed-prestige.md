@@ -133,6 +133,9 @@ coins"** — the two-stage chip on plots and meadow cells. Applied to seeds: sea
 the seed's slot, the one-time unlock price buys it. Levels keep their vertebrae, the wall keeps
 its size, and the acquisition rule stays the one rule learned once.
 
+(Decided otherwise in the final design: the unlock price gates alone — season-level regating was
+rejected as a double wall; see [33-year-one-economy.md](33-year-one-economy.md).)
+
 ## Surgery 4 — the trees: a checklist for this audience, not an allocation exam
 
 The adversarial critique's strongest surviving attack, rated fatal as-proposed: **19 trees × ~6

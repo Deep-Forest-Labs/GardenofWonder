@@ -4,6 +4,9 @@
 genre so saturated the game cannot stick out, or should I focus on the idle incremental tapper —
 and what would it actually take to build something that succeeds?*
 
+**Update, 2026-08-29:** direction D was executed via docs 30 → 31 → 32; the Shared Sky
+(direction C) remains compatible future work per 32's "What the Year does not touch".
+
 Four directions, priced. Extends [17-market-and-positioning.md](17-market-and-positioning.md) and
 [25-world-map.md](25-world-map.md) rather than redoing them; every market figure below is theirs.
 

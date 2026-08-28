@@ -1,10 +1,16 @@
 # Navigation and Information Architecture
 
-**Status: phase 1 built, phases 2–5 specified but not built.** This is the agreed target structure
+**Status: phase 1 built; phase 2 (the world map) BUILT 2026-08-25; phases 3–5 specified but not
+built.** This is the agreed target structure
 for the game's navigation. Decided 2026-08-05; reasoning in
 [10-decision-log.md](10-decision-log.md). **The dock's purpose was reframed by the owner
 2026-08-25** — read the next section first, since it supersedes the target structure below where
 the two disagree.
+
+**Superseded in part, 2026-08-29.** Season-swiping replaces map navigation
+([32-the-garden-year.md](32-the-garden-year.md)); the centre-pedestal World dock target and phases
+3–4 are superseded where they assume the map. The map and the World button retire when the year
+strip ships.
 
 Read alongside [08-ui-and-layout.md](08-ui-and-layout.md) for how the current UI is put together and
 [12-meta-layer-design.md](12-meta-layer-design.md) for the world this navigation has to serve.

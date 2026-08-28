@@ -13,8 +13,11 @@ chickens question opened 2026-08-14 and re-raised 2026-08-25.
 Companions: [13-order-system.md](13-order-system.md) is the demand side that consumes everything
 here. [21-potting-bench.md](21-potting-bench.md) is the crafting engine.
 [14-economy-model.md](14-economy-model.md) owns pricing structure; every number below is a
-placeholder tier, not a price — the economy retune stays deferred, and **every value ships in
-`data.js`, remote-config-ready**, per the standing rule.
+placeholder tier, not a price — the retune is now specified in
+[33-year-one-economy.md](33-year-one-economy.md) and ships with the Year's slice A, and **every
+value ships in `data.js`, remote-config-ready**, per the standing rule. The cottage crops' home is
+Fall ([32-the-garden-year.md](32-the-garden-year.md)) and eight of them ship as Fall's launch
+list; the rollout follows the Year's slices rather than the map phases.
 
 ## The rule every good must pass
 

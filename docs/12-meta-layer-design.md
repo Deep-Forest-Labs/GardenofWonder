@@ -4,6 +4,10 @@
 — see "Prototype status" at the bottom, and [03-systems.md](03-systems.md) for how it works. The
 Potting Shed, the Market and the world map are still design only.
 
+**Superseded in part, 2026-08-29.** The region/map world model is superseded by the Garden Year's
+seasons ([32-the-garden-year.md](32-the-garden-year.md)); the tonal rules, the currency policy and
+the crafting-tier reasoning remain the record.
+
 Companion documents: [13-order-system.md](13-order-system.md) for the Market engine,
 [14-economy-model.md](14-economy-model.md) for resources, recipes and tuning.
 

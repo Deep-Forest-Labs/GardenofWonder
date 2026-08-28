@@ -23,11 +23,15 @@ of the year, and the player swipes between them:
                THE HOLLOW
 ```
 
-- **Horizontal is time.** Swiping left/right moves through the seasons. Locked seasons show as
-  hedge gates with something drifting behind them — a gate is a promise, and every early turn
-  keeps one.
-- **Vertical stays altitude.** Swipe down from Summer to the Hollow, exactly as today. The
-  vertical ladder survives; only the map altitude above it retires.
+- **Horizontal is time.** Swiping left/right moves through the seasons — the strip ships in
+  slice A, mirroring the vertical gesture's rules (starts on the background, `dx > dy`, ~70px).
+  Locked seasons show as hedge gates with something drifting behind them (a static backdrop, a
+  padlock chip and one drifting particle — non-interactive); a gate is a promise, and every early
+  turn keeps one. Gate turns are data: `DATA.year.fallTurn = 1` (load-bearing in slice A),
+  `winterTurn = 3`, `springTurn = 6` (remote-config knobs).
+- **Vertical stays exactly as built: up goes in.** Swipe *up* from Summer enters the Hollow, as
+  today. Swipe-down is the map's pull-back gesture and retires with the map; it is then free for
+  later use.
 - **Summer is home.** The app opens there. It is the garden that exists today, unchanged.
 - **Art ships as a background swap** (owner's call, 2026-08-29): same board grammar, four
   backdrops. Real per-season art arrives after the feel is proven — the same MVP-first sequencing
@@ -35,8 +39,10 @@ of the year, and the player swipes between them:
   new place.
 
 **Migration note for the built map:** the house rule stands — *a tab leaves when its home exists,
-and not before.* The map, `overworld.js` and the World button stay live until the year strip
-ships, then retire together. The Stand's re-entry is below.
+and not before.* The season strip ships in slice A, so the map, `overworld.js` and the camera
+retire with slice A. **The Stand keeps an entry throughout:** in slice A the dock's World button
+becomes a **Stand** button opening the existing Stand sheet (one swap, honouring the rule), until
+slice D's order strip replaces it. The meadow keeps its current entry from Summer unchanged.
 
 ## The four seasons
 
@@ -60,34 +66,78 @@ where those beds were always going to live.
 **Fall and Winter beds never clear automatically.** The Turn is a main-garden event (below). Lean
 confirmed as a default, revisit after one playtest.
 
+### Fall's board, specified
+
+- **The garden's own grammar:** a board of **eight plots with the talking flower in the middle**,
+  paying exactly what it pays everywhere — the meadow's rule, kept (`UI.flowerBtn()` returns
+  whichever flower is on screen).
+- **All eight plots open the moment Fall unlocks.** Fall is Turn 1's gift; making its plots
+  bought again would tax the reward.
+- **The whole board is one bed.** The **windfall** (+50%, `DATA.fall.windfall`) pays when the
+  harvest lands on a board whose **all eight plots are planted and ripe** — all eight, so a
+  single-strawberry board cannot fish for bonuses. The fill-cycle resets when the bed empties.
+- **Crops are not flowers:** Fall plants roll **no rarity, no mutations, drop no gems and never
+  write `discovered`** — the windfall is Fall's juice, and every flower system stays a flower
+  system. They do count generic `harvest` quest tracks.
+- **The Century Bloom ships with Fall** (owner-confirmed 2026-08-29): plantable in a Fall plot,
+  **excluded from the bed-ripeness math** (a 14-day plant must not park the windfall), one
+  growing at a time, and it survives every Turn like any running long timer.
+
 ## The Turn — prestige
 
 ### The trigger: the year-meter
 
 A meter, visible from the first session, fills as the year is played. **The meter is the pouch:**
 it shows the Saved Seeds the year has grown so far, and it doubles as the season's visual clock —
-as it fills, Summer's palette ripens toward autumn. The Turn unlocks at a small minimum
-(`YEAR.minSeeds`) and is **invited, never forced**: the calendar never turns it for you, the
+as it fills, Summer's palette ripens toward autumn (one `--season-tint` overlay on the scenery,
+composed like the weather tint — purely visual, no state). The Turn unlocks at a small minimum
+(`DATA.year.minSeeds`) and is **invited, never forced**: the calendar never turns it for you, the
 meter never stops you from playing on, and the word "reset" appears nowhere in the game.
 
+**Where the meter lives:** a third HUD pill beside the two wallets — the HUD is up in every room,
+which is what makes the meter visible in every season. Before the first Turn it is the mystery
+meter; afterwards the pill shows the banked Saved Seeds, with the current year's projection
+revealed on tap. Tapping the pill when the meter is full is also the **re-invite**: declining the
+flower's offer costs nothing and the ceremony reopens from here whenever the player likes.
+
 This supersedes doc 30's growth-slowdown mechanic: the deceleration that makes turning attractive
-comes from the seed-unlock walls ([33-year-one-economy.md](33-year-one-economy.md#unlock-prices)),
+comes from the seed-unlock walls ([33-year-one-economy.md](33-year-one-economy.md#unlock-prices--where-the-spread-lives)),
 and the season-aging is **visual only**. Simpler, and nothing punishes a player who lingers.
 
 ### The ceremony
 
 Five beats, about a minute, one decision:
 
-1. **The meter fills.** The garden golds; the flower starts mentioning the harvest moon.
-2. **The flower asks.** *"The year's turning. Save your seeds?"* Declining is free and final for
-   as long as the player likes.
-3. **Bless one flower.** The single choice in the ceremony: the blessed flower keeps **one free
-   petal**, forever. (Turn 1 scripts this beat as the tutorial for petals.)
-4. **The seeds are counted.** A count-up from the year's whole earnings — the ceremony's
-   fireworks. Sublinear mint, veterancy bonus; formula in doc 33.
+1. **The meter fills.** The garden golds; the flower starts mentioning the harvest moon
+   (3–4 meter-state lines in `FLOWER_LINES` ship with slice A).
+2. **The flower asks.** *"The year's turning. Save your seeds?"* Declining is free — the
+   ceremony reopens from the meter pill whenever the player likes.
+3. **Bless one flower.** The single choice in the ceremony: pick any flower, and its **free
+   petal lands on Rich Bloom**, written into `state.petals` like any bought petal. One blessing
+   per Turn, any flower, repeatable across years; `state.blessed` keeps the list for provenance
+   and ceremony copy. (Turn 1 scripts this beat as the tutorial for petals.)
+4. **The Tally.** The ceremony's fireworks, owner-designed 2026-08-29: an **arcade end-of-year
+   score**. The base count-up rolls from the year's whole earnings (sublinear mint, doc 33) —
+   then the year's achievements slam in one line at a time, each raising the multiplier:
+
+   > *Orders filled: 47 → ×1.25!*
+   > *Full-bed windfalls: 12 → +10%!*
+   > *Species grown this year: 9 → +8%!*
+   > *Legendary blooms: 4 → +8%!*
+   > *Best combo: 85 → +5%!*
+
+   Every line reads a **year-scoped counter** in `state.year.stats` (never lifetime, never
+   spendable), the bonuses **add** and the sum multiplies the base, **capped at ×2.0**
+   (`DATA.year.tallyCap`), and the lines are data (`DATA.year.tally`). **The cosy rule: a line
+   the year scored zero on simply does not appear.** The Tally only celebrates — there is no
+   "×1.00, you failed" row, ever. Tiers and bonuses in doc 33.
 5. **The gate opens.** Spring returns to Summer — and on the early turns, a hedge gate lifts:
    Fall at turn 1, Winter around turn 3, Spring around turn 6. **The reset pays in places first
    and numbers second**, which is the whole reason this design beats a plain prestige.
+
+**The surface and the commit:** the ceremony is a sheet mode (`turn`), built on the welcome-back
+scene's pattern, driven by **one atomic `Game.turnYear(blessedId)`** that tallies, mints, clears
+and saves in a single commit — a Turn can never half-happen.
 
 ### What the Turn clears, and what it never touches
 
@@ -95,12 +145,24 @@ Owner-decided 2026-08-29: **the Turn clears the fast annuals in the main garden 
 
 | Clears (the year's things) | Never touched (the forever things) |
 | --- | --- |
-| Summer's planted plots | **Any running long timer, anywhere** — Winter sleepers, a mid-grow Century Bloom. A reset that eats a two-week plant is the one unforgivable version of this |
-| Gold (after the pouch is minted) | Saved Seeds, petals, seed **unlocks** (one-time prices stay paid) |
-| Badges — Power Punch through Combo Coil, rebought each year; the rebuild is the ritual | Creatures, stars, the Hollow and everything in it; food clocks run on real time throughout |
-| Plots 5–8 (gold rebuy; lifetime level gates are long met) | Lifetime reputation and level; the Almanac's lifetime records (`discovered`, `bestRarity`) |
-| Boost inventory | Cards, packs, gems, mementos, decorations |
-| The Stand's three open slots (regenerated, so no order names a bloom the new year can't grow yet) | Fall / Winter / Spring gardens and their contents |
+| Summer's planted plots — see the in-flight rules below | **Any running long timer, anywhere** — Winter sleepers, a mid-grow Century Bloom. A reset that eats a two-week plant is the one unforgivable version of this |
+| Gold — zeroed to `defaultState`'s 100 starting coins, after the mint | Saved Seeds, petals, seed **unlocks** (one-time prices stay paid) |
+| **Every key in `state.upgrades`** — the tap badges, the three procs, Sprinklers, Land Deed, the drone and all eight harvesters. The rebuild is the ritual, and `tap.power` / `comboMax` / crit fields are **re-derived immediately after the wipe** | Creatures, stars, the Hollow and everything in it; food clocks run on real time throughout |
+| Plots 5–8 close (gold rebuy; plots 1–4 stay open; lifetime level gates are long met) | Lifetime reputation and level; the Almanac's lifetime records (`discovered`, `bestRarity`, `rarityCounts`) |
+| Boost inventory; the combo zeroes with the board; an *active* boost or called sky simply expires on its own clock | Cards, packs, gems, mementos, decorations |
+| The Stand's open slots (all of them) regenerate with `nextAt = now`, drawing flower lines from `seedUnlocks` only — no order may name a bloom the fresh year cannot yet grow | Fall / Winter / Spring gardens and their contents; `quests.active` keep their progress; the daily quest keeps its day |
+| `state.year` rolls over: `coinsEarned` and `stats` zero, `number` increments | Everything not named in the clears column survives verbatim — that is the rule sim-test 1 is generated from |
+
+**In-flight things at the moment of the Turn**, so nothing is ever silently eaten:
+
+- A **ready, unharvested bloom** is auto-collected — paid into the year *before* the mint, so
+  turning never costs a harvest.
+- An **unopened card pack on a plot** is banked into `state.packs`. Packs are never touched by
+  the Turn, so they cannot be destroyed by it either.
+- A **growing Summer annual** — including a caught mutation on it — is forfeit with the plot,
+  and the flower's ask says so in one line ("the beds still growing will go to the compost").
+  This is the one thing the Turn takes, it is stated before it happens, and waiting costs
+  nothing.
 
 Every row of this table is a sim-test. The Turn is a **new, selective path** — the Settings reset
 (`gw-save` wipe) is not a prestige and must never be reused as one
@@ -231,7 +293,7 @@ Each slice ships and is judged before the next starts, per the house pattern:
 
 | Slice | Contents | Proves |
 | --- | --- | --- |
-| **A — the Turn** | Year-meter, ceremony, mint, the never-resets partition under sim-test, petals (shared skills only) on Almanac rows, unlock prices on seeds 3+, **Fall** at background-swap art with its first plant list and the windfall rule | Does turning the year feel like a gift or a loss — the whole design in one question |
+| **A — the Turn** | Year-meter pill, ceremony with **the Tally**, mint, the never-resets partition under sim-test, petals (shared skills only) on Almanac rows, unlock prices on seeds 3+, the seed-picker's unlock rows, the season strip, the map's retirement, the Stand's dock entry, **Fall** at background-swap art with its plant list, the windfall rule and the **Century Bloom** | Does turning the year feel like a gift or a loss — the whole design in one question |
 | **B — the signatures** | The launch six signatures, countdown framing, the blessing tutorial polish | Do petals make individual flowers feel *owned* |
 | **C — Winter** | The night-shift garden, morning-check session shape, welcome-back scene extension | Does the overnight ritual form |
 | **D — orders return** | The order strip over the garden, order-driven rep past level 17, extended ladder rungs | Does demand pull planting across seasons |
@@ -242,12 +304,15 @@ The economy retune ships **inside slice A** — it is not a later pass
 
 ## Open questions
 
-- **Fall's windfall rule** — bed-completion bonus as specced, or per-plant streaks? Decide in
-  slice A playtest; the rule is one `data.js` knob either way.
 - **The Harvest Drone and per-plot harvesters** — parked for their own conversation
-  (owner-standing). Nothing in slices A–D depends on it; Winter is deliberately designed to need
-  no automation.
-- **Does the Century Bloom exist in slice A or C?** It is Winter-flavoured but it is also the
-  best screenshot in the design. Lean: ship one ultra-long showpiece plant with Fall in slice A.
+  (owner-standing). They reset with the badges each year; nothing else in slices A–D depends on
+  them, and Winter is deliberately designed to need no automation.
 - **Spring's v1 scope** — nursery-as-ceremony-home only, or the first breeding mechanics? Not
   needed until slice E; do not design it now.
+- **Notifications** — Fall's dinner windfall and Winter's morning check imply reminders, but no
+  push mechanism exists and none ships in v1: the windfall itself is the appointment. Park push
+  for its own conversation alongside the Unity shell.
+
+**Closed 2026-08-29 by the owner:** the Century Bloom ships in slice A with Fall, and the
+windfall is the bed-completion bonus — with the streak appetite landing as **the Tally** instead,
+where it multiplies the whole year rather than one bed.

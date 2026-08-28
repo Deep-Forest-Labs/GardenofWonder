@@ -4,6 +4,12 @@
 Where this document says "cut", read it as "the case for cutting, with the counter-case stated."
 Decisions land in [10-decision-log.md](10-decision-log.md) after the owner rules on them.
 
+**Update, 2026-08-29:** items 0–2 and 5 of the settle-order were resolved by
+[32-the-garden-year.md](32-the-garden-year.md) / [33-year-one-economy.md](33-year-one-economy.md)
+— the loop and scarcity via the Year, the spine via petals-on-Almanac, the ceiling via the Turn,
+the retune via 33, with Bloom Mastery retired rather than capped. This document remains the audit
+record.
+
 Its job is the one the owner asked for: what is strong, what is redundant, what is missing, and
 what should be cut — before any new design is written. It extends
 [17-market-and-positioning.md](17-market-and-positioning.md) and

@@ -1,6 +1,8 @@
 # Order System
 
-**Status: specification, not built.** Structure is locked; numbers are placeholders pending the
+**Status: built 2026-08-25** — simulation and surface shipped as the Garden Stand
+([03-systems.md](03-systems.md#the-garden-stand--orders)); this document remains the design record
+and the liveops roadmap. Structure is locked; numbers are placeholders pending the
 prototype. See [12-meta-layer-design.md](12-meta-layer-design.md) for the world it sits in.
 
 **Confirmed and named, 2026-08-25.** The order board is **the Garden Stand**, a place on the world
@@ -144,6 +146,12 @@ telegraphed on the card. They're the reason to read the board rather than tappin
 engine.
 
 ## Reputation and land
+
+**Revised by the Garden Year, 2026-08-29 ([32-the-garden-year.md](32-the-garden-year.md)).**
+Reputation gates order tiers, board slots and the re-authored ladder past level 17 — not land
+(hedge gates open by Turn count) and not seed tiers (one-time gold unlock prices,
+[33-year-one-economy.md](33-year-one-economy.md)). Orders are promoted to the perennial reputation
+engine.
 
 Reputation is earned only here, never spent, and is the single global progression track. It gates:
 

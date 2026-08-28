@@ -10,6 +10,13 @@ on the lane**. `overworld.js` draws the scene, `ui-map.js` drives the camera,
 [17-market-and-positioning.md](17-market-and-positioning.md) for the wider market research this
 extends. Like that document, this one goes stale on its own — figures are from August 2026.
 
+**Superseded as direction, 2026-08-29.** The world map is replaced by the Garden Year's seasonal
+swipe strip ([32-the-garden-year.md](32-the-garden-year.md)). The built map stays live until the
+year strip ships, then retires — the "a tab leaves when its home exists" rule. Phases C and D are
+superseded by the Year's seasons: Fall absorbs the Orchard and the cottage crops, Winter absorbs
+the long-clock role, Spring absorbs breeding. The research, the place taxonomy and "share the
+grammar, never share the verb" remain the record, and the Year obeys them.
+
 ## The owner's framing, which this document answers
 
 **"A new-age FarmVille: incremental, idle, and a tapper."** Zoom out from the garden and it becomes

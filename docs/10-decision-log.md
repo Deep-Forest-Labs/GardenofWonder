@@ -5,6 +5,66 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (design, later) — The Tally, and what the verification fleet found
+
+**The owner added the ceremony's missing beat, and it is the best kind of feature — one that was
+already half-built.** The Turn's count-up becomes an **arcade end-of-year score**: the base mint
+rolls up, then the year's achievements land one line at a time, each raising a multiplier —
+orders filled, full-bed windfalls, species grown, Legendary blooms, best combo. Bonuses add, the
+sum multiplies the base, **capped at ×2.0**, every line reads a year-scoped counter in
+`state.year.stats` (never lifetime, never spendable), and **a line the year scored zero on simply
+does not appear** — the Tally only celebrates, because a "×1.00, you failed" row is the arcade
+convention this game must not import. The tiers rotate categories deliberately: demand, Fall's
+ritual, breadth, luck celebrated, and the tap loop. Also closed by the owner: **the Century Bloom
+ships in slice A with Fall**, and **the windfall is the bed-completion bonus** — the streak
+appetite lands in the Tally, where it multiplies the whole year rather than one bed.
+
+**A three-agent verification fleet ran over docs 32/33 and its findings are all applied.** The
+consistency auditor found a real arithmetic error in 33's own prose — the mint formula yields ~61
+seeds on a ~370K-coin year, not the ~160K the draft quoted — and a **swipe-direction error in 32**
+(the Hollow is entered by swiping *up*, as built; "down" was written from the artifact's diagram
+rather than from `ui.js`). Eleven older docs received supersession notes in the same pass, 25 and
+13 and 16 chief among them, so no cold reader can be sent to build the Orchard again.
+
+**The completeness critic asked the question that mattered — could an engineer build slice A
+without a design question — and the answer was no, thirteen times.** The blockers are now closed
+in the docs: the never-resets partition generates from one rule (*everything not named in the
+clears column survives verbatim*) with in-flight cases specified — a ready bloom auto-collects
+into the year before the mint, a plot-parked pack banks into `state.packs`, a growing annual is
+forfeit and the flower says so before it happens; the badge wipe names every `state.upgrades` key
+and re-derives the tap fields; the blessing is one Rich Bloom petal per Turn on any flower; the
+ceremony is one atomic `Game.turnYear(blessedId)` behind a sheet mode, re-invited from the meter
+pill; the meter is a third HUD pill; **Fall's board keeps the talking flower in the middle**
+(the meadow's rule beats the critic's suggestion of a prop — the flower pays everywhere or the
+grammar is broken); the windfall needs all eight plots planted and ripe so a single strawberry
+cannot fish for it; **crops are not flowers** — no rarity, no mutations, no gems, never
+`discovered`, and `DATA.fall` lives wholly outside `DATA.seeds` so no flower system drags them in;
+**the Stand keeps a dock entry through slices A–C** (the World button becomes a Stand button —
+one swap, honouring "a tab leaves when its home exists"); and **four year-one quests re-key** —
+`q_lavender_3`, `q_rose_3`, `q_peony_3`, `q_marigold_3` name seeds behind 240K–983K unlocks that
+a ~370K first year cannot reach, the sell-quest jam arriving a third time. Every credit grant now
+routes through one `Game.credit(amount, {cheat, refund})` helper so the mint can never silently
+miss a faucet, and migrated saves start `coinsEarned` at zero because no honest backfill source
+exists.
+
+**One regression is accepted knowingly, so nobody "fixes" it later:** retiring Bloom Mastery cuts
+a veteran save's income at migration — `masteryMult` leaves every yield, and the 2-seeds-per-tier
+conversion buys back only a fraction through petals. That is the retune working as intended on an
+economy the owner has already called broken; the conversion is a courtesy, not compensation, and
+it stays toastless per the backfill pattern.
+
+### Rejected
+
+**A prop in Fall's centre instead of the flower** — the one critic suggestion overruled, because
+"the talking flower stands in the middle of every board and pays what it pays" is the grammar.
+**Multiplying tally lines against each other** — bonuses add before the cap, or three mid tiers
+compound past it. **A tally line for creatures kept fed** — an upkeep stat in a celebration reads
+as surveillance; the Tally only counts things that went right. **Backfilling `coinsEarned` from
+`stats`** — no lifetime coin figure exists in the save, and a guessed number in a mint formula is
+worse than a low meter.
+
+---
+
 ## 2026-08-29 (design) — The Garden Year is the design, documented for build
 
 **The owner said go**, after four brainstorm rounds: the seasonal world, the Turn, Saved Seeds and

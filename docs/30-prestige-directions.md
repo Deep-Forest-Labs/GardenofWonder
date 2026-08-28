@@ -3,8 +3,11 @@
 **Status: analysis, 2026-08-26 — partly superseded 2026-08-29.** The owner chose a concrete
 mechanism three days later: **per-seed permanent upgrade trees**, which is idea 2 (Seed Saving)
 arrived at independently in authored rather than generated form, on idea 1's chassis. The current
-design is **[31-per-seed-prestige.md](31-per-seed-prestige.md)**; this document remains the record
-of the option space and the two structural problems, both of which doc 31 inherits and resolves.
+design is now **[32-the-garden-year.md](32-the-garden-year.md)** (via
+[31-per-seed-prestige.md](31-per-seed-prestige.md)); this document remains the record of the
+option space and the two structural problems, both of which doc 31 inherits and resolves. Doc 32
+supersedes two of this document's mechanisms: the season-aging growth slowdown is now visual only,
+and the lifetime-vs-season level split is retired — nothing re-locks.
 
 The original framing: the owner's pivot — focus on **the garden as
 is**, and design a real incremental-idle prestige system — restart (or restart halfway), earn a

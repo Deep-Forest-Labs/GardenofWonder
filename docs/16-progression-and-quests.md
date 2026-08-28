@@ -118,6 +118,10 @@ hidden.
 
 ### Level rewards
 
+**Seed level-gates retire with the Year build, 2026-08-29.** `unlockLevel` on seeds goes away —
+seeds gate on one-time gold unlock prices instead
+([33-year-one-economy.md](33-year-one-economy.md)). Plot, habitat and meadow level gates stay.
+
 Every level grants something. The primary lever is **seeds**. Plots are the other.
 
 - Seeds 1–3 (Daisy, Tulip, Bluebell) are unlocked at level 1.
@@ -454,6 +458,10 @@ backfill from remaining flowers grants already-reached milestones on first load 
 
 ## Phase 5 — Bloom Mastery
 
+**Retires into petals with the Year build, 2026-08-29.** Lifetime counts stay; tiers convert to a
+one-time Saved Seeds grant. See [32-the-garden-year.md](32-the-garden-year.md) and the migration
+section of [33-year-one-economy.md](33-year-one-economy.md).
+
 **Built 2026-08-14.** Phase 4 answered "how many kinds have you grown." It does not answer "why
 keep growing the ones you already have." Once a species is in the book it stops asking for
 anything, and the dominant strategy stays what it has always been: plant the most expensive seed
@@ -681,6 +689,11 @@ harvest and the ratio being measured comes out wrong.
 
 ## Phase 6 — The Almanac becomes card sets
 
+**Note, 2026-08-29:** [32-the-garden-year.md](32-the-garden-year.md) now owns the Almanac's future
+shape — the flower's one home: species, rarity, count, honey, creature, petals. Phase 6's
+set-completion "permanent growing bonus" must be re-derived against petals before any of it is
+built.
+
 **Specified 2026-08-14, not built.** This is a restructuring of Phase 4's surface, not a new system.
 Reasoning in [10-decision-log.md](10-decision-log.md); evidence in
 [17-market-and-positioning.md](17-market-and-positioning.md#who-this-game-is-for).
@@ -766,7 +779,8 @@ social pressure ever justifies it.
 - **Do not put reputation on a mastery tier.** The level curve is aligned to Market order tiers
   and cannot absorb an endless faucet.
 - **Do not make Legendary a mastery goal.** A 2% roll on a sequential ladder is a stall.
-- **Do not build the world map.** Still deferred. Same reasons as before.
+- **Do not extend the world map.** It was built 2026-08-25 and retires when the Year's season
+  strip ships — see [32-the-garden-year.md](32-the-garden-year.md).
 
 ## Open questions
 

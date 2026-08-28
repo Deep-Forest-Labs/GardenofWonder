@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-26**
+Last updated: **2026-08-29**
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -48,8 +48,9 @@ from quests and levels.
 > **The structural finding: no per-plant price spread can create a wall while yield = 1.4× cost
 > holds** — the whole ladder self-finances in ~6 active minutes. The spread lives in **one-time
 > per-seed unlock prices, permanent across prestiges** (seed 3 = 150K, ×1.6/tier, seed 19 ≈ 277M),
-> gated by the shipped two-stage chip: **season level opens the slot, the unlock price buys it** —
-> so levels keep their vertebrae.
+> gated by the shipped two-stage chip. *(Final design, later the same day: the unlock price gates
+> alone — season-level regating was rejected as a double wall, and the ladder's rewards re-author
+> instead. See [33-year-one-economy.md](33-year-one-economy.md).)*
 >
 > **The four surgeries:** currency is **sqrt of lifetime-earned this run**, never leftover balance
 > (Antimatter Dimensions is the honest counterexample, and the conditions that save it there —
@@ -831,26 +832,19 @@ below.
 
 ## Two things to know before touching the economy
 
-**The economy needs a full retune, and it is deliberately deferred.** Every number is a placeholder,
-and the owner has said the whole curve — possibly including *fewer* seeds, unlocked through card
-packs — is open. It is not being done now because an economy is tuned against the systems that
-consume it, and orders, cards and prestige do not exist yet. Retuning now means retuning twice. The
-right moment is after the Market and card sets land.
+**The retune is no longer deferred — it is specified.** The owner unblocked it 2026-08-26 ("the
+economy is already broken") and it now lives in [33-year-one-economy.md](33-year-one-economy.md),
+shipping inside the Garden Year's slice A. The consuming system the deferral was waiting for is
+the prestige loop itself, and it was designed first. Every number in the current build remains a
+placeholder until slice A lands.
 
-**When it happens, the level curve is the dependency nobody expects.** Levels 2–17 currently pay out
-**one seed each** — that is the entire reward structure of the progression ladder. Pull seeds back
-and those levels have nothing to grant, so a seed-count change is also a progression rework. Scope it
-as one piece rather than discovering it halfway through.
+**The level-curve dependency this section always warned about is resolved by design, not dodged:**
+levels 2–17 paid out one seed each, and [33-year-one-economy.md](33-year-one-economy.md) retires
+seed level-gates in favour of one-time gold unlock prices — so the ladder's freed rewards are
+re-authored (levels 18–40 sketched in 33), and four year-one quests that name walled seeds get
+re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
-
-**Design, not build: settling the six items in [27-design-audit.md](27-design-audit.md#the-order-to-settle-things-in).**
-Item 0 is drafted — [28-the-loop.md](28-the-loop.md) — and awaits the owner's ruling on the one
-thing it argues against: the full Gossip Harbor pivot. **Three of the audit's five questions are
-answered** (merge moves to the centre; creatures go wide with breeding wanted long-run; the cheat
-buttons stay). **Two are deferred by the owner** as their own conversations: what a season is and
-what survives one, and the launch content bill of materials — the second of which the economy
-retune needs as a target.
 
 **The spec exists: build slice A of the Garden Year.** [32-the-garden-year.md](32-the-garden-year.md)
 is the design, [33-year-one-economy.md](33-year-one-economy.md) the numbers, and slice A is the
@@ -985,7 +979,11 @@ through the back door. **Every number is provisional** and belongs in the full r
 its own `cellUnlock` event — the garden's `unlock` centres confetti on a plot node, and in the
 meadow the garden is `display:none`. 12 new sim-test assertions, at 914.
 
-**The MVP is done.** The Stand and the map frame both ship. What comes next, roughly in order:
+**The MVP is done.** The Stand and the map frame both ship. ~~What comes next, roughly in
+order:~~ **This list is parked by the Garden Year pivot, 2026-08-29** — the map retires when the
+season strip ships ([32-the-garden-year.md](32-the-garden-year.md)); Fall absorbs the Orchard's
+role, Winter the long-clock role, and collect-all/land-buying die with the map. Kept for the
+record:
 
 1. ~~**The Wild Meadow**~~ — **done 2026-08-25**, art included.
 2. **The Orchard** — the long-clock producer, and the natural home for collect-all. It is also the
@@ -1553,10 +1551,10 @@ stale line here costs them real time before they have any way to know it is wron
 > its scene must be drawn at the size the room really measures rather than sliced from a phone-sized
 > viewBox. Both mistakes shipped in the meadow and both read as "it looks like a prototype."
 >
-> **Your job is the next place: the Orchard** — the long-clock producer, and the natural home for
-> collect-all. It is also the first place that will want its own keeper slots. Read
-> `docs/25-world-map.md` for what a place is allowed to be, and hold the three-question not-a-clone
-> test before building anything.
+> **Your job is slice A of the Garden Year** — the Turn, the mint, petals, unlock prices and Fall.
+> Read `docs/32-the-garden-year.md` (the design) and `docs/33-year-one-economy.md` (the numbers,
+> including the sim-test bill that lands before any UI). The one rule above all others there:
+> a season is a speed and a rule, never a re-skin.
 >
 > **How I work.** I'm the designer; an engineer ports to Unity. Two people, modest revenue goal,
 > deliberately small scope. I want you as a **design advisor as much as an implementer** — push back
