@@ -846,7 +846,14 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
-**The spec exists: build slice A of the Garden Year.** [32-the-garden-year.md](32-the-garden-year.md)
+**The build is phased and gated: [34-build-plan.md](34-build-plan.md).** Slice A splits into four
+owner-reviewed phases (engine → ceremony → Fall and the strip → tuning), each built by a fresh
+session from the paste-ready prompt in that doc, each ending in a critic gauntlet and a
+five-minute phone test script before the owner's verdict gates the next. **Phase 1 has not
+started.** If you are a builder session, your prompt told you your phase — doc 34 is your scope,
+and the design conversation lives elsewhere: where docs 32/33 are silent, ask, don't invent.
+
+**The spec itself: slice A of the Garden Year.** [32-the-garden-year.md](32-the-garden-year.md)
 is the design, [33-year-one-economy.md](33-year-one-economy.md) the numbers, and slice A is the
 whole first task: the year state and mint (earnings-accumulator, never balance, cheat grants
 excluded), the Turn path over the never-resets partition, petals' shared skills on the Almanac

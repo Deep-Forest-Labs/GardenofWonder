@@ -48,6 +48,7 @@ Read it before anything else if you're picking the project up cold.
 | [31-per-seed-prestige.md](31-per-seed-prestige.md) | You're building the prestige system — the per-seed upgrade design pressure-tested: the currency formula, the unlock-price spread, the wall size, the tree surface rules, and the 25 invariants it touches — **the current design, not built** |
 | [32-the-garden-year.md](32-the-garden-year.md) | You're building the Year — the seasonal world, the Turn, Saved Seeds, petals, orders-in-the-year, the never-resets partition, and the build slices — **the master design, decided 2026-08-29, not built** |
 | [33-year-one-economy.md](33-year-one-economy.md) | You're tuning or building the Year's numbers — unlock prices, the mint, petal costs and effects, the launch six signatures, Fall's plants, migration, and the sim-test bill — **specification, not built** |
+| [34-build-plan.md](34-build-plan.md) | You're building the Year or kicking off a builder session — the phases, the review gates, the critic gauntlet every phase runs, and the paste-ready prompts — **the build plan, phase 1 not started** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

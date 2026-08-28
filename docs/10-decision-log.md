@@ -5,6 +5,43 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (process) — The build gets phases, a gauntlet, and a prompt per builder
+
+**The owner asked for the build to start — in phases they can review, with critics reviewing the
+work too.** The plan is [34-build-plan.md](34-build-plan.md); this records the process decisions.
+
+**The session split holds:** this session stays strategy and review, and each phase is built by a
+fresh session from a paste-ready prompt in doc 34 — the standing role division, applied to the
+build. **Slice A splits into four reviewable phases**, because a single review gate at the end of
+the whole slice would be the first time the owner saw anything: 1 the engine (simulation only,
+the live game visibly unchanged while the year accrues underneath), 2 the ceremony (the Turn
+sheet, the Tally as theatre, petal rows), 3 Fall and the strip (the world change, the map's
+retirement), 4 the tuning pass (its own phase, deliberately, so tuning is never squeezed into
+the end of a build phase). Slices B–E become phases 5–8, scoped when reached.
+
+**Every phase ends in a gauntlet before the owner sees it:** the suite run repeatedly (the flaky
+class), an adversarial multi-agent critique inside the builder session — invariant coverage,
+partition completeness, economy pacing through the real `game.js`, and for UI phases a
+visual-fidelity critic judging phone screenshots rule-by-rule against doc 05 plus a grammar
+critic — then the five-step docs handoff, a push, and **a five-minute cheat-driven test script**
+so the owner's review never starts with "where do I look?". The owner's verdict gates the next
+phase, their notes go verbatim into the next prompt, and `/code-review ultra` is recommended
+after phases 1 and 3.
+
+**Three bars are named in the plan because the owner named them:** visual fidelity to doc 05,
+tuning measured never asserted, and the prestige feeling like what the game was always meant to
+be — with doc 32's rubric (*gift or loss?*) as the standing review question.
+
+### Rejected
+
+**Building in this session** — the strategy seat stays clean, per the standing role split.
+**One review at the end of slice A** — four gates instead. **Critics only at the end** — the
+gauntlet runs inside every phase, before the owner's time is spent. **Pre-writing phase 2–4
+prompts in full** — each next prompt is written after the previous review so the owner's notes
+land in it verbatim, which is what makes the loop real.
+
+---
+
 ## 2026-08-29 (design, later) — The Tally, and what the verification fleet found
 
 **The owner added the ceremony's missing beat, and it is the best kind of feature — one that was
