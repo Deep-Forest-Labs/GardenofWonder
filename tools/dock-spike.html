@@ -514,7 +514,7 @@ body[data-notes="0"] .slot{display:none}
 .band{position:absolute;left:0;right:0;bottom:0;height:var(--yard,108px);z-index:4}
 
 /* Left: UPGRADE, a rounded pill with the word on it, per the sketch. */
-.fpill{position:absolute;left:0;bottom:var(--band-b,52px);
+.fpill{position:absolute;left:var(--band-x,34px);bottom:var(--band-b,52px);
   display:flex;flex-direction:column;align-items:center;gap:1px;
   padding:7px 10px 6px;border:3.5px solid var(--ink);border-radius:16px;
   background:linear-gradient(180deg,#fffdf7,var(--paper-3));
@@ -525,7 +525,7 @@ body[data-notes="0"] .slot{display:none}
 /* Right: POWER-UP, a round button, per the sketch. Its body takes the held
    boost's own tint under the house white veil, so which boost is loaded is
    readable before the icon is. */
-.fround{position:absolute;right:0;bottom:var(--band-b,52px);
+.fround{position:absolute;right:var(--band-x,34px);bottom:var(--band-b,52px);
   width:58px;height:58px;border-radius:50%;display:grid;place-items:center;
   border:3.5px solid var(--ink);
   background:
@@ -563,7 +563,28 @@ body[data-notes="0"] .slot{display:none}
   border:2.5px solid var(--ink);background:linear-gradient(180deg,#ffe066,var(--coin));
   box-shadow:0 2px 0 var(--ink-2)}
 
-/* ---------- the two doors at the foot ---------- */
+/* ---------- the season tabs ---------- */
+/* The owner's tabs, kept exactly as they ship: 38px, flush to the SCREEN edge
+   (not the column edge), bottom pinned at --bottom-gap + 104px, drained paper
+   when locked with the turn that opens them on the face. The band's two
+   buttons sit INSIDE them — inset 34px from the column, which clears the tab
+   by 6px and needs nothing from the tab itself. */
+.s-edge{position:absolute;bottom:calc(var(--bottom-gap) + 104px);z-index:5;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  width:38px;padding:9px 4px;
+  border:3px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
+  font-size:9.5px;font-weight:800;line-height:1.05;text-align:center}
+.s-edge svg{width:19px;height:19px}
+.s-edge .w{writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.06em}
+.s-edge.r{right:0;border-right:0;border-radius:16px 0 0 16px}
+.s-edge.l{left:0;border-left:0;border-radius:0 16px 16px 0}
+.s-edge.locked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.24)}
+.s-edge .turn{font-size:8.5px;opacity:.75;letter-spacing:0}
+
+/* ---------- retired: the two door graphics at the foot ---------- */
 /* The burrow door is the precedent; the meadow door is its mirror twin. Both
    sit in the yard's bottom corners, under the band's two buttons. */
 .door2{position:absolute;bottom:2px;display:flex;flex-direction:column;align-items:center;gap:2px;
@@ -589,13 +610,12 @@ body[data-notes="0"] .slot{display:none}
   font-size:11px;font-weight:800}
 .doorpair .dp svg{width:18px;height:18px}
 
-/* ---------- the sheet, stopped above the dock ---------- */
-/* Doc 36's rule: a panel opens ABOVE the dock so the Garden button is always
-   visible as the way home. Today every sheet is pinned to bottom:0 at z-index
-   50 and covers the dock outright; the scrim covers it too. Both are lifted. */
-.sheet.docked{bottom:calc(var(--bottom-gap) + 56px + 6px);
-  height:min(66dvh,560px);border-radius:26px 26px 26px 26px}
-.scrim.docked{bottom:calc(var(--bottom-gap) + 56px + 6px)}
+/* ---------- the sheet ---------- */
+/* RULED BY THE OWNER, 2026-08-30: a panel may cover the dock, because every one
+   of them carries a close button. Doc 36's "sheets open above the dock" is
+   superseded — nothing moves, the sheet stays exactly where it has always been. */
+.sheet.docked{}
+.scrim.docked{}
 
 /* ---------- panel furniture ---------- */
 .psec{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
@@ -608,9 +628,18 @@ body[data-notes="0"] .slot{display:none}
 .row.ready{background:linear-gradient(180deg,#f2fff2,#d3f9d8)}
 .row.dimmed{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
   box-shadow:0 3px 0 var(--paper-dim-edge)}
-.face{flex:none;width:42px;height:42px;border-radius:50%;border:3px solid var(--ink);
-  background:linear-gradient(180deg,#ffe9d6,#ffcba4);box-shadow:0 2px 0 var(--ink-2);
-  display:grid;place-items:center;font-size:19px}
+.face{flex:none;width:48px;height:48px;border-radius:50%;border:3px solid var(--ink);
+  background:linear-gradient(180deg,#ffe9d6,#ffcba4);box-shadow:0 3px 0 var(--ink-2);
+  display:grid;place-items:center;font-size:22px}
+/* An order row reads top-down now, not left-to-right: who and what on one line,
+   then the things you owe them at a size you can read across a room. */
+.row.order{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-rows:auto auto;gap:3px 9px;align-items:center;padding:9px}
+.row.order .face{grid-row:1}
+.row.order .mid{grid-row:1;grid-column:2}
+.row.order .pay{grid-row:1;grid-column:3}
+.row.order .tokens{grid-row:2;grid-column:1 / -1;align-items:flex-end}
+.row.order .cta{margin-left:auto;align-self:flex-end}
 .mid{display:block;flex:1;min-width:0}
 .who{display:block;font-size:12.5px;font-weight:800;line-height:1.15}
 .sub{display:block;font-size:10.5px;font-weight:600;color:#5c452f;line-height:1.25;margin-top:1px}
@@ -620,14 +649,22 @@ body[data-notes="0"] .slot{display:none}
 .bar2{height:8px;border:2px solid var(--ink);border-radius:999px;overflow:hidden;
   background:var(--paper-dim-2);margin-top:4px}
 .bar2 i{display:block;height:100%;background:linear-gradient(180deg,#8fe08a,var(--grass-d))}
-.tokens{display:flex;gap:4px;margin-top:5px}
-.tok{width:26px;height:26px;border-radius:8px;border:2.5px solid var(--ink);
-  background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 2px 0 var(--ink-2);
-  display:grid;place-items:center;position:relative}
-.tok svg{width:16px;height:16px}
-.tok .n{position:absolute;bottom:-3px;right:-3px;font-size:8px;font-weight:800;
-  background:var(--paper-3);border:2px solid var(--ink);border-radius:999px;padding:0 2px}
-.tok.done{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.tokens{display:flex;gap:7px;margin-top:7px}
+/* THE ORDER TOKEN. What you have to deliver is the most important thing in the
+   row, so it is the biggest thing in the row — and the count sits in its own
+   band UNDER the art rather than stamped across it. A number on top of a bloom
+   is two things fighting for the same 26 pixels. */
+.tok{width:52px;border-radius:12px;border:3px solid var(--ink);overflow:hidden;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 9px rgba(44,26,16,.16)}
+.tok .art{height:40px;display:grid;place-items:center;
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.9),rgba(255,255,255,.55)),var(--tt,#ffe0ad)}
+.tok .art svg{width:30px;height:30px;display:block}
+.tok .n{display:block;border-top:3px solid var(--ink);
+  background:linear-gradient(180deg,var(--paper-2),var(--paper-3));
+  font-size:11px;font-weight:800;text-align:center;line-height:1.5;letter-spacing:-.01em}
+.tok.done .n{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.tok.done .n::after{content:' ✓'}
 .pill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;
   border:2.5px solid var(--ink);border-radius:999px;
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
@@ -683,8 +720,14 @@ body[data-notes="0"] .slot{display:none}
   box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.18);margin-bottom:10px}
 .bigmeter i{position:absolute;left:0;bottom:0;right:0;height:var(--p,0%);
   background:linear-gradient(180deg,var(--seed-l),var(--seed))}
-.bigmeter .lb{position:absolute;inset:0;display:grid;place-items:center;gap:2px;
+.bigmeter .lb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:7px;
   font-size:13px;font-weight:800;text-align:center;padding:0 12px;line-height:1.25}
+.bigmeter .lb svg{width:20px;height:20px;flex:none}
+/* A locked meter is still a meter. The drained rim says "not yet"; the fill
+   underneath says "and here is how far". */
+.bigmeter.locked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.18)}
+.note2.say{text-align:center;font-size:12.5px;font-style:italic;padding:0 6px}
 .gates{display:grid;gap:6px;margin-bottom:10px}
 .gate{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:800}
 .gate .tr{flex:1;height:11px;border:2.5px solid var(--ink);border-radius:999px;overflow:hidden;
@@ -723,6 +766,7 @@ body[data-notes="0"] .slot{display:none}
   border:3px solid var(--ink);border-radius:var(--r-md);
   background:linear-gradient(180deg,#59b95d,#4fae54)}
 .cstrip .band{--yard:112px}
+.cstrip{--band-b:4px;--band-x:34px;--pet-b:64px;--pw:74px}
 .clab{font-size:10.5px;font-weight:800;margin-bottom:3px}
 
 /* ---------- the ruler: a measured column down the right of a frame ---------- */
@@ -743,7 +787,7 @@ body[data-notes="0"] .slot{display:none}
 .phone .stage{padding:2px 0 var(--yard,108px)}
 .phone .quest-strip{min-height:52px}
 .phone .garden{width:370px;height:370px}
-.phone{--yard:108px;--band-b:48px;--pet-b:16px;--pw:74px}
+.phone{--yard:108px;--band-b:4px;--band-x:34px;--pet-b:64px;--pw:74px}
 /* A 360px handset. The frame is really 360 wide, not a 390 frame with a
    smaller board drawn in it — a squeeze frame that is not squeezed proves
    nothing. */
@@ -752,7 +796,7 @@ body[data-notes="0"] .slot{display:none}
 /* A 700px-tall handset: the game's own max-height:700px block fires, the dock
    drops to 50px, the yard's clamp lands on 91px, and the board becomes
    height-bound rather than width-bound. */
-.phone.short{height:700px;--yard:91px;--band-b:42px;--pet-b:12px;--pw:66px}
+.phone.short{height:700px;--yard:91px;--band-b:2px;--band-x:34px;--pet-b:14px;--pw:66px}
 .phone.short .garden{width:354px;height:354px}
 .phone.short .dock5,.phone.short .d5{height:50px}
 .phone.short .dock5{grid-template-rows:50px}
@@ -1020,8 +1064,17 @@ function dock5(o) {
 /* ---------- THE BAND ---------- */
 /* UPGRADE, the tending creatures, POWER-UP — the owner's sketch, in the yard
    the stage already reserves. `pets` is a count, 0 to 4. */
+/* The season tabs, exactly as they ship: locked ones wear the drained paper and
+   the Turn that opens them, so sideways is a promise you can read from here. */
+const tab = (side, name, locked, turn) =>
+  '<button class="s-edge ' + side + (locked ? ' locked' : '') + '">' +
+  (locked ? ico('lock') : '') + '<span class="w">' + name + '</span>' +
+  (turn ? '<span class="turn">' + turn + '</span>' : '') + '</button>';
+const tabs = (o) => (o.tabs === false ? '' :
+  tab('l', 'SPRING', true, 'Turn 6') + tab('r', 'FALL', o.fallLocked !== false, o.fallLocked === false ? '' : 'Turn 1'));
+
 const PET_C = ['#ffd6ea', '#c9f5cf', '#cde5ff', '#ffe0ad'];
-const PET_X = [30, 70, 44, 58];
+const PET_X = [34, 66, 44, 56];
 function band(o) {
   o = o || {};
   const n = o.pets === undefined ? 3 : o.pets;
@@ -1038,15 +1091,9 @@ function band(o) {
       ico(o.boost ? o.boost.i : 'bolt') +
       '<span class="cnt">' + (o.held === undefined ? 4 : o.held) + '</span>' +
       '</button>';
-  const doors = o.doors === 'pair'
-    ? '<div class="doorpair"><span class="dp">' + ico('sprout') + 'The Hollow</span>' +
-      '<span class="dp">' + ico('leaf') + 'The Meadow</span></div>'
-    : (o.doors === false ? '' :
-      '<span class="door2 l"><i class="mouth"></i>The Hollow</span>' +
-      '<span class="door2 r"><i class="mouth"></i>The Meadow</span>');
   return '<div class="band">' +
     '<button class="fpill">' + ico('badge') + 'UPGRADE</button>' +
-    '<div class="pets">' + pets + '</div>' + boost + doors + '</div>';
+    '<div class="pets">' + pets + '</div>' + boost + '</div>';
 }
 
 /* A phone wearing phase 3.5's bottom of the screen. Everything above the band
@@ -1057,7 +1104,7 @@ function ph(o) {
   o.noAlbum = o.noAlbum === undefined ? true : o.noAlbum;
   const body = '<div class="ui">' + hud5(o) + questStrip() + '<div class="rail">' + (o.rail || '') + '</div>' +
     stage(o).replace('</main>', band(o) + '</main>') + dock5(o) + '</div>';
-  return '<div class="phone' + (o.cls ? ' ' + o.cls : '') + '">' + scenery(o.tint) + body +
+  return '<div class="phone' + (o.cls ? ' ' + o.cls : '') + '">' + scenery(o.tint) + body + tabs(o) +
     (o.sheet ? '<div class="scrim docked"></div>' + o.sheet : '') +
     (o.ruler || '') + (o.toast || '') + '</div>';
 }
@@ -1193,10 +1240,11 @@ F.push({
   notes: [
     ['d', '<b>This is the screen a player lives on. Worth the long look.</b> Five buttons, the centre raised, and one band above them holding the two floating controls with the creatures between — the sketch, drawn at the size it ships.'],
     ['d', '<b>THE BAND COSTS THE LAYOUT NOTHING.</b> <code>.stage</code> already reserves a yard along its bottom for creatures — 108px at 390&times;844, running from y652 to y760. The two buttons move into the two ends of that same strip. No new grid row, not one pixel off the board. Measured on this frame against the running game: the board is <b>370&times;370 before this change and 370&times;370 after it</b>, and the yard and the dock land on exactly the same pixels.'],
-    ['d', '<b>But the band itself is full.</b> Inside its 108px: the two floating buttons occupy 2&ndash;60 and the two doors 61&ndash;106. Two pixels spare top and bottom. The air in this frame is the 49px of empty stage <i>above</i> the band, not slack inside it.'],
+    ['d', '<b>The two floating buttons sit INSIDE the season tabs</b> — inset 34px from the column, which clears a 38px tab by 6px. The tabs keep the screen edges they have always had, and neither has to know about the other.'],
+    ['d', 'With the door graphics gone, the band’s foot is free, so the buttons drop to it and <b>the creatures stand above them</b> rather than beside them. Their feet clear the buttons’ tops and their heads clear the board — the crowd reads as a row again, which is what the sketch draws.'],
     ['d', '<b>The pedestal rises out of the dock without making the dock taller.</b> The row stays 56px and is <code>align-items:end</code>; the Garden button is 74px and overflows upward by 18. Row 5 never changes height, so nothing in the <code>.ui</code> grid is re-measured — which is the rule that stops a fifth button wrapping onto a second row.'],
     ['d', '<b>The pedestal is grass.</b> It is the one button the colour of the place it takes you to, so it reads as <i>play</i> by material and not only by size. Every other button in the dock is cream paper.'],
-    ['d', '<b>The creatures’ feet lift 16px</b> so the raised Garden button never crops one. Their four standing spots move in from 34/80/52/66 per cent to 30/70/44/58, which keeps them clear of both floating buttons — three lines in <code>ui.js</code>.'],
+    ['d', '<b>The creatures’ feet lift 16px</b> so the raised Garden button never crops one. Their four standing spots move in from 34/80/52/66 per cent to 34/44/56/66, which keeps the crowd clear of both season tabs — three lines in <code>ui.js</code>.'],
     ['d', 'The HUD is two wallets and two round buttons now. The pill went to the Turn button and the star went to Cards, so <b>the round buttons go back to 44px</b> — <code>style.css</code> shaved them to 40 to fit three wallets and three buttons at 390px and wrote the cost down as a real one. This phase pays it back.'],
     ['q', '<b>The Turn button carries no number in year one, and the label still says “Turn”.</b> Doc 32’s rule is that the meter fills unexplained. A word is not a number, and a button you cannot read yet is a promise — but it is the one place year one says anything at all about the Turn. The alternative is a pouch glyph and no word until the first Turn lands.']
   ]
@@ -1218,24 +1266,26 @@ F.push({
     '</div>',
   notes: [
     ['d', '<b>The two-buttons-only state is the one that had to be checked, and it holds.</b> With nobody tending, the band reads as two controls at the ends of an empty lawn — which is what the garden already looks like on a fresh save, because the yard is empty then too. Nothing is added to fill it.'],
-    ['d', '<b>Four creatures overlap each other, and they already do.</b> The yard is 370px wide and a creature is 74px; the four spots are 30/44/58/70 per cent, so the middle pair overlap by roughly a third. That is the existing shipped look, not a regression — they read as a crowd, which is the point.'],
+    ['d', '<b>Four creatures overlap each other, and they already do.</b> The yard is 370px wide and a creature is 74px; the four spots are 34/44/56/66 per cent, so the middle pair overlap by roughly a third. That is the existing shipped look, not a regression — they read as a crowd, which is the point.'],
     ['d', 'The creatures keep both taps: one to collect a waiting keepsake, one to open the creature’s panel. Nothing about them changes except where their feet land.'],
-    ['q', '<b>At four tending, the crowd reaches to about 296px of 370.</b> The Power-up button starts at 312. It clears — by 16px. If a fifth Habitat slot is ever added, the band is the thing that breaks first, and the answer would be to inset the spots again rather than to shrink the buttons.']
+    ['d', 'The creatures now stand <b>above</b> the two buttons rather than beside them, so the only thing they have to clear horizontally is the season tabs at the screen edges — and at four tending the crowd runs 99&ndash;291 of 370, nowhere near either. The band stopped being the crowded row the moment the door graphics left it.']
   ]
 });
 
 /* ---------- 4. WHERE THE TWO DOORS GO ---------- */
 F.push({
-  t: 'Where the two doors go — the corners, or a pair in the middle',
-  s: 'The sketch has no doors in it. This is the one composition question it cannot settle.',
+  t: 'The rooms are gestures now, and the seasons keep their tabs',
+  s: 'Owner’s call, 2026-08-30: no door graphics. Swipe for a room, tab for a season.',
   tag: 'THE BAND',
-  html: ph({ coins: '84.2K', turn: 0.34, oq: 2, pets: 2, boost: { i: 'sprout', n: 'Seed Rush', t: '#51cf66' }, held: 3 }) +
-        ph({ coins: '84.2K', turn: 0.34, oq: 2, pets: 2, boost: { i: 'sprout', n: 'Seed Rush', t: '#51cf66' }, held: 3, doors: 'pair' }),
+  html: ph({ coins: '84.2K', turn: 0.34, oq: 2, pets: 2, boost: { i: 'sprout', n: 'Seed Rush', t: '#51cf66' }, held: 3,
+    speech: 'Down goes to the Hollow. Up goes out to the meadow.' }) +
+        ph({ coins: '212K', turn: 0.55, oq: 1, pets: 4, fallLocked: false,
+    boost: { i: 'clover', n: 'Fortune Aura', t: '#9775fa' }, held: 2 }),
   notes: [
-    ['d', '<b>LEFT — the corners, and my recommendation.</b> The burrow door does not move at all: it is at <code>left:10px; bottom:2px</code> today and it stays there. The meadow door is its literal mirror at the right, same silhouette, hedge instead of soil — <i>same grammar, different verb</i>, which is the house rule the meadow’s cobbles already follow. Each door sits under the button above it, and the creatures own the whole middle exactly as the sketch draws them.'],
-    ['d', '<b>RIGHT — the pair, which is how the phase-3 spike drew them.</b> Two doors side by side read as “two ways out” more clearly than two corners do. Look at what it costs: the pair lands in the middle of the band, which is where the sketch puts the creatures <i>and</i> where the raised Garden button rises into. The creatures are pushed to the sides, the two doors sit on the pedestal’s shoulders, and the one clean thing about the composition — a symmetrical row of button, creatures, button — is gone.'],
-    ['q', '<b>The measurement decides it on short phones and the corners win.</b> At 390&times;700 the band has 95px between the board and the dock. Corners: button 50 + door 45, stacked at the edges, and the creature’s head clears the board by 3px. Pair: the doors take the bottom of the middle, the creatures move up 30px, and their heads overlap the board by about 19px. <b>Which one the owner prefers at 844 is still a taste call — this only says what happens at 700.</b>'],
-    ['d', 'Whichever wins, the meadow’s door is built <b>first</b>, on its own, and verified end to end before a line of the map comes out. Doc 36’s order-of-work rule: never a push where the meadow has no door.']
+    ['d', '<b>OWNER’S CALL — the two door graphics go.</b> No mouth in the ground, no gate in the hedge. A room is reached by the swipe, and the swipe is what the player is meant to learn: <b>down goes under to the Hollow, up goes out to the Wild Meadow.</b> The Hollow is underground and the meadow is up the lane, so the two directions mean what they say.'],
+    ['d', '<b>OWNER’S CALL — the season tabs stay exactly as they ship,</b> locked and persistent, on both edges, wearing the drained paper and the Turn that opens them. They are the thing that teaches sideways, and they teach it whether or not the player ever swipes. <b>The band’s two buttons sit INSIDE them</b> — inset 34px from the column, which clears a 38px tab by 6px and asks nothing of the tab.'],
+    ['q', '<b>THE ONE RISK IN THIS, NAMED PLAINLY: the meadow now has no visible door at all.</b> The Hollow is fine — a player who never finds the swipe still loses nothing they can see. But the meadow holds the hives, the keepers, the Honey Shelf and <b>four quests worth 114 of the ladder’s 777 reputation</b>, and after this phase there is no button, no tab and no label pointing at it. <b>The flower says it once, on the first Summer after the meadow is available</b>, the way the burrow mouth used to nudge — that is the whole of its discoverability. If that turns out to be too quiet in play, the cheapest fix is a tab of its own on the bottom edge, and it is worth watching for.'],
+    ['d', '<b>RIGHT — Fall unlocked, four creatures tending.</b> The Fall tab has taken the ordinary cream treatment and the Spring tab is still drained with its Turn on it. Same object, two states, and the band underneath is unchanged.']
   ]
 });
 
@@ -1269,13 +1319,21 @@ F.push({
 });
 
 /* ---------- the panel bodies ---------- */
+/* THE ORDER ROW — the owner's hierarchy, 2026-08-30: who is asking, what they
+   asked for, and then the things you actually owe them, biggest of all. */
 const orderRow = (name, good, ready, coins, rep, toks) =>
-  '<div class="row' + (ready ? ' ready' : '') + '"><span class="face">' + (ready ? '🙂' : '🙂') + '</span>' +
-  '<span class="mid"><span class="who">' + name + '</span><span class="sub">' + good + '</span>' +
-  '<span class="tokens">' + toks.map((t) => '<span class="tok' + (t[1] ? ' done' : '') + '">' + ico(t[0]) +
-    '<span class="n">' + t[2] + '</span></span>').join('') + '</span></span>' +
-  '<span class="pay"><span class="p">' + ico('coin') + coins + '</span><span class="p">' + ico('star') + rep + '</span>' +
-  (ready ? '<span class="pill ok">Ready</span>' : '') + '</span></div>';
+  '<div class="row order' + (ready ? ' ready' : '') + '">' +
+  '<span class="face">🙂</span>' +
+  '<span class="mid"><span class="who">' + name + '</span><span class="sub">' + good + '</span></span>' +
+  '<span class="pay"><span class="p">' + ico('coin') + coins + '</span>' +
+  '<span class="p">' + ico('star') + rep + '</span></span>' +
+  '<span class="tokens">' + toks.map((t) =>
+    '<span class="tok' + (t[1] ? ' done' : '') + '" style="--tt:' + (t[3] || '#ffe0ad') + '">' +
+    '<span class="art">' + (t[0].charAt(0) === '<' ? t[0] : ico(t[0])) + '</span>' +
+    '<span class="n">' + t[2] + '</span></span>').join('') +
+    (ready ? '<span class="pill ok cta">Ready &middot; hand it over</span>'
+           : '<span class="pill cta">' + (toks.length > 1 ? 'still growing' : 'still growing') + '</span>') +
+  '</span></div>';
 
 const questRow = (txt, sub, right, ready) =>
   '<div class="row' + (ready ? ' ready' : '') + '"><span class="mid"><span class="who">' + txt + '</span>' +
@@ -1284,8 +1342,11 @@ const questRow = (txt, sub, right, ready) =>
 
 const ORDERS_BODY =
   '<p class="psec">The Stand &middot; 1 ready to hand over</p>' +
-  orderRow('Marigold Hen', 'Rose Tea', true, '2,400', '18', [['leaf', 1, '3/3'], ['honey', 1, '1/1']]) +
-  orderRow('Old Bramble', 'Any blooms', false, '1,150', '11', [['leaf', 0, '2/5']]) +
+  orderRow('Marigold Hen', 'wants Rose Tea', true, '2,400', '18',
+    [[bloom('#ff8fab', '#fff', '#e8453c', 6), 1, '3 / 3', '#ffd6e3'],
+     ['honey', 1, '1 / 1', '#ffe9a8']]) +
+  orderRow('Old Bramble', 'wants a bunch of anything', false, '1,150', '11',
+    [[bloom('#ffe066', '#fff', '#ffc93c', 6), 0, '2 / 5', '#fff3bf']]) +
   '<div class="row dimmed"><span class="face">' + ico('clock') + '</span><span class="mid">' +
   '<span class="who">Someone is on their way</span><span class="sub">1m 22s</span></span></div>' +
   '<p class="psec">Now</p>' +
@@ -1343,9 +1404,14 @@ const TURN_BODY_FILLING =
   '</div>';
 
 const TURN_BODY_YEARONE =
-  '<div class="bigmeter" style="--p:34%"><i></i><div class="lb"><b>Something is filling</b></div></div>' +
-  '<p class="note2" style="text-align:center;font-size:12.5px">“It fills a little every time you grow something.”</p>' +
-  '<div style="display:grid;place-items:center;padding:18px 0 6px;width:120px;margin:0 auto">' + talker() + '</div>';
+  '<div class="bigmeter locked" style="--p:34%"><i></i><div class="lb">' +
+    ico('lock') + '<b>Something is filling</b></div></div>' +
+  '<div class="gates">' +
+    '<div class="gate bind"><span style="width:78px">Gold earned</span>' +
+    '<span class="tr"><i style="width:34%"></i></span><span class="tag2">keep going</span></div>' +
+  '</div>' +
+  '<p class="note2 say">“It fills a little every time you sell something. Keep the gold coming and I’ll tell you what it’s for.”</p>' +
+  '<div style="display:grid;place-items:center;padding:6px 0 2px;width:112px;margin:0 auto">' + talker() + '</div>';
 
 const SHOP_BODY =
   '<div class="tabsrow"><span class="tabp">Upgrades</span><span class="tabp">Craft</span><span class="tabp on">Shop</span></div>' +
@@ -1380,8 +1446,8 @@ F.push({
   html: ph({ coins: '84.2K', turn: 0.34, oq: 2, pets: 3, boost: { i: 'bolt', n: 'Bloom Burst', t: '#ff6b9d' },
     sheet: panel({ title: 'Orders & Quests', body: ORDERS_BODY }) }),
   notes: [
-    ['d', '<b>EVERY PANEL STOPS ABOVE THE DOCK.</b> Today a sheet is pinned to <code>bottom:0</code> at z-index 50 and covers the dock outright — automation cannot even click a dock button while one is open. Doc 36 wants the Garden button visible as the way home, so the sheet’s bottom edge and the scrim’s both lift to clear the dock. <b>The panel also gives up 100px of height, and it has to.</b> Lifting today’s 660px sheet by the dock’s 84px would push its top edge up into the wallets, and the HUD is the one thing that must be true in every room. At <code>min(66dvh, 560px)</code> the panel’s top lands at y200 — <b>clear of the HUD by 89px and of the quest strip by 31</b>, measured on this frame.'],
-    ['q', '<b>The ceremony is the one panel that should still take the whole screen.</b> It is <code>min(94dvh, 800px)</code> and it locks the sheet shut while the Tally rolls, so there is nothing to go home to mid-ritual. Proposed: the Turn ceremony keeps the full height and covers the dock; every other panel clears it.'],
+    ['d', '<b>OWNER’S CALL — a panel may cover the dock, and nothing about the sheet moves.</b> Doc 36 asked for panels that stop above the dock so the Garden button is always the visible way home; the owner ruled otherwise, because <b>every panel already carries a close button</b> and a second way home is not worth 100px of panel. The sheet stays exactly where it has always been: pinned to the bottom, <code>min(80dvh, 660px)</code>, covering the dock. <b>This is the cheapest decision in the phase — it is zero lines of CSS.</b>'],
+    ['d', 'One consequence worth knowing rather than fixing: browser automation still cannot tap a dock button while a sheet is open, which is why the probe scripts click in-sheet controls instead.'],
     ['q', '<b>ANSWERING GATE QUESTION 3 — one list or two tabs? One list, with two headings.</b> Tabs would hide half of a badge that counts two different things: orders you can fill and quests you can claim. A player who sees “2” and taps in should see both without a second decision. The scroll is short — three order slots, at most three ladder quests and one daily.'],
     ['d', 'Both halves are the panels that already exist: the Stand’s rows, faces and have/need token chips, and the quest cards under their own <i>Now</i> and <i>Today</i> headings. Nothing is redrawn; the Stand’s two-line header becomes the first section heading.'],
     ['d', '<b>Quests gain a second door.</b> Before this phase the only way into the quest list was the strip; now the ladder is also one tap from the dock. The Stand loses nothing — it had exactly one door too, and it was the map.']
@@ -1425,9 +1491,10 @@ F.push({
         ph({ coins: '212K', turn: 0.41, pouch: '186', pets: 3, boost: { i: 'sprout', n: 'Seed Rush', t: '#51cf66' }, held: 2,
     sheet: panel({ title: 'The Year', body: TURN_BODY_FILLING }) }),
   notes: [
-    ['q', '<b>THIS IS THE ONE PLACE THE NEW DOCK COULD BREAK A RULE, AND IT IS WORTH READING TWICE.</b> Doc 32 says year one is a mystery and the mystery is the tutorial: the meter fills, unexplained. A Turn button in the dock is a door a player <i>will</i> push in the first minute. If that door opened onto a pouch, two named gates and a petal shop, the whole prestige system would be explained before the player has met it — and the game already refuses to do that in three separate places (the projection card, the Almanac’s petal tracks, the pouch line).'],
-    ['d', '<b>So in year one the panel is the mystery, drawn large.</b> The meter, the flower, and one of the three lines it already says: “It fills a little every time you grow something.” No pouch, no gates, no petals — the petal tracks are already gated in code and stay gated. The explanation arrives where it always did: the first time the meter fills, the ceremony’s ask names what goes and what stays.'],
-    ['d', '<b>RIGHT — year four, mid-fill.</b> Now the panel has everything: the pouch reads 186, both gates are drawn, and the lower one is marked as the one holding the Turn. This is the projection card the HUD pill used to pop, with room to breathe.'],
+    ['d', '<b>OWNER’S CALL — mysterious, but never directionless.</b> “Something can be mysterious and fun, but something that’s mysterious and fun with no direction feels broken.” So year one keeps the mystery and gains <b>one track: the gold</b>. The meter wears the drained rim and a padlock — it is honestly locked — and underneath it a single bar says the thing a player can act on: <i>keep earning gold</i>. No pouch, no petals, no second gate, and <b>no numbers</b>, which is doc 32’s rule followed to the letter. A bar with no target on it is direction without explanation.'],
+    ['d', 'The flower says the rest, in its own voice: <i>“It fills a little every time you sell something. Keep the gold coming and I’ll tell you what it’s for.”</i> That is a promise with a verb in it, which is what the old line was missing.'],
+    ['q', 'The bar shown is the gold gate, because gold is the one a player can push on directly. The seed gate is the other half and it is deliberately not drawn in year one — two tracks is a system, one track is a nudge.'],
+    ['d', '<b>RIGHT — year four, mid-fill.</b> Now the panel has everything: the pouch reads 186, <i>both</i> gates are drawn, and the lower one is marked as the one holding the Turn. This is the projection card the HUD pill used to pop, with room to breathe.'],
     ['d', 'Nothing in the engine changes for either. <code>turnsCompleted &lt; 1</code> is the same condition three surfaces already read.']
   ]
 });
@@ -1480,16 +1547,18 @@ F.push({
 
 /* ---------- 12. THE MEADOW'S NEW DOOR ---------- */
 F.push({
-  t: 'The meadow’s door, in place at the foot of the garden',
+  t: 'The meadow’s way in — the swipe, and the one line that teaches it',
   s: 'Built FIRST, before a line of the map comes out.',
   tag: 'THE MEADOW',
   html: ph({ coins: '84.2K', turn: 0.34, pets: 2, boost: { i: 'clover', n: 'Fortune Aura', t: '#9775fa' }, held: 2,
+    speech: 'Swipe up — the hives are out that way.',
     toast: '<div class="toast">' + ico('leaf') + '<div><b>The Wild Meadow</b><br>Your hives are up the lane.</div></div>' }),
   notes: [
-    ['d', '<b>The burrow door does not move.</b> It sits at <code>left:10px; bottom:2px</code> today and it sits there after. The meadow’s door is its mirror at the right: same silhouette, same label treatment, hedge green instead of soil brown — <i>same grammar, different verb</i>, which is the rule the meadow’s own cobbles-against-the-garden’s-soil already follows.'],
+    ['d', '<b>OWNER’S CALL — no door graphic.</b> The vertical swipe is the way to both rooms and it is what the player is meant to learn: <b>down goes under to the Hollow, up goes out to the meadow.</b> Nothing is drawn on the lawn for either.'],
+    ['d', 'The Hollow keeps a second teacher it does not need — a player who never finds the swipe loses nothing they can see, because the creatures are already standing in the garden. <b>The meadow does not have that,</b> which is why the flower says it once, on the first Summer after the meadow is available. Same one-time nudge the burrow mouth used to give.'],
     ['d', '<b>This is the phase’s first commit, and it ships on its own.</b> <code>UI.enterMeadow()</code> has exactly one caller in the whole repo — the map’s dive — and the meadow’s only exit swipes back to the map. Until the door exists, retiring the map strands a whole built room: the hives, the keepers, the Honey Shelf, and <b>four quests worth 114 of the ladder’s 777 reputation</b>.'],
     ['d', 'The meadow’s exit chip changes with it — “Swipe down for the map” becomes the way back to the garden. The swipe stays; only its destination moves.'],
-    ['q', 'Doc 32 says the map’s swipe-down is “then free for later use”, so it is left free rather than re-pointed at the meadow. A door only. If the owner would rather the meadow inherited the gesture too, it is three lines in the gesture block — but two rooms on one swipe axis is how the Hollow and the map got confusing in the first place.']
+    ['q', '<b>The Hollow’s direction flips, and that is worth a sentence.</b> Today swipe UP goes to the Hollow, because the old rule was <i>up goes in, down pulls back to the map</i>. With no map there is nothing to pull back to, and the owner’s instruction is “slide down to go to the hollow” — which is also the truer picture, since the Hollow is underground. So down is the Hollow and up is freed for the meadow. <b>A friend who has learned the old swipe will land in the meadow instead of the Hollow the first time</b> — they lose nothing, but they will notice. Flipping it back is one line.']
   ]
 });
 
@@ -1566,16 +1635,20 @@ F.push({
     '<tr><td><b>1. Do the five buttons, the floating pair and the quest strip fit at 360–390 wide and ≤700 tall?</b></td>' +
     '<td><span class="keep">MEASURED — YES.</span> At 360 wide the dock buttons are 81px each and the HUD gets its 44px touch targets back. At 700 tall the band has 95px and needs exactly 95. <b>The band costs the layout nothing</b> — it lives in the yard the stage already reserves for creatures. See the two squeeze frames.</td></tr>' +
     '<tr><td><b>2. Is the Turn button’s fill legible at dock size? Pulse vs filling vs year-one?</b></td>' +
-    '<td><span class="keep">MEASURED — YES</span> at 74&times;56, rising from the bottom rather than wiping across. Ready is the game’s existing 1.4s gold breath. <b>Year one is not a different button — it is a different panel</b>, and that is the important half of the answer.</td></tr>' +
+    '<td><span class="keep">MEASURED — YES</span> at 74&times;56, rising from the bottom rather than wiping across. Ready is the game’s existing 1.4s gold breath. <b>Year one is a different panel, not a different button</b> — and per the owner it is a <i>locked</i> panel with one gold track on it, so the mystery keeps a direction.</td></tr>' +
     '<tr><td><b>3. Orders &amp; Quests: one list or two tabs?</b></td>' +
     '<td><span class="move">ONE LIST, two headings.</span> The badge counts two different things; tabs would hide half of what a player came in for.</td></tr>' +
     '<tr><td><b>4. The power-up’s empty state: hidden or a quiet slot?</b></td>' +
-    '<td><span class="ask">A QUIET SLOT — recommended, arguable.</span> The locked season gate is the precedent: drained paper, and a promise you can read. Hidden costs the sketch its symmetry in the first session, and teaches a new player nothing about where boosts come from.</td></tr>' +
+    '<td><span class="keep">RULED — A QUIET SLOT.</span> The owner’s words: “it’s okay to have an empty POWER-UP frame — we just have it as the drained version, and there’s nothing there yet.” Same drained paper the locked season tab wears.</td></tr>' +
+    '<tr><td><b>4b. Do panels stop above the dock?</b></td>' +
+    '<td><span class="keep">RULED — NO, THEY COVER IT.</span> Every panel carries a close button, so a second way home is not worth 100px of panel. Doc 36’s sheet rule is superseded and the sheet does not move at all.</td></tr>' +
+    '<tr><td><b>4c. How is a room reached now?</b></td>' +
+    '<td><span class="keep">RULED — BY THE SWIPE.</span> No door graphics. <b>Down to the Hollow, up to the meadow.</b> The season tabs stay exactly as they ship, locked and persistent, and the band’s two buttons sit inside them.</td></tr>' +
     '<tr><td><b>5. Does the quest strip survive, shrink, or fold into a badge?</b></td>' +
     '<td><span class="keep">SURVIVES, UNCHANGED.</span> It is the one always-visible goal; a count is not a goal. Revisit when orders return in slice D and it has competition.</td></tr>' +
     '</table></div>',
   notes: [
-    ['q', '<b>And three questions doc 36 did not ask, which the mapping frame turned up:</b> where the Apothecary lives now that it has no dock button; whether the land parcels die with the map (I say yes, deliberately); and whether the Turn panel in year one is allowed to exist at all given doc 32’s mystery rule (I say yes, if it says nothing).'],
+    ['q', '<b>And three questions doc 36 did not ask, which the mapping frame turned up.</b> Two are still open: where the Apothecary lives now it has no dock button, and whether the land parcels die with the map (I say yes, deliberately). <b>The third is answered:</b> the Turn panel may exist in year one, locked and mysterious, provided it shows the gold track — the owner’s rule is that mysterious without direction just reads as broken.'],
     ['d', 'Everything in this spike is layout. No economy knob, no rule, no number in <code>data.js</code> moves in this phase — the blessing, <code>mintK</code> and every open decision in docs/11 stay exactly where they are.']
   ]
 });

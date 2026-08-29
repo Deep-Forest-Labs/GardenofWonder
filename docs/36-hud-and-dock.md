@@ -1,7 +1,8 @@
 # The Big Five — the HUD and Dock Update
 
-**Status: the owner's spec, 2026-08-30. THE SPIKE IS UP AND WAITING FOR THE OWNER —
-`tools/dock-spike.html`, 16 frames, pushed 2026-08-30. No UI code yet.** The bottom of the screen rebuilds around
+**Status: the owner's spec, 2026-08-30. THE SPIKE IS APPROVED WITH ANNOTATIONS and the build is
+under way — `tools/dock-spike.html` carries the annotated version. See "The owner's annotations"
+below; where they and the body of this document disagree, the annotations win.** The bottom of the screen rebuilds around
 **five main dock buttons plus a floating pair** — the shape the big mobile games converge on
 (Monopoly Go, Clash Royale), and the owner's direct design. This is a mini-phase between the
 Surface run and phase 4; the wireframe gate applies in full (the owner is reviewing, and has a
@@ -175,3 +176,33 @@ Both are recorded in [11-known-issues.md](11-known-issues.md).
    the Wonder chip, and stays `:empty{display:none}` the rest of the time.
 3. The four panels, each stopping above the dock so the Garden button is the visible way home.
 4. **Then** the map's removal — the World button, `ui-map.js`, `overworld.js` and the swipe-down.
+
+
+---
+
+## The owner's annotations, 2026-08-30 — these supersede the body above
+
+Given against the spike. **Verbatim intent, folded into the spike before any UI code.**
+
+1. **A panel may cover the dock.** "The slide-ups can overlay the menu since there's a close button
+   on each one." **This supersedes "Sheets open above the dock" above** — the sheet does not move at
+   all, and the Garden button is not a second way home while a panel is open. Zero lines of CSS.
+2. **No door graphics for the Hollow or the meadow.** The vertical swipe is the way to a room, and
+   learning it is the point: **down goes under to the Hollow, up goes out to the Wild Meadow.** The
+   Hollow's direction therefore flips — the old *up goes in, down pulls back to the map* rule dies
+   with the map, and the Hollow is underground. The meadow's only teacher is a one-time line from
+   the flower; **this is the phase's one real discoverability risk and it is named in
+   [11-known-issues.md](11-known-issues.md).**
+3. **The season tabs stay exactly as they ship** — both edges, locked and persistent, drained paper
+   with the Turn that opens them. They are what teaches sideways. **The band's two buttons sit
+   *inside* them**: inset 34px from the column, which clears a 38px tab by 6px.
+4. **The order rows are redesigned to a stated hierarchy** — who is asking, what they asked for, and
+   then, biggest of all, **the things you owe them**. The count no longer sits on top of the bloom:
+   the token is a 52px tile with the art on top and the count in its own band underneath.
+5. **The power-up's empty state is the quiet drained slot.** "It's okay to have an empty POWER-UP
+   frame — we just have it as the drained version, and there's nothing there yet."
+6. **Year one is locked, mysterious, and never directionless.** "Something can be mysterious and fun,
+   but something that's mysterious and fun with no direction feels broken." The Turn panel in year
+   one shows a padlocked meter and **one track — the gold** — with no numbers on it, and the flower
+   says what to do about it. The pouch, the petals and the second gate all still wait for the first
+   Turn.
