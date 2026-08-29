@@ -4716,14 +4716,181 @@ G.processFall(clock);
 check('the next full fill arms a second windfall', S.year.stats.windfalls === 2);
 for (let i = 0; i < DATA.fall.plots; i += 1) G.fallHarvest(i);
 
+group('bill 12c — the windfall survives the way a player actually harvests');
+/* THE REGRESSION THIS GROUP EXISTS FOR: the latch used to be a sticky flag
+   cleared only when the bed fell simultaneously empty, so a player who
+   replanted each plot as they harvested it never cleared it — and every later
+   full ripe bed was silently refused its windfall for the life of the save.
+   Five fills paid one windfall. The group above missed it by harvesting the
+   whole bed before replanting, which is the one flow that did clear the flag. */
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+const fallN = DATA.fall.plots;
+const berry = G.fallPlantById('strawberry');
+const fullBedWindfall = Math.round(berry.yield * (1 + DATA.fall.windfall)) * fallN;
+let fillPaid = [];
+for (let fill = 0; fill < 5; fill += 1) {
+  if (fill === 0) for (let i = 0; i < fallN; i += 1) G.fallPlant(i, 'strawberry');
+  S.fall.grid.forEach((c) => { if (c.seed) c.plantedAt = clock - 9999; });
+  G.processFall(clock);
+  let paid = 0;
+  /* Harvest and immediately replant, plot by plot — the bed is never empty. */
+  for (let i = 0; i < fallN; i += 1) {
+    const r = G.fallHarvest(i);
+    if (r) paid += r.payout;
+    G.fallPlant(i, 'strawberry');
+  }
+  fillPaid.push(paid);
+}
+check('five replant-as-you-go fills all pay the windfall',
+  fillPaid.every((p) => p === fullBedWindfall), fillPaid.join(' / '));
+check('and each one is counted for the Tally', S.year.stats.windfalls === 5,
+  `${S.year.stats.windfalls}`);
+check('the latch is derived, so it is down once the last mark is spent',
+  S.fall.bedPaid === false);
+
+group('bill 12d — a bed that ripened while the tab was shut still pays');
+/* load() rebuilds every Fall cell with `ready: false` by design, so a
+   flag-based ripeness test could not arm on the first harvest after a
+   reload — which is exactly what fallHarvest's comment promised. The check
+   reads the clock instead. */
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+for (let i = 0; i < fallN; i += 1) G.fallPlant(i, 'strawberry');
+S.fall.grid.forEach((c) => { c.plantedAt = clock - 9999; });
+G.saveNow();
+G.load();
+check('the reload really does clear the render flags',
+  S.fall.grid.every((c) => c.ready === false));
+const shutPay = G.fallHarvest(0);
+check('and the first harvest after it still pays the windfall',
+  shutPay && shutPay.windfall && shutPay.payout === Math.round(berry.yield * 1.5),
+  `${shutPay && shutPay.payout}`);
+
+group('bill 12e — a partly collected fill cannot re-arm while its marks stand');
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+for (let i = 0; i < fallN; i += 1) G.fallPlant(i, 'strawberry');
+S.fall.grid.forEach((c) => { c.plantedAt = clock - 9999; });
+G.processFall(clock);
+for (let i = 0; i < 4; i += 1) { G.fallHarvest(i); G.fallPlant(i, 'strawberry'); }
+S.fall.grid.forEach((c) => { if (c.seed) c.plantedAt = clock - 9999; });
+G.processFall(clock);
+check('a full ripe bed holding four unspent marks does not arm again',
+  S.year.stats.windfalls === 1, `${S.year.stats.windfalls}`);
+check('and the marks that stand still pay when collected',
+  G.fallHarvest(4).windfall === true);
+for (let i = 0; i < DATA.fall.plots; i += 1) G.fallHarvest(i);
+
+group('the refusals — every gate asserted from the NO side');
+/* Round 3's mutation pass found that both gardens' ripeness gates and three of
+   Fall's four purchase gates had no negative test: every rig ripens with
+   `plantedAt = clock - 9999` and plants with a full wallet into an empty cell,
+   so the refusal half was never exercised. Deleting a gate turned the game
+   into an unbounded gold printer with the suite green — plant-and-harvest in
+   the same instant, one Fall plot filling the mint's whole coins floor in zero
+   elapsed time. These are the NO cases. */
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+S.seedUnlocks.bluebell = true;
+clearGarden();
+G.plant(0, G.seedById('daisy'));
+check('the main garden refuses a harvest the instant it is planted',
+  G.harvest(0) === null && S.grid[0].seed === 'daisy');
+G.fallPlant(0, 'strawberry');
+check('Fall refuses a harvest the instant it is planted',
+  G.fallHarvest(0) === null && S.fall.grid[0].seed === 'strawberry');
+const berryDef = G.fallPlantById('strawberry');
+S.credits = berryDef.cost - 1;
+check('Fall refuses a crop one coin short, and plants nothing',
+  G.fallPlant(1, 'strawberry') === false && !S.fall.grid[1].seed);
+S.credits = berryDef.cost;
+check('and charges exactly its price when it can pay',
+  G.fallPlant(1, 'strawberry') === true && S.credits === 0);
+S.credits = 1e9;
+check('Fall refuses to plant over a crop already in the ground',
+  G.fallPlant(1, 'pumpkin') === false && S.fall.grid[1].seed === 'strawberry');
+S.year.turnsCompleted = 0;
+check('and refuses everything before the Turn that opens Fall',
+  G.fallOpen() === false && G.fallPlant(2, 'strawberry') === false && !S.fall.grid[2].seed);
+S.year.turnsCompleted = 1;
+
+group('the Saved Seeds sink refuses too');
+/* Petals are the only sink for the prestige currency, and buyPetal could be
+   made free — or buyable at zero seeds — with the whole suite green. */
+G.reset();
+S.savedSeeds = 0;
+check('a petal is refused with an empty pouch, and nothing is written',
+  G.buyPetal('daisy', 'rich') === false && G.petalsOf('daisy').rich === 0);
+const richPrice = G.petalCost('daisy', 'rich');
+S.savedSeeds = richPrice - 1;
+check('and refused one seed short', G.buyPetal('daisy', 'rich') === false
+  && S.savedSeeds === richPrice - 1);
+S.savedSeeds = richPrice;
+check('it charges exactly the quoted price', G.buyPetal('daisy', 'rich') === true
+  && S.savedSeeds === 0 && G.petalsOf('daisy').rich === 1);
+check('and the ladder climbs, so the second petal costs more than the first',
+  G.petalCost('daisy', 'rich') === Math.round(richPrice * DATA.petals.petalRatio),
+  `${G.petalCost('daisy', 'rich')} vs ${richPrice}`);
+S.savedSeeds = 1e6;
+check('every rung of one flower\'s ladder is priced off the last, not the first', (() => {
+  G.reset();
+  S.savedSeeds = 1e6;
+  const seen = [];
+  for (let p = 0; p < DATA.petals.shared.quick.cap; p += 1) {
+    seen.push(G.petalCost('tulip', 'quick'));
+    G.buyPetal('tulip', 'quick');
+  }
+  return seen.every((c, i) => i === 0 || c > seen[i - 1]);
+})());
+
+group('the offline path is walled by the seed unlocks, exactly like the online one');
+/* passiveIncomeRate() is the only place the unlock wall guards offline income,
+   and the online twin is backstopped by plant()'s own check — so this guard
+   has no second line of defence. Dropping it paid a fresh save ~21x its
+   legitimate rate. The rig has to give the harvester a ceiling ABOVE the
+   unlock wall for the guard to be load-bearing. */
+G.reset();
+clearGarden();
+S.upgrades.autoHarvest = 1;
+S.upgrades.plot1Harvester = 19;        // ceiling: the whole ladder
+const walledRate = G.passiveIncomeRate();
+S.seedUnlocks.bluebell = true;
+const widerRate = G.passiveIncomeRate();
+check('a fresh save earns offline only from the seeds it actually owns',
+  walledRate > 0 && widerRate > walledRate,
+  `${walledRate.toFixed(4)} then ${widerRate.toFixed(4)}`);
+check('and the rate is the free ladder\'s, not the whole catalogue\'s', (() => {
+  G.reset();
+  clearGarden();
+  S.upgrades.autoHarvest = 1;
+  S.upgrades.plot1Harvester = 19;
+  const tulip = G.seedById('tulip');
+  const rarityMean = DATA.rarity.reduce((a, r) => a + r.w * r.m, 0)
+    / DATA.rarity.reduce((a, r) => a + r.w, 0);
+  const expected = (tulip.yield * rarityMean - tulip.cost) / tulip.grow;
+  return Math.abs(G.passiveIncomeRate() - expected) < 1e-9;
+})(), `${G.passiveIncomeRate()}`);
+
 group('bill 12b — a growing Century Bloom neither blocks nor collects the windfall');
+/* Self-contained: this group used to read a running windfall count carried
+   over from the group above it, so inserting anything between them moved a
+   number it asserted. A test that depends on where it sits in the file is a
+   test that will be broken by an unrelated edit. */
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
 check('only one Century Bloom may grow', G.fallPlant(0, 'century')
   && G.fallPlant(1, 'century') === false);
 for (let i = 1; i < DATA.fall.plots; i += 1) G.fallPlant(i, 'strawberry');
 S.fall.grid.forEach((c, i) => { if (i > 0) c.plantedAt = clock - 9999; });
 G.processFall(clock);
-check('seven crops around a growing Century still windfall', S.year.stats.windfalls === 3
-  && !S.fall.grid[0].windfall);
+check('seven crops around a growing Century still windfall', S.year.stats.windfalls === 1
+  && !S.fall.grid[0].windfall, `${S.year.stats.windfalls}`);
 const centuryDef = G.fallPlantById('century');
 S.fall.grid[0].plantedAt = clock - centuryDef.grow - 1;
 G.processFall(clock);

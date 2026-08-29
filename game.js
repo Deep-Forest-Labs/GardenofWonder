@@ -3190,14 +3190,31 @@ const Game = (() => {
     return true;
   }
 
+  /** Ripe by the clock, not by the cached `ready` flag. `ready` is the render
+      flag and `load()` rebuilds every Fall cell with it false, so a bed that
+      completed while the tab was shut would fail a flag-based test on the
+      first harvest — before `processFall()` had repaired the flags. */
+  const fallCellRipe = (c) => Boolean(c && c.seed) && nowSeconds() - c.plantedAt >= c.grow;
+
   /** Arm the windfall the moment the whole bed stands planted and ripe.
       Marks land per-cell so a plot replanted mid-collection joins the next
-      fill, not this one — and `bedPaid` holds until the bed empties, which is
-      what makes the windfall once per fill. */
+      fill, not this one.
+
+      THE LATCH IS THE PREVIOUS FILL'S UNCONSUMED MARKS, not a sticky flag.
+      It used to be a flag cleared in exactly one branch — when the bed fell
+      simultaneously empty — and a player who replants each plot as they
+      harvest it never empties the bed, so the flag stuck and every later full
+      ripe bed was silently refused its windfall for the life of the save.
+      Deriving the latch from the marks makes "once per fill" structural: while
+      any cell still carries a mark the fill is still being collected, and the
+      moment the last one is consumed the bed is free to arm again.
+      `state.fall.bedPaid` survives as the saved mirror of that derivation. */
   function checkFallWindfall() {
-    if (state.fall.bedPaid) return false;
     const bed = fallBedCells();
-    if (!bed.length || !bed.every((c) => c.seed && c.ready)) return false;
+    const outstanding = bed.some((c) => c.seed && c.windfall);
+    state.fall.bedPaid = outstanding;
+    if (outstanding) return false;
+    if (!bed.length || !bed.every(fallCellRipe)) return false;
     bed.forEach((c) => { c.windfall = true; });
     state.fall.bedPaid = true;
     state.year.stats.windfalls += 1;
@@ -3233,8 +3250,9 @@ const Game = (() => {
     cell.grow = 0;
     cell.ready = false;
     cell.windfall = false;
-    /* The fill-cycle resets when the bed empties. */
-    if (fallBedCells().every((c) => !c.seed)) state.fall.bedPaid = false;
+    /* Re-derive the latch now this mark is spent: consuming the last one ends
+       the fill, whether or not the bed happens to be empty. */
+    state.fall.bedPaid = fallBedCells().some((c) => c.seed && c.windfall);
     save();
     emit('currency');
     const payload = { idx, payout, plant: def, windfall, century: Boolean(def.century) };

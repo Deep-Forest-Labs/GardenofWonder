@@ -454,7 +454,9 @@ seedUnlocks: {},                // seedId -> true; one-time gold prices, permane
 blessed: [],                    // [{ seed, year }] — provenance of every Turn's free petal
 fall: {
   grid: [ /* DATA.fall.plots cells */ { seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false } ],
-  bedPaid: false                // the windfall's once-per-fill latch
+  bedPaid: false                // the windfall's once-per-fill latch — DERIVED, not sticky:
+                                // it mirrors "some plot still carries an unspent windfall
+                                // mark", recomputed on every arm and every Fall harvest
 }
 ```
 

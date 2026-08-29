@@ -63,8 +63,11 @@ the knobs interact: **tune the unlock ratio *last*, after petal pricing** — wi
 (below), ~×1.45 may be needed to hit the day-25–40 window. Phase 4's job. What survives
 unchanged: first Turn on day ~2.7–3.3, the first wall reading as "six times everything I've
 earned," and deliberately-long walls arriving naturally from Turn 6+ where veterans expect them.
-*(Phase 1's own pacing tool reproduces the **year-one figure** once its model buys the game's
-automation — three runs at 370K / 409K / 312K against the 370–410K band — but lands the
+*(Phase 1's own pacing tool lands the year-one figure **near, but not reliably inside**, this
+band once its model buys the game's automation. Three runs of 370K / 409K / 312K were quoted at
+first; **a 120-run sample is the honest picture — median ~355K, quartiles 309–386K, only about a
+quarter inside 370–410K, with a long tail above it.** The three-run sample was too small to
+characterise the spread and the claim it supported has been withdrawn. The tool also lands the
 **first Turn at day ~1.75–1.9**, earlier than 2.7–3.3. The remaining gap is turn-policy
 sensitivity: the tool's casual player turns when the next wall is more than ~1.2 days of income
 away, and doc 33's band sits inside the measured envelope of that knob. Catalogued in the
@@ -162,10 +165,11 @@ ledger. **The first Turn is unchanged** — a first year *is* the lifetime, so i
 **Plots 5–8 cannot be bought in year one** — `turnsCompleted ≥ 1` joins their existing level
 gates, so the first year is played on four plots and **Turn 1's gift grows: Fall, and the right
 to a bigger garden.** The sim demanded this too: at 9.4K for four plots that double income, year
-one earned ~800K and broke the documented pacing; gated, it earns **~370–410K — verified twice
-over: by the 2026-08-29 design-session model, and independently by phase 1's shipped pacing tool
-once its play model buys the game's automation (370K / 409K / 312K across three runs)** — and
-every downstream number holds. A migrated save keeps whatever plots it already opened for its
+one earned ~800K and broke the documented pacing; gated, it earns **~370–410K by the
+2026-08-29 design-session model. Phase 1's shipped pacing tool puts the median nearby but lower
+(~355K over 120 runs, quartiles 309–386K) with wide spread**, so treat the band as the design
+target rather than a reproduced measurement until phase 4 re-baselines it against a real
+playtest — and A migrated save keeps whatever plots it already opened for its
 current year — nothing a player owns is ever re-locked.
 
 First Turn pays **~60–65 base seeds on that ~370–410K first year**, times a modest first-year
@@ -182,7 +186,7 @@ scored zero on does not appear**; the Tally only celebrates.
 **Tier bonuses within a line ACCUMULATE — ratified by the phase-1 review, 2026-08-29,** because
 it is arithmetic rather than taste: only the cumulative reading reproduces this document's own
 worked example and reaches its own cap. 47 orders pays tier 1 and tier 2 together, +25% — which is exactly doc 32's own
-"Orders filled: 47 → ×1.25!" example — a maxed year sums to +138% and genuinely hits the ×2.0
+"Orders filled: 47" example (doc 32 now renders that line as "+25%!", the same bonus) — a maxed year sums to +138% and genuinely hits the ×2.0
 cap, and a typical mid-game year lands the quoted ~×1.35. The alternative reading
 (highest-tier-only) caps out at ×1.69 and can never reach the cap this document says a maxed
 year hits, so cumulative is what `projectedTally()` implements. A line whose counter is below
@@ -214,7 +218,11 @@ phase 4's, and `mintK` is the knob.**
 Sink runway, **recomputed from the shipped constants (2026-08-29, phase 1) rather than from the
 design session's estimate**: maxing both shared skills on all nineteen flowers costs
 **636,378 Saved Seeds** — that is the entire sink reachable in phase 1, since `buyPetal()`
-refuses signatures until slice B, which add **88,689** for a full total of **725,067**. (The
+refuses signatures until slice B. (A full total including signatures cannot be computed from
+`data.js` at all — it carries `signatureMult` but no signature petal counts, so any total
+depends on an assumption about how many petals each signature gets; doc 33's own launch-six
+table gives four of the six fewer than three. The number to trust, and the one a sim-test
+pins, is the 636,378 above. The
 design session's ~525K and ~679K were estimates from before the values landed; a sim-test now
 pins the 636K figure so the docs and the data cannot drift apart again — doc 33's own preamble
 asks for exactly that.) ~~Against ~1.8K/day at the endgame faucet that is months of headroom
@@ -308,7 +316,8 @@ cottage list — beds and trees, never field rows:
 
 **The windfall rule** (`DATA.fall.windfall = 0.5`): harvesting a Fall bed whose **every
 windfall-eligible plot is planted and ripe** pays **+50% on the whole bed** — all of them, so a
-single-strawberry board cannot fish for it; the fill-cycle resets when the bed empties. A plot
+single-strawberry board cannot fish for it; the fill ends when its last marked plot is
+collected, not when the bed empties. A plot
 holding the Century Bloom stands outside the bed's count (it neither blocks nor collects the
 windfall), so "all eight" means all eight *unless one of them is the fortnight plant*. One knob, one legible rule,
 and it is what makes Fall an appointment rather than a chore. Fall plants gate on gold prices
@@ -388,7 +397,10 @@ the launch six ship).
 6. Gems/hour flat across all seeds in `DATA.seeds` (Fall crops drop no gems, so the invariant is
    scoped to flowers); no petal changes any gem chance.
 7. *(Slice B)* Mutation income share stays in band with Storm-Kissed at cap.
-8. Quick Sprout at cap + Sprinklers + Keeper + Seed Rush stays above the 0.3 floor.
+8. Quick Sprout at cap + Sprinklers + Keeper + Seed Rush is **clamped at** the 0.3 floor in
+   `plantGrowth()` — the stack multiplies to 0.294 and the clamp binds, so the last petal
+   delivers about three quarters of its advertised effect. Asserted as the clamp, not as a
+   bound the skill sits inside (phase 4 owns which of the two it should be).
 9. All open Stand slots regenerate at the Turn with `nextAt = now`, drawing flower lines from
    `seedUnlocks` only.
 10. Petal effects reach `passiveIncomeRate()` (offline mirrors online).

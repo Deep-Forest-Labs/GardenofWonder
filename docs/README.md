@@ -59,7 +59,7 @@ A cozy mobile idle game. You tap a talking flower for coins and plant seeds in e
 arranged around it. Seeds grow on a timer, harvests roll a rarity multiplier, and you spend the
 proceeds on upgrades that make taps stronger, growth faster, and the whole loop automated.
 
-It is a static site: fourteen plain `<script>` tags, no build step, no dependencies, and no audio
+It is a static site: nineteen plain `<script>` tags, no build step, no dependencies, and no audio
 files. All art is inline SVG and CSS. All sound is synthesized at runtime with the Web Audio API.
 It is deployed straight from the repository root to GitHub Pages, and installs to a phone's home
 screen as a PWA that plays offline — see [23-installable-pwa.md](23-installable-pwa.md). The only

@@ -78,7 +78,10 @@ confirmed as a default, revisit after one playtest.
   bought again would tax the reward.
 - **The whole board is one bed.** The **windfall** (+50%, `DATA.fall.windfall`) pays when the
   harvest lands on a board whose **all eight plots are planted and ripe** — all eight, so a
-  single-strawberry board cannot fish for bonuses. The fill-cycle resets when the bed empties.
+  single-strawberry board cannot fish for bonuses. **The fill ends when its last marked plot is
+  collected** — not when the bed happens to fall empty, so a player who replants each plot as
+  they harvest it still gets the next bed's windfall (see the 2026-08-29 fix in
+  [10-decision-log.md](10-decision-log.md)).
 - **Crops are not flowers:** Fall plants roll **no rarity, no mutations, drop no gems and never
   write `discovered`** — the windfall is Fall's juice, and every flower system stays a flower
   system. They do count generic `harvest` quest tracks.

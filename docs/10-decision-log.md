@@ -5,6 +5,71 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (phase 1.2) — Round 3 finds a live Fall bug the tests were shaped to miss, and every refusal gets a test
+
+**The gauntlet's third round was the one that found a real gameplay bug**, not a coverage
+gap — and it found it in the system two rounds of critics had already been over.
+
+**Fall's windfall latch stuck permanently the first time a player replanted mid-collection.**
+`bedPaid` was cleared in exactly one branch: when the bed fell *simultaneously* empty. A player
+who harvests a plot and immediately replants it — the natural per-plot flow, and the one phase 3
+will ship — never empties the bed, so the latch stuck and **every subsequent full ripe bed was
+silently refused its windfall for the life of the save.** Measured on the shipped engine: five
+consecutive full, ripe fills paid **one** windfall, losing 11,200 coins on the second fill alone.
+It survived the Turn (Fall is correctly never touched) and survived save/load, so once stuck it
+was stuck forever.
+
+**The fix is to stop keeping a flag and start deriving the latch.** A fill is still being
+collected exactly while some plot carries an unspent windfall mark; the moment the last mark is
+spent the bed is free to arm again. `bedPaid` survives as the saved *mirror* of that derivation,
+recomputed on every arm and every Fall harvest, so it cannot desync. Ripeness moved to
+`plantedAt`/`grow` in the same change: `checkFallWindfall()` was reading the cached `ready`
+flag, and `load()` rebuilds every Fall cell with `ready: false` — so the comment promising that
+"a bed that completed while the tab was shut still pays" was not true, and now is.
+
+**Why three rounds of critics missed it, which is the more useful lesson: my own bill-12 group
+harvested the entire bed before replanting.** That is the one flow that *did* clear the flag. The
+test asserted "a replant mid-collection joins the next fill" and then never ran a second fill.
+A rig can assert the right sentence and still walk the one path where the bug does not appear.
+
+**Every gate now has a test from the NO side.** Round 3's mutation pass found that both gardens'
+ripeness gates and three of Fall's four purchase gates had no negative test at all — every rig
+ripens with `plantedAt = clock - 9999` and plants with a full wallet into an empty cell, so the
+*refusal* half was never exercised. Deleting a gate turned the game into an unbounded gold
+printer with the suite green: plant-and-harvest in the same instant, one Fall plot filling the
+mint's entire coins floor in zero elapsed time. Same for the Saved Seeds sink — `buyPetal` could
+be made free, or buyable at zero seeds, or have its per-petal ratio deleted (sink 636K → 388K)
+— and for `passiveIncomeRate()`'s unlock guard, whose removal paid a fresh save ~21× its
+legitimate offline rate, and which has no second line of defence the way the online twin does.
+Thirteen mutations introduced, thirteen caught. Suite 1,129 → 1,149.
+
+**And bill 12b was silently order-coupled** — it read a running windfall count carried over from
+the group above it, so inserting anything between them moved a number it asserted. Made
+self-contained. A test that depends on where it sits in the file is a test an unrelated edit
+will break.
+
+**Three corrections to my own phase-1.1 documentation**, all found by round 3's docs critic:
+the "reproduces doc 33's 370–410K first year" claim rested on **three runs**; a 120-run sample
+puts the median at ~355K with quartiles 309–386K and only about a quarter inside the band, so
+the claim is withdrawn and the band is restated as the design target. Bill item 8 still carried
+the pre-correction "stays above the 0.3 floor" wording 140 lines below the row I had corrected.
+And the 725,067 total sink is not derivable from `data.js` at all — there are no signature petal
+counts in the data, so any total assumes them, and four of doc 33's own launch six take fewer
+than three; only the 636,378 shared-skill figure is real, and it is the one pinned by a
+sim-test. Also fixed: `docs/02`'s load-order table had been five files short since 2026-08-25
+(the Stand, map and meadow files), the second time that table has gone stale the same way.
+
+### Rejected
+
+**Deleting `bedPaid` and deriving the latch purely at read time** — it is a saved field that
+phase 2 and 3 will render against, and another session had just documented it; keeping it as a
+recomputed mirror fixes the bug without a save-shape change mid-flight. **Fixing the blessing**
+— it is the open owner decision and a ceremony beat, not mine to tune. **Re-running the pacing
+tool's headline numbers as proof of the band** — the 120-run distribution is the honest answer
+and it says the tool does not reproduce the band; overclaiming it once was enough.
+
+---
+
 ## 2026-08-29 (phase 1.1, the ruling) — The mint becomes cumulative, the exploit dies by construction, and the blessing inherits the problem
 
 **The owner ruled on the mint: cumulative.** This is the second of the two conditions phase 1's

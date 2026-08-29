@@ -39,6 +39,23 @@ from quests and levels.
 > **the owner's ruling on the mint**, where the review's four measured variants recommend the
 > cumulative shape (B) and prove veterancy must be deleted rather than capped.
 >
+> **PHASE 1.2, THE GAUNTLET'S THIRD ROUND — one LIVE bug found and fixed, and every refusal
+> now has a test.** Round 3 caught what two rounds of critics and an independent review had
+> all walked past: **Fall's windfall latch stuck permanently the first time a player replanted
+> a plot as they harvested it** — the natural per-plot flow — because the latch was a flag
+> cleared only when the bed fell simultaneously empty. Five consecutive full ripe beds paid
+> ONE windfall, and it survived both the Turn and save/load, so once stuck it was stuck for
+> the life of the save. The latch is now **derived from the fill's own unspent marks** and
+> ripeness is read from the clock rather than the cached `ready` flag (which `load()` clears,
+> so the promise that a bed ripening while the tab was shut still pays is now true rather
+> than merely commented). **My own bill-12 test missed it by harvesting the whole bed before
+> replanting — the one flow that did clear the flag.** Round 3 also found that both gardens'
+> ripeness gates, three of Fall's four purchase gates, the Saved Seeds sink and
+> `passiveIncomeRate()`'s unlock guard had **no negative test at all**: deleting any of them
+> left the suite green while the game became an unbounded gold printer. All now asserted from
+> the NO side; thirteen mutations, thirteen caught; suite **1,149**. See the 2026-08-29
+> (phase 1.2) entry in [10-decision-log.md](10-decision-log.md).
+>
 > **PHASE 1.1 IS COMPLETE — BOTH CONDITIONS CLOSED, AND THE MINT IS CUMULATIVE.** The owner
 > ruled, and the ruling is built: the pool a garden will ever mint is
 > `mintK × sqrt(state.lifetimeCoins)`, a Turn draws the undrawn part of it
@@ -48,7 +65,7 @@ from quests and levels.
 > increment. Two new never-reset top-level fields; a phase-1 save inherits `lifetimeCoins`
 > from the year it is standing in. **The exploit is dead by construction** —
 > `node tools/year-sim.js 12 all` **exits zero**, with normal play ahead of turn-spam by a
-> stable ~1.5–1.6× on seeds and ahead on gold too. The suite is at **1,129 assertions** with
+> stable ~1.5–1.6× on seeds and ahead on gold too. The suite is at **1,149 assertions** with
 > a new bill item **17b** for the mint's own properties, and twelve of twelve mutants die
 > (four survived the first pass and are closed; writing the last of them found a real defect
 > in the patch — a `null` `lifetimeCoins` passed the finite guard as `0`). **Condition 1
@@ -72,8 +89,9 @@ from quests and levels.
 > 16. Two findings changed what we know: the pacing model had never bought the game's
 > automation, so **the exploit is a SEEDS-ONLY break — normal play out-earns the turn-spam
 > cadence on gold by ~2.7×** (which narrows the dials to the mint's shape and corroborates the
-> review's recommendation), and with automation modelled the tool **reproduces doc 33's
-> 370–410K first year for the first time**. **The owner's ruling on the mint has since
+> review's recommendation), and with automation modelled the tool moved the first year close to
+> doc 33's 370–410K band. *(That was quoted from three runs and later withdrawn: a 120-run
+> sample puts the median at ~355K, quartiles 309–386K, about a quarter inside the band.)* **The owner's ruling on the mint has since
 > landed — see the block above.** Phase 2 begins at the wireframe gate, in its own session.
 >
 > **THE GARDEN YEAR IS DOCUMENTED FOR BUILD, 2026-08-29.** The brainstorm ended and the owner said
@@ -1618,7 +1636,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,129 assertions over the simulation layer
+node tools/sim-test.js          # 1,149 assertions over the simulation layer
 node tools/year-sim.js 12 all   # the pacing model — exits non-zero while the cheap-Turn exploit stands
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
@@ -1715,7 +1733,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,129 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,149 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

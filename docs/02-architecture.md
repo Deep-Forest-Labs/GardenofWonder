@@ -2,7 +2,7 @@
 
 ## Shape of the project
 
-Fourteen JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
+Nineteen JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
 dependencies. Each file defines exactly one global and they load in dependency order as plain
 `<script>` tags.
 
@@ -16,20 +16,30 @@ reference globals defined above it.
 
 | # | File | Global | Depends on |
 | --- | --- | --- | --- |
-| 1 | `data.js` | `DATA`, `WONDER`, `FLOWER_LINES`, `PLOT_AUTOPLANTERS`, `MAX_RARITY_MULT`, `CREATURES`, `CREATURE_TRAITS`, `CREATURE_PAIRS`, `BENCH` | nothing |
+| 1 | `data.js` | `DATA`, `WONDER`, `FLOWER_LINES`, `PLOT_AUTOPLANTERS`, `MAX_RARITY_MULT`, `CREATURES`, `CREATURE_TRAITS`, `CREATURE_PAIRS`, `BENCH`, `STAND`, `GOODS`, `CUSTOMERS`, `MEADOW` | nothing |
 | 2 | `flora.js` | `Flora` | `DATA` (at `injectDefs` time) |
 | 3 | `critters.js` | `Critters` | nothing |
-| 4 | `hollow.js` | `Hollow` | nothing |
-| 5 | `icons.js` | `Icons` | nothing |
-| 6 | `audio.js` | `Sound` | nothing |
-| 7 | `fx.js` | `FX` | nothing |
-| 8 | `game.js` | `Game` | `DATA`, `WONDER`, `PLOT_AUTOPLANTERS`, `CREATURES` |
-| 9 | `ui-shared.js` | `UI` | `Game`, the DOM |
-| 10 | `ui-scenery.js` | *(attaches to `UI`)* | `UI` |
-| 11 | `ui-sheet.js` | *(attaches to `UI`)* | `UI` |
-| 12 | `ui-hollow.js` | *(attaches to `UI`)* | `UI`, `Hollow`, `Critters` |
-| 13 | `ui-events.js` | *(attaches nothing)* | `UI` |
-| 14 | `ui.js` | *(attaches to `UI`)* | everything above |
+| 4 | `customers.js` | `Customers` | nothing |
+| 5 | `overworld.js` | `Overworld` | nothing |
+| 6 | `hollow.js` | `Hollow` | nothing |
+| 7 | `meadow.js` | `Meadow` | nothing |
+| 8 | `icons.js` | `Icons` | nothing |
+| 9 | `audio.js` | `Sound` | nothing |
+| 10 | `fx.js` | `FX` | nothing |
+| 11 | `game.js` | `Game` | `DATA`, `WONDER`, `PLOT_AUTOPLANTERS`, `CREATURES`, `STAND`, `MEADOW` |
+| 12 | `ui-shared.js` | `UI` | `Game`, the DOM |
+| 13 | `ui-scenery.js` | *(attaches to `UI`)* | `UI` |
+| 14 | `ui-sheet.js` | *(attaches to `UI`)* | `UI` |
+| 15 | `ui-hollow.js` | *(attaches to `UI`)* | `UI`, `Hollow`, `Critters` |
+| 16 | `ui-map.js` | *(attaches to `UI`)* | `UI`, `Overworld` |
+| 17 | `ui-meadow.js` | *(attaches to `UI`)* | `UI`, `Meadow` |
+| 18 | `ui-events.js` | *(attaches nothing)* | `UI` |
+| 19 | `ui.js` | *(attaches to `UI`)* | everything above |
+
+*(The table stood at fourteen from 2026-08-16 until 2026-08-29 — the five files added with the
+Stand, the map and the meadow on 2026-08-25 were documented in this file's prose but never added
+here. That is the second time this table has gone stale the same way; the count in the first
+sentence is the thing to check when a file is added.)*
 
 The UI files touch the DOM on load, and only `ui.js` calls `boot()`. Every other file is inert
 until something calls into it.

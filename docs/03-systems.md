@@ -933,9 +933,21 @@ that field by field and fails if a future save field dodges classification.
 and pack fields. `fallPlant` / `processFall` / `fallHarvest` run the board; crops pay
 `yield` flat — no rarity, no mutations, no gems, no `discovered`, no pantry, no bench —
 and count only generic `harvest` quest tracks. **The windfall** arms the moment every
-non-Century plot stands planted and ripe: each cell is marked, `bedPaid` locks the fill,
-`stats.windfalls` counts one, and marked harvests pay ×1.5 until the bed empties and the
-cycle resets. The **Century Bloom** is data-flagged `century: true`: one growing at a
+non-Century plot stands planted and ripe — ripeness read from `plantedAt`/`grow`, never
+from the cached `ready` flag, because `load()` rebuilds every Fall cell with `ready`
+false and a bed that completed while the tab was shut still has to pay. Each cell is
+marked, `stats.windfalls` counts one, and each marked harvest pays ×1.5.
+
+**The once-per-fill latch is derived from those marks, not from a flag.** A fill is
+"still being collected" exactly while some plot carries an unspent mark; the moment the
+last one is spent the bed is free to arm again. `state.fall.bedPaid` is the saved mirror
+of that derivation, recomputed on every arm and every Fall harvest. It used to be a
+sticky flag cleared only when the bed fell simultaneously empty — which a player who
+replants each plot as they harvest it never does, so the flag stuck and every later bed
+was silently refused its windfall for the life of the save (found and fixed 2026-08-29;
+five consecutive full beds paid one windfall).
+
+The **Century Bloom** is data-flagged `century: true`: one growing at a
 time, excluded from the bed math (it neither blocks nor collects a windfall), and like
 every running long timer it survives the Turn untouched. Fall opens at
 `turnsCompleted >= DATA.year.fallTurn`; nothing renders until phase 3.

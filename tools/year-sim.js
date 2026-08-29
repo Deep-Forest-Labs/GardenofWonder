@@ -122,10 +122,20 @@ function bestPlantable() {
   return pick;
 }
 
+/* Best by coins per plot-hour, not last-affordable-in-array-order. Wheat is
+   listed after apple in data.js and is deliberately off the 1.4x-per-hour
+   curve (2,000/plot-hour against apple's 2,400), so an array-order pick made
+   the model plant wheat in all eight plots forever the moment the wallet
+   passed 20,000 — never planting the crop doc 33 calls the overnight anchor,
+   and understating Fall's ceiling for both the casual player and the
+   turn-spam adversary that parks its doomed wallet there. */
 function bestFallCrop() {
   let pick = null;
+  let bestRate = -Infinity;
   DATA.fall.plants.forEach((p) => {
-    if (!p.century && S.credits >= p.cost) pick = p;
+    if (p.century || S.credits < p.cost) return;
+    const rate = (p.yield - p.cost) / p.grow;
+    if (rate > bestRate) { bestRate = rate; pick = p; }
   });
   return pick;
 }
