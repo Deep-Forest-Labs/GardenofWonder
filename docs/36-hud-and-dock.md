@@ -18,7 +18,7 @@ tray in the rail (replaced by the floating power-up button).
 | --- | --- | --- | --- |
 | 1 | **Orders & Quests** | One panel: the Stand's order queue (the existing sheet content re-homed) above the quest list | The fillable-order dot; a claimable-quest count |
 | 2 | **Cards** | The album, the sets, and pack-opening | Unopened pack count. **The album star leaves the top HUD** |
-| 3 | **GARDEN** — centre, raised, largest | Returns to Summer and closes any open sheet, from anywhere | The pedestal reads as *play* at a glance. *(The sketch writes both MAP and GARDEN on this button — the owner's verbal spec says Garden; whether the word MAP survives on it, or the map returns here later, is an open question flagged to the owner)* |
+| 3 | **GARDEN** — centre, raised, largest | Returns to Summer and closes any open sheet, from anywhere | The pedestal reads as *play* at a glance. **Ruled 2026-08-30: Garden only — and the map is REMOVED in this phase, not parked** (see the order-of-work rule below) |
 | 4 | **Turn** | The Year panel: the pouch, **petal spending** (each flower's card), and the ceremony's CTA when the Turn is ready | **The button body IS the year-meter** — it fills as the year grows and pulses when both gates pass. The fill reads the *binding* gate (the lower of the two ratios), so "why can't I turn" is one glance |
 | 5 | **Shop** | The existing shop sheet; the future home of the iOS/Android store | None yet |
 
@@ -49,9 +49,13 @@ above the row.
 ## What moves, what retires, what stays
 
 - **Retires:** the meter pill (job moves to the Turn button); the album star in the HUD (job
-  moves to Cards); the rail's boost chips (job moves to the power-up button); the dock's
-  **World** button (the map stays reachable by the swipe-down gesture, which stays live —
-  **map and meadow are explicitly on hold by the owner's call, untouched and unretired**).
+  moves to Cards); the rail's boost chips (job moves to the power-up button); and — **ruled
+  2026-08-30 — the map itself**: the World button, `overworld.js`, the camera and the
+  swipe-down gesture all go. **Order-of-work rule: the Wild Meadow gets its new door first** —
+  the burrow door's twin at the foot of the garden
+  ([35-morning-review.md](35-morning-review.md) §4), verified end to end — and only then does
+  the map come out. Never a push where the meadow has no door. The Stand's queue re-homes into
+  the Orders & Quests button in the same phase.
 - **Stays:** the top HUD's wallets, the Almanac book (the species/petal *record* — the Turn
   panel is where petals are *bought*), the gear, the quest strip for now (it is the one
   always-visible goal; whether the Orders & Quests badge replaces it long-term is a gate

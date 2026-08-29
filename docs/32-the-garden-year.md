@@ -20,6 +20,54 @@ shaped it is [31-per-seed-prestige.md](31-per-seed-prestige.md); the option spac
 **The sentence:** *you don't walk a map — you swipe through the year, and turning it is the
 prestige.*
 
+## The plain-English glossary — read this first
+
+**Owner-requested, 2026-08-30: every conversation about the Year uses these words, simply.**
+Agents talking to the owner lead with the feel and keep the math in the docs.
+
+| Word | What it means, plainly |
+| --- | --- |
+| **The Year** | One playthrough of your garden, spring to the Turn |
+| **The Turn** | The prestige moment: end the year, cash it in, start fresh with permanent bonuses. Never the word "reset" |
+| **Gold** | The year's money. Spend it freely — it goes away at the Turn |
+| **Saved Seeds** | The forever money. You only get them at the Turn; they buy petals; you never lose them |
+| **The well** | Everything you've *ever* earned feeds one deep well of Saved Seeds. Each Turn scoops out what's new. Turn often = small scoops, wait = one big scoop — same total either way, so there's no wrong rhythm |
+| **The meter** | Fills as your year grows; pulses when a Turn is ready. Lives in the dock's Turn button |
+| **The Tally** | The arcade scoreboard at the Turn — bonus lines for orders filled, windfalls, species grown — multiplies your scoop, up to double |
+| **The blessing** | The one flower you pick each Turn; it gets a free petal |
+| **Petals** | Permanent upgrades on each flower: worth more, grows faster, plus one special skill each. Bought with Saved Seeds |
+| **Unlock price** | The one-time gold price to open a new seed. Paid once, yours forever |
+| **The seasons** | Gardens at different speeds. Summer is seconds, Fall is hours, Winter is days, Spring is the long game |
+| **The windfall** | Fall's bonus for harvesting the whole bed at once — the dinner appointment |
+| **The Century Bloom** | The fourteen-day showpiece plant. Survives every Turn |
+| **Signatures** | Each flower's one special petal skill (arrives in a later phase) |
+
+### How it all runs together
+
+```
+                    PLAY THE YEAR
+         tap · plant · harvest · fill orders
+                        │
+                        ▼   gold grows, the meter fills
+              ┌──────────────────┐
+              │     THE TURN     │   bless one flower,
+              │                  │   the Tally scores your year
+              └──────────────────┘
+        gold goes ──────┼────── Saved Seeds arrive
+                        ▼
+              SPEND SEEDS ON PETALS
+           every flower permanently better
+                        │
+                        ▼
+           next year starts faster — new
+           seeds and new seasons in reach
+                        │
+                        └────────► back to playing
+```
+
+One loop, one conversion, two wallets. Everything else in this document is detail on that
+picture.
+
 ## The world: one swipe wide
 
 The world map is **replaced by the year**. Four gardens sit on one horizontal strip, in the order

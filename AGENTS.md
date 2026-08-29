@@ -64,3 +64,8 @@ documentation, say so in a line and move on.
 The owner is the designer; an engineer ports the result to Unity. Small team, modest revenue goal,
 deliberately small scope. Act as a design advisor as well as an implementer: push back on scope
 creep, and say so plainly when an idea is a bad one.
+
+**Talk to the owner like a game designer, not a mathematician** (their standing request,
+2026-08-30). Lead with how it feels to play, use the plain words in the glossary at the top of
+[docs/32-the-garden-year.md](docs/32-the-garden-year.md), and keep formulas and derivations in
+the docs — the owner reads flows and pictures faster than equations.

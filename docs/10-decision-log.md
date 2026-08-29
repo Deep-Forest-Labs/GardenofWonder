@@ -653,6 +653,30 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-30 (design, later) — Garden only, the map goes, and the project learns to speak plainly
+
+**Three owner calls in one message.** The dock's centre button is **Garden, nothing else** — the
+sketch's MAP/GARDEN double label is resolved. **The map is removed, not parked** — which
+green-lights the morning review's §4 proposal by necessity: the meadow gets the burrow door's
+twin *first*, verified, and only then does the map (button, camera, `overworld.js`, swipe-down)
+come out, all inside phase 3.5. And **the owner asked the whole project to change how it talks
+to them**: like a game designer, not a mathematician — plain words, flows and pictures first,
+formulas kept in the docs.
+
+That third call produced three artifacts: a **plain-English glossary and a one-page flow
+diagram at the top of [32-the-garden-year.md](32-the-garden-year.md)** (the words every
+conversation now uses — the well, the scoop, the Turn, the Tally), a standing instruction in
+**AGENTS.md** so every future builder session inherits the style without being told, and a
+memory note so the advisor session holds it across conversations.
+
+### Rejected
+
+**A separate glossary doc** — the words belong at the top of the design they describe, where a
+cold reader hits them first. **Keeping swipe-down alive after the map goes** — a gesture to a
+deleted screen is a trap; doc 32 already said the gesture frees up when the map retires.
+
+---
+
 ## 2026-08-30 (design) — The Big Five: the owner rebuilds the bottom of the screen
 
 **The owner's call, with a reference screenshot, before the rest of the morning docket:** the
