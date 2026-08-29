@@ -2336,7 +2336,17 @@
       if (a === 'turnLater') { closeSheet(); Sound.play('close'); return; }
       if (a === 'turnGo') { commitTurn(); return; }
       if (a === 'turnSpring') { turnStep = 5; renderSheet(true); Sound.play('open'); return; }
-      if (a === 'turnDone') { closeSheet(); Sound.play('close'); return; }
+      if (a === 'turnDone') {
+        closeSheet();
+        Sound.play('close');
+        /* "Spring returns to Summer" — doc 32's fifth beat. The meter pill is in
+           the HUD, which is up in every season, so the ceremony can be opened
+           from Fall; ending it anywhere but home would leave the player looking
+           at a bed the Turn did not touch while their garden was rebuilt behind
+           them. */
+        if (UI.seasonHere && UI.seasonHere() !== 'summer') UI.enterSeason('summer');
+        return;
+      }
       if (a === 'closeWelcome') { closeSheet(); Sound.play('close'); return; }
       if (a === 'backToAlbum') { openSheet('album'); Sound.play('open'); return; }
       if (a === 'openPack') {

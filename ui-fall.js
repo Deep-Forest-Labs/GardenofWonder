@@ -125,6 +125,7 @@
     let planted = 0;
     let ripe = 0;
     let soonest = null;
+    let latest = null;
     grid.forEach((c) => {
       const def = c && c.seed ? plantById(c.seed) : null;
       /* The Century Bloom is not part of the bed in EITHER direction: it does
@@ -141,9 +142,13 @@
       else {
         const left = c.plantedAt + c.grow - now;
         if (soonest === null || left < soonest) soonest = left;
+        /* The bed arms when the LAST plot ripens, so the wait a full bed is
+           counting down is the longest one, not the shortest. Getting this
+           backwards would promise a windfall minutes before it could pay. */
+        if (latest === null || left > latest) latest = left;
       }
     });
-    return { eligible, planted, ripe, soonest,
+    return { eligible, planted, ripe, soonest, latest,
       armed: eligible > 0 && planted === eligible && ripe === eligible };
   }
 
@@ -156,13 +161,17 @@
     if (b.armed) {
       cls = 'armed';
       html = `${Icons.get('star')}The whole bed — <b>+${pct}%</b>`;
-    } else if (b.planted === b.eligible && b.eligible - b.ripe === 1 && b.soonest !== null) {
+    } else if (b.planted === b.eligible && b.eligible - b.ripe === 1 && b.latest !== null) {
+      /* One to go. A count is a status; a WAIT is an appointment, and the
+         appointment is what makes Fall a place you come back to. */
       cls = 'close';
-      html = `${Icons.get('clock')}<b>One more</b> in ${span(b.soonest)} — then <b>+${pct}%</b>`;
-    } else if (b.planted < b.eligible) {
-      html = `${Icons.get('leaf')}<b>${b.planted} / ${b.eligible}</b> planted · fill the bed for <b>+${pct}%</b>`;
-    } else {
+      html = `${Icons.get('clock')}<b>One more</b> in ${span(b.latest)} — then <b>+${pct}%</b>`;
+    } else if (b.planted === b.eligible && b.latest !== null) {
+      html = `${Icons.get('clock')}All ${b.eligible} in · ripe in ${span(b.latest)}`;
+    } else if (b.planted === 0) {
       html = `${Icons.get('leaf')}Fill all ${b.eligible} for <b>+${pct}%</b>`;
+    } else {
+      html = `${Icons.get('leaf')}<b>${b.planted} / ${b.eligible}</b> planted · fill the bed for <b>+${pct}%</b>`;
     }
     if (el.fallChip.dataset.sig !== cls + html) {
       el.fallChip.className = `fl-chip ${cls}`;

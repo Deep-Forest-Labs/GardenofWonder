@@ -10,6 +10,38 @@ Read it beside the two spikes. They carry the same notes inline, on the frame th
 
 ---
 
+## Where the night got to
+
+**Both spikes shipped first, in their own commits**, so the record shows layout preceded code:
+`tools/turn-spike.html` (21 frames) and `tools/fall-spike.html` (12 frames).
+
+**Phase 2 is built and gauntleted.** The meter pill and its projection, the Turn ceremony's five
+beats, petal tracks on the Almanac, unlock prices in the plant picker, and the season tint. Eight
+adversarial critics ran over it and **three independently found the same blocker — the ask told the
+player the Turn was free** while it zeroed their gold, badges, boosts and plots 5–8. Fixed, along
+with about twenty other findings. Every one is in the 2026-08-29 (phase 2, the gauntlet) entry of
+`10-decision-log.md`.
+
+**Phase 3's first half is built**: the strip, the season edge tabs, the locked-season gate, Fall's
+board with all eight crops, the windfall and the Century Bloom. **Its gauntlet is the one piece that
+did not finish** — see §7 at the bottom for exactly where it stopped.
+
+**The map is untouched and the dock still says World**, which is your runway answer: *phase 2 deep,
+phase 3 parked with the map still working*. Both navigations work. The blocker under the rest of
+phase 3 is that **the Wild Meadow's only door is the map** — retiring one strands the other.
+
+**No economy knob or rule moved.** `mintK`, `minSeeds`, `minCoins`, `tallyCap`, unlock prices, petal
+prices and the blessing's grant are exactly as phase 1 left them. The three numbers I did add are
+visual only and labelled as such in `DATA.year`: the season tint's hue, its ceiling, and how much of
+a year's earnings ripens the palette.
+
+**Four questions are waiting for you**, and they are the only things I could not settle alone:
+§1 the meter pill's number (and the album button that would buy it back), §4 the meadow's missing
+door, §5 the eight-tap Fall bed, and the accessibility trade in §2 — 40px round buttons on phones
+under 430px wide, which one fewer HUD button also fixes.
+
+---
+
 ## The five-minute phone walkthrough
 
 Everything below is reachable from the live URL. Do it in this order.

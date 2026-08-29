@@ -651,6 +651,14 @@ board is the thing this game is. Low also puts them in the same band as the burr
 ways out of the garden read as one family. A locked edge wears the drained paper and the turn that
 opens it, so **a gate is a promise you can read from Summer** without walking to it.
 
+**The vertical ladder hangs off Summer only.** Swipe up and swipe down do nothing in Fall or at a
+gate — the Hollow is under the *garden*, not under the year, which is doc 32's diagram. It also
+prevents a desync: the map dives back "to the garden", and Summer's board has to be the one in the
+stage when it does. For the same reason the dock's **World** button comes home before it opens the
+map, and the ceremony's last beat returns the player to Summer — a Turn opened from Fall would
+otherwise end with the player looking at a bed the Turn did not touch while their garden was rebuilt
+behind them.
+
 **Fall's board keeps the yard's padding even though its creatures do not follow it.** Both boards are
 then the same size, which is what sharing the grammar means; the empty strip below Fall's board is
 simply ground.

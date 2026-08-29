@@ -647,6 +647,12 @@
     }
     // Vertical, and clearly so — a diagonal drag should not navigate.
     if (Math.abs(dy) <= NAV_SWIPE || Math.abs(dy) <= dx) return;
+    /* The vertical ladder hangs off SUMMER only — that is doc 32's diagram, and
+       the Hollow is under the garden rather than under the year. Allowing it
+       from Fall would also desync the two navigators: the map would return the
+       player "to the garden" while `.in-fall` still had Fall's board in the
+       stage. */
+    if (season !== 'summer') return;
     noteActivity();
     if (dy > 0) UI.enterHollow();
     else UI.enterMap('garden');
@@ -677,7 +683,14 @@
     /* Every other tab is a sheet. The world is a PLACE, so it travels rather
        than opening a panel — the discoverable way in for anyone who has not
        found the swipe yet. */
-    if (b.dataset.tab === 'world') { UI.closeSheet(); UI.enterMap('garden'); return; }
+    if (b.dataset.tab === 'world') {
+      UI.closeSheet();
+      /* Come home first: the map dives back "to the garden", and Summer's board
+         has to be the one in the stage when it does. */
+      goSeason('summer');
+      UI.enterMap('garden');
+      return;
+    }
     if (UI.sheetMode() === b.dataset.tab) UI.closeSheet();
     else UI.openSheet(b.dataset.tab);
   });
