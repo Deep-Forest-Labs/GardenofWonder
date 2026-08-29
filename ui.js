@@ -837,7 +837,15 @@
     const html = sides.map(([side, sdef]) => {
       if (!sdef) return '';
       const ready = seasonReady(sdef);
-      const turn = sdef.gate && !seasonTurned(sdef) ? `<span class="turn">Turn ${DATA.year[sdef.gate]}</span>` : '';
+      /* The tab says which of the two gates is holding it, exactly as the gate
+         screen does. Without the second case a season whose Turn has passed but
+         whose garden is unbuilt rendered as a bare padlock with no label at
+         all — a lock the player can never act on and cannot tell apart from one
+         they can. Winter's turn passes around day 2.3 of play, so that state is
+         reached quickly rather than theoretically. */
+      const why = !seasonTurned(sdef) ? `Turn ${DATA.year[sdef.gate]}`
+        : (!sdef.built ? 'Soon' : '');
+      const turn = why ? `<span class="turn">${why}</span>` : '';
       const dot = seasonWaiting(sdef.id) ? '<span class="s-dot"></span>' : '';
       return `<button class="s-edge ${side}${ready ? '' : ' locked'}" data-season="${sdef.id}"
         aria-label="${ready ? 'Go to' : 'Look at'} ${sdef.name}">

@@ -104,12 +104,61 @@ so nobody reopens it; the reasoning is in the review entry of
 [10-decision-log.md](10-decision-log.md) and inline in
 [33-year-one-economy.md](33-year-one-economy.md#the-tally).
 
-### `q_discover_5` straddles the year boundary on a fresh save
+### The discover track is priced in gold now, and nothing was re-keyed for it — CONFIRMED IN PLAY 2026-08-29
 
-Discover quests read lifetime `discovered` and survive the Turn, so they resolve across
-years rather than jamming — but a fresh save's `q_discover_5` (rep 12) will hold an active
-slot from mid-year-one until rose unlocks in year two. Doc 33 re-keyed exactly four quests
-and deliberately not this one. Watch it in the first playtest.
+**The owner hit this in the first minutes of a fresh save.** It was filed as "watch it in the
+first playtest"; it has now been watched, and it is bigger than one quest.
+
+**A player can discover exactly two species for free.** `state.discovered[id]` is written in one
+place — `recordHarvest()`, on harvesting that flower — so a species is discovered by *growing* it,
+and you can only grow what you have unlocked. Daisy and Tulip are `DATA.year.freeSeeds`. Everything
+after them is a one-time gold price at ×1.5 a step:
+
+| To reach | Species | Unlocks needed | Cumulative gold |
+| --- | --- | --- | --- |
+| `q_discover_5` (rep 12) | 5 | Bluebell + Lavender + Rose | **712,500** |
+| `almanacMilestones[0]` (rep 20, 1 gem, a boost) | 5 | same | **712,500** |
+| `q_discover_8` (rep 18) | 8 | + Peony, Marigold, Orchid | **3,117,188** |
+| `almanacMilestones[1]` (rep 30, 2 gems, a boost) | 10 | + Sun Lotus, Jade Fern | **7,388,673** |
+
+For scale, **the first Turn needs 100,000 earned** — so a player reaches the whole prestige loop
+about seven times over before the ladder's fifth-species rung is payable.
+
+**It jams the quest strip, which is the real cost.** `fillActive()` walks `DATA.quests` in order and
+keeps three; `stripQuest()` always returns `active[0]`. `q_discover_5` sits eleventh in the ladder,
+behind ten tap/plant/harvest/upgrade quests a player finishes in the first half hour — so it reaches
+the front of the strip early and **stays there**. `tools/year-sim.js 6 casual` buys the third unlock
+on **day 3.33**, so the game's always-visible progress display reads "Discover 5 species · 2 / 5"
+for roughly three days of play. The two quests behind it still progress and can still be claimed
+from the quest panel, so this is a visibility failure rather than a hard block — but it is the
+documented strip-jam trap in a new guise, and the escape hatch the docs name for it (`paused: true`)
+is the same one.
+
+**Doc 33 re-keyed exactly four quests for the walls** — `q_rose_3`, `q_lavender_3`, `q_marigold_3`
+and `q_peony_3`, the ones naming a specific unreachable seed, each onto a freely-advanceable track
+at the same rep so the 777 total held. The discover track was not among them, and the Almanac
+milestones were not considered at all. **This is a design decision, not a bug fix** — it is for the
+design session, and the four re-keys above are the house's own worked example of how to make one.
+
+### The plant picker uses one padlock for two different refusals
+
+On one screen a player sees, top to bottom: **Daisy** with a green go button, **Tulip** with a grey
+circle containing a **padlock**, and **Bluebell** with a drained row and a padlock chip reading
+**150K**. The Tulip padlock means *you have 74 gold and this costs 110* — a refusal that clears
+itself in about ten seconds. The Bluebell chip means *this costs 150,000 gold, once, forever*.
+
+The owner's words: *"it almost looks like I can get the Bluebell first because it's 150K."* The
+hierarchy is inverted — the thing with a **price** looks obtainable and the thing with a bare
+**padlock** looks locked, while in fact Tulip is one harvest away and Bluebell is three days away.
+
+The affordability padlock (`ui-sheet.js`, the `.seed-go` slot) predates the Garden Year; the unlock
+chip (`.seed-lock`) is new, and the collision is new with it. The codebase already has the precedent
+for fixing this class of thing: `Game.plotGate(idx)` returns `'turn'` or `'level'` so a locked plot
+can say **"Turn 1"** or **"Lv 6"** instead of one padlock for both. **For the design session:** the
+cheapest honest distinction is probably to give the momentary refusal no padlock at all — the row is
+already disabled and greyed, and a price you will have in ten seconds does not need a lock on it.
+
+
 
 ### ~~OPEN OWNER DECISION: the cheap-Turn cadence is strictly profitable~~ — RESOLVED, 2026-08-29
 

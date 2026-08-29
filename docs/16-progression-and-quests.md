@@ -8,6 +8,17 @@ owner-ratified the same evening, and built 2026-08-14. Reasoning in
 Read alongside [13-order-system.md](13-order-system.md), which owns reputation long-term, and
 [15-navigation-and-ia.md](15-navigation-and-ia.md), which owns where things live on screen.
 
+> **THE LADDER IS NOW MISPRICED AGAINST THE GARDEN YEAR — open for the design session, 2026-08-29.**
+> This document's ladder was written when seeds unlocked by **level**. They unlock by a one-time
+> **gold price** now ([33-year-one-economy.md](33-year-one-economy.md)), and only two seeds are
+> free — so every rung that counts *species* is priced in gold it was never costed against:
+> `q_discover_5` and the Almanac's first milestone both need **712,500 gold**, `q_discover_8` needs
+> **3.1M**, and the second milestone needs **7.4M**, while the whole prestige loop opens at 100,000.
+> `q_discover_5` also sits eleventh in a ladder whose strip only ever shows `active[0]`, so it holds
+> the game's main progress display for about three days of play. Doc 33 re-keyed four quests for the
+> walls and left this track alone. **The full statement, with the numbers and the options, is in
+> [11-known-issues.md](11-known-issues.md).**
+
 ## The problem being fixed
 
 The game has no answer to "what am I working toward." Every system is a spend surface — badges,
