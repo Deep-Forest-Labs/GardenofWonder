@@ -333,7 +333,6 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    allowed to compress, and it gives up padding (not a digit) when a 375px
    phone is carrying a million coins and four figures of gems. */
 .wallet{flex:none;min-width:0}
-.wallet.meter{flex:0 1 auto}
 
 .wallet{
   display:flex;align-items:center;gap:5px;
@@ -349,80 +348,15 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .wallet.pop{animation:walletPop .34s cubic-bezier(.34,1.56,.64,1)}
 @keyframes walletPop{0%{transform:scale(1)}40%{transform:scale(1.18) rotate(-3deg)}100%{transform:scale(1)}}
-/* THE YEAR METER — the third pill, and the meter IS the pill. Its own body
-   fills as the year does, so it costs the HUD no more width than a third wallet
-   and needs no second row for a bar. It carries no number: three numbered
-   wallets do not fit beside three round buttons at 390px, and a HUD that
-   changes shape as you earn is worse than a number one tap away. The reasoning
-   and the two alternatives are in docs/35-morning-review.md. */
-.wallet.meter{
-  position:relative;overflow:hidden;isolation:isolate;
-  padding:5px 10px;font:inherit;color:var(--ink);
-  min-height:44px;
-}
-/* .wallets is a flex row, so the meter's 44px lifts all three pills to the
-   touch minimum together — and the HUD row was already 44px tall because of
-   the round buttons beside them, so it costs nothing. */
-.meter-fill{
-  position:absolute;left:0;top:0;bottom:0;z-index:-1;
-  width:var(--year-p,0%);
-  background:linear-gradient(180deg,var(--seed-l),var(--seed));
-  border-right:2px solid rgba(44,26,16,.22);
-  transition:width .6s ease;
-}
-.wallet.meter:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink-2), 0 4px 8px rgba(44,26,16,.18)}
-/* Full uses the same 1.4s breath every affordable price in the game uses — a
-   player has met it on every buyable thing and it means "you can have this now". */
-.wallet.meter.full{animation:meterFull 1.4s ease-in-out infinite}
-@keyframes meterFull{
-  0%,100%{box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18), 0 0 0 0 rgba(255,201,60,.55)}
-  50%{box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18), 0 0 0 5px rgba(255,201,60,.5)}
+/* THE YEAR METER PILL RETIRED, 2026-08-30 (phase 3.5). Its body was the meter
+   and its tap was the projection; both moved into the dock's Turn button and
+   the Year panel, which have room for what a 39px pill never did. */
 }
 
 .w-icon{width:22px;height:22px;display:block;flex:none}
 .w-icon svg{width:100%;height:100%;display:block}
 .w-num{min-width:1ch}
 
-/* THE PROJECTION. What the meter is counting, and — when it is not full — which
-   of the two Turn gates is still short. "Why can't I turn yet" has to be
-   answerable without a wiki, so both gates are drawn as tracks. It deliberately
-   shows the UN-TALLIED increment and never the tallied pouch: the multiplier is
-   the ceremony's fireworks and quoting it here would spoil the only piece of
-   theatre the Turn has. */
-.year-pop{
-  position:absolute;top:calc(100% + 9px);left:0;z-index:8;
-  width:min(268px, 100%);
-  padding:11px 12px;
-  border:3.5px solid var(--ink);border-radius:var(--r-md);
-  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
-  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22);
-  animation:popIn .22s cubic-bezier(.34,1.56,.64,1);
-}
-.year-pop[hidden]{display:none}
-@keyframes popIn{0%{transform:translateY(-6px) scale(.94);opacity:0}100%{transform:none;opacity:1}}
-.year-pop::before{
-  content:'';position:absolute;left:var(--tail,24px);top:-9px;width:16px;height:16px;
-  background:#fffdf7;
-  border-left:3.5px solid var(--ink);border-top:3.5px solid var(--ink);
-  border-radius:3px 0 0 0;transform:rotate(45deg);
-}
-.yp-cap{margin:0 0 5px;font-size:11.5px;font-weight:800;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--ink-soft)}
-.yp-num{display:flex;align-items:center;gap:7px;font-size:29px;font-weight:800;line-height:1;
-  font-variant-numeric:tabular-nums}
-.yp-num svg{width:26px;height:26px}
-.yp-sub{margin:6px 0 0;font-size:11.5px;font-weight:700;color:var(--ink-soft);line-height:1.35}
-.yp-say{margin:2px 0 0;font-size:15px;font-weight:800;line-height:1.3}
-.yp-gate{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px;font-weight:800}
-.yp-gate .lab{width:24px;height:24px;flex:none;line-height:0}
-.yp-gate .lab svg{width:24px;height:24px;display:block}
-.yp-gate .track{flex:1;height:12px;border-radius:999px;border:2.5px solid var(--ink);
-  background:#e9dcc3;overflow:hidden;position:relative}
-.yp-gate .track i{position:absolute;left:0;top:0;bottom:0;
-  background:linear-gradient(180deg,#ffe066,var(--coin))}
-.yp-gate.met .track i{background:linear-gradient(180deg,#8ce99a,#51cf66)}
-.yp-gate .val{flex:none;font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
-.yp-gate.met .val svg{width:15px;height:15px;vertical-align:-3px}
 
 .hud-actions{display:flex;gap:6px;flex:none}
 .round-btn{
@@ -538,8 +472,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   width:13px;height:13px;border-radius:50%;background:#fff;
   display:grid;place-items:center;font-style:normal;font-size:8px;
 }
-.chip.buyable{background:linear-gradient(180deg,#fffdf7,#fff3b0)}
-.chip.buyable:active{transform:translateY(2px)}
+/* `.chip.buyable` retired with the rail's shop — spending a boost is the band's
+   POWER-UP button now, and the rail keeps only the countdowns. */
 .chip .chip-price{
   display:flex;align-items:center;gap:2px;
   background:var(--ink);color:#fff;border-radius:999px;
@@ -1107,6 +1041,199 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   box-shadow:0 2px 0 var(--ink-2);
   animation:tagPop 1.1s ease-in-out infinite;
 }
+
+/* =========================================================
+   THE BIG FIVE — phase 3.5, docs/36
+   Orders & Quests | Cards | GARDEN | Turn | Shop
+   ========================================================= */
+/* The row is pinned to the dock's own height and aligned to its END, so the
+   raised centre button can be TALLER than the row and rise out of the top
+   without growing grid row 5. Nothing else in `.ui` is re-measured — which is
+   the rule that stopped a fifth button wrapping onto a second row. */
+/* Explicit heights, not min-heights. `Orders & Quests` sets on two lines and
+   pushed its own button 5px taller than the other four, which with
+   `align-items:end` made one button stand proud of the row for no reason. Every
+   button is exactly the row; only the pedestal is allowed to be taller. */
+.dock.five{grid-template-rows:56px;align-items:end}
+.dock.five .dock-btn{min-height:0;height:56px}
+.dock.five .dock-btn.home{height:74px}
+.dock.five .dock-label{font-size:9.5px;line-height:1.05}
+
+/* THE PEDESTAL. Grass, because it is the one button the colour of the place it
+   takes you back to — so it reads as *play* by material and not only by size. */
+.dock-btn.home{
+  border-radius:22px;border-width:3.5px;
+  background:linear-gradient(180deg,#8fe08a,var(--grass) 55%,var(--grass-d));
+  box-shadow:0 6px 0 #2f7a34, 0 12px 18px rgba(44,26,16,.3);
+  color:#173d1c;
+}
+.dock-btn.home .dock-ico{width:28px;height:28px}
+.dock-btn.home .dock-label{font-size:11.5px;letter-spacing:.02em;
+  text-shadow:0 1px 0 rgba(255,255,255,.45)}
+.dock-btn.home:active,.dock-btn.home.pressed{
+  box-shadow:0 1px 0 #2f7a34, 0 4px 9px rgba(44,26,16,.28)}
+.dock:has(.dock-btn:nth-child(5)) .dock-btn.home .dock-ico{width:26px;height:26px}
+
+/* THE TURN BUTTON IS THE METER. The fill rises from the bottom rather than
+   wiping across: the pill it replaces is 39px wide and had no room to do
+   anything else, while a button has 56px of height to travel — and rising is
+   the right picture, because the pouch fills. `isolation` keeps the z-index:-1
+   fill above the button's own background and below its content. */
+.dock-btn.turn{overflow:hidden;isolation:isolate}
+.turn-fill{
+  position:absolute;left:0;right:0;bottom:0;z-index:-1;
+  height:var(--year-p,0%);
+  background:linear-gradient(180deg,var(--seed-l),var(--seed));
+  border-top:2px solid rgba(44,26,16,.22);
+  transition:height .6s ease;
+}
+/* The ready breath is the full pill's own ring, moved onto the button. It is
+   worn by exactly one thing in the game and it has only ever meant one thing:
+   the Turn is ready. */
+.dock-btn.turn.ready{animation:turnFull 1.4s ease-in-out infinite}
+@keyframes turnFull{
+  0%,100%{box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22), 0 0 0 0 rgba(255,201,60,.55)}
+  50%    {box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22), 0 0 0 5px rgba(255,201,60,.5)}
+}
+/* The pouch, promoted. The number already exists in three panels; this is the
+   first time it is on an always-visible surface. Year one never shows it. */
+.seedchip{
+  position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:2px;
+  padding:1px 6px 1px 3px;white-space:nowrap;
+  border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--seed-l));
+  box-shadow:0 2px 0 var(--ink-2);
+  font-size:10px;font-weight:800;line-height:1.5;
+}
+.seedchip svg{width:12px;height:12px;display:block}
+.seedchip[hidden]{display:none}
+/* A dot on a button that is already breathing is noise. */
+.dock-btn.turn.ready .dock-dot{display:none}
+
+/* ---------- THE BAND — the owner's sketch, 2026-08-30 ----------
+   UPGRADE, the tending creatures, POWER-UP, in one row between the garden and
+   the dock. It costs the layout NOTHING: it lives in the yard `.stage` already
+   reserves (`--yard-h`), so the board measures the same before and after.
+
+   Both buttons are inset past the season edge tabs, which keep the screen edges
+   they have always had — 38px of tab, 34px of inset, 6px of daylight. */
+.fpill,.fround{
+  position:absolute;bottom:4px;z-index:4;
+  margin:0;border:3.5px solid var(--ink);cursor:pointer;
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.fpill{
+  left:34px;display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:7px 10px 6px;border-radius:16px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.24);
+  font:inherit;font-size:9px;font-weight:800;letter-spacing:.02em;color:var(--ink);
+}
+.fpill .f-ico{width:24px;height:24px;display:block}
+.fpill .f-ico svg{width:100%;height:100%;display:block}
+.fround{
+  right:34px;width:58px;height:58px;border-radius:50%;
+  display:grid;place-items:center;padding:0;
+  background:
+    radial-gradient(circle at 34% 26%,rgba(255,255,255,.9),rgba(255,255,255,.5)),
+    var(--tint,#9775fa);
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.24);
+}
+.fround svg{width:28px;height:28px;display:block}
+.fpill:active,.fround:active{transform:translateY(4px);
+  box-shadow:0 1px 0 var(--ink-2), 0 3px 7px rgba(44,26,16,.25)}
+.f-count{
+  position:absolute;top:-6px;right:-4px;
+  min-width:20px;height:20px;padding:0 4px;border-radius:999px;
+  display:grid;place-items:center;
+  border:2.5px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);
+  font-size:10px;font-weight:800;color:var(--ink);
+}
+/* THE EMPTY SLOT — drained paper, the same family a locked season tab wears,
+   because this game already says "a thing you do not have yet" that way. It is
+   not a dead button: tapping it says where boosts come from. */
+.fround.empty{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 5px 0 var(--paper-dim-edge), 0 9px 14px rgba(44,26,16,.18);
+  border-style:dashed;
+}
+.fround.empty svg{opacity:.5}
+/* A place puts its own dock up and hides the garden's; the band goes with it. */
+.in-hollow .fpill,.in-hollow .fround,
+.in-meadow .fpill,.in-meadow .fround,
+.in-gate .fpill,.in-gate .fround{display:none}
+
+/* =========================================================
+   THE YEAR PANEL — phase 3.5
+   The projection card the HUD pill used to pop, with room.
+   ========================================================= */
+.yr-meter{
+  position:relative;height:78px;margin:2px 0 12px;overflow:hidden;
+  border:3.5px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.18);
+}
+.yr-meter > i{
+  position:absolute;left:0;right:0;bottom:0;height:var(--p,0%);
+  background:linear-gradient(180deg,var(--seed-l),var(--seed));
+  transition:height .6s ease;
+}
+/* A LOCKED meter is still a meter: the drained rim says "not yet", the fill
+   underneath says how far. Year one is a mystery, never a blank. */
+.yr-meter.locked{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.18);
+}
+.yr-meter.ready{animation:turnFull 1.4s ease-in-out infinite}
+.yr-lab{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:0 14px;font-size:15px;font-weight:800;text-align:center;line-height:1.25;
+}
+.yr-lab svg{width:22px;height:22px;flex:none}
+.yr-gates{display:grid;gap:7px;margin-bottom:12px}
+.yr-gate{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800}
+.yr-gate .lab{display:flex;align-items:center;gap:4px;width:104px;flex:none}
+.yr-gate .lab svg{width:15px;height:15px}
+.yr-gate .track{
+  flex:1;height:13px;overflow:hidden;
+  border:2.5px solid var(--ink);border-radius:999px;background:var(--paper-dim-2);
+}
+.yr-gate .track i{display:block;height:100%;
+  background:linear-gradient(180deg,#8fe08a,var(--grass-d));transition:width .3s ease}
+/* The binding gate — the lower of the two, and the one the dock button's fill
+   is actually drawing. Marked, so the panel and the button agree out loud. */
+.yr-gate.bind .track i{background:linear-gradient(180deg,#ffe066,var(--coin-d))}
+.yr-gate .tag{
+  flex:none;min-width:46px;text-align:center;font-size:9.5px;
+  background:var(--ink);color:var(--paper-2);border-radius:999px;padding:2px 7px;
+}
+.yr-gate .tag svg{width:12px;height:12px;display:block;margin:0 auto}
+.yr-gate.met .tag{background:#2f9e44}
+.yr-say{text-align:center;font-style:italic;font-size:13px;line-height:1.45}
+.yr-spend{margin-top:16px;display:flex;align-items:center;gap:7px}
+
+/* Petal spending, a card per flower. The Almanac keeps the record rows. */
+.pt-cards{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}
+.pt-card{
+  min-width:0;padding:8px;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.14);
+}
+.pt-head{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800}
+.pt-art{width:26px;height:26px;flex:none;line-height:0}
+.pt-art svg{width:100%;height:100%;overflow:visible}
+.pt-card .petal-track{gap:3px;margin-top:6px}
+.pt-card .petal-track .pl{width:44px;font-size:9px;line-height:1.05}
+.pt-card .petal-track .pips i{width:6px;height:6px}
+.pt-card .petal-track .price{font-size:10px;padding:1px 6px}
+
+/* The seam between the two halves of Orders & Quests. Not a heading — the two
+   panels bring their own — just enough air that they read as two lists. */
+.ord-split{height:2px;margin:16px 0 4px;border-radius:999px;background:rgba(44,26,16,.14)}
 
 /* =========================================================
    BOTTOM SHEET
@@ -1828,8 +1955,15 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    ========================================================= */
 @media (max-height:700px){
   .dock-btn{min-height:50px;padding:5px 4px}
+  .dock.five{grid-template-rows:50px}
+  .dock.five .dock-btn{height:50px}
+  .dock.five .dock-btn.home{height:64px}
+  /* The pedestal's rise drops with the dock, so the raised Garden button still
+     clips a creature's foot rather than its shin. */
+  .critter-yard{--pet-lift:4px}
   .dock-ico{width:22px;height:22px}
   .dock-label{font-size:11px}
+  .dock.five .dock-label{font-size:9.5px}
   .wallet{font-size:14px;padding:4px 9px 4px 5px}
   .w-icon{width:19px;height:19px}
   .round-btn{width:40px;height:40px}
@@ -1841,24 +1975,25 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    them, three wallets and three round buttons do not fit 390px at full size —
    they wrap, and the wrap comes and goes as the numbers grow. Same values the
    short-screen block above uses, promoted to apply on narrow WIDTH too. */
+/* The HUD tightens on a narrow screen. The wallets still compress — a "880.2K"
+   coin pill is the widest thing up here — but the ROUND BUTTONS ARE BACK TO
+   44px as of phase 3.5, and that is a debt this phase collected rather than a
+   new decision.
+
+   What stood here before: with the year meter beside them, three wallets
+   (222px) and three 44px buttons (144px) plus the 8px gap came to 374px of the
+   370 available. Four pixels over. The buttons dropped to 40 — under the touch
+   minimum — and the note said in prose that THE REAL FIX was one fewer HUD
+   button, and that it was the owner's call to make.
+
+   The owner made it. The meter pill moved into the dock's Turn button and the
+   album star moved to Cards, so the row is two wallets and two buttons: about
+   234px of the 340 available at 360px wide, with the worst realistic numbers in
+   it. There is nothing left to buy the four pixels from, and nothing left that
+   needs them. */
 @media (max-width:430px){
   .wallet{font-size:14px;padding:4px 9px 4px 5px}
   .w-icon{width:19px;height:19px}
-  /* The meter carries no number, so it is the pill that gives width back. */
-  .wallet.meter{padding:5px 7px}
-  /* AND THE ROUND BUTTONS DROP TO 40px, which is a real cost and is written
-     down rather than hidden. Measured at 390px with the worst realistic
-     wallets ("880.2K" coins, "1,163" gems): the three pills are 222px, three
-     44px buttons are 144px, and with the 8px gap that is 374px of the 370px
-     available. Four pixels. The choice was a 40px control — a size this
-     stylesheet already uses on short screens — or a HUD that wraps and unwraps
-     as the player gets richer, and a layout that changes shape as you earn is
-     worse than a control 4px under the touch minimum. THE REAL FIX is to give
-     the HUD one fewer round button (the album's own page is the Almanac); that
-     is a navigation decision and it is the owner's, in docs/35. */
-  .round-btn{width:40px;height:40px}
-  .round-btn svg{width:21px;height:21px}
-  .wallet.meter{min-height:40px}
 }
 @media (min-width:600px) and (min-height:760px){
   .ui{padding-left:calc(var(--sal) + 16px);padding-right:calc(var(--sar) + 16px)}
@@ -2118,10 +2253,19 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   pointer-events: none;
   z-index: 3;
 }
+/* Phase 3.5: the creatures keep their feet on the lawn. Lifting them clear of
+   the band's two buttons was tried and it broke doc 05's anchoring rule — a
+   creature 64px up reads as floating, because the lawn it belongs to is still
+   down there. So they stand where they stood, the two floating buttons paint
+   over them at z-index 4, and a creature tucked behind a button is depth rather
+   than a collision — the same thing the burrow mouth did before it retired.
+   The 6px is the pedestal's rise, so the raised Garden button clips a foot
+   rather than a shin. */
+.critter-yard { --pet-lift: 6px; }
 .critter {
   position: absolute;
   left: var(--x, 50%);
-  bottom: 2px;
+  bottom: var(--pet-lift, 2px);
   width: clamp(66px, 19vw, 96px);
   height: clamp(66px, 19vw, 96px);
   margin: 0;
@@ -2848,30 +2992,46 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em}
 .on-good svg{width:14px;height:14px}
 
-.on-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:1px}
-.on-chip{position:relative;width:38px;text-align:center}
-.on-chips.big .on-chip{width:60px}
+.on-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:3px}
+/* THE ORDER TOKEN — rebuilt 2026-08-30 on the owner's note: "the numbers overlay
+   the icon of the flower they need to deliver."
+
+   They did, literally: the count was `position:absolute; top:30px` on a 38px
+   art tile, so the pill sat across the bottom eight pixels of the bloom. Two
+   things were fighting for the same square, and the bloom is the one that has
+   to read — it is what the player has to go and grow.
+
+   So the token is one object with two bands: the art on top at 44px, the count
+   in its own strip underneath with a rule between them. Bigger, and nothing
+   overlapping anything. */
+.on-chip{
+  position:relative;width:64px;text-align:center;overflow:hidden;
+  border:3px solid var(--ink,#2c1a10);border-radius:13px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2,#ffeecd));
+  box-shadow:0 3px 0 var(--ink-2,#5a3a1f), 0 6px 9px rgba(44,26,16,.16);
+}
+.on-chips.big .on-chip{width:78px;border-radius:17px;border-width:3.5px}
 .on-chip-art{
-  width:38px;height:38px;display:grid;place-items:center;line-height:0;
-  border:3px solid var(--ink,#2c1a10);border-radius:12px;background:#f7ead1;
+  width:100%;height:52px;display:grid;place-items:center;line-height:0;
+  background:#f7ead1;
 }
-.on-chips.big .on-chip-art{width:60px;height:60px;border-radius:16px}
-.on-chip-art svg{width:80%;height:80%;overflow:visible}
+.on-chips.big .on-chip-art{height:62px}
+.on-chip-art svg{width:76%;height:76%;overflow:visible}
 .on-chip.done .on-chip-art{background:#d3f9d8}
-/* The count sits ON the token rather than beside it — one glance, one object. */
 .on-chip-count{
-  position:absolute;left:50%;top:30px;transform:translateX(-50%);
-  display:inline-flex;align-items:center;gap:1px;
-  padding:1px 5px;border:2.5px solid var(--ink,#2c1a10);border-radius:999px;
-  background:#fff7e1;font-size:10px;font-weight:800;line-height:1.25;white-space:nowrap;
+  display:flex;align-items:center;justify-content:center;gap:2px;
+  border-top:3px solid var(--ink,#2c1a10);
+  background:linear-gradient(180deg,var(--paper-2,#ffeecd),var(--paper-3,#ffe0ad));
+  font-size:12.5px;font-weight:800;line-height:1.6;white-space:nowrap;
 }
-.on-chips.big .on-chip-count{top:50px;font-size:12px;padding:2px 7px;border-width:3px}
-.on-chip-count svg{width:11px;height:11px}
-.on-chip.done .on-chip-count{background:#8ce99a}
+.on-chips.big .on-chip-count{font-size:14px;line-height:1.6;border-top-width:3.5px}
+.on-chip-count svg{width:13px;height:13px}
+.on-chips.big .on-chip-count svg{width:15px;height:15px}
+.on-chip.done .on-chip-count{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
 .on-chip-name{display:none}
 .on-chips.big .on-chip-name{
-  display:block;margin-top:9px;font-size:10px;line-height:1.15;
-  color:var(--ink-soft);
+  display:block;padding:4px 3px 5px;border-top:2px solid rgba(44,26,16,.16);
+  font-size:10px;line-height:1.15;color:var(--ink-soft);
 }
 .on-chip-qty{display:none}
 

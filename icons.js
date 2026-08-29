@@ -113,6 +113,12 @@ const Icons = (() => {
       <path d="M6.4 6.6h11.2l-1 12.4a2 2 0 0 1-2 1.8H9.4a2 2 0 0 1-2-1.8Z" fill="#ffa8a8"/>`),
     sparkle: S(`<path d="M12 2.6c.8 5.4 3.4 8 8.8 8.8-5.4.8-8 3.4-8.8 8.8-.8-5.4-3.4-8-8.8-8.8 5.4-.8 8-3.4 8.8-8.8Z" fill="#ffe066"/>`),
     clock: S(`<circle cx="12" cy="12" r="8.6" fill="#e7f5ff"/><path d="M12 7v5.2l3.4 2.2" stroke-width="2.2"/>`),
+    /* The Stand's awning, for the Orders & Quests button. Flat fills inside one
+       thick outline, like the thirty-odd above it. */
+    orders: S(`
+      <path d="M4.6 10.2h14.8v9.6a1.2 1.2 0 0 1-1.2 1.2H5.8a1.2 1.2 0 0 1-1.2-1.2Z" fill="#fff8e7"/>
+      <path d="M3 5.6h18l-1.4 4.6H4.4Z" fill="#ff8fab"/>
+      <path d="M9.4 21v-5.4h5.2V21"/>`),
     cards: S(`
       <rect x="3.2" y="7.4" width="9.4" height="13" rx="2.2" fill="#8ce99a" transform="rotate(-16 7.9 13.9)"/>
       <rect x="7.3" y="6.2" width="9.4" height="13" rx="2.2" fill="#a5d8ff" transform="rotate(-3 12 12.7)"/>

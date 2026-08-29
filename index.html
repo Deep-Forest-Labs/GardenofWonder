@@ -74,22 +74,14 @@
           <div class="wallets">
             <div class="wallet" id="walletCredits"><span class="w-icon" data-icon="coin"></span><span class="w-num" id="credits">0</span></div>
             <div class="wallet" id="walletGems"><span class="w-icon" data-icon="gem"></span><span class="w-num" id="gems">0</span></div>
-            <!-- The year meter. A wallet whose own body is the meter, so it costs
-                 the HUD no more width than a third pill and needs no second row.
-                 It carries no number: three numbered wallets do not fit beside
-                 three round buttons at 390px, and a HUD that changes shape as you
-                 earn is worse than a number one tap away. See docs/35. -->
-            <button class="wallet meter" id="walletYear" type="button" aria-label="The year's pouch">
-              <i class="meter-fill" id="yearFill"></i>
-              <span class="w-icon" data-icon="pouch"></span>
-            </button>
             <button class="dev-dot" id="btnDev" type="button" aria-label="Developer tools" tabindex="-1"></button>
           </div>
-          <!-- The meter's tap affordance. Anchored under the pill, inside .hud so
-               it inherits the column; a two-line readout does not want a sheet. -->
-          <div class="year-pop" id="yearPop" hidden></div>
+          <!-- Two wallets and two round buttons since phase 3.5. The year meter
+               moved into the dock's Turn button, whose body IS the meter, and the
+               album star moved to the Cards button. That is what buys the round
+               buttons back to 44px at 390px wide — see the max-width:430px block
+               in style.css, which asked for exactly this. -->
           <div class="hud-actions">
-            <button class="round-btn" id="btnAlbum" aria-label="Card album"><span data-icon="star"></span></button>
             <button class="round-btn" id="btnBonuses" aria-label="Garden almanac and bonuses"><span data-icon="book"></span></button>
             <button class="round-btn" id="btnSettings" aria-label="Settings"><span data-icon="gear"></span></button>
           </div>
@@ -123,28 +115,50 @@
             </div>
           </div>
           <div class="critter-yard" id="critterYard" aria-label="Creatures living in your garden"></div>
+          <!-- THE BAND. One row between the garden and the dock, reading left to
+               right: UPGRADE, the tending creatures, POWER-UP. It costs the
+               layout nothing, because it lives in the yard `.stage` already
+               reserves for the creatures. Both buttons are inset past the season
+               edge tabs, which keep the screen edges they have always had. -->
+          <button class="fpill" id="btnUpgrade" type="button" aria-label="Upgrades">
+            <span class="f-ico" data-icon="badge"></span>
+            <span class="f-lab">UPGRADE</span>
+            <span class="dock-dot" hidden></span>
+          </button>
+          <button class="fround" id="btnPower" type="button" aria-label="Power-up"></button>
         </main>
         <section class="hollow" id="hollow" aria-label="The Hollow" hidden></section>
 
         <div class="season-edges" id="seasonEdges" aria-hidden="false"></div>
 
-        <nav class="dock" id="dock" aria-label="Shops">
-          <button class="dock-btn" data-tab="upgrades">
-            <span class="dock-ico" data-icon="badge"></span>
-            <span class="dock-label">Upgrades</span>
+        <!-- THE BIG FIVE. Orders & Quests, Cards, GARDEN, Turn, Shop — the
+             owner's dock, specced in docs/36. The centre is a raised pedestal
+             and the fourth button's own body is the year meter. -->
+        <nav class="dock five" id="dock" aria-label="Menu">
+          <button class="dock-btn" data-tab="orders">
+            <span class="dock-ico" data-icon="orders"></span>
+            <span class="dock-label">Orders<br>&amp; Quests</span>
             <span class="dock-dot" hidden></span>
           </button>
-          <!-- The way to the world, for anyone who has not found the swipe. The
-               Stand is not a tab any more — it is a stall on the lane, reached
-               by going out to the map. See docs/25-world-map.md. -->
-          <button class="dock-btn" data-tab="world">
-            <span class="dock-ico" data-icon="grid"></span>
-            <span class="dock-label">World</span>
+          <button class="dock-btn" data-tab="album">
+            <span class="dock-ico" data-icon="cards"></span>
+            <span class="dock-label">Cards</span>
             <span class="dock-dot" hidden></span>
           </button>
-          <button class="dock-btn" data-tab="craft">
-            <span class="dock-ico" data-icon="flask"></span>
-            <span class="dock-label">Craft</span>
+          <!-- The pedestal is taller than the dock's row and the row is
+               align-items:end, so it rises out of the top without changing row
+               5's height. Nothing else in the .ui grid is re-measured. -->
+          <button class="dock-btn home" data-tab="garden" aria-label="Back to the garden">
+            <span class="dock-ico" data-icon="sprout"></span>
+            <span class="dock-label">GARDEN</span>
+          </button>
+          <!-- The button's body IS the year meter: it fills on the binding gate
+               and breathes when a Turn is ready. -->
+          <button class="dock-btn turn" data-tab="year">
+            <i class="turn-fill" id="yearFill"></i>
+            <span class="seedchip" id="pouchChip" hidden></span>
+            <span class="dock-ico" data-icon="pouch"></span>
+            <span class="dock-label">Turn</span>
             <span class="dock-dot" hidden></span>
           </button>
           <button class="dock-btn" data-tab="shop">

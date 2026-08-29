@@ -5,6 +5,66 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (phase 3.5b) — The Big Five, and the mystery that had no door out
+
+Built to the annotated spike. The dock is **Orders & Quests · Cards · GARDEN · Turn · Shop**, with
+UPGRADE and POWER-UP floating in the band above it.
+
+**The band costs the layout nothing, and that is the finding the phase rests on.** `.stage` already
+reserves a yard along its bottom for the creatures; the two floating controls move into the two ends
+of that same strip. The board measures 370×370 before and after. Both are inset 34px from the column
+so they clear the 38px season tabs by 6 — the owner's *"have the UPGRADEs and POWER-UPs sit inside"*,
+in pixels.
+
+**The pedestal rises without making the dock taller.** `.dock.five` pins `grid-template-rows` to the
+dock's own height with `align-items:end` and gives every button that exact height; only `.home` is
+taller and overflows upward. Two cascade bugs were found by measuring rather than by looking:
+`.dock.five .dock-btn{min-height:56px}` out-specified both `.dock-btn.home`'s 74 and the
+`max-height:700px` block's 50, so at first the pedestal did not rise at all and the short-screen dock
+did not shrink. Explicit heights fixed both.
+
+**The creatures were lifted 64px to clear the band, and it was wrong.** It broke doc 05's anchoring
+rule outright — a creature 64px up reads as floating, because the lawn it belongs to is still down
+there. They stand where they stood; the two buttons paint over them at z-index 4, and a creature
+tucked behind a button is depth, which is exactly what the burrow mouth used to do. What did have to
+move is `CRITTER_SPOTS`: the old 80% spot put the second creature squarely behind the POWER-UP
+button, so the crowd comes in to 32/68/44/56.
+
+**THE ONE REAL BUG, and it was the owner's own warning coming true.** The year-one Year panel shipped
+with a mystery and no door out of it: when the meter filled, the dock button breathed, the gold bar
+sat at 100%, and the panel still said *keep going* — with no way to Turn at all. The mystery branch
+had simply never been given the ceremony's button. It now unlocks the moment `turnReady()` is true,
+drops the padlock, and offers *See what it's for*; the ceremony's ask does the teaching, exactly as
+it always has. **"Mysterious with no direction feels broken" was the note, and this was the proof.**
+
+**The order token was rebuilt because the owner caught it.** `.on-chip-count` was
+`position:absolute; top:30px` over a 38px art tile, so the have/want pill sat across the bottom eight
+pixels of the bloom. Two things fighting for one square, and the bloom is the half a player has to go
+and grow. The token is now one object with two bands — 52px of art on top, the count in its own strip
+underneath with a rule between them — and both numbers always show, with a tick **added** rather than
+substituted, because "3/3 ✓" keeps the size of the ask that a bare tick loses.
+
+**The HUD collected an old debt.** `style.css` had shaved every round button to 40px — under the
+touch minimum — and written down in prose that the real fix was one fewer HUD button and that the
+call was the owner's. Retiring the meter pill and the album star is that call: the row is two wallets
+and two buttons, 234px of the 340 available at 360px wide, and 44px is back.
+
+**Rejected: panels that stop above the dock.** Doc 36 asked for it so the Garden button would always
+be the visible way home. The owner ruled otherwise — every panel already carries a close button — and
+that ruling is worth 100px of panel height and zero lines of CSS.
+
+**The rail lost its shop and kept its clock.** `.chip.buyable` retires; running boosts and the Wonder
+still count down there. The power-up slot draws from *held AND not currently running*, because
+`activateBoost` refuses to re-arm a live boost and returns false — a slot seated from held alone
+would eventually hold a boost whose tap does nothing. The seat empties the instant it is spent, so
+"a running boost cannot be refreshed" stays true by construction rather than by a check.
+
+**Retired and deleted rather than left dead:** `.wallet.meter`, `.meter-fill`, `.year-pop` and every
+`.yp-*` rule, `.chip.buyable`, the `#btnAlbum` listener, `onYearTap`, `openYearPop`, `renderYearPop`
+and `yearGate`. Dead CSS is a trap in a 50KB stylesheet.
+
+---
+
 ## 2026-08-30 (phase 3.5a) — The doors become the gesture, and the meadow finally has a way in
 
 The owner's annotation at the gate: *"remove the little graphic for the hollow and the meadow — I

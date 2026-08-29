@@ -43,9 +43,22 @@ sheet the player asked for.
 │      └───┴───┴───┘          │
 │                             │
 ├─────────────────────────────┤
-│   Upgrades  Apiary Craft Shop │ dock       (row 5, auto)
+│  [UP]   pets pets   [PWR]   │  the band     (in the stage's own yard)
+├─────────────────────────────┤
+│ Orders Cards (GARDEN) Turn Shop │ dock   (row 5, auto — the centre rises)
 └─────────────────────────────┘
 ```
+
+**The band costs the layout nothing.** `.stage` already reserves a yard along its bottom for the
+creatures (`--yard-h`, 108px at 390×844, 91px at 700); the two floating controls move into the two
+ends of that same strip. The board measures 370×370 before and after. Both are inset 34px from the
+column so they clear the 38px season edge tabs, which keep the screen edges they have always had.
+
+**The pedestal rises out of the dock without making the dock taller.** `.dock.five` pins
+`grid-template-rows` to the dock's own height with `align-items:end`, and gives every button that
+exact height; only `.dock-btn.home` is taller (74px at 844, 64 at ≤700) and overflows upward. Row 5
+never changes height, so nothing in the `.ui` grid is re-measured — which is the rule that stops a
+fifth button wrapping onto a second row.
 
 The stage is the only flexible row. Everything else is content-sized, so the garden absorbs
 whatever space is left.
@@ -482,52 +495,61 @@ flash may screenshot as invisible even though it fired. Verify by asserting the 
 
 ## HUD
 
-### The year meter — the third pill (2026-08-29, phase 2)
+### The year meter is the dock's Turn button (2026-08-30, phase 3.5)
 
-**The meter is the pill.** `.wallet.meter` is a third wallet whose own body fills as the year does
-(`.meter-fill`, an absolutely-positioned child at `z-index:-1` under `isolation:isolate`), so it
-costs the HUD no more width than a third wallet and needs no second row for a bar. It is a real
-`<button>`; the other two wallets are `div`s.
+**Superseding the third-pill design of phase 2.** `.wallet.meter`, `.meter-fill` and `.year-pop` are
+gone; their whole job moved down to the dock.
 
-**It carries no number, and that is a measured decision, not a preference.** The column is 360px
-inside `.ui`'s padding, three round buttons take 132 of it at 40px, and three *numbered* wallets need
-~245px of the 220px left — so `.wallets` (which is `flex-wrap: wrap`) wraps, and it wraps and unwraps
-**as the numbers grow**, which is the one thing a HUD must never do. Both numbers — the banked pouch
-and the year's increment — live one tap away in the projection instead. The alternative that buys
-both (the album star leaves the HUD for the Almanac) is a navigation change and is parked for the
-owner in [35-morning-review.md](35-morning-review.md).
+**The button's body is the meter.** `.dock-btn.turn` carries `.turn-fill`, an absolutely-positioned
+child at `z-index:-1` under `isolation:isolate` — the pill's own trick, one row lower. **The fill
+rises from the bottom rather than wiping across.** The pill it replaces was **39px wide** (the one
+wallet with no number in it), so it never had room to say much; a dock button has 56px of height to
+travel, and rising is the truer picture anyway — the pouch fills.
 
-**The HUD tightens below 430px of width**, the same values the `max-height:700px` block already
-uses: wallet padding 4/9 at 14px, 19px icons, 40px round buttons, and 7px of padding on the
-numberless meter. Without it the pills wrap on every phone, with or without a number on the meter.
-The 40px round buttons are a **measured** cost — see Accessibility below — and the fix that restores
-44px is one fewer button in the HUD.
+**It shows the binding gate,** unchanged: `yearProgress()` returns `min(seeds, coins)`, because the
+Turn needs *both* the un-tallied increment ≥ `minSeeds` and the year's earnings ≥ `minCoins`, and a
+bar tracking one would sit full while the other held the ceremony shut. Still recomputed on the 0.6s
+slow tick, never per frame — `projectedMint()` walks the whole Tally table.
 
-**Where it still wraps, and why that is where the line was drawn.** Measured at the composition
-width, 390px: the three pills reach 222px at the worst realistic numbers ("880.2K" coins, "1,163"
-gems), the round buttons 132px, and 222 + 8 + 132 = 362 of the 370 available — one row, with 8px
-spare. At **375px** (an SE) the same numbers need 362 of 355 and the wallets wrap to two rows. That
-is left as graceful degradation rather than chased: shaving the last seven pixels means padding and
-gaps so tight that any future string re-breaks it, and the wrap only appears on the narrowest phone
-at roughly a million coins *and* four figures of gems. One fewer round button removes the whole
-problem.
+**Ready** takes `turnFull`, the 1.4s gold breath the full pill used to wear. Worth being exact about
+what that borrows: this ring is worn by **exactly one thing in the game** and has only ever meant
+*the Turn is ready*, so the meaning travels with it intact. The attention dot is suppressed while it
+breathes — a dot on a button that is already pulsing is noise.
 
-**The fill shows the binding gate.** The Turn needs *both* the un-tallied increment ≥ `minSeeds` and
-the year's earnings ≥ `minCoins`, so the bar is `min(seeds, coins)` — a bar that showed only one
-would sit full while the other held the ceremony shut. Recomputed on the 0.6s slow tick, never per
-frame: `projectedMint()` walks the whole Tally table. At full it takes `affordPulse`, the same breath
-every affordable price wears.
+**`.seedchip` is the pouch, promoted.** Saved Seeds have always had a number — in the projection, in
+the Almanac's seed-row header, in the ceremony — but never on an always-visible surface. The chip
+rides above the button from the first Turn onward, and **never in year one**, where doc 32's rule is
+that the meter fills with no numbers on it at all.
 
-**Tapping it.** Full → the ceremony opens (doc 32's re-invite: declining costs nothing and the
-ceremony reopens from here forever). Short of full → `.year-pop`, a coach-mark-shaped card anchored
-under the pill, with the increment, the banked pouch and **both gates drawn as tracks** so *why can't
-I turn yet* is answerable without a wiki. Its tail is positioned from a measurement, because the pill
-moves as the coin number grows. It shows the **un-tallied** increment and never the tallied pouch —
-quoting the multiplier here would spoil the only piece of theatre the Turn has.
+**Tapping it opens the Year panel** (sheet mode `year`), which is the projection card with room to
+breathe: the pouch, both gates as tracks with the binding one marked, the ceremony's own button when
+a Turn is ready, and petal spending as a card per flower. That is one tap further from the ceremony
+than the pill was, and it buys a button that is useful for the other fifty weeks of the year.
+
+**Year one is a locked panel, and it is never directionless.** The owner's rule (2026-08-30):
+*something mysterious with no direction feels broken.* So before the first Turn the panel shows a
+padlocked meter, **one** track — the gold, because gold is the half a player can push on directly —
+with no numbers on it, and the flower saying what to do about it. No pouch, no seed gate, no petals.
+**And the moment the Turn is ready the lock comes off and the ceremony's button appears**, which is
+the door out of the mystery; the ceremony's ask is where the explaining has always happened. Shipping
+without that door was a real bug in this build: full meter, breathing dock button, and a panel still
+saying *keep going*.
+
+### The HUD's round buttons are 44px again (2026-08-30)
+
+The `max-width:430px` block used to shave every round button to 40px — under the touch minimum —
+because three wallets (222px) plus three 44px buttons (144px) plus the gap came to 374px of the 370
+available. It said in prose that the real fix was one fewer HUD button and that the call was the
+owner's. **The owner made it.** The meter pill moved into the Turn button and the album star moved to
+Cards, so the HUD is two wallets and two round buttons: about 234px of the 340 available at 360px
+wide, with the worst realistic numbers in it. The block now compresses the wallets only.
 
 ### The rest of the HUD
 
-Two wallet pills — coins and gems — plus round buttons for the Almanac and Settings. A
+Two wallet pills — coins and gems — plus round buttons for the Almanac and Settings. **The
+developer dot** is still an unlabelled 44px strip, `position:absolute; left:100%` on `.wallets`, so
+it costs the row no width; with the meter pill retired it now sits in clear space rather than under
+the first round button. A
 quest strip sits between the HUD and the rail: level pip with a reputation ring, a thick bar for
 the current quest's progress (task name and count drawn on top of the fill), and a reward chip.
 Tapping it opens the quest panel; tapping a completed quest claims it. See
@@ -547,13 +569,16 @@ The Almanac panel (`bonuses`) opens with a collection header — `N / 19 discove
 the four milestone rungs — followed by the seed list in the two-line row described above, then the
 stats that used to be the whole page.
 
-## Status rail — the boost tray
+## Status rail — the countdown strip
 
-Between the quest strip and the stage. This is where boosters live now that they're out of the dock (navigation
-phase 1, [15-navigation-and-ia.md](15-navigation-and-ia.md)): each booster in `DATA.boosters`
-renders as a countdown chip while active, or a tappable `data-boost` chip while you hold at least
-one and it is idle. Neither → nothing renders for it, so the tray never shows an empty slot as an
-upsell. A Wonder countdown is prepended when active so it always leads.
+**The rail lost its shop and kept its clock (2026-08-30, phase 3.5).** Spending a boost is the band's
+POWER-UP button now; what renders here is the countdown of whatever is already **running**, plus the
+Wonder, which is prepended so it always leads. The `.chip.buyable` state is retired.
+
+It is `:empty{display:none}`, so most of the time it costs nothing — but note that its two 6px
+gutters are billed whether or not track 3 has height, because the `.ui` grid has five explicit
+tracks. Deleting the track outright would buy the stage back 6px, not 12; keeping the rail as the
+clock is worth more than 6px.
 
 Decor no longer appears here — it's cosmetic now, with no gameplay state worth surfacing in a
 glanceable HUD row.
@@ -578,13 +603,23 @@ every 0.6 s. Suppressed while a sheet is open. The flower will not speak while o
 
 ## Dock attention dots
 
-Each dock button carries a dot shown when something in that shop is affordable and that shop isn't
-already open. Recomputed every 0.6 s in `updateDockDots()`. This is the primary discovery mechanism
-— it's how a player learns a shop is worth opening without being nagged.
+Each dock button carries a dot shown when there is something worth opening it for, and hidden while
+that panel is already up. Recomputed every 0.6 s in `updateDockDots()`. This is the primary
+discovery mechanism — it's how a player learns a panel is worth opening without being nagged.
 
-Upgrades and Shop show a dot when something in them is affordable, Apiary when jars are waiting,
-Craft when something is ready to make or collect. Boosters have no dock dot — the buy chip itself,
-appearing in the rail only when affordable, is the affordance.
+**Re-pointed for the Big Five (2026-08-30):**
+
+| Button | Dot when |
+| --- | --- |
+| Orders & Quests | An order you can fill, **or** a quest you can claim (`Game.stripQuest().complete`, the same call the strip uses, so the two can never disagree) |
+| Cards | `state.packs > 0` — an unopened pack. **New**: nothing has ever badged the pack count before |
+| Turn | The Turn is ready. Suppressed while the button is breathing, since that says it louder |
+| Shop | Affordable decor **or** something brewable — Craft has no button of its own now, so its dot folds in here |
+| **UPGRADE** (the band's pill) | An affordable upgrade. **The first time the dot rule has reached a control that is not a dock button** |
+
+**One dot lost its home and is not silently re-pointed:** the World button used to badge *jars
+waiting in the meadow*, and the meadow has no button any more. Recorded in
+[11-known-issues.md](11-known-issues.md) rather than folded into an unrelated dot.
 
 The same idea is the intended basis for **contextual upgrade affordances** in
 [15-navigation-and-ia.md](15-navigation-and-ia.md): once upgrades live on the objects they upgrade,
@@ -595,8 +630,9 @@ second one.
 
 | Condition | Change |
 | --- | --- |
-| `max-height: 700px` | Dock, wallets and round buttons shrink |
+| `max-height: 700px` | Dock row 56→50px, pedestal 74→64, creature lift 6→4, wallets shrink |
 | `max-height: 600px` | Rail hidden |
+| `max-width: 430px` | Wallet padding and icons compress. **No longer touches the round buttons** — see the HUD section |
 | `min-width: 600px` and `min-height: 760px` | Horizontal padding added so the garden doesn't sprawl on tablets |
 | Landscape, `max-height: 560px` | Rail hidden, sheet grows to 94dvh, dock compressed |
 

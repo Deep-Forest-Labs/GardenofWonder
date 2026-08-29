@@ -80,7 +80,8 @@
     const titles = {
       upgrades: 'Upgrades', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
-      quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
+      quests: 'Quests', orders: 'Orders & Quests', year: 'The Year',
+      dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
       critter: '', stand: '', order: '', turn: '', crops: 'Choose a crop',
       keepers: 'Keepers', shelf: 'The Honey Shelf', stores: 'Stores', build: 'What goes here?',
       album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
@@ -117,6 +118,7 @@
     const render = {
       upgrades: renderUpgrades, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
+      orders: renderOrders, year: renderYear,
       turn: renderTurn, crops: renderCrops,
       dev: renderDev, welcome: renderWelcome, feed: renderFeed, critter: renderCritter,
       stand: renderStand, order: renderOrder,
@@ -919,6 +921,121 @@
     </div>`;
   }
 
+  /* ============ Orders & Quests — the first of the Big Five ============ */
+  /* ONE panel, TWO headed sections, not two tabs. The button's badge counts two
+     different things — an order you can fill and a quest you can claim — so a
+     player who taps in on a "2" has to be able to see both without making a
+     second choice first. The scroll is short either way: three order slots, at
+     most three ladder quests and one daily.
+
+     Both halves are the panels that already existed. The Stand's own two-line
+     header becomes this panel's first section heading, which is why nothing here
+     is drawn twice. */
+  function renderOrders() {
+    return `${renderStand()}
+      <div class="ord-split"></div>
+      ${renderQuests()}`;
+  }
+
+  /* ============ The Year — the fourth of the Big Five ============ */
+  /* The projection card the HUD pill used to pop, with room to breathe: the
+     pouch, both Turn gates, the ceremony's own button when it is ready, and
+     petal spending as a card per flower.
+
+     YEAR ONE IS DIFFERENT, and deliberately so. Doc 32's rule is that the meter
+     fills unexplained — but the owner's rule on top of it is that a mystery with
+     no direction reads as broken. So year one gets a locked meter, ONE track
+     (the gold, because gold is the half a player can push on directly), no
+     numbers on it, and the flower saying what to do. The pouch, the petals and
+     the seed gate all still wait for the first Turn. */
+  function renderYear() {
+    const { mint, seeds, coins, p } = UI.yearProgress();
+    const y = DATA.year;
+    const first = S.year.turnsCompleted < 1 && !(S.savedSeeds > 0);
+    const pct = Math.round(Math.max(0, Math.min(1, p)) * 100);
+
+    const ready = Game.turnReady();
+
+    if (first) {
+      /* THE MYSTERY HAS TO HAVE A DOOR OUT OF IT. A meter that is full, a dock
+         button that is breathing, and a panel still saying "keep going" is the
+         exact failure the owner named: mysterious with no direction reads as
+         broken. So the moment the Turn is ready the lock comes off and the
+         ceremony's own button appears — and the ceremony's ask is where the
+         explaining has always happened. Everything else stays hidden: no pouch,
+         no second gate, no petals. */
+      if (ready) {
+        return `
+          <div class="yr-meter ready" style="--p:100%"><i></i>
+            <div class="yr-lab"><b>It&rsquo;s full</b></div>
+          </div>
+          <div class="cere-flower">${Flora.talkingFlower()}</div>
+          <p class="sheet-note yr-say">&ldquo;It&rsquo;s full &mdash; and I know what it&rsquo;s for after all. Come and see.&rdquo;</p>
+          <button class="big-btn yes" data-act="openTurn">${Icons.get('pouch')}See what it&rsquo;s for</button>`;
+      }
+      return `
+        <div class="yr-meter locked" style="--p:${pct}%"><i></i>
+          <div class="yr-lab">${Icons.get('lock')}<b>Something is filling</b></div>
+        </div>
+        <div class="yr-gates">
+          <div class="yr-gate bind">
+            <span class="lab">${Icons.get('coin')}Gold earned</span>
+            <span class="track"><i style="width:${Math.round(Math.min(1, coins) * 100)}%"></i></span>
+            <span class="tag">keep going</span>
+          </div>
+        </div>
+        <div class="cere-flower">${Flora.talkingFlower()}</div>
+        <p class="sheet-note yr-say">&ldquo;${UI.mysteryLine()}&rdquo;</p>
+        <p class="sheet-note yr-say">&ldquo;Keep the gold coming and I&rsquo;ll know what it&rsquo;s for.&rdquo;</p>`;
+    }
+
+    const cta = ready
+      ? `<button class="big-btn yes" data-act="openTurn">${Icons.get('pouch')}Turn the year</button>`
+      : '';
+    return `
+      <div class="yr-meter${ready ? ' ready' : ''}" style="--p:${pct}%"><i></i>
+        <div class="yr-lab"><b>${ready ? 'The year is ready to turn' : 'The year is still growing'}</b></div>
+      </div>
+      <div class="yr-gates">
+        ${yrGate('coin', 'Gold earned', coins, coins <= seeds)}
+        ${yrGate('pouch', 'Seeds ready', seeds, seeds < coins)}
+      </div>
+      <p class="sheet-note">Ready to save: <b>${fmt(Math.floor(mint.base))}</b> seeds. How the year <b>scored</b> is added when you Turn.</p>
+      ${cta}
+      <p class="sheet-note yr-spend">Spend your seeds
+        <span class="chip">${Icons.get('pouch')}${fmt(S.savedSeeds)}</span></p>
+      ${petalCards()}`;
+  }
+
+  /* The two tracks, with the BINDING one marked — the lower of the pair is what
+     the dock button's fill is drawing, so "why can't I turn yet" is answered in
+     the same place twice rather than in two different units. */
+  /* Exactly ONE gate wears the marker. A tie marks the first, because two
+     "this one" tags answer "why can't I turn yet" with a shrug. */
+  function yrGate(icon, label, ratio, isBinding) {
+    const met = ratio >= 1;
+    const bind = isBinding && !met;
+    return `<div class="yr-gate${met ? ' met' : ''}${bind ? ' bind' : ''}">
+      <span class="lab">${Icons.get(icon)}${label}</span>
+      <span class="track"><i style="width:${Math.round(Math.min(1, Math.max(0, ratio)) * 100)}%"></i></span>
+      <span class="tag">${met ? Icons.get('check') : (bind ? 'this one' : 'nearly')}</span>
+    </div>`;
+  }
+
+  /* Petal spending, as a card per flower — doc 36's words. The Almanac keeps the
+     RECORD rows (what you found, its best rarity, how many you grew); this is
+     the shop. Only unlocked seeds appear, because a petal on a flower you cannot
+     plant is not a purchase. */
+  function petalCards() {
+    const cards = DATA.seeds.filter((sd) => Game.seedUnlocked(sd.id)).map((sd) => `
+      <div class="pt-card">
+        <div class="pt-head"><span class="pt-art">${Flora.head(sd, 26)}</span>${sd.name}</div>
+        ${petalTrack(sd, 'rich', DATA.petals.shared.rich.name)}
+        ${petalTrack(sd, 'quick', DATA.petals.shared.quick.name)}
+      </div>`).join('');
+    return `<div class="pt-cards">${cards}</div>`;
+  }
+
   function renderQuests() {
     const lv = Game.levelFromRep(S.rep);
     const into = Game.repIntoLevel(S.rep);
@@ -1291,14 +1408,20 @@
     return sd ? sd.name : need.of;
   };
 
-  /* One line item as a token: the thing itself, big, with have-of-want stamped
-     across the bottom and a tick when it is covered. */
+  /* One line item as a token: the thing itself on top, and how many of them you
+     have in a band of its own underneath.
+
+     The count used to sit ON the art and the owner caught it — a number across
+     the bottom of a bloom means neither reads, and the bloom is the half the
+     player has to act on. Both halves always show their numbers now, covered or
+     not, with a tick added rather than substituted: "3/3 ✓" says more than a
+     tick alone, which loses the size of the ask. */
   function standNeedChip(need, size) {
     const have = Game.standHave(need);
     const done = have >= need.qty;
     return `<div class="on-chip${done ? ' done' : ''}">
       <div class="on-chip-art">${standNeedArt(need, size)}</div>
-      <div class="on-chip-count">${done ? Icons.get('check') : `${fmt(Math.min(have, need.qty))}/`}${done ? '' : fmt(need.qty)}</div>
+      <div class="on-chip-count">${fmt(Math.min(have, need.qty))}/${fmt(need.qty)}${done ? Icons.get('check') : ''}</div>
       <div class="on-chip-name">${standNeedName(need)}</div>
       <b class="on-chip-qty">${need.qty}</b>
     </div>`;
@@ -2345,6 +2468,10 @@
     const act = e.target.closest('[data-act]');
     if (act) {
       const a = act.dataset.act;
+      /* The Year panel hands off to the ceremony. Two panels rather than one
+         because the ceremony locks the sheet while the Tally rolls, and a panel
+         you cannot leave is not where petal spending belongs. */
+      if (a === 'openTurn') { openSheet('turn'); return; }
       if (a === 'turnBless') { turnStep = 1; renderSheet(true); Sound.play('open'); return; }
       if (a === 'turnBack') { turnStep = 0; renderSheet(true); Sound.play('close'); return; }
       if (a === 'turnLater') { closeSheet(); Sound.play('close'); return; }

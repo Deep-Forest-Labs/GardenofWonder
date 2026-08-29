@@ -439,87 +439,38 @@
   }
 
   let yearFillShown = -1;
+  let pouchShown = -1;
   /* Published so the scenery can tint `theme-color` by the same amount — the
      status-bar strip has to match the sky under it. */
   let seasonAmount = 0;
+  /* Since phase 3.5 the meter is the dock's Turn button rather than a HUD pill:
+     same number, same binding gate, more room. The fill rises from the bottom
+     because a button has 56px of height to travel where the pill had 39px of
+     width. */
   function updateYearMeter() {
     const { p, ripe } = yearProgress();
     const pct100 = Math.round(p * 1000) / 10;
     if (pct100 !== yearFillShown) {
-      el.yearFill.style.width = `${pct100}%`;
+      el.yearFill.style.height = `${pct100}%`;
       yearFillShown = pct100;
     }
-    el.walletYear.classList.toggle('full', Game.turnReady());
+    el.turnBtn.classList.toggle('ready', Game.turnReady());
+    /* The pouch, promoted to an always-visible surface for the first time — and
+       never in year one, where doc 32's rule is that the meter fills with no
+       numbers on it at all. */
+    const showPouch = (S.year.turnsCompleted >= 1 || S.savedSeeds > 0) ? Math.floor(S.savedSeeds) : -1;
+    if (showPouch !== pouchShown) {
+      pouchShown = showPouch;
+      el.pouchChip.hidden = showPouch < 0;
+      if (showPouch >= 0) el.pouchChip.innerHTML = `${Icons.get('pouch')}${fmt(showPouch)}`;
+    }
     /* The garden golds as the year fills. Derived, never stored — doc 32 is
        explicit that the season aging is visual only. */
     el.seasonTint.style.setProperty('--season-c', DATA.year.seasonTint);
     seasonAmount = DATA.year.seasonTintMax * ripe;
     el.seasonTint.style.setProperty('--season-o', seasonAmount.toFixed(3));
-    /* An open projection keeps answering. It is a string rebuild on a 0.6s
-       tick with nothing focusable inside it, so re-rendering costs nothing —
-       and a card that freezes at "45,000 / 100K" while the pill behind it
-       fills is worse than no card. */
-    if (!el.yearPop.hidden) renderYearPop();
-  }
-
-  function yearGate(icon, ratio, have, need) {
-    const met = ratio >= 1;
-    return `<div class="yp-gate${met ? ' met' : ''}">
-      <span class="lab">${Icons.get(icon)}</span>
-      <span class="track"><i style="width:${Math.round(Math.min(1, ratio) * 100)}%"></i></span>
-      <span class="val">${met ? Icons.get('check') : `${fmt(have)} / ${fmt(need)}`}</span>
-    </div>`;
-  }
-
-  function renderYearPop() {
-    const { mint, seeds, coins } = yearProgress();
-    const y = DATA.year;
-    /* YEAR ONE IS A MYSTERY, and doc 32 is explicit that the mystery is the
-       tutorial: "the meter fills, unexplained". So before the first Turn the
-       pill has a voice and not a readout — a projection here would explain the
-       whole prestige system to someone who has not met it. The flower keeps
-       the promise instead, and the ceremony itself does the teaching when the
-       meter fills. */
-    if (S.year.turnsCompleted < 1) {
-      el.yearPop.innerHTML = `
-        <p class="yp-cap">Something is filling</p>
-        <p class="yp-say">${pickLine(MYSTERY_LINES, String(S.stats.totalTaps || 0))}</p>`;
-      return;
-    }
-    const banked = S.savedSeeds > 0
-      ? `<p class="yp-sub"><b>${fmt(S.savedSeeds)}</b> already in the pouch.</p>` : '';
-    el.yearPop.innerHTML = `
-      <p class="yp-cap">Ready to save this year</p>
-      <div class="yp-num">${Icons.get('pouch')}<span>${fmt(Math.floor(mint.base))}</span></div>
-      <p class="yp-sub">How the year <b>scored</b> is added when you Turn.</p>
-      ${banked}
-      ${yearGate('coin', coins, Math.floor(S.year.coinsEarned), y.minCoins)}
-      ${yearGate('pouch', seeds, Math.floor(mint.base), y.minSeeds)}`;
-  }
-
-  function openYearPop() {
-    renderYearPop();
-    el.yearPop.hidden = false;
-    /* The tail points at the pill, and the pill moves as the coin number grows —
-       so it is measured rather than guessed. */
-    const pill = el.walletYear.getBoundingClientRect();
-    const host = el.yearPop.parentElement.getBoundingClientRect();
-    const tail = Math.max(14, Math.min(host.width - 32, pill.left - host.left + pill.width / 2 - 9));
-    el.yearPop.style.setProperty('--tail', `${Math.round(tail)}px`);
-  }
-  function closeYearPop() { el.yearPop.hidden = true; }
-
-  /* Tapping the pill when the meter is full IS the re-invite — declining the
-     flower's offer costs nothing and the ceremony reopens from here, however
-     many times. Short of full it answers the other question instead. */
-  function onYearTap() {
-    Sound.resume();
-    if (Game.turnReady()) {
-      closeYearPop();
-      UI.openSheet('turn');
-      return;
-    }
-    if (el.yearPop.hidden) openYearPop(); else closeYearPop();
+    /* An open Year panel keeps answering while the meter behind it fills. */
+    if (UI.sheetMode() === 'year') UI.renderSheet();
   }
 
   function popWallet(name) {
@@ -531,26 +482,20 @@
   }
 
   /* ============ rail chips ============ */
-  /* The boost tray: active boosts show a countdown, held idle ones show a
-     tappable chip that consumes one. Nothing renders when you hold none. */
+  /* THE RAIL LOST ITS SHOP AND KEPT ITS CLOCK (phase 3.5). Spending a boost is
+     the band's POWER-UP button now; what is left here is the countdown of
+     whatever is already running, plus the Wonder. It is `:empty{display:none}`,
+     so most of the time it costs nothing at all. */
   function renderRail() {
     const now = Game.nowSeconds();
     let html = '';
     DATA.boosters.forEach((b) => {
-      if (Game.activeBoost(b.id)) {
-        const remain = Math.max(0, S.boosters[b.id] - now);
-        const p = Math.max(0, Math.min(1, remain / b.dur));
-        html += `<div class="chip timed" style="--tint:${b.tint}">
-          <span class="ring" style="--p:${p.toFixed(3)}"><i>${Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain)}</i></span>
-          <span>${b.name}</span></div>`;
-      } else {
-        const held = (S.boostInv && S.boostInv[b.id]) || 0;
-        if (held < 1) return;
-        html += `<button class="chip buyable" data-boost="${b.id}" style="--tint:${b.tint}">
-          <span class="chip-ico">${Icons.get(b.icon)}</span>
-          <span>${b.name}</span>
-          <span class="chip-price">×${held}</span></button>`;
-      }
+      if (!Game.activeBoost(b.id)) return;
+      const remain = Math.max(0, S.boosters[b.id] - now);
+      const p = Math.max(0, Math.min(1, remain / b.dur));
+      html += `<div class="chip timed" style="--tint:${b.tint}">
+        <span class="ring" style="--p:${p.toFixed(3)}"><i>${Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain)}</i></span>
+        <span>${b.name}</span></div>`;
     });
     if (Game.wonderActive()) {
       const remain = Math.max(0, S.wonder.until - now);
@@ -562,6 +507,39 @@
       el.rail.innerHTML = html;
       el.rail.dataset.sig = html;
     }
+  }
+
+  /* ============ the power-up button ============ */
+  /* One held boost at a time, chosen at random, with a badge counting the whole
+     inventory. The eligible pool is held AND NOT ALREADY RUNNING: activateBoost
+     refuses to re-arm a live boost and returns false, so a slot seated from
+     held-alone would eventually hold a boost whose tap does nothing and the
+     button would read as broken.
+
+     The seat is sticky while it stays eligible — re-rolling every 0.25s tick
+     would make the button flicker between four glyphs, and a control that
+     changes what it does while you reach for it is worse than a slow one. */
+  let powerSeat = '';
+  function eligibleBoosts() {
+    return DATA.boosters.filter((b) => ((S.boostInv && S.boostInv[b.id]) || 0) > 0 && !Game.activeBoost(b.id));
+  }
+  function renderPowerUp() {
+    const pool = eligibleBoosts();
+    if (!pool.some((b) => b.id === powerSeat)) {
+      powerSeat = pool.length ? pool[(Math.random() * pool.length) | 0].id : '';
+    }
+    const held = DATA.boosters.reduce((n, b) => n + ((S.boostInv && S.boostInv[b.id]) || 0), 0);
+    const def = powerSeat && DATA.boosters.find((b) => b.id === powerSeat);
+    const sig = `${powerSeat}|${held}`;
+    if (el.btnPower.dataset.sig === sig) return;
+    el.btnPower.dataset.sig = sig;
+    el.btnPower.classList.toggle('empty', !def);
+    el.btnPower.dataset.boost = def ? def.id : '';
+    el.btnPower.style.setProperty('--tint', def ? def.tint : 'transparent');
+    el.btnPower.setAttribute('aria-label', def ? `Use ${def.name}` : 'Power-up');
+    el.btnPower.innerHTML = def
+      ? `${Icons.get(def.icon)}${held > 1 ? `<span class="f-count">${held}</span>` : ''}`
+      : Icons.get('bolt');
   }
 
   /* ============ toasts ============ */
@@ -697,13 +675,42 @@
     tapCritter(node.dataset.critter);
   }, { passive: false });
 
-  el.rail.addEventListener('click', (e) => {
-    const chip = e.target.closest('[data-boost]');
-    if (!chip) return;
-    if (Game.activateBoost(chip.dataset.boost)) {
-      const c = FX.centerOf(chip);
+  /* THE BAND. Upgrades on the left, one held boost on the right.
+
+     Spending goes through Game.activateBoost, which brings the whole
+     confirmation package with it for free — the purchase event plays the boost
+     sound, buzzes 14ms and toasts the booster's own name and icon. Nothing else
+     needs writing; the local sparks are the only addition. */
+  el.btnUpgrade.addEventListener('click', () => {
+    Sound.resume();
+    noteActivity();
+    if (UI.sheetMode() === 'upgrades') UI.closeSheet();
+    else UI.openSheet('upgrades');
+  });
+  el.btnPower.addEventListener('click', () => {
+    Sound.resume();
+    noteActivity();
+    const id = el.btnPower.dataset.boost;
+    /* Empty is a promise, not a dead control: it says where boosts come from
+       rather than doing nothing at all. */
+    if (!id) {
+      Sound.play('deny');
+      toast({
+        title: 'Nothing loaded yet',
+        body: 'Power-ups come from quests and from levelling up.',
+        art: Icons.get('bolt')
+      });
+      return;
+    }
+    if (Game.activateBoost(id)) {
+      const c = FX.centerOf(el.btnPower);
       FX.sparks(c.x, c.y, 12, '#ffe066');
       FX.ring(c.x, c.y, '#ffffff', 0.45, 70);
+      /* The seat empties the instant it is spent, so the next held boost takes
+         its place and "a running boost cannot be refreshed" stays true by
+         construction rather than by a check. */
+      powerSeat = '';
+      renderPowerUp();
       renderRail();
     }
   });
@@ -711,25 +718,25 @@
   el.dock.addEventListener('click', (e) => {
     const b = e.target.closest('.dock-btn');
     if (!b) return;
-    /* Every other tab is a sheet. The world is a PLACE, so it travels rather
-       than opening a panel — the discoverable way in for anyone who has not
-       found the swipe yet. */
-    if (b.dataset.tab === 'world') {
+    Sound.resume();
+    const tab = b.dataset.tab;
+    /* GARDEN is not a panel — it is the way home, from anywhere. It closes any
+       open sheet, leaves whichever room you are standing in, and puts Summer's
+       board back in the stage. It is the one button that always does something,
+       which is why it is the one that reads as *play*. */
+    if (tab === 'garden') {
       UI.closeSheet();
-      /* Come home first: the map dives back "to the garden", and Summer's board
-         has to be the one in the stage when it does. */
+      if (UI.hollowOpen()) UI.exitHollow();
+      if (UI.meadowOpen()) UI.leaveMeadow();
       goSeason('summer');
-      UI.enterMap('garden');
       return;
     }
-    if (UI.sheetMode() === b.dataset.tab) UI.closeSheet();
-    else UI.openSheet(b.dataset.tab);
+    if (UI.sheetMode() === tab) UI.closeSheet();
+    else UI.openSheet(tab);
   });
 
   $('#btnSettings').addEventListener('click', () => UI.openSheet('settings'));
   $('#btnDev').addEventListener('click', () => UI.openSheet('dev'));
-  $('#btnAlbum').addEventListener('click', () => UI.openSheet('album'));
-  el.walletYear.addEventListener('click', (e) => { e.stopPropagation(); onYearTap(); });
   el.seasonEdges.addEventListener('click', (e) => {
     const b = e.target.closest('[data-season]');
     if (b) goSeason(b.dataset.season);
@@ -737,13 +744,6 @@
   el.gateLayer.addEventListener('click', (e) => {
     if (e.target.closest('[data-gateback]')) { hideGate(); Sound.play('close'); }
   });
-  /* Anything else on screen dismisses the projection — it is a popover, not a
-     panel, and it must never be the thing standing between a tap and a plot. */
-  el.game.addEventListener('pointerdown', (e) => {
-    if (el.yearPop.hidden) return;
-    if (e.target.closest('#walletYear')) return;
-    closeYearPop();
-  }, true);
   $('#btnBonuses').addEventListener('click', () => UI.openSheet('bonuses'));
   el.questStrip.addEventListener('click', () => {
     Sound.resume();
@@ -956,12 +956,32 @@
     /* The world button carries every place's attention: an order you can fill,
        or jars waiting in the meadow. */
     const canGive = Game.standOrders().some((o) => Game.standCanDeliver(o));
-    const map = { upgrades: canUpgrade, craft: canBrew, shop: canDecor, world: canGive || canHive };
+    /* `stripQuest()` is the engine's own "what is in front of the player right
+       now" — the same call the quest strip uses, so the dot and the strip can
+       never disagree about whether something is claimable. */
+    const q = Game.stripQuest();
+    const canClaim = Boolean(q && q.complete);
+    /* Re-pointed for the Big Five. Craft has no button of its own any more, so
+       its dot folds into Shop's — a player who can brew learns it by opening
+       Shop, which is one tab pill away from the bench. `canHive` is the meadow's
+       jars, and the meadow has no button either; it is deliberately unhomed and
+       recorded in docs/11 rather than hidden inside another dot. */
+    const map = {
+      orders: canGive || canClaim,
+      album: S.packs > 0,
+      year: Game.turnReady(),
+      shop: canDecor || canBrew
+    };
     $$('.dock-btn', el.dock).forEach((b) => {
       const dot = $('.dock-dot', b);
+      if (!dot) return;
       const show = map[b.dataset.tab] && UI.sheetMode() !== b.dataset.tab;
       dot.hidden = !show;
     });
+    /* The band's UPGRADE pill carries the same dot on the same rule — the first
+       time the attention-dot idea has reached a control that is not a dock tab. */
+    const upDot = $('.dock-dot', el.btnUpgrade);
+    if (upDot) upDot.hidden = !(canUpgrade && UI.sheetMode() !== 'upgrades');
   }
 
   /* ============ banners ============ */
@@ -985,7 +1005,10 @@
 
   /* Fixed spots along the lawn, so a creature keeps its place between renders
      rather than jumping about whenever the yard is rebuilt. */
-  const CRITTER_SPOTS = [34, 80, 52, 66];
+  /* Phase 3.5: the crowd comes in off the edges, because the band's two
+     floating buttons now stand at 34px in from each side. The old 80% spot put
+     the second creature squarely behind the POWER-UP button. */
+  const CRITTER_SPOTS = [32, 68, 44, 56];
   const critterEls = new Map();
 
   function buildCritter(def, spot) {
@@ -1109,7 +1132,7 @@
     comboRing.style.setProperty('--combo-op', (0.3 + cp * 0.7).toFixed(2));
 
     railAcc += dt;
-    if (railAcc >= 0.25) { railAcc = 0; renderRail(); UI.tickSheetTimers(); }
+    if (railAcc >= 0.25) { railAcc = 0; renderRail(); renderPowerUp(); UI.tickSheetTimers(); }
 
     slowAcc += dt;
     if (slowAcc >= 0.6) {
@@ -1167,6 +1190,7 @@
     sizeGarden();
     if (window.ResizeObserver) new ResizeObserver(() => { sizeGarden(); if (UI.sizeFallBoard) UI.sizeFallBoard(); }).observe($('.stage'));
     renderRail();
+    renderPowerUp();
     renderQuestStrip();
     Object.values(counters).forEach((c) => { c.disp = c.get(); c.node.textContent = fmt(c.disp); });
 
@@ -1279,6 +1303,14 @@
   UI.popWallet = popWallet;
   UI.renderQuestStrip = renderQuestStrip;
   UI.renderRail = renderRail;
+  UI.renderPowerUp = renderPowerUp;
+  /* The Year panel is the projection's new home, and it lives in ui-sheet.js —
+     so the two presentation helpers and the mystery voice are published here
+     rather than duplicated there. `ui-sheet.js` still does no economy math:
+     both of these read Game and shape the answer, exactly as they did when the
+     pill owned them. */
+  UI.yearProgress = yearProgress;
+  UI.mysteryLine = () => pickLine(MYSTERY_LINES, String(S.stats.totalTaps || 0));
   UI.hideCoach = hideCoach;
   UI.seasonAmount = () => seasonAmount;
   /* The ceremony's gate card checks for this before it promises a swipe — a
