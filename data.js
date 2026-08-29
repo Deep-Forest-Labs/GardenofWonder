@@ -374,6 +374,12 @@ const DATA = {
        under it. Tuning is phase 4's. */
     seasonTint: '#ffb066',
     seasonTintMax: 0.38,
+    /* And how much of a year's earnings it takes to ripen fully. The Turn's
+       gates are both met about a quarter of the way through year one, so the
+       meter's own fill makes a poor season clock — the garden would finish
+       ripening on day one. Doc 33 targets 370-410K for year one; this is the
+       middle of that, and like the two above it is visual only. */
+    seasonSpan: 390000,
     tally: [
       { id: 'orders',      label: 'Orders filled',           stat: 'orders',      tiers: [{ at: 10, bonus: 0.10 }, { at: 25, bonus: 0.15 }, { at: 50, bonus: 0.25 }] },
       { id: 'windfalls',   label: 'Full-bed windfalls',      stat: 'windfalls',   tiers: [{ at: 3,  bonus: 0.05 }, { at: 8,  bonus: 0.10 }, { at: 15, bonus: 0.15 }] },

@@ -459,6 +459,26 @@ its shadow drawn on top of that. The pad is the ground; the shadow is the contac
 same treatment with a trodden patch, because a soft ellipse under a creature is a shadow with no
 floor to fall on.
 
+
+### The values phase 2 added, and why each one exists
+
+Doc 05's fifth check asks *did I invent a value*, and says the answer must either reuse an existing
+one or be written down here with its reason. Phase 2 added three small ramps. They are **component
+ramps**, not palette entries — the same shape as the meadow's `--mw-stone-*` and `--cob-*`, which
+this document names as families rather than listing value by value.
+
+| Ramp | Values | Why it could not reuse one |
+| --- | --- | --- |
+| **The Tally plate** | `#8a5a33 → #71472a → #5c3a22`, lip `#4a2e1a` | The plate is the ceremony's **dark body** — the second of the four value tiers, doing the same job the garden's planter does against the lawn. It cannot be the planter's own `#d9a870 → #97643a`: the plate sits on cream inside a sheet, not on green, so it needs to be darker to separate, and the cream pills on top of it need more contrast than the planter gives. |
+| **The hedge** | `#3f7d43`, lit `#57a25c`, shaded `#2f6236` | `--grass` is the lawn, and a hedge that is the lawn's colour has no figure against the lawn — the meadow's exact diagnosis. Shipped in `UI.hedge()` so the gate card and phase 3's season gates are one object at two sizes. |
+| **The gate's scene** | sky `#ffd9a1 → #ffb570 → #e88f4e`, ground `#9a7a3f → #7d6132`, pad `#b08c4c` | An autumn sky and autumn ground, which the palette has none of — every existing sky value is written from JS by `updateSky()` and every green is Summer's. |
+
+**They are literals in `style.css` rather than `:root` tokens on purpose:** each is used by exactly
+one component, and twelve more names in a palette this document already says carries 149 colours by
+accident would be a worse trade than three named ramps in one table. Promoting them to local custom
+properties on their components (the `--mw-stone-*` pattern) is the tidy if a second component ever
+wants one — a phase-4 job, not a phase-2 one.
+
 ### The check to run before calling any screen done
 
 Not from memory. Put the new screen **next to the garden at the same size**, on a phone-shaped

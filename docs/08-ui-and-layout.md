@@ -486,8 +486,19 @@ both (the album star leaves the HUD for the Almanac) is a navigation change and 
 owner in [35-morning-review.md](35-morning-review.md).
 
 **The HUD tightens below 430px of width**, the same values the `max-height:700px` block already
-uses: wallet padding 4/9 at 14px, 19px icons, 40px round buttons. Without it the pills wrap on every
-phone, with or without a number on the meter.
+uses: wallet padding 4/9 at 14px, 19px icons, 40px round buttons, and 7px of padding on the
+numberless meter. Without it the pills wrap on every phone, with or without a number on the meter.
+The 40px round buttons are a **measured** cost — see Accessibility below — and the fix that restores
+44px is one fewer button in the HUD.
+
+**Where it still wraps, and why that is where the line was drawn.** Measured at the composition
+width, 390px: the three pills reach 222px at the worst realistic numbers ("880.2K" coins, "1,163"
+gems), the round buttons 132px, and 222 + 8 + 132 = 362 of the 370 available — one row, with 8px
+spare. At **375px** (an SE) the same numbers need 362 of 355 and the wallets wrap to two rows. That
+is left as graceful degradation rather than chased: shaving the last seven pixels means padding and
+gaps so tight that any future string re-breaks it, and the wrap only appears on the narrowest phone
+at roughly a million coins *and* four figures of gems. One fewer round button removes the whole
+problem.
 
 **The fill shows the binding gate.** The Turn needs *both* the un-tallied increment ≥ `minSeeds` and
 the year's earnings ≥ `minCoins`, so the bar is `min(seeds, coins)` — a bar that showed only one
@@ -587,7 +598,16 @@ Present:
 - `role="tab"` with `aria-selected` on sheet tabs; `aria-pressed` on settings toggles.
 - `aria-hidden` toggled on the sheet as it opens and closes.
 - Full `prefers-reduced-motion` support.
-- Minimum 44 px tap targets.
+- Minimum 44 px tap targets **everywhere except the HUD row on phones narrower
+  than 430px**, where the three round buttons and the wallet pills are 40px.
+  That is a measured trade, not an oversight: with the year meter beside them
+  the three pills reach 222px at realistic numbers, three 44px buttons are
+  144px, and 222 + 8 + 144 is 374px of the 370px a 390px phone has. The choice
+  was a 40px control or a HUD that wraps and unwraps as the player gets richer,
+  and a layout that changes shape as you earn is the worse of the two. **One
+  fewer round button restores 44px with room to spare** — see
+  [35-morning-review.md](35-morning-review.md) §1. The quest strip is also
+  under 44px and always has been.
 - Sound effects and music independently disableable.
 
 Missing, and worth knowing before claiming accessibility:

@@ -38,7 +38,7 @@
     r.setProperty('--star-op', (a.star + (b.star - a.star) * k).toFixed(2));
     r.setProperty('--sun-x', (a.sx + (b.sx - a.sx) * k).toFixed(1) + '%');
     r.setProperty('--sun-y', (a.sy + (b.sy - a.sy) * k).toFixed(1) + '%');
-    setThemeColor(mix(a.s1, b.s1, k));
+    setThemeColor(seasonMix(mix(a.s1, b.s1, k)));
   }
 
   /* The strip iOS draws above an installed app is painted from `theme-color`, and
@@ -84,13 +84,58 @@
 
   /* The sky is the only cue for ordinary weather — a banner four times an hour would be noise.
      Rare weather earns a line from the flower. */
+  /* The season tint is a multiply over the whole scene, and the status-bar
+     strip is painted from `theme-color` — which is written from here. If only
+     one of them is tinted, the strip stops matching the sky it sits above, and
+     doc 08 spends four bullets and three rounds of layout work on exactly that
+     class of join. `mix()` hands us an rgb() string, so this works in the same
+     space; multiply is per channel, c * ((1-a) + a*t/255). */
+  const TINT_RGB = [255, 176, 102];   /* #ffb066, DATA.year.seasonTint */
+  function seasonMix(rgb) {
+    const amt = typeof UI.seasonAmount === 'function' ? UI.seasonAmount() : 0;
+    if (!(amt > 0)) return rgb;
+    const c = (rgb.match(/\d+/g) || []).map(Number);
+    if (c.length < 3) return rgb;
+    const out = c.slice(0, 3).map((v, i) =>
+      Math.max(0, Math.min(255, Math.round(v * ((1 - amt) + amt * (TINT_RGB[i] / 255))))));
+    return `rgb(${out[0]}, ${out[1]}, ${out[2]})`;
+  }
+
   function paintWeather(w) {
     el.game.dataset.weather = w.id;
     if (w.tint) el.game.style.setProperty('--weather-tint', w.tint);
     else el.game.style.removeProperty('--weather-tint');
   }
 
+
+  /* A HEDGE, and the shape a gate is made of. Drawn as a mass with a lumpy
+     crown rather than a green rectangle — doc 05's grass lesson applied to a
+     bigger silhouette: a band is a mat with things growing out of it, and a
+     flat-topped slab reads as a card. `preserveAspectRatio="none"` lets it fill
+     any gate opening, and `vector-effect="non-scaling-stroke"` keeps the ink
+     even while it does. Shared, because the ceremony's gate card and the season
+     gates are the same object seen at two sizes. */
+  function hedge(flip) {
+    const body = 'M0 108 V54 Q4 34 20 36 Q26 16 46 22 Q62 8 78 22 Q98 16 106 38 Q124 40 128 58 V108 Z';
+    return `<svg class="hedge-svg" viewBox="0 0 128 108" preserveAspectRatio="none" aria-hidden="true"
+      style="transform:scaleX(${flip ? -1 : 1})">
+      <path d="${body}" fill="#3f7d43" stroke="#2c1a10" stroke-width="4" stroke-linejoin="round"
+        vector-effect="non-scaling-stroke"/>
+      <path d="M0 70 V54 Q4 34 20 36 Q26 16 46 22 Q62 8 78 22 Q98 16 106 38 Q124 40 128 58 V70
+               Q96 62 64 70 Q32 78 0 70 Z"
+        fill="#57a25c" stroke="#2c1a10" stroke-width="2.6" stroke-linejoin="round"
+        vector-effect="non-scaling-stroke"/>
+      <path d="M0 108 V96 Q32 88 64 96 Q96 104 128 96 V108 Z" fill="#2f6236" opacity=".8"/>
+      <circle cx="62" cy="58" r="5" fill="#ffd6ea" stroke="#2c1a10" stroke-width="2.6"
+        vector-effect="non-scaling-stroke"/>
+      <circle cx="88" cy="78" r="4.4" fill="#fff3bf" stroke="#2c1a10" stroke-width="2.6"
+        vector-effect="non-scaling-stroke"/>
+    </svg>`;
+  }
+
   UI.updateSky = updateSky;
   UI.buildClouds = buildClouds;
   UI.paintWeather = paintWeather;
+  UI.hedge = hedge;
+  UI.seasonMix = seasonMix;
 })();

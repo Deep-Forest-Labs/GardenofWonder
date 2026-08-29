@@ -515,7 +515,7 @@
   }
 
   function turnTitle() {
-    if (turnStep === 0) return 'The year’s turning';
+    if (turnStep === 0) return 'The Turn';
     if (turnStep === 1) return 'Bless one flower';
     if (turnStep === 5) return `Year ${S.year.number}`;
     return '';
@@ -534,11 +534,31 @@
     const mint = Game.projectedMint();
     const growing = S.grid.filter((c) => c.seed && !c.ready && !c.locked).length;
     const ripe = S.grid.filter((c) => c.seed && c.ready).length;
-    const keeps = ['Saved Seeds', 'Seed unlocks', 'Petals', 'Creatures', 'Cards', 'Level']
-      .map((k) => `<span class="chip">${Icons.get('check')}${k}</span>`).join('');
+    /* The icon names the thing, exactly as it does on the spring beat four
+       screens later. Six identical ticks beside six words is a wall of copy
+       wearing a chip, and it teaches the same object twice in one ceremony. */
+    const keeps = [['pouch', 'Seeds'], ['lock', 'Unlocks'], ['star', 'Petals'],
+      ['butterfly', 'Creatures'], ['cards', 'Cards'], ['badge', 'Level']]
+      .map(([ico, k]) => `<span class="chip">${Icons.get(ico)}${k}</span>`).join('');
+    /* WHAT THE TURN TAKES, named before it is taken. The ask used to name only
+       the growing plots, and told an empty board that the Turn "costs you
+       nothing at all" — which is false on every board: gold zeroes to the fresh
+       purse, every badge wipes and is rebought, boosts go, and plots 5-8 close.
+       Doc 32's clears column, said to the player in their own words. An
+       irreversible commit may never understate its own price. */
+    const bigPlots = S.grid.filter((c, i) => !c.locked && Game.plotUnlockLevel(i) > 1).length;
+    /* Icon and noun, the same grammar the "stays" row uses two lines below —
+       the row's own heading carries the verb, so the chips do not have to. */
+    const goes = [
+      [`${Icons.get('coin')}Gold`, true],
+      [`${Icons.get('badge')}Badges`, Object.values(S.upgrades || {}).some((v) => v > 0)],
+      [`${Icons.get('bolt')}Boosts`, Object.values(S.boostInv || {}).some((v) => v > 0)],
+      [`${Icons.get('grid')}${bigPlots} big plot${bigPlots === 1 ? '' : 's'}`, bigPlots > 0],
+      [`${Icons.get('sprout')}${growing} growing`, growing > 0]
+    ].filter(([, on]) => on).map(([html]) => `<span class="chip gone">${html}</span>`).join('');
     const cost = growing
-      ? `<b>${growing} bed${growing === 1 ? ' is' : 's are'} still growing.</b> ${growing === 1 ? 'It goes' : 'They go'} to the compost${ripe ? ' — everything ripe is picked for you first' : ''}.`
-      : 'Nothing is still growing. This Turn costs you nothing at all.';
+      ? `${growing === 1 ? 'The plot' : `All ${growing} plots`} still growing ${growing === 1 ? 'goes' : 'go'} to the compost${ripe ? ' — everything ripe is picked for you first' : ''}.`
+      : (ripe ? 'Everything ripe is picked for you first.' : 'The board is empty, so nothing is composted.');
     return `<div class="cere">
       <div class="cere-flower">${Flora.talkingFlower()}</div>
       <div class="speech-block">The year’s turning. Save your seeds?</div>
@@ -546,7 +566,10 @@
         <p class="plate-cap">Ready to save</p>
         <div class="plate-big outlined">${Icons.get('pouch')}<span>${fmt(Math.floor(mint.base))}</span></div>
       </div>
-      <div class="cost-line">${Icons.get('sprout')}<span>${cost}</span></div>
+      <div class="cost-line${growing ? '' : ' good'}">${Icons.get('sprout')}<span>${cost}</span></div>
+      <p class="cere-lab">This year goes</p>
+      <div class="keep-row">${goes}</div>
+      <p class="cere-lab">These stay, always</p>
       <div class="keep-row">${keeps}</div>
       <div class="btn-row">
         <button class="big-btn yes" data-act="turnBless">${Icons.get('pouch')}Turn the year</button>
@@ -561,7 +584,7 @@
       return `<div class="cere">
         <div class="cere-flower">${Flora.talkingFlower()}</div>
         <div class="speech-block">Every bloom you have is as rich as it gets. Keep the blessing — there’ll be new flowers.</div>
-        <div class="cost-line">${Icons.get('check')}<span>No blessing lands this Turn. Nothing is lost, and nothing is owed.</span></div>
+        <div class="cost-line good">${Icons.get('check')}<span>No blessing lands this Turn. Nothing is lost, and nothing is owed.</span></div>
         <div class="btn-row">
           <button class="big-btn yes" data-act="turnGo">${Icons.get('pouch')}Turn the year</button>
           <button class="big-btn" data-act="turnBack">Back</button>
@@ -647,18 +670,25 @@
       unlocks ? `<span class="chip">${Icons.get('lock')}${unlocks} unlock${unlocks === 1 ? '' : 's'} kept</span>` : '',
       petals ? `<span class="chip">${Icons.get('star')}${petals} petal${petals === 1 ? '' : 's'} kept</span>` : ''
     ].join('');
-    /* The gate only promises a gesture once the strip exists to honour it. */
-    const hint = UI.enterSeason ? `<span class="chip">${Icons.get('sprout')}swipe right</span>`
-      : `<span class="chip">${Icons.get('sprout')}opening soon</span>`;
+    /* The card may not say a place is open and, 200px to its right, that it is
+       not. Both halves follow the same condition: the gesture is only promised
+       once the strip exists to honour it, and until then the card says the
+       thing that is true. */
+    const strip = Boolean(UI.enterSeason);
     const gate = r.fallOpens ? `<div class="gate-card">
-      <div class="gate-scene"><span class="hedge l"></span><span class="hedge r"></span>
+      <div class="gate-scene${strip ? '' : ' shut'}">
+        <span class="hedge l">${UI.hedge(false)}</span><span class="hedge r">${UI.hedge(true)}</span>
         <span class="gate-bloom">${Flora.head(Game.seedById('marigold') || DATA.seeds[0], 62)}</span></div>
-      <div class="gate-foot"><span>Fall is open</span>${hint}</div>
+      <div class="gate-foot"><span>${strip ? 'Fall is open' : 'Fall opens next'}</span>
+        ${strip ? `<span class="chip">${Icons.get('sprout')}swipe right</span>` : ''}</div>
     </div>` : '';
-    const blessed = r.blessed ? `<div class="cost-line">${Icons.get('star')}<span>
+    const blessed = r.blessed ? `<div class="cost-line good">${Icons.get('star')}<span>
       <b>${Game.seedById(r.blessed).name}</b> carries your blessing — a free Rich Bloom petal.</span></div>` : '';
     return `<div class="cere">
       <div class="cere-flower">${Flora.talkingFlower()}</div>
+      <div class="speech-block">${r.fallOpens
+        ? 'A whole new year — and somewhere new to put it.'
+        : 'A whole new year. I can already smell it.'}</div>
       ${gate}
       ${blessed}
       <div class="keep-row">${chips}</div>
@@ -1349,7 +1379,17 @@
   }
 
   function petalTracks(seed) {
-    if (S.year.turnsCompleted < 1) return '';
+    /* Year one shows no petal UI — doc 32's "the mystery is the tutorial".
+       But a MIGRATED save is not in year one with nothing: migrateYear()
+       converts retired Bloom Mastery tiers into Saved Seeds while
+       turnsCompleted is still 0, and those seeds are the compensation for a
+       yield regression the player is already paying. A currency you hold and
+       cannot spend is not a mystery, it is a bug. */
+    if (S.year.turnsCompleted < 1 && !(S.savedSeeds > 0)) return '';
+    /* UNLOCKED, not discovered — the same rule the blessing picker uses and the
+       same one turnYear() enforces. A blessing landing on a flower you own but
+       have not grown yet must have somewhere to show itself. */
+    if (!Game.seedUnlocked(seed.id)) return '';
     return petalTrack(seed, 'rich', DATA.petals.shared.rich.name)
       + petalTrack(seed, 'quick', DATA.petals.shared.quick.name);
   }
@@ -1386,6 +1426,7 @@
         return `<div class="almanac-row dim">
           <div class="almanac-row-top">${head}<span class="r">—</span><span class="c">—</span></div>
           <span class="seed-desc">${s.desc}</span>
+          ${petalTracks(s)}
         </div>`;
       }
       return `<div class="almanac-row">
@@ -1421,7 +1462,7 @@
       </div>
       <div class="stat-block">
         <h3>${Icons.get('sprout')} Seed Almanac</h3>
-        ${S.year.turnsCompleted >= 1
+        ${(S.year.turnsCompleted >= 1 || S.savedSeeds > 0)
           ? `<p class="sheet-note pouch-note"><span class="chip">${Icons.get('pouch')}${fmt(S.savedSeeds)}</span> to spend on petals.</p>`
           : ''}
         ${seedRows}
@@ -2204,10 +2245,15 @@
     const petal = e.target.closest('[data-petal]');
     if (petal) {
       const { petal: id, skill } = petal.dataset;
+      /* Measure BEFORE the purchase: buyPetal() emits `panels`, which rebuilds
+         the sheet body, so by the time it returns this node is detached and its
+         rect is 0x0 — the float would fire from the top-left corner. Same
+         family as the confetti-from-the-corner trap already in the docs. */
+      const at = FX.centerOf(petal);
       if (Game.buyPetal(id, skill)) {
         Sound.play('buy');
         FX.haptic(10);
-        FX.floatAt(petal, '+1', 'good');
+        FX.float(at.x, at.y, '+1', 'good');
       } else {
         Sound.play('deny');
         FX.shake(3);
@@ -2369,6 +2415,13 @@
       node.disabled = !can;
       node.classList.toggle('ok', can);
       node.classList.toggle('no', !can);
+    });
+    $$('[data-unlockgo]', el.sheetBody).forEach((node) => {
+      const price = Game.seedUnlockPrice(node.dataset.unlockgo);
+      const can = S.credits >= price;
+      node.disabled = !can;
+      const short = $('.unlock-short', el.sheetBody);
+      if (short) short.textContent = can ? '' : `${fmt(price - S.credits)} short.`;
     });
     $$('[data-unlock]', el.sheetBody).forEach((node) => {
       const price = Game.seedUnlockPrice(node.dataset.unlock);

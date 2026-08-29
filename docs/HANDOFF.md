@@ -34,7 +34,20 @@ from quests and levels.
 > whole Wild Meadow**, so phase 3 gives it the burrow door's twin at the foot of the garden and
 > leaves swipe-down retired, as doc 32 asks.
 >
-> **PHASE 2 IS BUILT — the Turn has a surface, and a year can be played from the game's own UI.**
+> **PHASE 2 IS BUILT AND GAUNTLETED — the Turn has a surface, and a year can be played from the
+> game's own UI.** Eight adversarial critics ran over the built phase and **three of them
+> independently found the same blocker: the ask told the player the Turn was free.** A tidy player
+> who harvested the board clean read *"This Turn costs you nothing at all"* and then lost their gold,
+> every badge, their boosters and plots 5–8, atomically and unrecoverably. The ask now carries two
+> labelled rows — *this year goes* and *these stay, always*. Also found and fixed: the **mystery
+> meter did not exist** (`turnsCompleted` appeared zero times in `ui.js`, so a first-time tap
+> explained the whole prestige system); the **season tint stopped a quarter of the way through the
+> year** and left the iOS status-bar strip untinted above the sky it sits on; the **HUD still wrapped
+> at 375px**, which resizes the board as you earn; and the drained-paper family — the game's word for
+> *stopped working* — was carrying the ceremony's best news. Full list in the 2026-08-29 (phase 2,
+> the gauntlet) entry of [10-decision-log.md](10-decision-log.md).
+>
+> **What phase 2 ships.**
 > The meter pill (a third wallet whose own body *is* the meter), its projection popover with both
 > Turn gates drawn as tracks, the `turn` sheet's five beats — the ask, the blessing picker, the
 > Tally's count-up / lines / total, the spring return with the gate card — petal tracks on the

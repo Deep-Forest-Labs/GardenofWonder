@@ -1,7 +1,7 @@
 /* Garden Wonder — presentation, input and glue. */
 
 (() => {
-  const { $, $$, S, el, fmt, fmtTime } = UI;
+  const { $, $$, S, el, fmt, fmtTime, pickLine } = UI;
 
   /* ============ garden ============ */
   const plotEls = [];
@@ -386,6 +386,16 @@
     el.questStrip.dataset.claim = claimId;
   }
 
+  /* The flower's answer before the first Turn. Deliberately no numbers: it is
+     a promise, not a readout, and it is the only thing year one says about the
+     Turn until the meter is full. Three lines so a curious player who taps
+     twice does not get the same one back. */
+  const MYSTERY_LINES = [
+    'Something\u2019s filling up. I don\u2019t know what yet.',
+    'It fills a little every time you grow something.',
+    'When it\u2019s full, I\u2019ll know what to do with it.'
+  ];
+
   /* ============ the year meter ============ */
   /* The pill's fill is how close the Turn is, which means it has to show the
      BINDING gate — the Turn needs both the un-tallied increment and the year's
@@ -398,12 +408,27 @@
     const mint = Game.projectedMint();
     const seeds = y.minSeeds > 0 ? mint.base / y.minSeeds : 1;
     const coins = y.minCoins > 0 ? S.year.coinsEarned / y.minCoins : 1;
-    return { mint, seeds, coins, p: Math.max(0, Math.min(1, Math.min(seeds, coins))) };
+    /* TWO different progresses, and they are not the same question.
+       The PILL answers "can I turn yet", so it shows the binding gate — a bar
+       tracking only one of the two would sit full while the other held the
+       ceremony shut. But the gates are both met about a quarter of the way
+       through year one, so the same number makes a poor SEASON clock: the
+       garden would finish ripening on day one and never move again. The tint
+       runs on the year's own earnings instead. */
+    const ripe = y.seasonSpan > 0 ? S.year.coinsEarned / y.seasonSpan : 0;
+    return {
+      mint, seeds, coins,
+      p: Math.max(0, Math.min(1, Math.min(seeds, coins))),
+      ripe: Math.max(0, Math.min(1, ripe))
+    };
   }
 
   let yearFillShown = -1;
+  /* Published so the scenery can tint `theme-color` by the same amount — the
+     status-bar strip has to match the sky under it. */
+  let seasonAmount = 0;
   function updateYearMeter() {
-    const { p } = yearProgress();
+    const { p, ripe } = yearProgress();
     const pct100 = Math.round(p * 1000) / 10;
     if (pct100 !== yearFillShown) {
       el.yearFill.style.width = `${pct100}%`;
@@ -413,13 +438,19 @@
     /* The garden golds as the year fills. Derived, never stored — doc 32 is
        explicit that the season aging is visual only. */
     el.seasonTint.style.setProperty('--season-c', DATA.year.seasonTint);
-    el.seasonTint.style.setProperty('--season-o', (DATA.year.seasonTintMax * p).toFixed(3));
+    seasonAmount = DATA.year.seasonTintMax * ripe;
+    el.seasonTint.style.setProperty('--season-o', seasonAmount.toFixed(3));
+    /* An open projection keeps answering. It is a string rebuild on a 0.6s
+       tick with nothing focusable inside it, so re-rendering costs nothing —
+       and a card that freezes at "45,000 / 100K" while the pill behind it
+       fills is worse than no card. */
+    if (!el.yearPop.hidden) renderYearPop();
   }
 
-  function yearGate(label, ratio, have, need, icon) {
+  function yearGate(icon, ratio, have, need) {
     const met = ratio >= 1;
     return `<div class="yp-gate${met ? ' met' : ''}">
-      <span class="lab">${label}</span>
+      <span class="lab">${Icons.get(icon)}</span>
       <span class="track"><i style="width:${Math.round(Math.min(1, ratio) * 100)}%"></i></span>
       <span class="val">${met ? Icons.get('check') : `${fmt(have)} / ${fmt(need)}`}</span>
     </div>`;
@@ -428,15 +459,27 @@
   function renderYearPop() {
     const { mint, seeds, coins } = yearProgress();
     const y = DATA.year;
+    /* YEAR ONE IS A MYSTERY, and doc 32 is explicit that the mystery is the
+       tutorial: "the meter fills, unexplained". So before the first Turn the
+       pill has a voice and not a readout — a projection here would explain the
+       whole prestige system to someone who has not met it. The flower keeps
+       the promise instead, and the ceremony itself does the teaching when the
+       meter fills. */
+    if (S.year.turnsCompleted < 1) {
+      el.yearPop.innerHTML = `
+        <p class="yp-cap">Something is filling</p>
+        <p class="yp-say">${pickLine(MYSTERY_LINES, String(S.stats.totalTaps || 0))}</p>`;
+      return;
+    }
     const banked = S.savedSeeds > 0
       ? `<p class="yp-sub"><b>${fmt(S.savedSeeds)}</b> already in the pouch.</p>` : '';
     el.yearPop.innerHTML = `
       <p class="yp-cap">Ready to save this year</p>
       <div class="yp-num">${Icons.get('pouch')}<span>${fmt(Math.floor(mint.base))}</span></div>
-      <p class="yp-sub">How the year <i>scored</i> is added at the ceremony.</p>
+      <p class="yp-sub">How the year <b>scored</b> is added when you Turn.</p>
       ${banked}
-      ${yearGate('Earned', coins, Math.floor(S.year.coinsEarned), y.minCoins)}
-      ${yearGate('Seeds', seeds, Math.floor(mint.base), y.minSeeds)}`;
+      ${yearGate('coin', coins, Math.floor(S.year.coinsEarned), y.minCoins)}
+      ${yearGate('pouch', seeds, Math.floor(mint.base), y.minSeeds)}`;
   }
 
   function openYearPop() {
@@ -635,7 +678,7 @@
      panel, and it must never be the thing standing between a tap and a plot. */
   el.game.addEventListener('pointerdown', (e) => {
     if (el.yearPop.hidden) return;
-    if (e.target.closest('#yearPop') || e.target.closest('#walletYear')) return;
+    if (e.target.closest('#walletYear')) return;
     closeYearPop();
   }, true);
   $('#btnBonuses').addEventListener('click', () => UI.openSheet('bonuses'));
@@ -1047,6 +1090,7 @@
   UI.renderQuestStrip = renderQuestStrip;
   UI.renderRail = renderRail;
   UI.hideCoach = hideCoach;
+  UI.seasonAmount = () => seasonAmount;
   UI.noteActivity = noteActivity;
   UI.plotEls = plotEls;
   /* A function, not the node: buildGarden() throws the flower away and makes a new one. */

@@ -32,9 +32,13 @@ shortens levels 2–17's fanfare until the ladder re-authors in slice D.
 behaviour):
 
 1. **Harvest yield drops by 5% × mastery tiers** on every flower, the moment the save loads —
-   the accepted Bloom Mastery regression logged on 2026-08-29. The 2-seeds-per-tier conversion
-   pays into a currency with no spend surface until phase 2, so the compensation is invisible
-   for now.
+   the accepted Bloom Mastery regression logged on 2026-08-29. ~~The 2-seeds-per-tier conversion
+   pays into a currency with no spend surface until phase 2~~ — **closed 2026-08-29 (phase 2).**
+   The conversion grants Saved Seeds while `turnsCompleted` is still 0, so the Almanac's petal
+   tracks and its pouch balance now appear on `turnsCompleted >= 1 **or** savedSeeds > 0`. Doc
+   32's "year one shows nothing" rule is about a player holding nothing, and it still holds for
+   them; a migrated save is holding the compensation for a yield cut it is already paying, and a
+   currency you own and cannot spend is not a mystery.
 2. **Plots 5–8 refuse purchase** until the first Turn, and the Land Deed badge reads *Maxed* at
    level 0 while that is true.
 3. **The dev "Unlock the next seed" button finds nothing to sell** on a fully grandfathered

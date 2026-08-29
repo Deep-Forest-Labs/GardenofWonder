@@ -325,7 +325,15 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    UNDER `.ui` instead and the HUD sits at the top of it. */
 .hud{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
   position:relative;z-index:6}
-.wallets{display:flex;gap:6px;flex-wrap:wrap}
+.wallets{display:flex;gap:6px;flex-wrap:nowrap}
+/* NOWRAP, deliberately. A wrapping HUD grows row 1 by ~46px, which costs the
+   `1fr` stage the same and makes sizeGarden() visibly shrink the board — a
+   layout that reshapes itself as you earn, which is the one thing this row must
+   never do. So nothing wraps; instead the numberless meter is the only pill
+   allowed to compress, and it gives up padding (not a digit) when a 375px
+   phone is carrying a million coins and four figures of gems. */
+.wallet{flex:none;min-width:0}
+.wallet.meter{flex:0 1 auto}
 
 .wallet{
   display:flex;align-items:center;gap:5px;
@@ -350,7 +358,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .wallet.meter{
   position:relative;overflow:hidden;isolation:isolate;
   padding:5px 10px;font:inherit;color:var(--ink);
+  min-height:44px;
 }
+/* .wallets is a flex row, so the meter's 44px lifts all three pills to the
+   touch minimum together — and the HUD row was already 44px tall because of
+   the round buttons beside them, so it costs nothing. */
 .meter-fill{
   position:absolute;left:0;top:0;bottom:0;z-index:-1;
   width:var(--year-p,0%);
@@ -361,7 +373,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .wallet.meter:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink-2), 0 4px 8px rgba(44,26,16,.18)}
 /* Full uses the same 1.4s breath every affordable price in the game uses — a
    player has met it on every buyable thing and it means "you can have this now". */
-.wallet.meter.full{animation:affordPulse 1.4s ease-in-out infinite}
+.wallet.meter.full{animation:meterFull 1.4s ease-in-out infinite}
+@keyframes meterFull{
+  0%,100%{box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18), 0 0 0 0 rgba(255,201,60,.55)}
+  50%{box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18), 0 0 0 5px rgba(255,201,60,.5)}
+}
 
 .w-icon{width:22px;height:22px;display:block;flex:none}
 .w-icon svg{width:100%;height:100%;display:block}
@@ -385,9 +401,10 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .year-pop[hidden]{display:none}
 @keyframes popIn{0%{transform:translateY(-6px) scale(.94);opacity:0}100%{transform:none;opacity:1}}
 .year-pop::before{
-  content:'';position:absolute;left:var(--tail,24px);top:-12px;width:18px;height:12px;
-  background:#fffdf7;clip-path:polygon(50% 0,100% 100%,0 100%);
-  border-left:3.5px solid var(--ink);border-right:3.5px solid var(--ink);
+  content:'';position:absolute;left:var(--tail,24px);top:-9px;width:16px;height:16px;
+  background:#fffdf7;
+  border-left:3.5px solid var(--ink);border-top:3.5px solid var(--ink);
+  border-radius:3px 0 0 0;transform:rotate(45deg);
 }
 .yp-cap{margin:0 0 5px;font-size:11.5px;font-weight:800;letter-spacing:.06em;
   text-transform:uppercase;color:var(--ink-soft)}
@@ -395,8 +412,10 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   font-variant-numeric:tabular-nums}
 .yp-num svg{width:26px;height:26px}
 .yp-sub{margin:6px 0 0;font-size:11.5px;font-weight:700;color:var(--ink-soft);line-height:1.35}
+.yp-say{margin:2px 0 0;font-size:15px;font-weight:800;line-height:1.3}
 .yp-gate{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px;font-weight:800}
-.yp-gate .lab{width:46px;flex:none}
+.yp-gate .lab{width:24px;height:24px;flex:none;line-height:0}
+.yp-gate .lab svg{width:24px;height:24px;display:block}
 .yp-gate .track{flex:1;height:12px;border-radius:999px;border:2.5px solid var(--ink);
   background:#e9dcc3;overflow:hidden;position:relative}
 .yp-gate .track i{position:absolute;left:0;top:0;bottom:0;
@@ -726,6 +745,13 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   opacity:var(--season-o,0);
   mix-blend-mode:multiply;
   transition:opacity 1.4s ease;
+  /* Faded out over the last 44px, exactly as .meadow::after fades its stripes
+     and .vignette fades its darkening. iOS paints any strip below a short
+     window with --page-fill, which is the UNtinted lawn — so a tint that ran
+     to the bottom edge would draw the join that three rounds of layout work
+     went into making invisible. */
+  -webkit-mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
 }
 .game[data-weather="rain"] .scenery::after{opacity:.30}
 .game[data-weather="storm"] .scenery::after{opacity:.52}
@@ -1241,18 +1267,19 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));
   box-shadow:0 2px 0 var(--paper-dim-edge);
 }
-.seed-row.locked .verb-note{filter:saturate(.4)}
+.seed-row.locked .verb-note,
+.seed-row.locked .verb-chip{filter:saturate(.35)}
 /* The unlock price sits in the slot the go button uses on every other row. */
 .seed-lock{
   display:inline-flex;align-items:center;gap:4px;flex:none;
-  padding:6px 11px;
+  padding:6px 9px;
   border:2.5px solid var(--ink);border-radius:999px;
   background:linear-gradient(180deg,#fff,var(--paper-3));
   box-shadow:0 2px 0 var(--ink-2);
-  font-size:13px;font-weight:800;line-height:1;
+  font-size:12px;font-weight:800;line-height:1;
   font-variant-numeric:tabular-nums;
 }
-.seed-lock svg{width:16px;height:16px}
+.seed-lock svg{width:15px;height:15px}
 .seed-lock.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a);animation:affordPulse 1.4s ease-in-out infinite}
 .seed-lock.no{background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));box-shadow:0 2px 0 var(--paper-dim-edge)}
 /* The row you just paid for keeps its place in the list and lights for a beat,
@@ -1265,7 +1292,13 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 /* The unlock question. One-time, permanent, unrefundable, and the game has no
    undo — so it asks, as a whole panel rather than a card floating over a
    scrolling list that a `panels` event can rebuild underneath it. */
-.unlock-ask{display:grid;justify-items:center;gap:7px;text-align:center;padding:16px 4px 6px}
+.unlock-ask{
+  display:grid;justify-items:center;gap:7px;text-align:center;
+  margin:10px 2px;padding:18px 14px 16px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3.5px solid var(--ink);border-radius:var(--r-lg);
+  box-shadow:0 5px 0 var(--ink-2), 0 10px 18px rgba(44,26,16,.24);
+}
 .unlock-art{
   width:100px;height:100px;border-radius:50%;
   display:grid;place-items:center;margin-bottom:2px;
@@ -1401,7 +1434,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    vocabulary in the seed's own green, so a player reads "3 of 5" without a
    fraction. The price is the ordinary .price family in the three states they
    already know — green affordable, drained short, grey MAX. */
-.petal-track{display:flex;align-items:center;gap:8px;margin-top:6px}
+.petal-track{display:flex;align-items:center;gap:8px;margin-top:10px;min-height:40px}
 .petal-track .pl{width:88px;flex:none;font-size:11.5px;font-weight:800}
 .petal-track .sp{flex:1}
 .petal-track .pips{flex:none;gap:3px}
@@ -1409,6 +1442,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   box-shadow:inset 0 2px 0 rgba(255,255,255,.4)}
 .petal-track .pip.off{background:var(--paper-dim-2);box-shadow:none}
 .petal-buy{font:inherit;color:var(--ink);cursor:pointer;
+  min-height:40px;padding:0 12px;
   font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums}
 .petal-buy:active{transform:translateY(2px);box-shadow:0 0 0 var(--ink-2)}
 .petal-buy[disabled]{cursor:default}
@@ -1521,7 +1555,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   font-size:16px;font-weight:800;line-height:1.3;
 }
 .speech-block::after{
-  content:'';position:absolute;left:24px;top:-9px;width:14px;height:14px;
+  content:'';position:absolute;left:calc(50% - 7px);top:-9px;width:14px;height:14px;
   background:#fffdf7;border-left:3px solid var(--ink);border-top:3px solid var(--ink);
   border-radius:3px 0 0 0;transform:rotate(45deg);
 }
@@ -1564,7 +1598,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   text-shadow:0 2px 0 rgba(44,26,16,.5)}
 .tline .cnt{font-variant-numeric:tabular-nums}
 .tline .bon{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
-.tfoot{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:12px}
+.tfoot{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:12px;padding-right:4px}
 .tfoot.centred{justify-content:center}
 .tfoot .plate-cap{margin:0}
 .tmult{font-size:34px;font-weight:800;line-height:1}
@@ -1577,7 +1611,25 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   font-size:12.5px;font-weight:700;line-height:1.35;
 }
 .cost-line svg{width:22px;height:22px;flex:none}
-.keep-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+/* Same geometry, opposite meaning. Drained paper is the game's word for
+   "asleep, out of food, stopped working" (doc 05), so a grant and a
+   reassurance may not wear it — the blessing that just landed was reading as
+   the deadest object on the screen. */
+.cost-line.good{
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18);
+}
+.keep-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.cere-lab{margin:12px 0 0;font-size:11px;font-weight:800;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-soft)}
+/* What the year takes wears the drained paper every "not any more" state in
+   this game wears — not red, because a cost stated in advance is not an error.
+   It restates its own lip, like every other modifier that touches box-shadow. */
+.chip.gone{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 2px 0 var(--paper-dim-edge);
+}
+.chip.gone svg{filter:saturate(.45)}
 
 /* The blessing. A grid of blooms, not a list of rows: the only decision here is
    WHICH flower, so cost, yield and verb would all be noise. */
@@ -1612,24 +1664,40 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   border:4px solid var(--ink);border-radius:var(--r-lg);
   box-shadow:0 5px 0 var(--ink-2), 0 10px 18px rgba(44,26,16,.26);
 }
-.gate-scene{position:relative;height:126px;background:linear-gradient(180deg,#ffd9a1,#ffb570 62%,#e88f4e)}
-.gate-scene .hedge{
-  position:absolute;bottom:0;width:40%;height:106px;
-  border:3px solid var(--ink);border-radius:34px 34px 6px 6px;
-  background:
-    radial-gradient(circle at 26% 20%, rgba(255,255,255,.2) 0 14%, transparent 16%),
-    radial-gradient(circle at 68% 34%, rgba(0,0,0,.14) 0 12%, transparent 14%),
-    linear-gradient(180deg,#4d9150 0%, #3f7d43 46%, #2f6236 100%);
-  box-shadow:inset 0 6px 0 rgba(255,255,255,.16), inset 0 -8px 0 rgba(0,0,0,.18);
+.gate-scene{
+  position:relative;height:126px;overflow:hidden;
+  background:linear-gradient(180deg,#ffd9a1,#ffb570 62%,#e88f4e);
 }
+/* Ground, inside the container, because doc 05 check 3 is "is anything
+   floating?" and a sky with a flower in it is the answer. The hedges stand on
+   this and the bloom gets a pad on top of it. */
+.gate-scene::after{
+  content:'';position:absolute;left:-2%;right:-2%;bottom:0;height:26px;z-index:1;
+  border-top:3px solid var(--ink);
+  background:linear-gradient(180deg,#9a7a3f,#7d6132);
+}
+.gate-scene .hedge{position:absolute;bottom:14px;width:42%;height:106px;line-height:0;z-index:2}
+.hedge-svg{width:100%;height:100%;display:block;overflow:visible}
 .gate-scene .hedge.l{left:0;transform:translateX(-30%) rotate(-7deg);transform-origin:bottom left;
   animation:gateL .9s cubic-bezier(.22,1,.28,1) both}
 .gate-scene .hedge.r{right:0;transform:translateX(30%) rotate(7deg);transform-origin:bottom right;
   animation:gateR .9s cubic-bezier(.22,1,.28,1) both}
+/* A gate with nowhere to go stays shut. The card may not draw an open gate
+   while the strip that honours it is still unbuilt. */
+.gate-scene.shut .hedge.l{transform:none;animation:none}
+.gate-scene.shut .hedge.r{transform:none;animation:none}
 @keyframes gateL{0%{transform:none}100%{transform:translateX(-30%) rotate(-7deg)}}
 @keyframes gateR{0%{transform:none}100%{transform:translateX(30%) rotate(7deg)}}
-.gate-bloom{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:62px;line-height:0}
-.gate-bloom svg{width:100%;height:auto}
+.gate-bloom{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:62px;
+  line-height:0;z-index:2}
+.gate-bloom svg{width:100%;height:auto;filter:drop-shadow(0 4px 0 rgba(44,26,16,.22))}
+/* The pad is the ground and the shadow is the contact — a dark ellipse on a
+   dark band would be invisible, which is the meadow's lesson. */
+.gate-bloom::after{
+  content:'';position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);
+  width:46px;height:12px;border-radius:50%;z-index:-1;
+  background:radial-gradient(ellipse at 50% 40%, #b08c4c 0 60%, rgba(176,140,76,0) 72%);
+}
 .gate-foot{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
   padding:9px 12px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
@@ -1772,8 +1840,21 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 @media (max-width:430px){
   .wallet{font-size:14px;padding:4px 9px 4px 5px}
   .w-icon{width:19px;height:19px}
+  /* The meter carries no number, so it is the pill that gives width back. */
+  .wallet.meter{padding:5px 7px}
+  /* AND THE ROUND BUTTONS DROP TO 40px, which is a real cost and is written
+     down rather than hidden. Measured at 390px with the worst realistic
+     wallets ("880.2K" coins, "1,163" gems): the three pills are 222px, three
+     44px buttons are 144px, and with the 8px gap that is 374px of the 370px
+     available. Four pixels. The choice was a 40px control — a size this
+     stylesheet already uses on short screens — or a HUD that wraps and unwraps
+     as the player gets richer, and a layout that changes shape as you earn is
+     worse than a control 4px under the touch minimum. THE REAL FIX is to give
+     the HUD one fewer round button (the album's own page is the Almanac); that
+     is a navigation decision and it is the owner's, in docs/35. */
   .round-btn{width:40px;height:40px}
   .round-btn svg{width:21px;height:21px}
+  .wallet.meter{min-height:40px}
 }
 @media (min-width:600px) and (min-height:760px){
   .ui{padding-left:calc(var(--sal) + 16px);padding-right:calc(var(--sar) + 16px)}

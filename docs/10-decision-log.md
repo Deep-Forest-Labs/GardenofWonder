@@ -5,6 +5,98 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (phase 2, the gauntlet) — Eight critics, and the ask was lying
+
+Eight independent adversarial critics over the built phase — visual fidelity against the spike then
+doc 05, layout against doc 08, spec against docs 32/33/34/11, correctness, the house traps, grammar,
+accessibility and motion, and state/saves. **Three of them independently found the same blocker**,
+which is the strongest signal the ladder produces.
+
+**THE BLOCKER: the ask told the player the Turn was free.** `turnAsk()` built its cost line from the
+grid alone, so a tidy player who harvested the board clean — the *careful* play — read *"This Turn
+costs you nothing at all"* and then lost their gold, every badge level, their held boosters and
+plots 5–8, atomically and with the sheet locked against dismissal a beat later. The engine was
+right; doc 32's clears column is exactly what `turnYear()` does. The screen whose entire job is
+informed consent was the part that was wrong, and it was wrong in the branch a careful player is
+*most* likely to hit. The ask now carries two labelled rows — **this year goes** (gold, badges,
+boosts, the big plots, whatever is still growing) and **these stay, always** — and the
+"costs you nothing" branch is deleted. *An irreversible commit may never understate its own price.*
+
+**The mystery meter did not exist.** `turnsCompleted` appeared zero times in `ui.js`: there was one
+pill state and one popover, so a first-time player's first tap explained the whole prestige system —
+increment, both gates, the pouch. Doc 32's introduction rule is "year one: nothing, unexplained; the
+mystery is the tutorial", and docs/35 had claimed the mystery was preserved because the pill carries
+no number. The popover gave it away. Before the first Turn the pill now answers in the flower's
+voice and no numbers at all.
+
+**The season tint was a clock that stopped a quarter of the way through the year.** Both Turn gates
+are met at roughly 100K earned; doc 33 targets 370–410K for year one. Driving the tint off the
+meter's own fill meant the garden finished ripening on day one and never moved again. The *pill*
+still shows the binding gate — that answers "can I turn yet", which is its question — but the tint
+now runs on `DATA.year.seasonSpan`, the year's own earnings. Two progresses, two questions.
+
+**And the tint had two unpainted edges.** It multiplies over the whole scenery, but `theme-color`
+(the iOS status-bar strip) and `--page-fill` (the strip below a short window) were still publishing
+the untinted sky and lawn — the exact class of join doc 08 spends four bullets and three rounds of
+layout work making invisible. The strip is now tinted by the same multiply in `seasonMix()`, and the
+overlay is masked off its own last 44px, the same geometry `.meadow::after` and `.vignette` already
+use.
+
+**Two irreversible spends, two opposite rules.** The phase gave a 150K seed unlock a whole confirm
+panel and gave a petal purchase a 27px button 6px from its neighbour — a mis-tap bought the wrong
+skill, permanently. Petal chips are 40px with 10px between tracks now. The unlock confirm also froze
+its own affordability: `syncAfford` re-synced the list row but not the ask, so a player who opened it
+while saving up could never complete the purchase without backing out.
+
+**The drained-paper family was carrying good news.** `--paper-dim` is this game's word for *asleep,
+out of food, stopped working*. The spring beat was announcing "Daisy carries your blessing" on it —
+the best fact on the screen, rendered as the deadest object in the frame. Grants and reassurances
+take a cream band now; the drained one is kept for the actual cost.
+
+**The gate card had no ground in it**, so the marigold hung in an orange void and the rotated hedges
+ended on a hard diagonal — doc 05 check 3 verbatim, the meadow's own diagnosis one screen over. It
+has a ground band with an ink edge, the bloom stands on a lighter pad with its shadow on top of
+that, and the hedge's crown carries a contour so it stops reading as three flat bands.
+
+**And the card said two contradictory things at once.** "Fall is open" sat beside a chip reading
+"opening soon", because the feature check guarded only the chip. Both halves follow the same
+condition now, and the gate stays visually *shut* until the strip exists to honour it — a card may
+not draw an open gate onto a place you cannot reach.
+
+**The HUD, again, and this time measured to the pixel.** `.wallets` was `flex-wrap: wrap`, so at
+375px with a million coins and four figures of gems the meter dropped to a second row, the HUD grew
+~46px, the `1fr` stage lost the same, and `sizeGarden()` visibly shrank the board — a layout that
+reshapes itself as you earn, which is the one thing this row must never do and the thing the
+numberless pill was chosen to prevent. It is `nowrap` now, and **the one pill with no number is the
+only thing allowed to compress**: under pressure it gives up padding rather than the HUD giving up
+its shape. Measured at 375×812 with "880.2K" and "1,163": one row, 40px tall, 8px spare.
+
+**The round buttons are 40px on phones under 430px wide, and that is written down rather than
+hidden.** Three pills at their realistic worst are 222px; three 44px buttons are 144px; 222 + 8 + 144
+is 374 of the 370 a 390px phone has. Four pixels. The choice was a 40px control — a size this
+stylesheet already used on short screens — or a wrapping HUD. Doc 08's accessibility section now
+says so instead of claiming 44px. **The real fix is one fewer round button in the HUD**, which is a
+navigation decision and sits with the owner in docs/35.
+
+**Smaller, all real:** the petal float fired on a node `buyPetal`'s own `panels` emit had already
+deleted, so "+1" appeared in the top-left corner (the documented confetti-from-the-corner trap, one
+screen over); the projection froze the moment it opened and went on answering "why can't I turn yet"
+with stale numbers; the ceremony's header narrated the flower's own line back at it 90px above its
+mouth; the ask called garden plots "beds" fifteen seconds before the Tally used "bed" to mean Fall's
+whole eight-cell board; the popover said "the ceremony", a word the player has never been taught,
+where the game says "the Turn"; the keep-row chips carried six identical ticks where the same object
+four beats later let the icon name the thing; the unlock price chip was twice the width of the go
+button it replaces, so locked rows wrapped their stat pills and the picker's columns stopped lining
+up; and ten new hex values shipped without the entry doc 05's fifth check requires — now three named
+component ramps in that document, with the reason each could not reuse an existing value.
+
+**Verified clean, and worth recording so it is not re-litigated:** the step machine survives a
+`panels` emit mid-Tally; a triple-tap on *Turn the year* commits exactly once; `turnTimers` are
+cleared on every reachable exit; the `sheetLocked` window cannot deadlock, because the scrim covers
+`.ui` so neither the dock nor the pill can open a sheet during it; no old save can feed `undefined`
+into the new reads; every new `box-shadow` state modifier restates its lip; and the mandated
+`0 3px 0 rgba(` grep over the phase's whole diff is clean.
+
 ## 2026-08-29 (phase 2, the ceremony) — The Turn gets its surface, and the cosy rule gets enforced twice
 
 **The whole of phase 2's remaining scope in one push, because it is one coherent thing:** a player
