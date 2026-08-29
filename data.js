@@ -1071,7 +1071,10 @@ const FLOWER_LINES = {
   aurora: ['Look up — the sky has colours!', 'I have only seen this twice.', 'The whole garden is glowing.'],
   wonderfall: ['The sky is doing something wonderful.', 'Oh my. Oh MY.', 'Remember this one.'],
   mutation: ['Something changed out there!', 'That bloom looks different...', 'Well, would you look at that.'],
-  wonder: ['WONDERRRR!', 'Everything is upside-down lovely!', 'Grab it all!']
+  wonder: ['WONDERRRR!', 'Everything is upside-down lovely!', 'Grab it all!'],
+  /* Fall's bed arming — the payoff of the season's one rule. Phase 4 owns the
+     meter-state lines; this one belongs to Fall and ships with it. */
+  windfall: ['The whole bed at once!', 'Every last one, ready together.', 'Now THAT is a harvest.']
 };
 
 /* ---------------- the Garden Stand ----------------

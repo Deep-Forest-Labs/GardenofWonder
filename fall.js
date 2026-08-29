@@ -136,6 +136,14 @@ const Fall = (() => {
           <stop offset="0.55" stop-color="${P.sky2}"/>
           <stop offset="1" stop-color="${P.sky3}"/>
         </linearGradient>
+        <!-- The last 44px fade to the page's own lawn, exactly as .meadow::after
+             fades its stripes. iOS paints any strip below a short window with
+             --page-fill, so a scene that ran its own colour to the bottom edge
+             would draw the join three rounds of layout work went into hiding. -->
+        <linearGradient id="fall-foot" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4fae54" stop-opacity="0"/>
+          <stop offset="1" stop-color="#4fae54" stop-opacity="1"/>
+        </linearGradient>
       </defs>
       <rect x="0" y="0" width="${w}" height="${h}" fill="url(#fall-sky)"/>
       <ellipse cx="${r2(w * 0.74)}" cy="${r2(h * 0.11)}" rx="${r2(w * 0.2)}" ry="${r2(h * 0.055)}"
@@ -147,8 +155,7 @@ const Fall = (() => {
       <rect x="0" y="${groundTop}" width="${w}" height="${h - groundTop}" fill="${P.ground}"/>
       <rect x="0" y="${groundTop}" width="${w}" height="10" fill="${P.groundLight}" opacity=".6"/>
       ${stubble}
-      <rect x="0" y="${floor - 30}" width="${w}" height="${Math.max(0, h - floor - 14)}"
-        fill="${P.groundDark}" opacity=".28"/>
+      <rect x="0" y="${h - 44}" width="${w}" height="44" fill="url(#fall-foot)"/>
       ${leaves}
     </svg>`;
   }

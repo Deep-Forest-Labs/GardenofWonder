@@ -466,6 +466,20 @@
   Game.on('grid', () => UI.buildGarden());
   /* A Turn can open a gate, so the strip's edges are re-read when one lands.
      Nothing else changes what is reachable. */
+  /* THE BED ARMS. It is the payoff of the whole season and nothing was
+     listening for it — the engine emitted `windfall` and the game said nothing.
+     Celebrated on the board, not on the garden, because the player is standing
+     in Fall when it lands. */
+  Game.on('windfall', () => {
+    if (!(UI.fallOpen && UI.fallOpen())) return;
+    const c = FX.centerOf(el.fallBoard);
+    FX.ring(c.x, c.y, '#ffc93c', 0.55, 120);
+    FX.sparks(c.x, c.y, 12, '#ffc93c');
+    FX.haptic([10, 40, 10]);
+    Sound.play('crit');
+    UI.say('windfall', true);
+  });
+
   Game.on('turn', () => {
     if (UI.renderSeasonEdges) UI.renderSeasonEdges();
   });

@@ -36,9 +36,11 @@ locked-season gate, Fall's board with all eight crops, the windfall and the Cent
    affordance or a change to how the engine is called — neither was mine to take overnight. Also in
    docs/35.
 5. **Fall is not in the welcome-back report.** `reconcile()` walks `state.grid` only, so a Fall bed
-   that ripened overnight is announced by the edge tab's dot and by nothing else — no line in the
-   away sheet, no toast, and nothing listens for the engine's `windfall` emit. For a season whose
-   whole design is "an appointment rather than a chore" that is the missing half of the bell.
+   that ripened while the app was shut gets no line in the away sheet. The rest of the bell now
+   exists — the edge tab carries an attention dot whenever anything in Fall is ripe or still owed a
+   windfall, and the engine's `windfall` emit is celebrated on the board — but the away report is
+   the half a player sees *first*, and it is still silent about Fall. Adding it means a Fall field
+   in `reconcile()`'s return and a line in `renderWelcome`.
 6. **Fall has no season tint of its own.** `--season-tint` ripens *Summer* toward autumn; Fall's
    scene is already autumn and is not tinted. Whether Fall should have its own clock is a phase-4
    question.

@@ -3660,6 +3660,12 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    padlock, the turn that opens it, and one thing drifting. The HUD stays up —
    that is the rule for every place in this game — and everything else goes. */
 .gate-layer{position:absolute;inset:0;z-index:3;overflow:hidden}
+/* Same rule as the scene above it: nothing may leave its own colour against the
+   page's lawn at the bottom edge of .game. */
+.gate-layer::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:44px;pointer-events:none;z-index:5;
+  background:linear-gradient(180deg,rgba(79,174,84,0),#4fae54);
+}
 .gate-layer[hidden]{display:none}
 .in-gate .stage,
 .in-gate #dock,
