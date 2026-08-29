@@ -405,7 +405,7 @@
                creature never stands on a plot. -->
           <div class="mw-keeper-bank" id="meadowKeepers" aria-label="Keepers"></div>
         </main>
-        <div class="mw-exit"><i></i><span>Swipe down for the garden</span></div>
+        <button class="mw-exit" type="button" data-mwexit="1"><i></i><span>Swipe down for the garden</span></button>
         <nav class="dock mw-dock">${DOCK.map((d) => `
         <button class="dock-btn" type="button" data-dock="${d.id}">
           <span class="dock-ico">${ico(d.icon)}</span>
@@ -421,7 +421,11 @@
       const slot = e.target.closest('[data-keeper-slot]');
       if (slot) { tapKeeperSlot(Number(slot.dataset.keeperSlot)); return; }
       const dock = e.target.closest('[data-dock]');
-      if (dock) dockTap(dock.dataset.dock);
+      if (dock) { dockTap(dock.dataset.dock); return; }
+      /* The pill is the Hollow's twin and the Hollow's is tappable, so this one
+         has to be too — same mark, same meaning. The swipe is still the fast
+         path once it is learned. */
+      if (e.target.closest('[data-mwexit]')) { leave(); Sound.play('close'); }
     });
 
     /* Swipe down goes back to the garden.

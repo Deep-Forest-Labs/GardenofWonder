@@ -351,7 +351,6 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 /* THE YEAR METER PILL RETIRED, 2026-08-30 (phase 3.5). Its body was the meter
    and its tap was the projection; both moved into the dock's Turn button and
    the Year panel, which have room for what a 39px pill never did. */
-}
 
 .w-icon{width:22px;height:22px;display:block;flex:none}
 .w-icon svg{width:100%;height:100%;display:block}
@@ -1039,8 +1038,14 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   width:16px;height:16px;border-radius:50%;
   background:#ff6b6b;border:2.5px solid var(--ink);
   box-shadow:0 2px 0 var(--ink-2);
+  display:grid;place-items:center;
+  font-size:9.5px;font-weight:800;line-height:1;color:#fff;
+  text-shadow:0 1px 0 rgba(44,26,16,.75);
   animation:tagPop 1.1s ease-in-out infinite;
 }
+/* A count needs room; a bare nudge does not. */
+.dock-dot.wide{width:auto;min-width:16px;padding:0 4px;border-radius:999px}
+.dock-dot[hidden]{display:none}
 
 /* =========================================================
    THE BIG FIVE — phase 3.5, docs/36
@@ -1054,9 +1059,17 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    pushed its own button 5px taller than the other four, which with
    `align-items:end` made one button stand proud of the row for no reason. Every
    button is exactly the row; only the pedestal is allowed to be taller. */
+/* `.critter-yard` is z-index:3 and `.stage` is not a stacking context, so
+   without this the dock paints UNDER the creatures — they wash their glow
+   across the crown of the one button that must read as *play*, and they steal
+   its taps. `#dock`, not `.dock`: the Hollow's and the meadow's docks wear the
+   same class and must not be raised over their own rooms. */
+#dock{position:relative;z-index:5}
 .dock.five{grid-template-rows:56px;align-items:end}
 .dock.five .dock-btn{min-height:0;height:56px}
 .dock.five .dock-btn.home{height:74px}
+.dock.five .dock-btn.home .dock-label{font-size:11.5px;letter-spacing:.02em}
+.dock.five .dock-btn.home .dock-ico{width:28px;height:28px}
 .dock.five .dock-label{font-size:9.5px;line-height:1.05}
 
 /* THE PEDESTAL. Grass, because it is the one button the colour of the place it
@@ -1079,9 +1092,19 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    anything else, while a button has 56px of height to travel — and rising is
    the right picture, because the pouch fills. `isolation` keeps the z-index:-1
    fill above the button's own background and below its content. */
-.dock-btn.turn{overflow:hidden;isolation:isolate}
+/* THE CLIP BELONGS TO THE FILL, NOT THE BUTTON. `overflow:hidden` on the button
+   also ate the pouch chip that hangs 9px above it — the top of a 21px chip
+   sliced off flat, taking its ink contour and the tops of its digits with it,
+   on the one number this phase newly promoted to an always-visible surface. The
+   fill is its own clip box instead; 15px is the button's inner curve (18px
+   outer radius less the 3px border). */
+.dock-btn.turn{isolation:isolate}
 .turn-fill{
-  position:absolute;left:0;right:0;bottom:0;z-index:-1;
+  position:absolute;inset:0;z-index:-1;
+  overflow:hidden;border-radius:15px;
+}
+.turn-fill::before{
+  content:'';position:absolute;left:0;right:0;bottom:0;
   height:var(--year-p,0%);
   background:linear-gradient(180deg,var(--seed-l),var(--seed));
   border-top:2px solid rgba(44,26,16,.22);
@@ -1161,6 +1184,9 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   border-style:dashed;
 }
 .fround.empty svg{opacity:.5}
+/* Held, but the one you hold is already running. Not drained — you still own it
+   and the badge still counts it — just visibly not offering itself. */
+.fround.busy{opacity:.72;box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18)}
 /* A place puts its own dock up and hides the garden's; the band goes with it. */
 .in-hollow .fpill,.in-hollow .fround,
 .in-meadow .fpill,.in-meadow .fround,
@@ -1928,6 +1954,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 @keyframes bannerOut{to{transform:scale(.7);opacity:0}}
 
 /* coach marks */
+.coach[hidden]{display:none}
 .coach{
   position:absolute;z-index:65;pointer-events:none;
   transform:translate(-50%,0);
@@ -1966,7 +1993,6 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   .dock.five .dock-label{font-size:9.5px}
   .wallet{font-size:14px;padding:4px 9px 4px 5px}
   .w-icon{width:19px;height:19px}
-  .round-btn{width:40px;height:40px}
 }
 @media (max-height:600px){
   .rail{display:none}
@@ -2266,8 +2292,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   position: absolute;
   left: var(--x, 50%);
   bottom: var(--pet-lift, 2px);
-  width: clamp(66px, 19vw, 96px);
-  height: clamp(66px, 19vw, 96px);
+  /* Trimmed from 19vw when the band took the ends of the yard (phase 3.5).
+     Four creatures and two floating buttons share 370px; at 19vw the outer two
+     were half behind a button and each adjacent pair overlapped by 30px. */
+  width: clamp(60px, 17vw, 88px);
+  height: clamp(60px, 17vw, 88px);
   margin: 0;
   padding: 0;
   border: 0;
@@ -2886,9 +2915,12 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:rgba(255,247,225,.94);font-family:inherit;font-weight:700;font-size:11.5px;
   color:var(--ink);box-shadow:0 3px 0 var(--ink-2);cursor:pointer;
 }
-.hollow-exit i{width:0;height:0;border:5px solid transparent;border-top-color:var(--ink);
-  margin-top:4px;animation:hl-nudge 2.4s ease-in-out infinite}
-@keyframes hl-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+/* Points and nudges UP, because since 2026-08-30 that is the way out. The
+   margin moves with it: a down triangle paints the top half of its box and an
+   up triangle the bottom, so the 4px has to swap sides or the mark sits low. */
+.hollow-exit i{width:0;height:0;border:5px solid transparent;border-bottom-color:var(--ink);
+  margin-bottom:4px;animation:hl-nudge 2.4s ease-in-out infinite}
+@keyframes hl-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .hollow-exit:active{transform:translateX(-50%) translateY(2px);box-shadow:0 1px 0 var(--ink-2)}
 
 .hollow-count{
@@ -3399,7 +3431,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   justify-self:center;
   display:flex;align-items:center;gap:7px;padding:5px 13px;margin-bottom:2px;
   border:3px solid var(--ink,#2c1a10);border-radius:999px;background:rgba(255,247,225,.9);
-  font-size:11.5px;font-weight:800;box-shadow:0 3px 0 var(--ink-2);pointer-events:none;
+  font-size:11.5px;font-weight:800;box-shadow:0 3px 0 var(--ink-2);pointer-events:auto;
+  margin:0;font:inherit;color:inherit;cursor:pointer;
 }
 .mw-exit i{width:0;height:0;border:5px solid transparent;border-top-color:var(--ink,#2c1a10);
   animation:coachBob .9s ease-in-out infinite}

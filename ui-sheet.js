@@ -694,7 +694,7 @@
         <span class="hedge l">${UI.hedge(false)}</span><span class="hedge r">${UI.hedge(true)}</span>
         <span class="gate-bloom">${Flora.head(Game.seedById('marigold') || DATA.seeds[0], 62)}</span></div>
       <div class="gate-foot"><span>${strip ? 'Fall is open' : 'Fall opens next'}</span>
-        ${strip ? `<span class="chip">${Icons.get('sprout')}swipe right</span>` : ''}</div>
+        ${strip ? `<span class="chip">${Icons.get('leaf')}the tab on the right</span>` : ''}</div>
     </div>` : '';
     const blessed = r.blessed ? `<div class="cost-line good">${Icons.get('star')}<span>
       <b>${Game.seedById(r.blessed).name}</b> carries your blessing — a free Rich Bloom petal.</span></div>` : '';
@@ -932,8 +932,20 @@
      header becomes this panel's first section heading, which is why nothing here
      is drawn twice. */
   function renderOrders() {
+    /* The badge counts two things, so the panel names two things. Without a
+       heading on the second half, a player who tapped in on a claimable quest
+       scrolled past the Stand's footer into what looked like the same list. */
+    const q = Game.stripQuest();
+    const ready = q && q.complete;
     return `${renderStand()}
       <div class="ord-split"></div>
+      <div class="on-head">
+        <div class="on-head-copy">
+          <b>Quests</b>
+          <span>${ready ? 'One is ready to claim.' : 'Reputation, and what it opens.'}</span>
+        </div>
+        ${ready ? `<span class="on-tier">${Icons.get('check')}Ready</span>` : ''}
+      </div>
       ${renderQuests()}`;
   }
 
@@ -1768,14 +1780,18 @@
       const have = Game.hasCard(card.id);
       const r = Game.rarityDef(card.rarity);
       const copies = Game.cardCount(card.id);
-      return `<button class="cardcell${have ? ' have' : ''}" data-card="${card.id}">
+      /* A cell, not a button: nothing has ever read `data-card` and a card in a
+         set is a thing you look at rather than a thing you press. The Cards
+         dock button sends far more traffic here than the HUD star ever did, so
+         nine controls that do nothing is nine controls too many. */
+      return `<div class="cardcell${have ? ' have' : ''}" data-card="${card.id}">
         ${starRow(r.stars, have ? r.stars : 0)}
         <span class="cardface" style="--set:${set.tint}">
           ${have ? cardArt(card, 46) : ''}
           <span class="cardname">${card.name}</span>
         </span>
         ${have && copies > 1 ? `<span class="cdupe">+${copies - 1}</span>` : ''}
-      </button>`;
+      </div>`;
     }).join('');
     return `
       <div class="setbar" style="--set:${set.tint}">
@@ -2262,7 +2278,7 @@
         body: `${good ? good.name : 'Order'} &middot; +${fmt(res.paid)} coins, +${order.rep} rep`,
         art: Icons.get(good ? good.icon : 'gift')
       });
-      UI.openSheet('stand');
+      UI.openSheet('orders');
       return;
     }
 
@@ -2272,7 +2288,7 @@
     if (shoo) {
       if (Game.standSkip(Number(shoo.dataset.skiporder))) {
         Sound.play('tap');
-        UI.openSheet('stand');
+        UI.openSheet('orders');
       }
       return;
     }

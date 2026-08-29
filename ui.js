@@ -237,10 +237,25 @@
      flower names it once, on the first idle line after the tutorial is done.
      One line, one save flag, and then it goes back to chatting. */
   function idleNudge(now2) {
-    if (!S.seen.meadow && S.seen.plot) {
-      S.seen.meadow = true;
-      Game.save();
-      sayText('Swipe up sometime — the wild meadow is out that way.', true);
+    /* Summer, in the garden, with no gate and no room on top — the same "name
+       every variable that can answer *where am I*" rule the vertical swipe
+       follows. Anywhere else the bubble paints into a `display:none` subtree
+       and the line is spent into nothing; in the Hollow it would also be a lie,
+       because "swipe up" means the opposite thing down there.
+
+       AND THE FLAG IS ONLY CONSUMED ONCE THE LINE HAS ACTUALLY BEEN DRAWN.
+       `sayText` still refuses while a coach mark is up, which is reachable
+       here: a player who plants before ever tapping the flower has
+       `seen.plot` true and `seen.intro` false. Spending the meadow's ONLY
+       signpost on a bubble nobody saw is unrecoverable — `seen.meadow` has no
+       backfill, by design. */
+    const canSee = season === 'summer' && !gateOn
+      && !UI.hollowOpen() && !UI.meadowOpen() && !UI.sheetMode();
+    if (!S.seen.meadow && S.seen.plot && canSee) {
+      if (sayText('Swipe up for the wild meadow.', true)) {
+        S.seen.meadow = true;
+        Game.save();
+      }
       return;
     }
     say('idle');
@@ -253,16 +268,20 @@
 
   /* The same bubble and the same cooldown, for lines that live somewhere other
      than FLOWER_LINES — a creature's, for instance. */
+  /* Returns whether it actually drew. Every existing caller ignores it; the
+     meadow's one-time signpost does not, because a line it never showed must
+     not be counted as shown. */
   function sayText(text, force) {
     const now = Date.now() / 1000;
-    if (!text) return;
-    if (!el.coach.hidden) return; // don't stack a bubble on top of a coach mark
-    if (!force && now - lastSpeech < 3.2) return;
+    if (!text) return false;
+    if (!el.coach.hidden) return false; // don't stack a bubble on top of a coach mark
+    if (!force && now - lastSpeech < 3.2) return false;
     lastSpeech = now;
     speechEl.textContent = text;
     speechEl.classList.add('show');
     clearTimeout(speechTimer);
     speechTimer = setTimeout(() => speechEl.classList.remove('show'), 2400);
+    return true;
   }
 
   let faceTimer = null;
@@ -530,15 +549,25 @@
     }
     const held = DATA.boosters.reduce((n, b) => n + ((S.boostInv && S.boostInv[b.id]) || 0), 0);
     const def = powerSeat && DATA.boosters.find((b) => b.id === powerSeat);
-    const sig = `${powerSeat}|${held}`;
+    /* DRAINED MEANS THE BAG IS EMPTY, never "the one you hold is already
+       running". A player whose only boost is mid-countdown still owns it, and
+       the badge is the one place its count is written — dropping both while the
+       rail beside it counts the same boost down is the button contradicting the
+       screen. The SEAT still decides what a tap does; this only decides what
+       the button says. */
+    const shown = def || (held
+      ? DATA.boosters.find((b) => ((S.boostInv && S.boostInv[b.id]) || 0) > 0) : null);
+    const sig = `${powerSeat}|${held}|${shown ? shown.id : ''}`;
     if (el.btnPower.dataset.sig === sig) return;
     el.btnPower.dataset.sig = sig;
-    el.btnPower.classList.toggle('empty', !def);
+    el.btnPower.classList.toggle('empty', !shown);
+    el.btnPower.classList.toggle('busy', !def && Boolean(shown));
     el.btnPower.dataset.boost = def ? def.id : '';
-    el.btnPower.style.setProperty('--tint', def ? def.tint : 'transparent');
-    el.btnPower.setAttribute('aria-label', def ? `Use ${def.name}` : 'Power-up');
-    el.btnPower.innerHTML = def
-      ? `${Icons.get(def.icon)}${held > 1 ? `<span class="f-count">${held}</span>` : ''}`
+    el.btnPower.style.setProperty('--tint', shown ? shown.tint : 'transparent');
+    el.btnPower.setAttribute('aria-label',
+      def ? `Use ${def.name}` : (shown ? `${shown.name} is already running` : 'Power-up'));
+    el.btnPower.innerHTML = shown
+      ? `${Icons.get(shown.icon)}${held > 1 ? `<span class="f-count">${held}</span>` : ''}`
       : Icons.get('bolt');
   }
 
@@ -613,7 +642,7 @@
      Making them wait for `pointerup` instead would fix that and cost the tap
      latency the whole core loop is built on, which is a far worse trade. */
   const NAV_SWIPE = 70;
-  const noSwipe = '.plot,.fl-plot,.flower-btn,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,[data-critter],.coach,.s-edge,.g-back,.year-pop';
+  const noSwipe = '.plot,.fl-plot,.flower-btn,.fpill,.fround,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,[data-critter],.coach,.s-edge,.g-back';
   let navY0 = null;
   let navX0 = null;
   let navId = null;
@@ -695,11 +724,19 @@
        rather than doing nothing at all. */
     if (!id) {
       Sound.play('deny');
-      toast({
-        title: 'Nothing loaded yet',
-        body: 'Power-ups come from quests and from levelling up.',
-        art: Icons.get('bolt')
-      });
+      const running = DATA.boosters.find((b) => Game.activeBoost(b.id)
+        && ((S.boostInv && S.boostInv[b.id]) || 0) > 0);
+      toast(running
+        ? {
+          title: `${running.name} is already running`,
+          body: 'One at a time. The strip above the garden is counting it down.',
+          art: Icons.get(running.icon)
+        }
+        : {
+          title: 'Nothing loaded yet',
+          body: 'Power-ups come from quests and from levelling up.',
+          art: Icons.get('bolt')
+        });
       return;
     }
     if (Game.activateBoost(id)) {
@@ -972,11 +1009,23 @@
       year: Game.turnReady(),
       shop: canDecor || canBrew
     };
+    /* Doc 36's table asks for counts, not bare discs: "the fillable-order dot; a
+       claimable-quest count" and "unopened pack count". A number is a reason to
+       open something; a dot is only a nudge. */
+    const counts = {
+      orders: Game.standOrders().filter((o) => Game.standCanDeliver(o)).length + (canClaim ? 1 : 0),
+      album: S.packs
+    };
     $$('.dock-btn', el.dock).forEach((b) => {
       const dot = $('.dock-dot', b);
       if (!dot) return;
-      const show = map[b.dataset.tab] && UI.sheetMode() !== b.dataset.tab;
+      const tab = b.dataset.tab;
+      const show = map[tab] && UI.sheetMode() !== tab;
       dot.hidden = !show;
+      const n = counts[tab];
+      const txt = show && n > 1 ? String(n) : '';
+      if (dot.textContent !== txt) dot.textContent = txt;
+      dot.classList.toggle('wide', Boolean(txt));
     });
     /* The band's UPGRADE pill carries the same dot on the same rule — the first
        time the attention-dot idea has reached a control that is not a dock tab. */
@@ -1008,7 +1057,7 @@
   /* Phase 3.5: the crowd comes in off the edges, because the band's two
      floating buttons now stand at 34px in from each side. The old 80% spot put
      the second creature squarely behind the POWER-UP button. */
-  const CRITTER_SPOTS = [32, 68, 44, 56];
+  const CRITTER_SPOTS = [35, 65, 45, 55];
   const critterEls = new Map();
 
   function buildCritter(def, spot) {
@@ -1017,6 +1066,11 @@
     node.type = 'button';
     node.dataset.critter = def.id;
     node.style.setProperty('--x', spot + '%');
+    /* Paint order is DOM order, which is ARRIVAL order — so without this a
+       creature further left could be drawn in front of one further right, with
+       every creature on the same baseline and no depth cue to explain it.
+       Stacking by position makes the occlusion read as a crowd. */
+    node.style.zIndex = String(Math.round(spot));
     node.setAttribute('aria-label', `${def.name}, a ${def.species}`);
     node.innerHTML = `
       <span class="critter-motes">${Critters.motes(3, def.art.glow)}</span>
