@@ -71,6 +71,17 @@ would have built. `UI.openSheet(mode, arg)` opens any panel directly; `UI.enterH
 `console.warn` in the game is invisible to it — including `Save load failed`, which is the one you
 most want to see. "no console errors" means no errors, not no problems.
 
+**A `tap:` on an element below the fold misses, silently, and the run still exits 0.** The step
+dispatches a real touch at the element's coordinates, so anything scrolled outside the 844px
+viewport is simply not there to hit — the sheet's Garden Year buttons sit at roughly y=1285 and
+were never reached. Nothing errors, the screenshots look plausible, and the exit code says
+success: the run proved the page did not throw, **not that any of your steps ran.** Use
+`eval:` with `.click()` to test that a handler is wired, and keep `tap:` for testing that a hit
+target is actually reachable by a thumb — which is the one question `eval:` cannot answer. Cost
+a session an hour on the phase-1 dev panel, twice: once believing a live button was dead, once
+trusting a green run that had done nothing. Assert on state after a `tap:`, never on the exit
+code alone.
+
 **What it will not tell you.** Nothing about audio, because there is no output device. Nothing
 about real touch feel, momentum or the bottom sheet's drag. Nothing about iOS Safari, which is the
 platform this game is actually played on and the one most likely to disagree — a change to sticky
