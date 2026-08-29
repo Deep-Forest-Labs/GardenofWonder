@@ -12,85 +12,48 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
-> **THE SURFACE RUN IS UNDER WAY — phases 2 and 3 merged into one unattended session on the
-> owner's call, 2026-08-29.** The wireframe gate's approval step is deferred to morning for this
-> run only: **both spikes shipped first, in their own commits, so the record shows layout preceded
-> code** — `tools/turn-spike.html` (21 frames: the meter pill and its projection, the ceremony's
-> four beats, the Almanac row before and after petals, the picker's unlock rows, the season tint)
-> and `tools/fall-spike.html` (12 frames: Summer with the strip legible, the swipe mid-gesture, a
-> hedge gate up close, Fall's board through filling / one-from-ready / armed / paid, the Century
-> Bloom's wait, the dock swap). **Every decision the gate would have put to the owner is in
-> [35-morning-review.md](35-morning-review.md)**, with what it cost and what changing it costs —
-> read that first in the morning; it opens with a five-minute phone walkthrough.
+> **THE SURFACE RUN IS DONE FOR THE NIGHT — phases 2 and 3 merged into one unattended session on
+> the owner's call, 2026-08-29.** The wireframe gate's approval step was deferred to morning for
+> this run only, so **both spikes shipped first in their own commits** —
+> `tools/turn-spike.html` (21 frames) and `tools/fall-spike.html` (12) — and
+> **[35-morning-review.md](35-morning-review.md) carries every decision the gate would have put to
+> the owner**, opening with where the night got to and a five-minute phone walkthrough that was
+> itself walked end to end before it was written down. **No economy knob or rule moved.**
 >
-> **Two findings from drawing it that changed the build.** *(1)* **The meter pill cannot carry a
-> number.** Measured on the real metrics: 360px of HUD, 132px of round buttons, and three numbered
-> wallets need ~245px of the 220px left — so the wallets wrap, and worse, they wrap *as you get
-> richer*. Shipping icon-and-fill with both numbers one tap away; the alternative that buys both
-> (the album star leaves the HUD for the Almanac) is a navigation call and is parked for the owner.
-> *(2)* **The meadow has no door.** Doc 32 says it "keeps its current entry from Summer" and there
-> is no such entry — `UI.enterMeadow()` has exactly one caller in the repo and it is the map's dive,
-> and the meadow's only exit returns to the map. **Retiring the map without re-homing it strands the
-> whole Wild Meadow**, so phase 3 gives it the burrow door's twin at the foot of the garden and
-> leaves swipe-down retired, as doc 32 asks.
->
-> **PHASE 3'S FIRST HALF IS LIVE: the strip, the gates and Fall.** Horizontal is time — SPRING ←
-> SUMMER → FALL → WINTER, swiped between with the vertical gesture's rules mirrored
-> (background-start, `dx > dy`, ~70px), plus an edge tab on each side so the gesture has a visible
-> door the way the burrow has one. **Fall is not a place layer**: a season is the same room in a
-> different month, so `.stage` swaps its board and the scenery swaps behind it while the HUD, quest
-> strip, rail and dock never move — which is also why nothing in Fall re-states the 560px column.
-> Fall's board is the garden's construction in a woven trug on damp autumn earth, all eight crops on
-> hour clocks, the windfall stated as one chip in four states above the board, and the Century Bloom
-> in its own block with a plot colour of its own because it stands outside the bed in both
-> directions. A locked season shows its gate — sky, hedge, padlock, the turn that opens it — and says
-> which of the two gates is holding it, so a Turn-5 player never reads "Opens at Turn 3".
->
-> **THE MAP IS DELIBERATELY UNTOUCHED and the dock still says World** — the owner's overnight call
-> was *phase 2 deep, phase 3 parked with the map still working*. Both navigations work, which is doc
-> 34's hard rail. **The blocker under the rest of phase 3: the Wild Meadow's only door is the map**,
-> so it cannot retire until the meadow has one (the burrow door's twin, drawn in frame 1 of the
-> fall spike). Phase 3's remainder is itemised in [11-known-issues.md](11-known-issues.md); new files
-> are `fall.js` and `ui-fall.js`, documented in [02-architecture.md](02-architecture.md).
->
-> **PHASE 2 IS BUILT AND GAUNTLETED — the Turn has a surface, and a year can be played from the
-> game's own UI.** Eight adversarial critics ran over the built phase and **three of them
-> independently found the same blocker: the ask told the player the Turn was free.** A tidy player
-> who harvested the board clean read *"This Turn costs you nothing at all"* and then lost their gold,
-> every badge, their boosters and plots 5–8, atomically and unrecoverably. The ask now carries two
+> **PHASE 2 IS BUILT AND GAUNTLETED: the Turn has a surface.** The year-meter pill (a third wallet
+> whose own body *is* the meter) and its projection with both Turn gates drawn as tracks; the `turn`
+> sheet's five beats — the ask, the blessing picker, the Tally's count-up / lines / total, the
+> spring return with its gate card; petal tracks on the Almanac rows; unlock prices in the plant
+> picker with a confirm; and the season tint ripening Summer as the year fills. **Eight adversarial
+> critics ran over it and three independently found the same blocker: the ask told the player the
+> Turn was free** while it zeroed their gold, badges, boosts and plots 5–8. It now carries two
 > labelled rows — *this year goes* and *these stay, always*. Also found and fixed: the **mystery
-> meter did not exist** (`turnsCompleted` appeared zero times in `ui.js`, so a first-time tap
-> explained the whole prestige system); the **season tint stopped a quarter of the way through the
-> year** and left the iOS status-bar strip untinted above the sky it sits on; the **HUD still wrapped
-> at 375px**, which resizes the board as you earn; and the drained-paper family — the game's word for
-> *stopped working* — was carrying the ceremony's best news. Full list in the 2026-08-29 (phase 2,
-> the gauntlet) entry of [10-decision-log.md](10-decision-log.md).
+> meter did not exist** (`turnsCompleted` appeared zero times in `ui.js`, so a first tap explained
+> the whole prestige system), the **season tint stopped a quarter of the way through the year** and
+> left the iOS status-bar strip untinted above the sky it sits on, the **HUD still wrapped at
+> 375px**, and the drained-paper family — the game's word for *stopped working* — was carrying the
+> ceremony's best news.
 >
-> **What phase 2 ships.**
-> The meter pill (a third wallet whose own body *is* the meter), its projection popover with both
-> Turn gates drawn as tracks, the `turn` sheet's five beats — the ask, the blessing picker, the
-> Tally's count-up / lines / total, the spring return with the gate card — petal tracks on the
-> Almanac rows, and the season tint warming Summer as the year fills. **The cosy rule is enforced
-> twice**: the engine never emits a line the year scored zero on, and a year that scored *nothing*
-> now shows no multiplier at all, because a Tally ending on a bare "×1.00" is the "you failed" row
-> doc 32 forbids wearing a different hat. **The blessing picker filters capped flowers**, closing
-> the carried-forward requirement in [11-known-issues.md](11-known-issues.md). Suite still 1,207;
-> no economy knob moved. See the 2026-08-29 (phase 2, the ceremony) entry in
-> [10-decision-log.md](10-decision-log.md), the new sections in
-> [08-ui-and-layout.md](08-ui-and-layout.md), and the tint's two visual constants in
-> [05-art-direction.md](05-art-direction.md).
+> **PHASE 3'S FIRST HALF IS BUILT AND GAUNTLETED: the strip, the gates and Fall.** Horizontal is
+> time — SPRING ← SUMMER → FALL → WINTER — swiped with the vertical gesture's rules mirrored, plus
+> an edge tab on each side so the gesture has a visible door the way the burrow has one. **Fall is
+> not a place layer**: a season is the same room in a different month, so `.stage` swaps its board
+> and the scenery swaps behind it while the HUD, quest strip, rail and dock never move — which is
+> also why nothing in Fall re-states the 560px column. Fall's board is the garden's construction in
+> a woven trug on damp autumn earth, eight crops on hour clocks, the windfall stated as one chip
+> above the board, and the Century Bloom in its own block with a plot colour of its own. Six more
+> critics found **three blockers**: the bed chip read the clock instead of the engine's windfall
+> marks and so lied about the +50% in both directions; the gate's only visible button was inert; and
+> a two-thumb tap changed season. All fixed, and **four new traps** are recorded below.
 >
-> **PHASE 2's FIRST PUSH: the plant picker sells unlocks.** A locked row now wears its
-> one-time gold price in the slot every other row uses for its go button, drained rather than
-> greyed-out — it is an advert for the thing you are saving 150K for, so its numbers stay readable.
-> Tapping it **asks before it charges** (one-time, permanent, unrefundable, no undo), and the toast
-> says *yours for good — unlocks survive every Turn*, which is the one fact a player cannot see.
-> **A fresh save can therefore plant past Tulip again.** Shipped first, ahead of the ceremony, on
-> the owner's call. With it: **`Game.plotGate(idx)`**, because two different refusals were wearing
-> one label — a plot the Turn is holding said "Lv 3", which is a sentence nobody could act on. It
-> now says **Turn 1**, and the deny float says *After your first Turn*. Suite 1,202 → **1,207**. See
-> the 2026-08-29 (phase 2, first push) entry in [10-decision-log.md](10-decision-log.md) and the
-> pruned seam in [11-known-issues.md](11-known-issues.md). **Next: the ceremony.**
+> **THE MAP IS DELIBERATELY UNTOUCHED and the dock still says World** — the owner's runway call was
+> *phase 2 deep, phase 3 parked with the map still working*. Both navigations work, which is doc
+> 34's hard rail. **The blocker under the rest of phase 3: the Wild Meadow's only door is the map**,
+> so retiring one strands the other; doc 32's sentence saying otherwise is corrected there. Phase
+> 3's remainder is itemised in [11-known-issues.md](11-known-issues.md), and the four questions
+> waiting for the owner are in [35-morning-review.md](35-morning-review.md). New files are `fall.js`
+> and `ui-fall.js`, in [02-architecture.md](02-architecture.md). Suite **1,207**, clean across
+> repeated runs.
 >
 > **PHASE 1 OF THE GARDEN YEAR IS BUILT, 2026-08-29 — the engine, as pure simulation, awaiting
 > the owner's verdict.** The whole prestige loop runs headlessly under the live game, which looks

@@ -4,8 +4,11 @@
 and phase 1.1 rebuilt the mint on the owner's cumulative ruling.** Every number below now
 lives in `data.js` (`DATA.year`, `DATA.petals`, `DATA.fall`), `Game.credit()` is wired
 through every faucet, and sim-test bill items 1–6, 8–17b and 18 are asserted in
-`tools/sim-test.js` (item 7 waits for slice B; the suite stands at 1,149). What is built is simulation only —
-the surfaces arrive in phases 2–3. See
+`tools/sim-test.js` (item 7 waits for slice B; the suite stands at 1,207). **The surfaces arrived on 2026-08-29 too** — phase 2 (the ceremony, the meter, petals, unlock
+prices) and phase 3's first half (the strip and Fall). Every number below is still the engine's;
+**no economy knob moved when the surfaces were built**, and the three constants the surfaces added
+(`seasonTint`, `seasonTintMax`, `seasonSpan` in `DATA.year`) are visual only and drive nothing but
+the palette. See
 [03-systems.md](03-systems.md#the-garden-year--the-engine-simulation-only) for the engine as
 it exists. The numbers for
 [32-the-garden-year.md](32-the-garden-year.md), and the economy retune the owner unblocked

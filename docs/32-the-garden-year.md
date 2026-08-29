@@ -1,8 +1,14 @@
 # The Garden Year
 
-**Status: the design, decided 2026-08-29. The simulation engine (phase 1 of
-[34-build-plan.md](34-build-plan.md)) is BUILT — the Turn, the mint, the Tally, petals, unlock
-prices and Fall all run headlessly under the live game; every surface here is still unbuilt.**
+**Status: the design, decided 2026-08-29. Phase 1 (the engine), phase 2 (the ceremony) and the
+first half of phase 3 (the strip and Fall) are BUILT and gauntleted — see
+[34-build-plan.md](34-build-plan.md).** Live now: the year-meter pill and its projection, the Turn
+ceremony's five beats with the arcade Tally, the blessing, petal tracks on the Almanac, unlock
+prices in the plant picker, the season tint, the horizontal season strip with its edge tabs, the
+locked-season gates, and Fall's board with all eight crops, the windfall and the Century Bloom.
+**Still unbuilt in slice A:** the map's retirement and the Stand's dock entry, which are blocked on
+re-homing the Wild Meadow — the map is its only door, contrary to the sentence in *The world: one
+swipe wide* below. Winter and Spring have gates and no gardens; they are slices C and E.
 This is the master document for
 the game's new shape — the seasonal world, the Turn (prestige), Saved Seeds, flower mastery, and
 how orders, creatures and every existing system sit inside it. Numbers live in
@@ -45,7 +51,13 @@ of the year, and the player swipes between them:
 and not before.* The season strip ships in slice A, so the map, `overworld.js` and the camera
 retire with slice A. **The Stand keeps an entry throughout:** in slice A the dock's World button
 becomes a **Stand** button opening the existing Stand sheet (one swap, honouring the rule), until
-slice D's order strip replaces it. The meadow keeps its current entry from Summer unchanged.
+slice D's order strip replaces it. ~~The meadow keeps its current entry from Summer unchanged.~~
+**Corrected 2026-08-29 while building phase 3: there is no entry from Summer.** `UI.enterMeadow()`
+has exactly one caller in the repo — the map's dive — and the meadow's only exit returns to the map.
+So **retiring the map strands the Wild Meadow**, and the map cannot go until the meadow has a door
+of its own. The proposal, drawn in frame 1 of `tools/fall-spike.html`, is the burrow door's twin at
+the foot of the garden; the freed swipe-down stays retired as this document says. Owner's call, in
+[35-morning-review.md](35-morning-review.md) §4.
 
 ## The four seasons
 

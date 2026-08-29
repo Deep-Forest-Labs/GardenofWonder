@@ -22,9 +22,11 @@ player the Turn was free** while it zeroed their gold, badges, boosts and plots 
 with about twenty other findings. Every one is in the 2026-08-29 (phase 2, the gauntlet) entry of
 `10-decision-log.md`.
 
-**Phase 3's first half is built**: the strip, the season edge tabs, the locked-season gate, Fall's
-board with all eight crops, the windfall and the Century Bloom. **Its gauntlet is the one piece that
-did not finish** — see §7 at the bottom for exactly where it stopped.
+**Phase 3's first half is built and gauntleted too**: the strip, the season edge tabs, the
+locked-season gate, Fall's board with all eight crops, the windfall and the Century Bloom. Six more
+critics ran over it and found **three blockers** — the bed chip read the clock instead of the
+engine's windfall marks and so lied about the +50% in both directions; the gate's only visible
+button was inert; and a two-thumb tap changed season. All fixed. §7 has the list and what is left.
 
 **The map is untouched and the dock still says World**, which is your runway answer: *phase 2 deep,
 phase 3 parked with the map still working*. Both navigations work. The blocker under the rest of
@@ -342,3 +344,44 @@ like admin.
 dock cannot take the Stand. My proposal is in §4 — the burrow door's twin at the foot of the garden,
 drawn in frame 1 of the fall spike — and it is one button plus one handler. It is the first thing
 phase 3's remainder needs.
+
+---
+
+## §7 — What phase 3's gauntlet found, and what is left
+
+Six critics: the mandatory grammar critic, visual fidelity against the spike then doc 05, gesture
+and layout, whether Fall's surface tells the truth about Fall's rules, correctness, and the house
+traps. Three blockers, all fixed; the full list is in the 2026-08-29 (phase 3, the gauntlet) entry
+of `10-decision-log.md`. **The three worth knowing about:**
+
+1. **The bed chip read the clock, not the engine's marks.** A bed that is planted and ripe is not
+   necessarily a bed that will pay — the latch marks once per fill and refuses to mark again while
+   any mark is unspent. So harvesting one plot and replanting it (the natural flow) left the chip
+   promising +50% on a plot that could never earn it, and collecting one plot dropped the promise off
+   the seven that still would. Every marked plot now wears a gold ring, so *which of these still
+   pays* is something you can see.
+2. **The gate's "Back to the garden" was dead.** `.in-gate` shipped with half of the place-layer
+   pair; `.ui` covers the screen and ate the tap. It is the handoff's own trap, and it is now
+   written there as an instruction rather than an anecdote.
+3. **A two-thumb tap changed season.** One pair of gesture-origin variables with no `pointerId`, and
+   the core loop is rapid two-thumb tapping.
+
+### What is left of phase 3, in the order I would do it
+
+1. **The meadow's door**, then the map's retirement and the Stand in the dock. Blocked on your call
+   in §4; everything else waits behind it.
+2. **The eight-tap bed harvest** (§5) — the biggest single difference between Fall feeling like an
+   appointment and Fall feeling like admin.
+3. **Fall in the welcome-back report.** The edge tab's dot and the arming celebration exist now, but
+   a bed that ripened overnight is still silent in the away sheet — which is the screen a player
+   sees first.
+4. **Winter and Spring** are slices C and E and are correctly gated; their gates say which of the
+   two gates is holding them.
+
+### One thing I would look at with fresh eyes
+
+Fall's scene is composed into the two bands the board does not cover, which is a constraint I only
+found by drawing it and is now a trap in the handoff. It reads as a season — but it is
+background-swap art by doc 32's own staging, and it is the part of the night I would least defend as
+finished. Phase 4 owns it; if it looks wrong to you in the morning, that is the honest answer rather
+than a defect.
