@@ -20,7 +20,6 @@ const UI = (() => {
     hollow: $('#hollow'),
     map: $('#map'),
     meadow: $('#meadow'),
-    burrowDoor: $('#burrowDoor'),
     rail: $('#rail'),
     questStrip: $('#questStrip'),
     qPip: $('#qPip'),

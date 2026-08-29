@@ -405,7 +405,7 @@
                creature never stands on a plot. -->
           <div class="mw-keeper-bank" id="meadowKeepers" aria-label="Keepers"></div>
         </main>
-        <div class="mw-exit"><i></i><span>Swipe down for the map</span></div>
+        <div class="mw-exit"><i></i><span>Swipe down for the garden</span></div>
         <nav class="dock mw-dock">${DOCK.map((d) => `
         <button class="dock-btn" type="button" data-dock="${d.id}">
           <span class="dock-ico">${ico(d.icon)}</span>
@@ -424,7 +424,11 @@
       if (dock) dockTap(dock.dataset.dock);
     });
 
-    /* Swipe down goes back out to the map.
+    /* Swipe down goes back to the garden.
+
+       Since 2026-08-30 the meadow is entered by swiping UP from the garden, so
+       its exit is the opposite swipe — and it is the only way out, because the
+       map that used to hold it is gone.
 
        The board covers nearly the whole room, so excluding cells from the
        gesture left it working only on the slivers of scene either side — which
@@ -450,7 +454,7 @@
       const dy = e.clientY - y0;
       const dx = Math.abs(e.clientX - x0);
       y0 = null;
-      if (dy > 70 && dy > dx) { dragged = true; leave(); UI.enterMap('meadow'); return; }
+      if (dy > 70 && dy > dx) { dragged = true; leave(); return; }
       // Anything that moved is a drag that fell short, never a tap on a cell.
       if (Math.abs(dy) > 14 || dx > 14) dragged = true;
     });

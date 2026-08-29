@@ -5,6 +5,28 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## The meadow's only door is a gesture nobody can see (2026-08-30, phase 3.5)
+
+**Accepted, not a bug — but the thing to watch in the first playtest.** The owner ruled at the
+phase-3.5 gate that the Hollow and the meadow lose their labelled door graphics and are reached by
+the vertical swipe: **down goes under to the Hollow, up goes out to the meadow.**
+
+The Hollow survives that easily — a player who never swipes still sees its creatures standing in the
+garden, and the Feed panel and Loadout are reachable the moment they do. **The meadow has nothing of
+the kind.** There is no button, no tab and no label pointing at it, and it holds the hives, the
+keepers, the Honey Shelf and four quests worth **114 of the ladder's 777 reputation**
+(`q_hive_1` 14, `q_honey_3` 16, `q_honey_8` 36, `q_honey_15` 48).
+
+Its whole discoverability is one line from the flower, fired once on the first idle after the
+tutorial and gated by a new `seen.meadow` save flag: *"Swipe up sometime — the wild meadow is out
+that way."*
+
+**And one dot has nowhere to live.** `updateDockDots()` put a badge on the World button whenever
+jars were waiting in the meadow; the World button is gone and nothing has replaced that signal, so a
+full hive now waits silently. If the meadow reads as forgotten in play, the cheapest fixes in order
+are: give the meadow's swipe an edge tab of its own on the bottom edge (the season tabs' pattern,
+already built), or re-home the jar dot onto something always visible.
+
 ## Two dead surfaces, found by the phase-3.5 dock mapping (2026-08-30)
 
 Both pre-date this phase. They are recorded rather than fixed because the dock rebuild must not

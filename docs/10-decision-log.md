@@ -5,6 +5,50 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (phase 3.5a) — The doors become the gesture, and the meadow finally has a way in
+
+The owner's annotation at the gate: *"remove the little graphic for the hollow and the meadow — I
+want players to learn they can slide down to go to the hollow, it doesn't need a button that's
+prominent."* Built, and it is the first push of the phase because **the map may not retire before
+the meadow has a door** and this is that door.
+
+**Down goes under, up goes out.** The Hollow's direction flips. The old rule — *up goes in, down
+pulls the camera back* — was the map's altitude metaphor, and with the map going there is no camera
+to pull back to. What is left is the picture: the Hollow is a burrow under the garden, the meadow is
+up the lane. A room's exit is now the opposite of the swipe that got you there, which is what makes
+the axis learnable rather than two unrelated gestures. **A friend who learned the old swipe will land
+in the meadow the first time** — they lose nothing, and it is one line to flip back if the owner
+would rather.
+
+**The burrow mouth is deleted, not hidden.** It was the discoverable entrance and the owner is right
+that it was competing with the gesture it existed to teach — and the band needs the foot of the yard
+for the floating pair. `.burrow-door`, `.burrow-mouth` and `.burrow-label` are gone from
+`style.css`, the node is out of `index.html` and out of the `ui-shared.js` cache, and it is off the
+swipe-exclusion list.
+
+**The meadow's exit comes home.** `UI.enterMap('meadow')` was the only thing that happened when you
+swiped out of the meadow; now `leave()` simply returns to the garden, and the chip reads *Swipe down
+for the garden*. `UI.enterMap` now has exactly one caller left in the repo — the World dock button —
+which is what push 3 removes.
+
+**The one real cost, and it is named rather than absorbed:** the meadow now has no visible entrance
+at all. The Hollow can afford that; the meadow holds 114 of the ladder's 777 reputation behind four
+quests. Its whole discoverability is one line from the flower on the first idle after the tutorial,
+gated by a new `seen.meadow` flag — which deliberately has **no** load-time backfill, because nobody
+has seen that line yet, including a player who has been reaching the meadow through the map. Filed
+in [11-known-issues.md](11-known-issues.md) with the two cheapest fixes if it reads as forgotten in
+play.
+
+**Rejected: keeping the Hollow on swipe-up and giving the meadow the freed swipe-down.** Less churn
+— the Hollow would not have changed at all — but it puts the burrow above the garden and the meadow
+below it, which is a picture of nothing. The owner asked for down; down is also true.
+
+Both navigations still work after this push: the World button and the map are untouched, so the
+meadow is reachable two ways for exactly one push. That is doc 34's hard rail being obeyed rather
+than trusted.
+
+---
+
 ## 2026-08-30 (phase 3.5, the wireframe gate) — The Big Five's spike, and the three things the spec forgot
 
 `tools/dock-spike.html`, 16 frames, pushed before any UI code per doc 34's gate. What follows is the

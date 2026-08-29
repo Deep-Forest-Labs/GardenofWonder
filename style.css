@@ -2697,25 +2697,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .critter-memento.none{color:var(--ink-soft);opacity:.7}
 
 /* ============ the way down to the Hollow ============ */
-/* A visible mouth in the ground teaches the place exists; the swipe out of it is
-   the fast path once learned. A swipe-only entrance is undiscoverable. */
-.burrow-door{
-  position:absolute;left:10px;bottom:2px;z-index:4;
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  margin:0;padding:0;border:0;background:none;cursor:pointer;
-}
-.burrow-mouth{
-  display:block;width:clamp(38px,11vw,54px);height:clamp(26px,7.5vw,38px);
-  border:4px solid var(--ink);border-bottom:0;
-  border-radius:999px 999px 0 0;
-  background:linear-gradient(180deg,#8a6039,#5e3f24);
-  box-shadow:inset 0 5px 0 rgba(0,0,0,.28);
-}
-.burrow-label{
-  font-size:10px;font-weight:800;color:#fff;
-  text-shadow:0 2px 0 rgba(44,26,16,.9),0 0 6px rgba(44,26,16,.6);
-}
-.burrow-door:active .burrow-mouth{transform:translateY(2px)}
+/* THE BURROW MOUTH IS GONE, 2026-08-30 (the owner's call at the phase-3.5 gate).
+   A room is reached by the vertical swipe now, and learning that swipe is the
+   point: DOWN goes under to the Hollow, UP goes out to the Wild Meadow. The two
+   labelled mouths on the lawn were competing with the gesture they were meant
+   to teach, and the band needs the foot of the yard for the floating pair. */
 .in-hollow .stage,.in-hollow #dock,.in-hollow .rail,.in-hollow .quest-strip{display:none}
 
 /* ============ the Hollow ============ */

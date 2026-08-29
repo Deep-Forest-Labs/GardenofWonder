@@ -207,7 +207,7 @@
       <div id="hollowScene" class="hollow-scene-wrap"></div>
       <div id="hollowTenants" class="hollow-tenants"></div>
       <button class="hollow-exit" id="hollowExit" type="button">
-        <i></i><span>Swipe down for the garden</span>
+        <i></i><span>Swipe up for the garden</span>
       </button>
       <p class="hollow-count" id="hollowCount"></p>
       <p class="hollow-empty" id="hollowEmpty" hidden>Nobody lives here yet.<br>Grow what they like and they will turn up.</p>
@@ -236,23 +236,25 @@
       else UI.openSheet('critter', n.dataset.critter);
     }, { passive: false });
 
-    /* Swipe DOWN to go up to the garden. Dragging down pulls the world down past
-       you, which is the same direction any scroll uses — swiping up to rise reads
-       backwards once you actually try it. */
+    /* Swipe UP to climb back to the garden. A room's exit is the opposite of the
+       swipe that got you here, and since 2026-08-30 the way in is DOWN — the
+       Hollow is under the garden, and with the map retired there is no camera to
+       pull back. Getting the pair the same way round is what makes the axis
+       learnable at all. */
     let y0 = null;
     let x0 = 0;
     el.hollow.addEventListener('pointerdown', (e) => {
       y0 = null;
       /* Creatures and the dock act on the way down, so a drag begun on one has
          already opened a sheet or toggled a slot — leaving would then do two
-         things at once. Same rule as the garden's swipe up. */
+         things at once. Same rule as the garden's own swipe. */
       if (e.target.closest('[data-critter],.dock,.hollow-exit')) return;
       y0 = e.clientY;
       x0 = e.clientX;
     });
     el.hollow.addEventListener('pointerup', (e) => {
       if (y0 === null) return;
-      const dy = e.clientY - y0;
+      const dy = y0 - e.clientY;
       const dx = Math.abs(e.clientX - x0);
       y0 = null;
       if (dy > 70 && dy > dx) exit();

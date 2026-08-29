@@ -171,10 +171,22 @@ From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
 - **`overscroll-behavior: none`** and `overflow: hidden` on the body prevent rubber-banding.
 - **`user-select: none`** everywhere, since the whole screen is a tap target.
 
-### Navigating between the garden and the Hollow
+### Navigating between the garden and its two rooms
 
-**Swipe up in the garden to go down; swipe down in the Hollow to come back.** Both drag the world
-past you in the direction a scroll would. The burrow mouth stays as the discoverable entrance.
+**Rewritten 2026-08-30 (phase 3.5).** The old rule was the map's — *up goes in, down pulls the
+camera back* — and it died with the map. What is left is the picture:
+
+**Swipe DOWN in the garden to go under to the Hollow; swipe UP to go out to the Wild Meadow.** A
+room's own exit is the opposite of the swipe that got you there, so the Hollow leaves upward and the
+meadow leaves downward.
+
+**There is no longer a labelled door for either room.** The burrow mouth is gone (the owner's call at
+the phase-3.5 gate): the gesture is what a player is meant to learn, and two labelled mouths on the
+lawn were competing with it — as well as occupying the foot of the yard the floating pair now needs.
+The Hollow can afford that, because its creatures are standing in the garden whether or not you ever
+swipe. **The meadow cannot**, so the flower names it once, on the first idle line after the tutorial
+(`seen.meadow`). That one line is the whole of the meadow's discoverability and it is filed as a risk
+in [11-known-issues.md](11-known-issues.md).
 
 Two rules keep the gestures from fighting the game:
 
@@ -669,17 +681,18 @@ the centring away. Same collision as a state modifier that writes `box-shadow` a
 
 ## The vertical ladder
 
-Since 2026-08-25 the game is three places stacked on one axis, with one rule:
+**Rebuilt 2026-08-30 (phase 3.5).** The axis is three places again, but they are three *rooms* now
+rather than three altitudes:
 
 ```
-   THE MAP        swipe DOWN from the garden
-   THE GARDEN     you start here
-   THE HOLLOW     swipe UP from the garden
+   THE WILD MEADOW   swipe UP from the garden      (out along the lane)
+   THE GARDEN        you start here
+   THE HOLLOW        swipe DOWN from the garden    (under the roots)
 ```
 
-**Down pulls the camera back, up goes in.** From the map, swiping up dives to the garden; from the
-Hollow, swiping down comes back up. One gesture, one metaphor, and no dock slot spent on
-navigation.
+**Down goes under, up goes out**, and a room leaves by the opposite swipe. The old rule — *down
+pulls the camera back, up goes in* — belonged to the map's altitude metaphor and retired with it;
+there is no camera to pull back to any more. No dock slot is spent on navigation either way.
 
 The garden's swipe still **only starts on the background** — plots and the flower act on
 `pointerdown` and would fire on the way out, and making them wait for `pointerup` would cost the tap
@@ -687,8 +700,8 @@ latency the core loop is built on. On the map a drag is a pan, so only a gesture
 than 12px counts as a tap; otherwise panning across the world would keep opening whatever it
 finished over.
 
-`.in-map` hides the stage, dock, rail and quest strip, exactly as `.in-hollow` does — and both hide
-coach marks, because a coach mark points at something in the garden that is now covered.
+`.in-meadow` hides the stage, dock, rail and quest strip, exactly as `.in-hollow` does — and both
+hide coach marks, because a coach mark points at something in the garden that is now covered.
 
 ## The HUD is always up
 

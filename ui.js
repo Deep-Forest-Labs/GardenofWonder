@@ -231,6 +231,21 @@
     idleSince = Date.now() / 1000;
   }
 
+  /* The meadow is the one room with no visible entrance: the Hollow's creatures
+     are standing in the garden whether or not you ever find the swipe, but a
+     player who never swipes up never learns the meadow exists at all. So the
+     flower names it once, on the first idle line after the tutorial is done.
+     One line, one save flag, and then it goes back to chatting. */
+  function idleNudge(now2) {
+    if (!S.seen.meadow && S.seen.plot) {
+      S.seen.meadow = true;
+      Game.save();
+      sayText('Swipe up sometime — the wild meadow is out that way.', true);
+      return;
+    }
+    say('idle');
+  }
+
   function say(bucket, force) {
     const lines = FLOWER_LINES[bucket] || FLOWER_LINES.idle;
     sayText(lines[(Math.random() * lines.length) | 0], force);
@@ -602,23 +617,25 @@
   }
 
 
-  el.burrowDoor.addEventListener('click', () => {
-    noteActivity();
-    UI.enterHollow();
-  });
+  /* The vertical ladder: the MEADOW above, the garden here, the HOLLOW below.
 
-  /* The vertical ladder: MAP above, garden here, HOLLOW below. One rule for all
-     of it — swipe DOWN pulls the camera back, swipe UP goes in. So from the
-     garden, up is the Hollow and down is the map.
+     The old rule was the map's — up goes in, down pulls the camera back — and it
+     died with the map. What is left is the picture: the Hollow is a burrow under
+     the garden and the meadow is up the lane, so DOWN goes under and UP goes out.
+     A room's own exit is the opposite of the swipe that got you there.
+
+     There is no longer a labelled door for either. That is deliberate (the
+     owner's call at the phase-3.5 gate) and the gesture is what a player is meant
+     to learn — but it also means the meadow has no visible entrance at all, so
+     the flower names it once, on the first Summer after the meadow is reachable.
 
      It only starts on the BACKGROUND — sky, lawn, the margins. Plots and the
      flower act on `pointerdown` and have already fired by the time a drag is
      recognisable, so a swipe begun on one would plant or harvest on its way out.
      Making them wait for `pointerup` instead would fix that and cost the tap
-     latency the whole core loop is built on, which is a far worse trade. The
-     burrow door is still the discoverable way in; this is the fast path. */
+     latency the whole core loop is built on, which is a far worse trade. */
   const NAV_SWIPE = 70;
-  const noSwipe = '.plot,.fl-plot,.flower-btn,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,[data-critter],.burrow-door,.coach,.s-edge,.g-back,.year-pop';
+  const noSwipe = '.plot,.fl-plot,.flower-btn,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,[data-critter],.coach,.s-edge,.g-back,.year-pop';
   let navY0 = null;
   let navX0 = null;
   let navId = null;
@@ -668,8 +685,8 @@
        once. */
     if (gateOn || season !== 'summer') return;
     noteActivity();
-    if (dy > 0) UI.enterHollow();
-    else UI.enterMap('garden');
+    if (dy > 0) UI.enterMeadow();
+    else UI.enterHollow();
   });
 
   el.critterYard.addEventListener('pointerdown', (e) => {
@@ -1085,7 +1102,7 @@
       comboAcc -= 1;
       Game.decayCombo();
       const now2 = Date.now() / 1000;
-      if (now2 - idleSince > 26 && !UI.sheetMode()) { say('idle'); idleSince = now2; }
+      if (now2 - idleSince > 26 && !UI.sheetMode()) { idleNudge(now2); idleSince = now2; }
     }
     const cp = S.tap.combo / S.tap.comboMax;
     comboRing.style.setProperty('--combo', cp.toFixed(3));

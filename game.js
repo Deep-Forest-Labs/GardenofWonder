@@ -76,7 +76,7 @@ const Game = (() => {
       mementos: {},
       luckyPacks: 0,
       prefs: { sfx: true, music: false },
-      seen: { intro: false, plot: false, apiary: false },
+      seen: { intro: false, plot: false, apiary: false, meadow: false },
       quests: { active: [], done: [], daily: { id: null, progress: 0, day: '', claimed: false } },
       rep: 0,
       level: 1,
@@ -223,6 +223,9 @@ const Game = (() => {
       // does carry. Any future `seen` flag needs its own line here.
       if (!state.seen.intro && (state.stats.totalTaps || state.stats.totalHarvests)) state.seen.intro = true;
       if (!state.seen.plot && (state.stats.totalHarvests || (parsed.grid || []).some((c) => c && c.seed))) state.seen.plot = true;
+      /* `seen.meadow` deliberately has no backfill: it gates the one line that
+         teaches the meadow's new swipe, and nobody has seen that line yet —
+         including a player who reached the meadow through the retired map. */
       state.apiary = Object.assign(d.apiary, parsed.apiary || {});
       state.quests = Object.assign(d.quests, parsed.quests && typeof parsed.quests === 'object' ? parsed.quests : {});
       if (!Array.isArray(state.quests.active)) state.quests.active = [];
