@@ -111,6 +111,20 @@ plots 5–8 behind the first Turn. Both are accepted regressions, named in
 judges the numbers: does the first wall read as six-times-everything, does the pouch feel
 earned, do 2–5 petals per Turn feel right on paper.
 
+### The Surface run — phases 2 and 3 merged for one overnight session (owner's call, 2026-08-29)
+
+**The owner asked for a larger unattended phase, accepting the trade this implies:** the
+wireframe gate's approval step is **deferred to morning** for this run only. The builder ships
+both spikes *first* (their own commits, so the record shows layout preceded code), builds
+faithful to them, and keeps **`docs/35-morning-review.md`** — every decision the gate would have
+put to the owner, each with what was chosen, why, and what changing it costs. The owner reviews
+spikes and build together in the morning; layout notes then are **accepted rework**, priced in
+by this call. Two hard rails survive the merge: every push leaves the live game playable and
+navigable (**the map may not retire before the strip works — never a push where neither
+navigation exists**), and **no economy knob or rule moves overnight** — the blessing's pricing
+and the mintK calibration are open owner decisions in [11-known-issues.md](11-known-issues.md),
+and the UI is built against the engine exactly as it behaves.
+
 ### Phase 2 — The ceremony
 
 **Begins at the wireframe gate: `tools/turn-spike.html`, owner-approved before any UI code.**

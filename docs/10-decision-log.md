@@ -322,6 +322,42 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-29 (review, later) — 1.1 verified, the blessing goes on the morning docket, and the night gets a double phase
+
+**Phase 1.1 is verified by the strategy session:** 1,202/0 reproduced across runs, the mint
+cumulative with veterancy deleted outright, `year-sim` green with casual beating every spam
+shape on the currencies the mint controls, and M09 closed with genuine negative assertions
+(both grandfather arms tested separately, and the level-1 catalogue asserted exactly). The 1.1
+builder also ran three unprompted follow-up rounds and disclosed what they found instead of
+tuning it away: **the blessing is now the largest per-Turn grant and nothing prices it** — one
+free petal per Turn against a split-neutral mint means ~95 spam-Turns farm half the entire
+shared-skill sink (~318K seeds of value) free. Measured, disclosed, untouched. The related
+disclosure that the 2–5-petals-per-Turn claim is false under the cumulative mint is phase 4's
+mintK calibration, exactly where the mint ruling said it would land.
+
+**The advisor's recommendation for the morning docket, not a ruling: each flower can be blessed
+once, ever.** Nineteen free petals lifetime (~6% of the sink, not 50%), the ceremony intact,
+and the choice *deepened* — which flower earns its one blessing becomes a real decision, and
+spam gains only earliness, not value. The builder's other dials (tally-scaling, caps) remain on
+the table; the owner rules when awake.
+
+**And the owner asked for a larger overnight phase, so phases 2 and 3 merge into one unattended
+Surface run** — with the wireframe gate's approval step deferred to morning by the owner's
+explicit call, spikes still built first so layout precedes code, and every gate-worthy decision
+logged to a morning-review file as accepted rework. Two rails are non-negotiable overnight:
+every push playable with a working navigation (the strip before the map retires), and no
+economy knob moves — the blessing and mintK wait for daylight.
+
+### Rejected
+
+**Ruling on the blessing tonight** — it is a ceremony-beat design decision the owner was
+promised. **Letting the overnight builder ask questions** — it cannot; the morning-review file
+replaces ask-don't-invent for one night, bounded by the no-economy and playable-push rails.
+**Including phase 4 in the overnight run** — tuning is calibrated against the owner's own
+played feel, which no unattended session has.
+
+---
+
 ## 2026-08-29 (review) — Phase 1 passes its independent review, with one escape and one ruling to make
 
 **The strategy session reviewed the builder's phase 1 without reusing its gauntlet** — four

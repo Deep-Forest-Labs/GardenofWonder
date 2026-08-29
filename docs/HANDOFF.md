@@ -948,6 +948,13 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**Phase 1 and 1.1 are BUILT, REVIEWED and VERIFIED (1,202/0; the mint is cumulative; the
+exploit is dead; M09 closed). The Surface run — phases 2+3 merged — is next, overnight, per
+[34-build-plan.md](34-build-plan.md)'s "The Surface run" section: spikes first, morning-review
+file instead of mid-run questions, every push playable, no economy knobs. On the morning
+docket: the blessing's pricing (advisor recommends once-ever per flower) and the mintK
+calibration, both in [11-known-issues.md](11-known-issues.md).**
+
 **The build is phased and gated: [34-build-plan.md](34-build-plan.md).** Slice A splits into four
 owner-reviewed phases (engine → ceremony → Fall and the strip → tuning), each built by a fresh
 session from the paste-ready prompt in that doc, each ending in a critic gauntlet and a
