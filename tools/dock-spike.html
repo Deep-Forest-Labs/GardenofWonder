@@ -762,10 +762,10 @@ body[data-notes="0"] .slot{display:none}
 
 /* ---------- the band census: four populations at true width ---------- */
 .census{display:grid;gap:12px}
-.cstrip{position:relative;height:150px;width:370px;max-width:100%;overflow:hidden;
+.cstrip{box-sizing:content-box;position:relative;height:130px;width:370px;max-width:100%;overflow:hidden;
   border:3px solid var(--ink);border-radius:var(--r-md);
   background:linear-gradient(180deg,#59b95d,#4fae54)}
-.cstrip .band{--yard:112px}
+.cstrip .band{--yard:108px}
 .cstrip{--band-b:4px;--band-x:34px;--pet-b:64px;--pw:74px}
 .clab{font-size:10.5px;font-weight:800;margin-bottom:3px}
 
@@ -1162,7 +1162,7 @@ const MAP_ROWS = [
   ['gone', 'World — travel to the map', '<b>Retired with the map.</b> Everything it reached is re-homed below.'],
   ['ask', 'Craft — the Apothecary', '<b>No dock button of its own.</b> It keeps the tab pill it already has inside Shop and Upgrades, so it is two taps instead of one. <b>Doc 36 does not mention Craft at all — this is the one function the spec leaves without a named home.</b>'],
   ['keep', 'Shop — sky calls and decor', 'The <b>SHOP</b> button, fifth of the five. Unchanged sheet.'],
-  ['keep', 'The red attention dot on a dock button', 'Same dot, re-pointed: Orders&nbsp;&amp; Quests gets the fillable-order and claimable-quest counts, Shop keeps affordable decor, Craft’s dot has nowhere to live and folds into Shop’s.'],
+  ['keep', 'The red attention dot on a dock button', 'Same dot, re-pointed: Orders&nbsp;&amp; Quests gets the fillable-order and claimable-quest counts, Shop keeps affordable decor, and <b>Upgrades’ dot moves with its button onto the band’s UPGRADE pill</b> — drawn on a floating control for the first time, since the dot rule only reaches dock buttons today. The World dot did two jobs and only one of them has a home: <b>jars waiting in the meadow has none</b>, because the meadow has no button any more. Craft’s dot folds into Shop’s.'],
   ['keep', 'Tapping the tab you are in closes the sheet', 'Unchanged — and the <b>GARDEN</b> button now closes any sheet from anywhere, which is the new, better way home.'],
 
   ['grp', 'The top HUD'],
@@ -1173,10 +1173,10 @@ const MAP_ROWS = [
   ['move', 'The album star', '<b>Leaves the HUD</b> for the <b>CARDS</b> button — doc 36’s ruling, and the fix <code>style.css</code> itself asks for in the max-width:430px block.'],
   ['keep', 'The Almanac book', 'Stays in the HUD. It keeps the <i>record</i> rows; the Turn panel is where petals are <i>bought</i>.'],
   ['keep', 'The gear', 'Stays. Settings has no other door.'],
-  ['keep', 'The dev dot', 'Stays — the unlabelled 44px strip beside the gem wallet. It is the only way into Developer tools, and the five-minute script needs it.'],
+  ['keep', 'The dev dot', 'Stays — the unlabelled 44px strip at the right-hand end of the wallets row (today just past the year pill; beside the gem wallet once the pill retires). It is the only way into Developer tools, and the five-minute script needs it.'],
 
   ['grp', 'The status rail'],
-  ['move', 'Tap a held boost to spend it', 'The <b>POWER-UP</b> button, right end of the band. One boost loaded at a time, a count badge for the rest.'],
+  ['move', 'Tap a held boost to spend it', 'The <b>POWER-UP</b> button, right end of the band. One boost loaded at a time, and a count badge for the whole inventory.'],
   ['keep', 'A running boost’s countdown chip', '<b>Stays in the rail.</b> The rail loses its shop, not its clock — and it is <code>:empty{display:none}</code>, so it costs nothing when nothing is running.'],
   ['keep', 'The WONDER countdown', 'Stays in the rail, still first. It is not a held boost and has no inventory, so it has no business on the power-up button.'],
 
@@ -1220,7 +1220,7 @@ F.push({
         ({ keep: 'STAYS', move: 'MOVES', gone: 'GOES', ask: 'ASK' })[r[0]] + '</span> &middot; ' + r[1] + '</td><td>' + r[2] + '</td></tr>').join('') +
     '</table></div>',
   notes: [
-    ['d', '<b>Three functions had exactly one door before this phase and still do after it:</b> the Turn ceremony (the year pill, now the Turn button), Developer tools (the unlabelled strip beside the gem wallet), and Settings (the gear). Each is a single point of failure by design; the build has to prove each one still opens, which is what the reachability walk at the end is for.'],
+    ['d', '<b>Five things had exactly one door before this phase and still have exactly one after it:</b> the Turn ceremony (the year pill, now the Turn button), Cards (the HUD star, now the Cards button), the Almanac (the book, which does not move), Developer tools (the unlabelled strip at the end of the wallets), and Settings (the gear). Each is a single point of failure by design; the build has to prove every one of them still opens, which is what the reachability walk at the end is for.'],
     ['q', '<b>CRAFT IS THE ONE REAL GAP IN THE SPEC.</b> Doc 36 names five buttons and a floating pair and never mentions the Apothecary. It does not fall off the edge — the three shop panels share a tab pill row, so Shop → Craft is two taps — but it goes from a top-level button to a tab inside another shop, and that is a demotion the owner should make on purpose. The alternative is putting Craft on the band and moving Upgrades into the Shop tabs, which is the same trade the other way round.'],
     ['q', '<b>The land parcels die with the map.</b> They are the only thing the map held that has no new home, and they were a promise (“land opens up as the Stand builds your reputation”) rather than a system. Killing them is cheap and honest; keeping them means finding a surface for a promise about land in a game that no longer has a map of land.'],
     ['d', 'Craft’s attention dot has nowhere to go, so it folds into Shop’s. A player who could brew something now learns it by opening Shop, which is one tab away from the bench.']
@@ -1256,7 +1256,7 @@ const cstrip = (n, extra) => '<div><p class="clab">' + extra + '</p><div class="
 
 F.push({
   t: 'The band with nobody, one, three and four tending',
-  s: 'True width (370px) and true height (the 108px yard). Four is the ceiling — the Habitat opens slots at levels 1, 5, 10 and 16.',
+  s: 'True width (370px) and the real 108px yard. Four is the ceiling — the Habitat opens slots at levels 1, 5, 10 and 16.',
   tag: 'THE BAND',
   html: '<div class="census">' +
     cstrip(0, 'NOBODY YET — a fresh save, before the first creature moves in') +
@@ -1309,11 +1309,11 @@ F.push({
     '<div class="stcol">' + turnBtn({ p: 1, ready: true, pouch: '312' }) + '<span class="cap2">READY<br>full, and breathing</span></div>' +
     '</div>',
   notes: [
-    ['d', '<b>The fill rises from the bottom, it does not wipe across.</b> The pill it replaces wiped left to right, which worked at 130px wide; a 74px button is too narrow for a horizontal wipe to read as anything but a glitch. Rising is also the right picture: the pouch fills.'],
+    ['d', '<b>The fill rises from the bottom, it does not wipe across.</b> The pill it replaces wipes left to right across just <b>39px</b> — it is the narrowest thing in the HUD, because it is the one pill carrying no number. So the button is not too narrow for a wipe; rising simply has more room to travel, 56px of button height against the pill’s 39px of width. And it is the better picture anyway: the pouch fills.'],
     ['d', '<b>It reads the binding gate — the lower of the two ratios — so “why can’t I turn yet” is one glance.</b> That number already exists: <code>yearProgress()</code> in <code>ui.js</code> computes <code>min(seeds, coins)</code> today and hands it to the pill. The Turn button reads exactly the same value; nothing in the engine changes.'],
-    ['d', '<b>The ready state is the same 1.4-second gold breath every affordable price in the game uses.</b> A player has met it on every buyable thing and it already means <i>you can have this now</i>. It is a class toggle, not a new animation.'],
-    ['d', '<b>YEAR ONE IS THE SECOND CHIP, MISSING.</b> Doc 32’s rule is no numbers before the first Turn, so the year-one button is fill and label only. From year two the pouch — Saved Seeds — rides above the button as a cream chip. <b>That readout does not exist anywhere in the game today</b>: the forever money has never had a wallet, because the pill that stood for it carried no number. This is a gain, not a port.'],
-    ['q', '<b>ANSWERING GATE QUESTION 2 — is the fill legible at dock size?</b> Yes at 74&times;56, and this frame is the evidence: at 6% you can see a lip of green, at 62% the level is unmistakable, and full-plus-breathing reads across the room. What it cannot do is show a <i>small</i> change — a percentage point is half a pixel. That is fine and probably right: this is a meter you glance at, and the panel behind it is where you go for the detail.'],
+    ['d', '<b>The ready state is the year pill’s own 1.4-second gold breath, moved onto the button.</b> Worth being exact: that ring is worn today by exactly one thing in the whole game — the full pill — and it has only ever meant <i>the Turn is ready</i>. So this is borrowed vocabulary rather than a new idea, and the meaning travels with it intact.'],
+    ['d', '<b>YEAR ONE IS THE SECOND CHIP, MISSING.</b> Doc 32’s rule is no numbers before the first Turn, so the year-one button is fill and label only. From year two the pouch — Saved Seeds — rides above the button as a cream chip. <b>The number exists today, but never in sight</b> — the pill’s own tap-pop says it, the Almanac heads its seed rows with it, and the ceremony counts it out. It has just never been on an always-visible surface, because the pill that stood for the forever money carried no number. The chip is a promotion, not a new readout.'],
+    ['q', '<b>ANSWERING GATE QUESTION 2 — is the fill legible at dock size?</b> Yes at 70&times;56 — and at 64&times;56 on a 360 phone — and this frame is the evidence: at 6% you can see a lip of green, at 62% the level is unmistakable, and full-plus-breathing reads across the room. What it cannot do is show a <i>small</i> change — a percentage point is half a pixel. That is fine and probably right: this is a meter you glance at, and the panel behind it is where you go for the detail.'],
     ['q', 'The two year-one states differ only by fill level, and that is deliberate: nothing about the button announces that year one is special. If the owner would rather year one be visibly a mystery — a “?” where the pouch chip goes, say — it is one conditional.']
   ]
 });
@@ -1523,7 +1523,7 @@ const roundState = (o) => o.empty
 
 F.push({
   t: 'The power-up button, loaded and empty',
-  s: 'One random held boost. Tap uses it, another fills the slot, the badge counts the rest.',
+  s: 'One random held boost. Tap uses it, another fills the slot, and the badge counts every boost you hold.',
   tag: 'POWER-UP',
   html: '<div class="states">' +
     '<div class="stcol">' + roundState({ i: 'bolt', t: '#ff6b9d', c: 4 }) + '<span class="cap2">Bloom Burst<br>loaded · 4 held</span></div>' +
@@ -1574,7 +1574,7 @@ F.push({
     ['d', '<b>It holds, and it holds with room.</b> At 360 the column is 340px. Five dock buttons at <code>minmax(0,1fr)</code> with a 5px gap are <b>64px each</b> (70px at 390) — comfortably past the 44px touch minimum, and the game’s own stylesheet already anticipates a fifth button: <code>.dock:has(.dock-btn:nth-child(5))</code> tightens the gap, drops the label to 10px and the icon to 22px. That rule was written for this and has never fired.'],
     ['d', '<b>“Orders &amp; Quests” does not fit on one line at 64px and is not asked to.</b> It sets on two, which is why every label in this dock is 10px and centred. The other four are single words.'],
     ['d', '<b>The HUD is the surprise win.</b> The block in <code>style.css</code> that shaved every round button to 40px measured three wallets (222px) plus three 44px buttons plus the gap at <b>374px of the 370 available — four pixels over.</b> Take away the meter pill and the album star and it is two wallets and two buttons: comfortably inside 340, so <b>44px touch targets come back at 360px wide.</b>'],
-    ['d', 'The board is 340&times;340 here, width-bound, exactly as it is today. The band’s two buttons sit at the column’s two edges and the four creatures reach 288px of 340 — 24px of daylight before the power-up button.'],
+    ['d', 'The board is 340&times;340 here, width-bound, exactly as it is today. <b>Horizontal clearance stopped mattering the moment the door graphics left</b>: the creatures now stand <i>above</i> the two buttons rather than beside them — their feet clear the button tops by 2px — so the only thing they have to miss is a season tab at the screen edge, and at four tending the crowd runs 89&ndash;271 of 340 with the tabs outside it.'],
     ['q', 'The wallets are drawn at their worst realistic width (“880.2K”, “1,163”), and measured on this frame they come to 177px. With the two round buttons at 94 and the gap at 8, that is <b>279px of the 340 available — 61px spare</b>, where today it is four. The HUD stops being the tightest row on the screen.']
   ]
 });
@@ -1588,10 +1588,10 @@ F.push({
     ruler: ruler([[111, 'HUD 44'], [169, 'quest 52'], [531, 'band 91', 1], [628, 'dock 50'], [678, 'inset 34']]) }),
   notes: [
     ['d', '<b>The verdict: it fits, and what gives is a few pixels of the two floating buttons.</b> Measured on this frame at a real 390&times;700: the yard is <b>91px</b> (531&ndash;622) and the dock starts at 628. The stack it holds is a 50px button over a 40px door at each edge, which is 90 of the 91 — so the buttons ride <b>3 to 7px behind the bottom edge of the board</b>, tucked under its lip. The creatures clear the board by 7px and clear the raised Garden button by 4.'],
-    ['d', '<b>The board already overlaps the yard at this height, before anything in this phase.</b> At 390&times;700 the running game reports a 354px board in 352px of stage — it has been 2px over since Fall shipped. So a button sliding under the board’s lip is the existing condition of this screen, not a new one, and the lip is drawn to be sat behind.'],
+    ['d', '<b>The board already overlaps the yard at this height, before anything in this phase.</b> At 390&times;700 the running game reports a 354px board in 352px of stage — it has been 2px over since the creature yard shipped on 17 August, where <code>sizeGarden()</code> began subtracting the yard from the stage’s border box and never gave its 2px of top padding back. So a button sliding under the board’s lip is the existing condition of this screen, not a new one, and the lip is drawn to be sat behind.'],
     ['d', '<b>The game already shrinks itself here and this rides along.</b> <code>@media (max-height:700px)</code> drops the dock to 50px and the round buttons to 40; the band’s two buttons join that block at 50px, the door’s mouth at 23px, and the pedestal’s rise drops from 18px to 14 so the raised Garden button still clears the creatures’ feet.'],
-    ['d', '<b>The quest strip is present, at full size, and it is 52px of the 700.</b> No media query has ever touched it and none is proposed. It plus the HUD plus the dock plus the insets is 261px of fixed furniture before the rail carries anything.'],
-    ['d', 'The rail is empty here and still bills 12px — five explicit grid tracks means four 6px gutters, permanently, whether or not track 3 has height. Retiring the rail outright would save that 12px; keeping it as the countdown clock is worth more than 12px.'],
+    ['d', '<b>The quest strip is present, at full size, and it is 52px of the 700.</b> No media query has ever touched it and none is proposed. It plus the HUD plus the dock plus the insets is 259px of fixed furniture before the rail carries anything.'],
+    ['d', 'The rail is empty here and still sits in a 12px dead band — five explicit grid tracks means four 6px gutters, permanently, whether or not track 3 has height. Deleting the track outright would collapse that band to one gutter and buy the stage back <b>6px, not 12</b>; keeping the rail as the countdown clock is worth more than 6px.'],
     ['q', '<b>ANSWERING GATE QUESTION 1 — it fits at 360 wide and at 700 tall, both measured on frames that are really those sizes.</b> The honest cost is that at 700 the band is <i>full</i>: 90px of content in 91px of yard, with the buttons tucked a few pixels under the board. It works, and there is nothing left over. <b>If a 640px-tall device ever matters, the band is the first thing that breaks</b>, and the answer there would be to drop the doors to icon-only mouths rather than to shrink the buttons again.'],
     ['q', '<b>ANSWERING GATE QUESTION 5 — the quest strip survives this phase, unchanged.</b> It is the one always-visible goal in the game, and the Orders &amp; Quests badge is a count, not a goal: “2” does not tell you to harvest three roses. The case for folding it away gets stronger when orders return in slice D and the strip has competition — that is phase 7’s question, not tonight’s.']
   ]
@@ -1619,7 +1619,7 @@ F.push({
     '<button class="dock-btn"><span class="dock-ico">' + ico('decor') + '</span><span class="dock-label">Decorate</span></button>' +
     '</nav></div></div>',
   notes: [
-    ['d', '<b>Not one pixel of this frame changes.</b> The Hollow, the Wild Meadow and the locked-season gate are places with their own four-button docks; the Big Five is the dock of the garden and its seasons. A place hides the garden’s dock outright — <code>.in-hollow #dock{display:none}</code> — and puts its own up instead.'],
+    ['d', '<b>Not one pixel of this dock changes.</b> The Hollow and the Wild Meadow are places with their own four-button docks; the Big Five is the dock of the garden and its seasons, and a locked-season gate simply hides every dock there is. A place hides the garden’s dock outright — <code>.in-hollow #dock{display:none}</code> — and puts its own up instead.'],
     ['d', '<b>The HUD is here, and it is the version this phase leaves behind:</b> two wallets and two round buttons. That is the only thing about this screen that moves, and it moves everywhere at once.'],
     ['d', 'The Big Five rides the season strip: Summer and Fall share it, because a season is the same room in a different month rather than a different place. Fall hides none of the chrome today and none of it after.'],
     ['q', 'Three docks now share the <code>.dock</code> class and only one of them becomes five. The two four-button docks keep the existing <code>.dock-btn</code> exactly; the new one is its own class so a future change to one never silently reshapes the others.']
@@ -1633,9 +1633,9 @@ F.push({
   tag: 'THE GATE',
   html: '<div class="mapwrap"><table class="maptab"><tr><th style="width:34%">The question</th><th>The answer</th></tr>' +
     '<tr><td><b>1. Do the five buttons, the floating pair and the quest strip fit at 360–390 wide and ≤700 tall?</b></td>' +
-    '<td><span class="keep">MEASURED — YES.</span> At 360 wide the dock buttons are 81px each and the HUD gets its 44px touch targets back. At 700 tall the band has 95px and needs exactly 95. <b>The band costs the layout nothing</b> — it lives in the yard the stage already reserves for creatures. See the two squeeze frames.</td></tr>' +
+    '<td><span class="keep">MEASURED — YES.</span> At 360 wide the dock buttons are 64px each (70px at 390), comfortably past the 44px touch minimum, and the HUD gets its 44px touch targets back. At 700 tall the band is 91px and the stack it holds is 90 — full, with nothing spare. <b>The band costs the layout nothing</b> — it lives in the yard the stage already reserves for creatures. See the two squeeze frames.</td></tr>' +
     '<tr><td><b>2. Is the Turn button’s fill legible at dock size? Pulse vs filling vs year-one?</b></td>' +
-    '<td><span class="keep">MEASURED — YES</span> at 74&times;56, rising from the bottom rather than wiping across. Ready is the game’s existing 1.4s gold breath. <b>Year one is a different panel, not a different button</b> — and per the owner it is a <i>locked</i> panel with one gold track on it, so the mystery keeps a direction.</td></tr>' +
+    '<td><span class="keep">MEASURED — YES</span> at 70&times;56, rising from the bottom rather than wiping across. Ready is the game’s existing 1.4s gold breath. <b>Year one is a different panel, not a different button</b> — and per the owner it is a <i>locked</i> panel with one gold track on it, so the mystery keeps a direction.</td></tr>' +
     '<tr><td><b>3. Orders &amp; Quests: one list or two tabs?</b></td>' +
     '<td><span class="move">ONE LIST, two headings.</span> The badge counts two different things; tabs would hide half of what a player came in for.</td></tr>' +
     '<tr><td><b>4. The power-up’s empty state: hidden or a quiet slot?</b></td>' +

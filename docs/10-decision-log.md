@@ -46,11 +46,20 @@ came to 374px of the 370 available, four pixels over — and named the real fix:
 This phase retires two (the meter pill into the Turn button, the album star into Cards), so the HUD
 is two wallets and two buttons and **44px touch targets come back even at 360px wide.**
 
-**The Turn button's fill rises rather than wipes.** The pill it replaces wiped left-to-right at
-130px wide; a 74px button is too narrow for that to read as anything but a glitch, and rising is the
-right picture anyway — the pouch fills. It reads `yearProgress()`'s existing `min(seeds, coins)`, so
-nothing in the engine changes. From year two it also carries the pouch count, which **Saved Seeds
-have never had anywhere** — the pill that stood for them carried no number.
+**The Turn button's fill rises rather than wipes.** The pill it replaces wipes left-to-right across
+just **39px** — it is the narrowest thing in the HUD, being the one pill with no number — so a wipe
+is not too narrow so much as out of room: rising has 56px of button height to travel instead. It
+reads `yearProgress()`'s existing `min(seeds, coins)`, so nothing in the engine changes. From year
+two it also carries the pouch count, which is a **promotion rather than a new readout**: the number
+already exists in the projection pop, the Almanac's seed-row header and the ceremony, and has simply
+never been on an always-visible surface.
+
+**Corrected on the adversarial pass, before the owner read them:** the fill's ready ring is not "the
+breath every affordable price uses" — it is the *full pill's own* ring, worn today by exactly one
+thing in the game and meaning exactly one thing, which is a better argument than the one first
+written; the dock button is 70×56 at 390 and 64×56 at 360; retiring the rail's track buys back 6px
+of stage, not 12; and the board's 2px overhang at 700 dates from the creature yard on 17 August, not
+from Fall.
 
 **Rejected: opening the ceremony straight from the dock button.** It is one tap closer and it makes
 the button useless for the other fifty weeks of the year. The panel behind it holds the pouch, both
