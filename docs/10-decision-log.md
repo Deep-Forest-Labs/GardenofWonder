@@ -5,6 +5,84 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (phase 3.5, the wireframe gate) — The Big Five's spike, and the three things the spec forgot
+
+`tools/dock-spike.html`, 16 frames, pushed before any UI code per doc 34's gate. What follows is the
+reasoning; the frames carry the pictures and [36-hud-and-dock.md](36-hud-and-dock.md) carries the
+summary.
+
+**The mapping frame was built first and earned its place three times over.** Walking every function
+on today's dock, HUD, rail, quest strip and gestures — plus everything the world map is the only
+door to — turned up three things nobody had named. **The Apothecary loses its dock button and doc
+36 never mentions it**; it survives on the tab pill row it already shares with Upgrades and Shop, so
+it is two taps rather than lost, but that is a demotion and the owner should make it. **The map's
+locked land parcels have no new home at all** — a promise about land, drawn on a surface that is
+going away; recommended dead, deliberately. And **the `stores` sheet is already opened by nothing**
+and a card cell in the album is already a button with no handler; both are recorded in doc 11 rather
+than silently "preserved" into the new dock.
+
+**The band costs the layout nothing, and that is the finding the whole phase rests on.** `.stage`
+already reserves a yard along its bottom for the creatures — 108px at 390×844, 91px at 700. The
+owner's two floating buttons move into the two ends of that same strip. No new grid row, and the
+board measures 370×370 before and after. The pedestal is *taller than the dock row* with
+`align-items:end`, so the raised Garden button rises out of the top without changing row 5's height
+— which is what stops a fifth button wrapping onto a second row, the exact bug `grid-auto-flow:
+column` was introduced to fix.
+
+**Every measurement in the spike is read off a frame that is really that size.** Two frames were
+wrong the first time and both were caught by measuring rather than by looking: the 360 frame was a
+390 frame with a smaller board drawn in it, and the 700 frame was not 700 tall. Worse, the chassis
+inherited from the phase-2 and phase-3 spikes is `box-sizing: border-box` with a 5px phone frame, so
+**every frame in all three spikes has been 380×834 of usable area rather than 390×844.** Fixed here
+with `content-box`; the older two are left alone.
+
+**The HUD wins something back.** `style.css`'s `max-width:430px` block shaved every round button to
+40px and wrote the cost down in prose — three wallets at 222px plus three 44px buttons plus the gap
+came to 374px of the 370 available, four pixels over — and named the real fix: one fewer HUD button.
+This phase retires two (the meter pill into the Turn button, the album star into Cards), so the HUD
+is two wallets and two buttons and **44px touch targets come back even at 360px wide.**
+
+**The Turn button's fill rises rather than wipes.** The pill it replaces wiped left-to-right at
+130px wide; a 74px button is too narrow for that to read as anything but a glitch, and rising is the
+right picture anyway — the pouch fills. It reads `yearProgress()`'s existing `min(seeds, coins)`, so
+nothing in the engine changes. From year two it also carries the pouch count, which **Saved Seeds
+have never had anywhere** — the pill that stood for them carried no number.
+
+**Rejected: opening the ceremony straight from the dock button.** It is one tap closer and it makes
+the button useless for the other fifty weeks of the year. The panel behind it holds the pouch, both
+gates and petal spending, which is worth the extra tap.
+
+**Rejected: hiding the power-up button when nothing is held.** The standing rule is *hidden, never a
+dead button*, but this game already has a better answer for "a thing you do not have yet" — the
+locked season edge, which wears the drained paper and the turn that opens it, because a gate is a
+promise you can read. Hidden also breaks the sketch's symmetry in the first session, when the band
+is two buttons and an empty lawn. Proposed as a quiet drained slot whose tap says where boosts come
+from. **This is a gate question and the owner may overrule it in one class.**
+
+**Rejected: putting the two doors in the middle as a pair,** which is how the phase-3 spike drew
+them. The middle is where the sketch puts the creatures and where the pedestal rises into; the pair
+lands on the pedestal's shoulders and pushes the creatures to the sides. The corners keep the burrow
+door exactly where it already is and make the meadow's door its literal mirror. **Drawn both ways
+in frame 4 — this is the one composition question the sketch cannot settle.**
+
+**The rail keeps its clock and loses only its shop.** Doc 36 retires "the rail's boost chips", and
+the chips a player *taps* are the ones that move. A running boost's countdown and the Wonder chip
+stay, because the button is the shop and the rail is the clock — which also keeps *a running boost
+cannot be refreshed* true by construction, since the used boost leaves the button the instant it
+starts. The eligible pool for the slot is therefore **held AND not currently running**: draw from
+held alone and the button will eventually seat a boost whose tap does nothing, because
+`activateBoost` returns false and the click handler's success branch never fires.
+
+**Year one is the one place this dock could break a rule.** A Turn button in the dock is a door a
+player will push in the first minute, and doc 32 is explicit that year one is a mystery. So the
+year-one panel is the meter drawn large, the flower's existing line, and nothing else — no pouch, no
+gates, no petals. The explanation still arrives where it always did, in the ceremony's ask.
+
+**No economy knob or rule moved.** The blessing, `mintK` and every open decision in doc 11 are
+exactly where they were.
+
+---
+
 ## 2026-08-29 (phase 3, the gauntlet) — Six critics, and the gate's only button was dead
 
 Six adversarial critics over the strip and Fall — the mandatory grammar critic, visual fidelity

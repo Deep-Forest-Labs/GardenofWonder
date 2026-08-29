@@ -1,0 +1,1604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Big Five — phase 3.5 wireframe spike</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   dock-spike.html — the wireframe gate for phase 3.5,
+   the Big Five: the dock and the bottom of the screen.
+
+   Static. No game dependencies: no data.js, no flora.js, no
+   game.js. Everything here is drawn from scratch so the spike
+   can never break because the game moved, and so it stays
+   readable on a phone from the live URL.
+
+   The tokens, the metrics and the material recipe below are
+   COPIED from style.css on purpose. Layout is the question a
+   spike answers, and a layout judged at the wrong proportions
+   is not judged at all.
+   ========================================================= */
+
+:root{
+  --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+  --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad;
+  --paper-dim:#ebe5d9; --paper-dim-2:#d8d0c0; --paper-dim-edge:#bcb0a0;
+  --grass:#5cc45c; --grass-d:#3f9d45; --grass-l:#8fe08a;
+  --soil:#a9713f; --soil-d:#7d4f2a; --soil-dd:#5f3a1e;
+  --coin:#ffc93c; --coin-d:#f08c00; --gem:#8ce0ff;
+  --rare:#4dabf7; --epic:#b197fc; --legend:#ffd43b;
+  --sky1:#7ec8f2; --sky2:#bfe9ff; --sky3:#e9f8ff;
+  --r-lg:26px; --r-md:18px; --r-sm:12px;
+  --font:'Baloo 2', ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+
+  /* The seed pouch. Saved Seeds are the forever money, so they are not gold and
+     not gems — a green that belongs to growing things, kept clear of every
+     rarity colour. Proposed here, an open question in docs/35. */
+  --seed:#7bd88f; --seed-d:#3f9d45; --seed-l:#c9f5cf;
+
+  /* Insets. The game reads four :root variables and never env(), which is what
+     lets a desktop preview stand in for a notched phone. The frames below set
+     them to a real iPhone 16 Pro so the spike is judged with the insets on. */
+  --sat:0px; --sar:0px; --sab:0px; --sal:0px;
+  --bottom-gap:max(10px, calc(var(--sab) - 12px));
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#efe3cd;color:var(--ink);
+  font-family:var(--font);font-weight:700;-webkit-text-size-adjust:100%}
+
+/* ---------- the page around the frames ---------- */
+.page{max-width:1500px;margin:0 auto;padding:14px 12px 80px}
+.page > h1{font-size:20px;margin:0 0 4px}
+.lede{font-size:13px;font-weight:600;line-height:1.45;color:#4a3524;margin:0 0 12px;max-width:70ch}
+.lede b{font-weight:800}
+.controls{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px;position:sticky;top:0;z-index:50;
+  background:#efe3cdEE;padding:8px 0;backdrop-filter:blur(3px)}
+.toggle{border:3px solid var(--ink);border-radius:999px;background:#e8d5b0;color:var(--ink);
+  padding:5px 12px;font:inherit;font-size:12px;box-shadow:0 3px 0 rgba(44,26,16,.35);cursor:pointer}
+.toggle[data-on="1"]{background:linear-gradient(180deg,#ffe066,var(--coin))}
+.toggle:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(44,26,16,.35)}
+
+.grid{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+figure{margin:0;width:390px;max-width:100%}
+figcaption{font-size:12.5px;font-weight:800;margin:0 0 6px;line-height:1.3}
+figcaption i{display:block;font-style:normal;font-weight:600;font-size:11.5px;color:#5c452f;margin-top:2px}
+.tag{display:inline-block;background:var(--ink);color:#ffeecd;border-radius:999px;
+  padding:1px 8px;font-size:10.5px;font-weight:800;margin-right:5px;vertical-align:1px}
+
+/* A note pinned to a frame: what the layout decided, or what it is asking. */
+.note{font-size:11.5px;font-weight:600;line-height:1.4;color:#4a3524;margin:7px 0 0;
+  border-left:4px solid var(--ink-2);padding-left:8px}
+.note.q{border-color:#e8590c}
+.note.q::before{content:'QUESTION — ';font-weight:800;color:#e8590c}
+.note.d::before{content:'DECIDED — ';font-weight:800}
+body[data-notes="0"] .note{display:none}
+
+/* ---------- the phone ---------- */
+/* 390x844 exactly, because that is what the game is composed at, with a real
+   handset's insets on so nothing is judged against a desktop's zeroes. */
+.phone{box-sizing:content-box;position:relative;width:390px;height:844px;overflow:hidden;
+  border:5px solid var(--ink);border-radius:36px;box-shadow:0 8px 0 rgba(44,26,16,.3);
+  background:#4fae54;--sat:59px;--sab:34px;user-select:none;
+  --bottom-gap:max(10px, calc(var(--sab) - 12px))}
+.phone.no-inset{--sat:0px;--sab:0px}
+
+/* scenery: eleven CSS layers in the game; four is enough to judge a layout on */
+.scenery{position:absolute;inset:0}
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 58%,var(--sky3) 100%)}
+.sun{position:absolute;left:74%;top:14%;width:66px;height:66px;border-radius:50%;
+  background:radial-gradient(circle,#fff6c9 40%,#ffe9a3 70%,rgba(255,233,163,0) 72%)}
+.hills{position:absolute;left:-6%;right:-6%;bottom:31%;height:150px;
+  background:radial-gradient(ellipse 60% 100% at 30% 100%,#59b463 0 70%,transparent 72%),
+             radial-gradient(ellipse 70% 100% at 78% 100%,#4da657 0 70%,transparent 72%)}
+.lawn{position:absolute;left:0;right:0;bottom:0;height:34%;
+  background:repeating-linear-gradient(92deg,#59b95d 0 26px,#4fae54 26px 52px)}
+.lawn::after{content:'';position:absolute;left:0;right:0;bottom:0;height:44px;
+  background:linear-gradient(180deg,rgba(79,174,84,0),#4fae54)}
+.fence{position:absolute;left:0;right:0;bottom:31%;height:20px;
+  background:repeating-linear-gradient(90deg,#c98f52 0 7px,transparent 7px 26px),
+             linear-gradient(180deg,transparent 0 6px,#c98f52 6px 11px,transparent 11px)}
+.vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 90% 70% at 50% 42%,transparent 40%,rgba(44,26,16,.28) 100%);
+  -webkit-mask-image:linear-gradient(180deg,#000 0 74%,transparent 92%);
+  mask-image:linear-gradient(180deg,#000 0 74%,transparent 92%)}
+
+/* THE SEASON TINT. Composed like the weather tint — an overlay on the scenery,
+   never a repaint of the sky, so the day/night cycle keeps running underneath. */
+.season-tint{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;
+  background:var(--season-c,#ffb066);opacity:var(--season-o,0);transition:opacity .8s ease}
+
+/* ---------- the interface column ---------- */
+.ui{position:absolute;inset:0;z-index:20;display:grid;
+  grid-template-rows:auto auto auto minmax(0,1fr) auto;
+  grid-template-columns:minmax(0,1fr);
+  padding:calc(var(--sat) + 8px) calc(var(--sar) + 10px) var(--bottom-gap) calc(var(--sal) + 10px);
+  gap:6px;max-width:560px;margin:0 auto}
+.hud{grid-row:1} .quest-strip{grid-row:2} .rail{grid-row:3} .stage{grid-row:4} .dock{grid-row:5}
+
+.hud{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.wallets{display:flex;gap:6px;flex-wrap:wrap;position:relative}
+.wallet{display:flex;align-items:center;gap:5px;padding:5px 11px 5px 6px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:999px;
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18);
+  font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;line-height:1}
+.w-icon{width:22px;height:22px;display:block;flex:none}
+.w-icon svg{width:100%;height:100%;display:block}
+.hud-actions{display:flex;gap:6px;flex:none}
+.round-btn{width:44px;height:44px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:50%;
+  box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.2)}
+.round-btn svg{width:24px;height:24px}
+
+/* THE THIRD PILL — the year meter. A wallet whose own body is the meter, so it
+   costs the HUD no width beyond a third wallet and needs no separate bar. */
+.meter{position:relative;overflow:hidden;isolation:isolate}
+.meter .fill{position:absolute;left:0;top:0;bottom:0;width:var(--p,0%);z-index:-1;
+  background:linear-gradient(180deg,var(--seed-l),var(--seed));
+  border-right:2px solid rgba(44,26,16,.25);transition:width .6s ease}
+.meter.mystery .w-num{letter-spacing:.06em}
+.meter.full{animation:affordPulse 1.4s ease-in-out infinite}
+@keyframes affordPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+
+/* the tightened HUD — the proposal that keeps three wallets on one row */
+.hud.tight .wallet{padding:4px 8px 4px 5px;font-size:14px}
+.hud.tight .w-icon{width:19px;height:19px}
+.hud.tight .round-btn{width:40px;height:40px}
+.hud.tight .round-btn svg{width:21px;height:21px}
+
+.quest-strip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;
+  width:100%;padding:5px 8px 5px 5px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:18px;
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.16)}
+.q-pip{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(180deg,#ffe066,var(--coin));border:3px solid var(--ink);
+  font-size:13px;font-weight:800}
+.q-bar{position:relative;height:22px;border-radius:999px;border:2.5px solid var(--ink);
+  background:#e9dcc3;overflow:hidden}
+.q-bar i{position:absolute;left:0;top:0;bottom:0;width:46%;background:linear-gradient(180deg,#8ce99a,#51cf66)}
+.q-bar > span{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;
+  padding:0 8px;font-size:11px;font-weight:800}
+.q-reward{width:26px;height:26px}
+
+.rail{display:flex;gap:6px}
+.stage{position:relative;display:grid;place-items:center;min-height:0;padding:2px 0 88px}
+.garden{--gap:10px;position:relative;display:grid;width:330px;height:330px;
+  grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:var(--gap);padding:calc(var(--gap) * .85);
+  border:4px solid var(--ink);border-radius:26px;
+  background:repeating-linear-gradient(96deg,rgba(255,255,255,.07) 0 3px,transparent 3px 14px),
+             linear-gradient(180deg,#d9a870 0%,#bd8551 42%,#97643a 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.28), inset 0 -9px 0 rgba(0,0,0,.2),
+             0 9px 0 #6b4423, 0 18px 26px rgba(44,26,16,.3)}
+.plot{position:relative;border-radius:var(--r-md);border:3px solid var(--ink);
+  background:radial-gradient(circle at 26% 22%,rgba(255,255,255,.16) 0 12%,transparent 13%),
+             radial-gradient(circle at 72% 62%,rgba(0,0,0,.10) 0 9%,transparent 10%),
+             linear-gradient(180deg,var(--soil) 0%,var(--soil-d) 72%,var(--soil-dd) 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.16), inset 0 -7px 0 rgba(0,0,0,.18),
+             0 4px 0 var(--soil-dd), 0 8px 14px rgba(44,26,16,.24);
+  display:grid;place-items:center}
+.plot.mid{background:radial-gradient(circle at 26% 22%,rgba(255,255,255,.16) 0 12%,transparent 13%),
+             linear-gradient(180deg,#e8d5a8,#cbb182);border-style:dashed;box-shadow:none}
+.plot svg{width:78%;height:78%;overflow:visible}
+.plot .bar{position:absolute;left:12%;right:12%;bottom:7px;height:7px;border-radius:999px;
+  border:2px solid var(--ink);background:#e9dcc3;overflow:hidden}
+.plot .bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#8ce99a,#51cf66)}
+
+.dock{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+.dock-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  padding:7px 4px 6px;min-height:56px;background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22)}
+.dock-ico{width:24px;height:24px} .dock-ico svg{width:100%;height:100%;display:block}
+.dock-label{font-size:11px;font-weight:800;line-height:1}
+
+/* ---------- the sheet ---------- */
+.scrim{position:absolute;inset:0;z-index:45;background:rgba(30,18,10,.45);backdrop-filter:blur(2px)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:50;height:min(80%,660px);max-width:560px;margin:0 auto;
+  display:flex;flex-direction:column;
+  background:linear-gradient(180deg,var(--paper) 0%,var(--paper-2) 100%);
+  border:4px solid var(--ink);border-bottom:0;border-radius:28px 28px 0 0;
+  box-shadow:0 -8px 30px rgba(44,26,16,.32);padding-bottom:var(--sab)}
+.sheet.tall{height:min(92%,780px)}
+/* The ceremony keeps one height across all four beats — a sheet that resized
+   between the ask and the Tally would jump under the player's thumb. The short
+   beats centre their plate instead, which is also where a scoreboard belongs. */
+.sheet.cere{height:min(94%,800px)}
+.sheet.cere .sheet-body{display:flex;flex-direction:column;justify-content:center}
+.sheet.cere .btn-row{margin-top:auto;padding-top:16px}
+/* The flower stands in the body rather than in #sheetArt: a ceremony this tall
+   has no room above its own top edge, and the breakout art clips off screen. */
+.cere-flower{display:grid;place-items:center;margin:0 0 10px}
+.cere-flower svg{width:132px;height:132px;filter:drop-shadow(0 6px 0 rgba(44,26,16,.22))}
+.sheet-art{position:absolute;left:0;right:0;bottom:calc(100% - 46px);height:150px;
+  display:grid;place-items:end center;z-index:1;pointer-events:none}
+.sheet-art svg{width:150px;height:150px;filter:drop-shadow(0 6px 0 rgba(44,26,16,.25))}
+.sheet-grip{padding:9px 0 3px;display:grid;place-items:center}
+.sheet-grip span{width:52px;height:6px;border-radius:999px;background:rgba(44,26,16,.28)}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px 8px}
+.sheet-head h2{margin:0;font-size:21px;font-weight:800}
+.round-btn.ghost{width:38px;height:38px;box-shadow:0 3px 0 var(--ink-2)}
+.round-btn.ghost svg{width:20px;height:20px}
+.sheet-body{flex:1;min-height:0;overflow:hidden;padding:2px 14px 22px}
+.sheet-note{font-size:13px;font-weight:600;opacity:.72;margin:0 0 10px;line-height:1.35}
+
+/* ---------- the house pills ---------- */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 4px;
+  border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);font-size:12px;font-weight:700;line-height:1;white-space:nowrap}
+.chip svg{width:17px;height:17px;display:block}
+.price{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;
+  border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fff,var(--paper-3));
+  font-size:12.5px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;
+  box-shadow:0 2px 0 var(--ink-2)}
+.price svg{width:15px;height:15px}
+.price.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.price.no{background:linear-gradient(180deg,#ffe3e3,#ffc9c9)}
+.price.maxed{background:linear-gradient(180deg,#e9ecef,#dee2e6)}
+.stat{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:999px;
+  border:2px solid var(--ink);background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);font-size:10.5px;font-weight:800;line-height:1.3}
+.stat.good{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.pips{display:flex;gap:3px}
+.pip{width:11px;height:11px;border-radius:50%;background:var(--seed);border:2px solid var(--ink);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.45)}
+.pip.off{background:var(--paper-dim-2);box-shadow:none}
+.outlined{color:#fff;text-shadow:
+  2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),
+  1.5px 1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px -1.5px 0 var(--ink),
+  0 5px 0 rgba(44,26,16,.35)}
+
+/* ---------- buttons the ceremony needs ---------- */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:13px 16px;border:3.5px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#ffe98a,var(--coin));font:inherit;font-size:17px;font-weight:800;
+  color:var(--ink);box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22)}
+.btn svg{width:22px;height:22px}
+.btn.quiet{background:linear-gradient(180deg,#fffdf7,var(--paper-2));font-size:15px;padding:10px 16px;
+  box-shadow:0 4px 0 var(--ink-2), 0 7px 11px rgba(44,26,16,.18)}
+.btn.seed{background:linear-gradient(180deg,#d6f7dd,var(--seed))}
+.btn[disabled]{filter:grayscale(.55) opacity(.6)}
+.btn-row{display:grid;gap:8px;margin-top:12px}
+
+/* ---------- the ceremony's own surfaces ---------- */
+/* The Tally plate runs the garden's four value tiers: ink outline, a DARK body
+   (the plate), a mid body (its inner well), and cream pills for every number.
+   That is the same figure-against-ground the board wins with, which is why an
+   arcade scoreboard can be loud here without leaving the house. */
+.plate{position:relative;border:4px solid var(--ink);border-radius:var(--r-lg);
+  padding:14px 14px 12px;
+  background:repeating-linear-gradient(96deg,rgba(255,255,255,.06) 0 3px,transparent 3px 14px),
+             linear-gradient(180deg,#8a5a33 0%,#71472a 46%,#5c3a22 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.2), inset 0 -8px 0 rgba(0,0,0,.22),
+             0 6px 0 #4a2e1a, 0 12px 20px rgba(44,26,16,.3)}
+.plate .cap{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:#f6e3c4;opacity:.85;text-align:center;margin:0 0 4px}
+.plate .big{display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:46px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.plate .big svg{width:34px;height:34px}
+.plate .mult{font-size:34px;font-weight:800;line-height:1}
+
+/* A Tally line: the counter in a cream pill, the bonus in the green that means
+   yes everywhere else in the game. Lines land one at a time; a line the year
+   scored zero on is never built. */
+.tline{display:flex;align-items:center;gap:8px;margin-top:8px}
+.tline .lab{flex:1;min-width:0;font-size:13.5px;font-weight:800;color:#fff4de;
+  text-shadow:0 2px 0 rgba(44,26,16,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tline .cnt{font-variant-numeric:tabular-nums}
+.tline .bon{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.tline.ghost{opacity:.25;filter:grayscale(.6)}
+
+/* the ask */
+.speech-block{position:relative;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:var(--r-md);padding:11px 13px;
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.2);
+  font-size:16px;font-weight:800;line-height:1.3}
+.speech-block::after{content:'';position:absolute;left:24px;top:-9px;width:14px;height:14px;
+  background:#fffdf7;border-left:3px solid var(--ink);border-top:3px solid var(--ink);
+  border-radius:3px 0 0 0;transform:rotate(45deg)}
+.keep-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.cost-line{display:flex;align-items:center;gap:8px;margin-top:11px;padding:9px 11px;
+  border:3px solid var(--ink);border-radius:var(--r-sm);
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 3px 0 var(--paper-dim-edge);font-size:12.5px;font-weight:700;line-height:1.3}
+.cost-line svg{width:22px;height:22px;flex:none}
+
+/* the blessing picker */
+.bless-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.bless-tile{display:grid;justify-items:center;gap:3px;padding:9px 4px 7px;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fff,#fff5e2);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.2)}
+.bless-tile .art{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+  border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2);
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.95),rgba(255,255,255,.6)),var(--art,#e8f7e3)}
+.bless-tile .art svg{width:38px;height:38px}
+.bless-tile .nm{font-size:11.5px;font-weight:800;line-height:1.1;text-align:center}
+.bless-tile.on{background:linear-gradient(180deg,#fff6c2,#ffe066);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.2), 0 0 0 4px rgba(255,201,60,.55)}
+.bless-tile .tick{position:absolute}
+/* The slot the blessing's price would live in. It renders nothing tonight —
+   the engine gives the petal away free — and it is reserved so that pricing the
+   blessing later is a data change rather than a re-layout. */
+.slot{margin-top:10px;border:2.5px dashed rgba(44,26,16,.32);border-radius:var(--r-sm);
+  padding:7px 10px;font-size:11px;font-weight:700;color:var(--ink-soft);text-align:center}
+body[data-notes="0"] .slot{display:none}
+
+/* the gate that opens */
+.gate-card{position:relative;overflow:hidden;border:4px solid var(--ink);border-radius:var(--r-lg);
+  padding:0;box-shadow:0 5px 0 var(--ink-2), 0 10px 18px rgba(44,26,16,.26)}
+.gate-card .scene{position:relative;height:126px;
+  background:linear-gradient(180deg,#ffd9a1,#ffb570 62%,#e88f4e)}
+.gate-card .hedge{position:absolute;bottom:0;width:38%;height:104px;background:#3f7d43;
+  border:3px solid var(--ink);border-radius:8px 8px 0 0;
+  background-image:radial-gradient(circle at 30% 30%,rgba(255,255,255,.14) 0 18%,transparent 20%)}
+.gate-card .hedge.l{left:0;transform:translateX(-30%) rotate(-7deg);transform-origin:bottom left}
+.gate-card .hedge.r{right:0;transform:translateX(30%) rotate(7deg);transform-origin:bottom right}
+.gate-card .foot{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 12px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border-top:3px solid var(--ink);font-size:15px;font-weight:800}
+
+/* the projection popover — the pill's tap affordance */
+.pop{position:absolute;left:10px;top:calc(var(--sat) + 58px);width:250px;z-index:30;
+  border:3.5px solid var(--ink);border-radius:var(--r-md);padding:11px 12px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 5px 0 var(--ink-2), 0 10px 18px rgba(44,26,16,.28)}
+.pop::before{content:'';position:absolute;left:26px;top:-12px;width:18px;height:12px;
+  background:#fffdf7;clip-path:polygon(50% 0,100% 100%,0 100%);
+  border-left:3.5px solid var(--ink);border-right:3.5px solid var(--ink)}
+.pop h4{margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-soft)}
+.pop .num{display:flex;align-items:center;gap:7px;font-size:30px;font-weight:800;line-height:1;
+  font-variant-numeric:tabular-nums}
+.pop .num svg{width:26px;height:26px}
+.pop .sub{font-size:11.5px;font-weight:700;color:var(--ink-soft);line-height:1.35;margin-top:5px}
+.gate-bar{margin-top:8px}
+.gate-bar .row{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;margin-top:5px}
+.gate-bar .track{flex:1;height:12px;border-radius:999px;border:2.5px solid var(--ink);
+  background:#e9dcc3;overflow:hidden;position:relative}
+.gate-bar .track i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#8ce99a,#51cf66)}
+.gate-bar .track i.short{background:linear-gradient(180deg,#ffe066,var(--coin))}
+
+/* almanac + picker rows */
+.almanac-row{padding:8px 2px 9px;border-bottom:2px solid rgba(44,26,16,.1)}
+.almanac-row-top{display:flex;align-items:center;gap:8px}
+.almanac-row-top .n{flex:1;min-width:0;font-size:15px;font-weight:800;display:flex;align-items:center;gap:7px}
+.almanac-bloom{width:26px;height:26px;flex:none}
+.almanac-bloom svg{width:100%;height:100%}
+.almanac-row-top .r{font-size:10.5px;font-weight:800;letter-spacing:.04em}
+.r-legend{color:#c99700} .r-epic{color:#8b6ce0} .r-rare{color:#2b8ae0}
+.almanac-row-top .c{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;opacity:.75}
+.seed-desc{display:block;margin-top:2px;font-size:11px;font-weight:600;line-height:1.3;color:var(--ink-soft)}
+.petal-track{display:flex;align-items:center;gap:8px;margin-top:6px}
+.petal-track .pl{font-size:11.5px;font-weight:800;width:82px;flex:none}
+.petal-track .pips{flex:none}
+.petal-track .sp{flex:1}
+.almanac-row.dim{opacity:.45}
+
+.seed-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
+  width:100%;padding:9px 11px;margin-bottom:9px;
+  background:linear-gradient(180deg,#fff,#fff5e2);
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24)}
+.seed-art{width:54px;height:54px;flex:none;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.95),rgba(255,255,255,.6)),var(--art,#e8f7e3);
+  border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2)}
+.seed-art svg{width:40px;height:40px}
+.seed-name{font-size:15px;font-weight:800;line-height:1.15}
+.seed-stats{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.seed-go{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2);
+  background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.seed-go svg{width:22px;height:22px}
+/* A locked row is DIMMED, never illegible: it is an advert for a thing you are
+   saving for, so its stats have to stay readable. Today's gated row uses
+   filter:grayscale(.7) opacity(.72) and disappears. */
+.seed-row.locked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.18)}
+.seed-row.locked .seed-art{filter:saturate(.35)}
+.seed-row.locked .stat{background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));
+  box-shadow:0 2px 0 var(--paper-dim-edge)}
+.seed-row.fresh{background:linear-gradient(180deg,#fff6c2,#ffe066);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24), 0 0 0 4px rgba(255,201,60,.5)}
+.lock-cost{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;
+  border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fff,var(--paper-3));
+  box-shadow:0 2px 0 var(--ink-2);font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.lock-cost svg{width:16px;height:16px}
+.lock-cost.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a);animation:affordPulse 1.4s ease-in-out infinite}
+.lock-cost.no{background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));box-shadow:0 2px 0 var(--paper-dim-edge)}
+.confirm{position:absolute;left:14px;right:14px;bottom:120px;z-index:20;
+  border:4px solid var(--ink);border-radius:var(--r-lg);padding:14px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 6px 0 var(--ink-2), 0 12px 22px rgba(44,26,16,.3)}
+.confirm h4{margin:0 0 4px;font-size:17px;font-weight:800}
+.confirm p{margin:0 0 10px;font-size:12.5px;font-weight:700;color:var(--ink-soft);line-height:1.35}
+.confirm .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.toast{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--sat) + 96px);z-index:30;
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  border:3px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
+  font-size:13px;font-weight:800;white-space:nowrap}
+.toast svg{width:20px;height:20px}
+.speech{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);
+  padding:7px 12px;border:3px solid var(--ink);border-radius:14px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2);font-size:12.5px;font-weight:800;white-space:nowrap}
+
+/* =========================================================
+   PHASE 3.5 — THE BIG FIVE, THE BAND, AND THE PANELS
+   Everything below is new to this spike. The block above is
+   the shared chassis, byte-for-byte from the phase-2 and
+   phase-3 spikes, so all three are judged at the same
+   proportions.
+   ========================================================= */
+
+/* ---------- the dock of five ---------- */
+/* The row keeps the game's existing grid exactly: auto-flow column, equal
+   columns, and a 56px row. The pedestal is TALLER THAN THE ROW and the row is
+   `align-items:end`, so it rises out of the top without changing the dock's own
+   height. Nothing below row 5 moves; nothing in the .ui grid is re-measured. */
+.dock5{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+  gap:5px;height:56px;grid-template-rows:56px;align-items:end}
+.d5{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;height:56px;padding:6px 2px 5px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22);
+  font-size:10px;font-weight:800;line-height:1.05;text-align:center;color:var(--ink)}
+.d5 svg{width:22px;height:22px;display:block}
+.d5 .lab{display:block;letter-spacing:-.01em}
+
+/* THE PEDESTAL. Grass under a garden button, so the centre reads as *play* by
+   material and not only by size — it is the one button that is the colour of
+   the thing it takes you back to. */
+.d5.home{height:74px;border-radius:22px;border-width:3.5px;
+  background:linear-gradient(180deg,#8fe08a,var(--grass) 55%,var(--grass-d));
+  box-shadow:0 6px 0 #2f7a34, 0 12px 18px rgba(44,26,16,.3);
+  color:#173d1c}
+.d5.home svg{width:28px;height:28px}
+.d5.home .lab{font-size:11.5px;letter-spacing:.02em;
+  text-shadow:0 1px 0 rgba(255,255,255,.45)}
+
+/* THE TURN BUTTON IS THE METER. The fill is the button's own body rising from
+   the bottom — a vessel filling, which is what the pouch is. The pill it
+   replaces wiped left-to-right; a 74px-wide button is too narrow to read a
+   horizontal wipe, and too short for the wipe to mean anything. */
+.d5.turn{overflow:hidden;isolation:isolate}
+.d5.turn .fill{position:absolute;left:0;right:0;bottom:0;z-index:-1;
+  height:var(--p,0%);
+  background:linear-gradient(180deg,var(--seed-l),var(--seed));
+  border-top:2px solid rgba(44,26,16,.22)}
+/* The ready breath is the same 1.4s gold breath every affordable price in the
+   game already uses, so it means what it has always meant: you can have this
+   now. */
+.d5.turn.ready{animation:breathe 1.4s ease-in-out infinite}
+@keyframes breathe{
+  0%,100%{box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22), 0 0 0 0 rgba(255,201,60,.55)}
+  50%    {box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22), 0 0 0 5px rgba(255,201,60,.5)}
+}
+/* The pouch count. Saved Seeds have never had a readout — the pill that carried
+   the meter carried no number, on purpose. Year one keeps it that way. */
+.d5 .seedchip{position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:2px;padding:1px 6px 1px 3px;
+  border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--seed-l));
+  box-shadow:0 2px 0 var(--ink-2);font-size:9.5px;font-weight:800;white-space:nowrap}
+.d5 .seedchip svg{width:12px;height:12px}
+
+/* The attention dot, unchanged from the game's own. */
+.d5 .dot{position:absolute;top:-6px;right:-4px;width:16px;height:16px;border-radius:50%;
+  background:#ff6b6b;border:2.5px solid var(--ink);box-shadow:0 2px 0 var(--ink-2);
+  display:grid;place-items:center;font-size:9px;color:#fff;
+  text-shadow:0 1px 0 rgba(44,26,16,.9)}
+.d5 .dot.wide{width:auto;min-width:16px;padding:0 4px;border-radius:999px}
+
+/* ---------- the band above the dock ---------- */
+/* The owner's sketch: one row between the garden and the dock, reading left to
+   right — UPGRADE, the tending creatures, POWER-UP.
+
+   IT COSTS THE LAYOUT NOTHING. `.stage` already reserves a yard along its
+   bottom for the creatures (`--yard-h`, 70-108px); the two buttons move into
+   the two ends of that same strip. No new grid row, no pixel taken from the
+   board. */
+.band{position:absolute;left:0;right:0;bottom:0;height:var(--yard,108px);z-index:4}
+
+/* Left: UPGRADE, a rounded pill with the word on it, per the sketch. */
+.fpill{position:absolute;left:0;bottom:var(--band-b,52px);
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:7px 10px 6px;border:3.5px solid var(--ink);border-radius:16px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.24);
+  font-size:9px;font-weight:800;letter-spacing:.02em}
+.fpill svg{width:24px;height:24px;display:block}
+
+/* Right: POWER-UP, a round button, per the sketch. Its body takes the held
+   boost's own tint under the house white veil, so which boost is loaded is
+   readable before the icon is. */
+.fround{position:absolute;right:0;bottom:var(--band-b,52px);
+  width:58px;height:58px;border-radius:50%;display:grid;place-items:center;
+  border:3.5px solid var(--ink);
+  background:
+    radial-gradient(circle at 34% 26%,rgba(255,255,255,.9),rgba(255,255,255,.5)),
+    var(--tint,#9775fa);
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.24)}
+.fround svg{width:28px;height:28px}
+.fround .cnt{position:absolute;top:-6px;right:-4px;
+  min-width:20px;height:20px;padding:0 4px;border-radius:999px;
+  display:grid;place-items:center;
+  border:2.5px solid var(--ink);background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);font-size:10px;font-weight:800}
+.fround .cap,.fpill .cap{position:absolute;left:50%;transform:translateX(-50%);
+  bottom:-13px;font-size:8.5px;font-weight:800;color:#fff;white-space:nowrap;
+  text-shadow:0 2px 0 rgba(44,26,16,.9),0 0 6px rgba(44,26,16,.6)}
+
+/* THE EMPTY POWER-UP SLOT — the proposal. Drained paper, the same family the
+   locked season gate wears, so it reads as a promise rather than as a control
+   that has stopped working. */
+.fround.empty{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 5px 0 var(--paper-dim-edge), 0 9px 14px rgba(44,26,16,.18);
+  border-style:dashed}
+.fround.empty svg{opacity:.5}
+
+/* ---------- the creatures in the band ---------- */
+/* They stand where they already stand. Their feet lift clear of the pedestal's
+   rise so the raised Garden button never crops a creature. */
+.pets{position:absolute;left:0;right:0;bottom:var(--pet-b,18px);height:0}
+.pet{position:absolute;bottom:0;width:var(--pw,74px);height:var(--pw,74px);
+  transform:translateX(-50%)}
+.pet svg{width:100%;height:100%;display:block}
+.pet .zz{position:absolute;right:2px;top:2px;font-size:12px;font-weight:800;color:#fff;
+  text-shadow:0 2px 0 rgba(44,26,16,.9)}
+.pet .gift{position:absolute;right:0;top:6px;width:18px;height:18px;border-radius:50%;
+  border:2.5px solid var(--ink);background:linear-gradient(180deg,#ffe066,var(--coin));
+  box-shadow:0 2px 0 var(--ink-2)}
+
+/* ---------- the two doors at the foot ---------- */
+/* The burrow door is the precedent; the meadow door is its mirror twin. Both
+   sit in the yard's bottom corners, under the band's two buttons. */
+.door2{position:absolute;bottom:2px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:9.5px;font-weight:800;color:#fff;
+  text-shadow:0 2px 0 rgba(44,26,16,.9),0 0 6px rgba(44,26,16,.6)}
+.door2.l{left:8px} .door2.r{right:8px}
+.door2 .mouth{display:block;width:46px;height:28px;
+  border:4px solid var(--ink);border-bottom:0;border-radius:999px 999px 0 0;
+  background:linear-gradient(180deg,#8a6039,#5e3f24);
+  box-shadow:inset 0 5px 0 rgba(0,0,0,.28)}
+/* The meadow's mouth is a gap in a hedge, not a hole in the ground — same
+   silhouette, different material, so the twin is a twin and not a duplicate. */
+.door2.r .mouth{background:linear-gradient(180deg,#3f7d43,#28522e);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.16)}
+
+/* The alternative composition, drawn so the two can be compared: both doors
+   centred as a pair at the foot, the way the phase-3 spike drew them. */
+.doorpair{position:absolute;left:0;right:0;bottom:2px;display:flex;justify-content:center;gap:8px}
+.doorpair .dp{display:flex;align-items:center;gap:6px;padding:5px 11px 5px 7px;
+  border:3px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.2);
+  font-size:11px;font-weight:800}
+.doorpair .dp svg{width:18px;height:18px}
+
+/* ---------- the sheet, stopped above the dock ---------- */
+/* Doc 36's rule: a panel opens ABOVE the dock so the Garden button is always
+   visible as the way home. Today every sheet is pinned to bottom:0 at z-index
+   50 and covers the dock outright; the scrim covers it too. Both are lifted. */
+.sheet.docked{bottom:calc(var(--bottom-gap) + 56px + 6px);
+  height:min(66dvh,560px);border-radius:26px 26px 26px 26px}
+.scrim.docked{bottom:calc(var(--bottom-gap) + 56px + 6px)}
+
+/* ---------- panel furniture ---------- */
+.psec{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-soft);margin:2px 0 6px}
+.psec + .psec{margin-top:12px}
+.row{display:flex;align-items:center;gap:8px;padding:8px;margin-bottom:7px;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.14)}
+.row.ready{background:linear-gradient(180deg,#f2fff2,#d3f9d8)}
+.row.dimmed{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 3px 0 var(--paper-dim-edge)}
+.face{flex:none;width:42px;height:42px;border-radius:50%;border:3px solid var(--ink);
+  background:linear-gradient(180deg,#ffe9d6,#ffcba4);box-shadow:0 2px 0 var(--ink-2);
+  display:grid;place-items:center;font-size:19px}
+.mid{display:block;flex:1;min-width:0}
+.who{display:block;font-size:12.5px;font-weight:800;line-height:1.15}
+.sub{display:block;font-size:10.5px;font-weight:600;color:#5c452f;line-height:1.25;margin-top:1px}
+.pay{flex:none;display:grid;justify-items:end;gap:2px;font-size:11px;font-weight:800}
+.pay .p{display:flex;align-items:center;gap:3px}
+.pay svg{width:14px;height:14px}
+.bar2{height:8px;border:2px solid var(--ink);border-radius:999px;overflow:hidden;
+  background:var(--paper-dim-2);margin-top:4px}
+.bar2 i{display:block;height:100%;background:linear-gradient(180deg,#8fe08a,var(--grass-d))}
+.tokens{display:flex;gap:4px;margin-top:5px}
+.tok{width:26px;height:26px;border-radius:8px;border:2.5px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 2px 0 var(--ink-2);
+  display:grid;place-items:center;position:relative}
+.tok svg{width:16px;height:16px}
+.tok .n{position:absolute;bottom:-3px;right:-3px;font-size:8px;font-weight:800;
+  background:var(--paper-3);border:2px solid var(--ink);border-radius:999px;padding:0 2px}
+.tok.done{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;
+  border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);font-size:10.5px;font-weight:800}
+.pill svg{width:13px;height:13px}
+.pill.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.pill.no{background:linear-gradient(180deg,#ffe3e3,#ffa8a8)}
+.pill.seed{background:linear-gradient(180deg,#fffdf7,var(--seed-l))}
+.big{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
+  padding:11px;margin:4px 0 10px;border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#ffe9a8,var(--coin));
+  box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.16);
+  font-size:14px;font-weight:800}
+.big svg{width:20px;height:20px}
+.big.yes{background:linear-gradient(180deg,#b2f2bb,#51cf66)}
+.big.magic{background:linear-gradient(180deg,#e5dbff,#b197fc)}
+.note2{font-size:11px;font-weight:600;color:#5c452f;line-height:1.4;margin:0 0 9px}
+.tabsrow{display:flex;gap:5px;margin-bottom:9px}
+.tabp{padding:4px 11px;border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 2px 0 var(--ink-2);
+  font-size:11px;font-weight:800}
+.tabp.on{background:linear-gradient(180deg,#ffe9a8,var(--coin))}
+
+/* the album's set tiles */
+.sets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.settile{padding:9px;border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.14);
+  display:grid;justify-items:center;gap:5px;font-size:11px;font-weight:800;text-align:center}
+.settile.done{border-color:#2f9e44;box-shadow:0 3px 0 #2f9e44, 0 6px 10px rgba(44,26,16,.14)}
+.settile .ring{width:34px;height:34px;border-radius:50%;border:3px solid var(--ink);
+  display:grid;place-items:center;background:var(--t,#ffe0ad);box-shadow:0 2px 0 var(--ink-2)}
+.settile .ring svg{width:18px;height:18px}
+
+/* the Turn panel's flower cards — petal spending, one card per flower */
+.pcards{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.pcard{padding:7px;min-width:0;border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.14)}
+.pcard .ph{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800}
+.pcard .ph .art{width:26px;height:26px;flex:none}
+.pcard .trk{display:flex;align-items:center;gap:3px;margin-top:6px;font-size:9px;font-weight:800}
+.pcard .trk .pl{width:42px;flex:none;color:#5c452f;line-height:1.05}
+.pips{display:flex;gap:2px}
+.pips i{width:6px;height:6px;border-radius:50%;background:var(--seed);
+  border:1.5px solid var(--ink);display:block}
+.pips i.off{background:var(--paper-dim-2)}
+.pcard .sp{flex:1}
+
+/* the big meter on the Turn panel */
+.bigmeter{position:relative;height:74px;border:3.5px solid var(--ink);border-radius:var(--r-md);
+  overflow:hidden;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.18);margin-bottom:10px}
+.bigmeter i{position:absolute;left:0;bottom:0;right:0;height:var(--p,0%);
+  background:linear-gradient(180deg,var(--seed-l),var(--seed))}
+.bigmeter .lb{position:absolute;inset:0;display:grid;place-items:center;gap:2px;
+  font-size:13px;font-weight:800;text-align:center;padding:0 12px;line-height:1.25}
+.gates{display:grid;gap:6px;margin-bottom:10px}
+.gate{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:800}
+.gate .tr{flex:1;height:11px;border:2.5px solid var(--ink);border-radius:999px;overflow:hidden;
+  background:var(--paper-dim-2)}
+.gate .tr i{display:block;height:100%;background:linear-gradient(180deg,#8fe08a,var(--grass-d))}
+.gate.bind .tr i{background:linear-gradient(180deg,#ffe066,var(--coin-d))}
+.gate .tag2{flex:none;font-size:9px;background:var(--ink);color:#ffeecd;
+  border-radius:999px;padding:1px 6px}
+
+/* ---------- the old-home -> new-home mapping frame ---------- */
+.mapwrap{width:100%;max-width:820px}
+.maptab{width:100%;border-collapse:collapse;font-size:12px;font-weight:600;background:#fffdf7;
+  border:3px solid var(--ink);border-radius:var(--r-md);overflow:hidden}
+.maptab th{background:var(--ink);color:#ffeecd;font-weight:800;font-size:11px;
+  text-align:left;padding:6px 8px;letter-spacing:.03em}
+.maptab td{padding:6px 8px;border-top:2px solid #e8dcc4;vertical-align:top;line-height:1.35}
+.maptab tr.grp td{background:var(--paper-3);font-weight:800;font-size:11.5px;
+  letter-spacing:.04em;text-transform:uppercase}
+.maptab .keep{color:#2f6f38;font-weight:800}
+.maptab .move{color:#9c5a00;font-weight:800}
+.maptab .gone{color:#c92a2a;font-weight:800}
+.maptab .ask{color:#e8590c;font-weight:800}
+
+/* ---------- the button-state strip ---------- */
+.states{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
+  padding:14px 12px;border:3px solid var(--ink);border-radius:var(--r-md);
+  background:#e8d5b0;box-shadow:0 4px 0 rgba(44,26,16,.35)}
+.stcol{display:grid;justify-items:center;gap:6px;width:96px}
+.stcol .cap2{font-size:9.5px;font-weight:800;text-align:center;line-height:1.25}
+.stcol .d5{width:78px}
+.stcol .fround,.stcol .fpill{position:static;bottom:auto;left:auto;right:auto}
+
+/* ---------- the band census: four populations at true width ---------- */
+.census{display:grid;gap:12px}
+.cstrip{position:relative;height:150px;width:370px;max-width:100%;overflow:hidden;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#59b95d,#4fae54)}
+.cstrip .band{--yard:112px}
+.clab{font-size:10.5px;font-weight:800;margin-bottom:3px}
+
+/* ---------- the ruler: a measured column down the right of a frame ---------- */
+.ruler{position:absolute;right:2px;top:0;bottom:0;width:74px;z-index:30;pointer-events:none;
+  font-size:8.5px;font-weight:800}
+.ruler b{position:absolute;right:0;display:block;padding:1px 4px;border-radius:5px;
+  background:rgba(44,26,16,.86);color:#ffeecd;white-space:nowrap}
+.ruler u{position:absolute;left:0;right:0;height:0;border-top:1.5px dashed rgba(44,26,16,.75);
+  text-decoration:none}
+
+/* ---------- true metrics, overriding the chassis's simplifications ---------- */
+/* The chassis drew a 330px board in an 88px yard. Phase 3.5's whole question is
+   whether things FIT, so these frames use the numbers the running game actually
+   reports at 390x844 with an iPhone 16 Pro's insets: a 370px board (the full
+   column, flush to both padding edges), a 108px yard, a 56px dock. Measured
+   with `node tools/probe.js`, not asserted. */
+.dock5{grid-row:5}
+.phone .stage{padding:2px 0 var(--yard,108px)}
+.phone .quest-strip{min-height:52px}
+.phone .garden{width:370px;height:370px}
+.phone{--yard:108px;--band-b:48px;--pet-b:16px;--pw:74px}
+/* A 360px handset. The frame is really 360 wide, not a 390 frame with a
+   smaller board drawn in it — a squeeze frame that is not squeezed proves
+   nothing. */
+.phone.narrow{width:360px}
+.phone.narrow .garden{width:340px;height:340px}
+/* A 700px-tall handset: the game's own max-height:700px block fires, the dock
+   drops to 50px, the yard's clamp lands on 91px, and the board becomes
+   height-bound rather than width-bound. */
+.phone.short{height:700px;--yard:91px;--band-b:42px;--pet-b:12px;--pw:66px}
+.phone.short .garden{width:354px;height:354px}
+.phone.short .dock5,.phone.short .d5{height:50px}
+.phone.short .dock5{grid-template-rows:50px}
+.phone.short .d5.home{height:64px}
+.phone.short .fround{width:50px;height:50px}
+.phone.short .fround svg{width:24px;height:24px}
+.phone.short .fpill{padding:5px 8px 4px}
+.phone.short .fpill svg{width:20px;height:20px}
+.phone.short .door2 .mouth{width:40px;height:23px}
+.phone.short .sheet.docked{bottom:calc(var(--bottom-gap) + 50px + 6px)}
+.phone.short .scrim.docked{bottom:calc(var(--bottom-gap) + 50px + 6px)}
+/* The HUD gets its 44px touch targets back. With the album star and the meter
+   pill both gone the row is two wallets and two round buttons, so the
+   max-width:430px compromise that shaved every round button to 40px — written
+   down in style.css as a real cost — is paid off by this phase. */
+.phone .round-btn{width:44px;height:44px}
+.phone .wallet{font-size:14px;padding:4px 9px 4px 5px}
+.phone .w-icon{width:19px;height:19px}
+
+</style>
+</head>
+<body data-notes="1">
+<div class="page">
+<h1>The Big Five — phase 3.5 wireframe spike</h1>
+<p class="lede">The dock and the bottom of the screen, rebuilt to the owner’s sketch: <b>five main buttons — Orders &amp; Quests &middot; Cards &middot; GARDEN &middot; Turn &middot; Shop — and one band above them holding UPGRADE, the tending creatures, and POWER-UP.</b>
+Drawn at <b>390&times;844</b> with a real handset’s insets, using the metrics the running game actually reports, so the question <i>does it fit</i> is answered by measuring rather than by asserting.
+<b>Static:</b> no <code>data.js</code>, no <code>game.js</code> — every bloom, creature and icon here is a hand-drawn stand-in and every number is a placeholder.
+Wireframe fidelity: <b>layout is the question, polish is the build’s job.</b> Notes marked QUESTION are for the owner; notes marked DECIDED are calls I made and can unmake.
+<b>Frame 1 is the one that matters most</b> — every function on today’s dock and HUD, and where each one lands.</p>
+<div class="controls">
+  <button class="toggle" data-on="1" id="tNotes">Notes</button>
+  <button class="toggle" data-on="1" id="tInset">Phone insets (59 / 34)</button>
+</div>
+<div class="grid" id="grid"></div>
+</div>
+<script>
+/* ---------------------------------------------------------
+   Hand-drawn stand-ins. No game files are loaded, so a spike
+   can never break because the game moved underneath it.
+   --------------------------------------------------------- */
+const INK = '#2c1a10';
+const S = (inner, vb) => '<svg viewBox="' + (vb || '0 0 24 24') + '" fill="none" stroke="' + INK +
+  '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+
+const ICON = {
+  coin: S('<circle cx="12" cy="12" r="8.5" fill="#ffc93c"/><circle cx="12" cy="12" r="4.6" fill="#f7b100"/>'),
+  gem: S('<path d="M5 10 12 3l7 7-7 10z" fill="#8ce0ff"/><path d="M5 10h14M12 3v17"/>'),
+  seed: S('<path d="M12 20c0-6 3-10 8-11 0 6-3 10-8 11z" fill="#7bd88f"/>' +
+          '<path d="M12 20c0-5-2.5-8-7-9 0 5 2.5 8 7 9z" fill="#5cc45c"/><path d="M12 20v-3"/>'),
+  lock: S('<rect x="5" y="10.5" width="14" height="9.5" rx="3" fill="#ffe0ad"/>' +
+          '<path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5"/><circle cx="12" cy="15" r="1.4" fill="' + INK + '"/>'),
+  clock: S('<circle cx="12" cy="12" r="8.5" fill="#fff8e7"/><path d="M12 7.5V12l3 2"/>'),
+  star: S('<path d="M12 3.5l2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.8l6-.8z" fill="#ffd43b"/>'),
+  book: S('<path d="M4 5.5h6a2.5 2.5 0 012.5 2.5v11A2.5 2.5 0 0010 16.5H4z" fill="#fff8e7"/>' +
+          '<path d="M20 5.5h-6A2.5 2.5 0 0011.5 8v11A2.5 2.5 0 0114 16.5h6z" fill="#ffeecd"/>'),
+  gear: S('<circle cx="12" cy="12" r="3.4" fill="#ffeecd"/><path d="M12 3.5v2.6M12 17.9v2.6M20.5 12h-2.6M6.1 12H3.5' +
+          'M18 6l-1.8 1.8M7.8 16.2 6 18M18 18l-1.8-1.8M7.8 7.8 6 6"/>'),
+  close: S('<path d="M7 7l10 10M17 7L7 17"/>'),
+  badge: S('<circle cx="12" cy="10" r="6" fill="#ffd43b"/><path d="M8.5 15.5 7 21l5-2.4L17 21l-1.5-5.5"/>'),
+  flask: S('<path d="M10 3.5v6L5.5 18a2.5 2.5 0 002.2 3.5h8.6A2.5 2.5 0 0018.5 18L14 9.5v-6z" fill="#c9f5cf"/><path d="M9 3.5h6"/>'),
+  decor: S('<path d="M6 20h12l-1.5-8H7.5z" fill="#ffb570"/><path d="M9 12V9a3 3 0 016 0v3"/>'),
+  stall: S('<path d="M4 10h16v10H4z" fill="#fff8e7"/><path d="M3 6h18l-1.5 4h-15z" fill="#ff8fab"/><path d="M9 20v-6h6v6"/>'),
+  sprout: S('<path d="M12 20v-7"/><path d="M12 13c0-3.3 2.7-6 6-6 0 3.3-2.7 6-6 6z" fill="#8fe08a"/>' +
+            '<path d="M12 15c0-2.8-2.2-5-5-5 0 2.8 2.2 5 5 5z" fill="#5cc45c"/>'),
+  check: S('<path d="M5 12.5l4.5 4.5L19 7.5" stroke-width="3"/>'),
+  leaf: S('<path d="M5 19C5 10 11 5 19 5c0 8-5 14-14 14z" fill="#8fe08a"/><path d="M5 19c4-4 7-6 11-8"/>'),
+  grid: S('<rect x="4" y="4" width="7" height="7" rx="2" fill="#c9f5cf"/><rect x="13" y="4" width="7" height="7" rx="2" fill="#ffe0ad"/>' +
+          '<rect x="4" y="13" width="7" height="7" rx="2" fill="#ffe0ad"/><rect x="13" y="13" width="7" height="7" rx="2" fill="#c9f5cf"/>')
+};
+const ico = (k) => ICON[k] || '';
+
+/* A bloom, at whatever size the caller places it. Six petals and a core is
+   enough to read a flower at 22px, which is the size the Almanac uses. */
+function bloom(c1, c2, core, petals) {
+  petals = petals || 6;
+  let p = '';
+  for (let i = 0; i < petals; i++) {
+    const a = (360 / petals) * i;
+    p += '<ellipse cx="50" cy="27" rx="13" ry="19" fill="' + c1 + '" stroke="' + INK +
+         '" stroke-width="3" transform="rotate(' + a + ' 50 50)"/>';
+  }
+  return '<svg viewBox="0 0 100 100">' + p +
+    '<circle cx="50" cy="50" r="13" fill="' + core + '" stroke="' + INK + '" stroke-width="3"/>' +
+    '<circle cx="46" cy="46" r="4" fill="' + c2 + '"/></svg>';
+}
+/* The talking flower, for the sheet's breakout art. */
+function talker(mood) {
+  const eye = mood === 'shut'
+    ? '<path d="M40 46q5 4 10 0M60 46q5 4 10 0" stroke="' + INK + '" stroke-width="3.4" fill="none" stroke-linecap="round"/>'
+    : '<circle cx="45" cy="46" r="4.6" fill="' + INK + '"/><circle cx="65" cy="46" r="4.6" fill="' + INK + '"/>';
+  let p = '';
+  for (let i = 0; i < 8; i++) {
+    const a = 45 * i;
+    p += '<ellipse cx="55" cy="20" rx="12" ry="17" fill="#ffd6ea" stroke="' + INK +
+         '" stroke-width="3.4" transform="rotate(' + a + ' 55 50)"/>';
+  }
+  return '<svg viewBox="0 0 110 128">' +
+    '<path d="M55 122V78" stroke="#46ad7c" stroke-width="7" stroke-linecap="round"/>' +
+    '<path d="M55 100c-10 0-17-6-19-14 10-2 17 3 19 14z" fill="#46ad7c" stroke="' + INK + '" stroke-width="3"/>' +
+    p + '<circle cx="55" cy="50" r="22" fill="#fff3bf" stroke="' + INK + '" stroke-width="3.4"/>' +
+    eye + '<path d="M47 58q8 7 16 0" stroke="' + INK + '" stroke-width="3.4" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="36" cy="56" r="4" fill="#ffb3c9" opacity=".8"/><circle cx="74" cy="56" r="4" fill="#ffb3c9" opacity=".8"/>' +
+    '</svg>';
+}
+
+const pips = (on, total) => '<span class="pips">' +
+  Array.from({ length: total }, (_, i) => '<i class="pip' + (i < on ? '' : ' off') + '"></i>').join('') + '</span>';
+</script>
+
+<script>
+/* ---------------------------------------------------------
+   The phone, and the chrome that is on screen in every frame.
+   Metrics copied from style.css so proportions are true.
+   --------------------------------------------------------- */
+const SEEDS = {
+  daisy:      { n: 'Daisy',      c1: '#ffe066', c2: '#fff9db', core: '#ffc93c' },
+  tulip:      { n: 'Tulip',      c1: '#ff6b8a', c2: '#ffd6e0', core: '#ffe066' },
+  bluebell:   { n: 'Bluebell',   c1: '#5c7cfa', c2: '#dbe4ff', core: '#ffe066' },
+  lavender:   { n: 'Lavender',   c1: '#b197fc', c2: '#eee5ff', core: '#f3d9fa' },
+  rose:       { n: 'Rose',       c1: '#e03131', c2: '#ffc9c9', core: '#ffd43b' },
+  marigold:   { n: 'Marigold',   c1: '#ff922b', c2: '#ffe8cc', core: '#e8590c' },
+  peony:      { n: 'Peony',      c1: '#f783ac', c2: '#ffdeeb', core: '#fff3bf' },
+  sunlotus:   { n: 'Sun Lotus',  c1: '#ffd43b', c2: '#fff9db', core: '#ff922b' },
+  moonflower: { n: 'Moonflower', c1: '#d0ebff', c2: '#f8f9fa', core: '#a5d8ff' }
+};
+const head = (k, size) => bloom(SEEDS[k].c1, SEEDS[k].c2, SEEDS[k].core, k === 'daisy' ? 8 : 6);
+
+function meter(o) {
+  if (!o) return '';
+  return '<div class="wallet meter' + (o.num ? '' : ' mystery') + (o.full ? ' full' : '') +
+    '" style="--p:' + Math.round(o.p * 100) + '%"><i class="fill"></i>' +
+    '<span class="w-icon">' + ico('seed') + '</span>' +
+    (o.num ? '<span class="w-num">' + o.num + '</span>' : '') + '</div>';
+}
+function hud(o) {
+  return '<header class="hud' + (o.loose ? '' : ' tight') + '">' +
+    '<div class="wallets">' +
+      '<div class="wallet"><span class="w-icon">' + ico('coin') + '</span><span class="w-num">' + (o.coins || '84.2K') + '</span></div>' +
+      '<div class="wallet"><span class="w-icon">' + ico('gem') + '</span><span class="w-num">' + (o.gems || '24') + '</span></div>' +
+      meter(o.meter) +
+    '</div>' +
+    '<div class="hud-actions">' +
+      (o.noAlbum ? '' : '<button class="round-btn">' + ico('star') + '</button>') +
+      '<button class="round-btn">' + ico('book') + '</button>' +
+      '<button class="round-btn">' + ico('gear') + '</button>' +
+    '</div></header>';
+}
+const questStrip = () =>
+  '<button class="quest-strip"><span class="q-pip">7</span><span class="q-bar"><i></i>' +
+  '<span><span>Harvest 3 roses</span><span>2 / 3</span></span></span>' +
+  '<span class="q-reward">' + ico('coin') + '</span></button>';
+
+function stage(o) {
+  o = o || {};
+  const cells = [];
+  const fill = o.plots || ['bloom:rose', 'grow:.7', 'empty', 'grow:.3', '', 'bloom:daisy', 'empty', 'grow:.5', 'bloom:tulip'];
+  for (let i = 0; i < 9; i++) {
+    if (i === 4) {
+      cells.push('<div style="display:grid;place-items:center;position:relative">' +
+        (o.speech ? '<span class="speech">' + o.speech + '</span>' : '') +
+        '<div style="width:86%">' + talker(o.mood) + '</div></div>');
+      continue;
+    }
+    const f = fill[i] || 'empty';
+    if (f.indexOf('bloom:') === 0) cells.push('<button class="plot">' + head(f.slice(6)) + '</button>');
+    else if (f.indexOf('grow:') === 0) cells.push('<button class="plot"><span class="bar"><i style="width:' +
+      Math.round(parseFloat(f.slice(5)) * 100) + '%"></i></span></button>');
+    else cells.push('<button class="plot mid">' + ico('sprout') + '</button>');
+  }
+  return '<main class="stage"><div class="garden">' + cells.join('') + '</div></main>';
+}
+function dock(o) {
+  const b = (icoKey, label) => '<button class="dock-btn"><span class="dock-ico">' + ico(icoKey) +
+    '</span><span class="dock-label">' + label + '</span></button>';
+  return '<nav class="dock">' + b('badge', 'Upgrades') + b((o && o.stand) ? 'stall' : 'grid', (o && o.stand) ? 'Stand' : 'World') +
+    b('flask', 'Craft') + b('decor', 'Shop') + '</nav>';
+}
+const scenery = (tint) =>
+  '<div class="scenery"><div class="sky"></div><div class="sun"></div><div class="hills"></div>' +
+  '<div class="fence"></div><div class="lawn"></div><div class="vignette"></div>' +
+  '<div class="season-tint" style="--season-o:' + (tint || 0) + '"></div></div>';
+
+function sheet(o) {
+  return '<section class="sheet' + (o.cere ? ' cere' : (o.tall ? ' tall' : '')) + '">' +
+    (o.art ? '<div class="sheet-art">' + o.art + '</div>' : '') +
+    '<div class="sheet-grip"><span></span></div>' +
+    '<div class="sheet-head"><h2>' + (o.title || '') + '</h2>' +
+      (o.close === false ? '' : '<button class="round-btn ghost">' + ico('close') + '</button>') + '</div>' +
+    '<div class="sheet-body">' + o.body + '</div></section>';
+}
+function phone(o) {
+  o = o || {};
+  return '<div class="phone" style="--season-o:' + (o.tint || 0) + '">' + scenery(o.tint) +
+    '<div class="ui">' + hud(o) + questStrip() + '<div class="rail"></div>' + stage(o) + dock(o) + '</div>' +
+    (o.pop || '') + (o.toast || '') +
+    (o.sheet ? '<div class="scrim"></div>' + o.sheet : '') + '</div>';
+}
+</script>
+<script>
+/* ---------------------------------------------------------
+   Phase 3.5's own furniture, built on the chassis above.
+   --------------------------------------------------------- */
+
+/* Two more glyphs the icon set does not have yet. Both are one new 24x24 icon
+   in icons.js when this builds — flat fills inside one thick outline, like the
+   thirty-odd already there. */
+ICON.orders = S('<path d="M4 9h16v11H4z" fill="#fff8e7"/><path d="M3 5.5h18L19.5 9h-15z" fill="#ff8fab"/>' +
+                '<path d="M9 20v-6h6v6"/>');
+ICON.cards = S('<rect x="3.5" y="6" width="10" height="14" rx="2.5" fill="#e5dbff" transform="rotate(-8 8.5 13)"/>' +
+               '<rect x="10.5" y="4.5" width="10" height="14" rx="2.5" fill="#fff8e7"/>' +
+               '<path d="M15.5 9.2l1.1 2.3 2.5.3-1.9 1.7.5 2.5-2.2-1.2-2.2 1.2.5-2.5-1.9-1.7 2.5-.3z" fill="#ffd43b"/>');
+ICON.pouch = S('<path d="M8.6 8.5h6.8c2.9 2 4.6 5 4.6 7.9 0 2.6-2.8 4.1-8 4.1s-8-1.5-8-4.1c0-2.9 1.7-5.9 4.6-7.9z" fill="#c9f5cf"/>' +
+               '<path d="M8.6 8.5c-.7-1.5-.4-2.9.9-3.4 1-.4 1.8.1 2.5 1 .7-.9 1.5-1.4 2.5-1 1.3.5 1.6 1.9.9 3.4"/>' +
+               '<path d="M8.6 8.5h6.8"/>');
+ICON.bolt = S('<path d="M13.6 2.4 5.8 13.2h4.6l-.9 8.4 8.4-11.4h-4.9Z" fill="#ffd43b"/>');
+ICON.clover = S('<path d="M12 12c0-3-2-4.5-4-4.5S4.5 9 4.5 11 6 14 8 14s4-1 4-2z" fill="#69db7c"/>' +
+                '<path d="M12 12c0-3 2-4.5 4-4.5S19.5 9 19.5 11 18 14 16 14s-4-1-4-2z" fill="#51cf66"/>' +
+                '<path d="M12 12c-3 0-4.5-2-4.5-4S9 4 11 4s3 1.5 3 3.5-1 4.5-2 4.5z" fill="#51cf66"/>' +
+                '<path d="M12 12v8"/>');
+ICON.shop = S('<path d="M4.5 8.5h15l-1.3 11.5H5.8z" fill="#ffd9b0"/>' +
+              '<path d="M8.8 10.5V7a3.2 3.2 0 016.4 0v3.5"/>' +
+              '<path d="M4.5 8.5h15" /><circle cx="9" cy="13" r="1.1" fill="#2c1a10"/><circle cx="15" cy="13" r="1.1" fill="#2c1a10"/>');
+ICON.honey = S('<path d="M12 3.5 19 7.5v9L12 20.5 5 16.5v-9z" fill="#ffd43b"/><path d="M12 3.5v17M5 7.5l7 4 7-4"/>');
+ICON.hand = S('<path d="M8.5 12V5.5a1.7 1.7 0 013.4 0V11m0-1.5a1.7 1.7 0 013.4 0V12m0-1a1.7 1.7 0 013.4 0v4.5c0 3.3-2.4 5.5-5.6 5.5S7 18.8 6 16l-1.4-3a1.7 1.7 0 012.8-1.8z" fill="#ffe9d6"/>');
+
+/* A creature stand-in. The real ones come from critters.js; a wireframe needs
+   a body, a face and a pair of legs at the right size, nothing more. */
+function critter(c, mood) {
+  const eyes = mood === 'asleep'
+    ? '<path d="M36 44q6 5 12 0M62 44q6 5 12 0" stroke="' + INK + '" stroke-width="4" fill="none" stroke-linecap="round"/>'
+    : '<circle cx="42" cy="45" r="5" fill="' + INK + '"/><circle cx="68" cy="45" r="5" fill="' + INK + '"/>';
+  return '<svg viewBox="0 0 110 110">' +
+    '<ellipse cx="55" cy="98" rx="30" ry="7" fill="rgba(44,26,16,.22)"/>' +
+    '<path d="M30 30 22 12M80 30 88 12" stroke="' + INK + '" stroke-width="4" stroke-linecap="round"/>' +
+    '<circle cx="22" cy="11" r="6" fill="' + c + '" stroke="' + INK + '" stroke-width="4"/>' +
+    '<circle cx="88" cy="11" r="6" fill="' + c + '" stroke="' + INK + '" stroke-width="4"/>' +
+    '<ellipse cx="55" cy="56" rx="38" ry="36" fill="' + c + '" stroke="' + INK + '" stroke-width="4.5"/>' +
+    '<ellipse cx="55" cy="70" rx="24" ry="18" fill="rgba(255,255,255,.42)"/>' +
+    eyes + '<path d="M45 62q10 8 20 0" stroke="' + INK + '" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+    '<path d="M40 90v6M70 90v6" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>' +
+    '</svg>';
+}
+
+/* ---------- THE BIG FIVE ---------- */
+/* Orders & Quests | Cards | GARDEN | Turn | Shop. The centre is the pedestal;
+   the fourth button's own body is the year meter. */
+function dock5(o) {
+  o = o || {};
+  const btn = (k, lab, extra, cls) =>
+    '<button class="d5' + (cls ? ' ' + cls : '') + '">' + (extra || '') +
+    '<span>' + ico(k) + '</span><span class="lab">' + lab + '</span></button>';
+
+  const oq = btn('orders', 'Orders<br>&amp; Quests', o.oq ? '<span class="dot wide">' + o.oq + '</span>' : '');
+  const cards = btn('cards', 'Cards', o.packs ? '<span class="dot wide">' + o.packs + '</span>' : '');
+  const home = '<button class="d5 home">' + ico('sprout') + '<span class="lab">GARDEN</span></button>';
+  const p = Math.round((o.turn === undefined ? 0.34 : o.turn) * 100);
+  const turn = '<button class="d5 turn' + (o.turnReady ? ' ready' : '') + '" style="--p:' + p + '%">' +
+    '<i class="fill"></i>' +
+    (o.pouch ? '<span class="seedchip">' + ico('pouch') + o.pouch + '</span>' : '') +
+    '<span>' + ico('pouch') + '</span><span class="lab">Turn</span></button>';
+  const shop = btn('shop', 'Shop', o.shopDot ? '<span class="dot"></span>' : '');
+  return '<nav class="dock5">' + oq + cards + home + turn + shop + '</nav>';
+}
+
+/* ---------- THE BAND ---------- */
+/* UPGRADE, the tending creatures, POWER-UP — the owner's sketch, in the yard
+   the stage already reserves. `pets` is a count, 0 to 4. */
+const PET_C = ['#ffd6ea', '#c9f5cf', '#cde5ff', '#ffe0ad'];
+const PET_X = [30, 70, 44, 58];
+function band(o) {
+  o = o || {};
+  const n = o.pets === undefined ? 3 : o.pets;
+  let pets = '';
+  for (let i = 0; i < n; i++) {
+    pets += '<span class="pet" style="left:' + PET_X[i] + '%">' +
+      critter(PET_C[i], i === 3 && o.asleep ? 'asleep' : '') +
+      (i === 3 && o.asleep ? '<span class="zz">z</span>' : '') +
+      (i === 0 && o.gift ? '<span class="gift"></span>' : '') + '</span>';
+  }
+  const boost = o.boost === null
+    ? '<button class="fround empty">' + ico('bolt') + '</button>'
+    : '<button class="fround" style="--tint:' + (o.boost ? o.boost.t : '#ff6b9d') + '">' +
+      ico(o.boost ? o.boost.i : 'bolt') +
+      '<span class="cnt">' + (o.held === undefined ? 4 : o.held) + '</span>' +
+      '</button>';
+  const doors = o.doors === 'pair'
+    ? '<div class="doorpair"><span class="dp">' + ico('sprout') + 'The Hollow</span>' +
+      '<span class="dp">' + ico('leaf') + 'The Meadow</span></div>'
+    : (o.doors === false ? '' :
+      '<span class="door2 l"><i class="mouth"></i>The Hollow</span>' +
+      '<span class="door2 r"><i class="mouth"></i>The Meadow</span>');
+  return '<div class="band">' +
+    '<button class="fpill">' + ico('badge') + 'UPGRADE</button>' +
+    '<div class="pets">' + pets + '</div>' + boost + doors + '</div>';
+}
+
+/* A phone wearing phase 3.5's bottom of the screen. Everything above the band
+   is the chassis, unchanged, which is the point: this phase moves entries and
+   never behaviour. */
+function ph(o) {
+  o = o || {};
+  o.noAlbum = o.noAlbum === undefined ? true : o.noAlbum;
+  const body = '<div class="ui">' + hud5(o) + questStrip() + '<div class="rail">' + (o.rail || '') + '</div>' +
+    stage(o).replace('</main>', band(o) + '</main>') + dock5(o) + '</div>';
+  return '<div class="phone' + (o.cls ? ' ' + o.cls : '') + '">' + scenery(o.tint) + body +
+    (o.sheet ? '<div class="scrim docked"></div>' + o.sheet : '') +
+    (o.ruler || '') + (o.toast || '') + '</div>';
+}
+
+/* The HUD after the retirements: two wallets, two round buttons. The meter pill
+   is gone (its job is the Turn button) and the album star is gone (its job is
+   the Cards button). The dev dot stays exactly where it is — an unlabelled
+   44px strip beside the gem wallet is still the only way into Developer tools. */
+function hud5(o) {
+  return '<header class="hud">' +
+    '<div class="wallets">' +
+      '<div class="wallet"><span class="w-icon">' + ico('coin') + '</span><span class="w-num">' + (o.coins || '84.2K') + '</span></div>' +
+      '<div class="wallet"><span class="w-icon">' + ico('gem') + '</span><span class="w-num">' + (o.gems || '24') + '</span></div>' +
+      '<span style="position:absolute;left:100%;top:0;width:44px;height:100%" title="the dev dot: absolute, costs the row no width"></span>' +
+    '</div>' +
+    '<div class="hud-actions">' +
+      '<button class="round-btn">' + ico('book') + '</button>' +
+      '<button class="round-btn">' + ico('gear') + '</button>' +
+    '</div></header>';
+}
+
+/* A panel that stops above the dock, so the Garden button is always the visible
+   way home. Today every sheet is pinned to bottom:0 and covers the dock. */
+function panel(o) {
+  return '<section class="sheet docked">' +
+    '<div class="sheet-grip"><span></span></div>' +
+    '<div class="sheet-head"><h2>' + (o.title || '') + '</h2>' +
+    '<button class="round-btn ghost">' + ico('close') + '</button></div>' +
+    '<div class="sheet-body">' + o.body + '</div></section>';
+}
+
+const ruler = (marks) => '<div class="ruler">' +
+  marks.map(([y, lab, left]) => '<u style="top:' + y + 'px"></u><b style="top:' + (y - 7) + 'px' +
+    (left ? ';right:auto;left:-292px' : '') + '">' + lab + '</b>').join('') +
+  '</div>';
+</script>
+
+<script>
+/* =========================================================
+   THE FRAMES.
+
+   The brief's list, in its order: the mapping first so nothing
+   falls off the edge silently; then the garden with the whole
+   new bottom; the band at every population; each panel; the
+   Turn button's states; the power-up; the meadow's door; the
+   squeezes, measured; and the Hollow, to show a room keeps
+   its own dock.
+   ========================================================= */
+const F = [];
+
+/* ---------- 1. NOTHING FALLS OFF THE EDGE ---------- */
+const MAP_ROWS = [
+  ['grp', 'The dock, today: Upgrades · World · Craft · Shop'],
+  ['move', 'Upgrades — the badges shop', 'The <b>UPGRADE</b> pill, left end of the band. One tap, same sheet.'],
+  ['gone', 'World — travel to the map', '<b>Retired with the map.</b> Everything it reached is re-homed below.'],
+  ['ask', 'Craft — the Apothecary', '<b>No dock button of its own.</b> It keeps the tab pill it already has inside Shop and Upgrades, so it is two taps instead of one. <b>Doc 36 does not mention Craft at all — this is the one function the spec leaves without a named home.</b>'],
+  ['keep', 'Shop — sky calls and decor', 'The <b>SHOP</b> button, fifth of the five. Unchanged sheet.'],
+  ['keep', 'The red attention dot on a dock button', 'Same dot, re-pointed: Orders&nbsp;&amp; Quests gets the fillable-order and claimable-quest counts, Shop keeps affordable decor, Craft’s dot has nowhere to live and folds into Shop’s.'],
+  ['keep', 'Tapping the tab you are in closes the sheet', 'Unchanged — and the <b>GARDEN</b> button now closes any sheet from anywhere, which is the new, better way home.'],
+
+  ['grp', 'The top HUD'],
+  ['keep', 'Coins and gems', 'Unchanged. Both wallets stay exactly where they are.'],
+  ['move', 'The year-meter pill', '<b>Retires.</b> Its body becomes the <b>TURN</b> button’s body — the same fill, reading the same binding gate.'],
+  ['move', 'Tap the pill → the year projection card', 'Becomes the <b>Turn panel</b>. A popover under a HUD pill was always a compromise; a panel can hold the pouch and the petals too.'],
+  ['move', 'Tap the pill when full → the Turn ceremony', 'The <b>Turn panel</b> carries the ceremony’s button when a Turn is ready. <b>This is the only route into prestige in the game</b>, so it is the one entry that must not be got wrong.'],
+  ['move', 'The album star', '<b>Leaves the HUD</b> for the <b>CARDS</b> button — doc 36’s ruling, and the fix <code>style.css</code> itself asks for in the max-width:430px block.'],
+  ['keep', 'The Almanac book', 'Stays in the HUD. It keeps the <i>record</i> rows; the Turn panel is where petals are <i>bought</i>.'],
+  ['keep', 'The gear', 'Stays. Settings has no other door.'],
+  ['keep', 'The dev dot', 'Stays — the unlabelled 44px strip beside the gem wallet. It is the only way into Developer tools, and the five-minute script needs it.'],
+
+  ['grp', 'The status rail'],
+  ['move', 'Tap a held boost to spend it', 'The <b>POWER-UP</b> button, right end of the band. One boost loaded at a time, a count badge for the rest.'],
+  ['keep', 'A running boost’s countdown chip', '<b>Stays in the rail.</b> The rail loses its shop, not its clock — and it is <code>:empty{display:none}</code>, so it costs nothing when nothing is running.'],
+  ['keep', 'The WONDER countdown', 'Stays in the rail, still first. It is not a held boost and has no inventory, so it has no business on the power-up button.'],
+
+  ['grp', 'The quest strip'],
+  ['ask', 'The strip itself — level pip, quest text, progress', '<b>Survives this phase unchanged</b> (gate question 5). It is the one always-visible goal, and a count on a dock button is not a goal.'],
+  ['keep', 'Tap to claim a finished quest', 'Unchanged.'],
+  ['keep', 'Tap to open the Quests sheet', 'Unchanged — <b>and gains a second door</b>, the Orders&nbsp;&amp; Quests button. Quests had exactly one route before this phase.'],
+
+  ['grp', 'What the world map was the only door to'],
+  ['move', 'The Garden Stand — the order queue', 'The <b>ORDERS &amp; QUESTS</b> button, above the quest list. Same sheet, same rows.'],
+  ['move', 'The Wild Meadow', '<b>Its own door at the foot of the garden</b>, the burrow door’s twin — and it is built <b>first</b>, before a line of the map comes out. Four quests and 114 of the ladder’s 777 reputation live behind it.'],
+  ['keep', 'The Hollow', 'Already has two doors of its own — the burrow mouth and the swipe up. Nothing to do.'],
+  ['keep', 'The Garden itself', 'The <b>GARDEN</b> button, and it is now reachable from every screen rather than from the map.'],
+  ['gone', 'The locked land parcels', '<b>Dies with the map, deliberately.</b> They were a promise of land that the Stand’s reputation would open, drawn on a surface that is going away. Nothing else in the game refers to them. <b>Named here so it is a decision and not an accident</b> — docs/25 owns them.'],
+  ['gone', 'The map’s drag hint', 'Dies with the map.'],
+
+  ['grp', 'Gestures'],
+  ['gone', 'Swipe DOWN → the map', '<b>Retires with the map.</b> Doc 32 says the gesture is then free for later use; it is left free, not re-pointed.'],
+  ['keep', 'Swipe UP → the Hollow', 'Untouched.'],
+  ['keep', 'Swipe LEFT / RIGHT → the seasons', 'Untouched. The Big Five rides the season strip: Summer and Fall share it.'],
+
+  ['grp', 'In the garden — nothing here moves'],
+  ['keep', 'The flower, the plots, the combo ring, the coach marks', 'Untouched.'],
+  ['keep', 'The creatures — collect a keepsake, open a panel', '<b>They stand where they already stand</b>, in the middle of the band, and keep both taps. The sketch names their home rather than moving them.'],
+  ['keep', 'The burrow door', 'Untouched, and it keeps its corner.'],
+  ['keep', 'The season edge tabs, the gate screen, Fall’s board', 'Untouched.'],
+
+  ['grp', 'Already broken before this phase — not mine, but not hidden either'],
+  ['ask', 'The <code>stores</code> sheet (honey &amp; beeswax, “Sell all”)', 'Written, registered, and <b>opened by nothing</b> — a repo-wide search finds no caller. It is dead today, so this phase cannot “preserve” it. Wire it or delete it, as its own decision.'],
+  ['ask', 'A card cell in the album', 'Renders as a button with <code>data-card</code> and <b>no handler reads it</b> — tapping a card does nothing. The Cards button is about to send far more traffic there.']
+];
+
+F.push({
+  t: 'Every function on the old dock and HUD, and where it lands',
+  s: 'The first frame, so nothing falls off the edge silently.',
+  tag: 'MAPPING',
+  html: '<div class="mapwrap"><table class="maptab"><tr><th style="width:38%">What it does today</th><th>Where it lands</th></tr>' +
+    MAP_ROWS.map((r) => r[0] === 'grp'
+      ? '<tr class="grp"><td colspan="2">' + r[1] + '</td></tr>'
+      : '<tr><td><span class="' + r[0] + '">' +
+        ({ keep: 'STAYS', move: 'MOVES', gone: 'GOES', ask: 'ASK' })[r[0]] + '</span> &middot; ' + r[1] + '</td><td>' + r[2] + '</td></tr>').join('') +
+    '</table></div>',
+  notes: [
+    ['d', '<b>Three functions had exactly one door before this phase and still do after it:</b> the Turn ceremony (the year pill, now the Turn button), Developer tools (the unlabelled strip beside the gem wallet), and Settings (the gear). Each is a single point of failure by design; the build has to prove each one still opens, which is what the reachability walk at the end is for.'],
+    ['q', '<b>CRAFT IS THE ONE REAL GAP IN THE SPEC.</b> Doc 36 names five buttons and a floating pair and never mentions the Apothecary. It does not fall off the edge — the three shop panels share a tab pill row, so Shop → Craft is two taps — but it goes from a top-level button to a tab inside another shop, and that is a demotion the owner should make on purpose. The alternative is putting Craft on the band and moving Upgrades into the Shop tabs, which is the same trade the other way round.'],
+    ['q', '<b>The land parcels die with the map.</b> They are the only thing the map held that has no new home, and they were a promise (“land opens up as the Stand builds your reputation”) rather than a system. Killing them is cheap and honest; keeping them means finding a surface for a promise about land in a game that no longer has a map of land.'],
+    ['d', 'Craft’s attention dot has nowhere to go, so it folds into Shop’s. A player who could brew something now learns it by opening Shop, which is one tab away from the bench.']
+  ]
+});
+
+
+/* ---------- 2. THE GARDEN, WITH THE WHOLE NEW BOTTOM ---------- */
+F.push({
+  t: 'Summer, the whole new bottom of the screen',
+  s: 'The Big Five, and the band above it: UPGRADE · the tending creatures · POWER-UP.',
+  tag: 'THE FIVE',
+  html: ph({
+    coins: '84.2K', gems: '24', turn: 0.34, pouch: '', oq: 2, packs: 1,
+    boost: { i: 'bolt', n: 'Bloom Burst', t: '#ff6b9d' }, held: 4, pets: 3
+  }),
+  notes: [
+    ['d', '<b>This is the screen a player lives on. Worth the long look.</b> Five buttons, the centre raised, and one band above them holding the two floating controls with the creatures between — the sketch, drawn at the size it ships.'],
+    ['d', '<b>THE BAND COSTS THE LAYOUT NOTHING.</b> <code>.stage</code> already reserves a yard along its bottom for creatures — 108px at 390&times;844, running from y652 to y760. The two buttons move into the two ends of that same strip. No new grid row, not one pixel off the board. Measured on this frame against the running game: the board is <b>370&times;370 before this change and 370&times;370 after it</b>, and the yard and the dock land on exactly the same pixels.'],
+    ['d', '<b>But the band itself is full.</b> Inside its 108px: the two floating buttons occupy 2&ndash;60 and the two doors 61&ndash;106. Two pixels spare top and bottom. The air in this frame is the 49px of empty stage <i>above</i> the band, not slack inside it.'],
+    ['d', '<b>The pedestal rises out of the dock without making the dock taller.</b> The row stays 56px and is <code>align-items:end</code>; the Garden button is 74px and overflows upward by 18. Row 5 never changes height, so nothing in the <code>.ui</code> grid is re-measured — which is the rule that stops a fifth button wrapping onto a second row.'],
+    ['d', '<b>The pedestal is grass.</b> It is the one button the colour of the place it takes you to, so it reads as <i>play</i> by material and not only by size. Every other button in the dock is cream paper.'],
+    ['d', '<b>The creatures’ feet lift 16px</b> so the raised Garden button never crops one. Their four standing spots move in from 34/80/52/66 per cent to 30/70/44/58, which keeps them clear of both floating buttons — three lines in <code>ui.js</code>.'],
+    ['d', 'The HUD is two wallets and two round buttons now. The pill went to the Turn button and the star went to Cards, so <b>the round buttons go back to 44px</b> — <code>style.css</code> shaved them to 40 to fit three wallets and three buttons at 390px and wrote the cost down as a real one. This phase pays it back.'],
+    ['q', '<b>The Turn button carries no number in year one, and the label still says “Turn”.</b> Doc 32’s rule is that the meter fills unexplained. A word is not a number, and a button you cannot read yet is a promise — but it is the one place year one says anything at all about the Turn. The alternative is a pouch glyph and no word until the first Turn lands.']
+  ]
+});
+
+/* ---------- 3. THE BAND, AT EVERY POPULATION ---------- */
+const cstrip = (n, extra) => '<div><p class="clab">' + extra + '</p><div class="cstrip">' +
+  band({ pets: n, boost: { i: 'bolt', n: 'Bloom Burst', t: '#ff6b9d' }, held: 4 }) + '</div></div>';
+
+F.push({
+  t: 'The band with nobody, one, three and four tending',
+  s: 'True width (370px) and true height (the 108px yard). Four is the ceiling — the Habitat opens slots at levels 1, 5, 10 and 16.',
+  tag: 'THE BAND',
+  html: '<div class="census">' +
+    cstrip(0, 'NOBODY YET — a fresh save, before the first creature moves in') +
+    cstrip(1, 'ONE tending') +
+    cstrip(3, 'THREE tending — the sketch’s state') +
+    cstrip(4, 'FOUR tending — the ceiling') +
+    '</div>',
+  notes: [
+    ['d', '<b>The two-buttons-only state is the one that had to be checked, and it holds.</b> With nobody tending, the band reads as two controls at the ends of an empty lawn — which is what the garden already looks like on a fresh save, because the yard is empty then too. Nothing is added to fill it.'],
+    ['d', '<b>Four creatures overlap each other, and they already do.</b> The yard is 370px wide and a creature is 74px; the four spots are 30/44/58/70 per cent, so the middle pair overlap by roughly a third. That is the existing shipped look, not a regression — they read as a crowd, which is the point.'],
+    ['d', 'The creatures keep both taps: one to collect a waiting keepsake, one to open the creature’s panel. Nothing about them changes except where their feet land.'],
+    ['q', '<b>At four tending, the crowd reaches to about 296px of 370.</b> The Power-up button starts at 312. It clears — by 16px. If a fifth Habitat slot is ever added, the band is the thing that breaks first, and the answer would be to inset the spots again rather than to shrink the buttons.']
+  ]
+});
+
+/* ---------- 4. WHERE THE TWO DOORS GO ---------- */
+F.push({
+  t: 'Where the two doors go — the corners, or a pair in the middle',
+  s: 'The sketch has no doors in it. This is the one composition question it cannot settle.',
+  tag: 'THE BAND',
+  html: ph({ coins: '84.2K', turn: 0.34, oq: 2, pets: 2, boost: { i: 'sprout', n: 'Seed Rush', t: '#51cf66' }, held: 3 }) +
+        ph({ coins: '84.2K', turn: 0.34, oq: 2, pets: 2, boost: { i: 'sprout', n: 'Seed Rush', t: '#51cf66' }, held: 3, doors: 'pair' }),
+  notes: [
+    ['d', '<b>LEFT — the corners, and my recommendation.</b> The burrow door does not move at all: it is at <code>left:10px; bottom:2px</code> today and it stays there. The meadow door is its literal mirror at the right, same silhouette, hedge instead of soil — <i>same grammar, different verb</i>, which is the house rule the meadow’s cobbles already follow. Each door sits under the button above it, and the creatures own the whole middle exactly as the sketch draws them.'],
+    ['d', '<b>RIGHT — the pair, which is how the phase-3 spike drew them.</b> Two doors side by side read as “two ways out” more clearly than two corners do. Look at what it costs: the pair lands in the middle of the band, which is where the sketch puts the creatures <i>and</i> where the raised Garden button rises into. The creatures are pushed to the sides, the two doors sit on the pedestal’s shoulders, and the one clean thing about the composition — a symmetrical row of button, creatures, button — is gone.'],
+    ['q', '<b>The measurement decides it on short phones and the corners win.</b> At 390&times;700 the band has 95px between the board and the dock. Corners: button 50 + door 45, stacked at the edges, and the creature’s head clears the board by 3px. Pair: the doors take the bottom of the middle, the creatures move up 30px, and their heads overlap the board by about 19px. <b>Which one the owner prefers at 844 is still a taste call — this only says what happens at 700.</b>'],
+    ['d', 'Whichever wins, the meadow’s door is built <b>first</b>, on its own, and verified end to end before a line of the map comes out. Doc 36’s order-of-work rule: never a push where the meadow has no door.']
+  ]
+});
+
+
+/* ---------- 5. THE TURN BUTTON'S STATES ---------- */
+const turnBtn = (o) => {
+  const p = Math.round(o.p * 100);
+  return '<button class="d5 turn' + (o.ready ? ' ready' : '') + '" style="--p:' + p + '%">' +
+    '<i class="fill"></i>' + (o.pouch ? '<span class="seedchip">' + ico('pouch') + o.pouch + '</span>' : '') +
+    '<span>' + ico('pouch') + '</span><span class="lab">Turn</span></button>';
+};
+
+F.push({
+  t: 'The Turn button in every state',
+  s: 'The button’s own body IS the year meter — the job the HUD pill is handing over.',
+  tag: 'TURN',
+  html: '<div class="states">' +
+    '<div class="stcol">' + turnBtn({ p: 0.06 }) + '<span class="cap2">YEAR ONE<br>barely started</span></div>' +
+    '<div class="stcol">' + turnBtn({ p: 0.62 }) + '<span class="cap2">YEAR ONE<br>filling · no number</span></div>' +
+    '<div class="stcol">' + turnBtn({ p: 0.55, pouch: '128' }) + '<span class="cap2">YEAR 4<br>filling · the pouch reads</span></div>' +
+    '<div class="stcol">' + turnBtn({ p: 1, ready: true, pouch: '312' }) + '<span class="cap2">READY<br>full, and breathing</span></div>' +
+    '</div>',
+  notes: [
+    ['d', '<b>The fill rises from the bottom, it does not wipe across.</b> The pill it replaces wiped left to right, which worked at 130px wide; a 74px button is too narrow for a horizontal wipe to read as anything but a glitch. Rising is also the right picture: the pouch fills.'],
+    ['d', '<b>It reads the binding gate — the lower of the two ratios — so “why can’t I turn yet” is one glance.</b> That number already exists: <code>yearProgress()</code> in <code>ui.js</code> computes <code>min(seeds, coins)</code> today and hands it to the pill. The Turn button reads exactly the same value; nothing in the engine changes.'],
+    ['d', '<b>The ready state is the same 1.4-second gold breath every affordable price in the game uses.</b> A player has met it on every buyable thing and it already means <i>you can have this now</i>. It is a class toggle, not a new animation.'],
+    ['d', '<b>YEAR ONE IS THE SECOND CHIP, MISSING.</b> Doc 32’s rule is no numbers before the first Turn, so the year-one button is fill and label only. From year two the pouch — Saved Seeds — rides above the button as a cream chip. <b>That readout does not exist anywhere in the game today</b>: the forever money has never had a wallet, because the pill that stood for it carried no number. This is a gain, not a port.'],
+    ['q', '<b>ANSWERING GATE QUESTION 2 — is the fill legible at dock size?</b> Yes at 74&times;56, and this frame is the evidence: at 6% you can see a lip of green, at 62% the level is unmistakable, and full-plus-breathing reads across the room. What it cannot do is show a <i>small</i> change — a percentage point is half a pixel. That is fine and probably right: this is a meter you glance at, and the panel behind it is where you go for the detail.'],
+    ['q', 'The two year-one states differ only by fill level, and that is deliberate: nothing about the button announces that year one is special. If the owner would rather year one be visibly a mystery — a “?” where the pouch chip goes, say — it is one conditional.']
+  ]
+});
+
+/* ---------- the panel bodies ---------- */
+const orderRow = (name, good, ready, coins, rep, toks) =>
+  '<div class="row' + (ready ? ' ready' : '') + '"><span class="face">' + (ready ? '🙂' : '🙂') + '</span>' +
+  '<span class="mid"><span class="who">' + name + '</span><span class="sub">' + good + '</span>' +
+  '<span class="tokens">' + toks.map((t) => '<span class="tok' + (t[1] ? ' done' : '') + '">' + ico(t[0]) +
+    '<span class="n">' + t[2] + '</span></span>').join('') + '</span></span>' +
+  '<span class="pay"><span class="p">' + ico('coin') + coins + '</span><span class="p">' + ico('star') + rep + '</span>' +
+  (ready ? '<span class="pill ok">Ready</span>' : '') + '</span></div>';
+
+const questRow = (txt, sub, right, ready) =>
+  '<div class="row' + (ready ? ' ready' : '') + '"><span class="mid"><span class="who">' + txt + '</span>' +
+  '<span class="sub">' + sub + '</span></span>' +
+  '<span class="pay"><span class="pill' + (ready ? ' ok' : '') + '">' + right + '</span></span></div>';
+
+const ORDERS_BODY =
+  '<p class="psec">The Stand &middot; 1 ready to hand over</p>' +
+  orderRow('Marigold Hen', 'Rose Tea', true, '2,400', '18', [['leaf', 1, '3/3'], ['honey', 1, '1/1']]) +
+  orderRow('Old Bramble', 'Any blooms', false, '1,150', '11', [['leaf', 0, '2/5']]) +
+  '<div class="row dimmed"><span class="face">' + ico('clock') + '</span><span class="mid">' +
+  '<span class="who">Someone is on their way</span><span class="sub">1m 22s</span></span></div>' +
+  '<p class="psec">Now</p>' +
+  questRow('Harvest 3 roses', '+24 reputation · 1 Bloom Burst', 'Claim', true) +
+  questRow('Grow 5 different species', '+30 reputation', '2 / 5') +
+  questRow('Reach a 55 combo', '+18 reputation · 1 Fortune Aura', '31 / 55') +
+  '<p class="psec">Today</p>' +
+  questRow('Fill 3 orders', '+20 reputation · 40 gems', '1 / 3');
+
+const CARDS_BODY =
+  '<p class="note2">Collect nine cards to finish a set. Packs come from quests, levels and surprises in the garden.</p>' +
+  '<div class="big magic">' + ico('cards') + 'Open a pack &middot; 1 waiting</div>' +
+  '<div class="bar2" style="height:12px;margin-bottom:10px"><i style="width:31%"></i></div>' +
+  '<p class="psec">34 of 108 collected</p>' +
+  '<div class="sets">' +
+  '<div class="settile done"><span class="ring" style="--t:#c9f5cf">' + ico('check') + '</span>Meadow Folk<span class="pill ok">9 / 9</span></div>' +
+  '<div class="settile"><span class="ring" style="--t:#ffe0ad">' + ico('book') + '</span>First Blooms<span class="pill">6 / 9</span></div>' +
+  '<div class="settile"><span class="ring" style="--t:#e5dbff">' + ico('book') + '</span>Night Garden<span class="pill">4 / 9</span></div>' +
+  '<div class="settile"><span class="ring" style="--t:#cdeeff">' + ico('book') + '</span>Deep Water<span class="pill">2 / 9</span></div>' +
+  '</div>';
+
+const petalCard = (name, c1, core, rich, quick, cost, can) =>
+  '<div class="pcard"><div class="ph"><span class="art">' + bloom(c1, '#fff', core, 6) + '</span>' + name + '</div>' +
+  '<div class="trk"><span class="pl">Rich Bloom</span>' + pips(rich, 5) + '<span class="sp"></span>' +
+  (rich >= 5 ? '<span class="pill">MAX</span>' : '<span class="pill ' + (can ? 'ok' : 'no') + '">' + ico('pouch') + cost + '</span>') + '</div>' +
+  '<div class="trk"><span class="pl">Quick Sprout</span>' + pips(quick, 5) + '<span class="sp"></span>' +
+  '<span class="pill ' + (can ? 'ok' : 'no') + '">' + ico('pouch') + cost + '</span></div></div>';
+
+const TURN_BODY_READY =
+  '<div class="bigmeter" style="--p:100%"><i></i><div class="lb"><b>The year is ready to turn</b></div></div>' +
+  '<div class="gates">' +
+  '<div class="gate"><span style="width:74px">Seeds</span><span class="tr"><i style="width:100%"></i></span><span class="tag2">met</span></div>' +
+  '<div class="gate"><span style="width:74px">Gold earned</span><span class="tr"><i style="width:100%"></i></span><span class="tag2">met</span></div>' +
+  '</div>' +
+  '<div class="big yes">' + ico('pouch') + 'Turn the year</div>' +
+  '<p class="psec">Spend your seeds &middot; <span class="pill seed">' + ico('pouch') + '312</span></p>' +
+  '<div class="pcards">' +
+  petalCard('Daisy', '#ffe066', '#ffc93c', 3, 2, '68', true) +
+  petalCard('Rose', '#ff8fab', '#e8453c', 1, 0, '99', true) +
+  petalCard('Tulip', '#b197fc', '#7048e8', 0, 0, '143', false) +
+  petalCard('Bluebell', '#8ce0ff', '#1c7ed6', 0, 0, '207', false) +
+  '</div>';
+
+const TURN_BODY_FILLING =
+  '<div class="bigmeter" style="--p:41%"><i></i><div class="lb"><b>The year is still growing</b></div></div>' +
+  '<div class="gates">' +
+  '<div class="gate bind"><span style="width:74px">Seeds</span><span class="tr"><i style="width:41%"></i></span><span class="tag2">this one</span></div>' +
+  '<div class="gate"><span style="width:74px">Gold earned</span><span class="tr"><i style="width:88%"></i></span><span class="tag2">nearly</span></div>' +
+  '</div>' +
+  '<p class="note2"><b>The lower track is the one holding the Turn.</b> That is the number the dock button draws.</p>' +
+  '<p class="psec">Spend your seeds &middot; <span class="pill seed">' + ico('pouch') + '186</span></p>' +
+  '<div class="pcards">' +
+  petalCard('Daisy', '#ffe066', '#ffc93c', 5, 2, '—', true) +
+  petalCard('Rose', '#ff8fab', '#e8453c', 1, 0, '99', true) +
+  '</div>';
+
+const TURN_BODY_YEARONE =
+  '<div class="bigmeter" style="--p:34%"><i></i><div class="lb"><b>Something is filling</b></div></div>' +
+  '<p class="note2" style="text-align:center;font-size:12.5px">“It fills a little every time you grow something.”</p>' +
+  '<div style="display:grid;place-items:center;padding:18px 0 6px;width:120px;margin:0 auto">' + talker() + '</div>';
+
+const SHOP_BODY =
+  '<div class="tabsrow"><span class="tabp">Upgrades</span><span class="tabp">Craft</span><span class="tabp on">Shop</span></div>' +
+  '<p class="psec">The sky</p>' +
+  '<div class="row"><span class="face" style="background:linear-gradient(180deg,#cdeeff,#8ce0ff)">☔</span>' +
+  '<span class="mid"><span class="who">Call the Rain</span><span class="sub">Everything growing gets a shot at a Dewdrop.</span></span>' +
+  '<span class="pay"><span class="pill ok">' + ico('gem') + '12</span></span></div>' +
+  '<p class="note2">Purely decorative. Place them and forget them.</p>' +
+  '<div class="sets">' +
+  '<div class="settile"><span class="ring" style="--t:#ffe0ad">' + ico('leaf') + '</span>Stone Lantern<span class="pill ok">' + ico('coin') + '4,500</span></div>' +
+  '<div class="settile"><span class="ring" style="--t:#c9f5cf">' + ico('sprout') + '</span>Garden Gnome<span class="pill no">' + ico('coin') + '18,000</span></div>' +
+  '</div>';
+
+const UPG_BODY =
+  '<div class="tabsrow"><span class="tabp on">Upgrades</span><span class="tabp">Craft</span><span class="tabp">Shop</span></div>' +
+  '<div class="row"><span class="face" style="background:linear-gradient(180deg,#ffe9a8,#ffc93c)">' + ico('bolt') + '</span>' +
+  '<span class="mid"><span class="who">Power Punch <span class="pill">Lv 6</span></span><span class="sub">Every tap pays more.</span></span>' +
+  '<span class="pay"><span class="pill ok">' + ico('coin') + '3,120</span></span></div>' +
+  '<div class="row"><span class="face" style="background:linear-gradient(180deg,#c9f5cf,#51cf66)">' + ico('sprout') + '</span>' +
+  '<span class="mid"><span class="who">Quick Grip <span class="pill">Lv 3</span></span><span class="sub">Holding the flower taps faster.</span></span>' +
+  '<span class="pay"><span class="pill no">' + ico('coin') + '11,400</span></span></div>' +
+  '<div class="row"><span class="face" style="background:linear-gradient(180deg,#e5dbff,#b197fc)">' + ico('clover') + '</span>' +
+  '<span class="mid"><span class="who">Lucky Charm <span class="pill">Lv 2</span></span><span class="sub">Better odds on every harvest.</span></span>' +
+  '<span class="pay"><span class="pill no">' + ico('coin') + '26,000</span></span></div>';
+
+
+/* ---------- 6-10. THE FIVE PANELS, EACH ABOVE THE DOCK ---------- */
+F.push({
+  t: 'Orders & Quests',
+  s: 'One panel: the Stand’s queue above the quest list. The Garden button is the way home.',
+  tag: 'PANELS',
+  html: ph({ coins: '84.2K', turn: 0.34, oq: 2, pets: 3, boost: { i: 'bolt', n: 'Bloom Burst', t: '#ff6b9d' },
+    sheet: panel({ title: 'Orders & Quests', body: ORDERS_BODY }) }),
+  notes: [
+    ['d', '<b>EVERY PANEL STOPS ABOVE THE DOCK.</b> Today a sheet is pinned to <code>bottom:0</code> at z-index 50 and covers the dock outright — automation cannot even click a dock button while one is open. Doc 36 wants the Garden button visible as the way home, so the sheet’s bottom edge and the scrim’s both lift to clear the dock. The sheet is <code>min(80dvh, 660px)</code> and the space above the dock at 390&times;844 is 766px, so <b>it already fits without shrinking</b> — only its anchor moves.'],
+    ['q', '<b>ANSWERING GATE QUESTION 3 — one list or two tabs? One list, with two headings.</b> Tabs would hide half of a badge that counts two different things: orders you can fill and quests you can claim. A player who sees “2” and taps in should see both without a second decision. The scroll is short — three order slots, at most three ladder quests and one daily.'],
+    ['d', 'Both halves are the panels that already exist: the Stand’s rows, faces and have/need token chips, and the quest cards under their own <i>Now</i> and <i>Today</i> headings. Nothing is redrawn; the Stand’s two-line header becomes the first section heading.'],
+    ['d', '<b>Quests gain a second door.</b> Before this phase the only way into the quest list was the strip; now the ladder is also one tap from the dock. The Stand loses nothing — it had exactly one door too, and it was the map.']
+  ]
+});
+
+F.push({
+  t: 'Cards',
+  s: 'The album and pack-opening, off the dock. The star leaves the HUD.',
+  tag: 'PANELS',
+  html: ph({ coins: '84.2K', turn: 0.34, packs: 1, pets: 3, boost: { i: 'clover', n: 'Fortune Aura', t: '#9775fa' }, held: 2,
+    sheet: panel({ title: 'The Long Season', body: CARDS_BODY }) }),
+  notes: [
+    ['d', '<b>The unopened-pack count is genuinely new.</b> <code>state.packs</code> exists and the album reads it, but nothing in the HUD or the dock has ever badged it — a pack could sit unopened for days behind a star button with no dot on it. The Cards button wears the count.'],
+    ['d', 'The panel is the album exactly as it renders today: the lede, the collection bar, “Open a pack &middot; N waiting” when you hold one, and the two-up set tiles with their n/9 pills. Opening a pack takes over the same panel, one card at a time, as it does now.'],
+    ['d', 'The album star is the button <code>style.css</code> asked to lose by name: the max-width:430px block says in prose that the real fix for the 40px round buttons is one fewer HUD button. This is that fix.']
+  ]
+});
+
+F.push({
+  t: 'Turn — the Year panel, with a Turn ready',
+  s: 'The pouch, the two gates, the ceremony’s button, and petal spending as a card per flower.',
+  tag: 'PANELS',
+  html: ph({ coins: '512K', turn: 1, turnReady: true, pouch: '312', pets: 3,
+    boost: { i: 'coin', n: 'Golden Popups', t: '#ffc93c' }, held: 5,
+    sheet: panel({ title: 'The Year', body: TURN_BODY_READY }) }),
+  notes: [
+    ['d', '<b>The ceremony is one tap further away than it is today, and that is the trade.</b> The pill opened the ceremony directly when full; the Turn button opens this panel and the ceremony’s own button is inside it. The gain is that the same button is useful for the other fifty weeks of the year, instead of being a pill that does nothing until it is full.'],
+    ['d', '<b>Petals move here, as a card per flower</b> — doc 36’s words. The Almanac keeps the <i>record</i> rows: what you have found, its best rarity, how many you have grown. This panel is the <i>shop</i>: two tracks, five pips each, a buy chip in Saved Seeds. Splitting them that way is why the Almanac book stays in the HUD rather than following the star out.'],
+    ['d', 'Both Turn gates are drawn as tracks with the binding one marked, which is the projection card’s job moving into a surface big enough for it.'],
+    ['q', '<b>The petal cards are two-up here and the Almanac’s tracks are full-width rows.</b> Two-up fits four flowers on a screen instead of two, which matters at nineteen. If the owner would rather they stayed the shape they already are, it is the same markup at one column.']
+  ]
+});
+
+F.push({
+  t: 'Turn — year one, and the year that follows',
+  s: 'The mystery is the tutorial. Year one says nothing, and it must keep saying nothing.',
+  tag: 'PANELS',
+  html: ph({ coins: '12.4K', turn: 0.34, pets: 1, boost: null, noQuest: true,
+    sheet: panel({ title: 'The Year', body: TURN_BODY_YEARONE }) }) +
+        ph({ coins: '212K', turn: 0.41, pouch: '186', pets: 3, boost: { i: 'sprout', n: 'Seed Rush', t: '#51cf66' }, held: 2,
+    sheet: panel({ title: 'The Year', body: TURN_BODY_FILLING }) }),
+  notes: [
+    ['q', '<b>THIS IS THE ONE PLACE THE NEW DOCK COULD BREAK A RULE, AND IT IS WORTH READING TWICE.</b> Doc 32 says year one is a mystery and the mystery is the tutorial: the meter fills, unexplained. A Turn button in the dock is a door a player <i>will</i> push in the first minute. If that door opened onto a pouch, two named gates and a petal shop, the whole prestige system would be explained before the player has met it — and the game already refuses to do that in three separate places (the projection card, the Almanac’s petal tracks, the pouch line).'],
+    ['d', '<b>So in year one the panel is the mystery, drawn large.</b> The meter, the flower, and one of the three lines it already says: “It fills a little every time you grow something.” No pouch, no gates, no petals — the petal tracks are already gated in code and stay gated. The explanation arrives where it always did: the first time the meter fills, the ceremony’s ask names what goes and what stays.'],
+    ['d', '<b>RIGHT — year four, mid-fill.</b> Now the panel has everything: the pouch reads 186, both gates are drawn, and the lower one is marked as the one holding the Turn. This is the projection card the HUD pill used to pop, with room to breathe.'],
+    ['d', 'Nothing in the engine changes for either. <code>turnsCompleted &lt; 1</code> is the same condition three surfaces already read.']
+  ]
+});
+
+F.push({
+  t: 'Shop, and Upgrades from the band',
+  s: 'The fifth button, and the floating pair’s left half. Craft rides the tab pills.',
+  tag: 'PANELS',
+  html: ph({ coins: '84.2K', turn: 0.34, shopDot: true, pets: 2, boost: { i: 'bolt', n: 'Bloom Burst', t: '#ff6b9d' }, held: 4,
+    sheet: panel({ title: 'Shop', body: SHOP_BODY }) }) +
+        ph({ coins: '84.2K', turn: 0.34, pets: 2, boost: { i: 'bolt', n: 'Bloom Burst', t: '#ff6b9d' }, held: 4,
+    sheet: panel({ title: 'Upgrades', body: UPG_BODY }) }),
+  notes: [
+    ['d', 'Both sheets are exactly what they are today. The only change is where the tap comes from and where the sheet stops.'],
+    ['q', '<b>Look at the tab pills — that row is now Craft’s only home.</b> The Apothecary loses its dock button and keeps the pill it already shares with Upgrades and Shop. Two taps instead of one, for a bench that runs on timers you come back to rather than a shop you browse. <b>It is defensible and it is still a demotion, and doc 36 never mentions it.</b>'],
+    ['d', 'The band’s UPGRADE pill opens the same sheet the old dock’s leftmost button did — same content, same tabs, one thumb-reach lower.']
+  ]
+});
+
+
+/* ---------- 11. THE POWER-UP BUTTON ---------- */
+const roundState = (o) => o.empty
+  ? '<button class="fround empty" style="position:static">' + ico('bolt') + '</button>'
+  : '<button class="fround" style="position:static;--tint:' + o.t + '">' + ico(o.i) +
+    (o.n === false ? '' : '<span class="cnt">' + o.c + '</span>') + '</button>';
+
+F.push({
+  t: 'The power-up button, loaded and empty',
+  s: 'One random held boost. Tap uses it, another fills the slot, the badge counts the rest.',
+  tag: 'POWER-UP',
+  html: '<div class="states">' +
+    '<div class="stcol">' + roundState({ i: 'bolt', t: '#ff6b9d', c: 4 }) + '<span class="cap2">Bloom Burst<br>loaded · 4 held</span></div>' +
+    '<div class="stcol">' + roundState({ i: 'sprout', t: '#51cf66', c: 3 }) + '<span class="cap2">Seed Rush<br>the next one up</span></div>' +
+    '<div class="stcol">' + roundState({ i: 'clover', t: '#9775fa', c: 2 }) + '<span class="cap2">Fortune Aura</span></div>' +
+    '<div class="stcol">' + roundState({ i: 'coin', t: '#ffc93c', c: 1, }) + '<span class="cap2">Golden Popups<br>the last one held</span></div>' +
+    '<div class="stcol">' + roundState({ empty: true }) + '<span class="cap2">EMPTY<br>the proposal</span></div>' +
+    '</div>' +
+    ph({ coins: '9.2K', turn: 0.11, pets: 1, boost: null,
+      rail: '<div class="chip timed" style="--tint:#ff6b9d"><span class="ring" style="--p:.4"><i>12</i></span><span>Bloom Burst</span></div>' }),
+  notes: [
+    ['d', '<b>The button takes the loaded boost’s own tint under the house white veil</b>, so which power-up is up reads before the glyph does — the same trick <code>.verb-note</code> and <code>.seed-art</code> use to pale a saturated token into a surface. Four boosts, four tints, no new colours.'],
+    ['d', '<b>The eligible pool is not simply “boosts you hold”.</b> <code>activateBoost</code> refuses to re-arm a boost that is already running and returns false, and today’s rail expresses that by hiding the held chip for the duration. So the slot draws from <i>held AND not currently running</i> — otherwise it will eventually seat a boost whose tap does nothing and the button will look dead.'],
+    ['d', '<b>The countdown stays in the rail.</b> The button is the shop; the rail is the clock. That keeps “a running boost cannot be refreshed” true by construction — the used boost leaves the button the instant it starts, and the next held one takes its place, which is exactly what doc 36 asks for. The bottom frame shows it: one boost running in the rail, an empty slot in the band.'],
+    ['d', 'Wiring is one call. <code>Game.activateBoost(id)</code> already fires the purchase event that plays the boost sound, buzzes 14ms and toasts “Bloom Burst active!” with the booster’s own icon. Nothing new has to be written for the feedback.'],
+    ['q', '<b>ANSWERING GATE QUESTION 4 — empty state: a quiet slot, not hidden. My recommendation, and it is arguable.</b> The standing rule is <i>hidden, never a dead button</i>. But the game already has a better answer for “a thing you do not have yet”: the locked season edge, which wears the drained paper and the turn that opens it, because <b>a gate is a promise you can read</b>. A hidden power-up teaches a new player nothing — boosts arrive from quests and levels, and there is no other surface that says so. So: drained paper, dashed edge, and a tap that says where boosts come from. Not dead, because it answers.'],
+    ['q', '<b>And hiding it costs the composition.</b> The sketch is a symmetrical row — a button, the creatures, a button. Hide the right one on a fresh save and the band is lopsided in exactly the first session that matters. <b>If the owner prefers hidden, that is the cost to accept</b>, and it is one class.'],
+    ['q', '<b>The badge counts every held boost across all four kinds, not copies of the loaded one.</b> That is the more useful number — “you have five power-ups” — but it means the badge does not drop to zero when the loaded boost’s own copies run out. The alternative reads the loaded kind only and is more literal.']
+  ]
+});
+
+/* ---------- 12. THE MEADOW'S NEW DOOR ---------- */
+F.push({
+  t: 'The meadow’s door, in place at the foot of the garden',
+  s: 'Built FIRST, before a line of the map comes out.',
+  tag: 'THE MEADOW',
+  html: ph({ coins: '84.2K', turn: 0.34, pets: 2, boost: { i: 'clover', n: 'Fortune Aura', t: '#9775fa' }, held: 2,
+    toast: '<div class="toast">' + ico('leaf') + '<div><b>The Wild Meadow</b><br>Your hives are up the lane.</div></div>' }),
+  notes: [
+    ['d', '<b>The burrow door does not move.</b> It sits at <code>left:10px; bottom:2px</code> today and it sits there after. The meadow’s door is its mirror at the right: same silhouette, same label treatment, hedge green instead of soil brown — <i>same grammar, different verb</i>, which is the rule the meadow’s own cobbles-against-the-garden’s-soil already follows.'],
+    ['d', '<b>This is the phase’s first commit, and it ships on its own.</b> <code>UI.enterMeadow()</code> has exactly one caller in the whole repo — the map’s dive — and the meadow’s only exit swipes back to the map. Until the door exists, retiring the map strands a whole built room: the hives, the keepers, the Honey Shelf, and <b>four quests worth 114 of the ladder’s 777 reputation</b>.'],
+    ['d', 'The meadow’s exit chip changes with it — “Swipe down for the map” becomes the way back to the garden. The swipe stays; only its destination moves.'],
+    ['q', 'Doc 32 says the map’s swipe-down is “then free for later use”, so it is left free rather than re-pointed at the meadow. A door only. If the owner would rather the meadow inherited the gesture too, it is three lines in the gesture block — but two rooms on one swipe axis is how the Hollow and the map got confusing in the first place.']
+  ]
+});
+
+/* ---------- 13-14. THE SQUEEZES, MEASURED ---------- */
+F.push({
+  t: '360px wide — the narrow squeeze, measured',
+  s: 'Every number here is read off the running game with an iPhone’s insets on, not estimated.',
+  tag: 'SQUEEZE',
+  html: ph({ cls: 'narrow', coins: '880.2K', gems: '1,163', turn: 0.62, oq: 3, packs: 2, pets: 4,
+    boost: { i: 'clover', n: 'Fortune Aura', t: '#9775fa' }, held: 6,
+    ruler: ruler([[111, 'HUD 44'], [169, 'quest 52'], [588, 'board 340'], [652, 'band 108', 1], [766, 'dock 56'], [822, 'inset 34']]) }),
+  notes: [
+    ['d', '<b>It holds, and it holds with room.</b> At 360 the column is 340px. Five dock buttons at <code>minmax(0,1fr)</code> with a 5px gap are <b>81px each</b> — wider than a thumb, and the game’s own stylesheet already anticipates a fifth button: <code>.dock:has(.dock-btn:nth-child(5))</code> tightens the gap, drops the label to 10px and the icon to 22px. That rule was written for this and has never fired.'],
+    ['d', '<b>“Orders &amp; Quests” does not fit on one line at 81px and is not asked to.</b> It sets on two, which is why every label in this dock is 10px and centred. The other four are single words.'],
+    ['d', '<b>The HUD is the surprise win.</b> The block in <code>style.css</code> that shaved every round button to 40px measured three wallets (222px) plus three 44px buttons plus the gap at <b>374px of the 370 available — four pixels over.</b> Take away the meter pill and the album star and it is two wallets and two buttons: comfortably inside 340, so <b>44px touch targets come back at 360px wide.</b>'],
+    ['d', 'The board is 340&times;340 here, width-bound, exactly as it is today. The band’s two buttons sit at the column’s two edges and the four creatures reach 288px of 340 — 24px of daylight before the power-up button.'],
+    ['q', 'The wallets are drawn at their worst realistic width (“880.2K”, “1,163”). If they ever grow a digit past that the HUD has 22px of slack left, not four.']
+  ]
+});
+
+F.push({
+  t: '700px tall — the short squeeze, measured, with the quest strip present',
+  s: 'The tightest screen the game supports. This is where the band has to be argued for.',
+  tag: 'SQUEEZE',
+  html: ph({ cls: 'short', coins: '84.2K', turn: 0.62, oq: 2, pets: 3,
+    boost: { i: 'bolt', n: 'Bloom Burst', t: '#ff6b9d' }, held: 4,
+    ruler: ruler([[111, 'HUD 44'], [169, 'quest 52'], [531, 'band 91', 1], [628, 'dock 50'], [678, 'inset 34']]) }),
+  notes: [
+    ['d', '<b>The verdict: it fits, and what gives is a few pixels of the two floating buttons.</b> Measured on this frame at a real 390&times;700: the yard is <b>91px</b> (531&ndash;622) and the dock starts at 628. The stack it holds is a 50px button over a 40px door at each edge, which is 90 of the 91 — so the buttons ride <b>3 to 7px behind the bottom edge of the board</b>, tucked under its lip. The creatures clear the board by 7px and clear the raised Garden button by 4.'],
+    ['d', '<b>The board already overlaps the yard at this height, before anything in this phase.</b> At 390&times;700 the running game reports a 354px board in 352px of stage — it has been 2px over since Fall shipped. So a button sliding under the board’s lip is the existing condition of this screen, not a new one, and the lip is drawn to be sat behind.'],
+    ['d', '<b>The game already shrinks itself here and this rides along.</b> <code>@media (max-height:700px)</code> drops the dock to 50px and the round buttons to 40; the band’s two buttons join that block at 50px, the door’s mouth at 23px, and the pedestal’s rise drops from 18px to 14 so the raised Garden button still clears the creatures’ feet.'],
+    ['d', '<b>The quest strip is present, at full size, and it is 52px of the 700.</b> No media query has ever touched it and none is proposed. It plus the HUD plus the dock plus the insets is 261px of fixed furniture before the rail carries anything.'],
+    ['d', 'The rail is empty here and still bills 12px — five explicit grid tracks means four 6px gutters, permanently, whether or not track 3 has height. Retiring the rail outright would save that 12px; keeping it as the countdown clock is worth more than 12px.'],
+    ['q', '<b>ANSWERING GATE QUESTION 1 — it fits at 360 wide and at 700 tall, both measured on frames that are really those sizes.</b> The honest cost is that at 700 the band is <i>full</i>: 90px of content in 91px of yard, with the buttons tucked a few pixels under the board. It works, and there is nothing left over. <b>If a 640px-tall device ever matters, the band is the first thing that breaks</b>, and the answer there would be to drop the doors to icon-only mouths rather than to shrink the buttons again.'],
+    ['q', '<b>ANSWERING GATE QUESTION 5 — the quest strip survives this phase, unchanged.</b> It is the one always-visible goal in the game, and the Orders &amp; Quests badge is a count, not a goal: “2” does not tell you to harvest three roses. The case for folding it away gets stronger when orders return in slice D and the strip has competition — that is phase 7’s question, not tonight’s.']
+  ]
+});
+
+/* ---------- 15. THE HOLLOW, UNCHANGED ---------- */
+F.push({
+  t: 'The Hollow, unchanged — rooms keep their own docks',
+  s: 'The Big Five is the garden-and-seasons dock. It does not travel.',
+  tag: 'ROOMS',
+  html: '<div class="phone"><div class="scenery" style="background:#b8834c"></div>' +
+    '<div class="ui">' + hud5({ coins: '84.2K' }) +
+    '<div style="grid-row:2"></div><div style="grid-row:3"></div>' +
+    '<main class="stage" style="padding:2px 0 12px"><div style="display:grid;gap:14px;justify-items:center">' +
+    '<div style="display:flex;gap:10px">' +
+    '<span style="width:76px;height:76px">' + critter('#ffd6ea') + '</span>' +
+    '<span style="width:76px;height:76px">' + critter('#c9f5cf') + '</span>' +
+    '<span style="width:76px;height:76px">' + critter('#cde5ff', 'asleep') + '</span>' +
+    '</div><p class="note2" style="color:#fff;text-shadow:0 2px 0 rgba(44,26,16,.8);margin:0">someone is asleep — feed to wake them</p>' +
+    '</div></main>' +
+    '<nav class="dock" style="grid-row:5">' +
+    '<button class="dock-btn"><span class="dock-ico">' + ico('honey') + '</span><span class="dock-label">Feed</span></button>' +
+    '<button class="dock-btn"><span class="dock-ico">' + ico('sprout') + '</span><span class="dock-label">Pet</span></button>' +
+    '<button class="dock-btn"><span class="dock-ico">' + ico('star') + '</span><span class="dock-label">Loadout</span></button>' +
+    '<button class="dock-btn"><span class="dock-ico">' + ico('decor') + '</span><span class="dock-label">Decorate</span></button>' +
+    '</nav></div></div>',
+  notes: [
+    ['d', '<b>Not one pixel of this frame changes.</b> The Hollow, the Wild Meadow and the locked-season gate are places with their own four-button docks; the Big Five is the dock of the garden and its seasons. A place hides the garden’s dock outright — <code>.in-hollow #dock{display:none}</code> — and puts its own up instead.'],
+    ['d', '<b>The HUD is here, and it is the version this phase leaves behind:</b> two wallets and two round buttons. That is the only thing about this screen that moves, and it moves everywhere at once.'],
+    ['d', 'The Big Five rides the season strip: Summer and Fall share it, because a season is the same room in a different month rather than a different place. Fall hides none of the chrome today and none of it after.'],
+    ['q', 'Three docks now share the <code>.dock</code> class and only one of them becomes five. The two four-button docks keep the existing <code>.dock-btn</code> exactly; the new one is its own class so a future change to one never silently reshapes the others.']
+  ]
+});
+
+/* ---------- 16. THE FIVE GATE QUESTIONS, IN ONE PLACE ---------- */
+F.push({
+  t: 'Doc 36’s five gate questions, answered',
+  s: 'Three are answered with measurements. Two are recommendations, and both are arguable.',
+  tag: 'THE GATE',
+  html: '<div class="mapwrap"><table class="maptab"><tr><th style="width:34%">The question</th><th>The answer</th></tr>' +
+    '<tr><td><b>1. Do the five buttons, the floating pair and the quest strip fit at 360–390 wide and ≤700 tall?</b></td>' +
+    '<td><span class="keep">MEASURED — YES.</span> At 360 wide the dock buttons are 81px each and the HUD gets its 44px touch targets back. At 700 tall the band has 95px and needs exactly 95. <b>The band costs the layout nothing</b> — it lives in the yard the stage already reserves for creatures. See the two squeeze frames.</td></tr>' +
+    '<tr><td><b>2. Is the Turn button’s fill legible at dock size? Pulse vs filling vs year-one?</b></td>' +
+    '<td><span class="keep">MEASURED — YES</span> at 74&times;56, rising from the bottom rather than wiping across. Ready is the game’s existing 1.4s gold breath. <b>Year one is not a different button — it is a different panel</b>, and that is the important half of the answer.</td></tr>' +
+    '<tr><td><b>3. Orders &amp; Quests: one list or two tabs?</b></td>' +
+    '<td><span class="move">ONE LIST, two headings.</span> The badge counts two different things; tabs would hide half of what a player came in for.</td></tr>' +
+    '<tr><td><b>4. The power-up’s empty state: hidden or a quiet slot?</b></td>' +
+    '<td><span class="ask">A QUIET SLOT — recommended, arguable.</span> The locked season gate is the precedent: drained paper, and a promise you can read. Hidden costs the sketch its symmetry in the first session, and teaches a new player nothing about where boosts come from.</td></tr>' +
+    '<tr><td><b>5. Does the quest strip survive, shrink, or fold into a badge?</b></td>' +
+    '<td><span class="keep">SURVIVES, UNCHANGED.</span> It is the one always-visible goal; a count is not a goal. Revisit when orders return in slice D and it has competition.</td></tr>' +
+    '</table></div>',
+  notes: [
+    ['q', '<b>And three questions doc 36 did not ask, which the mapping frame turned up:</b> where the Apothecary lives now that it has no dock button; whether the land parcels die with the map (I say yes, deliberately); and whether the Turn panel in year one is allowed to exist at all given doc 32’s mystery rule (I say yes, if it says nothing).'],
+    ['d', 'Everything in this spike is layout. No economy knob, no rule, no number in <code>data.js</code> moves in this phase — the blessing, <code>mintK</code> and every open decision in docs/11 stay exactly where they are.']
+  ]
+});
+
+</script>
+<script>
+/* ---------- render ---------- */
+const grid = document.getElementById('grid');
+grid.innerHTML = F.map((f, i) =>
+  '<figure><figcaption><span class="tag">' + (i + 1) + ' · ' + f.tag + '</span>' + f.t +
+  (f.s ? '<i>' + f.s + '</i>' : '') + '</figcaption>' + f.html +
+  (f.notes || []).map(([k, txt]) => '<p class="note ' + k + '">' + txt + '</p>').join('') +
+  '</figure>').join('');
+
+document.getElementById('tNotes').addEventListener('click', (e) => {
+  const on = e.currentTarget.dataset.on === '1' ? '0' : '1';
+  e.currentTarget.dataset.on = on;
+  document.body.dataset.notes = on;
+});
+document.getElementById('tInset').addEventListener('click', (e) => {
+  const on = e.currentTarget.dataset.on === '1' ? '0' : '1';
+  e.currentTarget.dataset.on = on;
+  document.querySelectorAll('.phone').forEach(p => p.classList.toggle('no-inset', on === '0'));
+});
+</script>
+</body>
+</html>

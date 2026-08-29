@@ -1,6 +1,7 @@
 # The Big Five — the HUD and Dock Update
 
-**Status: the owner's spec, 2026-08-30. Not built.** The bottom of the screen rebuilds around
+**Status: the owner's spec, 2026-08-30. THE SPIKE IS UP AND WAITING FOR THE OWNER —
+`tools/dock-spike.html`, 16 frames, pushed 2026-08-30. No UI code yet.** The bottom of the screen rebuilds around
 **five main dock buttons plus a floating pair** — the shape the big mobile games converge on
 (Monopoly Go, Clash Royale), and the owner's direct design. This is a mini-phase between the
 Surface run and phase 4; the wireframe gate applies in full (the owner is reviewing, and has a
@@ -89,3 +90,88 @@ the standard gauntlet with the visual critic judging against the approved spike 
 [05-art-direction.md](05-art-direction.md) second. The five-minute script for this phase is a
 navigation lap: every panel from its button, back via Garden, the Turn button through empty →
 filling → ready → ceremony, one power-up used and the slot refilling.
+
+
+---
+
+## The spike — `tools/dock-spike.html`, 2026-08-30
+
+The wireframe gate's deliverable, pushed before a line of UI code. Sixteen frames at a real
+390&times;844 with an iPhone 16 Pro's insets on, using the metrics the running game reports rather
+than the numbers this document asserts. Static: no `data.js`, no `game.js`.
+
+**Read frame 1 first.** It is the old-home &rarr; new-home mapping for every function on today's
+dock, HUD, rail, quest strip and gestures, plus everything the world map was the only door to.
+Nothing falls off the edge silently, and three things nearly did.
+
+| # | Frame | What it settles |
+| --- | --- | --- |
+| 1 | The mapping table | Every current function, and where it lands |
+| 2 | Summer, the whole new bottom | The Big Five and the band, at the size they ship |
+| 3 | The band at 0 / 1 / 3 / 4 creatures | The two-buttons-only state, and the four-creature ceiling |
+| 4 | Where the two doors go | The corners vs. a centred pair — the sketch cannot settle this |
+| 5 | The Turn button in every state | Year one, filling, the pouch chip, ready-and-breathing |
+| 6 | Orders &amp; Quests | One list, two headings, above the dock |
+| 7 | Cards | The album, and the pack count the HUD never badged |
+| 8 | The Year panel, Turn ready | The pouch, both gates, the ceremony's button, petal cards |
+| 9 | The Year panel in year one | The mystery, kept |
+| 10 | Shop, and Upgrades from the band | And the tab pills that are now Craft's only home |
+| 11 | The power-up, loaded and empty | The eligible pool, and the empty-state proposal |
+| 12 | The meadow's door | The burrow door's twin, built first |
+| 13 | 360px wide, measured | The HUD wins its 44px touch targets back |
+| 14 | 700px tall, measured | The band is full: 90px of content in 91px of yard |
+| 15 | The Hollow, unchanged | Rooms keep their own docks |
+| 16 | The five gate questions | Answered in one place |
+
+### The five gate questions, answered
+
+1. **Does it fit?** Measured, yes, on frames that are really 360 wide and really 700 tall. **The
+   band costs the layout nothing** — it lives in the yard `.stage` already reserves for creatures
+   (108px at 390&times;844, 91px at 700), so the board is 370&times;370 before and after. The
+   pedestal is taller than the dock row and `align-items:end`, so it rises without making row 5
+   taller. At 700 the band is *full*: a 50px button over a 40px door at each edge is 90 of the 91,
+   and the buttons tuck 3&ndash;7px under the board's lip. It works and there is nothing spare.
+2. **Is the Turn button's fill legible?** Yes at 74&times;56, rising from the bottom rather than
+   wiping across — a 74px button is too narrow for a horizontal wipe. Ready is the game's existing
+   1.4s gold breath. **Year one is not a different button, it is a different panel.**
+3. **Orders &amp; Quests: one list or two tabs?** One list, two headings. The badge counts two
+   different things and tabs would hide half of what the player came in for.
+4. **The power-up's empty state?** **A quiet drained slot, recommended and arguable.** The locked
+   season edge is the precedent: drained paper is how this game says *a promise you can read*.
+   Hidden costs the sketch its symmetry in the first session and teaches a new player nothing about
+   where boosts come from.
+5. **Does the quest strip survive?** Unchanged. It is the one always-visible goal; a count is not a
+   goal. Revisit when orders return in slice D.
+
+### Three questions this document did not ask, which the mapping turned up
+
+- **The Apothecary has no named home.** Doc 36 lists five buttons and a floating pair and never
+  mentions Craft. It does not fall off the edge — the three shop panels share a tab pill row, so
+  Shop &rarr; Craft is two taps — but it goes from a top-level button to a tab inside another shop,
+  and that demotion should be the owner's, not a side effect.
+- **The land parcels die with the map.** The only thing the map held with no new home. They were a
+  promise about land in a game that will no longer have a map of land. Recommended: let them go,
+  deliberately; [25-world-map.md](25-world-map.md) owns them.
+- **May the Turn panel exist at all in year one?** Doc 32's mystery rule says the meter fills
+  unexplained, and a Turn button in the dock is a door a player will push in the first minute.
+  Proposed: in year one the panel *is* the mystery — the meter drawn large, the flower's existing
+  line, and nothing else. The explanation still arrives where it always did, in the ceremony's ask.
+
+### Two things already broken, found while mapping and not fixed here
+
+Both are recorded in [11-known-issues.md](11-known-issues.md).
+
+- The `stores` sheet (the honey and beeswax pantry) is written, registered in both the title and
+  render maps, and **opened by nothing** — a repo-wide search finds no caller.
+- A card cell in the album renders as a `<button data-card>` and **no handler reads it**. The Cards
+  button is about to send far more traffic there.
+
+### What the build then does, in order
+
+1. **The meadow's door first**, on its own, verified end to end. Never a push where the meadow has
+   no door.
+2. The Big Five and the band. The meter pill retires into the Turn button, the album star into
+   Cards, the rail's *buyable* chips into the power-up button — the rail keeps its countdowns and
+   the Wonder chip, and stays `:empty{display:none}` the rest of the time.
+3. The four panels, each stopping above the dock so the Garden button is the visible way home.
+4. **Then** the map's removal — the World button, `ui-map.js`, `overworld.js` and the swipe-down.

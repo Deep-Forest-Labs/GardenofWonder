@@ -5,6 +5,24 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## Two dead surfaces, found by the phase-3.5 dock mapping (2026-08-30)
+
+Both pre-date this phase. They are recorded rather than fixed because the dock rebuild must not
+"preserve" a route that was never live.
+
+### The `stores` sheet is opened by nothing
+
+Sheet mode `stores` — the honey and beeswax pantry with a "Sell all" button per line — is fully
+written and registered in **both** the titles map and the render map in `ui-sheet.js`, and a
+repo-wide search for `openSheet(` finds **no caller**. The meadow's dock is Collect / Move / Keepers
+/ Shelf; nothing opens Stores. Either wire it to a door or delete it, as its own decision.
+
+### A card cell in the album does nothing
+
+`renderCardSet()` draws each of the nine cells as `<button ... data-card="...">`, and no handler
+anywhere reads `data-card`. Tapping a card in a set is inert. This matters more after phase 3.5:
+the Cards dock button is about to send far more traffic into the album than a HUD star ever did.
+
 ## The Garden Year — phase 1's deliberate seams (2026-08-29)
 
 The engine shipped with no UI, so several truths are temporarily invisible or mislabelled.
