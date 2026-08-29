@@ -94,7 +94,11 @@ number would let a good year's fireworks buy entry to a Turn the pool cannot pay
 **The exploit is dead, and dead by construction rather than by tuning.** `node
 tools/year-sim.js 12 all` exited non-zero for a day and now **exits zero**: normal play beats
 turn-at-every-gate on Saved Seeds by a stable ~1.5–1.6× across runs (832–967 against 563–610
-at day 10) and on gold as well. The sum of every Turn's draw is the same number however the
+at day 10) and on gold as well. *(Re-measured later the same day, after the Fall session
+corrected `bestFallCrop` — it had planted wheat forever, off the 1.4×/hour curve. Giving the
+adversary the better crop made it stronger and the margin **widened** to ~1.9–2.2×, 883–956
+against 418–481. The tables in docs 33 and 11 carry the newer figures; this paragraph keeps
+the ones this commit was judged on.)* The sum of every Turn's draw is the same number however the
 year is sliced, verified end to end at 1→64 chunks. **The first Turn is unchanged** — a first
 year *is* the lifetime — so doc 33's ~60–65 seeds on a ~370–410K year survives untouched.
 

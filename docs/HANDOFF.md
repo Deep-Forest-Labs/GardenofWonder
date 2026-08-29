@@ -65,7 +65,8 @@ from quests and levels.
 > increment. Two new never-reset top-level fields; a phase-1 save inherits `lifetimeCoins`
 > from the year it is standing in. **The exploit is dead by construction** —
 > `node tools/year-sim.js 12 all` **exits zero**, with normal play ahead of turn-spam by a
-> stable ~1.5–1.6× on seeds and ahead on gold too. The suite is at **1,149 assertions** with
+> stable ~1.9–2.2× on seeds and ahead on gold too (re-measured after the same day's Fall
+> fixes, which handed the adversary a better crop and **widened** the margin from ~1.5–1.6×). The suite is at **1,149 assertions** with
 > a new bill item **17b** for the mint's own properties, and twelve of twelve mutants die
 > (four survived the first pass and are closed; writing the last of them found a real defect
 > in the patch — a `null` `lifetimeCoins` passed the finite guard as `0`). **Condition 1

@@ -4,7 +4,7 @@
 and phase 1.1 rebuilt the mint on the owner's cumulative ruling.** Every number below now
 lives in `data.js` (`DATA.year`, `DATA.petals`, `DATA.fall`), `Game.credit()` is wired
 through every faucet, and sim-test bill items 1–6, 8–17b and 18 are asserted in
-`tools/sim-test.js` (item 7 waits for slice B; the suite stands at 1,121). What is built is simulation only —
+`tools/sim-test.js` (item 7 waits for slice B; the suite stands at 1,149). What is built is simulation only —
 the surfaces arrive in phases 2–3. See
 [03-systems.md](03-systems.md#the-garden-year--the-engine-simulation-only) for the engine as
 it exists. The numbers for
@@ -126,15 +126,22 @@ Measured over 12 modelled days after the change (`node tools/year-sim.js 12 all`
 
 | Day 10 | lifetime coins | Saved Seeds minted | petals bought | Turns |
 | --- | --- | --- | --- | --- |
-| casual (rides to the wall) | ~37–41M | **832–967** | 26–31 | 3–6 |
-| smart (turns at every gate) | ~23–29M | 563–610 | 17–21 | 25–28 |
-| rush (daisy-only probe) | ~1.5–1.7M | 147–168 | 7–9 | 9–10 |
+| casual (rides to the wall) | ~29–35M | **883–956** | 25–26 | 4–6 |
+| smart (turns at every gate) | ~13–17M | 418–481 | 14–15 | 25–27 |
+| rush (daisy-only probe) | ~1.5–1.6M | 149–169 | 7 | 9–10 |
 
-Normal play now wins on both currencies, with a stable ~1.5–1.6× margin on seeds across runs,
-and the Tally graduates from garnish to the economic teacher: a maxed year mints ×2.0 where a
+Normal play now wins on both currencies, with a stable **~1.9–2.2×** margin on seeds across
+runs, and the Tally graduates from garnish to the economic teacher: a maxed year mints ×2.0 where a
 spam year manages ~×1.0–1.2, and the multiplier is pure upside because it never touches the
 ledger. **The first Turn is unchanged** — a first year *is* the lifetime, so it still pays
 ~60–65 base seeds on a ~370–410K year.
+
+*(Re-measured 2026-08-29 after the same day's Fall fixes, which corrected `year-sim`'s
+`bestFallCrop` — it had been taking the last affordable crop in array order and so planted
+wheat forever, which is off the 1.4×/hour curve. Handing the adversary the **better** crop
+makes it a stronger opponent, and the margin **widened** rather than narrowing: the verdict
+still exits zero. Earlier in the day, against the weaker adversary, the same table read
+832–967 against 563–610 for a ~1.5–1.6× margin.)*
 
 > **THE COST OF THE SHAPE, MEASURED — two consequences for phase 4's tuning chair, neither of
 > them a reason to keep the old mint.** The review named the first in advance; the second was

@@ -86,7 +86,8 @@ split-neutral base re-arms the split at 1.3–1.4×, so capping it was never eno
 now gates the un-tallied increment rather than the tallied pouch. Because the pool depends on
 lifetime earnings alone, the sum of every Turn's draw is the same number however the year is
 sliced — no cadence can out-mint another, and `node tools/year-sim.js 12 all` **exits zero**,
-with normal play ahead of turn-spam by a stable ~1.5–1.6× on seeds across runs.
+with normal play ahead of turn-spam by a stable ~1.9–2.2× on seeds across runs (re-measured
+after the same day's Fall fixes gave the adversary a better crop; the margin widened).
 
 **Whose ruling:** the owner's, taking the phase-1 independent review's recommendation (variant
 B of four measured through the real engine — dials alone failed at 3.5–4×, a ratcheting coins
@@ -438,7 +439,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,121 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,149 assertions over the
 economy, progression, saves and mastery. Everything above that line — the six `ui-*` files,
 layout, the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI
