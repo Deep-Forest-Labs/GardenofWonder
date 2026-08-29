@@ -17,9 +17,9 @@ const NET_TIMEOUT = 4000;   // slow network -> fall back to cache rather than ha
 
 const CORE = [
   './', './index.html', './style.css', './manifest.json',
-  './data.js', './flora.js', './critters.js', './customers.js', './overworld.js', './hollow.js', './meadow.js', './fall.js', './icons.js',
+  './data.js', './flora.js', './critters.js', './customers.js', './hollow.js', './meadow.js', './fall.js', './icons.js',
   './audio.js', './fx.js', './game.js',
-  './ui-shared.js', './ui-scenery.js', './ui-sheet.js', './ui-hollow.js', './ui-map.js', './ui-meadow.js', './ui-fall.js',
+  './ui-shared.js', './ui-scenery.js', './ui-sheet.js', './ui-hollow.js', './ui-meadow.js', './ui-fall.js',
   './ui-events.js', './ui.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
   './icons/apple-touch-icon.png'

@@ -1,0 +1,216 @@
+{
+  "main": {
+    "id": "70507f67ca8dcdec",
+    "type": "split",
+    "children": [
+      {
+        "id": "96c1484125fc08f6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6f87ab623eaf20a6",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/17-market-and-positioning.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "17-market-and-positioning"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "8d438350ba7af664",
+    "type": "split",
+    "children": [
+      {
+        "id": "442702d339ddd2a7",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ac60048b844c3055",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "9ec62c1e788b960b",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "630dfa4a82d4beb9",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "6c56ff2cd16e0fd0",
+    "type": "split",
+    "children": [
+      {
+        "id": "dcdda237533d0979",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "81005f2733cc31a6",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "docs/17-market-and-positioning.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "268e7063dbdb31a9",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "docs/17-market-and-positioning.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "fd6857a4eff9b185",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "076a56de9192c944",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "baccb59c03c399af",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "docs/17-market-and-positioning.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "6f87ab623eaf20a6",
+  "lastOpenFiles": [
+    "tools/_railtest_tmp.html",
+    "_measure_tmp.html",
+    "tools/dock-spike.html",
+    "docs/36-hud-and-dock.md",
+    "ui-fall.js",
+    "fall.js",
+    "tools/fall-spike.html",
+    "docs/35-morning-review.md",
+    "tools/turn-spike.html",
+    "tools/year-sim.js",
+    "docs/34-build-plan.md",
+    "docs/33-year-one-economy.md",
+    "docs/32-the-garden-year.md",
+    "docs/31-per-seed-prestige.md",
+    "docs/30-prestige-directions.md",
+    "docs/29-direction-and-odds.md",
+    "docs/28-the-loop.md",
+    "docs/27-design-audit.md",
+    "docs/18-mutations-and-weather.md",
+    "docs/16-progression-and-quests.md",
+    "docs/13-order-system.md",
+    "docs/08-ui-and-layout.md"
+  ]
+}

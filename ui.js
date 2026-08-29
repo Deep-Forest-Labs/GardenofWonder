@@ -620,7 +620,7 @@
   el.game.addEventListener('pointerdown', (e) => {
     navY0 = null;
     navId = null;
-    if (UI.hollowOpen() || UI.mapOpen() || UI.meadowOpen() || UI.sheetMode()) return;
+    if (UI.hollowOpen() || UI.meadowOpen() || UI.sheetMode()) return;
     if (e.target.closest(noSwipe)) return;
     navY0 = e.clientY;
     navX0 = e.clientX;
@@ -1137,8 +1137,7 @@
     slowAcc += dt;
     if (slowAcc >= 0.6) {
       slowAcc = 0;
-      if (UI.mapOpen()) UI.renderMap();
-      else if (UI.meadowOpen()) UI.renderMeadow();
+      if (UI.meadowOpen()) UI.renderMeadow();
       else if (UI.hollowOpen && UI.hollowOpen()) UI.renderHollow();
       else renderCritters();
       updateDockDots();

@@ -51,43 +51,26 @@ The engine shipped with no UI, so several truths are temporarily invisible or mi
 All of these resolve in phases 2–3; they are listed so nobody "fixes" them early or is
 surprised on a fresh save.
 
-### Phase 3 shipped the strip and Fall, and DELIBERATELY did not retire the map
+### ~~Phase 3 shipped the strip and Fall, and DELIBERATELY did not retire the map~~ — DONE 2026-08-30 (phase 3.5)
 
-The owner's overnight call was *phase 2 deep, phase 3 parked with the map still working*, and that
-is exactly where this stopped. What is live: the horizontal strip, the season edge tabs, the
-locked-season gate, Fall's board with all eight crops, the windfall and the Century Bloom. What is
-**not** done, and is phase 3's remainder:
+The map, `overworld.js`, `ui-map.js`, the camera, the World dock button and the swipe-down pull-back
+are all deleted, in the order the rail required: **the meadow's way in shipped first, on its own,
+while the map still worked.** The Stand is the Orders & Quests button; the Wild Meadow is the swipe
+up; the Hollow is the swipe down. The four meadow quests and their 114 reputation are reachable
+again — through a gesture rather than a button, which is its own entry above.
 
-1. **The map, `overworld.js`, `ui-map.js` and the camera are untouched**, and the dock still says
-   **World**. Doc 32 has the Stand taking that slot when the map retires. Both navigations work
-   right now, which is the rail doc 34 sets — *never a push where neither exists* — and it is the
-   safe place to stop.
-2. **The Wild Meadow still enters from the map, and that is its only door.** `UI.enterMeadow()`
-   has exactly one caller in the repo — `ui-map.js:257`, the map's dive — and the meadow's only exit
-   returns to the map. Retiring the map therefore cannot happen until the meadow has a door; the
-   plan is the burrow door's twin at the foot of the garden, drawn in frame 1 of
-   `tools/fall-spike.html`. **This costs reputation, not just a room:** doc 33 keeps four
-   meadow-dependent quests live (`q_hive_1`, `q_honey_3/8/15`, **114 rep of a 777-rep ladder**) on
-   the stated grounds that "the meadow stays reachable from Summer's edge from day one" — which is
-   false in the same way doc 32's sentence was, and is now corrected there too. Those four are
-   claimable today *because the map is still there*. **Two docs asserted a Summer door that has
-   never existed**, which is the pattern to watch: the meadow's entry has been wrong in writing
-   longer than it has been wrong in code. See [35-morning-review.md](35-morning-review.md) §4.
-3. **Winter and Spring have gates but no gardens** (slices C and E). Their gate reads *"Opens at
+**What is still open from phase 3, unchanged:**
+
+1. **Winter and Spring have gates but no gardens** (slices C and E). Their gate reads *"Opens at
    Turn N"* while the turn is the binding gate and *"Still growing in"* once it has passed, so it
    never tells a Turn-5 player that Winter opens at Turn 3.
-4. **Collecting a full Fall bed is eight taps.** `fallHarvest(idx)` is per plot, so the bed's big
+2. **Collecting a full Fall bed is eight taps.** `fallHarvest(idx)` is per plot, so the bed's big
    moment arrives as eight separate toasts. A collect-all is the single biggest difference between
    Fall feeling like an appointment and Fall feeling like admin, and it needs either a new
-   affordance or a change to how the engine is called — neither was mine to take overnight. Also in
-   docs/35.
-5. **Fall is not in the welcome-back report.** `reconcile()` walks `state.grid` only, so a Fall bed
-   that ripened while the app was shut gets no line in the away sheet. The rest of the bell now
-   exists — the edge tab carries an attention dot whenever anything in Fall is ripe or still owed a
-   windfall, and the engine's `windfall` emit is celebrated on the board — but the away report is
-   the half a player sees *first*, and it is still silent about Fall. Adding it means a Fall field
-   in `reconcile()`'s return and a line in `renderWelcome`.
-6. **Fall has no season tint of its own.** `--season-tint` ripens *Summer* toward autumn; Fall's
+   affordance or a change to how the engine is called.
+3. **Fall is not in the welcome-back report.** `reconcile()` walks `state.grid` only, so a Fall bed
+   that ripened while the app was shut gets no line in the away sheet.
+4. **Fall has no season tint of its own.** `--season-tint` ripens *Summer* toward autumn; Fall's
    scene is already autumn and is not tinted. Whether Fall should have its own clock is a phase-4
    question.
 

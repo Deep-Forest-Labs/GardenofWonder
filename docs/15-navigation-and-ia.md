@@ -1,5 +1,23 @@
 # Navigation and Information Architecture
 
+> **SUPERSEDED IN ITS DOCK SECTIONS, 2026-08-30 (phase 3.5) — third and final supersession.**
+> The dock is now the owner's **Big Five**: *Orders & Quests · Cards · GARDEN · Turn · Shop*, with a
+> floating **UPGRADE** pill and **POWER-UP** button in the band above it. See
+> [36-hud-and-dock.md](36-hud-and-dock.md), which is the live spec, and
+> [08-ui-and-layout.md](08-ui-and-layout.md) for how it is built.
+>
+> **What survived from this document:** the hard cap of five; the centre pedestal; *places live on
+> the map, systems live in the dock* becoming *rooms are gestures, systems are the dock*; the
+> attention-dot pattern, which this phase extended to a control that is not a dock button; and the
+> house rule that decided the whole build order — **a tab leaves when its home exists, and not
+> before.**
+>
+> **What did not:** the pedestal is **GARDEN**, not World. **The map is deleted**, so "navigation is
+> the map, never the dock" is now "navigation is the gesture, never the dock". The Apiary and Craft
+> tabs are gone from the dock — Craft keeps only the tab pill it shares with Upgrades and Shop, and
+> **that demotion is the one thing doc 36 never named**. The boost tray left the rail for the
+> POWER-UP button; the rail keeps only countdowns.
+
 **Status: phase 1 built; phase 2 (the world map) BUILT 2026-08-25; phases 3–5 specified but not
 built.** This is the agreed target structure
 for the game's navigation. Decided 2026-08-05; reasoning in

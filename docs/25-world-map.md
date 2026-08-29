@@ -1,6 +1,17 @@
 # The World Map — Research and Design
 
-**Status: the MVP is BUILT, 2026-08-25.** Phases A and B both ship: the world, the pan camera, the
+> **RETIRED 2026-08-30 (phase 3.5). This document is a design record, not a spec.** The map,
+> `overworld.js`, `ui-map.js`, the camera and the swipe-down pull-back are deleted. The year
+> replaced it — four gardens on a horizontal strip — exactly as
+> [32-the-garden-year.md](32-the-garden-year.md) said it would. Everything the map was the only door
+> to has a new one: the Stand is the Orders & Quests button, the Wild Meadow is the swipe up, the
+> Hollow is the swipe down, the garden is the GARDEN button. **The three locked land parcels are the
+> one thing that had nowhere to go and were retired deliberately** — they were a promise that
+> reputation would open land, drawn on a screen that no longer exists. If that promise is wanted
+> again it needs a new home, not this one. `tools/map-spike.html` stays as the design reference.
+> Phases C and D below were never built.
+
+**Status when it shipped: the MVP was BUILT, 2026-08-25.** Phases A and B both ship: the world, the pan camera, the
 swipe ladder, the dive, the Hollow's burrow, three locked parcels, and **the Garden Stand as a stall
 on the lane**. `overworld.js` draws the scene, `ui-map.js` drives the camera,
 `tools/map-spike.html` stays as the design reference. Phases C and D below are still design. Companion documents:

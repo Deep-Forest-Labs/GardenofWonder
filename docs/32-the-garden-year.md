@@ -86,26 +86,34 @@ of the year, and the player swipes between them:
   padlock chip and one drifting particle — non-interactive); a gate is a promise, and every early
   turn keeps one. Gate turns are data: `DATA.year.fallTurn = 1` (load-bearing in slice A),
   `winterTurn = 3`, `springTurn = 6` (remote-config knobs).
-- **Vertical stays exactly as built: up goes in.** Swipe *up* from Summer enters the Hollow, as
-  today. Swipe-down is the map's pull-back gesture and retires with the map; it is then free for
-  later use.
+- **Vertical is two rooms, one either side of the garden (rebuilt 2026-08-30, phase 3.5).** The old
+  rule — *up goes in, down pulls the camera back* — was the map's altitude metaphor and retired with
+  it. What is left is the picture: **swipe DOWN to go under to the Hollow, swipe UP to go out to the
+  Wild Meadow**, and a room leaves by the opposite swipe. Neither has a labelled door any more; the
+  gesture is the thing to learn, and the meadow's only teacher is one line from the flower.
 - **Summer is home.** The app opens there. It is the garden that exists today, unchanged.
 - **Art ships as a background swap** (owner's call, 2026-08-29): same board grammar, four
   backdrops. Real per-season art arrives after the feel is proven — the same MVP-first sequencing
   that built the map. The meadow already proved one board re-skinned with a new rule reads as a
   new place.
 
-**Migration note for the built map:** the house rule stands — *a tab leaves when its home exists,
-and not before.* The season strip ships in slice A, so the map, `overworld.js` and the camera
-retire with slice A. **The Stand keeps an entry throughout:** in slice A the dock's World button
-becomes a **Stand** button opening the existing Stand sheet (one swap, honouring the rule), until
-slice D's order strip replaces it. ~~The meadow keeps its current entry from Summer unchanged.~~
-**Corrected 2026-08-29 while building phase 3: there is no entry from Summer.** `UI.enterMeadow()`
-has exactly one caller in the repo — the map's dive — and the meadow's only exit returns to the map.
-So **retiring the map strands the Wild Meadow**, and the map cannot go until the meadow has a door
-of its own. The proposal, drawn in frame 1 of `tools/fall-spike.html`, is the burrow door's twin at
-the foot of the garden; the freed swipe-down stays retired as this document says. Owner's call, in
-[35-morning-review.md](35-morning-review.md) §4.
+**THE MAP IS GONE, 2026-08-30.** `overworld.js`, `ui-map.js`, the `.map-layer`, the camera, the
+World dock button and the swipe-down pull-back are all deleted. The house rule was honoured — *a tab
+leaves when its home exists, and not before* — and it was honoured in three separate pushes, in this
+order:
+
+1. **The meadow's way in first.** `UI.enterMeadow()` had exactly one caller in the whole repo (the
+   map's dive) and the meadow's only exit returned to the map, so retiring the map first would have
+   stranded a built room and 114 of the ladder's 777 reputation with it. The swipe shipped, and the
+   meadow's exit came home, while the map was still there.
+2. **Then the Big Five**, which is where the World button went.
+3. **Then the deletion.**
+
+Everything the map was the only door to has a new one: **the Stand** is the Orders & Quests button,
+**the Wild Meadow** is the swipe up, **the Hollow** is the swipe down, **the garden** is the GARDEN
+button. **The locked land parcels are the one thing that had nowhere to go, and they went with the
+map deliberately** — a promise about land, drawn on a screen that no longer exists. See
+[25-world-map.md](25-world-map.md), which is now a design record rather than a spec.
 
 ## The four seasons
 

@@ -20,7 +20,6 @@ reference globals defined above it.
 | 2 | `flora.js` | `Flora` | `DATA` (at `injectDefs` time) |
 | 3 | `critters.js` | `Critters` | nothing |
 | 4 | `customers.js` | `Customers` | nothing |
-| 5 | `overworld.js` | `Overworld` | nothing |
 | 6 | `hollow.js` | `Hollow` | nothing |
 | 7 | `meadow.js` | `Meadow` | nothing |
 | 7b | `fall.js` | `Fall` | nothing |
@@ -32,7 +31,6 @@ reference globals defined above it.
 | 13 | `ui-scenery.js` | *(attaches to `UI`)* | `UI` |
 | 14 | `ui-sheet.js` | *(attaches to `UI`)* | `UI` |
 | 15 | `ui-hollow.js` | *(attaches to `UI`)* | `UI`, `Hollow`, `Critters` |
-| 16 | `ui-map.js` | *(attaches to `UI`)* | `UI`, `Overworld` |
 | 17 | `ui-meadow.js` | *(attaches to `UI`)* | `UI`, `Meadow` |
 | 17b | `ui-fall.js` | *(attaches to `UI`)* | `UI`, `Fall`, `Game` |
 | 18 | `ui-events.js` | *(attaches nothing)* | `UI` |
@@ -283,27 +281,17 @@ sink lands on the name plate).
 the same contract the sleeping creatures use. That is why the file never has to be told whether an
 order is filled, and why every screen that draws a customer gets the reaction for free.
 
-## `overworld.js` and `ui-map.js`
+## `overworld.js` and `ui-map.js` — deleted 2026-08-30
 
-Added 2026-08-25. `overworld.js` follows the same contract as `flora.js`, `critters.js` and
-`hollow.js` — **parameters in, SVG out, knows nothing about the game** — and owns the world's
-coordinates: `W`, `H`, `PLACES`, `PARCELS` and `CELLS`. A landmark has one set of numbers, and the
-UI reads them to position its own layers, so art and hit targets cannot drift apart.
+Both files are gone with the map (phase 3.5). The year replaced the world: four gardens on a
+horizontal strip, two rooms on the vertical swipe, and the Big Five in the dock. See
+[32-the-garden-year.md](32-the-garden-year.md) for what replaced what, and
+[25-world-map.md](25-world-map.md), which is now a design record.
 
-**It is deliberately not called `Map`.** That is a JS built-in and `ui-hollow.js` already uses
-`new Map()`.
-
-`ui-map.js` is the camera and the input. The one identity the whole file rests on:
-
-```
-transform: translate(-camX * s, -camY * s) scale(s)   with transform-origin: 0 0
-```
-
-That puts world point `(camX, camY)` at the top-left of the screen — **and it only holds from the
-origin.** Moving `transform-origin` to the place being dived into breaks the pan, which is how the
-first build shipped wrong. The dive therefore animates the *camera*, not the origin, and the
-transition is switched on only for the rise and the dive — a transition left on during a drag makes
-every pan lag a third of a second behind the finger.
+The one idea worth keeping out of `ui-map.js` if a camera is ever wanted again: a
+`translate(-camX*s, -camY*s) scale(s)` identity only holds with `transform-origin: 0 0`, so a dive
+animates the **camera** and never the origin. That is recorded in "Traps in this codebase" in
+[HANDOFF.md](HANDOFF.md) and stays there.
 
 ## `fall.js` and `ui-fall.js`
 

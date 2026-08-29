@@ -5,6 +5,38 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (phase 3.5c) — The map comes out, last and on purpose
+
+`overworld.js`, `ui-map.js`, the `.map-layer`, the whole `.ow-*` block (4.9KB of CSS), the World
+button and the swipe-down pull-back: deleted. The house rule stood — *a tab leaves when its home
+exists, and not before* — and it was honoured across **three pushes in this order**, each of which
+left the live game navigable:
+
+1. **The meadow's way in**, on its own, while the map still worked. `UI.enterMeadow()` had exactly
+   one caller in the repo and it was the map's dive.
+2. **The Big Five**, which is where the World button went.
+3. **The deletion.**
+
+**Everything the map was the only door to has a new one** — the Stand is the Orders & Quests button,
+the Wild Meadow is the swipe up, the Hollow is the swipe down, the garden is the GARDEN button.
+
+**The three locked land parcels are the one thing that had nowhere to go, and they went with it
+deliberately.** They were a promise that reputation would open land, drawn on a screen that no longer
+exists; nothing else in the game refers to them. Killing them silently would have been the easy
+version. [25-world-map.md](25-world-map.md) is now a design record with that stated at the top, so
+if the promise is wanted again it gets a new home rather than a resurrection.
+
+**Kept out of the deletion:** the camera identity — `translate(-camX*s, -camY*s) scale(s)` only holds
+with `transform-origin: 0 0`, so a dive animates the camera and never the origin. It cost a rebuild
+to learn and it stays in the traps list.
+
+**One syntax trap worth recording, because it is the shape of every "delete a branch" edit:** taking
+`if (UI.mapOpen()) UI.renderMap();` out of the slow tick left the `else if` beneath it dangling off
+`slowAcc = 0;`. `node --check` caught it immediately — which is the whole argument for running it on
+every file you touch in a project with no build step.
+
+---
+
 ## 2026-08-30 (phase 3.5b) — The Big Five, and the mystery that had no door out
 
 Built to the annotated spike. The dock is **Orders & Quests · Cards · GARDEN · Turn · Shop**, with
