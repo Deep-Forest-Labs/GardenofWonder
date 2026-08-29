@@ -47,6 +47,10 @@
         <div class="layer meadow"></div>
         <div class="layer fence"></div>
         <div class="vignette"></div>
+        <!-- The year ripening. A real layer rather than a pseudo-element because
+             ::after already carries the weather and ::before would paint under
+             the sky. Both are multiply overlays and both can be on at once. -->
+        <div class="season-tint" id="seasonTint"></div>
       </div>
 
       <div class="wonder-veil" id="wonderVeil" aria-hidden="true"></div>
@@ -58,8 +62,20 @@
           <div class="wallets">
             <div class="wallet" id="walletCredits"><span class="w-icon" data-icon="coin"></span><span class="w-num" id="credits">0</span></div>
             <div class="wallet" id="walletGems"><span class="w-icon" data-icon="gem"></span><span class="w-num" id="gems">0</span></div>
+            <!-- The year meter. A wallet whose own body is the meter, so it costs
+                 the HUD no more width than a third pill and needs no second row.
+                 It carries no number: three numbered wallets do not fit beside
+                 three round buttons at 390px, and a HUD that changes shape as you
+                 earn is worse than a number one tap away. See docs/35. -->
+            <button class="wallet meter" id="walletYear" type="button" aria-label="The year's pouch">
+              <i class="meter-fill" id="yearFill"></i>
+              <span class="w-icon" data-icon="pouch"></span>
+            </button>
             <button class="dev-dot" id="btnDev" type="button" aria-label="Developer tools" tabindex="-1"></button>
           </div>
+          <!-- The meter's tap affordance. Anchored under the pill, inside .hud so
+               it inherits the column; a two-line readout does not want a sheet. -->
+          <div class="year-pop" id="yearPop" hidden></div>
           <div class="hud-actions">
             <button class="round-btn" id="btnAlbum" aria-label="Card album"><span data-icon="star"></span></button>
             <button class="round-btn" id="btnBonuses" aria-label="Garden almanac and bonuses"><span data-icon="book"></span></button>

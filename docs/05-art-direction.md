@@ -46,6 +46,9 @@ new CSS.
 | Soil | `--soil` | `#a9713f` |
 | Soil, shadow | `--soil-d` | `#7d4f2a` |
 | Soil, deepest | `--soil-dd` | `#5f3a1e` |
+| Saved Seeds | `--seed` | `#7bd88f` |
+| Saved Seeds, shadow | `--seed-d` | `#3f9d45` |
+| Saved Seeds, light | `--seed-l` | `#c9f5cf` |
 | Coins | `--coin` | `#ffc93c` |
 | Coins, edge | `--coin-d` | `#f08c00` |
 | Tickets | `--ticket` | `#ff8fab` |
@@ -63,6 +66,22 @@ dimmer colour holds its edge at any lightness and can be contrast-checked.
 fallback that was not `--paper-2`; it was harmless only because the variable always resolved, and it
 was a wrong value sitting in the source waiting to be copied. If a variable might not resolve, that
 is a bug to fix at the declaration, not to paper over at the use.
+
+`--seed` is the Garden Year's one new token, added 2026-08-29 with the year meter. The second
+currency needed a colour of its own and could not borrow one: gold is coins, cyan is gems, and
+blue/purple/gold are the rarity vocabulary a player has already learned. It is a green that belongs
+to growing things and is used for exactly three things — the meter's fill, the petal pips, and every
+price paid in Saved Seeds. The pouch icon that goes with it is deliberately **cream-bodied with green
+seeds**, because a green glyph on the green fill disappeared.
+
+**The season tint.** `DATA.year.seasonTint` / `seasonTintMax` (`#ffb066` at `0.38`) warm Summer's
+palette toward autumn as the year meter fills — one `multiply` overlay on the scenery
+(`.season-tint`, a real layer after `.vignette`, because `::after` already carries the weather and
+`::before` would paint under the sky), derived from the meter every slow tick and never saved. The
+weather tint tops out at `.52` for a full storm; a season is a mood and a storm is an event, so this
+stays under it. Both can be on at once and the day/night cycle keeps running under both. *Observed
+and not fixed:* over a night sky the multiply reads browner than it does at noon — a phase-4
+question, since the fix is to scale the tint by daylight.
 
 The three rarity colours are load-bearing and consistent everywhere — particles, plot auras, toast
 borders, floating text. A player learns blue/purple/gold once.

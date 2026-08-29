@@ -5,6 +5,83 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (phase 2, the ceremony) — The Turn gets its surface, and the cosy rule gets enforced twice
+
+**The whole of phase 2's remaining scope in one push, because it is one coherent thing:** a player
+can now see the year filling, ask what it means, turn it, watch the Tally, and spend the pouch. Any
+smaller slice would have shipped a currency with no sink or a sink with no currency.
+
+**The meter pill carries no number, and that is measured rather than preferred.** Doc 32 asks for the
+banked Saved Seeds on the pill. On the real metrics they do not fit: 360px of HUD, 132px of round
+buttons at 40px, and three numbered wallets needing ~245px of the 220px left. `.wallets` is
+`flex-wrap: wrap`, so the overflow is not an error — it is a HUD that **changes shape as you earn**,
+appearing and disappearing as "84.2K" becomes "212K". Icon-and-fill fits at every wealth on every
+phone down to a 375px SE, with both numbers one tap away. *Rejected for tonight, and the better
+answer if the owner wants it:* move the album star into the Almanac and everything fits at the worst
+numbers. That is a navigation change and it is the owner's, so it is parked in docs/35 rather than
+taken.
+
+**The fill shows the binding gate, not the seeds.** The Turn needs the increment AND the year's
+earnings; a bar showing only the first would sit full while the second held the ceremony shut, which
+is the worst possible reading of a meter. `min(seeds, coins)`.
+
+**The projection shows the un-tallied increment and never the pouch.** Quoting the multiplied number
+before the ceremony would spoil the Tally, which is the one piece of theatre the Turn has. Both gates
+are drawn as tracks instead, because *why can't I turn yet* has to be answerable without a wiki.
+
+**The ceremony renders from a step variable.** Every `panels` emit rebuilds the sheet body from
+scratch — a ceremony animating out of its own markup would restart its fireworks whenever an
+unrelated purchase fired. Rendering deterministically from `(step, linesShown, count)` means a
+repaint reproduces the same frame. The corollary took a second pass to see: **only the newest line
+may carry the entrance animation**, or every landing replays the whole list and the Tally jitters
+instead of stacking.
+
+**It cannot be dismissed between the commit and the total.** `turnYear()` is atomic and has already
+happened by the time the count-up starts, so a stray scrim tap would cost the celebration with
+nothing to undo. One early return in `closeSheet()` covers all three dismissal paths, and
+`.sheet.no-exit` hides the controls that would invite the tap it refuses. *Rejected:* guarding each
+path separately — three places to forget.
+
+**A sheet at 94dvh cannot carry `#sheetArt`.** Found by building it: the breakout art sits above the
+sheet's top edge, and at that height the top edge is 50px from the top of the screen, so the flower
+clipped off. The ceremony draws its own flower inside the body. Named in the spike's notes and worth
+keeping in mind for any future full-height panel.
+
+**THE COSY RULE IS ENFORCED TWICE, and the second one was a real find.** The engine already refuses
+to emit a Tally line the year scored zero on. But a year that scored *nothing at all* reached the
+total and rendered **"×1.00"** — which is precisely the "you failed" row doc 32 forbids, wearing a
+different hat at the summary level. A zero-scoring year now shows the pouch and no multiplier at
+all. Caught by walking the zero-stats case by hand before the critics ran.
+
+**The blessing picker filters capped flowers** — the carried-forward requirement from docs/11 — and
+shows each flower's Rich Bloom pips, so the room you are filling is visible rather than implied.
+*Rejected:* a "skip the blessing" button. It is free value, and an irreversible Turn that quietly
+gave nothing is the exact failure docs/11 describes; the only no-blessing path is the
+every-flower-capped panel, which says so in a sentence.
+
+**The dashed price slot from the spike did not ship.** The spike reserved a line for a future
+blessing price, which was the right thing to *draw* and the wrong thing to *build*: an empty dashed
+box is a promise to the player, not to the developer. The layout leaves room; the markup does not
+pretend.
+
+**Petal tracks appear only after the first Turn, and only on a flower you have grown.** Doc 32's
+year one is "nothing, unexplained". No teaser, no locked track, no stubbed signature — a row that
+advertises an unbuilt thing is the quest-strip trap wearing a different hat. *The counter-argument I
+could not settle:* nothing at all is also the version that gives a player no reason to open the
+Almanac in year one.
+
+**The season tint is a real layer, not a pseudo-element.** `.scenery::after` already carries the
+weather, and `::before` would be the first child and paint under the sky. `.season-tint` sits after
+`.vignette`; both are `multiply` and both can be on at once. Its two numbers are in `DATA.year`
+beside the year's other knobs, labelled visual-only — **no economy knob moved tonight.** Observed and
+left: over a night sky the multiply reads browner than at noon; scaling the tint by daylight is a
+phase-4 question.
+
+**`--seed` is the one new colour token.** The second currency could not borrow gold (coins), cyan
+(gems), or any of blue/purple/gold (the rarity vocabulary). The pouch icon that carries it is
+cream-bodied with green seeds, because the first version was green-on-green and vanished into the
+meter's own fill.
+
 ## 2026-08-29 (phase 2, first push) — The wall gets a shopfront, and two refusals stop sharing one label
 
 **Shipped first on purpose, and on the owner's call:** with no unlock surface, a brand-new save on

@@ -34,7 +34,21 @@ from quests and levels.
 > whole Wild Meadow**, so phase 3 gives it the burrow door's twin at the foot of the garden and
 > leaves swipe-down retired, as doc 32 asks.
 >
-> **PHASE 2's FIRST PUSH IS LIVE: the plant picker sells unlocks.** A locked row now wears its
+> **PHASE 2 IS BUILT — the Turn has a surface, and a year can be played from the game's own UI.**
+> The meter pill (a third wallet whose own body *is* the meter), its projection popover with both
+> Turn gates drawn as tracks, the `turn` sheet's five beats — the ask, the blessing picker, the
+> Tally's count-up / lines / total, the spring return with the gate card — petal tracks on the
+> Almanac rows, and the season tint warming Summer as the year fills. **The cosy rule is enforced
+> twice**: the engine never emits a line the year scored zero on, and a year that scored *nothing*
+> now shows no multiplier at all, because a Tally ending on a bare "×1.00" is the "you failed" row
+> doc 32 forbids wearing a different hat. **The blessing picker filters capped flowers**, closing
+> the carried-forward requirement in [11-known-issues.md](11-known-issues.md). Suite still 1,207;
+> no economy knob moved. See the 2026-08-29 (phase 2, the ceremony) entry in
+> [10-decision-log.md](10-decision-log.md), the new sections in
+> [08-ui-and-layout.md](08-ui-and-layout.md), and the tint's two visual constants in
+> [05-art-direction.md](05-art-direction.md).
+>
+> **PHASE 2's FIRST PUSH: the plant picker sells unlocks.** A locked row now wears its
 > one-time gold price in the slot every other row uses for its go button, drained rather than
 > greyed-out — it is an advert for the thing you are saving 150K for, so its numbers stay readable.
 > Tapping it **asks before it charges** (one-time, permanent, unrefundable, no undo), and the toast

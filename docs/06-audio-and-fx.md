@@ -171,3 +171,21 @@ not escalate to Epic or Legendary juice; the gem is in the toast body, not in mo
 
 This ladder is a design contract. If you add an event, place it on the ladder deliberately rather
 than giving it maximum juice.
+
+## The Turn's celebration (2026-08-29, phase 2)
+
+The ceremony's ladder, placed but deliberately **not tuned** — where the Tally sits on the
+celebration ladder is phase 4's, per [34-build-plan.md](34-build-plan.md).
+
+| Beat | Sound | FX |
+| --- | --- | --- |
+| The Turn commits | `levelup` | — |
+| Each Tally line lands | `coin` | `FX.haptic(8)` |
+| The total | `legend` | `FX.confetti` + `FX.ring` (seed green) + `FX.shake(7)` + `FX.haptic([14,50,14])` |
+| A petal bought | `buy` | `FX.floatAt(+1)`, `FX.haptic(10)` |
+| A seed unlocked | `buy` | `FX.haptic([12,40,12])` and a toast |
+
+**Reduced motion is honoured by the sequence, not only by the CSS.** With `prefers-reduced-motion`
+the base count-up does not roll — it lands on its final value — and the lines land with no delay
+between them, so the whole Tally resolves at once instead of over three seconds. The line entrance
+(`.tline.just`) is a CSS animation and is already covered by the global reduced-motion block.

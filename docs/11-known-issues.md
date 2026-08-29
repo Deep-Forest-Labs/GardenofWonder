@@ -21,10 +21,8 @@ the picker, and a plot the Turn is holding now chips **"Turn 1"** with a deny fl
 
 **Still true, and by design:** a fresh save is played on **four plots** through year one —
 plots 5–8 open at the first Turn ([32-the-garden-year.md](32-the-garden-year.md)), so this is
-the design, not a gap. What is *not* yet true is that the Turn itself has a surface; until the
-ceremony ships it exists only behind the dev sheet, so a fresh save still cannot reach Turn 1
-from the game's own UI, and therefore cannot open plots 5–8. The ceremony is the next push of
-phase 2.
+the design, not a gap. **The Turn now has its surface** (the meter pill and the ceremony, phase 2),
+so a fresh save can reach Turn 1 from the game's own UI and open them.
 
 The remaining seam in this family: the level-up toast no longer announces seeds, which
 shortens levels 2–17's fanfare until the ladder re-authors in slice D.
@@ -44,21 +42,19 @@ behaviour):
    offers whatever seed is next — not necessarily Bluebell at 150K. **To feel the first wall as
    step 2 of the review script describes it, use a fresh save in a private window.**
 
-### The Almanac still renders the frozen mastery ladder
+### ~~The Almanac still renders the frozen mastery ladder~~ — FIXED 2026-08-29 (phase 2)
 
-`masteryGoal()` answers with the tier the save was on, forever, and the yield chip reads
-"+0%" because `masteryMult()` retired. Honest but odd-looking. Phase 2 replaces the row with
-petal tracks.
+The row's third line is now two **petal tracks** — Rich Bloom and Quick Sprout, with pips and a
+price in Saved Seeds. The Almanac no longer calls `masteryGoal()` at all; discovery is read from
+the lifetime harvest count instead. Tracks appear only after the first Turn and only on a flower
+you have actually grown.
 
-### Phase 2 must filter capped flowers out of the blessing picker
+### ~~Phase 2 must filter capped flowers out of the blessing picker~~ — DONE 2026-08-29
 
-The ceremony's beat 3 is "pick any flower", the Turn is atomic and irreversible, and
-`turnYear()` accepts a flower already at its Rich Bloom cap: it writes nothing, returns
-`blessed: null`, and the Turn still completes. A player who picks a capped flower therefore
-loses that Turn's blessing with no undo. Phase 1's dev button hit exactly this — it blessed
-Daisy by name, and the review script's own steps cap her — so it now blesses the cheapest
-flower with room and says so when none is left. The picker must do the same. Carried forward
-from round 4 of the gauntlet.
+The ceremony's picker lists only flowers whose Rich Bloom still has room, and shows each one's pips
+so the room is visible. The every-flower-capped case has its own panel: the flower says the
+blessing is being kept, and the Turn goes ahead saying plainly that nothing is lost and nothing is
+owed.
 
 ### ~~The Tally's tier-reading needs the owner's confirmation~~ — RATIFIED
 

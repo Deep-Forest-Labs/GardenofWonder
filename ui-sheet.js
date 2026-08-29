@@ -40,6 +40,7 @@
     sheetMode = mode;
     sheetArg = arg;
     pendingUnlock = null;
+    if (mode === 'turn') startTurn(); else endTurn();
     renderSheet(true);
     el.sheet.classList.add('open');
     el.sheet.setAttribute('aria-hidden', 'false');
@@ -52,6 +53,12 @@
 
   function closeSheet() {
     if (!sheetMode) return;
+    /* The Turn has already committed by the time the Tally is rolling, and it
+       cannot be undone — so the one thing the ceremony owes the player is the
+       celebration. Every dismissal path comes through here, which is why the
+       guard lives here rather than on each of them. */
+    if (sheetLocked) return;
+    endTurn();
     sheetMode = null;
     el.sheet.classList.remove('open');
     el.sheet.style.transform = '';
@@ -74,17 +81,22 @@
       upgrades: 'Upgrades', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
       quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
-      critter: '', stand: '', order: '',
+      critter: '', stand: '', order: '', turn: '',
       keepers: 'Keepers', shelf: 'The Honey Shelf', stores: 'Stores', build: 'What goes here?',
       album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
     };
     let title = titles[sheetMode] || '';
+    if (sheetMode === 'turn') title = turnTitle();
     if (sheetMode === 'cardset') {
       const set = ALBUM.sets.find((x) => x.id === sheetArg);
       if (set) title = set.name;
     }
 
     el.sheetTitle.textContent = title;
+    /* The ceremony keeps ONE height across all five beats — a sheet that resized
+       between the ask and the Tally would jump under the player's thumb — and it
+       is taller than a shop, so the beats with little content can centre. */
+    el.sheet.classList.toggle('cere-sheet', sheetMode === 'turn');
 
     if (SHOP_TABS.includes(sheetMode)) {
       el.sheetTabs.innerHTML = TABS.map(
@@ -105,6 +117,7 @@
     const render = {
       upgrades: renderUpgrades, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
+      turn: renderTurn,
       dev: renderDev, welcome: renderWelcome, feed: renderFeed, critter: renderCritter,
       stand: renderStand, order: renderOrder,
       keepers: renderKeepers, shelf: renderShelf, stores: renderStores, build: renderBuild,
@@ -453,6 +466,267 @@
   function verbNote(seed) {
     const v = seed.verb && DATA.verbs[seed.verb];
     return v ? `<span class="verb-note" style="--verb:${v.tint}">${v.desc}</span>` : '';
+  }
+
+  /* ============ THE TURN — the ceremony ============
+
+     Five beats on one sheet: the ask, the blessing, the Tally's three moments,
+     the spring return. Two rules govern how it is built.
+
+     ONE: it renders from a step variable, never from what is already in the
+     DOM. Any `panels` emit rebuilds the sheet body from scratch, so a ceremony
+     that animated out of its markup would restart its own fireworks every time
+     an unrelated purchase fired. The pack reveal is the precedent.
+
+     TWO: from the moment turnYear() commits until the total lands, the sheet
+     cannot be dismissed. The Turn is atomic and has already happened by then —
+     a stray scrim tap would cost the player the only celebration it has, with
+     nothing to undo. The close button, the scrim and the drag are all guarded,
+     and all three come back at the spring return.
+  */
+  const TURN_BASE_MS = 1100;
+  const TURN_LINE_MS = 430;
+  let turnStep = 0;        /* 0 ask · 1 bless · 2 count · 3 lines · 4 total · 5 spring */
+  let turnPick = null;
+  let turnResult = null;
+  let turnLines = 0;
+  let turnCount = 0;
+  let turnTimers = [];
+  let sheetLocked = false;
+
+  const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function turnClear() { turnTimers.forEach(clearTimeout); turnTimers = []; }
+  function turnAt(ms, fn) { turnTimers.push(setTimeout(fn, ms)); }
+
+  function startTurn() {
+    turnClear();
+    turnStep = 0; turnPick = null; turnResult = null; turnLines = 0; turnCount = 0;
+    sheetLocked = false;
+    el.sheet.classList.remove('no-exit');
+  }
+  function endTurn() {
+    turnClear();
+    sheetLocked = false;
+    el.sheet.classList.remove('no-exit');
+  }
+  function lockSheet(on) {
+    sheetLocked = on;
+    el.sheet.classList.toggle('no-exit', on);
+  }
+
+  function turnTitle() {
+    if (turnStep === 0) return 'The year’s turning';
+    if (turnStep === 1) return 'Bless one flower';
+    if (turnStep === 5) return `Year ${S.year.number}`;
+    return '';
+  }
+
+  /* Every flower you own a seed for whose Rich Bloom still has room. Capped
+     flowers are FILTERED OUT rather than shown and refused: turnYear() accepts
+     one, writes nothing and completes anyway, so picking a full flower would
+     lose the largest per-Turn grant in the game with no undo. */
+  function blessableSeeds() {
+    const cap = DATA.petals.shared.rich.cap;
+    return DATA.seeds.filter((s) => Game.seedUnlocked(s.id) && Game.petalsOf(s.id).rich < cap);
+  }
+
+  function turnAsk() {
+    const mint = Game.projectedMint();
+    const growing = S.grid.filter((c) => c.seed && !c.ready && !c.locked).length;
+    const ripe = S.grid.filter((c) => c.seed && c.ready).length;
+    const keeps = ['Saved Seeds', 'Seed unlocks', 'Petals', 'Creatures', 'Cards', 'Level']
+      .map((k) => `<span class="chip">${Icons.get('check')}${k}</span>`).join('');
+    const cost = growing
+      ? `<b>${growing} bed${growing === 1 ? ' is' : 's are'} still growing.</b> ${growing === 1 ? 'It goes' : 'They go'} to the compost${ripe ? ' — everything ripe is picked for you first' : ''}.`
+      : 'Nothing is still growing. This Turn costs you nothing at all.';
+    return `<div class="cere">
+      <div class="cere-flower">${Flora.talkingFlower()}</div>
+      <div class="speech-block">The year’s turning. Save your seeds?</div>
+      <div class="plate">
+        <p class="plate-cap">Ready to save</p>
+        <div class="plate-big outlined">${Icons.get('pouch')}<span>${fmt(Math.floor(mint.base))}</span></div>
+      </div>
+      <div class="cost-line">${Icons.get('sprout')}<span>${cost}</span></div>
+      <div class="keep-row">${keeps}</div>
+      <div class="btn-row">
+        <button class="big-btn yes" data-act="turnBless">${Icons.get('pouch')}Turn the year</button>
+        <button class="big-btn" data-act="turnLater">Not yet</button>
+      </div>
+    </div>`;
+  }
+
+  function turnBlessPanel() {
+    const list = blessableSeeds();
+    if (!list.length) {
+      return `<div class="cere">
+        <div class="cere-flower">${Flora.talkingFlower()}</div>
+        <div class="speech-block">Every bloom you have is as rich as it gets. Keep the blessing — there’ll be new flowers.</div>
+        <div class="cost-line">${Icons.get('check')}<span>No blessing lands this Turn. Nothing is lost, and nothing is owed.</span></div>
+        <div class="btn-row">
+          <button class="big-btn yes" data-act="turnGo">${Icons.get('pouch')}Turn the year</button>
+          <button class="big-btn" data-act="turnBack">Back</button>
+        </div>
+      </div>`;
+    }
+    const cap = DATA.petals.shared.rich.cap;
+    const tiles = list.map((s) => {
+      const rich = Game.petalsOf(s.id).rich;
+      const pips = Array.from({ length: cap }, (_, i) =>
+        `<i class="pip${i < rich ? '' : ' off'}"></i>`).join('');
+      return `<button class="bless-tile${turnPick === s.id ? ' on' : ''}" data-bless="${s.id}">
+        <span class="bless-art" style="--art:${s.art.c1}">${Flora.head(s, 40)}</span>
+        <span class="bless-name">${s.name}</span>
+        <span class="pips">${pips}</span>
+      </button>`;
+    }).join('');
+    const picked = turnPick ? Game.seedById(turnPick) : null;
+    return `<div class="cere top">
+      <p class="sheet-note">Your blessing lands as a free <b>Rich Bloom</b> petal. Any flower, once a Turn.</p>
+      <div class="bless-grid">${tiles}</div>
+      <div class="btn-row">
+        <button class="big-btn yes" data-act="turnGo" ${picked ? '' : 'disabled'}>
+          ${Icons.get('star')}${picked ? `Bless the ${picked.name}` : 'Pick a flower'}
+        </button>
+      </div>
+    </div>`;
+  }
+
+  /* The Tally. The lines are already zero-filtered by the engine — a line the
+     year scored nothing on is never emitted — so the cosy rule is honest by
+     construction here rather than by filtering in the view. */
+  function turnTally() {
+    const t = turnResult.tally;
+    const shown = t.lines.slice(0, turnLines);
+    const cap = DATA.year.tallyCap;
+    const running = Math.min(cap, 1 + shown.reduce((a, l) => a + l.bonus, 0));
+    const done = turnStep === 4;
+    /* Only the newest line animates. Every landing re-renders the plate, so an
+       animation on .tline would replay the whole list each time and the Tally
+       would jitter instead of stacking. */
+    const rows = shown.map((l, i) => `<div class="tline${i === shown.length - 1 && !done ? ' just' : ''}">
+      <span class="lab">${l.label}</span>
+      <span class="chip cnt">${fmt(l.count)}</span>
+      <span class="price bon">+${Math.round(l.bonus * 100)}%</span>
+    </div>`).join('');
+    /* THE COSY RULE, at the summary as well as the line. A year that scored
+       nothing has no lines — and it must have no multiplier either, or the
+       Tally ends on "×1.00", which is the "you failed" row doc 32 forbids
+       wearing a different hat. It just shows the pouch and celebrates that. */
+    const foot = done
+      ? (t.mult > 1
+        ? `<div class="tfoot centred">
+             <span class="plate-cap">${fmt(Math.floor(turnResult.base))}</span>
+             <span class="tmult outlined">×${t.mult.toFixed(2)}${t.mult >= cap ? ' MAX' : ''}</span>
+           </div>`
+        : '')
+      : (turnLines
+        ? `<div class="tfoot"><span class="plate-cap">the year scored</span>
+             <span class="tmult outlined">×${running.toFixed(2)}</span></div>`
+        : '');
+    return `<div class="cere">
+      <div class="plate${done ? ' won' : ''}">
+        <p class="plate-cap">${done ? 'Into the pouch' : 'The year’s pouch'}</p>
+        <div class="plate-big outlined">${Icons.get('pouch')}<span id="turnNum">${
+          fmt(done ? turnResult.pouch : turnCount)}</span></div>
+        ${rows}
+        ${foot}
+      </div>
+      ${turnStep === 2 ? '<p class="sheet-note centred">counting…</p>' : ''}
+      ${done ? `<div class="btn-row">
+        <button class="big-btn yes" data-act="turnSpring">${Icons.get('pouch')}Into the pouch</button>
+      </div>` : ''}
+    </div>`;
+  }
+
+  function turnSpring() {
+    const r = turnResult || {};
+    const unlocks = Object.keys(S.seedUnlocks || {}).length;
+    const petals = Object.values(S.petals || {}).reduce((a, p) => a + p.rich + p.quick + p.sig, 0);
+    const chips = [
+      `<span class="chip">${Icons.get('pouch')}${fmt(S.savedSeeds)} banked</span>`,
+      unlocks ? `<span class="chip">${Icons.get('lock')}${unlocks} unlock${unlocks === 1 ? '' : 's'} kept</span>` : '',
+      petals ? `<span class="chip">${Icons.get('star')}${petals} petal${petals === 1 ? '' : 's'} kept</span>` : ''
+    ].join('');
+    /* The gate only promises a gesture once the strip exists to honour it. */
+    const hint = UI.enterSeason ? `<span class="chip">${Icons.get('sprout')}swipe right</span>`
+      : `<span class="chip">${Icons.get('sprout')}opening soon</span>`;
+    const gate = r.fallOpens ? `<div class="gate-card">
+      <div class="gate-scene"><span class="hedge l"></span><span class="hedge r"></span>
+        <span class="gate-bloom">${Flora.head(Game.seedById('marigold') || DATA.seeds[0], 62)}</span></div>
+      <div class="gate-foot"><span>Fall is open</span>${hint}</div>
+    </div>` : '';
+    const blessed = r.blessed ? `<div class="cost-line">${Icons.get('star')}<span>
+      <b>${Game.seedById(r.blessed).name}</b> carries your blessing — a free Rich Bloom petal.</span></div>` : '';
+    return `<div class="cere">
+      <div class="cere-flower">${Flora.talkingFlower()}</div>
+      ${gate}
+      ${blessed}
+      <div class="keep-row">${chips}</div>
+      <div class="btn-row">
+        <button class="big-btn yes" data-act="turnDone">${Icons.get('sprout')}Into the new year</button>
+      </div>
+    </div>`;
+  }
+
+  function renderTurn() {
+    if (turnStep === 0) return turnAsk();
+    if (turnStep === 1) return turnBlessPanel();
+    if (turnStep >= 2 && turnStep <= 4) return turnResult ? turnTally() : turnAsk();
+    return turnSpring();
+  }
+
+  /* ---- the sequence ---- */
+  function commitTurn() {
+    const res = Game.turnYear(turnPick);
+    if (!res) { Sound.play('deny'); return; }
+    turnResult = res;
+    turnStep = 2; turnLines = 0; turnCount = 0;
+    lockSheet(true);
+    renderSheet(true);
+    Sound.play('levelup');
+    rollBase();
+  }
+
+  function rollBase() {
+    const target = Math.floor(turnResult.base);
+    if (calm()) { turnCount = target; turnStep = 3; renderSheet(false); landLine(); return; }
+    const t0 = Date.now();
+    const step = () => {
+      const k = Math.min(1, (Date.now() - t0) / TURN_BASE_MS);
+      turnCount = Math.round(target * (1 - Math.pow(1 - k, 3)));
+      const n = $('#turnNum', el.sheetBody);
+      if (n) n.textContent = fmt(turnCount);
+      if (k < 1) turnAt(40, step);
+      else { turnStep = 3; renderSheet(false); turnAt(260, landLine); }
+    };
+    step();
+  }
+
+  function landLine() {
+    const lines = turnResult.tally.lines;
+    if (turnLines >= lines.length) {
+      turnStep = 4;
+      renderSheet(false);
+      celebrateTurn();
+      return;
+    }
+    turnLines += 1;
+    renderSheet(false);
+    Sound.play('coin');
+    FX.haptic(8);
+    turnAt(calm() ? 0 : TURN_LINE_MS, landLine);
+  }
+
+  function celebrateTurn() {
+    lockSheet(false);
+    Sound.play('legend');
+    FX.haptic([14, 50, 14]);
+    const plate = $('.plate', el.sheetBody);
+    if (!plate) return;
+    const c = FX.centerOf(plate);
+    FX.confetti(c.x, c.y);
+    FX.ring(c.x, c.y, '#7bd88f', 0.5, 90);
+    FX.shake(7);
   }
 
   function renderSeeds() {
@@ -1050,6 +1324,36 @@
     </div>`;
   }
 
+  /* THE PETAL TRACKS. They replace the mastery goal line the Garden Year
+     retired, and they appear ONLY after the first Turn: doc 32's year one is
+     "nothing, unexplained — the mystery is the tutorial", so there is no
+     teaser, no locked track and no coming-soon. The pips arriving the morning
+     after Turn 1 IS the tutorial. The signature (third) skill is slice B and is
+     deliberately not stubbed — a row that advertises an unbuilt thing is the
+     quest-strip trap wearing a different hat. */
+  function petalTrack(seed, skill, label) {
+    const def = DATA.petals.shared[skill];
+    const owned = Game.petalsOf(seed.id)[skill];
+    const maxed = owned >= def.cap;
+    const pips = Array.from({ length: def.cap }, (_, i) =>
+      `<i class="pip${i < owned ? '' : ' off'}"></i>`).join('');
+    const cost = maxed ? 0 : Game.petalCost(seed.id, skill);
+    const can = !maxed && S.savedSeeds >= cost;
+    const chip = maxed
+      ? '<span class="price maxed">MAX</span>'
+      : `<button class="price petal-buy ${can ? 'ok' : 'no'}" data-petal="${seed.id}" data-skill="${skill}"
+           ${can ? '' : 'disabled'} aria-label="Buy a ${label} petal for ${seed.name}">${Icons.get('pouch')}${fmt(cost)}</button>`;
+    return `<div class="petal-track">
+      <span class="pl">${label}</span><span class="pips">${pips}</span><span class="sp"></span>${chip}
+    </div>`;
+  }
+
+  function petalTracks(seed) {
+    if (S.year.turnsCompleted < 1) return '';
+    return petalTrack(seed, 'rich', DATA.petals.shared.rich.name)
+      + petalTrack(seed, 'quick', DATA.petals.shared.quick.name);
+  }
+
   function renderBonuses() {
     const tapMult = (1 + Game.boostVal('tapPower')) * (1 + Game.boostVal('globalCredits'));
     const tapEff = S.tap.power * tapMult * Game.wonderMult();
@@ -1075,16 +1379,15 @@
       const n = Game.discoveredOf(s.id);
       const best = Game.bestRarityOf(s.id);
       const rdef = best ? DATA.rarity.find((r) => r.key === best) : null;
-      const goal = Game.masteryGoal(s.id);
       const head = `<span class="n"><span class="almanac-bloom">${Flora.head(s, 22)}</span>${s.name}</span>`;
-      if (!goal || !rdef) {
+      /* Discovery is the row's own split, read from the lifetime harvest count
+         rather than from the retired mastery ladder's goal. */
+      if (!n || !rdef) {
         return `<div class="almanac-row dim">
           <div class="almanac-row-top">${head}<span class="r">—</span><span class="c">—</span></div>
           <span class="seed-desc">${s.desc}</span>
         </div>`;
       }
-      const fill = goal.qty ? Math.max(0, Math.min(1, goal.have / goal.qty)) : 0;
-      const gemTier = DATA.masteryGemEvery && goal.tier % DATA.masteryGemEvery === 0;
       return `<div class="almanac-row">
         <div class="almanac-row-top">
           ${head}
@@ -1092,11 +1395,7 @@
           <span class="c">×${fmt(n)}</span>
         </div>
         <span class="seed-desc">${s.desc}</span>
-        <div class="almanac-row-goal">
-          <span class="g">Tier ${goal.tier} · ${fmt(goal.have)} / ${fmt(goal.qty)} ${MASTERY_TRACK[goal.track]}${gemTier ? `<span class="gem-pip">${Icons.get('gem')}</span>` : ''}</span>
-          <i class="mastery-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${goal.qty}" aria-valuenow="${Math.min(goal.have, goal.qty)}" aria-label="${s.name} mastery tier ${goal.tier}"><b style="transform:scaleX(${fill})"></b></i>
-          <span class="y">${signed(Game.masteryMult(s.id) - 1)}</span>
-        </div>
+        ${petalTracks(s)}
       </div>`;
     }).join('');
 
@@ -1122,6 +1421,9 @@
       </div>
       <div class="stat-block">
         <h3>${Icons.get('sprout')} Seed Almanac</h3>
+        ${S.year.turnsCompleted >= 1
+          ? `<p class="sheet-note pouch-note"><span class="chip">${Icons.get('pouch')}${fmt(S.savedSeeds)}</span> to spend on petals.</p>`
+          : ''}
         ${seedRows}
       </div>
       <div class="stat-block">
@@ -1899,9 +2201,37 @@
       handleDev(devBtn.dataset.dev, devBtn.dataset.arg);
       return;
     }
+    const petal = e.target.closest('[data-petal]');
+    if (petal) {
+      const { petal: id, skill } = petal.dataset;
+      if (Game.buyPetal(id, skill)) {
+        Sound.play('buy');
+        FX.haptic(10);
+        FX.floatAt(petal, '+1', 'good');
+      } else {
+        Sound.play('deny');
+        FX.shake(3);
+      }
+      return;
+    }
+
+    const bless = e.target.closest('[data-bless]');
+    if (bless) {
+      turnPick = bless.dataset.bless;
+      renderSheet(false);
+      Sound.play('tap');
+      return;
+    }
+
     const act = e.target.closest('[data-act]');
     if (act) {
       const a = act.dataset.act;
+      if (a === 'turnBless') { turnStep = 1; renderSheet(true); Sound.play('open'); return; }
+      if (a === 'turnBack') { turnStep = 0; renderSheet(true); Sound.play('close'); return; }
+      if (a === 'turnLater') { closeSheet(); Sound.play('close'); return; }
+      if (a === 'turnGo') { commitTurn(); return; }
+      if (a === 'turnSpring') { turnStep = 5; renderSheet(true); Sound.play('open'); return; }
+      if (a === 'turnDone') { closeSheet(); Sound.play('close'); return; }
       if (a === 'closeWelcome') { closeSheet(); Sound.play('close'); return; }
       if (a === 'backToAlbum') { openSheet('album'); Sound.play('open'); return; }
       if (a === 'openPack') {
@@ -2032,6 +2362,13 @@
       node.classList.toggle('affordable', can);
       const price = $('.price', node);
       if (price) { price.classList.toggle('ok', can); price.classList.toggle('no', !can); }
+    });
+    $$('[data-petal]', el.sheetBody).forEach((node) => {
+      const cost = Game.petalCost(node.dataset.petal, node.dataset.skill);
+      const can = S.savedSeeds >= cost;
+      node.disabled = !can;
+      node.classList.toggle('ok', can);
+      node.classList.toggle('no', !can);
     });
     $$('[data-unlock]', el.sheetBody).forEach((node) => {
       const price = Game.seedUnlockPrice(node.dataset.unlock);

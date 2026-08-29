@@ -366,6 +366,14 @@ const DATA = {
        at tallyCap. A line that scored no bonus does not appear — the Tally
        only celebrates. */
     tallyCap: 2.0,
+    /* PURELY VISUAL, and deliberately filed beside the year's other knobs so
+       nobody hunts for it: how far Summer's palette ripens toward autumn as the
+       meter fills. One overlay on the scenery, composed like the weather tint —
+       no state, nothing derived from it. The weather tint tops out at .52 for a
+       full storm; a season is a mood and a storm is an event, so this stays
+       under it. Tuning is phase 4's. */
+    seasonTint: '#ffb066',
+    seasonTintMax: 0.38,
     tally: [
       { id: 'orders',      label: 'Orders filled',           stat: 'orders',      tiers: [{ at: 10, bonus: 0.10 }, { at: 25, bonus: 0.15 }, { at: 50, bonus: 0.25 }] },
       { id: 'windfalls',   label: 'Full-bed windfalls',      stat: 'windfalls',   tiers: [{ at: 3,  bonus: 0.05 }, { at: 8,  bonus: 0.10 }, { at: 15, bonus: 0.15 }] },

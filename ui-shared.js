@@ -33,6 +33,9 @@ const UI = (() => {
     gems: $('#gems'),
     walletCredits: $('#walletCredits'),
     walletGems: $('#walletGems'),
+    walletYear: $('#walletYear'),
+    yearFill: $('#yearFill'),
+    yearPop: $('#yearPop'),
     dock: $('#dock'),
     sheet: $('#sheet'),
     sheetBody: $('#sheetBody'),
@@ -46,7 +49,8 @@ const UI = (() => {
     coach: $('#coach'),
     cloudsFar: $('#cloudsFar'),
     cloudsNear: $('#cloudsNear'),
-    sky: $('#sky')
+    sky: $('#sky'),
+    seasonTint: $('#seasonTint')
   };
 
   /* ============ formatting ============ */

@@ -228,6 +228,7 @@ All shopping happens in one sheet that slides up from the bottom, holding eight 
 | `settings` | Settings | Gear button in HUD | none |
 | `dev` | Developer tools | Unlabelled hit area beside the gem wallet | none |
 | `welcome` | While you were away | Opens itself on load after a real absence | none |
+| `turn` | *(per beat)* | The year-meter pill when the meter is full | none |
 | `album` | *(season name)* | Star button in HUD | none |
 | `cardset` | *(set name)* | Tapping a set tile | none |
 | `pack` | Opening a pack | Opening a pack from the album | none |
@@ -297,6 +298,59 @@ scratch, and a floating card would vanish mid-question; the pending seed lives i
 one-time, permanent and unrefundable, and the game has no undo** — one extra tap on the happy path
 is the trade. On success the row keeps its place, lights `.fresh` gold for 2.2s, and a toast says
 *yours for good — unlocks survive every Turn*, which is the one fact a player cannot see.
+
+### The Turn ceremony — sheet mode `turn` (2026-08-29, phase 2)
+
+Five beats on one sheet: the ask, the blessing, the Tally's three moments, the spring return.
+`.sheet.cere-sheet` is `min(94dvh, 800px)` — **one height across every beat**, because a sheet that
+resized between the ask and the Tally would jump under the player's thumb. The body is a flex column
+that centres its content; the picker alone opts out with `.cere.top`, since with every flower
+unlocked its grid is seven rows.
+
+**The flower stands inside the body, not in `#sheetArt`.** A sheet this tall has no room above its
+own top edge, so the breakout art clips off the screen. `.cere-flower` is the ceremony's own.
+
+**It renders from a step variable, never from what is in the DOM.** Any `panels` emit rebuilds
+`#sheetBody` from scratch, so a ceremony that animated out of its markup would restart its fireworks
+every time an unrelated purchase fired. The pack reveal is the precedent. The corollary: **only the
+newest Tally line carries the entrance animation** (`.tline.just`) — on `.tline` it would replay the
+whole list at every landing and the Tally would jitter instead of stack.
+
+**From the commit until the total lands, the sheet cannot be dismissed.** `turnYear()` is atomic and
+has already happened by then; a stray scrim tap would cost the player the only celebration it has,
+with nothing to undo. The guard is a single early return in `closeSheet()` — every dismissal path
+(button, scrim, drag) goes through it — plus `.sheet.no-exit`, which hides the close button and dims
+the grip. All three come back at the spring return.
+
+**The plate is the garden's four value tiers indoors:** ink outline, a dark body with the board's own
+grain, cream pills for every counter, the house green for every bonus, `.outlined` for the big
+numbers. That is why an arcade scoreboard can be this loud without leaving the style.
+
+**The cosy rule is enforced twice.** The engine never emits a line the year scored zero on, so no
+`×1.00` row can render — and **a year that scored nothing shows no multiplier at all**, because a
+Tally ending on a bare "×1.00" is that same failure row wearing a different hat. It shows the pouch
+and celebrates that.
+
+**The blessing picker filters capped flowers.** `turnYear()` accepts a flower already at its Rich
+Bloom cap, writes nothing and completes anyway — so showing one would let a player lose the largest
+per-Turn grant in the game with no undo. The picker is a grid of blooms with their Rich Bloom pips
+and nothing else, because the only decision is *which flower*. There is no skip button; the only
+no-blessing path is the every-flower-capped state, which has its own panel and its own line of
+writing. A dashed slot for a future price is **not** drawn — the reserved-cost idea from the spike
+survives as layout headroom only.
+
+### The Almanac petal rows (2026-08-29, phase 2)
+
+The mastery goal line is replaced by **two petal tracks**: name, pips, price. The pips are the game's
+existing level vocabulary in the seed's own green, so a player reads "3 of 5" without a fraction; the
+price is the ordinary `.price` family in three states they already know — green affordable, drained
+short, grey `MAX`. Only the price chip is the button, so a mis-tap on the row cannot spend seeds.
+
+**They appear only after the first Turn, and only on a discovered flower.** Doc 32's year one is
+"nothing, unexplained — the mystery is the tutorial", so there is no teaser and no locked track; the
+pips arriving the morning after Turn 1 *is* the tutorial. An undiscovered row keeps its two-line dim
+form. **The signature (third) skill is slice B and is deliberately not stubbed** — a row that
+advertises an unbuilt thing is the quest-strip trap wearing a different hat.
 
 ### The Almanac seed row
 
@@ -415,6 +469,40 @@ flash may screenshot as invisible even though it fired. Verify by asserting the 
 [HANDOFF.md](HANDOFF.md).
 
 ## HUD
+
+### The year meter — the third pill (2026-08-29, phase 2)
+
+**The meter is the pill.** `.wallet.meter` is a third wallet whose own body fills as the year does
+(`.meter-fill`, an absolutely-positioned child at `z-index:-1` under `isolation:isolate`), so it
+costs the HUD no more width than a third wallet and needs no second row for a bar. It is a real
+`<button>`; the other two wallets are `div`s.
+
+**It carries no number, and that is a measured decision, not a preference.** The column is 360px
+inside `.ui`'s padding, three round buttons take 132 of it at 40px, and three *numbered* wallets need
+~245px of the 220px left — so `.wallets` (which is `flex-wrap: wrap`) wraps, and it wraps and unwraps
+**as the numbers grow**, which is the one thing a HUD must never do. Both numbers — the banked pouch
+and the year's increment — live one tap away in the projection instead. The alternative that buys
+both (the album star leaves the HUD for the Almanac) is a navigation change and is parked for the
+owner in [35-morning-review.md](35-morning-review.md).
+
+**The HUD tightens below 430px of width**, the same values the `max-height:700px` block already
+uses: wallet padding 4/9 at 14px, 19px icons, 40px round buttons. Without it the pills wrap on every
+phone, with or without a number on the meter.
+
+**The fill shows the binding gate.** The Turn needs *both* the un-tallied increment ≥ `minSeeds` and
+the year's earnings ≥ `minCoins`, so the bar is `min(seeds, coins)` — a bar that showed only one
+would sit full while the other held the ceremony shut. Recomputed on the 0.6s slow tick, never per
+frame: `projectedMint()` walks the whole Tally table. At full it takes `affordPulse`, the same breath
+every affordable price wears.
+
+**Tapping it.** Full → the ceremony opens (doc 32's re-invite: declining costs nothing and the
+ceremony reopens from here forever). Short of full → `.year-pop`, a coach-mark-shaped card anchored
+under the pill, with the increment, the banked pouch and **both gates drawn as tracks** so *why can't
+I turn yet* is answerable without a wiki. Its tail is positioned from a measurement, because the pill
+moves as the coin number grows. It shows the **un-tallied** increment and never the tallied pouch —
+quoting the multiplier here would spoil the only piece of theatre the Turn has.
+
+### The rest of the HUD
 
 Two wallet pills — coins and gems — plus round buttons for the Almanac and Settings. A
 quest strip sits between the HUD and the rail: level pip with a reputation ring, a thick bar for

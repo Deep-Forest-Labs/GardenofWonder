@@ -386,6 +386,84 @@
     el.questStrip.dataset.claim = claimId;
   }
 
+  /* ============ the year meter ============ */
+  /* The pill's fill is how close the Turn is, which means it has to show the
+     BINDING gate — the Turn needs both the un-tallied increment and the year's
+     earnings, so a bar that showed only one would sit full while the other held
+     the ceremony shut. Recomputed on the slow tick, not per frame:
+     projectedMint() walks the whole Tally table and nothing here changes at
+     60fps. */
+  function yearProgress() {
+    const y = DATA.year;
+    const mint = Game.projectedMint();
+    const seeds = y.minSeeds > 0 ? mint.base / y.minSeeds : 1;
+    const coins = y.minCoins > 0 ? S.year.coinsEarned / y.minCoins : 1;
+    return { mint, seeds, coins, p: Math.max(0, Math.min(1, Math.min(seeds, coins))) };
+  }
+
+  let yearFillShown = -1;
+  function updateYearMeter() {
+    const { p } = yearProgress();
+    const pct100 = Math.round(p * 1000) / 10;
+    if (pct100 !== yearFillShown) {
+      el.yearFill.style.width = `${pct100}%`;
+      yearFillShown = pct100;
+    }
+    el.walletYear.classList.toggle('full', Game.turnReady());
+    /* The garden golds as the year fills. Derived, never stored — doc 32 is
+       explicit that the season aging is visual only. */
+    el.seasonTint.style.setProperty('--season-c', DATA.year.seasonTint);
+    el.seasonTint.style.setProperty('--season-o', (DATA.year.seasonTintMax * p).toFixed(3));
+  }
+
+  function yearGate(label, ratio, have, need, icon) {
+    const met = ratio >= 1;
+    return `<div class="yp-gate${met ? ' met' : ''}">
+      <span class="lab">${label}</span>
+      <span class="track"><i style="width:${Math.round(Math.min(1, ratio) * 100)}%"></i></span>
+      <span class="val">${met ? Icons.get('check') : `${fmt(have)} / ${fmt(need)}`}</span>
+    </div>`;
+  }
+
+  function renderYearPop() {
+    const { mint, seeds, coins } = yearProgress();
+    const y = DATA.year;
+    const banked = S.savedSeeds > 0
+      ? `<p class="yp-sub"><b>${fmt(S.savedSeeds)}</b> already in the pouch.</p>` : '';
+    el.yearPop.innerHTML = `
+      <p class="yp-cap">Ready to save this year</p>
+      <div class="yp-num">${Icons.get('pouch')}<span>${fmt(Math.floor(mint.base))}</span></div>
+      <p class="yp-sub">How the year <i>scored</i> is added at the ceremony.</p>
+      ${banked}
+      ${yearGate('Earned', coins, Math.floor(S.year.coinsEarned), y.minCoins)}
+      ${yearGate('Seeds', seeds, Math.floor(mint.base), y.minSeeds)}`;
+  }
+
+  function openYearPop() {
+    renderYearPop();
+    el.yearPop.hidden = false;
+    /* The tail points at the pill, and the pill moves as the coin number grows —
+       so it is measured rather than guessed. */
+    const pill = el.walletYear.getBoundingClientRect();
+    const host = el.yearPop.parentElement.getBoundingClientRect();
+    const tail = Math.max(14, Math.min(host.width - 32, pill.left - host.left + pill.width / 2 - 9));
+    el.yearPop.style.setProperty('--tail', `${Math.round(tail)}px`);
+  }
+  function closeYearPop() { el.yearPop.hidden = true; }
+
+  /* Tapping the pill when the meter is full IS the re-invite — declining the
+     flower's offer costs nothing and the ceremony reopens from here, however
+     many times. Short of full it answers the other question instead. */
+  function onYearTap() {
+    Sound.resume();
+    if (Game.turnReady()) {
+      closeYearPop();
+      UI.openSheet('turn');
+      return;
+    }
+    if (el.yearPop.hidden) openYearPop(); else closeYearPop();
+  }
+
   function popWallet(name) {
     const c = counters[name];
     if (!c) return;
@@ -552,6 +630,14 @@
   $('#btnSettings').addEventListener('click', () => UI.openSheet('settings'));
   $('#btnDev').addEventListener('click', () => UI.openSheet('dev'));
   $('#btnAlbum').addEventListener('click', () => UI.openSheet('album'));
+  el.walletYear.addEventListener('click', (e) => { e.stopPropagation(); onYearTap(); });
+  /* Anything else on screen dismisses the projection — it is a popover, not a
+     panel, and it must never be the thing standing between a tap and a plot. */
+  el.game.addEventListener('pointerdown', (e) => {
+    if (el.yearPop.hidden) return;
+    if (e.target.closest('#yearPop') || e.target.closest('#walletYear')) return;
+    closeYearPop();
+  }, true);
   $('#btnBonuses').addEventListener('click', () => UI.openSheet('bonuses'));
   el.questStrip.addEventListener('click', () => {
     Sound.resume();
@@ -804,6 +890,7 @@
       else if (UI.hollowOpen && UI.hollowOpen()) UI.renderHollow();
       else renderCritters();
       updateDockDots();
+      updateYearMeter();
       refreshCoach();
       UI.updateSky();
       if (UI.sheetMode() === 'settings') UI.syncAfford();

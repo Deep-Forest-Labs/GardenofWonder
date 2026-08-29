@@ -84,6 +84,15 @@ const Icons = (() => {
       <path d="M12 20.4v-7.2" stroke-width="2.4"/>
       <path d="M12 13.6C9.6 13.6 6 12.4 5.2 8.6c3.6-.8 6.4 1.6 6.8 5Z" fill="#69db7c"/>
       <path d="M12 12.6c1.4-2.8 4.2-4.6 6.8-4-.4 3.6-3.4 5.4-6.8 5.2Z" fill="#8ce99a"/>`),
+    /* Saved Seeds — the forever money. A cinched pouch with a seed on it, in a
+       green that is not the sprout button's and not any rarity's, so the second
+       currency is never mistaken for the go button or for a tier. */
+    pouch: S(`
+      <path d="M8.4 8.2h7.2c2.4 1.8 3.8 4.3 3.8 6.9 0 3-2.6 5.3-7.4 5.3S4.6 18.1 4.6 15.1c0-2.6 1.4-5.1 3.8-6.9Z" fill="#fff3bf"/>
+      <path d="M8.4 8.2c-.6-1.3-.4-2.6.6-3.4 1.4-1.1 4.6-1.1 6 0 1 .8 1.2 2.1.6 3.4" fill="#ffd8a8"/>
+      <path d="M12 17.4c-2.1 0-3.4-1.4-3.6-3.6 2.4-.3 3.8 1 3.6 3.6Z" fill="#3f9d45" stroke-width="1.5"/>
+      <path d="M12 17.4c.2-2.6 1.6-3.9 4-3.6-.2 2.2-1.5 3.6-3.6 3.6Z" fill="#7bd88f" stroke-width="1.5"/>
+      <path d="M12 17.4v-2.2" stroke-width="1.5"/>`),
     lock: S(`
       <rect x="4.6" y="10.4" width="14.8" height="10" rx="3" fill="#ffd8a8"/>
       <path d="M8.2 10.2V7.8a3.8 3.8 0 0 1 7.6 0v2.4"/>

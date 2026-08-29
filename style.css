@@ -29,6 +29,14 @@
   --soil-dd:#5f3a1e;
 
   /* currency */
+  /* Saved Seeds — the forever money, and the one new token the Garden Year's
+     surface adds. Deliberately not gold (that is coins), not cyan (gems), and
+     clear of all three rarity colours: a player has learned blue/purple/gold
+     means a tier, and doc 05 forbids borrowing that vocabulary for anything
+     else. */
+  --seed:#7bd88f;
+  --seed-d:#3f9d45;
+  --seed-l:#c9f5cf;
   --coin:#ffc93c;
   --coin-d:#f08c00;
   --ticket:#ff8fab;
@@ -333,9 +341,69 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .wallet.pop{animation:walletPop .34s cubic-bezier(.34,1.56,.64,1)}
 @keyframes walletPop{0%{transform:scale(1)}40%{transform:scale(1.18) rotate(-3deg)}100%{transform:scale(1)}}
+/* THE YEAR METER — the third pill, and the meter IS the pill. Its own body
+   fills as the year does, so it costs the HUD no more width than a third wallet
+   and needs no second row for a bar. It carries no number: three numbered
+   wallets do not fit beside three round buttons at 390px, and a HUD that
+   changes shape as you earn is worse than a number one tap away. The reasoning
+   and the two alternatives are in docs/35-morning-review.md. */
+.wallet.meter{
+  position:relative;overflow:hidden;isolation:isolate;
+  padding:5px 10px;font:inherit;color:var(--ink);
+}
+.meter-fill{
+  position:absolute;left:0;top:0;bottom:0;z-index:-1;
+  width:var(--year-p,0%);
+  background:linear-gradient(180deg,var(--seed-l),var(--seed));
+  border-right:2px solid rgba(44,26,16,.22);
+  transition:width .6s ease;
+}
+.wallet.meter:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink-2), 0 4px 8px rgba(44,26,16,.18)}
+/* Full uses the same 1.4s breath every affordable price in the game uses — a
+   player has met it on every buyable thing and it means "you can have this now". */
+.wallet.meter.full{animation:affordPulse 1.4s ease-in-out infinite}
+
 .w-icon{width:22px;height:22px;display:block;flex:none}
 .w-icon svg{width:100%;height:100%;display:block}
 .w-num{min-width:1ch}
+
+/* THE PROJECTION. What the meter is counting, and — when it is not full — which
+   of the two Turn gates is still short. "Why can't I turn yet" has to be
+   answerable without a wiki, so both gates are drawn as tracks. It deliberately
+   shows the UN-TALLIED increment and never the tallied pouch: the multiplier is
+   the ceremony's fireworks and quoting it here would spoil the only piece of
+   theatre the Turn has. */
+.year-pop{
+  position:absolute;top:calc(100% + 9px);left:0;z-index:8;
+  width:min(268px, 100%);
+  padding:11px 12px;
+  border:3.5px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 5px 0 var(--ink-2), 0 10px 18px rgba(44,26,16,.28);
+  animation:popIn .22s cubic-bezier(.34,1.56,.64,1);
+}
+.year-pop[hidden]{display:none}
+@keyframes popIn{0%{transform:translateY(-6px) scale(.94);opacity:0}100%{transform:none;opacity:1}}
+.year-pop::before{
+  content:'';position:absolute;left:var(--tail,24px);top:-12px;width:18px;height:12px;
+  background:#fffdf7;clip-path:polygon(50% 0,100% 100%,0 100%);
+  border-left:3.5px solid var(--ink);border-right:3.5px solid var(--ink);
+}
+.yp-cap{margin:0 0 5px;font-size:11.5px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-soft)}
+.yp-num{display:flex;align-items:center;gap:7px;font-size:29px;font-weight:800;line-height:1;
+  font-variant-numeric:tabular-nums}
+.yp-num svg{width:26px;height:26px}
+.yp-sub{margin:6px 0 0;font-size:11.5px;font-weight:700;color:var(--ink-soft);line-height:1.35}
+.yp-gate{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px;font-weight:800}
+.yp-gate .lab{width:46px;flex:none}
+.yp-gate .track{flex:1;height:12px;border-radius:999px;border:2.5px solid var(--ink);
+  background:#e9dcc3;overflow:hidden;position:relative}
+.yp-gate .track i{position:absolute;left:0;top:0;bottom:0;
+  background:linear-gradient(180deg,#ffe066,var(--coin))}
+.yp-gate.met .track i{background:linear-gradient(180deg,#8ce99a,#51cf66)}
+.yp-gate .val{flex:none;font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.yp-gate.met .val svg{width:15px;height:15px;vertical-align:-3px}
 
 .hud-actions{display:flex;gap:6px;flex:none}
 .round-btn{
@@ -647,6 +715,17 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:var(--weather-tint,transparent);
   opacity:0;transition:opacity var(--weather-fade) ease, background var(--weather-fade) ease;
   mix-blend-mode:multiply;
+}
+/* The year ripening — Summer's palette warming toward autumn as the meter
+   fills. Visual only, derived from the meter every slow tick and never saved;
+   it sits UNDER the weather tint, so a storm in a late year still reads as a
+   storm and the day/night cycle keeps running under both. */
+.season-tint{
+  position:absolute;inset:0;pointer-events:none;
+  background:var(--season-c,#ffb066);
+  opacity:var(--season-o,0);
+  mix-blend-mode:multiply;
+  transition:opacity 1.4s ease;
 }
 .game[data-weather="rain"] .scenery::after{opacity:.30}
 .game[data-weather="storm"] .scenery::after{opacity:.52}
@@ -1035,6 +1114,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .sheet.open{transform:translateY(0);box-shadow:0 -8px 30px rgba(44,26,16,.32)}
 .sheet.dragging{transition:none}
+/* The ceremony, after it commits. closeSheet() refuses while the Tally rolls;
+   these two hide the controls that would otherwise invite the tap it refuses. */
+.sheet.no-exit .sheet-head .round-btn.ghost{display:none}
+.sheet.no-exit .sheet-grip span{opacity:.25}
+.sheet.no-exit .sheet-grip{touch-action:auto;cursor:default}
 
 .sheet-grip{padding:9px 0 3px;display:grid;place-items:center;touch-action:none;cursor:grab}
 .sheet-grip span{width:52px;height:6px;border-radius:999px;background:rgba(44,26,16,.28)}
@@ -1069,6 +1153,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   font-size:13px;font-weight:600;opacity:.72;
   margin:0 0 10px;line-height:1.35;
 }
+.cere .sheet-note.centred{margin:14px 0 0}
 
 /* ---------- cards ---------- */
 .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
@@ -1312,6 +1397,23 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .almanac-row-top .r-legend{color:#f08c00;opacity:1}
 .almanac-row-top .c{flex:0 0 46px;font-size:13px;font-weight:800;
   font-variant-numeric:tabular-nums;color:#2b8a3e;text-align:right}
+/* A petal track: name, pips, price. The pips are the game's existing level
+   vocabulary in the seed's own green, so a player reads "3 of 5" without a
+   fraction. The price is the ordinary .price family in the three states they
+   already know — green affordable, drained short, grey MAX. */
+.petal-track{display:flex;align-items:center;gap:8px;margin-top:6px}
+.petal-track .pl{width:88px;flex:none;font-size:11.5px;font-weight:800}
+.petal-track .sp{flex:1}
+.petal-track .pips{flex:none;gap:3px}
+.petal-track .pip{width:10px;height:10px;background:var(--seed);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.4)}
+.petal-track .pip.off{background:var(--paper-dim-2);box-shadow:none}
+.petal-buy{font:inherit;color:var(--ink);cursor:pointer;
+  font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.petal-buy:active{transform:translateY(2px);box-shadow:0 0 0 var(--ink-2)}
+.petal-buy[disabled]{cursor:default}
+.pouch-note{display:flex;align-items:center;gap:7px;opacity:1}
+
 .almanac-row-goal{display:flex;align-items:center;gap:8px;margin-top:3px}
 .almanac-row-goal .g{flex:0 0 auto;font-size:11px;font-weight:700;opacity:.6;
   display:inline-flex;align-items:center;gap:3px}
@@ -1385,6 +1487,154 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    price in this game. The magic purple next door is the Epic rarity's family
    and is not available for a buy button. */
 .big-btn.yes{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.big-btn[disabled]{filter:grayscale(.6) opacity(.55)}
+
+
+/* =========================================================
+   THE TURN — the ceremony
+   Five beats on one sheet. The plate runs the garden's own four value tiers
+   indoors: ink outline, a DARK body, cream pills for every number, .outlined
+   for the big ones. That is why an arcade scoreboard can be this loud without
+   leaving the house style.
+   ========================================================= */
+.sheet.cere-sheet{height:min(94dvh, 800px)}
+.sheet.cere-sheet .sheet-body{display:flex;flex-direction:column}
+.cere{flex:1;display:flex;flex-direction:column;justify-content:center}
+/* The picker starts at the top instead: with every flower unlocked the grid is
+   seven rows and fills the sheet, and a list that centres itself when short and
+   fills when long jumps around as the garden grows. */
+.cere.top{justify-content:flex-start}
+.cere .btn-row{padding-top:16px;display:grid;gap:8px}
+.centred{text-align:center}
+
+/* The flower stands IN the body, not in #sheetArt: a sheet this tall has no
+   room above its own top edge and the breakout art clips off the screen. */
+.cere-flower{display:grid;place-items:center;margin:0 0 10px}
+.cere-flower svg{width:132px;height:132px;filter:drop-shadow(0 6px 0 rgba(44,26,16,.22))}
+
+.speech-block{
+  position:relative;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  padding:11px 13px;
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.2);
+  font-size:16px;font-weight:800;line-height:1.3;
+}
+.speech-block::after{
+  content:'';position:absolute;left:24px;top:-9px;width:14px;height:14px;
+  background:#fffdf7;border-left:3px solid var(--ink);border-top:3px solid var(--ink);
+  border-radius:3px 0 0 0;transform:rotate(45deg);
+}
+
+.plate{
+  position:relative;margin-top:12px;
+  border:4px solid var(--ink);border-radius:var(--r-lg);
+  padding:14px 14px 12px;
+  background:
+    repeating-linear-gradient(96deg, rgba(255,255,255,.06) 0 3px, transparent 3px 14px),
+    linear-gradient(180deg,#8a5a33 0%, #71472a 46%, #5c3a22 100%);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.2),
+    inset 0 -8px 0 rgba(0,0,0,.22),
+    0 6px 0 #4a2e1a,
+    0 12px 20px rgba(44,26,16,.3);
+}
+/* The won state adds a rim and restates the whole stack — a box-shadow modifier
+   that forgets to is how the lip gets deleted in the one state everybody looks at. */
+.plate.won{
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.2),
+    inset 0 -8px 0 rgba(0,0,0,.22),
+    0 6px 0 #4a2e1a,
+    0 12px 20px rgba(44,26,16,.3),
+    0 0 0 4px var(--coin);
+}
+.plate-cap{margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;color:#f6e3c4;opacity:.85;text-align:center}
+.plate-big{display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:clamp(36px,11vw,46px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.plate-big svg{width:34px;height:34px}
+
+/* A Tally line. The counter is a cream pill and the bonus is the same green
+   every affordable price wears, because a bonus is the biggest yes the game has. */
+.tline{display:flex;align-items:center;gap:8px;margin-top:8px}
+.tline.just{animation:tlineIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tlineIn{0%{transform:translateX(26px);opacity:0}100%{transform:none;opacity:1}}
+.tline .lab{flex:1;min-width:0;font-size:13.5px;font-weight:800;color:#fff4de;line-height:1.15;
+  text-shadow:0 2px 0 rgba(44,26,16,.5)}
+.tline .cnt{font-variant-numeric:tabular-nums}
+.tline .bon{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.tfoot{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:12px}
+.tfoot.centred{justify-content:center}
+.tfoot .plate-cap{margin:0}
+.tmult{font-size:34px;font-weight:800;line-height:1}
+
+.cost-line{
+  display:flex;align-items:center;gap:8px;margin-top:11px;padding:9px 11px;
+  border:3px solid var(--ink);border-radius:var(--r-sm);
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 3px 0 var(--paper-dim-edge);
+  font-size:12.5px;font-weight:700;line-height:1.35;
+}
+.cost-line svg{width:22px;height:22px;flex:none}
+.keep-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+
+/* The blessing. A grid of blooms, not a list of rows: the only decision here is
+   WHICH flower, so cost, yield and verb would all be noise. */
+.bless-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:4px}
+.bless-tile{
+  display:grid;justify-items:center;gap:3px;padding:9px 4px 7px;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fff,#fff5e2);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.2);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.bless-tile:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink-2), 0 4px 8px rgba(44,26,16,.2)}
+.bless-tile.on{
+  background:linear-gradient(180deg,#fff6c2,#ffe066);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.2), 0 0 0 4px rgba(255,201,60,.55);
+}
+.bless-art{
+  width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)),
+    var(--art,#e8f7e3);
+  border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2);
+}
+.bless-name{font-size:11.5px;font-weight:800;line-height:1.1;text-align:center}
+.bless-tile .pip{width:9px;height:9px;background:var(--seed)}
+.bless-tile .pip.off{background:var(--paper-dim-2)}
+
+/* The gate. The reset pays in PLACES first and numbers second, so the place
+   gets the picture and the seeds get a chip. */
+.gate-card{
+  position:relative;overflow:hidden;margin-top:12px;
+  border:4px solid var(--ink);border-radius:var(--r-lg);
+  box-shadow:0 5px 0 var(--ink-2), 0 10px 18px rgba(44,26,16,.26);
+}
+.gate-scene{position:relative;height:126px;background:linear-gradient(180deg,#ffd9a1,#ffb570 62%,#e88f4e)}
+.gate-scene .hedge{
+  position:absolute;bottom:0;width:40%;height:106px;
+  border:3px solid var(--ink);border-radius:34px 34px 6px 6px;
+  background:
+    radial-gradient(circle at 26% 20%, rgba(255,255,255,.2) 0 14%, transparent 16%),
+    radial-gradient(circle at 68% 34%, rgba(0,0,0,.14) 0 12%, transparent 14%),
+    linear-gradient(180deg,#4d9150 0%, #3f7d43 46%, #2f6236 100%);
+  box-shadow:inset 0 6px 0 rgba(255,255,255,.16), inset 0 -8px 0 rgba(0,0,0,.18);
+}
+.gate-scene .hedge.l{left:0;transform:translateX(-30%) rotate(-7deg);transform-origin:bottom left;
+  animation:gateL .9s cubic-bezier(.22,1,.28,1) both}
+.gate-scene .hedge.r{right:0;transform:translateX(30%) rotate(7deg);transform-origin:bottom right;
+  animation:gateR .9s cubic-bezier(.22,1,.28,1) both}
+@keyframes gateL{0%{transform:none}100%{transform:translateX(-30%) rotate(-7deg)}}
+@keyframes gateR{0%{transform:none}100%{transform:translateX(30%) rotate(7deg)}}
+.gate-bloom{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:62px;line-height:0}
+.gate-bloom svg{width:100%;height:auto}
+.gate-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 12px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border-top:3px solid var(--ink);font-size:15px;font-weight:800;
+}
 
 /* =========================================================
    OVERLAYS
@@ -1514,6 +1764,16 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 @media (max-height:600px){
   .rail{display:none}
+}
+/* The HUD tightens on a narrow screen, and it has to: with the year meter beside
+   them, three wallets and three round buttons do not fit 390px at full size —
+   they wrap, and the wrap comes and goes as the numbers grow. Same values the
+   short-screen block above uses, promoted to apply on narrow WIDTH too. */
+@media (max-width:430px){
+  .wallet{font-size:14px;padding:4px 9px 4px 5px}
+  .w-icon{width:19px;height:19px}
+  .round-btn{width:40px;height:40px}
+  .round-btn svg{width:21px;height:21px}
 }
 @media (min-width:600px) and (min-height:760px){
   .ui{padding-left:calc(var(--sal) + 16px);padding-right:calc(var(--sar) + 16px)}

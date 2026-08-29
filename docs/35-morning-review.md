@@ -24,8 +24,20 @@ Everything below is reachable from the live URL. Do it in this order.
 | 6 | Frames 7 → 8 → 9 | Filling → one from ready → armed. | Whether the windfall rule can be misread. |
 | 7 | Frame 11 | The Century Bloom, and the bed still armed at seven. | The exception that stops a fortnight parking the windfall. |
 
-*(This table grows as the night does — the built-game steps land under it as each phase ships. If
-the run stopped early, the sections below say exactly where.)*
+**Then the built game, from the live URL.** Developer tools is the unlabelled dot right of the gem
+wallet.
+
+| # | Where | What to do | What you are judging |
+| --- | --- | --- | --- |
+| 8 | The garden | Look at the HUD. Third pill, green, no number. | Does the meter read as a meter without a number on it? |
+| 9 | Dev → **Drive a year** | Tap it a few times and watch the pill fill and the garden warm. | The season tint. It is the only tuning I invented. |
+| 10 | Tap the pill | Short of full, it shows the projection. | Can you tell *why* you cannot turn yet? |
+| 11 | Dev → drive until the pill pulses, then tap it | The ceremony. Read the ask, bless a flower, watch the Tally. | ***Gift or loss?*** — the whole rubric, in one screen. |
+| 12 | Almanac (the book button) | Petal tracks on any flower you have grown. Buy one. | Does the pouch have somewhere to go? |
+| 13 | Tap an empty plot | The picker. Locked rows wear their price. | Is the wall legible, and is the confirm worth its tap? |
+
+*(This table grows as the night does. If the run stopped early, the sections below say exactly
+where.)*
 
 ---
 
