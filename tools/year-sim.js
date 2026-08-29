@@ -15,13 +15,21 @@
        the competent version of the same cadence).
 
    THE VERDICT CAN FAIL. When a cheap-Turn shape beats casual on lifetime
-   coins or on Saved Seeds minted, the tool says so and exits non-zero. As of
-   2026-08-29 it DOES fail at the spec constants — sqrt(coinsEarned) plus
-   uncapped veterancy make frequent 100K Turns strictly seed-optimal, and
-   Turn-surviving Fall beds launder the pre-Turn wallet (the gauntlet's
-   blocker finding; docs/11-known-issues.md and docs/33 carry the numbers).
-   The dials are the owner's: minCoins, veterancy, mintK — a phase-4
-   decision. Do not "fix" this tool to pass; fix the data, then it passes.
+   coins or on Saved Seeds minted, the tool says so and exits non-zero. It
+   failed for one day at the original spec constants — sqrt(coinsEarned) plus
+   uncapped veterancy made frequent 100K Turns strictly seed-optimal — and it
+   PASSES as of 2026-08-29 (phase 1.1), when the owner ruled the mint
+   cumulative: the pool is 0.1*sqrt(lifetimeCoins) less what has been drawn,
+   so no cadence can out-mint another. Do not "fix" this tool to pass; fix the
+   data, then it passes.
+
+   WHAT THE EXIT CODE DOES NOT COVER: the blessing. One free Rich Bloom petal
+   per Turn is a per-turn CONSTANT on a now-split-neutral base, and 95 Turns
+   fill every flower's Rich Bloom ladder — 318,189 Saved Seeds of value — for
+   ~101M lifetime coins. The report separates blessed petals from bought ones
+   and discloses this beneath the verdict; it is not failed on, because the
+   blessing is a ceremony beat (docs/32) and the owner's next decision rather
+   than this tool's to call. See docs/11-known-issues.md.
 
    The play model is deliberately simple and its knobs sit at the top.
    Calibrate the MODEL knobs to represent a person; never calibrate the
@@ -247,6 +255,7 @@ function maybeTurn(strategy, results) {
     pouch: r.pouch,
     tallyMult: r.tally.mult,
     petals,
+    blessed: r.blessed ? 1 : 0,
     seedsLeft: S.savedSeeds
   });
   results.yearStart = clock;
@@ -272,14 +281,21 @@ function run(strategy, days) {
     }
     results.trailingIncome = Math.max(1, cumEarnedNow() - lifetimeAtDayStart);
     lifetimeAtDayStart = cumEarnedNow();
+    /* Petals owned are split, because the blessing is a PER-TURN grant and
+       lumping it in with bought petals hides exactly the thing a cadence
+       strategy is farming. */
+    const blessedSoFar = results.turns.reduce((a, t) => a + t.blessed, 0);
+    const owned = DATA.seeds.reduce((a, s) => {
+      const p = G.petalsOf(s.id);
+      return a + p.rich + p.quick;
+    }, 0);
     results.snapshots.push({
       day: day + 1,
       cumEarned: Math.round(cumEarnedNow()),
       savedSeedsMinted: results.turns.reduce((a, t) => a + t.pouch, 0),
-      petalsOwned: DATA.seeds.reduce((a, s) => {
-        const p = G.petalsOf(s.id);
-        return a + p.rich + p.quick;
-      }, 0),
+      petalsOwned: owned,
+      petalsBlessed: blessedSoFar,
+      petalsBought: owned - blessedSoFar,
       turns: results.turns.length
     });
   }
@@ -298,7 +314,7 @@ const report = (r) => {
     console.log(`  Turn ${t.turn}: day ${t.day.toFixed(2)} · year earned ${t.earned.toLocaleString()} · pouch ${t.pouch} (x${t.tallyMult.toFixed(2)}) · ${t.petals} petals bought · ${t.seedsLeft} seeds left`);
   });
   const last = r.snapshots[r.snapshots.length - 1];
-  console.log(`  end of day ${last.day}: lifetime earned ${last.cumEarned.toLocaleString()}, ${last.savedSeedsMinted} seeds minted, ${last.petalsOwned} petals owned, ${last.turns} turns`);
+  console.log(`  end of day ${last.day}: lifetime earned ${last.cumEarned.toLocaleString()}, ${last.savedSeedsMinted} seeds minted, ${last.petalsOwned} petals owned (${last.petalsBought} bought + ${last.petalsBlessed} blessed), ${last.turns} turns`);
 
   if (r.strategy === 'casual') {
     const t1 = r.turns[0];
@@ -329,7 +345,7 @@ if (strategy === 'all') {
   const day = Math.min(days, 10);
   const rows = [casual, rush, smart].map((r) => ({ r, s: r.snapshots[day - 1] }));
   rows.forEach(({ r, s }) => {
-    console.log(`  day ${day}  ${r.strategy.padEnd(6)}: earned ${s.cumEarned.toLocaleString().padStart(11)} · minted ${String(s.savedSeedsMinted).padStart(6)} seeds · ${s.petalsOwned} petals · ${s.turns} turns`);
+    console.log(`  day ${day}  ${r.strategy.padEnd(6)}: earned ${s.cumEarned.toLocaleString().padStart(11)} · minted ${String(s.savedSeedsMinted).padStart(6)} seeds · ${String(s.petalsBought).padStart(3)} petals bought + ${String(s.petalsBlessed).padStart(3)} blessed · ${s.turns} turns`);
   });
   const c = rows[0].s;
   const beats = rows.slice(1).filter(({ r, s }) => {
@@ -341,17 +357,33 @@ if (strategy === 'all') {
   });
   if (beats.length) {
     console.log('  VERDICT: FAIL — a cheap-Turn cadence is profitable against normal play.');
-    console.log('  This is the spec-level exploit on record (docs/11-known-issues.md, docs/33).');
+    console.log('  The cumulative mint is supposed to make this impossible by construction, so');
+    console.log('  this is a REGRESSION, not the old known exploit: something is paying per Turn');
+    console.log('  again. Check that mintedBase moves by the un-tallied increment, that the pool');
+    console.log('  reads lifetimeCoins, and that no per-turn multiplier has come back.');
     const goldToo = rows.slice(1).some(({ s }) => s.cumEarned > c.cumEarned);
     console.log(goldToo
       ? '  It wins on GOLD as well as seeds — the strongest form of the break.'
-      : '  It is a SEEDS-ONLY break: normal play out-earns it in gold, so the mint shape\n'
-        + '  (mintK / veterancy) is the dial, not the coins floor.');
-    console.log('  The dials are minCoins / veterancy / mintK in DATA.year — the owner\'s call.');
+      : '  It is a SEEDS-ONLY break: normal play out-earns it in gold.');
+    console.log('  The dials are minCoins / minSeeds / mintK in DATA.year — the owner\'s call.');
     process.exitCode = 1;
   } else {
-    console.log('  VERDICT: OK — every cheap-Turn shape loses to normal play.');
+    console.log('  VERDICT: OK — every cheap-Turn shape loses to normal play on gold and on');
+    console.log('  Saved Seeds minted, which are the two currencies the mint controls.');
   }
+  /* The blessing is NOT one of them, and this verdict does not cover it. One
+     free Rich Bloom petal per Turn is a per-Turn CONSTANT sitting on top of a
+     mint that is now split-neutral by construction, so it is the one term a
+     cadence can still farm — and the blessed column above is where it shows.
+     Reported rather than failed on: the exit code answers the question the
+     owner ruled on, and the blessing is a ceremony beat (docs/32, beat 3), so
+     changing it is the owner's next decision, not this tool's verdict. The
+     arithmetic is in docs/11-known-issues.md. */
+  const blessRows = rows.map(({ r, s }) => `${r.strategy} ${s.petalsBlessed}`).join(' · ');
+  console.log(`\n  DISCLOSURE — free petals from the blessing, which no gate prices: ${blessRows}.`);
+  console.log('  The blessing pays one Rich Bloom petal PER TURN regardless of earnings, so it is');
+  console.log('  the term a cadence still farms. 95 Turns fill every flower\'s Rich Bloom ladder');
+  console.log('  (318,189 Saved Seeds of value) for ~101M lifetime coins. See docs/11-known-issues.md.');
 } else {
   report(run(strategy, days));
 }

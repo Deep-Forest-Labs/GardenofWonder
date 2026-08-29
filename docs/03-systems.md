@@ -872,10 +872,11 @@ save cannot pass Tulip because the unlock rows arrive in phase 2. All three are 
 
 **`Game.credit(amount, {cheat, refund})` is the single credit faucet.** Every grant —
 taps, harvests, orders, sales, keepsakes, quest gold, level coins, the offline grant in
-`reconcile()` — routes through it, so `state.year.coinsEarned` (the mint's whole input)
-counts by construction. `cheat: true` (the dev gold buttons) and `refund: true` (migrations,
-failed purchases) skip the accumulator. **A raw `state.credits +=` anywhere is a bug** —
-sim-test bill item 4 hunts them.
+`reconcile()` — routes through it, so **both** earnings accumulators count by construction:
+`state.year.coinsEarned` (this year, zeroed at the Turn, opens the coins gate) and
+`state.lifetimeCoins` (never reset, sizes the mintable pool). `cheat: true` (the dev gold
+buttons) and `refund: true` (migrations, failed purchases) skip both together. **A raw
+`state.credits +=` anywhere is a bug** — sim-test bill item 4 hunts them.
 
 **Seed unlocks:** seeds 3+ carry a one-time gold price, `DATA.year.unlockBase ×
 unlockRatio^(n−3)` (150K at ×1.5), permanent across Turns, stored in `state.seedUnlocks`.
@@ -900,9 +901,20 @@ bestCombo — written where the events happen and never read from lifetime recor
 `projectedTally()` walks `DATA.year.tally`: tier bonuses within a line **accumulate**
 (47 orders pays tiers 1 and 2 together, +25% — the doc's own ×1.25 example), lines sum,
 and the multiplier clamps at `tallyCap`. A line that scored no bonus is not returned at
-all. `projectedMint()` is `mintK × sqrt(coinsEarned) × (1 + veterancy × turnsCompleted) ×
-tally`, and `turnReady()` demands both gates: projected mint ≥ `minSeeds` AND
-`coinsEarned ≥ minCoins`.
+all.
+
+**The mint is cumulative** (the owner's ruling, 2026-08-29; the shape before it was
+`sqrt(coinsEarnedThisYear)` times a per-turn veterancy multiplier, which made splitting the
+year strictly profitable). `projectedMint()` returns `total = mintK × sqrt(lifetimeCoins)` —
+the whole pool the garden will ever mint — and `base`, the undrawn part of it,
+`max(0, total − mintedBase)`; the pouch is `round(base × tally)`. `turnYear()` then adds the
+**un-tallied** `base` to `state.mintedBase`, so the Tally is a gift rather than a loan and the
+sum of every Turn's draw can never exceed the pool. **`DATA.year.veterancy` is deleted** —
+turn count moves no part of the projection, because any per-turn term re-arms the split.
+`turnReady()` demands both gates: the un-tallied increment ≥ `minSeeds` AND
+`coinsEarned ≥ minCoins`. Neither ledger is ever reset, by the Turn or anything else; a save
+from before the ruling inherits `lifetimeCoins` from the year it is standing in (see
+[07-save-data.md](07-save-data.md#the-ledger-migration--phase-1-saves-added-2026-08-29-phase-11)).
 
 **`turnYear(blessedId)` is atomic** — collect, bank, mint, bless, clear, roll over,
 `saveNow()`, in one commit. In-flight rules first: ready blooms auto-collect through the

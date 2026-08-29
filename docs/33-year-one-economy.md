@@ -1,9 +1,10 @@
 # The Year-One Economy — the retune
 
-**Status: specification 2026-08-29; the ENGINE HALF IS BUILT — phase 1 landed the same day.**
-Every number below now lives in `data.js` (`DATA.year`, `DATA.petals`, `DATA.fall`),
-`Game.credit()` is wired through every faucet, and sim-test bill items 1–6 and 8–18 are
-asserted in `tools/sim-test.js` (item 7 waits for slice B). What is built is simulation only —
+**Status: specification 2026-08-29; the ENGINE HALF IS BUILT — phase 1 landed the same day,
+and phase 1.1 rebuilt the mint on the owner's cumulative ruling.** Every number below now
+lives in `data.js` (`DATA.year`, `DATA.petals`, `DATA.fall`), `Game.credit()` is wired
+through every faucet, and sim-test bill items 1–6, 8–17b and 18 are asserted in
+`tools/sim-test.js` (item 7 waits for slice B; the suite stands at 1,121). What is built is simulation only —
 the surfaces arrive in phases 2–3. See
 [03-systems.md](03-systems.md#the-garden-year--the-engine-simulation-only) for the engine as
 it exists. The numbers for
@@ -20,16 +21,18 @@ The frozen-port seed table survives on purpose. What changes is everything aroun
 1. **`yield = cost × 1.4` at Common holds for every seed, including new Fall/Winter plants.**
    The wall never comes from a worse ratio; it comes from the unlock prices below. Petal and
    verb and mutation effects all apply off the yield curve, `masteryMult`-style.
-2. **The mint reads earnings, never balance.** `state.year.coinsEarned` is a
-   lifetime-this-year accumulator, never decremented. **Every credit grant routes through one
-   helper — `Game.credit(amount, { cheat, refund })` — which increments the accumulator unless
-   flagged**, so taps, harvests, orders, jar sales, quest gold and the offline grant in
-   `reconcile()` all count by construction, and no future faucet can silently miss it. Spending
-   is seed-neutral, and a sim-test asserts it (buy everything one tick before the Turn; the
-   pouch must not change).
+2. **The mint reads earnings, never balance.** Two accumulators, both written only by
+   `Game.credit(amount, { cheat, refund })` and neither ever decremented:
+   `state.year.coinsEarned` is this year's earnings and opens the coins gate;
+   **`state.lifetimeCoins` never resets and is what sizes the mintable pool.** Every grant —
+   taps, harvests, orders, jar sales, quest gold, the offline grant in `reconcile()` — routes
+   through the one helper, so both count by construction and no future faucet can silently
+   miss either. Spending is seed-neutral, and a sim-test asserts it (buy everything one tick
+   before the Turn; the pouch must not change).
 3. **Cheated grants are excluded from the mint.** The dev/cheat paths call `credit()` with
-   `cheat: true` (and migrations with `refund: true`), skipping `coinsEarned`. Testers keep
-   their buttons; the pacing data stays clean.
+   `cheat: true` (and migrations with `refund: true`), skipping **both** accumulators — the
+   pool is permanent, so a cheated coin in it would never wash out. Testers keep their
+   buttons; the pacing data stays clean.
 4. **Gems touch none of this.** No gem → petal path, no gem → unlock path, no per-seed gem skill.
 
 ## Unlock prices — where the spread lives
@@ -76,32 +79,85 @@ their lifetime-level gates. The level ladder's freed rewards are re-authored bel
 
 ## Saved Seeds — the mint
 
+**The mint is CUMULATIVE — the owner's ruling, 2026-08-29.** The whole pool a garden will
+ever mint is sized by **lifetime** earnings; a Turn draws whatever part of that pool has not
+been drawn yet, and the Tally multiplies the draw on the way out without consuming it.
+
 ```
-base  = DATA.year.mintK × sqrt(coinsEarnedThisYear) × (1 + DATA.year.veterancy × turnsCompleted)
-pouch = round( base × tally )                      // tally ∈ [1.0, DATA.year.tallyCap]
-mintK = 0.1   veterancy = 0.2   minSeeds = 10   minCoins = 100,000   tallyCap = 2.0   // DATA.year
+totalMintable = DATA.year.mintK × sqrt(state.lifetimeCoins)   // the pool, ever
+increment     = totalMintable − state.mintedBase              // what is left to draw
+pouch         = round( increment × tally )                    // tally ∈ [1.0, tallyCap]
+at the Turn:    state.mintedBase += increment                 // the UN-TALLIED increment
+
+mintK = 0.1   minSeeds = 10   minCoins = 100,000   tallyCap = 2.0   // DATA.year
 ```
 
-**The Turn requires both gates: projected mint ≥ `minSeeds` AND `coinsEarned ≥ minCoins`.** The
-coins floor exists because the full-model sim found the seeds-only gate is reached at ~8K coins,
-enabling a **daisy petal rush** — several Turns a day into cheap Daisy petals, 36% faster to the
-first million than intended play. One number closes it (verified).
+`state.lifetimeCoins` and `state.mintedBase` are **top-level and never reset** — not by the
+Turn, not by anything. `lifetimeCoins` is fed by `Game.credit()` beside `year.coinsEarned`
+and skips the same cheated and refunded grants; `mintedBase` moves only at the Turn, and only
+by the **un-tallied** increment, so a well-played year's fireworks are a gift rather than a
+loan against its own future seeds.
 
-> **PHASE 1's GAUNTLET FALSIFIED THE ECONOMIC HALF OF THIS, 2026-08-29 — an owner decision is
-> open.** The gates hold exactly as specified (sim-tested), but the *cadence* they permit is
-> strictly profitable: `sqrt(coinsEarned)` means four 100K years mint ~2.6× one 400K year, the
-> uncapped veterancy term compounds with turn count, and **Fall beds — which rightly survive the
-> Turn — let the doomed pre-Turn wallet be converted into next-year income** (eight apples pay
-> 806K per 8-hour fill; one windfall apple alone clears the 100K floor). Measured through the
-> real engine over 12 modeled days: a player who plays normally but turns at every 100K gate
-> mints **~20× the Saved Seeds of the wall-riding player** at ~8 Turns/day — while **losing to
-> them on gold by ~2.7×**, so this is a **seeds-only break** and the mint's shape is the dial,
-> not the coins floor. `node tools/year-sim.js 12 all` reproduces it and **exits non-zero until
-> it is resolved**. The strategy session's review has since measured four fixes and recommends
-> **the cumulative mint** (lifetime accumulator, mint the increment, Tally on top, veterancy
-> deleted — any per-turn multiplier on a split-neutral base re-arms the break); see the
-> 2026-08-29 review entry in [10-decision-log.md](10-decision-log.md). **The ruling is the
-> owner's**; the engine implements this spec faithfully in the meantime.
+**The Turn requires both gates: the un-tallied `increment` ≥ `minSeeds` AND `coinsEarned` ≥
+`minCoins`.** The seeds gate reads the increment rather than the pouch because the increment
+is what the Turn actually spends from the pool — gating the tallied number would let a good
+year's Tally buy entry to a Turn the pool cannot pay for. The coins floor is unchanged and
+still keeps a year from being cashed in the hour it started.
+
+**`DATA.year.veterancy` is deleted.** Not capped — deleted. The phase-1 review measured that
+re-attaching *any* per-turn multiplier to a split-neutral base re-arms the split at 1.3–1.4×;
+a term that rewards turn count is the exploit, whatever its size.
+
+### Why cumulative, and what it bought
+
+The shape before this ruling was `mintK × sqrt(coinsEarnedThisYear) × (1 + veterancy ×
+turnsCompleted)`, and it was **strictly profitable to split the year**: four 100K years minted
+~2.6× one 400K year, veterancy compounded on top, and Fall beds laundered the doomed pre-Turn
+wallet. Measured through the real engine, a player who played normally but turned at every
+100K gate minted **~20× the Saved Seeds** of one who rode the year to its wall.
+
+Cumulative kills that **by construction** rather than by tuning: the pool depends on lifetime
+earnings alone, so the sum of every Turn's draw is the same number however the year is sliced.
+Measured over 12 modelled days after the change (`node tools/year-sim.js 12 all`, which now
+**exits zero**):
+
+| Day 10 | lifetime coins | Saved Seeds minted | petals bought | Turns |
+| --- | --- | --- | --- | --- |
+| casual (rides to the wall) | ~37–41M | **832–967** | 26–31 | 3–6 |
+| smart (turns at every gate) | ~23–29M | 563–610 | 17–21 | 25–28 |
+| rush (daisy-only probe) | ~1.5–1.7M | 147–168 | 7–9 | 9–10 |
+
+Normal play now wins on both currencies, with a stable ~1.5–1.6× margin on seeds across runs,
+and the Tally graduates from garnish to the economic teacher: a maxed year mints ×2.0 where a
+spam year manages ~×1.0–1.2, and the multiplier is pure upside because it never touches the
+ledger. **The first Turn is unchanged** — a first year *is* the lifetime, so it still pays
+~60–65 base seeds on a ~370–410K year.
+
+> **THE COST OF THE SHAPE, MEASURED — two consequences for phase 4's tuning chair, neither of
+> them a reason to keep the old mint.** The review named the first in advance; the second was
+> found while landing this patch.
+>
+> 1. **The lifetime seed supply is now hard-bounded at `0.1 × sqrt(lifetime coins)`**, where
+>    before it grew without limit through veterancy. The shared-skill sink below — 636,378
+>    Saved Seeds — needs **4.05 × 10¹³ lifetime coins**, about a million days at the measured
+>    late income of ~40M/day. A year of play at that income opens a pool of ~12,000 seeds.
+>    The sink is therefore not "months of headroom" any more; it is unreachable, and
+>    **"every Turn affords a similar 2–5 petals forever" is false at these constants** — the
+>    shipped tool measures 1 of 5 Turns in band against 4 of 7 before. The pair of exponents
+>    this document says must be tuned together (petal cost 1.25/level against the pouch's
+>    growth) is now genuinely mismatched. **`mintK` is the knob, and it is phase 4's** — the
+>    ruling was about the mint's *shape*, and re-pricing it against the petal ladder is a
+>    separate decision that wants playtest data.
+> 2. **The blessing is now the largest per-Turn grant in the game, and nothing prices it.**
+>    One free Rich Bloom petal per Turn is a per-turn *constant* sitting on a split-neutral
+>    base — the same family the review warned about, in a currency the mint does not control.
+>    Driven through the real engine: **95 Turns fill every flower's Rich Bloom ladder — all
+>    318,189 Saved Seeds of it, exactly half this sink — for ~101M lifetime coins, about 2.5
+>    days of play**, while the mint pays 997 seeds over the same span. It is pre-existing and
+>    the old mint had it too; what changed is that the mint no longer dwarfs it. Logged as
+>    the open decision in [11-known-issues.md](11-known-issues.md); `year-sim` discloses the
+>    blessed column beside the bought one rather than failing on it, because the exit code
+>    answers the question the owner ruled on.
 
 **Plots 5–8 cannot be bought in year one** — `turnsCompleted ≥ 1` joins their existing level
 gates, so the first year is played on four plots and **Turn 1's gift grows: Fall, and the right
@@ -147,9 +203,13 @@ it would read as mandatory). `mintK` is the counter-knob if playtest tallies run
 variedly*; it must never be the difference between progressing and not. The tiers rotate effect
 categories deliberately: demand (orders), Fall's ritual (windfalls), breadth (species), luck
 celebrated (legendaries), and the tap loop (combo). The two growth exponents that must stay matched:
-petal costs compound at 1.25/level while the pouch grows ~1.2–1.26/cycle, so **every Turn affords
-a similar 2–5 petals forever**, spread across a widening catalog. These two knobs are the pacing
-dials; tune them together or not at all.
+petal costs compound at 1.25/level while the pouch grows with `sqrt(lifetime)`. ~~**every Turn
+affords a similar 2–5 petals forever**~~ — **this no longer holds, and knowingly so.** Under
+the cumulative mint the shipped tool measures 1 of 5 Turns inside the 2–5 band where the old
+shape measured 4 of 7; the pouch's growth is now sublinear in lifetime earnings while petal
+costs still compound at 1.25/level, so the two exponents are genuinely mismatched. These two
+knobs are still the pacing dials and still tune together or not at all — **re-matching them is
+phase 4's, and `mintK` is the knob.**
 
 Sink runway, **recomputed from the shipped constants (2026-08-29, phase 1) rather than from the
 design session's estimate**: maxing both shared skills on all nineteen flowers costs
@@ -157,9 +217,15 @@ design session's estimate**: maxing both shared skills on all nineteen flowers c
 refuses signatures until slice B, which add **88,689** for a full total of **725,067**. (The
 design session's ~525K and ~679K were estimates from before the values landed; a sim-test now
 pins the 636K figure so the docs and the data cannot drift apart again — doc 33's own preamble
-asks for exactly that.) Against ~1.8K/day at the endgame faucet that is months of headroom
-before any deep petal, with `L20+` catalogs effectively aspirational. The sink stays ahead of
-the faucet without any petal being individually out of reach.
+asks for exactly that.) ~~Against ~1.8K/day at the endgame faucet that is months of headroom
+before any deep petal.~~ **Recomputed under the cumulative mint: the sink is unreachable, not
+merely deep.** The pool is `0.1 × sqrt(lifetime)` forever, so 636,378 seeds needs
+**4.05 × 10¹³ lifetime coins** — about a million days at the measured ~40M/day late income,
+where a whole year of play at that income opens ~12,000 seeds. Half of the sink (the 318,189
+of Rich Bloom) is meanwhile given away free by the blessing in 95 Turns; see the boxed note in
+[the mint](#saved-seeds--the-mint) and the open decision in
+[11-known-issues.md](11-known-issues.md). Both are `mintK`-and-petal-price questions for phase
+4, not reasons to restore a splittable mint.
 
 ## Petals — prices and effects
 
@@ -289,11 +355,16 @@ Re-price only on playtest evidence, and log it.
   them.
 - **New state** (all in `defaultState()` **and** the nested re-merge list in `load()`, and every
   new `data.js` global in the sim-test GLOBALS whitelist — the two documented save traps):
-  `year { number, coinsEarned, turnsCompleted }`, `savedSeeds`, `petals { seedId: { rich,
-  quick, sig } }`, `seedUnlocks { seedId: true }`, `fall { grid, … }`, `blessed`.
+  `year { number, coinsEarned, turnsCompleted }`, **`lifetimeCoins`**, **`mintedBase`**,
+  `savedSeeds`, `petals { seedId: { rich, quick, sig } }`, `seedUnlocks { seedId: true }`,
+  `fall { grid, … }`, `blessed`.
 - **Existing saves enter the Year mid-flight:** the current garden becomes year one in
   progress, and `coinsEarned` **starts at zero** — no lifetime coin figure exists anywhere in
-  the save, so there is nothing honest to backfill from; the meter simply starts low. Nobody
+  the save, so there is nothing honest to backfill from; the meter simply starts low. **A save
+  that already has a `year` but no ledgers** (anything written by phase 1, the owner's own
+  included) takes `lifetimeCoins` from the `year.coinsEarned` it is standing in and
+  `mintedBase = 0`, so that year is drawn exactly once — the same pouch the old formula would
+  have paid it at zero Turns, and never again. Nobody
   loses a seed they could plant: any seed with `discovered[id] > 0`, or whose old `unlockLevel`
   the save's level had already passed, is marked unlocked free — the grandfather pattern from
   the level-gate migration.
@@ -301,7 +372,7 @@ Re-price only on playtest evidence, and log it.
 ## The sim-test bill
 
 The suite grows with slice A; these are the invariants, most inherited from the audit. Items
-1–6 and 8–18 land with slice A; item 7 lands with slice B (Storm-Kissed does not exist before
+1–6, 8–17b and 18 land with slice A; item 7 lands with slice B (Storm-Kissed does not exist before
 the launch six ship).
 
 1. The never-resets partition, asserted field by field across a Turn — generated from the rule
@@ -310,8 +381,9 @@ the launch six ship).
    badges.
 2. The Turn kills no running growth timer, in any season; ready blooms auto-collect into
    `coinsEarned` *before* the mint; a plot-parked card pack is banked into `state.packs`.
-3. Mint reads `coinsEarned` only; a spend-everything-then-Turn run pouches identically.
-4. Cheat grants never reach `coinsEarned` (`credit()` is the single tested faucet).
+3. Mint reads earnings only; a spend-everything-then-Turn run pouches identically.
+4. Cheat grants never reach `coinsEarned` **or `lifetimeCoins`** (`credit()` is the single
+   tested faucet).
 5. `yield = cost × 1.4` for every seed including Fall's; petals leave the curve alone.
 6. Gems/hour flat across all seeds in `DATA.seeds` (Fall crops drop no gems, so the invariant is
    scoped to flowers); no petal changes any gem chance.
@@ -328,7 +400,18 @@ the launch six ship).
     zero-scored line contributes nothing and renders nothing.
 15. `state.year.stats` counters zero at the Turn and never read lifetime records.
 16. The blessing writes exactly one Rich Bloom petal, once per Turn.
-17. The Turn refuses below either gate — `minSeeds` projected or `minCoins` earned — and the
-    daisy-rush shape (many cheap Turns in one day) stays unprofitable against normal play.
+17. The Turn refuses below either gate — the un-tallied `increment` against `minSeeds`, or
+    `minCoins` earned — including the case where a maxed Tally would lift a short increment
+    over the seeds gate; and the daisy-rush shape (many cheap Turns in one day) stays
+    unprofitable against normal play. **Asserted and green since the cumulative mint landed
+    (2026-08-29, phase 1.1); `node tools/year-sim.js 12 all` exits zero.**
+17b. **The cumulative mint itself** (added with the ruling): `veterancy` is absent from
+    `DATA.year` and turn count moves no part of the projection; the pool is
+    `mintK × sqrt(lifetimeCoins)` and is unmoved by the year's own earnings or by the wallet;
+    four Turns draw exactly the pool one Turn draws over the same lifetime; a drawn pool
+    refuses a fresh 100K year and re-opens only after another `minSeeds` of pool is earned; a
+    maxed Tally pays over the pool rather than out of it; cheats reach neither ledger; both
+    migration arms land where they should; and a ledger past the pool clamps the increment at
+    zero rather than going negative.
 18. Plots 5–8 refuse purchase while `turnsCompleted = 0`, except on a migrated save that already
     owned them — nothing owned is ever re-locked.

@@ -48,12 +48,15 @@ behaviour):
 "+0%" because `masteryMult()` retired. Honest but odd-looking. Phase 2 replaces the row with
 petal tracks.
 
-### The Tally's tier-reading needs the owner's confirmation
+### ~~The Tally's tier-reading needs the owner's confirmation~~ — RATIFIED
 
-Phase 1 implemented **cumulative tiers** (the reasoning and the contradicting examples are in
-the 2026-08-29 build entry of [10-decision-log.md](10-decision-log.md) and flagged inline in
-[33-year-one-economy.md](33-year-one-economy.md#the-tally)). If the owner rules the other
-way, `projectedTally()` is one line and three doc numbers change.
+**Closed 2026-08-29 by the phase-1 independent review**, on arithmetic rather than taste:
+cumulative tiers are the only reading that reproduces doc 33's own "47 orders → ×1.25"
+worked example *and* reaches the ×2.0 cap the same document says a maxed year hits
+(highest-tier-only caps out at ×1.69). `projectedTally()` was already right. Kept here only
+so nobody reopens it; the reasoning is in the review entry of
+[10-decision-log.md](10-decision-log.md) and inline in
+[33-year-one-economy.md](33-year-one-economy.md#the-tally).
 
 ### `q_discover_5` straddles the year boundary on a fresh save
 
@@ -62,42 +65,87 @@ years rather than jamming — but a fresh save's `q_discover_5` (rep 12) will ho
 slot from mid-year-one until rose unlocks in year two. Doc 33 re-keyed exactly four quests
 and deliberately not this one. Watch it in the first playtest.
 
-### OPEN OWNER DECISION: the cheap-Turn cadence is strictly profitable — bill item 17's economic half is false at the current constants
+### ~~OPEN OWNER DECISION: the cheap-Turn cadence is strictly profitable~~ — RESOLVED, 2026-08-29
 
-The phase-1 gauntlet confirmed this with the real engine. **It is a SEEDS-ONLY break** — round
-2 of the gauntlet found the pacing model had never bought the game's automation, so offline
-income was identically zero for every strategy; with the drone, the harvesters and the two
-offline badges in the model, **normal play out-earns the cadence in gold by ~2.7×** (42.3M vs
-15.5M by day 10) while still losing to it on Saved Seeds by ~20×. The gold half of this note's
-earlier claim is withdrawn; the seeds half is confirmed and is the whole problem. **That
-narrows the dials: the mint's shape (`mintK`, `veterancy`) is the lever, not the coins floor.**
-Two mechanisms stack:
+**The owner ruled: the mint becomes cumulative.** Phase 1.1 implemented it, and the exploit is
+dead by construction rather than by tuning.
 
-1. **The mint favours splitting.** `sqrt(coinsEarned)` makes four 100K years mint ~2.6× one
-   400K year, and the uncapped `(1 + 0.2 × turns)` veterancy term compounds with turn count —
-   by turn ~55 a 100K year pays ~380–440 seeds (the pacing tool's own transcript shows Turn 55
-   paying 440 on a 119K year), still clearing the 636K shared-skill sink runway ("months of
-   headroom") in weeks. *(The first version of this note said ~1,100 — a ~2.5× overstatement
-   caught by the phase-1 independent review; the exploit needs no exaggeration.)*
-2. **Fall beds launder the doomed wallet.** Fall rightly survives the Turn, so gold that is
-   about to zero converts freely into growing crops that pay into the NEXT year's meter —
-   eight apples pay 806K per 8-hour fill, one windfall apple alone clears the 100K floor, and
-   a single fill can finance ~8 consecutive Turns.
+**What was wrong.** The mint was `mintK × sqrt(coinsEarnedThisYear) × (1 + veterancy ×
+turnsCompleted)`. Two mechanisms stacked: `sqrt` of a *per-year* number is superadditive under
+splitting (four 100K years minted ~2.6× one 400K year), and the uncapped veterancy term
+compounded with turn count on top. Fall beds, which rightly survive the Turn, let the doomed
+pre-Turn wallet be converted into next-year income. Measured through the real engine over 12
+modelled days: turn-at-every-gate minted **~20× the wall-rider's Saved Seeds** at ~8 Turns/day,
+while losing to them on gold by ~2.7× — a seeds-only break.
 
-Measured over 12 modeled days (`node tools/year-sim.js 12 all`, which now plays these shapes
-honestly, buys the automation, and **exits non-zero while the exploit stands**):
-normal-play-but-turn-at-every-gate mints **~20× the wall-rider's Saved Seeds** at ~8 Turns/day,
-while **losing to it on gold ~2.7×**. The engine implements the spec faithfully — the ruling is
-the owner's, scheduled with phase 4 (or sooner as a pure data change if the ritual matters
-before then).
+**What fixed it.** The pool a garden will ever mint is now `mintK × sqrt(state.lifetimeCoins)`;
+a Turn draws the undrawn part of it (`state.mintedBase`), and the Tally multiplies the draw
+without consuming it. Both ledgers are top-level and never reset. `DATA.year.veterancy` is
+**deleted** — the phase-1 review proved that re-attaching *any* per-turn multiplier to a
+split-neutral base re-arms the split at 1.3–1.4×, so capping it was never enough. `minSeeds`
+now gates the un-tallied increment rather than the tallied pouch. Because the pool depends on
+lifetime earnings alone, the sum of every Turn's draw is the same number however the year is
+sliced — no cadence can out-mint another, and `node tools/year-sim.js 12 all` **exits zero**,
+with normal play ahead of turn-spam by a stable ~1.5–1.6× on seeds across runs.
 
-**The strategy session has since measured four fixes and recommends one** — see the 2026-08-29
-review entry in [10-decision-log.md](10-decision-log.md): dials alone fail at 3.5–4×, a
-ratcheting floor fails at 1.2–1.5× and punishes turn-loving players forever, **any** per-turn
-multiplier on a split-neutral base re-arms the break (so veterancy must be *deleted*, not
-capped), and **the cumulative mint — lifetime accumulator, mint the increment, Tally on top —
-is the only shape that kills it by construction.** That ruling is the second of the two
-conditions phase 1's review left open; the first (a missing migration assertion) is closed.
+**Whose ruling:** the owner's, taking the phase-1 independent review's recommendation (variant
+B of four measured through the real engine — dials alone failed at 3.5–4×, a ratcheting coins
+floor at 1.2–1.5×, and cumulative-with-capped-veterancy at 1.3–1.4×). The reasoning is in the
+2026-08-29 review and phase-1.1 entries of [10-decision-log.md](10-decision-log.md); the
+formula is in [33-year-one-economy.md](33-year-one-economy.md#saved-seeds--the-mint).
+
+### OPEN OWNER DECISION: the blessing is now the largest per-Turn grant, and nothing prices it
+
+**Found while landing the cumulative mint, 2026-08-29.** The mint's base is split-neutral now,
+but the ceremony's blessing is not: **one free Rich Bloom petal per Turn, regardless of what
+the year earned.** That is a per-turn *constant* on a split-neutral base — the same family the
+review warned about, in a currency the mint does not control.
+
+Driven through the real engine, turning as often as the gates allow and blessing the cheapest
+uncapped flower each time:
+
+- **95 Turns fill every flower's Rich Bloom ladder** (19 flowers × cap 5) — **318,189 Saved
+  Seeds of value, exactly half the entire shared-skill sink — for free.**
+- It costs **~101M lifetime coins**, about **2.5 days** of play at the measured ~40M/day late
+  income. The mint pays **997 seeds** over the same 95 Turns.
+- Buying that same 318,189 seeds' worth would need a lifetime of ~1.0 × 10¹³ coins — about
+  **253,000 days**. The blessing is therefore worth ~320× the seeds it is handed out beside.
+
+It is **pre-existing** — the blessing has always been one petal per Turn, and the old mint had
+the same hole — but the old mint was large enough to dwarf it. What the ruling changed is the
+ratio. `tools/year-sim.js` now separates **bought** petals from **blessed** ones in its report
+and discloses this beneath the verdict; it does **not** fail on it, because the exit code
+answers the question the owner ruled on and the blessing is a designed ceremony beat
+([32-the-garden-year.md](32-the-garden-year.md), beat 3 — "one blessing per Turn, any flower,
+repeatable across years").
+
+**The dials, none of them taken:** price the blessing against the year (scale it with the
+Tally or the increment), make it once per *year* rather than per *Turn*, cap total blessings,
+or leave it and accept that the Rich Bloom ladder is a Turn-count reward rather than a Saved
+Seeds sink. **This is a design decision about a ceremony beat, so it is the owner's** — phase
+1.1 measured it and changed nothing.
+
+### The shared-skill sink is now unreachable, and the 2–5-petals-per-Turn claim is false
+
+Same cause, different consequence, and it is **phase 4's tuning chair rather than an owner
+decision** — the review named it in advance as the cumulative mint's honest cost.
+
+The lifetime seed supply is now hard-bounded at `0.1 × sqrt(lifetime coins)` where veterancy
+previously let it grow without limit. So:
+
+- Maxing both shared skills on all nineteen flowers (**636,378 Saved Seeds**) needs
+  **4.05 × 10¹³ lifetime coins** — ~1,000,000 days at ~40M/day. Doc 33's "months of headroom"
+  is now geological; the sink is not deep, it is out of reach.
+- A whole year of play at that income opens a pool of only **~12,000 seeds**.
+- Doc 33's **"every Turn affords a similar 2–5 petals forever" is false at these constants**:
+  the shipped tool measures **1 of 5** Turns in band where the old shape measured 4 of 7. The
+  two exponents doc 33 says must stay matched — petal cost compounding at 1.25/level against
+  the pouch's growth — are genuinely mismatched now.
+
+**`mintK` is the knob** (or the petal ladder is), and doc 33 already says these two tune
+together or not at all. Deliberately not touched here: the ruling was about the mint's
+*shape*, re-pricing it wants playtest data, and phase 4 owns the calibration. Both numbers
+above are recomputed rather than quoted, and a sim-test pins the 636,378 figure.
 
 ## Balance
 
@@ -390,7 +438,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,096 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,121 assertions over the
 economy, progression, saves and mastery. Everything above that line — the six `ui-*` files,
 layout, the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI

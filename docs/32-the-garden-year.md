@@ -122,8 +122,12 @@ Five beats, about a minute, one decision:
    per Turn, any flower, repeatable across years; `state.blessed` keeps the list for provenance
    and ceremony copy. (Turn 1 scripts this beat as the tutorial for petals.)
 4. **The Tally.** The ceremony's fireworks, owner-designed 2026-08-29: an **arcade end-of-year
-   score**. The base count-up rolls from the year's whole earnings (sublinear mint, doc 33) —
-   then the year's achievements slam in one line at a time, each raising the multiplier:
+   score**. The base count-up rolls from **the increment — the part of the garden's lifetime
+   mintable pool that this Turn is drawing** (the cumulative mint, doc 33; the owner's ruling,
+   2026-08-29). It is *not* the year's earnings: the pool is sized by lifetime coins and the
+   ledger remembers what has already been drawn, which is what makes turning often worth
+   nothing. Then the year's achievements slam in one line at a time, each raising the
+   multiplier:
 
    > *Orders filled: 47 → +25%!*
    > *Full-bed windfalls: 12 → +15%!*
@@ -138,6 +142,11 @@ Five beats, about a minute, one decision:
    (`DATA.year.tallyCap`), and the lines are data (`DATA.year.tally`). **The cosy rule: a line
    the year scored zero on simply does not appear.** The Tally only celebrates — there is no
    "×1.00, you failed" row, ever. Tiers and bonuses in doc 33.
+
+   **The multiplier is pure gift.** The ledger moves by the *un-tallied* increment, so a
+   well-played year is never charged for its own fireworks — which is why the Tally became the
+   economic teacher when the mint went cumulative: full years out-score spam years, and the
+   difference is not borrowed back later.
 
    *(The bonuses above were corrected on 2026-08-29 to the numbers `projectedTally()` actually
    produces at those counts. As first written, four of the five disagreed with doc 33's tier
@@ -161,7 +170,7 @@ Owner-decided 2026-08-29: **the Turn clears the fast annuals in the main garden 
 | Clears (the year's things) | Never touched (the forever things) |
 | --- | --- |
 | Summer's planted plots — see the in-flight rules below | **Any running long timer, anywhere** — Winter sleepers, a mid-grow Century Bloom. A reset that eats a two-week plant is the one unforgivable version of this |
-| Gold — zeroed to `defaultState`'s 100 starting coins, after the mint | Saved Seeds, petals, seed **unlocks** (one-time prices stay paid) |
+| Gold — zeroed to `defaultState`'s 100 starting coins, after the mint | Saved Seeds, petals, seed **unlocks** (one-time prices stay paid), and the mint's two ledgers — `lifetimeCoins` (never written except by `credit()`) and `mintedBase` (only ever grows, at the Turn, by the un-tallied increment) |
 | **Every key in `state.upgrades`** — the tap badges, the three procs, Sprinklers, Land Deed, the drone and all eight harvesters. The rebuild is the ritual, and `tap.power` / `comboMax` / crit fields are **re-derived immediately after the wipe** | Creatures, stars, the Hollow and everything in it; food clocks run on real time throughout |
 | Plots 5–8 close (gold rebuy from Turn 1 on — **they cannot be bought at all in year one**, so Turn 1's gift is Fall *and* the right to a bigger garden; migrated saves keep what they owned) | Lifetime reputation and level; the Almanac's lifetime records (`discovered`, `bestRarity`, `rarityCounts`) |
 | Boost inventory; the combo zeroes with the board; an *active* boost or called sky simply expires on its own clock | Cards, packs, gems, mementos, decorations |

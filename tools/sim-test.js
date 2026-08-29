@@ -4108,6 +4108,19 @@ check('a keeper who is not a real creature is dropped on load', (() => {
 /* Deep-equal via JSON — every field in this save is JSON round-trippable. */
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const freshCell = () => ({ locked: false, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0, packDrop: false });
+/* A rig that wants a turnable year has to prime BOTH ledgers now: the coins
+   gate reads the year, the seeds gate reads the lifetime pool minus what has
+   been drawn. Setting only `year.coinsEarned` leaves the pool at zero and the
+   Turn refuses — which would make every rig below pass or fail for the wrong
+   reason. `mintedBase` stays where the caller left it. */
+const primeYear = (earned, lifetime) => {
+  S.year.coinsEarned = earned;
+  S.lifetimeCoins = lifetime === undefined ? earned : lifetime;
+};
+/* The mint, restated independently of game.js — a rig that recomputed the
+   pouch by calling projectedMint() would assert the engine against itself. */
+const expectedPouch = (lifetime, drawn, tallyMult) =>
+  Math.round(Math.max(0, DATA.year.mintK * Math.sqrt(lifetime) - drawn) * tallyMult);
 
 group('bill 1 — the never-resets partition, field by field');
 /* Generated from the rule: EVERYTHING not named in the clears column survives
@@ -4185,6 +4198,11 @@ const buildTurnRig = (inFlight) => {
     number: 2, coinsEarned: 250000, turnsCompleted: 1,
     stats: { orders: 12, windfalls: 1, species: 2, speciesSeen: { daisy: true, tulip: true }, legendaries: 1, bestCombo: 60 }
   };
+  /* A veteran's ledger: 900K earned across two years, ~60 seeds of the pool
+     already drawn at the first Turn. Non-default on purpose — a Turn that
+     reset either one has to be visible here. */
+  S.lifetimeCoins = 900000;
+  S.mintedBase = 60;
   /* A veteran garden: every plot open, one annual growing (not ready). */
   S.grid.forEach((c, i) => { S.grid[i] = freshCell(); });
   S.grid[2] = { ...freshCell(), seed: 'daisy', plantedAt: clock, grow: 9999 };
@@ -4213,11 +4231,9 @@ const buildTurnRig = (inFlight) => {
 
 buildTurnRig(false);
 const yrBefore = JSON.parse(JSON.stringify(S));
-const yrExpectedPouch = Math.round(
-  DATA.year.mintK * Math.sqrt(yrBefore.year.coinsEarned)
-  * (1 + DATA.year.veterancy * yrBefore.year.turnsCompleted)
-  * (() => { const t = G.projectedTally(); return t.mult; })()
-);
+const yrTallyMult = G.projectedTally().mult;
+const yrExpectedIncrement = DATA.year.mintK * Math.sqrt(yrBefore.lifetimeCoins) - yrBefore.mintedBase;
+const yrExpectedPouch = expectedPouch(yrBefore.lifetimeCoins, yrBefore.mintedBase, yrTallyMult);
 const yrTurn = G.turnYear(null);
 check('the Turn ran', Boolean(yrTurn));
 
@@ -4225,12 +4241,12 @@ const SURVIVES = ['version', 'gems', 'tickets', 'decor', 'boosters', 'weatherCal
   'setsClaimed', 'stats', 'wonder', 'apiary', 'flowers', 'craft', 'goods', 'bench', 'critters',
   'pairsSeen', 'mementos', 'luckyPacks', 'prefs', 'seen', 'quests', 'rep', 'level', 'discovered',
   'bestRarity', 'almanacClaimed', 'mastery', 'rarityCounts', 'seedUnlocks', 'petals', 'blessed',
-  'fall', 'harvestsThisSession', 'lastSeen'];
+  'fall', 'harvestsThisSession', 'lastSeen', 'lifetimeCoins'];
 /* CHANGED, not "cleared": doc 32's never-touched column means never reset or
    decreased — savedSeeds sits here because the mint WRITES it (upward, by
    exactly the projection, asserted below), and petals/blessed sit in SURVIVES
    only because this run passes no blessing (bill 16 covers the blessing). */
-const CHANGED_BY_THE_TURN = ['credits', 'grid', 'upgrades', 'tap', 'boostInv', 'stand', 'year', 'savedSeeds'];
+const CHANGED_BY_THE_TURN = ['credits', 'grid', 'upgrades', 'tap', 'boostInv', 'stand', 'year', 'savedSeeds', 'mintedBase'];
 SURVIVES.forEach((k) => {
   check(`\`${k}\` survives the Turn verbatim`, same(S[k], yrBefore[k]),
     `${JSON.stringify(S[k]).slice(0, 80)} vs ${JSON.stringify(yrBefore[k]).slice(0, 80)}`);
@@ -4241,6 +4257,15 @@ check('every field of the save is classified — no key dodges the partition',
 check('gold zeroes to the fresh purse, after the mint', S.credits === 100);
 check('the mint paid exactly the projection', S.savedSeeds === yrBefore.savedSeeds + yrExpectedPouch
   && yrTurn.pouch === yrExpectedPouch, `${S.savedSeeds} vs ${yrBefore.savedSeeds} + ${yrExpectedPouch}`);
+check('`lifetimeCoins` survives the Turn — the pool is never reset',
+  S.lifetimeCoins === yrBefore.lifetimeCoins, `${S.lifetimeCoins} vs ${yrBefore.lifetimeCoins}`);
+check('`mintedBase` grows by the UN-tallied increment, never by the pouch',
+  Math.abs(S.mintedBase - (yrBefore.mintedBase + yrExpectedIncrement)) < 1e-9
+  && S.mintedBase !== yrBefore.mintedBase + yrTurn.pouch,
+  `${S.mintedBase} vs ${yrBefore.mintedBase} + ${yrExpectedIncrement} (pouch ${yrTurn.pouch}, tally ${yrTallyMult})`);
+check('the drawn ledger exactly equals the pool the year had opened',
+  Math.abs(S.mintedBase - DATA.year.mintK * Math.sqrt(yrBefore.lifetimeCoins)) < 1e-9,
+  `${S.mintedBase}`);
 check('every badge is wiped', Object.values(S.upgrades).every((v) => v === 0));
 check('the tap fields re-derive from the wiped badges',
   S.tap.power === 1 && S.tap.critChance === 0.05 && S.tap.critMult === 10
@@ -4279,7 +4304,7 @@ Math.random = () => 0.5;   // common rarity, no gem, no new Wonder, no pack proc
 const flightTurn = G.turnYear(null);
 Math.random = rngFlight;
 /* What the auto-collected harvest and the pack-banking are ALLOWED to move. */
-const HARVEST_WRITES = ['flowers', 'bench', 'stats', 'harvestsThisSession', 'discovered', 'quests', 'packs'];
+const HARVEST_WRITES = ['flowers', 'bench', 'stats', 'harvestsThisSession', 'discovered', 'quests', 'packs', 'lifetimeCoins'];
 check('the in-flight arm really ran', Boolean(flightTurn) && flightTurn.collected === 1
   && flightTurn.bankedPacks === 1, JSON.stringify(flightTurn && { c: flightTurn.collected, p: flightTurn.bankedPacks }));
 SURVIVES.filter((k) => !HARVEST_WRITES.includes(k)).forEach((k) => {
@@ -4289,10 +4314,16 @@ SURVIVES.filter((k) => !HARVEST_WRITES.includes(k)).forEach((k) => {
 check('the collected bloom was paid into the year BEFORE the mint',
   flightTurn.earned === flightBefore.year.coinsEarned + daisyPay,
   `${flightTurn.earned} vs ${flightBefore.year.coinsEarned} + ${daisyPay}`);
-check('and the pouch is minted from that larger number', flightTurn.pouch === Math.round(
-  DATA.year.mintK * Math.sqrt(flightBefore.year.coinsEarned + daisyPay)
-  * (1 + DATA.year.veterancy * flightBefore.year.turnsCompleted) * flightTurn.tally.mult),
-  `${flightTurn.pouch}`);
+check('and the pouch is minted from that larger number', flightTurn.pouch === expectedPouch(
+  flightBefore.lifetimeCoins + daisyPay, flightBefore.mintedBase, flightTurn.tally.mult),
+  `${flightTurn.pouch} vs ${expectedPouch(flightBefore.lifetimeCoins + daisyPay, flightBefore.mintedBase, flightTurn.tally.mult)}`);
+/* The lifetime half of the same claim. The collected bloom has to reach the
+   POOL, not just the year — the year only opens the coins gate, and a mint
+   that read `year.coinsEarned` would pass the assertion above while paying
+   from the wrong number. */
+check('and it reached the lifetime pool, not only the year',
+  Math.abs(S.lifetimeCoins - (flightBefore.lifetimeCoins + daisyPay)) < 1e-9,
+  `${S.lifetimeCoins} vs ${flightBefore.lifetimeCoins} + ${daisyPay}`);
 check('the banked pack is added, never destroyed', S.packs === flightBefore.packs + 1);
 check('the lifetime records the harvest wrote only grew',
   S.discovered.daisy === flightBefore.discovered.daisy + 1
@@ -4310,7 +4341,7 @@ check('the Fall crop\'s clock is untouched', same(S.fall.grid[0], yrBefore.fall.
 check('the Century Bloom\'s clock is untouched', same(S.fall.grid[5], yrBefore.fall.grid[5]));
 G.reset();
 clearGarden();
-S.year.coinsEarned = 200000;
+primeYear(200000);
 S.year.turnsCompleted = 1;   // a veteran, so Fall is open for the timer half
 S.fall.grid[3] = { seed: 'apple', plantedAt: clock - 50, grow: 28800, ready: false, windfall: false };
 S.grid[0] = { ...freshCell(), seed: 'daisy', plantedAt: clock - 100, grow: 10, ready: true };
@@ -4344,8 +4375,8 @@ group('bill 3 — the mint reads earnings, never balance');
 const mintRigFor = (spendEverything) => {
   G.reset();
   clearGarden();
-  S.year.coinsEarned = 300000;
-  S.year.turnsCompleted = 1;      // both arms: Fall open, plots buyable, veterancy identical
+  primeYear(300000);
+  S.year.turnsCompleted = 1;      // both arms: Fall open, plots buyable
   S.credits = 300000;
   S.rep = G.cumulativeRep(14);    // both arms: the level gates on plots and meadow land are open
   S.level = 14;
@@ -4453,21 +4484,42 @@ S.lastSeen = clock - 3600;
 const wokeUp = G.reconcile();
 check('the offline grant earns into the year', wokeUp && wokeUp.earned > 0
   && earnedNow() === yrMark + wokeUp.earned, JSON.stringify(wokeUp && wokeUp.earned));
-/* And the cheats do not. */
+/* And the cheats do not — on EITHER ledger. The lifetime one is the one that
+   matters most here: the year's accumulator is wiped every Turn, so a stray
+   cheated coin in it washes out, while a stray coin in the pool is permanent
+   and inflates every future pouch. */
+const lifetimeNow = () => S.lifetimeCoins;
 yrMark = earnedNow();
+let ltMark = lifetimeNow();
 const creditsBeforeCheat = S.credits;
 G.Dev.grantGold(1e6);
 check('cheated gold lands in the wallet', S.credits === creditsBeforeCheat + 1e6);
 check('cheated gold never reaches the mint', earnedNow() === yrMark);
+check('and never reaches the lifetime pool either', lifetimeNow() === ltMark);
 S.tap.holdInterval = 180;   // the floor: Quick Grip's effect refuses, and the price refunds
 S.credits = 1e6;
 yrMark = earnedNow();
+ltMark = lifetimeNow();
 check('a refunded purchase is not income', G.buyUpgrade('holdSpeed') === false
   && S.credits === 1e6 && earnedNow() === yrMark);
+check('and a refund never reaches the lifetime pool', lifetimeNow() === ltMark);
+/* The refund flag itself, through the exported faucet — the decor migration
+   is the live caller, and a refund is not income on either ledger. */
 yrMark = earnedNow();
+ltMark = lifetimeNow();
+const creditsBeforeRefund = S.credits;
+G.credit(250000, { refund: true });
+check('an explicit refund grant moves the wallet and neither accumulator',
+  S.credits === creditsBeforeRefund + 250000
+  && earnedNow() === yrMark && lifetimeNow() === ltMark,
+  `${earnedNow()} / ${lifetimeNow()}`);
+yrMark = earnedNow();
+ltMark = lifetimeNow();
 G.Dev.feedCritters();
 check('the feed-everyone cheat stays off the mint', earnedNow() === yrMark);
 check('the year driver IS earning, by design', (G.Dev.driveYear(500), earnedNow() === yrMark + 500));
+check('and the driver earns into the pool too, so the meter and the mint agree',
+  lifetimeNow() === ltMark + 500, `${lifetimeNow()} vs ${ltMark} + 500`);
 /* The last credit() call site: a level's hive grant landing on a full meadow
    pays coins instead. A real faucet on a real path, and the only one the rest
    of this group does not drive. */
@@ -4565,7 +4617,7 @@ G.reset();
 clearGarden();
 unlockTo(17);
 S.apiary.cells[0] = { kind: 'hive', at: clock, jars: [] };
-S.year.coinsEarned = 200000;
+primeYear(200000);
 for (let i = 0; i < STAND.slots; i += 1) G.standGenerate(i);
 /* Strand an order naming a bloom, then shrink the unlock pool to prove the
    regenerated board draws only from what the fresh year can grow. */
@@ -4606,7 +4658,7 @@ group('bill 11 — an unlock is charged once per lifetime; the Turn never re-cha
 G.reset();
 clearGarden();
 S.credits = 150000;
-S.year.coinsEarned = 200000;
+primeYear(200000);
 G.unlockSeed('bluebell');
 check('the unlock spent the wallet', S.credits === 0);
 check('the Turn actually ran', Boolean(G.turnYear(null)));
@@ -4760,20 +4812,20 @@ check('a tap writes the best combo', (() => {
 group('bill 16 — the blessing writes exactly one Rich Bloom petal, once per Turn');
 G.reset();
 clearGarden();
-S.year.coinsEarned = 200000;
+primeYear(200000);
 const blessTurn = G.turnYear('tulip');
 check('the chosen flower gained one free petal', G.petalsOf('tulip').rich === 1
   && blessTurn.blessed === 'tulip');
 check('provenance is kept, at the year that blessed it',
   S.blessed.length === 1 && S.blessed[0].seed === 'tulip' && S.blessed[0].year === 1,
   JSON.stringify(S.blessed));
-S.year.coinsEarned = 200000;
+primeYear(200000, 900000);
 const badBless = G.turnYear('never_a_seed');
 check('an unknown flower blesses nothing, and the Turn still runs',
   badBless && badBless.blessed === null && S.blessed.length === 1);
 S.petals.rose = { rich: 5, quick: 0, sig: 0 };
 S.seedUnlocks.rose = true;
-S.year.coinsEarned = 200000;
+primeYear(200000, 2500000);
 const capBless = G.turnYear('rose');
 check('a capped skill cannot be blessed past its cap',
   capBless && capBless.blessed === null && G.petalsOf('rose').rich === 5);
@@ -4782,33 +4834,253 @@ group('bill 17 — the Turn refuses below either gate, and cheap Turns stay clos
 G.reset();
 clearGarden();
 G.Dev.setYearStats({ orders: 50, windfalls: 15, species: 15, legendaries: 8, bestCombo: 80 });
-S.year.coinsEarned = 99999;
+primeYear(99999, 5000000);   // the pool is wide open; only the coins floor is short
 /* A refused Turn must leave the save byte-identical. This is the one path a
    player can invoke freely and repeatedly below both gates, so a blessing
    written on it would be an ungated free-petal faucet. */
 const refusedBefore = JSON.parse(JSON.stringify(S));
 check('a rich Tally cannot carry a year under the coins floor',
   G.turnReady() === false && G.turnYear('daisy') === null);
-check('and a refused Turn changes nothing at all — no petal, no mint, no wipe',
+check('and a refused Turn changes nothing at all — no petal, no mint, no wipe, no draw',
   same(S, refusedBefore),
   Object.keys(S).filter((k) => !same(S[k], refusedBefore[k])).join(',') || 'identical');
-S.year.coinsEarned = 100000;
+primeYear(100000, 5000000);
 check('the floor itself passes', G.turnReady() === true);
+/* The seeds gate, isolated: the coins floor is dropped to zero so the
+   INCREMENT is the only thing left refusing. */
 const savedMinCoins = DATA.year.minCoins;
 DATA.year.minCoins = 0;
 G.Dev.setYearStats({ orders: 0, windfalls: 0, species: 0, legendaries: 0, bestCombo: 0 });
-S.year.coinsEarned = 5000;
-check('the projected-mint gate refuses on its own', G.turnReady() === false,
-  `pouch ${G.projectedMint().pouch}`);
-S.year.coinsEarned = 12000;
-check('and passes at ten projected seeds', G.turnReady() === true
-  && G.projectedMint().pouch >= DATA.year.minSeeds, `pouch ${G.projectedMint().pouch}`);
+primeYear(5000, 5000);
+S.mintedBase = 0;
+check('the increment gate refuses on its own', G.turnReady() === false,
+  `increment ${G.projectedMint().base}`);
+primeYear(12000, 12000);
+check('and passes at ten seeds of undrawn pool', G.turnReady() === true
+  && G.projectedMint().base >= DATA.year.minSeeds, `increment ${G.projectedMint().base}`);
+/* The gate reads the increment, NOT the tallied pouch — a maxed Tally on a
+   pool that is 9.9 seeds deep must still refuse, or the fireworks would be
+   buying entry to a Turn the pool cannot pay for. */
+primeYear(9000, 9000);
+S.mintedBase = 0;
+G.Dev.setYearStats({ orders: 50, windfalls: 15, species: 15, legendaries: 8, bestCombo: 80 });
+check('a maxed Tally cannot lift a short increment over the seeds gate',
+  G.projectedMint().base < DATA.year.minSeeds
+  && G.projectedMint().pouch >= DATA.year.minSeeds
+  && G.turnReady() === false,
+  `increment ${G.projectedMint().base}, pouch ${G.projectedMint().pouch}`);
+G.Dev.setYearStats({ orders: 0, windfalls: 0, species: 0, legendaries: 0, bestCombo: 0 });
 DATA.year.minCoins = savedMinCoins;
-S.year.coinsEarned = 150000;
+primeYear(150000, 150000);
+S.mintedBase = 0;
 G.turnYear(null);
 check('the moment after a Turn the gates are shut again', G.turnReady() === false);
 S.year.coinsEarned = 8000;   // where the seeds-only gate once let the daisy rush in
 check('the old daisy-rush entry point stays shut', G.turnReady() === false);
+/* And the shut gate is now the SEEDS one as well as the coins one: a year
+   that re-earns its whole 100K floor immediately after a Turn still cannot
+   turn, because the pool it would draw from has already been drawn. That is
+   the cadence break, asserted rather than argued. */
+S.year.coinsEarned = 100000;
+check('re-earning the coins floor alone does not re-open the Turn',
+  S.year.coinsEarned >= DATA.year.minCoins && G.projectedMint().base < DATA.year.minSeeds
+  && G.turnReady() === false,
+  `increment ${G.projectedMint().base}`);
+
+group('bill 17b — the cumulative mint: the pool is lifetime-only, and cadence buys nothing');
+/* The owner's ruling, 2026-08-29. The pool a garden will ever mint is
+   mintK x sqrt(lifetimeCoins); a Turn draws the undrawn part of it. These are
+   the properties the ruling was chosen FOR, asserted directly rather than
+   inferred from the pacing tool's exit code. */
+check('the veterancy term is gone from the data entirely',
+  !('veterancy' in DATA.year), JSON.stringify(Object.keys(DATA.year)));
+
+G.reset();
+clearGarden();
+primeYear(150000, 4000000);
+S.mintedBase = 40;
+const vetProbe = () => { const p = G.projectedMint(); return { base: p.base, total: p.total, pouch: p.pouch }; };
+S.year.turnsCompleted = 0;
+const vetAtZero = vetProbe();
+S.year.turnsCompleted = 40;
+const vetAtForty = vetProbe();
+check('and turn count moves no part of the projection — no per-turn multiplier survives',
+  same(vetAtZero, vetAtForty), `${JSON.stringify(vetAtZero)} vs ${JSON.stringify(vetAtForty)}`);
+
+/* The pool identity: the projection is exactly what lifetime earnings have
+   opened, minus what has been drawn — and it depends on NEITHER the year's
+   own earnings nor the wallet. */
+G.reset();
+clearGarden();
+primeYear(200000, 1000000);
+S.mintedBase = 25;
+S.credits = 9e8;
+check('the pool is mintK x sqrt(lifetime), and the increment is what is undrawn',
+  Math.abs(G.projectedMint().total - 0.1 * Math.sqrt(1000000)) < 1e-9
+  && Math.abs(G.projectedMint().base - (0.1 * Math.sqrt(1000000) - 25)) < 1e-9,
+  JSON.stringify(G.projectedMint()));
+const poolBefore = G.projectedMint().base;
+S.year.coinsEarned = 999999;
+check('and raising the YEAR without the lifetime raises nothing',
+  Math.abs(G.projectedMint().base - poolBefore) < 1e-9);
+
+/* Splitting neutrality, driven through the real Turn on both sides: the same
+   four million earned, taken as one Turn or as four, draws the same pool. The
+   old shape paid the splitter ~2.6x for the same money — that is the exploit,
+   and this is the assertion that would catch its return. */
+const earnAndTurn = (chunks) => {
+  G.reset();
+  clearGarden();
+  let pouches = 0;
+  let turns = 0;
+  chunks.forEach((amount) => {
+    G.credit(amount);
+    const r = G.turnYear(null);
+    if (r) { pouches += r.pouch; turns += 1; }
+  });
+  return { pouches, turns, drawn: S.mintedBase, lifetime: S.lifetimeCoins };
+};
+const oneShot = earnAndTurn([4000000]);
+const fourWay = earnAndTurn([1000000, 1000000, 1000000, 1000000]);
+check('both shapes really ran their Turns', oneShot.turns === 1 && fourWay.turns === 4,
+  `${oneShot.turns} / ${fourWay.turns}`);
+check('four Turns draw exactly the pool one Turn draws',
+  Math.abs(oneShot.drawn - fourWay.drawn) < 1e-9
+  && Math.abs(oneShot.drawn - 0.1 * Math.sqrt(4000000)) < 1e-9,
+  `${oneShot.drawn} vs ${fourWay.drawn}`);
+check('and splitting the year mints no more Saved Seeds than not splitting it',
+  fourWay.pouches <= oneShot.pouches + 2 && oneShot.pouches > 0,
+  `split ${fourWay.pouches} vs whole ${oneShot.pouches}`);
+
+/* The cadence's own wall: a garden that has drawn its pool cannot re-open the
+   Turn by earning the coins floor again — it has to earn its way to another
+   ten seeds of pool, which costs more every time. */
+G.reset();
+clearGarden();
+G.credit(1000000);
+G.turnYear(null);
+G.credit(150000);
+check('a drawn pool refuses a fresh 150K year',
+  S.year.coinsEarned >= DATA.year.minCoins && G.turnReady() === false,
+  `increment ${G.projectedMint().base}`);
+const needed = Math.pow((DATA.year.mintK * Math.sqrt(S.lifetimeCoins) + DATA.year.minSeeds) / DATA.year.mintK, 2)
+  - S.lifetimeCoins;
+G.credit(needed);
+check('and re-opens only once another ten seeds of pool have been earned',
+  G.turnReady() === true && G.projectedMint().base >= DATA.year.minSeeds,
+  `after +${Math.round(needed)} earned, increment ${G.projectedMint().base.toFixed(2)}`);
+
+/* The Tally rides on top of the pool without spending it — the whole reason
+   the ruling could keep the Tally as the year's teacher. */
+G.reset();
+clearGarden();
+G.credit(4000000);
+G.Dev.setYearStats({ orders: 50, windfalls: 15, species: 15, legendaries: 8, bestCombo: 80 });
+const talliedProjection = G.projectedMint();
+const tallied = G.turnYear(null);
+check('a maxed Tally pays over the pool, not out of it',
+  tallied.tally.mult === DATA.year.tallyCap
+  && tallied.pouch === Math.round(talliedProjection.base * DATA.year.tallyCap)
+  && Math.abs(S.mintedBase - talliedProjection.base) < 1e-9,
+  `pouch ${tallied.pouch}, drawn ${S.mintedBase}, increment ${talliedProjection.base}`);
+check('so the well-played year genuinely out-mints the same money played flat',
+  tallied.pouch > oneShot.pouches, `${tallied.pouch} vs ${oneShot.pouches}`);
+
+/* Cheated gold reaches NEITHER ledger — the pool is the thing testers could
+   most easily contaminate, and it is permanent. */
+G.reset();
+clearGarden();
+const cheatLifetime = S.lifetimeCoins;
+G.Dev.grantGold(5000000);
+check('a cheat grant moves the wallet and neither ledger',
+  S.credits >= 5000000 && S.lifetimeCoins === cheatLifetime && S.year.coinsEarned === 0);
+
+/* The migration, both arms. A phase-1 save carries a year but no ledgers; a
+   pre-Year save carries neither, and has no honest coin figure to inherit. */
+G.reset();
+const phase1Save = JSON.parse(JSON.stringify(S));
+phase1Save.year = { number: 2, coinsEarned: 250000, turnsCompleted: 1,
+  stats: { orders: 0, windfalls: 0, species: 0, speciesSeen: {}, legendaries: 0, bestCombo: 0 } };
+delete phase1Save.lifetimeCoins;
+delete phase1Save.mintedBase;
+globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(phase1Save));
+G.load();
+check('a phase-1 save inherits its current year as its lifetime, with nothing drawn',
+  S.lifetimeCoins === 250000 && S.mintedBase === 0,
+  `${S.lifetimeCoins} / ${S.mintedBase}`);
+const migratedFirst = G.turnYear(null);
+check('so its next Turn pays that year exactly once, and only once',
+  migratedFirst && migratedFirst.pouch === Math.round(0.1 * Math.sqrt(250000) * migratedFirst.tally.mult)
+  && Math.abs(S.mintedBase - 0.1 * Math.sqrt(250000)) < 1e-9,
+  `pouch ${migratedFirst && migratedFirst.pouch}, drawn ${S.mintedBase}`);
+/* Earning the same year again pays again — but sublinearly, which is the
+   whole mechanism. A second identical 250K opens sqrt(2)-1 of the first
+   year's pool, not another whole one; under the old shape it opened another
+   whole one AND a veterancy bonus on top. */
+const firstDraw = S.mintedBase;
+G.credit(250000);
+const secondDraw = G.projectedMint().base;
+check('and a second identical year pays strictly less than the first',
+  secondDraw < firstDraw
+  && Math.abs(secondDraw - firstDraw * (Math.SQRT2 - 1)) < 1e-6,
+  `${secondDraw.toFixed(2)} vs ${firstDraw.toFixed(2)}`);
+
+G.reset();
+const preYearSave = JSON.parse(JSON.stringify(S));
+['year', 'savedSeeds', 'petals', 'seedUnlocks', 'blessed', 'fall', 'lifetimeCoins', 'mintedBase']
+  .forEach((k) => { delete preYearSave[k]; });
+preYearSave.stats = { totalTaps: 6, totalCrits: 0, totalHarvests: 3, wonders: 0 };
+globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(preYearSave));
+G.load();
+check('a pre-Year save starts both ledgers at zero — there is nothing honest to backfill',
+  S.lifetimeCoins === 0 && S.mintedBase === 0 && S.year.coinsEarned === 0,
+  `${S.lifetimeCoins} / ${S.mintedBase}`);
+
+/* An edited save cannot mint from a negative pool, and cannot be walled by a
+   ledger larger than its own pool either — it just has nothing undrawn. */
+G.reset();
+clearGarden();
+primeYear(200000, 200000);
+S.mintedBase = 5000;
+check('a ledger past the pool clamps the increment at zero, never below',
+  G.projectedMint().base === 0 && G.projectedMint().pouch === 0
+  && G.turnReady() === false);
+
+/* The ledgers are PERMANENT, so the guards on the way in are the only thing
+   standing between a hand-edited save and an inflated pool forever. Each of
+   these mutations survived the suite until this block existed. */
+G.reset();
+const junkLedgers = JSON.parse(JSON.stringify(S));
+junkLedgers.year = { number: 2, coinsEarned: 120000, turnsCompleted: 1,
+  stats: { orders: 0, windfalls: 0, species: 0, speciesSeen: {}, legendaries: 0, bestCombo: 0 } };
+junkLedgers.lifetimeCoins = -5000000;
+junkLedgers.mintedBase = -900;
+globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(junkLedgers));
+G.load();
+check('a negative `mintedBase` clamps to zero — it can never be an extra pool',
+  S.mintedBase === 0, `${S.mintedBase}`);
+check('a negative `lifetimeCoins` falls back to the year, never to a negative pool',
+  S.lifetimeCoins === 120000, `${S.lifetimeCoins}`);
+const junkShapes = ['not a number', null, NaN, Infinity, -Infinity, {}];
+check('and every other junk shape takes the same fallback', junkShapes.every((v) => {
+  const save = JSON.parse(JSON.stringify(junkLedgers));
+  save.lifetimeCoins = v;
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+  G.load();
+  return S.lifetimeCoins === 120000;
+}), `${S.lifetimeCoins}`);
+/* And the projection defends itself even if that guard is ever removed: a
+   negative pool must read as zero, never as NaN — a NaN pouch would poison
+   savedSeeds permanently on the first Turn. */
+G.reset();
+clearGarden();
+S.lifetimeCoins = -1;
+S.mintedBase = 0;
+const negProjection = G.projectedMint();
+check('a negative lifetime reads as an empty pool, never as NaN',
+  negProjection.total === 0 && negProjection.base === 0 && negProjection.pouch === 0
+  && Number.isFinite(negProjection.pouch) && G.turnReady() === false,
+  JSON.stringify(negProjection));
 
 group('bill 18 — plots 5–8 refuse purchase in year one, and nothing owned is re-locked');
 G.reset();
@@ -4836,6 +5108,8 @@ G.reset();
 S.year = { number: 3, coinsEarned: 123456.78, turnsCompleted: 2,
   stats: { orders: 4, windfalls: 1, species: 2, speciesSeen: { daisy: true, tulip: true }, legendaries: 1, bestCombo: 44 } };
 S.savedSeeds = 77;
+S.lifetimeCoins = 987654.32;
+S.mintedBase = 61.5;
 S.petals = { daisy: { rich: 2, quick: 1, sig: 0 } };
 S.seedUnlocks = { bluebell: true, lavender: true };
 S.blessed = [{ seed: 'daisy', year: 1 }, { seed: 'bluebell', year: 2 }];
@@ -4849,6 +5123,9 @@ check('year, pouch, petals, unlocks, blessings and Fall all come back',
   && same(S.petals, yrRound.petals) && same(S.seedUnlocks, yrRound.seedUnlocks)
   && same(S.blessed, yrRound.blessed) && S.fall.grid[2].seed === 'pumpkin'
   && S.fall.bedPaid === true);
+check('and both mint ledgers survive the round trip to the fraction',
+  S.lifetimeCoins === 987654.32 && S.mintedBase === 61.5,
+  `${S.lifetimeCoins} / ${S.mintedBase}`);
 check('a junk Fall plant is dropped on load, not crashed on', (() => {
   const raw = JSON.parse(JSON.stringify(S));
   raw.fall.grid[0] = { seed: 'ghost_crop', plantedAt: 1, grow: 1 };

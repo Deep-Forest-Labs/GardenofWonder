@@ -22,16 +22,24 @@ const Game = (() => {
     return {
       version: 4,
       credits: 100,
-      /* The Garden Year. `coinsEarned` is the mint's whole input: a
-         lifetime-this-year accumulator written only by credit(), never
-         decremented, zeroed at the Turn. `stats` are the Tally's counters —
-         year-scoped, never lifetime, never spendable. */
+      /* The Garden Year. `coinsEarned` is the year's own earnings — written
+         only by credit(), never decremented, zeroed at the Turn. It is what
+         the coins gate reads. `stats` are the Tally's counters — year-scoped,
+         never lifetime, never spendable. */
       year: {
         number: 1,
         coinsEarned: 0,
         turnsCompleted: 0,
         stats: { orders: 0, windfalls: 0, species: 0, speciesSeen: {}, legendaries: 0, bestCombo: 0 }
       },
+      /* The cumulative mint's two ledgers, neither of which ever resets.
+         `lifetimeCoins` is every coin the garden has honestly earned, and it
+         alone sizes the pool; `mintedBase` is how much of that pool has been
+         drawn, so the sum of every Turn's draw can never exceed it. Splitting
+         a year across many Turns therefore mints exactly what one Turn would
+         have — which is the whole reason the shape is cumulative. */
+      lifetimeCoins: 0,
+      mintedBase: 0,
       savedSeeds: 0,
       petals: {},
       seedUnlocks: {},
@@ -88,11 +96,16 @@ const Game = (() => {
      silently miss it. `cheat` (the dev buttons) and `refund` (migrations,
      failed purchases) skip the accumulator: testers keep their buttons, the
      pacing data stays clean, and a refund was never income. Spending stays a
-     plain subtraction — the mint reads earnings, never balance. */
+     plain subtraction — the mint reads earnings, never balance. The year's
+     accumulator and the lifetime one move together and are excluded together:
+     one faucet, one rule, so the pool and the gate can never disagree. */
   function credit(amount, opts) {
     const n = Math.max(0, amount || 0);
     state.credits += n;
-    if (!opts || (!opts.cheat && !opts.refund)) state.year.coinsEarned += n;
+    if (!opts || (!opts.cheat && !opts.refund)) {
+      state.year.coinsEarned += n;
+      state.lifetimeCoins += n;
+    }
     return n;
   }
 
@@ -430,6 +443,17 @@ const Game = (() => {
             bestCombo: count(ys.bestCombo)
           }
         };
+        /* The cumulative mint's ledgers. A save from before the ruling has
+           neither: `lifetimeCoins` becomes the year it is standing in, which
+           is the only earnings figure any save actually holds, and
+           `mintedBase` starts at zero so that year is drawn exactly once —
+           the same pouch the old formula would have paid it, and nothing
+           more, ever. A junk value falls back the same way. */
+        state.lifetimeCoins = typeof parsed.lifetimeCoins === 'number'
+          && Number.isFinite(parsed.lifetimeCoins) && parsed.lifetimeCoins >= 0
+          ? parsed.lifetimeCoins
+          : state.year.coinsEarned;
+        state.mintedBase = Math.max(0, Number(parsed.mintedBase) || 0);
         state.savedSeeds = Math.max(0, Number(parsed.savedSeeds) || 0);
         state.petals = {};
         const pp = parsed.petals && typeof parsed.petals === 'object' ? parsed.petals : {};
@@ -3257,19 +3281,25 @@ const Game = (() => {
     return { lines, sum, mult: Math.min(YEAR().tallyCap, 1 + sum) };
   }
 
-  /** What the Turn would mint right now. Reads the earnings accumulator and
-      nothing else — never the balance, so spending is provably seed-neutral. */
+  /** What the Turn would mint right now. `total` is the whole pool lifetime
+      earnings have opened; `base` is the undrawn part of it — the increment,
+      and the number the ceremony's count-up rolls to. Reads earnings and the
+      ledger, never the balance, so spending is provably seed-neutral, and
+      never turn count, so cadence is provably worth nothing. */
   function projectedMint() {
     const tally = projectedTally();
-    const base = YEAR().mintK * Math.sqrt(Math.max(0, state.year.coinsEarned))
-      * (1 + YEAR().veterancy * state.year.turnsCompleted);
-    return { base, tally, pouch: Math.round(base * tally.mult) };
+    const total = YEAR().mintK * Math.sqrt(Math.max(0, state.lifetimeCoins));
+    const base = Math.max(0, total - state.mintedBase);
+    return { total, mintedBase: state.mintedBase, base, tally, pouch: Math.round(base * tally.mult) };
   }
 
-  /** Both gates: projected mint AND a coins floor. The floor is what keeps
-      many-cheap-Turns-a-day unprofitable. */
+  /** Both gates: the UN-tallied increment against minSeeds, and this year's
+      earnings against the coins floor. The increment is what is gated because
+      it is what the Turn actually spends from the pool — gating the tallied
+      pouch would let a good year's fireworks buy entry to a Turn the pool
+      cannot pay for. */
   function turnReady() {
-    return projectedMint().pouch >= YEAR().minSeeds
+    return projectedMint().base >= YEAR().minSeeds
       && state.year.coinsEarned >= YEAR().minCoins;
   }
 
@@ -3303,6 +3333,10 @@ const Game = (() => {
     const earnedThisYear = state.year.coinsEarned;
     const minted = projectedMint();
     state.savedSeeds += minted.pouch;
+    /* The ledger moves by the UN-tallied increment, never the pouch. The
+       Tally is a gift on the way out; charging it to the pool would make a
+       well-played year cost the garden its own future seeds. */
+    state.mintedBase += minted.base;
 
     /* The blessing: one free Rich Bloom petal on a chosen flower, written
        like any bought petal, recorded for provenance. */
@@ -3366,6 +3400,9 @@ const Game = (() => {
     const payload = {
       pouch: minted.pouch,
       base: minted.base,
+      total: minted.total,
+      mintedBase: state.mintedBase,
+      lifetime: state.lifetimeCoins,
       tally: minted.tally,
       earned: earnedThisYear,
       blessed,
@@ -3794,6 +3831,7 @@ const Game = (() => {
         ...p,
         ready: turnReady(),
         coinsEarned: state.year.coinsEarned,
+        lifetimeCoins: state.lifetimeCoins,
         minSeeds: YEAR().minSeeds,
         minCoins: YEAR().minCoins,
         turnsCompleted: state.year.turnsCompleted

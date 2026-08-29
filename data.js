@@ -332,16 +332,22 @@ const DATA = {
     unlockRatio: 1.5,
     freeSeeds: 2,
 
-    /* The mint: base = mintK x sqrt(coinsEarnedThisYear) x (1 + veterancy x
-       turnsCompleted), then the Tally multiplies it. mintK is the counter-knob
-       if playtest tallies run hot. */
+    /* The mint, CUMULATIVE — the owner's ruling, 2026-08-29. The whole pool a
+       garden will ever mint is mintK x sqrt(state.lifetimeCoins); a Turn draws
+       the part of it that has not been drawn yet (state.mintedBase), and the
+       Tally multiplies that increment on the way out without consuming it. The
+       pool depends on lifetime earnings alone, so no cadence can out-mint
+       another and splitting a year buys nothing. There is deliberately no
+       per-turn multiplier here: any factor on turn count re-arms the split.
+       mintK is the counter-knob if playtest tallies run hot. */
     mintK: 0.1,
-    veterancy: 0.2,
 
-    /* The Turn's two gates: projected mint >= minSeeds AND coinsEarned >=
-       minCoins. The coins floor is what keeps many-cheap-Turns-a-day
-       unprofitable — the seeds-only gate was reached at ~8K coins and enabled
-       a daisy petal rush 36% faster than intended play. */
+    /* The Turn's two gates: the un-tallied INCREMENT >= minSeeds AND this
+       year's coinsEarned >= minCoins. The coins floor keeps a year from being
+       cashed in the hour it started — the seeds-only gate was reached at ~8K
+       coins and enabled a daisy petal rush 36% faster than intended play — and
+       the increment floor is what thins the cadence as the pool is drawn
+       down. */
     minSeeds: 10,
     minCoins: 100000,
 

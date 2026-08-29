@@ -72,7 +72,7 @@ the right vehicle — the spike (`tools/map-spike.html`, `merge-spike`, `hollow-
 
 | Phase | Ships | The owner reviews | Slice |
 | --- | --- | --- | --- |
-| **1 — The engine** — **BUILT 2026-08-29, awaiting the owner's verdict** | Year state, `credit()`, the mint + Tally math, `turnYear()`, unlock prices, petal effects, quest re-keys, migration, dev-tools drivers, **the whole sim-test bill** (items 1–6, 8–18 asserted; suite at 1,096) | Numbers, via a cheat-driven year — no UI yet | A (sim half) |
+| **1 — The engine** — **BUILT 2026-08-29, awaiting the owner's verdict** | Year state, `credit()`, the mint + Tally math, `turnYear()`, unlock prices, petal effects, quest re-keys, migration, dev-tools drivers, **the whole sim-test bill** (items 1–6, 8–17b and 18 asserted; suite at 1,121) | Numbers, via a cheat-driven year — no UI yet | A (sim half) |
 | **2 — The ceremony** | The meter pill, the Turn sheet with the arcade Tally, the blessing, petal rows on the Almanac, unlock rows in the seed picker, the season tint | Plays a full year on the phone; *gift or loss?* | A (surface half) |
 | **3 — Fall and the strip** | The horizontal season strip, hedge gates, Fall's board + eight crops + windfall + Century Bloom, map retirement, the Stand's dock entry | Turn 1 → the gate opens → a Fall day | A (world half) |
 | **4 — The tuning pass** | Play-derived retune of every knob against the doc 33 targets, FTUE beats, flower lines, celebration polish | Day 1–3 pacing on a fresh save; the wall's *feeling* | A (polish) |
@@ -87,7 +87,8 @@ early.
 ### Phase 1 — The engine (simulation only, no UI)
 
 **In scope:** `DATA.year` / `DATA.fall` / `DATA.petals` (+ the GLOBALS whitelist);
-`state.year { number, coinsEarned, stats, turnsCompleted }`, `savedSeeds`, `petals`,
+`state.year { number, coinsEarned, stats, turnsCompleted }`, `lifetimeCoins`,
+`mintedBase`, `savedSeeds`, `petals`,
 `seedUnlocks`, `blessed`, `state.fall` — all in `defaultState()` **and** the re-merge list;
 `Game.credit(amount, {cheat, refund})` wired through every faucet; the mint with the Tally
 (counters, tiers, cap, zero-line rule); atomic `Game.turnYear(blessedId)` over the full
@@ -97,7 +98,7 @@ and the plots-5–8 year gate; petal effects via `petalMult` at harvest and
 in `passiveIncomeRate()`; Bloom Mastery retirement + conversion grant; the four quest re-keys at
 held reputation; Fall's plants and windfall **as simulation** (the board state machine, no
 rendering); Century Bloom rules; dev-tools drivers (drive a year's earnings, force the meter,
-run a Turn, inspect the Tally). **The entire sim-test bill, items 1–6 and 8–18.**
+run a Turn, inspect the Tally). **The entire sim-test bill, items 1–6 and 8–18 — plus 17b, the cumulative mint's own group, added with the owner's ruling in phase 1.1.**
 
 **Out of scope, hard:** any visible UI beyond dev tools; the ceremony sheet; the strip; Fall's
 rendering; art of any kind. The live game must look and play identically after every phase-1
@@ -188,12 +189,14 @@ the repo documents a class of flaky tests from unpinned Math.random, and a
 flaky suite is a failing suite.
 
 Key numbers as of 2026-08-29 (docs/33 is authoritative wherever anything
-differs): unlock(3) = 150K at x1.5/tier; mint = 0.1·sqrt(coinsEarned) ·
-(1 + 0.2·turns) · tally, tally summed then capped at x2.0; the Turn requires
-projected mint >= 10 AND coinsEarned >= 100K; petals cost
+differs): unlock(3) = 150K at x1.5/tier; the mint is CUMULATIVE —
+pool = 0.1·sqrt(lifetimeCoins), increment = pool - mintedBase,
+pouch = round(increment · tally), and the Turn adds the UN-TALLIED increment
+to mintedBase; tally summed then capped at x2.0; there is no veterancy term;
+the Turn requires increment >= 10 AND coinsEarned >= 100K; petals cost
 15 · 1.45^(seed-1) · 1.25^(petal-1), signatures x0.6; plots 5-8 require
 turnsCompleted >= 1 (migrated saves keep what they own); cheated gold never
-reaches coinsEarned.
+reaches coinsEarned OR lifetimeCoins.
 
 When implementation is complete, run the gauntlet from docs/34 before your
 handoff: an adversarial multi-agent critique with independent critics for

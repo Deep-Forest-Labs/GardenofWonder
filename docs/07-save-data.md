@@ -431,19 +431,23 @@ a creature sent to rest stops keeping without anything having to remember.
 
 ## The Garden Year (added 2026-08-29)
 
-Six new top-level fields, all in `defaultState()` **and** re-merged individually in `load()`:
+**Eight** new top-level fields, all in `defaultState()` **and** re-merged individually in
+`load()` (six landed with phase 1; `lifetimeCoins` and `mintedBase` arrived with the
+cumulative mint in phase 1.1):
 
 ```js
 year: {
   number: 1,                    // which year is being played, 1-based
-  coinsEarned: 0,               // the mint's whole input — written ONLY by credit(), never decremented
-  turnsCompleted: 0,            // gates Fall (fallTurn), plots 5–8 (plotTurnGate), the veterancy bonus
+  coinsEarned: 0,               // THIS year's earnings — written ONLY by credit(), never decremented, zeroed at the Turn; opens the coins gate
+  turnsCompleted: 0,            // gates Fall (fallTurn) and plots 5–8 (plotTurnGate) — and NOTHING in the mint
   stats: {                      // the Tally's counters: year-scoped, zeroed at the Turn
     orders: 0, windfalls: 0, species: 0,
     speciesSeen: {},            // seedId -> true, so a species counts once per year
     legendaries: 0, bestCombo: 0
   }
 },
+lifetimeCoins: 0,               // every coin honestly earned, ever — written ONLY by credit(), NEVER reset; sizes the mintable pool
+mintedBase: 0,                  // seeds already drawn from that pool, un-tallied; NEVER reset, grows only at the Turn
 savedSeeds: 0,                  // the forever money; minted at the Turn, spent on petals, never reset
 petals: {},                     // seedId -> { rich, quick, sig }; clamped to the shared caps on load
 seedUnlocks: {},                // seedId -> true; one-time gold prices, permanent across Turns
@@ -465,7 +469,14 @@ Rules that matter:
 - **`year.stats.species` is recomputed from `speciesSeen`** on load, so the pair can never drift
   apart.
 - **`coinsEarned` may be fractional** and survives as a Number; it is compared, never displayed
-  raw.
+  raw. **`lifetimeCoins` and `mintedBase` are fractional too** and round-trip to the fraction —
+  `mintedBase` in particular must never be rounded, or repeated Turns would drift the ledger
+  away from the pool it is meant to track.
+- **The two ledgers are rebuilt after `state.year`**, because `lifetimeCoins` falls back to the
+  *sanitised* `year.coinsEarned` when the save has no ledger of its own. A junk `lifetimeCoins`
+  (string, `null`, `NaN`, negative) takes the same fallback; a junk `mintedBase` clamps to 0.
+  `projectedMint()` clamps the increment at zero, so an edited save with `mintedBase` past its
+  pool simply has nothing to draw rather than minting a negative pouch.
 
 ### The Year migration — `migrateYear()`, keyed on the missing `year` key
 
@@ -481,9 +492,22 @@ pattern):
    `round(DATA.year.masteryConvert × totalTiers)` Saved Seeds, silent. The tiers stay in
    `state.mastery` as a frozen record. A second load neither advances nor converts again.
 3. **`coinsEarned` starts at zero** — no lifetime coin figure exists anywhere in the save, so
-   there is nothing honest to backfill from. The meter simply starts low.
+   there is nothing honest to backfill from. The meter simply starts low. **`lifetimeCoins`
+   and `mintedBase` start at zero with it**, for the same reason.
 4. **Nothing owned is re-locked**: open plots stay open (the Turn gate only refuses *purchases*
    while `turnsCompleted < plotTurnGate`), and `version` is stamped `4`.
+
+### The ledger migration — phase 1 saves, added 2026-08-29 (phase 1.1)
+
+A save that already carries a `year` but no `lifetimeCoins` — everything phase 1 wrote,
+including the owner's own — is not a `migrateYear()` case, because its `year` key exists. It
+is handled in `load()`'s field rebuild instead: **`lifetimeCoins` inherits the sanitised
+`year.coinsEarned`** (the only earnings figure such a save actually holds) and **`mintedBase`
+starts at 0**, so the year it is standing in is drawn exactly once — the same pouch the old
+per-year formula would have paid it at zero Turns — and never again. A save that had already
+completed Turns gets a one-off draw on its current year only; that is generous by at most one
+year's pouch, bounded, and correct in the only direction that matters, since no honest
+lifetime figure exists to reconstruct.
 
 **The Turn is not the Settings reset.** `turnYear()` is a selective, atomic path over the
 partition in [32-the-garden-year.md](32-the-garden-year.md#what-the-turn-clears-and-what-it-never-touches);

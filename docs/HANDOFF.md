@@ -39,7 +39,33 @@ from quests and levels.
 > **the owner's ruling on the mint**, where the review's four measured variants recommend the
 > cumulative shape (B) and prove veterancy must be deleted rather than capped.
 >
-> **PHASE 1.1 IS DONE — condition 1 is closed.** M09 is dead (three cases now separate the
+> **PHASE 1.1 IS COMPLETE — BOTH CONDITIONS CLOSED, AND THE MINT IS CUMULATIVE.** The owner
+> ruled, and the ruling is built: the pool a garden will ever mint is
+> `mintK × sqrt(state.lifetimeCoins)`, a Turn draws the undrawn part of it
+> (`state.mintedBase`), the Tally multiplies the draw without consuming it, and
+> **`DATA.year.veterancy` is deleted** — not capped, because the review proved any per-turn
+> multiplier on a split-neutral base re-arms the split. `minSeeds` gates the un-tallied
+> increment. Two new never-reset top-level fields; a phase-1 save inherits `lifetimeCoins`
+> from the year it is standing in. **The exploit is dead by construction** —
+> `node tools/year-sim.js 12 all` **exits zero**, with normal play ahead of turn-spam by a
+> stable ~1.5–1.6× on seeds and ahead on gold too. The suite is at **1,129 assertions** with
+> a new bill item **17b** for the mint's own properties, and twelve of twelve mutants die
+> (four survived the first pass and are closed; writing the last of them found a real defect
+> in the patch — a `null` `lifetimeCoins` passed the finite guard as `0`). **Condition 1
+> (M09) was verified rather than redone** — the mutant still kills the suite on both arms.
+> **Two costs, measured and filed, neither fixed:** the lifetime seed supply is now hard-
+> bounded, so the 636,378 shared-skill sink needs 4.05 × 10¹³ lifetime coins and doc 33's
+> "2–5 petals per Turn forever" is false (phase 4's `mintK` chair); and **the blessing
+> inherited the exploit** — one free Rich Bloom petal per Turn is now the largest per-Turn
+> grant in the game, and 95 Turns hand over the whole Rich Bloom ladder (318,189 Saved Seeds
+> of value) for ~101M lifetime coins, about 2.5 days of play. That is **the one open owner
+> decision now**, with four dials named and none taken; `year-sim` splits bought from blessed
+> petals and discloses it beneath the verdict rather than failing on it. See the
+> 2026-08-29 (phase 1.1, the ruling) entry in [10-decision-log.md](10-decision-log.md) and
+> the open decision in [11-known-issues.md](11-known-issues.md). **Phase 2's wireframe gate
+> is next, in its own session.**
+>
+> **Phase 1.1's first half, earlier the same day — condition 1 closed.** M09 is dead (three cases now separate the
 > migration's two grandfather arms and assert the negative), round 2 of the builder's gauntlet
 > is answered (21 confirmed findings, two of them blockers about rigs that never exercised the
 > path they covered), and the suite is at **1,096 assertions**, every fix mutation-proven 16 of
@@ -47,8 +73,8 @@ from quests and levels.
 > automation, so **the exploit is a SEEDS-ONLY break — normal play out-earns the turn-spam
 > cadence on gold by ~2.7×** (which narrows the dials to the mint's shape and corroborates the
 > review's recommendation), and with automation modelled the tool **reproduces doc 33's
-> 370–410K first year for the first time**. **Only the owner's ruling on the mint is
-> outstanding.** Phase 2 begins at the wireframe gate, in its own session, after it.
+> 370–410K first year for the first time**. **The owner's ruling on the mint has since
+> landed — see the block above.** Phase 2 begins at the wireframe gate, in its own session.
 >
 > **THE GARDEN YEAR IS DOCUMENTED FOR BUILD, 2026-08-29.** The brainstorm ended and the owner said
 > go. **[32-the-garden-year.md](32-the-garden-year.md)** is the master design — four seasonal
@@ -887,11 +913,11 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 **The build is phased and gated: [34-build-plan.md](34-build-plan.md).** Slice A splits into four
 owner-reviewed phases (engine → ceremony → Fall and the strip → tuning), each built by a fresh
 session from the paste-ready prompt in that doc, each ending in a critic gauntlet and a
-five-minute phone test script before the owner's verdict gates the next. **Phase 1 is BUILT and
-awaiting the owner's verdict** — the engine as simulation, the bill asserted, the game visually
-unchanged; the five-minute script is at the end of the phase-1 session's handoff and drives
-Developer tools → the Garden Year rows. **Phase 2 does not start until the verdict, and starts
-at the wireframe gate** (`tools/turn-spike.html`, owner-approved before any UI code). If you are
+five-minute phone test script before the owner's verdict gates the next. **Phase 1 and 1.1 are BUILT and awaiting the
+owner's review** — the engine as simulation, the bill asserted, the game visually unchanged,
+and the mint rebuilt cumulative on the owner's ruling; the five-minute script is at the end of
+the phase-1 session's handoff and drives Developer tools → the Garden Year rows. **Phase 2
+starts at the wireframe gate** (`tools/turn-spike.html`, owner-approved before any UI code). If you are
 a builder session, your prompt told you your phase — doc 34 is your scope, and the design
 conversation lives elsewhere: where docs 32/33 are silent, ask, don't invent.
 
@@ -908,10 +934,14 @@ Everything below is one panel: tap the unlabelled dot beside the gem wallet, scr
 Garden Year**. Nothing here has a surface yet — you are judging *numbers*, and the row's
 header line is the meter until phase 2 draws it.
 
-1. **Watch the meter fill.** Tap **Earn +100K**, then **+400K**. The header re-reads each time:
-   earned-so-far against the 100K floor, then `base × tally → pouch`, then whether the Turn is
-   ready. Note that **+1M gold** (in *Give*, above) moves the wallet and **not** the meter —
-   that is cheated gold staying out of the mint, deliberately.
+1. **Watch the meter fill.** Tap **Earn +100K**, then **+400K**. The header re-reads each time,
+   and since the ruling it shows the **ledger** the mint runs on: earned-so-far against the
+   100K floor, then `pool P from L lifetime, D drawn`, then
+   `projects N seeds (increment I / 10 × tally M)`, then whether the Turn is ready. The pool is
+   `0.1 × sqrt(lifetime)` and the increment is what this Turn would draw out of it. Note that
+   **+1M gold** (in *Give*, above) moves the wallet and **neither** ledger — that is cheated
+   gold staying out of the mint, deliberately, and the lifetime one matters most because it
+   never resets.
 2. **Hit the wall.** In *Petals*, tap **Unlock the next seed**. On a **fresh** save Bluebell
    wants **150,000** — the first wall, and the number to judge: on day one it should read as
    impossible. Pay it, and it is paid forever (it survives every Turn). **On your own save this
@@ -919,9 +949,16 @@ header line is the meter until phase 2 draws it.
    had earned, which is correct and deliberate. To feel the wall as a new player meets it, open
    the game in a private window and run these steps there.
 3. **Turn the year.** Tap **A good year's Tally** (a canned mid-game year), then **Run the Turn
-   (bless Daisy)**. The toast is the ceremony's content without its theatre: the pouch, the
-   Tally's multiplier, and every line that scored — *Orders filled: 12 → +10%*, and so on. A
-   line the year scored nothing on simply does not appear.
+   (bless Daisy)**. The toast is the ceremony's content without its theatre: the pouch, then
+   **`drew X of a Y pool`**, the Tally's multiplier, and every line that scored — *Orders
+   filled: 12 → +10%*, and so on. A line the year scored nothing on simply does not appear.
+   **Then do it again** — this is the ruling made visible, and the one thing worth two minutes
+   of the five. Tap **Earn +400K** and **Run the Turn** a second time: the header's *drawn*
+   figure has gone up by exactly the last increment, and the second pouch is *much* smaller
+   than the first, because the pool grows with the square root of lifetime earnings and you
+   have already drawn most of what the first 500K opened. **Turning often now buys nothing.**
+   That is the whole change; if a Turn ever pays as much as the one before it on the same
+   money, something has regressed.
 4. **Spend the pouch.** *Petals* now shows Saved Seeds and Daisy's next two prices. Buy **Rich
    Bloom** and **Quick Sprout** a few times and watch the price ladder climb — 2–5 petals per
    Turn is the intended feel.
@@ -933,11 +970,13 @@ header line is the meter until phase 2 draws it.
    **Harvest the bed**: eight crops, and the windfall pays **+50% on the whole bed** because
    every plot was planted and ripe. That is the appointment Fall is built around.
 
-**The one question waiting on you:** turning often is currently the optimal play — a player who
-turns at every 100K gate out-mints and out-earns one who rides the year to its wall. It is
-measured, reproducible (`node tools/year-sim.js 12 all`), and the dials are all data
-(`minCoins`, `veterancy`, `mintK`). See the open decision in
-[11-known-issues.md](11-known-issues.md).
+**The question that was waiting on you is answered** — you ruled the mint cumulative, phase 1.1
+built it, and turning often now buys nothing (`node tools/year-sim.js 12 all` exits zero).
+**The new one, in its place:** the blessing is now the largest per-Turn grant in the game and
+nothing prices it — **95 Turns hand over every flower's Rich Bloom ladder, 318,189 Saved Seeds
+of value, for about 2.5 days of play**, while the mint pays 997 seeds over the same span. It is
+a ceremony beat, so the call is yours; four dials are named and none taken. See the open
+decision in [11-known-issues.md](11-known-issues.md).
 
 **Parked by this pivot, not deleted:** the map build-out, the Stand's expansion, the meadow's next
 pieces, the bench surface, and the merge-central layout work in [28-the-loop.md](28-the-loop.md).
@@ -1579,7 +1618,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,096 assertions over the simulation layer
+node tools/sim-test.js          # 1,129 assertions over the simulation layer
 node tools/year-sim.js 12 all   # the pacing model — exits non-zero while the cheap-Turn exploit stands
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
@@ -1676,7 +1715,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,096 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,129 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

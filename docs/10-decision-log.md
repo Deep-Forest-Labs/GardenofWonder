@@ -5,6 +5,108 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (phase 1.1, the ruling) — The mint becomes cumulative, the exploit dies by construction, and the blessing inherits the problem
+
+**The owner ruled on the mint: cumulative.** This is the second of the two conditions phase 1's
+independent review left open, and the recommendation it made after measuring four variants
+through the real engine. The mint is now:
+
+```
+pool      = mintK × sqrt(state.lifetimeCoins)      // lifetime earnings, ever
+increment = pool − state.mintedBase                 // what is left to draw
+pouch     = round(increment × tally)
+at the Turn: state.mintedBase += increment          // the UN-TALLIED increment
+```
+
+Two new top-level fields, neither of which ever resets: `lifetimeCoins`, fed by `credit()`
+beside `year.coinsEarned` under the same cheat/refund exclusions, and `mintedBase`, the ledger
+of un-tallied seeds already drawn. `DATA.year.veterancy` is **deleted**, not capped — the
+review proved that re-attaching any per-turn multiplier to a split-neutral base re-arms the
+split at 1.3–1.4×. `minSeeds` now gates the **increment** rather than the tallied pouch,
+because the increment is what the Turn actually spends from the pool; gating the tallied
+number would let a good year's fireworks buy entry to a Turn the pool cannot pay for.
+
+**The exploit is dead, and dead by construction rather than by tuning.** `node
+tools/year-sim.js 12 all` exited non-zero for a day and now **exits zero**: normal play beats
+turn-at-every-gate on Saved Seeds by a stable ~1.5–1.6× across runs (832–967 against 563–610
+at day 10) and on gold as well. The sum of every Turn's draw is the same number however the
+year is sliced, verified end to end at 1→64 chunks. **The first Turn is unchanged** — a first
+year *is* the lifetime — so doc 33's ~60–65 seeds on a ~370–410K year survives untouched.
+
+**Two costs, both measured rather than estimated, both filed rather than fixed.**
+
+1. **The lifetime seed supply is now hard-bounded** at `0.1 × sqrt(lifetime)`, where veterancy
+   previously let it grow without limit. The 636,378-seed shared-skill sink needs **4.05 ×
+   10¹³ lifetime coins** — about a million days at the measured ~40M/day; a whole year of play
+   opens ~12,000 seeds. Doc 33's **"every Turn affords a similar 2–5 petals forever" is now
+   false** (the tool measures 1 of 5 Turns in band against 4 of 7 before). The review named
+   this cost in advance and assigned it to phase 4's chair; `mintK` is the knob, doc 33 says
+   these two exponents tune together or not at all, and re-pricing wants playtest data.
+2. **The blessing inherited the exploit.** With the base split-neutral, the one free Rich Bloom
+   petal per Turn is now the largest per-Turn grant in the game and nothing prices it. Driven
+   through the real engine: **95 Turns fill every flower's Rich Bloom ladder — 318,189 Saved
+   Seeds of value, exactly half the shared sink — for ~101M lifetime coins, about 2.5 days of
+   play**, while the mint pays 997 seeds over the same span. It is pre-existing; what changed
+   is that the mint no longer dwarfs it. `year-sim` now splits **bought** petals from
+   **blessed** ones and discloses this beneath the verdict rather than failing on it, because
+   the exit code answers the question the owner ruled on and the blessing is a designed
+   ceremony beat. Logged as the new open owner decision in
+   [11-known-issues.md](11-known-issues.md) with four dials named and none taken.
+
+**The suite went 1,096 → 1,129**, and the new group is bill item **17b** — the cumulative mint's
+own properties asserted directly rather than inferred from the pacing tool's exit code:
+veterancy absent from the data and turn count moving no part of the projection, the pool
+unmoved by the year's own earnings or the wallet, four Turns drawing exactly what one Turn
+draws, a drawn pool refusing a fresh 150K year, a maxed Tally paying *over* the pool rather
+than out of it, both migration arms, and the negative clamps.
+
+**Mutation-proven, twelve of twelve.** Every regression the shape invites was introduced into a
+scratch copy and the suite watched: ledger moving by the pouch instead of the increment, the
+gate reading `.pouch`, the pool reading the year instead of the lifetime, `credit()` forgetting
+or over-feeding the ledger, the Turn resetting either ledger, a per-turn multiplier re-added on
+the pouch *or* folded into the Tally, the ledger floored to an integer each draw (a slow leak),
+and the draw taken before the in-flight harvest is credited. **Four survived the first pass and
+are now closed**: a refund reaching `lifetimeCoins` (bill 4 asserted the exclusion on the
+year's accumulator only — and the year's washes out every Turn while the pool's is permanent),
+and the three load-time guards on hand-edited ledgers. **Writing that last test found a real
+defect in this patch**: `Number.isFinite(Number(null))` is `true`, so a `lifetimeCoins` that
+JSON had flattened from `NaN`/`Infinity` to `null` passed the guard as `0` and silently zeroed
+the pool instead of inheriting the year. The guard now demands an actual number.
+
+**Task 2 of the phase-1.1 brief was already done** and was verified rather than redone: the
+M09 mutant (gut `migrateYear()`'s condition so every seed unlocks free) was re-applied to a
+scratch copy and the suite went red on both arms — *"and a seed with NEITHER evidence stays
+walled"* and *"a modest save is NOT handed the whole ladder"*, the latter naming Eternal Crown
+explicitly. Re-verified after the mint changes.
+
+**Migration.** A save that already carries a `year` but no ledgers — everything phase 1 wrote,
+the owner's own included — is not a `migrateYear()` case, since its `year` key exists; it is
+handled in `load()`'s field rebuild, taking `lifetimeCoins` from the sanitised
+`year.coinsEarned` and `mintedBase` from zero. That year is therefore drawn exactly once, at
+the same pouch the old per-year formula would have paid it at zero Turns. A save that had
+completed Turns gets a one-off draw on its current year: generous by at most one year's pouch,
+bounded, and correct in the only available direction, because no honest lifetime figure exists
+anywhere in the save to reconstruct.
+
+### Rejected
+
+**Tuning `mintK` to restore the 2–5 petals band.** The ruling was about the mint's *shape*;
+re-pricing it against the petal ladder is a different decision, wants playtest data, and is
+explicitly phase 4's — the review said so when it recommended the shape. Doing it in the same
+patch would also make it impossible to tell which change moved the pacing. **Failing
+`year-sim` on the blessing.** The brief asked for the tool to go green on Saved Seeds and it
+does; the blessing is a ceremony beat, so silently widening the exit-code criterion would be
+this session overruling the owner on a design question. Disclosed in the report instead —
+which is the same fix the gauntlet applied when it caught the tool declaring "unprofitable:
+YES" while rush was winning in its own printout. **Capping the blessing, or making it once per
+year.** Both are real options and both are the owner's; phase 1.1 measured the problem and
+changed nothing. **Taking the peer session's Fall windfall-latch bug into this commit.** It is
+confirmed and real (`bedPaid` never clears for a player who replants as they harvest), but it
+is a different system with a different fix, and bundling it would blur what this commit is for;
+the phase-1 builder session takes it next.
+
+---
+
 ## 2026-08-29 (phase 1.1) — The review's condition closed, round 2 of the gauntlet answered, and the exploit turns out to be seeds-only
 
 **Phase 1.1 is the patch the independent review made a condition of its approval, plus round 2

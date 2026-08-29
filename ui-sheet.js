@@ -1361,7 +1361,8 @@
     const p = Game.Dev.projectTurn();
     const lines = p.tally.lines.map((l) => `${l.label} ${l.count} +${Math.round(l.bonus * 100)}%`).join(' · ');
     return `year ${S.year.number}, turn ${p.turnsCompleted} · earned ${fmt(Math.floor(p.coinsEarned))} / ${fmt(p.minCoins)}
-      · projects ${fmt(p.pouch)} seeds (base ${p.base.toFixed(1)} × tally ${p.tally.mult.toFixed(2)}${lines ? ` — ${lines}` : ''})
+      · pool ${p.total.toFixed(1)} from ${fmt(Math.floor(p.lifetimeCoins))} lifetime, ${p.mintedBase.toFixed(1)} drawn
+      · projects ${fmt(p.pouch)} seeds (increment ${p.base.toFixed(1)} / ${p.minSeeds} × tally ${p.tally.mult.toFixed(2)}${lines ? ` — ${lines}` : ''})
       · ${p.ready ? 'THE TURN IS READY' : 'not yet ready'}`;
   }
 
@@ -1518,7 +1519,7 @@
           const lines = turn.tally.lines.map((l) => `${l.label}: ${l.count} → +${Math.round(l.bonus * 100)}%`);
           UI.toast({
             title: `The year turned — ${fmt(turn.pouch)} Saved Seeds`,
-            body: `Tally ×${turn.tally.mult.toFixed(2)}${lines.length ? ' · ' + lines.join(' · ') : ''}${turn.blessed ? ' · blessed: daisy' : ''}`,
+            body: `drew ${turn.base.toFixed(1)} of a ${turn.total.toFixed(1)} pool · Tally ×${turn.tally.mult.toFixed(2)}${lines.length ? ' · ' + lines.join(' · ') : ''}${turn.blessed ? ' · blessed: daisy' : ''}`,
             art: Icons.get('sprout')
           });
           UI.buildGarden();
