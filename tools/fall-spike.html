@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>The Turn — phase 2 wireframe spike</title>
+<title>Fall and the strip — phase 3 wireframe spike</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 /* =========================================================
-   turn-spike.html — the wireframe gate for phase 2.
+   fall-spike.html — the wireframe gate for phase 3.
 
    Static. No game dependencies: no data.js, no flora.js, no
    game.js. Everything here is drawn from scratch so the spike
@@ -432,12 +432,154 @@ body[data-notes="0"] .slot{display:none}
   padding:7px 12px;border:3px solid var(--ink);border-radius:14px;
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
   box-shadow:0 3px 0 var(--ink-2);font-size:12.5px;font-weight:800;white-space:nowrap}
+
+/* =========================================================
+   PHASE 3 — Fall, the strip, the gates.
+   A season is a speed and a rule, never a re-skin: the board
+   below is the garden's construction line for line, and what
+   changes is the material (a woven trug, not a soil planter),
+   the clock (hours, not seconds) and the rule (the bed pays
+   together). Everything else is deliberately identical.
+   ========================================================= */
+
+/* Autumn is a palette on the scenery, not a different scenery. */
+.phone.fall .sky{background:linear-gradient(180deg,#8fbfd8 0%,#cfe0e6 46%,#ffe3bd 100%)}
+.phone.fall .sun{background:radial-gradient(circle,#fff0cf 40%,#ffd9a0 70%,rgba(255,217,160,0) 72%)}
+.phone.fall .hills{background:radial-gradient(ellipse 60% 100% at 30% 100%,#b4713a 0 70%,transparent 72%),
+                              radial-gradient(ellipse 70% 100% at 78% 100%,#96562c 0 70%,transparent 72%)}
+.phone.fall .lawn{background:repeating-linear-gradient(92deg,#8f9c4a 0 26px,#7d8b40 26px 52px)}
+.phone.fall .lawn::after{background:linear-gradient(180deg,rgba(125,139,64,0),#7d8b40)}
+.phone.fall .fence{background:repeating-linear-gradient(90deg,#a86a3a 0 7px,transparent 7px 26px),
+                              linear-gradient(180deg,transparent 0 6px,#a86a3a 6px 11px,transparent 11px)}
+
+/* THE BED. Same 3x3, same lip ladder, same grass fringe — a woven trug instead
+   of a soil planter, because the verb here is "collect it all together" and a
+   basket is what says that. */
+.garden.trug{
+  background:
+    repeating-linear-gradient(52deg,rgba(255,255,255,.09) 0 4px,transparent 4px 11px),
+    repeating-linear-gradient(-52deg,rgba(0,0,0,.10) 0 4px,transparent 4px 11px),
+    linear-gradient(180deg,#c98a4e 0%,#a76b38 44%,#8a5528 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.24), inset 0 -9px 0 rgba(0,0,0,.22),
+             0 9px 0 #5f3a1a, 0 18px 26px rgba(44,26,16,.32)}
+.garden.trug::before{background:radial-gradient(ellipse 52% 100% at 50% 100%,#7d8b40 0 92%,transparent 94%);
+  background-size:22px 12px;background-repeat:repeat-x}
+/* Autumn earth: damper and cooler than Summer's, so the crop reads against it. */
+.plot.earth{
+  background:
+    radial-gradient(circle at 26% 22%,rgba(255,255,255,.13) 0 12%,transparent 13%),
+    radial-gradient(circle at 72% 62%,rgba(0,0,0,.12) 0 9%,transparent 10%),
+    linear-gradient(180deg,#7e5e42 0%,#5f4630 72%,#453221 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.13), inset 0 -7px 0 rgba(0,0,0,.2),
+             0 4px 0 #392a1c, 0 8px 14px rgba(44,26,16,.24)}
+.plot.earth.mid{background:radial-gradient(circle at 26% 22%,rgba(255,255,255,.14) 0 12%,transparent 13%),
+  linear-gradient(180deg,#c7b48f,#a89372);border-style:dashed;box-shadow:none}
+.plot.ripe{box-shadow:inset 0 5px 0 rgba(255,255,255,.13), inset 0 -7px 0 rgba(0,0,0,.2),
+  0 4px 0 #392a1c, 0 8px 14px rgba(44,26,16,.24), 0 0 0 3px var(--coin)}
+.plot .ready-pop{position:absolute;top:-9px;right:-6px;width:24px;height:24px;border-radius:50%;
+  display:grid;place-items:center;background:linear-gradient(180deg,#ffe066,var(--coin));
+  border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2);font-size:13px;font-weight:800}
+.plot .wait{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
+  padding:2px 7px;border-radius:999px;border:2px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 2px 0 var(--ink-2);
+  font-size:9.5px;font-weight:800;white-space:nowrap}
+.crop{width:88%;height:88%}
+
+/* THE BED CHIP — the whole of Fall's rule, in one object above the board.
+   Doc 33's windfall pays only when every eligible plot is planted AND ripe, so
+   the one thing this screen must never do is let a player harvest at 7 of 8
+   without knowing. */
+.bed-wrap{position:absolute;left:0;right:0;top:-12px;z-index:4;display:flex;justify-content:center}
+.bed-chip{display:flex;align-items:center;gap:7px;padding:6px 13px;white-space:nowrap;max-width:100%;
+  border:3px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.2);
+  font-size:12.5px;font-weight:800}
+.bed-chip svg{width:18px;height:18px}
+.bed-chip b{font-variant-numeric:tabular-nums}
+.bed-chip.close{background:linear-gradient(180deg,#fff6c2,#ffe066)}
+.bed-chip.armed{background:linear-gradient(180deg,#ffe98a,var(--coin));
+  animation:affordPulse 1.4s ease-in-out infinite}
+.garden.armed{box-shadow:inset 0 5px 0 rgba(255,255,255,.24), inset 0 -9px 0 rgba(0,0,0,.22),
+  0 9px 0 #5f3a1a, 0 18px 26px rgba(44,26,16,.32), 0 0 0 4px var(--coin), 0 0 26px 8px rgba(255,201,60,.5)}
+
+/* THE CENTURY BLOOM — a fortnight in a plot, and outside the bed's arithmetic. */
+.plot.century{background:
+    radial-gradient(circle at 26% 22%,rgba(255,255,255,.16) 0 12%,transparent 13%),
+    linear-gradient(180deg,#5b4a7a 0%,#463962 72%,#332a49 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.16), inset 0 -7px 0 rgba(0,0,0,.22),
+             0 4px 0 #2a2240, 0 8px 14px rgba(44,26,16,.28)}
+.plot.century .wait{background:linear-gradient(180deg,#efe7ff,#d8ccff)}
+.cent-bar{position:absolute;left:12%;right:12%;bottom:26px;height:9px;border-radius:999px;
+  border:2px solid var(--ink);background:#efe7ff;overflow:hidden}
+.cent-bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#e5dbff,#b197fc)}
+
+/* THE SEASON EDGE — how a player finds out sideways exists. The horizontal
+   answer to the burrow door: a labelled thing you can tap, and a gesture that
+   does the same. */
+.edge{position:absolute;bottom:104px;z-index:7;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:9px 5px;width:38px;
+  border:3px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.22);
+  font-size:9.5px;font-weight:800;letter-spacing:.02em;text-align:center;line-height:1.05}
+.edge svg{width:19px;height:19px}
+.edge.r{right:0;border-right:0;border-radius:16px 0 0 16px}
+.edge.l{left:0;border-left:0;border-radius:0 16px 16px 0}
+.edge .w{writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.06em}
+.edge.locked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 4px 0 var(--paper-dim-edge), 0 7px 12px rgba(44,26,16,.18)}
+
+/* THE DOORS at the foot of the garden. The burrow door is the precedent and the
+   meadow gate is its twin — the map used to be the meadow's only way in. */
+.doors{position:absolute;left:0;right:0;bottom:4px;display:flex;justify-content:center;gap:8px;z-index:3}
+.door{display:flex;align-items:center;gap:6px;padding:6px 12px 6px 8px;
+  border:3px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.2);
+  font-size:11.5px;font-weight:800}
+.door svg{width:19px;height:19px}
+
+/* A LOCKED SEASON is a promise, not a wall: a real backdrop, a hedge across it,
+   a padlock chip, the turn that opens it, and one thing drifting. */
+.gate-screen{position:absolute;inset:0;overflow:hidden}
+.gate-hedge{position:absolute;left:-4%;right:-4%;bottom:0;height:38%;
+  background:
+    radial-gradient(circle at 12% 18%,rgba(255,255,255,.13) 0 7%,transparent 8%),
+    radial-gradient(circle at 62% 12%,rgba(0,0,0,.12) 0 6%,transparent 7%),
+    linear-gradient(180deg,#3f7d43 0%,#33693a 52%,#28522e 100%);
+  border-top:4px solid var(--ink);border-radius:40px 60px 0 0 / 30px 40px 0 0;
+  box-shadow:inset 0 6px 0 rgba(255,255,255,.14), 0 -6px 18px rgba(44,26,16,.22)}
+.gate-hedge::after{content:'';position:absolute;left:0;right:0;top:-14px;height:20px;
+  background:radial-gradient(ellipse 50% 100% at 50% 100%,#3f7d43 0 90%,transparent 92%);
+  background-size:34px 20px;background-repeat:repeat-x}
+.gate-plate{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);
+  display:grid;justify-items:center;gap:9px;z-index:3;text-align:center}
+.gate-lock{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;
+  border:4px solid var(--ink);background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+  box-shadow:0 5px 0 var(--ink-2), 0 10px 18px rgba(44,26,16,.28)}
+.gate-lock svg{width:40px;height:40px}
+.gate-name{font-size:34px;font-weight:800;letter-spacing:.06em}
+.leaf-drift{position:absolute;width:22px;opacity:.9;animation:drift 9s linear infinite}
+@keyframes drift{0%{transform:translate(0,-10px) rotate(0)}100%{transform:translate(-70px,220px) rotate(220deg)}}
+@media (prefers-reduced-motion:reduce){.leaf-drift{animation:none}.bed-chip.armed{animation:none}}
+
+/* THE STRIP, mid-swipe. Two seasons on one track — this is the only frame that
+   shows the gesture rather than its endpoints. */
+.track{position:absolute;inset:0;display:flex;width:200%;transform:translateX(-34%)}
+.pane{position:relative;width:50%;height:100%;overflow:hidden}
+.pane + .pane{box-shadow:-14px 0 22px -12px rgba(44,26,16,.35)}
+.hand{position:absolute;left:22%;top:56%;width:54px;height:54px;border-radius:50%;z-index:9;
+  border:4px solid var(--ink);background:rgba(255,255,255,.42)}
+.hand::after{content:'';position:absolute;left:100%;top:50%;width:120px;height:5px;
+  transform:translateY(-50%);background:repeating-linear-gradient(90deg,var(--ink) 0 9px,transparent 9px 17px)}
 </style>
 </head>
 <body data-notes="1">
 <div class="page">
-<h1>The Turn — phase 2 wireframe spike</h1>
-<p class="lede">Every screen and state phase 2 touches, at <b>390&times;844</b> with a real handset's insets, drawn
+<h1>Fall and the strip — phase 3 wireframe spike</h1>
+<p class="lede">Every screen and state phase 3 touches, at <b>390&times;844</b> with a real handset's insets, drawn
 with the house material so proportions are judged at the size they ship in. <b>Static:</b> no <code>data.js</code>,
 no <code>flora.js</code>, no <code>game.js</code> — the blooms and icons here are hand-drawn stand-ins, and the
 numbers are placeholders that match what the engine actually produces today.
@@ -614,482 +756,351 @@ function phone(o) {
 }
 </script>
 
+
 <script>
 /* =========================================================
-   THE FRAMES. Doc 34's phase-2 list, in its order:
-   1 the HUD pill (both states + the projection)  2 the sheet's
-   four beats  3 the Almanac row  4 the seed picker  5 the tint.
+   THE FRAMES. Doc 34's phase-3 list, in its order:
+   1 Summer with the strip legible   2 a hedge gate up close
+   3 Fall's board, crops, windfall   4 the Century Bloom's wait
+   5 the dock with the Stand where the World button was.
    ========================================================= */
 const F = [];
 
-/* ---------- 1. THE THIRD PILL ---------- */
-F.push({
-  t: 'The meter, before the first Turn',
-  s: 'Summer, year one. The third pill carries no number — the fill IS the message.',
-  tag: 'HUD',
-  html: phone({
-    coins: '38.4K',
-    meter: { p: 0.34 },
-    speech: 'Warm one, isn’t it?'
-  }),
-  notes: [
-    ['d', 'The pill is a <b>wallet whose own body is the meter</b>. It costs the HUD no more width than a third wallet, needs no separate bar, and the fill reads at a glance from across a room. The alternative — pill plus a bar underneath — spends a whole HUD row.'],
-    ['d', 'Pre-Turn-1 it carries <b>no number at all</b>: doc 32’s year one is "nothing, unexplained — the mystery is the tutorial". A number would invite arithmetic; a rising fill invites a tap. It is also 34px narrower, which is what keeps the HUD on one row for the whole of year one.'],
-    ['q', 'Is the seed green (<code>--seed #7bd88f</code>) the right currency colour? It is deliberately not gold (that is coins), not cyan (gems), and clear of all three rarity colours. It is the one new token this phase adds.']
-  ]
-});
+/* The eight crops, plus the fortnight plant. Costs and clocks are doc 33's. */
+const CROPS = {
+  strawberry:  { n: 'Strawberry',    cost: '2,000',     grow: '20m', yield: '2,800',     c: '#e8453c', l: '#3f9d45' },
+  mint:        { n: 'Mint',          cost: '3,500',     grow: '35m', yield: '4,900',     c: '#51cf66', l: '#2f9e44' },
+  chamomile:   { n: 'Chamomile',     cost: '5,500',     grow: '50m', yield: '7,700',     c: '#fff3bf', l: '#8fe08a' },
+  brambleberry:{ n: 'Bramble Berry', cost: '9,000',     grow: '1.5h', yield: '12,600',   c: '#5f3dc4', l: '#2f9e44' },
+  pumpkin:     { n: 'Pumpkin',       cost: '16,000',    grow: '3h',  yield: '22,400',    c: '#ff922b', l: '#2f9e44' },
+  elderflower: { n: 'Elderflower',   cost: '28,000',    grow: '5h',  yield: '39,200',    c: '#f8f9fa', l: '#69db7c' },
+  apple:       { n: 'Apple',         cost: '48,000',    grow: '8h',  yield: '67,200',    c: '#e03131', l: '#2f9e44' },
+  wheat:       { n: 'Wheat',         cost: '20,000',    grow: '4h',  yield: '28,000',    c: '#ffd43b', l: '#e8a33d' },
+  century:     { n: 'Century Bloom', cost: '2,000,000', grow: '14d', yield: '2,800,000', c: '#b197fc', l: '#845ef7' }
+};
+/* Crops are not flowers, and they are not drawn like flowers: a berry on a stem,
+   a gourd, an ear — never a radial bloom. That is the rule doing visual work. */
+function crop(k, stage) {
+  const d = CROPS[k], s = stage === undefined ? 3 : stage;
+  const leaf = '<path d="M50 92V' + (s === 1 ? 74 : s === 2 ? 58 : 44) + '" stroke="' + d.l +
+    '" stroke-width="7" stroke-linecap="round"/>' +
+    '<path d="M50 72c-13 0-21-7-23-17 12-2 21 4 23 17z" fill="' + d.l + '" stroke="' + INK + '" stroke-width="3"/>';
+  if (s === 1) return '<svg viewBox="10 10 80 80">' + leaf + '</svg>';
+  const body = k === 'wheat'
+    ? '<g>' + [0, 1, 2, 3].map(i => '<ellipse cx="' + (42 + (i % 2) * 16) + '" cy="' + (30 + i * 9) + '" rx="9" ry="7" fill="' + d.c +
+        '" stroke="' + INK + '" stroke-width="3"/>').join('') + '</g>'
+    : k === 'pumpkin'
+      ? '<g><ellipse cx="50" cy="42" rx="26" ry="21" fill="' + d.c + '" stroke="' + INK + '" stroke-width="3.4"/>' +
+        '<path d="M40 24c0 24 0 24 0 36M60 24c0 24 0 24 0 36" stroke="' + INK + '" stroke-width="2.4" opacity=".45"/></g>'
+      : k === 'elderflower' || k === 'chamomile'
+        ? '<g>' + [0, 1, 2, 3, 4].map(i => '<circle cx="' + (34 + (i % 3) * 16) + '" cy="' + (32 + Math.floor(i / 3) * 15) +
+            '" r="9" fill="' + d.c + '" stroke="' + INK + '" stroke-width="3"/>').join('') + '</g>'
+        : '<g><circle cx="50" cy="40" r="20" fill="' + d.c + '" stroke="' + INK + '" stroke-width="3.4"/>' +
+          '<circle cx="43" cy="33" r="5" fill="#fff" opacity=".5"/></g>';
+  return '<svg viewBox="10 10 80 80">' + leaf + (s === 2 ? '<g transform="translate(50 46) scale(.5) translate(-50 -46)">' + body + '</g>' : body) + '</svg>';
+}
 
-F.push({
-  t: 'The meter, after the first Turn',
-  s: 'The fill keeps rising through the new year. The pouch is one tap away.',
-  tag: 'HUD',
-  html: phone({ coins: '212K', meter: { p: 0.52 } }),
-  notes: [
-    ['d', '<b>The HUD tightens, and it has to.</b> Measured in this frame: the column is 360px wide, three round buttons take 132 of it at 40px, and three wallets plus their gaps take the rest with nothing to spare. The tightening — wallet padding 4/8, 14px numerals, 19px icons, 40px buttons — is exactly the <code>max-height:700px</code> block the game already ships, promoted to apply on narrow screens too. Without it the pills wrap on every phone.'],
-    ['q', '<b>THE ONE LAYOUT QUESTION OF PHASE 2.</b> Doc 32 says the pill shows the banked Saved Seeds after the first Turn. Measured, it cannot — not with three round buttons beside it. This frame is my proposal: the pill stays <b>icon and fill</b>, and the two numbers (banked, and this year’s) live one tap away in the projection. It fits at every wealth, in every room, forever. The next two frames show what it costs and what the alternative costs.']
-  ]
-});
+/* The Fall board. The garden's construction, line for line — 3x3, the talking
+   flower in the middle, eight plots around it — in a different material. */
+function bed(o) {
+  o = o || {};
+  const cells = [];
+  for (let i = 0; i < 9; i++) {
+    if (i === 4) { cells.push('<div style="display:grid;place-items:center"><div style="width:86%">' + talker() + '</div></div>'); continue; }
+    const c = (o.cells || [])[i < 4 ? i : i - 1] || {};
+    if (c.century) {
+      cells.push('<button class="plot earth century">' + '<span class="crop">' + crop('century', 2) + '</span>' +
+        '<span class="cent-bar"><i style="width:' + (c.p || 21) + '%"></i></span>' +
+        '<span class="wait">' + (c.wait || '11d left') + '</span></button>');
+    } else if (!c.k) {
+      cells.push('<button class="plot earth mid">' + ico('sprout') + '</button>');
+    } else {
+      cells.push('<button class="plot earth' + (c.ripe ? ' ripe' : '') + '">' +
+        '<span class="crop">' + crop(c.k, c.ripe ? 3 : (c.stage || 2)) + '</span>' +
+        (c.ripe ? '<span class="ready-pop">!</span>' : '') +
+        (c.wait ? '<span class="wait">' + c.wait + '</span>' : '') + '</button>');
+    }
+  }
+  return '<main class="stage"><div style="position:relative">' +
+    (o.chip ? '<div class="bed-wrap">' + o.chip + '</div>' : '') +
+    '<div class="garden trug' + (o.armed ? ' armed' : '') + '">' + cells.join('') + '</div></div></main>';
+}
 
-F.push({
-  t: 'What doc 32 asks for, measured',
-  s: 'The same pill carrying its number. The wallets wrap and the stage loses 30px.',
-  tag: 'HUD',
-  html: phone({ coins: '212K', meter: { p: 0.52, num: '1.2K' } }),
-  notes: [
-    ['q', 'Already tightened, and still one pixel over — and <b>worse as you get richer</b>: "38.4K" is wider than "212K", and a gem count over 999 pushes it 20px past the edge. So the wrap is not a rare degradation, it is a layout that <b>changes shape as you earn</b>, which is the one thing a HUD must never do.'],
-    ['q', 'Costs ~30px of stage permanently. The garden board is the thing this game <i>is</i>; I would not spend a tenth of its height on a number that has a home one tap away.']
-  ]
-});
+const doors = (o) => '<div class="doors">' +
+  '<span class="door">' + ico('leaf') + 'The Meadow</span>' +
+  '<span class="door">' + ico('sprout') + 'The Hollow</span></div>';
 
-F.push({
-  t: 'The alternative that buys both',
-  s: 'Same numbered pill, with the album star folded into the Almanac.',
-  tag: 'HUD',
-  html: phone({ coins: '38.4K', meter: { p: 0.52, num: '18.4K' }, noAlbum: true }),
-  notes: [
-    ['q', 'Two round buttons instead of three, and everything fits at the <i>worst</i> numbers — 5-character coins and a five-figure pouch — with room left over. This is the version I would build if the album moved.'],
-    ['d', 'It is not invention: doc 32 already makes the Almanac "the one place a flower’s whole story lives", and the design audit’s five-collections-into-one consolidation points the same way — the card album is a collection, and the Almanac is the collections page.'],
-    ['q', '<b>But it is a navigation change, so it is yours, not mine.</b> It touches doc 15’s IA and it moves a button a live tester already uses. Parked here rather than shipped; the icon-and-fill pill is what goes in tonight, and swapping to this later is one markup line plus the album’s new home.']
-  ]
-});
+const edge = (side, label, locked, sub) =>
+  '<div class="edge ' + side + (locked ? ' locked' : '') + '">' + ico(locked ? 'lock' : 'leaf') +
+  '<span class="w">' + label + '</span>' + (sub ? '<span style="font-size:8.5px;opacity:.75">' + sub + '</span>' : '') + '</div>';
 
-F.push({
-  t: 'Tap the pill: the projection',
-  s: 'The pill’s tap affordance while the year is still short of the gates.',
-  tag: 'HUD',
-  html: phone({
-    coins: '62.1K', meter: { p: 0.62 },
-    pop: '<div class="pop"><h4>Ready to save this year</h4>' +
-      '<div class="num">' + ico('seed') + '<span>1,240</span></div>' +
-      '<p class="sub">How the year <i>scored</i> is added at the ceremony.<br>' +
-      '<b>1,240 already in the pouch.</b></p>' +
-      '<div class="gate-bar">' +
-        '<div class="row"><span>Earned</span><span class="track"><i class="short" style="width:62%"></i></span><span>62K / 100K</span></div>' +
-        '<div class="row"><span>Seeds</span><span class="track"><i style="width:100%"></i></span><span>' + ico('check') + '</span></div>' +
-      '</div></div>'
-  }),
-  notes: [
-    ['d', 'The popover shows the <b>increment</b> — the un-tallied number the engine gates on — and deliberately <b>not</b> the tallied pouch. Showing the multiplied total here would spoil the Tally, which is the one piece of theatre this phase exists to build.'],
-    ['d', 'Both gates are drawn as tracks, because "why can’t I turn yet" must be answerable without a wiki. The short gate is gold, the met gate green — the same green that means <i>yes</i> on every price in the game.'],
-    ['q', 'The popover is a coach-mark-shaped card anchored under the pill, not a sheet. A sheet for a two-line readout felt like a door for a window.']
-  ]
-});
-
-F.push({
-  t: 'The meter full: the re-invite',
-  s: 'Both gates met. The pill pulses; tapping it opens the ceremony, however many times you decline.',
-  tag: 'HUD',
-  html: phone({
-    coins: '104K', meter: { p: 1, full: true }, tint: 0.3,
-    speech: 'The year’s turning…'
-  }),
-  notes: [
-    ['d', 'Full uses <code>affordPulse</code>, the same 1.4s breath an affordable price already uses. A player has met it on every buyable thing in the game; it means <i>you can have this now</i>.'],
-    ['d', 'The season tint is near its end here — the meter and the palette say the same thing twice, which is what doc 32 asks for.']
-  ]
-});
-
-/* ---------- 2. THE CEREMONY ---------- */
-const KEEPS = ['Seeds', 'Unlocks', 'Petals', 'Creatures', 'Cards', 'Level']
-  .map(k => '<span class="chip">' + ico('check') + k + '</span>').join('');
-
-F.push({
-  t: 'Beat 1 — the ask',
-  s: 'Sheet mode <code>turn</code>. The flower asks; declining is free.',
-  tag: 'CEREMONY',
-  html: phone({
-    coins: '104K', meter: { p: 1, full: true }, tint: 0.3,
-    sheet: sheet({
-      title: 'The year’s turning', cere: true,
-      body:
-        '<div class="cere-flower">' + talker() + '</div>' +
-        '<div class="speech-block">The year’s turning. Save your seeds?</div>' +
-        '<div class="plate" style="margin-top:12px">' +
-          '<p class="cap">Ready to save</p>' +
-          '<div class="big outlined">' + ico('seed') + '<span>1,240</span></div>' +
-        '</div>' +
-        '<div class="cost-line">' + ico('leaf') +
-          '<span><b>Three beds are still growing.</b> They go to the compost — everything ripe is picked for you first.</span>' +
-        '</div>' +
-        '<div class="keep-row">' + KEEPS + '</div>' +
-        '<div class="btn-row"><button class="btn">' + ico('seed') + 'Turn the year</button>' +
-        '<button class="btn quiet">Not yet</button></div>'
-    })
-  }),
-  notes: [
-    ['d', 'Built on the welcome-back scene’s pattern as doc 34 asks, with one borrowing from the pack reveal: the ceremony renders from a <b>step variable</b>, so a <code>panels</code> event mid-Tally repaints the same frame instead of restarting it.'],
-    ['d', 'The <b>cost is stated before it is paid</b>, in the drained paper a state wears everywhere else in the game — not red, because losing three growing beds is a cost, not an error.'],
-    ['d', 'The keep-row is six chips instead of a paragraph: the standing "more iconography, fewer sentences" note. What survives a Turn is the single most reassuring fact in this screen.'],
-    ['q', '"Turn the year" is the verb. "Save your seeds" is the flower’s. The word <i>reset</i> appears nowhere, per doc 32 — but the button could equally read <b>Save the year</b>. One word, worth a second of your time in the morning.']
-  ]
-});
-
-F.push({
-  t: 'Beat 2 — bless one flower',
-  s: 'The single choice in the ceremony. Capped flowers are not shown at all.',
-  tag: 'CEREMONY',
-  html: phone({
-    coins: '104K', meter: { p: 1, full: true }, tint: 0.3,
-    sheet: sheet({
-      title: 'Bless one flower', cere: true,
-      body:
-        '<p class="sheet-note">Your blessing lands as a free <b>Rich Bloom</b> petal. Any flower, once a Turn.</p>' +
-        '<div class="bless-grid">' +
-          ['tulip', 'bluebell', 'rose', 'lavender', 'marigold', 'peony'].map((k, i) =>
-            '<button class="bless-tile' + (i === 2 ? ' on' : '') + '">' +
-            '<span class="art" style="--art:' + SEEDS[k].c1 + '">' + head(k) + '</span>' +
-            '<span class="nm">' + SEEDS[k].n + '</span>' + pips(i === 2 ? 2 : (i % 3), 5) + '</button>').join('') +
-        '</div>' +
-        '<div class="slot">reserved: the blessing’s price or per-year limit renders here — nothing tonight</div>' +
-        '<div class="btn-row"><button class="btn">' + ico('star') + 'Bless the Rose</button></div>'
-    })
-  }),
-  notes: [
-    ['d', '<b>Daisy is missing on purpose.</b> Her Rich Bloom is at cap, and <code>turnYear()</code> silently drops a blessing on a capped flower — the player would lose the largest per-Turn grant in the game with no undo. Filtering the picker is the carried-forward requirement in docs/11, and it is why the pips are on the tile: you can see the room you are filling.'],
-    ['d', 'A grid of blooms, not a list of rows. The decision here is <i>which flower</i> and nothing else — no cost, no yield, no verb — so the row’s stat pills would all be noise.'],
-    ['d', 'The <b>dashed slot is deliberate</b> and it is the owner’s call from tonight: the blessing is free in the engine and its pricing is an open decision in docs/11. The layout reserves the line now so pricing it later is a data change, not a redesign. It renders nothing today (the dashes are the spike’s, not the game’s).'],
-    ['q', 'There is no "skip the blessing" button. It is free value, and an undoable Turn that quietly gave nothing is the exact failure docs/11 describes. The only no-blessing path is the next frame.']
-  ]
-});
-
-F.push({
-  t: 'Beat 2, the edge — nothing left to bless',
-  s: 'Every unlocked flower is at its Rich Bloom cap.',
-  tag: 'CEREMONY',
-  html: phone({
-    coins: '104K', meter: { p: 1, full: true }, tint: 0.3,
-    sheet: sheet({
-      title: 'Bless one flower', cere: true,
-      body:
-        '<div class="speech-block">Every bloom you have is as rich as it gets. Keep the blessing — there’ll be new flowers.</div>' +
-        '<div class="cost-line" style="margin-top:12px">' + ico('check') +
-          '<span>No blessing lands this Turn. Nothing is lost, and nothing is owed.</span></div>' +
-        '<div class="btn-row"><button class="btn">' + ico('seed') + 'Turn the year</button>' +
-        '<button class="btn quiet">Back</button></div>'
-    })
-  }),
-  notes: [
-    ['d', 'The state the dev button hit in phase 1 and the reason docs/11 carries the requirement forward. The engine returns <code>blessed: null</code> and completes the Turn either way; the difference is whether the player was told.'],
-    ['q', 'Reachable in practice only very late, or on a save with one or two seeds unlocked and both maxed. Cheap to build, and it is the difference between a silent bug and a line of writing.']
-  ]
-});
-
-F.push({
-  t: 'Beat 3a — the Tally opens',
-  s: 'The base count-up. This is the increment, not the year’s earnings.',
-  tag: 'CEREMONY',
-  html: phone({
-    coins: '104K', meter: { p: 1, full: true }, tint: 0.3,
-    sheet: sheet({
-      title: '', close: false, cere: true,
-      body:
-        '<div class="plate">' +
-          '<p class="cap">The year’s pouch</p>' +
-          '<div class="big outlined">' + ico('seed') + '<span>1,240</span></div>' +
-        '</div>' +
-        '<p class="sheet-note" style="text-align:center;margin-top:14px">counting…</p>'
-    })
-  }),
-  notes: [
-    ['d', 'The plate is the <b>fourth value tier put to work</b>: ink outline, a dark body, cream pills on top of it. That is the garden’s own figure-against-ground recipe, which is how an arcade scoreboard can be this loud without leaving the house style.'],
-    ['d', '<b>The header is empty and the close button is gone</b> from here until the total lands. The Turn has committed by this point — <code>turnYear()</code> is atomic and has already run — so a scrim tap or a drag-dismiss mid-count would cost the player the only celebration the Turn has. Both are guarded for these three frames and restored after.'],
-    ['q', 'Count-up duration: I am building ~1.1s for the base, 380ms per line, 500ms for the total — about three seconds of ceremony. Reduced motion drops every number in at once with no roll.']
-  ]
-});
-
-F.push({
-  t: 'Beat 3b — the lines land',
-  s: 'One at a time. A line the year scored zero on is never built.',
-  tag: 'CEREMONY',
-  html: phone({
-    coins: '104K', meter: { p: 1, full: true }, tint: 0.3,
-    sheet: sheet({
-      title: '', close: false, cere: true,
-      body:
-        '<div class="plate">' +
-          '<p class="cap">The year’s pouch</p>' +
-          '<div class="big outlined">' + ico('seed') + '<span>1,240</span></div>' +
-          '<div class="tline"><span class="lab">Orders filled</span><span class="chip cnt">47</span>' +
-            '<span class="price bon">+25%</span></div>' +
-          '<div class="tline"><span class="lab">Species grown</span><span class="chip cnt">9</span>' +
-            '<span class="price bon">+5%</span></div>' +
-          '<div class="tline"><span class="lab">Best combo</span><span class="chip cnt">85</span>' +
-            '<span class="price bon">+8%</span></div>' +
-          '<div style="display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:12px">' +
-            '<span class="cap" style="margin:0">the year scored</span>' +
-            '<span class="mult outlined">×1.38</span></div>' +
-        '</div>'
-    })
-  }),
-  notes: [
-    ['d', '<b>Two of the five lines are absent</b>, and that is the whole cosy rule: this year caught no Legendary and popped no full Fall bed, so those lines do not exist. There is never a "×1.00, you failed" row. The engine already refuses to emit them (<code>tier === 0</code> is not pushed), so the presentation is honest by construction rather than by filtering.'],
-    ['d', 'The counter is a cream chip and the bonus is the <b>same green as an affordable price</b>. Green means yes everywhere in this game; a bonus is the biggest yes it has.'],
-    ['d', 'The running multiplier sits bottom-right and climbs as each line lands — an arcade score, in the one place on the plate the eye lands last.'],
-    ['q', 'Line labels are shortened from the data (<i>Species grown this year</i> → <i>Species grown</i>) so they never wrap on a 390px phone. If you would rather the copy be exactly doc 33’s, the labels wrap to two lines and the plate grows ~60px.']
-  ]
-});
-
-F.push({
-  t: 'Beat 3c — the total',
-  s: 'The multiplier slams, the pouch recounts, the confetti fires.',
-  tag: 'CEREMONY',
-  html: phone({
-    coins: '104K', meter: { p: 1, full: true }, tint: 0.3,
-    sheet: sheet({
-      title: '', close: false, cere: true,
-      body:
-        '<div class="plate">' +
-          '<p class="cap">Into the pouch</p>' +
-          '<div class="big outlined">' + ico('seed') + '<span>1,711</span></div>' +
-          '<div style="display:flex;justify-content:center;align-items:baseline;gap:8px;margin-top:6px">' +
-            '<span class="cap" style="margin:0">1,240</span><span class="mult outlined" style="font-size:26px">×1.38</span></div>' +
-        '</div>' +
-        '<div class="btn-row"><button class="btn seed">' + ico('seed') + 'Into the pouch</button></div>'
-    })
-  }),
-  notes: [
-    ['d', 'The base is restated small beside the multiplier so the arithmetic is visible — an arcade score you cannot check is a slot machine.'],
-    ['d', 'Celebration lands here and nowhere else in the sequence: confetti, a ring, <code>FX.shake(7)</code>, the <code>legend</code> sound. <b>Where exactly it sits on the celebration ladder is phase 4’s</b>, per doc 34 — I am placing it at crit-level and leaving the tuning alone.'],
-    ['q', 'At the ×2.0 cap the multiplier reads <b>×2.00 MAX</b> in the same plate. I have not drawn a separate frame for it; if you want the cap to feel like an achievement rather than a ceiling, that is a phase-4 flourish.']
-  ]
-});
-
-F.push({
-  t: 'Beat 4 — the spring return',
-  s: 'The new year, and the gift that is a place rather than a number.',
-  tag: 'CEREMONY',
-  html: phone({
-    coins: '100', meter: { p: 0.02 }, tint: 0,
-    sheet: sheet({
-      title: 'Year two', cere: true,
-      body:
-        '<div class="cere-flower">' + talker() + '</div>' +
-        '<div class="gate-card"><div class="scene">' +
-          '<div class="hedge l"></div><div class="hedge r"></div>' +
-          '<div style="position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:64px">' + head('marigold') + '</div>' +
-        '</div><div class="foot"><span>Fall is open</span><span class="chip">' + ico('leaf') + 'swipe right</span></div></div>' +
-        '<div class="keep-row" style="margin-top:12px">' +
-          '<span class="chip">' + ico('seed') + '1,711 banked</span>' +
-          '<span class="chip">' + ico('lock') + '4 unlocks kept</span>' +
-          '<span class="chip">' + ico('star') + '3 petals kept</span></div>' +
-        '<div class="btn-row"><button class="btn">' + ico('sprout') + 'Into the new year</button></div>'
-    })
-  }),
-  notes: [
-    ['d', '<b>The gate is the payoff, so it gets the picture.</b> Doc 32: "the reset pays in places first and numbers second" — the seeds are a chip, the place is a card with a scene in it.'],
-    ['d', 'The hedges are drawn parting rather than opened: the gate animates apart on entry, which is the one motion in this frame.'],
-    ['q', 'This frame is phase 2 building against a phase 3 promise — the swipe-right chip is a lie until the strip ships. <b>If phase 3 does not land tonight, this card ships saying "Fall opens next" with no gesture hint</b>, and the chip goes in with the strip. Flagged so the two phases cannot desync in a push.'],
-    ['q', 'The HUD behind is the honest new-year state: 100 coins, the meter empty, the pouch carrying 1.7K. Seeing the coin wallet at 100 is the moment a prestige either reads as a gift or a robbery — it is the single most important thing for you to feel on the phone in the morning.']
-  ]
-});
+/* A phone with phase 3's chrome: the season edges, the two doors, the Stand in
+   the dock, and either Summer's board or Fall's. */
+function scene(o) {
+  o = o || {};
+  const body = o.gate ? o.gate : ('<div class="ui">' + hud(o) + questStrip() + '<div class="rail"></div>' +
+    (o.doors === false ? (o.bed ? bed(o.bed) : stage(o))
+                       : (o.bed ? bed(o.bed) : stage(o)).replace('</main>', doors() + '</main>')) +
+    dock({ stand: true }) + '</div>');
+  return '<div class="phone' + (o.fall ? ' fall' : '') + '" style="--season-o:' + (o.tint || 0) + '">' +
+    scenery(o.tint) + body + (o.edges || '') + (o.pop || '') + (o.toast || '') +
+    (o.sheet ? '<div class="scrim"></div>' + o.sheet : '') + '</div>';
+}
 </script>
 
 <script>
-/* ---------- 3. THE ALMANAC ROW ---------- */
-function almanacRow(o) {
-  return '<div class="almanac-row' + (o.dim ? ' dim' : '') + '">' +
-    '<div class="almanac-row-top"><span class="n"><span class="almanac-bloom">' + head(o.k) + '</span>' + SEEDS[o.k].n + '</span>' +
-      '<span class="r r-' + (o.rk || 'legend') + '">' + (o.r || 'LEGENDARY') + '</span>' +
-      '<span class="c">×' + o.c + '</span></div>' +
-    '<span class="seed-desc">' + o.d + '</span>' +
-    (o.tracks || '') + '</div>';
-}
-const track = (label, on, cap, chip) =>
-  '<div class="petal-track"><span class="pl">' + label + '</span>' + pips(on, cap) +
-  '<span class="sp"></span>' + chip + '</div>';
-
+/* ---------- 1. SUMMER, WITH SIDEWAYS MADE VISIBLE ---------- */
 F.push({
-  t: 'The Almanac before the first Turn',
-  s: 'No petal UI exists in year one. The retired mastery line simply goes.',
-  tag: 'ALMANAC',
-  html: phone({
+  t: 'Summer, before the first Turn',
+  s: 'How a player finds out sideways exists — and where the meadow went.',
+  tag: 'STRIP',
+  html: scene({
     coins: '38.4K', meter: { p: 0.34 },
+    edges: edge('r', 'FALL', true, 'Turn 1') + edge('l', 'SPRING', true, 'Turn 6')
+  }),
+  notes: [
+    ['d', '<b>The season edge is the horizontal answer to the burrow door.</b> The garden already teaches one gesture with a visible labelled thing you can also tap; the strip gets the same treatment rather than a swipe nobody finds. A locked edge wears the drained paper and the turn that opens it, so <b>a gate is a promise you can read from Summer</b> without going to look.'],
+    ['d', 'It is 38px wide, half off the screen edge, vertically centred, and sits above the scenery but below the sheet — it never overlaps the board, the HUD or the dock.'],
+    ['q', 'An edge tab on each side is two more objects on the game’s calmest screen. The alternative is the gesture alone plus a one-time coach mark after Turn 1, which is quieter and much easier to miss — and missing it means missing Fall entirely, which is Turn 1’s whole reward.'],
+    ['q', '<b>THE MEADOW HAD TO BE RE-HOMED, AND THIS IS WHERE I PUT IT.</b> Doc 32 says "the meadow keeps its current entry from Summer unchanged" — but there is no entry from Summer: <code>UI.enterMeadow()</code> has exactly one caller in the repo and it is the map’s dive. Retiring the map without this door strands the whole meadow. So it becomes <b>the burrow door’s twin</b>, at the foot of the garden. Doc 32 says swipe-down "is then free for later use", so I have left the gesture retired and given the meadow a door only.']
+  ]
+});
+
+F.push({
+  t: 'Summer, after Turn 1',
+  s: 'The gate has opened. The edge is live and the flower says so once.',
+  tag: 'STRIP',
+  html: scene({
+    coins: '100', meter: { p: 0.04 },
+    speech: 'Fall’s open — go and see.',
+    edges: edge('r', 'FALL', false) + edge('l', 'SPRING', true, 'Turn 6')
+  }),
+  notes: [
+    ['d', 'An unlocked edge takes the ordinary cream pill treatment, so live and locked are told apart by material rather than by reading the label.'],
+    ['d', 'The flower’s line fires once, on the first return to Summer after the gate opens. It is the same one-time-nudge pattern the burrow mouth uses.']
+  ]
+});
+
+F.push({
+  t: 'The swipe itself',
+  s: 'Background-start, dx > dy, ~70px — the vertical rules mirrored.',
+  tag: 'STRIP',
+  html: '<div class="phone"><div class="track">' +
+    '<div class="pane">' + scenery(0.34) + '<div class="ui" style="transform:none">' + hud({ coins: '104K', meter: { p: 0.9 } }) +
+      questStrip() + '<div class="rail"></div>' + stage({}) + dock({ stand: true }) + '</div></div>' +
+    '<div class="pane"><div class="phone fall" style="position:absolute;inset:0;border:0;border-radius:0;box-shadow:none;width:100%;height:100%">' +
+      scenery(0) + '<div class="ui">' + hud({ coins: '104K', meter: { p: 0.9 } }) + questStrip() + '<div class="rail"></div>' +
+      bed({ cells: [{ k: 'pumpkin' }, {}, { k: 'mint', ripe: true }, {}, {}, { k: 'apple' }, {}, {}] }) +
+      dock({ stand: true }) + '</div></div></div>' +
+    '</div><div class="hand"></div></div>',
+  notes: [
+    ['d', '<b>The HUD, quest strip and dock ride with each season rather than sitting still above the strip.</b> Each season is a whole screen that slides, which is what makes the gesture feel like walking rather than like paging a carousel — and it is also the cheapest thing to build, since a season is just another layer.'],
+    ['d', 'The gesture mirrors <code>ui.js</code>’s vertical one exactly: it only starts on the background (plots and the flower fire on <code>pointerdown</code>, so a swipe begun on one would plant on its way out), it needs ~70px, and it needs <code>dx &gt; dy</code> so a diagonal does nothing. The existing guard list grows by the new layer.'],
+    ['q', 'A swipe that lands on a locked season shows its gate screen (next frame) rather than refusing. You can always walk up to a locked gate — that is what makes it a promise.']
+  ]
+});
+
+/* ---------- 2. A GATE, UP CLOSE ---------- */
+F.push({
+  t: 'A hedge gate, up close',
+  s: 'Where a locked season lives. Static backdrop, padlock, the turn, one drifting leaf.',
+  tag: 'GATE',
+  html: scene({
+    fall: true, coins: '38.4K', meter: { p: 0.34 }, doors: false,
+    gate: '<div class="gate-screen">' +
+      '<div class="leaf-drift" style="left:22%;animation-delay:-2s">' + ico('leaf') + '</div>' +
+      '<div class="leaf-drift" style="left:68%;animation-delay:-6s">' + ico('leaf') + '</div>' +
+      '<div class="gate-hedge"></div>' +
+      '<div class="gate-plate"><div class="gate-lock">' + ico('lock') + '</div>' +
+        '<div class="gate-name outlined">FALL</div>' +
+        '<span class="chip">' + ico('seed') + 'Opens at your first Turn</span></div>' +
+      '</div>' +
+      '<div class="ui" style="display:block;pointer-events:none">' + hud({ coins: '38.4K', meter: { p: 0.34 } }) + '</div>' +
+      edge('l', 'SUMMER', false)
+  }),
+  notes: [
+    ['d', '<b>The HUD stays up and everything else goes.</b> That is the rule for every place layer in this game — the wallets and the settings are reachable from any room — and it is why the gate screen has no quest strip, no rail and no dock.'],
+    ['d', 'The hedge is drawn as a mass with a lit top edge and a lumpy silhouette, not a green rectangle: doc 05’s grass lesson, that a band is a mat with things growing out of it rather than shapes laid on a surface.'],
+    ['d', 'Two leaves drift, slowly, and they are the only motion. <code>prefers-reduced-motion</code> stops them — and, per the traps, their <b>visibility never depends on the keyframe having run</b>: they start visible and drift, rather than fading in.'],
+    ['q', 'The padlock is a 74px plate rather than a small chip, because at this size it is the screen’s subject. The turn that opens it is a cream chip under the name — a number, in a pill, like every other number in the game.'],
+    ['q', 'The backdrop behind the hedge is the season’s own sky, so you can see what kind of place you are being promised. It is drawn at the room’s measured size, never sliced from a 390-wide viewBox.']
+  ]
+});
+
+/* ---------- 3. FALL'S BOARD ---------- */
+F.push({
+  t: 'Fall, the morning it opens',
+  s: 'Turn 1’s gift. All eight plots open at once — Fall never sells you its own beds.',
+  tag: 'FALL',
+  html: scene({
+    fall: true, coins: '100', meter: { p: 0.04 },
+    bed: { cells: [{}, {}, {}, {}, {}, {}, {}, {}], chip: '<div class="bed-chip">' + ico('leaf') + 'Fill all eight for <b>+50%</b></div>' },
+    edges: edge('l', 'SUMMER', false) + edge('r', 'WINTER', true, 'Turn 3')
+  }),
+  notes: [
+    ['d', '<b>The garden’s grammar, exactly:</b> a 3×3 board floating in a scene, the talking flower in the middle paying what it pays everywhere, eight tappable cells around it, the dock below. Nothing here needs to be learned twice.'],
+    ['d', '<b>What differs is the material, and the material is the verb.</b> Summer’s board is a soil planter — you dig it, plant it, clear it. Fall’s is a <b>woven trug</b> on damp autumn earth, because the verb here is <i>fill it and carry the whole thing in</i>. Same four value tiers: ink, a dark body, mid cells, cream chips.'],
+    ['d', 'All eight plots open the moment Fall unlocks. Doc 32: making Fall’s beds bought again would tax the reward.'],
+    ['q', 'The bed chip above the board is Fall’s entire rule stated as one object, on screen from the first second. Everything else about the windfall is that chip changing state.']
+  ]
+});
+
+F.push({
+  t: 'The crop picker',
+  s: 'Eight crops on hour clocks. Not flowers, and priced in gold only.',
+  tag: 'FALL',
+  html: scene({
+    fall: true, coins: '84.2K', meter: { p: 0.3 },
+    bed: { cells: [{ k: 'pumpkin' }, {}, {}, {}, {}, {}, {}, {}] },
     sheet: sheet({
-      title: 'Garden Almanac',
-      body:
-        '<p class="sheet-note">9 / 19 discovered</p>' +
-        almanacRow({ k: 'daisy', c: '512', d: 'Swift starter bloom; perfect for keeping early plots busy.' }) +
-        almanacRow({ k: 'tulip', c: '318', r: 'EPIC', rk: 'epic', d: 'Cups that open all at once, the morning after rain.' }) +
-        almanacRow({ k: 'bluebell', c: '96', r: 'RARE', rk: 'rare', d: 'Quiet neighbour; the beds beside it come on faster.' }) +
-        almanacRow({ k: 'rose', c: '4', r: 'RARE', rk: 'rare', d: 'Thorned, slow, and worth the wait.' })
+      title: 'Choose a crop',
+      body: '<p class="sheet-note">Planting into bed 2. Every bed ripe pays <b>+50%</b> on the lot.</p>' +
+        ['strawberry', 'mint', 'chamomile', 'brambleberry'].map(k => {
+          const d = CROPS[k];
+          return '<button class="seed-row"><span class="seed-art" style="--art:' + d.c + '">' +
+            '<span style="width:40px;height:40px;display:block">' + crop(k) + '</span></span>' +
+            '<span><span class="seed-name">' + d.n + '</span><span class="seed-stats">' +
+            '<span class="stat">' + ico('coin') + d.cost + '</span>' +
+            '<span class="stat">' + ico('clock') + d.grow + '</span>' +
+            '<span class="stat good">' + d.yield + '</span></span></span>' +
+            '<span class="seed-go">' + ico('sprout') + '</span></button>';
+        }).join('')
     })
   }),
   notes: [
-    ['d', 'Two lines, no third. Doc 32’s introduction rule is "year one: nothing — the mystery is the tutorial", so there is <b>no petal teaser and no locked track</b> here. The morning after the first Turn, pips appear on every row; that arrival is the tutorial.'],
-    ['d', 'This also closes a docs/11 seam: the frozen mastery ladder ("Tier 13 · 512 / 1,000" with a permanent +0%) is deleted rather than left reading honestly-but-oddly.'],
-    ['q', 'Nothing at all, or one greyed line that says a skill is coming? I chose nothing — but nothing is also the version that gives a player no reason to come back to this page in year one.']
+    ['d', 'The plant picker’s own row, unchanged: art badge, name, three stat pills, green go button. A second picker that looked different would be a second thing to learn for no gain.'],
+    ['d', '<b>No verb chip, no rarity, no gem pill.</b> Crops roll no rarity, drop no gems, take no mutations and are never written to <code>discovered</code> — so their row has three facts instead of five, and the shorter row is itself the tell that these are not flowers.'],
+    ['d', 'The clocks are the other tell: <b>20m</b> where Summer says <b>24s</b>. Doc 32’s one rule — a season is a speed and a rule — is visible in the stat pills before anything is planted.'],
+    ['q', 'The header note restates the windfall on the picker, because the moment you are choosing crops is the moment the rule pays off.'],
+    ['q', 'The Century Bloom is <b>not</b> in this list — it gets its own frame further down. Two million gold in a list of two-thousand-gold strawberries would either be scrolled past or tapped by accident.']
   ]
 });
 
 F.push({
-  t: 'The Almanac after the first Turn',
-  s: 'Petal tracks and buy chips. Three affordability states in one screen.',
-  tag: 'ALMANAC',
-  html: phone({
-    coins: '212K', meter: { p: 0.52 },
-    sheet: sheet({
-      title: 'Garden Almanac',
-      body:
-        '<p class="sheet-note" style="display:flex;align-items:center;gap:8px">' +
-          '<span class="chip">' + ico('seed') + '1,240</span> to spend on petals.</p>' +
-        almanacRow({
-          k: 'daisy', c: '512', d: 'Swift starter bloom; perfect for keeping early plots busy.',
-          tracks: track('Rich Bloom', 5, 5, '<span class="price maxed">MAX</span>') +
-                  track('Quick Sprout', 3, 5, '<span class="price ok">' + ico('seed') + '29</span>')
-        }) +
-        almanacRow({
-          k: 'tulip', c: '318', r: 'EPIC', rk: 'epic', d: 'Cups that open all at once, the morning after rain.',
-          tracks: track('Rich Bloom', 2, 5, '<span class="price ok">' + ico('seed') + '34</span>') +
-                  track('Quick Sprout', 0, 5, '<span class="price ok">' + ico('seed') + '22</span>')
-        }) +
-        almanacRow({
-          k: 'moonflower', c: '12', r: 'EPIC', rk: 'epic', d: 'Opens at dusk and closes when the sun finds it.',
-          tracks: track('Rich Bloom', 0, 5, '<span class="price no">' + ico('seed') + '2,914</span>') +
-                  track('Quick Sprout', 0, 5, '<span class="price no">' + ico('seed') + '2,914</span>')
-        })
-    })
+  t: 'Filling the bed',
+  s: 'Five planted, three empty. The chip counts what is missing.',
+  tag: 'FALL',
+  html: scene({
+    fall: true, coins: '62.1K', meter: { p: 0.34 },
+    bed: {
+      cells: [{ k: 'pumpkin', stage: 2 }, { k: 'mint', stage: 2 }, {}, { k: 'apple', stage: 1 }, { k: 'wheat', stage: 2 }, {}, {}, { k: 'strawberry', ripe: true }],
+      chip: '<div class="bed-chip">' + ico('leaf') + '<b>5 / 8</b> planted · fill the bed for <b>+50%</b></div>'
+    },
+    edges: edge('l', 'SUMMER', false) + edge('r', 'WINTER', true, 'Turn 3')
   }),
   notes: [
-    ['d', 'The mastery line’s slot becomes <b>two tracks</b>: name, pips, price. Pips are the game’s existing level vocabulary (<code>.pip</code>, already used for upgrade levels) recoloured to the seed green, so a player reads "3 of 5" without a fraction.'],
-    ['d', 'Prices are the ordinary <code>.price</code> family in three states you already know: green affordable, cream-drained unaffordable, grey <b>MAX</b>. Petals are bought with Saved Seeds and nothing else, so the seed icon is on every chip — a coin here would be a lie.'],
-    ['d', 'A row is four lines now where it was three. The Almanac is the one page a player has come to <i>read</i> rather than to choose, so the height is affordable here in a way it would not be in the plant picker.'],
-    ['q', 'The signature (third) skill is slice B and is <b>not stubbed</b> — no greyed third track, no "coming soon". A row that advertises an unbuilt thing is the quest-strip trap wearing a different hat.'],
-    ['q', 'Moonflower’s price is a real one from the shipped formula (seed 11’s first petal ≈ 2,914). That wall showing up on the Almanac’s third row is the pacing story doc 33 flags for phase 4 — worth seeing early, and not mine to tune tonight.']
-  ]
-});
-
-/* ---------- 4. THE SEED PICKER ---------- */
-const stats = (cost, time, yieldRange) =>
-  '<span class="seed-stats"><span class="stat">' + ico('coin') + cost + '</span>' +
-  '<span class="stat">' + ico('clock') + time + '</span>' +
-  '<span class="stat good">' + yieldRange + '</span></span>';
-
-F.push({
-  t: 'The seed picker, wearing unlock prices',
-  s: 'The wall doc 33 puts the whole spread behind — one-time, permanent, paid in gold.',
-  tag: 'PICKER',
-  html: phone({
-    coins: '212K', meter: { p: 0.52 },
-    sheet: sheet({
-      title: 'Choose a seed',
-      body:
-        '<p class="sheet-note">Planting into plot 3.</p>' +
-        '<button class="seed-row"><span class="seed-art" style="--art:' + SEEDS.tulip.c1 + '">' + head('tulip') + '</span>' +
-          '<span><span class="seed-name">Tulip</span>' + stats('420', '38s', '588–4,704') + '</span>' +
-          '<span class="seed-go">' + ico('sprout') + '</span></button>' +
-        '<div class="seed-row locked"><span class="seed-art" style="--art:' + SEEDS.bluebell.c1 + '">' + head('bluebell') + '</span>' +
-          '<span><span class="seed-name">Bluebell</span>' + stats('180', '24s', '252–2,016') + '</span>' +
-          '<span class="lock-cost ok">' + ico('lock') + '150K</span></div>' +
-        '<div class="seed-row locked"><span class="seed-art" style="--art:' + SEEDS.lavender.c1 + '">' + head('lavender') + '</span>' +
-          '<span><span class="seed-name">Lavender</span>' + stats('260', '31s', '364–2,912') + '</span>' +
-          '<span class="lock-cost no">' + ico('lock') + '225K</span></div>' +
-        '<div class="seed-row locked"><span class="seed-art" style="--art:' + SEEDS.rose.c1 + '">' + head('rose') + '</span>' +
-          '<span><span class="seed-name">Rose</span>' + stats('540', '52s', '756–6,048') + '</span>' +
-          '<span class="lock-cost no">' + ico('lock') + '338K</span></div>'
-    })
-  }),
-  notes: [
-    ['d', '<b>A locked row is drained, not deleted.</b> Today’s gated row is <code>grayscale(.7) opacity(.72)</code> and its stats stop being readable — but this row is an advert for the thing you are saving 150K for, so the numbers have to survive. It takes the drained-paper family (<code>--paper-dim</code>) that every other "not now" state in the game wears.'],
-    ['d', 'The price chip replaces the go button in the same slot, so the eye finds the answer in the same place on every row. Affordable turns green and breathes with <code>affordPulse</code>; unaffordable stays drained.'],
-    ['d', 'This frame also retires a docs/11 seam: the row currently chips <b>"Level 1"</b> from the retired <code>unlockLevel</code>, which is simply the wrong refusal.'],
-    ['q', 'Sort order puts locked rows in the list rather than in a separate section, so the ladder reads as one shelf you are climbing. The alternative — an "unlockable" group at the bottom — hides the wall you are saving for.']
+    ['d', 'The chip counts <b>planted</b>, not ripe, while the bed is still filling — the first half of the rule is that every plot has to have something in it.'],
+    ['q', 'A ripe crop in a half-full bed still shows its "!" badge and can still be harvested. It pays its ordinary yield and costs you the windfall. <b>The chip is the only thing standing between a player and that mistake</b>, which is why it is on the board rather than in a panel.']
   ]
 });
 
 F.push({
-  t: 'Paying the wall, and the moment after',
-  s: 'A confirm, because 150K spent by a mis-tap is the worst tap in the game.',
-  tag: 'PICKER',
-  html: phone({
-    coins: '212K', meter: { p: 0.52 },
-    sheet: sheet({
-      title: 'Choose a seed',
-      body:
-        '<p class="sheet-note">Planting into plot 3.</p>' +
-        '<div class="seed-row fresh"><span class="seed-art" style="--art:' + SEEDS.bluebell.c1 + '">' + head('bluebell') + '</span>' +
-          '<span><span class="seed-name">Bluebell</span>' + stats('180', '24s', '252–2,016') + '</span>' +
-          '<span class="seed-go">' + ico('sprout') + '</span></div>' +
-        '<div class="seed-row locked"><span class="seed-art" style="--art:' + SEEDS.lavender.c1 + '">' + head('lavender') + '</span>' +
-          '<span><span class="seed-name">Lavender</span>' + stats('260', '31s', '364–2,912') + '</span>' +
-          '<span class="lock-cost no">' + ico('lock') + '225K</span></div>',
-    }),
-    toast: '<div class="toast">' + ico('lock') + 'Bluebell unlocked — yours for good</div>'
+  t: 'One plot from ready',
+  s: 'The state doc 34 asks for by name — and the one that makes Fall an appointment.',
+  tag: 'FALL',
+  html: scene({
+    fall: true, coins: '62.1K', meter: { p: 0.36 },
+    bed: {
+      cells: [{ k: 'pumpkin', ripe: true }, { k: 'mint', ripe: true }, { k: 'chamomile', ripe: true },
+              { k: 'apple', stage: 2, wait: '4m' }, { k: 'wheat', ripe: true }, { k: 'strawberry', ripe: true },
+              { k: 'brambleberry', ripe: true }, { k: 'elderflower', ripe: true }],
+      chip: '<div class="bed-chip close">' + ico('clock') + '<b>One more</b> in 4m — then <b>+50%</b></div>'
+    },
+    edges: edge('l', 'SUMMER', false) + edge('r', 'WINTER', true, 'Turn 3')
   }),
   notes: [
-    ['d', 'The unlocked row keeps its place in the list and lights gold for a beat, so the thing you paid for is the thing that moves. Then it is an ordinary row with a green go button — it can be planted immediately, which is the reward.'],
-    ['d', 'The toast says <b>"yours for good"</b> because that is the fact a player cannot see: unlocks survive every Turn. A one-time price that looks like a per-year price is the single most likely misreading in this phase.'],
-    ['q', 'The confirm step (next frame) costs one tap on the happy path. I think it is worth it; a 150K mis-tap is unrecoverable and the game has no undo. If you disagree it is a two-line deletion.']
+    ['d', '<b>Seven ripe, one growing, and the chip goes gold and names the wait.</b> The unripe plot is the only one without a "!" badge and the only one wearing a countdown, so the eye lands on it immediately. This is the frame the whole windfall rule lives or dies on.'],
+    ['d', 'The chip switches to the affordable-gold treatment here — the same colour the game uses for <i>you can nearly have this</i> — one step short of the pulse it takes when the bed is armed.'],
+    ['q', 'It says "one more in 4m", not "7/8 ripe". A count is a status; a <b>wait</b> is an appointment, and the appointment is what doc 32 wants Fall to be.']
   ]
 });
 
 F.push({
-  t: 'The unlock confirm',
-  s: 'One extra tap, standing between a mis-tap and a year’s savings.',
-  tag: 'PICKER',
-  html: phone({
-    coins: '212K', meter: { p: 0.52 },
-    sheet: sheet({
-      title: 'Choose a seed',
-      body:
-        '<p class="sheet-note">Planting into plot 3.</p>' +
-        '<div class="seed-row locked"><span class="seed-art" style="--art:' + SEEDS.bluebell.c1 + '">' + head('bluebell') + '</span>' +
-          '<span><span class="seed-name">Bluebell</span>' + stats('180', '24s', '252–2,016') + '</span>' +
-          '<span class="lock-cost ok">' + ico('lock') + '150K</span></div>'
-    }),
-    pop: '<div class="confirm"><h4>Unlock Bluebell?</h4>' +
-      '<p>150K gold, once. It stays unlocked through every Turn, for good.</p>' +
-      '<div class="row"><button class="btn quiet">Not yet</button>' +
-      '<button class="btn">' + ico('coin') + 'Unlock</button></div></div>'
+  t: 'The bed is ready',
+  s: 'All eight ripe. The board itself is the announcement.',
+  tag: 'FALL',
+  html: scene({
+    fall: true, coins: '62.1K', meter: { p: 0.36 },
+    bed: {
+      armed: true,
+      cells: [{ k: 'pumpkin', ripe: true }, { k: 'mint', ripe: true }, { k: 'chamomile', ripe: true },
+              { k: 'apple', ripe: true }, { k: 'wheat', ripe: true }, { k: 'strawberry', ripe: true },
+              { k: 'brambleberry', ripe: true }, { k: 'elderflower', ripe: true }],
+      chip: '<div class="bed-chip armed">' + ico('star') + 'The whole bed — <b>+50%</b></div>'
+    },
+    edges: edge('l', 'SUMMER', false) + edge('r', 'WINTER', true, 'Turn 3')
   }),
   notes: [
-    ['d', 'The confirm names the price, the permanence and nothing else. Two buttons, the safe one on the left.'],
-    ['q', 'It sits over the sheet rather than replacing it, so the row you are buying stays visible behind the question.']
+    ['d', '<b>The board wears the state, not a banner.</b> A gold rim and a warm bloom around the trug, the chip pulsing above it — you can tell from across the room, which is the point of a screen you come back to at dinner time.'],
+    ['d', 'The rim is a fourth <code>box-shadow</code> layer added to the board’s own stack. It <b>restates the whole lip and contact shadow</b> — the documented trap is that a state modifier setting <code>box-shadow</code> silently deletes the lip, and it bites hardest exactly here, in the state a player is most likely to be looking at.'],
+    ['q', 'No toast, no banner, no sound when the bed arms. The board announcing itself is enough, and a notification for something you must be looking at anyway is noise. If it should be louder, that is a celebration-ladder decision and it belongs to phase 4.']
   ]
 });
 
-/* ---------- 5. THE SEASON TINT ---------- */
-[['Early in the year', 0, 0, 'The garden as it is today. At zero the overlay is a no-op.'],
- ['Mid-year', 0.5, 0.18, 'Warm, and easy to miss unless you look for it — which is the point.'],
- ['The year, ripe', 1, 0.38, 'Gold. The pill is full, the flower is mentioning the harvest moon.']]
-  .forEach(([label, p, o, sub], i) => {
-    F.push({
-      t: '--season-tint · ' + label,
-      s: sub,
-      tag: 'TINT',
-      html: phone({
-        coins: i === 0 ? '4.1K' : i === 1 ? '52.8K' : '104K',
-        meter: { p: p, full: i === 2 },
-        tint: o,
-        speech: i === 2 ? 'The harvest moon’s low tonight…' : null
-      }),
-      notes: i === 2 ? [
-        ['d', 'One overlay on the scenery, composed exactly like the weather tint — <code>mix-blend-mode:multiply</code> over the sky layers rather than a repaint, so the <b>day/night cycle keeps running underneath it</b> and dawn still happens in an autumn year.'],
-        ['d', 'Opacity runs 0 → 0.32 across the year, against the weather tint’s 0.52 ceiling for a full storm. It is deliberately below the weather’s loudest, because a season is a mood and a storm is an event.'],
-        ['q', 'Purely visual, no state, as doc 32 requires — it is derived from the meter each frame. The three values (<b>0 / .18 / .38</b>) and the hue <code>#ffb066</code> are mine; they are the only tuning I invented tonight and they are a phase-4 knob, not an economy one. Judge them by flicking between these three frames — a player never sees them side by side, so the drift is meant to be noticed only once it has happened.']
-      ] : []
-    });
-  });
+F.push({
+  t: 'The windfall pays',
+  s: 'One tap on any ripe plot collects the bed and the bonus together.',
+  tag: 'FALL',
+  html: scene({
+    fall: true, coins: '241K', meter: { p: 0.44 },
+    bed: {
+      cells: [{}, {}, {}, {}, {}, {}, {}, {}],
+      chip: '<div class="bed-chip">' + ico('leaf') + 'Fill all eight for <b>+50%</b></div>'
+    },
+    toast: '<div class="toast">' + ico('coin') + 'The whole bed — 178,500 <b>+50%</b></div>',
+    edges: edge('l', 'SUMMER', false) + edge('r', 'WINTER', true, 'Turn 3')
+  }),
+  notes: [
+    ['q', '<b>An open question I could not settle from the docs, and the biggest one in phase 3.</b> The engine harvests <b>one plot per tap</b> (<code>fallHarvest(idx)</code>), and each ripe plot pays its own share with the windfall multiplier applied. So collecting a full bed is eight taps and eight toasts. This frame draws what I think it should be — <b>the whole bed collected in one motion, one number</b> — but that needs either a collect-all affordance or a change to how the engine is called, and the engine is not mine to change tonight.'],
+    ['d', 'What I will build against the engine as it stands: each tap pays and toasts normally, and the <b>bed’s own total</b> is shown once on the chip as it empties. If you want the single-tap harvest, it is a small addition on top and a much better moment.'],
+    ['d', 'The bed resets to its filling state immediately, because the fill ends when its last marked plot is collected — a player who replants each plot as they pick it still gets the next bed’s windfall. That was a live bug in phase 1.2 and the presentation has to keep the promise the fix made.']
+  ]
+});
 
+/* ---------- 4. THE CENTURY BLOOM ---------- */
+F.push({
+  t: 'The Century Bloom, day 3 of 14',
+  s: 'What a fortnight looks like — and why the bed still says seven.',
+  tag: 'FALL',
+  html: scene({
+    fall: true, coins: '84.2K', meter: { p: 0.4 },
+    bed: {
+      cells: [{ century: true, p: 21, wait: '11d left' }, { k: 'mint', ripe: true }, { k: 'chamomile', ripe: true },
+              { k: 'apple', ripe: true }, { k: 'wheat', ripe: true }, { k: 'strawberry', ripe: true },
+              { k: 'brambleberry', ripe: true }, { k: 'elderflower', ripe: true }],
+      armed: true,
+      chip: '<div class="bed-chip armed">' + ico('star') + 'The whole bed — <b>+50%</b></div>'
+    },
+    edges: edge('l', 'SUMMER', false) + edge('r', 'WINTER', true, 'Turn 3')
+  }),
+  notes: [
+    ['d', '<b>The bed is armed with seven crops, and that is correct.</b> The Century Bloom stands outside the bed’s arithmetic — it neither blocks the windfall nor collects it — so "all eight" means all eight <i>unless one of them is the fortnight plant</i>. Getting this wrong would park the windfall for two weeks, which is exactly why doc 33 wrote the exception.'],
+    ['d', 'Its plot is a different body colour from every other — deep violet earth — so the one cell that is not part of the bed <b>looks like it is not part of the bed</b>. The rule is visible before it is explained.'],
+    ['d', '<b>The wait is made visible three ways:</b> a plant that is visibly a sapling, a progress bar that has moved a fifth of the way, and a chip reading the days left. A fourteen-day timer with no visible progress is indistinguishable from a bug.'],
+    ['q', 'The bar is drawn <i>inside</i> the plot rather than under the board, so the wait belongs to the plant. It is also the only plot in either garden with a bar this long-running, which is a good enough reason for it to look different.'],
+    ['q', 'It survives every Turn — a running long timer is never killed. I am not surfacing that promise anywhere yet; the natural place is the ceremony’s ask ("your Century Bloom keeps growing"), and that is a phase-2 copy change I have left alone.']
+  ]
+});
+
+/* ---------- 5. THE DOCK, AND THE MAP'S RETIREMENT ---------- */
+F.push({
+  t: 'The dock: the Stand where the World was',
+  s: 'One swap, honouring the house rule — a tab leaves when its home exists.',
+  tag: 'DOCK',
+  html: scene({
+    coins: '84.2K', meter: { p: 0.4 },
+    edges: edge('r', 'FALL', false) + edge('l', 'SPRING', true, 'Turn 6')
+  }),
+  notes: [
+    ['d', 'Doc 32’s exact instruction: in slice A the dock’s <b>World</b> button becomes a <b>Stand</b> button opening the Stand sheet that already exists, until slice D’s order strip replaces it. The dock stays at four buttons, well inside the five cap, and the panel it opens is unchanged — which is why there is no frame for it here.'],
+    ['d', 'It routes through the dock’s ordinary generic branch, since the Stand is already a sheet mode. The swap is a markup change plus one key in the attention-dot map.'],
+    ['q', 'The icon is a market stall. The icon set has no stall today, so this is one new 24×24 icon in <code>icons.js</code> — flat fills inside one thick outline, like the other thirty-three.'],
+    ['q', '<b>The order the pushes have to happen in.</b> The strip must work in the same push as the map’s retirement or an earlier one, and the Stand and the meadow both need their new doors before the map goes. My order: <b>strip and gates first, then Fall, then the dock swap and the map’s deletion last</b> — so there is never a push where neither navigation exists.'],
+    ['q', 'This frame is also the whole of Summer after phase 3: the dock swapped, two season tabs, two doors, and nothing else moved. Worth a long look — it is the screen a player lives on.']
+  ]
+});
+</script>
+<script>
 /* ---------- render ---------- */
 const grid = document.getElementById('grid');
 grid.innerHTML = F.map((f, i) =>

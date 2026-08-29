@@ -20,6 +20,9 @@ Everything below is reachable from the live URL. Do it in this order.
 | 2 | Frames 2 → 3 → 4 | The three HUD variants, in order. | **The one layout question of phase 2** — see §1 below. |
 | 3 | Frames 7 → 13 | The ceremony's four beats in sequence. | *Gift or loss?* — the rubric. |
 | 4 | Frames 19 → 21 | Flick between the three season tints. | Whether the garden ripening reads at all. |
+| 5 | `tools/fall-spike.html` | Frame 1 first, and sit with it. | Summer after phase 3 — two season tabs, two doors, the Stand in the dock. The screen a player lives on. |
+| 6 | Frames 7 → 8 → 9 | Filling → one from ready → armed. | Whether the windfall rule can be misread. |
+| 7 | Frame 11 | The Century Bloom, and the bed still armed at seven. | The exception that stops a fortnight parking the windfall. |
 
 *(This table grows as the night does — the built-game steps land under it as each phase ships. If
 the run stopped early, the sections below say exactly where.)*
@@ -167,3 +170,78 @@ map (`ui-meadow.js:453`). **So retiring the map without re-homing the meadow str
 Meadow**: a whole built screen, with its hives, keepers and honey, unreachable from anywhere. This
 is the hard rail of phase 3 and it is dealt with in §5 when phase 3 lands.
 
+
+**How I dealt with it:** the meadow gets **a door at the foot of the garden, the burrow door's twin**
+— same shape, same place, same "a visible labelled thing beside a gesture" pattern. Doc 32 says the
+map's swipe-down "is then free for later use", so I have **left the gesture retired** and given the
+meadow a door only. Both doors are drawn in frame 1 of the fall spike. *Changing it:* the door is one
+button and one handler; if you would rather the meadow inherited swipe-down as well, that is three
+lines in the gesture block.
+
+---
+
+## §5 — Decisions the gate would have asked about (phase 3)
+
+**Sideways is discovered by a season tab at the screen edge.** The horizontal answer to the burrow
+door: a 38px half-off-screen tab, one per side, wearing the season's name — and, when it is locked,
+the drained paper and the turn that opens it. So **a gate is a promise you can read from Summer**
+without walking to it. *The alternative* is the gesture alone plus a one-time coach mark, which is
+quieter and much easier to miss — and missing it means missing Fall, which is Turn 1's whole reward.
+*Changing it:* the tabs are one component and one handler.
+
+**The tabs sit low, over the lawn, not centred.** Centred vertically they landed **on the board**,
+and the board is the thing this game is. Dropping them to the lawn band also puts them beside the two
+doors, so all four ways out of the garden read as one family.
+
+**Each season is a whole screen that slides — HUD, quest strip and dock included.** Not a static
+frame with a sliding board. It makes the gesture feel like walking rather than paging a carousel, and
+it is also the cheaper build, since a season is just another layer under `.ui`.
+
+**A swipe onto a locked season shows its gate rather than refusing.** You can always walk up to a
+locked gate; that is what makes it a promise rather than a wall.
+
+**Fall's board is the garden's construction in a different material.** Same 3×3, same talking flower
+in the middle, same lip ladder, same grass fringe — a **woven trug on damp autumn earth** instead of a
+soil planter, because the verb here is *fill it and carry the whole thing in*. That is doc 05's
+material lesson and the meadow's cobbles-vs-soil precedent, applied a second time.
+
+**Fall's whole rule lives in one chip above the board, in four states:** *fill all eight for +50%* →
+*5 / 8 planted* → *one more in 4m* → *the whole bed — +50%*, pulsing. The one thing this screen must
+never do is let a player harvest at seven of eight without knowing, and the chip is what stands
+between them and that. When the bed is armed the **board itself** takes a gold rim and a warm bloom —
+no banner, no toast: you can tell from across the room, which is what a screen you come back to at
+dinner needs. *Note for the build:* that rim is a fourth `box-shadow` layer and it **restates the
+whole lip and contact shadow**, because the documented trap is that a state modifier setting
+`box-shadow` silently deletes the lip — and it would bite in exactly the state a player is most likely
+to be looking at.
+
+**"One more in 4m", not "7 / 8 ripe".** A count is a status; a wait is an appointment, and the
+appointment is what doc 32 wants Fall to be.
+
+**The Century Bloom gets a different body colour from every other plot** — deep violet earth — so the
+one cell that is *not* part of the bed looks like it is not part of the bed. Its wait is made visible
+three ways: a plant that is visibly a sapling, a bar that has moved a fifth of the way, and a chip
+reading the days left. A fourteen-day timer with no visible progress is indistinguishable from a bug.
+It is **not** in the crop picker: two million gold in a list of two-thousand-gold strawberries is
+either scrolled past or tapped by accident.
+
+**The crop row is the plant picker's row with two facts removed.** No verb chip, no rarity, no gem
+pill — crops roll none of those — and the shorter row is itself the tell that these are not flowers.
+The clocks do the rest: **20m** where Summer says **24s**.
+
+**The dock's World becomes Stand, and the Stand sheet is unchanged.** Doc 32's exact instruction; the
+dock stays at four buttons. One new 24×24 stall icon is needed — `icons.js` has no stall today.
+
+**The order the pushes have to happen in, which is the run's hard rail:** strip and gates first, then
+Fall, then the dock swap and the map's deletion **last**. The Stand and the meadow both need their new
+doors before the map goes, so there is never a push where neither navigation exists.
+
+### The one phase-3 question I could not answer alone
+
+**Collecting a full Fall bed is eight taps.** The engine harvests one plot per call
+(`fallHarvest(idx)`), each paying its own share with the windfall applied — so the bed's big moment
+arrives as eight separate toasts. I have drawn what I think it should be (**one motion, one number**)
+and **built what the engine actually does**, because a collect-all is either a new affordance or a
+change to how the engine is called, and no engine rule was mine to move tonight. It is a small
+addition on top and a much better moment; it is also the single biggest difference between Fall
+feeling like an appointment and Fall feeling like admin.
