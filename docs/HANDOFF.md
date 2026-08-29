@@ -12,40 +12,38 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
-> **PHASE 3.5 IS AT THE WIREFRAME GATE. THE SPIKE IS UP AND I AM STOPPED, WAITING FOR THE OWNER.**
-> `tools/dock-spike.html` — 16 frames, static, pushed before a line of UI code, per doc 34's gate.
-> Open it on the phone from the live URL: <https://jonishua.github.io/gardenwonder/tools/dock-spike.html>.
-> **No game code has changed.** Every frame index and every decision is listed in the new spike
-> section at the bottom of [36-hud-and-dock.md](36-hud-and-dock.md), and the reasoning is in the
-> 2026-08-30 (phase 3.5) entry in [10-decision-log.md](10-decision-log.md).
+> **PHASE 3.5 IS BUILT AND LIVE — the Big Five, the band, and the map is gone.** Three pushes on
+> 2026-08-30, in the order doc 36's rail required, each leaving the live game navigable:
+> `06785dc` the two door graphics become the vertical swipe; `add83d4` the dock rebuild; `eeba59d`
+> the map deleted. The owner approved `tools/dock-spike.html` with six annotations and they are
+> built verbatim — they are listed in [36-hud-and-dock.md](36-hud-and-dock.md), whose **as-built
+> section at the bottom is the truth** for this dock.
 >
-> **Read frame 1 first — the mapping.** Every function on today's dock, HUD, rail, quest strip and
-> gestures, plus everything the world map is the only door to, and where each one lands. It turned
-> up **three things the spec had not named**: the Apothecary loses its dock button and doc 36 never
-> mentions it (it survives as a tab pill inside Shop, which is a demotion the owner should make);
-> the map's locked land parcels have no new home at all (recommended dead, deliberately); and
-> whether a Turn button may exist in year one at all, given doc 32's mystery rule. Two surfaces were
-> also found **already** dead — the `stores` sheet has no caller and album card cells have no
-> handler — and are now in [11-known-issues.md](11-known-issues.md).
+> **The dock is Orders & Quests · Cards · GARDEN · Turn · Shop**, with a floating **UPGRADE** pill
+> and **POWER-UP** button in the band above it. **The band costs the layout nothing** — it lives in
+> the yard `.stage` already reserves for the creatures, and the board is 370×370 before and after.
+> The meter pill and the album star retire into the Turn and Cards buttons, which is the fix
+> `style.css` asked for in prose and buys **44px round buttons back** at 360px wide.
 >
-> **The headline: the band costs the layout nothing.** `.stage` already reserves a yard along its
-> bottom for the creatures (108px at 390×844, 91px at 700), and the owner's two floating buttons
-> move into the two ends of that same strip. The board measures **370×370 before and after**. The
-> raised Garden pedestal is taller than the dock row with `align-items:end`, so it rises without
-> making row 5 taller. And the HUD **wins its 44px touch targets back even at 360px wide**, because
-> retiring the meter pill and the album star is exactly the fix `style.css`'s own `max-width:430px`
-> block asks for in prose.
+> **Navigation is the gesture now: DOWN goes under to the Hollow, UP goes out to the Wild Meadow**,
+> and a room leaves by the opposite swipe. The Hollow's direction flipped, because *up goes in, down
+> pulls the camera back* was the map's rule and there is no camera any more. **The meadow has no
+> visible entrance at all** — one line from the flower on the first idle after the tutorial is its
+> whole discoverability, and that is the phase's named risk, in
+> [11-known-issues.md](11-known-issues.md) with the two cheapest fixes.
 >
-> **What is waiting on the owner:** the doors — corners or a centred pair (frame 4, drawn both ways,
-> the one thing the sketch cannot settle); the power-up's empty state — a quiet drained slot is
-> recommended and hidden is one class away; and the three questions above. **Annotations against the
-> sketch go into the build verbatim. Nothing else starts until then.**
+> **Three real bugs this build found, all fixed:** the year-one Year panel had a mystery and **no
+> door out of it** (full meter, breathing button, and a panel still saying *keep going* with no way
+> to Turn — the owner's own warning coming true); lifting the creatures to clear the band broke doc
+> 05's anchoring rule outright; and `min-height` on `.dock.five .dock-btn` out-specified both the
+> pedestal's 74px and the short-screen block's 50, so the pedestal did not rise and the 700px dock
+> did not shrink. All three were found by measuring rather than by reading.
 >
-> **The build order after approval, and it is not negotiable:** the meadow's door first, on its own,
-> verified end to end — then the Big Five and the band, then the panels, and **only then** the map's
-> removal. Never a push where the meadow has no door: `UI.enterMeadow()` has exactly one caller in
-> the repo and it is the map's dive, and four quests worth **114 of the ladder's 777 reputation**
-> live behind that room.
+> **What is still open:** the **Apothecary has no dock button** and doc 36 never named that — it
+> survives on the tab pill it shares with Upgrades and Shop; the **jars-waiting dot** has nowhere to
+> live now the meadow has no button; and the map's **land parcels died with it**, deliberately
+> (doc 25 says so at the top). Suite **1,207**, clean across five runs; `year-sim` exits 0.
+> **No economy knob or rule moved.**
 
 > **FIRST PLAYTEST, 2026-08-29 — THE PROGRESSION LADDER NEEDS A DESIGN SESSION BEFORE PHASE 4.**
 > The owner played a fresh save and hit two things in the first minutes; auditing them turned up a

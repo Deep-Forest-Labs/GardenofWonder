@@ -1,8 +1,10 @@
 # The Big Five — the HUD and Dock Update
 
-**Status: the owner's spec, 2026-08-30. THE SPIKE IS APPROVED WITH ANNOTATIONS and the build is
-under way — `tools/dock-spike.html` carries the annotated version. See "The owner's annotations"
-below; where they and the body of this document disagree, the annotations win.** The bottom of the screen rebuilds around
+**Status: BUILT AND LIVE, 2026-08-30.** The spike was approved with annotations and the build
+shipped in three pushes. `tools/dock-spike.html` carries the annotated spike and is the reference
+the visual critic judges against. **Where the annotations and the body of this document disagree,
+the annotations win** — and where the *as-built* section at the very bottom and anything above it
+disagree, the as-built section wins. The bottom of the screen rebuilds around
 **five main dock buttons plus a floating pair** — the shape the big mobile games converge on
 (Monopoly Go, Clash Royale), and the owner's direct design. This is a mini-phase between the
 Surface run and phase 4; the wireframe gate applies in full (the owner is reviewing, and has a
@@ -206,3 +208,60 @@ Given against the spike. **Verbatim intent, folded into the spike before any UI 
    one shows a padlocked meter and **one track — the gold** — with no numbers on it, and the flower
    says what to do about it. The pouch, the petals and the second gate all still wait for the first
    Turn.
+
+
+---
+
+## As built, 2026-08-30
+
+Three pushes, in the order the rail required. Every one left the live game navigable.
+
+| Push | Commit | What shipped |
+| --- | --- | --- |
+| a | `06785dc` | The door graphics retire into the vertical swipe. **Down goes under to the Hollow, up goes out to the Wild Meadow**, and a room leaves by the opposite swipe. The meadow's exit comes home. The map still worked through this push. |
+| b | `add83d4` | The Big Five, the band, the four panels, the rebuilt order token, the HUD's 44px buttons back. |
+| c | `eeba59d` | The map deleted — `overworld.js`, `ui-map.js`, the `.ow-*` block, the World button, the swipe-down pull-back. |
+
+### What each of the five actually does
+
+| # | Button | Opens | Badge |
+| --- | --- | --- | --- |
+| 1 | Orders & Quests | Sheet mode `orders` — `renderStand()` above `renderQuests()`, one scroll, two headings | A fillable order **or** a claimable quest (`Game.stripQuest().complete`, the strip's own call) |
+| 2 | Cards | Sheet mode `album` — unchanged | `state.packs > 0`. **New**: nothing had ever badged the pack count |
+| 3 | **GARDEN** | Not a panel. Closes any sheet, leaves the Hollow or the meadow, and returns the season to Summer | — |
+| 4 | Turn | Sheet mode `year` — the Year panel | The Turn is ready. Suppressed while the button breathes |
+| 5 | Shop | Sheet mode `shop` — unchanged | Affordable decor **or** something brewable (Craft's dot folds in here) |
+
+The band: **UPGRADE** (`#btnUpgrade`, opens `upgrades`, carries its own dot — the first time the dot
+rule has reached a control that is not a dock button) and **POWER-UP** (`#btnPower`).
+
+### The things worth knowing before touching this again
+
+- **The band costs the layout nothing.** It lives in the yard `.stage` already reserves for the
+  creatures. The board is 370×370 before and after at 390×844. Both buttons are inset 34px from the
+  column, which clears a 38px season tab by 6.
+- **The pedestal rises without growing the dock.** `.dock.five` pins `grid-template-rows` to the
+  dock's height with `align-items:end` and gives every button that exact height; only
+  `.dock-btn.home` is taller. **Use explicit heights, not `min-height`** — `min-height` on
+  `.dock.five .dock-btn` out-specifies both `.dock-btn.home` and the `max-height:700px` block, and
+  that bug shipped for an hour: the pedestal did not rise and the short-screen dock did not shrink.
+- **The creatures stay on the lawn.** Lifting them to clear the band was tried and broke doc 05's
+  anchoring rule — a creature 64px up reads as floating. The buttons paint over them at z-index 4.
+  `CRITTER_SPOTS` moved to 32/68/44/56, because the old 80% spot sat behind the POWER-UP button.
+- **The power-up's pool is *held AND not running*.** `activateBoost` refuses to re-arm a live boost
+  and returns false; a slot seated from held alone will eventually hold a boost whose tap does
+  nothing. The seat empties the instant it is spent, so *a running boost cannot be refreshed* stays
+  true by construction.
+- **Year one's panel must have a door out of it.** It shipped without one — full meter, breathing
+  button, and a panel still saying *keep going*. The ceremony's button now appears the moment
+  `turnReady()` is true.
+
+### What is still open
+
+- **The Apothecary has no button of its own** and this document never named that. It survives on the
+  tab pill it shares with Upgrades and Shop: Shop → Craft, two taps.
+- **The meadow has no visible entrance at all** — one line from the flower is its whole
+  discoverability, and the jars-waiting dot has nowhere to live. Both in
+  [11-known-issues.md](11-known-issues.md).
+- **The land parcels died with the map**, deliberately. [25-world-map.md](25-world-map.md) says so at
+  the top.
