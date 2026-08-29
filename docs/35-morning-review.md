@@ -61,18 +61,22 @@ wallet.
 
 | # | Where | What to do | What you are judging |
 | --- | --- | --- | --- |
-| 8 | The garden | Look at the HUD. Third pill, green, no number. | Does the meter read as a meter without a number on it? |
-| 9 | Dev → **Drive a year** | Tap it a few times and watch the pill fill and the garden warm. | The season tint. It is the only tuning I invented. |
-| 10 | Tap the pill | Short of full, it shows the projection. | Can you tell *why* you cannot turn yet? |
-| 11 | Dev → drive until the pill pulses, then tap it | The ceremony. Read the ask, bless a flower, watch the Tally. | ***Gift or loss?*** — the whole rubric, in one screen. |
-| 12 | Almanac (the book button) | Petal tracks on any flower you have grown. Buy one. | Does the pouch have somewhere to go? |
-| 13 | Tap an empty plot | The picker. Locked rows wear their price. | Is the wall legible, and is the confirm worth its tap? |
-| 14 | Swipe **left** on the lawn (or tap the FALL tab) | Fall. Plant a strawberry, then Dev → *Fill Fall* and *Ripen Fall*. | Does Fall read as the garden in another season, or as a second game? |
-| 15 | Watch the chip above Fall's board as it fills | *fill all eight* → *5 / 8* → *one more in 4m* → *the whole bed* | Can the windfall rule be misread? It is the only thing between a player and harvesting at seven of eight. |
+| 8 | The garden, on a **fresh** save (a private window) | Look at the HUD: a third pill, green, no number. Tap it. | Year one is a mystery — the pill answers in the flower's voice and gives no numbers at all. Is that the right amount of nothing? |
+| 9 | Dev (the unlabelled dot right of the gems) → **Earn +400K**, three times | Watch the pill fill and the garden warm as it goes. | The season tint. It is the only tuning I invented, and it runs on the year's earnings rather than on the meter. |
+| 10 | Dev → **A good year's Tally**, then tap the pulsing pill | The ceremony. Read the ask — especially *this year goes* — bless a flower, watch the Tally land one line at a time. | ***Gift or loss?*** — the whole rubric, in one screen. And is the price honestly stated before you pay it? |
+| 11 | Back in the garden, Dev → **Earn +25K**, then tap the pill | *Now* the projection, because the pill only speaks in numbers after the first Turn: what is ready to save, and **both** Turn gates as tracks. | Can you tell *why* you cannot turn yet, without a wiki? |
+| 12 | Almanac (the book button) | Petal tracks on every unlocked flower. Buy one. | Does the pouch have somewhere to go the morning after? |
+| 13 | Tap an empty plot | The picker. Locked rows wear their one-time price. | Is the wall legible, and is the confirm worth its extra tap? |
+| 14 | Swipe **left** on the lawn — or tap the **FALL** tab at the right edge | Fall. | Does it read as the garden in another season, or as a second game? |
+| 15 | Plant something, then Dev → **Fill the bed** and **Ripen the bed** | Watch the chip above the board: *fill all eight* → *5 / 8 planted* → *All 8 in · ripe in 20m* → *one more in 4m* → *the whole bed*. | Can the windfall rule be misread? That chip is the only thing between a player and harvesting at seven of eight. |
 | 16 | Swipe left again, from Fall | Winter's gate. | Is a locked season a promise or a wall? |
+| 17 | Swipe right twice, back to Summer | The dock still says **World**, and the map still works. | Both navigations are live — nothing was retired. |
 
-*(This table grows as the night does. If the run stopped early, the sections below say exactly
-where.)*
+**This script was walked end to end, step by step, in a headless run of the live build** — that is
+how steps 10 and 11 ended up in this order: on a fresh save one *Earn +400K* already meets both Turn
+gates, so the projection cannot be reached before the ceremony is. The mystery pill, the ceremony,
+the petal tracks, the locked picker rows, Fall's four chip states, Winter's gate and the still-live
+World button were each asserted in that run.
 
 ---
 
