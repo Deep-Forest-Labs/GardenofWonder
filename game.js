@@ -1141,6 +1141,17 @@ const Game = (() => {
     if (plotUnlockLevel(idx) > 1 && state.year.turnsCompleted < YEAR().plotTurnGate) return false;
     return levelFromRep(state.rep) >= plotUnlockLevel(idx);
   }
+  /* WHICH gate is refusing, so the UI can say the true thing rather than one
+     label for two different refusals. Plots 5-8 are held by the Turn first and
+     the level second, and after the Garden Year the level is usually not the
+     binding one — a chip reading "Lv 3" on a plot whose real refusal is "no
+     Turn yet" is a lie the player cannot act on. Read-only; it re-reads the
+     same two conditions plotAvailable() does and moves no rule. */
+  function plotGate(idx) {
+    if (plotAvailable(idx)) return '';
+    if (plotUnlockLevel(idx) > 1 && state.year.turnsCompleted < YEAR().plotTurnGate) return 'turn';
+    return 'level';
+  }
 
   /* ---------------- flower mastery — petals ----------------
 
@@ -3975,7 +3986,8 @@ const Game = (() => {
     wonderActive, wonderMult, startWonder, comboMult,
     UPGRADE_EFFECTS,
     repToNext, cumulativeRep, levelFromRep, repIntoLevel,
-    seedUnlocked, seedUnlockLevel, plotAvailable, plotUnlockLevel,
+    seedUnlocked, seedUnlockLevel, plotAvailable,
+    plotGate, plotUnlockLevel,
     claimQuest, stripQuest, questById,
     discoveredCount, discoveredOf, bestRarityOf, almanacMilestones,
     masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf,

@@ -272,6 +272,32 @@ The row carries the full card material — 3px ink, `0 4px 0 var(--ink-2)`, and 
 `0 8px 14px rgba(44,26,16,.24)` contact shadow the plot has, so rows sit *above* the paper rather
 than on it. The press collapses the lip and tightens the shadow together.
 
+#### The locked row, and the unlock price (2026-08-29, phase 2)
+
+A seed that has not been unlocked wears its **one-time gold price** where every other row wears its
+go button, so the eye finds the answer in the same place down the whole list. The row is
+`.seed-row.locked`:
+
+- **Drained, never illegible.** It takes the `--paper-dim` family every other "not now" state in the
+  game wears, and it restates its own lip (`0 4px 0 var(--paper-dim-edge)`) — a `box-shadow`
+  modifier that forgets to is how the lip gets deleted in exactly the states a player is looking at.
+  The art desaturates to `.35`, the stat pills drain, and **the numbers stay readable**: the row is
+  an advert for the thing you are saving 150K for.
+- The price chip is `.seed-lock`, the documented pill recipe at 2.5px/`0 2px 0`. `.ok` is the house
+  green and pulses with `affordPulse`; `.no` is drained. `syncAfford()` keeps both honest between
+  renders, so the chip flips the moment a harvest lands.
+- It replaced a `.seed-row.gated` that read **"Level N"** from the retired `unlockLevel` — the wrong
+  refusal since the Garden Year priced seeds in gold — and greyed the row to `opacity(.72)`.
+
+**Tapping it asks first.** `.unlock-ask` replaces the whole panel — bloom at 100px, the question,
+the price and the permanence in one sentence, `Not yet` / the green price. It is the whole panel
+rather than a card floating over the list because a `panels` event rebuilds the sheet body from
+scratch, and a floating card would vanish mid-question; the pending seed lives in a module local in
+`ui-sheet.js` for the same reason. The sort pills hide while the question is up. **An unlock is
+one-time, permanent and unrefundable, and the game has no undo** — one extra tap on the happy path
+is the trade. On success the row keeps its place, lights `.fresh` gold for 2.2s, and a toast says
+*yours for good — unlocks survive every Turn*, which is the one fact a player cannot see.
+
 ### The Almanac seed row
 
 The `bonuses` panel lists all nineteen seeds. A grown row is three lines; an ungrown row is two.
@@ -324,7 +350,7 @@ Driven by `data-state` on each plot button:
 
 | State | Appearance |
 | --- | --- |
-| `locked` | Padlock and coin price, or "Lv *n*" if the level has not opened it yet; pulses when affordable (`data-afford="1"`) |
+| `locked` | Padlock and coin price; pulses when affordable (`data-afford="1"`). When a gate refuses the purchase the chip names **which** gate — `Turn 1` while the Garden Year holds plots 5–8, `Lv n` when the level is the binding one. `Game.plotGate(idx)` answers that, so the UI never has to re-derive the rule, and the deny float says the sentence (*After your first Turn*) that the chip only marks |
 | `empty` | Dashed plant-spot marker; bobs only during first-plant onboarding |
 | `grow` | Plant at its growth stage, progress bar beneath |
 | `ready` | Full bloom, bouncing `!` badge, sweep shine |

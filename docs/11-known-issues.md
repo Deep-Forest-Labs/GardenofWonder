@@ -11,21 +11,23 @@ The engine shipped with no UI, so several truths are temporarily invisible or mi
 All of these resolve in phases 2–3; they are listed so nobody "fixes" them early or is
 surprised on a fresh save.
 
-### A FRESH save is hard-capped at 2 of 19 seeds and 4 of 8 plots until phase 2
+### ~~A FRESH save is hard-capped at 2 of 19 seeds~~ — FIXED 2026-08-29 (phase 2)
 
-Say it plainly (the gauntlet's spec critic caught the soft version of this note): with no
-unlock surface shipped, a brand-new save on the live site can never plant past Tulip and can
-never buy plots 5–8 or run a Turn from the game's own UI — `Game.unlockSeed()` has no caller
-outside Developer tools (a **"Unlock the next seed" dev button** exists precisely so the wall
-can be paid and *felt* during review), and the Turn exists only behind the dev sheet. The
-owner's grandfathered save sees nothing locked, so the live game reads unchanged **for
-migrated saves only** — confirm every live tester is on one before phase 2, or warn them.
+**The seed half is closed.** The plant picker sells unlocks: a locked row wears its one-time
+gold price, asks before it charges, and says *yours for good* when it lands. The two label
+seams that came with it are gone too — the retired `unlockLevel` no longer appears anywhere in
+the picker, and a plot the Turn is holding now chips **"Turn 1"** with a deny float reading
+*After your first Turn*, instead of a "Lv 3" nobody could act on.
 
-The label seams, same family: `renderSeeds()` still chips a locked seed with the retired
-`unlockLevel` ("Level 1" on a Bluebell that actually wants 150K gold), a year-gated plot's
-chip and deny toast still say "Lv 3" while the true refusal is "no Turn yet", and the
-level-up toast no longer announces seeds, which shortens levels 2–17's fanfare until the
-ladder re-authors in slice D. Phase 2 ships the real unlock rows.
+**Still true, and by design:** a fresh save is played on **four plots** through year one —
+plots 5–8 open at the first Turn ([32-the-garden-year.md](32-the-garden-year.md)), so this is
+the design, not a gap. What is *not* yet true is that the Turn itself has a surface; until the
+ceremony ships it exists only behind the dev sheet, so a fresh save still cannot reach Turn 1
+from the game's own UI, and therefore cannot open plots 5–8. The ceremony is the next push of
+phase 2.
+
+The remaining seam in this family: the level-up toast no longer announces seeds, which
+shortens levels 2–17's fanfare until the ladder re-authors in slice D.
 
 **And a MIGRATED save is not behaviourally unchanged either — three real differences**, so
 "the live game plays identically" is retired as a claim (it holds for the *look*, not the

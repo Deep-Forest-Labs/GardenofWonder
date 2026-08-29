@@ -170,17 +170,24 @@
       if (c.lucky !== lucky) { v.lucky.classList.toggle('show', lucky); c.lucky = lucky; }
 
       if (state === 'locked') {
-        const gated = !Game.plotAvailable(i);
-        if (c.gated !== gated) {
+        /* Two different refusals, two different labels. "Lv 3" on a plot the
+           Turn is holding is the wrong sentence, and it is the one a fresh save
+           sees on plots 5-8 all through year one. */
+        const gate = Game.plotGate(i);
+        const gated = gate !== '';
+        if (c.gated !== gate) {
           v.root.dataset.gated = gated ? '1' : '0';
-          if (gated) {
+          if (gate === 'turn') {
+            v.costWrap.textContent = `Turn ${DATA.year.plotTurnGate}`;
+            v.cost = null;
+          } else if (gate === 'level') {
             v.costWrap.textContent = `Lv ${Game.plotUnlockLevel(i)}`;
             v.cost = null;
           } else {
             v.costWrap.innerHTML = `${Icons.get('coin')}<span></span>`;
             v.cost = $('span', v.costWrap);
           }
-          c.gated = gated;
+          c.gated = gate;
           c.cost = null;
         }
         if (gated) {
@@ -558,9 +565,12 @@
     Sound.resume();
     const cell = S.grid[idx];
     if (cell.locked) {
-      if (!Game.plotAvailable(idx)) {
+      const gate = Game.plotGate(idx);
+      if (gate) {
         const c = FX.centerOf(node);
-        FX.float(c.x, c.y, `Level ${Game.plotUnlockLevel(idx)}`, '');
+        FX.float(c.x, c.y, gate === 'turn'
+          ? (DATA.year.plotTurnGate === 1 ? 'After your first Turn' : `After Turn ${DATA.year.plotTurnGate}`)
+          : `Level ${Game.plotUnlockLevel(idx)}`, '');
         return;
       }
       if (!Game.unlockPlot(idx)) {

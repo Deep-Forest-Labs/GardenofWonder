@@ -29,9 +29,17 @@
     document.documentElement.style.setProperty('--page-fill', color);
   }
 
+  /* The seed the picker is asking about, and the one it just sold. Both live
+     up here rather than in the markup, because a `panels` event rebuilds the
+     sheet body from scratch and anything held in the DOM would vanish
+     mid-question. */
+  let pendingUnlock = null;
+  let justUnlocked = null;
+
   function openSheet(mode, arg) {
     sheetMode = mode;
     sheetArg = arg;
+    pendingUnlock = null;
     renderSheet(true);
     el.sheet.classList.add('open');
     el.sheet.setAttribute('aria-hidden', 'false');
@@ -82,7 +90,10 @@
       el.sheetTabs.innerHTML = TABS.map(
         (t) => `<button class="tab" role="tab" data-tab="${t.id}" aria-selected="${t.id === sheetMode}">${t.label}</button>`
       ).join('');
-    } else if (sheetMode === 'seeds') {
+    } else if (sheetMode === 'seeds' && !pendingUnlock) {
+      /* The sort pills go while the picker is asking a yes/no question — they
+         are not part of the question, and tapping one under it would re-sort a
+         list nobody can see. */
       const opts = [['tier', 'By tier'], ['balanced', 'Balanced'], ['costAsc', 'Cheapest'], ['costDesc', 'Priciest']];
       el.sheetTabs.innerHTML = opts
         .map(([id, label]) => `<button class="tab" role="tab" data-sort="${id}" aria-selected="${id === seedSort}">${label}</button>`)
@@ -453,7 +464,13 @@
       const drops = [];
       if (s.gemChance) drops.push(`<span class="stat gem">${Icons.get('gem')}${pct(s.gemChance, 1)}</span>`);
       if (locked) {
-        return `<div class="seed-row gated">
+        /* A locked row is DRAINED, never illegible: it is an advert for the
+           thing you are saving up for, so its numbers have to survive. The
+           unlock price sits in the slot the go button uses on every other row,
+           so the eye finds the answer in the same place down the whole list. */
+        const price = Game.seedUnlockPrice(s.id);
+        const afford = S.credits >= price;
+        return `<button class="seed-row locked" data-unlock="${s.id}">
           <span class="seed-art" style="--art:${s.art.c1}">${Flora.head(s, 40)}</span>
           <span>
             <span class="seed-name">${s.name}${verbChip(s)}</span>
@@ -465,10 +482,10 @@
             </span>
             ${verbNote(s)}
           </span>
-          <span class="seed-go">Level ${s.unlockLevel}</span>
-        </div>`;
+          <span class="seed-lock ${afford ? 'ok' : 'no'}">${Icons.get('lock')}${fmt(price)}</span>
+        </button>`;
       }
-      return `<button class="seed-row" data-plant="${s.id}" ${can ? '' : 'disabled'}>
+      return `<button class="seed-row${justUnlocked === s.id ? ' fresh' : ''}" data-plant="${s.id}" ${can ? '' : 'disabled'}>
         <span class="seed-art" style="--art:${s.art.c1}">${Flora.head(s, 40)}</span>
         <span>
           <span class="seed-name">${s.name}${verbChip(s)}</span>
@@ -483,7 +500,31 @@
         <span class="seed-go">${Icons.get(can ? 'sprout' : 'lock')}</span>
       </button>`;
     }).join('');
+    if (pendingUnlock) return unlockAsk();
     return `<p class="sheet-note">Planting into plot ${(sheetArg ?? 0) + 1}. Grow times already include your sprinklers and boosts.</p>${rows}`;
+  }
+
+  /* An unlock is one-time, permanent and unrefundable, and the game has no undo
+     — so it asks. Rendered as the whole panel rather than as a card floating
+     over the list, because a floating card has to survive a re-render in a
+     scrolling body and this does not. */
+  function unlockAsk() {
+    const s = Game.seedById(pendingUnlock);
+    if (!s) return '';
+    const price = Game.seedUnlockPrice(s.id);
+    const afford = S.credits >= price;
+    return `<div class="unlock-ask">
+      <span class="unlock-art" style="--art:${s.art.c1}">${Flora.head(s, 76)}</span>
+      <h3>Unlock ${s.name}?</h3>
+      <p>${fmt(price)} gold, once. It stays unlocked through every Turn, for good.</p>
+      <div class="unlock-row">
+        <button class="big-btn" data-unlockno="1">Not yet</button>
+        <button class="big-btn yes" data-unlockgo="${s.id}" ${afford ? '' : 'disabled'}>
+          ${Icons.get('coin')}${fmt(price)}
+        </button>
+      </div>
+      ${afford ? '' : `<p class="unlock-short">${fmt(price - S.credits)} short.</p>`}
+    </div>`;
   }
 
   function questRewardLine(def) {
@@ -1786,6 +1827,48 @@
       }
       return;
     }
+    /* The seed-unlock ladder: ask, then charge. pendingUnlock is cleared BEFORE
+       unlockSeed() because that emits `panels`, which re-renders this sheet —
+       leaving it set would redraw the question over the answer. */
+    const unlockAskBtn = e.target.closest('[data-unlock]');
+    if (unlockAskBtn) {
+      pendingUnlock = unlockAskBtn.dataset.unlock;
+      renderSheet(true);
+      Sound.play('tap');
+      return;
+    }
+    const unlockNo = e.target.closest('[data-unlockno]');
+    if (unlockNo) {
+      pendingUnlock = null;
+      renderSheet(true);
+      Sound.play('close');
+      return;
+    }
+    const unlockGo = e.target.closest('[data-unlockgo]');
+    if (unlockGo) {
+      const id = unlockGo.dataset.unlockgo;
+      const seed = Game.seedById(id);
+      pendingUnlock = null;
+      if (Game.unlockSeed(id)) {
+        justUnlocked = id;
+        Sound.play('buy');
+        FX.haptic([12, 40, 12]);
+        UI.toast({
+          title: `${seed.name} unlocked`,
+          body: 'Yours for good — unlocks survive every Turn.',
+          art: Flora.head(seed, 34)
+        });
+        setTimeout(() => {
+          if (justUnlocked !== id) return;
+          justUnlocked = null;
+          if (sheetMode === 'seeds') renderSheet(false);
+        }, 2200);
+      } else {
+        Sound.play('deny');
+      }
+      renderSheet(true);
+      return;
+    }
     const plant = e.target.closest('[data-plant]');
     if (plant) {
       const seed = Game.seedById(plant.dataset.plant);
@@ -1949,6 +2032,12 @@
       node.classList.toggle('affordable', can);
       const price = $('.price', node);
       if (price) { price.classList.toggle('ok', can); price.classList.toggle('no', !can); }
+    });
+    $$('[data-unlock]', el.sheetBody).forEach((node) => {
+      const price = Game.seedUnlockPrice(node.dataset.unlock);
+      const can = S.credits >= price;
+      const chip = $('.seed-lock', node);
+      if (chip) { chip.classList.toggle('ok', can); chip.classList.toggle('no', !can); }
     });
     $$('[data-plant]', el.sheetBody).forEach((node) => {
       const s = Game.seedById(node.dataset.plant);

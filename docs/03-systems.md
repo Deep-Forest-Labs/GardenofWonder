@@ -882,9 +882,15 @@ buttons) and `refund: true` (migrations, failed purchases) skip both together. *
 unlockRatio^(n−3)` (150K at ×1.5), permanent across Turns, stored in `state.seedUnlocks`.
 `unlockSeed(id)` charges once and can never charge again; skipping ahead is legal (the sim
 proved it dominated). Levels stopped gating seeds; `unlockLevel` stays in the data only for
-migrations and the picker's interim label. Plots 5–8 additionally refuse purchase until
+migrations. **The plant picker sells them from 2026-08-29 (phase 2)** — a locked row wears the
+price and asks before it charges; see
+[08-ui-and-layout.md](08-ui-and-layout.md#the-locked-row-and-the-unlock-price-2026-08-29-phase-2).
+Plots 5–8 additionally refuse purchase until
 `turnsCompleted >= DATA.year.plotTurnGate` — year one is played on four plots, and migrated
-saves keep whatever they owned.
+saves keep whatever they owned. **`plotGate(idx)` says which of the two gates is refusing** —
+`'turn'`, `'level'` or `''` — so the plot chip can stop reporting a level at a plot the Turn is
+holding. It is read-only and re-reads the same two conditions `plotAvailable()` does; the sim
+asserts the two never disagree.
 
 **Petals:** `state.petals[seedId] = { rich, quick, sig }`, bought with Saved Seeds via
 `buyPetal(id, skill)` at `DATA.petals` prices. Rich Bloom multiplies harvests through

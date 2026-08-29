@@ -1138,8 +1138,64 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .seed-row:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink-2), 0 4px 8px rgba(44,26,16,.22)}
 .seed-row[disabled]{filter:grayscale(.6) opacity(.6)}
-.seed-row.gated{filter:grayscale(.7) opacity(.72);pointer-events:none}
-.seed-row.gated .seed-go{font-size:11px;font-weight:900;opacity:.85;white-space:nowrap}
+/* A LOCKED SEED ROW is drained, not deleted. The old gated row was
+   grayscale(.7) opacity(.72) with a "Level N" chip, and it did two wrong
+   things: the level stopped being the real gate when the Garden Year priced
+   seeds in gold, and a row you cannot read is a poor advert for the thing you
+   are saving 150K for. It takes the drained-paper family every other "not now"
+   state wears — and it restates its own lip, because a box-shadow modifier
+   that forgets to is how the lip gets deleted in exactly the states a player
+   is looking at. */
+.seed-row.locked{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.18);
+}
+.seed-row.locked:active{transform:translateY(4px);box-shadow:0 0 0 var(--paper-dim-edge), 0 4px 8px rgba(44,26,16,.18)}
+.seed-row.locked .seed-art{filter:saturate(.35)}
+.seed-row.locked .stat{
+  background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));
+  box-shadow:0 2px 0 var(--paper-dim-edge);
+}
+.seed-row.locked .verb-note{filter:saturate(.4)}
+/* The unlock price sits in the slot the go button uses on every other row. */
+.seed-lock{
+  display:inline-flex;align-items:center;gap:4px;flex:none;
+  padding:6px 11px;
+  border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fff,var(--paper-3));
+  box-shadow:0 2px 0 var(--ink-2);
+  font-size:13px;font-weight:800;line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.seed-lock svg{width:16px;height:16px}
+.seed-lock.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a);animation:affordPulse 1.4s ease-in-out infinite}
+.seed-lock.no{background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));box-shadow:0 2px 0 var(--paper-dim-edge)}
+/* The row you just paid for keeps its place in the list and lights for a beat,
+   so the thing you bought is the thing that moves. */
+.seed-row.fresh{
+  background:linear-gradient(180deg,#fff6c2,#ffe066);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24), 0 0 0 4px rgba(255,201,60,.5);
+}
+
+/* The unlock question. One-time, permanent, unrefundable, and the game has no
+   undo — so it asks, as a whole panel rather than a card floating over a
+   scrolling list that a `panels` event can rebuild underneath it. */
+.unlock-ask{display:grid;justify-items:center;gap:7px;text-align:center;padding:16px 4px 6px}
+.unlock-art{
+  width:100px;height:100px;border-radius:50%;
+  display:grid;place-items:center;margin-bottom:2px;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)),
+    var(--art,#e8f7e3);
+  border:4px solid var(--ink);
+  box-shadow:0 5px 0 var(--ink-2), 0 10px 16px rgba(44,26,16,.22);
+}
+.unlock-ask h3{margin:0;font-size:22px;font-weight:800}
+.unlock-ask p{margin:0;font-size:13.5px;font-weight:700;color:var(--ink-soft);line-height:1.4;max-width:32ch}
+.unlock-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%;margin-top:10px}
+.unlock-row .big-btn{margin-top:0}
+.unlock-row .big-btn[disabled]{filter:grayscale(.55) opacity(.6)}
+.unlock-short{font-size:12.5px;font-weight:800;color:var(--ink-soft)}
 
 .quest-card{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -1325,6 +1381,10 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .big-btn svg{width:20px;height:20px}
 .big-btn.danger{background:linear-gradient(180deg,#ffe3e3,#ffa8a8)}
 .big-btn.magic{background:linear-gradient(180deg,#e5dbff,#b197fc)}
+/* Confirming a purchase is a yes, and green is what yes looks like on every
+   price in this game. The magic purple next door is the Epic rarity's family
+   and is not available for a buy button. */
+.big-btn.yes{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
 
 /* =========================================================
    OVERLAYS

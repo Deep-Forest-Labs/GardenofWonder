@@ -5483,6 +5483,29 @@ G.load();
 check('a migrated save keeps every plot it owned', S.grid.every((c) => !c.locked)
   && S.year.turnsCompleted === 0);
 
+/* plotGate() names WHICH gate is refusing, so the plot chip can stop saying
+   "Lv 3" at a plot the Turn is holding. Asserted from both arms and from the
+   NO side, because the whole value of the accessor is that the two refusals
+   are told apart. */
+G.reset();
+unlockTo(12);
+S.credits = 1e9;
+check('before the first Turn every high plot reports the TURN gate',
+  [4, 5, 6, 7].every((i) => G.plotGate(i) === 'turn'));
+check('and the four open plots report no gate at all',
+  [0, 1, 2, 3].every((i) => G.plotGate(i) === ''));
+S.year.turnsCompleted = 1;
+check('after a Turn the same plots report no gate',
+  [4, 5, 6, 7].every((i) => G.plotGate(i) === ''));
+G.reset();
+S.year.turnsCompleted = 1;
+S.rep = 0;
+check('a level-gated plot reports the LEVEL gate once the Turn gate is met',
+  G.plotGate(7) === 'level' && G.plotUnlockLevel(7) > 1);
+check('plotGate never disagrees with plotAvailable',
+  S.grid.every((c, i) => (G.plotGate(i) === '') === G.plotAvailable(i)));
+G.reset();
+
 group('the Year survives a save round trip');
 G.reset();
 S.year = { number: 3, coinsEarned: 123456.78, turnsCompleted: 2,

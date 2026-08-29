@@ -12,6 +12,40 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **THE SURFACE RUN IS UNDER WAY — phases 2 and 3 merged into one unattended session on the
+> owner's call, 2026-08-29.** The wireframe gate's approval step is deferred to morning for this
+> run only: **both spikes shipped first, in their own commits, so the record shows layout preceded
+> code** — `tools/turn-spike.html` (21 frames: the meter pill and its projection, the ceremony's
+> four beats, the Almanac row before and after petals, the picker's unlock rows, the season tint)
+> and `tools/fall-spike.html` (12 frames: Summer with the strip legible, the swipe mid-gesture, a
+> hedge gate up close, Fall's board through filling / one-from-ready / armed / paid, the Century
+> Bloom's wait, the dock swap). **Every decision the gate would have put to the owner is in
+> [35-morning-review.md](35-morning-review.md)**, with what it cost and what changing it costs —
+> read that first in the morning; it opens with a five-minute phone walkthrough.
+>
+> **Two findings from drawing it that changed the build.** *(1)* **The meter pill cannot carry a
+> number.** Measured on the real metrics: 360px of HUD, 132px of round buttons, and three numbered
+> wallets need ~245px of the 220px left — so the wallets wrap, and worse, they wrap *as you get
+> richer*. Shipping icon-and-fill with both numbers one tap away; the alternative that buys both
+> (the album star leaves the HUD for the Almanac) is a navigation call and is parked for the owner.
+> *(2)* **The meadow has no door.** Doc 32 says it "keeps its current entry from Summer" and there
+> is no such entry — `UI.enterMeadow()` has exactly one caller in the repo and it is the map's dive,
+> and the meadow's only exit returns to the map. **Retiring the map without re-homing it strands the
+> whole Wild Meadow**, so phase 3 gives it the burrow door's twin at the foot of the garden and
+> leaves swipe-down retired, as doc 32 asks.
+>
+> **PHASE 2's FIRST PUSH IS LIVE: the plant picker sells unlocks.** A locked row now wears its
+> one-time gold price in the slot every other row uses for its go button, drained rather than
+> greyed-out — it is an advert for the thing you are saving 150K for, so its numbers stay readable.
+> Tapping it **asks before it charges** (one-time, permanent, unrefundable, no undo), and the toast
+> says *yours for good — unlocks survive every Turn*, which is the one fact a player cannot see.
+> **A fresh save can therefore plant past Tulip again.** Shipped first, ahead of the ceremony, on
+> the owner's call. With it: **`Game.plotGate(idx)`**, because two different refusals were wearing
+> one label — a plot the Turn is holding said "Lv 3", which is a sentence nobody could act on. It
+> now says **Turn 1**, and the deny float says *After your first Turn*. Suite 1,202 → **1,207**. See
+> the 2026-08-29 (phase 2, first push) entry in [10-decision-log.md](10-decision-log.md) and the
+> pruned seam in [11-known-issues.md](11-known-issues.md). **Next: the ceremony.**
+>
 > **PHASE 1 OF THE GARDEN YEAR IS BUILT, 2026-08-29 — the engine, as pure simulation, awaiting
 > the owner's verdict.** The whole prestige loop runs headlessly under the live game, which looks
 > and plays identically: `Game.credit()` as the single earnings faucet (cheats and refunds

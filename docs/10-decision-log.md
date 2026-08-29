@@ -5,6 +5,48 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (phase 2, first push) — The wall gets a shopfront, and two refusals stop sharing one label
+
+**Shipped first on purpose, and on the owner's call:** with no unlock surface, a brand-new save on
+the live site could never plant past Tulip. That is the smallest, safest slice of phase 2 and it is
+the one that unbreaks a fresh save, so it goes in before the ceremony rather than after it.
+
+**A locked seed row is drained, not deleted.** The row it replaces was `grayscale(.7) opacity(.72)`
+with a `Level N` chip read from the retired `unlockLevel`, which had been the wrong refusal since
+the Garden Year priced seeds in gold. Two decisions inside that:
+
+- *Why drained rather than hidden or greyed to nothing.* The row is an **advert for the thing you
+  are saving 150K for**. If its cost, its clock and its yield range are not readable, the wall has
+  no shape and the player has nothing to aim at. `--paper-dim` is what every other "not now" state
+  in this game wears, and it says *not yet* without spending a hue.
+- *Why the price sits where the go button sits.* One slot, one answer, down the whole list — the eye
+  never has to search a second place to find out whether a row is buyable.
+
+**It asks before it charges.** An unlock is one-time, permanent, unrefundable and the game has no
+undo, so a mis-tap on a 150K row would be the worst tap in the game. The confirm costs one tap on
+the happy path and names the price, the permanence and nothing else. *Rejected:* a long-press
+(undiscoverable), and a floating confirm card over the list — a `panels` event rebuilds the sheet
+body from scratch and would delete the question mid-answer, which is why the pending seed lives in
+a module local and the ask replaces the whole panel.
+
+**The toast says "yours for good".** The single fact a player cannot see is that unlocks survive
+every Turn. A one-time price that reads as a per-year price is the likeliest misreading in this
+phase, and one line of copy closes it.
+
+**`Game.plotGate(idx)` — because two different refusals were wearing one label.** Plots 5–8 are held
+by the Turn first and the level second, and after the Garden Year the level is usually not the
+binding one — so a chip reading `Lv 3` on a plot the Turn is holding is a sentence the player cannot
+act on, and it is what every fresh save saw all through year one. The accessor is read-only and
+re-reads exactly the two conditions `plotAvailable()` already checks; the UI then says `Turn 1` on
+the chip and *After your first Turn* in the deny float. *Why in the engine and not in `ui.js`:*
+which gate binds is a rule, and `ui.js` does not do rule math. The suite asserts both arms, the
+no-gate case, and that `plotGate` and `plotAvailable` can never disagree — 1,202 → 1,207.
+
+**Green is what yes looks like.** The confirm's buy button was `.big-btn.magic` for about ten
+minutes; magic is `#b197fc`, which is the Epic rarity's own colour, and doc 05 forbids borrowing a
+rarity for something that is not a rarity. It is the house green now, the same green every
+affordable price in the game already wears.
+
 ## 2026-08-29 (phase 1.3) — Round 4: no blockers, no live bugs, and the small-sample habit caught a third time
 
 **The gauntlet's fourth round is the first with no blocker and no live engine bug** — 18
