@@ -3554,6 +3554,12 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 /* The fortnight plant. A body colour of its own, so the one cell that is NOT
    part of the bed looks like it is not part of the bed — the rule is visible
    before it is explained. */
+/* Still owed a windfall. The gold ring is the same "you can have this" gold the
+   armed board and every affordable price wear, and it restates the plot's own
+   lip and contact shadow rather than replacing them. */
+.fl-plot.marked{
+  box-shadow:0 4px 0 #392a1c, 0 8px 14px rgba(44,26,16,.24), 0 0 0 3px var(--coin);
+}
 .fl-plot.century{
   background:linear-gradient(180deg,#5b4a7a 0%, #463962 72%, #332a49 100%);
   box-shadow:0 4px 0 #2a2240, 0 8px 14px rgba(44,26,16,.28);
@@ -3569,10 +3575,13 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 /* THE BED CHIP — Fall's whole rule as one object, above the board, on screen
    from the first second. Everything else about the windfall is this chip
    changing state. */
-.fl-wrap{position:relative;display:grid;place-items:center}
+.fl-wrap{position:relative;display:grid;place-items:center;margin-top:22px}
 .fl-chip{
   position:absolute;left:50%;transform:translateX(-50%);
-  top:-13px;z-index:6;
+  /* Clear of the top row's "!" badges, which sit at top:-9px inside their
+     plots — the chip was painting over two of the eight in exactly the state
+     the whole feature is about, and swallowing their taps as well. */
+  top:-34px;z-index:6;pointer-events:none;
   display:flex;align-items:center;gap:7px;
   max-width:96%;padding:6px 13px;white-space:nowrap;
   border:3px solid var(--ink);border-radius:999px;
@@ -3628,6 +3637,15 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.24);
 }
 .s-edge .turn{font-size:8.5px;opacity:.75;letter-spacing:0}
+/* The dock's attention dot, on a season. Same object, same meaning: there is
+   something in there worth opening. */
+.s-edge .s-dot{
+  position:absolute;top:-6px;right:-4px;
+  width:16px;height:16px;border-radius:50%;
+  background:#ff6b6b;border:3px solid var(--ink);
+  box-shadow:0 2px 0 var(--ink-2);
+}
+.s-edge{position:absolute;bottom:0;pointer-events:auto}
 
 /* ---------- a locked season, seen from its gate ----------
    A gate is a promise, not a wall: a real backdrop, a hedge across it, a

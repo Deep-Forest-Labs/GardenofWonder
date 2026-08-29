@@ -35,7 +35,11 @@ locked-season gate, Fall's board with all eight crops, the windfall and the Cent
    Fall feeling like an appointment and Fall feeling like admin, and it needs either a new
    affordance or a change to how the engine is called — neither was mine to take overnight. Also in
    docs/35.
-5. **Fall has no season tint of its own.** `--season-tint` ripens *Summer* toward autumn; Fall's
+5. **Fall is not in the welcome-back report.** `reconcile()` walks `state.grid` only, so a Fall bed
+   that ripened overnight is announced by the edge tab's dot and by nothing else — no line in the
+   away sheet, no toast, and nothing listens for the engine's `windfall` emit. For a season whose
+   whole design is "an appointment rather than a chore" that is the missing half of the bell.
+6. **Fall has no season tint of its own.** `--season-tint` ripens *Summer* toward autumn; Fall's
    scene is already autumn and is not tinted. Whether Fall should have its own clock is a phase-4
    question.
 

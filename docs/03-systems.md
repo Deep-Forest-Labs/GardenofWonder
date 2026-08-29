@@ -1112,8 +1112,13 @@ trug on damp autumn earth instead of a soil planter, because Fall's verb is *fil
 whole thing in*. All eight plots open the moment Fall unlocks; Fall never sells you its own beds.
 
 **The bed pays together.** `Game.checkFallWindfall()` marks every eligible plot when they are all
-planted and ripe, and `fallHarvest()` pays `yield × 1.5` on each marked one. The surface states that
-rule as one chip above the board, in four states: *fill all eight for +50%* → *5 / 8 planted* →
+planted and ripe, and `fallHarvest()` pays `yield × 1.5` on each marked one. **The surface reads the
+marks, not the clock** — that distinction is the whole rule. A bed that is planted and ripe is not
+necessarily a bed that will pay: the latch refuses to mark again while any mark is unspent, so a
+player replanting as they harvest has a board full of ripe crops of which only the marked ones owe
++50%. Every marked plot wears a gold ring, and the chip counts them. Reading the clock alone told
+both halves of the lie — it promised a windfall to a replanted plot that could never be marked, and
+it dropped the promise off the plots that were about to keep it. The chip's states: *fill all eight for +50%* → *5 / 8 planted* →
 *one more in 4m* → *the whole bed — +50%*, pulsing, with the board itself taking a gold rim. **The
 chip is the only thing standing between a player and harvesting at seven of eight**, which is why it
 is on the board rather than in a panel, and why the near-miss state names a **wait** rather than a
@@ -1123,6 +1128,12 @@ count: a count is a status, a wait is an appointment.
 collects it — so it gets a body colour of its own (violet earth) and its own block in the crop
 picker. Two million gold in a list of two-thousand-gold strawberries is either scrolled past or
 tapped by accident.
+
+**Fall's edge tab carries the dock's attention dot** when anything in Fall is ripe or still owed a
+windfall — an appointment needs a bell, and the dot is the pattern the dock already uses to teach
+that a room is worth opening. *(Still missing, and named in
+[11-known-issues.md](11-known-issues.md): Fall does not appear in the welcome-back report, so a bed
+that ripened overnight is announced by the dot and nothing else.)*
 
 **Crops are not flowers and are not drawn like flowers**: a berry on a stem, a gourd, an ear of
 wheat, never a radial bloom. Their rows carry three stat pills where a seed row carries five — no

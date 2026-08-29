@@ -78,7 +78,7 @@
            empty plot's wait text — so the wait pill painted as an empty capsule
            on every ripe plot. Exactly the trap the docs record for
            `dataset.look`. */
-        cache: { look: '?', wait: '?', state: '?' }
+        cache: { look: '?', wait: '?', state: '?', marked: null }
       });
     }
   }
@@ -119,11 +119,14 @@
      rule as one object, and it is the only thing standing between a player and
      harvesting at seven of eight. */
   function bedState() {
-    const grid = S.fall.grid || [];
+    /* load() rebuilds state.fall defensively, so this should never be empty —
+       but the board must not be the thing that throws if it ever is. */
+    const grid = (S.fall && S.fall.grid) || [];
     const now = nowSec();
     let eligible = 0;
     let planted = 0;
     let ripe = 0;
+    let marked = 0;
     let soonest = null;
     let latest = null;
     grid.forEach((c) => {
@@ -135,6 +138,14 @@
       eligible += 1;
       if (!def) return;
       planted += 1;
+      /* THE MARKS ARE THE PROMISE. checkFallWindfall() marks every eligible
+         plot once per fill and refuses to mark again while any mark is unspent,
+         so a bed that is planted and ripe is NOT necessarily a bed that will
+         pay — and a bed being collected plot by plot still owes +50% on every
+         plot it already marked. Reading the clock alone told both lies: it
+         promised a windfall to a replanted plot that can never be marked, and
+         it dropped the promise off seven plots that were about to keep it. */
+      if (c.windfall) marked += 1;
       /* Ripeness is read from the clock, never from the cached `ready` flag —
          load() clears that, and the promise that a bed ripening while the tab
          was shut still pays depends on the clock being the authority. */
@@ -148,8 +159,9 @@
         if (latest === null || left > latest) latest = left;
       }
     });
-    return { eligible, planted, ripe, soonest, latest,
-      armed: eligible > 0 && planted === eligible && ripe === eligible };
+    return { eligible, planted, ripe, marked, soonest, latest,
+      collecting: marked > 0,
+      armed: marked === 0 && eligible > 0 && planted === eligible && ripe === eligible };
   }
 
   function renderBedChip() {
@@ -158,7 +170,18 @@
     const pct = Math.round(FALL().windfall * 100);
     let cls = '';
     let html;
-    if (b.armed) {
+    if (b.marked >= b.eligible && b.eligible > 0) {
+      /* Freshly marked, nothing collected yet: the moment of triumph, and it
+         gets the celebratory sentence. */
+      cls = 'armed';
+      html = `${Icons.get('star')}The whole bed — <b>+${pct}%</b>`;
+    } else if (b.collecting) {
+      /* Mid-collection. Every marked plot still owes +50%, and nothing planted
+         into the gaps joins this fill — the engine will not mark again until
+         the last of these is picked, so the chip must not imply otherwise. */
+      cls = 'armed';
+      html = `${Icons.get('star')}<b>${b.marked}</b> still ${b.marked === 1 ? 'pays' : 'pay'} <b>+${pct}%</b>`;
+    } else if (b.armed) {
       cls = 'armed';
       html = `${Icons.get('star')}The whole bed — <b>+${pct}%</b>`;
     } else if (b.planted === b.eligible && b.eligible - b.ripe === 1 && b.latest !== null) {
@@ -178,7 +201,7 @@
       el.fallChip.innerHTML = html;
       el.fallChip.dataset.sig = cls + html;
     }
-    el.fallBoard.classList.toggle('armed', b.armed);
+    el.fallBoard.classList.toggle('armed', b.armed || b.collecting);
   }
 
   /* ---------- per-cell render ---------- */
@@ -186,7 +209,7 @@
     if (!open) return;
     syncScene();
     const now = nowSec();
-    (S.fall.grid || []).forEach((c, i) => {
+    ((S.fall && S.fall.grid) || []).forEach((c, i) => {
       const v = cellEls.get(i);
       if (!v) return;
       const def = c && c.seed ? plantById(c.seed) : null;
@@ -199,6 +222,13 @@
         v.cache.look = look;
       }
       const state = !def ? 'empty' : ready ? 'ready' : 'grow';
+      /* A marked plot wears a gold ring, so "which of these still pays" is a
+         thing you can see rather than a thing you have to remember. */
+      const marked = Boolean(c && c.windfall);
+      if (v.cache.marked !== marked) {
+        v.root.classList.toggle('marked', marked);
+        v.cache.marked = marked;
+      }
       if (v.cache.state !== state) {
         v.root.dataset.state = state;
         v.root.classList.toggle('century', Boolean(def && def.century));
@@ -230,7 +260,7 @@
 
   /* ---------- input ---------- */
   function onCellTap(idx) {
-    const c = (S.fall.grid || [])[idx];
+    const c = ((S.fall && S.fall.grid) || [])[idx];
     const def = c && c.seed ? plantById(c.seed) : null;
     if (!def) { UI.openSheet('crops', idx); return; }
     const now = nowSec();

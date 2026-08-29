@@ -537,9 +537,21 @@
     /* The icon names the thing, exactly as it does on the spring beat four
        screens later. Six identical ticks beside six words is a wall of copy
        wearing a chip, and it teaches the same object twice in one ceremony. */
-    const keeps = [['pouch', 'Seeds'], ['lock', 'Unlocks'], ['star', 'Petals'],
-      ['butterfly', 'Creatures'], ['cards', 'Cards'], ['badge', 'Level']]
-      .map(([ico, k]) => `<span class="chip">${Icons.get(ico)}${k}</span>`).join('');
+    /* Eleven chips across two rows, and every glyph has to be its own — Level
+       and Badges both wore the badge rosette, which is two facts in one icon on
+       the screen whose whole job is telling them apart. */
+    const keeps = [['pouch', 'Seeds'], ['lock', 'Unlocks'], ['clover', 'Petals'],
+      ['butterfly', 'Creatures'], ['cards', 'Cards'], ['star', 'Level']]
+      .map(([ico, k]) => `<span class="chip">${Icons.get(ico)}${k}</span>`).join('')
+      /* Fall belongs in the "stays" column and was in neither. The Century
+         Bloom's entire promise is that a Turn cannot touch it, and until now
+         the only place that was written was the crop picker's note — seen once,
+         up to fourteen days earlier. A cautious player would refuse to Turn for
+         a fortnight, which is the exact trap the guarantee exists to prevent. */
+      + ((S.fall && S.fall.grid || []).some((c) => c && c.seed)
+        ? `<span class="chip">${Icons.get(Game.fallCenturyGrowing() ? 'sparkle' : 'leaf')}${
+          Game.fallCenturyGrowing() ? 'The Century Bloom' : 'Fall’s bed'}</span>`
+        : '');
     /* WHAT THE TURN TAKES, named before it is taken. The ask used to name only
        the growing plots, and told an empty board that the Turn "costs you
        nothing at all" — which is false on every board: gold zeroes to the fresh
@@ -777,7 +789,7 @@
           <span class="seed-name">${p.name}</span>
           <span class="seed-stats">
             <span class="stat">${Icons.get('coin')}${fmt(p.cost)}</span>
-            <span class="stat">${Icons.get('clock')}${fmtSpan(p.grow)}</span>
+            <span class="stat">${Icons.get('clock')}${p.century ? `${Math.round(p.grow / 86400)}d` : fmtSpan(p.grow)}</span>
             <span class="stat good">${Icons.get('coin')}${fmt(p.yield)}</span>
           </span>
         </span>
@@ -799,7 +811,9 @@
         <p class="stat-note">Fourteen days. It survives every Turn, and it stands outside the
           bed — it never blocks the windfall.</p>
       </div>` : '';
-    return `<p class="sheet-note">Planting into bed ${idx + 1}. Every plot ripe at once pays
+    /* "Bed" is the whole board, always — the eight plots that pay together.
+       A single cell is a plot, here as in Summer. */
+    return `<p class="sheet-note">Planting into plot ${idx + 1}. Every plot ripe at once pays
       <b>+${pct}%</b> on the whole bed.</p>${crops}${century}`;
   }
 

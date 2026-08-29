@@ -805,17 +805,35 @@
      exactly how the burrow door teaches the vertical swipe. A locked edge wears
      the drained paper and the turn that opens it, so a gate is a promise you
      can read from here without walking to it. */
+  /* Fall is an appointment, and an appointment needs a bell. Anything ripe or
+     still owed a windfall puts a dot on the edge tab — the same attention-dot
+     idea the dock already uses, which is how a player learns a room is worth
+     opening without being nagged. */
+  function seasonWaiting(id) {
+    if (id !== 'fall' || !Game.fallOpen()) return false;
+    const now = Date.now() / 1000;
+    return ((S.fall && S.fall.grid) || []).some((c) =>
+      c && c.seed && (c.windfall || now >= c.plantedAt + c.grow));
+  }
+
+  let edgeSig = '';
   function renderSeasonEdges() {
     const here = seasonIdx(season);
     const sides = [['l', SEASONS[here - 1]], ['r', SEASONS[here + 1]]];
-    el.seasonEdges.innerHTML = sides.map(([side, sdef]) => {
+    const html = sides.map(([side, sdef]) => {
       if (!sdef) return '';
       const ready = seasonReady(sdef);
       const turn = sdef.gate && !seasonTurned(sdef) ? `<span class="turn">Turn ${DATA.year[sdef.gate]}</span>` : '';
+      const dot = seasonWaiting(sdef.id) ? '<span class="s-dot"></span>' : '';
       return `<button class="s-edge ${side}${ready ? '' : ' locked'}" data-season="${sdef.id}"
         aria-label="${ready ? 'Go to' : 'Look at'} ${sdef.name}">
-        ${Icons.get(ready ? 'leaf' : 'lock')}<span class="w">${sdef.name}</span>${turn}</button>`;
+        ${Icons.get(ready ? 'leaf' : 'lock')}<span class="w">${sdef.name}</span>${turn}${dot}</button>`;
     }).join('');
+    /* Compared against a signature first, like the rail: this runs on the slow
+       tick and rewriting identical HTML four times a second thrashes the DOM. */
+    if (html === edgeSig) return;
+    edgeSig = html;
+    el.seasonEdges.innerHTML = html;
   }
 
   /* ============ plot input ============ */
@@ -1064,6 +1082,7 @@
       updateDockDots();
       updateYearMeter();
       if (UI.fallOpen && UI.fallOpen()) UI.renderFall();
+      renderSeasonEdges();
       refreshCoach();
       UI.updateSky();
       if (UI.sheetMode() === 'settings') UI.syncAfford();
