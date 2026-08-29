@@ -1076,6 +1076,55 @@ excluded), the Turn path over the never-resets partition, petals' shared skills 
 rows, unlock prices on seeds 3+, and Fall at background-swap art with the windfall rule — all
 under the sim-test bill in doc 33 before any UI. Simulation first, the Stand's own pattern.
 
+### The navigation lap — five minutes on the phone, phase 3.5
+
+**Every step below was walked end to end before it was written down.** Developer tools is the
+unlabelled patch of empty space just right of the gem wallet — one tap, no icon.
+
+**1 · The two rooms are gestures now.** On the lawn (not on a plot, not on the flower):
+
+- **Swipe UP** → the Wild Meadow. Swipe **down** to come back.
+- **Swipe DOWN** → the Hollow. Swipe **up** to come back.
+
+Down goes under, up goes out, and a room leaves by the opposite swipe. There are no doors drawn on
+the lawn any more. **Watch for this:** the meadow has no visible entrance at all — the flower says
+*"Swipe up sometime — the wild meadow is out that way"* once, on its first idle line after the
+tutorial, and that is the whole of it. If it feels forgotten, say so; the fix is a tab of its own.
+
+**2 · One power-up, used, and the slot refilling.** Developer tools → **+5 levels**, twice. Three
+power-ups land. The round button on the right of the band lights up in the boost's own colour with a
+badge counting them.
+
+- Tap it. It starts, its countdown appears in the strip above the garden, and **the slot fills
+  straight away with a different one** — the badge drops by one.
+- Spend the rest. The button goes to drained paper. **Tap it anyway**: it tells you where power-ups
+  come from rather than doing nothing.
+
+**3 · Every panel from its button, home by GARDEN.** Tap each of the five, and the UPGRADE pill on
+the left of the band. Come home from each with the raised green **GARDEN** button:
+
+Orders & Quests · Cards · Turn · Shop · UPGRADE — six panels, one way home. GARDEN also brings you
+out of the Hollow or the meadow, and back to Summer from Fall.
+
+**4 · The Turn button through all four states.** The fourth button's own body is the meter.
+
+- **Now:** empty and unexplained. No number anywhere on it.
+- Developer tools → **Earn +25K**. It fills a quarter. Tap it: a padlocked meter, one bar labelled
+  *Gold earned*, and the flower telling you to keep going. No pouch, no petals, no second gate —
+  a mystery, but never a mystery with nothing to do.
+- Developer tools → **Earn +100K**. It fills and **breathes gold**. Tap it: the lock is off and the
+  ceremony's button is there — *See what it's for*.
+- Take the Turn. Come back to the button afterwards: **the pouch now rides above it** with your
+  Saved Seeds on it, and the panel has both gates drawn, the lower one marked as the one holding
+  you, and a card for every flower to spend seeds on.
+
+**5 · The two squeezes, if you have a second phone.** At 360px wide the dock buttons are 64px each
+and the round buttons in the top bar are back to full size — that is a debt this phase collected.
+At 700px tall everything shrinks together and the band is exactly full.
+
+**The rubric, as always: does turning the year feel like a gift or a loss?** And for this phase:
+*can you find everything you used to be able to find?*
+
 ### The five-minute phase-1 test: feel a whole year from Developer tools
 
 Everything below is one panel: tap the unlabelled dot beside the gem wallet, scroll to **The
