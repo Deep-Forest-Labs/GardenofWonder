@@ -653,6 +653,41 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-30 (design) — The Big Five: the owner rebuilds the bottom of the screen
+
+**The owner's call, with a reference screenshot, before the rest of the morning docket:** the
+dock becomes **five main buttons** — Orders & Quests · Cards · **GARDEN** (centre, raised) ·
+**Turn** · Shop — with a **floating pair** above it: Upgrades on the left, and on the right a
+**power-up button that always holds one random held boost** (tap uses it, another fills in).
+The spec is [36-hud-and-dock.md](36-hud-and-dock.md); the Monopoly Go / Clash Royale shape,
+named as such by the owner.
+
+**What it resolves for free:** the morning review's §1 — its whole question was where the meter
+pill's number fits beside three round HUD buttons, and the answer is that **the meter stops
+being a pill: the Turn button's body is the meter**, filling as the year grows and pulsing at
+ready, with petals bought behind it. The pill retires, the album star leaves the HUD for the
+Cards slot, and the narrow-width squeeze dies with both. Doc 15 is superseded a third time —
+the centre-pedestal idea survives, but the pedestal is Garden, not World.
+
+**What it deliberately parks:** the map and meadow, by the owner's explicit words — the World
+button retires from the dock but the swipe-down gesture stays live, so both remain reachable
+and nothing is stranded; the meadow-door decision and the map's retirement wait. The quest
+strip stays for now, flagged as a gate question rather than removed on a hunch.
+
+**Process:** a mini-phase (3.5) with the wireframe gate in full force — the owner is awake, the
+spike is compared against their screenshot, and no build starts before approval. No economy
+knob moves; the phase moves entries, never behavior.
+
+### Rejected
+
+**Bundling the docket's quick fixes into this phase** (the picker padlock, the discover
+backfill) — the docket items get their own rulings in the design conversation now underway;
+this phase stays one thing. **Retiring the quest strip in the same pass** — the one
+always-visible goal does not leave on a hunch; the spike measures whether the Big Five's badges
+can carry its job first.
+
+---
+
 ## 2026-08-29 (review, later) — 1.1 verified, the blessing goes on the morning docket, and the night gets a double phase
 
 **Phase 1.1 is verified by the strategy session:** 1,202/0 reproduced across runs, the mint

@@ -312,8 +312,13 @@ directly under each — `q_daisy_15` (20), `q_tulip_8` (22), `q_harvest_30` (42)
 Turn, so they resolve across years rather than jamming forever — but `q_discover_5` will sit
 in a slot from mid-year-one until year two's rose unlock, which is worth an eye at the first
 playtest. The four meadow-dependent quests (`q_hive_1`, `q_honey_3/8/15`,
-114 rep) stay live because the meadow stays reachable from Summer's edge from day one — re-check
-the moment the meadow's entry point moves.
+114 rep) stay live because the meadow stays reachable ~~from Summer's edge~~ from day one.
+**Corrected 2026-08-29 while building phase 3: the meadow is not on Summer's edge.** Its only door
+is the map's dive — `UI.enterMeadow()` has exactly one caller in the repo, `ui-map.js:257`, the same
+correction doc 32 carries. These four are live today *because the map is*, so retiring the map
+without first giving the meadow a door takes **114 rep out of a 777-rep ladder** as well as
+stranding the room. The re-check this line asks for is therefore due now, not later — see
+[11-known-issues.md](11-known-issues.md).
 
 ## Fall content
 

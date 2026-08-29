@@ -1011,6 +1011,13 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**Phase 3.5, the Big Five ([36-hud-and-dock.md](36-hud-and-dock.md)): the dock rebuilds around
+five main buttons and a floating pair, owner-specced with a reference screenshot. Wireframe gate
+in full force — spike first, owner approval against the screenshot, then build. The meter pill
+and album star retire into it; map and meadow stay parked and reachable by gesture. The morning
+docket's remaining rulings (discover quests, Stand rep, picker padlocks, the blessing, mintK)
+are in the design conversation now.**
+
 **Phase 1 and 1.1 are BUILT, REVIEWED and VERIFIED (1,202/0; the mint is cumulative; the
 exploit is dead; M09 closed). The Surface run — phases 2+3 merged — is next, overnight, per
 [34-build-plan.md](34-build-plan.md)'s "The Surface run" section: spikes first, morning-review

@@ -22,11 +22,17 @@ locked-season gate, Fall's board with all eight crops, the windfall and the Cent
    **World**. Doc 32 has the Stand taking that slot when the map retires. Both navigations work
    right now, which is the rail doc 34 sets — *never a push where neither exists* — and it is the
    safe place to stop.
-2. **The Wild Meadow still enters from the map, and that is its only door.** Retiring the map
-   therefore cannot happen until the meadow has one; the plan is the burrow door's twin at the foot
-   of the garden, drawn in frame 1 of `tools/fall-spike.html`. Doc 32's claim that "the meadow keeps
-   its current entry from Summer" is still wrong about the code — see
-   [35-morning-review.md](35-morning-review.md) §4.
+2. **The Wild Meadow still enters from the map, and that is its only door.** `UI.enterMeadow()`
+   has exactly one caller in the repo — `ui-map.js:257`, the map's dive — and the meadow's only exit
+   returns to the map. Retiring the map therefore cannot happen until the meadow has a door; the
+   plan is the burrow door's twin at the foot of the garden, drawn in frame 1 of
+   `tools/fall-spike.html`. **This costs reputation, not just a room:** doc 33 keeps four
+   meadow-dependent quests live (`q_hive_1`, `q_honey_3/8/15`, **114 rep of a 777-rep ladder**) on
+   the stated grounds that "the meadow stays reachable from Summer's edge from day one" — which is
+   false in the same way doc 32's sentence was, and is now corrected there too. Those four are
+   claimable today *because the map is still there*. **Two docs asserted a Summer door that has
+   never existed**, which is the pattern to watch: the meadow's entry has been wrong in writing
+   longer than it has been wrong in code. See [35-morning-review.md](35-morning-review.md) §4.
 3. **Winter and Spring have gates but no gardens** (slices C and E). Their gate reads *"Opens at
    Turn N"* while the turn is the binding gate and *"Still growing in"* once it has passed, so it
    never tells a Turn-5 player that Winter opens at Turn 3.
