@@ -32,7 +32,24 @@ from quests and levels.
 > whole discoverability, and that is the phase's named risk, in
 > [11-known-issues.md](11-known-issues.md) with the two cheapest fixes.
 >
-> **Three real bugs this build found, all fixed:** the year-one Year panel had a mystery and **no
+> **THE GAUNTLET RAN: 69 agents, 52 confirmed findings, one blocker and twenty highs — all fixed.**
+> The blocker was the meadow's own signpost: `idleNudge()` spent and saved `seen.meadow` *before*
+> `sayText()` had drawn anything, and `sayText` swallows a line whenever a coach mark is up or the
+> bubble would paint into a hidden subtree. Twenty-six seconds idle in the Hollow, in Fall, or on a
+> gate burnt the game's only pointer to the Wild Meadow, permanently, with no backfill by design.
+> **Consume a one-shot only after the thing it pays for has happened.** Also caught: a swipe starting
+> on UPGRADE or POWER-UP navigated away; the pouch chip was guillotined by the Turn button's own
+> clip; the creatures painted over the GARDEN pedestal and stole its taps; and the round buttons were
+> still 40px on every phone under 700px tall. Full list in the 2026-08-30 gauntlet entry in
+> [10-decision-log.md](10-decision-log.md); what was knowingly left is in
+> [11-known-issues.md](11-known-issues.md).
+>
+> **Two specificity traps, and they are the same trap twice** — worth knowing before touching this
+> dock. `.dock.five .dock-btn{min-height}` out-specified both the pedestal's 74px and the short
+> block's 50px. And **`:has()` takes its argument's specificity**, so four rules written before the
+> `.five` class existed silently out-ranked everything it set.
+>
+> **Three real bugs the build itself found, all fixed:** the year-one Year panel had a mystery and **no
 > door out of it** (full meter, breathing button, and a panel still saying *keep going* with no way
 > to Turn — the owner's own warning coming true); lifting the creatures to clear the band broke doc
 > 05's anchoring rule outright; and `min-height` on `.dock.five .dock-btn` out-specified both the
