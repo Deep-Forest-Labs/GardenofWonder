@@ -12,6 +12,26 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **FIRST PLAYTEST, 2026-08-29 — THE PROGRESSION LADDER NEEDS A DESIGN SESSION BEFORE PHASE 4.**
+> The owner played a fresh save and hit two things in the first minutes; auditing them turned up a
+> third. All three are reproduced against the real engine and written up with numbers and options in
+> [11-known-issues.md](11-known-issues.md), and flagged at the top of
+> [16-progression-and-quests.md](16-progression-and-quests.md), which owns the ladder:
+>
+> 1. **A discover quest cannot count a species you already have.** Quests are dealt at `progress: 0`
+>    and a species fires its discover event once, ever — so the two free species are spent before
+>    `q_discover_5` is dealt. The Almanac reads 2 while the strip reads 0. It reaches the front of
+>    the always-visible strip at ~3 active minutes and stays there for days.
+> 2. **`q_discover_12`, the ladder's last rung, is arithmetically unclaimable** — dealt at 8+ species
+>    found, its ceiling is 10/12 even after growing all nineteen. It then holds the strip forever,
+>    and the daily quest can never reach the strip again.
+> 3. **The Stand out-runs the level ladder.** It has paid reputation since it shipped, up to 48 rep
+>    an order, while doc 32 puts order-driven rep and the levels 18–40 rungs in slice D.
+>
+> **These are design calls, not bug fixes, and none of them were taken.** Also filed and not taken:
+> the plant picker draws one padlock for two different refusals — a momentary "36 gold short" and a
+> permanent "150,000, once" — with the hierarchy inverted, so the expensive thing looks obtainable.
+>
 > **THE SURFACE RUN IS DONE FOR THE NIGHT — phases 2 and 3 merged into one unattended session on
 > the owner's call, 2026-08-29.** The wireframe gate's approval step was deferred to morning for
 > this run only, so **both spikes shipped first in their own commits** —

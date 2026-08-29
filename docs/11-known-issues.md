@@ -104,41 +104,106 @@ so nobody reopens it; the reasoning is in the review entry of
 [10-decision-log.md](10-decision-log.md) and inline in
 [33-year-one-economy.md](33-year-one-economy.md#the-tally).
 
-### The discover track is priced in gold now, and nothing was re-keyed for it — CONFIRMED IN PLAY 2026-08-29
+### The discover track is broken twice over — CONFIRMED IN PLAY AND REPRODUCED, 2026-08-29
 
-**The owner hit this in the first minutes of a fresh save.** It was filed as "watch it in the
-first playtest"; it has now been watched, and it is bigger than one quest.
+**The owner hit this in the first minutes of a fresh save, and auditing it found a second,
+worse fault underneath the first.** Both are reproduced against the real engine.
 
-**A player can discover exactly two species for free.** `state.discovered[id]` is written in one
-place — `recordHarvest()`, on harvesting that flower — so a species is discovered by *growing* it,
-and you can only grow what you have unlocked. Daisy and Tulip are `DATA.year.freeSeeds`. Everything
-after them is a one-time gold price at ×1.5 a step:
+#### Fault 1: a discover quest cannot count a species you already have
 
-| To reach | Species | Unlocks needed | Cumulative gold |
+`fillActive()` hands every quest out at `progress: 0` (game.js:1258) and `noteQuest()` only ever
+bumps instances **already in `state.quests.active`** (game.js:1332). A species fires its discover
+event exactly once, ever, on its first harvest (`almanac.first`, game.js:2025). Daisy and Tulip are
+grown in the first minute of a save; `q_discover_5` is the eleventh quest in the ladder and is dealt
+later. **Those two events are therefore spent before the quest exists, and nothing backfills.**
+
+Reproduced on a fresh save: the Almanac reads **2 species discovered** while the strip reads
+**0 / 5**. Growing a third takes the Almanac to 3 and the strip to 1. Two counters for the same
+word, on the same screen, permanently off by the number of species you found before the quest
+arrived.
+
+So the price is not what this file said yesterday. The real bar is **five *new* species**:
+
+| | reads | actually needs | cumulative gold |
 | --- | --- | --- | --- |
-| `q_discover_5` (rep 12) | 5 | Bluebell + Lavender + Rose | **712,500** |
-| `almanacMilestones[0]` (rep 20, 1 gem, a boost) | 5 | same | **712,500** |
-| `q_discover_8` (rep 18) | 8 | + Peony, Marigold, Orchid | **3,117,188** |
-| `almanacMilestones[1]` (rep 30, 2 gems, a boost) | 10 | + Sun Lotus, Jade Fern | **7,388,673** |
+| `q_discover_5` (rep 12) | 5 species | species #7 (Marigold) | **1,978,125** |
+| `q_discover_8` (rep 18) | 8 species | species #10 (Jade Fern) | **7,388,673** |
+| Almanac milestone 1 (rep 20, 1 gem, a boost) | 5 species | *correct* — it reads the lifetime count | 712,500 |
 
-For scale, **the first Turn needs 100,000 earned** — so a player reaches the whole prestige loop
-about seven times over before the ladder's fifth-species rung is payable.
+The Almanac milestones are the control case: `almanacMilestones` is evaluated as
+`found >= m.at` against the lifetime count (game.js:1372), so it says the true thing. **The quest
+engine is the one that is wrong**, and fixing it there makes the two agree.
 
-**It jams the quest strip, which is the real cost.** `fillActive()` walks `DATA.quests` in order and
-keeps three; `stripQuest()` always returns `active[0]`. `q_discover_5` sits eleventh in the ladder,
-behind ten tap/plant/harvest/upgrade quests a player finishes in the first half hour — so it reaches
-the front of the strip early and **stays there**. `tools/year-sim.js 6 casual` buys the third unlock
-on **day 3.33**, so the game's always-visible progress display reads "Discover 5 species · 2 / 5"
-for roughly three days of play. The two quests behind it still progress and can still be claimed
-from the quest panel, so this is a visibility failure rather than a hard block — but it is the
-documented strip-jam trap in a new guise, and the escape hatch the docs name for it (`paused: true`)
-is the same one.
+#### Fault 2: the ladder's last rung is arithmetically unclaimable
 
-**Doc 33 re-keyed exactly four quests for the walls** — `q_rose_3`, `q_lavender_3`, `q_marigold_3`
-and `q_peony_3`, the ones naming a specific unreachable seed, each onto a freely-advanceable track
-at the same rep so the 777 total held. The discover track was not among them, and the Almanac
-milestones were not considered at all. **This is a design decision, not a bug fix** — it is for the
-design session, and the four re-keys above are the house's own worked example of how to make one.
+`q_discover_12` (rep 50) is the fortieth of forty quests, so it is dealt only once ~31 others are
+done — by which point a measured run has found **10 species**. It then needs twelve *more*.
+Proved by exhaustion — deal it at N found, then first-harvest **every remaining species in the
+game**:
+
+| dealt at | best possible | |
+| --- | --- | --- |
+| 6 found | 12 / 12 | claimable |
+| 7 found | 12 / 12 | claimable |
+| **8 found** | **10 / 12** | **never claimable** |
+| 10 found | 9 / 12 | never claimable |
+| 12 found | 7 / 12 | never claimable |
+
+**Consequences, in order of how much they hurt.** It holds one of three active slots forever.
+`stripQuest()` returns `active[0]` (game.js:1616), so once the two ahead of it clear it becomes the
+permanent contents of the always-visible strip. And because `stripQuest()` only falls through to the
+daily when the ladder list is empty, **the daily quest can never appear on the strip again.** The
+quest panel reads "1 quest left on the ladder" for the life of the save.
+
+#### Before either fault bites: the strip is a discover billboard from about day 2
+
+`q_discover_5` reaches the front of the strip at roughly **three active minutes** of play, and the
+models clear it at day 2.75–3.5 on a 24-minute-a-day shape and **day 24+ on a 12-minute one**. The
+quests behind it still advance and are claimable from the quest panel, so rep does not stop — but
+the game's one always-visible progress display shows an unmovable species counter for days.
+
+#### For the design session
+
+Doc 33 re-keyed four quests for these walls — `q_rose_3`, `q_lavender_3`, `q_marigold_3`,
+`q_peony_3` — each onto a freely-advanceable track at the same rep so the 777 total held. That is
+the house's own worked example. The options, roughly in order of how much they buy:
+
+1. **Backfill `discover` progress on hand-out** from the lifetime count, the way the Almanac
+   milestones already do. One edit, fixes fault 1 everywhere, makes the strip agree with the
+   Almanac, and drops the prices to the documented 712,500 / 3,117,188. It does **not** fix fault 2
+   on its own — `q_discover_12` becomes merely very long (12 species ≈ 17.0M gold).
+2. **Re-key or bench the discover quests**, the four-re-keys pattern. `paused: true` is the
+   documented escape hatch and the ladder's rep total is preserved by a stand-in rung.
+3. **Re-cost the quantities** against the gold ladder — e.g. `discover 3`, reachable at the *first*
+   unlock, which turns the jam into a signpost for the wall itself.
+4. **Make `stripQuest()` prefer the nearest-to-complete active quest** rather than `active[0]`. Two
+   lines, and it would have defused the Posy jam and the sell-quest jam as well as this one. Worth
+   considering on its own merits whatever else is decided.
+5. **Point the discover track at `state.year.stats.speciesSeen`**, which already exists for the
+   Tally and resets each Turn — turning breadth into a repeatable seasonal goal rather than a
+   lifetime one. The largest change, and the one that fits the Garden Year best.
+
+### The Stand out-runs the level ladder, and slice D's rungs are not there yet
+
+Found in the same audit. **`standDeliver()` pays `addRep(order.rep)`** (game.js:3123) and the Stand
+is open from a fresh save — `STAND.tiers[0]` is `rep: 0, repPay: 4`, rising to `repPay: 16` at 600
+lifetime rep. A three-line tier-4 order pays **48 rep**, more than the largest quest in the game.
+
+Doc 32 puts order-driven reputation in **slice D** ("from the first Turn onward, orders are where
+reputation comes from"), together with the re-authored rungs for levels 18–40. **The faucet shipped
+in slice A; the rungs did not.** The measured effect on a casual model is level 18 by the first Turn
+and level 68 by day 21, against a `DATA.levelGrants` table that stops at level 20 — after which a
+level-up pays `20 × level` coins and nothing else, forever. Every level gate in the game
+(`plotUnlockLevel` max 12, meadow cells max 14, habitat slots max 16) is cleared inside three days.
+
+**Options:** bench the rep half of orders until slice D (they keep paying coins and the Tally's
+`orders` line); ship the 18–40 rungs before the faucet is allowed to reach them; scale `repPay`
+down; or split order standing from the level bar — which contradicts doc 16's "one progression
+number", the rule that made the feature affordable in the first place.
+
+*(This one is not caused by the Garden Year — the Stand has paid rep since it shipped — but the
+Year is what made it visible, because the Year is what made the level ladder stop being the thing
+that gates seeds.)*
 
 ### The plant picker uses one padlock for two different refusals
 

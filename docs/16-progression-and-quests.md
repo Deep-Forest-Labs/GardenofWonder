@@ -8,15 +8,23 @@ owner-ratified the same evening, and built 2026-08-14. Reasoning in
 Read alongside [13-order-system.md](13-order-system.md), which owns reputation long-term, and
 [15-navigation-and-ia.md](15-navigation-and-ia.md), which owns where things live on screen.
 
-> **THE LADDER IS NOW MISPRICED AGAINST THE GARDEN YEAR — open for the design session, 2026-08-29.**
-> This document's ladder was written when seeds unlocked by **level**. They unlock by a one-time
-> **gold price** now ([33-year-one-economy.md](33-year-one-economy.md)), and only two seeds are
-> free — so every rung that counts *species* is priced in gold it was never costed against:
-> `q_discover_5` and the Almanac's first milestone both need **712,500 gold**, `q_discover_8` needs
-> **3.1M**, and the second milestone needs **7.4M**, while the whole prestige loop opens at 100,000.
-> `q_discover_5` also sits eleventh in a ladder whose strip only ever shows `active[0]`, so it holds
-> the game's main progress display for about three days of play. Doc 33 re-keyed four quests for the
-> walls and left this track alone. **The full statement, with the numbers and the options, is in
+> **THE LADDER IS BROKEN AGAINST THE GARDEN YEAR — three findings, all reproduced, all open for
+> the design session, 2026-08-29.** This document's ladder was written when seeds unlocked by
+> **level**. They unlock by a one-time **gold price** now
+> ([33-year-one-economy.md](33-year-one-economy.md)) and only two seeds are free.
+>
+> 1. **A discover quest cannot count a species you already have.** Quests are dealt at
+>    `progress: 0` and the discover event fires once per species, ever — so the two free species are
+>    spent before `q_discover_5` is dealt. The Almanac reads 2 and the strip reads 0, on the same
+>    save. The real bar is five *new* species: **1,978,125 gold**, not the 712,500 the qty implies.
+> 2. **`q_discover_12` (rep 50, the last rung) is arithmetically unclaimable.** Dealt at 8 or more
+>    species found, its ceiling is 10/12 even after growing every species in the game. It then holds
+>    a slot and the strip forever, and the daily quest can never reach the strip again.
+> 3. **The Stand out-runs this ladder entirely.** `standDeliver()` pays reputation from a fresh save,
+>    at up to 48 rep an order — more than the largest quest here — while doc 32 puts order-driven
+>    rep and the levels 18–40 rungs in slice D. The faucet shipped; the rungs did not.
+>
+> **The numbers, the proofs and a ranked menu of options are in
 > [11-known-issues.md](11-known-issues.md).**
 
 ## The problem being fixed
