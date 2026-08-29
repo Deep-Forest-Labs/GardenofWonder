@@ -27,7 +27,8 @@ from quests and levels.
 > see the two 2026-08-29 entries in [10-decision-log.md](10-decision-log.md)) and left ONE OPEN
 > OWNER DECISION: the cheap-Turn cadence is strictly profitable at the spec constants (bill item
 > 17's economic half — sqrt-splitting, uncapped veterancy, Turn-surviving Fall beds;
-> `node tools/year-sim.js 12 all` reproduces it and exits non-zero until the data changes; dials
+> `node tools/year-sim.js 12 all` reproduced it and exited non-zero until the mint was ruled
+> cumulative; it exits 0 now, and a non-zero exit is the regression signal. Dials
 > are `minCoins` / `veterancy` / `mintK`).** See
 > [03-systems.md](03-systems.md#the-garden-year--the-engine-simulation-only) for the engine,
 > [07-save-data.md](07-save-data.md#the-garden-year-added-2026-08-29) for the save shape and
@@ -38,6 +39,24 @@ from quests and levels.
 > one fresh-mutation escape (M09: the grandfather migration lacks its negative assertion), and
 > **the owner's ruling on the mint**, where the review's four measured variants recommend the
 > cumulative shape (B) and prove veterancy must be deleted rather than capped.
+>
+> **PHASE 1.3 — THE GAUNTLET'S FOURTH ROUND IS THE FIRST WITH NO BLOCKER AND NO LIVE BUG.**
+> 18 findings, all coverage gaps, dev-surface wrinkles or stale sentences; rounds 1–3 each
+> turned up something that could bite a player and round 4 did not. Fixed: the per-cell
+> windfall marks (the substrate round 3's latch fix rests on) were never round-tripped, and
+> `bedPaid` was still restored verbatim from the save — so the mirror the last entry called
+> impossible to desync did, including from every save live on the site right now; `load()`
+> derives it. Four of the five Tally lines had no test that could fail — every line now has an
+> exact multiplier at every rung. Two tests asserted the right sentence while walking a path
+> where the code never ran (the refund branch, unreachable through the real badges; and
+> `Dev.setYearStats`'s species count, discarded on reload). **And the dev sheet blessed Daisy
+> by name — which the five-minute script's own steps cap** — so every later Turn silently
+> dropped the largest per-Turn grant in the game; it now blesses the cheapest flower with room
+> and says when none is left. Suite **1,202**, twelve mutations, twelve caught. The
+> small-sample habit was also caught a third time and in a third author's hands: the margin
+> table is restated as a median with a 30-run range, and the docs now say plainly that **the
+> tool's exit code, not the table, is the regression test.** See the 2026-08-29 (phase 1.3)
+> entry in [10-decision-log.md](10-decision-log.md).
 >
 > **PHASE 1.2, THE GAUNTLET'S THIRD ROUND — one LIVE bug found and fixed, and every refusal
 > now has a test.** Round 3 caught what two rounds of critics and an independent review had
@@ -65,8 +84,8 @@ from quests and levels.
 > increment. Two new never-reset top-level fields; a phase-1 save inherits `lifetimeCoins`
 > from the year it is standing in. **The exploit is dead by construction** —
 > `node tools/year-sim.js 12 all` **exits zero**, with normal play ahead of turn-spam by a
-> stable ~1.9–2.2× on seeds and ahead on gold too (re-measured after the same day's Fall
-> fixes, which handed the adversary a better crop and **widened** the margin from ~1.5–1.6×). The suite is at **1,149 assertions** with
+> a median ~1.9× on seeds (range ~1.5–2.2× over 30 runs) and ahead on gold too (re-measured after the same day's Fall
+> fixes, which handed the adversary a better crop and **widened** the margin from ~1.5–1.6×). The suite is at **1,202 assertions** with
 > a new bill item **17b** for the mint's own properties, and twelve of twelve mutants die
 > (four survived the first pass and are closed; writing the last of them found a real defect
 > in the patch — a `null` `lifetimeCoins` passed the finite guard as `0`). **Condition 1
@@ -1637,8 +1656,8 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,149 assertions over the simulation layer
-node tools/year-sim.js 12 all   # the pacing model — exits non-zero while the cheap-Turn exploit stands
+node tools/sim-test.js          # 1,202 assertions over the simulation layer
+node tools/year-sim.js 12 all   # the pacing model — MUST exit 0; non-zero means a cadence beats normal play
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
@@ -1734,7 +1753,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,149 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,202 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

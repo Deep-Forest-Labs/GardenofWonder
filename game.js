@@ -479,23 +479,34 @@ const Game = (() => {
         const f = parsed.fall && typeof parsed.fall === 'object' ? parsed.fall : {};
         const fg = Array.isArray(f.grid) ? f.grid : [];
         let centuries = 0;
+        const fallGrid = Array.from({ length: DATA.fall.plots }, (_, i) => {
+          const c = fg[i];
+          const def = c && c.seed ? DATA.fall.plants.find((p) => p.id === c.seed) : null;
+          if (!def) return { seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false };
+          if (def.century && ++centuries > 1) {
+            return { seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false };
+          }
+          return {
+            seed: def.id,
+            plantedAt: Number(c.plantedAt) || 0,
+            grow: Number(c.grow) > 0 ? Number(c.grow) : def.grow,
+            ready: false,
+            windfall: Boolean(c.windfall)
+          };
+        });
         state.fall = {
-          grid: Array.from({ length: DATA.fall.plots }, (_, i) => {
-            const c = fg[i];
-            const def = c && c.seed ? DATA.fall.plants.find((p) => p.id === c.seed) : null;
-            if (!def) return { seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false };
-            if (def.century && ++centuries > 1) {
-              return { seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false };
-            }
-            return {
-              seed: def.id,
-              plantedAt: Number(c.plantedAt) || 0,
-              grow: Number(c.grow) > 0 ? Number(c.grow) : def.grow,
-              ready: false,
-              windfall: Boolean(c.windfall)
-            };
-          }),
-          bedPaid: Boolean(f.bedPaid)
+          grid: fallGrid,
+          /* DERIVED, never restored. `bedPaid` mirrors "some plot still carries
+             an unspent mark", and taking it from the save would carry a stale
+             `true` across the one boundary the runtime cannot recompute at —
+             including from every pre-2026-08-29 save, where the old sticky
+             latch left exactly that. Same rule as the Century exclusion the
+             bed math uses everywhere else. */
+          bedPaid: fallGrid.some((c) => {
+            if (!c.seed || !c.windfall) return false;
+            const def = DATA.fall.plants.find((p) => p.id === c.seed);
+            return Boolean(def) && !def.century;
+          })
         };
       }
 
@@ -3838,6 +3849,15 @@ const Game = (() => {
       ['orders', 'windfalls', 'species', 'legendaries', 'bestCombo'].forEach((k) => {
         if (stats && typeof stats[k] === 'number') s[k] = Math.max(0, Math.round(stats[k]));
       });
+      /* `species` is derived from `speciesSeen` on load, so writing the count
+         alone would be thrown away by the next reload and the canned Tally
+         would quietly lose a line. Stock the map to match the count, using
+         real seed ids so it survives load()'s own filter. */
+      if (stats && typeof stats.species === 'number') {
+        s.speciesSeen = {};
+        DATA.seeds.slice(0, s.species).forEach((sd) => { s.speciesSeen[sd.id] = true; });
+        s.species = Object.keys(s.speciesSeen).length;
+      }
       save();
       return { ...s };
     },

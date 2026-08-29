@@ -1434,7 +1434,7 @@
         <button class="dev-btn" data-dev="yearEarn" data-arg="100000">Earn +100K</button>
         <button class="dev-btn" data-dev="yearEarn" data-arg="400000">Earn +400K</button>
         <button class="dev-btn" data-dev="yearStats" data-arg="1">A good year's Tally</button>
-        <button class="dev-btn warn" data-dev="yearTurn" data-arg="1">Run the Turn (bless Daisy)</button>`)}
+        <button class="dev-btn warn" data-dev="yearTurn" data-arg="1">Run the Turn (blesses a flower with room)</button>`)}
       ${devRow(`Petals — ${petalReport()}`, `
         <button class="dev-btn" data-dev="yearSeeds" data-arg="50">+50 Saved Seeds</button>
         <button class="dev-btn" data-dev="petalBuy" data-arg="rich">Daisy: Rich Bloom</button>
@@ -1512,14 +1512,25 @@
         D.setYearStats({ orders: 12, windfalls: 4, species: 6, legendaries: 2, bestCombo: 55 });
         break;
       case 'yearTurn': {
-        const turn = D.runTurn('daisy');
+        /* Bless the cheapest flower whose Rich Bloom still has room, the way
+           tools/year-sim.js does. Hardcoding Daisy meant the blessing silently
+           stopped landing the moment her ladder capped — which the review
+           script's own steps reach — and the toast simply omitted the word
+           rather than saying the largest per-Turn grant in the game had found
+           nowhere to go. */
+        const blessId = (DATA.seeds.find((s) => Game.seedUnlocked(s.id)
+          && Game.petalsOf(s.id).rich < DATA.petals.shared.rich.cap) || {}).id || null;
+        const turn = D.runTurn(blessId);
         ok = Boolean(turn);
         deny = 'The Turn is not ready — earn the year first.';
         if (ok) {
           const lines = turn.tally.lines.map((l) => `${l.label}: ${l.count} → +${Math.round(l.bonus * 100)}%`);
+          const blessNote = turn.blessed
+            ? ` · blessed: ${(Game.seedById(turn.blessed) || {}).name || turn.blessed}`
+            : ' · no blessing landed — every unlocked flower is at its Rich Bloom cap';
           UI.toast({
             title: `The year turned — ${fmt(turn.pouch)} Saved Seeds`,
-            body: `drew ${turn.base.toFixed(1)} of a ${turn.total.toFixed(1)} pool · Tally ×${turn.tally.mult.toFixed(2)}${lines.length ? ' · ' + lines.join(' · ') : ''}${turn.blessed ? ' · blessed: daisy' : ''}`,
+            body: `drew ${turn.base.toFixed(1)} of a ${turn.total.toFixed(1)} pool · Tally ×${turn.tally.mult.toFixed(2)}${lines.length ? ' · ' + lines.join(' · ') : ''}${blessNote}`,
             art: Icons.get('sprout')
           });
           UI.buildGarden();

@@ -5,6 +5,75 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (phase 1.3) — Round 4: no blockers, no live bugs, and the small-sample habit caught a third time
+
+**The gauntlet's fourth round is the first with no blocker and no live engine bug** — 18
+findings, 7 major, 11 minor, every one a coverage gap, a dev-surface wrinkle or a stale
+sentence. Rounds 1–3 each turned up something that could bite a player; round 4 did not. That
+is the shape of a phase converging, and it is the honest signal that the engine is done.
+
+**The findings worth naming:**
+
+**The per-cell windfall marks — the substrate round 3's whole latch fix rests on — were never
+round-tripped.** Dropping them on load silently forfeits every pending windfall mid-collection;
+forcing them pays +50% forever without the bed ever arming. Both directions are asserted now,
+in both senses. **And `bedPaid` was still restored verbatim from the save**, so the mirror the
+phase-1.2 entry called impossible to desync did desync across exactly one boundary — including
+from every save currently live on the site, where the old sticky latch left a stuck `true`.
+`load()` derives it now, honouring the Century exclusion like the rest of the bed math.
+
+**Four of the five Tally lines had no test that could fail.** Only the orders line was pinned;
+the rest rode on a maxed-year check whose `sum > 1` carried a third of the range in slack, so
+any line could be deleted, wired to the wrong counter, or re-tiered and stay green. Every line
+now has an exact multiplier at every rung, plus a one-below-the-rung check — this is the table
+phase 4's tuning chair edits, and it needed a net.
+
+**Two tests were asserting the right sentence while walking a path where the code never ran** —
+the same shape as round 3's lesson, twice more. "A refunded purchase is not income" never
+reached the refund: `upgradeMaxed` pre-empts `buyUpgrade` for every effect that can decline, so
+the branch is unreachable through the real badges. It is now tested by making an effect decline
+on purpose, and the refusal case is named honestly as a refusal. And `Dev.setYearStats` wrote a
+`species` count that `load()` recomputes from `speciesSeen` and therefore discards — the canned
+Tally quietly lost a line across a reload.
+
+**The dev sheet blessed Daisy by name, and the review script walks straight into capping her.**
+Following the five-minute script literally, steps 3 and 4 cap Daisy's Rich Bloom for 89 seeds
+out of a pouch already holding 115 — after which every Turn taken from the sheet silently drops
+the largest per-Turn grant in the game and the toast simply omits the word. It now blesses the
+cheapest flower with room, names it, and says so when the blessing finds nowhere to land. The
+repo already knew this hazard: `year-sim`'s `blessTarget()` carries a comment about it. The
+owner-facing surface walked into what the tool was written to avoid.
+
+**And the small-sample habit turned up a third time, in a third author's hands.** I quoted the
+pacing tool's year-one figure from three runs and withdrew it; the mint commit quoted its margin
+table and a bolded "stable ~1.9–2.2×" from a small sample, and a 30-run sample falls outside most
+of its cells — `smart`'s minted seeds land 436–553 against a quoted 418–481. Restated as a
+median with a range, with the ranges labelled as a 30-run sample and a line saying plainly that
+**the tool's exit code, not the table, is the regression test.** Three people made the same
+mistake in one day on the same tool; the lesson is not about anyone's care, it is that a
+stochastic model invites point estimates and the only defence is to write the sample size next
+to the number.
+
+**Also swept:** `data.js` still documented the windfall rule the latch fix disproved and the
+pouch-growth curve the cumulative mint deleted — the file the Unity port reads for the reasoning
+behind each knob. HANDOFF still told every cold session that `year-sim` is *expected* to exit
+non-zero, which inverts the pass condition after the ruling. Doc 34's hard out-of-scope bar
+still claimed phase 1 leaves the live game playing identically, which docs 03 and 11 retire by
+name. Suite 1,149 → 1,202; twelve mutations introduced against the new assertions, twelve
+caught.
+
+### Rejected
+
+**Re-running the margin table at 30 runs to quote fresh brackets** — that would repeat the
+error at higher precision. The direction is robust and the exit code is the test; the table
+says so now. **Fixing the blessing's economics** — still the owner's open decision, and this
+was a dev-surface bug about *which flower gets blessed*, not about what the blessing is worth.
+**Phase 2's blessing picker** — a real note (the ceremony must filter capped flowers, since the
+Turn is atomic and a blessing cannot be re-offered) but it is design work behind phase 2's
+wireframe gate, so it is carried forward rather than built.
+
+---
+
 ## 2026-08-29 (phase 1.2) — Round 3 finds a live Fall bug the tests were shaped to miss, and every refusal gets a test
 
 **The gauntlet's third round was the one that found a real gameplay bug**, not a coverage

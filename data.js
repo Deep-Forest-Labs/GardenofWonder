@@ -377,10 +377,17 @@ const DATA = {
 
   /* Flower mastery — petals, bought with Saved Seeds on the Almanac's rows.
      petalCost(seed n, petal p) = base x seedRatio^(n-1) x petalRatio^(p-1),
-     signatures x signatureMult. Priced so every Turn affords a similar 2–5
-     petals forever: petal costs compound at 1.25/level while the pouch grows
-     ~1.2–1.26/cycle — tune those two together or not at all. The launch
-     values (base 5, x1.3/seed) failed the full sim on both pacing checks. */
+     signatures x signatureMult. The launch values (base 5, x1.3/seed) failed
+     the full sim on both pacing checks.
+
+     THE "2–5 PETALS EVERY TURN FOREVER" PAIRING NO LONGER HOLDS, and the
+     comment that described it has been removed rather than left to mislead:
+     it balanced petal costs compounding at 1.25/level against a pouch growing
+     ~1.2–1.26 per cycle, and the cumulative mint (2026-08-29) deleted that
+     growth curve — the lifetime pool is mintK x sqrt(lifetimeCoins) and each
+     Turn draws only what is undrawn, so late pouches thin rather than grow.
+     Re-pairing the exponents against the cumulative mint is phase 4's chair;
+     see docs/33-year-one-economy.md and the ruling entry in the decision log. */
   petals: {
     base: 15,
     seedRatio: 1.45,
@@ -402,8 +409,12 @@ const DATA = {
      yield = cost x 1.4 holds for every plant here too.
 
      The windfall is Fall's juice: harvesting a bed whose every plot is
-     planted and ripe pays +50% on the whole bed, once per fill — the
-     fill-cycle resets when the bed empties. The Century Bloom is the
+     planted and ripe pays +50% on the whole bed, once per fill — and the
+     fill ends when its last marked plot is collected, NOT when the bed falls
+     empty. That distinction is the whole of the 2026-08-29 latch fix: a
+     player who replants each plot as they harvest it never empties the bed,
+     and the old rule left the latch stuck for the life of the save. The
+     Century Bloom is the
      showpiece: numbers deliberately absurd, excluded from the bed-ripeness
      math, one growing at a time, and it survives every Turn. */
   fall: {

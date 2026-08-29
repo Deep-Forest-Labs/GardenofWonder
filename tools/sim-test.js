@@ -4500,9 +4500,30 @@ S.tap.holdInterval = 180;   // the floor: Quick Grip's effect refuses, and the p
 S.credits = 1e6;
 yrMark = earnedNow();
 ltMark = lifetimeNow();
-check('a refunded purchase is not income', G.buyUpgrade('holdSpeed') === false
+/* A MAXED purchase is refused before it charges, so this pair asserts the
+   refusal, not the refund — `upgradeMaxed('holdSpeed')` pre-empts
+   `buyUpgrade` at the floor. Named honestly. */
+check('a refused purchase moves neither wallet nor ledger', G.buyUpgrade('holdSpeed') === false
   && S.credits === 1e6 && earnedNow() === yrMark);
-check('and a refund never reaches the lifetime pool', lifetimeNow() === ltMark);
+check('and a refusal never reaches the lifetime pool', lifetimeNow() === ltMark);
+/* The refund branch proper: `buyUpgrade` charges first and calls back the
+   effect, restoring the wallet through credit({refund}) when the effect
+   declines. Every shipped effect that can decline is shadowed by an
+   `upgradeMaxed` case, so the branch is unreachable through the real badges —
+   the only honest way to test it is to make an effect decline on purpose. */
+check('the refund path restores the wallet without minting anything', (() => {
+  const key = 'tapPower';
+  const real = G.UPGRADE_EFFECTS[key];
+  G.UPGRADE_EFFECTS[key] = () => false;
+  S.credits = 1e6;
+  const price = G.upgradePrice(key);
+  const yr0 = earnedNow();
+  const lt0 = lifetimeNow();
+  const refused = G.buyUpgrade(key);
+  G.UPGRADE_EFFECTS[key] = real;
+  return refused === false && S.credits === 1e6 && price > 0
+    && earnedNow() === yr0 && lifetimeNow() === lt0;
+})());
 /* The refund flag itself, through the exported faucet — the decor migration
    is the live caller, and a refund is not income on either ledger. */
 yrMark = earnedNow();
@@ -4781,8 +4802,56 @@ S.fall.grid.forEach((c) => { if (c.seed) c.plantedAt = clock - 9999; });
 G.processFall(clock);
 check('a full ripe bed holding four unspent marks does not arm again',
   S.year.stats.windfalls === 1, `${S.year.stats.windfalls}`);
+/* The mirror, asserted mid-fill — the one state it exists to describe, and
+   exactly where the old sticky flag went wrong. Asserting it only after an arm
+   and only at end-of-fill leaves the collection window uncovered. */
+check('the latch reads true while a fill is part-collected', S.fall.bedPaid === true);
+G.processFall(clock);
+check('and stays true across a tick, because it is recomputed not remembered',
+  S.fall.bedPaid === true);
 check('and the marks that stand still pay when collected',
   G.fallHarvest(4).windfall === true);
+
+group('bill 12f — an armed bed survives a save, and an unarmed one stays unarmed');
+/* The per-cell marks ARE the latch since round 3, and nothing round-tripped a
+   marked cell: dropping them on load silently forfeits every pending windfall
+   mid-collection, and forcing them pays +50% forever without the bed ever
+   arming. Both directions are asserted here. */
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+for (let i = 0; i < fallN; i += 1) G.fallPlant(i, 'strawberry');
+S.fall.grid.forEach((c) => { c.plantedAt = clock - 9999; });
+G.processFall(clock);
+G.fallHarvest(0);                      // spend one mark, leave seven standing
+G.saveNow();
+G.load();
+check('the unspent marks come back on exactly the plots that still hold them',
+  S.fall.grid.filter((c) => c.windfall).length === 7
+  && S.fall.grid[0].windfall === false,
+  S.fall.grid.map((c) => (c.windfall ? 'M' : '.')).join(''));
+check('the derived latch comes back with them', S.fall.bedPaid === true);
+const afterReloadPay = G.fallHarvest(1);
+check('and a marked plot still pays its windfall after the reload',
+  afterReloadPay.windfall && afterReloadPay.payout === Math.round(berry.yield * 1.5),
+  `${afterReloadPay.payout}`);
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+for (let i = 0; i < fallN; i += 1) G.fallPlant(i, 'strawberry');
+G.saveNow();
+G.load();
+check('a planted but never-armed bed comes back with no marks and no latch',
+  S.fall.grid.every((c) => !c.windfall) && S.fall.bedPaid === false
+  && S.year.stats.windfalls === 0);
+check('a save carrying a stale latch has it re-derived away, not restored', (() => {
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.fall.bedPaid = true;                    // the pre-2026-08-29 stuck flag
+  raw.fall.grid.forEach((c) => { c.windfall = false; });
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return S.fall.bedPaid === false;
+})());
 for (let i = 0; i < DATA.fall.plots; i += 1) G.fallHarvest(i);
 
 group('the refusals — every gate asserted from the NO side');
@@ -4935,10 +5004,138 @@ G.Dev.setYearStats({ orders: 7 });
 tally = G.projectedTally();
 check('a line below its first tier renders nothing and adds nothing',
   tally.lines.length === 0 && tally.mult === 1, JSON.stringify(tally));
+/* EVERY line, at EVERY rung, pinned to an exact multiplier. Only the orders
+   line used to be tested; the other four rode on the maxed-year check, whose
+   `sum > 1` carried a third of the range in slack — so a line could be
+   deleted, wired to the wrong counter, or re-tiered and still pass. The table
+   is what phase 4's tuning chair will edit, so it needs a net under it. */
+DATA.year.tally.forEach((line) => {
+  line.tiers.forEach((t, ti) => {
+    const stats = { orders: 0, windfalls: 0, species: 0, legendaries: 0, bestCombo: 0 };
+    stats[line.stat] = t.at;
+    G.Dev.setYearStats(stats);
+    const only = G.projectedTally();
+    const wantBonus = line.tiers.slice(0, ti + 1).reduce((a, x) => a + x.bonus, 0);
+    check(`${line.id} at ${t.at} pays exactly +${Math.round(wantBonus * 100)}% (tiers 1–${ti + 1})`,
+      only.lines.length === 1 && only.lines[0].id === line.id
+      && Math.abs(only.lines[0].bonus - wantBonus) < 1e-9
+      && Math.abs(only.mult - (1 + wantBonus)) < 1e-9,
+      JSON.stringify(only.lines));
+    /* One below the rung must not pay it — the threshold, not just the tier. */
+    if (t.at > 0) {
+      const under = { orders: 0, windfalls: 0, species: 0, legendaries: 0, bestCombo: 0 };
+      under[line.stat] = t.at - 1;
+      G.Dev.setYearStats(under);
+      const lower = G.projectedTally();
+      const wantLower = line.tiers.slice(0, ti).reduce((a, x) => a + x.bonus, 0);
+      check(`${line.id} at ${t.at - 1} stops short of that rung`,
+        Math.abs(lower.sum - wantLower) < 1e-9, `${lower.sum} vs ${wantLower}`);
+    }
+  });
+});
 G.Dev.setYearStats({ orders: 50, windfalls: 15, species: 15, legendaries: 8, bestCombo: 80 });
 tally = G.projectedTally();
-check('a maxed year sums past the cap and clamps at ×2.0 exactly',
-  tally.mult === DATA.year.tallyCap && tally.sum > 1, `sum ${tally.sum}, mult ${tally.mult}`);
+const maxedSum = DATA.year.tally.reduce((a, l) => a + l.tiers.reduce((b, t) => b + t.bonus, 0), 0);
+check('a maxed year sums to the whole table and clamps at ×2.0 exactly',
+  tally.mult === DATA.year.tallyCap && Math.abs(tally.sum - maxedSum) < 1e-9
+  && tally.lines.length === DATA.year.tally.length,
+  `sum ${tally.sum} vs ${maxedSum}, mult ${tally.mult}`);
+check('and the cap is doing real work — the raw sum overshoots it',
+  1 + maxedSum > DATA.year.tallyCap, `${1 + maxedSum}`);
+
+check('the canned Tally survives a reload — species is stocked, not just counted', (() => {
+  G.reset();
+  G.Dev.setYearStats({ orders: 25, windfalls: 8, species: 10, legendaries: 3, bestCombo: 50 });
+  const before = G.projectedTally();
+  G.saveNow();
+  G.load();
+  const after = G.projectedTally();
+  return before.lines.length === 5 && after.lines.length === 5
+    && Math.abs(before.sum - after.sum) < 1e-9;
+})(), JSON.stringify(G.projectedTally().lines.map((l) => l.id)));
+
+group('a GAPPED unlock set — the shape "skipping ahead" actually produces');
+/* Every other rig builds unlocks contiguously via unlockTo(), but skipping is
+   legal and asserted elsewhere, so a real save can own {daisy, tulip,
+   moonflower} with a nine-seed hole. highestUnlockedSeedIndex() returns the
+   highest OWNED index, and passiveIncomeRate() reads DATA.seeds[max] straight
+   with no seedUnlocked() re-check — the path docs/11 notes has no second line
+   of defence. */
+G.reset();
+clearGarden();
+S.seedUnlocks = { moonflower: true };
+check('the highest owned seed is the ceiling, hole or no hole',
+  G.seedUnlocked('moonflower') === true && G.seedUnlocked('rose') === false
+  && DATA.seeds[G.state ? DATA.seeds.findIndex((s) => s.id === 'moonflower') : 0].id === 'moonflower');
+S.upgrades.autoHarvest = 1;
+S.upgrades.plot1Harvester = 19;
+const gappedRate = G.passiveIncomeRate();
+const moon = G.seedById('moonflower');
+const rarityMeanG = DATA.rarity.reduce((a, r) => a + r.w * r.m, 0)
+  / DATA.rarity.reduce((a, r) => a + r.w, 0);
+check('and offline income values that seed, not the one at its index-minus-the-hole',
+  Math.abs(gappedRate - (moon.yield * rarityMeanG - moon.cost) / moon.grow) < 1e-9,
+  `${gappedRate}`);
+check('a walled seed inside the hole still cannot be planted',
+  G.plant(0, G.seedById('rose')) === false && !S.grid[0].seed);
+
+group('both grids repair impossible clocks on load');
+/* A pre-epoch plantedAt is elapsed-seconds corruption from the old format and
+   must ripen now; a far-future one is a clock change and clamps. Neither half
+   was tested, and the known-issues note about absolute timestamps assumes
+   this is doing its job. */
+G.reset();
+S.year.turnsCompleted = 1;
+{
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.grid[0] = { locked: false, seed: 'daisy', plantedAt: 5, grow: 12, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0, packDrop: false };
+  raw.grid[1] = { locked: false, seed: 'daisy', plantedAt: clock + 9e5, grow: 12, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0, packDrop: false };
+  raw.fall.grid[0] = { seed: 'strawberry', plantedAt: 5, grow: 1200, ready: false, windfall: false };
+  raw.fall.grid[1] = { seed: 'strawberry', plantedAt: clock + 9e5, grow: 1200, ready: false, windfall: false };
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+}
+check('a pre-epoch main-grid clock is rewritten to ripe-now',
+  Math.abs(S.grid[0].plantedAt - (G.nowSeconds() - S.grid[0].grow)) < 2,
+  `${S.grid[0].plantedAt}`);
+check('a future main-grid clock is clamped to now',
+  S.grid[1].plantedAt <= G.nowSeconds() + 1, `${S.grid[1].plantedAt}`);
+check('Fall inherits both repairs, as its comment promises',
+  Math.abs(S.fall.grid[0].plantedAt - (G.nowSeconds() - S.fall.grid[0].grow)) < 2
+  && S.fall.grid[1].plantedAt <= G.nowSeconds() + 1,
+  `${S.fall.grid[0].plantedAt} / ${S.fall.grid[1].plantedAt}`);
+
+group('the dev drivers do what the review script says they do');
+/* The five-minute owner script drives these buttons, so they are the phase's
+   only shipped surface — a driver that quietly does nothing sends the owner a
+   wrong impression of the engine underneath it. */
+G.reset();
+S.year.turnsCompleted = 1;
+const filled = G.Dev.fillFall();
+check('Fill the bed plants every Fall plot and pays for them',
+  filled === DATA.fall.plots && S.fall.grid.every((c) => c.seed),
+  `${filled} planted`);
+check('and the fill is cheat-funded, so it never reaches either ledger',
+  S.year.coinsEarned === 0 && S.lifetimeCoins === 0,
+  `${S.year.coinsEarned} / ${S.lifetimeCoins}`);
+check('Ripen the bed makes every plot ready and arms the windfall',
+  G.Dev.ripenFall() === DATA.fall.plots && S.year.stats.windfalls === 1);
+check('Fall refuses to fill before the Turn that opens it',
+  (G.reset(), G.Dev.fillFall() === 0));
+
+group('the turn payload announces the gate it opens, exactly once');
+G.reset();
+clearGarden();
+primeYear(200000, 200000);
+const openTurn = G.turnYear(null);
+check('Turn 1 reports that Fall opens', openTurn && openTurn.fallOpens === true
+  && G.fallOpen() === true);
+primeYear(200000, 900000);
+const laterTurn = G.turnYear(null);
+check('and no later Turn repeats the announcement',
+  laterTurn && laterTurn.fallOpens === false && G.fallOpen() === true);
+check('the payload carries the year it just closed', laterTurn.year === 3
+  && laterTurn.turnsCompleted === 2, `${laterTurn.year}/${laterTurn.turnsCompleted}`);
 
 group('bill 15 — the Tally never reads a lifetime record');
 G.reset();
@@ -5025,6 +5222,22 @@ check('the increment gate refuses on its own', G.turnReady() === false,
 primeYear(12000, 12000);
 check('and passes at ten seeds of undrawn pool', G.turnReady() === true
   && G.projectedMint().base >= DATA.year.minSeeds, `increment ${G.projectedMint().base}`);
+/* The increment boundary itself, the way the coins floor already has one —
+   the increment is the gate the cumulative ruling made load-bearing, so it
+   gets an exact-boundary test rather than a pair of loose brackets. The pool
+   is mintK*sqrt(lifetime), so minSeeds exactly is (minSeeds/mintK)^2 coins. */
+{
+  const exact = Math.pow(DATA.year.minSeeds / DATA.year.mintK, 2);
+  primeYear(exact, exact);
+  S.mintedBase = 0;
+  check('exactly ten seeds of undrawn pool passes the increment gate',
+    Math.abs(G.projectedMint().base - DATA.year.minSeeds) < 1e-9 && G.turnReady() === true,
+    `increment ${G.projectedMint().base}`);
+  primeYear(exact - 1, exact - 1);
+  S.mintedBase = 0;
+  check('and a hair under it refuses', G.projectedMint().base < DATA.year.minSeeds
+    && G.turnReady() === false, `increment ${G.projectedMint().base}`);
+}
 /* The gate reads the increment, NOT the tallied pouch — a maxed Tally on a
    pool that is 9.9 seeds deep must still refuse, or the fireworks would be
    buying entry to a Turn the pool cannot pay for. */
@@ -5280,7 +5493,9 @@ S.mintedBase = 61.5;
 S.petals = { daisy: { rich: 2, quick: 1, sig: 0 } };
 S.seedUnlocks = { bluebell: true, lavender: true };
 S.blessed = [{ seed: 'daisy', year: 1 }, { seed: 'bluebell', year: 2 }];
-S.fall.grid[2] = { seed: 'pumpkin', plantedAt: clock - 500, grow: 10800, ready: false, windfall: false };
+/* A COHERENT armed fixture: the mark and the latch agree, because the latch
+   is derived from the mark on load rather than restored beside it. */
+S.fall.grid[2] = { seed: 'pumpkin', plantedAt: clock - 500, grow: 10800, ready: false, windfall: true };
 S.fall.bedPaid = true;
 G.saveNow();
 const yrRound = JSON.parse(JSON.stringify(S));
@@ -5289,7 +5504,7 @@ check('year, pouch, petals, unlocks, blessings and Fall all come back',
   same(S.year, yrRound.year) && S.savedSeeds === 77
   && same(S.petals, yrRound.petals) && same(S.seedUnlocks, yrRound.seedUnlocks)
   && same(S.blessed, yrRound.blessed) && S.fall.grid[2].seed === 'pumpkin'
-  && S.fall.bedPaid === true);
+  && S.fall.grid[2].windfall === true && S.fall.bedPaid === true);
 check('and both mint ledgers survive the round trip to the fraction',
   S.lifetimeCoins === 987654.32 && S.mintedBase === 61.5,
   `${S.lifetimeCoins} / ${S.mintedBase}`);

@@ -124,14 +124,19 @@ earnings alone, so the sum of every Turn's draw is the same number however the y
 Measured over 12 modelled days after the change (`node tools/year-sim.js 12 all`, which now
 **exits zero**):
 
-| Day 10 | lifetime coins | Saved Seeds minted | petals bought | Turns |
-| --- | --- | --- | --- | --- |
-| casual (rides to the wall) | ~29–35M | **883–956** | 25–26 | 4–6 |
-| smart (turns at every gate) | ~13–17M | 418–481 | 14–15 | 25–27 |
-| rush (daisy-only probe) | ~1.5–1.6M | 149–169 | 7 | 9–10 |
+| Day 10 | lifetime coins | Saved Seeds minted | Turns |
+| --- | --- | --- | --- |
+| casual (rides to the wall) | ~29–35M | ~880–960 | 4–6 |
+| smart (turns at every gate) | ~14–24M | ~436–553 (median ~508) | 25–28 |
+| rush (daisy-only probe) | ~1.5–1.7M | ~150–170 | 9–10 |
 
-Normal play now wins on both currencies, with a stable **~1.9–2.2×** margin on seeds across
-runs, and the Tally graduates from garnish to the economic teacher: a maxed year mints ×2.0 where a
+*(Ranges over a 30-run sample. The model is stochastic and `smart` is the widest cell; earlier
+editions of this table quoted three-run brackets that a larger sample falls outside — the
+direction is what is robust here, not the digits. **The tool's exit code, not this table, is the
+regression test.**)*
+
+Normal play wins on both currencies, by a **median ~1.9× margin on seeds (range ~1.5–2.2×
+over 30 runs)**, and the Tally graduates from garnish to the economic teacher: a maxed year mints ×2.0 where a
 spam year manages ~×1.0–1.2, and the multiplier is pure upside because it never touches the
 ledger. **The first Turn is unchanged** — a first year *is* the lifetime, so it still pays
 ~60–65 base seeds on a ~370–410K year.
@@ -176,7 +181,9 @@ one earned ~800K and broke the documented pacing; gated, it earns **~370–410K 
 2026-08-29 design-session model. Phase 1's shipped pacing tool puts the median nearby but lower
 (~355K over 120 runs, quartiles 309–386K) with wide spread**, so treat the band as the design
 target rather than a reproduced measurement until phase 4 re-baselines it against a real
-playtest — and A migrated save keeps whatever plots it already opened for its
+playtest.
+
+A migrated save keeps whatever plots it already opened for its
 current year — nothing a player owns is ever re-locked.
 
 First Turn pays **~60–65 base seeds on that ~370–410K first year**, times a modest first-year
@@ -254,8 +261,8 @@ migrate up the ladder — early petals on new flowers stay the best value — bu
 is priced to outlast the faucet. **The launch values (base 5, ×1.3/seed) failed the full-model
 sim on both pacing checks:** turns paid 7–10 petals instead of 2–5, and the entire sink was
 consumed by **day ~56, at which point Turns stop paying for anything and the prestige loop
-dies.** At base 15 / ×1.45 the sim centres the 2–5 band and the sink (**725K seeds total** as
-shipped — see the recomputation above) is still uncleared at day 180 — the Turn button stays alive for months, which is the whole point.
+dies.** At base 15 / ×1.45 the sim centres the 2–5 band and the sink (**636,378 seeds**, the whole shared-skill
+ladder as shipped — see the recomputation above) is still uncleared at day 180 — the Turn button stays alive for months, which is the whole point.
 
 | Skill | Petals | Effect per petal | Guardrail |
 | --- | --- | --- | --- |

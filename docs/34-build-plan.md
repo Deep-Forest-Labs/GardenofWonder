@@ -72,7 +72,7 @@ the right vehicle — the spike (`tools/map-spike.html`, `merge-spike`, `hollow-
 
 | Phase | Ships | The owner reviews | Slice |
 | --- | --- | --- | --- |
-| **1 — The engine** — **BUILT 2026-08-29, awaiting the owner's verdict** | Year state, `credit()`, the mint + Tally math, `turnYear()`, unlock prices, petal effects, quest re-keys, migration, dev-tools drivers, **the whole sim-test bill** (items 1–6, 8–17b and 18 asserted; suite at 1,149) | Numbers, via a cheat-driven year — no UI yet | A (sim half) |
+| **1 — The engine** — **BUILT 2026-08-29, awaiting the owner's verdict** | Year state, `credit()`, the mint + Tally math, `turnYear()`, unlock prices, petal effects, quest re-keys, migration, dev-tools drivers, **the whole sim-test bill** (items 1–6, 8–17b and 18 asserted; suite at 1,202) | Numbers, via a cheat-driven year — no UI yet | A (sim half) |
 | **2 — The ceremony** | The meter pill, the Turn sheet with the arcade Tally, the blessing, petal rows on the Almanac, unlock rows in the seed picker, the season tint | Plays a full year on the phone; *gift or loss?* | A (surface half) |
 | **3 — Fall and the strip** | The horizontal season strip, hedge gates, Fall's board + eight crops + windfall + Century Bloom, map retirement, the Stand's dock entry | Turn 1 → the gate opens → a Fall day | A (world half) |
 | **4 — The tuning pass** | Play-derived retune of every knob against the doc 33 targets, FTUE beats, flower lines, celebration polish | Day 1–3 pacing on a fresh save; the wall's *feeling* | A (polish) |
@@ -101,8 +101,11 @@ rendering); Century Bloom rules; dev-tools drivers (drive a year's earnings, for
 run a Turn, inspect the Tally). **The entire sim-test bill, items 1–6 and 8–18 — plus 17b, the cumulative mint's own group, added with the owner's ruling in phase 1.1.**
 
 **Out of scope, hard:** any visible UI beyond dev tools; the ceremony sheet; the strip; Fall's
-rendering; art of any kind. The live game must look and play identically after every phase-1
-push — the year accrues silently underneath it.
+rendering; art of any kind. The live game must look identically the same after every phase-1
+push — the year accrues silently underneath it. *(Held for the look, and knowingly not for
+the behaviour: phase 1 retires Bloom Mastery's multiplier on a migrated save and gates
+plots 5–8 behind the first Turn. Both are accepted regressions, named in
+[11-known-issues.md](11-known-issues.md); the blanket "plays identically" claim is retired.)*
 
 **The review gate:** the owner opens dev tools, drives a simulated year in five minutes, and
 judges the numbers: does the first wall read as six-times-everything, does the pouch feel

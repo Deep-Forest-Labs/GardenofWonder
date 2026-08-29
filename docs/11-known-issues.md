@@ -48,6 +48,16 @@ behaviour):
 "+0%" because `masteryMult()` retired. Honest but odd-looking. Phase 2 replaces the row with
 petal tracks.
 
+### Phase 2 must filter capped flowers out of the blessing picker
+
+The ceremony's beat 3 is "pick any flower", the Turn is atomic and irreversible, and
+`turnYear()` accepts a flower already at its Rich Bloom cap: it writes nothing, returns
+`blessed: null`, and the Turn still completes. A player who picks a capped flower therefore
+loses that Turn's blessing with no undo. Phase 1's dev button hit exactly this — it blessed
+Daisy by name, and the review script's own steps cap her — so it now blesses the cheapest
+flower with room and says so when none is left. The picker must do the same. Carried forward
+from round 4 of the gauntlet.
+
 ### ~~The Tally's tier-reading needs the owner's confirmation~~ — RATIFIED
 
 **Closed 2026-08-29 by the phase-1 independent review**, on arithmetic rather than taste:
@@ -86,7 +96,7 @@ split-neutral base re-arms the split at 1.3–1.4×, so capping it was never eno
 now gates the un-tallied increment rather than the tallied pouch. Because the pool depends on
 lifetime earnings alone, the sum of every Turn's draw is the same number however the year is
 sliced — no cadence can out-mint another, and `node tools/year-sim.js 12 all` **exits zero**,
-with normal play ahead of turn-spam by a stable ~1.9–2.2× on seeds across runs (re-measured
+with normal play ahead of turn-spam by a median ~1.9× on seeds (range ~1.5–2.2× over 30 runs; re-measured
 after the same day's Fall fixes gave the adversary a better crop; the margin widened).
 
 **Whose ruling:** the owner's, taking the phase-1 independent review's recommendation (variant
