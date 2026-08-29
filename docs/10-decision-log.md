@@ -29,8 +29,12 @@ board measures 370×370 before and after. The pedestal is *taller than the dock 
 — which is what stops a fifth button wrapping onto a second row, the exact bug `grid-auto-flow:
 column` was introduced to fix.
 
-**Every measurement in the spike is read off a frame that is really that size.** Two frames were
-wrong the first time and both were caught by measuring rather than by looking: the 360 frame was a
+**Every measurement in the spike is read off a frame that is really that size, and self-review
+still caught three wrong numbers after the first push** — five dock buttons at 360 are 64px, not the
+81 that was four buttons' arithmetic; the HUD's spare width is 61px, not 22, once it is only two
+wallets; and the docked panel does give up 100px of height, because lifting today's 660px sheet
+clear of the dock would push its top edge into the wallets. Two frames were also wrong the first
+time and both were caught by measuring rather than by looking: the 360 frame was a
 390 frame with a smaller board drawn in it, and the 700 frame was not 700 tall. Worse, the chassis
 inherited from the phase-2 and phase-3 spikes is `box-sizing: border-box` with a 5px phone frame, so
 **every frame in all three spikes has been 380×834 of usable area rather than 390×844.** Fixed here
