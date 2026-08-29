@@ -987,16 +987,21 @@ header line is the meter until phase 2 draws it.
    had earned, which is correct and deliberate. To feel the wall as a new player meets it, open
    the game in a private window and run these steps there.
 3. **Turn the year.** Tap **A good year's Tally** (a canned mid-game year), then **Run the Turn
-   (bless Daisy)**. The toast is the ceremony's content without its theatre: the pouch, then
-   **`drew X of a Y pool`**, the Tally's multiplier, and every line that scored — *Orders
-   filled: 12 → +10%*, and so on. A line the year scored nothing on simply does not appear.
+   (blesses a flower with room)**. The toast is the ceremony's content without its theatre: the
+   pouch, then **`drew X of a Y pool`**, the Tally's multiplier, and every line that scored —
+   *Orders filled: 12 → +10%*, and so on. A line the year scored nothing on simply does not
+   appear. *(The button blesses the cheapest flower that still has room rather than Daisy by
+   name — walking these steps repeatedly caps her, and a named target then silently dropped the
+   blessing entirely.)*
    **Then do it again** — this is the ruling made visible, and the one thing worth two minutes
-   of the five. Tap **Earn +400K** and **Run the Turn** a second time: the header's *drawn*
-   figure has gone up by exactly the last increment, and the second pouch is *much* smaller
-   than the first, because the pool grows with the square root of lifetime earnings and you
-   have already drawn most of what the first 500K opened. **Turning often now buys nothing.**
-   That is the whole change; if a Turn ever pays as much as the one before it on the same
-   money, something has regressed.
+   of the five. Tap **Earn +400K** and **Run the Turn** a second time. Walked end to end in a
+   real browser on 2026-08-29, the numbers are: first Turn **pouch 91** on a 70.7 pool, all of
+   it drawn; then +400K opens only **24.2** more, and the second Turn pays **24** with the
+   drawn figure moving 70.7 → 94.9 — up by exactly that increment. Nearly the same money, a
+   quarter of the seeds, because the pool grows with the square root of *lifetime* earnings and
+   you have already drawn what the first 500K opened. **Turning often now buys nothing.** That
+   is the whole change; if a Turn ever pays as much as the one before it on the same money,
+   something has regressed.
 4. **Spend the pouch.** *Petals* now shows Saved Seeds and Daisy's next two prices. Buy **Rich
    Bloom** and **Quick Sprout** a few times and watch the price ladder climb — 2–5 petals per
    Turn is the intended feel.
