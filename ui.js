@@ -621,15 +621,25 @@
   const noSwipe = '.plot,.fl-plot,.flower-btn,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,[data-critter],.burrow-door,.coach,.s-edge,.g-back,.year-pop';
   let navY0 = null;
   let navX0 = null;
+  let navId = null;
   el.game.addEventListener('pointerdown', (e) => {
     navY0 = null;
+    navId = null;
     if (UI.hollowOpen() || UI.mapOpen() || UI.meadowOpen() || UI.sheetMode()) return;
     if (e.target.closest(noSwipe)) return;
     navY0 = e.clientY;
     navX0 = e.clientX;
+    navId = e.pointerId;
   });
+  /* A cancelled gesture must not leave an origin behind for the next release to
+     measure against. */
+  el.game.addEventListener('pointercancel', () => { navY0 = null; navId = null; });
   el.game.addEventListener('pointerup', (e) => {
     if (navY0 === null) return;
+    /* ONLY the finger that started it. Without this, a second thumb landing
+       anywhere overwrote the origin and the first thumb's release measured the
+       distance between them — a two-thumb tap on the flower changed season. */
+    if (navId !== null && e.pointerId !== navId) return;
     const dy = navY0 - e.clientY;
     const dxs = e.clientX - navX0;
     const dx = Math.abs(dxs);
@@ -652,7 +662,11 @@
        from Fall would also desync the two navigators: the map would return the
        player "to the garden" while `.in-fall` still had Fall's board in the
        stage. */
-    if (season !== 'summer') return;
+    /* The ladder hangs off SUMMER only — and a gate is held in `gateOn` while
+       `season` is still whatever it was, so testing the season alone let a
+       vertical swipe fire from a gate screen and leave two place-states on at
+       once. */
+    if (gateOn || season !== 'summer') return;
     noteActivity();
     if (dy > 0) UI.enterHollow();
     else UI.enterMap('garden');
@@ -827,7 +841,7 @@
       const dot = seasonWaiting(sdef.id) ? '<span class="s-dot"></span>' : '';
       return `<button class="s-edge ${side}${ready ? '' : ' locked'}" data-season="${sdef.id}"
         aria-label="${ready ? 'Go to' : 'Look at'} ${sdef.name}">
-        ${Icons.get(ready ? 'leaf' : 'lock')}<span class="w">${sdef.name}</span>${turn}${dot}</button>`;
+        ${ready ? '' : Icons.get('lock')}<span class="w">${sdef.name}</span>${turn}${dot}</button>`;
     }).join('');
     /* Compared against a signature first, like the rail: this runs on the slow
        tick and rewriting identical HTML four times a second thrashes the DOM. */
@@ -1126,7 +1140,7 @@
       sizeGarden();
     }, t));
     sizeGarden();
-    if (window.ResizeObserver) new ResizeObserver(sizeGarden).observe($('.stage'));
+    if (window.ResizeObserver) new ResizeObserver(() => { sizeGarden(); if (UI.sizeFallBoard) UI.sizeFallBoard(); }).observe($('.stage'));
     renderRail();
     renderQuestStrip();
     Object.values(counters).forEach((c) => { c.disp = c.get(); c.node.textContent = fmt(c.disp); });

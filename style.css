@@ -3450,6 +3450,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    board rather than sitting empty — a season is allowed to use its own room. */
 .in-fall .critter-yard,
 .in-fall .burrow-door{display:none}
+/* A coach mark points at something in the GARDEN, and .in-fall has hidden it —
+   so the bubble measured a 0x0 rect and parked in the top-left corner over the
+   coin wallet. Every other room declares this; Fall was built and never
+   registered as one. */
+.in-fall .coach{display:none}
 :root{--fl-noop:0}
 
 .fl-board{
@@ -3534,7 +3539,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 @keyframes readyBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 
 .fl-wait{
-  position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:5;
+  position:absolute;left:50%;top:6px;transform:translateX(-50%);z-index:5;
   padding:2px 7px;border-radius:999px;
   border:2px solid var(--ink);
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
@@ -3543,9 +3548,12 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 }
 .fl-wait[hidden]{display:none}
 .fl-bar{
-  position:absolute;left:12%;right:12%;bottom:24px;height:7px;z-index:4;
+  /* The garden's geometry and the garden's dark track: at 0% a cream well
+     drew a bright line across the plant, and an empty cell read as MORE
+     planted than a planted one. */
+  position:absolute;left:10%;right:10%;bottom:6px;height:7px;z-index:4;
   border-radius:999px;border:2px solid var(--ink);
-  background:#e9dcc3;overflow:hidden;
+  background:rgba(35,20,10,.5);overflow:hidden;
 }
 .fl-bar{display:none}
 .fl-plot[data-state="grow"] .fl-bar{display:block}
@@ -3659,6 +3667,14 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .in-gate .quest-strip,
 .in-gate .season-edges{display:none}
 .in-gate .coach{display:none}
+/* `.ui` is a stacking context covering the whole screen, so it eats every tap
+   meant for a layer beneath it — the gate's "Back to the garden" was the only
+   visible control on that screen and it was dead. `.in-map` and `.in-meadow`
+   have carried this pair since the meadow shipped; the gate was built without
+   it. The HUD opts back in, because the wallets and the settings are reachable
+   from every room. */
+.in-gate .ui{pointer-events:none}
+.in-gate .hud{pointer-events:auto}
 .g-sky{position:absolute;inset:0}
 .g-hedge{position:absolute;left:-6%;right:-6%;bottom:0;height:26%;line-height:0;display:flex}
 /* TILED, not stretched. One hedge stretched across a phone turns its lumps into

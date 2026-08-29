@@ -1363,6 +1363,33 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
 
+**A season's scene has two visible bands, not one canvas.** The board covers the middle of the
+screen — roughly y 25%–70% on a phone — so anything composed into it is drawn and then hidden. Fall
+shipped with its horizon, its hedge line, its stubble and both orchard trees all behind the board,
+and the only strip a player could see was a flat colour field. Compose into the top band (sky,
+horizon, hedge line) and the bottom one (ground, texture, props), and check by looking rather than
+by reading the coordinates.
+
+**A layer at `z-index` below `.ui` needs `.in-x .ui{pointer-events:none}` or every tap dies.** This
+is already recorded below for the meadow and the map, and it was stepped in again the moment a new
+place layer was added: the season gate's "Back to the garden" was the only visible control on its
+screen and it was inert, because `.in-gate` shipped with the `display:none` half of the pair and not
+the `pointer-events` half. **Whenever you add a `.in-something` block, copy BOTH lines.**
+
+**One pair of gesture-origin variables is a two-finger bug waiting to happen.** The swipe recorded
+`navX0/navY0` with no `pointerId`, so a second thumb landing anywhere overwrote the origin and the
+first thumb's release measured the distance between the two — on a 390px phone two thumbs sit ~250px
+apart horizontally and a few pixels apart vertically, and the core loop *is* rapid two-thumb tapping.
+It cost a season change per double-tap the moment a horizontal axis existed. Record the
+`pointerId`, ignore releases from any other, and clear the origin on `pointercancel`.
+
+**A room's own state is not the same variable as the room you are looking at.** The vertical ladder
+was gated on `season !== 'summer'`, but a locked-season gate is held in a *different* variable and
+leaves `season` untouched — so the ladder still fired from the gate screen and left two place-states
+on `#game` at once. Anything that guards on "where am I" has to name every variable that can answer.
+
+
+
 Things that cost real time to discover. None are visible from a casual read.
 
 **A state modifier that sets `box-shadow` silently deletes the lip.** `box-shadow` is one property,

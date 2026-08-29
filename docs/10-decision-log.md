@@ -5,6 +5,68 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (phase 3, the gauntlet) — Six critics, and the gate's only button was dead
+
+Six adversarial critics over the strip and Fall — the mandatory grammar critic, visual fidelity
+against the spike then doc 05, gesture and layout, whether Fall's surface tells the truth about
+Fall's rules, correctness, and the house traps. **Two blockers were found by more than one of them.**
+
+**THE BLOCKER: the bed chip read the clock instead of the engine's marks.** `checkFallWindfall()`
+marks every eligible plot once per fill and refuses to mark again while any mark is unspent — so a
+bed that is planted and ripe is *not* necessarily a bed that will pay. Harvesting one marked plot
+and replanting it (the natural per-plot flow, and the exact player the 1.2 latch fix was written
+for) left the chip gold and promising +50% on a plot that could never be marked; and collecting one
+marked plot dropped the rim off the seven that *were* still owed. Fall's one rule, told wrong in
+both directions, on the object built to tell it. The surface reads `cell.windfall` now, every marked
+plot wears a gold ring, and the chip counts them.
+
+**THE SECOND BLOCKER: the gate's "Back to the garden" was inert** — `.in-gate` shipped with the
+`display:none` half of the place-layer pair and not the `pointer-events` half, so `.ui` ate every
+tap on the only visible control on that screen. The trap is already in the handoff, written for the
+meadow. It has been rewritten as an instruction: **whenever you add a `.in-something` block, copy
+both lines.**
+
+**And a third that only a critic with a second finger would find: a two-thumb tap changed season.**
+The swipe kept one pair of origin variables with no `pointerId`, so a second thumb overwrote the
+origin and the first thumb's release measured the gap between them. On a 390px phone two thumbs sit
+~250px apart horizontally and a few pixels apart vertically — and the core loop is rapid two-thumb
+tapping. Harmless on the vertical axis for a year; a season change per double-tap the moment a
+horizontal one existed.
+
+**Fall was built and never registered as a room.** No `.in-fall .coach{display:none}`, so the coach
+mark re-fired on the 0.6s tick, measured the garden's hidden flower and parked over the coin wallet
+in every Fall screenshot. `critterStage()` had no Fall branch either, so a creature arriving while
+the player stood in Fall — which is what Fall's hour clocks *ask* them to do — celebrated from the
+top-left corner. And the flower binding lived inside `buildBoard()`, which runs once, while `leave()`
+cleared it every time: from the second visit on, every coin, float and speech bubble fired from the
+origin.
+
+**An empty Fall cell read as more planted than a planted one.** The empty mark was `sprout` — the
+glyph that means *a seedling is growing* — at 46% with a contour and a drop shadow, while a stage-1
+crop was a small leaf bisected by a cream progress track. Doc 05 records why `plantSpot` replaced a
+seed shape on empty plots: a dashed square reads as *put something here*. Fall now uses it, and the
+bar took the garden's dark track and position so a 0% bar vanishes into the soil.
+
+**A season's scene has two visible bands, not one canvas** — the phase's own lesson, now a trap in
+the handoff. Fall's horizon, hedge line, stubble and both orchard trees were composed into the band
+the board covers, so the only strip a player could see was a flat colour field. And its ground
+painted a dark band to the very bottom of `.game`, which is the one thing the status-bar work
+forbids: that darkening is what made a short window read as a *cut* rather than as ground.
+
+**The cell floor was an opaque rect over a properly built gradient** — the inset-shadow trap's
+cousin: a flat fill on top of the plot's own three-stop body. It is a gradient now, and the
+blemishes ride it.
+
+**Fall's appointment had no bell.** Nothing outside Fall said the bed was ripe. The edge tab carries
+the dock's attention dot now; the welcome-back half is not done and is named in docs/11.
+
+**Also:** the Turn's ask enumerated everything the Turn takes and keeps and Fall was in neither
+column — including the fortnight plant whose whole promise is that a Turn cannot touch it; the
+Century Bloom's 14 days rendered as "336h" in the pill read before committing two million gold;
+"bed" meant the plot in one sentence and the board in the next; every unlocked season tab wore an
+autumn leaf, including SUMMER; and `sizeFallBoard()` was wired to `window.resize` only, so the rail
+collapsing or expanding left Fall's board overhanging its frame until the next visit.
+
 ## 2026-08-29 (phase 3, the strip) — A season is the same room in a different month
 
 **The architectural decision the whole phase rests on: Fall is not a place layer.** The Hollow, the

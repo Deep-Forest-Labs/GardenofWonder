@@ -11,7 +11,14 @@
   /* Where a celebration about creatures should land. The garden is hidden while
      the Hollow is up, and a hidden element measures as a zero rect — so anything
      centred on it fires from the top-left corner instead. */
-  const critterStage = () => FX.centerOf(UI.hollowOpen() ? el.hollow : el.garden);
+  /* Whichever board is actually on screen. `.in-fall` display:none's the garden,
+     so a creature arriving while the player is in Fall measured a 0x0 rect and
+     celebrated from the top-left corner — the trap this line already exists to
+     avoid, one room later. */
+  const critterStage = () => FX.centerOf(
+    UI.hollowOpen() ? el.hollow
+      : (UI.fallOpen && UI.fallOpen()) ? el.fallBoard
+        : el.garden);
 
   Game.on('wonder', ({ active }) => {
     if (active) {

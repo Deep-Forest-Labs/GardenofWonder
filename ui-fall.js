@@ -50,10 +50,6 @@
         mid.className = 'fl-flower-cell';
         mid.innerHTML = `<button class="flower-btn fl-flower" id="fallFlower">${Flora.talkingFlower()}</button>`;
         board.appendChild(mid);
-        /* The talking flower follows the player and pays what it pays
-           everywhere — the meadow's rule, kept. UI.flowerBtn() returns
-           whichever flower is on screen. */
-        UI.bindFlower($('#fallFlower', mid));
         continue;
       }
       const idx = cell < 4 ? cell : cell - 1;
@@ -63,7 +59,7 @@
       b.innerHTML = `
         <span class="fl-floor">${Fall.cellFloor(idx)}</span>
         <span class="fl-slot"></span>
-        <span class="fl-empty">${Icons.get('sprout')}</span>
+        <span class="fl-empty">${Icons.get('plantSpot')}</span>
         <span class="fl-ready">!</span>
         <span class="fl-wait" hidden></span>
         <span class="fl-bar"><i></i></span>`;
@@ -266,7 +262,13 @@
     const now = nowSec();
     if (now < c.plantedAt + c.grow) {
       const p = FX.centerOf(cellEls.get(idx).root);
-      FX.float(p.x, p.y, def.century ? 'Still growing' : span(c.plantedAt + c.grow - now), '');
+      /* Fall has no hasten — its clocks are the mechanic — but the same tap
+         hastens in Summer, so the refusal has to say something rather than
+         nothing. */
+      FX.float(p.x, p.y, def.century
+        ? 'Growing all fortnight'
+        : `Ripe in ${span(c.plantedAt + c.grow - now)}`, '');
+      FX.haptic(4);
       return;
     }
     const res = Game.fallHarvest(idx);
@@ -284,6 +286,13 @@
     if (open) return;
     open = true;
     if (!built) { buildBoard(); built = true; }
+    /* Bound on every entry, not once at build. leave() clears it, so a second
+       visit left UI.flowerBtn() falling back to the garden's flower — which
+       .in-fall has display:none'd — and every coin, float and speech bubble
+       resolved against a 0x0 rect and fired from the screen corner. The
+       meadow avoids this by rebuilding its board on every enter; binding here
+       is the same fix without the rebuild. */
+    UI.bindFlower($('#fallFlower'));
     el.game.classList.add('in-fall');
     el.fallLayer.hidden = false;
     syncScene();

@@ -33,10 +33,10 @@ const Fall = (() => {
     },
     moon: {
       sky1: '#26304f', sky2: '#3b4568', sky3: '#5d5570',
-      hillFar: '#4a3450', hillNear: '#3a2a42',
+      hillFar: '#5c4265', hillNear: '#463251',
       ground: '#3f4a38', groundDark: '#354030', groundLight: '#4a5741',
       hedge: '#2b5230', hedgeLit: '#376a3c', hedgeDark: '#1f3c25',
-      trunk: '#4a3020', canopy: '#7a3f28', canopyLit: '#94513200',
+      trunk: '#4a3020', canopy: '#7a3f28', canopyLit: '#945132',
       leaf: '#8a4c2c', haze: 'rgba(120,120,190,.25)'
     }
   };
@@ -52,8 +52,18 @@ const Fall = (() => {
     const w = Math.max(320, Math.round(width || VIEW.w));
     const h = Math.max(480, Math.round(height || VIEW.h));
     const P = SKIES[sky] || SKIES.sun;
-    const horizon = Math.round(h * 0.30);
-    const groundTop = Math.round(h * 0.62);
+    /* THE COMPOSITION CONSTRAINT, learned by drawing it: the board covers the
+       middle of the screen, so a season's scene has exactly two visible bands —
+       roughly the top 25% and the bottom 25%. Anything composed into the middle
+       is drawn and then hidden. The horizon and its hedge line go into the top
+       band; the ground, its stubble and its props go into the bottom one. */
+    const horizon = Math.round(h * 0.20);
+    /* The board covers roughly the middle half of the screen, so a ground band
+       at 0.62h put the stubble and both orchard trees entirely behind it and
+       left the only strip a player can see as a flat colour field — "a surface
+       with no texture at all reads as a placeholder". The band starts below the
+       board instead, where its props are actually visible. */
+    const groundTop = Math.round(h * 0.70);
     const floor = h - dockHeight;
 
     /* Density scales with width so a wide window gets more of everything
@@ -74,12 +84,13 @@ const Fall = (() => {
     const hedgeW = Math.round(w / dense(150));
     for (let x = -hedgeW; x < w + hedgeW; x += hedgeW) {
       const lift = 8 + ((x / hedgeW) % 3) * 5;
-      hedge += `<path d="M${x} ${groundTop + 10} V${groundTop - 18 - lift}
-        Q${x + hedgeW * 0.18} ${groundTop - 38 - lift} ${x + hedgeW * 0.4} ${groundTop - 30 - lift}
-        Q${x + hedgeW * 0.68} ${groundTop - 46 - lift} ${x + hedgeW} ${groundTop - 20 - lift}
-        V${groundTop + 10} Z" fill="${P.hedge}"/>`;
+      const base = horizon + 46;
+      hedge += `<path d="M${x} ${base} V${base - 18 - lift}
+        Q${x + hedgeW * 0.18} ${base - 38 - lift} ${x + hedgeW * 0.4} ${base - 30 - lift}
+        Q${x + hedgeW * 0.68} ${base - 46 - lift} ${x + hedgeW} ${base - 20 - lift}
+        V${base} Z" fill="${P.hedge}"/>`;
     }
-    hedge += `<rect x="${-4}" y="${groundTop - 16}" width="${w + 8}" height="9" fill="${P.hedgeLit}" opacity=".55"/>`;
+    hedge += `<rect x="${-4}" y="${horizon + 30}" width="${w + 8}" height="9" fill="${P.hedgeLit}" opacity=".55"/>`;
 
     /* Two trees, offset from the RIGHT edge and the horizon so a wide window
        moves them apart rather than stretching them. The keeper is the ruler:
@@ -88,10 +99,12 @@ const Fall = (() => {
       <g transform="translate(${r2(cx)} ${r2(cy)}) scale(${s})">
         <path d="M0 0 V-58" stroke="${P.trunk}" stroke-width="13" stroke-linecap="round"/>
         <path d="M0 -34 L-18 -50 M0 -44 L16 -58" stroke="${P.trunk}" stroke-width="8" stroke-linecap="round"/>
-        <circle cx="-16" cy="-72" r="26" fill="${P.canopy}"/>
-        <circle cx="18" cy="-78" r="30" fill="${P.canopy}"/>
-        <circle cx="2" cy="-96" r="26" fill="${P.canopyLit}"/>
-        <circle cx="-24" cy="-88" r="17" fill="${P.canopyLit}"/>
+        <g stroke="${INK}" stroke-width="3.4">
+          <circle cx="-16" cy="-72" r="26" fill="${P.canopy}"/>
+          <circle cx="18" cy="-78" r="30" fill="${P.canopy}"/>
+          <circle cx="2" cy="-96" r="26" fill="${P.canopyLit}"/>
+          <circle cx="-24" cy="-88" r="17" fill="${P.canopyLit}"/>
+        </g>
       </g>`;
 
     /* The ground is a mass first and blades second: a dark back mat, the
@@ -125,16 +138,17 @@ const Fall = (() => {
         </linearGradient>
       </defs>
       <rect x="0" y="0" width="${w}" height="${h}" fill="url(#fall-sky)"/>
-      <ellipse cx="${r2(w * 0.74)}" cy="${r2(h * 0.13)}" rx="${r2(w * 0.26)}" ry="${r2(h * 0.09)}"
-        fill="${P.haze}"/>
+      <ellipse cx="${r2(w * 0.74)}" cy="${r2(h * 0.11)}" rx="${r2(w * 0.2)}" ry="${r2(h * 0.055)}"
+        fill="${P.haze}" opacity=".55"/>
       ${hills}
-      ${tree(w - 46, groundTop - 4, 1)}
-      ${tree(w - 128, groundTop + 6, 0.72)}
+      ${tree(w - 44, groundTop + 30, 0.52)}
+      ${tree(38, groundTop + 44, 0.4)}
       ${hedge}
       <rect x="0" y="${groundTop}" width="${w}" height="${h - groundTop}" fill="${P.ground}"/>
       <rect x="0" y="${groundTop}" width="${w}" height="10" fill="${P.groundLight}" opacity=".6"/>
       ${stubble}
-      <rect x="0" y="${floor - 30}" width="${w}" height="${h - floor + 30}" fill="${P.groundDark}" opacity=".45"/>
+      <rect x="0" y="${floor - 30}" width="${w}" height="${Math.max(0, h - floor - 14)}"
+        fill="${P.groundDark}" opacity=".28"/>
       ${leaves}
     </svg>`;
   }
@@ -145,8 +159,18 @@ const Fall = (() => {
      shadow goes on top of it. */
   function cellFloor(i) {
     const tilt = (i % 3) * 4 - 4;
+    /* The floor keeps the plot's own three-stop body rather than covering it
+       with one flat colour — an opaque child is exactly what flattens a surface
+       that the CSS underneath had already built properly. */
     return `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" class="fp-floor">
-      <rect x="0" y="0" width="100" height="100" fill="#5f4630"/>
+      <defs><linearGradient id="fp-body-${i}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#7e5e42"/>
+        <stop offset="0.72" stop-color="#5f4630"/>
+        <stop offset="1" stop-color="#453221"/>
+      </linearGradient></defs>
+      <rect x="0" y="0" width="100" height="100" fill="url(#fp-body-${i})"/>
+      <ellipse cx="26" cy="22" rx="13" ry="11" fill="rgba(255,255,255,.13)"/>
+      <ellipse cx="72" cy="62" rx="10" ry="8" fill="rgba(0,0,0,.12)"/>
       <rect x="0" y="0" width="100" height="100" fill="url(#fp-grain)" opacity=".5"/>
       <ellipse cx="50" cy="${78 + tilt * 0.3}" rx="21" ry="7.5" fill="#7b5c3f" opacity=".6"/>
       <ellipse cx="${34 + tilt}" cy="34" rx="9" ry="6" fill="#71543a" opacity=".6"/>
