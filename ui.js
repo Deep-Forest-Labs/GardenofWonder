@@ -488,8 +488,13 @@
     el.seasonTint.style.setProperty('--season-c', DATA.year.seasonTint);
     seasonAmount = DATA.year.seasonTintMax * ripe;
     el.seasonTint.style.setProperty('--season-o', seasonAmount.toFixed(3));
-    /* An open Year panel keeps answering while the meter behind it fills. */
-    if (UI.sheetMode() === 'year') UI.renderSheet();
+    /* An open Year panel keeps answering while the meter fills — but IN PLACE.
+       This is not the old projection popover, which the comment here used to
+       justify rebuilding because it had "nothing focusable inside it". This
+       panel holds four spend buttons per unlocked flower and the ceremony's own
+       call to action, and replacing `sheetBody.innerHTML` on a 0.6s tick swaps
+       whatever is under the player's thumb mid-press. */
+    if (UI.sheetMode() === 'year' && UI.syncYearPanel) UI.syncYearPanel();
   }
 
   function popWallet(name) {
@@ -734,7 +739,7 @@
         }
         : {
           title: 'Nothing loaded yet',
-          body: 'Power-ups come from quests and from levelling up.',
+          body: 'They turn up for quests, for levelling, and for filling the Almanac.',
           art: Icons.get('bolt')
         });
       return;
@@ -757,10 +762,12 @@
     if (!b) return;
     Sound.resume();
     const tab = b.dataset.tab;
-    /* GARDEN is not a panel — it is the way home, from anywhere. It closes any
-       open sheet, leaves whichever room you are standing in, and puts Summer's
-       board back in the stage. It is the one button that always does something,
-       which is why it is the one that reads as *play*. */
+    /* GARDEN is the SEASON STRIP'S way home: it returns Fall to Summer. It is
+       deliberately not a second way out of a panel or a room — a panel is
+       covered by its own sheet and carries a close button (docs/36 annotation
+       1), and a room leaves by the opposite swipe and hides the whole dock
+       (annotation 2). The closeSheet and room calls below are belt-and-braces
+       for a future layout where the dock is reachable, not live paths today. */
     if (tab === 'garden') {
       UI.closeSheet();
       if (UI.hollowOpen()) UI.exitHollow();
@@ -990,8 +997,6 @@
     const canBrew = Object.keys(S.goods).length > 0 || CRAFT_RECIPES.some((r) => Game.canCraft(r));
     /* A face is waiting and you can already fill their order — the one signal
        that should pull a player back into planting something specific. */
-    /* The world button carries every place's attention: an order you can fill,
-       or jars waiting in the meadow. */
     const canGive = Game.standOrders().some((o) => Game.standCanDeliver(o));
     /* `stripQuest()` is the engine's own "what is in front of the player right
        now" — the same call the quest strip uses, so the dot and the strip can

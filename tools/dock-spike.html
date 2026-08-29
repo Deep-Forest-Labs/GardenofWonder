@@ -766,7 +766,7 @@ body[data-notes="0"] .slot{display:none}
   border:3px solid var(--ink);border-radius:var(--r-md);
   background:linear-gradient(180deg,#59b95d,#4fae54)}
 .cstrip .band{--yard:108px}
-.cstrip{--band-b:4px;--band-x:34px;--pet-b:64px;--pw:74px}
+.cstrip{--band-b:4px;--band-x:34px;--pet-b:6px;--pw:67px}
 .clab{font-size:10.5px;font-weight:800;margin-bottom:3px}
 
 /* ---------- the ruler: a measured column down the right of a frame ---------- */
@@ -787,7 +787,7 @@ body[data-notes="0"] .slot{display:none}
 .phone .stage{padding:2px 0 var(--yard,108px)}
 .phone .quest-strip{min-height:52px}
 .phone .garden{width:370px;height:370px}
-.phone{--yard:108px;--band-b:4px;--band-x:34px;--pet-b:64px;--pw:74px}
+.phone{--yard:108px;--band-b:4px;--band-x:34px;--pet-b:6px;--pw:67px}
 /* A 360px handset. The frame is really 360 wide, not a 390 frame with a
    smaller board drawn in it — a squeeze frame that is not squeezed proves
    nothing. */
@@ -796,7 +796,7 @@ body[data-notes="0"] .slot{display:none}
 /* A 700px-tall handset: the game's own max-height:700px block fires, the dock
    drops to 50px, the yard's clamp lands on 91px, and the board becomes
    height-bound rather than width-bound. */
-.phone.short{height:700px;--yard:91px;--band-b:2px;--band-x:34px;--pet-b:14px;--pw:66px}
+.phone.short{height:700px;--yard:91px;--band-b:2px;--band-x:34px;--pet-b:4px;--pw:60px}
 .phone.short .garden{width:354px;height:354px}
 .phone.short .dock5,.phone.short .d5{height:50px}
 .phone.short .dock5{grid-template-rows:50px}
@@ -1074,7 +1074,7 @@ const tabs = (o) => (o.tabs === false ? '' :
   tab('l', 'SPRING', true, 'Turn 6') + tab('r', 'FALL', o.fallLocked !== false, o.fallLocked === false ? '' : 'Turn 1'));
 
 const PET_C = ['#ffd6ea', '#c9f5cf', '#cde5ff', '#ffe0ad'];
-const PET_X = [34, 66, 44, 56];
+const PET_X = [35, 65, 45, 55];
 function band(o) {
   o = o || {};
   const n = o.pets === undefined ? 3 : o.pets;

@@ -5,6 +5,87 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (phase 3.5, the gauntlet) — Sixty-nine critics, and the blocker was the meadow's only signpost
+
+Five independent critics — reachability that *walks*, visual fidelity against the approved spike then
+doc 05, grammar, the house traps, and the squeeze — then every finding independently re-checked
+against the running game. **Fifty-two confirmed, twelve dismissed.** One blocker, twenty highs.
+
+**THE BLOCKER, and it is the shape of a whole class of bug.** `idleNudge()` wrote `seen.meadow` and
+saved it *before* calling `sayText()` — and `sayText` has two ways to swallow a line: a coach mark
+up, or a bubble painting into a `display:none` subtree. The meadow has had no visible entrance since
+the first push of this phase, so that one line is its entire discoverability, and it has **no
+backfill by design**. Sitting in the Hollow, in Fall, or on a locked gate for twenty-six seconds
+spent it into nothing, permanently. In the Hollow it would also have been a lie — "swipe up" means
+the opposite thing down there. **Consume a one-shot only after the thing it pays for has actually
+happened**, and guard it on every variable that can answer *where am I*, which is the same rule the
+vertical swipe already follows. Verified by waiting out two real twenty-nine-second idles, one in the
+garden and one in a room.
+
+**Four things the phase itself broke and the gauntlet caught:**
+
+- **A swipe starting on UPGRADE or POWER-UP navigated to the meadow.** `noSwipe` lost `.burrow-door`
+  and gained nothing for its replacements. Press-slide-off-release — the standard cancel gesture —
+  had nowhere to go but up.
+- **The pouch chip was guillotined by the Turn button's own `overflow:hidden`,** which was there to
+  clip the fill. The top of a 21px chip sliced flat, contour and digits with it, on the one number
+  this phase newly promoted to an always-visible surface. **The clip belongs to the fill, not the
+  button** — the fill is its own clip box now, at the button's inner curve.
+- **The creatures painted OVER the GARDEN pedestal and stole its taps.** The code comment claimed the
+  reverse. `.critter-yard` is `z-index:3` and a `.dock-btn` is `position:relative; z-index:auto`, and
+  inside `.ui` a positive index paints after an auto one. `#dock{z-index:5}` — `#dock`, not `.dock`,
+  because the Hollow's and the meadow's docks wear the same class and must not be raised over their
+  own rooms.
+- **The HUD's round buttons were still 40px on every phone under 700px tall.** The phase deleted one
+  copy of that rule, celebrated it in the docs, and missed the identical pair in the short-screen
+  block. The docs were true above 700px only.
+
+**Two specificity traps, and they are the same trap twice.** `.dock.five .dock-btn{min-height}`
+out-specified both `.dock-btn.home`'s 74px and the short-screen block's 50px, so the pedestal did not
+rise and the short dock did not shrink. And `:has()` **takes its argument's specificity**, so the
+four `.dock:has(.dock-btn:nth-child(5))` rules — written before a `.five` class existed — silently
+out-ranked everything `.dock.five` set, including this phase's own 9.5px label rule, which never
+applied at any size. Converted rather than outranked.
+
+**The rail's track is reserved now, not collapsed.** `:empty{display:none}` was free while boosts
+were spent from a chip *inside* the rail — the row and its cause were one object. They are not any
+more: spending happens at POWER-UP, thirty pixels from the board, and a board that shrinks 9% on a
+short phone the moment you press a button is the layout changing shape under the player. Same call
+the HUD made when it took sub-44px buttons over a row that wraps as you earn. **It costs a 700px
+phone 31px of board, permanently, and that is the trade.**
+
+**The Year panel stopped rebuilding itself under the player's thumb.** `updateYearMeter` called
+`renderSheet()` on the 0.6s tick, inheriting a comment that justified it because the old projection
+popover "had nothing focusable inside it". This panel holds four spend buttons per unlocked flower.
+`syncYearPanel()` moves the meter and the two tracks in place and rebuilds only when the ceremony's
+button arrives or year one's lock comes off — neither of which can land under a thumb already down.
+
+**Grammar, all confirmed and all fixed:** the Hollow's exit arrow still pointed and bobbed DOWN while
+its label said "Swipe up"; the level-up that hands you your first boost still pointed at "the tray",
+which this phase deleted; the Cards button opened a panel titled *The Long Season*; POWER-UP claimed
+"nothing loaded yet" while the rail beside it counted down the boost you were holding; the Year panel
+tagged a gate "nearly" however far off it was and said *seeds* three times in a game where a seed is
+the thing you plant; and the ceremony told you to "swipe right" for a season you reach by swiping
+left.
+
+**Doc 05, rule by rule:** the pedestal's lip was grass on grass (rgb(47,122,52) against a lawn of
+rgb(70,144,76) — same hue, 1.2:1) on the one button that must read as *play*; the Turn button painted
+a 2px grey-tan scum line at 0% fill, because a border sits outside the box; an unmet gate filled
+green, and green is this game's *yes*; the empty POWER-UP wore a dashed contour and a faded glyph,
+two more ways of saying what drained paper already says; and two seams were translucent grey where
+every other seam on the screen is ink.
+
+**Deleted rather than left dead:** the `stores` sheet — fully written, registered in *both* maps, and
+opened by nothing, which the phase-3.5 dock mapping existed to catch — along with `honeyIco`, its
+only consumer; nine card cells that rendered as `<button data-card>` with no handler anywhere; a
+stray `}` left when `@keyframes meterFull` went; and `.in-fall .burrow-door`.
+
+**The spike was corrected to match the build, not the other way round.** Its band stood the creatures
+above the two buttons on a lane of their own; built, that reads as floating. The reference now shows
+what shipped, so the next visual critic judges against the truth.
+
+---
+
 ## 2026-08-30 (phase 3.5c) — The map comes out, last and on purpose
 
 `overworld.js`, `ui-map.js`, the `.map-layer`, the whole `.ow-*` block (4.9KB of CSS), the World

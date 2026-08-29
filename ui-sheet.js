@@ -83,8 +83,8 @@
       quests: 'Quests', orders: 'Orders & Quests', year: 'The Year',
       dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
       critter: '', stand: '', order: '', turn: '', crops: 'Choose a crop',
-      keepers: 'Keepers', shelf: 'The Honey Shelf', stores: 'Stores', build: 'What goes here?',
-      album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
+      keepers: 'Keepers', shelf: 'The Honey Shelf', build: 'What goes here?',
+      album: 'Cards', cardset: 'Set', pack: 'Opening a pack'
     };
     let title = titles[sheetMode] || '';
     if (sheetMode === 'turn') title = turnTitle();
@@ -122,7 +122,7 @@
       turn: renderTurn, crops: renderCrops,
       dev: renderDev, welcome: renderWelcome, feed: renderFeed, critter: renderCritter,
       stand: renderStand, order: renderOrder,
-      keepers: renderKeepers, shelf: renderShelf, stores: renderStores, build: renderBuild,
+      keepers: renderKeepers, shelf: renderShelf, build: renderBuild,
       album: renderAlbum, cardset: renderCardSet, pack: renderPack
     }[sheetMode];
     /* Whoever the sheet is about stands on top of it — a creature, or now the
@@ -197,7 +197,7 @@
     const harvesters = PLOT_AUTOPLANTERS.filter(({ idx }) => !S.grid[idx].locked).map(({ key }) => upgradeCard(key)).join('');
     const lockedCount = PLOT_AUTOPLANTERS.filter(({ idx }) => S.grid[idx].locked).length;
     return `
-      <p class="sheet-note">Buy upgrades to power up your taps, speed up growth and automate the garden.</p>
+      <p class="sheet-note">Buy upgrades to hit harder, grow faster and automate the garden.</p>
       <div class="card-grid">${core}</div>
       <p class="sheet-note" style="margin-top:16px">Harvesters keep a single plot planted for you, choosing the best seed you can afford.</p>
       <div class="card-grid">${harvesters || '<p class="sheet-note">Unlock a plot to hire its harvester.</p>'}</div>
@@ -252,11 +252,6 @@
   }
 
   /* ---- apiary ---- */
-  const honeyIco = (type) => {
-    const s = Game.seedById(type);
-    return s ? Flora.head(s, 22) : Icons.get('honey');
-  };
-
   function stockRow(icon, name, qty, unit, kind, key) {
     return `<div class="stock">
       <span class="stock-ico">${icon}</span>
@@ -362,15 +357,12 @@
       <div class="shelf-grid">${jars}</div>`;
   }
 
-  function renderStores() {
-    const honeys = Object.keys(S.apiary.honey).sort((a, b) => APIARY.honeyValue(b) - APIARY.honeyValue(a));
-    const stock = honeys.map((t) =>
-      stockRow(honeyIco(t), APIARY.honeyName(t), S.apiary.honey[t], APIARY.honeyValue(t), 'honey', t)
-    ).join('') + (S.apiary.wax ? stockRow(Icons.get('wax'), 'Beeswax', S.apiary.wax, APIARY.waxValue, 'wax', 'wax') : '');
-    return `<p class="sheet-note">Jars keep. The Stand pays better than selling, so hold anything
-        someone might ask for.</p>
-      ${stock || '<p class="sheet-note">Nothing in the pantry yet.</p>'}`;
-  }
+  /* `renderStores` — the honey and beeswax pantry — was deleted 2026-08-30. It
+     was fully written and registered in BOTH the titles and render maps, and a
+     repo-wide search found no caller: the meadow's dock is Collect / Move /
+     Keepers / Shelf and nothing opened Stores. Found by the phase-3.5 dock
+     mapping, which existed to catch exactly this. `stockRow` stays — the
+     Apothecary still uses it for goods. */
 
   /* ---- apothecary ---- */
   function needLabel(n) {
@@ -566,7 +558,7 @@
     const goes = [
       [`${Icons.get('coin')}Gold`, true],
       [`${Icons.get('badge')}Badges`, Object.values(S.upgrades || {}).some((v) => v > 0)],
-      [`${Icons.get('bolt')}Boosts`, Object.values(S.boostInv || {}).some((v) => v > 0)],
+      [`${Icons.get('bolt')}Power-ups`, Object.values(S.boostInv || {}).some((v) => v > 0)],
       [`${Icons.get('grid')}${bigPlots} big plot${bigPlots === 1 ? '' : 's'}`, bigPlots > 0],
       [`${Icons.get('sprout')}${growing} growing`, growing > 0]
     ].filter(([, on]) => on).map(([html]) => `<span class="chip gone">${html}</span>`).join('');
@@ -1010,13 +1002,35 @@
       </div>
       <div class="yr-gates">
         ${yrGate('coin', 'Gold earned', coins, coins <= seeds)}
-        ${yrGate('pouch', 'Seeds ready', seeds, seeds < coins)}
+        ${yrGate('pouch', 'Pouch ready', seeds, seeds < coins)}
       </div>
-      <p class="sheet-note">Ready to save: <b>${fmt(Math.floor(mint.base))}</b> seeds. How the year <b>scored</b> is added when you Turn.</p>
+      <p class="sheet-note">Ready to save: <b>${fmt(Math.floor(mint.base))}</b> Saved Seeds. How the year <b>scored</b> is added when you Turn.</p>
       ${cta}
-      <p class="sheet-note yr-spend">Spend your seeds
+      <p class="sheet-note yr-spend">Spend your pouch
         <span class="chip">${Icons.get('pouch')}${fmt(S.savedSeeds)}</span></p>
       ${petalCards()}`;
+  }
+
+  /* Only the meter and the two tracks move on a tick. The petal cards and the
+     ceremony's button are pressable and stay exactly where they are — the old
+     projection popover could be rebuilt wholesale because it held nothing you
+     could press, and this panel is not that. */
+  function syncYearPanel() {
+    if (sheetMode !== 'year') return;
+    const { coins, seeds, p } = UI.yearProgress();
+    const meter = el.sheetBody.querySelector('.yr-meter');
+    if (!meter) return;
+    meter.style.setProperty('--p', `${Math.round(Math.max(0, Math.min(1, p)) * 100)}%`);
+    const tracks = el.sheetBody.querySelectorAll('.yr-gate .track i');
+    const ratios = tracks.length === 1 ? [coins] : [coins, seeds];
+    tracks.forEach((t, i) => {
+      const w = `${Math.round(Math.min(1, Math.max(0, ratios[i])) * 100)}%`;
+      if (t.style.width !== w) t.style.width = w;
+    });
+    /* The one change that IS a rebuild: the ceremony's button arriving, or year
+       one's lock coming off. Those change what is on the panel rather than how
+       far along it is, and neither can land under a thumb already pressing. */
+    if (Game.turnReady() !== Boolean(el.sheetBody.querySelector('[data-act="openTurn"]'))) renderSheet();
   }
 
   /* The two tracks, with the BINDING one marked — the lower of the pair is what
@@ -1030,7 +1044,8 @@
     return `<div class="yr-gate${met ? ' met' : ''}${bind ? ' bind' : ''}">
       <span class="lab">${Icons.get(icon)}${label}</span>
       <span class="track"><i style="width:${Math.round(Math.min(1, Math.max(0, ratio)) * 100)}%"></i></span>
-      <span class="tag">${met ? Icons.get('check') : (bind ? 'this one' : 'nearly')}</span>
+      <span class="tag">${met ? Icons.get('check')
+        : (bind ? 'this one' : (ratio >= 0.8 ? 'nearly' : `${Math.round(Math.max(0, ratio) * 100)}%`))}</span>
     </div>`;
   }
 
@@ -2678,6 +2693,7 @@
   UI.openSheet = openSheet;
   UI.closeSheet = closeSheet;
   UI.renderSheet = renderSheet;
+  UI.syncYearPanel = syncYearPanel;
   UI.sheetMode = () => sheetMode;
   UI.setAwayReport = (report) => { awayReport = report; };
   UI.syncAfford = syncAfford;

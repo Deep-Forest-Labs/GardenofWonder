@@ -27,23 +27,40 @@ full hive now waits silently. If the meadow reads as forgotten in play, the chea
 are: give the meadow's swipe an edge tab of its own on the bottom edge (the season tabs' pattern,
 already built), or re-home the jar dot onto something always visible.
 
+## What the phase-3.5 gauntlet left open (2026-08-30)
+
+Fifty-two findings confirmed; the blocker and every high is fixed. These are the ones knowingly left.
+
+- **Four tending creatures overlap by 30px each, and the outermost tucks 5px behind the UPGRADE
+  pill.** There is no arrangement that avoids it: the band leaves 177px of clear lane between the two
+  floating buttons and four creatures need 268. They are trimmed from 19vw to 17vw and stacked by
+  position (`node.style.zIndex = spot`) so the occlusion reads left-behind-right instead of by
+  arrival order, which is the readable version of a crowd. **A fifth Habitat slot breaks this
+  first.**
+- **The reserved rail costs a 700px-tall phone 31px of board**, permanently, so the board no longer
+  jumps 9% when a power-up starts. Stability over size, the same call the HUD made.
+- **The sheet's breakout art is clipped in short landscape** — about 45% of the portrait is off the
+  top. Pre-existing; landscape is not a supported orientation for this game and nothing else in the
+  phase touches it.
+- **`Game.sell()`'s honey and wax branches are now provably unreachable** with the `stores` sheet
+  deleted. Harmless, and sweeping `game.js` for them is a separate change with its own test bill.
+
 ## Two dead surfaces, found by the phase-3.5 dock mapping (2026-08-30)
 
 Both pre-date this phase. They are recorded rather than fixed because the dock rebuild must not
 "preserve" a route that was never live.
 
-### The `stores` sheet is opened by nothing
+### ~~The `stores` sheet is opened by nothing~~ — DELETED 2026-08-30
 
 Sheet mode `stores` — the honey and beeswax pantry with a "Sell all" button per line — is fully
 written and registered in **both** the titles map and the render map in `ui-sheet.js`, and a
 repo-wide search for `openSheet(` finds **no caller**. The meadow's dock is Collect / Move / Keepers
 / Shelf; nothing opens Stores. Either wire it to a door or delete it, as its own decision.
 
-### A card cell in the album does nothing
+### ~~A card cell in the album does nothing~~ — FIXED 2026-08-30
 
-`renderCardSet()` draws each of the nine cells as `<button ... data-card="...">`, and no handler
-anywhere reads `data-card`. Tapping a card in a set is inert. This matters more after phase 3.5:
-the Cards dock button is about to send far more traffic into the album than a HUD star ever did.
+The nine cells are `<div>`s now. A card in a set is a thing you look at, and nine controls that do
+nothing is nine controls too many behind a dock button that gets far more traffic than a HUD star.
 
 ## The Garden Year — phase 1's deliberate seams (2026-08-29)
 

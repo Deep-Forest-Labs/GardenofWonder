@@ -151,7 +151,9 @@
     else if (g && g.gems) body = `+${g.gems} gems`;
     else if (g && g.boost) {
       const b = DATA.boosters.find((x) => x.id === g.boost);
-      body = b ? `${b.name} is waiting on the tray.` : 'A boost is waiting on the tray.';
+      /* The tray is gone — a boost is loaded into the POWER-UP button now, and
+         this line is the first time most players meet either. */
+      body = b ? `${b.name} is loaded in the power-up button.` : 'A power-up is loaded and ready.';
     }
     UI.toast({ title: `Level ${to}!`, body, art: Icons.get('star') });
     UI.showBanner(`Level ${to}!`, body, 2000);

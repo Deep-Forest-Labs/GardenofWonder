@@ -31,7 +31,7 @@ sheet the player asked for.
 ├─────────────────────────────┤
 │  ⑦ ▓▓▓  Harvest 3 roses     │  quest strip  (row 2, auto — always visible)
 ├─────────────────────────────┤
-│  boost tray                 │  rail         (row 3, auto — hidden if short)
+│  boost countdowns           │  rail         (row 3, reserved — hidden if short)
 ├─────────────────────────────┤
 │                             │
 │      ┌───┬───┬───┐          │
@@ -630,7 +630,7 @@ second one.
 
 | Condition | Change |
 | --- | --- |
-| `max-height: 700px` | Dock row 56→50px, pedestal 74→64, creature lift 6→4, wallets shrink |
+| `max-height: 700px` | Dock row 56→50px, pedestal 74→64, creature lift 6→4, wallets compress. **Round buttons stay 44px** |
 | `max-height: 600px` | Rail hidden |
 | `max-width: 430px` | Wallet padding and icons compress. **No longer touches the round buttons** — see the HUD section |
 | `min-width: 600px` and `min-height: 760px` | Horizontal padding added so the garden doesn't sprawl on tablets |
@@ -646,16 +646,13 @@ Present:
 - `role="tab"` with `aria-selected` on sheet tabs; `aria-pressed` on settings toggles.
 - `aria-hidden` toggled on the sheet as it opens and closes.
 - Full `prefers-reduced-motion` support.
-- Minimum 44 px tap targets **everywhere except the HUD row on phones narrower
-  than 430px**, where the three round buttons and the wallet pills are 40px.
-  That is a measured trade, not an oversight: with the year meter beside them
-  the three pills reach 222px at realistic numbers, three 44px buttons are
-  144px, and 222 + 8 + 144 is 374px of the 370px a 390px phone has. The choice
-  was a 40px control or a HUD that wraps and unwraps as the player gets richer,
-  and a layout that changes shape as you earn is the worse of the two. **One
-  fewer round button restores 44px with room to spare** — see
-  [35-morning-review.md](35-morning-review.md) §1. The quest strip is also
-  under 44px and always has been.
+- **Minimum 44 px tap targets everywhere in the HUD, at every size** (fixed
+  2026-08-30). The `max-width:430px` and `max-height:700px` blocks compress the
+  wallet pills only; both used to shave the round buttons to 40px and both have
+  stopped. That exception existed because three wallets and three 44px buttons
+  came to 374px of the 370 a 390px phone has, and **one fewer round button was
+  the named fix** — retiring the meter pill and the album star in phase 3.5 is
+  that fix, twice over. The quest strip is still under 44px and always has been.
 - Sound effects and music independently disableable.
 
 Missing, and worth knowing before claiming accessibility:
