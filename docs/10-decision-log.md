@@ -5,6 +5,64 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-29 (phase 3, the strip) — A season is the same room in a different month
+
+**The architectural decision the whole phase rests on: Fall is not a place layer.** The Hollow, the
+meadow and the map are rooms you leave the garden to visit — siblings of `.ui`, each hiding its
+chrome, each having to re-state the 560px column. A *season* is not that. `.stage` swaps its frame,
+the scenery swaps behind it, and the HUD, the quest strip, the rail and the dock never move.
+
+*Why it matters beyond tidiness:* it is "share the grammar, never share the verb" taken literally. A
+player walking sideways into Fall keeps every control they already know; the only things that change
+are the material, the clock and the rule. It also means nothing in Fall re-states the column,
+because nothing in Fall leaves `.ui` — the trap that made the meadow read as a different, worse game
+until `.mw-ui` was written. *Rejected:* a `.fall-layer` at z-index 13 beside the meadow, which is
+the pattern the codebase already had and would have been faster to write. It would have meant
+re-declaring the column, re-declaring a dock, and hiding the shops in a garden.
+
+**A season is reachable when its Turn has passed AND its garden exists**, and the gate says which of
+the two is holding it. Winter and Spring are slices C and E; a Turn-5 player standing at Winter's
+gate must not read "Opens at Turn 3". Two words of copy, chosen from `seasonTurned()`.
+
+**The gate is a screen, not a refusal.** Swiping onto a locked season shows it: a real sky, a hedge
+across it, a padlock, the turn that opens it, one drifting leaf, and the way back. You can always
+walk up to a locked gate — that is what makes it a promise rather than a wall.
+
+**The season edges are absolute, not grid items, and that cost a debugging pass.** As
+`grid-row: 4` with an auto column, an explicitly-placed item forced the next auto-placed item
+(`.stage`) into an **implicit second column**: the interface halved, the dock squashed into a corner
+and both tabs stacked on the left. Absolute against `.ui`, clear of the dock, they cannot touch the
+row layout. *And they sit low rather than centred* — centred they land on the board, and the board
+is the thing this game is.
+
+**The bed chip is Fall's whole rule as one object**, in four states ending in the board itself taking
+a gold rim. The near-miss state names a **wait**, not a count: *"one more in 4m"* rather than *"7 / 8
+ripe"*. A count is a status; a wait is an appointment, and the appointment is what doc 32 wants Fall
+to be. Its pulse lives on a pseudo-element, because `affordPulse` writes `transform` and the chip is
+centred with `translateX(-50%)` — the same collision family as a state modifier that writes
+`box-shadow` and silently eats the lip.
+
+**Two house traps, both stepped in and both caught by looking at the picture.** The per-cell render
+cache was seeded with `''`, and an empty plot's wait text *is* `''` — so the first write never fired
+and an empty capsule painted on every ripe plot. That is the documented `dataset.look` trap, one
+field over; the cache is seeded with `'?'` now. And a `display:none` written *after* the rule that
+shows it still loses on specificity, so the growth bar painted on empty plots.
+
+**The hedge lost its blossoms.** `UI.hedge()` is used at two very different aspects — a 42%-wide
+card panel and a full-width gate screen — and `preserveAspectRatio="none"` turns any circle into a
+tell-tale ellipse. The lumps and the bands survive stretching; a circle does not. The gate tiles two
+copies rather than stretching one, for the same reason a backdrop is never sliced.
+
+**Crops are not drawn like flowers.** A berry on a stem, a gourd, an ear of wheat — never a radial
+bloom. The rule doing visual work, so the board reads as another kind of garden before a single
+label is read; and the row carries three stat pills where a seed row carries five.
+
+**What was deliberately NOT done, on the owner's overnight call:** the map, `overworld.js`,
+`ui-map.js` and the camera are untouched and the dock still says World. Both navigations work, which
+is doc 34's rail — *never a push where neither exists*. The blocker underneath it is that **the Wild
+Meadow's only door is the map**, so retiring one strands the other; that is the first item of phase
+3's remainder, in [11-known-issues.md](11-known-issues.md).
+
 ## 2026-08-29 (phase 2, the gauntlet) — Eight critics, and the ask was lying
 
 Eight independent adversarial critics over the built phase — visual fidelity against the spike then

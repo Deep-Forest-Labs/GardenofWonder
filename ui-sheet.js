@@ -81,7 +81,7 @@
       upgrades: 'Upgrades', craft: 'Apothecary', shop: 'Shop',
       seeds: 'Choose a seed', bonuses: 'Garden Almanac', settings: 'Settings',
       quests: 'Quests', dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
-      critter: '', stand: '', order: '', turn: '',
+      critter: '', stand: '', order: '', turn: '', crops: 'Choose a crop',
       keepers: 'Keepers', shelf: 'The Honey Shelf', stores: 'Stores', build: 'What goes here?',
       album: ALBUM.season, cardset: 'Set', pack: 'Opening a pack'
     };
@@ -117,7 +117,7 @@
     const render = {
       upgrades: renderUpgrades, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
-      turn: renderTurn,
+      turn: renderTurn, crops: renderCrops,
       dev: renderDev, welcome: renderWelcome, feed: renderFeed, critter: renderCritter,
       stand: renderStand, order: renderOrder,
       keepers: renderKeepers, shelf: renderShelf, stores: renderStores, build: renderBuild,
@@ -757,6 +757,50 @@
     FX.confetti(c.x, c.y);
     FX.ring(c.x, c.y, '#7bd88f', 0.5, 90);
     FX.shake(7);
+  }
+
+  /* ============ Fall's crop picker ============
+     The plant picker's own row, unchanged, with two facts removed. Crops roll
+     no rarity, take no mutations, drop no gems and are never written to
+     `discovered` — so the row has three stat pills instead of five, and the
+     shorter row is itself the tell that these are not flowers. The clocks do
+     the rest: 20m where Summer says 24s. */
+  function renderCrops() {
+    const idx = sheetArg ?? 0;
+    const pct = Math.round(DATA.fall.windfall * 100);
+    const row = (p, extra) => {
+      const can = S.credits >= p.cost;
+      const tint = (Fall.PLANTS[p.id] || {}).body || '#e8d5a8';
+      return `<button class="seed-row${extra || ''}" data-crop="${p.id}" ${can ? '' : 'disabled'}>
+        <span class="seed-art" style="--art:${tint}">${Fall.crop(p.id, 3)}</span>
+        <span>
+          <span class="seed-name">${p.name}</span>
+          <span class="seed-stats">
+            <span class="stat">${Icons.get('coin')}${fmt(p.cost)}</span>
+            <span class="stat">${Icons.get('clock')}${fmtSpan(p.grow)}</span>
+            <span class="stat good">${Icons.get('coin')}${fmt(p.yield)}</span>
+          </span>
+        </span>
+        <span class="seed-go">${Icons.get(can ? 'sprout' : 'lock')}</span>
+      </button>`;
+    };
+    const crops = DATA.fall.plants.filter((p) => !p.century).map((p) => row(p)).join('');
+    const cent = DATA.fall.plants.find((p) => p.century);
+    /* The fortnight plant gets its own block and its own material. Two million
+       gold in a list of two-thousand-gold strawberries is either scrolled past
+       or tapped by accident. */
+    const growing = Game.fallCenturyGrowing();
+    const century = cent ? `
+      <div class="stat-block century-block">
+        <h3>${Icons.get('sparkle')} The long plant</h3>
+        ${growing
+          ? `<p class="stat-note">One is already growing. Only one at a time.</p>`
+          : row(cent, ' century')}
+        <p class="stat-note">Fourteen days. It survives every Turn, and it stands outside the
+          bed — it never blocks the windfall.</p>
+      </div>` : '';
+    return `<p class="sheet-note">Planting into bed ${idx + 1}. Every plot ripe at once pays
+      <b>+${pct}%</b> on the whole bed.</p>${crops}${century}`;
   }
 
   function renderSeeds() {
@@ -2212,6 +2256,21 @@
       renderSheet(true);
       return;
     }
+    const crop = e.target.closest('[data-crop]');
+    if (crop) {
+      const idx = sheetArg ?? 0;
+      if (Game.fallPlant(idx, crop.dataset.crop)) {
+        Sound.play('buy');
+        FX.haptic(8);
+        closeSheet();
+        UI.renderFall();
+      } else {
+        Sound.play('deny');
+        FX.shake(3);
+      }
+      return;
+    }
+
     const plant = e.target.closest('[data-plant]');
     if (plant) {
       const seed = Game.seedById(plant.dataset.plant);
@@ -2416,6 +2475,13 @@
       node.classList.toggle('ok', can);
       node.classList.toggle('no', !can);
     });
+    $$('[data-crop]', el.sheetBody).forEach((node) => {
+      const p = DATA.fall.plants.find((x) => x.id === node.dataset.crop);
+      const can = Boolean(p) && S.credits >= p.cost;
+      node.disabled = !can;
+      const go = $('.seed-go', node);
+      if (go) go.innerHTML = Icons.get(can ? 'sprout' : 'lock');
+    });
     $$('[data-unlockgo]', el.sheetBody).forEach((node) => {
       const price = Game.seedUnlockPrice(node.dataset.unlockgo);
       const can = S.credits >= price;
@@ -2449,5 +2515,6 @@
   UI.setAwayReport = (report) => { awayReport = report; };
   UI.syncAfford = syncAfford;
   UI.tickSheetTimers = tickSheetTimers;
+  UI.fmtSpan = fmtSpan;
   UI.CORE_UPGRADES = CORE_UPGRADES;
 })();

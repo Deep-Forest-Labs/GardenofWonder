@@ -50,7 +50,14 @@ const UI = (() => {
     cloudsFar: $('#cloudsFar'),
     cloudsNear: $('#cloudsNear'),
     sky: $('#sky'),
-    seasonTint: $('#seasonTint')
+    seasonTint: $('#seasonTint'),
+    fallLayer: $('#fallLayer'),
+    fallScene: $('#fallScene'),
+    fallFrame: $('#fallFrame'),
+    fallBoard: $('#fallBoard'),
+    fallChip: $('#fallChip'),
+    gateLayer: $('#gateLayer'),
+    seasonEdges: $('#seasonEdges')
   };
 
   /* ============ formatting ============ */

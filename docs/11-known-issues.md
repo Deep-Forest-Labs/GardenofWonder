@@ -11,6 +11,34 @@ The engine shipped with no UI, so several truths are temporarily invisible or mi
 All of these resolve in phases 2–3; they are listed so nobody "fixes" them early or is
 surprised on a fresh save.
 
+### Phase 3 shipped the strip and Fall, and DELIBERATELY did not retire the map
+
+The owner's overnight call was *phase 2 deep, phase 3 parked with the map still working*, and that
+is exactly where this stopped. What is live: the horizontal strip, the season edge tabs, the
+locked-season gate, Fall's board with all eight crops, the windfall and the Century Bloom. What is
+**not** done, and is phase 3's remainder:
+
+1. **The map, `overworld.js`, `ui-map.js` and the camera are untouched**, and the dock still says
+   **World**. Doc 32 has the Stand taking that slot when the map retires. Both navigations work
+   right now, which is the rail doc 34 sets — *never a push where neither exists* — and it is the
+   safe place to stop.
+2. **The Wild Meadow still enters from the map, and that is its only door.** Retiring the map
+   therefore cannot happen until the meadow has one; the plan is the burrow door's twin at the foot
+   of the garden, drawn in frame 1 of `tools/fall-spike.html`. Doc 32's claim that "the meadow keeps
+   its current entry from Summer" is still wrong about the code — see
+   [35-morning-review.md](35-morning-review.md) §4.
+3. **Winter and Spring have gates but no gardens** (slices C and E). Their gate reads *"Opens at
+   Turn N"* while the turn is the binding gate and *"Still growing in"* once it has passed, so it
+   never tells a Turn-5 player that Winter opens at Turn 3.
+4. **Collecting a full Fall bed is eight taps.** `fallHarvest(idx)` is per plot, so the bed's big
+   moment arrives as eight separate toasts. A collect-all is the single biggest difference between
+   Fall feeling like an appointment and Fall feeling like admin, and it needs either a new
+   affordance or a change to how the engine is called — neither was mine to take overnight. Also in
+   docs/35.
+5. **Fall has no season tint of its own.** `--season-tint` ripens *Summer* toward autumn; Fall's
+   scene is already autumn and is not tinted. Whether Fall should have its own clock is a phase-4
+   question.
+
 ### ~~A FRESH save is hard-capped at 2 of 19 seeds~~ — FIXED 2026-08-29 (phase 2)
 
 **The seed half is closed.** The plant picker sells unlocks: a locked row wears its one-time

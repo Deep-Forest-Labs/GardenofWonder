@@ -618,7 +618,7 @@
      latency the whole core loop is built on, which is a far worse trade. The
      burrow door is still the discoverable way in; this is the fast path. */
   const NAV_SWIPE = 70;
-  const noSwipe = '.plot,.flower-btn,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,[data-critter],.burrow-door,.coach';
+  const noSwipe = '.plot,.fl-plot,.flower-btn,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,[data-critter],.burrow-door,.coach,.s-edge,.g-back,.year-pop';
   let navY0 = null;
   let navX0 = null;
   el.game.addEventListener('pointerdown', (e) => {
@@ -631,8 +631,20 @@
   el.game.addEventListener('pointerup', (e) => {
     if (navY0 === null) return;
     const dy = navY0 - e.clientY;
-    const dx = Math.abs(e.clientX - navX0);
+    const dxs = e.clientX - navX0;
+    const dx = Math.abs(dxs);
     navY0 = null;
+    /* Horizontal is time, and it mirrors the vertical gesture rule for rule:
+       it only starts on the background (plots and the flower fire on
+       pointerdown and would plant on the way out), it needs the same ~70px, and
+       it has to be clearly horizontal or a diagonal would navigate. Swiping
+       LEFT drags the world left, which brings the season on the right into
+       view — the same direction a scroll would move it. */
+    if (dx > NAV_SWIPE && dx > Math.abs(dy)) {
+      noteActivity();
+      stepSeason(dxs < 0 ? 1 : -1);
+      return;
+    }
     // Vertical, and clearly so — a diagonal drag should not navigate.
     if (Math.abs(dy) <= NAV_SWIPE || Math.abs(dy) <= dx) return;
     noteActivity();
@@ -674,6 +686,13 @@
   $('#btnDev').addEventListener('click', () => UI.openSheet('dev'));
   $('#btnAlbum').addEventListener('click', () => UI.openSheet('album'));
   el.walletYear.addEventListener('click', (e) => { e.stopPropagation(); onYearTap(); });
+  el.seasonEdges.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-season]');
+    if (b) goSeason(b.dataset.season);
+  });
+  el.gateLayer.addEventListener('click', (e) => {
+    if (e.target.closest('[data-gateback]')) { hideGate(); Sound.play('close'); }
+  });
   /* Anything else on screen dismisses the projection — it is a popover, not a
      panel, and it must never be the thing standing between a tap and a plot. */
   el.game.addEventListener('pointerdown', (e) => {
@@ -688,6 +707,103 @@
     if (id) Game.claimQuest(id);
     else UI.openSheet('quests');
   });
+
+  /* ============ the season strip ============
+
+     Horizontal is time. Four gardens in the order of the year, and the player
+     swipes between them — SPRING <- SUMMER -> FALL -> WINTER. Summer is home
+     and the app opens there.
+
+     A season is reachable when its Turn has passed AND its garden exists.
+     Winter and Spring are slices C and E, so they are turn-gated in data and
+     unbuilt in code; their gate says which of the two is holding it, because
+     "Opens at Turn 3" shown to a player on Turn 5 is a lie. */
+  const SEASONS = [
+    { id: 'spring', name: 'SPRING', gate: 'springTurn', built: false },
+    { id: 'summer', name: 'SUMMER', gate: null, built: true },
+    { id: 'fall', name: 'FALL', gate: 'fallTurn', built: true },
+    { id: 'winter', name: 'WINTER', gate: 'winterTurn', built: false }
+  ];
+  const SEASON_SKY = {
+    spring: ['#bfe0f5', '#e6f3d8'], summer: ['#7ec8f2', '#e9f8ff'],
+    fall: ['#8fbfd8', '#ffe3bd'], winter: ['#9fb6cc', '#eef4f8']
+  };
+  let season = 'summer';
+  let gateOn = '';
+
+  const seasonIdx = (id) => SEASONS.findIndex((x) => x.id === id);
+  const seasonTurned = (sdef) => !sdef.gate || S.year.turnsCompleted >= DATA.year[sdef.gate];
+  const seasonReady = (sdef) => sdef.built && seasonTurned(sdef);
+
+  function stepSeason(dir) {
+    const i = seasonIdx(gateOn || season);
+    const next = SEASONS[i + dir];
+    if (!next) { FX.shake(3); return; }
+    goSeason(next.id);
+  }
+
+  function goSeason(id) {
+    const sdef = SEASONS[seasonIdx(id)];
+    if (!sdef) return;
+    hideGate();
+    if (!seasonReady(sdef)) { showGate(sdef); return; }
+    if (id === 'fall') {
+      if (season !== 'fall') { season = 'fall'; UI.enterFall(); }
+    } else {
+      if (season === 'fall') UI.leaveFall();
+      season = 'summer';
+    }
+    renderSeasonEdges();
+  }
+
+  /* ---------- the gate ---------- */
+  function showGate(sdef) {
+    gateOn = sdef.id;
+    const [sky1, sky2] = SEASON_SKY[sdef.id] || SEASON_SKY.summer;
+    const why = seasonTurned(sdef)
+      ? 'Still growing in'
+      : `Opens at Turn ${DATA.year[sdef.gate]}`;
+    el.gateLayer.innerHTML = `
+      <div class="g-sky" style="background:linear-gradient(180deg,${sky1},${sky2})"></div>
+      <div class="g-leaf" style="left:22%;animation-delay:-3s">${Icons.get('leaf')}</div>
+      <div class="g-leaf" style="left:68%;animation-delay:-8s">${Icons.get('leaf')}</div>
+      <div class="g-hedge">${[false, true].map((f) => UI.hedge(f)).join('')}</div>
+      <div class="g-plate">
+        <div class="g-lock">${Icons.get('lock')}</div>
+        <div class="g-name outlined">${sdef.name}</div>
+        <span class="chip">${Icons.get('pouch')}${why}</span>
+      </div>
+      <button class="g-back" data-gateback="1">${Icons.get('sprout')}Back to the garden</button>`;
+    el.gateLayer.hidden = false;
+    el.game.classList.add('in-gate');
+    UI.hideCoach();
+    Sound.play('open');
+  }
+  function hideGate() {
+    if (!gateOn) return;
+    gateOn = '';
+    el.gateLayer.hidden = true;
+    el.gateLayer.innerHTML = '';
+    el.game.classList.remove('in-gate');
+  }
+
+  /* ---------- the edges ----------
+     A labelled thing you can tap beside a gesture that does the same, which is
+     exactly how the burrow door teaches the vertical swipe. A locked edge wears
+     the drained paper and the turn that opens it, so a gate is a promise you
+     can read from here without walking to it. */
+  function renderSeasonEdges() {
+    const here = seasonIdx(season);
+    const sides = [['l', SEASONS[here - 1]], ['r', SEASONS[here + 1]]];
+    el.seasonEdges.innerHTML = sides.map(([side, sdef]) => {
+      if (!sdef) return '';
+      const ready = seasonReady(sdef);
+      const turn = sdef.gate && !seasonTurned(sdef) ? `<span class="turn">Turn ${DATA.year[sdef.gate]}</span>` : '';
+      return `<button class="s-edge ${side}${ready ? '' : ' locked'}" data-season="${sdef.id}"
+        aria-label="${ready ? 'Go to' : 'Look at'} ${sdef.name}">
+        ${Icons.get(ready ? 'leaf' : 'lock')}<span class="w">${sdef.name}</span>${turn}</button>`;
+    }).join('');
+  }
 
   /* ============ plot input ============ */
   function onPlotTap(idx, node) {
@@ -934,6 +1050,7 @@
       else renderCritters();
       updateDockDots();
       updateYearMeter();
+      if (UI.fallOpen && UI.fallOpen()) UI.renderFall();
       refreshCoach();
       UI.updateSky();
       if (UI.sheetMode() === 'settings') UI.syncAfford();
@@ -965,6 +1082,8 @@
     // have banked does not sit there pretending to still be accruing.
     Game.settleCritters();
     buildGarden();
+    UI.initFall();
+    renderSeasonEdges();
     renderCritters();
     sizeViewport();
     /* iOS reports a short window while the launch animation is still running and
@@ -1091,6 +1210,11 @@
   UI.renderRail = renderRail;
   UI.hideCoach = hideCoach;
   UI.seasonAmount = () => seasonAmount;
+  /* The ceremony's gate card checks for this before it promises a swipe — a
+     card may not draw an open gate onto a place that cannot be reached. */
+  UI.enterSeason = goSeason;
+  UI.seasonHere = () => season;
+  UI.renderSeasonEdges = renderSeasonEdges;
   UI.noteActivity = noteActivity;
   UI.plotEls = plotEls;
   /* A function, not the node: buildGarden() throws the flower away and makes a new one. */

@@ -53,6 +53,18 @@
         <div class="season-tint" id="seasonTint"></div>
       </div>
 
+      <!-- Fall's scene. A season is not a place layer in this game: the HUD, the
+           quest strip, the rail and the dock never move, `.stage` swaps its board
+           and the scenery swaps behind it. So this sits above the CSS scenery and
+           below `.ui`, and nothing here re-states the 560px column because it
+           never leaves it. -->
+      <div class="fall-layer" id="fallLayer" hidden aria-hidden="true">
+        <div class="fall-scene-host" id="fallScene"></div>
+      </div>
+      <!-- A locked season, seen from the gate. Above `.ui`'s scenery for the same
+           reason, and it hides the garden's own chrome while it is up. -->
+      <div class="gate-layer" id="gateLayer" hidden aria-label="A locked season"></div>
+
       <div class="wonder-veil" id="wonderVeil" aria-hidden="true"></div>
       <canvas class="fx-canvas" id="fx" aria-hidden="true"></canvas>
 
@@ -104,6 +116,12 @@
           <div class="garden-frame">
             <div class="garden" id="garden" aria-label="Your garden"></div>
           </div>
+          <div class="fall-frame" id="fallFrame">
+            <div class="fl-wrap">
+              <div class="fl-chip" id="fallChip"></div>
+              <div class="fl-board" id="fallBoard" aria-label="Fall's bed"></div>
+            </div>
+          </div>
           <div class="critter-yard" id="critterYard" aria-label="Creatures living in your garden"></div>
           <button class="burrow-door" id="burrowDoor" type="button" aria-label="Go down to the Hollow">
             <span class="burrow-mouth"></span>
@@ -111,6 +129,8 @@
           </button>
         </main>
         <section class="hollow" id="hollow" aria-label="The Hollow" hidden></section>
+
+        <div class="season-edges" id="seasonEdges" aria-hidden="false"></div>
 
         <nav class="dock" id="dock" aria-label="Shops">
           <button class="dock-btn" data-tab="upgrades">
@@ -171,6 +191,7 @@
   <script src="overworld.js"></script>
   <script src="hollow.js"></script>
   <script src="meadow.js"></script>
+  <script src="fall.js"></script>
   <script src="icons.js"></script>
   <script src="audio.js"></script>
   <script src="fx.js"></script>
@@ -181,6 +202,7 @@
   <script src="ui-hollow.js"></script>
   <script src="ui-map.js"></script>
   <script src="ui-meadow.js"></script>
+  <script src="ui-fall.js"></script>
   <script src="ui-events.js"></script>
   <script src="ui.js"></script>
 

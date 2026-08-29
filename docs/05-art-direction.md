@@ -70,8 +70,11 @@ is a bug to fix at the declaration, not to paper over at the use.
 `--seed` is the Garden Year's one new token, added 2026-08-29 with the year meter. The second
 currency needed a colour of its own and could not borrow one: gold is coins, cyan is gems, and
 blue/purple/gold are the rarity vocabulary a player has already learned. It is a green that belongs
-to growing things and is used for exactly three things — the meter's fill, the petal pips, and every
-price paid in Saved Seeds. The pouch icon that goes with it is deliberately **cream-bodied with green
+to growing things and is used for exactly two things — **the meter's fill and the petal pips**.
+Prices paid in Saved Seeds deliberately do *not* wear it: they take the ordinary `.price` family,
+because green there already means *you can afford this* and a second green meaning *this costs
+seeds* would be two facts in one colour. The pouch icon beside the number is what says which
+currency. The pouch icon that goes with it is deliberately **cream-bodied with green
 seeds**, because a green glyph on the green fill disappeared.
 
 **The season tint.** `DATA.year.seasonTint` / `seasonTintMax` (`#ffb066` at `0.38`) warm Summer's
@@ -472,6 +475,17 @@ this document names as families rather than listing value by value.
 | **The Tally plate** | `#8a5a33 → #71472a → #5c3a22`, lip `#4a2e1a` | The plate is the ceremony's **dark body** — the second of the four value tiers, doing the same job the garden's planter does against the lawn. It cannot be the planter's own `#d9a870 → #97643a`: the plate sits on cream inside a sheet, not on green, so it needs to be darker to separate, and the cream pills on top of it need more contrast than the planter gives. |
 | **The hedge** | `#3f7d43`, lit `#57a25c`, shaded `#2f6236` | `--grass` is the lawn, and a hedge that is the lawn's colour has no figure against the lawn — the meadow's exact diagnosis. Shipped in `UI.hedge()` so the gate card and phase 3's season gates are one object at two sizes. |
 | **The gate's scene** | sky `#ffd9a1 → #ffb570 → #e88f4e`, ground `#9a7a3f → #7d6132`, pad `#b08c4c` | An autumn sky and autumn ground, which the palette has none of — every existing sky value is written from JS by `updateSky()` and every green is Summer's. |
+
+Phase 3 added three more, on the same terms:
+
+| Ramp | Values | Why it could not reuse one |
+| --- | --- | --- |
+| **Fall's trug** | `#c98a4e → #a76b38 → #8a5528`, lip `#5f3a1a` | The board's body has to differ from the world it sits in *and* say its own verb. Summer's planter is soil — dug, planted, cleared; Fall's is a woven basket — filled and carried in whole. Same construction, different material, which is the meadow's cobbles-versus-soil lesson run a second time. |
+| **Fall's earth** | `#7e5e42 → #5f4630 → #453221`, lip `#392a1c` | Damper and cooler than `--soil`, so an orange gourd and a red berry read against it. Summer's soil is tuned for flowers. |
+| **The Century Bloom's plot** | `#5b4a7a → #463962 → #332a49`, lip `#2a2240` | The one cell that is *not* part of the bed has to look like it is not part of the bed. The rule is made visible before it is explained — and it is deliberately outside every existing family, because it is an exception. |
+
+Fall's scene palette (`SKIES.sun` / `SKIES.moon` in `fall.js`) is a component palette in the same
+sense as `Meadow.SKIES`, and lives beside the drawing that uses it.
 
 **They are literals in `style.css` rather than `:root` tokens on purpose:** each is used by exactly
 one component, and twelve more names in a palette this document already says carries 149 colours by

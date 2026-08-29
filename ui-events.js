@@ -457,5 +457,11 @@
   });
 
   Game.on('grid', () => UI.buildGarden());
+  /* A Turn can open a gate, so the strip's edges are re-read when one lands.
+     Nothing else changes what is reachable. */
+  Game.on('turn', () => {
+    if (UI.renderSeasonEdges) UI.renderSeasonEdges();
+  });
+
   Game.on('panels', () => { if (UI.sheetMode()) UI.renderSheet(false); });
 })();

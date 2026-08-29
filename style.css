@@ -395,7 +395,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   padding:11px 12px;
   border:3.5px solid var(--ink);border-radius:var(--r-md);
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
-  box-shadow:0 5px 0 var(--ink-2), 0 10px 18px rgba(44,26,16,.28);
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22);
   animation:popIn .22s cubic-bezier(.34,1.56,.64,1);
 }
 .year-pop[hidden]{display:none}
@@ -1297,7 +1297,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   margin:10px 2px;padding:18px 14px 16px;
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
   border:3.5px solid var(--ink);border-radius:var(--r-lg);
-  box-shadow:0 5px 0 var(--ink-2), 0 10px 18px rgba(44,26,16,.24);
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22);
 }
 .unlock-art{
   width:100px;height:100px;border-radius:50%;
@@ -1306,7 +1306,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
     radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)),
     var(--art,#e8f7e3);
   border:4px solid var(--ink);
-  box-shadow:0 5px 0 var(--ink-2), 0 10px 16px rgba(44,26,16,.22);
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22);
 }
 .unlock-ask h3{margin:0;font-size:22px;font-weight:800}
 .unlock-ask p{margin:0;font-size:13.5px;font-weight:700;color:var(--ink-soft);line-height:1.4;max-width:32ch}
@@ -1570,8 +1570,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   box-shadow:
     inset 0 5px 0 rgba(255,255,255,.2),
     inset 0 -8px 0 rgba(0,0,0,.22),
-    0 6px 0 #4a2e1a,
-    0 12px 20px rgba(44,26,16,.3);
+    0 5px 0 #4a2e1a,
+    0 9px 14px rgba(44,26,16,.22);
 }
 /* The won state adds a rim and restates the whole stack — a box-shadow modifier
    that forgets to is how the lip gets deleted in the one state everybody looks at. */
@@ -1579,8 +1579,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   box-shadow:
     inset 0 5px 0 rgba(255,255,255,.2),
     inset 0 -8px 0 rgba(0,0,0,.22),
-    0 6px 0 #4a2e1a,
-    0 12px 20px rgba(44,26,16,.3),
+    0 5px 0 #4a2e1a,
+    0 9px 14px rgba(44,26,16,.22),
     0 0 0 4px var(--coin);
 }
 .plate-cap{margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:.08em;
@@ -1607,7 +1607,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   display:flex;align-items:center;gap:8px;margin-top:11px;padding:9px 11px;
   border:3px solid var(--ink);border-radius:var(--r-sm);
   background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
-  box-shadow:0 3px 0 var(--paper-dim-edge);
+  box-shadow:0 3px 0 var(--paper-dim-edge), 0 6px 10px rgba(44,26,16,.14);
   font-size:12.5px;font-weight:700;line-height:1.35;
 }
 .cost-line svg{width:22px;height:22px;flex:none}
@@ -1619,6 +1619,10 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
   box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18);
 }
+/* The ladder, restated where the ceremony uses it: 3px pairs with
+   0 6px 10px, 4px with 0 8px 14px, 5px with the dock's 0 9px 14px, 9px with
+   0 18px 26px. Lip and contact shadow scale together or the object looks like
+   it is hovering at the wrong height. */
 .keep-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .cere-lab{margin:12px 0 0;font-size:11px;font-weight:800;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-soft)}
@@ -1662,7 +1666,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .gate-card{
   position:relative;overflow:hidden;margin-top:12px;
   border:4px solid var(--ink);border-radius:var(--r-lg);
-  box-shadow:0 5px 0 var(--ink-2), 0 10px 18px rgba(44,26,16,.26);
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22);
 }
 .gate-scene{
   position:relative;height:126px;overflow:hidden;
@@ -3417,3 +3421,262 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   text-transform:uppercase;letter-spacing:.04em;
 }
 .build-helps.on{color:#3f9950}
+
+/* =========================================================
+   FALL — the second season, and the strip it sits on
+
+   Fall is NOT a place layer. It is the same room with a different board in it:
+   `.stage` swaps its frame and the scenery swaps behind it, while the HUD, the
+   quest strip, the rail and the dock never move. That is why none of this
+   re-states the 560px column — it never leaves `.ui`.
+
+   The board is the garden's construction line for line — same 3x3, same gap,
+   same radius, same lip ladder, same grass fringe — in a different MATERIAL. A
+   woven trug on damp autumn earth, because Fall's verb is "fill it and carry
+   the whole thing in" where Summer's is "dig it, plant it, clear it".
+   ========================================================= */
+
+/* The scene sits above the CSS scenery and below `.ui`, so the HUD stays up and
+   the dock stays tappable through it. */
+.fall-layer{position:absolute;inset:0;z-index:2;pointer-events:none}
+.fall-layer[hidden]{display:none}
+.fall-scene-host{position:absolute;inset:0;overflow:hidden}
+.fall-scene{width:100%;height:100%;display:block}
+
+.fall-frame{display:none;width:100%;height:100%;place-items:center;min-height:0;min-width:0}
+.in-fall .fall-frame{display:grid}
+.in-fall .garden-frame{display:none}
+/* The creatures live in Summer. Their yard's reserved height goes back to the
+   board rather than sitting empty — a season is allowed to use its own room. */
+.in-fall .critter-yard,
+.in-fall .burrow-door{display:none}
+:root{--fl-noop:0}
+
+.fl-board{
+  --gap:clamp(6px, 2.2vw, 13px);
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:var(--gap);
+  padding:calc(var(--gap) * .85);
+  border:4px solid var(--ink);
+  border-radius:26px;
+  background:
+    repeating-linear-gradient(52deg, rgba(255,255,255,.09) 0 4px, transparent 4px 11px),
+    repeating-linear-gradient(-52deg, rgba(0,0,0,.10) 0 4px, transparent 4px 11px),
+    linear-gradient(180deg,#c98a4e 0%, #a76b38 44%, #8a5528 100%);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.24),
+    inset 0 -9px 0 rgba(0,0,0,.22),
+    0 9px 0 #5f3a1a,
+    0 18px 26px rgba(44,26,16,.32);
+}
+/* Armed. The board itself is the announcement — you can tell from across the
+   room, which is what a screen you come back to at dinner needs. It restates
+   the WHOLE stack, because a box-shadow modifier that adds a rim and forgets
+   the lip deletes the lip in exactly the state everybody is looking at. */
+.fl-board.armed{
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.24),
+    inset 0 -9px 0 rgba(0,0,0,.22),
+    0 9px 0 #5f3a1a,
+    0 18px 26px rgba(44,26,16,.32),
+    0 0 0 4px var(--coin),
+    0 0 30px 10px rgba(255,201,60,.42);
+}
+/* The garden's grass fringe, in stubble. */
+.fl-board::before{
+  content:'';position:absolute;left:5%;right:5%;top:-10px;height:12px;
+  background:radial-gradient(ellipse 52% 100% at 50% 100%, #7d8b40 0 92%, transparent 94%);
+  background-size:22px 12px;background-repeat:repeat-x;
+  opacity:.9;pointer-events:none;
+}
+
+.fl-plot{
+  position:relative;
+  border-radius:var(--r-md);
+  border:3px solid var(--ink);
+  background:linear-gradient(180deg,#7e5e42 0%, #5f4630 72%, #453221 100%);
+  box-shadow:0 4px 0 #392a1c, 0 8px 14px rgba(44,26,16,.24);
+  display:block;overflow:visible;isolation:isolate;
+  transition:transform .1s ease, box-shadow .1s ease;
+}
+.fl-plot:active{transform:translateY(3px);box-shadow:0 1px 0 #392a1c, 0 4px 8px rgba(44,26,16,.22)}
+/* The lit top edge and the shaded bottom ride an OVERLAY, because an inset
+   box-shadow paints under an element's content and the cell has an opaque
+   floor. Half the material recipe vanished from the meadow's cells this way. */
+.fl-plot::after{
+  content:'';position:absolute;inset:0;border-radius:15px;pointer-events:none;z-index:3;
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.13), inset 0 -7px 0 rgba(0,0,0,.2);
+}
+.fl-floor{position:absolute;inset:0;border-radius:15px;overflow:hidden;line-height:0}
+.fl-floor svg{width:100%;height:100%;display:block}
+.fl-slot{position:absolute;inset:0;display:grid;place-items:center;z-index:2;line-height:0}
+.fl-slot svg{width:88%;height:88%;overflow:visible}
+.fl-empty{position:absolute;inset:0;display:none;place-items:center;z-index:2;opacity:.85}
+.fl-empty svg{width:46%;height:46%;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+.fl-plot[data-state="empty"] .fl-empty{display:grid}
+.fl-plot[data-state="empty"]{filter:saturate(.85)}
+
+/* Ready. The same "!" the garden uses, so the state is learned once. */
+.fl-ready{
+  position:absolute;top:-9px;right:-6px;z-index:5;
+  width:24px;height:24px;border-radius:50%;
+  display:none;place-items:center;
+  background:linear-gradient(180deg,#ffe066,var(--coin));
+  border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2);
+  font-size:13px;font-weight:800;line-height:1;
+  animation:readyBob 1.5s ease-in-out infinite;
+}
+.fl-plot[data-state="ready"] .fl-ready{display:grid}
+.fl-plot[data-state="ready"]{box-shadow:0 4px 0 #392a1c, 0 8px 14px rgba(44,26,16,.24), 0 0 0 3px var(--coin)}
+@keyframes readyBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+
+.fl-wait{
+  position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:5;
+  padding:2px 7px;border-radius:999px;
+  border:2px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);
+  font-size:9.5px;font-weight:800;line-height:1.3;white-space:nowrap;
+}
+.fl-wait[hidden]{display:none}
+.fl-bar{
+  position:absolute;left:12%;right:12%;bottom:24px;height:7px;z-index:4;
+  border-radius:999px;border:2px solid var(--ink);
+  background:#e9dcc3;overflow:hidden;
+}
+.fl-bar{display:none}
+.fl-plot[data-state="grow"] .fl-bar{display:block}
+.fl-bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#8ce99a,#51cf66)}
+
+/* The fortnight plant. A body colour of its own, so the one cell that is NOT
+   part of the bed looks like it is not part of the bed — the rule is visible
+   before it is explained. */
+.fl-plot.century{
+  background:linear-gradient(180deg,#5b4a7a 0%, #463962 72%, #332a49 100%);
+  box-shadow:0 4px 0 #2a2240, 0 8px 14px rgba(44,26,16,.28);
+}
+.fl-plot.century .fl-floor{opacity:.25}
+.fl-plot.century .fl-wait{background:linear-gradient(180deg,#efe7ff,#d8ccff)}
+.fl-plot.century .fl-bar i{background:linear-gradient(180deg,#e5dbff,#b197fc)}
+
+.fl-flower-cell{display:grid;place-items:center;position:relative}
+.fl-flower{background:none;border:0;padding:0;width:86%;line-height:0;pointer-events:auto}
+.fl-flower svg{width:100%;height:auto;overflow:visible}
+
+/* THE BED CHIP — Fall's whole rule as one object, above the board, on screen
+   from the first second. Everything else about the windfall is this chip
+   changing state. */
+.fl-wrap{position:relative;display:grid;place-items:center}
+.fl-chip{
+  position:absolute;left:50%;transform:translateX(-50%);
+  top:-13px;z-index:6;
+  display:flex;align-items:center;gap:7px;
+  max-width:96%;padding:6px 13px;white-space:nowrap;
+  border:3px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.2);
+  font-size:12.5px;font-weight:800;line-height:1;
+}
+.fl-chip svg{width:18px;height:18px;flex:none}
+.fl-chip.close{background:linear-gradient(180deg,#fff6c2,#ffe066)}
+/* The pulse lives on a pseudo-element, never on the chip: affordPulse writes
+   `transform`, which would silently throw away the chip's own centring — the
+   same collision that eats a lip when a state modifier writes box-shadow. */
+.fl-chip.armed{background:linear-gradient(180deg,#ffe98a,var(--coin))}
+.fl-chip.armed::before{
+  content:'';position:absolute;inset:-6px;border-radius:999px;
+  background:rgba(255,201,60,.35);z-index:-1;
+  animation:affordPulse 1.4s ease-in-out infinite;
+}
+
+/* ---------- the season edges ----------
+   How a player finds out sideways exists. The horizontal answer to the burrow
+   door: a labelled thing you can tap, beside a gesture that does the same. They
+   sit low, over the lawn — centred vertically they land ON the board, and the
+   board is the thing this game is. */
+/* NOT a grid item. `.ui` has one explicit column, and an item with a definite
+   row but an auto column forces the next auto-placed item into an IMPLICIT
+   second column — which narrowed the whole interface to half the screen and
+   squashed the dock into a corner. Absolute against `.ui` instead, clear of the
+   dock, so it can never touch the row layout. */
+.season-edges{position:absolute;left:0;right:0;top:0;
+  bottom:calc(var(--bottom-gap) + 104px);pointer-events:none;z-index:5}
+.in-hollow .season-edges,
+.in-map .season-edges,
+.in-meadow .season-edges{display:none}
+.s-edge{
+  position:absolute;bottom:0;pointer-events:auto;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  width:38px;padding:9px 4px;
+  border:3px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
+  font-size:9.5px;font-weight:800;line-height:1.05;text-align:center;
+}
+.s-edge svg{width:19px;height:19px}
+.s-edge .w{writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.06em}
+.s-edge.r{right:0;border-right:0;border-radius:16px 0 0 16px}
+.s-edge.l{left:0;border-left:0;border-radius:0 16px 16px 0}
+.s-edge:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink-2)}
+/* A locked edge is a promise you can read from here — drained paper and the
+   turn that opens it, so nobody has to walk to a gate to find out. */
+.s-edge.locked{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.24);
+}
+.s-edge .turn{font-size:8.5px;opacity:.75;letter-spacing:0}
+
+/* ---------- a locked season, seen from its gate ----------
+   A gate is a promise, not a wall: a real backdrop, a hedge across it, a
+   padlock, the turn that opens it, and one thing drifting. The HUD stays up —
+   that is the rule for every place in this game — and everything else goes. */
+.gate-layer{position:absolute;inset:0;z-index:3;overflow:hidden}
+.gate-layer[hidden]{display:none}
+.in-gate .stage,
+.in-gate #dock,
+.in-gate .rail,
+.in-gate .quest-strip,
+.in-gate .season-edges{display:none}
+.in-gate .coach{display:none}
+.g-sky{position:absolute;inset:0}
+.g-hedge{position:absolute;left:-6%;right:-6%;bottom:0;height:26%;line-height:0;display:flex}
+/* TILED, not stretched. One hedge stretched across a phone turns its lumps into
+   a green hill and its flowers into ellipses — the same failure as slicing a
+   backdrop composed at 390 into a wider window. Each copy keeps its own
+   proportions and the row repeats to fill. */
+.g-hedge .hedge-svg{flex:1 1 0;min-width:0;height:100%}
+.g-plate{
+  position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);z-index:3;
+  display:grid;justify-items:center;gap:10px;text-align:center;
+}
+.g-lock{
+  width:74px;height:74px;border-radius:50%;display:grid;place-items:center;
+  border:4px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22);
+}
+.g-lock svg{width:40px;height:40px}
+.g-name{font-size:34px;font-weight:800;letter-spacing:.06em}
+.g-leaf{position:absolute;width:22px;opacity:.85;z-index:2;
+  animation:gateDrift 11s linear infinite}
+@keyframes gateDrift{
+  0%{transform:translate(0,-6%) rotate(0)}
+  100%{transform:translate(-70px,120vh) rotate(220deg)}
+}
+.g-back{
+  position:absolute;left:50%;bottom:calc(var(--sab) + 24px);transform:translateX(-50%);z-index:4;
+  display:flex;align-items:center;gap:7px;padding:9px 16px;
+  border:3px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.22);
+  font-size:14px;font-weight:800;
+}
+.g-back svg{width:20px;height:20px}
+@media (prefers-reduced-motion:reduce){
+  .g-leaf{animation:none}
+  .fl-chip.armed::before{animation:none}
+  .fl-ready{animation:none}
+}

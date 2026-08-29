@@ -35,6 +35,9 @@ wallet.
 | 11 | Dev → drive until the pill pulses, then tap it | The ceremony. Read the ask, bless a flower, watch the Tally. | ***Gift or loss?*** — the whole rubric, in one screen. |
 | 12 | Almanac (the book button) | Petal tracks on any flower you have grown. Buy one. | Does the pouch have somewhere to go? |
 | 13 | Tap an empty plot | The picker. Locked rows wear their price. | Is the wall legible, and is the confirm worth its tap? |
+| 14 | Swipe **left** on the lawn (or tap the FALL tab) | Fall. Plant a strawberry, then Dev → *Fill Fall* and *Ripen Fall*. | Does Fall read as the garden in another season, or as a second game? |
+| 15 | Watch the chip above Fall's board as it fills | *fill all eight* → *5 / 8* → *one more in 4m* → *the whole bed* | Can the windfall rule be misread? It is the only thing between a player and harvesting at seven of eight. |
+| 16 | Swipe left again, from Fall | Winter's gate. | Is a locked season a promise or a wall? |
 
 *(This table grows as the night does. If the run stopped early, the sections below say exactly
 where.)*
@@ -257,3 +260,49 @@ and **built what the engine actually does**, because a collect-all is either a n
 change to how the engine is called, and no engine rule was mine to move tonight. It is a small
 addition on top and a much better moment; it is also the single biggest difference between Fall
 feeling like an appointment and Fall feeling like admin.
+
+---
+
+## §6 — Decisions the gate would have asked about (phase 3, as built)
+
+**Fall is not a place layer, and that is the phase's one architectural decision.** The Hollow, the
+meadow and the map are rooms you leave the garden for. A season is the same room in a different
+month: `.stage` swaps its board, the scenery swaps behind it, and the HUD, quest strip, rail and
+dock never move. *What it buys:* every control a player knows keeps working in Fall, and nothing in
+Fall re-states the 560px column — the trap that made the meadow read as a worse game. *What
+changing it costs:* rebuilding Fall as a layer means re-declaring the column and a dock, and it
+would hide the shops inside a garden. I would not.
+
+**The season edges are absolute, not grid items** — as a grid item the tabs forced `.stage` into an
+implicit second column and halved the interface. They sit **low, over the lawn**, because centred
+they land on the board.
+
+**The gate says which gate is holding it.** Winter and Spring have turns in data and no gardens in
+code, so *"Opens at Turn 3"* would be a lie to anyone past Turn 3. It reads *"Still growing in"*
+once the turn has passed. *Changing it:* two words.
+
+**Fall's board keeps Summer's yard padding** even though its creatures do not follow it, so both
+boards are the same size. The empty strip below Fall's board is ground.
+
+**The bed chip's near-miss state names a wait, not a count** — *"one more in 4m"*, not *"7 / 8
+ripe"*. A count is a status; a wait is an appointment.
+
+**The Century Bloom gets its own block in the picker and its own plot colour.** Two million gold in
+a list of two-thousand-gold strawberries is either scrolled past or tapped by accident, and the one
+cell that is not part of the bed has to look like it.
+
+**The hedge has no blossoms.** It is used at a 42%-wide card panel and at a full-width gate screen,
+and `preserveAspectRatio="none"` turns any circle into a tell-tale ellipse.
+
+### The two phase-3 questions I could not answer alone
+
+**1. Collecting a full Fall bed is eight taps.** `fallHarvest(idx)` is per plot, so the bed's big
+moment arrives as eight separate toasts. I built what the engine does. A collect-all is either a new
+affordance or a change to how the engine is called, and no engine rule was mine to move overnight —
+but it is the single biggest difference between Fall feeling like an appointment and Fall feeling
+like admin.
+
+**2. The meadow still has no door but the map's.** Until it gets one, the map cannot retire and the
+dock cannot take the Stand. My proposal is in §4 — the burrow door's twin at the foot of the garden,
+drawn in frame 1 of the fall spike — and it is one button plus one handler. It is the first thing
+phase 3's remainder needs.

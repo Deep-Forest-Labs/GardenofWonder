@@ -34,6 +34,25 @@ from quests and levels.
 > whole Wild Meadow**, so phase 3 gives it the burrow door's twin at the foot of the garden and
 > leaves swipe-down retired, as doc 32 asks.
 >
+> **PHASE 3'S FIRST HALF IS LIVE: the strip, the gates and Fall.** Horizontal is time — SPRING ←
+> SUMMER → FALL → WINTER, swiped between with the vertical gesture's rules mirrored
+> (background-start, `dx > dy`, ~70px), plus an edge tab on each side so the gesture has a visible
+> door the way the burrow has one. **Fall is not a place layer**: a season is the same room in a
+> different month, so `.stage` swaps its board and the scenery swaps behind it while the HUD, quest
+> strip, rail and dock never move — which is also why nothing in Fall re-states the 560px column.
+> Fall's board is the garden's construction in a woven trug on damp autumn earth, all eight crops on
+> hour clocks, the windfall stated as one chip in four states above the board, and the Century Bloom
+> in its own block with a plot colour of its own because it stands outside the bed in both
+> directions. A locked season shows its gate — sky, hedge, padlock, the turn that opens it — and says
+> which of the two gates is holding it, so a Turn-5 player never reads "Opens at Turn 3".
+>
+> **THE MAP IS DELIBERATELY UNTOUCHED and the dock still says World** — the owner's overnight call
+> was *phase 2 deep, phase 3 parked with the map still working*. Both navigations work, which is doc
+> 34's hard rail. **The blocker under the rest of phase 3: the Wild Meadow's only door is the map**,
+> so it cannot retire until the meadow has one (the burrow door's twin, drawn in frame 1 of the
+> fall spike). Phase 3's remainder is itemised in [11-known-issues.md](11-known-issues.md); new files
+> are `fall.js` and `ui-fall.js`, documented in [02-architecture.md](02-architecture.md).
+>
 > **PHASE 2 IS BUILT AND GAUNTLETED — the Turn has a surface, and a year can be played from the
 > game's own UI.** Eight adversarial critics ran over the built phase and **three of them
 > independently found the same blocker: the ask told the player the Turn was free.** A tidy player

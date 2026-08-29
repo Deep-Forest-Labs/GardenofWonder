@@ -23,6 +23,7 @@ reference globals defined above it.
 | 5 | `overworld.js` | `Overworld` | nothing |
 | 6 | `hollow.js` | `Hollow` | nothing |
 | 7 | `meadow.js` | `Meadow` | nothing |
+| 7b | `fall.js` | `Fall` | nothing |
 | 8 | `icons.js` | `Icons` | nothing |
 | 9 | `audio.js` | `Sound` | nothing |
 | 10 | `fx.js` | `FX` | nothing |
@@ -33,6 +34,7 @@ reference globals defined above it.
 | 15 | `ui-hollow.js` | *(attaches to `UI`)* | `UI`, `Hollow`, `Critters` |
 | 16 | `ui-map.js` | *(attaches to `UI`)* | `UI`, `Overworld` |
 | 17 | `ui-meadow.js` | *(attaches to `UI`)* | `UI`, `Meadow` |
+| 17b | `ui-fall.js` | *(attaches to `UI`)* | `UI`, `Fall`, `Game` |
 | 18 | `ui-events.js` | *(attaches nothing)* | `UI` |
 | 19 | `ui.js` | *(attaches to `UI`)* | everything above |
 
@@ -302,6 +304,26 @@ origin.** Moving `transform-origin` to the place being dived into breaks the pan
 first build shipped wrong. The dive therefore animates the *camera*, not the origin, and the
 transition is switched on only for the rise and the dive — a transition left on during a drag makes
 every pan lag a third of a second behind the finger.
+
+## `fall.js` and `ui-fall.js`
+
+Added 2026-08-29 with phase 3, and they follow the meadow's split — `fall.js` draws (the scene at
+the room's measured size, the cell floor, the nine crop plants at three growth stages), `ui-fall.js`
+puts real state into it.
+
+**But Fall is NOT a place layer, and that is the whole point.** The Hollow, the meadow and the map
+are rooms you leave the garden to visit; a season is *the same room in a different month*. So
+`ui-fall.js` swaps `.stage`'s frame and the scenery behind it, and the HUD, the quest strip, the
+rail and the dock never move. Two consequences worth knowing:
+
+- **It does not re-state the 560px column**, because it never leaves `.ui`. A room built as a layer
+  must; that trap is what made the meadow read as a different, worse game before `.mw-ui` existed.
+- **The dock, the shops and the quest strip keep working in Fall**, which is what makes the season
+  read as a season rather than as a second game.
+
+The strip itself — which season is on screen, the swipe, the edge tabs and the locked-season gate —
+lives in `ui.js` beside the vertical navigator it mirrors, because it is navigation rather than a
+room.
 
 ## `meadow.js` and `ui-meadow.js`
 

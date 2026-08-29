@@ -126,10 +126,11 @@
         fill="#57a25c" stroke="#2c1a10" stroke-width="2.6" stroke-linejoin="round"
         vector-effect="non-scaling-stroke"/>
       <path d="M0 108 V96 Q32 88 64 96 Q96 104 128 96 V108 Z" fill="#2f6236" opacity=".8"/>
-      <circle cx="62" cy="58" r="5" fill="#ffd6ea" stroke="#2c1a10" stroke-width="2.6"
-        vector-effect="non-scaling-stroke"/>
-      <circle cx="88" cy="78" r="4.4" fill="#fff3bf" stroke="#2c1a10" stroke-width="2.6"
-        vector-effect="non-scaling-stroke"/>
+      <!-- No blossom dots. This shape is used at two very different aspects —
+           a 42%-wide card panel and a full-width gate screen — and
+           preserveAspectRatio="none" turns any circle into a tell-tale
+           ellipse. The lumps and the bands survive stretching; a circle does
+           not. -->
     </svg>`;
   }
 

@@ -1092,6 +1092,42 @@ cleared; a cobbled floor is laid once and left. Skinning the two boards differen
 separates the meadow from the green world it stands in — see
 [05-art-direction.md](05-art-direction.md#the-material-recipe--why-the-garden-looks-finished-and-the-meadow-does-not).
 
+### The season strip — Fall (2026-08-29, phase 3)
+
+**Horizontal is time.** Four gardens in the order of the year — SPRING ← SUMMER → FALL → WINTER —
+and the player swipes between them. Summer is home and the app opens there. The gesture mirrors the
+vertical one rule for rule: it starts only on the background, needs ~70px, and must be clearly
+horizontal (`dx > dy`) or a diagonal would navigate. Swiping *left* drags the world left, bringing
+the season on the right into view.
+
+**A season is reachable when its Turn has passed AND its garden exists.** `DATA.year.fallTurn`,
+`winterTurn` and `springTurn` are the turns; Winter and Spring are slices C and E and are not built,
+so their gate says which of the two is holding it — *"Opens at Turn 3"* when the turn is the gate,
+*"Still growing in"* once it has passed. "Opens at Turn 3" shown to a player on Turn 5 would be a
+lie, and this is the cheapest way not to tell it.
+
+**Fall's board is the garden's construction in a different material** — same 3×3, same talking
+flower in the middle paying what it pays everywhere, same lip ladder, same grass fringe — a woven
+trug on damp autumn earth instead of a soil planter, because Fall's verb is *fill it and carry the
+whole thing in*. All eight plots open the moment Fall unlocks; Fall never sells you its own beds.
+
+**The bed pays together.** `Game.checkFallWindfall()` marks every eligible plot when they are all
+planted and ripe, and `fallHarvest()` pays `yield × 1.5` on each marked one. The surface states that
+rule as one chip above the board, in four states: *fill all eight for +50%* → *5 / 8 planted* →
+*one more in 4m* → *the whole bed — +50%*, pulsing, with the board itself taking a gold rim. **The
+chip is the only thing standing between a player and harvesting at seven of eight**, which is why it
+is on the board rather than in a panel, and why the near-miss state names a **wait** rather than a
+count: a count is a status, a wait is an appointment.
+
+**The Century Bloom stands outside the bed in both directions** — it neither blocks the windfall nor
+collects it — so it gets a body colour of its own (violet earth) and its own block in the crop
+picker. Two million gold in a list of two-thousand-gold strawberries is either scrolled past or
+tapped by accident.
+
+**Crops are not flowers and are not drawn like flowers**: a berry on a stem, a gourd, an ear of
+wheat, never a radial bloom. Their rows carry three stat pills where a seed row carries five — no
+verb chip, no rarity, no gem pill — and the shorter row is itself the tell.
+
 ### Locked land
 
 **The garden's gate, restated (2026-08-25).** Cells 0–3 are open from the first visit; the rest sit

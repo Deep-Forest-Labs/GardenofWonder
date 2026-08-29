@@ -93,6 +93,9 @@ const Icons = (() => {
       <path d="M12 17.4c-2.1 0-3.4-1.4-3.6-3.6 2.4-.3 3.8 1 3.6 3.6Z" fill="#3f9d45" stroke-width="1.5"/>
       <path d="M12 17.4c.2-2.6 1.6-3.9 4-3.6-.2 2.2-1.5 3.6-3.6 3.6Z" fill="#7bd88f" stroke-width="1.5"/>
       <path d="M12 17.4v-2.2" stroke-width="1.5"/>`),
+    leaf: S(`
+      <path d="M5 19.4C5 10.6 11.2 5 19.6 4.6c.4 8.4-5.2 14.6-14 14.8Z" fill="#8fe08a"/>
+      <path d="M5.4 19c3.6-3.8 7-6 11.4-8" stroke-width="1.8"/>`),
     lock: S(`
       <rect x="4.6" y="10.4" width="14.8" height="10" rx="3" fill="#ffd8a8"/>
       <path d="M8.2 10.2V7.8a3.8 3.8 0 0 1 7.6 0v2.4"/>

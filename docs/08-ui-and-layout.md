@@ -618,6 +618,47 @@ Missing, and worth knowing before claiming accessibility:
 - **Colour is the only channel for rarity.** No shape or text differentiation.
 - Contrast has not been formally audited.
 
+## The horizontal strip — the seasons (2026-08-29, phase 3)
+
+```
+   SPRING   <-   SUMMER   ->   FALL   ->   WINTER
+ (turn ~6)       (home)      (turn 1)    (turn ~3)
+                    |
+                THE HOLLOW
+```
+
+**A season is not a place layer.** The Hollow, the meadow and the map are rooms you leave the garden
+to visit — they are siblings of `.ui`, they hide its chrome, and each has to re-state the 560px
+column. A season is *the same room in a different month*: `.stage` swaps `.garden-frame` for
+`.fall-frame`, the scenery swaps behind it, and **the HUD, the quest strip, the rail and the dock
+never move**. Nothing in Fall re-states the column because nothing in Fall leaves `.ui`.
+
+| Piece | Where it lives | Why |
+| --- | --- | --- |
+| `.fall-layer` (the scene) | a sibling of `.ui` inside `#world`, `z-index: 2` | above the CSS scenery, below `.ui`, so the HUD stays up and the dock stays tappable |
+| `.fall-frame` / `.fl-board` | inside `.stage`, beside `.garden-frame` | one board swaps for another in the same square the garden already sizes |
+| `.gate-layer` | a sibling of `.ui`, `z-index: 3` | a locked season is a screen, and `.in-gate` hides the stage, dock, rail and quest strip exactly as `.in-map` does |
+| `.season-edges` | **absolutely positioned against `.ui`**, not a grid item | see below |
+
+**The season edges are absolute, and that is load-bearing.** They were a grid item at `grid-row: 4`
+with an auto column for one build, and an explicitly-placed item with a definite row forces the next
+auto-placed item (`.stage`) into an **implicit second column** — which halved the interface, squashed
+the dock into a corner and stacked both tabs on the left. Absolute against `.ui`, clear of the dock
+by `calc(var(--bottom-gap) + 104px)`, they can never touch the row layout.
+
+**They sit low, over the lawn, not centred.** Centred vertically they land *on the board*, and the
+board is the thing this game is. Low also puts them in the same band as the burrow door, so all the
+ways out of the garden read as one family. A locked edge wears the drained paper and the turn that
+opens it, so **a gate is a promise you can read from Summer** without walking to it.
+
+**Fall's board keeps the yard's padding even though its creatures do not follow it.** Both boards are
+then the same size, which is what sharing the grammar means; the empty strip below Fall's board is
+simply ground.
+
+**The bed chip's pulse lives on a pseudo-element.** `affordPulse` animates `transform`, and the chip
+is centred with `translateX(-50%)` — a running animation outranks that declaration and would throw
+the centring away. Same collision as a state modifier that writes `box-shadow` and eats the lip.
+
 ## The vertical ladder
 
 Since 2026-08-25 the game is three places stacked on one axis, with one rule:
