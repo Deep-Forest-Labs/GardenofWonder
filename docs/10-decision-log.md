@@ -961,6 +961,41 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-30 (rulings) — Three yeses, a field guide, and the cleanup round
+
+**The owner ruled on three of the five open questions, plainly:** the discover quests get the
+fix (count what you already found, and the goal strip shows whichever quest is closest to done
+instead of always the oldest); the Stand's level points **pause** until the phase that builds
+the new level rewards (orders keep paying gold and keep counting on the Tally); and the
+padlock now means one thing only — the real one-time wall — while a
+ten-seconds-away "can't afford yet" row just looks grey.
+
+**Still open, by the owner's own words:** the blessing — they asked what it even does before
+ruling, which is its own finding: *the ceremony's one choice was not legible to the person who
+designed the game around it.* The plain answer now lives in the Garden Year artifact's new
+**field guide** (every Year term, one line each, blessing included) and in doc 32's glossary.
+The advisor's recommendation stands — each flower blessed once, ever. And the petal-pacing
+question waits on the owner actually playing, which is what the cheat request below is for.
+
+**The owner asked for a review kit of cheats**, because judging the feel requires living a week
+in an afternoon: simulate time passing, summon creatures to see them in the new HUD band, and
+whatever else helps. Scoped into the cleanup round: a **time-warp** (wind every clock — plants,
+Fall beds, the Century Bloom, food, keepsakes, jars — forward 1h / 8h / 24h without the away
+framing), **summon a creature / summon all six** (at a chosen star, tending, so the band fills),
+**grant Saved Seeds**, **grant boosts** (the Power-up button needs inventory to demonstrate
+itself), and **grant card packs**. All cheat-flagged so none of it touches the mint.
+
+**The cleanup round is phase 3.6:** the three ruled fixes plus the review kit, no wireframe
+gate (no new layouts — a dev panel and one padlock change), standard gauntlet-lite.
+
+### Rejected
+
+**Ruling the blessing by default while the owner was still asking what it does** — a mechanic
+gets explained before it gets judged. **A save-slot system for testing** — considered for the
+kit, dropped as scope; the fresh-save private window and the existing reset cover it.
+
+---
+
 ## 2026-08-30 (design, later) — Garden only, the map goes, and the project learns to speak plainly
 
 **Three owner calls in one message.** The dock's centre button is **Garden, nothing else** — the
