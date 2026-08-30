@@ -5,6 +5,57 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## The live web build loses saves after a week on iOS Safari (found 2026-08-30, strategy pass)
+
+**Safari's tracking prevention deletes all script-writeable storage — localStorage, IndexedDB,
+sessionStorage, and service worker registrations and cache — after 7 days of no interaction with the
+site.** The only exemption is a site the player added to their Home Screen: *"The first-party domain
+of home screen web applications is exempt from ITP's 7-day cap on all script-writeable storage"*
+([WebKit](https://webkit.org/tracking-prevention/)).
+
+**So an iOS Safari playtester who did not install the game and takes a week off loses their entire
+garden, silently.** For a game whose whole promise is that the garden is still there when you come
+back, this is the worst possible failure, and the review evidence across this lane says players blame
+the developer rather than the browser — save-data loss is the #1 one-star driver for the category
+leader ([38-market-refresh.md](38-market-refresh.md)).
+
+Three things follow, none of them done:
+
+- **The friend playtest group is exposed to this right now.** Anyone on iPhone who opened the link in
+  Safari without adding it to their Home Screen is on a seven-day clock. Worth telling them.
+- **iOS 26 made the install easier to ask for** — Safari 26.0 removed installability requirements
+  entirely, "there are now zero requirements for 'installability' in Safari" — but there is still **no
+  programmatic install prompt** on iOS (`BeforeInstallPromptEvent` is unsupported on Safari and
+  Firefox and is non-standard). The player has to be taught to use Share → Add to Home Screen.
+- **Cloud save, or a very hard install prompt, is a precondition for the web build going wide**, per
+  the ruling in [39-growth-and-launch.md](39-growth-and-launch.md).
+
+Two related facts recorded so nobody plans around the wrong ones: the **EU restriction on Home Screen
+web apps was reversed before iOS 17.4 shipped** — there is no EU carve-out — and **Background Sync
+does not exist in Safari at all** and is non-standard, so offline catch-up must run on next foreground
+open, which is what the game already does.
+
+## Two documentation contradictions the strategy pass hit (2026-08-30)
+
+Not game bugs, but they cost a research agent a whole wrong answer, so they are recorded here until
+someone reconciles them.
+
+- **Unity or Capacitor?** [37-monetization.md](37-monetization.md) gates every dollar of revenue on
+  "the Unity shell" and repeats it as gate 1. [23-installable-pwa.md](23-installable-pwa.md) says the
+  store wrapper is "a separate wrapper (Capacitor)". Docs 19 and 20 assume a Unity asset pipeline.
+  The cost research read doc 23, concluded the project owes Unity nothing, and priced the port at
+  zero. **Whoever knows the answer should write it in one place.** Note that the answer matters: the
+  art direction is implemented in `style.css`, so a Unity port means re-authoring the moat in a
+  language with no CSS, and that is the largest unpriced line in the project.
+- **The service worker is network-first by design**, which is correct for a no-build-step web game and
+  is documented in `sw.js`'s own header. But a Capacitor-wrapped build that fetches `game.js` on every
+  launch is close to Apple guideline 2.5.2 ("may not download, install, or execute code which
+  introduces or changes features or functionality of the app"), and doc 37's promise that caps are
+  "all remote-tunable" makes it deliberate rather than incidental, because the tunable numbers live in
+  `data.js`, which is JavaScript rather than JSON. **Cheap to fix if decided now (bundle locally, move
+  the knobs to fetched JSON, flip the wrapped build to cache-first), expensive to discover in review.**
+  Moot if the answer to the question above is Unity.
+
 ## What phase 3.7 knowingly left (2026-08-30)
 
 **`year-sim`'s cheap-Turn verdict no longer decides the same way twice.** Raising order gold to the

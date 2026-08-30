@@ -51,6 +51,9 @@ Read it before anything else if you're picking the project up cold.
 | [34-build-plan.md](34-build-plan.md) | You're building the Year or kicking off a builder session — the phases, the review gates, the critic gauntlet every phase runs, and the paste-ready prompts — **the build plan; phase 1 is built and reviewed, awaiting the owner's verdict** |
 | [36-hud-and-dock.md](36-hud-and-dock.md) | You're touching the dock, the HUD's bottom half, or the Turn button — the Big Five spec, what retires into it, and the gate questions — **owner-specced, not built** |
 | [37-monetization.md](37-monetization.md) | You're touching ads or purchases — the two promises, the ship-first placements, the store shelf, and the never-sell table with reasons — **the plan, owner picking, nothing built** |
+| [38-market-refresh.md](38-market-refresh.md) | You want the lane as it stands now — the four numbers doc 17 quotes that don't hold, the fourteen competitors it never named, the coded complaint pile, the positioning map, and the answer to whether anyone else has a prestige loop — **research, not the game** |
+| [39-growth-and-launch.md](39-growth-and-launch.md) | You're planning a launch — the dated calendar from September 2026 to June 2027, the Reddit playbook, the ASO correction, what in this game is actually filmable, and the one sentence with the fork underneath it — **plan, owner picking** |
+| [40-financial-model.md](40-financial-model.md) | You want to know what any of this earns — three scenarios in plain tables, the install volume needed to hold them, the cost side, the kill/scale signals, and the 2026 rules that change the plan; math in an appendix — **model, owner picking** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

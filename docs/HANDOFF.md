@@ -12,6 +12,50 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **THE STRATEGY REFRESH LANDED 2026-08-30 — three new documents, docs-only, no code and no economy knob.**
+> [38-market-refresh.md](38-market-refresh.md) (the lane as it stands), [39-growth-and-launch.md](39-growth-and-launch.md)
+> (a dated calendar) and [40-financial-model.md](40-financial-model.md) (what it earns). Reasoning and the full
+> list of corrections is in the 2026-08-30 strategy entry in [10-decision-log.md](10-decision-log.md).
+>
+> **Four numbers our docs quote do not hold**, and one of them is load-bearing: the Simulation retention table
+> (D1 30.1 / D7 8.71 / D30 2.96) comes from a vendor blog that contradicts itself on the same page, and the
+> largest real 2026 dataset publishes **no genre split at all** and puts the median mobile game at D1 ~18-22%,
+> D7 under 4%. **Our planning numbers are a top-quartile outcome dressed as a baseline.** Also corrected: Cats &
+> Soup is 80M downloads and a listed publisher, not an indie at 10M, and its "$300K/mo" could not be reproduced;
+> Egg Inc's moat is "never interrupt with an ad", not generosity; Terrarium's "$9K/mo" is from October 2022.
+> **Sensor Tower, AppMagic and data.ai are now one company**, so their agreement is one vote.
+>
+> **The finding that matters most: the number that decides the business is how many days a player stays.** To
+> hold 3,000 players a day at median retention you need **750 installs every day forever** — above what any
+> optimised game gets organically. At a good cozy curve, 375. At best-in-class idle, 200. **At median retention
+> this plan cannot reach its own target**, which makes the money question and the design question the same
+> question.
+>
+> **The positioning claim is now countable, not rhetorical.** Across 233 substantive five-star reviews of the
+> seven biggest games in and around our lane, **exactly one** praises a game for being generous or fair. And
+> **no commercially successful cozy game shipped a prestige loop between Jan 2025 and Aug 2026** — the Turn is
+> uncontested, and untested.
+>
+> **Two hard dependencies, neither an opinion.** There is **no analytics, telemetry or remote-config code
+> anywhere in the repo** (verified by grep), so the number the plan turns on cannot be measured and doc 37's
+> "all remote-tunable" has nothing behind it — that is the first line item on the Unity shell, ahead of ads.
+> And **Safari deletes every save after seven days without interaction** unless the player installed the game to
+> their Home Screen, which is live for the friend playtest group right now. Both in
+> [11-known-issues.md](11-known-issues.md), with the Unity-or-Capacitor contradiction the run also hit.
+>
+> **Four calls are the owner's and are deliberately not made:** pricing posture (free-with-a-real-shelf
+> recommended; premium at $4.99 is genuinely live), launch timing (PGC London, 18-19 Jan 2027 recommended —
+> confirmed rather than estimated), how loud to be about the two-people story, and whether $3-5K/month is the
+> target or the floor. Plus the fork in doc 39: **stakes, or "nothing dies while you're away" — we cannot market
+> both**, and the store listing, the launch post and the first screenshot are all blocked on it. The
+> recommendation is to keep the stakes and make the consequence legible and reversible, which is also what keeps
+> the game out of **PEGI 12** under the new June 2026 criteria.
+>
+> **Three dates worth acting on this week:** turn on Firebase Remote Config **before 1 September** (billing
+> starts, and enabling early defers it months); **start the Google Play account now**, because a personal
+> account needs **12 testers opted in continuously for 14 days** before production unlocks; and **DevGAMM closes
+> 7 September** — free, explicitly mobile, unreleased games eligible.
+
 > **PHASE 3.7 IS BUILT — the Numbers pass, the What's New popup, and orders that pay in minutes.**
 > Three owner rulings from live play, built together because the first one is a project-wide rule
 > the other two have to obey. Suite **1,353** (was 1,305), clean; the reasoning is in the phase 3.7

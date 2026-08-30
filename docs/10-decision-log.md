@@ -149,6 +149,182 @@ arithmetic in [11-known-issues.md](11-known-issues.md).
 
 ---
 
+## 2026-08-30 — The strategy refresh: what the market says now, what it costs, and the four numbers we were quoting that do not hold
+
+**Docs-only. No code, no economy knob, no design ruling.** Three new documents —
+[38-market-refresh.md](38-market-refresh.md), [39-growth-and-launch.md](39-growth-and-launch.md),
+[40-financial-model.md](40-financial-model.md) — plus corrections logged here. Twenty-three research agents,
+three adversarial fact-checkers who corrected thirteen claims and killed four, and one critic whose only job
+was to find what everyone else missed.
+
+### The honest framing first: doc 17 is fifteen days old
+
+The brief asked us to re-verify what had moved since August. **Nothing in the market moved in a fortnight**, and
+saying otherwise would have been the easiest way to waste the run. What the refresh actually bought was
+corrections, width, and a pile of coded player complaints. That is stated at the top of doc 38 so nobody reads
+it as a changed world.
+
+### What we concluded
+
+**The middle of this lane is empty and that is the whole strategy.** Three tiers: funded games that are hated
+for how they treat you and make money anyway; small games that are loved and earn nothing; abandoned games with
+enormous reach and no reason to return. Nobody is loved *and* earning. The evidence is countable rather than
+rhetorical — across **233 substantive five-star reviews** of the seven biggest games in and around our lane,
+**exactly one** praises a game for being generous or fair. "No forced ads, no energy, no fake timers" is
+therefore not a values position filed under monetization; it is the only unoccupied square on the board, and it
+should be the headline positioning claim with that number attached.
+
+**Cozy-plus-prestige is an empty intersection.** We looked hard: no commercially successful cozy idle game
+shipped a prestige loop between January 2025 and August 2026. The one cozy botanical game with a
+prestige-shaped reset is a solo dev at 10K installs. The 2026 incremental scene's prestige games are all uncozy
+— mining, tower defence, space. **The Turn is the only thing in this project nobody else has, and nobody else
+has tried it either**, which is the opportunity and the risk in the same sentence.
+
+**The number that decides everything is how many days a player stays, not what they spend.** To hold 3,000
+players a day at the 2026 median retention you need **750 installs every day forever**, which is well above what
+any optimised game gets organically; at a good cozy curve you need **375**; at best-in-class idle, **200**. The
+organic ceiling is 200-500/day. So at median retention this plan cannot reach its own target at all. **The money
+question and the design question turn out to be the same question.**
+
+**The ad-versus-purchase assumption in doc 37 is backwards for our shape.** The closest comparable cluster
+(Sensor Tower's hybridcasual Lifestyle & Puzzle) runs **59% purchases / 41% ads**; a live four-person idle
+studio's own books run 80/20; a solo dev's published P&L runs 67.5/32.5. The only source supporting an
+ads-majority model is a mediation vendor describing a different genre. **Recommendation: keep every promise and
+every placement exactly as ruled, and stop calling the ad line the plan. It is the floor. The shelf is the
+plan** — and doc 37 already says so in its own gems paragraph.
+
+### The four numbers we were quoting that do not hold
+
+1. **The Simulation retention table (D1 30.1 / D7 8.71 / D30 2.96).** It comes from one vendor blog **that
+   contradicts itself two paragraphs above the table**, and the largest genuine 2026 dataset — GameAnalytics,
+   16,000+ games — **publishes no genre split at all this year** and puts the median mobile game at D1 ~18-22%,
+   D7 just under 4%, D30 0.7-0.8%. Our planning numbers are a **top-quartile outcome dressed as a baseline**,
+   and every revenue figure downstream inherited that optimism. This is the correction that matters most.
+2. **Cats & Soup at "10M+ installs, ~$300K/mo, Hidea".** It is **80M+ downloads** from NEOWIZ's own statement,
+   the seller is **NEOWIZ** — a listed publisher that reports the game to investors — and **the $300K/mo could
+   not be reproduced** because Sensor Tower's per-app pages are login-walled. Stop using it as "what a small
+   team can earn."
+3. **Egg Inc's "moat is generosity", "~1M weekly actives", "12.5M iOS installs".** The generosity is **only
+   about ads**: free players earn offline at **0.5×** and 1.0× costs a $9.99 Pro Permit, which also gates the
+   MAX button, silos, boost slots and artifact slots. Neither the 1M WAU nor the 12.5M could be sourced at all.
+   **The transferable rule is narrower and better: never interrupt the player with an ad.**
+4. **Terrarium's "~$9K/mo".** Traces to **October 2022**; the host that published it now refuses connections.
+   The *argument* — reach without a reason — survives and is far better evidenced now. The number is four years
+   stale.
+
+Two smaller ones: **Terrarium is Green Panda → Ubisoft/Ketchapp, not Kolibri** (and that ownership *is* the
+explanation — a hypercasual ad-arbitrage org with no live-ops unit, which is why 11M installs never became a
+service), and **the "1,087 idle games earned $3.97M" statistic could not be reproduced in any search**.
+
+And one methodological correction with teeth: **Sensor Tower bought AppMagic on 2026-05-13**, having bought
+data.ai in 2024. Doc 17's confidence note lists them as separate credible sources. **They are one company**, so
+"AppMagic and Sensor Tower agree" is one vote.
+
+### Where we disagree with the standing docs
+
+- **Doc 29's ceiling argument leans on a channel that is closing.** It caps direction A with "Cats & Soup's
+  $300K/month comes with Netflix distribution attached." Netflix **sold Spry Fox back to its founders in
+  December 2025**, closed Boss Fight in October 2025, and closed Night School Studio and Moonloot on **13 August
+  2026**. The Cats & Soup Netflix Edition has been frozen since October 2024 at 3.30 stars from 172 ratings.
+  **Cats & Soup did not win because of Netflix.**
+- **Doc 29's ASO claim is half wrong.** Apple's own documentation names **downloads, number of ratings, and
+  quality of ratings** — retention appears nowhere. Retention reaches ASO through a specific chain: it keeps
+  players alive to reach a completion moment, the review prompt fires there, and ratings volume and star quality
+  are the documented factors. **That changes what you build** — it argues for engineering a satisfying
+  completion beat to hang the prompt on, which the Tally already is, and it promotes cloud save and
+  crash-freedom from hygiene to ranking infrastructure.
+- **Doc 29's TikTok numbers come from one unsourced SEO blog**, along with the "$200 behind a post" figure and a
+  "59% discovery" stat that TikTok's own research contradicts (it says 41%). TikTok's published floor is **$50/day
+  at campaign level**, so $200 is a four-day experiment. And the figure was borrowed from a *Steam wishlist*
+  playbook, where a wishlist is a free click and an install is an auction bid.
+- **Doc 17 has no competitor entry for Runaway Play.** Honey Grove appears only as a visual reference. They are
+  ~30 people with an eight-title cozy portfolio, an Apple editorial relationship, a 1M-download launch this
+  March, and **a bee-and-flowers game already on the shelf**. Biggest single blind spot in the document.
+- **Doc 17's "the lane is visually uniform, so craft wins" premise is weakening.** The conclusion survives, but
+  the two most *editorially successful* botanical games of the window are a 509MB 3D flower sim and 656MB of
+  painterly 3D, and **both won Apple "GAMES WE LOVE" slots**. Our craft argument has to be about *feel*, which
+  is cheap, not *fidelity*, which is not.
+- **The "$3,650 lifetime per idle title" graveyard is a MOBILE FREE-TO-PLAY statistic.** In the desktop-companion
+  lane next door, a first-time solo dev took ~$1.6M gross in four months at $7. Same content, different
+  storefront, completely different distribution of outcomes. That is an argument for taking a premium PC build
+  seriously as a revenue line — presented as an owner's call, not a recommendation.
+
+### The one place the evidence runs against the owner's stated taste
+
+**Punishing upkeep.** The owner has ruled that they want stakes, and this pass did not soften that — but it did
+not hide the evidence either. Window Garden, the nearest solo-dev success, loses stars exactly where upkeep
+scales with the collection (*"taking care of them every day felt too monotonous"*, *"this game wants to be a
+second job"*). Tiny Pasture's top negative review reads *"Listing it as an idler, but punishing you for being
+idle is a very strange choice."* A competitor launched on 2 August 2026 selling **the absence of upkeep** as its
+headline feature. And from **June 2026, PEGI rates a game PEGI 12 if daily mechanics punish players for not
+returning by losing content or reducing progress.**
+
+**The recommendation, which is a recommendation and not a ruling: keep the stakes, make the consequence
+legible, reversible, and tied to what the player chose rather than to how long they were away — and put the
+sleeping face in the first screenshot rather than leaving it to be discovered.** That version can honestly say
+"nothing is taken while you're away" while still having something at stake, and it is also the version that
+stays out of PEGI 12. There is a real marketing fork underneath this, written up in doc 39: the best-performing
+cozy dev post of 2026 won on *"Crops never die. Miss a week? Everything's right where you left it."* **We cannot
+say that and also ship punishing upkeep.** Both are good games; they are not the same marketing, and the store
+listing, the launch post, the first screenshot and the one sentence are all blocked on the answer.
+
+### What we rejected
+
+- **Rebuilding doc 17.** It is fifteen days old and mostly right. Extending and correcting it in a separate
+  document preserves the record of what was believed when, which is the whole point of dated research docs.
+- **Printing a Wholesome Direct 2027 date as fact.** The 2026 submission window is sourced to an X post that
+  returns HTTP 402 and an Instagram reel — neither openable by us or anyone without API access. It is marked
+  **UNSOURCEABLE** in doc 39 rather than quietly repeated, because a year's plan should not rest on a link
+  nobody can click. Related: Wholesome Direct's published success metric is **Steam wishlists**, and its August
+  Celebration is a Steam sale a mobile-only game cannot join. **IGF (13 Sep, explicitly mobile-eligible) and
+  DevGAMM (7 Sep, free, with a Best Mobile Game category) fit us better and close within three weeks.**
+- **Any starter-pack or piggy-bank conversion figure.** Five differently-phrased searches found qualitative
+  design writing and no published benchmark anywhere. Studios treat it as proprietary. Recorded as a gap rather
+  than filled.
+- **Every figure from the AI statistics farms** now dominating benchmark search results — gameinsights.ai,
+  playio.co, progamespoint, zipdo, worldmetrics. One claims casual D1 of 38% and LTV of $45, reconcilable with
+  nothing. **Rule adopted: if a figure's only home is a domain nobody in the industry has heard of, it does not
+  go in a doc.**
+- **Averaging GameAnalytics and Adjust.** Their retention figures differ ~2× and their session lengths ~10×,
+  because Adjust measures attributed installs in apps running paid UA — the funded cohort we are not in. Any doc
+  citing both in one table is broken.
+
+### Three things nobody had noticed, worth keeping
+
+- **Weather is a pure function of wall-clock epoch time, so the exact minute of the next Wonderfall is
+  computable in advance.** The rarest, loudest, best-filming moment in the game is on a public timetable and you
+  can be recording before it starts. The flip side, from the critic: it is computable by anyone with devtools,
+  because the game ships unminified with no build step — which argues for the forecast being an in-game surface
+  we own and pace rather than a third-party wiki we compete with.
+- **The seed art schema already supports `rainbow: true`.** Mutations are currently drawn as a border and glow
+  *around* the plot, which is invisible in a phone recording. Recolouring the actual petals converts our
+  structurally strongest mechanic from unfilmable to filmable **at data cost, not art cost**.
+- **The Century Bloom has no opening.** Every doc specifies its economics — fourteen days, one at a time,
+  survives the Turn — and not one specifies what happens when it opens. It is the only moment in the game with
+  two weeks of anticipation behind it, and anticipation is what makes a clip get *shared* rather than watched.
+
+### What is left open, and whose it is
+
+Four owner calls are presented with options and recommendations and **deliberately not decided**: pricing
+posture (free-with-shelf recommended, premium at $4.99 genuinely live), launch timing (PGC London, 18-19 January
+2027 recommended, because it is confirmed rather than estimated), how loud to be about the two-people story
+(warm but not central), and whether the $3-5K/month goal is the target or the floor.
+
+And the question the critic is right that nobody has put to the owner: **what does this have to earn, by when,
+for it to be worth continuing — and what happens in the month it earns $200?** Every strategy doc in this
+project is written for the 30-40% case and none for the median outcome. Three live decisions currently being
+made on aesthetics fall straight out of that answer: whether the Unity port is worth its cost, whether analytics
+ship at all, and whether the ad line is worth having.
+
+**Two hard dependencies surfaced that are not opinions.** There is **no analytics, telemetry or remote-config
+code anywhere in the repository** — verified by grep — so the number the whole plan turns on cannot currently be
+measured, and doc 37's promise that caps are "all remote-tunable" has nothing behind it. And **Safari deletes
+every save after seven days without interaction unless the player installed the game to their Home Screen**,
+which is live right now for the friend playtest group; it is in [11-known-issues.md](11-known-issues.md) with
+the two documentation contradictions the run also hit.
+
+---
+
 ## 2026-08-30 (phase 3.6) — The cleanup round: three ruled fixes, and a review kit so the owner can live a week in an afternoon
 
 **Implements the three rulings below, plus the cheats the owner asked for.** No new layouts, so no
