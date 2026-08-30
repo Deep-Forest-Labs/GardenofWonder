@@ -4,6 +4,14 @@
 *market*, not the game. It goes stale on its own — treat figures older than a year as directional and
 re-check anything load-bearing before betting on it.
 
+**Corrected by [38-market-refresh.md](38-market-refresh.md), 2026-08-30 — read it beside this.**
+Four load-bearing numbers here did not survive checking: the retention table is a top-quartile
+outcome dressed as a baseline; Cats & Soup is a NEOWIZ flagship at 80M+ installs, not a small-team
+comparable; Egg Inc's "generosity" is ads-only (the transferable rule is *never interrupt the
+player*); Terrarium's revenue figure is from 2022. Sensor Tower, AppMagic and data.ai are now one
+company — their agreement is one vote. And the "no forced ads, no energy" line is promoted from a
+monetization note to the headline positioning claim, with the evidence attached in 38.
+
 Its job is to answer three questions: is there room for this game, who is it actually for, and what
 makes an individual flower worth wanting.
 

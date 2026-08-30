@@ -9,6 +9,14 @@ Three agents built this: one mapped every natural money-moment in the real game,
 what the comparable games actually charge and where their ads live (sources in the run), and
 one adversary attacked every idea against the cosy rules. What survived is below.
 
+**Emphasis corrected by [40-financial-model.md](40-financial-model.md), 2026-08-30, and the
+advisor accepts it: the ads are the floor, the shelf is the plan.** Every promise and every
+placement below stands exactly as ruled — what changed is which line has to grow. The best
+evidence on our closest cluster runs ~59% purchases / 41% ads, the "Idle Miner is 60% ads" anchor
+failed sourcing, and the gap between missing the revenue goal and beating it is the gem-and-decor
+catalogue, not more ad slots. Also corrected: plan in *impressions*, not offers — 3–6 rewarded
+impressions per player per day, measured in the first playtest.
+
 ## The two promises — what we never sell, ever
 
 1. **The forever money is never for sale.** Saved Seeds, petals, seed unlocks, season gates,

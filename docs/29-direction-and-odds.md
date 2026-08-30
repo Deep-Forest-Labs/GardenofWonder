@@ -7,6 +7,15 @@ and what would it actually take to build something that succeeds?*
 **Update, 2026-08-29:** direction D was executed via docs 30 → 31 → 32; the Shared Sky
 (direction C) remains compatible future work per 32's "What the Year does not touch".
 
+**Repriced by [39-growth-and-launch.md](39-growth-and-launch.md), 2026-08-30.** The four-channel
+structure holds; three of the four were priced too high. Editorial features move thousands of
+installs, not step changes; ASO's behavioural engine is *ratings volume and quality*, reached
+through retention via the review prompt — not retention directly; the TikTok "$200 behind a post"
+figure and the Magic Research "$400K in twelve months" both failed sourcing (the honest version:
+a five-to-low-six-figure premium game over three years, started by two Reddit posts); the "$3,650
+per idle title" graveyard stat is unsourceable and is a mobile-F2P statistic besides; and the
+Netflix line under direction A is dead — Netflix exited cozy across 2025-26.
+
 Four directions, priced. Extends [17-market-and-positioning.md](17-market-and-positioning.md) and
 [25-world-map.md](25-world-map.md) rather than redoing them; every market figure below is theirs.
 

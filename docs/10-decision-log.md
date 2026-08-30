@@ -1508,6 +1508,39 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-30 (review) — The strategy pass is accepted, and the advisor's own numbers take their corrections
+
+**The strategist's three documents pass review** — sourced, honest about gaps, and willing to kill
+claims this project has been repeating, several of them the advisor's own. Correction notes now sit
+at the top of docs 17, 29, 37 and 01 so nobody quotes the dead numbers from the place they were
+born. The corrections accepted without argument: the retention baseline was optimistic, the
+Magic Research and graveyard figures fail sourcing, editorial features are worth thousands of
+installs rather than a launch, ASO runs on ratings rather than raw retention, and **doc 37's
+emphasis inverts — the ads are the floor, the shelf is the plan.**
+
+**What the pass surfaced that must move now:** Firebase Remote Config enabled before 1 September
+(two days); DevGAMM by 7 September and IGF by 13 September, both mobile-eligible and both
+better-fitted than the Wholesome Direct the plan previously leaned on; the Google Play 12-tester
+14-day clock started immediately; and **the Safari seven-day save wipe is live for the playtest
+group today** — friends playing in the browser who take a week off lose their garden, so the
+home-screen install push is now a duty of care, not a growth tactic.
+
+**Five calls are the owner's and are queued, not decided:** the fork (punishing upkeep versus the
+"nothing is taken while you're away" register — the store listing, the first screenshot and the
+one sentence all wait on it, and PEGI 12 rides on it); pricing posture (B recommended — real
+shelf; C, premium, stays a live option); launch timing (PGC London, 18–19 Jan 2027, recommended);
+the premium PC question; and the strategist's bluntest and best question — *what does this have
+to earn, by when, for you to keep working on it, and what do you do in the month it earns $200?*
+
+### Rejected
+
+**Averaging the two retention benchmarks** — one measures organic reality, the other paid-UA
+cohorts; the plan runs on the median and treats the old table as the target it always was.
+**Softening the fork into a compromise nobody chose** — it is presented to the owner as the two
+games it actually is.
+
+---
+
 ## 2026-08-30 (rulings) — Show the numbers, the What's New popup, and orders that pay like they mean it
 
 **Three owner calls from playing the build, and the first is a design principle that overrules
