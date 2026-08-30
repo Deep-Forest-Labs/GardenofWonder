@@ -56,6 +56,47 @@ someone reconciles them.
   the knobs to fetched JSON, flip the wrapped build to cache-first), expensive to discover in review.**
   Moot if the answer to the question above is Unity.
 
+## What phase 3.8 knowingly left (2026-08-30)
+
+**The placeholder gate on swipe-down was not built, and the idea is dropped rather than deferred.**
+Ruling 4 gave swipe-down to a hedge-gate placeholder — and swipe-down is the Wild Meadow's *only*
+door in the game. Building it would have stranded the room, its hives, its keepers and four quests
+worth 114 of the ladder's 777 reputation, on top of the strip-jam trap. **The owner ruled mid-round
+that the meadow keeps the direction and the gate waits for a round that gives it somewhere else to
+live.** Recorded here so the next agent does not re-propose it as an easy win: the blocker is not the
+gate, it is that the meadow needs a second door first.
+
+**The Cards pass raised four layout questions instead of answering them.** The ruling was look, not
+layout, and each of these needs the owner:
+
+1. **The card face's internal composition.** Art and name are centred, so the lower third of every
+   face is empty. Doc 05's check 4 would put the name in a capsule at the bottom — which turns the
+   face from "stacked centre" into "art above, name-plate below", a real internal layout change to a
+   102×136px cell.
+2. **An unowned card is an empty box.** The honest fix is a silhouette or a card-back pattern, which
+   is new content rather than a look change.
+3. **The grid gaps.** `.card-grid9` is 8px and `.set-grid` 9px; a 4px lip with its contact shadow
+   wants ~12px of clearance below each cell, and raising the gap changes how many rows fit above the
+   fold.
+4. **Whether Mythical should have a colour of its own.** It wears legendary gold said twice, because
+   the card ladder has five rungs where the garden has four and `--epic` purple already means one rung
+   *down*. Frozen, a Legendary and a Mythical differ by 1px of ring and 14px of glow blur.
+
+**Fall's board is ~23px higher than the garden's**, where it used to sit ~12px lower, because the bed
+chip's strip is reserved out of the frame. On an SE-class screen the board also gives up ~45px. Both
+are the price of Fall's one rule being readable, and both are deliberate — see
+[08-ui-and-layout.md](08-ui-and-layout.md#the-vertical-ladder).
+
+**A swipe begun on the What's New dialog navigates the world underneath it.** `noSwipe` in `ui.js`
+lists `.sheet` and `.scrim` but not `#news`, so a drag across the announcement card can enter the
+Hollow behind it. Found during this round's review and confirmed byte-identical at `ba5ddbf` — it
+predates the round and the direction flip neither caused nor widened it. One entry in the `noSwipe`
+string fixes it.
+
+**At 390×667 the pouch chip covers the top ~6px of the Turn button's icon.** `.seedchip{top:-9px}`
+against the short-screen `.dock-btn{height:50px}`. Also pre-existing; the glint does not touch the
+chip, this is the chip touching the icon.
+
 ## What phase 3.7 knowingly left (2026-08-30)
 
 **The pantry survives the Turn, so a fresh board of orders meets last year's stockpile.**

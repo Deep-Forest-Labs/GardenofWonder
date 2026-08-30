@@ -5,6 +5,176 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (phase 3.8) — The polish round: seven rulings, and one of them re-ruled at the door
+
+**All seven came from the owner playing the live build**; the spec is the "rulings, polish" entry
+further down. Six landed as written. The fourth was re-ruled mid-build, and that one is the entry
+worth reading.
+
+### 1 · The Turn button had a dead meter under its breath
+
+The ruling was a shine. Building it found that **the dock's year meter had never once painted**:
+`ui.js` wrote a `height` onto `.turn-fill`, which is only the clip box and is pinned `inset:0`, so
+the box shrank from the top while the waterline underneath stayed at `0%`. Two commits a day apart
+each did half of one design. Fixed here, because a glint on a broken surface is polish over a hole.
+
+The glint is **the ready plot's own `sweep`** — same 100° band, same 8° tilt — parked off the button
+for seven eighths of a nine-second cycle so it lands as a moment rather than as the constant travel a
+plot can afford at 1.9s. Gold, not the plot's white, because gold is already the only thing on this
+button that means *the Turn is ready*. Interval in `DATA.year.turnShineEvery`.
+
+**Reduced motion was a repair, not an addition.** The breath is an animation; the global clamp runs
+it once for `.001ms` and drops it; and the attention dot is suppressed on the assumption that the
+button is breathing. **A player with the preference on had no ready signal on the Turn button at
+all**, and it reviewed as correct for weeks. The general lesson is now in doc 05: *a collapsed
+animation must never be the only carrier of a state* — where a state animates, reduced motion needs a
+static substitute, not a shorter duration.
+
+*Rejected:* driving the glint from a JS timer. CSS says "park, then cross" in one animation, and this
+project already refuses recurring timers outside the frame loop.
+
+### 2 · The word, and the faucets
+
+One player-facing "Badges" survived, in the Turn's ask. The icon id, the four `*-badge` classes and
+the tools' model fields keep their names — renaming those blanks glyphs and empties panels with no
+error.
+
+**The faucet audit found nothing farmable, and that is the finding.** Quests, the level ladder and
+the Almanac are keyed on `quests`, `rep`, `level`, `discovered` and `almanacClaimed`, every one of
+which the Turn leaves verbatim. So the work is not a fix, it is a **tripwire**: `bill 1c` seeds each
+faucet as already-paid, runs a real Turn, and asserts the re-earn is refused. Sabotaging `turnYear()`
+to clear `quests.done`, to roll the daily, and typo'ing two booster ids fails ten assertions by name.
+
+**The distribution is a curve, not a number.** A new garden opens with four power-ups in the tray,
+the third and fourth quests a player finishes pay two each, and every level from 2 to 8 pays a rung —
+about 54 minutes of cover inside the first days, on top of the bag's 11½. Levels 10, 12 and 15 pay one
+each and then the level faucet is finished and quests, the Almanac and the Stand carry it.
+
+**The short boosters are front-loaded on purpose.** A boost already running cannot be refreshed, so a
+bag of half-hour auras is a bag the first session cannot spend. Worth knowing for phase 4: two Fortune
+Auras are 41 of those 54 minutes, and rarity odds are the one effect a beginner cannot *see* — the
+cover they feel is the 30-second pair, and `n` is the knob for it.
+
+*Rejected:* a `startedAt` timestamp to scope "the first few days". A save has no creation time, and
+seeding one in `defaultState()` would stamp every existing player as brand new on their next load.
+Reputation is monotonic, survives the Turn, and is already the shape `levelGrants` uses — so the curve
+is unfarmable **by construction** rather than by a guard.
+
+*Also:* `giveOpeningBag()` is deliberately **not** part of `defaultState()`, because that object is
+the backfill source for every save ever written and a bag declared there would be handed to any old
+save predating `boostInv`.
+
+### 3 · A petal with no pips
+
+`petalTrack()` draws the Turn panel's cards *and* the Almanac's rows, so this was one edit for both.
+The sentence is authored in data with a `{v}` token where the panel writes the effect value back in —
+a hand-typed "+30%" would be the first copy of a number this file otherwise keeps in one place.
+
+**At zero pips the sentence replaces the value line.** That is a small judgement inside the ruling:
+the show-the-numbers ruling put "now · next" on every track, and at zero pips "next +30%" and
+"+30% … per petal" are one fact said twice, the second time with a noun attached.
+
+### 4 · The gestures — re-ruled at the door
+
+Phase 3.5 read the gesture as a **pointer**: the Hollow is under the garden, so point the finger down
+to go there. In the hand it is backwards. **The finger drags the world.** Pull it up and you descend;
+push it down and you rise. Swipe UP goes down into the Hollow, swipe DOWN goes out along the lane.
+
+This reinstates the half of the phase-3.5a option that was **explicitly rejected at the time**, and
+`docs/22-creatures.md` had argued for it when the Hollow was first designed: *"dragging down pulls the
+world down past you, which is the direction every scroll already uses."* **The original argument was
+right and the gate overruled it** — that is the reusable lesson, and it is why a picture-argument
+about where a room *is* should not settle a question about what a *hand* does.
+
+**The placeholder gate is not built, and that is the owner's call taken mid-round.** Swipe-down is the
+Wild Meadow's *only* door in the game. The gate would have stranded the room, its hives, its keepers
+and four quests worth 114 of the ladder's 777 reputation — and a quest for a feature with no UI jams
+the strip. Three options went to the owner: build the gate and let the meadow go dark; make the gate
+the meadow's porch; or fix only the inverted half and let the gate wait. **The owner chose the third.**
+Both directions answer, nothing is stranded, and the gate ships in a round that gives it somewhere
+else to live.
+
+*Also done, because the code was open:* both room exits record their pointer id and clear on
+`pointercancel` — the same two-thumb hole the garden's swipe closed. The meadow is one thumb-tap away
+from a full board and was the most exposed.
+
+### 5 · Teaching the swipe
+
+Turn 1's gift is Fall, and a gift nobody can find is not a gift. Two one-shot marks, each retired by
+the player doing the thing it teaches — which also matters because `sayText()` refuses to draw a
+speech bubble while a coach is up, so a mark that could sit forever would mute the flower.
+
+**They point at their tab from the side**, because a season tab is a 38px column pinned to the screen
+edge. Two collisions came out of the review and both are fixed: a bubble centred on the tab is exactly
+band height, and one clamped above the band in Fall at 390×667 cut through the bed chip. The mark now
+asks the band and the chip where their tops are, and **a side mark the clamp pushes clear off its tab
+flips back to the stacked shape** rather than pointing a sideways arrow at nothing.
+
+**Gated on `Game.fallOpen()`, never on `turnsCompleted >= 1`** — which Turn opens Fall is
+`DATA.year.fallTurn`, a knob, and the identity would go quietly wrong the day it moves. Backfilled
+from Fall itself: a paid bed or a crop in the ground is proof the player found Fall and came back.
+`seen.meadow` still gets **no** backfill, deliberately — nobody has seen the line it gates.
+
+### 6 · The bed chip
+
+Above the board, its last 2px sat inside the board and its lower third lay across the stubble fringe —
+Fall's one rule drawn on top of Fall's one picture. On a notched phone, where the board fills the
+frame, it was pushed off the top of the board entirely.
+
+It hangs under the board now, anchored to `.fl-wrap`, which **is** the board's box. **The strip it
+stands in is reserved, not borrowed**: `sizeBoard()` subtracts 46px from the height it will accept. On
+a phone the board is width-bound and this costs nothing; on an SE-class screen it is height-bound and
+gives up about 45px. Without that, the widest state lay across the UPGRADE and POWER-UP buttons at
+390×667 — measured, not guessed. The consequence to know: Fall's board now sits ~23px **above** the
+garden's, where it used to sit ~12px below. It is the board *and its caption* that is centred.
+
+### 7 · The Cards pass
+
+The album shipped 15 August; the standard hardened on the 26th. These were the last screens still
+drawn the old way.
+
+**The fix is doc 05's first check applied literally.** Twelve pale tints on pale cream have no figure
+and no ground, and no amount of detail fixes that — the body colour has to change. So the tiles and
+the card faces become the **dark body tier**, in the Tally plate's ramp, which exists for exactly this
+case: a dark body standing on cream inside a sheet. The set's tint moves to its ring, where a tint
+belongs.
+
+**Rarity is painted in the rarity colours.** The reveal glowed gem-cyan for Rare and coin-gold for
+Legendary — the two *currencies* — and Wonderstruck pink for Mythical. **Mythical wears legendary gold
+said twice**, because the card ladder has five rungs where the garden has four and `--epic` purple
+already means one rung *down*.
+
+*Rejected:* giving Mythical a colour of its own — a new value in a palette this project already
+carries 176 of by accident, and "gold said twice" reads correctly rather than merely cheaply. Raised
+as a question rather than settled; frozen, a Legendary and a Mythical differ by 1px of ring and 14px
+of glow.
+
+*Rejected:* every layout change the standard would otherwise ask for — a name-plate on the card face,
+a back for an unowned card, wider grid gaps. The ruling said look, not layout; they are questions in
+the handoff.
+
+### Two tools, because the round could not otherwise be checked
+
+`tools/probe.js` gained `media:reduce` — CSS cannot force a media query on from inside the page, and
+"honest under reduced motion" is not a claim you can screenshot without it — and `drag:`, because the
+project had no way to drive a gesture headlessly at all. **`drag:` sends mouse input, not touch:** a
+dispatched touch drag on a page with no `touch-action:none` is read as a pan and answered with
+`pointercancel` after the first move, so the gesture dies in automation on a screen that works
+perfectly in the hand.
+
+### What the gauntlet caught that the build did not
+
+Five independent critics over the finished round. The two that mattered were both **the same trap
+wearing different hats**: `box-shadow` is one property. A duplicate Rare/Legendary/Mythical pack card
+wore the dark body's lip on a cream body, because `:not(.is-new)` and `.r-legend` are the same
+specificity and the later rule won outright — so the rarity ring moved onto its own custom property,
+and "which rarity" and "already had it" stopped fighting. And `bill 1c` was passing on things it did
+not test: its Almanac check asserted a getter after a Turn had already emptied the bag, the daily was
+not audited at all, and a typo'd booster id on any rung but level 2 paid nothing while the toast still
+announced a power-up. **A new test group is worth sabotaging before it is worth believing.**
+
+---
+
 ## 2026-08-30 (rulings, after phase 3.7) — The pantry was the bank, and the referee needs seeding
 
 **Two rulings out of the owner reading the phase-3.7 pacing result and not believing it.** Both came

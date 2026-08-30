@@ -9,8 +9,9 @@ decided, and what to do next. Update it at the end of any significant session.
 
 The game is **built, working, and live** at <https://jonishua.github.io/gardenwonder/>, deployed from
 `main` at the repository root. It is a single-screen idle garden — tap a talking flower, plant
-seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
-from quests and levels.
+seeds in eight plots, harvest with rarity multipliers, spend on **upgrades** (the word "badges" is
+retired everywhere a player reads, 2026-08-30), and earn **power-ups** from a starting bag, quests,
+levels, the daily and the Almanac.
 
 > **THE STRATEGY REFRESH LANDED 2026-08-30 — three new documents, docs-only, no code and no economy knob.**
 > [38-market-refresh.md](38-market-refresh.md) (the lane as it stands), [39-growth-and-launch.md](39-growth-and-launch.md)
@@ -1206,9 +1207,49 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
-**PHASE 3.7 IS BUILT AND WAITING FOR THE OWNER'S REVIEW.** All three rulings are in. Nothing is
-half-done and nothing is blocked. Walk the two-minute check below before reading further — most of
-what the next session does depends on the answer to its last two questions.
+**PHASE 3.8 — THE POLISH ROUND — IS BUILT AND WAITING FOR THE OWNER'S REVIEW.** Six of the owner's
+seven rulings are in as written; the seventh was re-ruled by the owner mid-round and is in as
+re-ruled. Nothing is half-done and nothing is blocked. The reasoning is the phase-3.8 entry at the
+top of [10-decision-log.md](10-decision-log.md); the five-minute phone check is below.
+
+**What landed**, in the owner's order:
+
+1. **The ready Turn button throws a gold glint** across its face every `DATA.year.turnShineEvery`
+   seconds, on top of the 1.4s breath, and holds a solid ring under reduced motion. Building it found
+   that **the dock's year meter had never once painted** — `ui.js` wrote a `height` onto the clip box
+   instead of `--year-p` onto the waterline. Fixed here.
+2. **"Badges" is gone from everything a player reads**, and **every power-up faucet is audited**:
+   nothing was farmable by Turning, and `bill 1c` in the suite now fails if anything ever is. The
+   curve is reshaped — a new garden opens with four power-ups in the tray, the third and fourth
+   quests pay two each, every level from 2 to 8 pays a rung, then it tapers to 10/12/15 and stops.
+   Provisional values; deep tuning is phase 4's.
+3. **Every petal skill says what it is in one plain line**, on the Turn panel's cards and the
+   Almanac's rows (one renderer, one edit). At zero pips the sentence replaces the bare "next +30%".
+4. **The vertical swipe is re-pointed**: finger UP goes down to the Hollow, finger DOWN goes out to
+   the Wild Meadow. **The placeholder gate was NOT built** — see below.
+5. **Two one-shot coach marks teach the season swipe** after the Turn that opens Fall, one each way,
+   pointing at the season tab from the side.
+6. **Fall's bed chip hangs under the board**, in a strip `sizeBoard()` reserves for it.
+7. **The album, the set view and pack-opening are on the house material** — dark bodies, real lips,
+   numbers in cream pills, and rarity in the rarity colours instead of the two currencies.
+
+**THE ONE RULING THAT CHANGED, and why it matters to whoever reads this next.** Ruling 4 gave
+swipe-down to a placeholder gate. **Swipe-down is the Wild Meadow's only door in the game** — the
+gate would have stranded the room, its hives, its keepers and four quests worth 114 of the ladder's
+777 reputation. Three options went to the owner and **the owner chose to fix only the inverted half
+and let the gate wait**. Do not re-propose the gate as an easy win: the blocker is that the meadow
+needs a second door first. Recorded in
+[11-known-issues.md](11-known-issues.md#what-phase-38-knowingly-left-2026-08-30).
+
+**What phase 3.8 knowingly left** — the gate, four Cards layout questions for the owner, Fall's
+board sitting ~23px higher than the garden's, and two pre-existing nits the review surfaced — is in
+[11-known-issues.md](11-known-issues.md#what-phase-38-knowingly-left-2026-08-30). **Read that section
+before proposing anything about the Cards screens or the vertical axis.**
+
+---
+
+**Still open from before this round, and unchanged by it.** Walk the phase-3.7 two-minute check below
+— most of what the next session does depends on the answer to its last two questions.
 
 **The pacing verdict was chased down after phase 3.7 shipped, and it produced two rulings. Both are
 specced and neither is built — they are the next two jobs, in this order.**
@@ -1268,6 +1309,59 @@ turns the Stand's standing back on — one word, `STAND.repPaused` in `data.js`.
 ladder and the Almanac's milestones are the only road to every level gate in the game, including the
 fourth habitat slot at level 16, so **do not bench another ladder quest without re-checking that
 headroom.**
+
+### The five-minute check, phase 3.8 — the polish round, on the phone
+
+**Every step was walked in the live build before it was written down.** Developer tools is the
+unlabelled patch of empty space just right of the gem wallet — one tap, no icon.
+
+**Steps 1–3 want a FRESH garden.** Settings → *Start over*, or open the game on a phone that has
+never seen it. Steps 4–8 want a Turn under your belt.
+
+**1 · A new garden opens with power-ups already in it.** The round button on the right of the band
+is lit in a colour with a **4** on it before you have done anything at all. Tap it and something
+starts. That is the first-days richness the ruling asked for — and it keeps coming: every level from
+2 to 8 pays another one, and levels arrive fast because the first quests are small.
+
+**2 · The ask says "upgrades".** Play until the Turn is ready (or Developer tools → *Earn 150K into
+the year*), then tap **Turn**. The card that asks you to confirm lists what the year takes: Gold,
+**Upgrades**, Power-ups, big plots, growing. The word "badges" is gone from everything you can read.
+
+**3 · A petal explains itself before you buy one.** Almanac (the book in the HUD) → scroll to any
+flower's rows. With no dots filled it now reads *"+30% gold on this flower's harvests, per petal."*
+and *"Grows 6% faster, per petal."* — not the bare "next +30%" from your screenshot. Same on the
+Turn panel's flower cards.
+
+**4 · The Turn button calls you.** With a Turn ready, watch the dock without touching it. It breathes
+gold as before — and **every nine seconds a glint crosses its face.** The green fill under it is also
+painting for the first time; it never has before, on any build you have played.
+
+**5 · Both swipes go where your hand expects.** On the lawn — not on a plot, not on the flower:
+**drag UP** and you go **down into the Hollow**; **drag DOWN** and you go **out to the Wild Meadow**.
+Each room comes back the opposite way, and each exit pill's arrow points the way its swipe goes. This
+is the half of ruling 4 that shipped; the placeholder gate did not — see *What phase 3.8 knowingly
+left* in [11-known-issues.md](11-known-issues.md), which explains why.
+
+**6 · After the Turn, the game teaches Fall.** Come back to the garden after the ceremony and a
+bubble sits beside the FALL tab with a finger dragging: *"Swipe left for Fall."* Do it. Inside Fall,
+the mirror image points back at SUMMER: *"Swipe right for the garden."* Each shows once, ever, and
+each disappears the moment you do the thing it teaches.
+
+**7 · The bed chip sits clear of the garden.** In Fall, the *"Fill all 8 for +50%"* pill is now
+**under** the board, not across its top edge. Plant the bed and watch it change: filling → all in →
+one more → the whole bed, gold and pulsing with the board's gold rim. Nothing it says is drawn on
+the bed any more.
+
+**8 · Open a pack in the new clothes.** Cards → *Open a pack*. The card is a dark wooden panel with
+a proper edge and a shadow, the art on a tinted disc, the name in cream on top. A **new** Rare or
+Legendary wears a ring in the same blue and gold the garden uses for rarity; a **spare** is the same
+card drained to grey paper with no ring at all. Back out to the album: twelve dark tiles on cream,
+each with its set's colour on its badge and its count in a little cream pill.
+
+**Two things to tell me if they feel wrong:** whether the first days feel *too* generous with
+power-ups (the knob is `n` in `DATA.levelGrants`, and it is provisional), and whether Mythical needs
+a colour of its own — right now it wears legendary gold said twice, because the cards have five
+rarity rungs where the garden has four.
 
 ### The two-minute check, phase 3.7 — read this one first
 
@@ -1412,13 +1506,17 @@ unlabelled patch of empty space just right of the gem wallet — one tap, no ico
 
 **1 · The two rooms are gestures now.** On the lawn (not on a plot, not on the flower):
 
-- **Swipe UP** → the Wild Meadow. Swipe **down** to come back.
-- **Swipe DOWN** → the Hollow. Swipe **up** to come back.
+- **Swipe UP** → the Hollow. Swipe **down** to come back.
+- **Swipe DOWN** → the Wild Meadow. Swipe **up** to come back.
 
-Down goes under, up goes out, and a room leaves by the opposite swipe. There are no doors drawn on
-the lawn any more. **Watch for this:** the meadow has no visible entrance at all — the flower says
-*"Swipe up sometime — the wild meadow is out that way"* once, on its first idle line after the
-tutorial, and that is the whole of it. If it feels forgotten, say so; the fix is a tab of its own.
+**Re-pointed 2026-08-30 (phase 3.8) after the owner played it and both directions went to the wrong
+room.** The rule is now *the finger drags the world*: pull it up and you descend, push it down and
+you rise. A room still leaves by the opposite swipe, and both exit pills' marks point the way their
+swipe goes. There are no doors drawn on the lawn. **Watch for this:** the meadow has no visible
+entrance at all — the flower says *"Swipe down for the wild meadow."* once, on its first idle line
+after the tutorial, and that is the whole of it. If it feels forgotten, say so; the fix is a tab of
+its own. Note the flag has no backfill, so a save that already spent that line never hears the new
+direction.
 
 **2 · One power-up, used, and the slot refilling.** Developer tools → **+5 levels**, twice. Three
 power-ups land. The round button on the right of the band lights up in the boost's own colour with a
@@ -1770,6 +1868,56 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
 
+**Writing a `height` onto a clip box pinned `inset:0` paints nothing, silently.** `.turn-fill` is
+`position:absolute; inset:0; overflow:hidden` and the water is its `::before` reading `--year-p`.
+`ui.js` wrote `el.yearFill.style.height`, which over-constrains the box (top, bottom and height all
+set, so `bottom` is dropped), shrinks the clip from the top, and leaves the waterline at `0%`. **The
+dock's year meter had never once painted** and nobody noticed for two days, because a meter that is
+empty looks exactly like a meter at zero. Two commits a day apart each did half of one design; the
+lesson is to check that the thing you are styling is the thing that draws.
+
+**A collapsed animation must never be the only carrier of a STATE.** The global reduced-motion clamp
+runs any animation once for `.001ms` with no fill-mode, so the value it was animating simply reverts.
+The ready Turn button's whole signal was a breathing gold ring, and its attention dot is suppressed on
+the assumption that the button is breathing — so **a player with the preference on had no ready signal
+at all**, and it reviewed as correct for weeks. `node tools/probe.js media:reduce page:index.html` is
+now the way to screenshot it. Where a state animates, reduced motion needs a *static substitute*.
+
+**`box-shadow` is one property, and the trap runs BOTH ways.** The recorded version is a state
+modifier deleting the base lip. The mirror bit this round: `.pack-reveal:not(.is-new) .pack-card`
+(drained paper) and `.pack-reveal.r-legend .pack-card` (the gold ring) are the **same specificity**
+— `:not()` contributes its argument — so the later rule won outright and a spare Legendary wore the
+dark body's lip and bruise on a cream body. When two independent facts want the same property, give
+one of them a **custom property** (`--pc-ring`) and compose, instead of restating the other's whole
+stack in every combination.
+
+**A coach mark centred on a screen-edge tab lands exactly on the band.** A season tab's midpoint is
+the same height as the UPGRADE pill and the POWER-UP button, and in Fall on a short screen it is also
+the bed chip's row. `placeCoach()` now asks those three nodes where their tops are rather than
+guessing a constant — and **a side mark the clamp pushes clear off its own tab flips back to the
+stacked shape**, because a sideways arrow pointing at nothing is worse than a down arrow that reaches.
+
+**A hidden target measures 0×0, so a coach mark has to be NOT SHOWN, not merely not painted.**
+`.in-meadow .coach{display:none}` hides the bubble but leaves `refreshCoach()` happily measuring a
+collapsed season tab and parking the mark over the wallets. Every room that can be up is named in the
+guard now. (`docs/08` claimed `.in-hollow` hid coach marks in CSS; it never did.)
+
+**A dispatched TOUCH drag is read as a pan and cancelled after the first move.** On a page with no
+`touch-action:none`, CDP's `Input.dispatchTouchEvent` produces `pointerdown → pointermove →
+pointercancel`, so a gesture that works perfectly in the hand dies in automation and looks broken.
+`tools/probe.js`'s `drag:` step sends **mouse** input instead — still real browser input with a live
+pointer, which is the thing a synthetic `PointerEvent` is not. Its `drag:@X,Y:DX,DY` form exists
+because the garden's swipe only starts on the background and the centre of anything big enough to
+name is covered by the board; `@30,600` is the lawn at 390×844. Keep the endpoint inside the
+viewport — events dispatched outside the window are not delivered.
+
+**A new test group is worth sabotaging before it is worth believing.** `bill 1c` shipped with three
+assertions that could not fail: one asserted a getter after a Turn had already emptied the bag, one
+table (`DATA.dailies`) was not in the audit at all, and a typo'd booster id on any rung but the one
+the walk happened to cross paid nothing while the level-up toast still announced a power-up. All three
+looked fine and read fine. **Break the guard, run the suite, and check that the assertion you meant to
+write is the one that goes red.**
+
 **An absolutely-positioned child of a `place-items: center` grid container is sized to its content,
 not stretched — even with `inset: 0`.** The announcement dialog's scrim was `position:absolute;
 inset:0` inside a centring grid, and it measured **0×0**: `align-self`/`justify-self` from
@@ -1911,7 +2059,7 @@ merged to `main` while your local tree still looks current. `git fetch` first.
 **A gesture cannot be added over controls that act on `pointerdown`.** Plots and the flower fire the
 moment you touch them, by design — `click` waits for release and makes rapid tapping feel laggy. So
 a swipe begun on one has already planted or harvested before it is recognisable as a drag, and the
-garden's swipe-up therefore only starts on the background. Do not "fix" this by moving those
+garden's vertical swipe therefore only starts on the background. Do not "fix" this by moving those
 handlers to `pointerup`; the tap latency is load-bearing.
 
 **An upkeep state the player cannot clear is a bug wearing a mechanic.** Sleeping applies only to
@@ -2293,12 +2441,13 @@ stale line here costs them real time before they have any way to know it is wron
 >
 > **Where the game is now.** The garden is the core loop: tap a talking flower, plant nineteen
 > seeds in eight plots, harvest with rarity and mutations. Six **creatures** with traits, stars,
-> pairs and keepsakes live in **the Hollow** under it. Above it there is now a **world map** you
-> pull back to — swipe down from the garden, swipe up to go in — holding the garden, the Hollow's
-> burrow, the **Garden Stand** (customers queue up wanting bouquets and named honeys, and pay coins
-> and reputation) and the **Wild Meadow** (a board of hives and tenders that make honey and
-> pollinate the garden). Read `docs/25-world-map.md`, `docs/03-systems.md` and the top few entries
-> of `docs/10-decision-log.md`.
+> pairs and keepsakes live in **the Hollow** under it, and the **Wild Meadow** (a board of hives and
+> tenders that make honey and pollinate the garden) is out along the lane. **The world map is
+> deleted** — both rooms are gestures now: the finger drags the world, so dragging UP goes down into
+> the Hollow and dragging DOWN goes out to the meadow, and each room leaves by the opposite swipe.
+> The **Garden Stand** (customers queue up wanting bouquets and named honeys, and pay coins and
+> reputation) is the Orders & Quests dock button. Read `docs/03-systems.md`,
+> `docs/08-ui-and-layout.md` and the top few entries of `docs/10-decision-log.md`.
 >
 > **THE HOUSE RULE, and the most useful sentence in the docs: share the grammar, never share the
 > verb.** Every place is the same frame — a square board floating in a scene, the talking flower in
