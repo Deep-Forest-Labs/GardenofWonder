@@ -61,6 +61,13 @@ Forgetting is not fatal — network-first means an online player still gets the 
 that file will be missing offline, and the game will fail to boot without a network. It is the one
 maintenance obligation this system creates.
 
+**Announcement art has the same obligation** (2026-08-30). `art/announcements/<id>.png` is the only
+raster the game itself loads — the narrow exception written up in
+[09-conventions.md](09-conventions.md) — and an installed app that cannot reach it draws a broken
+square in the middle of a dialog whose single button is the only way out. Every row added to
+`DATA.announcements` adds its image to `CORE` in the same commit. `VERSION` is **6** as of that
+change.
+
 ## Icons
 
 `icons/icon.svg` is the source of truth, generated in the game's own style: the `round` petal path

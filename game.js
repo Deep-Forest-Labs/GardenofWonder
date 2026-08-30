@@ -567,6 +567,52 @@ const Game = (() => {
     }
   }
 
+  /* ---------------- what's new ----------------
+
+     The announcement's seen-flag is the one piece of persistence in the game
+     that is deliberately NOT part of the save. Its button wipes the save, so a
+     flag living inside it would be erased on the way out and the popup would
+     open on every load forever. Its own key survives reset() by construction,
+     and it survives a player's own Settings reset for the same reason: an
+     announcement is news, and news is not progress.
+
+     Kept here rather than in a UI file because this is storage, not DOM, and
+     because a test can only assert "the flag survived the reset" against the
+     engine that owns both. */
+  const NEWS_KEY = 'gw-news';
+
+  function newsSeenList() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(NEWS_KEY) || '[]');
+      return Array.isArray(raw) ? raw.filter((id) => typeof id === 'string') : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  const newsSeen = (id) => newsSeenList().indexOf(id) !== -1;
+
+  function markNewsSeen(id) {
+    if (!id || newsSeen(id)) return false;
+    const list = newsSeenList().concat(id);
+    try { localStorage.setItem(NEWS_KEY, JSON.stringify(list)); } catch (e) { /* quota */ }
+    return true;
+  }
+
+  function clearNewsSeen() {
+    try { localStorage.removeItem(NEWS_KEY); } catch (e) { /* private mode */ }
+  }
+
+  /** The newest announcement this player has not read, or null. Newest is LAST
+      in the data, so a new build is one row appended. */
+  function pendingAnnouncement() {
+    const all = DATA.announcements || [];
+    for (let i = all.length - 1; i >= 0; i -= 1) {
+      if (!newsSeen(all[i].id)) return all[i];
+    }
+    return null;
+  }
+
   function reset() {
     localStorage.removeItem(SAVE_KEY);
     // Without this the next load() re-imports the old Idle Garden Reborn save
@@ -657,16 +703,28 @@ const Game = (() => {
     return isNight() ? 1 + critterTrait('nightYield') : 1;
   }
 
-  /** Payout multiplier a plot earns from its own verb and its neighbours'. */
-  function verbPayoutMult(idx) {
+  /** Payout multiplier a plot earns from its own verb and its neighbours'.
+      `prospective` answers for a seed that is not in the ground yet — the plant
+      picker only ever opens on an EMPTY plot, so reading the plot's own verb
+      there drops every self-verb term and quotes a Nightbell at double what it
+      pays by day. Omit it and the plot answers for itself, as harvest() wants. */
+  function verbPayoutMult(idx, prospective) {
     const t = VT();
     let m = 1 + neighbourVerbs(idx, 'nurse') * t.nurseGive;
-    const own = verbAt(idx);
+    const own = prospective === undefined ? verbAt(idx) : prospective;
     if (own === 'nurse') m *= (1 - t.nurseCost);
     if (own === 'deeproot') m *= 1 + plantedNeighbours(idx) * t.deeprootPerNeighbour;
     /* Read at harvest, not at planting — the decision Nightbell creates is *when to pick it*,
-       which only means something if the clock is checked at the moment you pick. */
-    if (own === 'nightbell') m *= isNight() ? t.nightbellNight : t.nightbellDay;
+       which only means something if the clock is checked at the moment you pick.
+       A PROJECTION therefore quotes the day rate, always: the plant is not ripe
+       yet, the sky will have moved by the time it is, and the Stand's rule for
+       a price that cannot be known when it is written applies here too — quote
+       a floor the player can trust, never a ceiling. The row's verb note is
+       what tells them picking it after dark pays more. */
+    if (own === 'nightbell') {
+      const night = prospective === undefined ? isNight() : false;
+      m *= night ? t.nightbellNight : t.nightbellDay;
+    }
     return m;
   }
 
@@ -887,16 +945,23 @@ const Game = (() => {
     return { idx, cost };
   }
 
-  const offlineRate = () => Math.min(
+  /* Both take the level as an argument so a badge card can ask what the NEXT
+     one is worth and get an answer that has been through the same clamp. The
+     ceiling binds well before the level cap once a creature is lending its
+     trait, and a card promising +5% into a clamp is the lie this pass exists
+     to remove. */
+  const offlineRateAt = (lvl) => Math.min(
     DATA.offline.maxRate,
-    (DATA.offline.baseRate + state.upgrades.offlineRate * DATA.offline.ratePerLevel)
+    (DATA.offline.baseRate + lvl * DATA.offline.ratePerLevel)
       * (1 + critterTrait('offlineRate'))
   );
-  const offlineHours = () => Math.min(
+  const offlineHoursAt = (lvl) => Math.min(
     DATA.offline.maxHours + (pairActive('longwatch') ? PAIR_TUNING.longWatchHours : 0),
-    DATA.offline.baseHours + state.upgrades.offlineHours * DATA.offline.hoursPerLevel
+    DATA.offline.baseHours + lvl * DATA.offline.hoursPerLevel
       + (pairActive('longwatch') ? PAIR_TUNING.longWatchHours : 0)
   );
+  const offlineRate = () => offlineRateAt(state.upgrades.offlineRate);
+  const offlineHours = () => offlineHoursAt(state.upgrades.offlineHours);
 
   /* What the garden actually produces on its own, in coins per second.
      A plot counts only if it has an auto-planter, and only if the drone exists to pick it —
@@ -1223,6 +1288,48 @@ const Game = (() => {
   function plantGrowth(seedDef, idx) {
     return seedDef.grow
       * Math.max(0.3, growModifier() * keeperModifier(idx) * petalGrowMult(seedDef.id));
+  }
+
+  /* What a harvest of this seed in this plot would actually pay, as the range
+     between the commonest and the rarest roll. The picker used to print
+     seed.yield straight off the data, which is the same lie the grow label
+     told: every live multiplier a harvest reads was missing, so a flower full
+     of Rich Bloom quoted the price of a flower with none. Rarity and mutation
+     stay OUT — those are rolls, not the value the player is holding — and
+     everything harvest() applies before them is in.
+
+     `mult` is what the pills need to know: at 1 the number is the plain data
+     value, above 1 it has been improved and the surface says so. */
+  function plantPayout(seedDef, idx) {
+    const stack = (1 + boostVal('globalCredits'))
+      * (1 + pollination())
+      * wonderMult()
+      * petalMult(seedDef.id)
+      * verbPayoutMult(idx, seedDef.verb || null)
+      * critterPayoutMult();
+    return {
+      min: Math.round(seedDef.yield * stack),
+      max: Math.round(seedDef.yield * MAX_RARITY_MULT * stack),
+      mult: stack
+    };
+  }
+
+  /* A petal skill in the two numbers a buyer needs: what you have now, and what
+     the next one adds. Both are the effect as a player reads it — Rich Bloom in
+     payout, Quick Sprout in time saved — never the raw multiplier, so the
+     buttons can print them without doing the arithmetic themselves. */
+  function petalEffect(id, skill) {
+    const def = PETALS().shared[skill];
+    if (!def) return null;
+    const owned = petalsOf(id)[skill] || 0;
+    const maxed = owned >= def.cap;
+    return {
+      owned,
+      cap: def.cap,
+      maxed,
+      now: owned * def.value,
+      next: maxed ? 0 : def.value
+    };
   }
 
   function todayKey() {
@@ -2216,13 +2323,21 @@ const Game = (() => {
     return true;
   }
 
+  /** One keeper's share of the meadow's speed. The panel used to work this out
+      from two MEADOW constants and the star-lending rule; it is written once,
+      here, and keeperSpeed() is its sum. */
+  function keeperLift(id) {
+    const def = critterById(id);
+    if (!def) return 0;
+    const mult = def.affinity === 'meadow' ? MEADOW.affinityMult : 1;
+    return critterWorkLevel(id) * MEADOW.keeperSpeedPerStar * mult;
+  }
+
   function keeperSpeed() {
     let bonus = 0;
     keepers().forEach((id) => {
-      const def = critterById(id);
-      if (!def || critterAsleep(id)) return;
-      const mult = def.affinity === 'meadow' ? MEADOW.affinityMult : 1;
-      bonus += critterWorkLevel(id) * MEADOW.keeperSpeedPerStar * mult;
+      if (critterAsleep(id)) return;
+      bonus += keeperLift(id);
     });
     return bonus;
   }
@@ -2945,13 +3060,21 @@ const Game = (() => {
 
   /* Selling stands in for the order board until the Market exists. Orders are
      meant to pay well above these prices — see docs/13-order-system.md. */
-  function sell(kind, key, all) {
+  /** What one unit is worth and how many are in the pantry — the row that shows
+      "Sell all" and the sale itself both price from here, so they cannot
+      disagree. */
+  function sellValue(kind, key) {
     let unit = 0;
     let have = 0;
     if (kind === 'honey') { unit = APIARY.honeyValue(key); have = state.apiary.honey[key] || 0; }
     else if (kind === 'wax') { unit = APIARY.waxValue; have = state.apiary.wax; }
     else if (kind === 'flower') { unit = flowerValue(key); have = state.flowers[key] || 0; }
     else { const r = CRAFT_RECIPES.find((x) => x.id === key); unit = r ? r.value : 0; have = state.goods[key] || 0; }
+    return { unit, have, total: unit * have };
+  }
+
+  function sell(kind, key, all) {
+    const { unit, have } = sellValue(kind, key);
     if (!have || !unit) return 0;
 
     const qty = all ? have : 1;
@@ -3555,6 +3678,15 @@ const Game = (() => {
   /* ---------------- shop ---------------- */
   const HOLD_INTERVAL_MIN = 180; // floor, ms — never faster than a fast manual tap
   const HOLD_INTERVAL_STEP = 60; // ms shaved off per level
+  /* The step and ceiling of the three badges whose effect is a running total on
+     `state.tap`. They are named because the badge CARD quotes what the next
+     level buys, and a card reading a second copy of these numbers would go on
+     advertising the old step after a rebalance touched only the purchase. */
+  const CRIT_MULT_STEP = 2;
+  const CRIT_MULT_MAX = 50;
+  const COMBO_STEP = 10;
+  const COMBO_MAX = 100;
+  const PLOT_EXPANSION_STEP = 2;   // plots opened per Land Deed
   const AUTO_WATER_MAX_LEVEL = 10;  // 1%/level, so this caps growth speed at +10%
   const RAIN_DANCE_MAX_LEVEL = 10;  // 1%/level, caps trigger chance at 10%
   const BEE_SWARM_MAX_LEVEL = 5;    // a free jar is worth more than a grow-time shave, so a lower cap
@@ -3576,13 +3708,13 @@ const Game = (() => {
       return true;
     },
     critChance: () => { state.upgrades.critChance += 1; state.tap.critChance += 0.01; return true; },
-    critMult: () => { state.upgrades.critMult += 1; state.tap.critMult = Math.min(50, state.tap.critMult + 2); return true; },
-    comboMeter: () => { state.upgrades.comboMeter += 1; state.tap.comboMax = Math.min(100, state.tap.comboMax + 10); return true; },
+    critMult: () => { state.upgrades.critMult += 1; state.tap.critMult = Math.min(CRIT_MULT_MAX, state.tap.critMult + CRIT_MULT_STEP); return true; },
+    comboMeter: () => { state.upgrades.comboMeter += 1; state.tap.comboMax = Math.min(COMBO_MAX, state.tap.comboMax + COMBO_STEP); return true; },
     rainDance: cappedUpgrade('rainDance', RAIN_DANCE_MAX_LEVEL),
     beeSwarm: cappedUpgrade('beeSwarm', BEE_SWARM_MAX_LEVEL),
     ladybug: cappedUpgrade('ladybug', LADYBUG_MAX_LEVEL),
     plotExpansion: () => {
-      const unlocked = unlockNextPlots(2);
+      const unlocked = unlockNextPlots(PLOT_EXPANSION_STEP);
       if (unlocked > 0) { state.upgrades.plotExpansion += 1; return true; }
       return false;
     },
@@ -3656,10 +3788,14 @@ const Game = (() => {
   const decorCount = (id) => state.decor.filter((d) => d.id === id).length;
 
   /* ---------------- automation + tick ---------------- */
+  /** Seconds between the drone's pickups at a given level. Read by the badge
+      card as well, so the number on the button is the number in the loop. */
+  const autoHarvestCadence = (level) => Math.max(0.7, 3 - (level || 0) * 0.5);
+
   function processAutoHarvest(now) {
     const level = state.upgrades.autoHarvest;
     if (!level) return;
-    const cadence = Math.max(0.7, 3 - level * 0.5);
+    const cadence = autoHarvestCadence(level);
     if (now - lastAutoHarvest < cadence) return;
     const target = state.grid.findIndex((cell) => !cell.locked && cell.seed && cell.ready);
     if (target === -1) return;
@@ -4166,11 +4302,201 @@ const Game = (() => {
     pending: () => ({ rarity: dev.rarity, gem: dev.gem, weather: dev.weather, boost: Object.keys(dev.boost).filter((k) => dev.boost[k]) })
   };
 
+  /* ---------------- what a purchase is worth ----------------
+
+     The owner's rule, from live play: if a button costs something, it says what
+     you get and what you now have. That is a UI job, but the NUMBERS are this
+     file's — every one of these existed already, inside the function that spends
+     them, and the panels were either reciting a constant from data.js by hand or
+     describing the effect in adjectives. A getter here is what keeps the label
+     and the engine the same number forever.
+
+     Each returns `now` and `next` in one unit, named by `unit`, so the card can
+     format without knowing any of the maths behind it. */
+
+  const UPGRADE_UNITS = {
+    tapPower: 'coins', holdSpeed: 'ms', critChance: 'pct', critMult: 'x',
+    comboMeter: 'combo', rainDance: 'pct', beeSwarm: 'pct', ladybug: 'pct',
+    plotExpansion: 'plots', autoWater: 'pct', autoHarvest: 'seconds',
+    offlineRate: 'pct', offlineHours: 'hours'
+  };
+
+  function upgradeEffect(key) {
+    const lvl = state.upgrades[key] || 0;
+    const maxed = upgradeMaxed(key);
+    const out = { key, level: lvl, maxed, unit: UPGRADE_UNITS[key] || 'seed', now: 0, next: 0 };
+    switch (key) {
+      case 'tapPower': out.now = state.tap.power; out.next = 1; break;
+      /* The hold is the one badge whose number goes DOWN, and its step is
+         clamped by the floor — the last level buys less than the ones before. */
+      case 'holdSpeed':
+        out.now = state.tap.holdInterval;
+        out.next = maxed ? 0 : state.tap.holdInterval - Math.max(HOLD_INTERVAL_MIN, state.tap.holdInterval - HOLD_INTERVAL_STEP);
+        break;
+      /* critChanceNow(), not the stored field: it adds the live boost and clamps
+         at the ceiling, and it is the number tapFlower() actually rolls against. */
+      case 'critChance': out.now = critChanceNow(); out.next = 0.01; break;
+      case 'critMult':
+        out.now = state.tap.critMult;
+        out.next = Math.min(CRIT_MULT_MAX, state.tap.critMult + CRIT_MULT_STEP) - state.tap.critMult;
+        break;
+      case 'comboMeter':
+        out.now = state.tap.comboMax;
+        out.next = Math.min(COMBO_MAX, state.tap.comboMax + COMBO_STEP) - state.tap.comboMax;
+        break;
+      case 'rainDance': case 'beeSwarm': case 'ladybug':
+        out.now = lvl * PROC_CHANCE_PER_LEVEL;
+        out.next = maxed ? 0 : PROC_CHANCE_PER_LEVEL;
+        break;
+      case 'plotExpansion':
+        out.now = state.grid.filter((c) => !c.locked).length;
+        out.next = maxed ? 0
+          : Math.min(PLOT_EXPANSION_STEP, state.grid.filter((c, i) => c.locked && plotAvailable(i)).length);
+        break;
+      case 'autoWater': out.now = lvl * 0.01; out.next = maxed ? 0 : 0.01; break;
+      /* A cadence improves by shrinking, and the first level is the one that
+         turns the drone on at all — so `now` is 0 until it exists. */
+      case 'autoHarvest':
+        out.now = lvl ? autoHarvestCadence(lvl) : 0;
+        out.next = autoHarvestCadence(lvl + 1);
+        break;
+      /* The step, not the constant: both clamp, and with a creature lending its
+         trait the ceiling arrives several levels before upgradeMaxed() does. */
+      case 'offlineRate':
+        out.now = offlineRate();
+        out.next = maxed ? 0 : offlineRateAt(lvl + 1) - out.now;
+        break;
+      case 'offlineHours':
+        out.now = offlineHours();
+        out.next = maxed ? 0 : offlineHoursAt(lvl + 1) - out.now;
+        break;
+      default: {
+        /* A harvester's value is a seed's NAME, and the clamp that decides it
+           lives in processAutoPlant() — including the unlock ceiling the
+           Almanac's version forgets, which is how a card came to promise a
+           bloom the drone could not plant. */
+        const cap = () => Math.min(highestUnlockedSeedIndex(), DATA.seeds.length - 1);
+        const at = (n) => (n < 0 ? null : (DATA.seeds[Math.min(n, cap())] || null));
+        out.unit = 'seed';
+        out.now = lvl ? (at(lvl - 1) || {}).name || '' : '';
+        out.next = (at(lvl) || {}).name || '';
+        break;
+      }
+    }
+    return out;
+  }
+
+  /** The whole tap payout in one place. renderBonuses() used to rebuild this
+      stack by hand and had already drifted — it omitted the combo. */
+  function tapStats() {
+    const mult = (1 + boostVal('tapPower')) * (1 + boostVal('globalCredits'));
+    /* `perTap` is every term tapFlower() applies to a non-crit tap EXCEPT the
+       combo, and the combo is handed back beside it. That is a deliberate
+       floor: the combo decays a point a second in the frame loop and the
+       Almanac does not re-render, so folding it in makes the headline a number
+       that was true when the panel opened and is wrong by the time it is read.
+       The same rule the Stand's wild lines follow — quote a floor the player
+       can trust, never a ceiling. */
+    return {
+      base: state.tap.power,
+      mult,
+      perTap: state.tap.power * mult * wonderMult(),
+      critChance: critChanceNow(),
+      critMult: state.tap.critMult,
+      comboMult: comboMult(),
+      comboMax: state.tap.comboMax,
+      holdInterval: state.tap.holdInterval
+    };
+  }
+
+  /** Growth as a player reads it: a bonus that goes up, not a modifier that
+      goes down. */
+  const growthStats = () => ({ bonus: Math.max(0, 1 - growModifier()), modifier: growModifier() });
+
+  /** What a food actually adds to THIS creature's clock, against what the tin
+      advertises. The two differ near the cap, and the button was stamping the
+      tin: a creature with 22 hours left was offered "+16h" and given two. */
+  function foodEffect(id, foodId) {
+    const food = foodById(foodId);
+    if (!food) return null;
+    const gain = foodGain(id, foodId);
+    const nominal = food.hours * 3600;
+    return {
+      gain,
+      nominal,
+      capped: gain < nominal - 1,
+      capHours: FOOD_CAP_HOURS,
+      fedForAfter: critterFedFor(id) + gain,
+      wakes: critterAsleep(id) && gain > 0
+    };
+  }
+
+  /** What a hive placed on this cell would do, gathered in one call for the
+      panel that is choosing WHERE to build. The three readings below all take a
+      cell index and read nothing but its neighbours, so they answer for an
+      empty cell exactly as well as for a built one — this is a projection
+      because of where it is asked, not because the maths differs. */
+  function hiveProjection(i) {
+    const b = hiveBonus(i);
+    return {
+      interval: hiveInterval(i),
+      capacity: hiveCapacity(i),
+      wax: hiveWax(i),
+      pollen: APIARY.pollination + b.pollen,
+      rare: b.rare
+    };
+  }
+
+  /** A tender's five effects in the direction a player reads them: `speed` is
+      positive when hives get FASTER. Two of the five are slower and their rows
+      said only that they were cool and quiet. */
+  function tenderEffect(id) {
+    const t = meadowTender(id);
+    if (!t) return null;
+    return {
+      id,
+      speed: -t.speed,
+      cap: t.cap,
+      wax: t.wax,
+      pollen: t.pollen,
+      rare: t.rare,
+      owned: tenderCount(id)
+    };
+  }
+
+  /** The gems a skip costs AND the seconds they buy. skipCost() derived the
+      second number and threw it away, so the chip could only ever say a price. */
+  function skipSaving(idx) {
+    const cell = state.grid[idx];
+    if (!cell || cell.locked || !cell.seed) return { gems: 0, seconds: 0 };
+    const seconds = Math.max(0, cell.grow - (nowSeconds() - cell.plantedAt));
+    return { gems: skipCost(idx), seconds };
+  }
+
+  /** What a bought sky is buying: the window, and the plants standing in the
+      ground to receive a roll. On an empty board that count is zero, and the
+      card said "everything growing" either way. */
+  function weatherCallEffect(id) {
+    const w = DATA.weather.types.find((t) => t.id === id);
+    if (!w) return null;
+    let plots = 0;
+    state.grid.forEach((cell) => { if (!cell.locked && cell.seed && cell.mutateAt) plots += 1; });
+    return {
+      minutes: DATA.weatherCall.minutes * (pairActive('lanternrain') ? PAIR_TUNING.lanternRainMult : 1),
+      mutation: w.mutation,
+      catch: w.catch,
+      mult: mutationMult(w.mutation),
+      plots
+    };
+  }
+
   return {
     state, on, emit, load, save, saveNow, reset, nowSeconds,
+    newsSeen, markNewsSeen, clearNewsSeen, pendingAnnouncement,
     credit,
     seedUnlockPrice, unlockSeed,
-    petalsOf, petalCost, buyPetal, petalMult, petalGrowMult,
+    petalsOf, petalCost, buyPetal, petalMult, petalGrowMult, petalEffect,
+    plantGrowth, plantPayout,
     fallOpen, fallPlantById, fallCell, fallCenturyGrowing, fallPlant, fallHarvest,
     processFall, checkFallWindfall,
     projectedTally, projectedMint, turnReady, turnYear,
@@ -4203,7 +4529,8 @@ const Game = (() => {
     standPrice, standOrderRep, standUnitValue, standFloorUnit, standGenerate, standDeliver, standSkip, standRefillIn, processStand,
     tick, progressOf, remainingOf,
     wonderActive, wonderMult, startWonder, comboMult,
-    UPGRADE_EFFECTS,
+    UPGRADE_EFFECTS, upgradeEffect, autoHarvestCadence, procChance, tapStats, growthStats,
+    foodEffect, hiveProjection, tenderEffect, keeperLift, skipSaving, weatherCallEffect, sellValue,
     repToNext, cumulativeRep, levelFromRep, repIntoLevel,
     seedUnlocked, seedUnlockLevel, plotAvailable,
     plotGate, plotUnlockLevel,

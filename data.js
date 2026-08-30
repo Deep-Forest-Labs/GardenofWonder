@@ -543,6 +543,35 @@ const DATA = {
     { id: 'd_harvest_10', text: 'Harvest 10 blooms', track: 'harvest', qty: 10,  rep: 12, reward: { credits: 50, boost: 'seedrush' } },
     { id: 'd_plant_6',    text: 'Plant 6 seeds',     track: 'plant',   qty: 6,   rep: 12, reward: { credits: 50, boost: 'seedrush' } },
     { id: 'd_tap_100',    text: 'Tap 100 times',     track: 'tap',     qty: 100, rep: 12, reward: { credits: 40, boost: 'bloom' } }
+  ],
+
+  /* WHAT'S NEW. One row per build worth announcing, newest LAST — the game
+     shows the last one the player has not seen and never shows it twice.
+     `reset` sends the player into a fresh garden when they close it, which is
+     how a playtest group starts a new build together; the dialog says so
+     itself, so the flag and the sentence can never drift apart.
+
+     The seen-flag lives OUTSIDE the save (Game.newsSeen), because a flag
+     stored inside it would be erased by the very reset this button performs
+     and the popup would open forever.
+
+     `img` is owner-supplied art and the only raster in the game — the
+     exception is written down in docs/09-conventions.md, and anything added
+     here has to join the CORE list in sw.js or an installed app shows a
+     broken square. */
+  announcements: [
+    {
+      id: 'garden-year',
+      img: 'art/announcements/garden-year.png',
+      title: 'The Garden Year',
+      bullets: [
+        'Your garden runs a year now, and you finish it with the Turn — the gold goes, and Saved Seeds stay with you for good.',
+        'Saved Seeds buy petals. Every flower can be made worth more, and quicker to grow, forever.',
+        'Seasons garden at different speeds: summer is seconds, Fall is hours. More open as you Turn.',
+        'A new bar along the bottom — Orders & Quests, Cards, your Garden, the Turn and the Shop.'
+      ],
+      reset: true
+    }
   ]
 };
 
@@ -1103,14 +1132,32 @@ const STAND = {
      turning this off pays every board already sitting in a save. */
   repPaused: true,
 
-  /* Orders must always beat selling their contents, or the whole engine is
-     optional. The lowest multiplier here is the floor that guarantees it, and
-     tools/sim-test.js asserts the property rather than the number. */
+  /* WHAT A DELIVERED ORDER IS WORTH, and the one number in this file the owner
+     ruled on from playing rather than from a spreadsheet: a filled order should
+     pay roughly ONE TO TWO MINUTES of what the player is currently earning.
+     At the old 1.55-2.60 it paid between a fifth of a second and four seconds —
+     "so small... almost feels pretty pointless", and the measurement agreed by a
+     factor of twenty-five to a hundred.
+
+     Measured with tools/order-gold.js across the casual model, in seconds of the
+     player's own earning rate with order gold and offline lumps taken out of the
+     anchor. Medians at these values: tier 1 ~100s, tier 2 ~100s, tier 3 ~70s,
+     tier 4 ~85s. Re-measure there rather than adjusting by eye.
+
+     Orders must always beat selling their contents, or the whole engine is
+     optional — and the real floor for that is mult > 1 / wildBonus, i.e. 1.12,
+     not the lowest number in this table as the note here used to claim. Raising
+     these can never endanger it; only lowering one below 1.12 can. Both halves
+     are asserted per tier in tools/sim-test.js, which until this pass only ever
+     exercised the top one.
+
+     The spread INSIDE a tier is far wider than the spread between tiers, and no
+     multiplier can close it — see docs/11-known-issues.md. */
   tiers: [
-    { tier: 1, rep: 0,    mult: 1.55, repPay: 4 },
-    { tier: 2, rep: 60,   mult: 1.85, repPay: 7 },
-    { tier: 3, rep: 220,  mult: 2.20, repPay: 11 },
-    { tier: 4, rep: 600,  mult: 2.60, repPay: 16 }
+    { tier: 1, rep: 0,    mult: 30,  repPay: 4 },
+    { tier: 2, rep: 60,   mult: 200, repPay: 7 },
+    { tier: 3, rep: 220,  mult: 210, repPay: 11 },
+    { tier: 4, rep: 600,  mult: 225, repPay: 16 }
   ]
 };
 

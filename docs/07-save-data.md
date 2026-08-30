@@ -7,6 +7,7 @@
 | Mechanism | `localStorage`, JSON |
 | Current key | `gw-save` |
 | Legacy key | `igr-save` (*Idle Garden Reborn*) |
+| Announcements seen | `gw-news` — **deliberately outside the save**, see below |
 | Schema version | `4` (the Garden Year — mastery's meaning changed from live ladder to frozen record) |
 
 Saves are scoped to the browser origin, so a GitHub Pages deployment shares storage with anything
@@ -194,6 +195,23 @@ Settings offers a reset behind a two-tap confirmation that disarms after 4 secon
 legacy key alone, so the next load re-imported the player's old *Idle Garden Reborn* progress and a
 reset silently didn't take. The safety-net reading lost: a player who asks for a clean start is
 asking for a clean start, and nothing in the UI explained the import.
+
+### The one flag that is NOT in the save (added 2026-08-30)
+
+`gw-news` holds a JSON array of the announcement ids the player has already read, and it is the
+only piece of persistence in the game that lives outside `gw-save` on purpose.
+
+The What's New dialog's button marks the announcement seen **and then wipes the save**, which is how
+a playtest group starts a new build together. A flag stored in the save would be erased by the very
+reset the button performs, and the dialog would open on every load for ever. Its own key survives
+`reset()` by construction — and survives a player's own Settings reset for the same reason, which
+is also correct: an announcement is news, and news is not progress.
+
+It is read and written through `Game.newsSeen()`, `Game.markNewsSeen()`, `Game.clearNewsSeen()` and
+`Game.pendingAnnouncement()`. It needs **no** `defaultState()` entry, no `load()` backfill and no
+Turn-partition classification — which is the whole reason to keep it out. A sim-test asserts it
+survives a `reset()` that demonstrably clears the wallet; that assertion is false the moment anyone
+moves the flag into `state`.
 
 ## Changing the schema
 

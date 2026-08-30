@@ -1065,8 +1065,24 @@ anywhere. That is what lets the Stand run with no crafting system under it.
 1. **Never ask for what the player cannot produce.** Flower lines draw only from unlocked seeds;
    honey lines only exist once a hive does. An order for a bloom you cannot unlock is a wall, not
    a goal.
-2. **Delivering always beats selling the contents.** `STAND.tiers[].mult` starts at 1.55, and the
-   suite asserts the property rather than the number.
+2. **Delivering always beats selling the contents.** The suite asserts the property rather than the
+   number, and since 2026-08-30 it asserts it **at every tier** — `standReset()` unlocks to level
+   20, which put rep past 600, so for as long as the check existed only tier 4's multiplier was
+   ever exercised and a broken tier 1–3 shipped green.
+
+**What an order pays, and why the numbers are large.** `STAND.tiers[].mult` runs **30 / 200 / 210 /
+225** since the Numbers pass (2026-08-30). The owner's rule is that a delivered order should be
+worth **roughly one to two minutes of the player's current earning rate**, at every tier — and at
+the old 1.55–2.60 it was worth between a fifth of a second and four seconds, which is what "almost
+feels pretty pointless" measured out as. [tools/order-gold.js](../tools/order-gold.js) is the
+measurement: it drives the casual model, divides each delivery by the rate the rest of the garden
+was running at, and prints a median per tier against the 60–120 second band. Re-run it after any
+change here rather than adjusting by eye.
+
+The real floor under the invariant is **`mult > 1 / STAND.wildBonus` = 1.12**, not the lowest number
+in the table — a single wild line pays 0.9× what its contents are worth before the multiplier, and
+every other shape is looser. Raising a multiplier can never endanger the invariant; only dropping
+one under 1.12 can.
 
 Generation also steers away from blooms the other slots already want, biases toward blooms the
 player has actually grown (75% of the time, never a hard filter or a new seed would never be

@@ -402,6 +402,30 @@ scale is the gentlest in the table, so the cap is what stops crit from becoming 
 Decor stacking used to be the other uncapped growth vector; it's cosmetic-only now and doesn't move
 any of these numbers.
 
+## The Garden Stand's payout multipliers (raised 2026-08-30)
+
+| Tier | Reputation | `mult` | Was |
+| --- | --- | --- | --- |
+| 1 | 0 | **30** | 1.55 |
+| 2 | 60 | **200** | 1.85 |
+| 3 | 220 | **210** | 2.20 |
+| 4 | 600 | **225** | 2.60 |
+
+`coins = Σ(unitValue × qty × wildBonus) × mult × varietyBonus`, where `varietyBonus` is
+`1 + 0.14 × (lines − 1)` and `wildBonus` is 0.9 on an "any" line.
+
+**The target these were tuned to** is the owner's, and it is not a multiple of anything: a delivered
+order should pay **roughly one to two minutes of the player's current earning rate**, at every tier.
+Measured with [tools/order-gold.js](../tools/order-gold.js) — medians over 25 simulated days come
+out at t1 87s, t2 95s, t3 73s, t4 82s. The old values paid **0.2 to 4 seconds**.
+
+**The floor is `1 / STAND.wildBonus` = 1.12**, below which a single wild line pays less than selling
+what filled it. Nothing above that can break the invariant; the numbers above are 27× to 200× clear
+of it.
+
+**Tier 1 and tier 2 are effectively one state.** Reputation passes 60 inside the first session, so a
+player stands at tier 1 for about twenty minutes and five deliveries. Tune them as a pair.
+
 ## Boosters
 
 Earned from quests, level-ups, the daily and Almanac milestones; stored in `boostInv`; activated from the rail. No

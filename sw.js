@@ -10,7 +10,7 @@
    still gets to garden, and forgetting to bump VERSION below strands nobody — the
    version only controls when old caches get swept up. */
 
-const VERSION = 5;
+const VERSION = 6;
 const CACHE = `gw-v${VERSION}`;
 const FONTS = 'gw-fonts';
 const NET_TIMEOUT = 4000;   // slow network -> fall back to cache rather than hang
@@ -20,9 +20,13 @@ const CORE = [
   './data.js', './flora.js', './critters.js', './customers.js', './hollow.js', './meadow.js', './fall.js', './icons.js',
   './audio.js', './fx.js', './game.js',
   './ui-shared.js', './ui-scenery.js', './ui-sheet.js', './ui-hollow.js', './ui-meadow.js', './ui-fall.js',
-  './ui-events.js', './ui.js',
+  './ui-news.js', './ui-events.js', './ui.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
-  './icons/apple-touch-icon.png'
+  './icons/apple-touch-icon.png',
+  // Announcement art is the only raster the game itself loads, and an installed
+  // app that cannot reach it shows a broken square in the middle of the dialog.
+  // Every row added to DATA.announcements adds its image here.
+  './art/announcements/garden-year.png'
 ];
 
 self.addEventListener('install', (e) => {

@@ -118,6 +118,16 @@
     return 3;
   }
 
+  /* The wait a skip deletes, said two ways. `13m` is what fits beside a price on
+     a 105px tile — `fmtTime`'s "12m 43s" is twice too wide and re-rendering
+     every second on eight plots to move the last digit. The spoken form is for
+     the label, because a screen reader reads `13m` as "thirteen em". */
+  function skipWait(sec, spoken) {
+    if (sec < 60) return spoken ? `${sec} second${sec === 1 ? '' : 's'}` : `${sec}s`;
+    const m = Math.round(sec / 60);
+    return spoken ? `${m} minute${m === 1 ? '' : 's'}` : `${m}m`;
+  }
+
   function renderPlots() {
     for (let i = 0; i < 8; i += 1) {
       const cell = S.grid[i];
@@ -140,15 +150,34 @@
         v.root.classList.toggle('has-pack', hasPack);
         c.packDrop = hasPack;
       }
-      const skipGems = state === 'grow' ? Game.skipCost(i) : 0;
-      if (c.skip !== skipGems) {
+      /* A gem price with no value beside it is a number the player cannot judge.
+         What the gems buy is the wait, so the wait rides in the same pill — one
+         call for both, so the price and the time it deletes can never drift.
+
+         The afford state is in the key as well. It used to hang off the price
+         alone, so a chip greyed out at 3 gems stayed grey after a gem drop until
+         the price happened to tick — a number a purchase changes, not updating
+         when it changed. */
+      const skip = state === 'grow' ? Game.skipSaving(i) : null;
+      const skipGems = skip ? skip.gems : 0;
+      const skipLeft = skipGems ? Math.ceil(skip.seconds) : 0;
+      const skipOk = skipGems && S.gems >= skipGems ? 'ok' : 'no';
+      if (c.skipLeft !== skipLeft || c.skipOk !== skipOk) {
+        c.skipLeft = skipLeft;
+        c.skipOk = skipOk;
         if (skipGems) {
-          v.skipNum.textContent = fmt(skipGems);
-          v.root.dataset.skip = S.gems >= skipGems ? 'ok' : 'no';
+          const label = `${fmt(skipGems)} · ${skipWait(skipLeft)}`;
+          if (c.skipLabel !== label) {
+            c.skipLabel = label;
+            v.skipNum.textContent = label;
+            v.skip.setAttribute('aria-label',
+              `Finish now for ${fmt(skipGems)} gems, saving ${skipWait(skipLeft, true)}`);
+          }
+          v.root.dataset.skip = skipOk;
         } else {
           delete v.root.dataset.skip;
+          c.skipLabel = '';
         }
-        c.skip = skipGems;
       }
       const mut = cell.mutation || '';
       if (c.mutation !== mut) {
@@ -569,8 +598,18 @@
     el.btnPower.classList.toggle('busy', !def && Boolean(shown));
     el.btnPower.dataset.boost = def ? def.id : '';
     el.btnPower.style.setProperty('--tint', shown ? shown.tint : 'transparent');
-    el.btnPower.setAttribute('aria-label',
-      def ? `Use ${def.name}` : (shown ? `${shown.name} is already running` : 'Power-up'));
+    /* FOUR BOOSTERS SHARE ONE SEAT, and the seat re-rolls — so the same round
+       button spends a different thing on different taps, and nothing but a tint
+       says which. The name, what it does and how long it lasts go in the label,
+       with the count the badge is showing: the badge counts the whole bag, not
+       the one seated, and a label that said only one of those two numbers would
+       contradict what is drawn on the button. */
+    const bagged = def ? ((S.boostInv && S.boostInv[def.id]) || 0) : 0;
+    const bag = held > bagged ? `${bagged} of these, ${held} power-ups in all` : `${bagged} to spend`;
+    let label = 'Power-up. Nothing loaded yet.';
+    if (def) label = `Use ${def.name}. ${def.desc} ${bag}.`;
+    else if (shown) label = `${shown.name} is already running. You hold ${held}.`;
+    el.btnPower.setAttribute('aria-label', label);
     el.btnPower.innerHTML = shown
       ? `${Icons.get(shown.icon)}${held > 1 ? `<span class="f-count">${held}</span>` : ''}`
       : Icons.get('bolt');
@@ -1205,7 +1244,13 @@
       renderSeasonEdges();
       refreshCoach();
       UI.updateSky();
-      if (UI.sheetMode() === 'settings') UI.syncAfford();
+      /* Every open panel, not just Settings. Half the numbers the panels now
+         quote move on a CLOCK rather than on a purchase — a mutation roll
+         firing empties the sky card's count with no event at all, and a
+         creature's food clock changes what the next tin is worth — and
+         `currency` was the only thing calling this. The 0.6s tier is where
+         work a player will not notice lagging belongs. */
+      if (UI.sheetMode()) UI.syncAfford();
     }
 
     requestAnimationFrame(frame);
@@ -1276,18 +1321,28 @@
        onboarded, and the scene would land on top of that. */
     const awayReport = Game.reconcile();
     UI.setAwayReport(awayReport);
-    if (awayReport && S.seen.plot) {
-      setTimeout(() => {
+    /* WHAT'S NEW GOES FIRST AND ALONE. It is the one dialog a player cannot
+       swipe away, so nothing else may open underneath it — the away report
+       would be sitting there behind the scrim, and on a `reset` announcement it
+       is a report on a garden that is about to be replaced anyway. Both the
+       welcome sheet and the flower's greeting stand down while it is up, and
+       the welcome sheet gets its turn from afterNews() if the announcement did
+       not take the player back to the start. */
+    const announcing = Boolean(UI.maybeAnnounce && UI.maybeAnnounce());
+    const welcome = () => {
+      if (awayReport && S.seen.plot) {
         UI.openSheet('welcome');
         Sound.play('open');
-      }, 900);
-    }
+      }
+    };
+    UI.afterNews = () => setTimeout(welcome, 400);
+    if (!announcing) setTimeout(welcome, 900);
 
     setTimeout(() => {
       if (info.migrated) {
         toast({ title: 'Progress restored', body: 'Your old garden came along', art: Icons.get('sprout') });
       }
-      say('greet', true);
+      if (!UI.newsOpen || !UI.newsOpen()) say('greet', true);
     }, 700);
 
     if (info.decorRefund) {

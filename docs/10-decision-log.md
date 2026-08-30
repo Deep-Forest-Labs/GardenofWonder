@@ -5,6 +5,150 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (phase 3.7) — The Numbers pass, the What's New popup, and orders that pay in minutes
+
+**Builds the three rulings logged below it on the same day.** The whole phase is the owner's one
+sentence made true everywhere: *if a button costs something, it says what you get and what you now
+have, and every number a purchase changes updates the moment you buy.*
+
+### 1. The picker was lying, and it was not the only one
+
+`renderSeeds()` computed its grow label as `seed.grow * growModifier()` — sprinklers and boosts, and
+nothing else. A tulip full of Quick Sprout read **18 seconds while growing in 13**, and the payout
+pill was worse: `seed.yield` straight off the data row, with none of the seven multipliers a real
+harvest reads. The engine was right the whole time; the label was the bug.
+
+Both pills now come from the functions the plant itself goes through — `Game.plantGrowth(seed, plot)`
+and a new `Game.plantPayout(seed, plot)` — so the picker cannot drift from the garden again. Rarity
+stays out of the payout because it is the range, and mutation stays out because it is a roll;
+everything else is in. **A number the garden has improved says so**: a faster grow time takes the
+house green, and an improved payout carries the multiplier that did it (`×5.7`) inside its own pill
+rather than being quietly bigger than the data row.
+
+`plantGrowth` was not exported. It is now, and `MAX_RARITY_MULT` left `ui-sheet.js` with it — the
+last piece of economy math in the picker.
+
+### 2. Pips stay, numbers join them
+
+**This overrules the phase-2 "pips, not spreadsheet rows" position**, and the resolution keeps both:
+the dots are the feel of filling something, and the number beside them is the value. Every petal
+track — the Turn panel's cards and the Almanac's rows, which share one function — now reads
+`Rich Bloom ●●●○○ +90% gold · next +30%`, off a new `Game.petalEffect()` rather than arithmetic in
+the panel.
+
+### 3. What the sweep found
+
+The Lucky Charm standard held on Lucky Charm and almost nowhere else. Thirteen badge cards shared
+one template whose only live number was `Lv N`, and six of them said nothing numeric at all. Five
+priced meadow tenders were described entirely in adjectives — **and two of them silently SLOW the
+hives they touch** while their copy said "cool and quiet". A creature food button stamped the tin's
+`+16h` while the engine's cap handed over two. "Sell all" showed the unit price and the quantity and
+left the player to multiply. A bought sky promised "everything growing gets a shot" on an empty
+board. A gem skip named a price and never the wait it deleted.
+
+Every one of those numbers already existed inside the function that spends it. The pass added
+thirteen getters to `game.js` — `upgradeEffect`, `foodEffect`, `hiveProjection`, `tenderEffect`,
+`keeperLift`, `skipSaving`, `weatherCallEffect`, `sellValue`, `tapStats`, `growthStats`,
+`autoHarvestCadence`, `procChance` promoted out of `Dev`, and `plantPayout`/`petalEffect` above — and
+the panels now read them instead of re-deriving them. Three house-rule violations went with it: the
+Almanac was rebuilding the tap payout stack by hand (and had already drifted — it omitted the
+combo), multiplying `PROC_CHANCE_PER_LEVEL` by hand, and duplicating the drone's cadence formula.
+
+**The live half of the rule needed its own work.** Most surfaces rebuild on `panels` and were
+already honest the moment a purchase landed. Two were not. The picker's payout pill folds in the
+Wonder multiplier and the night bonus, and neither a Wonder starting nor nightfall re-renders the
+sheet — so an open picker quoted a stale number for the length of a Wonder. `tickSheetTimers()` now
+re-reads the two pills on the slow tick, cached on the node so it writes only on a real change (a
+`panels` rebuild would swap the row under a pressing thumb, which is why it is a sync and not a
+re-render). And the plot's gem chip wrote its afford state only when the PRICE changed, so a chip
+greyed out at 3 gems stayed grey after a gem drop until the price happened to tick — up to thirty
+seconds of the game saying "you cannot afford this" when you could.
+
+**The one deliberate exception survives**: year one's mystery meter stays wordless. It is the
+tutorial, and the ruling named it.
+
+**Three questions left for the owner rather than answered.** The **plot unlock badge** and the
+**meadow cell badge** are 60px and already carry a gate label or a price; there is nowhere honest to
+put "what you now have", and the answer is visible on the board anyway. The **season edge tabs** are
+38px and say which Turn opens them and nothing about what is behind. And the **POWER-UP button**
+spends one of a rotating inventory and says only how many you hold: the name, effect and duration
+went into its label, but a visible caption needs the round button to give up glyph size, and every
+booster name is two words, so a visible label would be a truncation. All three are "no room",
+not "not worth saying".
+
+### 4. The What's New popup
+
+A one-time house-styled dialog on boot, in its own file (`ui-news.js`) because it is the only modal
+in the game a player cannot swipe away. Announcements are data — a new build is one row appended to
+`DATA.announcements` — and the first one ships with art the owner supplied, which makes it **the
+repo's second deliberate binary-asset exception**, written into the conventions rather than snuck
+in, and narrow: this folder, owner-supplied, lowercase paths, in `sw.js` in the same commit, never
+load-bearing.
+
+Three decisions worth the ink:
+
+**The seen-flag lives outside the save, in `gw-news`.** "Got it!" wipes the save; a flag inside it
+would be erased on the way out and the popup would open for ever. A sim-test asserts it survives a
+`reset()` that demonstrably clears the wallet — an assertion that is false the moment anyone moves
+the flag into `state`.
+
+**Nothing in the dialog fades in.** The card and the dim are opaque in their base style and the only
+thing the open class moves is the card's position. A modal whose single button depends on a frame
+that may never arrive is a trap, and this codebase has the scar: the pack badge started at
+`scale(0)`.
+
+**It sits outside `.world`.** FX builds its float layer as a child of `.game`, so a coin float from a
+harvest that landed while the dialog was up painted straight over the art. Found by looking at it.
+
+**The button never says "reset".** The fresh start is the announcement's gift, so the dialog says
+"This one starts everyone on fresh soil" and the button says "Got it!".
+
+### 5. Orders that pay in minutes rather than seconds
+
+The owner: the delivery bonus "is so small... almost feels pretty pointless." Measured, they were
+right by **a factor of twenty-five to a hundred**: at the old 1.55–2.60 a delivered order paid
+between a fifth of a second and four seconds of the player's own earning rate.
+
+`STAND.tiers[].mult` is now **30 / 200 / 210 / 225**, and the measurement is a new tool —
+`tools/order-gold.js` — that drives the casual model, divides each delivery by the rate the rest of
+the garden was running at (order gold and offline lumps deliberately outside the anchor), and prints
+a median per tier against the 60–120 second band. At these values, over 25 simulated days: **t1 87s,
+t2 95s, t3 73s, t4 82s** — every tier inside the band, cross-checked by a second, independently
+written probe that agreed within noise.
+
+**The floor the invariant sits on is `1 / STAND.wildBonus` = 1.12, not the lowest number in the
+table** — the comment in `data.js` claimed otherwise and had been wrong since the Stand shipped.
+Raising a multiplier can never endanger "delivering beats selling"; only dropping one under 1.12
+can. And the suite was only ever checking the top tier: `standReset()` unlocks to level 20, which
+puts rep past 600, so a broken tier 1–3 multiplier shipped green. Both properties now loop the tiers.
+
+### Rejected, and what it cost
+
+**Tuning `mult` per tier to hit the band at the tier BOUNDARIES.** Measured that way the four tiers
+demand a non-monotone set — tier 3 wants more than tier 4 — because between those thresholds the
+player's rate grows 2.9× while the board's median order value grows 10.1×. Measured over the
+deliveries a player actually makes, the same four values land in band together. The board-sample
+reading is the wrong denominator: it prices orders nobody fills.
+
+**Fixing the within-tier spread.** At the ruled values a tier-4 board pays anywhere from four
+seconds to six hours of the player's rate. Two structural causes, both in the engine and both out of
+scope for a data-only ruling: `standFloorUnit()` is pinned to Daisy for ever, and
+`standBuildOrder()` draws named blooms from the whole unlocked pool. Recorded in
+[11-known-issues.md](11-known-issues.md) with the cheapest first move.
+
+**Making `year-sim`'s verdict pass.** It no longer decides the same way twice — five runs came back
+OK, OK, OK, FAIL, FAIL — and the tool's own header says not to fix the tool. What it fails on is
+`smart` out-earning `casual` on lifetime GOLD, never on Saved Seeds minted, so the property the
+cumulative mint guarantees is intact in every run; the mechanism is `smart` laundering a
+now-much-larger wallet through Fall beds before each of its fifty-five Turns. Seeding and
+multi-running the verdict would settle it honestly, and a session should not go changing a verdict
+tool in the same pass that makes the verdict inconvenient. It is the owner's call, with the
+arithmetic in [11-known-issues.md](11-known-issues.md).
+
+**Numbers on year one's meter.** The mystery is the tutorial. Kept.
+
+---
+
 ## 2026-08-30 (phase 3.6) — The cleanup round: three ruled fixes, and a review kit so the owner can live a week in an afternoon
 
 **Implements the three rulings below, plus the cheats the owner asked for.** No new layouts, so no

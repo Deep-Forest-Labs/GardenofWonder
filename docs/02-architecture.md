@@ -2,7 +2,7 @@
 
 ## Shape of the project
 
-Nineteen JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
+Twenty JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
 dependencies. Each file defines exactly one global and they load in dependency order as plain
 `<script>` tags.
 
@@ -33,8 +33,15 @@ reference globals defined above it.
 | 15 | `ui-hollow.js` | *(attaches to `UI`)* | `UI`, `Hollow`, `Critters` |
 | 17 | `ui-meadow.js` | *(attaches to `UI`)* | `UI`, `Meadow` |
 | 17b | `ui-fall.js` | *(attaches to `UI`)* | `UI`, `Fall`, `Game` |
+| 17c | `ui-news.js` | *(attaches to `UI`)* | `UI`, `Game`, `DATA`, `Sound` |
 | 18 | `ui-events.js` | *(attaches nothing)* | `UI` |
 | 19 | `ui.js` | *(attaches to `UI`)* | everything above |
+
+`ui-news.js` is the What's New dialog and nothing else — one announcement, once, on the way in. It
+is a separate file rather than another few hundred lines in `ui.js` because it is the only modal in
+the game a player cannot swipe away and its button wipes the save: it deserves to be readable in
+one screen. It publishes `UI.maybeAnnounce()`, `UI.previewAnnouncement()` and `UI.newsOpen()`, and
+`boot()` calls the first of those before anything else can take the screen.
 
 *(The table stood at fourteen from 2026-08-16 until 2026-08-29 — the five files added with the
 Stand, the map and the meadow on 2026-08-25 were documented in this file's prose but never added

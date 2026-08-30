@@ -745,7 +745,7 @@ here so the retired design is legible, not as a description of the suite:
 What replaced the retired half: the ladder is asserted **flat** — no harvest advances a tier,
 pays a mastery gem, or moves a multiplier — and petals carry the per-seed yield instead. See
 [33-year-one-economy.md](33-year-one-economy.md) and the `bill 13` groups in
-`tools/sim-test.js`, which now runs 1,305 assertions.
+`tools/sim-test.js`, which now runs 1,353 assertions.
 
 **Trap the build found:** mastery multiplies harvest payout and climbs as a run proceeds, so any
 sim-test measuring a *different* harvest multiplier over thousands of harvests has to reset the

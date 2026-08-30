@@ -5,6 +5,80 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## What phase 3.7 knowingly left (2026-08-30)
+
+**`year-sim`'s cheap-Turn verdict no longer decides the same way twice.** Raising order gold to the
+ruled band moved the two shapes it compares close enough together that its single unseeded run per
+strategy cannot separate them: five runs at 30/200/210/225 came back **OK, OK, OK, FAIL, FAIL**, and
+`casual`'s own day-10 lifetime coins ranged **43M to 142M** across those runs while `smart`'s sat
+tight at 70–86M. Before the raise the margin was a stable 1.5× (22.7M against 15.3M) and the tool
+exited 0 every time.
+
+**The property the mint actually guarantees is intact in every run.** `smart` never out-mints
+`casual` on Saved Seeds — 1,061 against 1,258 and 1,024 against 1,055 in the two failing runs — so
+the cumulative mint is still split-neutral by construction, which is what bill item 17 was written
+to protect. What `smart` wins on is *lifetime gold*, and the mechanism is the one `smart` was built
+to exercise: it dumps its doomed wallet into Fall beds before every Turn, Fall beds survive the
+Turn, and order gold made the wallets it is laundering several times larger. Fifty-five Turns in ten
+days is fifty-five of those conversions.
+
+Two responses, and the choice is the owner's: **moderate the multipliers** — the verdict was stable
+below roughly 10/65/95/105, which is about 40% of the ruled values and puts an order back at 30–40
+seconds rather than the ruled minute or two — or **make the verdict decide honestly**, by seeding
+the model and running each shape several times, which is what a 3× spread in the thing being
+compared demands. This was not done here because a session should not go changing the verdict tool
+in the same pass that makes the verdict inconvenient.
+
+**The spread INSIDE a tier is far wider than the spread between tiers, and no multiplier can close
+it.** At the ruled values a tier-4 board pays anywhere from 4 seconds to six hours of the player's
+rate, p25 to p75 spanning 20×–200×. Two structural causes, both in the engine rather than in the
+multipliers:
+
+- **`standFloorUnit()` is pinned to Daisy for ever.** A wild line prices off `Math.min` over the
+  whole unlocked pool, Daisy is free and never leaves it, so Garden Handful's base value is the same
+  on day 30 as on day 0. It is roughly an eighth of every board.
+- **`standBuildOrder()` draws named blooms from the whole unlocked pool.** A tier-4 Posy can ask for
+  two Daisies or three Auroras — a 260× spread inside one good at one tier.
+
+Fixing either is an engine change with its own test bill, and the ruling was explicitly data-only.
+The cheapest first move is pricing a wild line off the pool's median rather than its minimum.
+
+**A board that was already sitting in a save shows the old price until the slot refills.**
+`order.coins` is authored at generation, and `standDeliver()` pays `Math.max(order.coins, worth)` —
+so an order written before the raise pays the NEW rate and displays the OLD one for up to one
+`STAND.refill` (100s). Nobody is underpaid and it clears itself; it is recorded so a screenshot of
+it is not diagnosed as a bug. The announcement's reset makes it moot for the playtest group.
+
+**Three buttons still cost something and cannot say what you now have, and all three are "no
+room".** The garden's **plot unlock badge** and the meadow's **cell badge** are ~60px and already
+carry either a gate label (`Turn 1`, `Lv 3`) or a price; the **season edge tabs** are 38px and say
+which Turn opens them and nothing about what is behind. The number that is missing under the letter
+of the rule is how many plots or cells you already own, and that is visible on the board itself. The
+**POWER-UP button** is the fourth: it spends one of a rotating inventory of boosters and shows a
+glyph and a count, so the same button spends a different thing on different taps. Its name, effect
+and duration are in its accessible label now, but a visible caption needs the round button to give
+up glyph size and every booster name is two words, so it would be a truncation. Owner's call.
+
+**Two meadow numbers still drift on a clock nobody notices.** The Keepers panel's bench chip and the
+build sheet's hive projection both divide by `Game.keeperSpeed()`, which falls when a keeper's food
+clock runs out and it falls asleep — a transition with no event behind it (`critterAsleep` is a
+computed predicate, not a flag). `syncAfford()` now runs on the 0.6s tick for any open sheet, which
+covers every surface that carries a `data-*` attribute, but the build sheet's rows carry
+`data-build` and the Keepers panel's chip is prose. Measured: a keeper's lift stepping 8% → 4% → 0%
+on the clock alone with the panel open and nothing redrawing. Accepted: both panels are snapshots
+you open to make a decision, and the drift is downward — you are never shown more than you have.
+The fix, if the owner wants it, is a `data-*` hook on those rows so `syncAfford()` can reach them.
+
+**In landscape the gem skip chip hangs off its plot.** It did before this pass (34px chip on a 31px
+tile) and the wait it now carries makes it worse. Landscape is not a supported orientation for this
+game and nothing else in the phase touches it; the chip is clamped to `white-space: nowrap` and
+`max-width` so it stays one line rather than wrapping into the neighbouring plot.
+
+**The announcement art is a JPEG carrying a `.png` extension**, 692 KB at 1152×1728. Browsers sniff
+the content and render it, and the service worker stores whatever the server sends, so it works —
+but the file is heavier than a phone dialog needs and its name does not describe it. Owner-supplied
+art is the owner's to re-export; flagged rather than re-encoded.
+
 ## What phase 3.6 knowingly left (2026-08-30)
 
 **The discover quest leads the goal strip the moment it is dealt, and cannot be advanced.** This is
@@ -19,7 +93,7 @@ unlock, which turns the jam into a signpost for the wall itself; or point the tr
 `state.year.stats.speciesSeen`, which makes breadth a seasonal goal instead of a lifetime one.
 
 **Pausing the Stand's standing also holds the Stand at a lower tier, which costs real gold.**
-`standTier()` reads `state.rep`, and the tier multiplier runs 1.55 → 2.60 — so the pause does not
+`standTier()` reads `state.rep`, and the tier multiplier runs 30 → 225 — so the pause does not
 only stop levels, it slows the coin curve that feeds the Turn meter. Measured with `year-sim`,
 casual, three runs each to day 14: **paused sits tight at ~30–32M lifetime; live ranges ~32–58M**,
 much wider and higher. `year-sim` exits 0 either way and no knob moved, but this is worth weighing
@@ -715,7 +789,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,305 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,353 assertions over the
 economy, progression, saves and mastery. Everything above that line — the six `ui-*` files,
 layout, the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI

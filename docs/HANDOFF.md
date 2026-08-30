@@ -12,6 +12,58 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **PHASE 3.7 IS BUILT — the Numbers pass, the What's New popup, and orders that pay in minutes.**
+> Three owner rulings from live play, built together because the first one is a project-wide rule
+> the other two have to obey. Suite **1,353** (was 1,305), clean; the reasoning is in the phase 3.7
+> entry in [10-decision-log.md](10-decision-log.md).
+>
+> **The rule, and it now holds project-wide:** *if a button costs something, it says what you get
+> and what you now have, and every number a purchase changes updates the moment you buy.* **This
+> overrules the phase-2 "pips, not spreadsheet rows" position** — the resolution keeps both, dots
+> for the feel and the number beside them for the value. **One deliberate exception survives**: year
+> one's mystery meter, still wordless.
+>
+> **The plant picker was lying and now cannot.** Its grow label applied sprinklers and boosts and
+> forgot petals and Keepers — a Tulip full of Quick Sprout read 18 seconds while growing in 13 — and
+> its payout pill was `seed.yield` off the data row with none of the seven multipliers a real harvest
+> reads. Both now come from the functions the plant itself goes through, `Game.plantGrowth()` and a
+> new `Game.plantPayout()`. **A number the garden has improved says so**: a faster time takes the
+> house green and an improved payout carries the `×` that did it.
+>
+> **The sweep found the rule was kept on Lucky Charm and almost nowhere else.** Thirteen badge cards
+> whose only live number was `Lv N`, six of them saying nothing numeric at all. Five priced meadow
+> tenders described entirely in adjectives — **two of which silently SLOW the hives they touch**,
+> now stated in a red pill as plainly as the benefits. A food button stamping the tin's `+16h` while
+> the cap handed over two. "Sell all" with no total. A bought sky promising "everything growing gets
+> a shot" on a board where nothing could catch it. A gem skip naming a price and never the wait it
+> deletes. **Thirteen getters joined `game.js`** so the panels read numbers instead of re-deriving
+> them, and three house-rule violations went with them — the Almanac was rebuilding the tap payout
+> stack by hand and had already drifted past the combo.
+>
+> **The What's New popup ships in its own file**, `ui-news.js`, because it is the only modal in the
+> game a player cannot swipe away. Announcements are data — a new build is one row appended to
+> `DATA.announcements`. **The seen-flag lives in `gw-news`, outside the save**, because "Got it!"
+> wipes the save and a flag inside it would loop the popup for ever; a sim-test asserts it survives a
+> reset that demonstrably clears the wallet. **Nothing in the dialog fades in** — a modal whose one
+> button depends on a frame that may never arrive is a trap. The art is the repo's **second
+> deliberate binary-asset exception**, written into the conventions and kept narrow.
+>
+> **Orders pay in minutes now, not seconds.** `STAND.tiers[].mult` went **1.55/1.85/2.20/2.60 →
+> 30/200/210/225**, measured with a new tool, [`tools/order-gold.js`](../tools/order-gold.js), that
+> divides every delivery by the rate the rest of the garden was running at. Medians land at **t1 87s,
+> t2 95s, t3 73s, t4 82s** against the owner's 60–120 second band; the old values paid **0.2 to 4
+> seconds**. Two things worth carrying forward: the invariant's real floor is `1 / wildBonus` =
+> **1.12**, not the lowest number in the table as `data.js` had claimed since the Stand shipped; and
+> the suite was only ever checking the TOP tier, because `standReset()` unlocks to level 20. Both
+> properties now loop the tiers.
+>
+> **The one thing that got worse:** `year-sim`'s cheap-Turn verdict no longer decides the same way
+> twice — five runs came back OK, OK, OK, FAIL, FAIL where it used to exit 0 every time. It fails on
+> lifetime GOLD only; `smart` never out-mints `casual` on Saved Seeds, so the property the cumulative
+> mint guarantees is intact in every run. Diagnosis, arithmetic and the two ways out are in
+> [11-known-issues.md](11-known-issues.md) — and the choice is the owner's, because a session should
+> not go changing a verdict tool in the same pass that makes the verdict inconvenient.
+
 > **PHASE 3.6 IS BUILT — the cleanup round: three ruled fixes and the owner's review kit.** No new
 > layouts, so no wireframe gate; no economy knob moved. Suite **1,305**, clean across six runs, every
 > fix mutation-proven; `year-sim` exits 0. Reasoning in the phase 3.6 entry in
@@ -1107,12 +1159,26 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
-**PHASE 3.6 IS BUILT AND WAITING FOR THE OWNER'S REVIEW.** The three ruled fixes and the review kit
-are in and pushed. Nothing is half-done and nothing is blocked. What the next session does depends
-on what the owner says after the two-minute check below.
+**PHASE 3.7 IS BUILT AND WAITING FOR THE OWNER'S REVIEW.** All three rulings are in. Nothing is
+half-done and nothing is blocked. Walk the two-minute check below before reading further — most of
+what the next session does depends on the answer to its last two questions.
 
-**Two things landed on `main` from the design session while this was being built** — `30c3a63` and
-`06ce06a`, both docs-only. Read them before assuming this section is complete:
+**One thing needs the owner's decision before the next economy pass, and it is the only one.**
+`year-sim`'s cheap-Turn verdict now flips run to run at the raised order gold — three OK and two
+FAIL across five runs, where before it exited 0 every time. It is **not** a mint break: `smart`
+never out-mints `casual` on Saved Seeds in any run, which is the property the cumulative mint was
+built to guarantee. What it wins on is lifetime *gold*, by laundering a much larger wallet through
+Fall beds before each of its fifty-five Turns. Two ways out, both the owner's call:
+
+- **Moderate the multipliers.** The verdict was stable below roughly `10/65/95/105` — about 40% of
+  the ruled values, which puts an order back at 30–40 seconds rather than the ruled minute or two.
+  That is choosing the tool's verdict over the owner's ruling, which is why it was not done here.
+- **Make the verdict decide honestly.** Seed the model and run each shape several times. A single
+  unseeded run per strategy cannot separate two numbers whose own spread is 3× (casual's day-10
+  lifetime coins ranged 43M–142M across the five runs).
+
+**Still genuinely open, and unchanged by this phase** — the first two inherited from the design
+session's docs-only commits `30c3a63` and `06ce06a`:
 
 - **The blessing is RULED, and the advisor's recommendation was not taken.** *Keep it exactly as it
   is*, no once-ever cap and no pricing. The owner's diagnosis was the sharper one: it feels
@@ -1121,11 +1187,8 @@ on what the owner says after the two-minute check below.
   sparks recorded against it. The farmability seam in [11-known-issues.md](11-known-issues.md) is
   therefore **accepted for now**, not a pending decision — it was still headed *OPEN OWNER DECISION*
   after the ruling landed and is re-marked in this commit.
-- **There is a money plan now**, [37-monetization.md](37-monetization.md). Nothing in phase 3.6
-  touches it.
-
-**Still genuinely open, and the owner's, not a builder's:**
-
+- **There is a money plan now**, [37-monetization.md](37-monetization.md). Nothing in phase 3.6 or
+  3.7 touches it.
 - **Petal pacing**, which waits on the owner playing. The answer the owner asked for is literally
   *"play five years with the time-warp and say whether the Turn still felt worth doing"* — so the
   cheat this round shipped is the instrument for it.
@@ -1137,7 +1200,54 @@ ladder and the Almanac's milestones are the only road to every level gate in the
 fourth habitat slot at level 16, so **do not bench another ladder quest without re-checking that
 headroom.**
 
-### The two-minute check, phase 3.6
+### The two-minute check, phase 3.7 — read this one first
+
+Two minutes, in order, on a phone. Every step was walked in the live build before it was written
+down. **Steps 4 and 5 need one tap in Developer tools** — the unlabelled patch of empty space just
+right of the gem wallet — because a fresh garden has no Saved Seeds yet and petals do not exist
+until your first Turn. That is the year-one mystery working as designed, not something to fix.
+
+**1 · Open the game. A card comes up, once.** Flashy art, four plain lines about the Garden Year,
+and one button. It is not fullscreen, you cannot swipe it away, and tapping outside does nothing —
+the button is the way out, on purpose. **It will never show again**, not even after the reset it is
+about to perform.
+
+**2 · Tap "Got it!" — and you land in a fresh garden.** Four plots, a hundred gold, nothing else.
+That is the announcement's gift rather than its threat, which is why the button does not say
+"reset" and the card says *"This one starts everyone on fresh soil"* instead. Everyone in the
+playtest starts the same build on the same morning.
+
+**3 · Tap an empty plot and read the Tulip row.** `110 gold · 18s · 154–1,232`. Remember the
+**18s** — that number used to be a lie. The picker was applying your sprinklers and boosts to it and
+forgetting your petals, so a flower you had spent Saved Seeds on read the same as one you had not.
+
+**4 · Buy a Quick Sprout petal on the Tulip, and watch that number move.** Developer tools →
+**Petals → +50 Saved Seeds**. Now the Turn button in the dock has a card per flower. Find **Tulip →
+Quick Sprout**: the row reads its own value out loud, *next −6%*, where before it was five dots and
+a price. Buy one and it becomes *−6% time · next −6%*.
+
+Now open the picker again. **The Tulip says 17s.** Buy the rest of the ladder and it says **13s, in
+green** — green because the garden made it better — and the payout beside it carries an `×` showing
+what your petals are adding. That is the whole point of the round: **nothing in the game should ever
+again show you a number that is not the number you would actually get.**
+
+**5 · Fill an order and feel the gold.** Developer tools → **Give → +1M gold**, then plant and
+harvest for a moment so you have blooms in the pantry. Orders & Quests in the dock: deliver whatever
+the first customer is asking for. It should land like a small windfall — roughly **a minute or two
+of what you are currently earning**, at every tier, which is the rule the whole change was measured
+against. Before this it paid between a fifth of a second and four seconds of your income, which is
+exactly why it felt pointless.
+
+**What to tell us.** Does an order feel like a *reward for engaging with the Stand*, or like free
+money that makes the rest of the garden feel slow? That is the one judgement a simulation cannot
+make, and it is the reason the numbers went up as far as they did rather than further.
+
+**And a smaller one:** now that the buttons all state their numbers, does the game read as *clearer*
+or as *busier*? Four buttons still say nothing about what you already have — the plot padlocks, the
+meadow's land, the season tabs and the POWER-UP button — because there is no honest room on any of
+them. If any of those four bother you, they are the next easy win.
+
+### The two-minute check, phase 3.6 — the round before this one
 
 Developer tools is the unlabelled patch of empty space just right of the gem wallet — one tap, no
 icon. Every step below was walked in the live build before it was written down.
@@ -1564,7 +1674,13 @@ merge.
 
 ## Known problems worth knowing immediately
 
-Full list in [11-known-issues.md](11-known-issues.md). The three that affect design decisions:
+Full list in [11-known-issues.md](11-known-issues.md). The four that affect design decisions:
+
+- **`year-sim` does not decide the same way twice any more** (2026-08-30). Raising order gold moved
+  the two shapes it compares inside its own noise: five runs, three OK and two FAIL. It is a GOLD
+  result, never a Saved Seeds one, so the mint is still split-neutral. **Do not read a single run of
+  it as a verdict until it is seeded and multi-run** — and do not "fix" it to pass. The arithmetic
+  and the two ways out are in [11-known-issues.md](11-known-issues.md); the choice is the owner's.
 
 - ~~**Endgame seeds have lower gem chances than a Daisy.**~~ **Fixed 2026-08-15.** Gem chance is now
   derived from grow time, so gems per hour is flat across all nineteen seeds and gem income tracks
@@ -1584,6 +1700,27 @@ That inversion was inherited from the frozen economy port; it is fixed. What rem
 the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
+
+**An absolutely-positioned child of a `place-items: center` grid container is sized to its content,
+not stretched — even with `inset: 0`.** The announcement dialog's scrim was `position:absolute;
+inset:0` inside a centring grid, and it measured **0×0**: `align-self`/`justify-self` from
+`place-items` apply to abspos children and override the fill, so the four zero offsets only decide
+*where* a content-sized box lands. There is no error and no warning — the game behind a modal simply
+stays bright. Put the dim on the layer itself, or say `place-self: stretch` on the child. Found by
+reading `getBoundingClientRect()` after a screenshot looked wrong; it survived one round of "the
+opacity must be the problem".
+
+**A modal that must not be painted over has to live OUTSIDE `.world`.** `FX` builds its float layer
+as a child of **`.game`**, so a coin float from a harvest that landed while the dialog was up drew
+straight over it — z-index cannot help, because the two are in different stacking contexts. `#news`
+is a direct child of `.game`, after `.world`, for exactly this reason. Anything future that must be
+the topmost thing on screen goes there too.
+
+**`check(name, () => expr)` in `tools/sim-test.js` passes vacuously.** The second argument is a
+condition, not a thunk — a function is truthy, so the assertion reports `ok` without ever running.
+Two written that way in this pass both "passed" and were testing nothing. Grep a new group for
+`check('...', () =>` before believing it; the same family as the `gardenwonder.save` key already
+recorded below.
 
 **A season's scene has two visible bands, not one canvas.** The board covers the middle of the
 screen — roughly y 25%–70% on a phone — so anything composed into it is drawn and then hidden. Fall
@@ -1895,7 +2032,12 @@ sheet is up; click the in-sheet tab pills at `#sheetTabs .tab[data-tab="..."]` i
 **`pagehide` calls `Game.saveNow()`.** Injecting a save into `localStorage` and then reloading does
 *not* work — the outgoing page writes its in-memory state over the injection. Seed the save from a
 page with no game code on the same origin, then navigate to the game. This wasted a full debugging
-cycle and produced a false "saves are broken" report.
+cycle and produced a false "saves are broken" report. **The same trap eats a `localStorage.clear()`
+from the console**, which is the tempting way to test a fresh install: the page you are clearing
+from writes its state straight back on the way out, and you reload into the save you thought you had
+deleted. The announcement's "Got it!" is safe from it by ORDER rather than by luck — `Game.reset()`
+makes the in-memory state a fresh garden *before* the reload, so the write that fires on the way out
+writes a fresh garden too.
 
 **Playwright needs an explicit browsers path** in this sandbox:
 `PLAYWRIGHT_BROWSERS_PATH="$HOME/Library/Caches/ms-playwright"`.
@@ -2018,11 +2160,26 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,305 assertions over the simulation layer
-node tools/year-sim.js 12 all   # the pacing model — MUST exit 0; non-zero means a cadence beats normal play
+node tools/sim-test.js          # 1,353 assertions over the simulation layer
+node tools/year-sim.js 12 all   # the pacing model — see the caveat below before trusting its exit code
+node tools/order-gold.js 25 4   # is a delivered order worth a minute of the player's time, per tier?
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
+
+**`year-sim`'s exit code stopped being a gate on 2026-08-30** and has not been made into one again.
+It runs ONE unseeded run per strategy, and at the raised order gold the two shapes it compares sit
+inside its own noise — five runs, three OK and two FAIL. Read the day-10 table rather than the exit
+code, and check *which currency* a shape wins on: a `smart` win on Saved Seeds minted would be a
+real mint break, a win on lifetime coins alone is the Fall-dump conversion and is what is currently
+flipping the verdict. See [11-known-issues.md](11-known-issues.md).
+
+**`tools/order-gold.js` is the Stand's tuning instrument**, and it is deterministic — the same
+`data.js` gives the same answer twice. It drives the casual model, divides each delivery by the rate
+the rest of the garden was running at (order gold and offline lumps deliberately outside the anchor)
+and prints a median per tier against the owner's 60–120 second band. Re-run it after ANY change to
+`STAND.tiers[].mult`, and give it 25 days or more — tier 4 needs rep 600 and does not arrive
+organically inside the 14-day default while `STAND.repPaused` is on.
 
 `tools/sim-test.js` runs the real `game.js` headlessly, because it has no DOM dependencies. **Keep
 it that way** — it is the cheapest way to validate a balance change, and it should survive the Unity
@@ -2115,7 +2272,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,305 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,353 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

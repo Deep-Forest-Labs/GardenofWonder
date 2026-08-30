@@ -191,6 +191,13 @@
       <div class="meadow-layer" id="meadow" aria-label="The Wild Meadow" hidden></div>
       <div class="coach" id="coach" hidden></div>
     </div>
+
+    <!-- WHAT'S NEW. Outside `.world` on purpose: FX builds its float layer as a
+         child of `.game`, so anything inside `.world` can be painted over by a
+         coin float from a harvest that landed while the dialog was up. This is
+         the one thing in the game a player cannot swipe away — nothing may draw
+         on top of it. -->
+    <div class="news" id="news" hidden aria-hidden="true"></div>
   </div>
 
   <script src="data.js"></script>
@@ -210,6 +217,7 @@
   <script src="ui-hollow.js"></script>
   <script src="ui-meadow.js"></script>
   <script src="ui-fall.js"></script>
+  <script src="ui-news.js"></script>
   <script src="ui-events.js"></script>
   <script src="ui.js"></script>
 

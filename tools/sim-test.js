@@ -55,6 +55,25 @@ const unlockTo = (level) => {
    against default state. Cost three green tests that were testing nothing. */
 const SAVE_KEY = 'gw-save';
 
+/* Every badge the Upgrades tab puts on screen. Kept here rather than imported
+   because ui-sheet.js cannot be loaded headless — if the tab gains a badge,
+   this list gains it too, and the "says what the next level buys" group is
+   what notices. */
+const UI_BADGE_KEYS = [
+  'tapPower', 'holdSpeed', 'critChance', 'critMult', 'comboMeter',
+  'rainDance', 'beeSwarm', 'ladybug',
+  'plotExpansion', 'autoWater', 'autoHarvest',
+  'offlineRate', 'offlineHours'
+].concat(PLOT_AUTOPLANTERS.map((p) => p.key));
+
+/* What a day-one casual player earns in an active minute, order gold and
+   offline lumps excluded — measured over the casual model in
+   tools/order-gold.js, and deliberately taken at the LOW end of the measured
+   1,600-2,700 spread so the assertion below fails on a real regression rather
+   than on run-to-run noise. Re-measure it there; never nudge it here to make a
+   test pass. */
+const CASUAL_RATE_PER_MIN = 2000;
+
 let pass = 0;
 let fail = 0;
 const group = (name) => console.log(`\n${name}`);
@@ -6245,6 +6264,453 @@ check('a different set of quests is ranked from scratch',
   G.stripQuest().def.id === 'q_harvest_10', G.stripQuest().def.id);
 check('and the panel still leads with whatever the strip shows',
   G.activeQuests()[0].id === G.stripQuest().def.id);
+G.reset();
+
+/* ============================================================
+   THE NUMBERS PASS — phase 3.7
+   The owner's rule: if a button costs something, it says what you get and what
+   you now have. The labels are a UI job, but the NUMBERS are the engine's, and
+   these are the assertions that keep a label from drifting away from the
+   function that spends it. Every one of them would have passed vacuously
+   before the getters existed, which is why each asserts against the real code
+   path rather than against a constant.
+   ============================================================ */
+
+group('the picker quotes what the plot would really give');
+G.reset();
+S.credits = 1e9;
+unlockTo(20);
+/* Petals are the successor to the mastery trap: clearGarden() does not clear
+   them, so a measurement that inherits an earlier group's petals is measuring
+   two things at once. */
+S.petals = {};
+const tulipDef = G.seedById('tulip');
+check('the grow label is the time the plant actually gets', (() => {
+  G.plant(0, tulipDef);
+  const baked = S.grid[0].grow;
+  S.grid[0].seed = null;
+  return Math.abs(G.plantGrowth(tulipDef, 0) - baked) < 1e-9;
+})());
+check('and Quick Sprout moves it — the bug that started this pass', (() => {
+  const before = G.plantGrowth(tulipDef, 0);
+  S.savedSeeds = 1e9;
+  G.buyPetal('tulip', 'quick');
+  const after = G.plantGrowth(tulipDef, 0);
+  return after < before - 0.5 && Math.abs(after - tulipDef.grow * (1 - DATA.petals.shared.quick.value)) < 1e-6;
+})());
+check('the payout label carries Rich Bloom', (() => {
+  S.petals = {};
+  const plain = G.plantPayout(tulipDef, 0);
+  S.savedSeeds = 1e9;
+  G.buyPetal('tulip', 'rich');
+  const rich = G.plantPayout(tulipDef, 0);
+  return rich.min > plain.min && Math.abs(rich.mult - (1 + DATA.petals.shared.rich.value)) < 1e-9;
+})());
+check('and a plain flower quotes exactly its data row', (() => {
+  S.petals = {};
+  const p = G.plantPayout(G.seedById('daisy'), 0);
+  const d = G.seedById('daisy');
+  return p.mult === 1 && p.min === d.yield && p.max === Math.round(d.yield * MAX_RARITY_MULT);
+})());
+/* THE PICKER OPENS ON AN EMPTY PLOT, which is why this group exists: every
+   self-verb term in verbPayoutMult() keys off the verb of the seed ALREADY in
+   the plot, so a projection that reads the plot instead of the seed being
+   offered drops all of them. It quoted a Nightbell at four times what it pays
+   by day and a Nurse 11% over. Asserted seed by seed against a real harvest. */
+check('a verb-carrying seed is quoted for the seed, not for the empty plot', (() => {
+  for (const def of DATA.seeds.filter((sd) => sd.verb)) {
+    G.reset();
+    S.petals = {};
+    S.credits = 1e12;
+    unlockTo(20);
+    G.Dev.setWeather('clear');
+    const quote = G.plantPayout(def, 0);
+    G.Dev.armRarity('common');
+    G.plant(0, def);
+    advance(Math.ceil(S.grid[0].grow) + 2);
+    const before = S.credits;
+    G.harvest(0);
+    const paid = S.credits - before;
+    if (paid < quote.min || paid > quote.max) return false;
+  }
+  G.Dev.clearAll();
+  return true;
+})());
+
+/* Nightbell is the one verb whose payout is decided at HARVEST, so a projection
+   cannot know it. It quotes the day rate — the floor — for the same reason the
+   Stand quotes a floor on a line that names nothing: a price the player can
+   trust, never a ceiling. This fails if anyone "improves" it to read the sky. */
+check('and Nightbell is quoted at its floor, whatever the sky is doing now', (() => {
+  const moon = DATA.seeds.find((sd) => sd.verb === 'nightbell');
+  if (!moon) return false;
+  G.reset();
+  S.petals = {};
+  unlockTo(20);
+  const quoted = G.plantPayout(moon, 0);
+  const day = moon.yield * DATA.verbTuning.nightbellDay;
+  return Math.abs(quoted.min - Math.round(day)) < 1
+    && quoted.mult < 1
+    && G.verbPayoutMult(0, 'nightbell') === DATA.verbTuning.nightbellDay;
+})());
+
+/* The label is a prediction, so the only proof that matters is a real harvest
+   landing on the number it promised. Rarity is pinned to common, which is the
+   bottom of the quoted range. */
+check('a real harvest lands inside the range the picker quoted', (() => {
+  G.reset();
+  S.petals = {};
+  S.credits = 1e9;
+  unlockTo(20);
+  S.savedSeeds = 1e9;
+  G.buyPetal('tulip', 'rich');
+  G.buyPetal('tulip', 'rich');
+  const quoted = G.plantPayout(tulipDef, 0);
+  G.Dev.armRarity('common');
+  G.plant(0, tulipDef);
+  advance(S.grid[0].grow + 2);
+  const before = S.credits;
+  G.harvest(0);
+  const paid = S.credits - before;
+  return paid >= quoted.min && paid <= quoted.max;
+})());
+
+group('a petal button says what you have and what the next one adds');
+G.reset();
+S.petals = {};
+S.savedSeeds = 1e9;
+unlockTo(20);
+check('nothing owned reads as nothing owned', (() => {
+  const e = G.petalEffect('daisy', 'rich');
+  return e.owned === 0 && e.now === 0 && e.next === DATA.petals.shared.rich.value;
+})());
+check('and each purchase moves `now` by exactly what `next` promised', (() => {
+  for (let i = 0; i < DATA.petals.shared.rich.cap; i += 1) {
+    const before = G.petalEffect('daisy', 'rich');
+    if (before.maxed) return false;
+    const promised = before.next;
+    G.buyPetal('daisy', 'rich');
+    const after = G.petalEffect('daisy', 'rich');
+    if (Math.abs(after.now - (before.now + promised)) > 1e-9) return false;
+  }
+  return true;
+})());
+check('the last petal in reads as full, and promises nothing more', (() => {
+  const e = G.petalEffect('daisy', 'rich');
+  return e.maxed === true && e.next === 0 && Math.abs(e.now - DATA.petals.shared.rich.cap * DATA.petals.shared.rich.value) < 1e-9;
+})());
+check('and `now` is the multiplier the harvest actually uses', (() => {
+  const e = G.petalEffect('daisy', 'rich');
+  return Math.abs(G.petalMult('daisy') - (1 + e.now)) < 1e-9;
+})());
+
+group('a badge card says what the next level buys');
+G.reset();
+S.credits = 1e12;
+check('every core badge answers with a unit',
+  UI_BADGE_KEYS.every((k) => Boolean(G.upgradeEffect(k).unit)));
+/* The property that matters is the same one the petals have: buying the thing
+   moves the running total by exactly what the card promised. Each badge is
+   asserted through its own unit, because they do not all count upward. */
+check('buying moves the running total by what the card promised', (() => {
+  const ups = ['tapPower', 'critChance', 'critMult', 'comboMeter', 'rainDance', 'beeSwarm', 'ladybug', 'autoWater', 'offlineRate', 'offlineHours'];
+  for (const key of ups) {
+    S.credits = 1e12;
+    const before = G.upgradeEffect(key);
+    if (before.maxed) continue;
+    if (!G.buyUpgrade(key)) return false;
+    const after = G.upgradeEffect(key);
+    if (Math.abs(after.now - (before.now + before.next)) > 1e-6) return false;
+  }
+  return true;
+})());
+check('the hold speed counts DOWN by what it promised', (() => {
+  S.credits = 1e12;
+  const before = G.upgradeEffect('holdSpeed');
+  G.buyUpgrade('holdSpeed');
+  const after = G.upgradeEffect('holdSpeed');
+  return Math.abs(after.now - (before.now - before.next)) < 1e-6;
+})());
+check('the drone quotes the cadence the loop actually runs on', (() => {
+  S.credits = 1e12;
+  G.buyUpgrade('autoHarvest');
+  const e = G.upgradeEffect('autoHarvest');
+  return e.now === G.autoHarvestCadence(S.upgrades.autoHarvest)
+    && e.next === G.autoHarvestCadence(S.upgrades.autoHarvest + 1)
+    && e.next < e.now;
+})());
+check('a maxed badge promises nothing more', (() => {
+  S.credits = 1e12;
+  for (let i = 0; i < 40; i += 1) G.buyUpgrade('ladybug');
+  const e = G.upgradeEffect('ladybug');
+  return e.maxed === true && e.next === 0;
+})());
+/* Both offline badges clamp, and with a creature lending its trait the ceiling
+   arrives several levels before upgradeMaxed() does — so the step has to be
+   measured through the same function, not read off the DATA constant. */
+check('the offline badges promise the step the clamp will actually give', (() => {
+  G.reset();
+  S.credits = 1e12;
+  const lender = CREATURES.find((c) => c.trait === 'offlineRate');
+  if (lender) {
+    S.critters[lender.id] = { home: true, fed: 0, fedUntil: G.nowSeconds() + 86400, stars: 6, seen: true };
+    G.setTending(lender.id, true);
+  }
+  for (const key of ['offlineRate', 'offlineHours']) {
+    for (let lvl = 0; lvl <= 15; lvl += 1) {
+      S.upgrades[key] = lvl;
+      const e = G.upgradeEffect(key);
+      if (e.maxed) continue;
+      const now = e.now;
+      S.upgrades[key] = lvl + 1;
+      const after = G.upgradeEffect(key).now;
+      S.upgrades[key] = lvl;
+      if (Math.abs(e.next - (after - now)) > 1e-9) return false;
+    }
+  }
+  return true;
+})());
+
+/* The crit card has to quote the chance tapFlower() rolls against, which adds
+   the live boost and clamps at the ceiling — not the raw stored field. */
+check('the crit card quotes the chance the roll uses, boost and all', (() => {
+  G.reset();
+  S.boostInv.bloom = 1;
+  G.activateBoost('bloom');
+  const e = G.upgradeEffect('critChance');
+  return Math.abs(e.now - G.critChanceNow()) < 1e-9 && e.now > S.tap.critChance;
+})());
+
+/* The per-tap figure is a FLOOR: every term a tap applies except the combo,
+   which decays a point a second while the panel sits open. Asserted both ways —
+   it is exactly a resting tap, and a tap with a combo running pays it times the
+   combo the same call hands back. */
+check('the tap figure is exactly what a resting tap pays', (() => {
+  G.reset();
+  S.credits = 1e12;
+  for (let i = 0; i < 9; i += 1) G.buyUpgrade('tapPower');
+  S.tap.critChance = 0;
+  S.tap.combo = 0;
+  const st = G.tapStats();
+  const before = S.credits;
+  G.tapFlower(false);
+  return st.comboMult === 1 && Math.abs((S.credits - before) - Math.round(st.perTap)) <= 1;
+})());
+check('and the combo it hands back is the factor on top', (() => {
+  G.reset();
+  S.credits = 1e12;
+  for (let i = 0; i < 9; i += 1) G.buyUpgrade('tapPower');
+  S.tap.critChance = 0;
+  for (let i = 0; i < 30; i += 1) G.tapFlower(false);
+  const st = G.tapStats();
+  const before = S.credits;
+  G.tapFlower(false);
+  return st.comboMult > 1
+    && Math.abs((S.credits - before) - Math.round(st.perTap * st.comboMult)) <= 1;
+})());
+
+check('a proc chance on the card is the chance the roll uses', (() => {
+  S.credits = 1e12;
+  G.buyUpgrade('rainDance');
+  return Math.abs(G.upgradeEffect('rainDance').now - G.procChance('rainDance')) < 1e-9;
+})());
+check('a harvester names the bloom it can actually plant, never one it cannot', (() => {
+  G.reset();
+  S.credits = 1e12;
+  /* Level 5 with only the free seeds unlocked: the clamp in processAutoPlant()
+     holds it at the top UNLOCKED seed, and the card has to say the same. */
+  for (let i = 0; i < 5; i += 1) G.buyUpgrade('plot1Harvester');
+  const e = G.upgradeEffect('plot1Harvester');
+  const unlocked = DATA.seeds.filter((s) => G.seedUnlocked(s.id));
+  return e.now === unlocked[unlocked.length - 1].name;
+})());
+
+group('the meadow and the roster say what a purchase does');
+G.reset();
+S.credits = 1e9;
+check('a tender that slows hives says so with a negative number', (() => {
+  const willow = G.tenderEffect('willow');
+  const sun = G.tenderEffect('sun');
+  return willow.speed < 0 && sun.speed > 0;
+})());
+check('and every tender in the data can be read',
+  MEADOW.tenders.every((t) => Boolean(G.tenderEffect(t.id))));
+check('a hive projection matches what the cell produces once built', (() => {
+  const cell = G.emptyCells()[0];
+  const p = G.hiveProjection(cell);
+  S.credits = 1e9;
+  G.placeHive(cell);
+  return Math.abs(p.interval - G.hiveInterval(cell)) < 1e-9
+    && p.capacity === G.hiveCapacity(cell)
+    && Math.abs(p.wax - G.hiveWax(cell)) < 1e-9;
+})());
+check('a food button can be told what it will really add', (() => {
+  G.reset();
+  S.credits = 1e9;
+  const who = CREATURES[0].id;
+  S.critters[who] = { home: true, fed: 0, fedUntil: 0, stars: 1, seen: true };
+  const food = CREATURE_FOOD[CREATURE_FOOD.length - 1];
+  const e = G.foodEffect(who, food.id);
+  return e && Math.abs(e.gain - G.foodGain(who, food.id)) < 1e-9 && e.nominal === food.hours * 3600;
+})());
+check('and it tells the truth when the cap is eating the tin', (() => {
+  const who = CREATURES[0].id;
+  const food = CREATURE_FOOD[CREATURE_FOOD.length - 1];
+  S.critters[who].fedUntil = G.nowSeconds() + FOOD_CAP_HOURS * 3600 - 600;
+  const e = G.foodEffect(who, food.id);
+  return e.capped === true && e.gain < e.nominal;
+})());
+check('a sell button can be told the total, not just the unit', (() => {
+  G.reset();
+  S.flowers = { daisy: 7 };
+  const v = G.sellValue('flower', 'daisy');
+  const before = S.credits;
+  G.sell('flower', 'daisy', true);
+  return v.have === 7 && v.total === v.unit * 7 && S.credits - before === v.total;
+})());
+check('a gem skip says the time it buys, not only the price', (() => {
+  G.reset();
+  S.credits = 1e9;
+  unlockTo(20);
+  G.plant(0, G.seedById('orchid'));
+  const s = G.skipSaving(0);
+  return s.gems === G.skipCost(0) && s.seconds > 0 && s.seconds <= S.grid[0].grow;
+})());
+check('a bought sky counts the plants standing in the ground', (() => {
+  G.reset();
+  S.credits = 1e9;
+  unlockTo(20);
+  const empty = G.weatherCallEffect('rain');
+  G.plant(0, G.seedById('tulip'));
+  G.plant(1, G.seedById('tulip'));
+  const full = G.weatherCallEffect('rain');
+  return empty.plots === 0 && full.plots === 2 && full.mutation === 'dew';
+})());
+
+/* ============================================================
+   ORDER GOLD — phase 3.7
+   The two standing properties were only ever exercised at the TOP tier:
+   standReset() unlocks to level 20, which puts rep past 600, so a broken
+   multiplier on tiers 1-3 shipped green. Both now loop the tiers.
+   ============================================================ */
+group('an order beats selling its contents at EVERY tier, not just the top one');
+STAND.tiers.forEach((tier) => {
+  check(`tier ${tier.tier}: a named order always pays more than selling its contents`, (() => {
+    standReset(20);
+    S.credits = 1e9;
+    G.placeHive(G.emptyCells()[0]);
+    S.rep = tier.rep;
+    if (G.standTier().tier !== tier.tier) return false;
+    for (let n = 0; n < 120; n += 1) {
+      S.stand.slots = Array(STAND.slots).fill(null);
+      const o = G.standGenerate(0);
+      if (!o || o.needs.some((need) => need.any)) continue;
+      const raw = o.needs.reduce((sum, need) => sum + G.standUnitValue(need.kind, need.of) * need.qty, 0);
+      if (o.coins <= raw) return false;
+    }
+    return true;
+  })());
+  check(`tier ${tier.tier}: a wild line never pays less than selling what it took`, (() => {
+    standReset(20);
+    S.rep = tier.rep;
+    const dearest = G.standFlowerPool()
+      .slice().sort((a, b) => G.standUnitValue('flower', b) - G.standUnitValue('flower', a))[0];
+    for (const stock of [G.standFlowerPool()[0], dearest]) {
+      for (let n = 0; n < 40; n += 1) {
+        S.stand.slots = Array(STAND.slots).fill(null);
+        S.rep = tier.rep;
+        const o = G.standGenerate(0);
+        if (!o || !o.needs.some((need) => need.any)) continue;
+        const qty = o.needs.reduce((a, need) => a + need.qty, 0);
+        S.flowers = {};
+        S.flowers[stock] = qty;
+        S.credits = 0;
+        const raw = G.standUnitValue('flower', stock) * qty;
+        const res = G.standDeliver(0);
+        if (!res || S.credits <= raw) return false;
+      }
+    }
+    return true;
+  })());
+});
+
+/* The floor the invariant really sits on, measured rather than asserted by
+   eye: below 1/0.9 a single wild line pays less than selling what filled it.
+   The comment in data.js used to claim the lowest shipped multiplier WAS that
+   floor; it never was, and now it is nowhere near it. */
+check('every tier clears the wild floor with room to spare',
+  STAND.tiers.every((t) => t.mult > 1 / STAND.wildBonus));
+check('tiers climb in pay as well as in standing',
+  STAND.tiers.every((t, i, a) => i === 0 || t.mult > a[i - 1].mult));
+/* The owner's ruling in one number, and the reason it is a MEDIAN over real
+   deliveries rather than a price off a card: the cheapest order a tier-1 board
+   can write is three daisies, and the re-price at the counter is what turns a
+   board price into a payout. A single order proves nothing; the middle of sixty
+   of them is what a player feels. */
+check('a delivered order is worth a minute of play, not a second of it', (() => {
+  const paid = [];
+  for (let n = 0; n < 60; n += 1) {
+    standReset(1);
+    S.rep = 0;
+    S.flowers = {};
+    S.credits = 0;
+    const o = G.standGenerate(0);
+    if (!o) return false;
+    /* The pantry a day-one player actually has. A wild line is filled with the
+       best bloom they can grow, not the cheapest in the pool — the casual model
+       plants the dearest seed it can afford, and filling with daisies here
+       measures a player nobody is. */
+    o.needs.forEach((need) => {
+      const pool = G.standFlowerPool();
+      const id = need.of || pool[pool.length - 1];
+      S.flowers[id] = (S.flowers[id] || 0) + need.qty;
+    });
+    const res = G.standDeliver(0);
+    if (!res) return false;
+    paid.push(res.paid);
+  }
+  paid.sort((a, b) => a - b);
+  return paid[Math.floor(paid.length / 2)] >= CASUAL_RATE_PER_MIN;
+})());
+
+/* The guard that outlives the measurement. Whatever the exact values, the
+   ruling bought an order that is worth minutes rather than seconds — and the
+   old table sat at 1.55-2.60, so anything back down in single figures is the
+   token the owner rejected, not a retune. Re-measure in tools/order-gold.js
+   before moving this. */
+check('and no tier has quietly slid back to a token',
+  STAND.tiers.every((t) => t.mult >= 20));
+
+group("what's new survives the reset its own button performs");
+G.clearNewsSeen();
+check('nothing is seen on a fresh install', !G.newsSeen(DATA.announcements[0].id));
+check('the newest unseen one is what would show', (() => {
+  const a = G.pendingAnnouncement();
+  return a && a.id === DATA.announcements[DATA.announcements.length - 1].id;
+})());
+check('marking it seen takes it out of the queue', (() => {
+  G.markNewsSeen(DATA.announcements[0].id);
+  return G.newsSeen(DATA.announcements[0].id) && G.pendingAnnouncement() === null;
+})());
+/* THE WHOLE POINT. The button marks the announcement seen and then wipes the
+   save; a flag living inside the save would go with it and the popup would
+   open on every load forever. This assertion is FALSE if the flag is ever
+   moved into state — which is exactly what makes it worth writing. */
+check('and it survives the wipe the button performs', (() => {
+  S.credits = 999999;
+  G.saveNow();
+  G.reset();
+  return S.credits !== 999999 && G.newsSeen(DATA.announcements[0].id) && G.pendingAnnouncement() === null;
+})());
+check('clearing the flags brings it back, which is what the dev button is for', (() => {
+  G.clearNewsSeen();
+  return !G.newsSeen(DATA.announcements[0].id) && Boolean(G.pendingAnnouncement());
+})());
+check('every announcement carries what the dialog needs to draw itself',
+  (DATA.announcements || []).every((a) => a.id && a.title && a.img
+    && Array.isArray(a.bullets) && a.bullets.length >= 1
+    && a.img.indexOf('/') !== 0));
+G.clearNewsSeen();
 G.reset();
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

@@ -275,6 +275,27 @@ Behaviour:
 - Re-rendering preserves `scrollTop` unless the mode changed, so buying an upgrade doesn't jump you
   back to the top of a long list.
 
+## The What's New dialog (2026-08-30)
+
+**The one thing on screen that is not a sheet.** An announcement is a card in the middle of the
+screen with its own scrim, `#news` in `index.html`, drawn by `ui-news.js`. It is not a sheet panel
+because it cannot be dragged away and it cannot be closed by tapping the scrim: its single "Got it!"
+button is the only way out, and on an announcement marked `reset` that button hands the player a
+fresh garden.
+
+| Rule | Why |
+| --- | --- |
+| **Never fullscreen.** `width: min(340px, 100% - 40px)`, centred, `max-height` inside `--sat`/`--sab` | The owner asked for a mobile-game popup, and the house has one. A full-bleed takeover was rejected in the same ruling |
+| **`z-index: 90`** — above the banner (70), the coach mark (65) and the toasts (60) | It is the first thing a player sees on a new build; nothing may land on top of it |
+| **Its own scrim**, not `#scrim` | The sheet's scrim belongs to a thing you can dismiss by tapping it. This one must not be dismissible |
+| **Nothing fades in.** The card and the scrim are opaque in their base style; `.show` moves the card 14px and nothing else | A frame that never arrives — a stopped animation clock, a transition that never starts — must not be able to trap a player behind a modal with an invisible button. Visibility belongs to the base style; motion is the flourish on top |
+| **The art is framed, never laid out.** `aspect-ratio: 4/3`, `object-fit: cover`, both dimensions stated on the `<img>` | The art is owner-supplied and portrait (1152×1728). Given its own aspect it is taller than the phone. Stating both dimensions is the raster version of the `width:auto` SVG trap |
+| **`.news[hidden]{display:none}` sits beside `.news{display:grid}`** | `[hidden]` loses to any later rule that sets `display`; the attribute selector's specificity is what saves it |
+
+**It goes first and alone on boot.** `boot()` calls `UI.maybeAnnounce()` before the away report and
+before the flower's greeting, and both stand down while it is up — the welcome sheet takes its turn
+from `UI.afterNews()` if the announcement did not send the player back to the start.
+
 ### The plant picker row
 
 A `seeds` row is a shelf item, not a table row. Left to right: a circular art badge tinted from the

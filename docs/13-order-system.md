@@ -127,6 +127,12 @@ locked part.
 
 Every order pays **coins and reputation**. Some pay a bonus.
 
+> **How much is "enough", 2026-08-30 (owner's ruling).** A delivered order should be worth **roughly
+> one to two minutes of the player's current earning rate**, at every tier. Not "more than selling",
+> not "a lot" — a span of the player's own time, measured rather than eyeballed. That is what
+> [tools/order-gold.js](../tools/order-gold.js) exists to check, and it is the number to re-derive
+> before touching `tierMultiplier` again.
+
 > **Paused, 2026-08-30.** The reputation half is switched off at `STAND.repPaused` until slice D
 > authors the level rungs past 20. Orders still pay coins and still count the Tally's orders line.
 > The formula below is what the engine still authors onto every order — the pause gates the
@@ -139,8 +145,18 @@ repReward  = base(tier) × lineItemCount
 
 - `itemCost` comes from the resource cost model in
   [14-economy-model.md](14-economy-model.md) — the notional value of producing one unit.
-- `tierMultiplier` starts around 1.5× and climbs. Orders must pay **more than selling raws
-  directly**, or the system is optional.
+- `tierMultiplier` is **30 / 200 / 210 / 225** across the four tiers as of 2026-08-30. It used to be
+  1.55–2.60, and that is the shape of the mistake worth remembering: it was chosen as a small
+  multiple of the raw value, and `flowerValue` is a STATIC `yield × 0.25` while the player's earning
+  rate compounds every Turn through petals, plots, rarity and the drone. A static anchor cannot
+  track a compounding rate, so what shipped as "a small windfall" decayed into a fifth of a second
+  of income without anyone changing a number. **Whatever constant ships will decay again for the
+  same reason** — the durable fix is pricing an order in *seconds of the player's earning rate*
+  rather than as a multiple of raw value, which is an engine change nobody has scoped yet. Until
+  then, re-measure with [tools/order-gold.js](../tools/order-gold.js) every few phases and expect to
+  raise it.
+- Orders must pay **more than selling raws directly**, or the system is optional. The real floor for
+  that is `mult > 1 / STAND.wildBonus` = **1.12**, not "around 1.5".
 - `varietyBonus` rewards spanning more regions. This is the thumb on the scale that makes
   interdependence pay.
 

@@ -14,11 +14,27 @@ gracefully without it.
 **No binary assets in the game.** No images, no audio files, no icon fonts. Generate SVG and
 synthesize sound. See [05-art-direction.md](05-art-direction.md).
 
-The single exception is `icons/` — the home screen icons the operating system requires, which
+The first exception is `icons/` — the home screen icons the operating system requires, which
 cannot be SVG on iOS. They are packaging, not art: nothing in the game loads them, and
 `icons/icon.svg` remains the source they are rasterised from. See
-[23-installable-pwa.md](23-installable-pwa.md). Do not read this as permission to add a PNG to
-the game itself.
+[23-installable-pwa.md](23-installable-pwa.md).
+
+**The second exception is `art/announcements/`, and it is deliberately narrow** (owner's ruling,
+2026-08-30). A What's New announcement carries one piece of flashy owner-supplied art, and that
+art is a photograph-class raster nobody is going to hand-write as SVG. The rules that keep it an
+exception rather than a precedent:
+
+- **This folder only.** `art/announcements/<id>.png`, one image per row in `DATA.announcements`.
+  Nothing else in the game may load a raster, and no other folder inherits this.
+- **Owner-supplied.** It is content the owner drops in, like the copy beside it — not something an
+  agent generates, converts or optimises. If it needs re-exporting, that is the owner's call.
+- **Lowercase paths.** GitHub Pages is case-sensitive and a Mac is not, so `Art/Announcements/`
+  works locally and 404s on the live site. This bit once already.
+- **It joins `CORE` in `sw.js` in the same commit**, or an installed app shows a broken square in
+  the middle of a dialog it cannot dismiss around.
+- **It is never load-bearing.** The dialog draws and dismisses with the image missing.
+
+Neither exception is permission to add a PNG anywhere else in the game.
 
 **No `<script type="module">`.** Modules break under `file://`. Plain scripts and globals, loaded in
 dependency order.
@@ -27,7 +43,8 @@ dependency order.
 Pages (`/gardenwonder/`), so `/style.css` would 404.
 
 **A new script file must be added to `CORE` in `sw.js`.** That list is what gets precached for
-offline play. Miss it and the game still works online but fails to boot without a network. See
+offline play. Miss it and the game still works online but fails to boot without a network. So does
+any announcement image — see the exception above. See
 [23-installable-pwa.md](23-installable-pwa.md).
 
 ## Layering

@@ -158,6 +158,17 @@
     return `<span class="price ${affordable ? 'ok' : 'no'}">${Icons.get(icon)}${fmt(cost)}</span>`;
   }
 
+  /* A number the garden has changed is never silently different from the one on
+     the seed's data row: the pill carries the multiplier that did it, in either
+     direction. A Nurse costs its own plot 10% and a Moonflower picked in
+     daylight pays half, and a quietly smaller number is the same lie as a
+     quietly larger one. Half a percent either way is rounding, not a change. */
+  function mx(mult) {
+    if (mult > 1.005) return ` <i class="mx">×${Number(mult.toFixed(2))}</i>`;
+    if (mult < 0.995) return ` <i class="mx low">×${Number(mult.toFixed(2))}</i>`;
+    return '';
+  }
+
   function pips(level, max = 8) {
     const shown = Math.min(level, max);
     let s = '';
@@ -172,12 +183,59 @@
     'offlineRate', 'offlineHours'
   ];
 
+  /* WHAT YOU HAVE, AND WHAT THIS LEVEL BUYS. Thirteen badges shared one template
+     whose only live number was "Lv N", and six of them said nothing numeric at
+     all — a player could not tell a 1% crit from a doubled multiplier without
+     buying one first. Every value comes off Game.upgradeEffect(), which is what
+     keeps the hold's shrinking milliseconds and the harvester's seed NAME from
+     being re-derived here.
+
+     Two pills rather than a sentence: a number lives in a cream pill, and the
+     pair is the ruling said out loud — this is what you have, this is what the
+     price buys. */
+  function upgradeValue(e) {
+    switch (e.key) {
+      /* The BASE, and it says so: boosts, the Wonder and the combo all multiply
+         it and none of them belong to this badge. The Almanac carries the live
+         figure; a card that quoted it here would move without anyone buying. */
+      case 'tapPower': return [`base ${fmt(e.now)} a tap`, `next +${fmt(e.next)}`];
+      /* The one badge whose number goes DOWN, and its step is clamped by the
+         floor — so the last level really does buy less than the ones before. */
+      case 'holdSpeed': return [`every ${(e.now / 1000).toFixed(2)}s`,
+        e.next ? `next −${(e.next / 1000).toFixed(2)}s` : ''];
+      case 'critChance': return [`${pct(e.now)} crit`, `next +${pct(e.next)}`];
+      case 'critMult': return [`×${e.now} on a crit`, e.next ? `next +${e.next}` : 'at its cap'];
+      case 'comboMeter': return [`combo ${e.now}`, e.next ? `next +${e.next}` : 'at its cap'];
+      /* The unit is spelled out once. When the running total is already carrying
+         it, the promise beside it only has to carry the step. */
+      case 'rainDance': case 'beeSwarm': case 'ladybug':
+        return [e.now ? `${pct(e.now, 1)} a tap` : '',
+          e.now ? `next +${pct(e.next, 1)}` : `next ${pct(e.next, 1)} a tap`];
+      case 'plotExpansion': return [`${e.now} plots`, `next +${e.next}`];
+      case 'autoWater': return [e.now ? `${pct(e.now)} faster` : '',
+        e.now ? `next +${pct(e.next)}` : `next ${pct(e.next)} faster`];
+      /* A cadence improves by shrinking and bottoms out at the engine's floor,
+         where another level is a purchase that changes nothing. */
+      case 'autoHarvest': return [e.now ? `every ${e.now.toFixed(1)}s` : '',
+        e.next === e.now ? 'as quick as it gets'
+          : `next ${e.now ? '' : 'a pick '}every ${e.next.toFixed(1)}s`];
+      case 'offlineRate': return [`${pct(e.now)} away`, `next +${pct(e.next)}`];
+      case 'offlineHours': return [`${e.now}h away`, `next +${e.next}h`];
+      /* A harvester plants the best bloom it has been raised to, and stops at the
+         highest seed you have UNLOCKED — past that a level is a purchase with
+         nothing behind it, and the card has to say so. */
+      default: return [e.now ? `plants ${e.now}` : '',
+        e.next === e.now ? 'none higher yet' : `next ${e.level ? '' : 'plants '}${e.next}`];
+    }
+  }
+
   function upgradeCard(key) {
     const def = DATA.upgrades[key];
     const lvl = S.upgrades[key];
     const maxed = Game.upgradeMaxed(key);
     const cost = Game.upgradePrice(key);
     const can = !maxed && S.credits >= cost;
+    const [now, next] = upgradeValue(Game.upgradeEffect(key));
     return `<button class="card ${can ? 'affordable' : ''}" data-buy="upgrade" data-key="${key}" ${maxed ? 'disabled' : ''}>
       <div class="card-top">
         <span class="card-badge">${Icons.get(def.icon || 'badge')}</span>
@@ -187,6 +245,8 @@
         </span>
       </div>
       ${pips(lvl)}
+      <span class="card-vals">${now ? `<span class="stat">${now}</span>` : ''}${
+        next && !maxed ? `<span class="stat next">${next}</span>` : ''}</span>
       <span class="card-desc">${def.desc}</span>
       ${priceTag(cost, 'credits', can, maxed)}
     </button>`;
@@ -204,6 +264,23 @@
       ${lockedCount ? `<p class="sheet-note" style="margin-top:10px">${lockedCount} more harvester${lockedCount > 1 ? 's' : ''} unlock with new plots.</p>` : ''}`;
   }
 
+  /* "Everything growing gets a shot at Dewkissed" was prose standing in for two
+     numbers the engine already knew — how many plants are actually in the ground
+     to receive a roll, and what the mutation pays when one lands. On an empty
+     board that first number is zero and the card was selling weather nobody
+     could catch, so it DRAINS rather than disabling: the sky is still for sale,
+     it just says what it is worth right now.
+
+     "Nothing LEFT to catch it" rather than "nothing planted": the count is
+     plants whose one mutation roll is still pending, so a board of four plants
+     that have all already rolled is legitimately zero, and the older wording
+     would have contradicted what the player could see. */
+  function skyLine(eff) {
+    const mins = `${Math.round(eff.minutes)} min`;
+    if (!eff.plots) return `${mins} &middot; nothing left to catch it`;
+    return `${mins} &middot; ${eff.plots} plant${eff.plots > 1 ? 's' : ''} standing to catch it`;
+  }
+
   function skyCards() {
     const active = Game.weatherCallActive();
     const rows = Object.keys(DATA.weatherCall.prices).map((id) => {
@@ -211,14 +288,20 @@
       const m = DATA.mutations[w.mutation];
       const price = Game.weatherCallPrice(id);
       const can = S.gems >= price && !active;
-      return `<button class="card ${can ? 'affordable' : ''}" data-buy="sky" data-key="${id}" ${active ? 'disabled' : ''}>
+      const eff = Game.weatherCallEffect(id);
+      return `<button class="card ${can ? 'affordable' : ''}${eff.plots ? '' : ' idle'}"
+        data-buy="sky" data-key="${id}" ${active ? 'disabled' : ''}>
         <div class="card-top">
           <span class="card-badge" style="background:${w.tint}">${Icons.get('sparkle')}</span>
           <span>
             <span class="card-title">Call ${w.name}</span>
-            <span class="card-sub">${DATA.weatherCall.minutes} min &middot; everything growing gets a shot at ${m.name}</span>
+            <span class="card-sub">${skyLine(eff)}</span>
           </span>
         </div>
+        <span class="card-vals">
+          <span class="stat">${pct(eff.catch)} a plant</span>
+          <span class="stat good">${m.name} pays ×${eff.mult}</span>
+        </span>
         ${priceTag(price, 'gems', can, false)}
       </button>`;
     }).join('');
@@ -252,12 +335,17 @@
   }
 
   /* ---- apiary ---- */
-  function stockRow(icon, name, qty, unit, kind, key) {
+  /* The one number the button changes is the gold it hands over, and it was the
+     one number the row did not show — the player was left to multiply the unit
+     price by the count. Quantity and price both come off the same getter now, so
+     the row and the sale can never disagree. */
+  function stockRow(icon, name, kind, key) {
+    const sale = Game.sellValue(kind, key);
     return `<div class="stock">
       <span class="stock-ico">${icon}</span>
-      <span class="stock-name">${name}<span class="stock-sub">${Icons.get('coin')}${fmt(unit)} each</span></span>
-      <span class="stock-qty">x${qty}</span>
-      <button class="mini" data-sell="${kind}" data-key="${key}">Sell all</button>
+      <span class="stock-name">${name}<span class="stock-sub">${Icons.get('coin')}${fmt(sale.unit)} each</span></span>
+      <span class="stock-qty">x${sale.have}</span>
+      <button class="mini" data-sell="${kind}" data-key="${key}">Sell all ${Icons.get('coin')}${fmt(sale.total)}</button>
     </div>`;
   }
 
@@ -265,6 +353,39 @@
      The room does the buying and collecting, because those are things you do to
      a place you are standing in. These three are the paperwork: who is working,
      what you have made, and what you can sell. */
+
+  const ORDINALS = ['', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+  const ordinal = (n) => ORDINALS[n] || `${n}th`;
+
+  /* The whole price curve is 1.8^owned, so the count is what makes the number
+     above it make sense. It sits under the price rather than in the copy for
+     exactly that reason. */
+  function buildBuy(cost, can, foot) {
+    return `<span class="build-buy">
+      ${priceTag(cost, 'credits', can)}
+      ${foot ? `<span class="build-owned">${foot}</span>` : ''}
+    </span>`;
+  }
+
+  const statPill = (icon, text, bad) =>
+    `<span class="stat${bad ? ' bad' : ''}">${Icons.get(icon)}${text}</span>`;
+
+  /* A PENALTY IS SAID AS PLAINLY AS A BENEFIT. Willow Shade and Foxglove Bank
+     both slow the hives they touch, and both rows described themselves entirely
+     in adjectives — cool and quiet, spires the bees can see. The engine hands
+     over `speed` already flipped into the direction a player reads it, so a
+     negative number here is genuinely a slower hive and wears the red pill the
+     rest of the game uses for "no". */
+  function tenderChips(eff) {
+    const out = [];
+    if (eff.speed > 0) out.push(statPill('clock', `${pct(eff.speed)} faster`));
+    if (eff.speed < 0) out.push(statPill('clock', `${pct(-eff.speed)} slower`, true));
+    if (eff.cap) out.push(statPill('honey', `holds +${eff.cap}`));
+    if (eff.wax) out.push(statPill('wax', `+${pct(eff.wax)} wax`));
+    if (eff.pollen) out.push(statPill('coin', `+${pct(eff.pollen)} garden gold`));
+    if (eff.rare) out.push(statPill('sparkle', `${pct(eff.rare)} better jars`));
+    return out.join('');
+  }
 
   /* What you can put on an empty meadow cell. Every option shows what it would
      do FOR ITS NEIGHBOURS, because that is the decision — not what it is, but
@@ -276,19 +397,28 @@
 
     const hiveCost = Game.nextHiveCost();
     const canHive = S.credits >= hiveCost;
+    /* The projection answers for THIS cell, neighbours and keepers counted — so
+       a hive dropped beside a Sun Trap quotes the faster jar before it is bought
+       rather than after. */
+    const hp = Game.hiveProjection(cell);
+    const hiveChips = statPill('clock', `a jar every ${fmtTime(hp.interval)}`)
+      + statPill('honey', `holds ${hp.capacity}`)
+      + statPill('coin', `+${pct(hp.pollen)} garden gold`);
     const rows = [`<button class="build-row${canHive ? ' affordable' : ''}" data-build="hive"
         data-cell="${cell}" type="button">
         <span class="build-art">${Meadow.hive()}</span>
         <span class="build-copy">
           <span class="card-title">Hive</span>
           <span class="card-sub">${MEADOW.hive.desc}</span>
+          <span class="build-stats">${hiveChips}</span>
         </span>
-        ${priceTag(hiveCost, 'credits', canHive)}
+        ${buildBuy(hiveCost, canHive, `${ordinal(Game.hiveCount() + 1)} hive`)}
       </button>`];
 
     MEADOW.tenders.forEach((t) => {
       const cost = Game.nextTenderCost(t.id);
       const can = S.credits >= cost;
+      const eff = Game.tenderEffect(t.id);
       const helps = nearHives
         ? `Helps ${nearHives} hive${nearHives > 1 ? 's' : ''} from here`
         : 'Nothing beside it yet';
@@ -298,9 +428,10 @@
         <span class="build-copy">
           <span class="card-title">${t.name}</span>
           <span class="card-sub">${t.desc}</span>
+          <span class="build-stats">${tenderChips(eff)}</span>
           <span class="build-helps${nearHives ? ' on' : ''}">${helps}</span>
         </span>
-        ${priceTag(cost, 'credits', can)}
+        ${buildBuy(cost, can, eff.owned ? `${eff.owned} built` : '')}
       </button>`);
     });
 
@@ -317,8 +448,7 @@
       const on = Game.isKeeper(def.id);
       const asleep = Game.critterAsleep(def.id);
       const bee = def.affinity === 'meadow';
-      const lift = Math.round(Game.critterWorkLevel(def.id) * MEADOW.keeperSpeedPerStar
-        * (bee ? MEADOW.affinityMult : 1) * 100);
+      const lift = Math.round(Game.keeperLift(def.id) * 100);
       return `<button class="keeper-row${on ? ' on' : ''}" data-keep="${def.id}" type="button">
         <span class="keeper-face${asleep ? ' asleep' : ''}">${Critters.draw(def)}</span>
         <span class="keeper-copy">
@@ -329,8 +459,14 @@
       </button>`;
     }).join('');
 
+    /* A row says what ONE keeper is worth and the panel says what the bench is
+       worth, because the two are not the same reading: an asleep keeper still
+       shows its lift on its own row and adds nothing to the hives. */
+    const bench = Game.keeperSpeed();
     return `<p class="sheet-note">The hives work on their own. A keeper just makes them quicker —
         ${now.length}/${slots} spots filled.</p>
+      ${bench ? `<p class="sheet-note bench-note"><span class="chip">${Icons.get('clock')}+${pct(bench)} faster</span>
+        on the hives, everyone on the bank counted.</p>` : ''}
       ${rows || '<p class="sheet-note">Nobody is out in the garden to send over.</p>'}
       ${out.length && !Game.keepersFree() && now.length < out.length
         ? '<p class="sheet-note">The bank is full. Tap someone on it to send them back.</p>' : ''}`;
@@ -413,7 +549,7 @@
 
     const goods = Object.keys(S.goods).map((id) => {
       const r = CRAFT_RECIPES.find((x) => x.id === id);
-      return stockRow(Icons.get(r.icon), r.name, S.goods[id], r.value, 'good', id);
+      return stockRow(Icons.get(r.icon), r.name, 'good', id);
     }).join('');
 
     const flowers = Object.keys(S.flowers)
@@ -598,19 +734,26 @@
       </div>`;
     }
     const cap = DATA.petals.shared.rich.cap;
+    /* THE LARGEST PER-TURN GRANT IN THE GAME, and the panel never said what it
+       was worth. Every petal is the same step, so the ask can carry the number
+       once; the tiles carry what each flower is already sitting on, which is the
+       fact the choice actually turns on. */
+    const step = pct(Game.petalEffect(list[0].id, 'rich').next);
     const tiles = list.map((s) => {
-      const rich = Game.petalsOf(s.id).rich;
+      const eff = Game.petalEffect(s.id, 'rich');
       const pips = Array.from({ length: cap }, (_, i) =>
-        `<i class="pip${i < rich ? '' : ' off'}"></i>`).join('');
+        `<i class="pip${i < eff.owned ? '' : ' off'}"></i>`).join('');
       return `<button class="bless-tile${turnPick === s.id ? ' on' : ''}" data-bless="${s.id}">
         <span class="bless-art" style="--art:${s.art.c1}">${Flora.head(s, 40)}</span>
         <span class="bless-name">${s.name}</span>
         <span class="pips">${pips}</span>
+        ${eff.owned ? `<span class="bless-val">+${pct(eff.now)} gold</span>` : ''}
       </button>`;
     }).join('');
     const picked = turnPick ? Game.seedById(turnPick) : null;
     return `<div class="cere top">
-      <p class="sheet-note">Your blessing lands as a free <b>Rich Bloom</b> petal. Any flower, once a Turn.</p>
+      <p class="sheet-note">Your blessing lands as a free <b>Rich Bloom</b> petal —
+        <span class="chip">+${step} gold</span> on that flower, kept through every Turn.</p>
       <div class="bless-grid">${tiles}</div>
       <div class="btn-row">
         <button class="big-btn yes" data-act="turnGo" ${picked ? '' : 'disabled'}>
@@ -812,11 +955,19 @@
   }
 
   function renderSeeds() {
+    const plot = sheetArg ?? 0;
     const rows = sortedSeeds().map((s) => {
       const locked = !Game.seedUnlocked(s.id);
       const can = !locked && S.credits >= s.cost;
-      const grow = Math.round(s.grow * Game.growModifier());
-      const max = Math.round(s.yield * MAX_RARITY_MULT);
+      /* The real number this plot would get, not the one on the seed's data
+         row. The label used to apply growModifier() alone, so a flower full of
+         Quick Sprout read 18 seconds while genuinely growing in 12 — the engine
+         was right and the label lied. Both pills now come from the same
+         functions the plant itself goes through, and a number the garden has
+         improved says so rather than being quietly different. */
+      const grow = Math.round(Game.plantGrowth(s, plot));
+      const quicker = grow < Math.round(s.grow);
+      const pay = Game.plantPayout(s, plot);
       const drops = [];
       if (s.gemChance) drops.push(`<span class="stat gem">${Icons.get('gem')}${pct(s.gemChance, 1)}</span>`);
       if (locked) {
@@ -832,8 +983,8 @@
             <span class="seed-name">${s.name}${verbChip(s)}</span>
             <span class="seed-stats">
               <span class="stat">${Icons.get('coin')}${fmt(s.cost)}</span>
-              <span class="stat">${Icons.get('clock')}${fmtTime(grow)}</span>
-              <span class="stat good">${Icons.get('coin')}${fmt(s.yield)}–${fmt(max)}</span>
+              <span class="stat s-grow${quicker ? ' good' : ''}">${Icons.get('clock')}${fmtTime(grow)}</span>
+              <span class="stat good s-pay">${Icons.get('coin')}${fmt(pay.min)}–${fmt(pay.max)}${mx(pay.mult)}</span>
               ${drops.join('')}
             </span>
             ${verbNote(s)}
@@ -850,8 +1001,8 @@
           <span class="seed-name">${s.name}${verbChip(s)}</span>
           <span class="seed-stats">
             <span class="stat">${Icons.get('coin')}${fmt(s.cost)}</span>
-            <span class="stat">${Icons.get('clock')}${fmtTime(grow)}</span>
-            <span class="stat good">${Icons.get('coin')}${fmt(s.yield)}–${fmt(max)}</span>
+            <span class="stat s-grow${quicker ? ' good' : ''}">${Icons.get('clock')}${fmtTime(grow)}</span>
+            <span class="stat good s-pay">${Icons.get('coin')}${fmt(pay.min)}–${fmt(pay.max)}${mx(pay.mult)}</span>
             ${drops.join('')}
           </span>
           ${verbNote(s)}
@@ -860,7 +1011,8 @@
       </button>`;
     }).join('');
     if (pendingUnlock) return unlockAsk();
-    return `<p class="sheet-note">Planting into plot ${(sheetArg ?? 0) + 1}. Grow times already include your sprinklers and boosts.</p>${rows}`;
+    return `<p class="sheet-note">Planting into plot ${plot + 1}. Times and payouts are what this plot
+      would really give — sprinklers, boosts, keepers and petals already counted.</p>${rows}`;
   }
 
   /* An unlock is one-time, permanent and unrefundable, and the game has no undo
@@ -890,9 +1042,12 @@
     const bits = [`+${def.rep} reputation`];
     if (def.reward && def.reward.credits) bits.push(`+${fmt(def.reward.credits)} coins`);
     if (def.reward && def.reward.gems) bits.push(`+${def.reward.gems} gems`);
+    /* A named booster and nothing else told a player who has never held one
+       exactly nothing. How long it runs is the fact that fits — the rail chip
+       carries the rest once it is lit. */
     if (def.reward && def.reward.boost) {
       const b = DATA.boosters.find((x) => x.id === def.reward.boost);
-      if (b) bits.push(b.name);
+      if (b) bits.push(`${b.name} (${fmtTime(b.dur)})`);
     }
     return bits.join(' · ');
   }
@@ -1209,14 +1364,35 @@
   /* The food is the button. A big token with what it gives you stamped on it,
      then the name, then the price — icon first, words second, which is the note
      the owner keeps coming back to. One clock means one number to stamp. */
+  /* THE STAMP IS THE REAL GAIN, NOT THE TIN'S. It printed `f.hours` while the
+     engine clamped to the 24-hour cap, so a creature with 22 hours left was
+     offered "+16h" and handed two. Both numbers come off one getter now, and the
+     line under the name is what the clock will read once the food is in. */
+  /* The stamp is a corner badge on a 52px token, so it gets ONE unit — "14h 2m"
+     wraps inside the pill and breaks it. The exact span is on the line below. */
+  function foodStamp(eff) {
+    const s = Math.round(eff.gain);
+    if (s <= 0) return 'Full';
+    if (s < 60) return `+${s}s`;
+    if (s < 3600) return `+${Math.round(s / 60)}m`;
+    return `+${Math.round(s / 3600)}h`;
+  }
+
+  function foodAfter(eff) {
+    if (eff.gain <= 0) return `full at ${fmtSpan(eff.fedForAfter)}`;
+    return eff.capped ? `caps at ${fmtSpan(eff.fedForAfter)}` : `then ${fmtSpan(eff.fedForAfter)}`;
+  }
+
   function foodButtons(id) {
     return CREATURE_FOOD.map((f) => {
-      const room = Game.foodGain(id, f.id) > 0;
+      const eff = Game.foodEffect(id, f.id);
+      const room = eff.gain > 0;
       const can = room && S.credits >= f.cost;
       return `<button class="food-btn${can ? ' affordable' : ''}" data-feed="${f.id}" data-who="${id}"
         ${room ? '' : 'disabled'} title="${f.desc}">
-        <span class="food-ico">${Icons.get(f.icon)}<b>+${f.hours}h</b></span>
+        <span class="food-ico">${Icons.get(f.icon)}<b>${foodStamp(eff)}</b></span>
         <span class="food-name">${f.name}</span>
+        <span class="food-after${eff.capped ? ' capped' : ''}">${foodAfter(eff)}</span>
         ${priceTag(f.cost, 'credits', can)}
       </button>`;
     }).join('');
@@ -1574,10 +1750,25 @@
      after Turn 1 IS the tutorial. The signature (third) skill is slice B and is
      deliberately not stubbed — a row that advertises an unbuilt thing is the
      quest-strip trap wearing a different hat. */
+  /* THE PIPS KEEP THE FEEL, THE NUMBER CARRIES THE VALUE. Dots alone were the
+     phase-2 position and the owner overruled it from live play: this is an
+     incremental game, so a button that costs something says what you get and
+     what you now have. Rich Bloom is read in gold, Quick Sprout in time, and
+     both are handed over by Game.petalEffect() rather than worked out here. */
+  function petalValue(skill, eff) {
+    const unit = skill === 'quick' ? 'time' : 'gold';
+    const sign = skill === 'quick' ? '−' : '+';
+    const now = `${sign}${Math.round(eff.now * 100)}% ${unit}`;
+    if (eff.maxed) return `<span class="pv full">${now} · every petal in</span>`;
+    const next = `next ${sign}${Math.round(eff.next * 100)}%`;
+    return `<span class="pv">${eff.owned ? `${now} · ` : ''}${next}</span>`;
+  }
+
   function petalTrack(seed, skill, label) {
     const def = DATA.petals.shared[skill];
-    const owned = Game.petalsOf(seed.id)[skill];
-    const maxed = owned >= def.cap;
+    const eff = Game.petalEffect(seed.id, skill);
+    const owned = eff.owned;
+    const maxed = eff.maxed;
     const pips = Array.from({ length: def.cap }, (_, i) =>
       `<i class="pip${i < owned ? '' : ' off'}"></i>`).join('');
     const cost = maxed ? 0 : Game.petalCost(seed.id, skill);
@@ -1585,11 +1776,13 @@
     const chip = maxed
       ? '<span class="price maxed">MAX</span>'
       : `<button class="price petal-buy ${can ? 'ok' : 'no'}" data-petal="${seed.id}" data-skill="${skill}"
-           ${can ? '' : 'disabled'} aria-label="Buy a ${label} petal for ${seed.name}">${Icons.get('pouch')}${fmt(cost)}</button>`;
+           ${can ? '' : 'disabled'} aria-label="Buy a ${label} petal for ${seed.name}, ${fmt(cost)} Saved Seeds, taking it from ${Math.round(eff.now * 100)} to ${Math.round((eff.now + eff.next) * 100)} percent">${Icons.get('pouch')}${fmt(cost)}</button>`;
     return `<div class="petal-track">
       <span class="pl">${label}</span><span class="pips">${pips}</span><span class="sp"></span>${chip}
+      ${petalValue(skill, eff)}
     </div>`;
   }
+
 
   function petalTracks(seed) {
     /* Year one shows no petal UI — doc 32's "the mystery is the tutorial".
@@ -1608,11 +1801,13 @@
   }
 
   function renderBonuses() {
-    const tapMult = (1 + Game.boostVal('tapPower')) * (1 + Game.boostVal('globalCredits'));
-    const tapEff = S.tap.power * tapMult * Game.wonderMult();
-    const critChance = Game.critChanceNow();
-    const critMult = S.tap.critMult;
-    const growBonus = Math.max(0, 1 - Game.growModifier());
+    /* Every reading on this panel comes from the engine. The tap stack used to be
+       rebuilt here and had already drifted away from tapFlower(), the growth line
+       inverted the modifier by hand, the procs multiplied the per-level constant
+       themselves and the drone's cadence was a second copy of the formula. Four
+       ways for the Almanac to disagree with the game it is describing. */
+    const tap = Game.tapStats();
+    const growth = Game.growthStats();
     const harvestBonus = Game.boostVal('globalCredits');
     const ah = S.upgrades.autoHarvest;
     const found = Game.discoveredCount();
@@ -1621,11 +1816,14 @@
 
     const line = (k, v, d) => `<div class="stat-line"><span class="kk"><span class="k">${k}</span>${d ? `<span class="d">${d}</span>` : ''}</span><span class="v">${v}</span></div>`;
 
+    /* The bloom a harvester really plants stops at the highest seed UNLOCKED,
+       which this row used to forget — so it named a flower the drone could not
+       put in the ground. */
     const harvesters = PLOT_AUTOPLANTERS.map(({ key, name, idx }) => {
       const lvl = S.upgrades[key];
       if (!lvl) return null;
-      const seed = DATA.seeds[Math.min(lvl - 1, DATA.seeds.length - 1)];
-      return line(`${name}`, `Lv ${lvl}`, `Plants up to ${seed.name}${S.grid[idx].locked ? ' (plot locked)' : ''}`);
+      const eff = Game.upgradeEffect(key);
+      return line(`${name}`, `Lv ${lvl}`, `Plants up to ${eff.now}${S.grid[idx].locked ? ' (plot locked)' : ''}`);
     }).filter(Boolean).join('');
 
     const seedRows = DATA.seeds.map((s) => {
@@ -1695,34 +1893,34 @@
       </div>
       <div class="stat-block">
         <h3>${Icons.get('fist')} Tap Power</h3>
-        ${line('Per tap', fmt(tapEff), `Base ${S.tap.power} · ${signed(tapMult - 1)} from boosts`)}
-        ${line('Hold-to-tap rate', `${(S.tap.holdInterval / 1000).toFixed(2)}s`, 'Hold the flower for automatic taps')}
-        ${line('Crit chance', pct(critChance, 1), 'Chance for a big bonus tap')}
-        ${line('Crit multiplier', `${critMult.toFixed(1)}x`, 'Payout spike when a crit lands')}
-        ${line('Combo cap', `${S.tap.comboMax}`, `${Game.comboMult().toFixed(2)}× now · +1% per combo`)}
+        ${line('Per tap', fmt(tap.perTap), `Base ${tap.base} · ${signed(tap.mult - 1)} from boosts · your combo multiplies it again`)}
+        ${line('Hold-to-tap rate', `${(tap.holdInterval / 1000).toFixed(2)}s`, 'Hold the flower for automatic taps')}
+        ${line('Crit chance', pct(tap.critChance, 1), 'Chance for a big bonus tap')}
+        ${line('Crit multiplier', `${tap.critMult.toFixed(1)}x`, 'Payout spike when a crit lands')}
+        ${line('Combo cap', `${tap.comboMax}`, `×${tap.comboMult.toFixed(2)} now · +1% per combo`)}
       </div>
       <div class="stat-block">
         <h3>${Icons.get('sparkle')} Tap Bonuses</h3>
         ${S.upgrades.rainDance
-          ? line('Rain Dance', pct(S.upgrades.rainDance * 0.002, 1), 'Chance per tap to instantly water a growing plot')
+          ? line('Rain Dance', pct(Game.procChance('rainDance'), 1), 'Chance per tap to instantly water a growing plot')
           : line('Rain Dance', 'Locked', 'Buy it in Upgrades to unlock')}
         ${S.upgrades.beeSwarm
-          ? line('Bee Swarm', pct(S.upgrades.beeSwarm * 0.002, 1), 'Chance per tap to fill a jar in an open hive')
+          ? line('Bee Swarm', pct(Game.procChance('beeSwarm'), 1), 'Chance per tap to fill a jar in an open hive')
           : line('Bee Swarm', 'Locked', 'Buy it in Upgrades to unlock')}
         ${S.upgrades.ladybug
-          ? line('Lucky Ladybug', pct(S.upgrades.ladybug * 0.002, 1), 'Chance per tap to boost a growing plot\u2019s rarity odds')
+          ? line('Lucky Ladybug', pct(Game.procChance('ladybug'), 1), 'Chance per tap to boost a growing plot\u2019s rarity odds')
           : line('Lucky Ladybug', 'Locked', 'Buy it in Upgrades to unlock')}
       </div>
       <div class="stat-block">
         <h3>${Icons.get('sprout')} Garden Mastery</h3>
-        ${line('Growth speed', signed(growBonus), 'Sprinklers and boosts')}
+        ${line('Growth speed', signed(growth.bonus), 'Sprinklers and boosts')}
         ${line('Rarity odds', signed(Game.boostVal('rarityWeight')), 'Chance of Rare, Epic and Legendary harvests')}
         ${line('Harvest yield', signed(harvestBonus), 'Extra credits on every harvest')}
         ${line('Wonder bonus', Game.wonderActive() ? `x${WONDER.payoutMult} active` : 'Idle', `Triggers randomly — ${S.stats.wonders || 0} so far`)}
       </div>
       <div class="stat-block">
         <h3>${Icons.get('drone')} Automation</h3>
-        ${ah ? line('Harvest Drone', `Lv ${ah}`, `Collects a ready plot every ${Math.max(0.7, 3 - ah * 0.5).toFixed(1)}s`) : line('Harvest Drone', 'Locked', 'Buy it to auto-collect')}
+        ${ah ? line('Harvest Drone', `Lv ${ah}`, `Collects a ready plot every ${Game.autoHarvestCadence(ah).toFixed(1)}s`) : line('Harvest Drone', 'Locked', 'Buy it to auto-collect')}
         ${harvesters || line('Harvesters', 'None hired', 'Hire them in the Upgrades tab')}
       </div>
       <div class="stat-block">
@@ -1967,6 +2165,16 @@
       · ${p.ready ? 'THE TURN IS READY' : 'not yet ready'}`;
   }
 
+  /* The preview never resets and never marks seen, so the row says which state
+     the real one is in — otherwise "it opened" tells you nothing about whether
+     a player would see it. */
+  function newsReport() {
+    const all = DATA.announcements || [];
+    const next = Game.pendingAnnouncement();
+    return `${all.length} announcement${all.length === 1 ? '' : 's'} · ${
+      next ? `"${next.title}" would show on the next load${next.reset ? ' and start a fresh garden' : ''}` : 'all seen'}`;
+  }
+
   function petalReport() {
     const d = Game.petalsOf('daisy');
     return `${fmt(S.savedSeeds)} Saved Seeds · Daisy R${d.rich}/Q${d.quick}
@@ -2056,6 +2264,9 @@
         <button class="dev-btn" data-dev="fallFill" data-arg="1">Fill the bed</button>
         <button class="dev-btn" data-dev="fallRipen" data-arg="1">Ripen the bed</button>
         <button class="dev-btn" data-dev="fallHarvestAll" data-arg="1">Harvest the bed</button>`)}
+      ${devRow(`What's New — ${newsReport()}`, `
+        <button class="dev-btn" data-dev="newsShow" data-arg="1">Preview announcement</button>
+        <button class="dev-btn warn" data-dev="newsClear" data-arg="1">Clear announcement flags</button>`)}
       <button class="big-btn" data-dev="clear" data-arg="1">Clear everything armed</button>
       ${devRow('Screen', `<p class="sheet-note">${screenReport()}</p>`)}
       <p class="sheet-note">Day phase ${(Game.dayPhase() * 100).toFixed(0)}% · ${Game.isNight() ? 'night' : 'day'} ·
@@ -2181,6 +2392,18 @@
         }
         break;
       }
+      case 'newsShow':
+        /* Preview only: it neither marks the announcement seen nor performs its
+           reset, because looking at a dialog must never cost the save. */
+        ok = Boolean(UI.previewAnnouncement && UI.previewAnnouncement());
+        deny = 'There is no announcement in DATA.announcements to show.';
+        redraw = false;
+        if (ok) closeSheet();
+        break;
+      case 'newsClear':
+        Game.clearNewsSeen();
+        UI.toast({ title: 'Announcements forgotten', body: 'The next load shows the newest one again.', art: Icons.get('book') });
+        break;
       case 'yearSeeds': D.grantSeeds(Number(arg) || 50); break;
       case 'petalBuy':
         ok = Game.buyPetal('daisy', arg);
@@ -2656,9 +2879,37 @@
     el.sheetGrip.addEventListener('pointercancel', onUp);
   })();
 
+  /* The picker quotes what THIS plot would really give, and two of the things in
+     that number arrive without anybody buying anything — a Wonder starting, and
+     the sun going down. Neither re-renders the sheet, so an open picker held a
+     stale payout for the whole length of the Wonder. Both pills are cached on
+     the node so the slow tick only writes when the number has actually moved. */
+  function syncSeedRows() {
+    const plot = sheetArg ?? 0;
+    $$('.seed-row', el.sheetBody).forEach((node) => {
+      const s = Game.seedById(node.dataset.plant || node.dataset.unlock);
+      if (!s) return;
+      const grow = Math.round(Game.plantGrowth(s, plot));
+      const pay = Game.plantPayout(s, plot);
+      const g = $('.s-grow', node);
+      if (g && g.dataset.v !== String(grow)) {
+        g.dataset.v = String(grow);
+        g.innerHTML = `${Icons.get('clock')}${fmtTime(grow)}`;
+        g.classList.toggle('good', grow < Math.round(s.grow));
+      }
+      const p = $('.s-pay', node);
+      const key = `${pay.min}|${pay.max}|${pay.mult}`;
+      if (p && p.dataset.v !== key) {
+        p.dataset.v = key;
+        p.innerHTML = `${Icons.get('coin')}${fmt(pay.min)}–${fmt(pay.max)}${mx(pay.mult)}`;
+      }
+    });
+  }
+
   /* Countdowns tick in place; a full re-render would fight the player's taps. */
   function tickSheetTimers() {
     if (!sheetMode) return;
+    if (sheetMode === 'seeds') syncSeedRows();
     $$('[data-countdown]', el.sheetBody).forEach((n) => {
       const left = Number(n.dataset.countdown) - Game.nowSeconds();
       n.textContent = left > 0 ? fmtTime(left) : 'a moment';
@@ -2682,6 +2933,12 @@
         can = pot >= d.cost;
       } else if (kind === 'sky') {
         can = !Game.weatherCallActive() && S.gems >= Game.weatherCallPrice(key);
+        /* A drone or a harvester can empty the board while the shop sits open,
+           and what the sky is worth is the count of plants standing in it. */
+        const eff = Game.weatherCallEffect(key);
+        node.classList.toggle('idle', !eff.plots);
+        const sub = $('.card-sub', node);
+        if (sub) sub.innerHTML = skyLine(eff);
       }
       node.classList.toggle('affordable', can);
       const price = $('.price', node);
@@ -2692,10 +2949,21 @@
     });
     $$('[data-feed]', el.sheetBody).forEach((node) => {
       const f = Game.foodById(node.dataset.feed);
-      const room = Game.foodGain(node.dataset.who, node.dataset.feed) > 0;
-      const can = Boolean(f) && room && S.credits >= f.cost;
+      const eff = Game.foodEffect(node.dataset.who, node.dataset.feed);
+      if (!f || !eff) return;
+      const room = eff.gain > 0;
+      const can = room && S.credits >= f.cost;
       node.disabled = !room;
       node.classList.toggle('affordable', can);
+      /* A hungrier creature has room for more of the tin, so both of these move
+         while the panel just sits there — not only when something is bought. */
+      const stamp = $('.food-ico b', node);
+      if (stamp) stamp.textContent = foodStamp(eff);
+      const after = $('.food-after', node);
+      if (after) {
+        after.textContent = foodAfter(eff);
+        after.classList.toggle('capped', eff.capped);
+      }
       const price = $('.price', node);
       if (price) { price.classList.toggle('ok', can); price.classList.toggle('no', !can); }
     });
