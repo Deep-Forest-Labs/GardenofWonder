@@ -1687,6 +1687,16 @@ automated tab that transition can freeze part-way and never settle, so waiting d
 Measure **relative to `#sheetBody`**, which is transform-independent. This produced two wrong
 diagnoses in one session, including a fold check that claimed content was off screen when it was not.
 
+**A design session can commit into THIS checkout while you are working in it, and the handoff is
+what breaks.** Not a branch and not a worktree — the same directory. Phase 3.6 was built across
+`30c3a63` and `06ce06a` landing underneath it, and one of them **ruled on the blessing** in the
+opposite direction to the advice this file was still carrying. Nothing conflicted, nothing failed,
+and `git status` looked exactly as expected, because the other session only touched `docs/` — so the
+first sign was the parent commit not being the one the session started from. **Re-read
+`10-decision-log.md` from the top immediately before writing step 5**, and diff `HEAD` against the
+commit you started at: the handoff is *derived*, and it is the one file guaranteed to be wrong when a
+ruling lands mid-session.
+
 **Check `git branch -r` before starting a specified phase.** Phase 4 was built twice, in parallel,
 by two agents that did not know about each other — competently and incompatibly, with different
 state shapes for the same feature. Cloud agents push to `cursor/*` branches and may already have
