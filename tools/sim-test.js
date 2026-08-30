@@ -5743,6 +5743,18 @@ G.load();
 check('a load that finds no save opens the bag exactly once',
   DATA.boosters.every((b) => S.boostInv[b.id] === (DATA.startingBoosts[b.id] || 0)),
   JSON.stringify(S.boostInv));
+/* A save that will not parse reports `fresh: true`, so it has to BE fresh — not
+   the broken save's wallet and level with a bag on top, and not a garden with
+   no quests dealt because ensureProgression() never ran. */
+globalThis.localStorage.setItem(SAVE_KEY, '{ this is not json');
+const brokenLoad = G.load();
+check('a save that will not parse opens a genuinely fresh garden',
+  brokenLoad.fresh === true
+  && S.credits === 100 && S.level === 1 && S.rep === 0
+  && S.quests.active.length > 0 && Boolean(S.quests.daily && S.quests.daily.id)
+  && DATA.boosters.every((b) => S.boostInv[b.id] === (DATA.startingBoosts[b.id] || 0)),
+  `${S.credits}/${S.level}/${S.rep} quests=${S.quests.active.length} daily=${S.quests.daily && S.quests.daily.id} bag=${JSON.stringify(S.boostInv)}`);
+globalThis.localStorage.removeItem(SAVE_KEY);
 
 /* The curve itself, asserted as a SHAPE rather than as numbers, so a phase-4
    retune moves values without touching this file — but cannot quietly invert

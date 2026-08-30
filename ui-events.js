@@ -149,21 +149,23 @@
     else if (g && g.hive) body = 'A new hive is waiting in the Apiary.';
     else if (g && g.decor) body = 'A new decoration was added to the garden.';
     else if (g && g.gems) body = `+${g.gems} gems`;
-    else if (grants.some((x) => x.boost)) {
-      /* The tray is gone — a boost is loaded into the POWER-UP button now, and
-         this line is the first time most players meet either. Count across
-         EVERY rung crossed, not just the last: since the curve pays on every
-         level from 2 to 8, one Almanac milestone can cross two rungs and the
-         old line announced the second while silently pocketing the first. */
-      const won = grants.filter((x) => x.boost);
+
+    /* THE POWER-UP LINE IS ADDED, NEVER CHOSEN. It used to be one arm of the
+       else-if chain, so a rung that also opened a plot announced the plot and
+       pocketed the power-up in silence — and levels 3, 6 and 12 do exactly that,
+       which is the first six levels of every playthrough. Counted across EVERY
+       rung crossed, too: one Almanac milestone can cross two. */
+    const won = grants.filter((x) => x.boost);
+    if (won.length) {
       const total = won.reduce((n, x) => n + (x.boostN || 1), 0);
       const names = [...new Set(won.map((x) => {
         const b = DATA.boosters.find((y) => y.id === x.boost);
         return b ? b.name : null;
       }).filter(Boolean))];
-      if (!names.length) body = 'A power-up is loaded and ready.';
-      else if (total === 1) body = `${names[0]} is loaded in the power-up button.`;
-      else body = `${total} power-ups are waiting in the button — ${names.join(', ')}.`;
+      const line = !names.length ? 'A power-up is loaded and ready.'
+        : total === 1 ? `${names[0]} is loaded in the power-up button.`
+          : `${total} power-ups are waiting in the button — ${names.join(', ')}.`;
+      body = body ? `${body} ${line}` : line;
     }
     UI.toast({ title: `Level ${to}!`, body, art: Icons.get('star') });
     UI.showBanner(`Level ${to}!`, body, 2000);

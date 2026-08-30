@@ -422,7 +422,15 @@ seed's own `art.c1` as the body under
 old highlight exactly where it was and pales every petal colour — from `#4c6ef5` to `#e03131` — to a
 disc the bloom's ink outline still reads against. Nineteen seeds, nineteen hues, no new tokens. The
 alternative was a hand-picked pale hex per seed, which is nineteen more colours in a palette already
-carrying 149 by accident.
+carrying 176 by accident.
+
+**The veil is for a SATURATED token. A family already near cream takes a highlight instead.** Four of
+the twelve card-set tints (`#ffe3bf`, `#ffd6a5`, `#e9d8c4`, `#d8cfc0`) are pale to begin with, and
+veiling them produced four identical white discs on the one badge that carries a set's identity —
+`.seed-art`'s own named failure reached from the other direction. `.set-ring` therefore takes
+`radial-gradient(circle at 34% 28%, rgba(255,255,255,.5), transparent 62%)` over the tint: the same
+highlight geometry, no wash. Use the veil when a token would otherwise fight the ink; use the
+highlight when it would otherwise disappear.
 
 ### 3. Objects must be anchored, not floated
 

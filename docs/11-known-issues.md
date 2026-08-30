@@ -87,6 +87,23 @@ chip's strip is reserved out of the frame. On an SE-class screen the board also 
 are the price of Fall's one rule being readable, and both are deliberate — see
 [08-ui-and-layout.md](08-ui-and-layout.md#the-vertical-ladder).
 
+**Three progress bars still compress their gradient instead of revealing it.** `.q-bar i`,
+`.almanac-meter i` and `.mastery-bar b` all draw a green-to-gold ramp and then show a fraction of it
+with `transform:scaleX()` — and a transform scales an element's *painted output*, so the whole ramp
+is squeezed into the sliver and an 8% bar ends in the same gold as a full one. The colour therefore
+carries no progress information on any of them. The album's two bars were fixed on 2026-08-30 with
+`clip-path: inset(0 calc(100% - var(--p)) 0 0)`, which hides the rest of a full-width fill instead of
+resampling it; the same one line repairs these three. Left because they are three other panels and
+the round was the Cards pass.
+
+**The season coach mark stands over the board at 390×667.** In Summer it grazes the bottom of the
+planter by 22px; in Fall it flips to the stacked shape, clears the bed chip by 6px and then covers a
+corner of the bed, with its arrow stopping short of the SUMMER tab. On a screen that short there is
+no clear gap at all: the mark yields to the band and to Fall's own rule, which are the two things
+with content the player needs, and the board is what is left. It is one-shot, `pointer-events:none`,
+and in Fall the bed it covers is empty on the visit where it appears. Accepted; if it ever needs
+solving, the honest fix is a smaller mark on `max-height:700px`, not another clamp.
+
 **A swipe begun on the What's New dialog navigates the world underneath it.** `noSwipe` in `ui.js`
 lists `.sheet` and `.scrim` but not `#news`, so a drag across the announcement card can enter the
 Hollow behind it. Found during this round's review and confirmed byte-identical at `ba5ddbf` — it

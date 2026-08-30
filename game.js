@@ -574,10 +574,16 @@ const Game = (() => {
       };
     } catch (err) {
       console.warn('Save load failed', err);
-      /* This branch reports `fresh: true`, so it IS a new garden as far as the
-         rest of the game is concerned — and it has to open with the same bag,
-         or a player whose save was truncated gets a garden with an empty
-         power-up seat and no way to tell why. */
+      /* This branch reports `fresh: true`, so it has to BE a new garden, not
+         whatever half-migrated state the throw left behind. The `try` above is
+         hundreds of lines of migration over arbitrary old saves, and anything
+         that throws after the first `Object.assign` leaves the broken save's own
+         values in `state` — a garden that reports itself fresh while carrying
+         someone's level, wallet and inventory, and with no quests dealt because
+         `ensureProgression()` never ran. Start over properly, then hand out the
+         bag the other two creation paths hand out. */
+      Object.assign(state, defaultState());
+      ensureProgression();
       giveOpeningBag();
       return { migrated: false, fresh: true };
     }

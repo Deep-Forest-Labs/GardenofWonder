@@ -1996,13 +1996,13 @@
       return `<button class="set-tile${done ? ' done' : ''}" data-set="${set.id}" style="--set:${set.tint}">
         <span class="set-ring">${Icons.get(done ? 'check' : 'book')}</span>
         <span class="set-name">${set.name}</span>
-        <span class="set-bar"><i style="transform:scaleX(${n / 9})"></i><b>${n}/9</b></span>
+        <span class="set-bar"><i style="--p:${(n / 9) * 100}%"></i><b>${n}/9</b></span>
       </button>`;
     }).join('');
     return `
       <div class="album-head">
         <p class="album-lede">Collect nine cards to finish a set, and every set to finish the album.</p>
-        <span class="album-bar"><i style="transform:scaleX(${total ? owned / total : 0})"></i><b>${owned} / ${total}</b></span>
+        <span class="album-bar"><i style="--p:${total ? (owned / total) * 100 : 0}%"></i><b>${owned} / ${total}</b></span>
       </div>
       ${S.packs ? `<button class="big-btn magic" data-act="openPack">Open a pack &middot; ${fmt(S.packs)} waiting</button>`
         : '<p class="sheet-note">No packs right now. They turn up from quests, levels and the odd surprise in the garden.</p>'}
@@ -2034,7 +2034,7 @@
         <span class="set-ring">${Icons.get(n === 9 ? 'check' : 'book')}</span>
         <span class="setbar-txt">
           <b>${n === 9 ? 'Complete' : `${n} of 9 collected`}</b>
-          <span class="set-bar"><i style="transform:scaleX(${n / 9})"></i><b>${n}/9</b></span>
+          <span class="set-bar"><i style="--p:${(n / 9) * 100}%"></i><b>${n}/9</b></span>
         </span>
       </div>
       <div class="card-grid9">${cards}</div>

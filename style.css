@@ -2310,14 +2310,17 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   position:relative;display:block;height:24px;border-radius:999px;
   background:rgba(44,26,16,.1);border:2.5px solid var(--ink);overflow:hidden;
 }
-/* THE RAMP BELONGS TO THE TRACK, NOT THE FILL. Painting the gradient inside a
-   narrow fill redraws the whole green-to-gold run inside it, so 8% looks as
-   finished as 100%. Scale a full-width bar instead, exactly as the Almanac's
-   meter and the quest bar do. */
+/* THE RAMP BELONGS TO THE TRACK, NOT THE FILL — and CLIPPING is what delivers
+   that, not scaling. A narrow `width` redraws the whole green-to-gold run inside
+   the sliver, so 8% looks as finished as 100%; `transform:scaleX()` does exactly
+   the same thing, because a transform scales an element's painted output. Only
+   a clip leaves the gradient where it was and hides the rest, so a part-full bar
+   shows its green end and nothing else. (`.q-bar i`, `.almanac-meter i` and
+   `.mastery-bar b` all still scale — same defect, filed in doc 11.) */
 .album-bar i,.set-bar i{
   position:absolute;inset:0;width:100%;border-radius:999px;
   background:linear-gradient(90deg,#8ce99a,#ffe066);
-  transform:scaleX(0);transform-origin:left center;
+  clip-path:inset(0 calc(100% - var(--p,0%)) 0 0);
 }
 .album-bar b,.set-bar b{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
@@ -2548,8 +2551,12 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 @keyframes packIn{0%{transform:scale(.7) rotate(-4deg);opacity:0}100%{transform:none;opacity:1}}
 @keyframes mythicPulse{0%,100%{filter:saturate(1)}50%{filter:saturate(1.45)}}
 @media (prefers-reduced-motion:reduce){
+  /* The mythic cancel has to match the selector that sets the animation, or it
+     loses on specificity and the only thing stopping the pulse is the global
+     clamp — which is the "a collapsed animation is not a guard" mistake this
+     round went to the trouble of writing down. */
   .pack-card{animation:none}
-  .pack-reveal.r-mythic .pack-card{animation:none}
+  .pack-reveal.is-new.r-mythic .pack-card{animation:none}
 }
 .setbar-txt{flex:1;display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800}
 .setbar-txt .set-bar{width:100%}
