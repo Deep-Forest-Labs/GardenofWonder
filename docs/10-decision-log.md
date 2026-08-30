@@ -1508,6 +1508,46 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-30 (rulings, polish) — Seven polish calls from the owner's play, before the strategy talk resumes
+
+**All seven are the owner's, from playing the live build.** Recorded here as the spec for the
+polish round; the prompt carries the detail.
+
+1. **The Turn button under-announces its biggest moment.** The pulse is fine and not enough —
+   when a Turn becomes available the player has *agency over the season itself*, and the button
+   must earn the eye: a shine sweep or equivalent, celebration-grade but not constant noise, and
+   honest under reduced-motion.
+2. **Player-facing "badges" are gone — the word is "upgrades", everywhere a player reads.** The
+   ceremony's ask says upgrades; the glossary gains the line. And **power-up distribution is a
+   design problem, ruled in direction**: audit every boost faucet, close anything farmable by
+   Turning (nothing that pays a power-up may be re-earnable through the year loop), and reshape
+   the curve so a **new player's first few days are rich with power-ups — near-always-active** —
+   with the generosity tapering as the game opens up. Knobs in data; deep tuning stays phase 4's.
+3. **A petal with no pips must still explain itself.** "Next +30%" with no base description
+   teaches nothing — every petal skill carries its one-line meaning at zero pips ("Rich Bloom:
+   +30% gold on this flower's harvests, per petal"), per the show-the-numbers principle.
+   (Transcribed from the owner's screenshot.)
+4. **The vertical gestures, ruled plainly:** swiping the finger **up** descends into the Hollow;
+   swiping **down** opens a **placeholder gate in the locked-season style** — a promise of
+   something above, content unnamed. Both directions now answer; neither is dead.
+5. **After the first Turn, teach the swipe.** A one-shot coach moment — an icon and a finger
+   dragging right-to-left — so the opened Fall is *found*: drag to enter, drag back to return.
+   The house coach-mark pattern, seen-once.
+6. **Fall's bed chip intrudes on the board** — reposition so the +50% pill reads without
+   overlaying the garden.
+7. **The Cards screens predate the visual standard** (the album shipped 15 August, the standard
+   hardened on the 26th) — a full visual pass bringing album, set view and pack-opening onto the
+   house material recipe, judged against doc 05.
+
+### Rejected
+
+**Treating item 2's farming worry as hypothetical** — whether or not a loop exists today, the
+invariant is worth asserting: the builder audits the faucets and the suite holds the result.
+**A wireframe gate for this round** — no new screens; before/after screenshots stand in for it,
+and the Cards pass is judged against the standard, not against a new layout.
+
+---
+
 ## 2026-08-30 (review) — The strategy pass is accepted, and the advisor's own numbers take their corrections
 
 **The strategist's three documents pass review** — sourced, honest about gaps, and willing to kill
