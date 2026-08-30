@@ -39,10 +39,11 @@ node tools/probe.js shot:boot
 node tools/probe.js 'tap:#flowerBtn*30' wait:400 shot:combo 'eval:document.getElementById("credits").textContent'
 node tools/probe.js size:430x932 shot:large
 node tools/probe.js media:reduce page:index.html wait:600 shot:calm  # the one preference the game must honour
+node tools/probe.js 'drag:@30,600:0,-160' wait:800 shot:hollow       # a real swipe, from the lawn
 ```
 
 Steps run in order: `shot:NAME`, `tap:SELECTOR` or `tap:SELECTOR*25`, `wait:MS`, `eval:EXPR`,
-`size:WxH`, `page:PATH`, `media:reduce` / `media:normal`. An unrecognised step is an error rather than a no-op, so a typo fails
+`size:WxH`, `page:PATH`, `media:reduce` / `media:normal`, `drag:SEL:DX,DY` or `drag:@X,Y:DX,DY`. An unrecognised step is an error rather than a no-op, so a typo fails
 loudly instead of silently skipping a tap. It exits non-zero if the page threw.
 
 The screenshots are worth attaching to the session so the owner can check a layout fix from a
@@ -82,6 +83,17 @@ target is actually reachable by a thumb — which is the one question `eval:` ca
 a session an hour on the phase-1 dev panel, twice: once believing a live button was dead, once
 trusting a green run that had done nothing. Assert on state after a `tap:`, never on the exit
 code alone.
+
+**`drag:` sends MOUSE events, not touch, and that is deliberate.** A dispatched *touch* drag on a
+page with no `touch-action:none` is read by the browser as a pan and answered with `pointercancel`
+after the first move — so the gesture dies in automation on a screen where it works perfectly in the
+hand, and the failure looks exactly like a broken swipe. Mouse events from the DevTools protocol are
+still **real browser input with a live pointer**, which is the thing a synthetic `PointerEvent`
+built in JS is not, so the branch under test is the one a finger takes. `drag:@X,Y:DX,DY` starts at
+a viewport point rather than an element's centre, because the garden's swipe only starts on the
+background and the centre of anything big enough to name is covered by the board. `@30,600` is the
+lawn at 390×844. Assert on state after a drag — `UI.hollowOpen()`, `#game`'s class — never on the
+exit code.
 
 **What it will not tell you.** Nothing about audio, because there is no output device. Nothing
 about real touch feel, momentum or the bottom sheet's drag. Nothing about iOS Safari, which is the

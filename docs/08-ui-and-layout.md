@@ -186,12 +186,20 @@ From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
 
 ### Navigating between the garden and its two rooms
 
-**Rewritten 2026-08-30 (phase 3.5).** The old rule was the map's — *up goes in, down pulls the
-camera back* — and it died with the map. What is left is the picture:
+**Re-ruled by the owner from live play, 2026-08-30 (phase 3.8), and this is the second rewrite.**
+Phase 3.5 read the gesture as a *pointer* — the Hollow is under the garden, so point the finger down
+to go there — and in the hand it came out backwards.
 
-**Swipe DOWN in the garden to go under to the Hollow; swipe UP to go out to the Wild Meadow.** A
-room's own exit is the opposite of the swipe that got you there, so the Hollow leaves upward and the
-meadow leaves downward.
+**The finger drags the world, it does not point at the destination.** Pull the world up and you
+descend; push it down and you rise. So:
+
+**Swipe UP in the garden to go down to the Hollow; swipe DOWN to go out to the Wild Meadow.** A
+room's own exit is the opposite of the swipe that got you there, so the Hollow leaves downward and
+the meadow leaves upward, and both exit pills' marks point the way their swipe goes.
+
+This is the rule [22-creatures.md](22-creatures.md) argued for when the Hollow was designed —
+*"dragging down pulls the world down past you, which is the direction every scroll already uses"* —
+and it is the half of the phase-3.5a option that was rejected then and is now reinstated.
 
 **There is no longer a labelled door for either room.** The burrow mouth is gone (the owner's call at
 the phase-3.5 gate): the gesture is what a player is meant to learn, and two labelled mouths on the
@@ -785,18 +793,19 @@ the centring away. Same collision as a state modifier that writes `box-shadow` a
 
 ## The vertical ladder
 
-**Rebuilt 2026-08-30 (phase 3.5).** The axis is three places again, but they are three *rooms* now
-rather than three altitudes:
+**Rebuilt 2026-08-30 (phase 3.5), and re-pointed 2026-08-30 (phase 3.8).** The axis is three places
+again, but they are three *rooms* now rather than three altitudes:
 
 ```
-   THE WILD MEADOW   swipe UP from the garden      (out along the lane)
+   THE WILD MEADOW   swipe DOWN from the garden    (out along the lane)
    THE GARDEN        you start here
-   THE HOLLOW        swipe DOWN from the garden    (under the roots)
+   THE HOLLOW        swipe UP from the garden      (under the roots)
 ```
 
-**Down goes under, up goes out**, and a room leaves by the opposite swipe. The old rule — *down
-pulls the camera back, up goes in* — belonged to the map's altitude metaphor and retired with it;
-there is no camera to pull back to any more. No dock slot is spent on navigation either way.
+**The finger moves the world, not a pointer**, and a room leaves by the opposite swipe. Phase 3.5's
+rule read the gesture the other way — *down goes under, up goes out* — which is correct as a picture
+and wrong in the hand; the owner caught it from live play. No dock slot is spent on navigation
+either way.
 
 The garden's swipe still **only starts on the background** — plots and the flower act on
 `pointerdown` and would fire on the way out, and making them wait for `pointerup` would cost the tap

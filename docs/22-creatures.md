@@ -290,6 +290,8 @@ came for when there is a badge, and when there is not, the thing you probably wa
 Walking down to the Hollow to feed a creature standing in front of you was the long way round.
 
 **Swipe up in the garden to go down to the Hollow**, mirroring the swipe down that comes back.
+(Reversed for phase 3.5, then restored by the owner from live play on 2026-08-30 — the argument two
+sections above was right the first time.)
 Dragging up pulls the world up past you, the same direction any scroll uses.
 
 **The swipe only starts on the background** — sky, lawn, the margins beside the board. Plots and the

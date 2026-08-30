@@ -90,7 +90,7 @@ of the year, and the player swipes between them:
   `winterTurn = 3`, `springTurn = 6` (remote-config knobs).
 - **Vertical is two rooms, one either side of the garden (rebuilt 2026-08-30, phase 3.5).** The old
   rule — *up goes in, down pulls the camera back* — was the map's altitude metaphor and retired with
-  it. What is left is the picture: **swipe DOWN to go under to the Hollow, swipe UP to go out to the
+  it. Re-pointed 2026-08-30 (phase 3.8): **swipe UP to go down to the Hollow, swipe DOWN to go out to the
   Wild Meadow**, and a room leaves by the opposite swipe. Neither has a labelled door any more; the
   gesture is the thing to learn, and the meadow's only teacher is one line from the flower.
 - **Summer is home.** The app opens there. It is the garden that exists today, unchanged.
@@ -112,7 +112,7 @@ order:
 3. **Then the deletion.**
 
 Everything the map was the only door to has a new one: **the Stand** is the Orders & Quests button,
-**the Wild Meadow** is the swipe up, **the Hollow** is the swipe down, **the garden** is the GARDEN
+**the Wild Meadow** is the swipe down, **the Hollow** is the swipe up, **the garden** is the GARDEN
 button. **The locked land parcels are the one thing that had nowhere to go, and they went with the
 map deliberately** — a promise about land, drawn on a screen that no longer exists. See
 [25-world-map.md](25-world-map.md), which is now a design record rather than a spec.

@@ -199,7 +199,8 @@ before any external audience.
 
 **Accepted, not a bug — but the thing to watch in the first playtest.** The owner ruled at the
 phase-3.5 gate that the Hollow and the meadow lose their labelled door graphics and are reached by
-the vertical swipe: **down goes under to the Hollow, up goes out to the meadow.**
+the vertical swipe. **Re-pointed 2026-08-30 (phase 3.8): swipe UP goes down to the Hollow, swipe
+DOWN goes out to the meadow** — the finger drags the world rather than pointing at the room.
 
 The Hollow survives that easily — a player who never swipes still sees its creatures standing in the
 garden, and the Feed panel and Loadout are reachable the moment they do. **The meadow has nothing of
@@ -208,8 +209,10 @@ keepers, the Honey Shelf and four quests worth **114 of the ladder's 777 reputat
 (`q_hive_1` 14, `q_honey_3` 16, `q_honey_8` 36, `q_honey_15` 48).
 
 Its whole discoverability is one line from the flower, fired once on the first idle after the
-tutorial and gated by a new `seen.meadow` save flag: *"Swipe up sometime — the wild meadow is out
-that way."*
+tutorial and gated by a new `seen.meadow` save flag: *"Swipe down for the wild meadow."* The flag
+has **no load-time backfill by design**, so a save that already spent the line will not hear the new
+direction — that is the cost of re-pointing the axis and it is accepted, because the meadow's exit
+pill names the way back the moment a player is inside.
 
 **And one dot has nowhere to live.** `updateDockDots()` put a badge on the World button whenever
 jars were waiting in the meadow; the World button is gone and nothing has replaced that signal, so a
@@ -264,7 +267,8 @@ The map, `overworld.js`, `ui-map.js`, the camera, the World dock button and the 
 are all deleted, in the order the rail required: **the meadow's way in shipped first, on its own,
 while the map still worked.** The Stand is the Orders & Quests button; the Wild Meadow is the swipe
 up; the Hollow is the swipe down. The four meadow quests and their 114 reputation are reachable
-again — through a gesture rather than a button, which is its own entry above.
+again — through a gesture rather than a button, which is its own entry above. (The two directions
+swapped in phase 3.8: the meadow is the swipe **down**, the Hollow the swipe **up**.)
 
 **What is still open from phase 3, unchanged:**
 

@@ -193,7 +193,9 @@ Given against the spike. **Verbatim intent, folded into the spike before any UI 
    on each one." **This supersedes "Sheets open above the dock" above** — the sheet does not move at
    all, and the Garden button is not a second way home while a panel is open. Zero lines of CSS.
 2. **No door graphics for the Hollow or the meadow.** The vertical swipe is the way to a room, and
-   learning it is the point: **down goes under to the Hollow, up goes out to the Wild Meadow.** The
+   learning it is the point. (**Re-pointed 2026-08-30, phase 3.8: up goes down to the Hollow, down
+   goes out to the Wild Meadow** — the finger drags the world. The paragraph below is the phase-3.5
+   reasoning it replaced.) The
    Hollow's direction therefore flips — the old *up goes in, down pulls back to the map* rule dies
    with the map, and the Hollow is underground. The meadow's only teacher is a one-time line from
    the flower; **this is the phase's one real discoverability risk and it is named in

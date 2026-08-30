@@ -4,8 +4,8 @@
 > `overworld.js`, `ui-map.js`, the camera and the swipe-down pull-back are deleted. The year
 > replaced it — four gardens on a horizontal strip — exactly as
 > [32-the-garden-year.md](32-the-garden-year.md) said it would. Everything the map was the only door
-> to has a new one: the Stand is the Orders & Quests button, the Wild Meadow is the swipe up, the
-> Hollow is the swipe down, the garden is the GARDEN button. **The three locked land parcels are the
+> to has a new one: the Stand is the Orders & Quests button, the Wild Meadow is the swipe **down**,
+> the Hollow is the swipe **up** (both re-pointed 2026-08-30, phase 3.8), the garden is the GARDEN button. **The three locked land parcels are the
 > one thing that had nowhere to go and were retired deliberately** — they were a promise that
 > reputation would open land, drawn on a screen that no longer exists. If that promise is wanted
 > again it needs a new home, not this one. `tools/map-spike.html` stays as the design reference.

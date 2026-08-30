@@ -23,12 +23,15 @@
 //   size:WxH           re-emulate at a new viewport (default 390x844)
 //   page:PATH          navigate elsewhere in the repo (default index.html)
 //   media:reduce       turn prefers-reduced-motion on (media:normal turns it off)
+//   drag:SEL:DX,DY     a real one-finger drag from SEL's centre, DX/DY in CSS px
+//   drag:@X,Y:DX,DY    the same, starting at a viewport point (the lawn, not an element)
 //
 // Examples:
 //   node tools/probe.js shot:boot
 //   node tools/probe.js 'tap:.flower*30' wait:600 shot:combo 'eval:UI.state.coins'
 //   node tools/probe.js size:430x932 shot:large
 //   node tools/probe.js media:reduce wait:400 shot:calm
+//   node tools/probe.js 'drag:@30,600:0,-160' wait:600 shot:hollow   # swipe UP
 //
 // Exits non-zero if the page threw an uncaught error, so it is usable in a
 // check-before-you-commit loop.
@@ -207,6 +210,13 @@ function parseSteps(argv) {
         steps.push({ kind, value: rest });
         break;
       }
+      case 'drag': {
+        const at = rest.lastIndexOf(':');
+        const m = at === -1 ? null : /^(-?\d+),(-?\d+)$/.exec(rest.slice(at + 1));
+        if (!m) throw new Error(`drag step wants SELECTOR:DX,DY, got "${rest}"`);
+        steps.push({ kind, selector: rest.slice(0, at), dx: +m[1], dy: +m[2] });
+        break;
+      }
       case 'tap': {
         const m = /^(.*?)(?:\*(\d+))?$/.exec(rest);
         steps.push({ kind, selector: m[1], times: m[2] ? +m[2] : 1 });
@@ -363,6 +373,51 @@ async function main() {
           await new Promise((r) => setTimeout(r, 40));
         }
         console.log(`  tap ${step.selector} x${step.times}`);
+        break;
+      }
+
+      /* A REAL one-finger drag, in steps. A gesture cannot be tested with a
+         synthetic PointerEvent — it has no live pointer, so it silently skips
+         branches a real finger hits, which is how a screen where nothing was
+         tappable once passed every automated test. See the traps in
+         docs/HANDOFF.md. */
+      case 'drag': {
+        /* `@X,Y` starts the drag at a viewport point rather than at an
+           element's centre. The garden's swipe only starts on the BACKGROUND,
+           and the centre of any element big enough to name is covered by the
+           board — so a selector cannot express "the lawn beside the plots". */
+        const origin = /^@(-?\d+),(-?\d+)$/.exec(step.selector);
+        const { result } = origin
+          ? { result: { value: { x: +origin[1], y: +origin[2] } } }
+          : await call('Runtime.evaluate', {
+            expression: `(() => {
+              const el = document.querySelector(${JSON.stringify(step.selector)});
+              if (!el) return null;
+              const r = el.getBoundingClientRect();
+              return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+            })()`,
+            returnByValue: true,
+          });
+        if (!result.value) throw new Error(`drag: nothing matches "${step.selector}"`);
+        const { x, y } = result.value;
+        /* MOUSE, not touch, and the reason is worth knowing. A dispatched
+           touch-drag on a page with no `touch-action:none` is read by the
+           browser as a pan and answered with `pointercancel` after the first
+           move, so the gesture dies in automation on a page where it works
+           perfectly in the hand. These are still real browser input events with
+           a live pointer — the thing a synthetic PointerEvent is not — so the
+           branch under test is the one a finger takes. */
+        const mouse = (type, px, py) => call('Input.dispatchMouseEvent', {
+          type, x: px, y: py, button: 'left', clickCount: 1, buttons: type === 'mouseReleased' ? 0 : 1,
+        });
+        await mouse('mousePressed', x, y);
+        const STEPS = 8;
+        for (let i = 1; i <= STEPS; i++) {
+          await mouse('mouseMoved', x + (step.dx * i) / STEPS, y + (step.dy * i) / STEPS);
+          await new Promise((r) => setTimeout(r, 16));
+        }
+        await mouse('mouseReleased', x + step.dx, y + step.dy);
+        console.log(`  drag ${step.selector} by ${step.dx},${step.dy}`);
         break;
       }
 

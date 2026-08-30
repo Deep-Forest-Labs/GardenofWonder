@@ -405,7 +405,7 @@
                creature never stands on a plot. -->
           <div class="mw-keeper-bank" id="meadowKeepers" aria-label="Keepers"></div>
         </main>
-        <button class="mw-exit" type="button" data-mwexit="1"><i></i><span>Swipe down for the garden</span></button>
+        <button class="mw-exit" type="button" data-mwexit="1"><i></i><span>Swipe up for the garden</span></button>
         <nav class="dock mw-dock">${DOCK.map((d) => `
         <button class="dock-btn" type="button" data-dock="${d.id}">
           <span class="dock-ico">${ico(d.icon)}</span>
@@ -428,11 +428,11 @@
       if (e.target.closest('[data-mwexit]')) { leave(); Sound.play('close'); }
     });
 
-    /* Swipe down goes back to the garden.
+    /* Swipe up goes back to the garden.
 
-       Since 2026-08-30 the meadow is entered by swiping UP from the garden, so
-       its exit is the opposite swipe — and it is the only way out, because the
-       map that used to hold it is gone.
+       Since the owner re-ruled the axis on 2026-08-30 the meadow is entered by
+       dragging the world DOWN, so its exit is the opposite swipe — and it is the
+       only way out, because the map that used to hold it is gone.
 
        The board covers nearly the whole room, so excluding cells from the
        gesture left it working only on the slivers of scene either side — which
@@ -445,17 +445,24 @@
        the garden's swipe start on the background but never on a plot. */
     let y0 = null;
     let x0 = null;
+    let pid = null;
     let dragged = false;
+    el.meadow.addEventListener('pointercancel', () => { y0 = null; pid = null; });
     el.meadow.addEventListener('pointerdown', (e) => {
       y0 = null;
+      pid = null;
       dragged = false;
       if (e.target.closest('.dock,.mw-exit,.flower-btn')) return;
       y0 = e.clientY;
       x0 = e.clientX;
+      pid = e.pointerId;
     });
     el.meadow.addEventListener('pointerup', (e) => {
       if (y0 === null) return;
-      const dy = e.clientY - y0;
+      /* Only the finger that started it — the same two-thumb hole the garden's
+         swipe closed, and this room is one thumb-tap away from a full board. */
+      if (pid !== null && e.pointerId !== pid) return;
+      const dy = y0 - e.clientY;
       const dx = Math.abs(e.clientX - x0);
       y0 = null;
       if (dy > 70 && dy > dx) { dragged = true; leave(); return; }

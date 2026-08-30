@@ -281,7 +281,7 @@
     const canSee = season === 'summer' && !gateOn
       && !UI.hollowOpen() && !UI.meadowOpen() && !UI.sheetMode();
     if (!S.seen.meadow && S.seen.plot && canSee) {
-      if (sayText('Swipe up for the wild meadow.', true)) {
+      if (sayText('Swipe down for the wild meadow.', true)) {
         S.seen.meadow = true;
         Game.save();
       }
@@ -674,10 +674,15 @@
 
   /* The vertical ladder: the MEADOW above, the garden here, the HOLLOW below.
 
-     The old rule was the map's — up goes in, down pulls the camera back — and it
-     died with the map. What is left is the picture: the Hollow is a burrow under
-     the garden and the meadow is up the lane, so DOWN goes under and UP goes out.
-     A room's own exit is the opposite of the swipe that got you there.
+     RE-RULED BY THE OWNER FROM LIVE PLAY, 2026-08-30: the finger drags the
+     WORLD, it does not point at the destination. Pull the world up and you
+     descend, so a finger dragged UP goes down into the Hollow; push it down and
+     you rise, so a finger dragged DOWN goes out and up the lane to the meadow.
+     Phase 3.5 read the gesture as a pointer — down goes under, up goes out —
+     and in the hand it came out backwards.
+
+     A room's own exit is the opposite of the swipe that got you there, so both
+     rooms' exits flipped with this, and both exit pills' marks with them.
 
      There is no longer a labelled door for either. That is deliberate (the
      owner's call at the phase-3.5 gate) and the gesture is what a player is meant
@@ -740,8 +745,8 @@
        once. */
     if (gateOn || season !== 'summer') return;
     noteActivity();
-    if (dy > 0) UI.enterMeadow();
-    else UI.enterHollow();
+    if (dy > 0) UI.enterHollow();
+    else UI.enterMeadow();
   });
 
   el.critterYard.addEventListener('pointerdown', (e) => {

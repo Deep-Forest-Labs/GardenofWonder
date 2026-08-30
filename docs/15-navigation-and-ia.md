@@ -255,6 +255,13 @@ menu.
 - **Swipe down to pull back, swipe up to go in.** Not a pinch. The garden already binds swipe-up to
   the Hollow (`ui.js`), and swipe-down is free, which makes the whole game one vertical ladder:
   **map → garden → Hollow**. One gesture, one metaphor, no dock tab.
+
+  > **Correction, 2026-08-30 (phase 3.8).** The map is deleted, so the ladder is
+  > **meadow → garden → Hollow**. The *directions* in this bullet happen to be the live ones again —
+  > swipe up goes into the Hollow — but not for the reason written here: it is not "up goes in", it
+  > is that the finger drags the world. See
+  > [08-ui-and-layout.md](08-ui-and-layout.md#the-vertical-ladder), which is the live spec for the
+  > axis; this section is phase-2 history.
 - Land parcels purchasable on the map, drawn as silhouettes with a price. The silhouette is the
   pull — you buy land you have been looking at.
 - Regions leave the dock.

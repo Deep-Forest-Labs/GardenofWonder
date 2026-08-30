@@ -43,8 +43,9 @@ There are three things in that sentence and **only one of them is about merge**:
    opening a panel.
 
 **Point 2 is the load-bearing one, and it is a layout insight rather than a genre one.** Garden
-Wonder currently puts its demand **two navigations away from its supply**: garden → swipe down →
-map → tap the Stand → dive in → read → back out → plant. The MVP's own feel rubric in
+Wonder currently puts its demand **two navigations away from its supply**: garden → swipe →
+map → tap the Stand → dive in → read → back out → plant. (Written while the map existed; the Stand
+is a dock button now, and the vertical swipe reaches the Hollow and the meadow.) The MVP's own feel rubric in
 [25-world-map.md](25-world-map.md#the-mvp-decided-2026-08-25--build-plain-test-the-feel-polish-as-we-go)
 asks *"does checking the Stand pull you back into planting something specific"* — and as laid out,
 it structurally cannot. The customer is smiling at you from a screen you are not on.

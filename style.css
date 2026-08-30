@@ -3052,11 +3052,12 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:rgba(255,247,225,.94);font-family:inherit;font-weight:700;font-size:11.5px;
   color:var(--ink);box-shadow:0 3px 0 var(--ink-2);cursor:pointer;
 }
-/* Points and nudges UP, because since 2026-08-30 that is the way out. The
-   margin moves with it: a down triangle paints the top half of its box and an
-   up triangle the bottom, so the 4px has to swap sides or the mark sits low. */
-.hollow-exit i{width:0;height:0;border:5px solid transparent;border-bottom-color:var(--ink);
-  margin-bottom:4px;animation:hl-nudge 2.4s ease-in-out infinite}
+/* Points and nudges DOWN, because since the owner re-ruled the axis that is the
+   way out of a room you entered by dragging the world up. The margin moves with
+   it: a down triangle paints the top half of its box and an up triangle the
+   bottom, so the 4px has to swap sides or the mark sits wrong. */
+.hollow-exit i{width:0;height:0;border:5px solid transparent;border-top-color:var(--ink);
+  margin-top:4px;animation:coachBob .9s ease-in-out infinite}
 @keyframes hl-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .hollow-exit:active{transform:translateX(-50%) translateY(2px);box-shadow:0 1px 0 var(--ink-2)}
 
@@ -3281,8 +3282,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 /* THE OVERWORLD IS GONE, 2026-08-30 (phase 3.5). The map, its camera, its place
    cards and its parcels retired with the World dock button; `overworld.js` and
    `ui-map.js` are deleted. Everything it was the only door to has a new one:
-   the Stand is the Orders & Quests button, the Wild Meadow is the swipe up, the
-   Hollow is the swipe down, and the garden is the GARDEN button. The land
+   the Stand is the Orders & Quests button, the Wild Meadow is the swipe DOWN,
+   the Hollow is the swipe UP, and the garden is the GARDEN button. The land
    parcels were the one thing with nowhere to go, and they went with it
    deliberately — see docs/25-world-map.md. */
 
@@ -3571,8 +3572,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   font-size:11.5px;font-weight:800;box-shadow:0 3px 0 var(--ink-2);pointer-events:auto;
   margin:0;font:inherit;color:inherit;cursor:pointer;
 }
-.mw-exit i{width:0;height:0;border:5px solid transparent;border-top-color:var(--ink,#2c1a10);
-  animation:coachBob .9s ease-in-out infinite}
+/* Up, since the meadow is now entered by dragging the world down and left by
+   dragging it back. Its twin in the Hollow points the other way for the same
+   reason. */
+.mw-exit i{width:0;height:0;border:5px solid transparent;border-bottom-color:var(--ink,#2c1a10);
+  margin-bottom:4px;animation:hl-nudge 2.4s ease-in-out infinite}
 
 .mw-dock{pointer-events:auto}
 .mw-dock .dock-btn.on{background:linear-gradient(180deg,#fff3c4,#ffe9a8)}

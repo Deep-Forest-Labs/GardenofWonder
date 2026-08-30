@@ -207,7 +207,7 @@
       <div id="hollowScene" class="hollow-scene-wrap"></div>
       <div id="hollowTenants" class="hollow-tenants"></div>
       <button class="hollow-exit" id="hollowExit" type="button">
-        <i></i><span>Swipe up for the garden</span>
+        <i></i><span>Swipe down for the garden</span>
       </button>
       <p class="hollow-count" id="hollowCount"></p>
       <p class="hollow-empty" id="hollowEmpty" hidden>Nobody lives here yet.<br>Grow what they like and they will turn up.</p>
@@ -236,25 +236,34 @@
       else UI.openSheet('critter', n.dataset.critter);
     }, { passive: false });
 
-    /* Swipe UP to climb back to the garden. A room's exit is the opposite of the
-       swipe that got you here, and since 2026-08-30 the way in is DOWN — the
-       Hollow is under the garden, and with the map retired there is no camera to
-       pull back. Getting the pair the same way round is what makes the axis
-       learnable at all. */
+    /* Swipe DOWN to climb back to the garden. A room's exit is the opposite of
+       the swipe that got you here, and since the owner re-ruled the axis on
+       2026-08-30 the way in is a finger dragged UP: the finger moves the world,
+       not a pointer at the destination. Getting the pair the same way round is
+       what makes the axis learnable at all.
+
+       The pointer id is recorded for the same reason the garden's swipe records
+       it — a second thumb landing anywhere overwrote the origin, and the first
+       thumb's release then measured the distance between two thumbs. */
     let y0 = null;
     let x0 = 0;
+    let pid = null;
+    el.hollow.addEventListener('pointercancel', () => { y0 = null; pid = null; });
     el.hollow.addEventListener('pointerdown', (e) => {
       y0 = null;
+      pid = null;
       /* Creatures and the dock act on the way down, so a drag begun on one has
          already opened a sheet or toggled a slot — leaving would then do two
          things at once. Same rule as the garden's own swipe. */
       if (e.target.closest('[data-critter],.dock,.hollow-exit')) return;
       y0 = e.clientY;
       x0 = e.clientX;
+      pid = e.pointerId;
     });
     el.hollow.addEventListener('pointerup', (e) => {
       if (y0 === null) return;
-      const dy = y0 - e.clientY;
+      if (pid !== null && e.pointerId !== pid) return;
+      const dy = e.clientY - y0;
       const dx = Math.abs(e.clientX - x0);
       y0 = null;
       if (dy > 70 && dy > dx) exit();
