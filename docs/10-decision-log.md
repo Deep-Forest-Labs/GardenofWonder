@@ -8,7 +8,7 @@ not the diff — git already has the diff.
 ## 2026-08-30 (phase 3.6) — The cleanup round: three ruled fixes, and a review kit so the owner can live a week in an afternoon
 
 **Implements the three rulings below, plus the cheats the owner asked for.** No new layouts, so no
-wireframe gate. No economy knob moved. Suite **1,207 → 1,296**, clean across six runs; `year-sim`
+wireframe gate. No economy knob moved. Suite **1,207 → 1,305**, clean across six runs; `year-sim`
 exits 0.
 
 ### The discover quests count what you already found
@@ -33,10 +33,19 @@ the mint on a timer. It gets a sim-test with an injected discover daily rather t
 
 **The strip now shows the quest nearest to done**, as a fraction of the goal — four of five is
 closer than five of twelve — with a completed quest first and ties going to the one dealt first, so
-a fresh save's strip is unchanged. **Measured rather than argued: over ten simulated minutes and 684
-strip reads the quest changed 4 times, and every change was a completion handing over to the next
-quest.** No oscillation. The quest panel reads the same order from the same getter, so the strip can
-never disagree with the panel it opens.
+a fresh save's strip is unchanged. The quest panel reads the same order from the same getter, so the
+strip can never disagree with the panel it opens.
+
+**And it HOLDS that quest until the active set changes**, which was not in the ruling and is the one
+place this round overrode a first implementation. Ranking on every read looked fine under a coarse
+harness — ten simulated minutes, 684 reads, four changes, every one a completion handing over. A
+finer harness sampling after every single action found the real case: two quests at similar
+fractions both advancing on *interleaved* actions. *Harvest 5 daisies* and *Tap 50 times* traded
+places **three times in two rounds** of tap-tap-harvest, which is the core loop, not an edge case.
+A goal that moves while you are looking at it is not a goal. The hold re-opens on a deal, a claim or
+a prune; a **finished** quest still jumps from anywhere, because a claim waiting is the one thing
+worth interrupting for. The lesson is the measurement, not the fix: **a harness that batches actions
+cannot see a flicker that lives in the interleaving.**
 
 This would also have defused the two jams already in the docs — 'Merge a Posy' and the sell quests —
 but it does **not** free the slot a dead quest holds. Only `paused: true` does that, and reading
@@ -99,6 +108,15 @@ so on a fresh save only one creature can be out. That is stated in the row heade
 around, and a summon that lands but cannot come out takes the *toast* path, not the deny path — the
 cap doing its job is not a failure.
 
+**A bug this round shipped and then caught: `moveIn()` stamps `tending` once, at arrival.** Summon
+the roster at level 1 and *then* open the habitat, and you get four slots with one creature in them
+and nothing to re-tend the other three — and the toast was telling the owner to do it in exactly
+that order. `summonAll()` now also sends resting creatures out through the real `setTending()`, so
+pressing it again after raising a level fills the band, and the toast says so. The assertion that
+was supposed to cover this passed while the band was empty (`habitatFree() > 0` is the *symptom*,
+not the guarantee) — the "test that passes for the wrong reason" trap, in a test written to honour
+that very trap.
+
 ### Rejected
 
 **Re-keying, benching or re-costing the discover quests**, and re-pointing the track at
@@ -120,6 +138,14 @@ instead.
 
 **Granting levels from the summon button** so the band fills in one tap. It would silently unlock
 plots, meadow cells and Stand tiers on the way past. One cheat, one job.
+
+**Overriding the ruling to keep the discover quest off the strip.** With the backfill it arrives at
+2/5 while its neighbours sit at 0, so it genuinely *is* the closest to done — and on a fresh save
+nothing can advance it until Bluebell's 150,000 wall. The two halves of the ruling meet here, and
+the answer is a design call the owner should make rather than one a builder should quietly take:
+re-cost the first rung to `discover 3`, or point the track at `state.year.stats.speciesSeen`. Both
+are on the menu in [11-known-issues.md](11-known-issues.md), where the seam is recorded rather than
+hidden.
 
 ---
 

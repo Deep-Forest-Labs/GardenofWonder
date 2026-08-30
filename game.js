@@ -574,6 +574,8 @@ const Game = (() => {
     localStorage.removeItem(LEGACY_KEY);
     Object.assign(state, defaultState());
     lastAutoHarvest = 0;
+    stripHeld = null;
+    stripFrom = '';
     ensureProgression();
     emit('grid');
     emit('panels');
@@ -1659,10 +1661,41 @@ const Game = (() => {
     return activeByNearest().map((q) => q.inst);
   }
 
+  /* The strip re-ranks when the active SET changes — a quest dealt, claimed or
+     pruned — and holds its choice in between. Ranking on every read meant the
+     one always-visible goal traded places as a player alternated tapping and
+     harvesting, which is the core loop: 'Harvest 5 daisies' and 'Tap 50 times'
+     swapped three times in two rounds of it. A goal that moves while you are
+     looking at it is not a goal. A quest that has actually FINISHED still jumps
+     the queue from anywhere, because a claim waiting is the one thing worth
+     interrupting for. */
+  let stripHeld = null;
+  let stripFrom = '';
+
+  function stripLeader() {
+    const live = activeByNearest();
+    if (!live.length) { stripHeld = null; stripFrom = ''; return null; }
+    /* Off the UNSORTED list: the ranked order changes whenever a counter moves,
+       so keying the hold on it would re-rank on exactly the reads it exists to
+       hold steady. What must change the choice is the SET, not its order. */
+    const sig = state.quests.active.map((q) => q.id).join(',');
+    const done = live.find((q) => q.frac >= 1);
+    if (done) { stripHeld = done.inst.id; stripFrom = sig; return done; }
+    if (sig !== stripFrom) {
+      stripFrom = sig;
+      stripHeld = live[0].inst.id;
+      return live[0];
+    }
+    const held = live.find((q) => q.inst.id === stripHeld);
+    if (held) return held;
+    stripHeld = live[0].inst.id;
+    return live[0];
+  }
+
   function stripQuest() {
     refreshDaily();
     fillActive();
-    const near = activeByNearest()[0];
+    const near = stripLeader();
     if (near) {
       return { kind: 'ladder', inst: near.inst, def: near.def, complete: near.inst.progress >= near.def.qty };
     }
@@ -3711,6 +3744,21 @@ const Game = (() => {
 
   /* ---------------- development tools ---------------- */
 
+  /* Send anyone resting out into a free slot, through the real toggle. `moveIn()`
+     stamps `tending` once, at arrival, and nothing re-tends afterwards — so
+     summoning the roster and *then* opening the habitat left three slots empty
+     with three creatures sitting in them, which is the order the panel's own
+     advice sends you round. */
+  function tendFreeSlots() {
+    let n = 0;
+    CREATURES.forEach((def) => {
+      if (habitatFree() <= 0) return;
+      if (!critterHere(def.id) || critterTending(def.id)) return;
+      if (setTending(def.id, true)) n += 1;
+    });
+    return n;
+  }
+
   const Dev = {
     /* Weather is sticky so the sky can be held while animations are inspected. */
     setWeather(id) {
@@ -3925,6 +3973,7 @@ const Game = (() => {
       const def = CREATURES.find((c) => !critterHere(c.id));
       if (!def) return null;
       const e = moveIn(def, star);
+      tendFreeSlots();
       save();
       emit('critter', e);
       // Coming out is what a pair is recorded from, and this is the only path
@@ -3942,6 +3991,9 @@ const Game = (() => {
         const r = Dev.summonCritter(star);
         if (r) out.push(r);
       });
+      /* Also the way back from the habitat cap: press it again after raising a
+         level and the creatures already resting take the slots that just opened. */
+      if (tendFreeSlots()) { save(); notePairs(); emit('panels'); }
       return out;
     },
 

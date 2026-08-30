@@ -2068,7 +2068,7 @@
   function benched(n) {
     UI.toast({
       title: n === 1 ? 'Moved in, waiting in the roster' : `${n} moved in, waiting in the roster`,
-      body: `${Game.habitatUsed()} of ${Game.habitatSlots()} slots are full. Tap +5 levels under Give — slots open at levels ${HABITAT_SLOT_LEVELS.join('/')}.`,
+      body: `${Game.habitatUsed()} of ${Game.habitatSlots()} slots are full. Tap +5 levels under Give, then Summon all six again to send them out — slots open at levels ${HABITAT_SLOT_LEVELS.join('/')}.`,
       art: Icons.get('sprout')
     });
   }
@@ -2123,11 +2123,12 @@
         break;
       }
       case 'summonAll': {
+        const outBefore = Game.habitatUsed();
         const got = D.summonAll(Number(arg) || 1);
-        ok = got.length > 0;
-        deny = 'Every creature already lives here.';
-        const waiting = got.filter((g) => !g.tending).length;
-        if (waiting) benched(waiting);
+        ok = got.length > 0 || Game.habitatUsed() > outBefore;
+        deny = 'Every creature already lives here, and every slot is full.';
+        const waiting = Game.crittersHome().length - Game.habitatUsed();
+        if (ok && waiting) benched(waiting);
         break;
       }
       case 'boosts': D.grantBoosts(); break;

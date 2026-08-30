@@ -5,6 +5,33 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## What phase 3.6 knowingly left (2026-08-30)
+
+**The discover quest leads the goal strip the moment it is dealt, and cannot be advanced.** This is
+the backfill and the nearest-to-done rule meeting each other: `q_discover_5` arrives at **2/5 =
+0.40** while `q_hive_1` and `q_honey_3` sit at 0.00, so it is genuinely the closest to done — and on
+a fresh save the third species is behind Bluebell's 150,000 wall, so nothing the player does moves
+it. It is **no longer a permanent jam**: any quest that finishes jumps the strip from anywhere, and
+claiming re-opens the ranking. But between claims the strip shows a goal you cannot act on. Both
+halves are the owner's ruling working as specified, so neither was overridden. **The two cheapest
+fixes are already on the menu above**: re-cost the first rung to `discover 3`, reachable at the first
+unlock, which turns the jam into a signpost for the wall itself; or point the track at
+`state.year.stats.speciesSeen`, which makes breadth a seasonal goal instead of a lifetime one.
+
+**Pausing the Stand's standing also holds the Stand at a lower tier, which costs real gold.**
+`standTier()` reads `state.rep`, and the tier multiplier runs 1.55 → 2.60 — so the pause does not
+only stop levels, it slows the coin curve that feeds the Turn meter. Measured with `year-sim`,
+casual, three runs each to day 14: **paused sits tight at ~30–32M lifetime; live ranges ~32–58M**,
+much wider and higher. `year-sim` exits 0 either way and no knob moved, but this is worth weighing
+when slice D's timing is decided — and worth remembering while judging petal pacing, because a
+slower gold curve is a slower Turn.
+
+**A +24h warp puts every creature exactly to sleep.** `FOOD_CAP_HOURS` and `ARRIVAL_AWAKE_HOURS` are
+both 24, so one full-day warp empties every food clock at once — anyone judging the HUD's pet band
+after a day-long warp is judging four sleeping faces. Not a bug (that is what a day without feeding
+does) but it defeats the review it was built for, so the two-minute check says to warp **+8 hours**
+when the band is what you are looking at, or to tap *Feed everyone* first.
+
 ## Two accepted seams in the time-warp (2026-08-30, phase 3.6)
 
 **A called sky is voided for the rolls it pulled.** `callWeather()` drags every unspent `mutateAt`
@@ -331,7 +358,15 @@ floor at 1.2–1.5×, and cumulative-with-capped-veterancy at 1.3–1.4×). The 
 2026-08-29 review and phase-1.1 entries of [10-decision-log.md](10-decision-log.md); the
 formula is in [33-year-one-economy.md](33-year-one-economy.md#saved-seeds--the-mint).
 
-### OPEN OWNER DECISION: the blessing is now the largest per-Turn grant, and nothing prices it
+### The blessing is the largest per-Turn grant and nothing prices it — ACCEPTED FOR NOW, 2026-08-30
+
+**RULED: keep it exactly as it is.** The owner's diagnosis was sharper than the advisor's — the
+blessing feels lackluster *because it is a ceremony wrapped around a thing you can already buy*, so
+the open question stopped being *how do we price this* and became **what should a blessing actually
+be**. No once-ever cap, no pricing; the farmability below is a known, accepted seam until that
+creative brief lands. Three sparks are recorded with the ruling in the 2026-08-30 blessing entry in
+[10-decision-log.md](10-decision-log.md). **The numbers below stand and are why the seam is worth
+watching — they are not a pending decision.**
 
 **Found while landing the cumulative mint, 2026-08-29.** The mint's base is split-neutral now,
 but the ceremony's blessing is not: **one free Rich Bloom petal per Turn, regardless of what
@@ -680,7 +715,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,296 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,305 assertions over the
 economy, progression, saves and mastery. Everything above that line — the six `ui-*` files,
 layout, the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI

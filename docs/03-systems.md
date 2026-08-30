@@ -450,7 +450,11 @@ that is a lifetime harvest count, and faking it to trip `checkCritters()` would 
 discover quests, the creature's growth loop and its attract line all at once. The consequence is
 visible and correct — a creature summoned at ★3 shows an empty bar toward ★4, because it genuinely
 has not earned anything yet. **Summoning grants no levels**, so on a fresh save only one of the six
-can be out at a time; the row header says so, and the way past it is *Give → +5 levels*.
+can be out at a time; the row header says so, and the way past it is *Give → +5 levels* **followed by
+pressing the summon again**. That second press is load-bearing, and is why `summonAll()` also sends
+resting creatures out through the real `setTending()`: `moveIn()` stamps `tending` once, at arrival,
+so opening the habitat *after* the roster is already home leaves the new slots empty with the
+creatures sitting in them. The panel's toast names that order.
 
 **The time-warp is the away cheat minus the away.** Same mechanism — clocks wind *back* — but
 `state.lastSeen` is the one clock it will not touch, because moving `lastSeen` is precisely what

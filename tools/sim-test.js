@@ -6121,10 +6121,19 @@ check('and the band still holds only what the level allows',
   G.habitatSlots() === 1 && G.habitatUsed() === 1);
 check('with everyone home, a summon has nothing left to do',
   G.Dev.summonCritter(1) === null && G.Dev.summonAll(1).length === 0);
-/* Levels are the way past the cap, and they are a different button on purpose. */
+/* Levels are the way past the cap, and they are a different button on purpose.
+   `habitatFree() > 0` on its own is the SYMPTOM of the bug this pair guards, not
+   a pass: `moveIn()` stamps `tending` once, at arrival, so raising a level after
+   the roster is already home used to open three slots that nothing ever filled. */
 unlockTo(HABITAT_SLOT_LEVELS[HABITAT_SLOT_LEVELS.length - 1]);
-check('levels are what open the band, not the summon',
-  G.habitatSlots() === HABITAT_SLOT_LEVELS.length && G.habitatFree() > 0);
+check('opening the habitat does not send anybody out by itself',
+  G.habitatSlots() === HABITAT_SLOT_LEVELS.length && G.habitatUsed() === 1,
+  `${G.habitatUsed()} out of ${G.habitatSlots()}`);
+check('and summoning again fills the slots that just opened',
+  (G.Dev.summonAll(1), G.habitatUsed() === HABITAT_SLOT_LEVELS.length),
+  `${G.habitatUsed()} out of ${G.habitatSlots()}`);
+check('which is the roster coming out, not six creatures arriving twice',
+  G.crittersHome().length === CREATURES.length);
 check('an impossible star is clamped rather than stored', (() => {
   G.reset();
   const high = G.Dev.summonCritter(99);
@@ -6205,6 +6214,38 @@ check('the lock glyph itself survives — plot gates and the meadow draw it', Ic
    'the unlock chip keeps the one true padlock' FAILS. That third run is the
    point of the negative case: a test that only says "no padlocks in the
    picker" is passed by deleting the padlock that is supposed to stay. */
+
+/* The strip is the game's one always-visible goal, and ranking it on every read
+   made it trade places as a player alternated tapping and harvesting — which is
+   the core loop, not an edge case. It re-ranks when the active SET changes and
+   holds in between; a finished quest still jumps from anywhere. */
+group('the goal strip holds its quest instead of trading places mid-stride');
+G.reset();
+S.quests.done = [];
+S.quests.active = [{ id: 'q_daisy_5', progress: 2 }, { id: 'q_tap_50', progress: 24 }];
+const firstPick = G.stripQuest().def.id;
+check('it opens on the one nearest to done', firstPick === 'q_tap_50', firstPick);
+S.quests.active[0].progress = 3;   // daisies 0.60 now leads taps 0.48
+check('and holds it when the other pulls ahead', G.stripQuest().def.id === 'q_tap_50',
+  G.stripQuest().def.id);
+S.quests.active[1].progress = 31;  // taps back in front — the swap-back that flickered
+check('and does not swing back when it retakes the lead', G.stripQuest().def.id === 'q_tap_50');
+S.quests.active[0].progress = 5;   // daisies FINISH
+check('but a finished quest still jumps the queue from anywhere',
+  G.stripQuest().def.id === 'q_daisy_5' && G.stripQuest().complete === true,
+  G.stripQuest().def.id);
+/* The set changing is what re-opens the ranking — a claim, a deal or a prune. */
+G.claimQuest('q_daisy_5');
+check('claiming re-ranks, because the set it was chosen from changed',
+  G.stripQuest().def.id !== 'q_daisy_5');
+/* The negative: the hold is a hold, not a freeze. A fresh set picks fresh. */
+S.quests.done = [];
+S.quests.active = [{ id: 'q_plant_20', progress: 1 }, { id: 'q_harvest_10', progress: 9 }];
+check('a different set of quests is ranked from scratch',
+  G.stripQuest().def.id === 'q_harvest_10', G.stripQuest().def.id);
+check('and the panel still leads with whatever the strip shows',
+  G.activeQuests()[0].id === G.stripQuest().def.id);
+G.reset();
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

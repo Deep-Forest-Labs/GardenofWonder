@@ -13,7 +13,7 @@ seeds in eight plots, harvest with rarity multipliers, spend on badges and decor
 from quests and levels.
 
 > **PHASE 3.6 IS BUILT — the cleanup round: three ruled fixes and the owner's review kit.** No new
-> layouts, so no wireframe gate; no economy knob moved. Suite **1,296**, clean across six runs, every
+> layouts, so no wireframe gate; no economy knob moved. Suite **1,305**, clean across six runs, every
 > fix mutation-proven; `year-sim` exits 0. Reasoning in the phase 3.6 entry in
 > [10-decision-log.md](10-decision-log.md).
 >
@@ -1111,15 +1111,25 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 are in and pushed. Nothing is half-done and nothing is blocked. What the next session does depends
 on what the owner says after the two-minute check below.
 
-**Still open, and both are the owner's, not a builder's:**
+**Two things landed on `main` from the design session while this was being built** — `30c3a63` and
+`06ce06a`, both docs-only. Read them before assuming this section is complete:
 
-- **The blessing.** The owner asked what it actually does before ruling on it, which was itself the
-  finding — the ceremony's one choice was not legible to the person who designed the game around it.
-  The plain answer is now in doc 32's glossary and the Garden Year field guide. The advisor's
-  recommendation stands: **each flower blessed once, ever.** Still in
-  [11-known-issues.md](11-known-issues.md) as an open decision.
-- **Petal pacing**, which waits on the owner actually playing. That is what the review kit was built
-  for — warp a few days and see whether petals arrive at a rate that feels like a gift.
+- **The blessing is RULED, and the advisor's recommendation was not taken.** *Keep it exactly as it
+  is*, no once-ever cap and no pricing. The owner's diagnosis was the sharper one: it feels
+  lackluster because it is *a ceremony wrapped around a thing you can already buy*. The open item
+  changed shape from *how do we price this* to **what should a blessing actually be**, with three
+  sparks recorded against it. The farmability seam in [11-known-issues.md](11-known-issues.md) is
+  therefore **accepted for now**, not a pending decision — it was still headed *OPEN OWNER DECISION*
+  after the ruling landed and is re-marked in this commit.
+- **There is a money plan now**, [37-monetization.md](37-monetization.md). Nothing in phase 3.6
+  touches it.
+
+**Still genuinely open, and the owner's, not a builder's:**
+
+- **Petal pacing**, which waits on the owner playing. The answer the owner asked for is literally
+  *"play five years with the time-warp and say whether the Turn still felt worth doing"* — so the
+  cheat this round shipped is the instrument for it.
+- **The Fall one-tap bed sweep**, explained to the owner and awaiting a yes or no.
 
 **What comes after, when the owner is ready:** slice D, which authors the level rungs past 20 and
 turns the Stand's standing back on — one word, `STAND.repPaused` in `data.js`. Until then the quest
@@ -1142,20 +1152,33 @@ icon. Every step below was walked in the live build before it was written down.
 **2 · Watch the goal strip pick the nearest quest.** On a fresh save the strip reads *Tap 25 times*.
 Plant one seed. The strip switches to **Plant a seed — Claim**, because that one is finished and the
 tap quest is at 1/25. It follows whatever you are closest to finishing rather than whatever you were
-given first. It should feel like the game noticing; if it feels like jitter, say so.
+given first — but it **holds** that quest while you play and only re-picks when one is claimed or a
+new one is dealt, so it will not trade places under your thumb. A quest you actually *finish* jumps
+in front from anywhere. **One thing to watch and tell us about:** once the discover quest is dealt it
+will sit on the strip, because counting the two species you already grew genuinely makes it the
+closest to done — and you cannot move it until you can afford Bluebell. It is no longer stuck
+forever (anything you finish jumps in front of it), but if it feels like the strip is nagging you
+about something you cannot do, say so — there are two cheap fixes waiting in
+[11-known-issues.md](11-known-issues.md).
 
 **3 · Warp a day and watch the garden catch up.** Developer tools → **Wind the world forward → +24
 hours**. In one tap: every plot ripe, Fall's whole bed ripe, hives full of jars, keepsakes waiting on
 your creatures — and your pets asleep and hungry, because a day of food ran out. **No welcome-back
 sheet, no offline-income screen** — this is the world moving while you watch, not you coming back to
 it. A power-up you have running keeps its time, on purpose, so this and the POWER-UP button do not
-fight each other.
+fight each other. Note a plot holds one plant, so warping further does not grow more in Summer — the
+long clocks (Fall, the Century Bloom, jars, keepsakes, food) are what a bigger warp is for.
 
 **4 · Summon the pets and look at the band.** Developer tools → **Creatures**. The row header tells
 you where you stand: *6 home · 1 out of 1 slot*. Tap **★3** to bring the next one in.
 
 - The band holds **four** at most, and slots open at levels **1 / 5 / 10 / 16** — so to see it full,
-  tap **Give → +5 levels** three times first, then **Summon all six, at the same star → ★3**.
+  tap **Give → +5 levels** three times first, then **Summon all six, at the same star → ★3**. If you
+  do it the other way round, press **Summon all six** once more afterwards: opening the habitat does
+  not send anyone out by itself, and that second press is what fills the new slots.
+- **Warp +8 hours rather than +24 while you are judging the band.** A full day empties every food
+  clock exactly, so after a 24-hour warp you would be looking at four sleeping faces. *Feed everyone*
+  is the other way back.
 - Judge it at **0, 1, 3 and 4**: is four a crowd? Do they collide with the UPGRADE pill or the
   POWER-UP button? Two of the six stay home resting, which is the habitat cap doing its job.
 - A summoned creature shows an **empty bar toward its next star**. That is honest, not a bug — it has
@@ -1985,7 +2008,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,296 assertions over the simulation layer
+node tools/sim-test.js          # 1,305 assertions over the simulation layer
 node tools/year-sim.js 12 all   # the pacing model — MUST exit 0; non-zero means a cadence beats normal play
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
@@ -2082,7 +2105,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,296 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,305 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

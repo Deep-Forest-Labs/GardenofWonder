@@ -89,6 +89,12 @@ A new persistent row between the HUD and the stage:
   completed quest always first and ties going to the one dealt first (`Game.stripQuest()`). Tapping
   the strip opens the quest panel, which leads with the same quest because both read the one order
   `Game.activeQuests()` returns.
+- **The strip holds its choice until the active set changes** — a quest dealt, claimed or pruned.
+  It does *not* re-rank on every read. Ranking continuously made the one always-visible goal trade
+  places as a player alternated tapping and harvesting, which is the core loop rather than an edge
+  case: measured, *Harvest 5 daisies* and *Tap 50 times* swapped three times in two rounds of it. A
+  goal that moves while you are looking at it is not a goal. **A finished quest still jumps the
+  queue from anywhere**, because a claim waiting is the one thing worth interrupting for.
 - Tapping a **completed** quest claims it. Do not auto-claim. The claim tap is the payoff moment
   and it needs sound, a coin burst, and the bar visibly moving. Route it through `FX` and the
   feedback ladder in [06-audio-and-fx.md](06-audio-and-fx.md) at roughly Rare-tier juice; a
@@ -739,7 +745,7 @@ here so the retired design is legible, not as a description of the suite:
 What replaced the retired half: the ladder is asserted **flat** — no harvest advances a tier,
 pays a mastery gem, or moves a multiplier — and petals carry the per-seed yield instead. See
 [33-year-one-economy.md](33-year-one-economy.md) and the `bill 13` groups in
-`tools/sim-test.js`, which now runs 1,296 assertions.
+`tools/sim-test.js`, which now runs 1,305 assertions.
 
 **Trap the build found:** mastery multiplies harvest payout and climbs as a run proceeds, so any
 sim-test measuring a *different* harvest multiplier over thousands of harvests has to reset the
