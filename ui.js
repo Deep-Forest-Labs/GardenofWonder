@@ -1006,19 +1006,36 @@
      a garden-targeted bubble measured a 0x0 rect in Fall and parked over the
      coin wallet. The season tabs are drawn in Fall, so this one has a real rect
      — but the blanket hide had to be narrowed rather than removed. */
+  let coachSide = '';
   function showCoach(target, text, opts = {}) {
     coachTarget = target;
+    /* A SEASON TAB IS POINTED AT FROM THE SIDE. It is a 38px column pinned to
+       the screen edge and standing on the lawn, and a bubble above it lands
+       squarely on Fall's bed chip. Beside it, the mark reads as an arrow into
+       the tab, which is also the direction the swipe goes. */
+    coachSide = opts.side || '';
     el.coach.hidden = false;
-    el.coach.classList.toggle('season', Boolean(opts.season));
+    el.coach.className = `coach${opts.season ? ' season' : ''}${coachSide ? ` side-${coachSide}` : ''}`;
     const finger = opts.swipe
       ? `<span class="c-swipe ${opts.swipe}">${Icons.get('swipe')}</span>`
       : '';
-    el.coach.innerHTML = `<div class="tip">${finger}${text}</div><div class="arrow"></div>`;
+    const tip = `<div class="tip">${finger}${text}</div>`;
+    const arrow = '<div class="arrow"></div>';
+    el.coach.innerHTML = coachSide === 'l' ? arrow + tip : tip + arrow;
     placeCoach();
   }
   function placeCoach() {
     if (!coachTarget || el.coach.hidden) return;
     const r = coachTarget.getBoundingClientRect();
+    if (coachSide) {
+      const w = el.coach.offsetWidth;
+      const h = el.coach.offsetHeight;
+      el.coach.style.top = `${Math.max(8, r.top + r.height / 2 - h / 2)}px`;
+      el.coach.style.left = coachSide === 'l'
+        ? `${r.right + 6}px`
+        : `${Math.max(8, r.left - 6 - w)}px`;
+      return;
+    }
     const cx = r.left + r.width / 2;
     el.coach.style.left = `${cx}px`;
     el.coach.style.top = `${Math.max(8, r.top - el.coach.offsetHeight - 6)}px`;
@@ -1068,12 +1085,12 @@
     } else if (season === 'fall' && !S.seen.gardenSwipe) {
       const node = el.seasonEdges.querySelector('.s-edge.l[data-season="summer"]');
       if (!node) { hideCoach(); return; }
-      if (coachTarget !== node) showCoach(node, 'Swipe right for the garden', { swipe: 'right', season: true });
+      if (coachTarget !== node) showCoach(node, 'Swipe right for the garden', { swipe: 'right', season: true, side: 'l' });
       el.coach.hidden = false;
     } else if (season === 'summer' && Game.fallOpen() && !S.seen.fallSwipe) {
       const node = el.seasonEdges.querySelector('.s-edge.r[data-season="fall"]');
       if (!node) { hideCoach(); return; }
-      if (coachTarget !== node) showCoach(node, 'Swipe left for Fall', { swipe: 'left' });
+      if (coachTarget !== node) showCoach(node, 'Swipe left for Fall', { swipe: 'left', side: 'r' });
       el.coach.hidden = false;
     } else {
       hideCoach();

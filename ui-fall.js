@@ -82,10 +82,15 @@
   /* The garden's own rule, restated: CSS cannot express "square, fitting the
      smaller dimension of a flexible parent", so the frame is measured and the
      board is written explicit pixels. */
+  /* The strip the bed chip stands in, reserved so the board can never grow into
+     it. On a phone the board is WIDTH-bound and this costs nothing; on a short
+     screen it is height-bound and the board gives up about 45px, which is the
+     price of Fall's one rule being readable instead of lying across the bed. */
+  const CHIP_ROOM = 46;
   function sizeBoard() {
     if (!el.fallFrame || !el.fallBoard) return;
     const r = el.fallFrame.getBoundingClientRect();
-    const side = Math.max(150, Math.floor(Math.min(r.width, r.height)));
+    const side = Math.max(150, Math.floor(Math.min(r.width, r.height - CHIP_ROOM)));
     el.fallBoard.style.width = `${side}px`;
     el.fallBoard.style.height = `${side}px`;
   }
@@ -111,9 +116,9 @@
   /* ---------- the bed, and its one rule ----------
      The windfall pays when every WINDFALL-ELIGIBLE plot is planted and ripe —
      eligible meaning "not the Century Bloom", which stands outside the count so
-     a fortnight plant can never park the bonus. The chip below is the whole
-     rule as one object, and it is the only thing standing between a player and
-     harvesting at seven of eight. */
+     a fortnight plant can never park the bonus. The chip under the board is the
+     whole rule as one object, and it is the only thing standing between a
+     player and harvesting at seven of eight. */
   function bedState() {
     /* load() rebuilds state.fall defensively, so this should never be empty —
        but the board must not be the thing that throws if it ever is. */

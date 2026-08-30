@@ -2106,6 +2106,17 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .c-swipe.right svg{transform:scaleX(-1)}
 @keyframes coachDrag{0%,100%{transform:translateX(3px)}50%{transform:translateX(-3px)}}
 .c-swipe.right{animation-direction:reverse}
+/* Beside the tab, not above it. `side-l` means the TAB is on the left, so the
+   mark stands to its right with the arrow pointing back at it. The base
+   `translate(-50%,0)` has to go: placeCoach() writes the exact corner here. */
+.coach.side-l,.coach.side-r{transform:none;flex-direction:row;align-items:center;gap:5px}
+.coach.side-l .arrow,.coach.side-r .arrow{
+  border:11px solid transparent;margin:0;
+  animation:coachBobX .9s ease-in-out infinite;
+}
+.coach.side-l .arrow{border-right-color:var(--ink);--nudge:-6px}
+.coach.side-r .arrow{border-left-color:var(--ink);--nudge:6px}
+@keyframes coachBobX{0%,100%{transform:translateX(0)}50%{transform:translateX(var(--nudge,-6px))}}
 @keyframes coachBob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
 /* A coach mark points at something in the garden, so an open sheet has covered
    the thing it is pointing at — it was floating over the panel's own title.
@@ -3838,16 +3849,25 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .fl-flower{background:none;border:0;padding:0;width:86%;line-height:0;pointer-events:auto}
 .fl-flower svg{width:100%;height:auto;overflow:visible}
 
-/* THE BED CHIP — Fall's whole rule as one object, above the board, on screen
+/* THE BED CHIP — Fall's whole rule as one object, UNDER the board, on screen
    from the first second. Everything else about the windfall is this chip
    changing state. */
-.fl-wrap{position:relative;display:grid;place-items:center;margin-top:22px}
+/* The margin is UNDER the board now, not over it: it is the chip's room, and
+   the frame centres board-plus-room so the reserve cannot be squeezed out. */
+.fl-wrap{position:relative;display:grid;place-items:center;margin-bottom:46px}
 .fl-chip{
   position:absolute;left:50%;transform:translateX(-50%);
-  /* Clear of the top row's "!" badges, which sit at top:-9px inside their
-     plots — the chip was painting over two of the eight in exactly the state
-     the whole feature is about, and swallowing their taps as well. */
-  top:-34px;z-index:6;pointer-events:none;
+  /* MOVED BELOW THE BOARD, 2026-08-30, on the owner's word that it intrudes.
+     Above it, the chip's last 2px sat inside the board and its lower third lay
+     across the stubble fringe — so Fall's one rule was drawn on top of Fall's
+     one picture, and on a notched phone the board fills the frame and the chip
+     was pushed off the top of it entirely. Below, it sits in the strip the
+     yard already reserves and Fall deliberately empties: no creatures stand
+     there in this season, and it reads as the board's caption rather than as
+     something laid over it. Anchored to `.fl-wrap`, which IS the board's box,
+     so it tracks the board at every viewport instead of being measured from a
+     frame the board does not fill. */
+  bottom:-42px;z-index:6;pointer-events:none;
   display:flex;align-items:center;gap:7px;
   max-width:96%;padding:6px 13px;white-space:nowrap;
   border:3px solid var(--ink);border-radius:999px;

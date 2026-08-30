@@ -761,6 +761,7 @@ never move**. Nothing in Fall re-states the column because nothing in Fall leave
 | --- | --- | --- |
 | `.fall-layer` (the scene) | a sibling of `.ui` inside `#world`, `z-index: 2` | above the CSS scenery, below `.ui`, so the HUD stays up and the dock stays tappable |
 | `.fall-frame` / `.fl-board` | inside `.stage`, beside `.garden-frame` | one board swaps for another in the same square the garden already sizes |
+| `.fl-chip` | absolute inside `.fl-wrap`, `bottom:-42px` | Fall's one rule, hanging under the board it describes — anchored to the board's own box so it tracks it at every viewport |
 | `.gate-layer` | a sibling of `.ui`, `z-index: 3` | a locked season is a screen, and `.in-gate` hides the stage, dock, rail and quest strip exactly as `.in-map` does |
 | `.season-edges` | **absolutely positioned against `.ui`**, not a grid item | see below |
 
@@ -784,12 +785,35 @@ otherwise end with the player looking at a bed the Turn did not touch while thei
 behind them.
 
 **Fall's board keeps the yard's padding even though its creatures do not follow it.** Both boards are
-then the same size, which is what sharing the grammar means; the empty strip below Fall's board is
-simply ground.
+then the same size, which is what sharing the grammar means; the strip below Fall's board is where
+the bed chip stands.
+
+**The bed chip moved under the board on 2026-08-30, on the owner's word that it intrudes.** Above
+it, the chip's last 2px sat inside the board and its lower third lay across the stubble fringe — so
+Fall's one rule was drawn on top of Fall's one picture, and on a notched phone, where the board
+fills the frame, it was pushed off the top of the board entirely. It now hangs under the board like
+a caption.
+
+**The strip it stands in is reserved, not borrowed.** `.fl-wrap` carries `margin-bottom:46px` and
+`sizeBoard()` subtracts the same 46 from the height it will accept, so the board can never grow into
+the chip's room. On a phone the board is **width**-bound and this costs nothing; on a short screen
+(SE-class, ≤700px tall) it is height-bound and the board gives up about 45px. That is the price of
+Fall's rule being readable instead of lying across the bed, and it is paid only where the screen
+genuinely cannot hold both.
+
+**Fall's board therefore sits ~23px above the garden's**, where it used to sit ~12px below. It is
+the *board plus its chip* that is centred now, which is the more honest object: the caption belongs
+to the board, and the pair is what the eye reads.
 
 **The bed chip's pulse lives on a pseudo-element.** `affordPulse` animates `transform`, and the chip
 is centred with `translateX(-50%)` — a running animation outranks that declaration and would throw
 the centring away. Same collision as a state modifier that writes `box-shadow` and eats the lip.
+Still true after the move: the chip is still centred with a transform, and the pulse is still on
+`::before`.
+
+**Its four states are unchanged** — filling, all-in-waiting, `.close` (one more, soft yellow),
+`.armed` (gold with the pulse) — and so is the armed bed's gold rim, which is a rule on
+`.fl-board.armed` and has nothing to do with the chip.
 
 ## The vertical ladder
 
