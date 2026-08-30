@@ -114,7 +114,8 @@ forever money.
 4. **Gem sinks grow** before gem packs are worth selling.
 5. **Caps live in data**: offers per session, refills per day, all remote-tunable.
 
-The revenue shape this points at, from the comparables: rewarded ads lead (the biggest idle
-games run majority-ad revenue; the genre's players watch more rewarded video than any other),
-with the Gem Jar, starter pack and decor as the quiet IAP floor. That matches the modest-DAU
+The revenue shape, corrected by [40-financial-model.md](40-financial-model.md): **the rewarded
+placements are the dependable floor, and the shelf — the Gem Jar, decor and gem catalogue — is
+the line that has to grow**, because the closest comparable cluster earns more from purchases
+than from ads and the gap between missing and beating the goal lives there. That matches the modest-DAU
 plan the market doc set from the start.
