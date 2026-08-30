@@ -885,8 +885,13 @@
     if (!seasonReady(sdef)) { showGate(sdef); return; }
     if (id === 'fall') {
       if (season !== 'fall') { season = 'fall'; UI.enterFall(); }
+      // Arriving retires the mark that pointed here, whichever way you arrived.
+      if (!S.seen.fallSwipe) { S.seen.fallSwipe = true; Game.save(); }
     } else {
-      if (season === 'fall') UI.leaveFall();
+      if (season === 'fall') {
+        UI.leaveFall();
+        if (!S.seen.gardenSwipe) { S.seen.gardenSwipe = true; Game.save(); }
+      }
       season = 'summer';
     }
     renderSeasonEdges();
@@ -996,17 +1001,36 @@
 
   /* ============ coach marks ============ */
   let coachTarget = null;
-  function showCoach(target, text) {
+  /* `swipe` draws the finger and its wake beside the words; `season` is what
+     lets the mark survive `.in-fall .coach{display:none}`, which exists because
+     a garden-targeted bubble measured a 0x0 rect in Fall and parked over the
+     coin wallet. The season tabs are drawn in Fall, so this one has a real rect
+     — but the blanket hide had to be narrowed rather than removed. */
+  function showCoach(target, text, opts = {}) {
     coachTarget = target;
     el.coach.hidden = false;
-    el.coach.innerHTML = `<div class="tip">${text}</div><div class="arrow"></div>`;
+    el.coach.classList.toggle('season', Boolean(opts.season));
+    const finger = opts.swipe
+      ? `<span class="c-swipe ${opts.swipe}">${Icons.get('swipe')}</span>`
+      : '';
+    el.coach.innerHTML = `<div class="tip">${finger}${text}</div><div class="arrow"></div>`;
     placeCoach();
   }
   function placeCoach() {
     if (!coachTarget || el.coach.hidden) return;
     const r = coachTarget.getBoundingClientRect();
-    el.coach.style.left = `${r.left + r.width / 2}px`;
+    const cx = r.left + r.width / 2;
+    el.coach.style.left = `${cx}px`;
     el.coach.style.top = `${Math.max(8, r.top - el.coach.offsetHeight - 6)}px`;
+    /* THE ARROW STAYS ON THE TARGET; THE BUBBLE MOVES. A season tab sits 19px
+       from the screen edge and the tip is `white-space:nowrap`, so a bubble
+       centred on it runs half its width off the screen. Shifting the whole mark
+       would leave the arrow pointing at nothing, so only the tip slides. */
+    const tip = el.coach.querySelector('.tip');
+    if (!tip) return;
+    const half = tip.offsetWidth / 2;
+    const want = Math.max(8 + half, Math.min(window.innerWidth - 8 - half, cx));
+    tip.style.setProperty('--tip-shift', `${Math.round(want - cx)}px`);
   }
   function hideCoach() {
     coachTarget = null;
@@ -1016,7 +1040,12 @@
     // hideCoach(), not just hidden=true: leaving coachTarget set means the next
     // tick takes the `coachTarget !== node` shortcut, skips showCoach(), and
     // reveals the old bubble with stale text at a stale position.
-    if (UI.sheetMode()) { hideCoach(); return; }
+    /* The Hollow, the meadow and a gate all set `display:none` on the season
+       tabs or on the coach itself, and a hidden node measures 0x0 — which parks
+       the bubble in the top-left corner over the wallets rather than failing.
+       Naming every room that can be up is the same rule the vertical swipe's
+       guard follows. */
+    if (UI.sheetMode() || gateOn || UI.hollowOpen() || UI.meadowOpen()) { hideCoach(); return; }
     if (!S.seen.intro) {
       if (coachTarget !== flowerBtn) showCoach(flowerBtn, 'Tap the flower!');
       el.coach.hidden = false;
@@ -1025,6 +1054,26 @@
       if (free === -1) { hideCoach(); return; }
       const node = plotEls[free] && plotEls[free].root;
       if (node && coachTarget !== node) showCoach(node, 'Plant a seed here');
+      el.coach.hidden = false;
+    /* TEACH THE SEASON SWIPE, ONCE EACH WAY. Turn 1's gift is Fall, and a gift
+       nobody can find is not a gift — the ceremony names the tab and then the
+       player is standing in a garden that looks exactly as it did. Both marks
+       are retired by the player doing the thing they teach, so neither can sit
+       there forever suppressing the flower's own lines (`sayText()` refuses
+       while a coach is up).
+
+       Gated on `Game.fallOpen()`, never on `turnsCompleted >= 1`: which Turn
+       opens Fall is `DATA.year.fallTurn`, a knob, and the identity would go
+       quietly wrong the day it moves. */
+    } else if (season === 'fall' && !S.seen.gardenSwipe) {
+      const node = el.seasonEdges.querySelector('.s-edge.l[data-season="summer"]');
+      if (!node) { hideCoach(); return; }
+      if (coachTarget !== node) showCoach(node, 'Swipe right for the garden', { swipe: 'right', season: true });
+      el.coach.hidden = false;
+    } else if (season === 'summer' && Game.fallOpen() && !S.seen.fallSwipe) {
+      const node = el.seasonEdges.querySelector('.s-edge.r[data-season="fall"]');
+      if (!node) { hideCoach(); return; }
+      if (coachTarget !== node) showCoach(node, 'Swipe left for Fall', { swipe: 'left' });
       el.coach.hidden = false;
     } else {
       hideCoach();

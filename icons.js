@@ -58,6 +58,13 @@ const Icons = (() => {
       <path d="M3.4 6.6h5M15.6 6.6h5M5.9 6.6v2.2c0 .8.7 1.4 1.5 1.4M18.1 6.6v2.2c0 .8-.7 1.4-1.5 1.4"/>
       <circle cx="12" cy="12.4" r="1.7" fill="#fff" stroke-width="1.4"/>
       <path d="M9.6 17.6 8.4 20M14.4 17.6 15.6 20" stroke-width="1.7"/>`),
+    /* A finger on the glass with its wake behind it. Drawn travelling LEFT,
+       because that is the swipe that reaches Fall; the return mark mirrors it
+       in CSS rather than carrying a second glyph. */
+    swipe: S(`
+      <path d="M11.2 21.4H8.6a3.4 3.4 0 0 1-2.6-1.2L3 16.4c-.6-.8.5-1.9 1.3-1.3l2 1.4V7.4a1.6 1.6 0 0 1 3.2 0v4.8h.7a1.4 1.4 0 0 1 1.4 1.4h.5a1.4 1.4 0 0 1 1.4 1.4v.4a1.4 1.4 0 0 1 1.4 1.4v1.3a3.3 3.3 0 0 1-2.2 3.3Z" fill="#ffc9a5"/>
+      <path d="M17.8 8.6a5.2 5.2 0 0 1 0 6.2" stroke-width="1.7"/>
+      <path d="M20.8 6.6a8.6 8.6 0 0 1 0 10.2" stroke-width="1.7"/>`),
     hand: S(`
       <path d="M7.4 12.4V5.8a1.8 1.8 0 0 1 3.6 0v5M11 10.6V4.6a1.8 1.8 0 0 1 3.6 0v6M14.6 11V6.8a1.8 1.8 0 0 1 3.5 0v7.4c0 4-2.6 6.6-6.4 6.6-3.4 0-5-1.6-6.6-4.6L3.6 13c-.6-1.1 1-2.4 2.1-1.3Z" fill="#ffc9a5"/>`),
     gnome: S(`

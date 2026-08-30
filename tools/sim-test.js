@@ -699,6 +699,46 @@ globalThis.localStorage.setItem('gw-save', JSON.stringify(freshSave));
 G.load();
 check('a save with no play at all still onboards', S.seen.intro === false && S.seen.plot === false);
 
+/* The two swipe coaches, added 2026-08-30. They teach the season swipe once
+   each way, and their backfill reads Fall itself: a bed paid for or a crop in
+   the ground is proof the player found Fall and came back. */
+G.reset();
+check('a fresh garden has not been taught either season swipe',
+  S.seen.fallSwipe === false && S.seen.gardenSwipe === false);
+G.reset();
+const usedFallSave = JSON.parse(JSON.stringify(S));
+delete usedFallSave.seen;
+usedFallSave.fall.bedPaid = true;
+globalThis.localStorage.setItem('gw-save', JSON.stringify(usedFallSave));
+G.load();
+check('a save with a paid Fall bed is not taught the swipe it plainly knows',
+  S.seen.fallSwipe === true && S.seen.gardenSwipe === true);
+G.reset();
+const grewFallSave = JSON.parse(JSON.stringify(S));
+delete grewFallSave.seen;
+grewFallSave.fall.grid[0] = { seed: 'pumpkin', plantedAt: 1, grow: 10, ready: false, windfall: false };
+globalThis.localStorage.setItem('gw-save', JSON.stringify(grewFallSave));
+G.load();
+check('so is one with a crop in the Fall bed', S.seen.fallSwipe === true);
+G.reset();
+const turnedOnlySave = JSON.parse(JSON.stringify(S));
+delete turnedOnlySave.seen;
+turnedOnlySave.year.turnsCompleted = 3;
+turnedOnlySave.stats.totalTaps = 900;
+globalThis.localStorage.setItem('gw-save', JSON.stringify(turnedOnlySave));
+G.load();
+check('but a save that has Turned and never planted in Fall still gets taught',
+  S.seen.fallSwipe === false && S.seen.gardenSwipe === false);
+check('the flags survive a Turn — a coach shown once is never shown again',
+  (() => {
+    G.reset();
+    S.seen.fallSwipe = true;
+    S.seen.gardenSwipe = true;
+    G.credit(400000);
+    G.turnYear();
+    return S.seen.fallSwipe === true && S.seen.gardenSwipe === true;
+  })());
+
 group('bill 13b — grandfather migration keeps seeds you could already use');
 G.reset();
 const saveOf = (extra) => {

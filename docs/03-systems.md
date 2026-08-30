@@ -1001,20 +1001,38 @@ and reports against doc 33's pacing targets; `tools/sim-test.js` carries the 18-
 
 ## Onboarding
 
-Two coach marks, tracked by `state.seen`:
+Four coach marks, tracked by `state.seen`:
 
 1. `intro` — "Tap the flower!" pointing at the flower, until the first tap.
 2. `plot` — "Plant a seed here" pointing at the first empty plot, until the first planting.
+3. `fallSwipe` — "Swipe left for Fall", pointing at the right-hand season tab. Shown once
+   `Game.fallOpen()` is true, which is Turn 1's gift, and retired the moment the player arrives in
+   Fall by any route.
+4. `gardenSwipe` — "Swipe right for the garden", pointing at the left-hand tab from inside Fall, and
+   retired when they come back.
 
-Both are one-shot and persist as seen. They hide whenever a sheet is open and reposition on
-resize.
+**The two season marks carry a finger and its wake** (`Icons.get('swipe')`, drawn travelling left and
+mirrored in CSS for the way back), because a season change is a *gesture* and an arrow alone does not
+say to drag. Each is retired by the player doing the thing it teaches, which also matters because
+`sayText()` refuses to draw a speech bubble while a coach is up — a mark that could sit forever would
+mute the flower.
+
+**They gate on `Game.fallOpen()`, never on `turnsCompleted >= 1`.** Which Turn opens Fall is
+`DATA.year.fallTurn`, a knob, and the identity would go quietly wrong the day it moves.
+
+All four are one-shot and persist as seen. They hide whenever a sheet is open and reposition on
+resize. **`.in-fall .coach:not(.season)` is why the Fall-side mark survives** the blanket that hides
+garden-targeted marks in Fall; the season tabs are drawn in that room and have a real rect.
 
 Two rules keep them from outstaying their welcome:
 
 **The flags are backfilled on load.** `state.seen` is merged defaults-first, so a save written
 before one of these keys existed reads back `false` and replays onboarding over a garden the player
 has plainly already used. `load()` therefore infers `intro` from `stats.totalTaps ||
-stats.totalHarvests` and `plot` from `stats.totalHarvests` or any occupied plot. **Any new `seen`
+stats.totalHarvests` and `plot` from `stats.totalHarvests` or any occupied plot; the two season
+marks are inferred from Fall itself — a paid bed or a crop in the ground is proof the player found
+Fall and came back. A save that has Turned but never planted there **does** get taught, which is the
+honest answer: the Turn opened a door they have not walked through. **Any new `seen`
 flag needs its own backfill line**, the same way every new badge key does — see
 [07-save-data.md](07-save-data.md).
 

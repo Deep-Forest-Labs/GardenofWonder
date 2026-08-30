@@ -252,7 +252,7 @@ as one piece.
 
 ### G. No FTUE for the new surfaces *(the brief named it; add the scale)*
 
-The game now has five surfaces — map, garden, Hollow, meadow, Stand — and two coach marks, both in
+The game now has five surfaces — map, garden, Hollow, meadow, Stand — and two coach marks (four since 2026-08-30), both in
 the garden. A new player who discovers the downward swipe by accident arrives on a map nothing has
 introduced. The 60-second rule in [17-market-and-positioning.md](17-market-and-positioning.md#distribution)
 has never been run against anything built since 2026-08-15.

@@ -44,7 +44,7 @@ lost if the player clears site data.
   stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
   wonder: { until: 0, last: 0 },
   prefs: { sfx: true, music: false },
-  seen: { intro: false, plot: false },
+  seen: { intro: false, plot: false, apiary: false, meadow: false, fallSwipe: false, gardenSwipe: false },
   quests: {
     active: [ { id: 'q_tap_25', progress: 0 } ],
     done: [],

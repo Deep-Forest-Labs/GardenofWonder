@@ -76,7 +76,7 @@ const Game = (() => {
       mementos: {},
       luckyPacks: 0,
       prefs: { sfx: true, music: false },
-      seen: { intro: false, plot: false, apiary: false, meadow: false },
+      seen: { intro: false, plot: false, apiary: false, meadow: false, fallSwipe: false, gardenSwipe: false },
       quests: { active: [], done: [], daily: { id: null, progress: 0, day: '', claimed: false } },
       rep: 0,
       level: 1,
@@ -227,6 +227,16 @@ const Game = (() => {
       /* `seen.meadow` deliberately has no backfill: it gates the one line that
          teaches the meadow's new swipe, and nobody has seen that line yet —
          including a player who reached the meadow through the retired map. */
+      /* The two swipe coaches DO get one, from the evidence a save carries. A
+         player with a paid bed or a crop in the ground has plainly found Fall
+         and come back, and showing them how would be the game forgetting who
+         they are. A save that has Turned but never planted there gets the
+         marks, which is the honest answer — the Turn opened a door they have
+         not walked through. */
+      const usedFall = Boolean(parsed.fall && (parsed.fall.bedPaid
+        || (parsed.fall.grid || []).some((c) => c && c.seed)));
+      if (!state.seen.fallSwipe && usedFall) state.seen.fallSwipe = true;
+      if (!state.seen.gardenSwipe && usedFall) state.seen.gardenSwipe = true;
       state.apiary = Object.assign(d.apiary, parsed.apiary || {});
       state.quests = Object.assign(d.quests, parsed.quests && typeof parsed.quests === 'object' ? parsed.quests : {});
       if (!Array.isArray(state.quests.active)) state.quests.active = [];

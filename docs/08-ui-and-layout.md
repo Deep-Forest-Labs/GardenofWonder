@@ -813,8 +813,15 @@ latency the core loop is built on. On the map a drag is a pan, so only a gesture
 than 12px counts as a tap; otherwise panning across the world would keep opening whatever it
 finished over.
 
-`.in-meadow` hides the stage, dock, rail and quest strip, exactly as `.in-hollow` does — and both
-hide coach marks, because a coach mark points at something in the garden that is now covered.
+`.in-meadow` hides the stage, dock, rail and quest strip, exactly as `.in-hollow` does. **Only
+`.in-meadow` hides coach marks in CSS** — `.in-hollow` never had that rule and the claim that it did
+was wrong until 2026-08-30. Both rooms are now named in `refreshCoach()`'s own guard instead, which
+is the stronger place for it: a hidden target measures 0×0 and parks the bubble in the top-left
+corner over the wallets, so the mark has to be *not shown*, not merely not painted.
+
+**`.in-fall` narrows rather than blankets.** `.in-fall .coach:not(.season){display:none}` — the two
+season marks point at the season tabs, which are drawn in Fall and have a real rect; every other mark
+points into the garden and would still land in the corner.
 
 ## The HUD is always up
 

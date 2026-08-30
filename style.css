@@ -2094,7 +2094,18 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   background:var(--paper);border:3px solid var(--ink);border-radius:14px;
   padding:6px 12px;font-size:13px;font-weight:800;white-space:nowrap;
   box-shadow:0 4px 0 var(--ink-2);
+  /* Set by placeCoach() when the target is near a screen edge: the bubble
+     slides, the arrow underneath does not. Zero for every centred mark. */
+  display:flex;align-items:center;gap:7px;
+  transform:translateX(var(--tip-shift,0px));
 }
+/* The finger and its wake. Drawn travelling left, mirrored for the way back —
+   one glyph, two directions, and the little slide is the whole instruction. */
+.c-swipe{display:block;line-height:0;animation:coachDrag 1.5s ease-in-out infinite}
+.c-swipe svg{width:21px;height:21px;display:block;overflow:visible}
+.c-swipe.right svg{transform:scaleX(-1)}
+@keyframes coachDrag{0%,100%{transform:translateX(3px)}50%{transform:translateX(-3px)}}
+.c-swipe.right{animation-direction:reverse}
 @keyframes coachBob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
 /* A coach mark points at something in the garden, so an open sheet has covered
    the thing it is pointing at — it was floating over the panel's own title.
@@ -3697,7 +3708,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    so the bubble measured a 0x0 rect and parked in the top-left corner over the
    coin wallet. Every other room declares this; Fall was built and never
    registered as one. */
-.in-fall .coach{display:none}
+/* …except the one that teaches the way back OUT of Fall, which points at the
+   season tab — a real, measured, visible node in this room. Narrowed rather
+   than removed: every other coach mark still targets something in the garden
+   and would still park in the corner. */
+.in-fall .coach:not(.season){display:none}
 :root{--fl-noop:0}
 
 .fl-board{

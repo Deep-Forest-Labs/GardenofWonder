@@ -65,7 +65,7 @@ Built and working:
 - Synthesized sound effects and ambient music.
 - Canvas particles, screen shake, floating text, haptics.
 - Save with automatic migration from the previous build.
-- Two coach marks for first-run onboarding.
+- Four coach marks: two for first-run onboarding, two teaching the season swipe after the first Turn.
 
 Deliberately absent: no accounts, no server, no analytics, no monetisation, no ads, no
 notifications. The game is entirely local to the browser.
