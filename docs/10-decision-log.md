@@ -961,6 +961,45 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-30 (design) — The money plan: one owner idea ships first, the other is ruled out by its own math
+
+**The owner opened the monetization conversation with two ideas, and a three-agent crew
+(placement inventory, market comparables with sources, a cosy-pillar adversary) returned the
+plan now in [37-monetization.md](37-monetization.md).** The headline rulings, recorded plainly:
+
+**The welcome-back gold doubler ships first** — the genre's most proven placement, offered as
+the *last* line of the away story, never in a first session, with one rule that closes a back
+door nobody had noticed: **ad-granted gold never feeds the well** (the cheat-gold flag,
+reused). Without that flag, ads would quietly mint Saved Seeds through the lifetime pool.
+
+**The Turn-pouch doubler is ruled out as stated, by two facts rather than taste:** a perfect
+year's Tally is ~×1.66, so a thirty-second ad granting ×2 would out-score playing well and the
+Tally would stop being the economic teacher; and the comparable everyone assumes does this —
+Egg Inc — actually doubles *earnings*, never the prestige currency, letting sub-linear prestige
+math absorb the boost. The same "I got more" feeling ships as gold doublers instead.
+
+**The never-sell table is now written down with reasons attached**, because every entry will be
+proposed again someday by someone reasonable: no Saved Seeds or petals for money ever, no seed
+unlock skips, no early season gates, no Century Bloom time (sell it a cosmetic pot, never the
+exit), no second blessing, no offline-cap lever, no Wonder extensions, no paid random packs.
+The two promises above the table: the forever money is never for sale, and the sacred moments
+stay clean — offers live on summary screens, after the fireworks.
+
+**The store shelf settles the piggy-bank currency question the hard way:** a Saved Seeds jar
+sells the Turn itself (never), a gold jar mints seeds through the well (never), so **the Gem
+Jar holds gems** — which is also exactly what Egg Inc's holds. Cosy build: never overflows,
+never expires, never nags. Cosmetic decor packs are named the cleanest sale in the game and
+the real answer to "what do gems buy."
+
+### Rejected
+
+**Every red-table entry above, each with its reason inline.** **The ad-refill Power-up button
+as a primary loop** — it survives only in the capped-bonus form where the free path never
+degrades; the moment scarcity exists to sell relief, it is energy in a costume. **Building any
+of this in the web build** — no ad SDK exists there and none will; the shell comes first.
+
+---
+
 ## 2026-08-30 (ruling) — The blessing stays as it is, and gets a creative brief instead of a fix
 
 **The owner's call, and their diagnosis is sharper than the advisor's was:** the blessing feels

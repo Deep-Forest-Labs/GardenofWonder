@@ -50,6 +50,7 @@ Read it before anything else if you're picking the project up cold.
 | [33-year-one-economy.md](33-year-one-economy.md) | You're tuning or building the Year's numbers — unlock prices, the mint, petal costs and effects, the launch six signatures, Fall's plants, migration, and the sim-test bill — **the engine half is built; the surfaces arrive in phases 2–3** |
 | [34-build-plan.md](34-build-plan.md) | You're building the Year or kicking off a builder session — the phases, the review gates, the critic gauntlet every phase runs, and the paste-ready prompts — **the build plan; phase 1 is built and reviewed, awaiting the owner's verdict** |
 | [36-hud-and-dock.md](36-hud-and-dock.md) | You're touching the dock, the HUD's bottom half, or the Turn button — the Big Five spec, what retires into it, and the gate questions — **owner-specced, not built** |
+| [37-monetization.md](37-monetization.md) | You're touching ads or purchases — the two promises, the ship-first placements, the store shelf, and the never-sell table with reasons — **the plan, owner picking, nothing built** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).
