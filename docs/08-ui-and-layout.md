@@ -679,10 +679,13 @@ booster activation, migration. Rare harvests deliberately don't qualify.
 overshoot on entry and scale away.
 
 **Coach marks** are absolutely positioned tooltips above their target — or **beside it when the
-target is a season tab** (`side-l` / `side-r`, arrow pointing sideways into the tab). Either shape is
-clamped above the band and above Fall's bed chip, and a side mark that the clamp pushes clear off its
-tab **flips back to the stacked shape** rather than pointing a sideways arrow at nothing; that is what
-happens in Fall at 390×667. They are suppressed while a sheet, a gate, the Hollow or the meadow is
+target is a season tab** (`side-l` / `side-r`, arrow pointing sideways into the tab). A side mark
+**looks for a gap** rather than only pushing upward: it tries the tab's midpoint, then just above and
+just below each of the three things that can be in the way (the UPGRADE pill, the POWER-UP button and
+Fall's bed chip), taking the candidate nearest the midpoint that clears them all and still lands on
+the tab. Beside a tall tab there is usually room *below* the chip as well as above it, which is where
+it sits in Fall at 390×844 and 390×812. When no gap exists at all it **flips back to the stacked
+shape** rather than pointing a sideways arrow at nothing; that is what happens in Fall at 390×667. They are suppressed while a sheet, a gate, the Hollow or the meadow is
 up. Repositioned on resize and every 0.6 s. The flower will not speak while one is visible.
 
 ## Dock attention dots

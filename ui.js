@@ -1042,36 +1042,44 @@
   function placeCoach() {
     if (!coachTarget || el.coach.hidden) return;
     const r = coachTarget.getBoundingClientRect();
-    /* NEVER OVER THE BAND, whichever shape the mark takes. A season tab's
-       midpoint is the same height as the UPGRADE pill and the POWER-UP button,
-       so a mark centred on it parked on top of them — over the very button the
-       round's own opening bag exists to teach — and in Fall at 390x667 it cut
-       through the bed chip that was moved out of the board's way an hour
-       earlier. Ask the things below where their tops are rather than guessing a
-       constant. */
-    const below = [el.btnUpgrade, el.btnPower, el.fallChip]
+    /* NOTHING THE PLAYER NEEDS GETS COVERED. A season tab's midpoint is the same
+       height as the UPGRADE pill and the POWER-UP button, so a mark centred on
+       it parked on top of them — over the very button the round's own opening
+       bag exists to teach — and in Fall it crossed the bed chip that was moved
+       out of the board's way an hour earlier. Ask those three where they are
+       rather than guessing a constant, and look for a gap rather than only
+       pushing upward: beside a tall tab there is usually room BELOW the chip as
+       well as above it. */
+    const blockers = [el.btnUpgrade, el.btnPower, el.fallChip]
       .map((n) => n && n.getBoundingClientRect())
-      .filter((b) => b && b.height > 0)
-      .map((b) => b.top);
-    const floor = below.length ? Math.min(...below) - 6 : Infinity;
+      .filter((b) => b && b.height > 0);
     if (coachWanted) {
       layOutCoach(coachWanted);
       const h = el.coach.offsetHeight;
-      const want = Math.min(r.top + r.height / 2 - h / 2, floor - h);
-      /* If the clamp pushes it clear off the tab, a sideways arrow is pointing
-         at nothing. Stand above the tab instead and point down — the house's
-         own shape, and the only honest one left on a short screen. */
-      if (want + h > r.top + 8) {
-        el.coach.style.top = `${Math.max(8, want)}px`;
-        el.coach.style.left = coachSide === 'l'
-          ? `${r.right + 6}px`
-          : `${Math.max(8, r.left - 6 - el.coach.offsetWidth)}px`;
+      const w = el.coach.offsetWidth;
+      const left = coachSide === 'l' ? r.right + 6 : Math.max(8, r.left - 6 - w);
+      const hits = blockers.filter((b) => b.right > left && b.left < left + w);
+      const clear = (top) => top >= 8 && hits.every((b) => top + h <= b.top - 6 || top >= b.bottom + 6);
+      /* A sideways arrow has to land on its tab, so every candidate must still
+         overlap it vertically. */
+      const onTab = (top) => top + h > r.top + 8 && top < r.bottom - 8;
+      const centred = r.top + r.height / 2 - h / 2;
+      const spot = [centred, ...hits.map((b) => b.top - 6 - h), ...hits.map((b) => b.bottom + 6)]
+        .filter((t) => clear(t) && onTab(t))
+        .sort((a, b) => Math.abs(a - centred) - Math.abs(b - centred))[0];
+      if (spot !== undefined) {
+        el.coach.style.top = `${spot}px`;
+        el.coach.style.left = `${left}px`;
         const sideTip = el.coach.querySelector('.tip');
         if (sideTip) sideTip.style.setProperty('--tip-shift', '0px');
         return;
       }
+      /* No gap beside the tab at all — a sideways arrow would be pointing at
+         nothing. Stand above it and point down instead: the house's own shape,
+         and the only honest one left on a screen this short. */
       layOutCoach('');
     }
+    const floor = blockers.length ? Math.min(...blockers.map((b) => b.top)) - 6 : Infinity;
     const cx = r.left + r.width / 2;
     el.coach.style.left = `${cx}px`;
     el.coach.style.top = `${Math.max(8, Math.min(r.top - el.coach.offsetHeight - 6, floor - el.coach.offsetHeight))}px`;
