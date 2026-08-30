@@ -422,7 +422,7 @@ you hold**, not what you can buy ([15-navigation-and-ia.md](15-navigation-and-ia
 | Change | Detail |
 | --- | --- |
 | Inventory | `state.boostInv = { bloom: 0, seedrush: 0, fortune: 0, golden: 0 }` |
-| Sources | Quest rewards, level-ups, daily quest, Almanac milestones. Later: orders, rewarded video. |
+| Sources | The opening bag, quest rewards, level-ups, the daily quest, Almanac milestones. Later: orders, rewarded video. **Audited 2026-08-30: no source is re-earnable by Turning** — see [04-economy.md](04-economy.md#every-faucet-audited-2026-08-30). |
 | Rail | Renders held boosts as tappable chips; tap consumes one and activates it. Active boosts keep the existing countdown chip. Nothing renders when you hold none. |
 | Wallet | Remove tickets from the HUD. Two wallets, credits and gems. |
 | Migration | `gems += round(tickets / 5)`, once, behind a flag, with a toast. Copy the decor-refund migration. |
@@ -434,9 +434,17 @@ No purchase path for boosts. Gems keep decor as their sink. If playtesting shows
 the documented fallback is gem pricing at 1 gem = 5 old tickets — but try scarcity first, because a
 boost you were given at the right moment reads as a gift and a boost you bought reads as a tax.
 
-Ladder gifts: hive → Seed Rush, Flower Tea → Golden Popups, Rare → Fortune Aura, Epic → Fortune
-Aura, combo 55 → Bloom Burst. Levels 3 / 6 / 9 / 12 / 15 grant Bloom Burst, Seed Rush, Golden
-Popups, Fortune Aura, Bloom Burst.
+Ladder gifts, reshaped 2026-08-30 so the first days are rich and the curve tapers:
+
+- **Quests:** harvest a bloom → Golden Popups ×2, harvest 5 daisies → Bloom Burst ×2, hive → Seed
+  Rush, Flower Tea → Golden Popups, discover 8 → Golden Popups, Rare → Fortune Aura, Epic → Fortune
+  Aura, combo 55 → Bloom Burst. **Adding a reward changes no rep, so the ladder still totals 777.**
+- **Levels 2 / 3 / 4 / 5 / 6 / 7 / 8** grant Bloom Burst ×2, Golden Popups ×2, Seed Rush, Bloom
+  Burst ×2, Fortune Aura, Golden Popups ×2, Seed Rush — then **10 / 12 / 15** grant one each of
+  Bloom Burst, Fortune Aura, Golden Popups, and the faucet is finished.
+- **`n` on a grant is the density knob.** `DATA.levelGrants[level].n` and `reward.n` on a quest are
+  both optional and both default to one copy. Turn the early rungs down there rather than deleting
+  them, so the shape of the curve stays readable.
 
 **Sim-test:** migration converts tickets at the stated rate exactly once; activating a held boost
 decrements inventory and sets the timer; activating with none held is a no-op.

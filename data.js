@@ -306,6 +306,17 @@ const DATA = {
     { id: 'golden',   name: 'Golden Popups', dur: 30,   icon: 'coin',    tint: '#ffc93c', effects: { globalCredits: 0.25 },             desc: '+25% credits from all sources for 30s.' }
   ],
 
+  /* THE OPENING BAG — what a brand-new garden starts with in the power-up seat.
+     A player learns the seat exists by having something in it; an empty one on
+     day one teaches nothing and the button reads as decoration. Handed out once,
+     at the moment a save is created (and by the Settings reset, which costs
+     everything) — never by the Turn, which clears the bag and never refills it.
+     Short boosters, deliberately: a boost already running cannot be refreshed,
+     so a bag of half-hour auras is a bag the first session cannot spend. Seed
+     Rush is the one long one, because the first thing a new garden does is wait
+     for a daisy. Provisional; deep tuning is phase 4's. */
+  startingBoosts: { bloom: 2, golden: 1, seedrush: 1 },
+
   /* Indices 0–3 start open. The rest become buyable at these levels, then cost gold.
      Since the Garden Year they also wait for the first Turn — see year.plotTurnGate. */
   plotUnlockLevel: [1, 1, 1, 1, 3, 6, 9, 12],
@@ -458,12 +469,31 @@ const DATA = {
   levelCoinGrant: 20,
   harvestRepEvery: 10,
   harvestRepGrant: 1,
+  /* THE POWER-UP CURVE, reshaped 2026-08-30 on the owner's ruling: a new
+     player's first days are RICH with power-ups and near-always-active, and the
+     generosity tapers as the rest of the game opens up. Rungs 2-8 are the first
+     days (levels 2-8 are 10, 25, 45, 70, 100, 135 and 175 lifetime reputation,
+     which is roughly the first two sessions); 10, 12 and 15 are the taper; after
+     15 the faucet is done and the game has quests, the Almanac and the Stand
+     instead. `n` is the number of copies, and it is the density knob — turn the
+     early rungs down here rather than deleting them, so the shape stays legible.
+     The long boosters are spaced on purpose: one cannot be refreshed while it
+     runs, so Fortune Aura's half hour and Seed Rush's ten minutes are what make
+     the first session near-always-active, and the 30-second pair is what makes
+     it feel busy. NONE of this is re-earnable by Turning — the ladder is keyed
+     on lifetime reputation, which the Turn never touches. Provisional values;
+     deep tuning is phase 4's. */
   levelGrants: {
-    3: { boost: 'bloom' },
-    6: { boost: 'seedrush' },
-    9: { boost: 'golden' },
-    12: { boost: 'fortune' },
-    15: { boost: 'bloom' },
+    2: { boost: 'bloom', n: 2 },
+    3: { boost: 'golden', n: 2 },
+    4: { boost: 'seedrush', n: 1 },
+    5: { boost: 'bloom', n: 2 },
+    6: { boost: 'fortune', n: 1 },
+    7: { boost: 'golden', n: 2 },
+    8: { boost: 'seedrush', n: 1 },
+    10: { boost: 'bloom', n: 1 },
+    12: { boost: 'fortune', n: 1 },
+    15: { boost: 'golden', n: 1 },
     18: { hive: 1 },
     19: { decor: 'shrine' },
     20: { gems: 5 }
@@ -507,8 +537,8 @@ const DATA = {
   quests: [
     { id: 'q_tap_25',      text: 'Tap 25 times',            track: 'tap',     qty: 25,  rep: 5 },
     { id: 'q_plant_1',     text: 'Plant a seed',            track: 'plant',   qty: 1,   rep: 5 },
-    { id: 'q_harvest_1',   text: 'Harvest a bloom',         track: 'harvest', qty: 1,   rep: 5 },
-    { id: 'q_daisy_5',     text: 'Harvest 5 daisies',       track: 'harvest', key: 'daisy',    qty: 5,  rep: 8 },
+    { id: 'q_harvest_1',   text: 'Harvest a bloom',         track: 'harvest', qty: 1,   rep: 5,  reward: { boost: 'golden', n: 2 } },
+    { id: 'q_daisy_5',     text: 'Harvest 5 daisies',       track: 'harvest', key: 'daisy',    qty: 5,  rep: 8,  reward: { boost: 'bloom', n: 2 } },
     { id: 'q_power_1',     text: 'Buy Power Punch',         track: 'upgrade', key: 'tapPower', qty: 1,  rep: 8 },
     { id: 'q_tap_50',      text: 'Tap 50 times',            track: 'tap',     qty: 50,  rep: 10, after: 'q_power_1' },
     { id: 'q_tulip_3',     text: 'Harvest 3 tulips',        track: 'harvest', key: 'tulip',    qty: 3,  rep: 10 },

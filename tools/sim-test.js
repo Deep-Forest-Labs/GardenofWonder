@@ -5538,6 +5538,131 @@ check('plotGate never disagrees with plotAvailable',
   S.grid.every((c, i) => (G.plotGate(i) === '') === G.plotAvailable(i)));
 G.reset();
 
+group('bill 1c — no power-up faucet is re-earnable by Turning');
+/* THE OWNER'S RULING, 2026-08-30: nothing that pays a power-up may be
+   re-earnable through the year loop. Nothing was, when this was written — so
+   this group is a tripwire, not a fix, and it is written to FAIL if a future
+   faucet is ever hung off something the Turn resets.
+
+   Every assertion below seeds the faucet as already-paid, runs a real Turn,
+   and then attempts the re-earn. A test that only checked `boostInv` is zero
+   after a Turn would pass on a save with no guard at all — the Turn clears the
+   bag either way. The re-earn attempt is the part that has to be refused. */
+const FAUCET_LEDGERS = ['quests', 'rep', 'level', 'discovered', 'almanacClaimed'];
+check('every ledger a power-up faucet is keyed on survives the Turn',
+  FAUCET_LEDGERS.every((k) => SURVIVES.indexOf(k) !== -1),
+  `${FAUCET_LEDGERS.filter((k) => SURVIVES.indexOf(k) === -1)} are in the cleared column`);
+check('and no faucet is keyed on anything the Turn changes',
+  FAUCET_LEDGERS.every((k) => CHANGED_BY_THE_TURN.indexOf(k) === -1));
+
+/* Every faucet in the game, listed from the data rather than by hand, so a new
+   booster or a new rung joins the audit automatically. */
+const BOOST_QUESTS = DATA.quests.filter((q) => q.reward && q.reward.boost && !q.paused);
+const BOOST_RUNGS = Object.keys(DATA.levelGrants || {}).filter((k) => DATA.levelGrants[k].boost);
+const BOOST_MILES = (DATA.almanacMilestones || []).filter((m) => m.boost);
+check('the audit sees every faucet the data declares',
+  BOOST_QUESTS.length > 0 && BOOST_RUNGS.length > 0 && BOOST_MILES.length > 0,
+  `${BOOST_QUESTS.length} quests, ${BOOST_RUNGS.length} rungs, ${BOOST_MILES.length} milestones`);
+
+/* F1 — the quest ladder. */
+G.reset();
+clearGarden();
+const farmQuest = BOOST_QUESTS[0];
+S.quests.active = [{ id: farmQuest.id, progress: farmQuest.qty }];
+const farmBagBefore = S.boostInv[farmQuest.reward.boost];
+const farmFirst = G.claimQuest(farmQuest.id);
+check('a boost-paying quest pays its power-up once',
+  farmFirst !== null && S.boostInv[farmQuest.reward.boost] === farmBagBefore + (farmQuest.reward.n || 1),
+  `${S.boostInv[farmQuest.reward.boost]} vs ${farmBagBefore} + ${farmQuest.reward.n || 1}`);
+S.credits = 400000;
+G.credit(400000);
+G.turnYear();
+check('the Turn does not put a claimed quest back on the board',
+  S.quests.done.indexOf(farmQuest.id) !== -1 && S.quests.active.every((a) => a.id !== farmQuest.id));
+S.quests.active = [{ id: farmQuest.id, progress: farmQuest.qty }];
+check('and re-claiming it after the Turn is refused, so its power-up cannot be farmed',
+  G.claimQuest(farmQuest.id) === null && S.boostInv[farmQuest.reward.boost] === 0);
+
+/* F3 — the level ladder. */
+G.reset();
+clearGarden();
+const rungLevel = Number(BOOST_RUNGS[0]);
+const rungGrant = DATA.levelGrants[rungLevel];
+G.Dev.grantLevels(rungLevel - 1);
+check('crossing a boost rung pays it', S.level >= rungLevel
+  && S.boostInv[rungGrant.boost] >= (rungGrant.n || 1),
+  `level ${S.level}, ${rungGrant.boost} ${S.boostInv[rungGrant.boost]}`);
+const repAcrossTurn = S.rep;
+const levelAcrossTurn = S.level;
+G.credit(400000);
+G.turnYear();
+check('reputation and level are untouched by the Turn, so no rung can be re-crossed',
+  S.rep === repAcrossTurn && S.level === levelAcrossTurn, `${S.rep}/${S.level} vs ${repAcrossTurn}/${levelAcrossTurn}`);
+check('the Turn emptied the bag and nothing refilled it',
+  Object.values(S.boostInv).every((v) => v === 0));
+/* Walk one more level after the Turn. The rung just crossed must pay, and the
+   rung crossed BEFORE the Turn must not pay again — which is the whole ruling,
+   stated as an experiment rather than as an inspection of the save. */
+const nextRung = DATA.levelGrants[String(S.level + 1)] || {};
+G.Dev.grantLevels(1);
+check('walking one more level after the Turn pays only the NEW rung',
+  S.boostInv[rungGrant.boost] === (nextRung.boost === rungGrant.boost ? (nextRung.n || 1) : 0)
+  && (!nextRung.boost || S.boostInv[nextRung.boost] === (nextRung.n || 1)),
+  `${JSON.stringify(S.boostInv)} after rung ${S.level}, expected only ${nextRung.boost || 'nothing'}`);
+
+/* F4 — the Almanac. */
+G.reset();
+clearGarden();
+const mile = BOOST_MILES[0];
+S.almanacClaimed = [mile.at];
+const milesClaimedBefore = S.almanacClaimed.slice();
+G.credit(400000);
+G.turnYear();
+check('a claimed Almanac milestone stays claimed through the Turn',
+  same(S.almanacClaimed, milesClaimedBefore));
+DATA.seeds.slice(0, mile.at).forEach((sd) => { S.discovered[sd.id] = (S.discovered[sd.id] || 0) + 1; });
+check('and it pays nothing a second time',
+  G.almanacMilestones().filter((m) => m.at === mile.at).every((m) => m.claimed)
+  && Object.values(S.boostInv).every((v) => v === 0), JSON.stringify(S.boostInv));
+
+/* The opening bag — the one faucet that is not earned at all. */
+G.reset();
+check('a brand-new garden opens with exactly DATA.startingBoosts in the tray',
+  Object.keys(DATA.startingBoosts).every((id) => S.boostInv[id] === DATA.startingBoosts[id])
+  && DATA.boosters.every((b) => S.boostInv[b.id] === (DATA.startingBoosts[b.id] || 0)),
+  JSON.stringify(S.boostInv));
+check('every id in the opening bag is a real booster',
+  Object.keys(DATA.startingBoosts).every((id) => DATA.boosters.some((b) => b.id === id)));
+G.credit(400000);
+G.turnYear();
+check('the Turn takes the opening bag and never hands out another',
+  Object.values(S.boostInv).every((v) => v === 0), JSON.stringify(S.boostInv));
+
+/* The curve itself, asserted as a SHAPE rather than as numbers, so a phase-4
+   retune moves values without touching this file — but cannot quietly invert
+   the ruling and back-load the generosity. */
+const earlyRungs = BOOST_RUNGS.map(Number).filter((L) => L <= 8);
+const lateRungs = BOOST_RUNGS.map(Number).filter((L) => L > 8);
+const copiesAt = (L) => DATA.levelGrants[L].n || 1;
+check('the first days are rich: every level from 2 to 8 pays a power-up',
+  [2, 3, 4, 5, 6, 7, 8].every((L) => BOOST_RUNGS.indexOf(String(L)) !== -1),
+  `${BOOST_RUNGS.join(',')}`);
+check('and the generosity tapers: the early rungs pay more copies than the late ones',
+  earlyRungs.reduce((a, L) => a + copiesAt(L), 0) > lateRungs.reduce((a, L) => a + copiesAt(L), 0) * 2,
+  `${earlyRungs.reduce((a, L) => a + copiesAt(L), 0)} early vs ${lateRungs.reduce((a, L) => a + copiesAt(L), 0)} late`);
+check('a long booster is never stacked on one rung — one that is already running cannot be refreshed',
+  BOOST_RUNGS.every((L) => {
+    const g = DATA.levelGrants[L];
+    const b = DATA.boosters.find((x) => x.id === g.boost);
+    return !b || b.dur <= 60 || (g.n || 1) === 1;
+  }));
+check('the near-always-active claim holds: the first eight levels buy over half an hour of cover',
+  earlyRungs.reduce((a, L) => {
+    const g = DATA.levelGrants[L];
+    const b = DATA.boosters.find((x) => x.id === g.boost);
+    return a + (b ? b.dur * (g.n || 1) : 0);
+  }, 0) >= 1800);
+
 group('the Year survives a save round trip');
 G.reset();
 S.year = { number: 3, coinsEarned: 123456.78, turnsCompleted: 2,

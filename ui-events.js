@@ -152,8 +152,13 @@
     else if (g && g.boost) {
       const b = DATA.boosters.find((x) => x.id === g.boost);
       /* The tray is gone — a boost is loaded into the POWER-UP button now, and
-         this line is the first time most players meet either. */
-      body = b ? `${b.name} is loaded in the power-up button.` : 'A power-up is loaded and ready.';
+         this line is the first time most players meet either. A rung can pay
+         more than one copy, so the count has to be said or the second one looks
+         like a bug when the button refills. */
+      const n = g.boostN || 1;
+      body = b
+        ? (n > 1 ? `${n} × ${b.name} are waiting in the power-up button.` : `${b.name} is loaded in the power-up button.`)
+        : 'A power-up is loaded and ready.';
     }
     UI.toast({ title: `Level ${to}!`, body, art: Icons.get('star') });
     UI.showBanner(`Level ${to}!`, body, 2000);

@@ -668,8 +668,10 @@
        screens later. Six identical ticks beside six words is a wall of copy
        wearing a chip, and it teaches the same object twice in one ceremony. */
     /* Eleven chips across two rows, and every glyph has to be its own — Level
-       and Badges both wore the badge rosette, which is two facts in one icon on
-       the screen whose whole job is telling them apart. */
+       and Upgrades both wore the rosette, which is two facts in one icon on the
+       screen whose whole job is telling them apart. The icon id stays `badge`:
+       it is the fallback glyph for every upgrade card and renaming it blanks
+       them with no error. */
     const keeps = [['pouch', 'Seeds'], ['lock', 'Unlocks'], ['clover', 'Petals'],
       ['butterfly', 'Creatures'], ['cards', 'Cards'], ['star', 'Level']]
       .map(([ico, k]) => `<span class="chip">${Icons.get(ico)}${k}</span>`).join('')
@@ -685,7 +687,7 @@
     /* WHAT THE TURN TAKES, named before it is taken. The ask used to name only
        the growing plots, and told an empty board that the Turn "costs you
        nothing at all" — which is false on every board: gold zeroes to the fresh
-       purse, every badge wipes and is rebought, boosts go, and plots 5-8 close.
+       purse, every upgrade wipes and is rebought, power-ups go, and plots 5-8 close.
        Doc 32's clears column, said to the player in their own words. An
        irreversible commit may never understate its own price. */
     const bigPlots = S.grid.filter((c, i) => !c.locked && Game.plotUnlockLevel(i) > 1).length;
@@ -693,7 +695,7 @@
        the row's own heading carries the verb, so the chips do not have to. */
     const goes = [
       [`${Icons.get('coin')}Gold`, true],
-      [`${Icons.get('badge')}Badges`, Object.values(S.upgrades || {}).some((v) => v > 0)],
+      [`${Icons.get('badge')}Upgrades`, Object.values(S.upgrades || {}).some((v) => v > 0)],
       [`${Icons.get('bolt')}Power-ups`, Object.values(S.boostInv || {}).some((v) => v > 0)],
       [`${Icons.get('grid')}${bigPlots} big plot${bigPlots === 1 ? '' : 's'}`, bigPlots > 0],
       [`${Icons.get('sprout')}${growing} growing`, growing > 0]
@@ -1047,7 +1049,8 @@
        carries the rest once it is lit. */
     if (def.reward && def.reward.boost) {
       const b = DATA.boosters.find((x) => x.id === def.reward.boost);
-      if (b) bits.push(`${b.name} (${fmtTime(b.dur)})`);
+      const n = def.reward.n || 1;
+      if (b) bits.push(`${n > 1 ? `${n} × ` : ''}${b.name} (${fmtTime(b.dur)})`);
     }
     return bits.join(' · ');
   }

@@ -1103,7 +1103,7 @@ a choice, and a stuck board is an uninstall.
 **Reputation is PAUSED here, behind `STAND.repPaused`** (owner's ruling, 2026-08-30). Orders keep
 paying gold and keep counting the Tally's `orders` line; the standing waits for slice D's rungs
 past level 20, because a three-line tier-4 order pays more standing than the largest quest in the
-game and `DATA.levelGrants` stops at 20.
+game and `DATA.levelGrants` stops at 20 (and its power-up rungs stop at 15).
 
 The pause is a **read**, not a rewrite. An order still authors its `rep` at generation and still
 carries it in the save; `Game.standOrderRep(order)` returns `0` while the flag is on, and

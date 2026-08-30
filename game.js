@@ -205,6 +205,7 @@ const Game = (() => {
     if (!raw && legacy) { raw = legacy; migrated = true; }
     if (!raw) {
       ensureProgression();
+      giveOpeningBag();
       return { migrated: false, fresh: true };
     }
     try {
@@ -623,6 +624,7 @@ const Game = (() => {
     stripHeld = null;
     stripFrom = '';
     ensureProgression();
+    giveOpeningBag();
     emit('grid');
     emit('panels');
     emit('currency');
@@ -1481,7 +1483,20 @@ const Game = (() => {
     if (!reward) return;
     if (reward.credits) credit(reward.credits);
     if (reward.gems) state.gems += reward.gems;
-    if (reward.boost) giveBoost(reward.boost);
+    /* `n` is the copy count and it stays OPTIONAL on the id: three panels and
+       two toasts read `reward.boost` as a bare booster id, so widening it into
+       an array would break them all while the headless suite stayed green. */
+    if (reward.boost) giveBoost(reward.boost, reward.n);
+  }
+
+  /* WHAT A BRAND-NEW GARDEN OPENS WITH. Called from the two places that create
+     one — a load that finds no save, and the Settings reset — and from nowhere
+     else. Deliberately NOT part of `defaultState()`: that object is also the
+     backfill source for every save ever written, so a bag declared there would
+     be handed to any old save that predates `boostInv`. */
+  function giveOpeningBag() {
+    const bag = DATA.startingBoosts || {};
+    Object.keys(bag).forEach((id) => giveBoost(id, bag[id]));
   }
   function giveBoost(id, n) {
     const count = n || 1;
@@ -1689,7 +1704,7 @@ const Game = (() => {
     // `seed` stays in the shape but is never filled: levels stopped unlocking
     // seeds when the Garden Year's one-time prices took the gate over, and a
     // level-up toast announcing a seed it did not unlock would be a lie.
-    const out = { level, coins, seed: null, plot: null, hive: false, decor: null, gems: 0, boost: null };
+    const out = { level, coins, seed: null, plot: null, hive: false, decor: null, gems: 0, boost: null, boostN: 0 };
     const plotIdx = (DATA.plotUnlockLevel || []).findIndex((lv, i) => i > 3 && lv === level);
     if (plotIdx >= 0) out.plot = plotIdx;
     if (grant.hive) {
@@ -1712,8 +1727,9 @@ const Game = (() => {
       out.gems = grant.gems;
     }
     if (grant.boost) {
-      giveBoost(grant.boost);
+      giveBoost(grant.boost, grant.n);
       out.boost = grant.boost;
+      out.boostN = grant.n || 1;
     }
     return out;
   }

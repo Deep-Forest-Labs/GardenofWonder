@@ -426,10 +426,52 @@ of it.
 **Tier 1 and tier 2 are effectively one state.** Reputation passes 60 inside the first session, so a
 player stands at tier 1 for about twenty minutes and five deliveries. Tune them as a pair.
 
-## Boosters
+## Boosters — the power-ups
 
-Earned from quests, level-ups, the daily and Almanac milestones; stored in `boostInv`; activated from the rail. No
-ticket price.
+**The word a player reads is "power-ups."** "Boosters" is the internal name and the data key; the
+glossary in [32-the-garden-year.md](32-the-garden-year.md) carries the plain one.
+
+Earned, never bought. Stored in `boostInv`; activated from the power-up seat in the band. No ticket
+price and no gold price.
+
+### Every faucet, audited 2026-08-30
+
+The owner's ruling: **nothing that pays a power-up may be re-earnable through the year loop.**
+Audited faucet by faucet, and nothing was — the audit's value is that `bill 1c` in
+[tools/sim-test.js](../tools/sim-test.js) now fails if a future faucet is ever hung off something the
+Turn resets.
+
+| Faucet | Knob | Pays | Re-earnable by Turning? |
+| --- | --- | --- | --- |
+| **The opening bag** | `DATA.startingBoosts` | Bloom Burst ×2, Golden Popups ×1, Seed Rush ×1 | **No.** Handed out only where a save is *created* — a load that finds none, and the Settings reset. The Turn empties `boostInv` and never refills it. |
+| **The quest ladder** | `DATA.quests[].reward.boost` (+ optional `n`) | 1–2 copies on eight live quests | **No.** `state.quests` survives the Turn verbatim, and `claimQuest()` refuses an id already in `done`. |
+| **The daily quest** | `DATA.dailies[].reward.boost` | 1 | **No — by Turning.** Once per *calendar day*, on the device clock, which the Turn does not touch. Rolling the system date forward is a live cheat and is recorded in [11-known-issues.md](11-known-issues.md); it is not a year-loop farm. |
+| **The level ladder** | `DATA.levelGrants` (+ `n`) | 1–2 copies on ten rungs, levels 2–15 | **No.** `rep` and `level` survive the Turn and never decrease, so a rung once crossed cannot be crossed again. |
+| **Almanac milestones** | `DATA.almanacMilestones[].boost` | 1 each at 5 / 10 / 15 / 19 species | **No.** `almanacClaimed` and `discovered` both survive the Turn. |
+| **Developer tools** | — | 1 of each, unlimited | Yes, deliberately. The cheat buttons stay live until there is a real audience. |
+
+### The curve: rich first, tapering after
+
+Reshaped 2026-08-30, on the ruling that **a new player's first days should be rich with power-ups,
+near-always-active**, with the generosity thinning as the rest of the game opens up. Provisional
+values, and deep tuning is phase 4's.
+
+- **Before any level:** the opening bag, so the seat is never empty on the first day. The button
+  teaches itself by having something in it.
+- **Levels 2–8** (10, 25, 45, 70, 100, 135 and 175 lifetime reputation — roughly the first two
+  sessions) **every rung pays**: `bloom ×2`, `golden ×2`, `seedrush`, `bloom ×2`, `fortune`,
+  `golden ×2`, `seedrush`. That is **50 minutes of cover** bought inside the first days, which is
+  what "near-always-active" means in practice.
+- **Levels 10, 12, 15** pay one copy each — the taper.
+- **After 15 the level faucet is done**, and quests, the Almanac and the Stand carry it.
+- **The first three quests a player ever finishes** now pay too: *Harvest a bloom* → Golden Popups
+  ×2, *Harvest 5 daisies* → Bloom Burst ×2. Rep values are untouched, so the ladder still totals 777.
+
+**Why the short boosters are front-loaded.** A boost already running cannot be refreshed
+(`activateBoost()` refuses), so a bag of half-hour auras is a bag the first session cannot spend.
+The 30-second pair is what makes the first minutes feel busy; Seed Rush's ten minutes and Fortune
+Aura's half hour are what actually cover the clock. `bill 1c` asserts that no rung stacks copies of
+a long booster.
 
 | Booster | Duration | Effect key | Value |
 | --- | --- | --- | --- |

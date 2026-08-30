@@ -30,6 +30,8 @@ Agents talking to the owner lead with the feel and keep the math in the docs.
 | **The Year** | One playthrough of your garden, spring to the Turn |
 | **The Turn** | The prestige moment: end the year, cash it in, start fresh with permanent bonuses. Never the word "reset" |
 | **Gold** | The year's money. Spend it freely — it goes away at the Turn |
+| **Upgrades** | The in-year shop: harder taps, faster growth, automation. Bought with gold, wiped at the Turn and rebought — the rebuild is the ritual. Once called badges, and players never see that word |
+| **Power-ups** | The short surges — Bloom Burst, Seed Rush, Fortune Aura, Golden Popups. Earned, never bought, and never re-earnable by Turning |
 | **Saved Seeds** | The forever money. You only get them at the Turn; they buy petals; you never lose them |
 | **The well** | Everything you've *ever* earned feeds one deep well of Saved Seeds. Each Turn scoops out what's new. Turn often = small scoops, wait = one big scoop — same total either way, so there's no wrong rhythm |
 | **The meter** | Fills as your year grows; pulses when a Turn is ready. Lives in the dock's Turn button |
@@ -242,7 +244,7 @@ Owner-decided 2026-08-29: **the Turn clears the fast annuals in the main garden 
 | --- | --- |
 | Summer's planted plots — see the in-flight rules below | **Any running long timer, anywhere** — Winter sleepers, a mid-grow Century Bloom. A reset that eats a two-week plant is the one unforgivable version of this |
 | Gold — zeroed to `defaultState`'s 100 starting coins, after the mint | Saved Seeds, petals, seed **unlocks** (one-time prices stay paid), and the mint's two ledgers — `lifetimeCoins` (never written except by `credit()`) and `mintedBase` (only ever grows, at the Turn, by the un-tallied increment) |
-| **Every key in `state.upgrades`** — the tap badges, the three procs, Sprinklers, Land Deed, the drone and all eight harvesters. The rebuild is the ritual, and `tap.power` / `comboMax` / crit fields are **re-derived immediately after the wipe** | Creatures, stars, the Hollow and everything in it; food clocks run on real time throughout |
+| **Every key in `state.upgrades`** — the tap upgrades, the three procs, Sprinklers, Land Deed, the drone and all eight harvesters. The rebuild is the ritual, and `tap.power` / `comboMax` / crit fields are **re-derived immediately after the wipe** | Creatures, stars, the Hollow and everything in it; food clocks run on real time throughout |
 | Plots 5–8 close (gold rebuy from Turn 1 on — **they cannot be bought at all in year one**, so Turn 1's gift is Fall *and* the right to a bigger garden; migrated saves keep what they owned) | Lifetime reputation and level; the Almanac's lifetime records (`discovered`, `bestRarity`, `rarityCounts`) |
 | Boost inventory; the combo zeroes with the board; an *active* boost or called sky simply expires on its own clock | Cards, packs, gems, mementos, decorations |
 | The Stand's open slots (all of them) regenerate with `nextAt = now`, drawing flower lines from `seedUnlocks` only — no order may name a bloom the fresh year cannot yet grow | Fall / Winter / Spring gardens and their contents; `quests.active` keep their progress; the daily quest keeps its day |
@@ -282,7 +284,7 @@ craft and sell but which no customer will take. Spec, measurement and test bill 
 **Gold is the year's money; Saved Seeds are the forever money.** Neither buys the other's things,
 so no purchase ever competes with the player's future:
 
-- **Gold** — earned all year; buys badges, plots, plants and seed unlocks; zeroed at the Turn
+- **Gold** — earned all year; buys upgrades, plots, plants and seed unlocks; zeroed at the Turn
   *after* minting.
 - **Saved Seeds** — minted **once, at the Turn, from the whole year's earnings** (never from the
   leftover balance — the hoarding failure is quantified in
