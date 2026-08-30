@@ -416,8 +416,9 @@ short, grey `MAX`. Only the price chip is the button, so a mis-tap on the row ca
 before they have ever bought a petal. Every track now carries its plain sentence: *"+30% gold on this
 flower's harvests, per petal."* / *"Grows 6% faster, per petal."* The sentence is authored in
 `DATA.petals.shared[skill].desc` with a `{v}` token where the panel writes `value` back in, so the
-percentage in the prose can never disagree with the effect — the two upgrade descriptions that typed
-their numbers by hand have both already drifted from the code.
+percentage in the prose can never disagree with the effect. Every other hand-typed number in
+`DATA.upgrades` and `DATA.verbs` was checked against the code on 2026-08-30 and all of them still
+match — the point is that they are copies, and a copy only has to be right until someone retunes.
 
 **At zero pips the sentence replaces the value line**, because `petalValue()` collapses there to the
 same number the sentence already carries. From one pip on both are drawn: the value line reports what
@@ -677,8 +678,12 @@ booster activation, migration. Rare harvests deliberately don't qualify.
 **Banners** are the full-screen centred announcement, used only for Wonder start and end. They
 overshoot on entry and scale away.
 
-**Coach marks** are absolutely positioned tooltips above their target, repositioned on resize and
-every 0.6 s. Suppressed while a sheet is open. The flower will not speak while one is visible.
+**Coach marks** are absolutely positioned tooltips above their target — or **beside it when the
+target is a season tab** (`side-l` / `side-r`, arrow pointing sideways into the tab). Either shape is
+clamped above the band and above Fall's bed chip, and a side mark that the clamp pushes clear off its
+tab **flips back to the stacked shape** rather than pointing a sideways arrow at nothing; that is what
+happens in Fall at 390×667. They are suppressed while a sheet, a gate, the Hollow or the meadow is
+up. Repositioned on resize and every 0.6 s. The flower will not speak while one is visible.
 
 ## Dock attention dots
 

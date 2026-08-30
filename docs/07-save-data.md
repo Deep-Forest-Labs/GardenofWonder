@@ -102,8 +102,16 @@ its reward twice.
 **`seen` flags are backfilled from play evidence in `load()`.** Like the other nested objects it is
 merged defaults-first, so a save predating a flag reads back `false` and re-runs onboarding for a
 player who is plainly past it. `intro` is inferred from `stats.totalTaps || stats.totalHarvests`,
-`plot` from `stats.totalHarvests` or any occupied plot. **A new `seen` flag needs its own line**,
-the same rule as a new badge key. Covered by the suite.
+`plot` from `stats.totalHarvests` or any occupied plot; `fallSwipe` and `gardenSwipe` from Fall
+itself — a paid bed (`fall.bedPaid`) or any `fall.grid` cell with a seed is proof the player found
+Fall and came back. `meadow` deliberately has **none**, because nobody has seen the line it gates.
+**A new `seen` flag needs its own line**, the same rule as a new upgrade key. Covered by the suite.
+
+**A written fresh save carries power-ups that `defaultState()` does not.** `giveOpeningBag()` puts
+`DATA.startingBoosts` into `boostInv` at the three points where a save is *created* — a load that
+finds none, a load whose save will not parse, and the Settings reset. It is deliberately not part of
+`defaultState()`, because that object is also the backfill source for every save ever written, and a
+bag declared there would be handed to any old save predating `boostInv`.
 
 **`prefs.music` defaults to `false`.** Deliberate: unrequested audio on load is hostile.
 

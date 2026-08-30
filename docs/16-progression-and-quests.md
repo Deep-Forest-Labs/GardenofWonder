@@ -436,9 +436,10 @@ boost you were given at the right moment reads as a gift and a boost you bought 
 
 Ladder gifts, reshaped 2026-08-30 so the first days are rich and the curve tapers:
 
-- **Quests:** harvest a bloom → Golden Popups ×2, harvest 5 daisies → Bloom Burst ×2, hive → Seed
-  Rush, Flower Tea → Golden Popups, discover 8 → Golden Popups, Rare → Fortune Aura, Epic → Fortune
-  Aura, combo 55 → Bloom Burst. **Adding a reward changes no rep, so the ladder still totals 777.**
+- **Quests, the seven live ones:** harvest a bloom → Golden Popups ×2, harvest 5 daisies → Bloom
+  Burst ×2, hive → Seed Rush, discover 8 → Golden Popups, Rare → Fortune Aura, Epic → Fortune Aura,
+  combo 55 → Bloom Burst. (An eighth, Flower Tea → Golden Popups, is authored but `paused`.)
+  **Adding a reward changes no rep, so the ladder still totals 777.**
 - **Levels 2 / 3 / 4 / 5 / 6 / 7 / 8** grant Bloom Burst ×2, Golden Popups ×2, Seed Rush, Bloom
   Burst ×2, Fortune Aura, Golden Popups ×2, Seed Rush — then **10 / 12 / 15** grant one each of
   Bloom Burst, Fortune Aura, Golden Popups, and the faucet is finished.
@@ -753,7 +754,7 @@ here so the retired design is legible, not as a description of the suite:
 What replaced the retired half: the ladder is asserted **flat** — no harvest advances a tier,
 pays a mastery gem, or moves a multiplier — and petals carry the per-seed yield instead. See
 [33-year-one-economy.md](33-year-one-economy.md) and the `bill 13` groups in
-`tools/sim-test.js`, which now runs 1,353 assertions.
+`tools/sim-test.js`, which now runs 1,384 assertions.
 
 **Trap the build found:** mastery multiplies harvest payout and climbs as a run proceeds, so any
 sim-test measuring a *different* harvest multiplier over thousands of harvests has to reset the

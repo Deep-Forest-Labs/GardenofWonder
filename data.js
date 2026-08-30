@@ -432,10 +432,10 @@ const DATA = {
 
        `desc` is the plain sentence a player reads BEFORE buying anything, and
        `{v}` is where the panel writes `value` back in. The number is written
-       once, here, and interpolated — a hand-typed "+30%" in the prose is the
-       first copy of a value this file otherwise keeps in exactly one place, and
-       the two upgrade descs that did that have both already drifted from the
-       code they describe. */
+       once, here, and interpolated — a hand-typed "+30%" in the prose would be
+       the first copy of a value this file otherwise keeps in exactly one place,
+       and every upgrade desc that quotes a number is exactly such a copy,
+       correct only until someone retunes it. */
     shared: {
       rich:  { name: 'Rich Bloom',   cap: 5, value: 0.30, desc: '+{v} gold on this flower\u2019s harvests, per petal.' },
       quick: { name: 'Quick Sprout', cap: 5, value: 0.06, desc: 'Grows {v} faster, per petal.' }

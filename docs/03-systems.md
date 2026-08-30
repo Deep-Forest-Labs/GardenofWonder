@@ -598,10 +598,16 @@ instance and increment from game events — they never read `state.flowers`. Ful
 
 ## Boosters
 
-Earned inventory in `state.boostInv`, timed once activated, and stackable across different
-boosters. Activating one that's already running is a no-op — the rail hides the hold-chip while
+Inventory in `state.boostInv`, timed once activated, and stackable across different
+boosters. Activating one that's already running is a no-op — the seat hides the hold-chip while
 that boost's countdown is up, so you cannot spend a second copy to refresh. No shop panel and no
-purchase path. A held booster surfaces as a chip in the status rail, tap to consume one. See
+purchase path. A held booster surfaces in the **power-up button in the band**, tap to spend one.
+
+**Mostly earned, but not entirely: a brand-new garden opens with `DATA.startingBoosts` already in
+the bag.** `giveOpeningBag()` is called only where a save is *created* — a load that finds none, a
+load whose save will not parse, and the Settings reset — so the Turn can never mint one. The full
+faucet audit, and the rule that nothing paying a power-up may be re-earnable through the year loop,
+is in [04-economy.md](04-economy.md#every-faucet-audited-2026-08-30). See
 [15-navigation-and-ia.md](15-navigation-and-ia.md) and
 [16-progression-and-quests.md](16-progression-and-quests.md).
 

@@ -752,7 +752,8 @@ were fixed that day — see [10-decision-log.md](10-decision-log.md) — and the
 
 `style.css` still carries **16 distinct corner radii** in a system documented as having three
 (12 / 18 / 26, plus `999px` and `50%`), and **11 distinct border widths** from `1.5px` to `11px` in
-a system whose rule is "3px ink on everything". `border-radius:14px` alone appears 13 times.
+a system whose rule is "3px ink on everything". `border-radius:14px` alone appears 12 times (13
+before the Cards pass snapped three of its own to the ladder).
 
 **Left out of the 2026-08-26 pass on purpose.** Every other item in that pass was a material change
 that could be verified by eye against the garden. Radius and border are *geometry*: changing them
@@ -765,8 +766,9 @@ cards / plots / dock to 18, the board to 26, and everything already at `999px` o
 
 ### Raw hex where a token exists
 
-`#2c1a10` is written out **32 times** instead of `var(--ink)`, and `style.css` holds **147 distinct
-hex values** against the 22 the palette names. Nobody chose most of them; they accreted. The ink can
+`#2c1a10` is written out **26 times** instead of `var(--ink)`, and `style.css` holds **176 distinct
+hex values** against the 22 the palette names (re-counted 2026-08-30, comments stripped; the Cards
+pass moved both). Nobody chose most of them; they accreted. The ink can
 never be adjusted globally while this is true, which undoes the reason for having tokens at all.
 
 ### ~~`.card-desc` is the last `opacity: .7` description text~~ — DONE 2026-08-30 (phase 3.8)
@@ -860,7 +862,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,353 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,384 assertions over the
 economy, progression, saves and mastery. Everything above that line — the six `ui-*` files,
 layout, the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI

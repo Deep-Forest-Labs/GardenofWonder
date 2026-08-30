@@ -574,6 +574,11 @@ const Game = (() => {
       };
     } catch (err) {
       console.warn('Save load failed', err);
+      /* This branch reports `fresh: true`, so it IS a new garden as far as the
+         rest of the game is concerned — and it has to open with the same bag,
+         or a player whose save was truncated gets a garden with an empty
+         power-up seat and no way to tell why. */
+      giveOpeningBag();
       return { migrated: false, fresh: true };
     }
   }
@@ -1499,9 +1504,9 @@ const Game = (() => {
     if (reward.boost) giveBoost(reward.boost, reward.n);
   }
 
-  /* WHAT A BRAND-NEW GARDEN OPENS WITH. Called from the two places that create
-     one — a load that finds no save, and the Settings reset — and from nowhere
-     else. Deliberately NOT part of `defaultState()`: that object is also the
+  /* WHAT A BRAND-NEW GARDEN OPENS WITH. Called from the three places that
+     create one — a load that finds no save, a load whose save will not parse,
+     and the Settings reset — and from nowhere else. Deliberately NOT part of `defaultState()`: that object is also the
      backfill source for every save ever written, so a bag declared there would
      be handed to any old save that predates `boostInv`. */
   function giveOpeningBag() {

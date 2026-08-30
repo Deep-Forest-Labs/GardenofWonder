@@ -444,7 +444,7 @@ Turn resets.
 | Faucet | Knob | Pays | Re-earnable by Turning? |
 | --- | --- | --- | --- |
 | **The opening bag** | `DATA.startingBoosts` | Bloom Burst ×2, Golden Popups ×1, Seed Rush ×1 | **No.** Handed out only where a save is *created* — a load that finds none, and the Settings reset. The Turn empties `boostInv` and never refills it. |
-| **The quest ladder** | `DATA.quests[].reward.boost` (+ optional `n`) | 1–2 copies on eight live quests | **No.** `state.quests` survives the Turn verbatim, and `claimQuest()` refuses an id already in `done`. |
+| **The quest ladder** | `DATA.quests[].reward.boost` (+ optional `n`) | 1–2 copies on seven live quests (eight authored; `q_tea` is paused) | **No.** `state.quests` survives the Turn verbatim, and `claimQuest()` refuses an id already in `done`. |
 | **The daily quest** | `DATA.dailies[].reward.boost` | 1 | **No — by Turning.** Once per *calendar day*, on the device clock, which the Turn does not touch. Rolling the system date forward is a live cheat and is recorded in [11-known-issues.md](11-known-issues.md); it is not a year-loop farm. |
 | **The level ladder** | `DATA.levelGrants` (+ `n`) | 1–2 copies on ten rungs, levels 2–15 | **No.** `rep` and `level` survive the Turn and never decrease, so a rung once crossed cannot be crossed again. |
 | **Almanac milestones** | `DATA.almanacMilestones[].boost` | 1 each at 5 / 10 / 15 / 19 species | **No.** `almanacClaimed` and `discovered` both survive the Turn. |
@@ -460,11 +460,14 @@ values, and deep tuning is phase 4's.
   teaches itself by having something in it.
 - **Levels 2–8** (10, 25, 45, 70, 100, 135 and 175 lifetime reputation — roughly the first two
   sessions) **every rung pays**: `bloom ×2`, `golden ×2`, `seedrush`, `bloom ×2`, `fortune`,
-  `golden ×2`, `seedrush`. That is **50 minutes of cover** bought inside the first days, which is
-  what "near-always-active" means in practice.
+  `golden ×2`, `seedrush`. That is **54 minutes of cover** bought inside the first days — 50 of it
+  from the three long boosters — on top of the opening bag's 11½, which is what
+  "near-always-active" means in practice. Two of those Fortune Auras are 41 of the 54 minutes, and a
+  rarity effect is the one a new player cannot see happening; the cover they *feel* is the
+  30-second pair.
 - **Levels 10, 12, 15** pay one copy each — the taper.
 - **After 15 the level faucet is done**, and quests, the Almanac and the Stand carry it.
-- **The first three quests a player ever finishes** now pay too: *Harvest a bloom* → Golden Popups
+- **The third and fourth quests a player finishes** now pay too: *Harvest a bloom* → Golden Popups
   ×2, *Harvest 5 daisies* → Bloom Burst ×2. Rep values are untouched, so the ladder still totals 777.
 
 **Why the short boosters are front-loaded.** A boost already running cannot be refreshed

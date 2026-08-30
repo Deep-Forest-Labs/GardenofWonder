@@ -16,7 +16,7 @@ Two income streams run at once:
 - **Idle** — seeds planted in plots mature on a timer and pay out on harvest, multiplied by a
   rarity roll.
 
-Coins buy seeds, plot unlocks, and badges. Badges make taps stronger, growth faster, and
+Coins buy seeds, plot unlocks, and upgrades. Upgrades make taps stronger, growth faster, and
 eventually automate both planting and harvesting, which is where the idle half of the genre
 takes over.
 

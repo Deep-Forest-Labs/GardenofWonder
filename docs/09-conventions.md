@@ -260,7 +260,7 @@ Before calling a change done:
 7. **Summon a Wonder** from Settings and watch it start and end.
 8. **Check a short viewport** (~640 px tall) — rail hidden, dock not stretched.
 9. **Rotate to landscape.**
-10. **Enable reduced motion** and confirm things calm down.
+10. **Enable reduced motion** and confirm every state that animates still *reads* when it does not — not merely that things calm down. `node tools/probe.js media:reduce page:index.html …` screenshots it.
 11. **Console must be clean.** No errors, no failed requests.
 
 If you touch save loading, test migration explicitly: seed an `igr-save`, clear `gw-save`, load, and

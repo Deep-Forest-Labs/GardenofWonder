@@ -1014,31 +1014,67 @@
        squarely on Fall's bed chip. Beside it, the mark reads as an arrow into
        the tab, which is also the direction the swipe goes. */
     coachSide = opts.side || '';
+    coachWanted = coachSide;
+    coachBase = `coach${opts.season ? ' season' : ''}`;
+    coachTip = `<div class="tip">${opts.swipe ? `<span class="c-swipe ${opts.swipe}">${Icons.get('swipe')}</span>` : ''}${text}</div>`;
     el.coach.hidden = false;
-    el.coach.className = `coach${opts.season ? ' season' : ''}${coachSide ? ` side-${coachSide}` : ''}`;
-    const finger = opts.swipe
-      ? `<span class="c-swipe ${opts.swipe}">${Icons.get('swipe')}</span>`
-      : '';
-    const tip = `<div class="tip">${finger}${text}</div>`;
-    const arrow = '<div class="arrow"></div>';
-    el.coach.innerHTML = coachSide === 'l' ? arrow + tip : tip + arrow;
+    /* Force the rebuild: layOutCoach() short-circuits on an unchanged class, and
+       a new mark can want the same shape with different words. */
+    el.coach.className = '';
+    layOutCoach(coachSide);
     placeCoach();
+  }
+  /* One mark, two shapes. Beside the target the arrow is a horizontal wedge and
+     comes first (or last) depending on which edge the target is on; above it,
+     the house's own stacked form. Rebuilt only when the shape actually changes
+     — this is read from the 0.6s tick. */
+  let coachWanted = '';
+  let coachBase = 'coach';
+  let coachTip = '';
+  function layOutCoach(side) {
+    const cls = `${coachBase}${side ? ` side-${side}` : ''}`;
+    if (el.coach.className === cls) return;
+    coachSide = side;
+    el.coach.className = cls;
+    const arrow = '<div class="arrow"></div>';
+    el.coach.innerHTML = side === 'l' ? arrow + coachTip : coachTip + arrow;
   }
   function placeCoach() {
     if (!coachTarget || el.coach.hidden) return;
     const r = coachTarget.getBoundingClientRect();
-    if (coachSide) {
-      const w = el.coach.offsetWidth;
+    /* NEVER OVER THE BAND, whichever shape the mark takes. A season tab's
+       midpoint is the same height as the UPGRADE pill and the POWER-UP button,
+       so a mark centred on it parked on top of them — over the very button the
+       round's own opening bag exists to teach — and in Fall at 390x667 it cut
+       through the bed chip that was moved out of the board's way an hour
+       earlier. Ask the things below where their tops are rather than guessing a
+       constant. */
+    const below = [el.btnUpgrade, el.btnPower, el.fallChip]
+      .map((n) => n && n.getBoundingClientRect())
+      .filter((b) => b && b.height > 0)
+      .map((b) => b.top);
+    const floor = below.length ? Math.min(...below) - 6 : Infinity;
+    if (coachWanted) {
+      layOutCoach(coachWanted);
       const h = el.coach.offsetHeight;
-      el.coach.style.top = `${Math.max(8, r.top + r.height / 2 - h / 2)}px`;
-      el.coach.style.left = coachSide === 'l'
-        ? `${r.right + 6}px`
-        : `${Math.max(8, r.left - 6 - w)}px`;
-      return;
+      const want = Math.min(r.top + r.height / 2 - h / 2, floor - h);
+      /* If the clamp pushes it clear off the tab, a sideways arrow is pointing
+         at nothing. Stand above the tab instead and point down — the house's
+         own shape, and the only honest one left on a short screen. */
+      if (want + h > r.top + 8) {
+        el.coach.style.top = `${Math.max(8, want)}px`;
+        el.coach.style.left = coachSide === 'l'
+          ? `${r.right + 6}px`
+          : `${Math.max(8, r.left - 6 - el.coach.offsetWidth)}px`;
+        const sideTip = el.coach.querySelector('.tip');
+        if (sideTip) sideTip.style.setProperty('--tip-shift', '0px');
+        return;
+      }
+      layOutCoach('');
     }
     const cx = r.left + r.width / 2;
     el.coach.style.left = `${cx}px`;
-    el.coach.style.top = `${Math.max(8, r.top - el.coach.offsetHeight - 6)}px`;
+    el.coach.style.top = `${Math.max(8, Math.min(r.top - el.coach.offsetHeight - 6, floor - el.coach.offsetHeight))}px`;
     /* THE ARROW STAYS ON THE TARGET; THE BUBBLE MOVES. A season tab sits 19px
        from the screen edge and the tip is `white-space:nowrap`, so a bubble
        centred on it runs half its width off the screen. Shifting the whole mark

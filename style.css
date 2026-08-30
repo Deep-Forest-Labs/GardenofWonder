@@ -2104,7 +2104,11 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .c-swipe{display:block;line-height:0;animation:coachDrag 1.5s ease-in-out infinite}
 .c-swipe svg{width:21px;height:21px;display:block;overflow:visible}
 .c-swipe.right svg{transform:scaleX(-1)}
-@keyframes coachDrag{0%,100%{transform:translateX(3px)}50%{transform:translateX(-3px)}}
+/* DIRECTIONAL, or `reverse` does nothing. A symmetric ease-in-out keyframe is
+   its own reverse, so the mirrored glyph was travelling both ways identically
+   and the slide — the half of the mark that says "drag" — carried no direction
+   at all. */
+@keyframes coachDrag{0%{transform:translateX(4px)}70%,100%{transform:translateX(-4px)}}
 .c-swipe.right{animation-direction:reverse}
 /* Beside the tab, not above it. `side-l` means the TAB is on the left, so the
    mark stands to its right with the arrow pointing back at it. The base
@@ -2303,19 +2307,25 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    runs green into gold, and the count in a cream capsule rather than painted on
    the bar. */
 .album-bar,.set-bar{
-  position:relative;display:block;height:20px;border-radius:999px;
+  position:relative;display:block;height:24px;border-radius:999px;
   background:rgba(44,26,16,.1);border:2.5px solid var(--ink);overflow:hidden;
 }
+/* THE RAMP BELONGS TO THE TRACK, NOT THE FILL. Painting the gradient inside a
+   narrow fill redraws the whole green-to-gold run inside it, so 8% looks as
+   finished as 100%. Scale a full-width bar instead, exactly as the Almanac's
+   meter and the quest bar do. */
 .album-bar i,.set-bar i{
-  position:absolute;inset:0 auto 0 0;border-radius:999px;
+  position:absolute;inset:0;width:100%;border-radius:999px;
   background:linear-gradient(90deg,#8ce99a,#ffe066);
+  transform:scaleX(0);transform-origin:left center;
 }
 .album-bar b,.set-bar b{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   padding:0 7px;border-radius:999px;
   border:2px solid var(--ink);
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
-  font-size:9.5px;font-weight:900;color:var(--ink);letter-spacing:.02em;line-height:1.5;
+  box-shadow:0 2px 0 var(--ink-2);
+  font-size:9.5px;font-weight:900;color:var(--ink);letter-spacing:.02em;line-height:1.25;
 }
 
 .set-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
@@ -2361,13 +2371,28 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
     0 8px 14px rgba(44,26,16,.24),
     0 0 0 4px #51cf66;
 }
+/* …and it still presses. `.done` is later than `:active` and the same
+   specificity, so without this the finished tile slid down 4px with its full
+   lip still under it — the one tile a player has actually completed. */
+.set-tile.done:active{
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.18),
+    inset 0 -7px 0 rgba(0,0,0,.2),
+    0 0 0 #4a2e1a,
+    0 4px 8px rgba(44,26,16,.22),
+    0 0 0 4px #51cf66;
+}
 /* The set's tint, under the white veil that lets a saturated token be used as a
    pale surface — the same move .seed-art makes for nineteen seed colours. */
 .set-ring{
   width:44px;height:44px;border-radius:50%;flex:none;
   display:grid;place-items:center;
+  /* A HIGHLIGHT, NOT A WASH. `.seed-art`'s full veil is tuned for saturated seed
+     colours; four of the twelve set tints are already near-cream, and veiling
+     them made four identical white discs — doc 05's own named failure, on the
+     one badge that now carries the set's identity. */
   background:
-    radial-gradient(circle at 34% 28%, rgba(255,255,255,.8), rgba(255,255,255,.34)),
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.5), transparent 62%),
     var(--set);
   border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2);
 }
@@ -2383,7 +2408,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   padding:9px 11px;border-radius:var(--r-sm);margin-bottom:12px;
   border:3px solid var(--ink);
   background:linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.46)), var(--set);
-  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.18);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
 }
 .setbar small{font-size:11px;font-weight:700;color:var(--ink-soft)}
 
@@ -2407,8 +2432,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   box-shadow:
     inset 0 4px 0 rgba(255,255,255,.4),
     inset 0 -6px 0 rgba(44,26,16,.07),
-    0 3px 0 var(--paper-dim-edge),
-    0 6px 10px rgba(44,26,16,.14);
+    0 4px 0 var(--paper-dim-edge),
+    0 8px 14px rgba(44,26,16,.14);
   color:var(--ink-soft);
 }
 /* box-shadow is ONE property, so every line of the base stack is restated here.
@@ -2475,11 +2500,18 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
     radial-gradient(circle at 26% 22%, rgba(255,255,255,.07) 0 9%, transparent 10%),
     radial-gradient(circle at 72% 62%, rgba(0,0,0,.07) 0 7%, transparent 8%),
     linear-gradient(180deg,#8a5a33 0%, #71472a 46%, #5c3a22 100%);
+  /* THE RING IS ITS OWN PROPERTY, not another line in this stack. `box-shadow`
+     is one property and `.pack-reveal:not(.is-new) .pack-card` and
+     `.pack-reveal.r-legend .pack-card` are the same specificity — so the later
+     rule won outright and a spare Legendary wore the DARK body's lip and bruise
+     on a cream body. The two facts are independent; they get two properties. */
+  --pc-ring:0 0 0 0 transparent;
   box-shadow:
     inset 0 5px 0 rgba(255,255,255,.2),
     inset 0 -8px 0 rgba(0,0,0,.22),
     0 5px 0 #4a2e1a,
-    0 9px 14px rgba(44,26,16,.22);
+    0 9px 14px rgba(44,26,16,.22),
+    var(--pc-ring);
   color:#fff4de;
   animation:packIn .42s cubic-bezier(.2,1.5,.4,1) both;
 }
@@ -2489,11 +2521,15 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    locked seed row wear, with its lip restated so the card keeps its material. */
 .pack-reveal:not(.is-new) .pack-card{
   background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  /* A spare keeps its star row and loses its ring — the rung is still readable,
+     the celebration is not repeated. */
+  --pc-ring:0 0 0 0 transparent;
   box-shadow:
     inset 0 5px 0 rgba(255,255,255,.4),
     inset 0 -8px 0 rgba(44,26,16,.07),
     0 5px 0 var(--paper-dim-edge),
-    0 9px 14px rgba(44,26,16,.14);
+    0 9px 14px rgba(44,26,16,.14),
+    var(--pc-ring);
   color:var(--ink);
 }
 .pack-reveal:not(.is-new) .pack-tag{color:var(--ink-soft)}
@@ -2503,23 +2539,10 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
    so rather than borrow purple — which a player has already learned means Epic,
    one rung DOWN — it wears legendary gold said twice: a solid ring, a wider
    glow, and the saturate breath. */
-.pack-reveal.r-rare .pack-card{
-  box-shadow:
-    inset 0 5px 0 rgba(255,255,255,.2), inset 0 -8px 0 rgba(0,0,0,.22),
-    0 5px 0 #4a2e1a, 0 9px 14px rgba(44,26,16,.22),
-    0 0 0 4px var(--rare), 0 0 22px 3px rgba(77,171,247,.7);
-}
-.pack-reveal.r-legend .pack-card{
-  box-shadow:
-    inset 0 5px 0 rgba(255,255,255,.2), inset 0 -8px 0 rgba(0,0,0,.22),
-    0 5px 0 #4a2e1a, 0 9px 14px rgba(44,26,16,.22),
-    0 0 0 4px var(--legend), 0 0 26px 5px rgba(255,212,59,.8);
-}
-.pack-reveal.r-mythic .pack-card{
-  box-shadow:
-    inset 0 5px 0 rgba(255,255,255,.2), inset 0 -8px 0 rgba(0,0,0,.22),
-    0 5px 0 #4a2e1a, 0 9px 14px rgba(44,26,16,.22),
-    0 0 0 5px var(--legend), 0 0 40px 10px rgba(255,212,59,.85);
+.pack-reveal.is-new.r-rare .pack-card{--pc-ring:0 0 0 4px var(--rare), 0 0 22px 3px rgba(77,171,247,.7)}
+.pack-reveal.is-new.r-legend .pack-card{--pc-ring:0 0 0 4px var(--legend), 0 0 26px 5px rgba(255,212,59,.8)}
+.pack-reveal.is-new.r-mythic .pack-card{
+  --pc-ring:0 0 0 5px var(--legend), 0 0 40px 10px rgba(255,212,59,.85);
   animation:mythicPulse 1.6s ease-in-out infinite;
 }
 @keyframes packIn{0%{transform:scale(.7) rotate(-4deg);opacity:0}100%{transform:none;opacity:1}}
@@ -3745,7 +3768,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 /* Up, since the meadow is now entered by dragging the world down and left by
    dragging it back. Its twin in the Hollow points the other way for the same
    reason. */
-.mw-exit i{width:0;height:0;border:5px solid transparent;border-bottom-color:var(--ink,#2c1a10);
+.mw-exit i{width:0;height:0;border:5px solid transparent;border-bottom-color:var(--ink);
   margin-bottom:4px;animation:hl-nudge 2.4s ease-in-out infinite}
 
 .mw-dock{pointer-events:auto}

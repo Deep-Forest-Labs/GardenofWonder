@@ -410,6 +410,14 @@ the launch six ship).
    *everything not named in the clears column survives verbatim* — and the Turn ends by
    re-deriving every badge-derived tap field (`tap.power`, `comboMax`, crit) from the wiped
    badges.
+   - **1b** — the same partition again on a Turn whose in-flight arm actually runs (auto-collect
+     and pack-banking happen *before* the mint and touch the save, so a wipe inside them is
+     invisible to a sweep that keeps that arm inert).
+   - **1c** *(added 2026-08-30)* — **no power-up faucet is re-earnable by Turning.** Every faucet the
+     data declares — the opening bag, the quest ladder, the daily, the level rungs, the Almanac — is
+     seeded as already-paid, put through a real Turn, and then re-attempted; the re-attempt must be
+     refused. It also asserts the shape of the curve (rich to level 8, tapering after), that every
+     booster id any table hands out resolves, and that no faucet stacks copies of a long booster.
 2. The Turn kills no running growth timer, in any season; ready blooms auto-collect into
    `coinsEarned` *before* the mint; a plot-parked card pack is banked into `state.packs`.
 3. Mint reads earnings only; a spend-everything-then-Turn run pouches identically.

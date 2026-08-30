@@ -38,8 +38,9 @@ offline. Details in [`docs/23-installable-pwa.md`](docs/23-installable-pwa.md).
   finished one to harvest.
 - **Harvests roll a rarity** — Common, Rare, Epic or Legendary — multiplying the payout up to 8×.
 - **Upgrades** buy harder taps, faster growth and automation, and every one of them is wiped and
-  rebought at the Turn. **Power-ups** are short surges you earn from quests and levels, then tap on
-  the tray to activate — they are never sold, and never re-earnable by Turning.
+  rebought at the Turn. **Power-ups** are short surges — you start with a bagful and earn more from
+  quests, levels, the daily and the Almanac — then tap the power-up button in the band to spend one.
+  They are never sold, and never re-earnable by Turning.
 - **The Almanac** tracks every species you have ever grown, best rarity included, and pays
   milestones at 5, 10, 15 and 19.
 - **Harvesters** keep a single plot planted on their own, always choosing the best seed you can

@@ -58,7 +58,7 @@ from quests and levels.
 
 > **PHASE 3.7 IS BUILT — the Numbers pass, the What's New popup, and orders that pay in minutes.**
 > Three owner rulings from live play, built together because the first one is a project-wide rule
-> the other two have to obey. Suite **1,353** (was 1,305), clean; the reasoning is in the phase 3.7
+> the other two have to obey. Suite **1,384** (was 1,305), clean; the reasoning is in the phase 3.7
 > entry in [10-decision-log.md](10-decision-log.md).
 >
 > **The rule, and it now holds project-wide:** *if a button costs something, it says what you get
@@ -2229,7 +2229,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,353 assertions over the simulation layer
+node tools/sim-test.js          # 1,384 assertions over the simulation layer
 node tools/year-sim.js 12 all   # the pacing model — see the caveat below before trusting its exit code
 node tools/order-gold.js 25 4   # is a delivered order worth a minute of the player's time, per tier?
 node --check <file>.js          # no build step, so this is the only syntax gate
@@ -2341,7 +2341,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,353 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,384 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

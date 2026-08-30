@@ -149,16 +149,21 @@
     else if (g && g.hive) body = 'A new hive is waiting in the Apiary.';
     else if (g && g.decor) body = 'A new decoration was added to the garden.';
     else if (g && g.gems) body = `+${g.gems} gems`;
-    else if (g && g.boost) {
-      const b = DATA.boosters.find((x) => x.id === g.boost);
+    else if (grants.some((x) => x.boost)) {
       /* The tray is gone — a boost is loaded into the POWER-UP button now, and
-         this line is the first time most players meet either. A rung can pay
-         more than one copy, so the count has to be said or the second one looks
-         like a bug when the button refills. */
-      const n = g.boostN || 1;
-      body = b
-        ? (n > 1 ? `${n} × ${b.name} are waiting in the power-up button.` : `${b.name} is loaded in the power-up button.`)
-        : 'A power-up is loaded and ready.';
+         this line is the first time most players meet either. Count across
+         EVERY rung crossed, not just the last: since the curve pays on every
+         level from 2 to 8, one Almanac milestone can cross two rungs and the
+         old line announced the second while silently pocketing the first. */
+      const won = grants.filter((x) => x.boost);
+      const total = won.reduce((n, x) => n + (x.boostN || 1), 0);
+      const names = [...new Set(won.map((x) => {
+        const b = DATA.boosters.find((y) => y.id === x.boost);
+        return b ? b.name : null;
+      }).filter(Boolean))];
+      if (!names.length) body = 'A power-up is loaded and ready.';
+      else if (total === 1) body = `${names[0]} is loaded in the power-up button.`;
+      else body = `${total} power-ups are waiting in the button — ${names.join(', ')}.`;
     }
     UI.toast({ title: `Level ${to}!`, body, art: Icons.get('star') });
     UI.showBanner(`Level ${to}!`, body, 2000);

@@ -266,6 +266,14 @@ Legendary, 10 for a Wonder.
 disables screen shake entirely, and drops ambient petals to zero with other particle counts cut.
 `FX` reads the preference once at init. **Any new effect must respect it.**
 
+**And a collapsed animation must never be the only carrier of a STATE.** Found the hard way on
+2026-08-30: the ready Turn button's whole signal was a breathing gold ring, the clamp above runs an
+animation once for `.001ms` and drops it, and the attention dot is suppressed on the assumption that
+the button is breathing — so a player with the preference on had *no* ready signal at all, and it
+reviewed as correct for weeks. Where a state animates, reduced motion needs a **static substitute**,
+not merely a shorter duration. The check is not "does it calm down", it is "does every state that
+animates still read when it does not".
+
 ## The Wonder Effect look
 
 The `wonder` class on `#game` drives a rainbow gradient sweep, a saturate/hue-rotate filter cycle,
@@ -495,8 +503,8 @@ Phase 3.8 added no ramp, but it did add four alphas, declared here under check 5
 | **Its reduced-motion rest state** | `rgba(255,201,60,.3)` into `rgba(255,201,60,.14)` | The same gold held still across the face. A wash rather than a band because a diagonal band frozen mid-travel reads as a rendering artefact, and the requirement is a *highlighted* state, not a paused animation. |
 
 **They are literals in `style.css` rather than `:root` tokens on purpose:** each is used by exactly
-one component, and twelve more names in a palette this document already says carries 149 colours by
-accident would be a worse trade than three named ramps in one table. Promoting them to local custom
+one component, and twelve more names in a palette this document already says carries 176 colours by
+accident (re-counted 2026-08-30) would be a worse trade than three named ramps in one table. Promoting them to local custom
 properties on their components (the `--mw-stone-*` pattern) is the tidy if a second component ever
 wants one — a phase-4 job, not a phase-2 one.
 

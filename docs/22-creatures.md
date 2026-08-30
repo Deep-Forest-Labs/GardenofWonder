@@ -241,8 +241,9 @@ second is a progression reward once the roster needs it, since an empty second f
 none. Entry is **a visible burrow mouth in the garden to teach it, and a swipe down as the fast
 path** — swipe alone is undiscoverable, and swipe-down also fights the sheet drag and browser refresh.
 
-**Wired into the game 2026-08-16.** A **burrow mouth** in the garden, bottom left, opens it; the exit
-chip or a swipe up closes it. `hollow.js` draws the room and knows nothing about the game;
+**Wired into the game 2026-08-16.** The burrow mouth was deleted at the phase-3.5 gate; the room is
+reached by **dragging the world up** from the garden, and the exit chip or a swipe **down** closes
+it (re-pointed 2026-08-30 — see [08-ui-and-layout.md](08-ui-and-layout.md#the-vertical-ladder)). `hollow.js` draws the room and knows nothing about the game;
 `ui-hollow.js` places real creatures into `Hollow.SPOTS` and owns the screen.
 
 - **Every creature that has moved in lives down here**, up to six per chamber. The garden yard shows

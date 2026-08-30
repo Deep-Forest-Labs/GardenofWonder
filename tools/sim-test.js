@@ -5623,6 +5623,34 @@ S.quests.active = [{ id: farmQuest.id, progress: farmQuest.qty }];
 check('and re-claiming it after the Turn is refused, so its power-up cannot be farmed',
   G.claimQuest(farmQuest.id) === null && S.boostInv[farmQuest.reward.boost] === 0);
 
+/* F2 — the daily. It is the one faucet that IS repeatable, and it repeats on
+   the device's calendar day rather than on anything the Turn touches. The
+   assertion is therefore that a Turn does not roll it: claim it, Turn, and the
+   same day's daily must still refuse. */
+G.reset();
+clearGarden();
+const f2Id = S.quests.daily && S.quests.daily.id;
+check('a daily is dealt on a fresh save', Boolean(f2Id), JSON.stringify(S.quests.daily));
+const f2Def = DATA.dailies.find((d) => d.id === f2Id);
+check('and every daily in the data pays a power-up, so this faucet is in scope',
+  DATA.dailies.every((d) => d.reward && d.reward.boost));
+S.quests.daily.progress = f2Def.qty;
+const f2Before = S.boostInv[f2Def.reward.boost];
+const f2Claim = G.claimQuest(f2Id);
+check('claiming the daily pays its power-up once',
+  f2Claim !== null && S.boostInv[f2Def.reward.boost] >= f2Before + (f2Def.reward.n || 1),
+  `claim=${JSON.stringify(f2Claim && f2Claim.id)} bag=${JSON.stringify(S.boostInv)} before=${f2Before} id=${f2Def.reward.boost}`);
+const f2Day = S.quests.daily.day;
+G.credit(400000);
+G.turnYear();
+check('the Turn does not roll the daily over — same id, same day, still claimed',
+  S.quests.daily.id === f2Id && S.quests.daily.day === f2Day && S.quests.daily.claimed === true,
+  JSON.stringify(S.quests.daily));
+S.quests.daily.progress = f2Def.qty;
+check('and re-claiming it after the Turn is refused',
+  G.claimQuest(f2Id) === null && Object.values(S.boostInv).every((v) => v === 0),
+  JSON.stringify(S.boostInv));
+
 /* F3 — the level ladder. */
 G.reset();
 clearGarden();
@@ -5660,8 +5688,14 @@ G.credit(400000);
 G.turnYear();
 check('a claimed Almanac milestone stays claimed through the Turn',
   same(S.almanacClaimed, milesClaimedBefore));
+/* Seed the species and then run the PAYER, not the getter. Asserting on
+   `almanacMilestones()` after a Turn is true by construction — the Turn already
+   emptied the bag — and deleting the double-pay guard left it green. `load()`
+   is the payer that can be reached from here without a harvest. */
 DATA.seeds.slice(0, mile.at).forEach((sd) => { S.discovered[sd.id] = (S.discovered[sd.id] || 0) + 1; });
-check('and it pays nothing a second time',
+globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(S));
+G.load();
+check('and it pays nothing a second time, even when the payer runs again',
   G.almanacMilestones().filter((m) => m.at === mile.at).every((m) => m.claimed)
   && Object.values(S.boostInv).every((v) => v === 0), JSON.stringify(S.boostInv));
 
@@ -5671,12 +5705,44 @@ check('a brand-new garden opens with exactly DATA.startingBoosts in the tray',
   Object.keys(DATA.startingBoosts).every((id) => S.boostInv[id] === DATA.startingBoosts[id])
   && DATA.boosters.every((b) => S.boostInv[b.id] === (DATA.startingBoosts[b.id] || 0)),
   JSON.stringify(S.boostInv));
-check('every id in the opening bag is a real booster',
-  Object.keys(DATA.startingBoosts).every((id) => DATA.boosters.some((b) => b.id === id)));
+/* EVERY table, not just the bag. `giveBoost` drops an unknown id in silence
+   while `grantLevel` still reports one to the toast, so a typo pays nothing and
+   announces a power-up anyway. Only rung 2 was incidentally covered before. */
+const ALL_GRANTS = [
+  ...Object.keys(DATA.startingBoosts).map((id) => ({ where: `startingBoosts.${id}`, boost: id, n: DATA.startingBoosts[id] })),
+  ...Object.keys(DATA.levelGrants).filter((L) => DATA.levelGrants[L].boost)
+    .map((L) => ({ where: `levelGrants.${L}`, boost: DATA.levelGrants[L].boost, n: DATA.levelGrants[L].n || 1 })),
+  ...DATA.quests.filter((q) => q.reward && q.reward.boost)
+    .map((q) => ({ where: `quest.${q.id}`, boost: q.reward.boost, n: q.reward.n || 1 })),
+  ...DATA.dailies.filter((q) => q.reward && q.reward.boost)
+    .map((q) => ({ where: `daily.${q.id}`, boost: q.reward.boost, n: q.reward.n || 1 })),
+  ...(DATA.almanacMilestones || []).filter((m) => m.boost)
+    .map((m) => ({ where: `almanac.${m.at}`, boost: m.boost, n: 1 }))
+];
+check('every booster id the data hands out resolves to a real booster',
+  ALL_GRANTS.every((g) => DATA.boosters.some((b) => b.id === g.boost)),
+  ALL_GRANTS.filter((g) => !DATA.boosters.some((b) => b.id === g.boost)).map((g) => g.where).join(','));
+check('and no faucet anywhere stacks copies of a long booster',
+  ALL_GRANTS.every((g) => {
+    const b = DATA.boosters.find((x) => x.id === g.boost);
+    return !b || b.dur <= 60 || g.n === 1;
+  }),
+  ALL_GRANTS.filter((g) => {
+    const b = DATA.boosters.find((x) => x.id === g.boost);
+    return b && b.dur > 60 && g.n > 1;
+  }).map((g) => g.where).join(','));
 G.credit(400000);
 G.turnYear();
 check('the Turn takes the opening bag and never hands out another',
   Object.values(S.boostInv).every((v) => v === 0), JSON.stringify(S.boostInv));
+/* The path a real first-time player takes is `load()` finding nothing, not
+   `reset()` — and it is the one that can hand the bag out twice. */
+globalThis.localStorage.removeItem(SAVE_KEY);
+globalThis.localStorage.removeItem('igr-save');
+G.load();
+check('a load that finds no save opens the bag exactly once',
+  DATA.boosters.every((b) => S.boostInv[b.id] === (DATA.startingBoosts[b.id] || 0)),
+  JSON.stringify(S.boostInv));
 
 /* The curve itself, asserted as a SHAPE rather than as numbers, so a phase-4
    retune moves values without touching this file — but cannot quietly invert
