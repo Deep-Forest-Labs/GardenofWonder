@@ -961,6 +961,27 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-30 (ruling) — The blessing stays as it is, and gets a creative brief instead of a fix
+
+**The owner's call, and their diagnosis is sharper than the advisor's was:** the blessing feels
+lackluster *because it is a ceremony wrapped around a thing you can already buy* — a free petal
+dressed up as an event. "Keep it as is right now until we figure out another way to do it
+better or come up with another cool idea." So: no once-ever cap, no pricing — the farmability
+stays a known, accepted seam (docs/11 keeps its entry, re-marked as accepted-for-now), and the
+open item changes shape from *how do we price this* to **what should a blessing actually BE**.
+
+Three sparks recorded for that brief, none chosen: the blessed flower wears a **crown all
+year** (identity, visible to anyone who sees your garden); the blessing **wakes the flower's
+signature skill for one year** before it is bought (a free taste of the game's coolest
+unbuilt thing — lands naturally with slice B); the Tally **nominates** the flower of the year
+and the player confirms or overrules (the blessing becomes an award, not a purchase).
+
+Also asked and answered in plain terms the same day: the Fall one-tap bed sweep (explained,
+awaiting yes/no) and the petal-pacing question (explained as "play five years with the
+time-warp and say whether the Turn still felt worth doing").
+
+---
+
 ## 2026-08-30 (rulings) — Three yeses, a field guide, and the cleanup round
 
 **The owner ruled on three of the five open questions, plainly:** the discover quests get the
