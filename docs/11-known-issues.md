@@ -58,6 +58,18 @@ someone reconciles them.
 
 ## What phase 3.7 knowingly left (2026-08-30)
 
+**The pantry survives the Turn, so a fresh board of orders meets last year's stockpile.**
+`turnYear()` regenerates all three slots and never touches `state.flowers` — and nothing else in the
+game empties that bag either, so it grows for the life of a save. **30.0% of a Turn-heavy player's
+entire order income lands in the first sixty seconds of a new year** (401 deliveries of 1,304;
+5.7% for a player who Turns four times). `state.apiary.honey` has the identical hole and four goods
+are honey goods, though it is unmeasured because the play model never builds a hive.
+
+**Ruled and specced 2026-08-30, not built**: last year's harvest becomes preserved — craftable,
+sellable, and no longer something a customer will take. [41-the-preserve.md](41-the-preserve.md)
+carries the spec, the measurement, the test bill, and the three things the change knowingly costs.
+**This is also the explanation for the entry below**, which was diagnosed wrongly at first.
+
 **`year-sim`'s cheap-Turn verdict no longer decides the same way twice.** Raising order gold to the
 ruled band moved the two shapes it compares close enough together that its single unseeded run per
 strategy cannot separate them: five runs at 30/200/210/225 came back **OK, OK, OK, FAIL, FAIL**, and
@@ -68,17 +80,25 @@ exited 0 every time.
 **The property the mint actually guarantees is intact in every run.** `smart` never out-mints
 `casual` on Saved Seeds — 1,061 against 1,258 and 1,024 against 1,055 in the two failing runs — so
 the cumulative mint is still split-neutral by construction, which is what bill item 17 was written
-to protect. What `smart` wins on is *lifetime gold*, and the mechanism is the one `smart` was built
-to exercise: it dumps its doomed wallet into Fall beds before every Turn, Fall beds survive the
-Turn, and order gold made the wallets it is laundering several times larger. Fifty-five Turns in ten
-days is fifty-five of those conversions.
+to protect. What `smart` wins on is *lifetime gold*.
 
-Two responses, and the choice is the owner's: **moderate the multipliers** — the verdict was stable
-below roughly 10/65/95/105, which is about 40% of the ruled values and puts an order back at 30–40
-seconds rather than the ruled minute or two — or **make the verdict decide honestly**, by seeding
-the model and running each shape several times, which is what a 3× spread in the thing being
-compared demands. This was not done here because a session should not go changing the verdict tool
-in the same pass that makes the verdict inconvenient.
+**The first diagnosis of that gold win was wrong, and is corrected here rather than deleted.** It
+blamed `smart` dumping its doomed wallet into Fall beds before each Turn. Fall-dumping is good play
+— the correct response to gold that is about to vanish, and the investment feeling Fall exists for —
+and gold at the Turn cannot be the mechanism at all, because the mint reads what a year *earned* and
+never what is left in the wallet. The actual amplifier is the pantry entry above. What a fast cadence
+genuinely *costs* is the badge wipe: fifty-three Turns is fifty-three rebuilds of the automation,
+which is why a four-Turn player normally wins on lifetime gold and why blocking the pantry catapult
+flips the result back.
+
+**Ruled 2026-08-30: seed it and run it paired**, rather than moderating the multipliers. Moderating
+would also have flipped the verdict and would have undone the ruling that raised them. Seeding is the
+load-bearing half — the same player can then be run on the same dice against two economies, so the
+difference is the change rather than the weather. It is the job *before* the Preserve, because the
+Preserve is the first change worth a real before-and-after. Note also that
+`tools/order-gold.js` copied `tools/year-sim.js`'s play model verbatim and the pantry probe made a
+third copy: **three copies of the casual player exist**, and pulling one `tools/play-model.js` out of
+them is part of the same job.
 
 **The spread INSIDE a tier is far wider than the spread between tiers, and no multiplier can close
 it.** At the ruled values a tier-4 board pays anywhere from 4 seconds to six hours of the player's

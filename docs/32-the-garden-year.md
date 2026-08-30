@@ -269,6 +269,14 @@ blessing adds one petal and one `state.blessed` record — and the sim-test part
 that: `savedSeeds` sits with the changed-by-the-Turn fields (asserted to grow by exactly the
 projection), while petals and blessings are asserted through the blessing's own bill item.*
 
+### What last year's harvest becomes (ruled 2026-08-30, not built)
+
+The partition above has a hole the owner found by playing: the pantry survives the Turn, so a fresh
+board of orders can be filled from last year's blooms before anything is planted. The ruling is that
+everything still in the pantry at the Turn is **preserved** — pressed flowers and kept jars, which
+craft and sell but which no customer will take. Spec, measurement and test bill in
+[41-the-preserve.md](41-the-preserve.md).
+
 ## Saved Seeds — the two-wallet rule
 
 **Gold is the year's money; Saved Seeds are the forever money.** Neither buys the other's things,

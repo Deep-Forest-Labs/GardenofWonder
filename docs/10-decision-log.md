@@ -5,6 +5,89 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (rulings, after phase 3.7) — The pantry was the bank, and the referee needs seeding
+
+**Two rulings out of the owner reading the phase-3.7 pacing result and not believing it.** Both came
+from playing, not from the sim; the sim only confirmed them afterwards.
+
+### 1. The correction that started it
+
+The phase-3.7 handoff said a Turn-heavy shape beat normal play by *laundering doomed gold through
+Fall beds*. **The owner rejected the framing and was right to.** Planting Fall before a Turn is the
+correct move and exactly the investment feeling Fall exists for — it is good play, not an exploit.
+And gold at the Turn cannot be the mechanism at all, because the mint reads what a year *earned*,
+never what is left in the wallet.
+
+The real cost of a fast cadence is that **the Turn wipes every badge**. Fifty-three Turns in ten days
+is fifty-three rebuilds of the automation, and the earning rate sawtooths where a four-Turn player's
+climbs and holds. That is the design working, and it should have been the explanation from the start.
+
+### 2. What last year's harvest becomes
+
+Chasing the correction found the actual hole, which the owner had already felt in play: *"when I come
+back to the game after a turn, I have those orders that I can turn in, and it catapults me far
+through the new season."*
+
+The Turn regenerates all three orders and **does not empty the pantry**, and nothing else in the game
+empties it either. So a fresh board meets a stockpile that has been growing for the life of the save.
+Measured: **30.0% of every coin a Turn-heavy player earns from orders lands in the first sixty seconds
+of a new year** — 401 deliveries of 1,304, against 5.7% for a player who Turns four times. Blocking
+it flips the ten-day result on its own (68.1M/46.6M in the Turn-heavy player's favour becomes
+32.4M/38.2M against him) and drops his Turn count from 53 to 35 without touching a multiplier.
+
+**The ruling: an order is filled from what you grew this year.** Everything still in the pantry at the
+Turn is preserved — craftable, sellable, and no longer something a customer will take. Nothing is
+destroyed, which is the point: the owner's own framing was that the blooms should keep their value
+somewhere else rather than be wiped. Spec in [41-the-preserve.md](41-the-preserve.md).
+
+Three things that ruling knowingly buys, all recorded there rather than discovered later: the first
+board of every new year becomes a to-do list rather than a payout; **normal play loses order income
+too**, by about two thirds, because the bank closes for everybody; and crafting finally acquires a
+supply, which it has never had.
+
+### Rejected
+
+**Cutting the order multipliers back to ~40%** to make the pacing verdict pass. It would also have
+flipped the result, and it would have taken an order from ninety seconds of income back to
+thirty-five — most of the way to the "pretty pointless" the ruling that raised them was fixing. That
+is undoing a ruling to satisfy a tool.
+
+**Wiping the pantry at the Turn.** Measured, because it was the cheap way to test the idea, and
+rejected as a design: it deletes something the player grew. The Preserve keeps the value and moves
+where it can be spent, which is the owner's version and the better one.
+
+**Capping or expiring the Preserve.** It grows forever and crafting is a thin sink, and that is
+accepted rather than solved — preserved stock is worth roughly a hundredth of the same stock fresh,
+because an order pays 30–225× the unit value. If the pile becomes a problem the answer is more
+crafting, not a cap.
+
+### 3. The pacing tool is a simulation and needs to become an instrument
+
+The owner's question, which is the more valuable one: *is this just a simulation, or a tool we can
+leverage when we retune?* Today it is the former, and it has quietly grown a second problem.
+
+`tools/order-gold.js` was written this phase by copying `tools/year-sim.js`'s play model verbatim,
+and the scratch probe that measured the pantry made a third copy. **Three copies of "what a casual
+player does in six minutes" already exist**, and every retune from here either copies it again or
+drifts from it.
+
+The ruling is to make it an instrument before the next economy change rather than after, and to keep
+it small — no dashboard, one command, a printed table:
+
+- **Seed the dice.** Every roll goes through `Math.random()`, so no two runs agree and the pacing
+  verdict is a coin flip (five runs of identical code came back OK, OK, OK, FAIL, FAIL). Seeded, the
+  same `data.js` answers the same way twice — and, far more useful, **the same player can be run on
+  the same dice against two economies**, so the difference IS the change rather than the weather.
+- **One play model, imported.** `tools/play-model.js`, and the question-tools stop carrying copies.
+- **Compare, don't report.** A retune always asks *did this help?*, never *what is the number?*. A
+  committed `tools/baseline.json` and a printed delta answers the question actually being asked.
+
+**Why before the Preserve rather than after:** the Preserve is the first change that moves order
+income for everyone, so it is exactly the change worth a real before-and-after — and measuring it with
+the referee as it stands would produce another coin flip.
+
+---
+
 ## 2026-08-30 (phase 3.7) — The Numbers pass, the What's New popup, and orders that pay in minutes
 
 **Builds the three rulings logged below it on the same day.** The whole phase is the owner's one

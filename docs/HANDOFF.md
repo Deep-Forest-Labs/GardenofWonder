@@ -104,9 +104,12 @@ from quests and levels.
 > **The one thing that got worse:** `year-sim`'s cheap-Turn verdict no longer decides the same way
 > twice — five runs came back OK, OK, OK, FAIL, FAIL where it used to exit 0 every time. It fails on
 > lifetime GOLD only; `smart` never out-mints `casual` on Saved Seeds, so the property the cumulative
-> mint guarantees is intact in every run. Diagnosis, arithmetic and the two ways out are in
-> [11-known-issues.md](11-known-issues.md) — and the choice is the owner's, because a session should
-> not go changing a verdict tool in the same pass that makes the verdict inconvenient.
+> mint guarantees is intact in every run.
+>
+> **Chased down after the phase shipped, and it was the pantry.** The Turn never emptied it, so a
+> fresh board of orders met a stockpile — 30% of a Turn-heavy player's order income lands in the
+> first minute of a new year. Two rulings came out of it and both are specced, not built: seed the
+> pacing tool, then build [the Preserve](41-the-preserve.md). See "The current task".
 
 > **PHASE 3.6 IS BUILT — the cleanup round: three ruled fixes and the owner's review kit.** No new
 > layouts, so no wireframe gate; no economy knob moved. Suite **1,305**, clean across six runs, every
@@ -1207,19 +1210,41 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 half-done and nothing is blocked. Walk the two-minute check below before reading further — most of
 what the next session does depends on the answer to its last two questions.
 
-**One thing needs the owner's decision before the next economy pass, and it is the only one.**
-`year-sim`'s cheap-Turn verdict now flips run to run at the raised order gold — three OK and two
-FAIL across five runs, where before it exited 0 every time. It is **not** a mint break: `smart`
-never out-mints `casual` on Saved Seeds in any run, which is the property the cumulative mint was
-built to guarantee. What it wins on is lifetime *gold*, by laundering a much larger wallet through
-Fall beds before each of its fifty-five Turns. Two ways out, both the owner's call:
+**The pacing verdict was chased down after phase 3.7 shipped, and it produced two rulings. Both are
+specced and neither is built — they are the next two jobs, in this order.**
 
-- **Moderate the multipliers.** The verdict was stable below roughly `10/65/95/105` — about 40% of
-  the ruled values, which puts an order back at 30–40 seconds rather than the ruled minute or two.
-  That is choosing the tool's verdict over the owner's ruling, which is why it was not done here.
-- **Make the verdict decide honestly.** Seed the model and run each shape several times. A single
-  unseeded run per strategy cannot separate two numbers whose own spread is 3× (casual's day-10
-  lifetime coins ranged 43M–142M across the five runs).
+**The handoff's own explanation of that verdict was wrong, and the owner caught it.** It said a
+Turn-heavy shape wins by laundering doomed gold through Fall beds. Fall-dumping before a Turn is good
+play, not an exploit, and gold at the Turn cannot be the mechanism at all — the mint reads what a
+year *earned*, never what is in the wallet. The real cost of a fast cadence is that **the Turn wipes
+every badge**: fifty-three Turns is fifty-three rebuilds of the automation. Do not repeat the
+laundering story.
+
+**1 · Seed the referee, then use it.** `tools/order-gold.js` was written this phase by copying
+`tools/year-sim.js`'s play model verbatim, and the probe that measured the pantry made a third copy —
+three copies of "what a casual player does in six minutes" already exist. Pull one
+`tools/play-model.js` out of them, **seed `Math.random`**, and print a delta against a committed
+`tools/baseline.json`. Seeding is the load-bearing half: unseeded, the verdict is a coin flip (five
+runs of identical code returned OK, OK, OK, FAIL, FAIL); seeded, the same player can be run on the
+same dice against two economies and the difference IS the change. Keep it small — one command, a
+printed table, no dashboard.
+
+**2 · Build the Preserve** — [41-the-preserve.md](41-the-preserve.md), owner-ruled, spec complete
+with a test bill. An order is filled from what you grew **this year**; everything still in the pantry
+at the Turn becomes pressed flowers and kept jars, which craft and sell but which no customer will
+take. The Turn regenerates all three orders and never emptied the pantry, so a fresh board met a
+stockpile that had been growing for the life of the save: **30% of a Turn-heavy player's entire order
+income arrived in the first sixty seconds of a new year.** Blocking it flips the ten-day result on
+its own and drops his Turn count from 53 to 35 without touching a multiplier.
+
+Three things that ruling knowingly buys, all in the spec: the first board of a new year becomes a
+to-do list rather than a payout; **normal play loses order income too**, by about two thirds; and the
+honey half ships unmeasured, because the play model never builds a hive so honey goods never reach
+the board.
+
+**The referee comes first on purpose** — the Preserve is the first change that moves order income for
+everyone, so it is exactly the change worth a real before-and-after, and measuring it with the tool as
+it stands would produce another coin flip.
 
 **Still genuinely open, and unchanged by this phase** — the first two inherited from the design
 session's docs-only commits `30c3a63` and `06ce06a`:

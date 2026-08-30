@@ -163,6 +163,13 @@ repReward  = base(tier) × lineItemCount
 Bonus rewards — a rare seed, a decor piece, gems, a story beat — should be occasional and
 telegraphed on the card. They're the reason to read the board rather than tapping deliver.
 
+> **Ruled 2026-08-30, not yet built: an order is filled from what you grew THIS year.** The Turn
+> throws away all three orders and writes new ones, but it does not empty the pantry — so a fresh
+> board met a stockpile, and 30% of a Turn-heavy player's entire order income arrived in the first
+> sixty seconds of a new year. Everything left in the pantry at the Turn becomes *preserved*:
+> craftable, sellable, and no longer something a customer will take. Full spec, including the honey
+> half and what it costs normal play, in [41-the-preserve.md](41-the-preserve.md).
+
 **Rule: fulfilling an order must always beat selling its contents.** Otherwise players bypass the
 engine.
 

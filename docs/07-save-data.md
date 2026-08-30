@@ -196,6 +196,13 @@ legacy key alone, so the next load re-imported the player's old *Idle Garden Reb
 reset silently didn't take. The safety-net reading lost: a player who asks for a clean start is
 asking for a clean start, and nothing in the UI explained the import.
 
+### `state.preserve` — ruled, not built (2026-08-30)
+
+Last year's harvest, kept: `{ flowers: {}, honey: {} }`, id to count, additive at every Turn. It
+**survives** the Turn and needs its own line in `defaultState()`, in the `load()` re-merge list and
+in the partition sweep. Orders may not spend from it; crafting and selling may. Spec in
+[41-the-preserve.md](41-the-preserve.md).
+
 ### The one flag that is NOT in the save (added 2026-08-30)
 
 `gw-news` holds a JSON array of the announcement ids the player has already read, and it is the
