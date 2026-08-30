@@ -499,7 +499,11 @@
     const { p, ripe } = yearProgress();
     const pct100 = Math.round(p * 1000) / 10;
     if (pct100 !== yearFillShown) {
-      el.yearFill.style.height = `${pct100}%`;
+      /* `--year-p`, not `height`. The fill is `.turn-fill::before` rising from
+         the bottom; `.turn-fill` itself is only its clip box and is pinned
+         `inset:0`. Writing a height there shrank the clip box from the top and
+         left the waterline at 0%, so the dock's meter had never once painted. */
+      el.yearFill.style.setProperty('--year-p', `${pct100}%`);
       yearFillShown = pct100;
     }
     el.turnBtn.classList.toggle('ready', Game.turnReady());
@@ -1267,6 +1271,11 @@
     if (!S.seen.plot) el.game.classList.add('onboard');
     Sound.prefs.sfx = S.prefs.sfx;
     Sound.prefs.music = S.prefs.music;
+
+    /* The glint's interval is a data knob, written to CSS once. It never
+       changes at runtime, so it does not belong on the 0.6s tick beside the
+       fill. */
+    el.turnBtn.style.setProperty('--turn-shine', `${DATA.year.turnShineEvery}s`);
 
     UI.buildClouds();
     UI.updateSky();

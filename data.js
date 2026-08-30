@@ -380,6 +380,14 @@ const DATA = {
        ripening on day one. Doc 33 targets 370-410K for year one; this is the
        middle of that, and like the two above it is visual only. */
     seasonSpan: 390000,
+    /* How often the ready Turn button throws its glint, in seconds. Also
+       visual, and a knob rather than a constant because the whole point is that
+       it can be turned down without touching CSS: the breath says "something
+       here", the glint says "look now", and one that came round too often would
+       be the constant noise the ruling forbids. The sweep crosses the button in
+       the last eighth of the cycle, so a longer interval is also a statelier
+       one. */
+    turnShineEvery: 9,
     tally: [
       { id: 'orders',      label: 'Orders filled',           stat: 'orders',      tiers: [{ at: 10, bonus: 0.10 }, { at: 25, bonus: 0.15 }, { at: 50, bonus: 0.25 }] },
       { id: 'windfalls',   label: 'Full-bed windfalls',      stat: 'windfalls',   tiers: [{ at: 3,  bonus: 0.05 }, { at: 8,  bonus: 0.10 }, { at: 15, bonus: 0.15 }] },

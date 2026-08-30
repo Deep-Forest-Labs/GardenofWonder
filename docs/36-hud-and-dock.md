@@ -136,7 +136,10 @@ Nothing falls off the edge silently, and three things nearly did.
    and the buttons tuck 3&ndash;7px under the board's lip. It works and there is nothing spare.
 2. **Is the Turn button's fill legible?** Yes at 74&times;56, rising from the bottom rather than
    wiping across — a 74px button is too narrow for a horizontal wipe. Ready is the game's existing
-   1.4s gold breath. **Year one is not a different button, it is a different panel.**
+   1.4s gold breath, and since 2026-08-30 a gold **glint** across the face every
+   `DATA.year.turnShineEvery` seconds on top of it — see
+   [08-ui-and-layout.md](08-ui-and-layout.md#the-year-meter-is-the-docks-turn-button-2026-08-30-phase-35).
+   **Year one is not a different button, it is a different panel.**
 3. **Orders &amp; Quests: one list or two tabs?** One list, two headings. The badge counts two
    different things and tabs would hide half of what the player came in for.
 4. **The power-up's empty state?** **A quiet drained slot, recommended and arguable.** The locked

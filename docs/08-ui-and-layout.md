@@ -547,6 +547,29 @@ what that borrows: this ring is worn by **exactly one thing in the game** and ha
 *the Turn is ready*, so the meaning travels with it intact. The attention dot is suppressed while it
 breathes — a dot on a button that is already pulsing is noise.
 
+**And since 2026-08-30, ready also throws a glint** (`turnShine` on `.turn-fill::after`). The breath
+says *something here*; a Turn is the player taking hold of the season itself, and the ruling was that
+it has to say *look now*. It is the ready plot's own `sweep` — same 100° band, same 8° tilt — but
+**parked off the button for seven eighths of its cycle** and crossing in the last eighth, so it lands
+as a moment rather than as the constant travel a plot can afford at 1.9s. Gold rather than the plot's
+white, because gold is already the only thing on this button that means *the Turn is ready*. The
+interval is `DATA.year.turnShineEvery` (9s), written to `--turn-shine` once at boot — a longer
+interval is also a statelier sweep, since the travel is a fraction of the cycle.
+
+**The clip belongs to `.turn-fill`, never to the button** — `overflow:hidden` on `.dock-btn.turn`
+eats the pouch chip hanging 9px above it.
+
+**Reduced motion holds the ring on solid and the glint still.** This is a repair as much as an
+addition: the breath is an animation, the global clamp runs it once for `.001ms` and drops it, and
+the attention dot is hidden on the assumption that the button is breathing — so a player with the
+preference on had **no ready signal on the Turn button at all**. The block sits at the very end of
+`style.css`, because a media query adds no specificity and has to come after every rule it cancels.
+
+**The fill is `--year-p` on `.turn-fill`, not a height.** `.turn-fill` is only the clip box and is
+pinned `inset:0`; the water is `.turn-fill::before` rising from the bottom. `ui.js` wrote a `height`
+onto the clip box for a day and a half, which shrank the box from the top and left the waterline at
+`0%` — **the dock's meter had never once painted.** Fixed 2026-08-30.
+
 **`.seedchip` is the pouch, promoted.** Saved Seeds have always had a number — in the projection, in
 the Almanac's seed-row header, in the ceremony — but never on an always-visible surface. The chip
 rides above the button from the first Turn onward, and **never in year one**, where doc 32's rule is

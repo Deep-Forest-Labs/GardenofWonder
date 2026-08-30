@@ -38,10 +38,11 @@ finds Chrome on both the cloud container and a Mac.
 node tools/probe.js shot:boot
 node tools/probe.js 'tap:#flowerBtn*30' wait:400 shot:combo 'eval:document.getElementById("credits").textContent'
 node tools/probe.js size:430x932 shot:large
+node tools/probe.js media:reduce page:index.html wait:600 shot:calm  # the one preference the game must honour
 ```
 
 Steps run in order: `shot:NAME`, `tap:SELECTOR` or `tap:SELECTOR*25`, `wait:MS`, `eval:EXPR`,
-`size:WxH`, `page:PATH`. An unrecognised step is an error rather than a no-op, so a typo fails
+`size:WxH`, `page:PATH`, `media:reduce` / `media:normal`. An unrecognised step is an error rather than a no-op, so a typo fails
 loudly instead of silently skipping a tap. It exits non-zero if the page threw.
 
 The screenshots are worth attaching to the session so the owner can check a layout fix from a

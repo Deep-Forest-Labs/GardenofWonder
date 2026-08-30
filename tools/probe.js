@@ -22,11 +22,13 @@
 //   eval:EXPR          evaluate EXPR and print the result
 //   size:WxH           re-emulate at a new viewport (default 390x844)
 //   page:PATH          navigate elsewhere in the repo (default index.html)
+//   media:reduce       turn prefers-reduced-motion on (media:normal turns it off)
 //
 // Examples:
 //   node tools/probe.js shot:boot
 //   node tools/probe.js 'tap:.flower*30' wait:600 shot:combo 'eval:UI.state.coins'
 //   node tools/probe.js size:430x932 shot:large
+//   node tools/probe.js media:reduce wait:400 shot:calm
 //
 // Exits non-zero if the page threw an uncaught error, so it is usable in a
 // check-before-you-commit loop.
@@ -198,6 +200,13 @@ function parseSteps(argv) {
         steps.push({ kind, width: +m[1], height: +m[2] });
         break;
       }
+      case 'media': {
+        if (rest !== 'reduce' && rest !== 'normal') {
+          throw new Error(`media step wants "reduce" or "normal", got "${rest}"`);
+        }
+        steps.push({ kind, value: rest });
+        break;
+      }
       case 'tap': {
         const m = /^(.*?)(?:\*(\d+))?$/.exec(rest);
         steps.push({ kind, selector: m[1], times: m[2] ? +m[2] : 1 });
@@ -301,6 +310,16 @@ async function main() {
       case 'size':
         size = { width: step.width, height: step.height };
         await emulate();
+        break;
+
+      /* The one preference the game is required to honour and the one thing a
+         screenshot cannot otherwise reach — CSS has no way to force a media
+         query on from inside the page. */
+      case 'media':
+        await call('Emulation.setEmulatedMedia', {
+          features: [{ name: 'prefers-reduced-motion', value: step.value === 'reduce' ? 'reduce' : 'no-preference' }],
+        });
+        console.log(`  media prefers-reduced-motion: ${step.value === 'reduce' ? 'reduce' : 'no-preference'}`);
         break;
 
       case 'wait':

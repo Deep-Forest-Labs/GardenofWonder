@@ -487,6 +487,13 @@ Phase 3 added three more, on the same terms:
 Fall's scene palette (`SKIES.sun` / `SKIES.moon` in `fall.js`) is a component palette in the same
 sense as `Meadow.SKIES`, and lives beside the drawing that uses it.
 
+Phase 3.8 added no ramp, but it did add four alphas, declared here under check 5:
+
+| Where | Values | Why |
+| --- | --- | --- |
+| **The Turn button's glint** (`turnShine`) | `rgba(255,255,255,.9)` into `rgba(255,201,60,.7)` | The geometry is the ready plot's `sweep` unchanged — same 100° band, same 8° tilt. Only the band's colour is new, and it is new because the plot's flat white at `.55` is tuned for **soil**: over a cream dock button it is a lightening streak with no meaning attached. `--coin` is already the one colour on this button that means *the Turn is ready*, so the glint says the same thing the ring says, louder and once. |
+| **Its reduced-motion rest state** | `rgba(255,201,60,.3)` into `rgba(255,201,60,.14)` | The same gold held still across the face. A wash rather than a band because a diagonal band frozen mid-travel reads as a rendering artefact, and the requirement is a *highlighted* state, not a paused animation. |
+
 **They are literals in `style.css` rather than `:root` tokens on purpose:** each is used by exactly
 one component, and twelve more names in a palette this document already says carries 149 colours by
 accident would be a worse trade than three named ramps in one table. Promoting them to local custom
