@@ -1105,6 +1105,53 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-30 (rulings) — Show the numbers, the What's New popup, and orders that pay like they mean it
+
+**Three owner calls from playing the build, and the first is a design principle that overrules
+an earlier one.**
+
+**1. Show the value where the player taps.** The owner's words: this is an incremental game —
+"these games are all about math and small numbers... show people the value that they have."
+Lucky Charm is the house's own worked example (says what it does, blips imply the total); the
+petals got it wrong (dots with no numbers), and the plant picker got it *actively* wrong — it
+applies Sprinklers and boosts to its grow-time label but **forgot petals**, so a tulip full of
+Quick Sprout still reads 18 seconds while genuinely growing faster underneath
+(`ui-sheet.js:818` applies `growModifier()` but not `petalGrowMult`). The engine was right;
+the label lied. **This overrules the phase-2 "pips, not spreadsheet rows" position** — the
+resolution keeps both: pips for the feel of filling something, the number beside them for the
+value. The rule, project-wide: *if a button costs something, it says what you get and what you
+now have; every number a purchase changes updates the moment you buy.* One deliberate
+exception survives: year one's mystery meter, the approved tutorial beat.
+
+**2. The What's New popup.** A one-time, house-styled dialog (never fullscreen) on opening the
+game: a piece of flashy art up top, a few plain bullets of what's new, and one button — "Got
+it!" — which also **resets the save** so the playtest group starts the new build fresh.
+Design decisions: announcements are **data** (id, image, title, bullets, and a per-announcement
+reset flag) so the owner ships a new one by adding a row; the seen-flag lives in its own
+storage key **outside the game save** — it must survive the very reset the button performs, or
+the popup loops forever; a seen announcement never shows again; dev tools get a preview and a
+clear-flags button. **The art is a raster image, which is the repo's first deliberate
+binary-asset exception beyond the home-screen icons** — announcement art is owner-supplied,
+per-announcement, and the exception is documented in the conventions rather than snuck in. The
+offline cache list must carry it or the installed app shows a broken square.
+
+**3. Orders pay real gold.** The owner: the delivery bonus "is so small... almost feels
+pretty pointless." Right — the Stand's multiplier was tuned against the old economy and, with
+its reputation paused, a filled order now pays a token. The ruling: raise order payouts until
+delivering feels like a small windfall — the working target is **roughly one to two minutes of
+the player's current earning rate per order**, measured in the sim rather than eyeballed, all
+in data, with the standing invariant untouched: delivering always beats selling the contents.
+
+### Rejected
+
+**Numbers on the year-one meter** — the mystery is the tutorial, kept. **Storing the popup's
+seen-flag in the save** — the reset would resurrect it. **A fullscreen takeover** — the owner
+asked for a mobile-game popup with the house border, and the house style has one. **Calling
+the button "Reset"** — it says "Got it!"; the fresh start is the announcement's gift, not its
+threat.
+
+---
+
 ## 2026-08-30 (design) — The money plan: one owner idea ships first, the other is ruled out by its own math
 
 **The owner opened the monetization conversation with two ideas, and a three-agent crew
