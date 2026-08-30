@@ -769,14 +769,10 @@ cards / plots / dock to 18, the board to 26, and everything already at `999px` o
 hex values** against the 22 the palette names. Nobody chose most of them; they accreted. The ink can
 never be adjusted globally while this is true, which undoes the reason for having tokens at all.
 
-### `.card-desc` is the last `opacity: .7` description text
+### ~~`.card-desc` is the last `opacity: .7` description text~~ — DONE 2026-08-30 (phase 3.8)
 
-`.seed-desc`, `.cp-about` and `.cp-card-v` all use `var(--ink-soft)` at full opacity now.
-`.card-desc` still uses opacity, which drags the text toward whatever surface is behind it — so it
-gets washier as the panel gets lighter, and it is the first thing to fail on a phone in sunlight.
-One-line fix, left because nothing else in the album was being touched.
-
-*Where:* `style.css`, `.card-desc`.
+Fixed alongside the Cards pass, which cleared the same family out of `.album-lede`,
+`.cardcell:not(.have) .cardname`, `.setbar small` and the pack's duplicate state.
 
 ### `.quest-card` has the seed row's material but not its contact shadow
 

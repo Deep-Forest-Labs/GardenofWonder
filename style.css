@@ -1437,7 +1437,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .card-top > span:last-child{min-width:0}
 .card-title{display:block;font-size:14px;font-weight:800;line-height:1.1}
 .card-sub{display:block;font-size:11px;font-weight:700;opacity:.62;line-height:1.15;margin-top:1px}
-.card-desc{font-size:11.5px;font-weight:600;line-height:1.3;opacity:.8}
+.card-desc{font-size:11.5px;font-weight:600;line-height:1.3;color:var(--ink-soft)}
 /* What you have and what the price buys, in the same cream pills the seed rows
    use. The card is 150px wide on a phone, so the pair is allowed to stack. */
 .card-vals{display:flex;flex-wrap:wrap;gap:4px}
@@ -2288,90 +2288,238 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 /* ============ THE CARD ALBUM ============
    Card art is a slot: .card-motif composes a placeholder from the icon vocabulary, .card-img would
    carry a real illustration. Both sit in the same box, so swapping one for the other changes
-   nothing about the layout. */
+   nothing about the layout.
+
+   BROUGHT ONTO THE HOUSE MATERIAL 2026-08-30. The album shipped on 15 August and the standard
+   hardened on the 26th, so these screens were the last place in the game still drawn the old way:
+   flat pastel tiles on cream paper — no figure against ground, no lip on anything, numbers set
+   loose on coloured bars. The fix is doc 05's own first check, applied literally: the tiles and the
+   card faces become the DARK BODY tier, in the Tally plate's ramp, because that ramp exists for
+   exactly this case — a dark body standing on cream inside a sheet. The set's identity moves onto
+   its ring, where a tint belongs: a badge, not a wall. */
 .album-head{margin:2px 0 12px}
-.album-lede{font-size:12.5px;font-weight:700;line-height:1.4;margin:0 0 8px;opacity:.85}
+.album-lede{font-size:12.5px;font-weight:700;line-height:1.4;margin:0 0 8px;color:var(--ink-soft)}
+/* The Almanac's meter, at album scale: an ink contour, a sunk track, a fill that
+   runs green into gold, and the count in a cream capsule rather than painted on
+   the bar. */
 .album-bar,.set-bar{
-  position:relative;display:block;height:16px;border-radius:999px;
-  background:rgba(44,26,16,.14);border:2px solid var(--ink);overflow:hidden;
+  position:relative;display:block;height:20px;border-radius:999px;
+  background:rgba(44,26,16,.1);border:2.5px solid var(--ink);overflow:hidden;
 }
-.album-bar i,.set-bar i{position:absolute;inset:0 auto 0 0;background:#8ce99a;border-radius:999px}
+.album-bar i,.set-bar i{
+  position:absolute;inset:0 auto 0 0;border-radius:999px;
+  background:linear-gradient(90deg,#8ce99a,#ffe066);
+}
 .album-bar b,.set-bar b{
-  position:absolute;inset:0;display:grid;place-items:center;
-  font-size:9.5px;font-weight:900;color:#2c1a10;letter-spacing:.02em;
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  padding:0 7px;border-radius:999px;
+  border:2px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  font-size:9.5px;font-weight:900;color:var(--ink);letter-spacing:.02em;line-height:1.5;
 }
 
 .set-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+/* THE DARK BODY, and the whole reason this screen now reads. Twelve pale tints
+   on pale cream had no figure and no ground; the same twelve tints on a dark
+   body do, and the tint is still there — it moved to the ring. The ramp is the
+   Tally plate's, already documented in doc 05, because a dark body standing on
+   cream inside a sheet is the same problem the plate solved. */
 .set-tile{
   display:flex;flex-direction:column;align-items:center;gap:6px;
-  padding:11px 9px;border-radius:16px;
-  border:3px solid var(--ink);background:var(--set,#f4ead9);
-  box-shadow:0 3px 0 var(--ink-2);
+  padding:11px 9px;border-radius:var(--r-md);
+  border:3px solid var(--ink);
+  background:
+    repeating-linear-gradient(96deg, rgba(255,255,255,.06) 0 3px, transparent 3px 14px),
+    radial-gradient(circle at 26% 22%, rgba(255,255,255,.07) 0 9%, transparent 10%),
+    radial-gradient(circle at 72% 62%, rgba(0,0,0,.07) 0 7%, transparent 8%),
+    linear-gradient(180deg,#8a5a33 0%, #71472a 46%, #5c3a22 100%);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.18),
+    inset 0 -7px 0 rgba(0,0,0,.2),
+    0 4px 0 #4a2e1a,
+    0 8px 14px rgba(44,26,16,.24);
+  color:#fff4de;
   touch-action:manipulation;
 }
-.set-tile:active{transform:translateY(3px);box-shadow:0 0 0 rgba(44,26,16,.35)}
-.set-tile.done{outline:3px solid #51cf66;outline-offset:1px}
+.set-tile:active{
+  transform:translateY(4px);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.18),
+    inset 0 -7px 0 rgba(0,0,0,.2),
+    0 0 0 #4a2e1a,
+    0 4px 8px rgba(44,26,16,.22);
+}
+/* A finished set wears a ring, and the ring RESTATES the whole stack — an
+   `outline` cannot carry a lip, and a box-shadow modifier that forgets one
+   deletes it in the state everybody is looking at. Green because green already
+   means yes everywhere in this game. */
+.set-tile.done{
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.18),
+    inset 0 -7px 0 rgba(0,0,0,.2),
+    0 4px 0 #4a2e1a,
+    0 8px 14px rgba(44,26,16,.24),
+    0 0 0 4px #51cf66;
+}
+/* The set's tint, under the white veil that lets a saturated token be used as a
+   pale surface — the same move .seed-art makes for nineteen seed colours. */
 .set-ring{
   width:44px;height:44px;border-radius:50%;flex:none;
   display:grid;place-items:center;
-  background:rgba(255,255,255,.6);border:3px solid var(--ink);
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.8), rgba(255,255,255,.34)),
+    var(--set);
+  border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2);
 }
 .set-ring svg{width:22px;height:22px}
 .set-name{font-size:12px;font-weight:900;text-align:center;line-height:1.2;min-height:2.4em;display:grid;align-items:center}
 .set-tile .set-bar{width:100%}
 
+/* The set's own header. The tint is the BODY, veiled, the way .verb-note wears a
+   verb's colour — a saturated token used as a pale surface, so ink stays legible
+   across all twelve. */
 .setbar{
   display:flex;align-items:center;gap:10px;
-  padding:9px 11px;border-radius:14px;margin-bottom:12px;
-  background:var(--set,#f4ead9);border:3px solid var(--ink);
+  padding:9px 11px;border-radius:var(--r-sm);margin-bottom:12px;
+  border:3px solid var(--ink);
+  background:linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.46)), var(--set);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.18);
 }
-.setbar small{font-size:11px;font-weight:700;opacity:.75}
+.setbar small{font-size:11px;font-weight:700;color:var(--ink-soft)}
 
 .card-grid9{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .cardcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;touch-action:manipulation}
 .cstars{display:flex;gap:1px;justify-content:center}
-.cstar svg{width:12px;height:12px;opacity:.28}
-.cstar.on svg{opacity:1;color:#ffd43b}
+/* An unearned star is DRAINED, not faded — the value comes out of the glyph the
+   way the meadow's locked land desaturates. Its gold is painted into the path,
+   so `color` never reached it; the old rule setting one had never applied. */
+.cstar svg{width:12px;height:12px;filter:saturate(.15) brightness(1.06)}
+.cstar.on svg{filter:none}
+/* A card face is the dark body tier, like its tile. Unowned it is the same
+   object drained, so the grid reads as nine cards of which some are filled —
+   never as nine holes. */
 .cardface{
   position:relative;width:100%;aspect-ratio:3/4;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  padding:6px 4px;border-radius:12px;
+  padding:6px 4px;border-radius:var(--r-sm);
   border:3px solid var(--ink);
-  background:rgba(44,26,16,.09);
-  box-shadow:inset 0 2px 0 rgba(255,255,255,.3);
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:
+    inset 0 4px 0 rgba(255,255,255,.4),
+    inset 0 -6px 0 rgba(44,26,16,.07),
+    0 3px 0 var(--paper-dim-edge),
+    0 6px 10px rgba(44,26,16,.14);
+  color:var(--ink-soft);
 }
-.cardcell.have .cardface{background:var(--set,#f4ead9);box-shadow:0 3px 0 var(--ink-2)}
-.cardcell:active .cardface{transform:translateY(2px)}
+/* box-shadow is ONE property, so every line of the base stack is restated here.
+   Writing the lip alone deleted the lit top edge of every card the player
+   actually owns — half the recipe gone in the only state that matters. */
+.cardcell.have .cardface{
+  background:
+    repeating-linear-gradient(96deg, rgba(255,255,255,.06) 0 3px, transparent 3px 14px),
+    radial-gradient(circle at 26% 22%, rgba(255,255,255,.07) 0 9%, transparent 10%),
+    radial-gradient(circle at 72% 62%, rgba(0,0,0,.07) 0 7%, transparent 8%),
+    linear-gradient(180deg,#8a5a33 0%, #71472a 46%, #5c3a22 100%);
+  box-shadow:
+    inset 0 4px 0 rgba(255,255,255,.18),
+    inset 0 -6px 0 rgba(0,0,0,.2),
+    0 4px 0 #4a2e1a,
+    0 8px 14px rgba(44,26,16,.24);
+  color:#fff4de;
+}
+.cardcell:active .cardface{
+  transform:translateY(3px);
+  box-shadow:
+    inset 0 4px 0 rgba(255,255,255,.18),
+    inset 0 -6px 0 rgba(0,0,0,.2),
+    0 0 0 #4a2e1a,
+    0 4px 8px rgba(44,26,16,.22);
+}
 .cardname{font-size:9px;font-weight:800;text-align:center;line-height:1.15;padding:0 2px}
-.cardcell:not(.have) .cardname{opacity:.5}
-.card-motif{display:grid;place-items:center;border-radius:50%;background:var(--motif,#d8cfc0);border:2px solid var(--ink)}
+/* The motif disc is the card's one piece of colour, and it stands on the face
+   rather than floating: veil, ink contour, lip. */
+.card-motif{
+  display:grid;place-items:center;border-radius:50%;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.8), rgba(255,255,255,.34)),
+    var(--motif);
+  border:3px solid var(--ink);box-shadow:0 2px 0 var(--ink-2);
+}
 .card-motif svg{width:58%;height:58%}
-.card-img{border-radius:8px;object-fit:cover}
+.card-img{border-radius:var(--r-sm);object-fit:cover;border:3px solid var(--ink);box-shadow:0 2px 0 var(--ink-2)}
+/* Every number in a cream pill with a contour and a lip — this one counts your
+   spares. */
 .cdupe{
   position:absolute;top:14px;right:-2px;
-  padding:1px 5px;border-radius:999px;
-  background:#fff;border:2px solid var(--ink);
-  font-size:9px;font-weight:900;
+  padding:1px 6px;border-radius:999px;
+  border:2px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);
+  font-size:9px;font-weight:900;color:var(--ink);
 }
 
-/* The opening. Rarity is telegraphed by the frame before the name is legible. */
+/* The opening. Rarity is telegraphed by the frame before the name is legible —
+   and since 2026-08-30 in the RARITY COLOURS the player already knows. It used
+   to glow gem-cyan for rare and coin-gold for legendary, which are the two
+   currencies, and Wonderstruck pink for mythical. Blue, purple and gold are a
+   vocabulary learned once in the garden; spending them on anything else, or
+   spending something else on them, is the one thing doc 05 forbids twice. */
 .pack-reveal{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0 14px}
 .pack-card{
   width:min(62%,210px);aspect-ratio:3/4;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-  padding:14px;border-radius:18px;
-  border:4px solid var(--ink);background:var(--set,#f4ead9);
-  box-shadow:0 5px 0 var(--ink-2);
+  padding:14px;border-radius:var(--r-md);
+  border:4px solid var(--ink);
+  background:
+    repeating-linear-gradient(96deg, rgba(255,255,255,.06) 0 3px, transparent 3px 14px),
+    radial-gradient(circle at 26% 22%, rgba(255,255,255,.07) 0 9%, transparent 10%),
+    radial-gradient(circle at 72% 62%, rgba(0,0,0,.07) 0 7%, transparent 8%),
+    linear-gradient(180deg,#8a5a33 0%, #71472a 46%, #5c3a22 100%);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.2),
+    inset 0 -8px 0 rgba(0,0,0,.22),
+    0 5px 0 #4a2e1a,
+    0 9px 14px rgba(44,26,16,.22);
+  color:#fff4de;
   animation:packIn .42s cubic-bezier(.2,1.5,.4,1) both;
 }
 .pack-name{font-size:14px;font-weight:900;text-align:center;line-height:1.2}
-.pack-tag{font-size:12px;font-weight:800;margin:0}
-.pack-reveal:not(.is-new){opacity:.85}
-.pack-reveal:not(.is-new) .pack-card{filter:grayscale(.45)}
-.pack-reveal.r-rare .pack-card{box-shadow:0 5px 0 var(--ink-2),0 0 22px 3px rgba(140,224,255,.75)}
-.pack-reveal.r-legend .pack-card{box-shadow:0 5px 0 var(--ink-2),0 0 26px 5px rgba(255,201,60,.85)}
+.pack-tag{font-size:12px;font-weight:800;margin:0;color:var(--ink)}
+/* A spare is DRAINED, not dimmed — the same paper the idle upgrade card and the
+   locked seed row wear, with its lip restated so the card keeps its material. */
+.pack-reveal:not(.is-new) .pack-card{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.4),
+    inset 0 -8px 0 rgba(44,26,16,.07),
+    0 5px 0 var(--paper-dim-edge),
+    0 9px 14px rgba(44,26,16,.14);
+  color:var(--ink);
+}
+.pack-reveal:not(.is-new) .pack-tag{color:var(--ink-soft)}
+/* Every rarity ring restates the whole stack, lip included. Common and Uncommon
+   deliberately get none: the ladder says a common thing does not announce
+   itself. Mythical is the top of a FIVE-rung ladder where the garden has four,
+   so rather than borrow purple — which a player has already learned means Epic,
+   one rung DOWN — it wears legendary gold said twice: a solid ring, a wider
+   glow, and the saturate breath. */
+.pack-reveal.r-rare .pack-card{
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.2), inset 0 -8px 0 rgba(0,0,0,.22),
+    0 5px 0 #4a2e1a, 0 9px 14px rgba(44,26,16,.22),
+    0 0 0 4px var(--rare), 0 0 22px 3px rgba(77,171,247,.7);
+}
+.pack-reveal.r-legend .pack-card{
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.2), inset 0 -8px 0 rgba(0,0,0,.22),
+    0 5px 0 #4a2e1a, 0 9px 14px rgba(44,26,16,.22),
+    0 0 0 4px var(--legend), 0 0 26px 5px rgba(255,212,59,.8);
+}
 .pack-reveal.r-mythic .pack-card{
-  box-shadow:0 5px 0 var(--ink-2),0 0 34px 7px rgba(255,143,208,.9);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.2), inset 0 -8px 0 rgba(0,0,0,.22),
+    0 5px 0 #4a2e1a, 0 9px 14px rgba(44,26,16,.22),
+    0 0 0 5px var(--legend), 0 0 40px 10px rgba(255,212,59,.85);
   animation:mythicPulse 1.6s ease-in-out infinite;
 }
 @keyframes packIn{0%{transform:scale(.7) rotate(-4deg);opacity:0}100%{transform:none;opacity:1}}
@@ -2391,8 +2539,8 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   transform:translateX(-50%);
   display:none;place-items:center;
   border-radius:50%;border:3px solid var(--ink);
-  background:#fff6d8;
-  box-shadow:0 3px 0 var(--ink-2), 0 0 16px 3px rgba(255,224,102,.85);
+  background:radial-gradient(circle at 34% 28%, #fffdf7, var(--paper-3));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18), 0 0 16px 3px rgba(255,224,102,.85);
   touch-action:manipulation;pointer-events:none;
 }
 /* Visibility comes from `display`, never from the animation — a badge that only exists once a

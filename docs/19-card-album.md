@@ -202,7 +202,40 @@ season has been authored end to end and the hours measured.**
 
 **12 sets of 9 = 108 cards**, in one season, *The Long Season*. Content in `ALBUM_SETS` / `ALBUM`
 (`data.js`); state and drawing in the album section of `game.js`; three sheet panels in `ui-sheet.js` —
-`album`, `cardset`, `pack`. Reached from a star button in the HUD.
+`album`, `cardset`, `pack`. Reached from the **Cards** button in the dock (it was a star in the HUD
+until the Big Five rebuilt the bottom of the screen).
+
+**The three screens were brought onto the house material on 2026-08-30.** The album shipped on 15
+August and the visual standard hardened on the 26th, so these were the last screens in the game
+still drawn the old way — flat pastel tiles on cream paper, no lip on anything, numbers set loose on
+coloured bars. Nothing about the layout or the behaviour changed. What changed:
+
+- **The tiles and the card faces are the dark body tier**, in the Tally plate's ramp
+  (`#8a5a33 → #71472a → #5c3a22`, lip `#4a2e1a`), because that ramp exists for exactly this case: a
+  dark body standing on cream inside a sheet. Twelve pale tints on pale cream had no figure and no
+  ground, which is doc 05's first and most important check.
+- **The set's tint moved to its ring**, under the white veil `.seed-art` uses — a tint belongs on a
+  badge, not on a wall.
+- **Every surface got the five-layer recipe**: grain, two blemishes, a lit top edge, a shaded bottom
+  and an opaque lip with the contact shadow that goes with it.
+- **`.cardcell.have .cardface` was the documented lip-deletion trap running live** — `box-shadow` is
+  one property, so owning a card deleted its lit top edge. Every state now restates the whole stack.
+- **A finished set wears a restated ring, not an `outline`** — an outline cannot carry a lip.
+- **Unowned cards and duplicate reveals are DRAINED, not faded.** `--paper-dim` with the lip
+  restated, never `opacity` or `grayscale`.
+- **Every number is in a cream pill** — the `n/9` on the bars, the `+N` spare counter.
+- **Rarity is painted in the rarity colours.** The reveal used to glow gem-cyan for Rare and
+  coin-gold for Legendary — the two currencies — and Wonderstruck pink for Mythical. Rare is now
+  `--rare`, Legendary `--legend`. **Mythical wears legendary gold said twice** — a solid ring, a
+  wider glow and the saturate breath — because the card ladder has five rungs where the garden has
+  four, and borrowing `--epic` purple would give the top rung a colour the player already learned
+  means one rung *down*. Common and Uncommon get no ring at all, which is the feedback ladder's own
+  rule about a common thing not announcing itself.
+
+**What was deliberately NOT done, and is a question for the owner** — see
+[HANDOFF.md](HANDOFF.md): the card face's internal composition (art above, name below, with the
+lower third empty), a back for an unowned card, the grid gaps, and whether Mythical should have a
+colour of its own. All four are layout or content, not look.
 
 Every set has the **same rarity shape**: three Common, two Uncommon, two Rare, one Legendary, one
 Mythical. Fixed on purpose — a new set is then only nine names and a tint, and a sim-test asserts
