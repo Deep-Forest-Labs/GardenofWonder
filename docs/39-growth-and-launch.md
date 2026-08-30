@@ -85,7 +85,7 @@ of them is the anchor).
 | **5 Jan** | Big Indie Pitch Mobile Edition (London) — deadline | ✓ | Free + ticket | CONFIRMED |
 | **18-19 Jan** | **PGC London 2027 + Big Indie Pitch Mobile Edition**, The Brewery | ✓ | Free pitch, PGC ticket required | CONFIRMED. **The single best-fitting recurring beat on this calendar for a two-person cozy mobile team.** Five minutes to expert panels, live feedback, a PocketGamer.biz roundup article for every participant — real free press. Studios up to 12. |
 | **Jan** | IndieCade Festival (online) | ✓ explicitly | $80 regular / $135 late, fee assistance available | CONFIRMED. Their instruction matters for a tiny team: *"The most important part of your submission is your DOCUMENTATION and not necessarily the build."* |
-| **~1-6 Mar** | **WHOLESOME DIRECT 2027 SUBMISSIONS OPEN** | see below | Free (probably) | **ESTIMATE, and see the warning.** |
+| **~1-6 Mar** | **WHOLESOME DIRECT 2027 SUBMISSIONS OPEN** | see below | Free (probably) | **ESTIMATE from 2025 and 2026, now corroborated by a second source — see the warning.** |
 | **1-5 Mar** | GDC 2027, Moscone Center | — | Expensive | SOFT (venue listing) |
 | **~early Mar** | Day of the Devs, San Francisco — free to attend, GDC week | ✓ no platform rule stated | Free | ESTIMATE from 8 Mar 2026, 16 Mar 2025, 17 Mar 2024 — all confirmed. But: **1,700+ submissions for ~60-70 slots**, and selected teams must deliver a build, a 2-3 minute intro video with isolated audio, a fact sheet and translated subtitles. A week of work. |
 | **~20 Mar** | **WHOLESOME DIRECT 2027 SUBMISSIONS CLOSE** | | | ESTIMATE — this exact date held in both 2025 and 2026 |
@@ -105,11 +105,13 @@ of them is the anchor).
 >
 > Two things, and the owner should hear both before planning a year around it.
 >
-> **First, the 2026 submission window (2-20 March) is sourced to an X/Twitter post that returns HTTP 402 and
-> cannot be opened by us or by anyone without API access.** The 2025 companion is an Instagram reel, equally
-> unfetchable. The date is probably right — it held in two consecutive years — but if a March 2027 push is going
-> on the calendar, **get a second source first.** The submission form only exists during the window, which is
-> why nobody can tell you the trailer length or the build requirement today.
+> **First, on sourcing — partly resolved.** The 2026 window (2-20 March) was originally sourced only to an
+> X/Twitter post that returns HTTP 402, which nobody can open. A second check found corroboration: Wholesome
+> Games' own TikTok carries a *"Wholesome Direct 2026 Submissions Open!"* post, and the submission form is a
+> plain Google Form (`forms.gle/TVYMGbEUo2kAag`, games and co-hosts on the same form) with a separate Typeform
+> for co-streamers and press. **The window is now corroborated well enough to plan against**, and the 20 March
+> close date held in both 2025 and 2026. Still unknown: trailer length, build requirement and key-art specs —
+> the form only accepts entries during the window, so nobody can read the requirements today.
 >
 > **Second, and more important: Wholesome Direct's entire machine runs on Steam wishlists.** Its published
 > success metric is *"+20,000 median wishlists"*; its August Celebration is a Steam sale a mobile-only game

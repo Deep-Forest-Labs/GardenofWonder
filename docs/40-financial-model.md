@@ -243,7 +243,7 @@ specifically.
 | What | When | What it means for us |
 | --- | --- | --- |
 | **Apple Small Business Program is still 15%** | Now | Confirmed on Apple's own page. Two catches doc 17 omits: the test is **two-sided** — under $1M in the prior calendar year **and** under $1M in the current year — and **enrolment is manual**, via the Paid Apps agreement in App Store Connect. It is not automatic. Also, Apple now varies SBP **by market**: China dropped to **12%** on 15 March 2026. |
-| **Google Play's fees were re-cut on 30 June 2026** | Live in US / EEA / UK | Under $1M it is now **10% service fee + 5% billing fee** — still **15% effective**, but newly **split**, and the 5% only attaches when Google Play Billing processes the sale. Australia 30 Sep 2026, Japan and Korea 31 Dec 2026, rest of world by 30 Sep 2027. Above $1M it becomes 20%+5% (new installs) or 25%+5% (existing). |
+| **Google Play's fees were re-cut on 30 June 2026** | Live in US / EEA / UK | **Read this row carefully — two of our research agents got it wrong and it is the most financially consequential detail in the document.** Under $1M the fee now depends on *when the player first installed*: **10% + 5% billing fee** for subscriptions and for **new installs**, but **20% + 5%** for **existing installs**. Google defines a new install as *"a transaction from a user whose first-time install or first update of the app from Google Play occurred on or after June 30, 2026."* **Garden Wonder has not launched, so every player we will ever have is a new install** — our rate is **15% effective**, permanently, for this app. A live game that launched before June would be paying ~25% on most of its revenue. Australia 30 Sep 2026, Japan and Korea 31 Dec 2026, rest of world by 30 Sep 2027. |
 | **Apple's EU terms change on 1 October 2026** | 1 Oct 2026 | **Good for us.** An SBP participant pays **15% on IAP, 10% on alternative in-app payment, 10% on out-of-app offers**, and the per-install Core Technology Fee is replaced by a **5% commission**. Best rate Apple has offered a small studio. |
 | **US external links currently cost 0%** | Now, but contested | Apple's guidelines confirm no entitlement is needed for US storefront apps. **But the Supreme Court took Apple's appeal on 30 June 2026**, and on **14 August 2026 Apple filed to charge 15%, or 5% for SBP developers**. **Plan for the 0% window to close.** |
 | **PEGI now rates games on their daily-return mechanics** | **From June 2026** | **This is the one that costs us.** Time-limited or quantity-limited offers → **PEGI 12**. Paid random items → **PEGI 16** by default. Daily-return rewards → PEGI 7. And: *mechanisms that **punish** players for not returning, by losing content or reducing progress → **PEGI 12**.* Germany's USK, which did this first, reports the new criteria applied to ~30% of submissions with **1 in 3 of those getting a higher rating**. |
@@ -404,11 +404,14 @@ US/Japan/UK/Brazil: hybridcasual Lifestyle & Puzzle **59.0% IAP / 41.0% ads**. A
 18-month books: 80/20, with the ad-removal pass as one of its best sellers. Flappy Bat: 67.5/32.5.
 
 **Store fees.** [Apple SBP](https://developer.apple.com/app-store/small-business-program/) 15%, two-sided $1M
-test, manual enrolment. [Google Play](https://support.google.com/googleplay/android-developer/answer/112622):
-first $1M in US/EEA/UK from 30 June 2026 is **10% + 5% billing fee** across all three transaction types — a
-single merged cell in Google's table, so 15% effective. Above $1M: 20%+5% new installs, 25%+5% existing.
-Everywhere else, the old 15%/30% tier holds until global rollout completes 30 Sep 2027. Apple $99/year; Google
-$25 once.
+test, manual enrolment. [Google Play](https://support.google.com/googleplay/android-developer/answer/112622),
+first $1M in US/EEA/UK from 30 June 2026, **checked directly against Google's own table because two research
+agents read it differently**: subscriptions **10% + 5%**, other transactions from **new installs 10% + 5%**,
+other transactions from **existing installs 20% + 5%**. Above $1M the existing-install rate rises again. **Since
+Garden Wonder is unreleased, every player is a "new install" by Google's own definition, so 15% is the correct
+figure for this model** — but a doc that says "Google is a flat 15%" is wrong in general and would mislead
+anyone applying it to a live game. Everywhere outside US/EEA/UK the old 15%/30% tier holds until the rollout
+completes 30 Sep 2027. Apple $99/year; Google $25 once.
 
 **Featuring is worth much less than folklore.** An 8-week Apple "New Games We Love" across 139 countries
 (excluding the US) → **2.74M impressions, 3,790 downloads, $130 in proceeds, one IAP sale ever.** A ~1-week US
