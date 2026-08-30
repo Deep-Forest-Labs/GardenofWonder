@@ -8,24 +8,28 @@ owner-ratified the same evening, and built 2026-08-14. Reasoning in
 Read alongside [13-order-system.md](13-order-system.md), which owns reputation long-term, and
 [15-navigation-and-ia.md](15-navigation-and-ia.md), which owns where things live on screen.
 
-> **THE LADDER IS BROKEN AGAINST THE GARDEN YEAR — three findings, all reproduced, all open for
-> the design session, 2026-08-29.** This document's ladder was written when seeds unlocked by
-> **level**. They unlock by a one-time **gold price** now
-> ([33-year-one-economy.md](33-year-one-economy.md)) and only two seeds are free.
+> **THE THREE LADDER FINDINGS ARE RULED AND FIXED, 2026-08-30 (phase 3.6).** This document's ladder
+> was written when seeds unlocked by **level**. They unlock by a one-time **gold price** now
+> ([33-year-one-economy.md](33-year-one-economy.md)) and only two seeds are free. What that broke,
+> and what was done:
 >
-> 1. **A discover quest cannot count a species you already have.** Quests are dealt at
->    `progress: 0` and the discover event fires once per species, ever — so the two free species are
->    spent before `q_discover_5` is dealt. The Almanac reads 2 and the strip reads 0, on the same
->    save. The real bar is five *new* species: **1,978,125 gold**, not the 712,500 the qty implies.
-> 2. **`q_discover_12` (rep 50, the last rung) is arithmetically unclaimable.** Dealt at 8 or more
->    species found, its ceiling is 10/12 even after growing every species in the game. It then holds
->    a slot and the strip forever, and the daily quest can never reach the strip again.
-> 3. **The Stand out-runs this ladder entirely.** `standDeliver()` pays reputation from a fresh save,
->    at up to 48 rep an order — more than the largest quest here — while doc 32 puts order-driven
->    rep and the levels 18–40 rungs in slice D. The faucet shipped; the rungs did not.
+> 1. **A discover quest could not count a species you already had.** Dealt at `progress: 0` while the
+>    discover event fires once per species ever, so the two free species were spent before
+>    `q_discover_5` was dealt — the Almanac read 2 and the strip read 0 on the same save. **Fixed:** a
+>    quest on a track with a lifetime record is dealt at that record. The prices fall to the
+>    documented **712,500 / 3,117,188**.
+> 2. **`q_discover_12` was arithmetically unclaimable.** Dealt at eight species, its ceiling was
+>    11/12 measured against the real engine, in a nineteen-seed game. **Fixed by the same change** —
+>    it is dealt at eight and asks for four more. It is now merely long, not impossible.
+> 3. **The Stand out-ran this ladder entirely**, paying up to 48 standing an order from a fresh save
+>    while doc 32 puts order-driven reputation and the levels 18–40 rungs in slice D. **Paused**
+>    behind `STAND.repPaused`, read through `Game.standOrderRep()`; orders still pay gold. **Until
+>    slice D lands, this ladder plus the Almanac's milestones are the only road to every level gate
+>    in the game** — including the fourth habitat slot at level 16.
 >
-> **The numbers, the proofs and a ranked menu of options are in
-> [11-known-issues.md](11-known-issues.md).**
+> **The strip also stopped showing the oldest active quest and started showing the nearest to done**,
+> so a slow or stuck quest can no longer own the game's one always-visible goal. Reasoning in the
+> phase 3.6 entry in [10-decision-log.md](10-decision-log.md).
 
 ## The problem being fixed
 
@@ -81,8 +85,10 @@ A new persistent row between the HUD and the stage:
   toward the next level.
 - **Bar**: progress of the quest currently on the strip (`progress / qty`). The task name and
   count sit on top of the fill. A chip at the right end shows the reputation reward.
-- **One quest** shown at a time — the oldest incomplete one. Tapping the strip opens the quest
-  panel with all active quests.
+- **One quest** shown at a time — the one **nearest to done**, as a fraction of its goal, with a
+  completed quest always first and ties going to the one dealt first (`Game.stripQuest()`). Tapping
+  the strip opens the quest panel, which leads with the same quest because both read the one order
+  `Game.activeQuests()` returns.
 - Tapping a **completed** quest claims it. Do not auto-claim. The claim tap is the payoff moment
   and it needs sound, a coin burst, and the bar visibly moving. Route it through `FX` and the
   feedback ladder in [06-audio-and-fx.md](06-audio-and-fx.md) at roughly Rare-tier juice; a
@@ -220,10 +226,24 @@ easiest way to get this feature wrong.
 | `merge` | a bench merge completes | `key` = chain id — added 2026-08-16 |
 | `bank` | an item is pulled off the bench into stock | Added 2026-08-16 |
 | `rarity` | harvest at rarity ≥ `key` | Rare / Epic / Legendary |
-| `discover` | first-ever harvest of a seed | Wired; no ladder quests use it — milestones pay instead |
+| `discover` | first-ever harvest of a seed | Three ladder rungs use it. **Dealt at the lifetime count**, not at zero — see the record table below |
 
 Counters live on the active quest instance, not globally, so a quest that becomes active later
 starts from zero. This is intentional: a quest should describe something you go *do*.
+
+**The one exception, and it is a rule rather than a special case (2026-08-30).** Where the game
+already keeps a *lifetime record* of a track, a quest on that track is dealt at that record instead
+of at zero. `QUEST_RECORDS` in `game.js` is the table, keyed on `track`; `questFloor()` applies it
+as a **floor**, so it can only ever raise an instance and re-applying it is harmless — which is also
+what straightens a save already stranded at 0/5, with no migration. Only `discover` has a record
+today (`state.discovered`, which the Almanac milestones have always read), and adding a second is
+one line plus one test. **The daily is deliberately excluded**: it is a goal for today, and the
+dailies are the only quests that pay gold, so one dealt already finished every morning is a faucet
+into the Year's mint on a timer.
+
+Note the trade this makes: because the record is the truth, a `discover` quest would still complete
+even if its `noteQuest()` event stopped firing. That is the point — the two must agree — but it
+means this one track has no event-level failure signal the way the others do.
 
 ### Authoring rules
 
@@ -327,7 +347,7 @@ repointed from the Apothecary at the bench on 2026-08-16, but **the potting benc
 — `benchMergeOnce()` and `benchBank()` exist in `game.js` and nothing in any `ui*.js` file calls
 them, so no player action can reach the `merge` or `bank` track. Handed out, they were exactly the
 jam the sell quests below caused: uncompletable, holding one of the three active slots forever, and
-`stripQuest()` renders `active[0]`, so the strip sat on "Merge a Posy 0/1" and never moved.
+`stripQuest()` then rendered `active[0]`, so the strip sat on "Merge a Posy 0/1" and never moved.
 
 Their ids are kept on purpose, against the rule above — but the orphan argument that kept them last
 time is what `ensureProgression()` now handles directly, so pausing is safe where deleting was not.
@@ -341,7 +361,7 @@ gets a screen**, and retire the three stand-ins with them if the total needs hol
 **The `sell` track carries no quests, deliberately.** `q_sell_5`, `q_sell_10` and `d_sell_3` were
 removed 2026-08-15: `sell()` only credits the track for `kind === 'flower'`, and `stockRow()` is
 only ever called for honey, wax and crafted goods, so no player could sell a flower. Because
-`fillActive()` caps at three and `stripQuest()` always renders `active[0]`, the quest strip jammed
+`fillActive()` caps at three and `stripQuest()` then rendered `active[0]`, the quest strip jammed
 permanently at "Sell 5 flowers 0/5" once it reached the front. The ladder's two slots became
 `q_discover_5` and `q_discover_12`, at the same reputation, which keeps the total at 777 — the
 suite asserts the ladder still reaches Eternal. **Do not add a sell quest until the UI can sell a
@@ -719,7 +739,7 @@ here so the retired design is legible, not as a description of the suite:
 What replaced the retired half: the ladder is asserted **flat** — no harvest advances a tier,
 pays a mastery gem, or moves a multiplier — and petals carry the per-seed yield instead. See
 [33-year-one-economy.md](33-year-one-economy.md) and the `bill 13` groups in
-`tools/sim-test.js`, which now runs 1,149 assertions.
+`tools/sim-test.js`, which now runs 1,296 assertions.
 
 **Trap the build found:** mastery multiplies harvest payout and climbs as a run proceeds, so any
 sim-test measuring a *different* harvest multiplier over thousands of harvests has to reset the

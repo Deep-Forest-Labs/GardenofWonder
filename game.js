@@ -544,8 +544,10 @@ const Game = (() => {
       if (!Object.prototype.hasOwnProperty.call(parsed, 'rep')) {
         progressionGrant = migrateProgression();
       }
-      ensureProgression();
+      // Before ensureProgression(), which now deals quests against the lifetime
+      // record this is what rebuilds.
       backfillDiscovered();
+      ensureProgression();
       const almanacGrant = grantAlmanacMilestones();
       // Silent by design: a backfilled record has no moment to celebrate.
       const masteryBackfill = backfillMastery();
@@ -1237,6 +1239,27 @@ const Game = (() => {
     return !!(def && def.paused);
   }
 
+  /* What a quest is already owed the moment it is dealt. Where the game keeps a
+     lifetime record of a track, that record is the honest answer — the Almanac
+     milestones have always read it that way, and a discover quest dealt at
+     species six that started at zero left one word counting two different
+     things on the same screen. Every other track answers zero: an event nobody
+     was tallying cannot be reconstructed afterwards. Keyed on the track so a
+     second record joins by adding a line. */
+  const QUEST_RECORDS = {
+    discover: () => discoveredCount()
+  };
+  /* A floor, not a starting value. A record can never sit below what an instance
+     counted for itself, so re-applying it on every fill is idempotent — which is
+     also what straightens a save whose quest is already stranded, with no
+     migration flag to carry. The daily is deliberately left out: it is a goal
+     for today, and a lifetime record would deal it finished every morning. */
+  function questFloor(inst, def) {
+    const record = def && QUEST_RECORDS[def.track];
+    if (!record) return;
+    inst.progress = Math.max(inst.progress, Math.min(def.qty, record()));
+  }
+
   function rollDaily(excludeId) {
     const pool = DATA.dailies.filter((q) => q.id !== excludeId && !questPaused(q));
     const back = DATA.dailies.filter((q) => !questPaused(q));
@@ -1261,6 +1284,7 @@ const Game = (() => {
       state.quests.active.push({ id: def.id, progress: 0 });
       have.add(def.id);
     });
+    state.quests.active.forEach((inst) => questFloor(inst, questById(inst.id)));
   }
   function ensureProgression() {
     if (!state.quests || typeof state.quests !== 'object') {
@@ -1274,8 +1298,8 @@ const Game = (() => {
     if (typeof state.rep !== 'number' || !(state.rep >= 0)) state.rep = 0;
     // Drop instances whose definition no longer exists, and instances of a quest
     // that has since been paused. Either one can never be claimed, so it holds
-    // one of the three slots forever and jams stripQuest(), which always shows
-    // active[0] — that is what stranded players on 'Merge a Posy'.
+    // one of the three slots forever — and the strip only falls through to the
+    // daily once the active list is empty, so a dead entry keeps the daily off it.
     state.quests.active = state.quests.active.filter((q) => {
       const def = q && questById(q.id);
       return !!def && !questPaused(def);
@@ -1613,13 +1637,34 @@ const Game = (() => {
     return payload;
   }
 
+  /* One order, read by the strip and by the quest panel, so the always-visible
+     goal is always the panel's first card. Nearest to done first, measured as a
+     fraction of the goal rather than a raw count — four of five is closer than
+     five of twelve. Ties keep the order the quests were dealt in, which is what
+     the strip showed before and which cannot shuffle under a player watching it.
+     A paused instance is dropped rather than ranked: a quest nothing can advance
+     is the thing that used to hold the strip shut. */
+  function activeByNearest() {
+    const live = [];
+    state.quests.active.forEach((inst, i) => {
+      const def = questById(inst.id);
+      if (!def || questPaused(def)) return;
+      const frac = inst.progress >= def.qty ? 1 : inst.progress / def.qty;
+      live.push({ inst, def, frac, dealt: i });
+    });
+    live.sort((a, b) => (b.frac - a.frac) || (a.dealt - b.dealt));
+    return live;
+  }
+  function activeQuests() {
+    return activeByNearest().map((q) => q.inst);
+  }
+
   function stripQuest() {
     refreshDaily();
     fillActive();
-    const inst = state.quests.active[0];
-    if (inst) {
-      const def = questById(inst.id);
-      if (def) return { kind: 'ladder', inst, def, complete: inst.progress >= def.qty };
+    const near = activeByNearest()[0];
+    if (near) {
+      return { kind: 'ladder', inst: near.inst, def: near.def, complete: near.inst.progress >= near.def.qty };
     }
     const d = state.quests.daily;
     const ddef = d && d.id ? questById(d.id) : null;
@@ -2535,6 +2580,22 @@ const Game = (() => {
 
   const critterReady = (def) => critterProgress(def) >= critterGoalFor(def, 1);
 
+  /** The one place an arrival record is written. Six fields that mean different
+      things — `fed` is the keepsake clock, `fedUntil` is food — so a second path
+      writing the shape by hand is one rename away from a silent corruption. */
+  function moveIn(def, level) {
+    const star = Math.max(1, Math.min(CREATURE_STARS, Math.round(Number(level) || 1)));
+    // Tend automatically when there is room: a first creature that did nothing
+    // until the player found a toggle would read as broken.
+    state.critters[def.id] = {
+      since: nowSeconds(), fed: 0, gifts: 0, met: false, level: star, tending: habitatFree() > 0,
+      // A generous free window, so nobody meets their first creature and
+      // watches it fall asleep before they know food exists.
+      fedUntil: nowSeconds() + ARRIVAL_AWAKE_HOURS * 3600
+    };
+    return { def, arrived: true, level: star };
+  }
+
   /** Called after a harvest. Handles both a creature turning up for the first time
       and a duplicate turning up to raise one that is already home — the same
       threshold machinery, escalating. Returns what happened. */
@@ -2543,15 +2604,7 @@ const Game = (() => {
     CREATURES.forEach((def) => {
       if (!critterHere(def.id)) {
         if (!critterReady(def)) return;
-        // Tend automatically when there is room: a first creature that did nothing
-        // until the player found a toggle would read as broken.
-        state.critters[def.id] = {
-          since: nowSeconds(), fed: 0, gifts: 0, met: false, level: 1, tending: habitatFree() > 0,
-          // A generous free window, so nobody meets their first creature and
-          // watches it fall asleep before they know food exists.
-          fedUntil: nowSeconds() + ARRIVAL_AWAKE_HOURS * 3600
-        };
-        events.push({ def, arrived: true, level: 1 });
+        events.push(moveIn(def, 1));
         return;
       }
       // Loop, because a long absence can bank enough for more than one star.
@@ -2964,6 +3017,13 @@ const Game = (() => {
     };
   }
 
+  /* What an order will actually pay in standing, as against what it was priced
+     at. The pause is a read, never a rewrite: the authored number stays in the
+     save, so STAND.repPaused going false pays every order already on a board
+     with no migration. Delivery and every card read this, or a card promises
+     standing the counter will not hand over. */
+  const standOrderRep = (order) => (STAND.repPaused ? 0 : Math.max(0, Number(order && order.rep) || 0));
+
   /* Deliberately biased toward blooms the player has actually grown, so the
      board reads as "someone noticed your garden" rather than a random quota.
      Never a hard filter, or a new seed would never be asked for. */
@@ -3123,7 +3183,7 @@ const Game = (() => {
     /* addRep() hands back the level grants but does not announce them — every
        caller emits its own, and a delivery that levelled you up in silence would
        lose the biggest moment in the game. */
-    const grants = addRep(order.rep);
+    const grants = addRep(standOrderRep(order));
     if (grants.length) emit('levelup', { from: grants[0].level - 1, to: state.level, grants });
     state.stand.slots[slot] = null;
     state.stand.nextAt[slot] = nowSeconds() + STAND.refill;
@@ -3743,6 +3803,67 @@ const Game = (() => {
       return report;
     },
 
+    /* Wind every production clock BACK by n hours rather than winding the world forward — the
+       same mechanism drainCritters() uses, because elapsed time against now is all any of these
+       systems reads. `lastSeen` deliberately stays where it is: moving it is what makes this an
+       absence, and an absence pays offline income. A running boost and the Wonder keep their
+       remaining time too, so the power-up buttons beside this one still have something left to
+       demonstrate. */
+    warp(hours) {
+      const back = Math.max(0, Number(hours) || 0) * 3600;
+      if (!back) return null;
+      const wind = (t) => Math.max(0, t - back);
+      /* Zero is a sentinel in three of these fields — no roll scheduled, no creature on record,
+         no keepsake ever handed over — so a clock that has to stay live floors at 1 instead:
+         rollMutations() skips a plant whose `mutateAt` is falsy and load() drops a creature
+         whose `since` is. */
+      const windLive = (t) => Math.max(1, t - back);
+      let clocks = 0;
+      state.grid.forEach((cell) => {
+        if (cell.locked || !cell.seed) return;
+        cell.plantedAt = wind(cell.plantedAt);
+        if (cell.mutateAt) cell.mutateAt = windLive(cell.mutateAt);
+        clocks += 1;
+      });
+      state.fall.grid.forEach((cell) => {
+        if (!cell.seed) return;
+        cell.plantedAt = wind(cell.plantedAt);
+        clocks += 1;
+      });
+      hiveCells().forEach((i) => {
+        state.apiary.cells[i].at = wind(state.apiary.cells[i].at);
+        clocks += 1;
+      });
+      state.craft.forEach((c) => { c.doneAt = wind(c.doneAt); clocks += 1; });
+      state.stand.nextAt.forEach((t, i) => {
+        if (!t) return;
+        state.stand.nextAt[i] = wind(t);
+        clocks += 1;
+      });
+      CREATURES.forEach((def) => {
+        const home = critterHome(def.id);
+        if (!home) return;
+        /* Both food and keepsakes, for opposite reasons. `fedUntil` is the food clock; `fed` is
+           when a keepsake was last handed over, and `since` stands in for it until the first one
+           is collected — so a warp that moved only `fedUntil` would starve the Hollow and hand
+           back nothing for the wait. */
+        home.fedUntil = wind(home.fedUntil || 0);
+        home.since = windLive(home.since || 0);
+        if (home.fed) home.fed = windLive(home.fed);
+        clocks += 1;
+      });
+      if (!clocks) return null;
+      /* One real tick catches the world up in this commit rather than a frame later, in the
+         engine's own order: the rolls the warp brought due, then readiness, the drone, the
+         planters, jars, crafts, orders and Fall. At dt 0 the Wonder's growth acceleration is a
+         no-op, so a warp cannot quietly spend the boost it just spared — and processWeather()
+         re-pins `lastSeen` to now, which is what keeps offline income out of this. */
+      tick(0);
+      save();
+      emit('panels');
+      return { hours: back / 3600, clocks };
+    },
+
     /* Wind the creature clocks BACK rather than the world forward, so a four-hour
        awake window can be watched running out without waiting four hours. This is
        the real mechanism — sleeping is derived from `fedUntil` against now, so
@@ -3789,6 +3910,49 @@ const Game = (() => {
         else state.credits -= food.cost;
       });
       return n;
+    },
+
+    /** Move the next creature nobody has met in, at a chosen star, through the
+        same record and the same arrival beat a real threshold crossing writes.
+
+        It leaves `state.discovered` alone on purpose. That is the lifetime
+        harvest count the Almanac, the discover quests, the growth loop and the
+        creature's own attract line all read, so tripping checkCritters() by
+        faking it would buy one celebration at the cost of four honest counters
+        — and it could not place a creature at a chosen star anyway, because an
+        arrival returns before the growth loop. */
+    summonCritter(star) {
+      const def = CREATURES.find((c) => !critterHere(c.id));
+      if (!def) return null;
+      const e = moveIn(def, star);
+      save();
+      emit('critter', e);
+      // Coming out is what a pair is recorded from, and this is the only path
+      // that can put several creatures out in one commit.
+      notePairs();
+      emit('panels');
+      return { ...e, tending: critterTending(def.id) };
+    },
+
+    /** The whole roster, at one star. No levels are granted, so the habitat cap
+        still decides how many of them the band can show. */
+    summonAll(star) {
+      const out = [];
+      CREATURES.forEach(() => {
+        const r = Dev.summonCritter(star);
+        if (r) out.push(r);
+      });
+      return out;
+    },
+
+    /** One of each, so the POWER-UP button has something to demonstrate itself
+        with. It reseats from `boostInv` on its own quarter-second tick, so
+        nothing here has to tell it. */
+    grantBoosts() {
+      DATA.boosters.forEach((b) => giveBoost(b.id, 1));
+      save();
+      emit('panels');
+      return DATA.boosters.length;
     },
 
     /** Drop a pack onto a plot so the collect beat can be inspected without waiting on the roll. */
@@ -3984,14 +4148,14 @@ const Game = (() => {
     benchExpand, benchExpandCost, benchUsed, benchCapacity, benchStockOf,
     standTier, standTierAt, standTierDefs, standOrders, standOrderAt, standGoodsAt, standGoodOffered,
     standFlowerPool, standHoneyPool, standHave, standNeedMet, standCanDeliver, standProgress,
-    standPrice, standUnitValue, standFloorUnit, standGenerate, standDeliver, standSkip, standRefillIn, processStand,
+    standPrice, standOrderRep, standUnitValue, standFloorUnit, standGenerate, standDeliver, standSkip, standRefillIn, processStand,
     tick, progressOf, remainingOf,
     wonderActive, wonderMult, startWonder, comboMult,
     UPGRADE_EFFECTS,
     repToNext, cumulativeRep, levelFromRep, repIntoLevel,
     seedUnlocked, seedUnlockLevel, plotAvailable,
     plotGate, plotUnlockLevel,
-    claimQuest, stripQuest, questById,
+    claimQuest, stripQuest, activeQuests, questById,
     discoveredCount, discoveredOf, bestRarityOf, almanacMilestones,
     masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf,
     neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier,

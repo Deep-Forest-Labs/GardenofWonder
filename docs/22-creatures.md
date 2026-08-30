@@ -528,12 +528,20 @@ clocks**, which also shows a live count of how many tenders are down:
 
 - **Drain 1h / 4h / 24h** winds both clocks *back*. This is the real mechanism rather than a
   simulation of it — sleeping is derived from `fedUntil` against now, so moving it is exactly what
-  the passage of time does. Both clocks move together, because every food's awake window outlasts
-  its boost and *asleep but still well fed* is a state real play cannot reach.
+  the passage of time does. There is one fullness clock since `awakeUntil` was absorbed on
+  2026-08-20, so there is no second clock that could drift out of step with it.
 - **Send them to sleep** empties every clock at once. It drains resting creatures too, so swapping
   one in shows it needing food.
 - **Feed everyone** is the way back, and it goes through the real `feedCritter()` purchase path
   rather than writing the clocks, so the wake-up beat is the one a player gets.
+
+A further pair sits in its own row above, under **Creatures**: **summon the next creature** and
+**summon all six**, each at a chosen star. Both write the arrival record through `moveIn()` — the
+same function the threshold path uses — and fire the same `critter` arrival event, so the moving-in
+beat is the real one. They touch nothing else: `state.discovered` stays where it was, so the Almanac
+and the discover quests stay honest and a creature summoned at ★3 correctly shows no progress yet
+toward ★4. And **they grant no levels**, so the habitat cap still decides how many can be out at
+once — on a fresh save that is one, which is what the row header says out loud.
 
 ### The numbers, and where the dial is
 

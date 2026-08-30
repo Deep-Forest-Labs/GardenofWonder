@@ -298,6 +298,16 @@ The row carries the full card material — 3px ink, `0 4px 0 var(--ink-2)`, and 
 `0 8px 14px rgba(44,26,16,.24)` contact shadow the plot has, so rows sit *above* the paper rather
 than on it. The press collapses the lip and tightens the shadow together.
 
+**The go button never becomes a padlock (2026-08-30, phase 3.6).** `.seed-go` draws the sprout in
+every state; when the seed costs more than the player holds, the row is `[disabled]` and the disc
+drains onto the `--paper-dim` family, restating its own lip. **In this picker a padlock means the
+one-time unlock wall and nothing else** — a refusal that clears itself in ten seconds is grey, and
+grey is the whole message. The two states were one glyph until the owner read a bare padlock as
+*more locked* than a chip reading 150K, which is exactly backwards. The same rule governs Fall's
+crop picker, which shares this row and has no unlock wall at all. Note that `syncAfford()` must
+leave the slot alone: it rewrites the row on every `currency` emit, so a fix in the markup alone
+grows the padlock back a second after the panel opens.
+
 #### The locked row, and the unlock price (2026-08-29, phase 2)
 
 A seed that has not been unlocked wears its **one-time gold price** where every other row wears its

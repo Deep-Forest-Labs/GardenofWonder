@@ -92,8 +92,9 @@ objects; a save without a `rep` key is grandfathered (see
 `ensureProgression()` drops any `quests.active` entry whose id no longer resolves through
 `questById()`, and nulls an unclaimed `quests.daily.id` so `refreshDaily()` rerolls it. Without
 that, a save carrying the retired quest keeps the orphan forever: `fillActive()` caps `active` at
-three, so the dead entry permanently costs the player a slot, and `stripQuest()` renders
-`active[0]`, so it can also jam the quest strip. This was added when the three unreachable sell
+three, so the dead entry permanently costs the player a slot, and the strip only falls through to
+the daily once `active` is empty, so it also keeps the daily quest off the strip. This was added
+when the three unreachable sell
 quests were removed (2026-08-15). A claimed daily is left alone on purpose — rerolling it would pay
 its reward twice.
 
@@ -404,6 +405,10 @@ and a sparse or short array indexes to `undefined` in `processStand()`. `load()`
 
 **An order naming a good or customer that no longer exists is dropped**, and the slot simply
 refills. Renaming a good id therefore costs nothing — the same rule keepsake ids follow.
+
+**An order's `rep` is authored but unpaid while `STAND.repPaused` is on.** It stays in the save on
+purpose: the pause is a read through `Game.standOrderRep()`, so flipping the flag off pays every
+board already written, with no migration and no save mutation. Never read `order.rep` directly.
 
 ## `state.apiary` — the meadow board
 

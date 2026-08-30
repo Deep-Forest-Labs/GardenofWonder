@@ -127,6 +127,11 @@ locked part.
 
 Every order pays **coins and reputation**. Some pay a bonus.
 
+> **Paused, 2026-08-30.** The reputation half is switched off at `STAND.repPaused` until slice D
+> authors the level rungs past 20. Orders still pay coins and still count the Tally's orders line.
+> The formula below is what the engine still authors onto every order — the pause gates the
+> *payment*, in `Game.standOrderRep()`, not the price.
+
 ```
 coinReward = Σ(itemCost × quantity) × tierMultiplier × varietyBonus
 repReward  = base(tier) × lineItemCount

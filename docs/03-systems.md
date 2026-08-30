@@ -423,9 +423,11 @@ cheat exercises the feature it claims to test, and the animation seen is the one
 | Boost a tap proc | **Sticky toggle.** Holds Rain Dance, Bee Swarm or Lucky Ladybug at a 50% chance per tap, bypassing the badge level entirely |
 | Trigger now | Wonder Effect, one-shot |
 | Garden | Fill plots, ripen everything, add a hive |
+| Creatures | Summons the next creature nobody has met, or all six, at a chosen star. Header shows how many are home and how many of the band's slots are open |
 | Creature food clocks | Drain 1h / 4h / 24h, send everyone to sleep, feed everyone. Header shows how many tenders are down |
+| Wind the world forward | Warps every production clock 1 / 8 / 24 hours — plants, Fall's bed and the Century Bloom, jars, crafts, orders, food and keepsakes — then catches the world up through one real `tick(0)`. No welcome sheet, no offline income |
 | Simulate an absence | Winds the world back 3 / 6 / 12 / 24 hours and opens the real welcome-back scene |
-| Give | Gold, gems, levels |
+| Give | Gold, gems, levels, one of every power-up |
 
 **The proc buttons are toggles, not one-shots.** A single forced fire meant reopening the panel for
 every look at an animation; held at 50% per tap you can leave the sheet closed and just tap. The
@@ -434,12 +436,33 @@ should not require buying Bee Swarm first — `procChance()` is the one place th
 clamps at certainty.
 
 **The creature cheats wind the clocks *back* rather than the world forward**, which is the real
-mechanism and not an imitation of it: sleeping is derived from `awakeUntil` against now. Both clocks
-move together, because every food's awake window outlasts its boost and *asleep but still well fed*
-is a state real play cannot reach — a cheat must not invent one. **Feed everyone** goes through the
+mechanism and not an imitation of it: sleeping is derived from `fedUntil` against now. There is one
+fullness clock, not two — `awakeUntil` was absorbed into `fedUntil` on 2026-08-20 — and where a
+creature stands on it decides everything, so winding it is the whole simulation. **Feed everyone** goes through the
 real `feedCritter()` purchase path rather than writing the clocks. Without these, testing a
 four-hour awake window means waiting four hours. See
 [22-creatures.md](22-creatures.md#testing-it-without-waiting-four-hours).
+
+**The summon writes the arrival record and nothing else.** `Dev.summonCritter()` goes through
+`moveIn()` — the same function the threshold path uses — and fires the same `critter` arrival event,
+so the celebration is the one a player gets. It deliberately does **not** touch `state.discovered`:
+that is a lifetime harvest count, and faking it to trip `checkCritters()` would move the Almanac, the
+discover quests, the creature's growth loop and its attract line all at once. The consequence is
+visible and correct — a creature summoned at ★3 shows an empty bar toward ★4, because it genuinely
+has not earned anything yet. **Summoning grants no levels**, so on a fresh save only one of the six
+can be out at a time; the row header says so, and the way past it is *Give → +5 levels*.
+
+**The time-warp is the away cheat minus the away.** Same mechanism — clocks wind *back* — but
+`state.lastSeen` is the one clock it will not touch, because moving `lastSeen` is precisely what
+turns an advance into an absence, and `reconcile()` pays `offlineEarnings(away)` off exactly that
+gap. `tick(0)` afterwards re-pins `lastSeen` to now through `processWeather()`, so a warp
+structurally cannot pay offline income; the payouts it causes are real harvests the player then
+takes, and Fall's windfall pays through `fallHarvest()` as always. **A running boost
+(`state.boosters`) and the Wonder (`state.wonder.until` / `.last`) keep their remaining time on
+purpose** — the rest of the review kit exists to demonstrate the power-up button, and a warp that
+blew a boost away would make the two cheats fight. A **called sky** (`state.weatherCall`) is
+excluded for the same reason it is a purchase, with one accepted consequence recorded in
+[11-known-issues.md](11-known-issues.md).
 
 The weather hold and the proc boosts are sticky; everything else is one-shot. `clearAll()` drops the
 lot, and the panel lists whatever is currently armed at the top so a boost left on is never a
@@ -1057,9 +1080,21 @@ named order.
 the single most load-bearing rule in the order spec: it turns "I do not have that" from a wall into
 a choice, and a stuck board is an uninstall.
 
-**Reputation comes from here**, which is what will eventually buy land on the world map.
-`standDeliver()` emits its own `levelup` — `addRep()` returns the grants but does not announce
-them, and every caller has to.
+**Reputation is PAUSED here, behind `STAND.repPaused`** (owner's ruling, 2026-08-30). Orders keep
+paying gold and keep counting the Tally's `orders` line; the standing waits for slice D's rungs
+past level 20, because a three-line tier-4 order pays more standing than the largest quest in the
+game and `DATA.levelGrants` stops at 20.
+
+The pause is a **read**, not a rewrite. An order still authors its `rep` at generation and still
+carries it in the save; `Game.standOrderRep(order)` returns `0` while the flag is on, and
+`standDeliver()` plus all three card displays read that getter instead of the field. Turning the
+flag off therefore pays every order already sitting on a board, with no migration and nothing
+touched in the save. While it is on, the star chip is **omitted from the card**, never drawn as
+★0 — a card must never promise standing it will not pay.
+
+`standDeliver()` still emits its own `levelup` when it grants one — `addRep()` returns the grants
+but does not announce them, and every caller has to. With the pause on it hands back an empty
+list, so nothing fires.
 
 ### The surface
 

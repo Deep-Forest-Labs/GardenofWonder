@@ -573,8 +573,9 @@ for (let i = 0; i < 12; i += 1) G.tapFlower();
 check('the combo quest tracks peak combo, not tap count', S.quests.active[0].progress === 12);
 
 /* A quest whose track cannot be advanced can never be completed, and because
-   fillActive() caps at three and stripQuest() always shows active[0], it holds
-   a slot forever and jams the strip. Three "Sell N flowers" quests shipped that
+   fillActive() caps at three it holds one of the slots forever — the strip
+   steps past it now, but the daily stays out of reach until the list empties.
+   Three "Sell N flowers" quests shipped that
    way. Note that grepping game.js is NOT enough to catch it — `noteQuest('sell')`
    is right there in sell(), it just only fires for kind 'flower', and the only
    sell buttons ui.js renders are honey, wax and crafted goods. Both halves below
@@ -3631,7 +3632,7 @@ check('an order cannot be delivered without the goods', (() => {
 /* Filled from the cheapest bloom in the pool, which is exactly what the card
    quoted, so the re-price must land on the quoted number rather than above it —
    this is what catches the wild discount being handed back at delivery. */
-check('delivering pays the coins and the reputation on the card', (() => {
+check('delivering pays the coins on the card, and the standing the flag allows', (() => {
   for (let n = 0; n < 40; n += 1) {
     standReset(6);
     S.flowers = {};
@@ -3645,7 +3646,7 @@ check('delivering pays the coins and the reputation on the card', (() => {
     if (!res) return false;
     if (S.credits !== res.paid) return false;
     if (res.paid !== o.coins) return false;
-    if (S.rep !== rep0 + o.rep) return false;
+    if (S.rep !== rep0 + G.standOrderRep(o)) return false;
   }
   return true;
 })());
@@ -4447,7 +4448,7 @@ check('daily quest gold earns into the year', (() => {
    watched reaching the mint, and its Tally counter must move off the real
    event rather than only ever off Dev.setYearStats. */
 S.flowers = { daisy: 3 };
-S.rep = 0; S.level = 1;   // four rep cannot level, so the delta below is the delivery alone
+S.rep = 0; S.level = 1;   // a delivery moves no rep at all now; the delta below is coins alone
 S.stand.slots[0] = {
   id: 'o_bill4', good: 'posy', customer: 'nan', slot: 0, at: clock,
   needs: [{ kind: 'flower', of: 'daisy', any: false, qty: 2 }], coins: 500, rep: 4
@@ -4877,6 +4878,18 @@ const berryDef = G.fallPlantById('strawberry');
 S.credits = berryDef.cost - 1;
 check('Fall refuses a crop one coin short, and plants nothing',
   G.fallPlant(1, 'strawberry') === false && !S.fall.grid[1].seed);
+/* The main garden's own one-coin-short refusal, which had no negative test —
+   and now needs one, because the picker's can't-afford padlock is gone. The
+   padlock was a second, visible gate in front of this one; with it removed the
+   engine's silent `return false` is the only thing between a broke player and a
+   free plant, and nothing above the simulation is checked by anything. */
+S.credits = G.seedById('bluebell').cost - 1;
+check('the main garden refuses a seed one coin short, and plants nothing',
+  G.plant(2, G.seedById('bluebell')) === false && !S.grid[2].seed, `credits ${S.credits}`);
+check('and charges exactly its price when it can pay',
+  (S.credits = G.seedById('bluebell').cost,
+    G.plant(2, G.seedById('bluebell')) === true && S.credits === 0));
+S.credits = 1e9;
 S.credits = berryDef.cost;
 check('and charges exactly its price when it can pay',
   G.fallPlant(1, 'strawberry') === true && S.credits === 0);
@@ -5555,6 +5568,643 @@ check('the live ladder still totals 777', liveLadder.reduce((a, q) => a + q.rep,
   check(`${standIn} needs nothing behind an unlock wall`,
     !newQ.key || ['daisy', 'tulip', 'bluebell'].includes(newQ.key));
 });
+
+/* Place immediately after the 'a retired quest is pruned from an existing save'
+   group, i.e. after the line
+     check('the unknown daily was rerolled', DATA.dailies.some((d) => d.id === S.quests.daily.id));
+   Verified in that position (1229 passed, 0 failed) and at the end of the file
+   (also 1229/0). Identifier collisions were checked: dealNow, disc5, disc12,
+   discFull, hiveQ, healed, stash, rngDaily, qJumped, qFell, legacyQuests and
+   legacyInst are all unused elsewhere in the suite. */
+
+/* The Almanac milestones have always read the lifetime species count, and the
+   quest engine dealt every quest at zero — one word counting two different
+   things on the same screen. Worse, q_discover_12 is dealt around species
+   eight and then asked for twelve MORE in a nineteen-seed game. A track the
+   game keeps a record for is dealt at that record. */
+group('a quest on a recorded track is dealt the progress it already earned');
+const dealNow = (id) => {
+  const at = DATA.quests.findIndex((q) => q.id === id);
+  S.quests.done = DATA.quests.slice(0, at).filter((q) => !q.paused).map((q) => q.id);
+  S.quests.active = [];
+  G.stripQuest();
+  return S.quests.active.find((q) => q.id === id);
+};
+G.reset();
+S.discovered = { daisy: 4, tulip: 2 };
+const disc5 = dealNow('q_discover_5');
+check('a discover quest starts at the lifetime species count',
+  disc5 && disc5.progress === 2, disc5 ? `${disc5.progress}` : 'never dealt');
+check('so the strip and the Almanac count the same word',
+  disc5.progress === G.discoveredCount());
+G.reset();
+DATA.seeds.slice(0, 8).forEach((s) => { S.discovered[s.id] = 1; });
+const disc12 = dealNow('q_discover_12');
+check('the last rung is dealt at eight species, not at zero',
+  disc12 && disc12.progress === 8, disc12 ? `${disc12.progress}` : 'never dealt');
+check('so what it still asks for exists in the game',
+  G.questById('q_discover_12').qty - disc12.progress <= DATA.seeds.length - G.discoveredCount(),
+  `needs ${G.questById('q_discover_12').qty - disc12.progress}, ${DATA.seeds.length - G.discoveredCount()} unfound`);
+G.reset();
+DATA.seeds.forEach((s) => { S.discovered[s.id] = 1; });
+const discFull = dealNow('q_discover_5');
+check('the backfill never overshoots the goal', discFull.progress === 5, `${discFull.progress}`);
+check('and a quest dealt already finished is simply claimable',
+  G.claimQuest('q_discover_5') !== null);
+/* The negative half, and the one that keeps this a rule rather than a blanket:
+   a track with no lifetime record is still dealt at zero, however much of it
+   the player has done. */
+G.reset();
+S.discovered = { daisy: 9, tulip: 9, bluebell: 9 };
+S.stats.totalHarvests = 500;
+S.apiary.honey = { wild: 40 };
+const hiveQ = dealNow('q_hive_1');
+check('a track with no lifetime record is still dealt at zero',
+  hiveQ && hiveQ.progress === 0, hiveQ ? `${hiveQ.progress}` : 'never dealt');
+
+group('a save stranded at zero on a recorded track is straightened on load');
+G.reset();
+S.discovered = { daisy: 9, tulip: 4, bluebell: 2, lavender: 1 };
+S.quests.active = [{ id: 'q_discover_5', progress: 0 }];
+S.quests.done = [];
+G.saveNow();
+G.load();
+const healed = S.quests.active.find((q) => q.id === 'q_discover_5');
+check('the stranded instance is raised to the record', healed && healed.progress === 4,
+  healed ? `${healed.progress}` : 'gone');
+check('and never past it', healed.progress === G.discoveredCount());
+
+/* The daily is deliberately NOT backfilled: it is a goal for today, and the
+   dailies are the only quests paying `reward.credits`, so one dealt finished
+   every morning is a faucet into the mint. No daily rides a recorded track
+   today — this is the guard for the day one does. */
+group('the daily is a goal for today, never a lifetime record');
+{
+  const stash = DATA.dailies.slice();
+  DATA.dailies.push({ id: 'd_discover_3', text: 'Discover 3 species', track: 'discover', qty: 3, rep: 12 });
+  G.reset();
+  S.discovered = { daisy: 4, tulip: 2, bluebell: 1, lavender: 6 };
+  S.quests.daily = { id: null, progress: 0, day: '', claimed: false };
+  const rngDaily = Math.random;
+  Math.random = () => 0.999;   // the last of the pool, which is the injected one
+  G.stripQuest();
+  Math.random = rngDaily;
+  check('the injected daily is the one rolled', S.quests.daily.id === 'd_discover_3', `${S.quests.daily.id}`);
+  check('a daily is dealt at zero whatever the record says',
+    S.quests.daily.progress === 0 && G.discoveredCount() === 4, `${S.quests.daily.progress}`);
+  DATA.dailies.length = 0;
+  stash.forEach((d) => DATA.dailies.push(d));
+  check('the daily pool is put back', DATA.dailies.length === stash.length);
+}
+
+group('the strip shows the quest nearest to done, not the oldest');
+G.reset();
+S.quests.done = [];
+S.quests.active = [{ id: 'q_tap_25', progress: 0 }, { id: 'q_plant_1', progress: 0 }, { id: 'q_harvest_1', progress: 0 }];
+check('with nothing started it is still the first one dealt', G.stripQuest().def.id === 'q_tap_25');
+S.quests.active[2].progress = 1;
+const qJumped = G.stripQuest();
+check('a complete quest jumps the queue', qJumped.def.id === 'q_harvest_1' && qJumped.complete === true,
+  qJumped.def.id);
+S.quests.active = [{ id: 'q_tap_25', progress: 5 }, { id: 'q_harvest_10', progress: 3 }];
+check('nearness is a fraction of the goal, not a raw count',
+  G.stripQuest().def.id === 'q_harvest_10', G.stripQuest().def.id);
+S.quests.active = [{ id: 'q_daisy_5', progress: 2 }, { id: 'q_plant_20', progress: 8 }];
+check('a tie keeps the order the quests were dealt in', G.stripQuest().def.id === 'q_daisy_5');
+S.quests.active = [{ id: 'q_plant_20', progress: 8 }, { id: 'q_daisy_5', progress: 2 }];
+check('and it is deal order that breaks it, not ladder position',
+  G.stripQuest().def.id === 'q_plant_20');
+check('the panel leads with the same quest as the strip',
+  G.activeQuests()[0].id === G.stripQuest().def.id);
+/* Anything that counts quests filters to live ones. A paused instance only
+   reaches the strip mid-session — ensureProgression() drops it on load — and
+   before this it was shown as the strip's contents. */
+S.quests.active = [{ id: DATA.quests.find((q) => q.paused).id, progress: 0 }, { id: 'q_plant_1', progress: 0 }];
+check('a paused instance is never the strip, even at the front',
+  G.stripQuest().def.paused !== true, G.stripQuest().def.id);
+
+group('the strip still falls through to the daily and then to rest');
+G.reset();
+DATA.seeds.forEach((s) => { S.discovered[s.id] = 1; });
+S.quests.done = DATA.quests.filter((q) => !q.paused).map((q) => q.id);
+S.quests.active = [];
+const qFell = G.stripQuest();
+check('a finished ladder reaches the daily', qFell.kind === 'daily' && !!qFell.def, qFell.kind);
+S.quests.daily.claimed = true;
+check('and a claimed daily reaches rest', G.stripQuest().kind === 'rest');
+G.reset();
+
+/* backfillDiscovered() rebuilds the lifetime record from a legacy save's
+   flowers, so it has to run BEFORE the quest engine reads that record — or a
+   migrated save spends one load with the strip and the Almanac disagreeing,
+   and load()'s own saveNow() writes the disagreement down. */
+group('a legacy save is straightened in one load, not two');
+G.reset();
+const legacyQuests = JSON.parse(JSON.stringify(S));
+delete legacyQuests.discovered;
+legacyQuests.flowers = { daisy: 5, tulip: 3, bluebell: 2 };
+legacyQuests.quests = { active: [{ id: 'q_discover_5', progress: 0 }], done: [],
+  daily: { id: null, progress: 0, day: '', claimed: false } };
+globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(legacyQuests));
+G.load();
+const legacyInst = S.quests.active.find((q) => q.id === 'q_discover_5');
+check('the record is rebuilt before the quest engine reads it',
+  legacyInst && legacyInst.progress === 3, legacyInst ? `${legacyInst.progress}` : 'gone');
+G.reset();
+
+/* ---------------- the Stand's paused standing ---------------- */
+group('the Stand’s reputation is paused behind a data flag');
+
+/* The owner's ruling, 2026-08-30: orders keep paying gold and keep counting on
+   the Tally, and the level points wait for slice D's rungs past 20. Assert the
+   flag's shipped state rather than reading it — a suite that adapts to whatever
+   the flag says would prove nothing in either position. */
+check('the pause is on', STAND.repPaused === true,
+  'slice D flips this to false, and the negative case below is what it must then produce');
+
+/* Priced honestly whatever the flag says. Zeroing here instead would bake the
+   pause into every order written while it was on. */
+check('standPrice still authors the tier’s standing', (() => {
+  const one = G.standPrice([{ kind: 'flower', of: 'daisy', qty: 2 }], STAND.tiers[0]);
+  return one.rep === STAND.tiers[0].repPay;
+})());
+
+check('a generated order still carries its authored rep into the save', (() => {
+  standReset(6);
+  const o = G.standGenerate(0);
+  return Boolean(o) && o.rep > 0;
+})());
+
+check('and the getter reads zero off that same order', (() => {
+  standReset(6);
+  const o = G.standGenerate(0);
+  return Boolean(o) && G.standOrderRep(o) === 0;
+})());
+
+check('the getter survives a missing or junk order without throwing',
+  G.standOrderRep(null) === 0 && G.standOrderRep({}) === 0);
+
+check('delivering pays gold and moves no standing at all', (() => {
+  standReset(6);
+  S.flowers = {};
+  S.apiary.honey = {};
+  S.credits = 0;
+  S.rep = 0;
+  S.level = 1;
+  const o = G.standGenerate(0);
+  if (!o) return false;
+  fillFor(o);
+  const res = G.standDeliver(0);
+  return Boolean(res) && res.paid > 0 && S.credits === res.paid
+    && S.rep === 0 && S.level === 1;
+})());
+
+/* The half the ruling names as the thing that must survive. The Tally's line is
+   its own counter and the pause must not reach it. */
+check('the Tally’s orders line still counts the delivery', (() => {
+  standReset(6);
+  S.flowers = {};
+  S.apiary.honey = {};
+  const o = G.standGenerate(0);
+  if (!o) return false;
+  fillFor(o);
+  const before = S.year.stats.orders;
+  return Boolean(G.standDeliver(0)) && S.year.stats.orders === before + 1;
+})());
+
+/* The reason the pause exists: a level the ladder has no rung for. Nine rep is
+   one short of level 2 and the smallest tier-1 order pays four, so unpaused
+   this delivery levels the player every time. */
+check('a delivery that would have levelled the player hands back no grants', (() => {
+  standReset(6);
+  S.flowers = {};
+  S.apiary.honey = {};
+  S.rep = G.cumulativeRep(2) - 1;
+  S.level = 1;
+  const o = G.standGenerate(0);
+  if (!o) return false;
+  fillFor(o);
+  const res = G.standDeliver(0);
+  return Boolean(res) && res.grants.length === 0
+    && S.level === 1 && S.rep === G.cumulativeRep(2) - 1;
+})());
+
+/* No other faucet is behind this flag. Each is driven through its real path,
+   with the pause still on. */
+check('quests still pay standing', (() => {
+  G.reset();
+  S.quests.active = [{ id: 'q_harvest_1', progress: 99 }];
+  S.quests.done = [];
+  S.rep = 0;
+  const claimed = G.claimQuest('q_harvest_1');
+  return Boolean(claimed) && claimed.rep > 0 && S.rep === claimed.rep;
+})());
+
+/* Milestones are paid inside load(), which is the only path that reaches them,
+   so this goes through a seeded save rather than a direct call. */
+check('Almanac milestones still pay standing', (() => {
+  G.reset();
+  const first = DATA.almanacMilestones.find((m) => m.rep > 0);
+  DATA.seeds.slice(0, first.at).forEach((sd) => { S.discovered[sd.id] = 1; });
+  S.rep = 0;
+  S.almanacClaimed = [];
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(S));
+  const res = G.load();
+  return Boolean(res.almanacGrant) && S.rep >= first.rep;
+})());
+
+check('the every-ten-harvests drip still pays standing', (() => {
+  G.reset();
+  clearGarden();
+  S.rep = 0;
+  S.credits = 1e6;
+  let last = null;
+  for (let n = 0; n < DATA.harvestRepEvery; n += 1) {
+    S.grid[0] = { ...freshCell(), seed: 'daisy', plantedAt: clock - 100, grow: 10, ready: true };
+    last = G.harvest(0);
+  }
+  return Boolean(last) && last.repBonus === DATA.harvestRepGrant && S.rep >= DATA.harvestRepGrant;
+})());
+
+check('Dev.grantLevels still moves the level bar', (() => {
+  G.reset();
+  S.rep = 0;
+  S.level = 1;
+  return G.Dev.grantLevels(3) === 4 && S.rep === G.cumulativeRep(4);
+})());
+
+/* THE NEGATIVE CASE, and the reversal proof in one. An order written to a save
+   while the pause was on must pay its authored standing the moment the flag
+   comes off — same order object, no migration, nothing rewritten — and must go
+   quiet again when it goes back on. Nine rep short of level 2 again, so the
+   level-up is deterministic: tier 1 pays 4, 8 or 12, and cumulativeRep(3) is 25,
+   so exactly one rung is ever crossed. */
+{
+  const savedRepPaused = STAND.repPaused;
+  standReset(6);
+  S.flowers = {};
+  S.apiary.honey = {};
+  S.credits = 0;
+  S.rep = G.cumulativeRep(2) - 1;
+  S.level = 1;
+  const saved = G.standGenerate(0);
+  fillFor(saved);
+  const whilePaused = G.standOrderRep(saved);
+  STAND.repPaused = false;
+  const whenLive = G.standOrderRep(saved);
+  const res = G.standDeliver(0);
+  check('flipping the flag off pays the SAME saved order its authored standing',
+    whilePaused === 0 && saved.rep > 0 && whenLive === saved.rep
+    && S.rep === G.cumulativeRep(2) - 1 + saved.rep,
+    `paused ${whilePaused}, live ${whenLive}, authored ${saved.rep}, rep ${S.rep}`);
+  check('and the level-up it earns is announced again',
+    Boolean(res) && res.grants.length === 1 && S.level === 2,
+    `grants ${res && res.grants.length}, level ${S.level}`);
+  STAND.repPaused = savedRepPaused;
+  check('putting the flag back needs no migration — the same order reads zero again',
+    G.standOrderRep(saved) === 0 && saved.rep > 0, `authored ${saved.rep}`);
+}
+
+/* Add to tools/sim-test.js immediately BEFORE the line
+     group('gems now track time in the ground, not harvest count');
+   so it sits next to its sibling, group('simulating an absence winds the world back').
+   Verified in place: 1,228 passed / 0 failed, five consecutive runs. */
+
+group('the time-warp winds the world forward without the absence');
+/* The world moving while you watch. Every production clock winds back, `lastSeen`
+   does not, and the two cheats beside it keep whatever they are running. */
+G.reset();
+check('zero hours does nothing', G.Dev.warp(0) === null);
+check('a world with nothing on a clock refuses, so the panel can say why',
+  G.Dev.warp(24) === null);
+check('a growing plot comes back ripe', (() => {
+  G.reset();
+  clearGarden();
+  unlockTo(20);
+  S.credits = 1e15;
+  G.plant(0, G.seedById('eternal'));
+  const r = G.Dev.warp(24);
+  return Boolean(r) && r.clocks >= 1 && S.grid[0].ready === true;
+})());
+check('Fall\'s bed and the Century Bloom ride the same clock', (() => {
+  G.reset();
+  S.year.turnsCompleted = 1;
+  S.credits = 1e15;
+  const annual = DATA.fall.plants.find((p) => !p.century);
+  const century = DATA.fall.plants.find((p) => p.century);
+  G.fallPlant(0, annual.id);
+  G.fallPlant(1, century.id);
+  const centuryAt = S.fall.grid[1].plantedAt;
+  G.Dev.warp(24);
+  return S.fall.grid[0].ready === true
+    && Math.abs((centuryAt - S.fall.grid[1].plantedAt) - 24 * 3600) < 2
+    && S.fall.grid[1].ready === false;
+})());
+check('hives fill to their cap and no further', (() => {
+  G.reset();
+  S.credits = 1e15;
+  G.plant(0, G.seedById('daisy'));
+  G.placeHive(0);
+  G.Dev.warp(24);
+  const first = G.cellAt(0).jars.length;
+  G.Dev.warp(24);
+  return first === G.hiveCapacity(0) && G.cellAt(0).jars.length === first;
+})());
+check('a craft in the queue comes out finished', (() => {
+  G.reset();
+  S.credits = 1e15;
+  G.plant(0, G.seedById('daisy'));
+  const recipe = CRAFT_RECIPES[0];
+  S.craft.push({ id: recipe.id, doneAt: G.nowSeconds() + 4 * 3600 });
+  G.Dev.warp(8);
+  return S.craft.length === 0 && S.goods[recipe.id] === 1;
+})());
+check('a Stand slot past its refill generates', (() => {
+  G.reset();
+  const far = G.nowSeconds() + 12 * 3600;
+  for (let i = 0; i < STAND.slots; i += 1) { S.stand.slots[i] = null; S.stand.nextAt[i] = far; }
+  G.Dev.warp(24);
+  return G.standOrders().length === STAND.slots;
+})());
+check('and a warp shorter than the wait leaves the counter empty', (() => {
+  G.reset();
+  const far = G.nowSeconds() + 12 * 3600;
+  for (let i = 0; i < STAND.slots; i += 1) { S.stand.slots[i] = null; S.stand.nextAt[i] = far; }
+  G.Dev.warp(8);
+  return G.standOrders().length === 0;
+})());
+/* Both creature clocks, for opposite reasons — `fed` is the keepsake timer and
+   `fedUntil` is the food, and the names say the other thing. */
+G.reset();
+unlockTo(HABITAT_SLOT_LEVELS[1]);
+S.discovered[G.critterById('pip').attract.seed] = 999;
+G.checkCritters();
+S.credits = 1e9;
+G.feedCritter('pip', CREATURE_FOOD[CREATURE_FOOD.length - 1].id);
+// Collecting is what sets `fed`; before the first one it reads 0 and `since` stands in.
+S.critters.pip.since = G.nowSeconds() - G.critterById('pip').keepsake.every * 2;
+G.collectKeepsakes('pip');
+const warpFedMark = S.critters.pip.fed;
+const warpUntilMark = S.critters.pip.fedUntil;
+const warpFedFor = G.critterFedFor('pip');
+G.Dev.warp(8);
+check('food winds down by exactly the hours asked',
+  Math.abs((warpFedFor - G.critterFedFor('pip')) - 8 * 3600) < 2);
+check('and the keepsake clock winds with it, as its own field',
+  Math.abs((warpFedMark - S.critters.pip.fed) - 8 * 3600) < 2
+  && Math.abs((warpUntilMark - S.critters.pip.fedUntil) - 8 * 3600) < 2
+  && S.critters.pip.fed !== S.critters.pip.fedUntil);
+check('so keepsakes are waiting that were not before', G.keepsakesWaiting('pip') > 0);
+check('a creature that has never handed one over still earns from the wait', (() => {
+  G.reset();
+  unlockTo(HABITAT_SLOT_LEVELS[1]);
+  S.discovered[G.critterById('pip').attract.seed] = 999;
+  G.checkCritters();
+  const before = G.keepsakesWaiting('pip');
+  G.Dev.warp(8);
+  return before === 0 && G.keepsakesWaiting('pip') > 0 && S.critters.pip.fed === 0;
+})());
+/* The line that separates this from the away cheat. */
+check('`lastSeen` lands on now, never behind it', (() => {
+  G.reset();
+  clearGarden();
+  unlockTo(20);
+  S.credits = 1e9;
+  G.plant(0, G.seedById('daisy'));
+  G.Dev.warp(24);
+  return Math.abs(S.lastSeen - G.nowSeconds()) < 2;
+})());
+check('so a warp with no automation pays nothing, on either ledger', (() => {
+  G.reset();
+  clearGarden();
+  unlockTo(20);
+  S.credits = 1e9;
+  G.plant(0, G.seedById('daisy'));
+  const credits = S.credits;
+  const earned = S.year.coinsEarned;
+  const lifetime = S.lifetimeCoins;
+  const r = G.Dev.warp(24);
+  return Boolean(r) && S.credits === credits
+    && S.year.coinsEarned === earned && S.lifetimeCoins === lifetime;
+})());
+check('where the same rig sent away pays offline income', (() => {
+  G.reset();
+  clearGarden();
+  unlockTo(20);
+  S.credits = 1e9;
+  S.upgrades.autoHarvest = 1;
+  S.upgrades.plot1Harvester = 1;
+  const earned = S.year.coinsEarned;
+  const report = G.Dev.simulateAway(6);
+  return Boolean(report) && report.earned > 0 && S.year.coinsEarned > earned;
+})());
+/* The deliberate exclusion: the kit's other cheats demonstrate the power-up
+   button, and a warp that blew them away would make the two fight. */
+check('a running boost keeps its remaining time', (() => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e9;
+  G.plant(0, G.seedById('daisy'));
+  S.boosters.seedrush = G.nowSeconds() + 600;
+  const until = S.boosters.seedrush;
+  G.Dev.warp(24);
+  return G.activeBoost('seedrush') === true && S.boosters.seedrush === until;
+})());
+check('and so does the Wonder, both of its clocks', (() => {
+  G.startWonder();
+  const until = S.wonder.until;
+  const last = S.wonder.last;
+  G.Dev.warp(24);
+  return G.wonderActive() === true && S.wonder.until === until && S.wonder.last === last;
+})());
+/* A warped roll is honoured because weather is a pure function of the clock, so
+   it resolves against the sky that stood at the moment it was scheduled for. */
+check('a roll the warp brings due fires and clears', (() => {
+  G.reset();
+  clearGarden();
+  unlockTo(20);
+  S.credits = 1e15;
+  G.plant(0, G.seedById('eternal'));
+  S.grid[0].mutateAt = G.nowSeconds() + 4 * 3600;
+  G.Dev.warp(8);
+  return S.grid[0].mutateAt === 0;
+})());
+check('and one still ahead of the warp stays scheduled', (() => {
+  G.reset();
+  clearGarden();
+  unlockTo(20);
+  S.credits = 1e15;
+  G.plant(0, G.seedById('eternal'));
+  const at = G.nowSeconds() + 12 * 3600;
+  S.grid[0].mutateAt = at;
+  G.Dev.warp(1);
+  return Math.abs((at - S.grid[0].mutateAt) - 3600) < 2 && S.grid[0].mutateAt > G.nowSeconds();
+})());
+/* Nothing sticks: an unwarped run afterwards behaves, and the drone's cadence is
+   a real-clock throttle the warp never touches. */
+check('the drone takes one plot per warp, at its own cadence', (() => {
+  G.reset();
+  clearGarden();
+  unlockTo(20);
+  S.credits = 1e15;
+  S.upgrades.autoHarvest = 1;
+  G.plant(0, G.seedById('daisy'));
+  G.plant(1, G.seedById('daisy'));
+  G.Dev.warp(24);
+  return S.grid.filter((c) => c.seed).length === 1;
+})());
+check('an argument no button offers still cannot zero a clock a zero would delete', (() => {
+  G.reset();
+  unlockTo(HABITAT_SLOT_LEVELS[1]);
+  S.discovered[G.critterById('pip').attract.seed] = 999;
+  G.checkCritters();
+  G.Dev.warp(1e7);
+  const floored = S.critters.pip.since >= 1;
+  G.saveNow();
+  G.load();
+  return floored && Boolean(G.critterHome('pip'));
+})());
+G.reset();
+
+/* ── NEW GROUP. Insert in tools/sim-test.js immediately after the last line of
+   group('the dev cheats can put a creature to sleep and get it back'), i.e.
+   after:  check('nothing leaked into the clock', G.critterFedFor(PIP.id) <= G.foodCapSeconds() + 1);
+   and before: group('food is authored, and stays off the parts that break an economy');
+   Verified green in place: 16 new ok lines, suite 1207 -> 1223 at this point. ── */
+
+/* The review kit's way to see the band fill in an afternoon. Two things have to
+   hold: the summon writes the SAME record the threshold path writes, and it does
+   not buy that by faking the lifetime harvest count underneath it. */
+group('the summon cheats fill the band without inventing lifetime progress');
+G.reset();
+clearGarden();
+let lastArrival = null;
+G.on('critter', (e) => { if (e && e.arrived) lastArrival = e; });
+const FIRSTC = CREATURES[0];
+const summoned = G.Dev.summonCritter(3);
+check('a summon brings the first creature nobody has met',
+  Boolean(summoned) && summoned.def.id === FIRSTC.id && G.critterHere(FIRSTC.id));
+check('at the star that was asked for', G.critterLevel(FIRSTC.id) === 3);
+check('and it fires the real arrival beat, the shape ui-events destructures',
+  Boolean(lastArrival) && lastArrival.def.id === FIRSTC.id
+  && lastArrival.arrived === true && lastArrival.level === 3);
+check('the record is the arrival shape, not a half-written one', (() => {
+  const h = G.critterHome(FIRSTC.id);
+  return h.gifts === 0 && h.met === false && h.fed === 0
+    && Math.abs((h.fedUntil - G.nowSeconds()) - ARRIVAL_AWAKE_HOURS * 3600) < 2;
+})());
+check('it takes the one slot a level-1 save has',
+  G.critterTending(FIRSTC.id) && summoned.tending === true && G.habitatFree() === 0);
+/* THE NEGATIVE CASE, and the reason the cheat does not simply call
+   checkCritters(): `discovered` is the lifetime harvest count the Almanac, the
+   discover quests and every creature's own growth loop read. */
+check('and nothing was banked into the lifetime harvest record',
+  Object.keys(S.discovered).length === 0 && G.critterProgress(FIRSTC) === 0
+  && G.discoveredCount() === 0, JSON.stringify(S.discovered));
+check('so the growth bar reads an honest zero toward the next star', (() => {
+  const goal = G.critterGoal(FIRSTC.id);
+  return goal.level === 4 && goal.have === 0 && goal.qty === G.critterGoalFor(FIRSTC, 4);
+})());
+check('a second summon takes the NEXT one, never a duplicate',
+  G.Dev.summonCritter(1).def.id === CREATURES[1].id && G.crittersHome().length === 2);
+/* The cap is the ruling: a summon grants no levels, so the overflow waits in the
+   roster rather than the band. */
+check('the overflow moves in but stays off the slots',
+  G.critterHere(CREATURES[1].id) && G.critterTending(CREATURES[1].id) === false
+  && G.habitatUsed() === 1);
+check('summoning all six brings the rest of the roster home',
+  G.Dev.summonAll(5).length === CREATURES.length - 2
+  && G.crittersHome().length === CREATURES.length);
+check('every one of them at the star asked for',
+  CREATURES.slice(2).every((c) => G.critterLevel(c.id) === 5));
+check('and the band still holds only what the level allows',
+  G.habitatSlots() === 1 && G.habitatUsed() === 1);
+check('with everyone home, a summon has nothing left to do',
+  G.Dev.summonCritter(1) === null && G.Dev.summonAll(1).length === 0);
+/* Levels are the way past the cap, and they are a different button on purpose. */
+unlockTo(HABITAT_SLOT_LEVELS[HABITAT_SLOT_LEVELS.length - 1]);
+check('levels are what open the band, not the summon',
+  G.habitatSlots() === HABITAT_SLOT_LEVELS.length && G.habitatFree() > 0);
+check('an impossible star is clamped rather than stored', (() => {
+  G.reset();
+  const high = G.Dev.summonCritter(99);
+  const low = G.Dev.summonCritter(0);
+  return high.level === CREATURE_STARS && low.level === 1;
+})());
+check('a summoned star survives a reload', (() => {
+  G.saveNow();
+  G.load();
+  return G.critterLevel(CREATURES[0].id) === CREATURE_STARS;
+})());
+G.reset();
+
+
+/* ── EXTENSION TO bill 4, in its own idiom rather than a new group. Insert in
+   tools/sim-test.js immediately after the existing:
+     check('and the driver earns into the pool too, so the meter and the mint agree',
+       lifetimeNow() === ltMark + 500, `${lifetimeNow()} vs ${ltMark} + 500`);
+   and before the hive-overflow block that re-marks yrMark. It must go there and
+   not earlier: 'the year driver IS earning, by design' reuses the yrMark set
+   before feedCritters(), so inserting above it would move that mark and break a
+   passing test. Verified green in place: 5 new ok lines, suite 1223 -> 1228. ── */
+
+/* The review kit — four grants the owner leans on for a week, and not one of them
+   may leave a coin behind on either ledger. */
+yrMark = earnedNow();
+ltMark = lifetimeNow();
+const seedsBeforeKit = S.savedSeeds;
+const packsBeforeKit = S.packs;
+const creditsBeforeKit = S.credits;
+G.Dev.grantSeeds(500);
+G.Dev.grantBoosts();
+G.grantPacks(3);
+G.Dev.summonAll(CREATURE_STARS);
+check('the review-kit grants all land', S.savedSeeds === seedsBeforeKit + 500
+  && DATA.boosters.every((b) => S.boostInv[b.id] > 0)
+  && S.packs === packsBeforeKit + 3
+  && G.crittersHome().length === CREATURES.length);
+check('and none of them reaches the mint', earnedNow() === yrMark, `${earnedNow()} vs ${yrMark}`);
+check('nor the lifetime pool', lifetimeNow() === ltMark, `${lifetimeNow()} vs ${ltMark}`);
+check('and none of them moves the wallet either, so nothing is minted by a refund',
+  S.credits === creditsBeforeKit);
+/* NEGATIVE: a granted boost is inventory, never a running boost. Firing it is
+   the POWER-UP button's job, through activateBoost(). */
+check('a granted boost is held, never auto-spent',
+  DATA.boosters.every((b) => G.activeBoost(b.id) === false));
+
+group('the plant picker padlocks the unlock wall and nothing else');
+/* There is no sim-test for the UI, so this reads the source the way the
+   bench-quest guard does. The claim is about meaning rather than layout: a
+   padlock is the one-time wall, and a row you will afford in ten seconds is
+   grey and nothing more. Both pickers write the same slot and syncAfford()
+   rewrites it on every coin, so all four writers are counted — a fix that
+   lands in the markup alone puts the padlock back a second after the panel
+   opens. */
+const sheetSrc = fs.readFileSync(path.join(ROOT, 'ui-sheet.js'), 'utf8');
+const goSlots = [...sheetSrc.matchAll(/class="seed-go">([\s\S]*?)<\/span>/g)].map((m) => m[1])
+  .concat([...sheetSrc.matchAll(/\.seed-go'[\s\S]{0,200}?innerHTML\s*=\s*([^;]+)/g)].map((m) => m[1]));
+check('the two pickers are the only writers of the go slot', goSlots.length === 2, `found ${goSlots.length}`);
+check('no go slot can render a padlock', !goSlots.some((slot) => /lock/.test(slot)), goSlots.join(' | '));
+check('the retired sprout-or-lock ternary is gone from the file', !/'sprout'\s*:\s*'lock'/.test(sheetSrc));
+check('syncAfford leaves the go slot alone entirely', !/\.seed-go'[\s\S]{0,200}?innerHTML/.test(sheetSrc));
+/* The negative case: deleting every padlock in the file would pass all four
+   checks above, and would delete the only refusal the padlock is now for. */
+check('the unlock chip keeps the one true padlock',
+  /class="seed-lock[^"]*"[^>]*>\$\{Icons\.get\('lock'\)\}/.test(sheetSrc));
+check('and the chip still quotes the price beside it', /class="seed-lock[\s\S]{0,90}?fmt\(price\)/.test(sheetSrc));
+check('and syncAfford still colours that chip ok/no',
+  /\$\('\.seed-lock', node\)/.test(sheetSrc) && /chip\.classList\.toggle\('ok', can\)/.test(sheetSrc));
+check('the lock glyph itself survives — plot gates and the meadow draw it', Icons.has('lock') === true);
+
+/* ---- verification I actually ran, so you know these are not decorative ----
+   Against ui-sheet.js AS IT SHIPS TODAY: the first four FAIL (goSlots.length
+   is 4, all four naming 'lock') and the last four PASS. Against a patched copy
+   with all four edits applied: all eight PASS. Against a deliberately
+   OVER-CORRECTED copy — the four edits PLUS someone also stripping
+   Icons.get('lock') out of the .seed-lock chip — the first four still pass and
+   'the unlock chip keeps the one true padlock' FAILS. That third run is the
+   point of the negative case: a test that only says "no padlocks in the
+   picker" is passed by deleting the padlock that is supposed to stay. */
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

@@ -12,6 +12,52 @@ The game is **built, working, and live** at <https://jonishua.github.io/gardenwo
 seeds in eight plots, harvest with rarity multipliers, spend on badges and decor, and earn boosts
 from quests and levels.
 
+> **PHASE 3.6 IS BUILT — the cleanup round: three ruled fixes and the owner's review kit.** No new
+> layouts, so no wireframe gate; no economy knob moved. Suite **1,296**, clean across six runs, every
+> fix mutation-proven; `year-sim` exits 0. Reasoning in the phase 3.6 entry in
+> [10-decision-log.md](10-decision-log.md).
+>
+> **The discover quests count what you already found.** A quest on a track the game keeps a lifetime
+> record for is now dealt at that record, as a *floor* — which also straightens a save already
+> stranded at 0/5, with no migration and nothing new in the save file. `q_discover_12` was measured
+> unwinnable at a ceiling of 11/12 and now asks for four more species instead of twelve. **The goal
+> strip shows the quest nearest to done** rather than the oldest, and the quest panel reads the same
+> order from the same getter so the two can never disagree. Measured over ten simulated minutes and
+> 684 strip reads: the quest changed **4 times, every one a completion handing over** — no flicker.
+>
+> **The Stand's standing is paused** behind `STAND.repPaused`, read through one getter,
+> `Game.standOrderRep(order)`. Orders keep paying gold and keep counting the Tally's orders line; the
+> card omits its star chip. The authored number stays honest in the save, so **slice D turns this
+> back on by changing one word and every board already written pays** — asserted in both directions.
+> Every other standing faucet is untouched, each with its own assertion, because putting the flag
+> inside `addRep()` would have switched off the whole ladder with a green suite. **Consequence worth
+> holding on to: until slice D, the quest ladder plus the Almanac's 140 is the only road to every
+> level gate**, including the fourth habitat slot at 16.
+>
+> **The padlock now means the one-time wall and nothing else.** The go button draws its sprout in
+> every state and drains on the `--paper-dim` family when unaffordable. Fall's crop picker took the
+> same edit — it shares the row and has no unlock wall at all. **The half that would have shipped
+> broken is `syncAfford()`**, which rewrote that slot on every `currency` emit; a markup-only fix
+> grows the padlock back a second after the panel opens.
+>
+> **The review kit is in Developer tools.** *Wind the world forward* 1h / 8h / 24h winds every
+> production clock back — plants in both seasons, Fall's bed and the Century Bloom, jars, crafts,
+> order refills, creature food **and** the separate keepsake clock — then runs one real `tick(0)`.
+> **`state.lastSeen` is the one field it will not touch**, because moving it is what turns an advance
+> into an absence and pays offline income. **A running power-up and the Wonder keep their remaining
+> time on purpose**, so the warp and the POWER-UP button do not fight; verified live. *Summon* the
+> next unmet creature or all six at a chosen ★, through the same `moveIn()` record and the same
+> arrival beat a real threshold writes — it leaves `state.discovered` alone, so a creature summoned
+> at ★3 honestly shows an empty bar toward ★4. **Summoning grants no levels**, so the band fills only
+> as far as habitat slots allow; the row header says so. Plus one of every power-up, +50 Saved Seeds,
+> and the pack buttons that were already there.
+>
+> **The one place the kit touches the mint, stated plainly:** `Dev.warp()` calls `credit()` nowhere,
+> but the real `tick(0)` runs the auto-harvester, so a save that owns the drone earns **one harvest
+> per warp press** (measured ~450–500 gold, often zero — the drone's own cadence gate blocks a
+> second). Suppressing it would mean a cheat that lies about what the automation would have done.
+> In [11-known-issues.md](11-known-issues.md) with the called-sky seam.
+
 > **PHASE 3.5 IS BUILT AND LIVE — the Big Five, the band, and the map is gone.** Three pushes on
 > 2026-08-30, in the order doc 36's rail required, each leaving the live game navigable:
 > `06785dc` the two door graphics become the vertical swipe; `add83d4` the dock rebuild; `eeba59d`
@@ -1061,6 +1107,70 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**PHASE 3.6 IS BUILT AND WAITING FOR THE OWNER'S REVIEW.** The three ruled fixes and the review kit
+are in and pushed. Nothing is half-done and nothing is blocked. What the next session does depends
+on what the owner says after the two-minute check below.
+
+**Still open, and both are the owner's, not a builder's:**
+
+- **The blessing.** The owner asked what it actually does before ruling on it, which was itself the
+  finding — the ceremony's one choice was not legible to the person who designed the game around it.
+  The plain answer is now in doc 32's glossary and the Garden Year field guide. The advisor's
+  recommendation stands: **each flower blessed once, ever.** Still in
+  [11-known-issues.md](11-known-issues.md) as an open decision.
+- **Petal pacing**, which waits on the owner actually playing. That is what the review kit was built
+  for — warp a few days and see whether petals arrive at a rate that feels like a gift.
+
+**What comes after, when the owner is ready:** slice D, which authors the level rungs past 20 and
+turns the Stand's standing back on — one word, `STAND.repPaused` in `data.js`. Until then the quest
+ladder and the Almanac's milestones are the only road to every level gate in the game, including the
+fourth habitat slot at level 16, so **do not bench another ladder quest without re-checking that
+headroom.**
+
+### The two-minute check, phase 3.6
+
+Developer tools is the unlabelled patch of empty space just right of the gem wallet — one tap, no
+icon. Every step below was walked in the live build before it was written down.
+
+**1 · Open the plant picker: one padlock, not two.** Tap any empty plot.
+
+- **Daisy** has a green go button. **Tulip** is grey with the same sprout on it, drained — you cannot
+  afford it *yet*, and that is all it says. **Bluebell** wears the padlock, with **150K** beside it.
+- The padlock now means one thing: **the one-time wall**. Tap the flower a few times and watch
+  Tulip's row come back to life on its own without anything unlocking.
+
+**2 · Watch the goal strip pick the nearest quest.** On a fresh save the strip reads *Tap 25 times*.
+Plant one seed. The strip switches to **Plant a seed — Claim**, because that one is finished and the
+tap quest is at 1/25. It follows whatever you are closest to finishing rather than whatever you were
+given first. It should feel like the game noticing; if it feels like jitter, say so.
+
+**3 · Warp a day and watch the garden catch up.** Developer tools → **Wind the world forward → +24
+hours**. In one tap: every plot ripe, Fall's whole bed ripe, hives full of jars, keepsakes waiting on
+your creatures — and your pets asleep and hungry, because a day of food ran out. **No welcome-back
+sheet, no offline-income screen** — this is the world moving while you watch, not you coming back to
+it. A power-up you have running keeps its time, on purpose, so this and the POWER-UP button do not
+fight each other.
+
+**4 · Summon the pets and look at the band.** Developer tools → **Creatures**. The row header tells
+you where you stand: *6 home · 1 out of 1 slot*. Tap **★3** to bring the next one in.
+
+- The band holds **four** at most, and slots open at levels **1 / 5 / 10 / 16** — so to see it full,
+  tap **Give → +5 levels** three times first, then **Summon all six, at the same star → ★3**.
+- Judge it at **0, 1, 3 and 4**: is four a crowd? Do they collide with the UPGRADE pill or the
+  POWER-UP button? Two of the six stay home resting, which is the habitat cap doing its job.
+- A summoned creature shows an **empty bar toward its next star**. That is honest, not a bug — it has
+  no lifetime harvests behind it, and faking them would move the Almanac and the discover quests.
+
+**5 · One thing to know while you judge pacing.** The warp itself mints nothing. But if you own the
+auto-harvester it will take **one** harvest per warp press (~450–500 gold), because the plot really
+is ripe — the same earnings you would have got by waiting. It is far too small to distort the year
+meter, but it is the one place the kit touches the mint, so you are being told rather than finding it.
+
+**The rubric, as always: does turning the year feel like a gift or a loss?** And for this round:
+*after a day of warping, do petals arrive often enough to feel worth saving for?*
+
+### Phase 3.5, for reference — the task this session inherited
+
 **Phase 3.5, the Big Five ([36-hud-and-dock.md](36-hud-and-dock.md)): the dock rebuilds around
 five main buttons and a floating pair, owner-specced with a reference screenshot. Wireframe gate
 in full force — spike first, owner approval against the screenshot, then build. The meter pill
@@ -1606,8 +1716,10 @@ directly**, so a phone's layout can be put on screen by overriding four numbers:
 The dock keys off `--bottom-gap`, `max(10px, calc(var(--sab) - 12px))`, not the whole inset.
 
 **A quest for a feature with no UI jams the strip, and the bench is the live example.** `fillActive()`
-caps at three and `stripQuest()` always renders `active[0]`, so an uncompletable quest holds a slot
-forever and the strip never moves. `paused: true` on a definition is the escape hatch: never handed
+caps at three, so an uncompletable quest holds a slot forever. Since 2026-08-30 `stripQuest()` ranks
+the live active quests nearest-to-done and steps past a stuck one, so the strip keeps moving — but
+the fall-through to the daily still waits for the active list to empty, so a dead entry keeps the
+daily off the strip for the life of the save. `paused: true` on a definition is the escape hatch: never handed
 out, stripped from an existing save by `ensureProgression()`, definition and tuning kept. Anything
 that counts quests — the panel's "N left", the suite's level-17 assertion — **must filter to live
 quests**, or it will report a ladder complete that no player can climb.
@@ -1781,6 +1893,15 @@ these conditions, don't wait on wall-clock time — trigger it, then manually se
 call (`take_screenshot_afterwards`). This cost a debugging cycle on the tap-proc animations before
 the cause was found; it is a testing-environment artifact, not a game bug.
 
+**The same freeze stops `requestAnimationFrame` outright, and the frame loop is what redraws the
+quest strip.** `frame()` in `ui.js` calls `hudTick()`, which calls `renderQuestStrip()` — so in a tab
+that is not compositing, the engine can be perfectly correct while the strip on screen still shows
+the previous quest, and it reads exactly like a broken render. `document.hidden` is `false` and
+`visibilityState` is `visible` throughout, so neither one tells you. Call `UI.renderQuestStrip()`
+directly to separate "the engine picked the wrong quest" from "nothing has repainted". The related
+half: `innerText` needs layout and comes back **empty** for the whole sheet body under the same
+conditions — read `textContent` instead when scraping a panel in automation.
+
 **The three tap-proc trigger rates share one constant.** `PROC_CHANCE_PER_LEVEL` in `game.js`
 (currently `0.002`) is read by `rollRainDance()`, `rollBeeSwarm()`, and `rollLadybug()` — tune all
 three at once by changing it in one place, not by editing each `roll*()` function.
@@ -1864,7 +1985,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,202 assertions over the simulation layer
+node tools/sim-test.js          # 1,296 assertions over the simulation layer
 node tools/year-sim.js 12 all   # the pacing model — MUST exit 0; non-zero means a cadence beats normal play
 node --check <file>.js          # no build step, so this is the only syntax gate
 python3 -m http.server 8899     # then open http://localhost:8899/
@@ -1961,7 +2082,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,202 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,296 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

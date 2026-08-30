@@ -1095,6 +1095,14 @@ const STAND = {
   varietyBonus: 0.14,       // per line item beyond the first — the thumb on the scale
   wildBonus: 0.9,           // an "any flowers" line pays less; it asks for nothing in particular
 
+  /* The standing faucet shipped in slice A and the rungs it feeds did not: a
+     three-line tier-4 order pays more standing than the largest quest in the
+     game, and DATA.levelGrants stops at 20. Orders keep their gold and keep
+     counting on the Tally; the standing waits for slice D. Read only through
+     Game.standOrderRep() — an order still authors its rep into the save, so
+     turning this off pays every board already sitting in a save. */
+  repPaused: true,
+
   /* Orders must always beat selling their contents, or the whole engine is
      optional. The lowest multiplier here is the floor that guarantees it, and
      tools/sim-test.js asserts the property rather than the number. */

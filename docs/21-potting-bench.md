@@ -158,7 +158,7 @@ this change exists to avoid. Two new tracks are wired: **`merge`** (keyed by cha
 Repointing them at the bench assumed the bench would get a screen. It has not: everything below is
 built in `game.js` and **nothing in any `ui*.js` file calls any of it**, so no player action reaches
 `benchMergeOnce()` or `benchBank()` and neither track can ever tick. Handed out, they were the jam
-the repointing was supposed to avoid — `fillActive()` caps at three and `stripQuest()` renders
+the repointing was supposed to avoid — `fillActive()` caps at three and `stripQuest()` then rendered
 `active[0]`, so the strip sat on "Merge a Posy 0/1" forever.
 
 All three now carry `paused: true`, which keeps the definition and its tuning but takes it out of

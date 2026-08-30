@@ -5,6 +5,24 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## Two accepted seams in the time-warp (2026-08-30, phase 3.6)
+
+**A called sky is voided for the rolls it pulled.** `callWeather()` drags every unspent `mutateAt`
+into its window; `Dev.warp()` then winds those rolls back but leaves `state.weatherCall` alone,
+because a bought sky is a running purchase and the warp's whole ruling is that it must not destroy
+one. So the pulled rolls land before `call.from` and `weatherAt()` resolves them against the real
+historical sky instead. Accepted: a gem-bought sky and a warp in the same minute is a dev-panel
+situation, and the alternatives are worse — ending the call early destroys the purchase, and
+widening its window backwards makes a bought sky retroactively true.
+
+**A warp with a drone earns into the mint.** `Dev.warp()` calls `credit()` nowhere, but `tick(0)`
+runs `processAutoHarvest()`, and a warped plot really is ripe — so the drone takes one plot per warp
+and that harvest earns on both ledgers. This is the same precedent `Dev.simulateAway()` already sets
+(`reconcile()` pays offline income unflagged, and a sim-test asserts it does). It means repeated
+warping is a Saved Seeds faucet for anyone holding the panel open. Testers are friends and the
+pacing tool is `year-sim`, so this is accepted for now; revisit with the dev buttons themselves
+before any external audience.
+
 ## The meadow's only door is a gesture nobody can see (2026-08-30, phase 3.5)
 
 **Accepted, not a bug — but the thing to watch in the first playtest.** The owner ruled at the
@@ -150,7 +168,16 @@ so nobody reopens it; the reasoning is in the review entry of
 [10-decision-log.md](10-decision-log.md) and inline in
 [33-year-one-economy.md](33-year-one-economy.md#the-tally).
 
-### The discover track is broken twice over — CONFIRMED IN PLAY AND REPRODUCED, 2026-08-29
+### ~~The discover track is broken twice over~~ — FIXED 2026-08-30 (phase 3.6)
+
+Both faults are closed, on the owner's ruling. A quest on a track the game keeps a lifetime record
+for is now **dealt at that record** (`QUEST_RECORDS` / `questFloor()` in `game.js`), so the strip and
+the Almanac count the same word, and `q_discover_12` — dealt at eight species — asks for four more
+rather than twelve in a nineteen-seed game. The quest strip now shows the **nearest-to-done** live
+active quest rather than `active[0]`, so a slow or stuck quest can no longer be the permanent
+contents of the game's one always-visible goal, and the daily is reachable again once the ladder is
+finished. The prices fall to the documented **712,500 / 3,117,188**. What is *not* fixed by this: an
+uncompletable quest still eats one of the three active slots, and only `paused: true` frees it.
 
 **The owner hit this in the first minutes of a fresh save, and auditing it found a second,
 worse fault underneath the first.** Both are reproduced against the real engine.
@@ -229,7 +256,15 @@ the house's own worked example. The options, roughly in order of how much they b
    Tally and resets each Turn — turning breadth into a repeatable seasonal goal rather than a
    lifetime one. The largest change, and the one that fits the Garden Year best.
 
-### The Stand out-runs the level ladder, and slice D's rungs are not there yet
+### ~~The Stand out-runs the level ladder~~ — RULED AND PAUSED, 2026-08-30
+
+**The owner ruled: bench the rep half of orders until slice D.** Shipped as `STAND.repPaused` in
+`data.js`, read through `Game.standOrderRep(order)` — one edit to reverse. Orders keep paying gold
+and keep counting the Tally's `orders` line; the order card omits its star chip while the flag is
+on. What remains open is slice D's job, not a bug: the rungs for levels 18–40. Kept below as the
+evidence that produced the ruling.
+
+#### The evidence
 
 Found in the same audit. **`standDeliver()` pays `addRep(order.rep)`** (game.js:3123) and the Stand
 is open from a fresh save — `STAND.tiers[0]` is `rep: 0, repPay: 4`, rising to `repPay: 16` at 600
@@ -251,23 +286,18 @@ number", the rule that made the feature affordable in the first place.
 Year is what made it visible, because the Year is what made the level ladder stop being the thing
 that gates seeds.)*
 
-### The plant picker uses one padlock for two different refusals
+### ~~The plant picker uses one padlock for two different refusals~~ — FIXED 2026-08-30 (phase 3.6)
 
-On one screen a player sees, top to bottom: **Daisy** with a green go button, **Tulip** with a grey
-circle containing a **padlock**, and **Bluebell** with a drained row and a padlock chip reading
-**150K**. The Tulip padlock means *you have 74 gold and this costs 110* — a refusal that clears
-itself in about ten seconds. The Bluebell chip means *this costs 150,000 gold, once, forever*.
+**The owner ruled: the padlock means the one-time wall and nothing else.** The go button now draws
+its sprout in every state and drains on the drained-paper tokens when the row is unaffordable, so a
+refusal that clears itself in ten seconds is grey and nothing more, while the `.seed-lock` chip and
+its price keep the only padlock in the picker. Fall's crop picker took the same edit — it shares the
+row and has no unlock wall at all, so its padlock could only ever have meant *can't afford yet*.
 
-The owner's words: *"it almost looks like I can get the Bluebell first because it's 150K."* The
-hierarchy is inverted — the thing with a **price** looks obtainable and the thing with a bare
-**padlock** looks locked, while in fact Tulip is one harvest away and Bluebell is three days away.
-
-The affordability padlock (`ui-sheet.js`, the `.seed-go` slot) predates the Garden Year; the unlock
-chip (`.seed-lock`) is new, and the collision is new with it. The codebase already has the precedent
-for fixing this class of thing: `Game.plotGate(idx)` returns `'turn'` or `'level'` so a locked plot
-can say **"Turn 1"** or **"Lv 6"** instead of one padlock for both. **For the design session:** the
-cheapest honest distinction is probably to give the momentary refusal no padlock at all — the row is
-already disabled and greyed, and a price you will have in ten seconds does not need a lock on it.
+**The half that is easy to miss and is now asserted:** `syncAfford()` rewrote that slot on every
+`currency` emit, so a markup-only fix would have put the padlock back about a second after the panel
+opened. Both of its writers are gone, and a sim-test reads `ui-sheet.js` to hold all four sites at
+once — including the negative case, because deleting every padlock in the file would otherwise pass.
 
 
 
@@ -411,6 +441,11 @@ harvest catches it up.
 every harvest, so the arrival threshold is crossed at exactly the authored count. `discovered` cannot
 jump while away either, because offline income is a closed-form rate and never replays harvests. It
 takes a seeded save or a dev cheat to bank progress ahead of an arrival.
+
+**The summon cheat produces the mirror image, not this bug.** `Dev.summonCritter(star)` leaves
+`discovered` alone on purpose, so a creature summoned at ★3 reads `0 / 135 Bluebell to ★4` — an
+empty bar rather than a full one. That is the honest number: it has no lifetime harvests behind it,
+and the next real harvest of its bloom will not move it until the count passes the ★4 goal.
 
 Fixing it means falling through to the growth loop after an arrival, which would let a creature
 **arrive at ★3** — and arriving small is a designed beat, not an accident
@@ -645,7 +680,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,149 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,296 assertions over the
 economy, progression, saves and mastery. Everything above that line — the six `ui-*` files,
 layout, the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI

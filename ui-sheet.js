@@ -787,7 +787,7 @@
             <span class="stat good">${Icons.get('coin')}${fmt(p.yield)}</span>
           </span>
         </span>
-        <span class="seed-go">${Icons.get(can ? 'sprout' : 'lock')}</span>
+        <span class="seed-go">${Icons.get('sprout')}</span>
       </button>`;
     };
     const crops = DATA.fall.plants.filter((p) => !p.century).map((p) => row(p)).join('');
@@ -841,6 +841,9 @@
           <span class="seed-lock ${afford ? 'ok' : 'no'}">${Icons.get('lock')}${fmt(price)}</span>
         </button>`;
       }
+      /* The go button drains, it never becomes a padlock. In this picker a
+         padlock means the one-time wall above and nothing else; a row you will
+         afford in ten seconds is grey, and grey is the whole message. */
       return `<button class="seed-row${justUnlocked === s.id ? ' fresh' : ''}" data-plant="${s.id}" ${can ? '' : 'disabled'}>
         <span class="seed-art" style="--art:${s.art.c1}">${Flora.head(s, 40)}</span>
         <span>
@@ -853,7 +856,7 @@
           </span>
           ${verbNote(s)}
         </span>
-        <span class="seed-go">${Icons.get(can ? 'sprout' : 'lock')}</span>
+        <span class="seed-go">${Icons.get('sprout')}</span>
       </button>`;
     }).join('');
     if (pendingUnlock) return unlockAsk();
@@ -1067,7 +1070,7 @@
     const lv = Game.levelFromRep(S.rep);
     const into = Game.repIntoLevel(S.rep);
     const need = Game.repToNext(lv);
-    const active = S.quests.active.map((inst) => questCard(inst, Game.questById(inst.id), true)).join('');
+    const active = Game.activeQuests().map((inst) => questCard(inst, Game.questById(inst.id), true)).join('');
     const daily = S.quests.daily;
     const ddef = daily && daily.id ? Game.questById(daily.id) : null;
     const dailyHtml = ddef && !daily.claimed
@@ -1480,6 +1483,7 @@
     const good = goodById(order.good);
     const ready = Game.standCanDeliver(order);
     const pct = Math.round(Game.standProgress(order) * 100);
+    const rep = Game.standOrderRep(order);
     return `<button class="on-row${ready ? ' ready' : ''}" data-order="${slot}">
       <div class="on-face ${standMoodClass(order)}">${standFaceFor(order)}</div>
       <div class="on-main">
@@ -1490,7 +1494,7 @@
       </div>
       <div class="on-pay">
         <span class="on-coins">${Icons.get('coin')}${fmt(order.coins)}</span>
-        <span class="on-rep">${Icons.get('star')}${order.rep}</span>
+        ${rep ? `<span class="on-rep">${Icons.get('star')}${rep}</span>` : ''}
         ${ready ? '<span class="on-go">Ready</span>' : ''}
       </div>
     </button>`;
@@ -1522,6 +1526,7 @@
     const good = goodById(order.good);
     const ready = Game.standCanDeliver(order);
     const pct = Math.round(Game.standProgress(order) * 100);
+    const rep = Game.standOrderRep(order);
     const mood = ready ? 'delivered' : 'waiting';
     const line = ready
       ? UI.pickLine(c.lines.greet, order.id)
@@ -1539,7 +1544,7 @@
       </div>
       <div class="on-pays">
         <span class="on-coins">${Icons.get('coin')}${fmt(order.coins)}</span>
-        <span class="on-rep">${Icons.get('star')}${order.rep} rep</span>
+        ${rep ? `<span class="on-rep">${Icons.get('star')}${rep} rep</span>` : ''}
       </div>
       <button class="big-btn${ready ? ' go' : ' off'}" data-deliver="${slot}"${ready ? '' : ' disabled'}>
         ${ready ? 'Hand it over' : 'Still growing'}
@@ -1977,6 +1982,8 @@
       `<button class="dev-btn" style="--dev:${m.tint}" data-dev="mutate" data-arg="${id}">${m.name}</button>`).join('');
     const rars = DATA.rarity.slice(1).map((r) =>
       `<button class="dev-btn${pending.rarity === r.key ? ' on' : ''}" data-dev="rarity" data-arg="${r.key}">${r.label}</button>`).join('');
+    const summonStars = (what) => Array.from({ length: CREATURE_STARS }, (_, i) =>
+      `<button class="dev-btn" data-dev="${what}" data-arg="${i + 1}">★${i + 1}</button>`).join('');
 
     const armed = [];
     if (pending.rarity) armed.push(`next harvest: ${pending.rarity}`);
@@ -2008,6 +2015,10 @@
         <button class="dev-btn" data-dev="card" data-arg="mythic">+1 mythical</button>
         <button class="dev-btn" data-dev="completeSet" data-arg="1">Complete a set</button>
         <button class="dev-btn" data-dev="dropPack" data-arg="1">Drop a pack in the garden</button>`)}
+      ${devRow(`Creatures — ${Game.crittersHome().length} home · ${Game.habitatUsed()} out of ${
+        Game.habitatSlots()} slot${Game.habitatSlots() === 1 ? '' : 's'} (slots open at levels ${
+        HABITAT_SLOT_LEVELS.join('/')})`, summonStars('summon'))}
+      ${devRow('Summon all six, at the same star', summonStars('summonAll'))}
       ${devRow(`Creature food clocks — ${Game.crittersAsleep().length} of ${
         Game.crittersTending().length} tending are asleep`, `
         <button class="dev-btn" data-dev="drain" data-arg="1">Drain 1h</button>
@@ -2015,6 +2026,10 @@
         <button class="dev-btn" data-dev="drain" data-arg="24">Drain 24h</button>
         <button class="dev-btn warn" data-dev="sleep" data-arg="1">Send them to sleep</button>
         <button class="dev-btn" data-dev="feedAll" data-arg="1">Feed everyone</button>`)}
+      ${devRow('Wind the world forward — no welcome sheet, no offline pay. Boosts and the Wonder keep their time', `
+        <button class="dev-btn" data-dev="warp" data-arg="1">+1 hour</button>
+        <button class="dev-btn" data-dev="warp" data-arg="8">+8 hours</button>
+        <button class="dev-btn" data-dev="warp" data-arg="24">+24 hours</button>`)}
       ${devRow('Simulate an absence', `
         <button class="dev-btn" data-dev="away" data-arg="3">3 hours</button>
         <button class="dev-btn" data-dev="away" data-arg="6">6 hours</button>
@@ -2024,7 +2039,8 @@
         <button class="dev-btn" data-dev="gold" data-arg="1">+1M gold</button>
         <button class="dev-btn" data-dev="gems" data-arg="1">+50 gems</button>
         <button class="dev-btn" data-dev="level" data-arg="1">+1 level</button>
-        <button class="dev-btn" data-dev="level" data-arg="5">+5 levels</button>`)}
+        <button class="dev-btn" data-dev="level" data-arg="5">+5 levels</button>
+        <button class="dev-btn" data-dev="boosts" data-arg="1">+1 of every power-up</button>`)}
       ${devRow(`The Garden Year — ${yearReport()}`, `
         <button class="dev-btn" data-dev="yearEarn" data-arg="25000">Earn +25K</button>
         <button class="dev-btn" data-dev="yearEarn" data-arg="100000">Earn +100K</button>
@@ -2046,6 +2062,17 @@
       sky now ${Game.currentWeather().name}</p>`;
   }
 
+  /* A summon that lands but cannot come out has not failed, so it must not take
+     the deny path — that is the habitat cap doing its job, and the way past it
+     is levels, which is a different button. */
+  function benched(n) {
+    UI.toast({
+      title: n === 1 ? 'Moved in, waiting in the roster' : `${n} moved in, waiting in the roster`,
+      body: `${Game.habitatUsed()} of ${Game.habitatSlots()} slots are full. Tap +5 levels under Give — slots open at levels ${HABITAT_SLOT_LEVELS.join('/')}.`,
+      art: Icons.get('sprout')
+    });
+  }
+
   function handleDev(what, arg) {
     const D = Game.Dev;
     let redraw = true;
@@ -2065,6 +2092,10 @@
       case 'gold': D.grantGold(1e6); break;
       case 'gems': S.gems += 50; Game.save(); Game.emit('currency'); break;
       case 'level': D.grantLevels(Number(arg) || 1); break;
+      case 'warp':
+        ok = Boolean(D.warp(Number(arg) || 1));
+        deny = 'Nothing in the world is on a clock yet — plant something first.';
+        break;
       case 'away': {
         const report = D.simulateAway(Number(arg) || 3);
         ok = Boolean(report);
@@ -2084,6 +2115,22 @@
         ok = D.feedCritters() > 0;
         deny = 'Nobody is tending, or they are all fed to the cap.';
         break;
+      case 'summon': {
+        const got = D.summonCritter(Number(arg) || 1);
+        ok = Boolean(got);
+        deny = 'Every creature already lives here.';
+        if (ok && !got.tending) benched(1);
+        break;
+      }
+      case 'summonAll': {
+        const got = D.summonAll(Number(arg) || 1);
+        ok = got.length > 0;
+        deny = 'Every creature already lives here.';
+        const waiting = got.filter((g) => !g.tending).length;
+        if (waiting) benched(waiting);
+        break;
+      }
+      case 'boosts': D.grantBoosts(); break;
       case 'packs': Game.grantPacks(Number(arg) || 1); break;
       case 'card': {
         const got = D.grantCard(arg || null);
@@ -2288,9 +2335,10 @@
       FX.coins(c.x, c.y, 10);
       Sound.play('quest');
       FX.haptic(14);
+      const rep = Game.standOrderRep(order);
       UI.toast({
         title: who ? UI.pickLine(who.lines.delivered, order.id) : 'Delivered',
-        body: `${good ? good.name : 'Order'} &middot; +${fmt(res.paid)} coins, +${order.rep} rep`,
+        body: `${good ? good.name : 'Order'} &middot; +${fmt(res.paid)} coins${rep ? `, +${rep} rep` : ''}`,
         art: Icons.get(good ? good.icon : 'gift')
       });
       UI.openSheet('orders');
@@ -2661,8 +2709,6 @@
       const p = DATA.fall.plants.find((x) => x.id === node.dataset.crop);
       const can = Boolean(p) && S.credits >= p.cost;
       node.disabled = !can;
-      const go = $('.seed-go', node);
-      if (go) go.innerHTML = Icons.get(can ? 'sprout' : 'lock');
     });
     $$('[data-unlockgo]', el.sheetBody).forEach((node) => {
       const price = Game.seedUnlockPrice(node.dataset.unlockgo);
@@ -2685,8 +2731,6 @@
       }
       const can = S.credits >= s.cost;
       node.disabled = !can;
-      const go = $('.seed-go', node);
-      if (go) go.innerHTML = Icons.get(can ? 'sprout' : 'lock');
     });
   }
 

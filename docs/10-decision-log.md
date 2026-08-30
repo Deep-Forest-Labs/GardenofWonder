@@ -5,6 +5,124 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (phase 3.6) — The cleanup round: three ruled fixes, and a review kit so the owner can live a week in an afternoon
+
+**Implements the three rulings below, plus the cheats the owner asked for.** No new layouts, so no
+wireframe gate. No economy knob moved. Suite **1,207 → 1,296**, clean across six runs; `year-sim`
+exits 0.
+
+### The discover quests count what you already found
+
+**Two faults with one symptom, needing different fixes.** A discover quest was dealt at zero however
+many flowers you had already grown, so the strip read 0/5 while the Almanac on the next screen read
+2 — one word counting two different things. And the last rung asked for twelve species after being
+dealt at eight, in a game with nineteen: measured against the real engine, a hard ceiling of 11/12.
+Unwinnable, and because the strip always showed the *oldest* active quest it then became the
+permanent contents of the one thing the game keeps in front of the player.
+
+**The engine now asks one question when it deals a quest: what does this goal already deserve?** The
+answer comes from a small table keyed on the quest's *track*. Only `discover` has an answer today,
+because it is the only track with a lifetime record behind it. It is written as a **floor**, not a
+starting value, which is the part worth keeping: a record can never be lower than what a quest
+counted for itself, so re-applying it is harmless — and that is what quietly straightens a save
+already stranded at 0/5, with no migration flag and nothing new in the save file.
+
+**The daily is deliberately excluded.** A daily is a goal for today; a lifetime record would deal it
+finished every morning — and the dailies are the only quests that pay gold, so that is a faucet into
+the mint on a timer. It gets a sim-test with an injected discover daily rather than a comment.
+
+**The strip now shows the quest nearest to done**, as a fraction of the goal — four of five is
+closer than five of twelve — with a completed quest first and ties going to the one dealt first, so
+a fresh save's strip is unchanged. **Measured rather than argued: over ten simulated minutes and 684
+strip reads the quest changed 4 times, and every change was a completion handing over to the next
+quest.** No oscillation. The quest panel reads the same order from the same getter, so the strip can
+never disagree with the panel it opens.
+
+This would also have defused the two jams already in the docs — 'Merge a Posy' and the sell quests —
+but it does **not** free the slot a dead quest holds. Only `paused: true` does that, and reading
+this as licence to unbench the bench quests would be a misreading.
+
+### The Stand's standing is paused on a flag, not zeroed in the save
+
+A three-line tier-4 order paid 48 standing, more than the largest quest in the game, while
+`DATA.levelGrants` stops at 20 — the faucet shipped in slice A and the rungs it feeds did not.
+
+**`STAND.repPaused` in `data.js`, read through one getter, `Game.standOrderRep(order)`.** Orders keep
+paying gold, keep counting the Tally's orders line, keep their refill and their skip.
+
+**Why a getter rather than zeroing the price at generation.** Zeroing writes the pause *into the
+save*: every order already on a board keeps a stale number, and flipping the flag back needs a
+migration to pay it. The getter leaves the authored number honest in the save and gates only the
+payment, so **slice D turns this on by changing one word and every board already written pays**. A
+sim-test asserts both directions. The order card omits its star chip entirely while the flag is on,
+because an order that promises standing it will not hand over is worse than one that promises
+nothing. Every other standing faucet — quests, Almanac milestones, the ten-harvest drip, the dev
+level grant — is untouched, and each has an assertion saying so, because putting the flag inside
+`addRep()` would have switched off the whole ladder with a green suite.
+
+### The padlock means the one-time wall, and nothing else
+
+The go button draws its sprout in every state and drains onto the drained-paper tokens when the row
+is unaffordable. An **empty** disc was rejected: it reads as a bug. Fall's crop picker took the same
+edit — it shares the row and has no unlock wall at all, so its padlock could only ever have meant
+*can't afford yet*.
+
+**The half that would have shipped broken:** `syncAfford()` rewrote that slot on every `currency`
+emit, so a markup-only fix puts the padlock back about a second after the panel opens — worse than
+shipping nothing, because it then reads as a flicker bug. There is no UI test in this project, so a
+sim-test reads `ui-sheet.js` and holds all four writers at once, including the negative case: a
+suite that only said "no padlocks in the picker" would be passed by deleting the padlock that stays.
+
+### The review kit
+
+**The time-warp is the away cheat with `lastSeen` held down.** It winds every production clock
+*back* — plants in both seasons, Fall's bed and the Century Bloom on the same field, hive jars,
+crafts, order refills, creature food **and** the separate keepsake clock — then runs one real
+`tick(0)` so the world catches up in the same commit. `state.lastSeen` is the one field it will not
+touch, because moving it is exactly what turns an advance into an absence and pays offline income;
+`tick(0)` even re-pins it to now, so the guarantee is structural rather than a promise.
+
+**A running power-up and the Wonder keep their remaining time — a ruling, not an oversight.** The
+rest of the kit exists to give the POWER-UP button something to demonstrate, and a warp that blew a
+boost away would make the two cheats fight each other. Verified live: 30s of Bloom Burst and 20s of
+Wonder both survived a 24-hour warp untouched.
+
+**Summoning goes through `moveIn()`**, extracted so that one function writes the arrival record — six
+fields that mean different things, and `fed` is the keepsake clock wearing a name that says
+otherwise. The summon fires the same `critter` arrival event a threshold crossing does, so the
+celebration is the one a player gets. **It leaves `state.discovered` alone on purpose**: faking it to
+trip `checkCritters()` would move the Almanac, the discover quests fix 1 has just taught to read that
+count, the growth loop and the creature's own attract line, all to buy one animation.
+
+**Summoning grants no levels.** The band holds `habitatSlots()` and slots open at levels 1/5/10/16,
+so on a fresh save only one creature can be out. That is stated in the row header rather than worked
+around, and a summon that lands but cannot come out takes the *toast* path, not the deny path — the
+cap doing its job is not a failure.
+
+### Rejected
+
+**Re-keying, benching or re-costing the discover quests**, and re-pointing the track at
+`state.year.stats.speciesSeen` — the owner ruled options 1 and 4. The `speciesSeen` idea is the
+strongest of the rest and stays available: it is a decision about what the discover track *is*,
+not a bug fix.
+
+**Zeroing the Stand's rep at generation** — see above; it writes the pause into the save.
+
+**An empty go disc, and a "36 gold short" label.** The ruling was *grey row only*; a disc with
+nothing in it reads as a broken button rather than as a quiet one.
+
+**Suppressing the drone's harvest inside the warp.** `Dev.warp()` calls `credit()` nowhere, but the
+real `tick(0)` runs the auto-harvester, and a warped plot genuinely is ripe — so a save that owns the
+drone earns one harvest per warp press (measured: ~450–500 gold, and often zero, because the drone's
+own cadence gate blocks a second). Suppressing it would mean a cheat that lies about what the
+automation would have done over the hours it just skipped. Recorded in `11-known-issues.md`
+instead.
+
+**Granting levels from the summon button** so the band fills in one tap. It would silently unlock
+plots, meadow cells and Stand tiers on the way past. One cheat, one job.
+
+---
+
 ## 2026-08-30 (phase 3.5, the gauntlet) — Sixty-nine critics, and the blocker was the meadow's only signpost
 
 Five independent critics — reachability that *walks*, visual fidelity against the approved spike then
