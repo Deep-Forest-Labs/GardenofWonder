@@ -1780,9 +1780,24 @@
       ? '<span class="price maxed">MAX</span>'
       : `<button class="price petal-buy ${can ? 'ok' : 'no'}" data-petal="${seed.id}" data-skill="${skill}"
            ${can ? '' : 'disabled'} aria-label="Buy a ${label} petal for ${seed.name}, ${fmt(cost)} Saved Seeds, taking it from ${Math.round(eff.now * 100)} to ${Math.round((eff.now + eff.next) * 100)} percent">${Icons.get('pouch')}${fmt(cost)}</button>`;
+    /* THE SKILL SAYS WHAT IT IS BEFORE IT SAYS WHAT IT IS WORTH. At zero pips
+       the value line collapses to a bare "next +30%", which teaches a player who
+       has never bought one absolutely nothing — the name is four small words in
+       a 44px column and the number has no noun attached to it. The sentence is
+       authored in data and the percentage is written back into it from `value`,
+       so it can never disagree with the effect. It is drawn at every pip count,
+       not only at zero: the meaning does not stop being useful once you own one.
+       `grid-column:1 / -1` is what keeps it out of the four-column track. */
+    const desc = (def.desc || '').replace('{v}', pct(def.value));
+    /* AT ZERO PIPS THE SENTENCE IS THE VALUE LINE. Unowned, `petalValue()`
+       collapses to a bare "next +30%" — the same number the sentence already
+       carries, with a noun attached. Printing both there is one fact said
+       twice; from one pip on they answer different questions (what you have
+       and what one more buys, against what the skill is) and both belong. */
     return `<div class="petal-track">
       <span class="pl">${label}</span><span class="pips">${pips}</span><span class="sp"></span>${chip}
-      ${petalValue(skill, eff)}
+      ${desc ? `<span class="pd">${desc}</span>` : ''}
+      ${owned || !desc ? petalValue(skill, eff) : ''}
     </div>`;
   }
 

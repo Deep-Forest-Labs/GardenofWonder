@@ -1307,6 +1307,9 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
 .pt-card .petal-track .pips i{width:6px;height:6px}
 .pt-card .petal-track .price{font-size:10px;padding:2px 7px;min-width:0;white-space:nowrap}
 .pt-card .petal-track .pv{font-size:9px;line-height:1.2;margin-bottom:2px}
+/* Two cards to a row on a phone, so the sentence is the same words at a size
+   the column can carry. */
+.pt-card .petal-track .pd{font-size:9px;line-height:1.25;margin-bottom:2px}
 
 /* The seam between the two halves of Orders & Quests. Not a heading — the two
    panels bring their own — just enough air that they read as two lists. */
@@ -1699,6 +1702,13 @@ button{font-family:inherit;color:inherit;border:0;background:none;padding:0;curs
   font-variant-numeric:tabular-nums;
 }
 .petal-track .pv.full{color:#2f9e44}
+/* The third row: what the skill IS, in words, at any pip count. Same token as
+   the seed's own description line under the Almanac heading — descriptive text
+   on paper is `--ink-soft`, never an opacity on ink. */
+.petal-track .pd{
+  grid-column:1 / -1;
+  font-size:11px;font-weight:600;line-height:1.3;color:var(--ink-soft);
+}
 .petal-track .pip{width:10px;height:10px;background:var(--seed);
   box-shadow:inset 0 2px 0 rgba(255,255,255,.4)}
 .petal-track .pip.off{background:var(--paper-dim-2);box-shadow:none}

@@ -397,10 +397,27 @@ survives as layout headroom only.
 
 ### The Almanac petal rows (2026-08-29, phase 2)
 
-The mastery goal line is replaced by **two petal tracks**: name, pips, price. The pips are the game's
+The mastery goal line is replaced by **two petal tracks**: name, pips, price, and — since
+2026-08-30 — the skill's one-line meaning. The pips are the game's
 existing level vocabulary in the seed's own green, so a player reads "3 of 5" without a fraction; the
 price is the ordinary `.price` family in three states they already know — green affordable, drained
 short, grey `MAX`. Only the price chip is the button, so a mis-tap on the row cannot spend seeds.
+
+**A skill says what it is before it says what it is worth.** A track with no pips used to read
+`next +30%` and nothing else — a number with no noun attached, on the one surface a player meets
+before they have ever bought a petal. Every track now carries its plain sentence: *"+30% gold on this
+flower's harvests, per petal."* / *"Grows 6% faster, per petal."* The sentence is authored in
+`DATA.petals.shared[skill].desc` with a `{v}` token where the panel writes `value` back in, so the
+percentage in the prose can never disagree with the effect — the two upgrade descriptions that typed
+their numbers by hand have both already drifted from the code.
+
+**At zero pips the sentence replaces the value line**, because `petalValue()` collapses there to the
+same number the sentence already carries. From one pip on both are drawn: the value line reports what
+you have and what one more buys, the sentence says what the skill is.
+
+`petalTrack()` in `ui-sheet.js` renders **both** surfaces — these rows and the Turn panel's petal
+cards — so this is one edit, not two. `.pd` takes `grid-column:1 / -1` to escape the track's four
+columns, and the token is `.seed-desc`'s: 11px, weight 600, `--ink-soft`.
 
 **They appear only after the first Turn, and only on a discovered flower.** Doc 32's year one is
 "nothing, unexplained — the mystery is the tutorial", so there is no teaser and no locked track; the

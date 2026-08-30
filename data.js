@@ -428,10 +428,17 @@ const DATA = {
     signatureMult: 0.6,
     /* The two shared skills on every flower, deliberately boring so there is
        never a wrong way to spend. Effects are additive per petal and apply as
-       a multiplier off the yield curve — seed.yield is never edited. */
+       a multiplier off the yield curve — seed.yield is never edited.
+
+       `desc` is the plain sentence a player reads BEFORE buying anything, and
+       `{v}` is where the panel writes `value` back in. The number is written
+       once, here, and interpolated — a hand-typed "+30%" in the prose is the
+       first copy of a value this file otherwise keeps in exactly one place, and
+       the two upgrade descs that did that have both already drifted from the
+       code they describe. */
     shared: {
-      rich:  { name: 'Rich Bloom',   cap: 5, value: 0.30 },
-      quick: { name: 'Quick Sprout', cap: 5, value: 0.06 }
+      rich:  { name: 'Rich Bloom',   cap: 5, value: 0.30, desc: '+{v} gold on this flower\u2019s harvests, per petal.' },
+      quick: { name: 'Quick Sprout', cap: 5, value: 0.06, desc: 'Grows {v} faster, per petal.' }
     }
   },
 
