@@ -214,9 +214,14 @@ Casual players fall off a cliff past four or five tracked quantities. Keep the t
 | Crafted goods | Perfume, Tea, Preserves, Candles, Salve |
 | Soft currency | Coins |
 | Hard currency | Gems |
+| Prestige currency | Saved Seeds *(minted only at the Turn, spent only on petals — [32-the-garden-year.md](32-the-garden-year.md); added 2026-08-31, taking the slot tickets vacated when they were retired)* |
 | Progression track | Reputation *(earned, never spent)* |
 
-Adding anything to this list requires removing something else.
+Adding anything to this list requires removing something else. The ledger of that rule so far:
+tickets were retired 2026-08-13 and Saved Seeds later took the vacated slot (the trade the
+overnight audit caught this table missing). Petals are deliberately **not** on the list — they
+are purchases, not a currency, the same way an upgrade level is not a wallet. `state.tickets`
+survives only as a dead field for old saves.
 
 ## What was cut, and why
 
