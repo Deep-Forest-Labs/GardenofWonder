@@ -299,7 +299,7 @@ confirm the import plus the "Progress restored" toast. Then test the pristine-sh
 ## Deploying
 
 The repository root **is** the deployed site. GitHub Pages serves `main` at
-`https://jonishua.github.io/gardenwonder/`.
+`https://deep-forest-labs.github.io/GardenofWonder/`.
 
 Consequences:
 

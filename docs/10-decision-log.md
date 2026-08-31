@@ -1908,6 +1908,26 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-31 (project) — The garden moves to Deep Forest Labs, history intact
+
+**The repo's new home is `github.com/Deep-Forest-Labs/GardenofWonder`** — created in the owner's
+Chrome session, then given the complete story: every commit since 2 August, both branches, both
+tags. Nothing was transferred, so nothing was lost: the old repo at `jonishua/gardenwonder`
+stays where it is (the owner ruled the testers and their saves need no bridge — old saves live
+in the old address and a fresh start is acceptable), and `main` now tracks the org repo as its
+one true origin, with the old remote kept reachable as `legacy`.
+
+**The move surfaced a repair worth recording:** the repository had never been garbage-collected
+— every object in a month of work was loose, which is why the first pushes hung for minutes. A
+whole month of game and documentation packs to **3.2 MiB**. Aborted-push debris was cleaned and
+the pack now exists; future clones and pushes are seconds.
+
+**Still to flip:** GitHub Pages on the new repo (Settings → Pages → main / root), which brings
+the new live URL — `deep-forest-labs.github.io/GardenofWonder` — into being. Doc references to
+the old addresses are updated in this commit; the memory notes carry the new remote.
+
+---
+
 ## 2026-08-30 (project) — Everything is kept, and the bible will one day be published
 
 **The owner's standing intent, recorded:** the whole body of work — every numbered doc, every

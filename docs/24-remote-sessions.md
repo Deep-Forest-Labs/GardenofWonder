@@ -11,7 +11,7 @@ is the part a session cannot work out on its own.
 ## The loop
 
 ```bash
-git clone https://github.com/jonishua/gardenwonder.git && cd gardenwonder
+git clone https://github.com/Deep-Forest-Labs/GardenofWonder.git && cd gardenwonder
 ```
 
 Then read `docs/HANDOFF.md` and `docs/09-conventions.md` as always — the rules in `AGENTS.md` are
@@ -116,7 +116,7 @@ access token scoped to this repository alone, with **Contents: read and write**,
 session:
 
 ```bash
-git remote set-url origin https://<token>@github.com/jonishua/gardenwonder.git
+git remote set-url origin https://<token>@github.com/Deep-Forest-Labs/GardenofWonder.git
 ```
 
 The container is destroyed when the session ends, and takes the token with it. Never write the

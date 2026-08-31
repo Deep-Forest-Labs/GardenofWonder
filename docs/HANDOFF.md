@@ -7,7 +7,7 @@ decided, and what to do next. Update it at the end of any significant session.
 
 ## Where the project stands
 
-The game is **built, working, and live** at <https://jonishua.github.io/gardenwonder/>, deployed from
+The game is **built, working, and live** at <https://deep-forest-labs.github.io/GardenofWonder/>, deployed from
 `main` at the repository root. It is a single-screen idle garden — tap a talking flower, plant
 seeds in eight plots, harvest with rarity multipliers, spend on **upgrades** (the word "badges" is
 retired everywhere a player reads, 2026-08-30), and earn **power-ups** from a starting bag, quests,
