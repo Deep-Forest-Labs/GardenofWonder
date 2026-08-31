@@ -1469,19 +1469,54 @@ html,body{
   -webkit-mask-image:linear-gradient(180deg,#000 0 32%,rgba(0,0,0,.42) 78%,transparent 100%);
   mask-image:linear-gradient(180deg,#000 0 32%,rgba(0,0,0,.42) 78%,transparent 100%);
   filter:blur(9px);
+  /* The phase animation owns opacity from here; this is the value it returns to
+     if the animation is ever cancelled, so a ray is never invisible by default. */
   opacity:calc(var(--wx-sunbreak-opacity,.28) * var(--k,1));
   transform-origin:50% 0%;
-  transform:rotate(var(--a,17deg));
-  animation:wxRayDrift calc(38s / max(.05, var(--wx-sunbreak-drift-speed,.5)))
-            ease-in-out infinite alternate;
+  /* Two motions, deliberately on different clocks. The sweep is the shafts
+     crossing the sky — off the left edge to off the right, so there is no wrap to
+     hide and a ray is never seen to jump. The phase is each shaft brightening and
+     dissolving on its own offset, which is what keeps three rays from reading as
+     one object sliding sideways. Together: always moving, never busy. */
+  transform:rotate(var(--a,17deg)) translateX(calc(var(--vw,1vw) * -45));
+  animation:
+    wxRaySweep calc(45s / max(.05, var(--wx-sunbreak-drift-speed,.5))) linear infinite,
+    wxRayPhase calc(11s / max(.05, var(--wx-sunbreak-drift-speed,.5))) ease-in-out infinite;
 }
-.wx-ray:nth-child(1){--x:8%;--w:96px;--a:15deg;--k:1}
-.wx-ray:nth-child(2){--x:34%;--w:70px;--a:19deg;--k:1;animation-delay:-9s}
-.wx-ray:nth-child(3){--x:58%;--w:112px;--a:13deg;--k:clamp(0, calc(var(--wx-sunbreak-rays,3) - 2), 1);animation-delay:-17s}
-.wx-ray:nth-child(4){--x:78%;--w:62px;--a:21deg;--k:clamp(0, calc(var(--wx-sunbreak-rays,3) - 3), 1);animation-delay:-4s}
-@keyframes wxRayDrift{
-  from{transform:rotate(var(--a,17deg)) translateX(-10px)}
-  to{transform:rotate(calc(var(--a,17deg) + 3deg)) translateX(14px)}
+/* Every ray is at a different point of BOTH cycles, so the sky is never
+   symmetrical and never all-bright at once. The negative delays are what put
+   them mid-journey the moment the sun comes out, rather than all lined up at the
+   left edge waiting to start. */
+.wx-ray:nth-child(1){--x:0%;--w:96px;--a:15deg;--k:1;
+  animation-delay:-26s,-1s}
+.wx-ray:nth-child(2){--x:0%;--w:70px;--a:19deg;--k:1;
+  animation-delay:-45s,-7s}
+.wx-ray:nth-child(3){--x:0%;--w:112px;--a:13deg;
+  --k:clamp(0, calc(var(--wx-sunbreak-rays,3) - 2), 1);
+  animation-delay:-64s,-13s}
+.wx-ray:nth-child(4){--x:0%;--w:62px;--a:21deg;
+  --k:clamp(0, calc(var(--wx-sunbreak-rays,3) - 3), 1);
+  animation-delay:-35s,-17s}
+/* Off the left edge to off the right, so the loop point is never on screen and a
+   ray is never seen to jump back. At the default drift a shaft crosses about a
+   third of the sky in the thirty seconds the sunbreak lives — slow enough to be
+   weather, fast enough to be movement.
+
+   The distance is a share of the FRAME, never a percentage of the ray: the four
+   shafts are deliberately different widths, and a percentage translate would give
+   each of them a different journey and bunch them together in the middle. */
+@keyframes wxRaySweep{
+  from{transform:rotate(var(--a,17deg)) translateX(calc(var(--vw,1vw) * -45))}
+  to{transform:rotate(calc(var(--a,17deg) + 4deg)) translateX(calc(var(--vw,1vw) * 145))}
+}
+/* At phase 0 a shaft simply crosses at a steady brightness; at 1 it arrives out
+   of nothing and dissolves back into it. The sweep runs off both edges either
+   way, so the knob only ever decides how much of the coming and going you see. */
+@keyframes wxRayPhase{
+  0%,100%{opacity:calc(var(--wx-sunbreak-opacity,.28) * var(--k,1)
+                       * (1 - var(--wx-sunbreak-phase,.75)))}
+  34%,58%{opacity:calc(var(--wx-sunbreak-opacity,.28) * var(--k,1))}
+}
 }
 
 /* Visible is the base style; the life animation only shapes the fade so the rays
@@ -1557,7 +1592,13 @@ html,body{
 /* One static, faint ray. */
 #frame[data-reduced="1"][data-sunbreak="1"] .wx-sunbreak{animation-name:none}
 #frame[data-reduced="1"] .wx-sunbreak{transition-duration:1.2s}
-#frame[data-reduced="1"] .wx-ray{animation-name:none}
+/* One faint shaft, standing still. The base transform starts a ray off the left
+   edge — that is where its journey begins — so the quiet version has to place it
+   somewhere worth looking at rather than inherit a position that means "not yet". */
+#frame[data-reduced="1"] .wx-ray{
+  animation-name:none,none;
+  transform:rotate(var(--a,17deg)) translateX(calc(var(--vw,1vw) * 26));
+}
 #frame[data-reduced="1"] .wx-ray:nth-child(1){opacity:calc(var(--wx-sunbreak-opacity,.28) * .6)}
 #frame[data-reduced="1"] .wx-ray:nth-child(n+2){opacity:0}
 
@@ -2473,11 +2514,12 @@ const KNOBS = [
   },
   {
     group: 'The sunbreak',
-    note: 'The sun through parting clouds, after Rain and after the Storm. Daytime only.',
+    note: 'The sun through parting clouds, after Rain and after the Storm. Daytime only. The shafts cross the sky right the whole time; Fade in/out decides how much of their coming and going you see.',
     items: [
       { path: 'sunbreak.rays',       label: 'Rays',    min: 0, max: 4,  step: 1 },
       { path: 'sunbreak.opacity',    label: 'Opacity', min: 0, max: 0.8, step: 0.01 },
       { path: 'sunbreak.driftSpeed', label: 'Drift',   min: 0.05, max: 3, step: 0.05 },
+      { path: 'sunbreak.phase',      label: 'Fade in/out', min: 0, max: 1, step: 0.01 },
       { path: 'sunbreak.duration',   label: 'Duration', min: 4, max: 90, step: 1, unit: 's' }
     ]
   }
@@ -2486,17 +2528,17 @@ const KNOBS = [
 /* The defaults are docs/41's starting points, and the copyable block below is
    what replaces them. Ordered the way it will read in data.js. */
 const DEFAULTS = {
-  frontSeconds: 30,
+  frontSeconds: 5,
   calledFrontSeconds: 5,
   rainGrowth: 0.10,
-  rain:       { drops: 46, dropSpeed: 900,  wind: 0.12, wash: 0.46, wetness: 0.34,
+  rain:       { drops: 74, dropSpeed: 900,  wind: 0.12, wash: 0.46, wetness: 0.34,
                 bed: 0.30, linger: 30 },
   storm:      { drops: 70, dropSpeed: 1150, wind: 0.42, wash: 0.68, wetness: 0.46,
                 flashMinGap: 3.4, flashJitter: 4.0, flashBright: 0.72, bed: 0.34 },
   aurora:     { ribbons: 3, ribbonSpeed: 0.16, ribbonOpacity: 0.42, dusk: 0.62,
                 duskSeconds: 4, rimGlow: 0.5, starBoost: 0.85, bed: 0.26 },
   wonderfall: { veil: 0.30, drizzle: 26, bob: 0.5, bobPeriod: 1.6, bed: 0.34 },
-  sunbreak:   { rays: 3, opacity: 0.28, driftSpeed: 0.5, duration: 30 }
+  sunbreak:   { rays: 3, opacity: 0.28, driftSpeed: 0.5, phase: 0.75, duration: 30 }
 };
 
 const V = JSON.parse(JSON.stringify(DEFAULTS));
