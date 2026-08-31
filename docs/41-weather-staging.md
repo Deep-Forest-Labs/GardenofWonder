@@ -249,3 +249,64 @@ One known tension, not a bug: everything that tints the frame is masked out over
 the very bottom of the lawn stays bright under a dark sky. That mask is load-bearing — iOS paints
 the strip below a short window with the flat lawn colour, and a tint running to the edge draws the
 join three rounds of layout work went into hiding.
+
+## How to review it — one sky at a time
+
+Open `tools/sky-spike.html`. Press **Sound** once (a browser will not make a noise until the page
+has been tapped), leave **Music** on so you can hear the sky change the tune, and press a sky.
+**Let it run all the way through the first time** — the shape is the thing being approved, not the
+still. After that, the little FRONT / TRANSFORM / LINGER / END pills drop you back into whichever
+part you are tuning without sitting through the announcement again. Every slider is live: move it
+while the rain is falling and the rain changes under your hand.
+
+**Rain — the cosy one.** Thirty seconds of clouds thickening and the flower saying it can smell
+rain, then it lands: drops fall, the sky deepens, the soil and the lawn go dark and wet, the plants
+pick up a sheen, and the flower puts a leaf over its head. It sits there for a while, then the drops
+thin out over five seconds and the sun breaks through. The sliders that decide how it feels are
+**Drops** and **Fall speed** (how heavy the weather is), **Sky wash** (how much light it takes out
+of the day) and **Wet ground** (how much of that reaches the board — this one also darkens the
+flowers standing in it, so it is the one to watch). **Drying** is how long the ground stays dark
+afterwards; that lingering wet is the "that happened" trace.
+
+**Thunderstorm — the dramatic one.** Everything Rain does, darker and heavier, plus the flash, a
+bolt behind the hills, a wind that leans the plants and the clouds sideways, and the pets ducking
+under the nearest leaves to peek out. It closes with one last distant rumble and then earns the same
+sunbreak Rain does. **Flash gap**, **Flash jitter** and **Flash bright** are the whole character of
+it — wind the gap down as far as you like and the stage will refuse anything past three flashes in
+ten seconds and tell you how many it held back, because that ceiling is not negotiable. **Wind lean**
+is how hard it is blowing.
+
+**Aurora — the beautiful one.** No warning at all: an aurora simply begins. The sky goes down to
+dusk over four seconds *whatever the time of day* — that bending of the light rules is what makes it
+read at noon — and the ribbons fade in, the stars come up, every plant takes a faint glow, and the
+creatures stop what they are doing and look up. Nothing else moves; that stillness is the point.
+**Ribbons** (two or three, there is no fourth), **Ribbon drift**, **Ribbon alpha** and **Dusk depth**
+are the four that matter. Push **Dusk depth** and the whole garden changes hour; push **Ribbon
+alpha** and it becomes a light show. Try it with the **Hour** slider at midday, which is where it has
+to work.
+
+**Wonderfall — the rarest sky in the game.** The banner, the forced line, a soft takeover cue and a
+haptic; then the rainbow veil comes over the garden, the ripe flowers start bobbing on the beat, gold
+drizzles out of the sky, and the flower sings. **Veil** is the one number that decides whether this
+sky announces itself. It starts at 0.30 against the Wonder Effect's 0.62 — deliberately far under, so
+it reads as weather rather than the ×3 event — and at 0.30 it is very quiet indeed. That is the first
+thing to judge. **Ripe bob** and **Bob period** decide whether the bobbing looks like dancing or
+twitching; **Gold drizzle** is how much falls.
+
+**The sunbreak — your addition, and it has its own button.** Two to four soft diagonal shafts fading
+in through the parting clouds after a shower, drifting slowly, then fading as the ground dries. It
+rides the end of Rain and the end of the Storm, and the Storm earning it is the bigger of the two.
+**Daytime only** — put the **Hour** slider into the night and press it, and nothing happens, which is
+correct. **Rays**, **Opacity**, **Drift** and **Duration** are all of it. It is meant to be very
+simple and very mild, so the question to ask is whether anyone would notice it at all.
+
+**Called Rain** is the same rain arriving in five seconds instead of thirty — what a bought sky
+should feel like. **Reduced motion** shows the honest quiet version of whichever sky you press: no
+drops, a still wet ground, one dim ribbon, a slow tint pulse instead of the flash, no bobbing, and a
+single faint ray for the sunbreak. Worth a pass through all five.
+
+**Join the strip** is on by default. The band above the phone is the strip iOS paints above an
+installed app, and it takes its colour from the sky. Switch the toggle off during a storm and watch
+it stop matching — that is the bug this pass has to avoid, made visible.
+
+When a sky feels right, press **Copy**. That block is what goes into `data.js` word for word.
