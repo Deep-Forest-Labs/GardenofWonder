@@ -30,12 +30,16 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 3. **#6 · Fall's board sits 23px high and its flower is 73% the size** — the season swipe is the
    game's signature move and it visibly jumps. Both causes measured and named; one `style.css` fix
    plus a glow element.
-4. **#5 · No cheat jumps ahead Turns** — the owner cannot reach the season gates to test them.
+4. **#7 · Fall's windfall needs a Collect All and its pill moved above the board** — **pair this
+   with #6**: the 46px margin causing #6's offset exists only to hold the pill this item moves, so
+   two sessions solving them apart will fight over the same space. Needs a new getter and an atomic
+   harvest-all in `game.js`.
+5. **#5 · No cheat jumps ahead Turns** — the owner cannot reach the season gates to test them.
    Dev-panel only, touches no player surface. **Read the item first**: it will not show anyone a
    Spring garden, because there is not one.
-5. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
+6. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
    minute. Contained to `audio.js` and one `data.js` knob, no layout, no new surface.
-6. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
+7. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
    the rail, tap for what it does. Real work: a new tappable surface where the rail has never had
    one, and it brushes a standing ruling (see the item).
 
@@ -537,6 +541,10 @@ rule silently wins and the 118% overscale never applies**. On top of that `.fl-f
 - Touches the recorded trap that a `box-shadow` state modifier deletes the base lip — `.fl-board.armed`
   already restates its whole stack for that reason (`style.css:4006`). Don't undo that while in here.
 
+**Pair this with `#7`.** That item moves the chip out from under the board, which is the only
+reason the 46px margin exists — but it also adds a Collect All button below. Same geometry,
+same session.
+
 **Fix sketch.** For the offset: make `.fl-wrap`'s box equal the board so the two frames centre the
 same content box, and hang the chip off it without adding height — `.fl-wrap` is already
 `position:relative`, so absolutely positioning `.fl-chip` below the board and dropping the
@@ -553,6 +561,83 @@ does not overlap what it sits between, since `.fl-flower-cell` is `overflow:visi
 **Open question.** Should the two boards match beyond position and flower size — same planter
 colour and weave — or is Fall's darker autumn planter deliberate? Read here as deliberate, and left
 alone.
+
+---
+
+### #7 · POLISH · Fall's windfall has no payoff moment, and its pill is under the board · cosmetic · reported 2026-08-31
+
+*Severity understates this one. Nothing is broken — it is a feature the owner asked for, and its
+value is that it is the payoff of Fall's only rule. Ordered high in the round on that basis.*
+
+**What the owner asked for.** "The button that says that has the star, and it says 'Eight still pay'
+or 'Pays 50%'. I think we should have that be a 'Collect All' button once it's got its bonus applied…
+A player can still tap each one exactly how it is and have seven still pay plus 50%, but they could
+hit a 'Collect All' for X value. They then have something that says '50% bonus applied'… a way for
+the player to feel like, 'Boom! They completed a challenge.'… I also think we should move that little
+bonus pill above the garden and have it as a pill that's just informative… We could add that collect
+all button below it once it's available."
+
+**The owner's read of the mechanic is correct.** Picking the bed plot by plot still pays +50% on
+every plot, because the promise is a per-cell mark rather than a live clock reading — `checkFallWindfall()`
+marks every eligible cell once per fill and refuses to mark again while any mark is unspent
+(`game.js:3579`). That is why the chip can honestly say "**7** still pay **+50%**". A Collect All is
+therefore a *convenience and a celebration*, not a new payout rule, and nothing in the economy moves.
+
+**What exists today.** `#fallChip` (`renderBedChip()`, `ui-fall.js:168`) is a **`<div>`, not a
+button** — six states of pure text, from "Fill all 8 for +50%" through "One more in 4m" to "The whole
+bed — +50%". It sits below the board and nothing can be tapped. Harvesting is one tap per cell
+(`ui-fall.js:279`), each firing its own coin burst, float, `crit` sound and haptic. Eight of those in
+a row is eight small pops where the owner wants one big one.
+
+**Do this together with `#6`, or do this one first.** The two are the same piece of geometry. `#6`'s
+23px board offset is caused by `.fl-wrap{margin-bottom:46px}` (`style.css:4110`), and that margin
+exists for **exactly one reason: to reserve the room under the board for this chip.** Move the pill
+above the board and the margin has no job left — which fixes `#6` for free — but adding a Collect All
+button below re-creates the need for room underneath. Two sessions solving these separately will
+fight each other over the same 46px.
+
+**The traps.**
+- **A button that appears only when armed will shift the board at the moment of triumph.** It lands
+  in a `place-items:center` grid, so a new row below grows the wrap and slides the board up — a jump
+  at the exact instant the player is looking at it. Reserve the row, or position the button
+  absolutely against `.fl-wrap`, which is already `position:relative`.
+- **The total must come from `game.js`, not be summed in the UI.** `09-conventions.md` is explicit:
+  the `ui-*` files never do economy math. The label needs the value *before* the tap, so the existing
+  dev cheat's approach — sum `r.payout` after harvesting (`ui-sheet.js:2455`) — cannot be copied.
+  This needs a real getter, `Game.fallBedValue()` or similar, returning the marked plots' total with
+  the windfall applied.
+- **Harvest-all belongs in `game.js` and should be atomic.** Looping `Game.fallHarvest(i)` eight
+  times fires eight `credit()` calls, eight saves and eight `currency` emits. `turnYear()` is the
+  house pattern for "one commit, never half-happens" (`game.js:3691`); a `Game.fallHarvestAll()`
+  should follow it and return one payload the UI celebrates once.
+- **One celebration, not eight.** Eight stacked coin bursts, floats and `crit` sounds is noise, and
+  the toast cap is two (`ui.js`). Place the new beat deliberately on the ladder in
+  `06-audio-and-fx.md` — this is the biggest moment Fall has, so it should read above an ordinary
+  windfall plot, and it needs its own entry rather than eight copies of the old one.
+- **A new tappable thing in Fall must join `noSwipe`** (`ui.js:708`) or a tap that drifts a few
+  pixels is read as a season swipe and the player leaves Fall instead of collecting. `.fpill` and
+  `.fround` are already listed; the new button has to be too.
+- **The Century Bloom is outside the bed in both directions** (`game.js:3532`): it does not block the
+  windfall and it does not collect it. The existing dev cheat loops all eight cells and *would* take
+  a ripe Century Bloom. Collect All must decide this deliberately — see the open question.
+
+**Fix sketch.** Split the one chip into two things. Above the board: the informative pill, keeping
+all six of `renderBedChip()`'s states verbatim — it is already good copy and it is the whole rule as
+one object. Below the board: a real `<button>` shown only while `bedState().marked > 0`, reading
+`Collect all — +{value} (50% bonus applied)`, wired to a new atomic `Game.fallHarvestAll()`. Drop
+`.fl-wrap`'s `margin-bottom` and let the pill above and the button below balance the board, which
+settles `#6`'s offset in the same pass. **What it might break:** `renderBedChip()` writes through a
+`dataset.sig` cache and toggles `.fl-board.armed`; splitting the element means two signatures, and
+the `armed` toggle must keep firing or the board stops announcing itself across the room. The chip's
+`armed` and `close` classes carry styling that will need re-homing. Run
+`node tools/style-check.js`, and add sim-test coverage for `fallHarvestAll()` — at minimum that it
+pays exactly what `fallBedValue()` promised, and that it leaves the Century Bloom alone if that is
+the ruling.
+
+**Open question for the owner.** Should Collect All take a ripe Century Bloom too? It is deliberately
+outside the bed — it neither blocks nor collects the windfall — so the consistent answer is that
+Collect All leaves it standing and the player picks the showpiece themselves. That is the reading
+recorded here unless the owner says otherwise.
 
 ---
 
