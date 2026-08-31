@@ -1014,13 +1014,90 @@ Kept here rather than deleted because one dependency is worth knowing before add
 `plotEls` and `flowerBtn`. That is the widest edge in the UI and the one most likely to grow. If it
 keeps growing, the answer is to split the garden out of `ui.js`, not to widen `UI` further.
 
-### Sheet panels use `innerHTML` with interpolation
+### Sheet panels use `innerHTML` with interpolation (measured 2026-08-30, overnight round)
 
-All interpolated content currently comes from `data.js` and is trusted, so there's no live
-vulnerability. But there's no escaping helper, so the first time player-supplied text reaches a
-panel it will be an injection. Add escaping before adding any naming or text-entry feature.
+**There is still no live vulnerability, and the reason to leave it that way is that a blanket escape
+would break four times more than it fixes.** The surface was parsed rather than eyeballed: every
+template literal in the nine `ui-*.js` files, with its interpolations counted and each one sorted by
+what it actually returns.
 
-*Where:* `ui-sheet.js`.
+**The size.** 56 `innerHTML` assignments. 513 template literals, 221 of which carry markup. 1,282
+`${…}` interpolations, of which **908 reach an `innerHTML`** — either directly or through a template
+nested inside one. 796 of the 908 are in `ui-sheet.js`, and all but six of those sit below a single
+line: `el.sheetBody.innerHTML = render ? render() : ''` at `ui-sheet.js:151`, which dispatches to 23
+panel renderers. The rest are `ui.js` (53), `ui-fall.js` (21), `ui-meadow.js` (20), `ui-hollow.js`
+(10), `ui-news.js` (6), `ui-scenery.js` (2).
+
+**Why it is not a find-and-replace.** Of the 908:
+
+- **468 are markup that must NOT be escaped.** `${Icons.get('coin')}` returns an SVG string — that one
+  icon appears at 16 sites — `${Critters.draw(def)}` returns a whole creature, and a nested
+  ``${trait ? `<span class="critter-trait">…</span>` : ''}`` returns a fragment. Escaping any of them
+  prints tag source into the panel.
+- **120 are text that must be escaped.** `${def.name}`, `${def.about}`, `${good.line}`, `${s.desc}`.
+- **320 cannot carry markup at all.** `${fmt(cost)}`, `${pct(eff.catch)}`, `${can ? 'affordable' :
+  ''}`, `${s.art.c1}`, `${(n / 9) * 100}`.
+
+**The middle category is 3.9 times the size of the first, and that is the whole problem.** A blanket
+`esc()` needs 468 hand-judged opt-outs across 6,568 lines, and each mistake is a silent visual break
+rather than a crash. Two facts make it worse. 191 of the 908 sit *inside a tag* — 137 in a quoted
+attribute, 42 inside `style="…"`, 12 unquoted (all twelve a literal `disabled`) — so one escape
+function is not even the right tool everywhere; a colour going into `style="--set:${set.tint}"` wants
+a CSS-value guard, not an HTML one. And escaping destroys the HTML entities that already travel
+through interpolations: `skyLine()` at `ui-sheet.js:280` returns a string containing `&middot;` and is
+interpolated at `:298`, so a blanket pass would print a literal `&middot;` on the weather card.
+
+**Nothing is reachable today, and that was checked rather than assumed.** Across every non-legacy
+script and `index.html`: zero `<input>`, zero `<textarea>`, zero `contenteditable`, zero `prompt()`,
+zero `location.search` / `location.hash` / `URLSearchParams`, zero `postMessage`, and no `fetch`
+outside `sw.js`. Every string in state is an id from `data.js` or a number, and no string value in
+`data.js` contains a tag. The only route is hand-editing `gw-save` in devtools, which is a player
+attacking themself.
+
+**What a naming feature would actually touch is 16 sites, not 908.** Naming a creature is the
+likeliest, and it is one field. Eleven direct renders: `ui-hollow.js:83`, `ui-meadow.js:209`,
+`ui-sheet.js:455`, `:1284` (a `title=` attribute), `:1311`, `:1336`, `:1469`, `:1494`, `:1518`,
+`:1531` (`other.name`) and `:1584`. Five more arrive through two shared funnels — `UI.toast()`
+(`ui.js:623`, interpolated at `:627`) from `ui-hollow.js:142`, `ui-meadow.js:334` and `ui.js:1313`,
+and `UI.showBanner()` (`ui.js:1200`, interpolated at `:1201`) from `ui-events.js:363` and `:373`.
+Hardening the two funnels covers all five, so it is thirteen edits. Three places already do it safely
+and need nothing: the `setAttribute('aria-label', …)` calls at `ui-hollow.js:78`, `ui.js:1237` and
+`ui-meadow.js:216`.
+
+**The ruling: player-supplied text never enters a template literal, and no `esc()` helper is
+written.** A field that can hold free text gets an empty labelled node from the template —
+`<span class="cp-name" data-cname></span>` — filled with `.textContent` in one pass after the panel
+is written; attribute cases use `setAttribute`. `sayText()` at `ui.js:309` already works exactly this
+way. It costs zero sites today, which is what makes it safe to adopt before the feature exists, and it
+survives the Unity port in a way an HTML escape function would not. The one honest price: a name
+inside a sentence — `Pet ${def.name}`, `A meal wakes ${def.name} up` — gains a wrapping span.
+
+The alternatives were priced. A blanket `esc()` needs the 468 opt-outs above. **Escaping at the
+boundary** — storing `esc(name)` in the save — is cheapest to write and worst to live with: `&lt;`
+ends up in the save file, [07-save-data.md](07-save-data.md) has to promise that field is
+HTML-escaped forever, the three `aria-label` sites and `sayText()` would show the escaped form, and
+every old save is stranded the day anyone changes their mind. **Doing it at the point of use when the
+feature is built** is right on timing and has no teeth — it is what this entry already said, which is
+why the entry is still here.
+
+**What would hold it.** `tools/sim-test.js` loads only `data.js`, `icons.js` and `game.js` and
+contains no reference to `document` or `window`. It cannot see any of this and should not be made to:
+`game.js` staying DOM-free is what makes that suite cheap and what is meant to survive the port. Two
+things can hold it instead, and both have a precedent in `tools/`:
+
+- **`tools/html-check.js`, in the shape of `tools/style-check.js`** — no dependencies, a small text
+  reader, and a `html-check.json` baseline that ratchets rather than judges. One rule to start: a
+  named list of state fields that can hold free text (today: empty) and a failure if an accessor for
+  one appears inside a template literal in a `ui-*.js` file. It passes green on an empty list, which
+  is the only way a check written before the feature lives long enough to meet it.
+- **`tools/probe.js`**, which already drives headless Chrome over CDP, takes `eval:EXPR` and exits
+  non-zero on an uncaught page error. The regression test for the day the feature lands: set a
+  creature's name to `<img src=x onerror=alert(1)>`, open the Almanac and the creature panel, and
+  assert `document.querySelectorAll('img[onerror]').length === 0` with no console errors.
+
+*Where:* `ui-sheet.js` (796 of the 908), `ui.js` (53), `ui-fall.js` (21), `ui-meadow.js` (20),
+`ui-hollow.js` (10), `ui-news.js` (6), `ui-scenery.js` (2). The sink to leave alone is
+`ui-sheet.js:151`; the problem was never the sink.
 
 ### Four sim-tests have been flaky, and the class of bug keeps recurring
 
