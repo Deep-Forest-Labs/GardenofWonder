@@ -5,6 +5,56 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (phase 3.9, the motion gate) — The stage goes up, and six knobs the spec did not name
+
+**`tools/sky-spike.html` is built and nothing has integrated**, which is the whole point of the
+gate. Six buttons, each playing a sky's entire shape — front, transform, linger, end — on the
+garden at 390×844 with a real handset's insets, thirty-six sliders, a block that prints the current
+state as the exact `DATA.weatherStage` object, and a reduced-motion toggle. The owner tunes; the
+builder transcribes.
+
+**The stage loads the game's own modules rather than mocking them.** `data.js`, `flora.js`,
+`critters.js` and `audio.js` are all DOM-light and know nothing about the game, so the plants, the
+flower, the creatures and every one-shot sound on the stage are the real ones. A sky approved
+against invented art would have to be approved twice.
+
+**Three divergences, chosen and written down** rather than discovered later: the particle canvas
+is frame-local where `fx.js` sizes to the window; the beds own their own `AudioContext`, because
+`Sound` exports no context and no bus and cannot be re-instrumented from outside; and reduced motion
+is a toggle rather than a media query, because the owner has to be able to see the quiet version on
+demand. The bed module is written in the shape it will take *inside* `audio.js`, so the build is a
+transcription.
+
+**Six knobs joined the spec's list**, all in the copyable block: `rain.wash` and `storm.wash` (the
+sky's own depth, which turned out to be a different decision from the wet ground), `aurora.rimGlow`,
+`aurora.starBoost`, `wonderfall.bobPeriod` (so "bob in rhythm" can be put on the 3.2s bar) and a
+stage-only `stageHoldSeconds` that never reaches `data.js`. A value the feel depends on and cannot
+be reached is a value that gets guessed.
+
+**Two things the stage makes visible on purpose.** The flash ceiling is enforced *on the stage* and
+reports its refusals, so winding the gap slider to 0.2s teaches the owner what the ceiling is rather
+than silently ignoring them. And the strip above the frame is painted from the same value the game
+writes into `theme-color`, computed from the weather layers themselves, with a toggle to switch the
+join off — the notch desync doc 08 spent four rounds on is now something to look at rather than
+something to remember.
+
+**Building it found one real bug in its own design.** The sunbreak first keyed "is it daytime" off
+`data-night`, which was the aurora's dusk flag — so at midnight the sun broke through. `data-night`
+now means *the sky is dark*, with two writers (the hour, and an aurora bending the light rules), and
+the aurora hands the flag back to the hour on its way out instead of hardcoding it off.
+
+### Rejected
+
+**Letting the sequences speak a spike-only vocabulary** through an adapter — they were rewritten to
+call the real bed API instead, because a sequence is the thing that gets transcribed into the game
+and a shim only a spike understands is a trap for whoever does that. **A speed control on the
+stage** — a sky played at 2× is not the sky being judged; the phase strip re-enters a phase instead,
+and the button still plays the whole sequence. **Adding a visual hook for the singing flower** — the
+mouth is already on the bar in CSS, so a second class would have been dead markup dressed as a
+feature.
+
+---
+
 ## 2026-08-30 (phase 3.8) — The polish round: seven rulings, and one of them re-ruled at the door
 
 **All seven came from the owner playing the live build**; the spec is the "rulings, polish" entry

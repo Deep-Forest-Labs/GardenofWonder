@@ -1207,6 +1207,30 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**PHASE 3.9 — THE SKY PASS — IS AT ITS MOTION GATE.** `tools/sky-spike.html` is built and pushed.
+**Nothing has integrated and nothing should**, until the owner has approved each sky's feel on the
+stage: no `DATA.weatherStage`, no engine nudges, no change to any file the game loads. The spec is
+[41-weather-staging.md](41-weather-staging.md), whose as-built section describes the stage; the
+reasoning is the phase-3.9 entry at the top of [10-decision-log.md](10-decision-log.md).
+
+**What the stage does.** Six buttons — Rain, Thunderstorm, Aurora, Wonderfall, called Rain and the
+Sunbreak — each playing a sky's whole shape (front, transform, linger, end) on the garden at
+390×844 with a real handset's insets. Thirty-six sliders, a block that prints the current state as
+the exact `DATA.weatherStage` object, and a reduced-motion toggle showing every sky's honest quiet
+version. It loads the repository's own `data.js`, `flora.js`, `critters.js` and `audio.js`, so the
+plants, the flower, the creatures and the sounds are the game's.
+
+**The owner reviews sky by sky, and one approval at a time is fine** — an approved sky may integrate
+while another is still being tuned. Their annotations and chosen values become the spec from that
+moment; the builder transcribes the numbers into `data.js` verbatim.
+
+**Read before touching this**: the four things the stage knowingly carries, in
+[11-known-issues.md](11-known-issues.md#what-the-sky-passs-motion-stage-knowingly-left-2026-08-30-phase-39)
+— especially the bottom-44px mask, which is load-bearing, and the wash defaults, which are not
+comparable to the live tint opacities.
+
+---
+
 **PHASE 3.8 — THE POLISH ROUND — IS BUILT AND WAITING FOR THE OWNER'S REVIEW.** Six of the owner's
 seven rulings are in as written; the seventh was re-ruled by the owner mid-round and is in as
 re-ruled. Nothing is half-done and nothing is blocked. The reasoning is the phase-3.8 entry at the
@@ -1867,6 +1891,17 @@ That inversion was inherited from the frozen economy port; it is fixed. What rem
 the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
+
+**A `z-index` on a layer that holds blended children silently kills every blend inside it.** A
+positioned element with a `z-index` is a stacking context, and a stacking context is an isolated
+blending group — so `mix-blend-mode: multiply` on its children blends against *transparency*
+instead of against the sky beneath. The sky spike's weather layer shipped with `z-index: 15` and
+every wash, dusk, ribbon and veil composited as a flat overlay: it looked plausible, it was not the
+specced compositing, and no error was raised anywhere. The weather layer now carries **no**
+`z-index` and relies on DOM order, with the siblings above it carrying their own. Anything future
+that blends with the scene has the same constraint, and `isolation: isolate` is the same bug spelled
+differently.
+
 
 **Writing a `height` onto a clip box pinned `inset:0` paints nothing, silently.** `.turn-fill` is
 `position:absolute; inset:0; overflow:hidden` and the water is its `::before` reading `--year-p`.

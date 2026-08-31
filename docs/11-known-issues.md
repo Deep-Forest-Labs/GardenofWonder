@@ -56,6 +56,32 @@ someone reconciles them.
   the knobs to fetched JSON, flip the wrapped build to cache-first), expensive to discover in review.**
   Moot if the answer to the question above is Unity.
 
+## What the Sky Pass's motion stage knowingly left (2026-08-30, phase 3.9)
+
+**Nothing has integrated, and that is the gate working.** `tools/sky-spike.html` is up; no sky
+is in the game, `DATA.weatherStage` does not exist yet, and neither engine nudge — `rainGrowth`
+or the aurora's night window — is built. All of it waits on the owner approving each sky's feel.
+
+Four things the stage carries deliberately, so nobody files them as bugs:
+
+- **The bottom 44px of the lawn stays bright under a dark sky.** Every full-frame tint is masked
+  out over the last stretch, because iOS paints the strip below a short window with the flat lawn
+  colour and a tint running to the edge draws the join three rounds of layout work went into
+  hiding. The same compromise the season tint already makes. Load-bearing; do not "fix" it.
+- **`rain.wash` and `storm.wash` start above the live `.scenery::after` opacities** (0.46/0.68
+  against 0.30/0.52). The spike's wash is its own gradient layer rather than a flat tint, so the
+  two numbers are not comparable and the live values are not the target. Whatever the owner
+  lands on is the number.
+- **The beds run on a second `AudioContext`.** `Sound` exports no context and no bus, so the
+  spike cannot reach in. Written in the shape it will take inside `audio.js`, so the build is a
+  transcription — but on the stage there really are two graphs, and the stage's own music is the
+  arrangement rather than `Sound`'s pad.
+- **`stageHoldSeconds` is a stage control, not a value.** It sets how long the stage sits in the
+  transform, and it deliberately never reaches `data.js`. Same for the hour and the year-ripening
+  sliders: those are viewing conditions.
+
+---
+
 ## What phase 3.8 knowingly left (2026-08-30)
 
 **The placeholder gate on swipe-down was not built, and the idea is dropped rather than deferred.**

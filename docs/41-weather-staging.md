@@ -1,6 +1,7 @@
 # The Sky Pass — weather you can feel
 
-**Status: the owner's spec, 2026-08-30. Not built.** Weather already carries 20–30% of all income
+**Status: the owner's spec, 2026-08-30. The MOTION STAGE is built and waiting for the owner's
+review; no sky has integrated yet.** Weather already carries 20–30% of all income
 through mutations (a tested invariant) and its entire presentation is one flat colour fade per
 state — no sound exists for any weather, nothing on the board reacts, and Wonderfall, the rarest
 sky in the game, never received the Wonder veil doc 18 promised it. **This pass stages the sky
@@ -173,3 +174,78 @@ switch. You bought a sky; it should arrive like one.
 4. Fronts derive from the *computed next slot* and never fire on Clear→Clear.
 5. No stage sequence writes game state (staging is presentation; the one exception is the two
    math nudges, which live in the engine, not the stage).
+
+---
+
+## As built: the motion stage (2026-08-30)
+
+`tools/sky-spike.html` is up. Open it beside the garden and press a button.
+
+**What is real on it.** It loads the repository's own `data.js`, `flora.js`, `critters.js` and
+`audio.js`, so the plants, the flower, the creatures and every one-shot sound are the game's, not a
+flattering copy. The scenery, the board and the dock are copied from `style.css` at 390×844 with an
+iPhone 16 Pro's insets on, because a sky judged at the wrong proportions is not judged.
+
+**Three deliberate divergences**, each noted in the file's header:
+
+1. **The particle canvas is frame-local.** It mirrors `fx.js` — the same pool shape, the same
+   `rnd`/`easeOut`, the same DPR-2 cap, the same clamped `step(dt)` — but sizes itself to the frame
+   rather than to the window, because the stage is one element on a tuning page.
+2. **The beds own their own `AudioContext`.** `Sound` exports `{ init, resume, play, setSfx,
+   setMusic, prefs }` and no context, no bus and no handle on its pad, so the spike cannot reach in
+   to add a third bus or re-instrument the music. The bed module is written the way it will be
+   written *into* `audio.js` — an ambience bus beside sfx and music, gains ramped with
+   `setTargetAtTime` — so the build is a transcription rather than a rewrite.
+3. **Reduced motion is a toggle, not a media query.** The owner has to be able to see the quiet
+   version of every sky on demand. The rules are the same rules either way.
+
+**Six buttons, each playing a whole sequence.** Rain, Thunderstorm, Aurora, Wonderfall, called
+Rain (the compressed front) and the Sunbreak on its own — front, transform, linger, end, with the
+sunbreak riding the ends of Rain and the Storm when the hour is daytime. A phase strip re-enters a
+phase without replaying the front; the button still plays the whole thing, because the whole thing
+is what gets approved.
+
+**The flash ceiling is enforced on the stage.** Wind the flash-gap slider down to 0.2s and the
+gate refuses everything past three flashes in any ten seconds, and says how many it held back.
+
+**The strip join is visible.** The band above the frame is painted from the same value the game
+writes into `theme-color`, computed from the weather layers themselves. A toggle switches the join
+off, which puts the notch desync on screen where it can be argued about instead of discovered on a
+handset a week later.
+
+### Knobs the spec did not name, added because the feel depends on them
+
+The spec's list is all present. Six more earned a slider while the layers were being drawn, and
+they are in the copyable block with the rest:
+
+| Knob | What it does | Default |
+| --- | --- | --- |
+| `rain.wash` / `storm.wash` | how far the sky wash commits — the sky's own depth, separate from the wet ground | 0.46 / 0.68 |
+| `aurora.rimGlow` | how strongly every plant takes its glow rim | 0.5 |
+| `aurora.starBoost` | how far the stars brighten under the dusk | 0.85 |
+| `wonderfall.bobPeriod` | the ripe-plant bob's period, so "in rhythm" can be put on the 3.2s bar | 1.6s |
+| `stageHoldSeconds` | **stage only** — how long the stage sits in the transform. Never reaches `data.js`. | 18 |
+
+`rain.wash` and `storm.wash` deliberately start higher than the live `.scenery::after` opacities
+(0.30 / 0.52): the spike's wash is its own gradient layer rather than a flat tint, so the numbers
+are not comparable and the live values are not the thing to match. **Whatever the owner lands on is
+the number.**
+
+### What the owner decides
+
+The spec's values are starting points and every one of them is a slider. The three worth looking at
+first, because they are where the current defaults are least confident:
+
+- **Wonderfall's veil at 0.30.** It is deliberately far under the Wonder Effect's 0.62 so it reads
+  as weather and not the ×3 event, and at 0.30 it is very quiet indeed. This is the one number that
+  decides whether the rarest sky in the game announces itself.
+- **The wet ground at 0.34 / 0.46.** It darkens the board as well as the lawn, which is the "the
+  board is the world too" line made real — and it darkens the plants standing in it by the same
+  amount.
+- **The sunbreak at three rays, 0.28.** Very simple, very mild was the brief; check it against
+  "did anyone notice".
+
+One known tension, not a bug: everything that tints the frame is masked out over the last 44px, so
+the very bottom of the lawn stays bright under a dark sky. That mask is load-bearing — iOS paints
+the strip below a short window with the flat lawn colour, and a tint running to the edge draws the
+join three rounds of layout work went into hiding.
