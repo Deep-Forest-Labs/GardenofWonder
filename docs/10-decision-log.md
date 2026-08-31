@@ -1728,6 +1728,29 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-30 (project) — Everything is kept, and the bible will one day be published
+
+**The owner's standing intent, recorded:** the whole body of work — every numbered doc, every
+spike in `tools/`, the decision log, the pitch artifact, the enforcement and pacing tools — is
+**kept permanently and will eventually be published as a styled wiki**: a public record of how
+much work went into the game, and the reference the Unity team builds from. The house already
+practices the policy that makes this possible — superseded docs receive status notes and are
+never deleted, spikes stay in `tools/` after their features ship, and the log keeps the
+reasoning git cannot.
+
+**One preservation gap found and closed the same day:** the Garden Year pitch — the visual
+document the whole prestige direction was sold and refined on — lived only as a hosted artifact
+plus a session-temporary source file. Its HTML is now committed as `docs/garden-year-pitch.html`,
+served straight off the repo like everything else.
+
+**The publication itself is a future phase, deliberately not now** — the corpus is consistent,
+cross-linked markdown, so a styled wiki is cheap to generate whenever the moment comes. Worth
+noting from the strategy pass: in the current climate, a hand-written 25,000-line design bible
+with its receipts attached is not just documentation — it is the exact proof-of-hand this
+audience rewards, and publishing it is marketing.
+
+---
+
 ## 2026-08-30 (design) — The Sky Pass: weather gets staged, and a motion gate guards the feel
 
 **The owner's pick from the weather brainstorm:** the full Weather Ladder plus fronts, the world

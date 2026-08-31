@@ -1,0 +1,646 @@
+<title>The Garden Year</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;0,9..144,750;1,9..144,500&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap">
+<style>
+  :root {
+    --ground: #f6f1e4;
+    --card: #fffdf6;
+    --card-edge: #e3d9c2;
+    --ink: #2e2a22;
+    --muted: #6f6753;
+    --faint: #a99e85;
+    --summer: #c8890f;
+    --fall: #bf5f22;
+    --winter: #4677b4;
+    --spring: #5d8a2f;
+    --summer-wash: #f7ead0;
+    --fall-wash: #f6e4d4;
+    --winter-wash: #e2ebf5;
+    --spring-wash: #e7eeda;
+    --gold-glow: #f3d9a0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #201c15;
+      --card: #2a251c;
+      --card-edge: #423a2b;
+      --ink: #ede5d2;
+      --muted: #b5a98d;
+      --faint: #7d7359;
+      --summer: #f0b73d;
+      --fall: #e08a4a;
+      --winter: #7fa9dd;
+      --spring: #96c25e;
+      --summer-wash: #3a3020;
+      --fall-wash: #3b2c20;
+      --winter-wash: #232f3e;
+      --spring-wash: #2a3320;
+      --gold-glow: #58481f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #201c15;
+    --card: #2a251c;
+    --card-edge: #423a2b;
+    --ink: #ede5d2;
+    --muted: #b5a98d;
+    --faint: #7d7359;
+    --summer: #f0b73d;
+    --fall: #e08a4a;
+    --winter: #7fa9dd;
+    --spring: #96c25e;
+    --summer-wash: #3a3020;
+    --fall-wash: #3b2c20;
+    --winter-wash: #232f3e;
+    --spring-wash: #2a3320;
+    --gold-glow: #58481f;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 20px 90px;
+  }
+  .page { max-width: 780px; margin: 0 auto; }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); margin: 56px 0 14px;
+  }
+  .eyebrow .dot { color: var(--fall); }
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 750; font-size: clamp(40px, 7vw, 58px);
+    line-height: 1.02; margin: 0 0 18px; letter-spacing: -0.015em; text-wrap: balance;
+  }
+  .kicker {
+    font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 500;
+    font-size: clamp(19px, 3vw, 23px); line-height: 1.45; color: var(--muted);
+    margin: 0 0 10px; max-width: 40ch; text-wrap: balance;
+  }
+  h2 {
+    font-family: "Fraunces", Georgia, serif; font-weight: 650;
+    font-size: 29px; line-height: 1.15; margin: 72px 0 6px; letter-spacing: -0.01em; text-wrap: balance;
+  }
+  h2 + .sub { color: var(--muted); margin: 0 0 24px; max-width: 62ch; }
+  p { max-width: 66ch; }
+  strong { font-weight: 800; }
+
+  .season-word { font-weight: 800; white-space: nowrap; }
+  .s-summer { color: var(--summer); }
+  .s-fall   { color: var(--fall); }
+  .s-winter { color: var(--winter); }
+  .s-spring { color: var(--spring); }
+
+  /* pitch claims */
+  .claims { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 30px 0 8px; }
+  .claim {
+    background: var(--card); border: 1.5px solid var(--card-edge); border-radius: 14px;
+    padding: 14px 16px 12px; font-size: 15px; line-height: 1.5;
+  }
+  .claim b { display: block; font-family: "Fraunces", Georgia, serif; font-weight: 650; font-size: 17px; margin-bottom: 3px; }
+
+  figure { margin: 30px 0 8px; }
+  figure svg { max-width: 100%; height: auto; display: block; }
+  figcaption { font-size: 13.5px; color: var(--muted); margin-top: 10px; max-width: 68ch; }
+  .scrollwrap { overflow-x: auto; }
+
+  /* season cards */
+  .seasons { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin: 26px 0 10px; }
+  .season {
+    border-radius: 16px; border: 1.5px solid var(--card-edge); background: var(--card);
+    padding: 18px 20px 16px; position: relative; overflow: hidden;
+  }
+  .season::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; }
+  .season h3 {
+    font-family: "Fraunces", Georgia, serif; font-weight: 750; font-size: 22px;
+    margin: 0 0 2px; display: flex; align-items: baseline; gap: 10px;
+  }
+  .season .clock {
+    font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .season p { font-size: 15px; margin: 8px 0 0; }
+  .season .unlock { font-size: 13px; font-weight: 700; color: var(--muted); margin-top: 10px; }
+  .season.summer::before { background: var(--summer); } .season.summer .clock { background: var(--summer-wash); color: var(--summer); }
+  .season.fall::before   { background: var(--fall); }   .season.fall .clock   { background: var(--fall-wash);   color: var(--fall); }
+  .season.winter::before { background: var(--winter); } .season.winter .clock { background: var(--winter-wash); color: var(--winter); }
+  .season.spring::before { background: var(--spring); } .season.spring .clock { background: var(--spring-wash); color: var(--spring); }
+
+  /* the one rule */
+  .rule {
+    margin: 34px 0 6px; border-radius: 16px; padding: 22px 26px;
+    background: var(--card); border: 2px dashed var(--fall);
+  }
+  .rule .tag { font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; color: var(--fall); }
+  .rule p {
+    font-family: "Fraunces", Georgia, serif; font-weight: 650; font-size: 21px; line-height: 1.4;
+    margin: 6px 0 0; max-width: 46ch;
+  }
+  .rule .why { font-family: "Nunito Sans", system-ui, sans-serif; font-weight: 400; font-size: 15px; color: var(--muted); margin-top: 10px; }
+
+  /* timeline */
+  .timeline { margin: 30px 0 0; display: flex; flex-direction: column; gap: 0; }
+  .day { display: grid; grid-template-columns: 86px 1fr; gap: 18px; position: relative; padding-bottom: 30px; }
+  .day::before { content: ""; position: absolute; left: 96px; top: 34px; bottom: 4px; width: 3px; border-radius: 3px; background: var(--card-edge); }
+  .day.t-summer::before { background: color-mix(in srgb, var(--summer) 45%, var(--card-edge)); }
+  .day.t-fall::before   { background: color-mix(in srgb, var(--fall) 45%, var(--card-edge)); }
+  .day.t-winter::before { background: color-mix(in srgb, var(--winter) 45%, var(--card-edge)); }
+  .day.t-spring::before { background: color-mix(in srgb, var(--spring) 45%, var(--card-edge)); }
+  .day:last-child { padding-bottom: 0; }
+  .day:last-child::before { display: none; }
+  .daychip {
+    font-variant-numeric: tabular-nums;
+    font-size: 12px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--muted); text-align: right; padding-top: 4px; line-height: 1.35;
+  }
+  .day h3 { font-family: "Fraunces", Georgia, serif; font-weight: 650; font-size: 20px; margin: 0 0 4px; }
+  .day p { font-size: 15.5px; margin: 0; max-width: 60ch; }
+  .day .feel { font-size: 13.5px; font-style: italic; color: var(--muted); margin-top: 7px; }
+
+  /* rituals strip */
+  .rituals { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 22px 0 6px; }
+  .ritual { background: var(--card); border: 1.5px solid var(--card-edge); border-radius: 14px; padding: 13px 15px; font-size: 14px; line-height: 1.45; }
+  .ritual b { display: block; font-size: 15px; }
+  .ritual .len { font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  /* personas */
+  .people { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin: 26px 0 8px; }
+  .person { background: var(--card); border: 1.5px solid var(--card-edge); border-radius: 16px; padding: 17px 19px 15px; }
+  .person h3 { font-family: "Fraunces", Georgia, serif; font-weight: 750; font-size: 19px; margin: 0; }
+  .person .lives { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin: 3px 0 8px; }
+  .person p { font-size: 14.5px; margin: 0; }
+
+  /* absorb table */
+  .absorb { width: 100%; border-collapse: collapse; margin: 24px 0 8px; font-size: 15px; }
+  .absorb th { text-align: left; font-size: 11.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 0 14px 8px 2px; }
+  .absorb td { padding: 10px 14px 10px 2px; border-top: 1.5px solid var(--card-edge); vertical-align: top; }
+  .absorb td:first-child { font-weight: 700; white-space: nowrap; }
+
+  /* questions */
+  .qs { margin: 24px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .qs li { background: var(--card); border: 1.5px solid var(--card-edge); border-radius: 14px; padding: 14px 18px; font-size: 15px; }
+  .qs b { font-family: "Fraunces", Georgia, serif; font-weight: 650; font-size: 16.5px; }
+
+  /* field guide */
+  .guide { width: 100%; border-collapse: collapse; margin: 24px 0 8px; font-size: 15px; }
+  .guide td { padding: 10px 14px 10px 2px; border-top: 1.5px solid var(--card-edge); vertical-align: top; }
+  .guide td:first-child { font-weight: 800; white-space: nowrap; font-family: "Fraunces", Georgia, serif; font-size: 16px; }
+
+  .footer {
+    margin-top: 70px; padding: 20px 24px; border-radius: 16px;
+    background: var(--gold-glow); color: var(--ink); font-size: 15px; font-weight: 600;
+    border: 1.5px solid var(--card-edge);
+  }
+
+  /* two wallets */
+  .wallets { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin: 26px 0 14px; }
+  .wallet { border-radius: 16px; padding: 17px 20px 15px; border: 2px solid var(--card-edge); background: var(--card); }
+  .wallet.w-gold { border-color: var(--summer); }
+  .wallet.w-seed { border-color: var(--fall); }
+  .w-name { font-family: "Fraunces", Georgia, serif; font-weight: 750; font-size: 18px; margin-bottom: 8px; }
+  .w-gold .w-name { color: var(--summer); }
+  .w-seed .w-name { color: var(--fall); }
+  .wallet ul { margin: 0; padding-left: 20px; font-size: 14.5px; }
+  .wallet li { margin: 3px 0; }
+  .w-line { margin-top: 10px; font-size: 13.5px; font-style: italic; color: var(--muted); }
+
+  /* decided/open tags */
+  .tagchip {
+    display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .12em;
+    text-transform: uppercase; padding: 2px 9px; border-radius: 999px; margin-right: 8px;
+    vertical-align: 2px;
+  }
+  .tag-done { background: var(--spring-wash); color: var(--spring); }
+  .tag-open { background: var(--winter-wash); color: var(--winter); }
+
+  /* note strip */
+  .note {
+    margin: 26px 0 6px; padding: 15px 20px; border-radius: 14px; font-size: 14.5px;
+    background: var(--card); border: 1.5px solid var(--card-edge); color: var(--muted);
+  }
+  .note b { color: var(--ink); }
+
+  @media (max-width: 560px) {
+    .day { grid-template-columns: 58px 1fr; gap: 12px; }
+    .day::before { left: 64px; }
+    body { font-size: 16px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .season { transition: transform .18s ease; }
+    .season:hover { transform: translateY(-2px); }
+  }
+</style>
+
+<div class="page">
+  <p class="eyebrow">Garden Wonder <span class="dot">·</span> brainstorm pitch <span class="dot">·</span> nothing here is built</p>
+  <h1>The Garden Year</h1>
+  <p class="kicker">You don't walk a map. You swipe through the year — and turning it is the prestige.</p>
+  <p>Your seasonal-gardens idea doesn't just work — it's the missing half of the prestige design.
+  Prestige systems live or die on one feeling: <strong>what did the reset actually give me?</strong>
+  Numbers-go-up is the genre's answer. Yours is better: <strong>the reset gives you a place.</strong>
+  You turn the year, and the year has somewhere new in it.</p>
+
+  <div class="claims">
+    <div class="claim"><b>Prestige pays in places</b>The scariest thing about a reset is losing your world. Here, the first reset <em>opens Fall</em>. Nobody uninstalls over that.</div>
+    <div class="claim"><b>Four speeds, one game</b>Seconds, hours, days, and the meta — the snacker and the twice-a-day player are both fully fed.</div>
+    <div class="claim"><b>A sentence nobody owns</b>"Swipe through the seasons of your garden." That's the store line, and it's a five-second clip.</div>
+  </div>
+
+  <h2>The world is one swipe wide</h2>
+  <p class="sub">Horizontal moves you through <em>time</em>. Vertical stays what it already is — altitude, down to the Hollow. No map screen, no menu: the year is the geography.</p>
+
+  <figure>
+    <div class="scrollwrap">
+    <svg viewBox="0 0 860 330" role="img" aria-label="Four seasonal gardens on one horizontal swipe strip: Spring, Summer (home), Fall, Winter. Fall unlocks at turn 1, Winter around turn 3, Spring around turn 6. The Hollow sits below Summer, reached by swiping down." style="min-width:640px">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g font-family="Nunito Sans, system-ui, sans-serif" fill="currentColor">
+
+        <!-- SPRING (locked) -->
+        <rect x="18" y="60" width="180" height="120" rx="16" fill="none" stroke="var(--spring)" stroke-width="2.5" stroke-dasharray="7 6"/>
+        <text x="108" y="98" text-anchor="middle" font-size="19" font-weight="800" fill="var(--spring)">SPRING</text>
+        <text x="108" y="122" text-anchor="middle" font-size="12.5" fill="var(--muted)">the nursery · breeding,</text>
+        <text x="108" y="139" text-anchor="middle" font-size="12.5" fill="var(--muted)">heirlooms, hatchery</text>
+        <rect x="53" y="152" width="110" height="21" rx="10.5" fill="var(--spring-wash)"/>
+        <text x="108" y="167" text-anchor="middle" font-size="11.5" font-weight="800" fill="var(--spring)">opens · turn ~6</text>
+
+        <!-- SUMMER (home) -->
+        <rect x="234" y="52" width="188" height="136" rx="16" fill="var(--summer-wash)" stroke="var(--summer)" stroke-width="3.5"/>
+        <text x="328" y="92" text-anchor="middle" font-size="19" font-weight="800" fill="var(--summer)">SUMMER</text>
+        <text x="328" y="116" text-anchor="middle" font-size="12.5" fill="var(--muted)">the garden you have today</text>
+        <text x="328" y="133" text-anchor="middle" font-size="12.5" fill="var(--muted)">tap · plant · seconds</text>
+        <rect x="288" y="146" width="80" height="21" rx="10.5" fill="var(--card)"/>
+        <text x="328" y="161" text-anchor="middle" font-size="11.5" font-weight="800" fill="var(--summer)">HOME</text>
+
+        <!-- FALL (locked at start, first unlock) -->
+        <rect x="458" y="60" width="180" height="120" rx="16" fill="none" stroke="var(--fall)" stroke-width="2.5" stroke-dasharray="7 6"/>
+        <text x="548" y="98" text-anchor="middle" font-size="19" font-weight="800" fill="var(--fall)">FALL</text>
+        <text x="548" y="122" text-anchor="middle" font-size="12.5" fill="var(--muted)">the harvest garden ·</text>
+        <text x="548" y="139" text-anchor="middle" font-size="12.5" fill="var(--muted)">hour clocks, big windfalls</text>
+        <rect x="496" y="152" width="104" height="21" rx="10.5" fill="var(--fall-wash)"/>
+        <text x="548" y="167" text-anchor="middle" font-size="11.5" font-weight="800" fill="var(--fall)">opens · turn 1</text>
+
+        <!-- WINTER (locked) -->
+        <rect x="674" y="60" width="172" height="120" rx="16" fill="none" stroke="var(--winter)" stroke-width="2.5" stroke-dasharray="7 6"/>
+        <text x="760" y="98" text-anchor="middle" font-size="19" font-weight="800" fill="var(--winter)">WINTER</text>
+        <text x="760" y="122" text-anchor="middle" font-size="12.5" fill="var(--muted)">the night shift · day-long</text>
+        <text x="760" y="139" text-anchor="middle" font-size="12.5" fill="var(--muted)">clocks, grows while away</text>
+        <rect x="705" y="152" width="110" height="21" rx="10.5" fill="var(--winter-wash)"/>
+        <text x="760" y="167" text-anchor="middle" font-size="11.5" font-weight="800" fill="var(--winter)">opens · turn ~3</text>
+
+        <!-- swipe arrows -->
+        <line x1="204" y1="120" x2="228" y2="120" stroke="currentColor" stroke-width="2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+        <line x1="428" y1="120" x2="452" y2="120" stroke="currentColor" stroke-width="2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+        <line x1="644" y1="120" x2="668" y2="120" stroke="currentColor" stroke-width="2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+        <text x="430" y="34" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--muted)">⟵ swipe through the year ⟶</text>
+
+        <!-- Hollow below summer -->
+        <line x1="328" y1="192" x2="328" y2="228" stroke="currentColor" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="342" y="216" font-size="11.5" fill="var(--muted)">swipe</text>
+        <rect x="252" y="234" width="152" height="62" rx="14" fill="none" stroke="currentColor" stroke-width="2"/>
+        <text x="328" y="260" text-anchor="middle" font-size="14" font-weight="800">THE HOLLOW</text>
+        <text x="328" y="280" text-anchor="middle" font-size="11.5" fill="var(--muted)">creatures live under it all</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption>Day one, a player sees Summer and three hedge-gates with something drifting behind each. Every gate is a promise, and every turn of the year keeps one.</figcaption>
+  </figure>
+
+  <h2>Four seasons, four speeds</h2>
+  <p class="sub">Each garden is a different <strong>clock</strong> and a different <strong>rule</strong> — that's what keeps four boards from being four clones.</p>
+
+  <div class="seasons">
+    <div class="season summer">
+      <h3><span class="s-summer">Summer</span> <span class="clock">seconds</span></h3>
+      <p>The garden you already built. Tapping, combos, procs, fast seeds — the fidget toy, the 7-minute sit-down. Nothing about it changes; it just stops carrying the whole game alone.</p>
+      <div class="unlock">Home. Open from the first tap.</div>
+    </div>
+    <div class="season fall">
+      <h3><span class="s-fall">Fall</span> <span class="clock">hours</span></h3>
+      <p>The harvest garden. Plant a whole bed over coffee, come back at dinner to a <strong>windfall</strong> — everything ripens in waves, and one big pop beats forty small ones. Orchard trees, pumpkins, the cottage crops live here.</p>
+      <div class="unlock">Opens at <strong>turn 1</strong> — the first prestige reward is a world.</div>
+    </div>
+    <div class="season winter">
+      <h3><span class="s-winter">Winter</span> <span class="clock">days</span></h3>
+      <p>The night shift. Day-long clocks under snow, huge payouts — and the twist: <strong>Winter grows at full speed while you're away.</strong> It's the garden that works while you sleep. Tuck it in at night, wake up to a payout.</p>
+      <div class="unlock">Opens around <strong>turn 3</strong>, when the player's rhythm exists.</div>
+    </div>
+    <div class="season spring">
+      <h3><span class="s-spring">Spring</span> <span class="clock">the meta</span></h3>
+      <p>The nursery. Saved seeds get planted here, new flower lines are bred here, and one day creatures hatch here. Spring is the garden <em>about</em> the other three — where the long game lives.</p>
+      <div class="unlock">Opens around <strong>turn 6</strong>. The last gate, and the deepest.</div>
+    </div>
+  </div>
+
+  <div class="rule">
+    <span class="tag">The one rule</span>
+    <p>A season is a speed and a rule — never a re-skin.</p>
+    <div class="why">If Fall is just orange Summer, we've built four clones of one garden, and that's the exact decay pattern the research keeps warning about. Different clock, different verb, same board grammar — the meadow already proved a re-skinned board with a new rule feels like a new place.</div>
+  </div>
+
+  <h2>The Turn — what prestiging actually is</h2>
+  <p class="sub">About a minute of ceremony, one choice, one gate. Here's the whole ride, start to finish.</p>
+
+  <figure>
+    <div class="scrollwrap">
+    <svg viewBox="0 0 920 230" role="img" aria-label="The Turn ceremony in five steps: the year-meter fills, the flower asks to save your seeds, you bless one flower, Saved Seeds are counted from everything you grew, and the gate opens as spring returns. An arrow loops back — next year runs a little richer." style="min-width:680px">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g font-family="Nunito Sans, system-ui, sans-serif" fill="currentColor">
+        <rect x="14" y="42" width="158" height="104" rx="14" fill="none" stroke="var(--summer)" stroke-width="2.5"/>
+        <text x="93" y="74" text-anchor="middle" font-size="13.5" font-weight="800" fill="var(--summer)">1 · THE METER FILLS</text>
+        <text x="93" y="98" text-anchor="middle" font-size="12" fill="var(--muted)">the year ripens — growth</text>
+        <text x="93" y="115" text-anchor="middle" font-size="12" fill="var(--muted)">slows, the garden golds</text>
+
+        <line x1="178" y1="94" x2="200" y2="94" stroke="currentColor" stroke-width="2" marker-end="url(#arr2)"/>
+
+        <rect x="206" y="42" width="158" height="104" rx="14" fill="none" stroke="var(--summer)" stroke-width="2.5"/>
+        <text x="285" y="74" text-anchor="middle" font-size="13.5" font-weight="800" fill="var(--summer)">2 · THE FLOWER ASKS</text>
+        <text x="285" y="98" text-anchor="middle" font-size="12" font-style="italic" fill="var(--muted)">"The year's turning —</text>
+        <text x="285" y="115" text-anchor="middle" font-size="12" font-style="italic" fill="var(--muted)">save your seeds?"</text>
+
+        <line x1="370" y1="94" x2="392" y2="94" stroke="currentColor" stroke-width="2" marker-end="url(#arr2)"/>
+
+        <rect x="398" y="42" width="158" height="104" rx="14" fill="var(--summer-wash)" stroke="var(--summer)" stroke-width="3.5"/>
+        <text x="477" y="74" text-anchor="middle" font-size="13.5" font-weight="800" fill="var(--summer)">3 · BLESS ONE FLOWER</text>
+        <text x="477" y="98" text-anchor="middle" font-size="12" fill="var(--muted)">your one choice — it keeps</text>
+        <text x="477" y="115" text-anchor="middle" font-size="12" fill="var(--muted)">a free petal, forever</text>
+
+        <line x1="562" y1="94" x2="584" y2="94" stroke="currentColor" stroke-width="2" marker-end="url(#arr2)"/>
+
+        <rect x="590" y="42" width="158" height="104" rx="14" fill="none" stroke="var(--summer)" stroke-width="2.5"/>
+        <text x="669" y="74" text-anchor="middle" font-size="13.5" font-weight="800" fill="var(--summer)">4 · THE TALLY</text>
+        <text x="669" y="98" text-anchor="middle" font-size="12" fill="var(--muted)">the year counts up — then</text>
+        <text x="669" y="115" text-anchor="middle" font-size="12" fill="var(--muted)">bonus lines slam in: ×2 cap</text>
+
+        <line x1="754" y1="94" x2="776" y2="94" stroke="currentColor" stroke-width="2" marker-end="url(#arr2)"/>
+
+        <rect x="782" y="42" width="126" height="104" rx="14" fill="none" stroke="var(--fall)" stroke-width="2.5"/>
+        <text x="845" y="74" text-anchor="middle" font-size="13.5" font-weight="800" fill="var(--fall)">5 · THE GATE</text>
+        <text x="845" y="98" text-anchor="middle" font-size="12" fill="var(--muted)">spring returns —</text>
+        <text x="845" y="115" text-anchor="middle" font-size="12" fill="var(--muted)">and Fall is open</text>
+
+        <path d="M 845 152 L 845 190 L 93 190 L 93 158" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="5 5" marker-end="url(#arr2)"/>
+        <text x="469" y="208" text-anchor="middle" font-size="12" font-style="italic" fill="var(--muted)">next year runs a little richer — and turns a little sooner</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption>Only the <strong>fast annuals in the main garden</strong> clear at the turn; a running long timer always survives. Step 4 is the arcade bit: the base count-up from everything you grew, then achievement lines land one at a time — <em>"Orders filled: 47 → ×1.25!" · "Full-bed windfalls: 12 → +10%!"</em> — bonuses add, capped at ×2, and a line you scored zero on simply never appears. The Tally only celebrates.</figcaption>
+  </figure>
+
+  <h2>Saved Seeds — the currency</h2>
+  <p class="sub">One pouch, filled at the turn. Three rules keep it feeling fair, and each one exists because a famous idle game got it wrong.</p>
+
+  <div class="claims">
+    <div class="claim"><b>Earned for the year you grew</b>The count comes from everything you harvested and earned all year — not what's sitting in your wallet at the end.</div>
+    <div class="claim"><b>Spending gold never costs you</b>Buy every badge, every plot, every seed — your pouch doesn't care. There is no "should I stop buying things before I turn?" Ever.</div>
+    <div class="claim"><b>Every year pays a little more</b>Veteran years are worth more seeds, so the pouch keeps up as your ambitions (and walls) get bigger.</div>
+  </div>
+  <p>Why not leftover gold, since that was the first instinct? Because if seeds came from <em>unspent</em> gold, the smart move would be to stop playing near the end of every year — no planting, no upgrades, just hoarding until the turn. The game would quietly punish you for playing it. Counting the whole year instead means the best way to earn seeds is always just… gardening harder.</p>
+
+  <div class="wallets">
+    <div class="wallet w-gold">
+      <div class="w-name">🪙 Gold — <em>the year's money</em></div>
+      <ul>
+        <li>Earned all year, by everything</li>
+        <li>Buys badges, plots, plants, seed unlocks</li>
+        <li>Resets at the turn — after the pouch is minted</li>
+      </ul>
+      <div class="w-line">Spend it like it's going out of style. It is.</div>
+    </div>
+    <div class="wallet w-seed">
+      <div class="w-name">🌰 Saved Seeds — <em>the forever money</em></div>
+      <ul>
+        <li>Minted once, at the turn, from the whole year</li>
+        <li>Buys petals — and only petals</li>
+        <li>Never resets, never expires</li>
+      </ul>
+      <div class="w-line">The only thing it can't buy is anything temporary.</div>
+    </div>
+  </div>
+  <p style="font-size:14.5px; color:var(--muted); max-width:66ch;">Because neither wallet can buy the other's things, no purchase ever competes with your future. That single wall is why every prestige game you've loved invented a second currency — heavenly chips, angels, soul eggs — instead of letting gold do both jobs.</p>
+
+  <h2>Flower mastery — where the seeds go</h2>
+  <p class="sub">Every flower in the Almanac gets its own little card, and Saved Seeds buy <strong>petals</strong> on it. This is the "level up each flower" system — here's what the Daisy's card looks like.</p>
+
+  <figure>
+    <svg viewBox="0 0 470 330" role="img" aria-label="Mockup of the Daisy mastery card: two shared skills — Rich Bloom at three of five petals, Quick Sprout at two of five — plus the Daisy's signature skill Lucky Petals, a card-pack countdown that improves from every 12th harvest to every 10th. Footer shows the next petal costs four Saved Seeds." style="max-width:470px">
+      <g font-family="Nunito Sans, system-ui, sans-serif" fill="currentColor">
+        <rect x="8" y="8" width="454" height="314" rx="18" fill="var(--card)" stroke="var(--card-edge)" stroke-width="2"/>
+        <!-- header -->
+        <circle cx="52" cy="52" r="17" fill="var(--summer-wash)" stroke="var(--summer)" stroke-width="2.5"/>
+        <circle cx="52" cy="52" r="6" fill="var(--summer)"/>
+        <text x="82" y="48" font-size="19" font-weight="800">DAISY</text>
+        <text x="82" y="66" font-size="11.5" fill="var(--muted)">seed no. 1 · the one that started it</text>
+        <rect x="356" y="36" width="90" height="24" rx="12" fill="var(--summer-wash)"/>
+        <text x="401" y="53" text-anchor="middle" font-size="11.5" font-weight="800" fill="var(--summer)">5 PETALS</text>
+
+        <line x1="26" y1="86" x2="444" y2="86" stroke="var(--card-edge)" stroke-width="1.5"/>
+
+        <!-- Rich Bloom row -->
+        <text x="26" y="116" font-size="14.5" font-weight="800">Rich Bloom</text>
+        <text x="26" y="134" font-size="11.5" fill="var(--muted)">every petal makes daisies worth more</text>
+        <g>
+          <circle cx="334" cy="118" r="8" fill="var(--summer)"/>
+          <circle cx="360" cy="118" r="8" fill="var(--summer)"/>
+          <circle cx="386" cy="118" r="8" fill="var(--summer)"/>
+          <circle cx="412" cy="118" r="8" fill="none" stroke="var(--faint)" stroke-width="2"/>
+          <circle cx="438" cy="118" r="8" fill="none" stroke="var(--faint)" stroke-width="2"/>
+        </g>
+
+        <!-- Quick Sprout row -->
+        <text x="26" y="168" font-size="14.5" font-weight="800">Quick Sprout</text>
+        <text x="26" y="186" font-size="11.5" fill="var(--muted)">grows back faster after every harvest</text>
+        <g>
+          <circle cx="334" cy="170" r="8" fill="var(--summer)"/>
+          <circle cx="360" cy="170" r="8" fill="var(--summer)"/>
+          <circle cx="386" cy="170" r="8" fill="none" stroke="var(--faint)" stroke-width="2"/>
+          <circle cx="412" cy="170" r="8" fill="none" stroke="var(--faint)" stroke-width="2"/>
+          <circle cx="438" cy="170" r="8" fill="none" stroke="var(--faint)" stroke-width="2"/>
+        </g>
+
+        <!-- Signature row -->
+        <rect x="18" y="204" width="434" height="66" rx="12" fill="var(--summer-wash)"/>
+        <text x="30" y="230" font-size="14.5" font-weight="800" fill="var(--summer)">✦ Lucky Petals</text>
+        <text x="152" y="230" font-size="10.5" font-weight="800" letter-spacing="1" fill="var(--muted)">DAISY'S SIGNATURE</text>
+        <text x="30" y="252" font-size="12" fill="var(--muted)">a card pack blooms every 12th harvest — next petal: every 10th</text>
+        <g>
+          <circle cx="400" cy="226" r="8" fill="var(--summer)"/>
+          <circle cx="426" cy="226" r="8" fill="none" stroke="var(--faint)" stroke-width="2"/>
+        </g>
+
+        <!-- footer -->
+        <text x="26" y="302" font-size="12.5" fill="var(--muted)">next petal:</text>
+        <ellipse cx="112" cy="298" rx="7" ry="9" fill="var(--fall)"/>
+        <text x="126" y="303" font-size="13.5" font-weight="800">× 4 Saved Seeds</text>
+        <text x="444" y="303" text-anchor="end" font-size="11.5" font-style="italic" fill="var(--muted)">3 harvests until the next pack</text>
+      </g>
+    </svg>
+    <figcaption>Petals, not spreadsheet rows. Three filled circles say more than "+90%" — and the pack countdown in the corner means even a petal bought in a "chance" skill is something you can watch arriving.</figcaption>
+  </figure>
+
+  <div class="claims">
+    <div class="claim"><b>Two shared skills, everywhere</b><strong>Rich Bloom</strong> and <strong>Quick Sprout</strong> on every flower. Boring on purpose — they're the "can't go wrong" petals, and they're why there is no wrong way to spend.</div>
+    <div class="claim"><b>One signature skill each</b>The Daisy drops card packs. The Moonflower could court storms (mutations). The Bluebell could call its creature sooner. The signature is where a flower's personality lives — and we only need to write five or six for launch.</div>
+    <div class="claim"><b>Chances are countdowns</b>Never "+0.4% chance" — always "every 12th → every 10th," with the counter visible on the card. You bought a thing you can watch coming.</div>
+    <div class="claim"><b>Everything maxes, eventually</b>It's a garden to fill, not an exam to pass. No petal is a mistake; a completionist can genuinely finish a flower's card. (Gems stay global — no flower becomes "the gem farm.")</div>
+  </div>
+
+  <h2>How it's introduced — one petal at a time</h2>
+  <p class="sub">The system never lands as a wall of trees. It arrives in four beats, and the player is never asked to understand more than one new thing per turn.</p>
+
+  <div class="claims">
+    <div class="claim"><b>Year one: nothing</b>No mastery UI exists. You just play the garden you have, and a little year-meter quietly fills. The mystery IS the tutorial.</div>
+    <div class="claim"><b>Turn one: one choice</b>The full ceremony, and exactly one decision — <em>bless a flower</em>. That blessing is your first petal, free. Gate opens, Fall exists, done. No shop, no tree, no reading.</div>
+    <div class="claim"><b>The morning after</b>A small pouch of Saved Seeds appears, and the Almanac's flower rows now show petals. You spend your first few on whatever you like — there are only two skills per flower to even look at.</div>
+    <div class="claim"><b>Turn two onward: the ritual</b>Turn → pouch fills → petals → replant. Signature skills reveal themselves as flowers earn their first petals, so the catalog deepens exactly as fast as the player does.</div>
+  </div>
+
+  <div class="note"><b>Your badges don't move.</b> Power Punch, Quick Grip, Lucky Charm, Star Strike, Combo Coil — all stay exactly what they are: the <em>inside-the-year</em> game, bought with gold, reset with the year, rebought stronger and faster each spring. The rebuild morning is half the fun of a fresh year (it's the same ritual AdCap players love about re-hiring managers). <b>The Harvest Drone and per-plot harvesters are deliberately not in any of this yet</b> — that's our separate conversation, and nothing here depends on how it lands.</div>
+
+  <h2>Two weeks in the life</h2>
+  <p class="sub">One player, gamer's-eye view. The colors on the rail show which garden owns that day.</p>
+
+  <div class="timeline">
+    <div class="day t-summer">
+      <div class="daychip">Day 1</div>
+      <div>
+        <h3>The toy</h3>
+        <p>You tap a flower and it talks back. Coins arc, daisies go in, the first upgrades land. Twenty minutes later you open the seed book and the third flower costs <strong>six times everything you've earned tonight</strong>. And when you swipe right, you bump a hedge gate with orange leaves drifting behind it. Locked.</p>
+        <div class="feel">Feels like: charmed, fidgety, one eyebrow up at that gate.</div>
+      </div>
+    </div>
+    <div class="day t-summer">
+      <div class="daychip">Day 2</div>
+      <div>
+        <h3>The wall gets personal</h3>
+        <p>Daily done, quests cleared, tap upgrades bought — your number is visibly moving, but the wall isn't. Meanwhile a little meter up top has been quietly filling all along. It says <em>autumn is coming</em>. Wait. Is the wall… the point?</p>
+        <div class="feel">Feels like: plotting.</div>
+      </div>
+    </div>
+    <div class="day t-fall">
+      <div class="daychip">Day 3</div>
+      <div>
+        <h3>The first turn</h3>
+        <p>The meter fills at the wall and the flower asks: <em>"The year's turning. Save your seeds?"</em> The garden goes gold, petals everywhere, and you pick <strong>one flower to bless</strong>. Your coins become Saved Seeds. And then the hedge gate opens — <span class="season-word s-fall">FALL</span> is a whole second garden, with plants that take hours and payouts that make Summer look cute.</p>
+        <div class="feel">Feels like: "oh — it's THAT kind of game." This is the screenshot.</div>
+      </div>
+    </div>
+    <div class="day t-fall">
+      <div class="daychip">Days 4–5</div>
+      <div>
+        <h3>The rhythm sets in</h3>
+        <p>Plant Fall over coffee. Tap Summer while you wait. Harvest the windfall at dinner. The second turn comes the same evening — the reclimb takes an afternoon, not two days, because your blessed daisies grow fat and fast. Now you're routing: bless the tulip next, or bank for the new seed? Even snack sessions have a finish line: <em>3 more harvests to a gem</em>.</p>
+        <div class="feel">Feels like: a routine you chose, not one assigned to you.</div>
+      </div>
+    </div>
+    <div class="day t-winter">
+      <div class="daychip">Days 6–7</div>
+      <div>
+        <h3>Winter opens</h3>
+        <p>Turn three lifts the frost gate. Day-long clocks under snow — and the trick lands the first morning: <span class="season-word s-winter">Winter grew all night while the app was closed.</span> Sunday evening you notice you have three rituals now, and you built them yourself.</p>
+        <div class="feel">Feels like: the game respects your sleep. Cosy players tell friends about exactly this.</div>
+      </div>
+    </div>
+    <div class="day t-spring">
+      <div class="daychip">Week 2</div>
+      <div>
+        <h3>Spring, and the long game</h3>
+        <p>Around turn six the last gate opens. <span class="season-word s-spring">Spring</span> is the nursery: your saved seeds go in the ground here, new lines get bred, and the walls between seeds are days long now — and that feels <em>fair</em>, because four gardens run at four speeds and something is always about to pop. You plant your first <strong>Century Bloom: fourteen days to flower</strong>. You check it like a tamagotchi. You will absolutely post it when it opens.</p>
+        <div class="feel">Feels like: tenure. The thing idle games are actually for.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rituals">
+    <div class="ritual"><b class="s-winter">The morning check</b><span class="len">40 seconds.</span> Collect Winter, glance at the meter, go to work.</div>
+    <div class="ritual"><b class="s-fall">The lunch flip</b><span class="len">2 minutes.</span> Harvest Fall's windfall, replant the beds.</div>
+    <div class="ritual"><b class="s-summer">The evening sit-down</b><span class="len">7 minutes.</span> Tap, route, bless, turn the year when it's ripe.</div>
+  </div>
+
+  <h2>Four players, one game</h2>
+  <p class="sub">The real payoff of four clocks: four completely different people are all fully fed — by the same build.</p>
+
+  <div class="people">
+    <div class="person">
+      <h3>The Snacker</h3>
+      <div class="lives s-summer">lives in summer</div>
+      <p>Five three-minute pops a day. Combos, procs, pity counters. Never reads a number bigger than the screen. The tap loop was built for this person and it stays theirs.</p>
+    </div>
+    <div class="person">
+      <h3>The Scheduler</h3>
+      <div class="lives" style="color:var(--fall)">lives in fall &amp; winter</div>
+      <p>Coffee and bedtime, two visits, barely taps. Plants long clocks and loves the welcome-back scene. Today's game gives this person almost nothing. The Garden Year gives them half the world.</p>
+    </div>
+    <div class="person">
+      <h3>The Optimizer</h3>
+      <div class="lives s-spring">lives in spring</div>
+      <p>Routes blessings, times turns, keeps a spreadsheet nobody asked for. This is the r/incremental_games crowd — the one channel that has launched games like ours for free.</p>
+    </div>
+    <div class="person">
+      <h3>The Collector</h3>
+      <div class="lives s-winter">lives everywhere</div>
+      <p>Fills almanac rows, chases jars, creatures, cards. Turns the year when the game invites it, not when the math says. The biggest slice of our actual audience.</p>
+    </div>
+  </div>
+
+  <h2>Nothing gets thrown away</h2>
+  <p class="sub">The year isn't a new game beside the old one — it's where everything already designed finds its seat.</p>
+
+  <table class="absorb">
+    <tr><th>What we built or designed</th><th>Where it lives in the year</th></tr>
+    <tr><td>The world map</td><td>Replaced by the swipe strip. Pull back later and you see all four beds at once — that's the map, and it's prettier.</td></tr>
+    <tr><td>The Orchard</td><td>It <em>is</em> Fall — trees, pumpkins, the cottage crops, the overnight windfall role.</td></tr>
+    <tr><td>The long-clock / offline layer</td><td>It <em>is</em> Winter, with a better fiction than any settings toggle: snow works the night shift.</td></tr>
+    <tr><td>Breeding, heirlooms, the hatchery</td><td>It <em>is</em> Spring — the owner's pet-breeding ambition gets a whole garden, not a menu.</td></tr>
+    <tr><td>The meadow &amp; hives</td><td>Stay at Summer's edge, untouched. Bees like summer.</td></tr>
+    <tr><td>The Garden Stand</td><td>Comes back later on one lane — every season feeds the same queue.</td></tr>
+    <tr><td>The badge shop</td><td>Stays exactly as-is: the inside-the-year game. Resets with the year, rebought stronger each spring.</td></tr>
+  </table>
+
+  <h2>The field guide — every word, plainly</h2>
+  <p class="sub">The one-line version of everything on this page. When any conversation gets too technical, these are the words.</p>
+
+  <table class="guide">
+    <tr><td>The Year</td><td>One playthrough of your garden, spring to the Turn.</td></tr>
+    <tr><td>The Turn</td><td>The prestige moment: end the year, cash it in, start fresh with permanent bonuses. Never called a reset.</td></tr>
+    <tr><td>Gold</td><td>The year's money. Spend it freely — it goes away at the Turn.</td></tr>
+    <tr><td>Saved Seeds</td><td>The forever money. You only get them at the Turn; they buy petals; you never lose them.</td></tr>
+    <tr><td>The well</td><td>Everything you've <em>ever</em> earned fills one deep well of Saved Seeds. Each Turn scoops out what's new. Turn often = small scoops, wait = one big scoop — same total either way, so there's no wrong rhythm.</td></tr>
+    <tr><td>The meter</td><td>Fills as your year grows, pulses when a Turn is ready. It lives in the dock's Turn button.</td></tr>
+    <tr><td>The Tally</td><td>The arcade scoreboard at the Turn — bonus lines for orders filled, windfalls, species grown — multiplies your scoop, up to double. A line you scored zero on never appears.</td></tr>
+    <tr><td>The blessing</td><td>The one flower you pick at each Turn. It gets <strong>one free petal</strong> — a permanent upgrade you'd normally pay Saved Seeds for, handed to the flower you choose. The ceremony's only decision: <em>who had the best year?</em></td></tr>
+    <tr><td>Petals</td><td>Permanent upgrades on each flower: worth more, grows faster, plus one special skill each. Bought with Saved Seeds.</td></tr>
+    <tr><td>Unlock price</td><td>The one-time gold price to open a new seed. Paid once, yours forever — it survives every Turn.</td></tr>
+    <tr><td>The seasons</td><td>Gardens at different speeds. Summer is seconds, Fall is hours, Winter is days, Spring is the long game.</td></tr>
+    <tr><td>The windfall</td><td>Fall's bonus for harvesting the whole bed at once — the dinner appointment.</td></tr>
+    <tr><td>The Century Bloom</td><td>The fourteen-day showpiece plant. Survives every Turn.</td></tr>
+    <tr><td>Signatures</td><td>Each flower's one special petal skill — the Daisy drops card packs, the Moonflower courts storms. A later phase.</td></tr>
+  </table>
+
+  <h2>Decided here, still open there</h2>
+  <p class="sub">Where the brainstorm stands after this round.</p>
+
+  <ul class="qs">
+    <li><span class="tagchip tag-done">Decided</span><b>The turn clears fast annuals in the main garden only.</b> A running long timer — Winter's sleepers, a mid-grow Century Bloom — always survives the year turning. A reset that eats a two-week plant is the one unforgivable version of this.</li>
+    <li><span class="tagchip tag-done">Decided</span><b>The year is the player's own calendar.</b> The meter invites the turn; nothing forces it. Real-time shared weather can still play on top of every season later — player-owned prestige, world-owned sky.</li>
+    <li><span class="tagchip tag-done">Decided</span><b>Art starts as a background swap per season.</b> Same board, four backdrops. We lean into real per-season art once the feel is proven — the same MVP-first call that built the map.</li>
+    <li><span class="tagchip tag-open">Open</span><b>The Harvest Drone and per-plot harvesters.</b> Parked for their own conversation. Nothing in the mastery system depends on where they land.</li>
+    <li><span class="tagchip tag-open">Open</span><b>Do Fall and Winter beds ever clear?</b> Lean: never automatically — the turn is a main-garden event, and the other seasons keep their own rhythm. Worth one playtest before locking.</li>
+  </ul>
+
+  <div class="footer">
+    Brainstorm only — nothing here touches the repo or the live game. Say go and this becomes a numbered doc with the prestige spec folded in; say no and it cost us an evening.
+  </div>
+</div>
