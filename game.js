@@ -56,7 +56,7 @@ const Game = (() => {
       decor: [],
       boosters: {},
       boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },
-      harvestsThisSession: 0,
+      harvestsTowardRep: 0,
       lastSeen: 0,
       weatherCall: null,
       cards: {},
@@ -415,6 +415,12 @@ const Game = (() => {
       if (typeof state.upgrades.plot1Gardener === 'number') {
         state.upgrades.plot1Harvester = state.upgrades.plot1Harvester || state.upgrades.plot1Gardener;
         delete state.upgrades.plot1Gardener;
+      }
+      /* The rep drip's counter never resets, so a returning player's progress
+         toward the next +1 has to survive the key it is stored under. */
+      if (typeof state.harvestsThisSession === 'number') {
+        state.harvestsTowardRep = state.harvestsTowardRep || state.harvestsThisSession;
+        delete state.harvestsThisSession;
       }
       // state.upgrades is replaced wholesale by the parsed save above, so every
       // key the game expects has to be restored here or it reads back undefined
@@ -2179,13 +2185,13 @@ const Game = (() => {
     // absence can never hand the player a board that filled itself.
     const benchTier = benchEntryTier(sdef.id, r.key);
     const benchGot = benchAddToBasket(benchTier);
-    state.harvestsThisSession += 1;
+    state.harvestsTowardRep += 1;
     state.stats.totalHarvests += 1;
     const almanac = recordHarvest(sdef.id, r.key);
     let repBonus = 0;
     let levelGrants = almanac.levelGrants.slice();
     const every = DATA.harvestRepEvery || 10;
-    if (state.harvestsThisSession % every === 0) {
+    if (state.harvestsTowardRep % every === 0) {
       repBonus = DATA.harvestRepGrant || 1;
       levelGrants = levelGrants.concat(addRep(repBonus));
     }

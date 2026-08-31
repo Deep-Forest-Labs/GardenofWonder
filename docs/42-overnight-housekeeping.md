@@ -118,6 +118,21 @@ an invalid `clip-path` **shows the whole bar** — so that collision fails by re
 
 The third named bar, `.mastery-bar b`, is emitted by nothing and was left exactly as found.
 
+### `harvestsThisSession` renamed, and deliberately not reset
+
+doc 11 filed it as a naming problem and it was right. The field counts lifetime harvests toward a
+repeating +1 reputation drip, is only read modulo 10, and progress surviving a reload is what a
+player wants. So it is `harvestsTowardRep` now — and **actually making it per-session is a behaviour
+change that was not made**, because nobody asked for one.
+
+The rename is behaviour-preserving **only** because it ships with a `load()` fixup. The field is in
+the save, and `load()` copies unknown keys in and never removes them, so a bare rename would have
+cost every existing player up to nine harvests of progress and left a dead key in `state` forever,
+silently. Proven load-bearing rather than assumed: removing the fixup turns the suite red in three
+places, one of them the pre-existing "no key dodges the partition" check, which names the stray key.
+`legacy/main.js` still writes the old name and was left alone on purpose — real `igr-save` payloads
+were written by it, and the same fixup migrates them for free.
+
 ### Four smaller repairs
 
 - **`Icons.get()` warns once per missing name**, gated on `location.hostname` being `localhost`,

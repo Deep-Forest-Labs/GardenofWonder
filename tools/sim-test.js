@@ -654,6 +654,17 @@ Object.keys(S.upgrades).forEach((key) => {
 check('no upgrade price comes back NaN',
   Object.keys(S.upgrades).every((k) => Number.isFinite(G.upgradePrice(k))));
 
+group('the rep drip counter carries its progress across the rename');
+G.reset();
+const dripSave = JSON.parse(JSON.stringify(S));
+delete dripSave.harvestsTowardRep;
+dripSave.harvestsThisSession = 9;
+globalThis.localStorage.setItem('gw-save', JSON.stringify(dripSave));
+G.load();
+check('a save written under the old name keeps its progress', S.harvestsTowardRep === 9);
+check('and the old key does not linger in the save', S.harvestsThisSession === undefined);
+G.reset();
+
 group('reset clears the legacy save too');
 G.reset();
 globalThis.localStorage.setItem('igr-save', JSON.stringify({ credits: 999999 }));
@@ -825,7 +836,7 @@ check('Lantern Tree costs gems', (() => {
 })());
 check('boosters have no ticket price', DATA.boosters.every((b) => !('tickets' in b)));
 G.reset();
-S.harvestsThisSession = 9;
+S.harvestsTowardRep = 9;
 S.credits = 1e6;
 clearGarden();
 S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '', luckyBug: false };
@@ -4234,7 +4245,7 @@ const buildTurnRig = (inFlight) => {
   /* 25, not 29: the in-flight sweep's auto-collect must not land on the
      every-tenth-harvest reputation drip, which would move rep and level for a
      reason that has nothing to do with the partition. */
-  S.harvestsThisSession = 25;
+  S.harvestsTowardRep = 25;
   S.lastSeen = clock - 60;
   S.stand.delivered = 6;
   S.stand.skipped = 2;
@@ -4301,7 +4312,7 @@ const SURVIVES = ['version', 'gems', 'tickets', 'decor', 'boosters', 'weatherCal
   'setsClaimed', 'stats', 'wonder', 'apiary', 'flowers', 'craft', 'goods', 'bench', 'critters',
   'pairsSeen', 'mementos', 'luckyPacks', 'prefs', 'seen', 'quests', 'rep', 'level', 'discovered',
   'bestRarity', 'almanacClaimed', 'mastery', 'rarityCounts', 'seedUnlocks', 'petals', 'blessed',
-  'fall', 'harvestsThisSession', 'lastSeen', 'lifetimeCoins'];
+  'fall', 'harvestsTowardRep', 'lastSeen', 'lifetimeCoins'];
 /* CHANGED, not "cleared": doc 32's never-touched column means never reset or
    decreased — savedSeeds sits here because the mint WRITES it (upward, by
    exactly the projection, asserted below), and petals/blessed sit in SURVIVES
@@ -4364,7 +4375,7 @@ Math.random = () => 0.5;   // common rarity, no gem, no new Wonder, no pack proc
 const flightTurn = G.turnYear(null);
 Math.random = rngFlight;
 /* What the auto-collected harvest and the pack-banking are ALLOWED to move. */
-const HARVEST_WRITES = ['flowers', 'bench', 'stats', 'harvestsThisSession', 'discovered', 'quests', 'packs', 'lifetimeCoins'];
+const HARVEST_WRITES = ['flowers', 'bench', 'stats', 'harvestsTowardRep', 'discovered', 'quests', 'packs', 'lifetimeCoins'];
 check('the in-flight arm really ran', Boolean(flightTurn) && flightTurn.collected === 1
   && flightTurn.bankedPacks === 1, JSON.stringify(flightTurn && { c: flightTurn.collected, p: flightTurn.bankedPacks }));
 SURVIVES.filter((k) => !HARVEST_WRITES.includes(k)).forEach((k) => {

@@ -70,6 +70,24 @@ knows nothing about the game and doc 09 says to keep it that way). Worth recordi
 cannot test this** — Node has no `location`, and probe.js drops every console message that is not an
 error — so it was proved by driving a real browser on 127.0.0.1 and capturing `console.warn`.
 
+**`harvestsThisSession` is renamed, not reset, and the difference is the whole point.** doc 11 filed
+this as "a naming problem" and it was right: the field counts lifetime harvests toward a repeating
++1 reputation drip, it is only ever read modulo 10, and progress surviving a reload is what a player
+would want. **Actually making it per-session is a behaviour change and was not made** — that is the
+owner's call, and nobody asked for it. It is now `harvestsTowardRep`, which is what it does.
+
+**The rename is only behaviour-preserving because it ships with a `load()` fixup.** The field is in
+the save, and `load()` is `Object.assign(state, defaultState(), parsed)` — which copies unknown keys
+in and never removes them. A bare rename would have cost every existing player up to nine harvests of
+progress and left the dead key riding along in `state` forever, silently. The fixup is in the shape
+of the existing `plot1Gardener` one, including the `delete`, and it sits in the fixup cluster rather
+than lower down `load()`, because the `catch` further on re-assigns defaults without deleting.
+Proven load-bearing rather than assumed: removing it turns the suite red in three places, one of them
+the pre-existing save-partition check, which names the stray key.
+
+`legacy/main.js` still writes the old name and was deliberately not touched — real `igr-save`
+payloads in players' browsers were written by that code, and the same fixup migrates them for free.
+
 **The focus ring is an `outline`, and that is the whole decision.** A ring is the natural job for
 `box-shadow` in this codebase — every surface already composes one — and that is exactly why it
 could not be used. `box-shadow` is one property, so a focus ring written that way deletes the lip of

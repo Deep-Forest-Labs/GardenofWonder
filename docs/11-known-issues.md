@@ -767,12 +767,6 @@ is the honest number and this one is not — they are the same disagreement read
 A second clamp would move the lie, not remove it. **The fix is in the state**, which is the design
 decision this entry already reserved.
 
-### `harvestsThisSession` is not per session
-
-It's saved and never reset, making it a lifetime counter. The name will mislead. Behaviour is
-reasonable — progress toward the 10-harvest reputation drip surviving a reload is what a player would
-want — so this is a naming problem.
-
 ### Absolute timestamps are trivially exploitable
 
 Growth, boosters and the Wonder all use wall-clock epoch seconds. Moving the system clock forward

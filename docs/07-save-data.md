@@ -40,7 +40,7 @@ lost if the player clears site data.
   decor: [ { id: 'gnome' } ],   // one entry per copy owned, cosmetic only since v3
   boosters: { bloom: 1735689600.123 },                          // id → absolute expiry, epoch seconds
   boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },   // held copies, not yet activated
-  harvestsThisSession: 0,
+  harvestsTowardRep: 0,
   stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
   wonder: { until: 0, last: 0 },
   prefs: { sfx: true, music: false },
@@ -77,8 +77,9 @@ planting, so changing sprinkler levels never retroactively affects something in 
 player with ten gnomes has ten array entries. `Game.decorCount(id)` counts them for display;
 nothing sums a stat from them anymore.
 
-**`harvestsThisSession` is a misnomer** — it's saved and never reset, so it's a lifetime counter
-driving the every-10-harvests reputation drip.
+**`harvestsTowardRep` is lifetime, not per-session.** It is saved and never reset, and only ever
+matters modulo 10 — it drives the every-10-harvests reputation drip. It was `harvestsThisSession`
+until 2026-08-30; an older save is renamed on load (see [Schema fixups](#schema-fixups)).
 
 **`boostInv` is nested and must be re-merged in `load()`.** A save without that key is a pre-phase-2
 save: tickets convert to gems at `round(tickets / 5)` once, then the field is written so the
@@ -170,10 +171,12 @@ way to break loading for existing players.
 
 ### Schema fixups
 
-Three live migrations run on load:
+Six live migrations run on load:
 
 - `plot1Gardener` is renamed to `plot1Harvester` (the key was renamed during the rebuild) and the
   old key deleted.
+- `harvestsThisSession` is renamed to `harvestsTowardRep`, same shape, and the old key deleted, so a
+  returning player keeps their progress toward the next reputation drip.
 - Any missing `plotNHarvester` key is initialised to `0`, so adding harvester slots later is safe.
 - A save without `boostInv` converts leftover tickets to gems at 5:1, once.
 - Remaining `flowers` keys backfill `discovered` (max with any existing count). Unclaimed

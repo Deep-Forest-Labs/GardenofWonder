@@ -193,8 +193,8 @@ tint the empty soil until something new is planted.
 
 ### Harvest drops
 
-- **Every 10th harvest pays +1 reputation.** The counter is `harvestsThisSession`, which despite the
-  name is saved and never reset, so progress toward the next bonus survives reloads.
+- **Every 10th harvest pays +1 reputation.** The counter is `harvestsTowardRep`, which is saved and
+  never reset, so progress toward the next bonus survives reloads.
 - **Gems**: `seed.gemChance` if the seed defines one, otherwise a flat 5%. Counter-intuitively the
   late-game seeds define *lower* gem chances (0.8% – 2%) than the 5% default, so common seeds are
   the better gem farm.
