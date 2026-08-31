@@ -23,23 +23,26 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
    also moves every bed's level, so tuning #1 before it would be tuning a number that is about to
    change. **Bigger than when it was filed**: the owner ruled sliders in, and a range input would be
    the first form control in the entire game.
-2. **#4 · The app icon is a yellow faceless flower, not the hero** — the cheapest item on the list
-   and the highest value for the effort: rewrite one SVG from a function that already exists, run
-   three documented shell commands. It shares no file with anything else here, so it can run
-   alongside the audio work rather than behind it.
-3. **#6 · Fall's board sits 23px high and its flower is 73% the size** — the season swipe is the
+2. **#8 · The gem skip chip counts down every second on eight plots** — the cheapest fix on the
+   list: delete half a template string. Note it **reverses a logged decision**, so it owes a new
+   decision-log entry and an amendment to a `docs/11` item.
+3. **#4 · The app icon is a yellow faceless flower, not the hero** — very high value for the
+   effort: rewrite one SVG from a function that already exists, run three documented shell
+   commands. It shares no file with anything else here, so it can run alongside the audio work
+   rather than behind it.
+4. **#6 · Fall's board sits 23px high and its flower is 73% the size** — the season swipe is the
    game's signature move and it visibly jumps. Both causes measured and named; one `style.css` fix
    plus a glow element.
-4. **#7 · Fall's windfall needs a Collect All and its pill moved above the board** — **pair this
+5. **#7 · Fall's windfall needs a Collect All and its pill moved above the board** — **pair this
    with #6**: the 46px margin causing #6's offset exists only to hold the pill this item moves, so
    two sessions solving them apart will fight over the same space. Needs a new getter and an atomic
    harvest-all in `game.js`.
-5. **#5 · No cheat jumps ahead Turns** — the owner cannot reach the season gates to test them.
+6. **#5 · No cheat jumps ahead Turns** — the owner cannot reach the season gates to test them.
    Dev-panel only, touches no player surface. **Read the item first**: it will not show anyone a
    Spring garden, because there is not one.
-6. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
+7. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
    minute. Contained to `audio.js` and one `data.js` knob, no layout, no new surface.
-7. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
+8. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
    the rail, tap for what it does. Real work: a new tappable surface where the rail has never had
    one, and it brushes a standing ruling (see the item).
 
@@ -638,6 +641,65 @@ the ruling.
 outside the bed — it neither blocks nor collects the windfall — so the consistent answer is that
 Collect All leaves it standing and the player picks the showpiece themselves. That is the reading
 recorded here unless the owner says otherwise.
+
+---
+
+### #8 · POLISH · The gem skip chip counts down every second on eight plots · annoying · reported 2026-08-31
+
+**What the owner saw.** "On each flower in the garden, in the top right corner, there's a gem icon
+that allows the player to tap the gem to speed up the time and immediately collect their harvest.
+Remove the timer that spawns that shows how many seconds are counting down. Just show the gem and
+how much it costs. The reason why it's a little distracting" *(message ends there; the ask is
+unambiguous and needs no clarification)*.
+
+**Repro.** Plant anything and watch the chip in a plot's top-right corner. It reads
+`💎 3 · 13m`, and inside the last minute before ripeness the wait re-renders **every second** — on
+up to eight plots at once, at exactly the moment the player is watching the board.
+
+**The likely cause — display only, one string.** `renderPlots()` builds the label as
+`` `${fmt(skipGems)} · ${skipWait(skipLeft)}` `` (`ui.js:172`). Dropping the ` · ${skipWait(...)}`
+half leaves the gem glyph and the price, which is exactly what was asked for. `skipWait()`
+(`ui.js:128`) renders minutes above 60s and **seconds below it**, which is where the per-second churn
+comes from. The price itself is far calmer: `skipCost()` is `ceil(remaining / skipSecondsPerGem)`
+with `skipSecondsPerGem: 30` (`data.js:136`), so it steps once every thirty seconds rather than
+every one.
+
+**Related — this reverses a logged decision, and the fix must say so.** The wait was added
+deliberately on 2026-08-30, in the sweep that put a real number on every surface: *"A gem skip named
+a price and never the wait it deleted"* (`10-decision-log.md`, the phase-3.8 entry). `Game.skipSaving()`
+was written for this one label — its own comment at `game.js:4599` says `skipCost()` "derived the
+second number and threw it away, so the chip could only ever say a price." **The owner is overruling
+that from live play**, on a cost the sweep did not weigh: one chip explaining itself is informative,
+eight ticking at once is noise. That is a legitimate reversal, but it is a reversal — it needs its
+own dated entry in `10-decision-log.md` recording that the owner overruled it and why, not a silent
+deletion that leaves the old entry standing and contradicting the game.
+
+Also related:
+- **It part-fixes a filed known issue.** `11-known-issues.md:311` — *"In landscape the gem skip chip
+  hangs off its plot… the wait it now carries makes it worse."* Removing the wait removes the "makes
+  it worse" half. The chip still overflows in landscape on its own (a 34px chip on a 31px tile), and
+  landscape is still unsupported, so **amend that entry rather than deleting it**.
+- **The CSS comment above `.skip-chip` becomes false.** `style.css:590` reads *"The price and the
+  wait are one fact, so they never wrap apart"*, justifying `white-space:nowrap` and the `max-width`
+  clamp. With the wait gone that reasoning no longer holds. The clamp is probably still worth keeping
+  for the landscape overflow above — but the comment has to be rewritten to say the true reason, per
+  the house rule that comments explain why.
+
+**Fix sketch.** Delete the wait from the visible label at `ui.js:172`. **Keep it in the
+`aria-label`** at `ui.js:176` — "Finish now for 3 gems, saving 13 minutes" is the accessible
+description of what the button does, it is spoken on demand rather than flickering on screen, and
+the owner's complaint is about visual noise. That also keeps `Game.skipSaving()` alive and in use,
+which avoids the recorded trap about removing a method from `Game` and leaving a `ui-*` caller
+behind. While in there, the render cache can relax: `c.skipLeft` (`ui.js:166`) exists to detect the
+countdown changing and no longer needs to be part of the key, so the outer branch stops firing once
+a second per plot — a small win for the every-frame budget the perf rules in `09-conventions.md`
+care about. **What it might break:** very little — the `data-skip` attribute driving
+`.plot[data-skip] .skip-chip{display:inline-flex}` and the affordability tint at
+`style.css:587` is set in the same block, so keep that write when trimming the cache. Verify at
+390×844 with several plots growing and at least one inside its final minute, which is the state that
+shows the churn.
+
+**No open question.** The ask is specific and the reversal is the owner's to make.
 
 ---
 
