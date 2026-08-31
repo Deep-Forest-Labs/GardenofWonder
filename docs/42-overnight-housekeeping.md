@@ -30,6 +30,32 @@ comparison, and the session's own work sat in `stash@{0}` until it was noticed. 
 worktree is free and cannot lose anything. There is one in this session's scratch space; the second
 comparison onwards used it.
 
+## If you are the Sky Pass session, this is your merge
+
+Twelve commits landed on `main` under you while your checkout stayed dirty. Nothing here read or
+wrote your working tree. **Every one of these edits is deliberately outside the weather, sky,
+scenery, fx and audio code**, so a merge should be mechanical — but four of the files are ones you
+are also holding, so here is exactly where to look rather than making you diff for it.
+
+| File | What this round changed, and where |
+| --- | --- |
+| `style.css` | Scattered hex→token swaps; `.q-bar i` and `.almanac-meter i` (the bars); a new `button:focus-visible` rule immediately under the `button{…}` reset near line 112; `.quest-card`, `.critter-gift`, `.card-badge`. **No rule under the SCENERY header or below it was touched.** |
+| `game.js` | Three places only: one key in `defaultState()`, one fixup in the `load()` cluster right under the `plot1Gardener` one, and two lines in `harvest()`. All the `harvestsThisSession` → `harvestsTowardRep` rename. |
+| `ui.js` | Two lines: the destructure at the top gains `pct`, and the quest-bar write in `renderQuest()`. |
+| `tools/sim-test.js` | The rename in four list/assignment lines, one new group inserted before `reset clears the legacy save too`, and **one new block appended after the last existing group** — so most of it is at the end of the file and should not conflict. |
+| `icons.js`, `ui-sheet.js`, `ui-fall.js` | One small edit each: the `get()` warning, three lines in `ui-sheet.js`, one `aria-label` in `ui-fall.js`. |
+
+**Two things that will greet you after the merge.** `node tools/style-check.js` now runs over
+`style.css`, and on tonight's snapshot of your branch it had 65 new raw hexes, 2 new translucent
+lips and 26 undeclared `--wx-*` knobs to say something about. The knobs are **fine** — that is what
+made the check split undeclared-with-a-fallback out of the failing set, so they no longer fail
+anything. The hexes and lips will fail, and doc 05's check 5 already asks for a new value to be
+written down with its reason. If a colour is deliberate, `--update-baseline` records it.
+
+And `sw.js` now has a test asserting every `<script>` in `index.html` is precached in `CORE`. You
+have both files open and a new `ui-weather.js` on disk — that check exists precisely for that
+moment, and it will tell you if the pair drifts.
+
 ## What was fixed
 
 ### The enforcement the standards never had
