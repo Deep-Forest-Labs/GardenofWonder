@@ -35,6 +35,7 @@ const FX = (() => {
     canvas.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     seedAmbient();
+    seedWeather();
   }
 
   function setMagnet(name, el) {
@@ -66,6 +67,206 @@ const FX = (() => {
         t: rnd(0, 10)
       });
     }
+  }
+
+  /* ---------- the weather layer ----------
+     A standing layer in the ambient petals' pattern: the pool is seeded once at
+     the size that was asked for and every drop leaving the bottom comes back in
+     at the top, so the budget is the count and never a function of how long the
+     sky has hung. `thin` is how much of that pool is in play — it ramps up when a
+     sky lands and down when one ends, which is what a shower stopping actually
+     looks like: the drops still falling reach the ground and are not replaced. */
+  const WX_MAX = 96;
+  const WX_SKIN = {
+    rain: { ink: '#dfeeff', alpha: 0.62 },
+    storm: { ink: '#cfe4fb', alpha: 0.74 }
+  };
+  /* Slower than rain, because this is falling light and not water. */
+  const GOLD_FALL = 210;
+  let wxKind = null;
+  let wxPool = [];
+  let wxSplash = [];
+  let wxThin = 0;
+  let wxThinRate = 0;
+  const wxCfg = { count: 0, speed: 900, wind: 0.12 };
+
+  const wxWant = () => (reduced || !wxKind
+    ? 0 : Math.max(0, Math.min(WX_MAX, Math.round(wxCfg.count))));
+
+  function seedWeather() {
+    const want = wxWant();
+    const live = Math.round(want * wxThin);
+    wxPool.length = 0;
+    for (let i = 0; i < want; i += 1) {
+      const p = makeWx(rnd(-H, H));
+      p.parked = i >= live;
+      wxPool.push(p);
+    }
+  }
+
+  /* One shape for both kinds. Two pools would mean two wrap rules and two places
+     for the budget to drift apart. */
+  function makeWx(y) {
+    return {
+      x: rnd(-40, W + 40),
+      y,
+      z: rnd(0.5, 1),
+      len: rnd(0.022, 0.034),
+      sway: rnd(0.3, 0.9),
+      t: rnd(0, 10),
+      r: rnd(3.2, 6),
+      vy: GOLD_FALL * rnd(0.72, 1.3),
+      vx: rnd(-14, 14),
+      rot: rnd(0, TAU),
+      spin: rnd(-5.5, 5.5),
+      a: rnd(0.72, 1),
+      parked: false
+    };
+  }
+
+  function weather(kind, opts = {}) {
+    if (!kind) { weatherClear(); return; }
+    const was = wxKind;
+    wxKind = kind;
+    if (typeof opts.count === 'number') wxCfg.count = opts.count;
+    if (typeof opts.speed === 'number') wxCfg.speed = opts.speed;
+    if (typeof opts.wind === 'number') wxCfg.wind = opts.wind;
+    if (was !== kind || wxPool.length !== wxWant()) seedWeather();
+    wxThinRate = 1 / 1.6;
+  }
+
+  function weatherOff(seconds) {
+    if (!wxKind) return;
+    wxThinRate = -1 / (seconds > 0 ? seconds : 1.6);
+  }
+
+  function weatherClear() {
+    wxKind = null;
+    wxPool.length = 0;
+    wxSplash.length = 0;
+    wxThin = 0;
+    wxThinRate = 0;
+  }
+
+  /* A drop landing on a plant. Reduced motion takes the layer to zero and lets
+     the wet ground carry the sky, so there is nothing for a drop to land from. */
+  function splashAt(x, y) {
+    if (reduced) return;
+    wxSplash.push({ kind: 'ring', x, y, life: 0, max: 0.42, size: 26 });
+    for (let i = 0; i < 3; i += 1) {
+      const a = rnd(-Math.PI * 0.85, -Math.PI * 0.15);
+      const sp = rnd(60, 150);
+      wxSplash.push({
+        x, y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        g: 620,
+        r: rnd(1.6, 2.8),
+        life: 0,
+        max: rnd(0.28, 0.46)
+      });
+    }
+  }
+
+  function stepWeather(dt) {
+    if (wxThinRate) {
+      const dir = wxThinRate;
+      wxThin = Math.max(0, Math.min(1, wxThin + dir * dt));
+      // Only a downward ramp that has reached zero has finished — a first frame
+      // with dt 0 sits at zero on the way UP and must not read as over.
+      if (dir > 0 && wxThin === 1) wxThinRate = 0;
+      if (dir < 0 && wxThin === 0) { wxThinRate = 0; weatherClear(); }
+    }
+    if (wxPool.length) drawWeather(dt);
+    if (wxSplash.length) drawSplash(dt);
+  }
+
+  function drawWeather(dt) {
+    const skin = WX_SKIN[wxKind];
+    const live = Math.round(wxPool.length * wxThin);
+    const soft = 0.4 + 0.6 * wxThin;
+    ctx.lineCap = 'round';
+    if (skin) ctx.strokeStyle = skin.ink;
+    for (let i = 0; i < wxPool.length; i += 1) {
+      const p = wxPool[i];
+      if (p.parked) {
+        if (i < live) { p.parked = false; p.x = rnd(-40, W + 40); p.y = rnd(-120, -20); }
+        continue;
+      }
+      const vy = skin ? wxCfg.speed * p.z : p.vy;
+      const vx = skin ? wxCfg.wind * wxCfg.speed * p.z * 0.55 : p.vx;
+      p.t += dt;
+      p.y += vy * dt;
+      p.x += (vx + Math.sin(p.t * p.sway) * (skin ? 6 : 16)) * dt;
+      if (p.y > H + 30) {
+        if (i < live) { p.y = rnd(-120, -20); p.x = rnd(-40, W + 40); } else { p.parked = true; }
+        continue;
+      }
+      if (p.x < -60) p.x = W + 40;
+      if (p.x > W + 60) p.x = -40;
+
+      if (skin) {
+        const lx = vx * p.len;
+        const ly = vy * p.len;
+        ctx.globalAlpha = skin.alpha * (0.34 + p.z * 0.66) * soft;
+        ctx.lineWidth = 0.9 + p.z * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(p.x - lx, p.y - ly);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        continue;
+      }
+
+      /* Gold has NO wallet magnet. The magnet is what makes a coin read as
+         money, and this is light falling out of the sky. */
+      p.rot += p.spin * dt;
+      ctx.save();
+      ctx.globalAlpha = p.a * soft;
+      ctx.translate(p.x, p.y);
+      ctx.scale(Math.max(0.18, Math.abs(Math.cos(p.rot))), 1);
+      ctx.fillStyle = '#ffc93c';
+      ctx.strokeStyle = '#2c1a10';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(0, 0, p.r, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#fff3bf';
+      ctx.beginPath();
+      ctx.arc(-p.r * 0.24, -p.r * 0.24, p.r * 0.34, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawSplash(dt) {
+    for (let i = wxSplash.length - 1; i >= 0; i -= 1) {
+      const p = wxSplash[i];
+      p.life += dt;
+      const k = p.life / p.max;
+      if (k >= 1) { wxSplash.splice(i, 1); continue; }
+      ctx.save();
+      if (p.kind === 'ring') {
+        ctx.globalAlpha = (1 - k) * 0.7;
+        ctx.strokeStyle = '#e8f5ff';
+        ctx.lineWidth = 2.4 * (1 - k) + 0.6;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.size * easeOut(k), p.size * easeOut(k) * 0.42, 0, 0, TAU);
+        ctx.stroke();
+      } else {
+        p.vy += p.g * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        ctx.globalAlpha = 1 - k;
+        ctx.fillStyle = '#e8f5ff';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * (1 - k * 0.5), 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
   }
 
   /* ---------- emitters ---------- */
@@ -220,6 +421,9 @@ const FX = (() => {
     }
     ctx.globalAlpha = 1;
 
+    // The sky falls over the drifting petals and under everything the player did.
+    if (wxKind || wxSplash.length) stepWeather(dt);
+
     const coinTarget = targetPoint('coin');
 
     for (let i = parts.length - 1; i >= 0; i -= 1) {
@@ -328,6 +532,8 @@ const FX = (() => {
   return {
     init, step, coins, sparks, stars, confetti, ring, rainbowBurst,
     float, floatAt, shake, haptic, setMagnet, centerOf,
-    get reduced() { return reduced; }
+    weather, weatherOff, splashAt,
+    get reduced() { return reduced; },
+    get weatherCount() { return Math.round(wxPool.length * wxThin); }
   };
 })();

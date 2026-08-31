@@ -167,6 +167,25 @@ const DATA = {
     ]
   },
 
+  /* What a sky is made of, as leaves rather than numbers buried in code, so the feel can be
+     retuned without a build. Every value here was set by hand by the owner on the motion stage in
+     tools/sky-spike.html and copied across unchanged — they are chosen, not derived, so a number
+     that looks arbitrary is. `frontSeconds` is how far ahead the forecast announces; `rainGrowth`
+     is the one entry the simulation reads. See docs/41-weather-staging.md. */
+  weatherStage: {
+    frontSeconds: 5,
+    calledFrontSeconds: 5,
+    rainGrowth: 0.1,
+    rain: { drops: 74, dropSpeed: 900, wind: 0.12, wash: 0.46,
+            wetness: 0.34, bed: 0.3, linger: 30 },
+    storm: { drops: 70, dropSpeed: 1150, wind: 0.42, wash: 0.68, wetness: 0.46,
+             flashMinGap: 3.4, flashJitter: 4, flashBright: 0.72, bed: 0.34 },
+    aurora: { ribbons: 3, ribbonSpeed: 0.16, ribbonOpacity: 0.42, dusk: 0.62,
+              duskSeconds: 4, rimGlow: 0.5, starBoost: 0.85, bed: 0.26 },
+    wonderfall: { veil: 0.3, drizzle: 26, bob: 0.5, bobPeriod: 1.6, bed: 0.34 },
+    sunbreak: { rays: 3, opacity: 0.28, driftSpeed: 0.5, phase: 0.75, duration: 30 },
+  },
+
   /* A plant holds at most one mutation and only ever upgrades to a higher rank. `mult` multiplies
      harvest payout. Tune against the measured income share, never by eye — see
      docs/18-mutations-and-weather.md. */
@@ -1144,6 +1163,14 @@ const FLOWER_LINES = {
   storm: ['Thunder! Hold onto your petals.', 'Ooh, that one was close.', 'What a sky.'],
   aurora: ['Look up — the sky has colours!', 'I have only seen this twice.', 'The whole garden is glowing.'],
   wonderfall: ['The sky is doing something wonderful.', 'Oh my. Oh MY.', 'Remember this one.'],
+  /* The forecast. The sky is computable, so the flower gets to know first — one line before a
+     real sky lands, and one when the sun comes back through. Never for a Clear slot: the silence
+     is what makes the rest of these events. */
+  rainFront: ['Smells like rain coming', 'Grey out west. Ooh.', 'Something wet this way comes.'],
+  stormFront: ['Hold onto your petals!', 'That sky means it.', 'Everyone under a leaf, please.'],
+  auroraFront: ['Wait — the light is going odd.', 'Is it dusk? It is not dusk.', 'Ooh. Something is starting.'],
+  wonderfallFront: ['The sky is winding up for something.', 'Look up. Any moment now.', 'I have a very good feeling.'],
+  sunbreak: ['There\u2019s the sun', 'Told you it would pass.', 'Look at that light coming through.'],
   mutation: ['Something changed out there!', 'That bloom looks different...', 'Well, would you look at that.'],
   wonder: ['WONDERRRR!', 'Everything is upside-down lovely!', 'Grab it all!'],
   /* Fall's bed arming — the payoff of the season's one rule. Phase 4 owns the

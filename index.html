@@ -44,13 +44,56 @@
         <div class="layer clouds-near" id="cloudsNear"></div>
         <div class="layer hills-mid"></div>
         <div class="layer hills-near"></div>
+        <!-- The fence is the world too, so it takes the rain on itself:
+             `.wx-wet` is an opt-in hook the stylesheet decides when to darken,
+             never a state this markup knows about.
+
+             NOT the lawn. `.wx-wet` darkens with a `filter`, and a filter cannot
+             carry a mask — the lawn reaches the bottom edge, and the strip iOS
+             paints below a short window is filled with the untinted lawn colour,
+             so darkening it here would draw the join three rounds of layout work
+             went into hiding. `.wx-ground` wets the lower scene instead: it is a
+             masked multiply inside `.wx`, which is what that layer is for. -->
         <div class="layer meadow"></div>
-        <div class="layer fence"></div>
+        <div class="layer fence wx-wet"></div>
         <div class="vignette"></div>
         <!-- The year ripening. A real layer rather than a pseudo-element because
              ::after already carries the weather and ::before would paint under
              the sky. Both are multiply overlays and both can be on at once. -->
         <div class="season-tint" id="seasonTint"></div>
+      </div>
+
+      <!-- ============ THE SKY PASS ============
+           The staged weather, above the living sky and below the interface.
+           It carries NO z-index and nothing may give it one: a positioned
+           element with a z-index is a stacking context, and a stacking context
+           is an isolated blending group — every multiply, screen and overlay
+           inside would blend against transparency instead of against the sky.
+           DOM order alone places it, and the siblings above carry their own.
+           `isolation`, `opacity` under 1, `filter` and `transform` on this box
+           are the same bug spelled differently. Layer order is load-bearing:
+           the stylesheet drives the clouds, the ribbons and the rays off
+           `:nth-child`. -->
+      <div class="wx" id="wx" aria-hidden="true">
+        <div class="wx-wash"></div>
+        <div class="wx-front">
+          <i class="wx-front-cloud"></i><i class="wx-front-cloud"></i><i class="wx-front-cloud"></i>
+          <i class="wx-front-cloud"></i><i class="wx-front-cloud"></i><i class="wx-front-cloud"></i>
+        </div>
+        <div class="wx-bolt"></div>
+        <div class="wx-dusk"></div>
+        <div class="wx-ribbons">
+          <i class="wx-ribbon" style="--i:0"></i>
+          <i class="wx-ribbon" style="--i:1"></i>
+          <i class="wx-ribbon" style="--i:2"></i>
+        </div>
+        <div class="wx-ground"></div>
+        <div class="wx-veil"></div>
+        <div class="wx-takeover"></div>
+        <div class="wx-sunbreak">
+          <i class="wx-ray"></i><i class="wx-ray"></i><i class="wx-ray"></i><i class="wx-ray"></i>
+        </div>
+        <div class="wx-flash-under"></div>
       </div>
 
       <!-- Fall's scene. A season is not a place layer in this game: the HUD, the
@@ -169,6 +212,12 @@
         </nav>
       </div>
 
+      <!-- Above the interface, because a flash that does not silhouette the
+           garden is a grey rectangle, and the leaf is a character beat rather
+           than a tint over one. -->
+      <div class="wx-umbrella" id="wxUmbrella"><i></i></div>
+      <div class="wx-flash" id="wxFlash"></div>
+
       <!-- ============ BOTTOM SHEET ============ -->
       <div class="scrim" id="scrim" hidden></div>
       <section class="sheet" id="sheet" aria-hidden="true" aria-label="Shop">
@@ -213,6 +262,10 @@
   <script src="game.js"></script>
   <script src="ui-shared.js"></script>
   <script src="ui-scenery.js"></script>
+  <!-- Before ui-events.js, not after. Both subscribe to `weather`, and the tail
+       of an ending sky has to be standing before that file asks paintWeather()
+       to hand the attribute over. -->
+  <script src="ui-weather.js"></script>
   <script src="ui-sheet.js"></script>
   <script src="ui-hollow.js"></script>
   <script src="ui-meadow.js"></script>

@@ -34,8 +34,11 @@
       b.className = 'plot';
       b.dataset.idx = idx;
       b.dataset.state = 'empty';
+      /* `.wx-wet` is an opt-in hook, not a state: it rides the plot's interior
+         for the life of the node and the stylesheet decides when a sky darkens
+         it. Nothing here has to know what the weather is. */
       b.innerHTML = `
-        <div class="plot-inner"><div class="plant-slot"></div></div>
+        <div class="plot-inner wx-wet"><div class="plant-slot"></div></div>
         <div class="empty-mark">${Icons.get('plantSpot')}</div>
         <div class="lock-badge">${Icons.get('lock')}<div class="lock-cost">${Icons.get('coin')}<span></span></div></div>
         <div class="bar"><i></i></div>
@@ -239,6 +242,13 @@
       if (c.seed !== cell.seed) {
         const sdef = Game.seedById(cell.seed);
         v.slot.innerHTML = sdef ? Flora.plant(sdef) : '';
+        /* The sheen and the wind lean are opt-in hooks the sky reads, so they go
+           on once with the plant rather than being written every frame. Only
+           here, where the plant is already being replaced — a class flipped on
+           the frame tier would be eight DOM writes a frame for a state that
+           changes four times an hour. */
+        const grown = v.slot.firstElementChild;
+        if (grown) grown.classList.add('wx-glint', 'wx-lean');
         c.seed = cell.seed;
         c.stage = null;
       }
@@ -1225,7 +1235,11 @@
 
   function buildCritter(def, spot) {
     const node = document.createElement('button');
-    node.className = 'critter';
+    /* Only tending creatures stand in the yard, and a storm is the one sky that
+       asks them to duck — so the shelter hook rides the node and the stylesheet
+       decides when. Built once, never toggled: `place()`-style passes position
+       these, and a node rebuilt under one flashes. */
+    node.className = 'critter wx-shelter';
     node.type = 'button';
     node.dataset.critter = def.id;
     node.style.setProperty('--x', spot + '%');
@@ -1363,6 +1377,10 @@
       renderSeasonEdges();
       refreshCoach();
       UI.updateSky();
+      /* Whether the sky is dark has two writers — the hour and an aurora bending
+         the light rules — and the hour crosses on a clock nothing emits for.
+         Nobody notices a dusk arriving half a second late. */
+      UI.syncWeatherNight();
       /* Every open panel, not just Settings. Half the numbers the panels now
          quote move on a CLOCK rather than on a purchase — a mutation roll
          firing empties the sky card's count with no event at all, and a
@@ -1399,6 +1417,11 @@
     // this, a page opened during rain or a storm renders a clear sky until the
     // slot rolls over. Roughly a quarter of slots are not clear.
     UI.paintWeather(Game.currentWeather());
+    /* And the staged layers with it — the tuned values reach CSS here, and a sky
+       already hanging when the page opens is put on screen without a front,
+       because it is not arriving, it is already here. After paintWeather(), which
+       is what writes the sky it reads. */
+    UI.startWeather();
     // Roll a capped creature's clock forward once, so time away it could never
     // have banked does not sit there pretending to still be accruing.
     Game.settleCritters();

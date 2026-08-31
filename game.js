@@ -797,21 +797,46 @@ const Game = (() => {
   };
   const currentWeather = () => weatherAt(nowSeconds());
 
+  const weatherSlotRemaining = (seconds) => {
+    const t = seconds === undefined ? nowSeconds() : seconds;
+    return (weatherSlotOf(t) + 1) * DATA.weather.slotSeconds - t;
+  };
+
+  /* The forecast, and it is computed every time it is asked for rather than stored anywhere. The
+     sky is a function of the clock, so the slot after this one can simply be looked up — a cached
+     answer would be a second source of truth for something that already has one. */
+  const nextWeather = (seconds) => {
+    const t = seconds === undefined ? nowSeconds() : seconds;
+    return weatherAt((weatherSlotOf(t) + 1) * DATA.weather.slotSeconds);
+  };
+
+  /* Rain waters. Growth is baked in at plant time here, so the nudge needs two paths or it only
+     ever pays a player who happened to sow at the right moment: this factor for anything sown
+     while it rains, and quickenForRain() for everything already in the ground when the sky turns.
+     A called rain is the same sky and inherits both. */
+  const rainGrowthActive = () => currentWeather().id === 'rain';
+  const rainGrowMult = () => (rainGrowthActive() ? 1 - DATA.weatherStage.rainGrowth : 1);
+
   /* The day cycle keys to epoch time for the same reason weather does: a phase derived from page
      boot restarts on every reload, so "is it night" could never mean anything the simulation could
      act on. Same 6-minute cycle, now shared and answerable. */
   const dayPhase = (seconds) => (((seconds === undefined ? nowSeconds() : seconds) / DAY.cycle) + DAY.offset) % 1;
+  /* An aurora bends the light rules whatever the hour, which is what makes it read at noon — so
+     Nightbell wakes and Luna works under one. It answers for the moment it is ASKED about, because
+     a mutation resolves against its own scheduled instant rather than against now. */
   const isNight = (seconds) => {
-    const t = dayPhase(seconds);
-    return t < DAY.dawn || t >= DAY.dusk;
+    const t = seconds === undefined ? nowSeconds() : seconds;
+    if (weatherAt(t).id === 'aurora') return true;
+    const p = dayPhase(t);
+    return p < DAY.dawn || p >= DAY.dusk;
   };
 
   /** Nightbloom. A mutation caught after dark may come in one tier higher — a coin
       flip rather than a certainty, because Dewkissed to Gilded is a 5x jump on that
       harvest. Capped below the top tier: the game's biggest moment should be found,
       never engineered, which is the same principle that keeps Wonderfall unpriced. */
-  function nightbloomUpgrade(id) {
-    if (!id || !pairActive('nightbloom') || !isNight()) return id;
+  function nightbloomUpgrade(id, seconds) {
+    if (!id || !pairActive('nightbloom') || !isNight(seconds)) return id;
     if (Math.random() >= PAIR_TUNING.nightbloomChance) return id;
     const rank = mutationRank(id);
     if (rank >= PAIR_TUNING.nightbloomCap) return id;
@@ -847,11 +872,12 @@ const Game = (() => {
     const caught = [];
     state.grid.forEach((cell, idx) => {
       if (cell.locked || !cell.seed || !cell.mutateAt || now < cell.mutateAt) return;
-      const w = weatherAt(cell.mutateAt);
+      const moment = cell.mutateAt;
+      const w = weatherAt(moment);
       cell.mutateAt = 0;
       if (!w.mutation) return;
       if (Math.random() >= w.catch * catchMultiplier(idx)) return;
-      cell.mutation = nightbloomUpgrade(w.mutation);
+      cell.mutation = nightbloomUpgrade(w.mutation, moment);
       caught.push({
         idx, mutation: cell.mutation, weather: w, seed: seedById(cell.seed),
         upgraded: cell.mutation !== w.mutation
@@ -861,14 +887,44 @@ const Game = (() => {
   }
 
   let lastWeatherSlot = null;
+  let lastFrontSlot = null;
+  let rainWatch = null;
 
   function processWeather() {
-    const slot = weatherSlotOf(nowSeconds());
+    const now = nowSeconds();
+    const slot = weatherSlotOf(now);
     if (lastWeatherSlot !== slot) {
       const first = lastWeatherSlot === null;
       lastWeatherSlot = slot;
-      if (!first) emit('weather', { weather: weatherForSlot(slot) });
+      /* weatherAt(), not weatherForSlot(): a bought sky and a held one both last
+         longer than a slot, and announcing the slot's own weather over the top of
+         one repainted the sky every sixty seconds to something nobody had asked
+         for. It cost four minutes of a called rain a tint at a time; now that a
+         sky is a whole sequence it would abort one mid-arrival. */
+      if (!first) emit('weather', { weather: weatherAt(now) });
     }
+
+    /* The announcement, once per upcoming slot and never for a Clear one. Seventy per cent of
+       slots are Clear, and that silence is the whole reason the rest of them land as events. */
+    const front = DATA.weatherStage.frontSeconds;
+    if (lastFrontSlot !== slot + 1 && weatherSlotRemaining(now) <= front) {
+      lastFrontSlot = slot + 1;
+      const to = nextWeather(now);
+      /* The lead actually left, not the nominal one. A phone locks and unlocks
+         and the frame loop stops with it, so the first tick back can land one
+         second before a boundary — and a front that claims five would hold the
+         arrival four seconds after the sky had already turned. */
+      const lead = Math.min(front, Math.max(0, weatherSlotRemaining(now)));
+      if (to.id !== 'clear') emit('front', { to, seconds: lead, called: false });
+    }
+
+    /* The retro half of rain waters fires on a rain that STARTS while the game is running.
+       A rain already standing at boot has either been paid for at plant time or was missed
+       while away — paying it on arrival at the page would pay it again on every reload. */
+    const raining = rainGrowthActive();
+    if (rainWatch === false && raining && quickenForRain().length) save();
+    rainWatch = raining;
+
     const caught = rollMutations();
     state.lastSeen = nowSeconds();
     if (caught.length) {
@@ -931,7 +987,11 @@ const Game = (() => {
     });
     save();
     emit('currency');
-    emit('weather', { weather: currentWeather() });
+    /* A bought sky arrives rather than appears — you paid for weather, and weather has a front.
+       It is compressed, because nobody wants to watch their purchase load. */
+    const to = currentWeather();
+    emit('front', { to, seconds: DATA.weatherStage.calledFrontSeconds, called: true });
+    emit('weather', { weather: to });
     emit('panels');
     return { id, until, pulled, price };
   }
@@ -953,10 +1013,11 @@ const Game = (() => {
     if (!cost || state.gems < cost) return null;
     state.gems -= cost;
     if (cell.mutateAt) {
-      const w = weatherAt(cell.mutateAt);
+      const moment = cell.mutateAt;
+      const w = weatherAt(moment);
       cell.mutateAt = 0;
       if (w.mutation && Math.random() < w.catch * catchMultiplier(idx)) {
-        cell.mutation = nightbloomUpgrade(w.mutation);
+        cell.mutation = nightbloomUpgrade(w.mutation, moment);
         emit('mutate', {
           caught: [{
             idx, mutation: cell.mutation, weather: w, seed: seedById(cell.seed),
@@ -1011,7 +1072,7 @@ const Game = (() => {
       const maxSeedIndex = Math.min(level - 1, highestUnlockedSeedIndex(), DATA.seeds.length - 1);
       if (maxSeedIndex < 0) return;
       const seed = DATA.seeds[maxSeedIndex];
-      const grow = plantGrowth(seed, idx);
+      const grow = plantGrowth(seed, idx, { sky: false });
       if (grow <= 0) return;
       const gross = seed.yield * EXPECTED_RARITY_MULT * yieldBonus
         * petalMult(seed.id) * verbPayoutMult(idx);
@@ -1311,12 +1372,17 @@ const Game = (() => {
   const petalGrowMult = (id) => Math.max(0, 1 - petalsOf(id).quick * PETALS().shared.quick.value);
 
   /* The whole growth stack in one place — sprinklers and boosts, Keepers,
-     Quick Sprout — clamped so the combined modifier can never fall through
-     the 0.3 floor however the pieces are tuned. Both the planting path and
-     passiveIncomeRate() read this, so offline always mirrors online. */
-  function plantGrowth(seedDef, idx) {
+     Quick Sprout, rain — clamped so the combined modifier can never fall
+     through the 0.3 floor however the pieces are tuned. Both the planting path
+     and passiveIncomeRate() read this, so offline always mirrors online. */
+  /* `sky: false` leaves the weather out. A sixty-second sky has no business setting the rate for
+     a twenty-four-hour absence, and letting it would make closing the app during a shower worth
+     real money — an incentive nobody asked for and the opposite of cosy. Rain waters what is in
+     the ground, not what the drone will plant tomorrow. */
+  function plantGrowth(seedDef, idx, opts) {
+    const sky = !opts || opts.sky !== false ? rainGrowMult() : 1;
     return seedDef.grow
-      * Math.max(0.3, growModifier() * keeperModifier(idx) * petalGrowMult(seedDef.id));
+      * Math.max(0.3, growModifier() * keeperModifier(idx) * petalGrowMult(seedDef.id) * sky);
   }
 
   /* What a harvest of this seed in this plot would actually pay, as the range
@@ -2095,6 +2161,23 @@ const Game = (() => {
       if (remain <= 0) return;
       cell.grow = elapsed + remain * (1 - VT().keeperGrowth);
       touched.push(n);
+    });
+    return touched;
+  }
+
+  /** The Keeper's own move, for the sky: shave rain's share off whatever was already growing when
+      it started. Anything sown after this point pays for it in plantGrowth() instead, so one rain
+      can never quicken the same plant twice. */
+  function quickenForRain() {
+    const share = DATA.weatherStage.rainGrowth;
+    const touched = [];
+    state.grid.forEach((cell, idx) => {
+      if (cell.locked || !cell.seed || cell.ready) return;
+      const elapsed = Math.max(0, nowSeconds() - cell.plantedAt);
+      const remain = Math.max(0, cell.grow - elapsed);
+      if (remain <= 0) return;
+      cell.grow = elapsed + remain * (1 - share);
+      touched.push(idx);
     });
     return touched;
   }
@@ -3939,11 +4022,17 @@ const Game = (() => {
   }
 
   const Dev = {
-    /* Weather is sticky so the sky can be held while animations are inspected. */
+    /* Weather is sticky so the sky can be held while animations are inspected. It announces
+       itself first: a held sky that skipped straight to the transform would leave the arrival —
+       the half of this pass with the most moving parts — with no way to be driven at all. */
     setWeather(id) {
       dev.weather = id || null;
-      emit('weather', { weather: currentWeather() });
-      return currentWeather();
+      const w = currentWeather();
+      if (dev.weather && w.id !== 'clear') {
+        emit('front', { to: w, seconds: DATA.weatherStage.frontSeconds, called: false });
+      }
+      emit('weather', { weather: w });
+      return w;
     },
     weatherOverride: () => dev.weather,
 
@@ -4582,6 +4671,7 @@ const Game = (() => {
     masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf,
     neighboursOf, verbAt, neighbourVerbs, plantedNeighbours, verbPayoutMult, keeperModifier,
     weatherSlotOf, weatherForSlot, weatherAt, currentWeather, rollMutations, processWeather,
+    nextWeather, weatherSlotRemaining, rainGrowthActive, rainGrowMult,
     mutationDef, mutationRank, mutationMult, catchMultiplier,
     dayPhase, isNight, reconcile, gemChanceFor,
     cardById, setOfCard, rarityDef, cardCount, hasCard, setOwned, setComplete,

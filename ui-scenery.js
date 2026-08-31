@@ -38,7 +38,7 @@
     r.setProperty('--star-op', (a.star + (b.star - a.star) * k).toFixed(2));
     r.setProperty('--sun-x', (a.sx + (b.sx - a.sx) * k).toFixed(1) + '%');
     r.setProperty('--sun-y', (a.sy + (b.sy - a.sy) * k).toFixed(1) + '%');
-    setThemeColor(seasonMix(mix(a.s1, b.s1, k)));
+    setThemeColor(seasonMix(weatherMix(mix(a.s1, b.s1, k))));
   }
 
   /* The strip iOS draws above an installed app is painted from `theme-color`, and
@@ -101,8 +101,67 @@
     return `rgb(${out[0]}, ${out[1]}, ${out[2]})`;
   }
 
+  /* THE WEATHER JOIN. The strip is painted from the top of the sky with the
+     season multiply folded in, and a sky heavy enough to recolour the scene has
+     to join that multiply or the notch desyncs — the exact class of bug doc 08
+     spent four rounds on.
+
+     Computed from the layers themselves rather than from a second table of
+     colours: the tint comes out of the same custom property the layer paints
+     with, and the strength is the layer's own live opacity, mid-transition and
+     all. So a sky that fades in fades in up here too, a value the owner retunes
+     carries through, and there is no second copy to drift. It answers for the
+     TOP of the sky only, which is all the strip ever shows. */
+  const wxEls = {};
+  const wxEl = (sel) => {
+    if (!wxEls[sel]) wxEls[sel] = document.querySelector(sel);
+    return wxEls[sel];
+  };
+  const alphaOf = (sel) => {
+    const node = wxEl(sel);
+    if (!node) return 0;
+    const v = parseFloat(getComputedStyle(node).opacity);
+    return isFinite(v) ? v : 0;
+  };
+  const tokenRgb = (name, fallback) => {
+    const v = getComputedStyle(el.game).getPropertyValue(name).trim();
+    if (!v) return fallback;
+    if (v[0] === '#') return [1, 3, 5].map((i) => parseInt(v.slice(i, i + 2), 16));
+    const n = (v.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+    return n.length === 3 ? n : fallback;
+  };
+  const chMul = (a, b) => a.map((v, i) => v * b[i] / 255);
+  const chScreen = (a, b) => a.map((v, i) => 255 - (255 - v) * (255 - b[i]) / 255);
+  const chLerp = (a, b, k) => a.map((v, i) => v + (b[i] - v) * Math.max(0, Math.min(1, k)));
+
+  function weatherMix(rgb) {
+    const sky = el.game.dataset.weather;
+    if (!sky || sky === 'clear') return rgb;
+    const base = (rgb.match(/\d+/g) || []).map(Number);
+    if (base.length < 3) return rgb;
+    let out = base.slice(0, 3);
+    if (sky === 'rain' || sky === 'storm') {
+      out = chLerp(out, chMul(out, tokenRgb('--wxr-wash-a', [109, 130, 154])), alphaOf('.wx-wash'));
+    } else if (sky === 'aurora') {
+      /* .94 is the dusk gradient's own top stop — the layer's opacity is only
+         half of how far it commits. */
+      out = chLerp(out, chMul(out, [19, 42, 82]), alphaOf('.wx-dusk') * 0.94);
+      out = chLerp(out, chScreen(out, tokenRgb('--wx-aurora-1', [95, 240, 182])),
+        alphaOf('.wx-ribbon') * 0.35);
+    } else if (sky === 'wonderfall') {
+      out = chLerp(out, chScreen(out, [255, 107, 107]), alphaOf('.wx-veil'));
+    }
+    const c = out.map((v) => Math.max(0, Math.min(255, Math.round(v))));
+    return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+  }
+
   function paintWeather(w) {
-    el.game.dataset.weather = w.id;
+    /* The tail of a sky is still that sky: `[data-wx-phase="end"]` paints the
+       parting clouds and the fading wash from `data-weather`, so `ui-weather.js`
+       keeps the outgoing id until the sky has finished and hands it over then.
+       The flat tint is NOT held with it — that one belongs to the sky actually
+       standing, and the staged wash is what fades. */
+    if (!(UI.wxHoldsSky && UI.wxHoldsSky())) el.game.dataset.weather = w.id;
     if (w.tint) el.game.style.setProperty('--weather-tint', w.tint);
     else el.game.style.removeProperty('--weather-tint');
   }

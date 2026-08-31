@@ -4,9 +4,25 @@ const Sound = (() => {
   let ctx = null;
   let master = null;
   let sfxBus = null;
+  let sfxFilter = null;
   let musicBus = null;
+  let ambBus = null;
+  let stinger = null;
   let ready = false;
   const prefs = { sfx: true, music: false };
+
+  const AMB_LEVEL = 0.5;
+  /* Both mutes reach the ambience bus, but not as equals. A bed is the world
+     making a sound rather than a tune, so the effects mute governs it outright:
+     a player who silenced effects asked the garden to be quiet, and a minute of
+     rain hiss would be ignoring them. The music mute only trims it, because
+     with the arrangement gone the bed is the whole sky, and cutting that too
+     leaves a weather event with no weather in it. */
+  const MUSIC_OFF_TRIM = 0.72;
+  const DUCK_HZ = 950;
+  const OPEN_HZ = 18000;
+
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 
   function init() {
     if (ready) return true;
@@ -16,25 +32,51 @@ const Sound = (() => {
     master = ctx.createGain();
     master.gain.value = 0.9;
     master.connect(ctx.destination);
+    /* The duck lives on the bus rather than in each recipe, so a sound written
+       a year from now sits under the rain without knowing the rain exists. */
+    sfxFilter = ctx.createBiquadFilter();
+    sfxFilter.type = 'lowpass';
+    sfxFilter.frequency.value = OPEN_HZ;
+    sfxFilter.Q.value = 0.4;
+    sfxFilter.connect(master);
     sfxBus = ctx.createGain();
     sfxBus.gain.value = prefs.sfx ? 0.65 : 0;
-    sfxBus.connect(master);
+    sfxBus.connect(sfxFilter);
     musicBus = ctx.createGain();
     musicBus.gain.value = 0;
     musicBus.connect(master);
+    ambBus = ctx.createGain();
+    ambBus.gain.value = 0;
+    ambBus.connect(master);
+    /* A bed sits low by design, and a crack routed straight into it comes out
+       quieter than a coin. This is the makeup that lets the thunder be written
+       at house scale — a 0.2 one-shot here lands where a 0.2 one-shot lands on
+       the effects bus — without lifting the bed underneath it. */
+    stinger = ctx.createGain();
+    stinger.gain.value = 1.45;
+    stinger.connect(ambBus);
     ready = true;
     if (prefs.music) startMusic();
     return true;
   }
 
-  function resume() {
-    if (!ready && !init()) return;
+  /* Browsers refuse to start a context without a gesture, so every entry point
+     that makes a noise goes through here first. */
+  function wake() {
+    if (!ready && !init()) return false;
     if (ctx.state === 'suspended') ctx.resume();
+    return true;
+  }
+
+  function resume() {
+    wake();
   }
 
   function setSfx(on) {
     prefs.sfx = on;
-    if (ready) sfxBus.gain.setTargetAtTime(on ? 0.65 : 0, ctx.currentTime, 0.02);
+    if (!ready) return;
+    sfxBus.gain.setTargetAtTime(on ? 0.65 : 0, ctx.currentTime, 0.02);
+    rampAmb(0.3);
   }
 
   function setMusic(on) {
@@ -45,6 +87,7 @@ const Sound = (() => {
     // scheduled are unaffected and fade out with the bus.
     if (on) startMusic(); else stopMusic();
     musicBus.gain.setTargetAtTime(on ? 0.16 : 0, ctx.currentTime, 0.4);
+    rampAmb(0.6);
   }
 
   /* --- tiny synth voices --- */
@@ -65,7 +108,7 @@ const Sound = (() => {
     osc.stop(t + dur + 0.05);
   }
 
-  function noise({ dur = 0.2, gain = 0.2, at = 0, hp = 800 }) {
+  function noise({ dur = 0.2, gain = 0.2, at = 0, hp = 800, lp = 0, bus = sfxBus }) {
     if (!ready) return;
     const t = ctx.currentTime + at;
     const len = Math.max(1, Math.floor(ctx.sampleRate * dur));
@@ -81,9 +124,64 @@ const Sound = (() => {
     g.gain.setValueAtTime(gain, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     src.connect(filt);
-    filt.connect(g);
-    g.connect(sfxBus);
+    if (lp) {
+      const low = ctx.createBiquadFilter();
+      low.type = 'lowpass';
+      low.frequency.value = lp;
+      filt.connect(low);
+      low.connect(g);
+    } else {
+      filt.connect(g);
+    }
+    g.connect(bus);
     src.start(t);
+  }
+
+  /* A closed mouth, not a mallet: slow in, slow out, and dark on top. */
+  function hum({ freq = 330, dur = 0.5, gain = 0.09, at = 0, bus = null }) {
+    if (!ready) return;
+    const t = ctx.currentTime + at;
+    const g = ctx.createGain();
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 1500;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t + 0.09);
+    g.gain.setTargetAtTime(0.0001, t + dur * 0.55, dur * 0.22);
+    [1, 1.005].forEach((mul, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq * mul, t);
+      const vg = ctx.createGain();
+      /* The pair sums to about one so `gain` still means what it says on every
+         other voice in the file. */
+      vg.gain.value = i ? 0.34 : 0.7;
+      osc.connect(vg);
+      vg.connect(lp);
+      osc.start(t);
+      osc.stop(t + dur + 0.4);
+    });
+    lp.connect(g);
+    g.connect(bus || ambBus);
+  }
+
+  function biquad(type, freq, q) {
+    const f = ctx.createBiquadFilter();
+    f.type = type;
+    f.frequency.value = freq;
+    if (q) f.Q.value = q;
+    return f;
+  }
+
+  function lfo(rate, depth, target) {
+    const osc = ctx.createOscillator();
+    const amt = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = rate;
+    amt.gain.value = depth;
+    osc.connect(amt);
+    amt.connect(target);
+    return osc;
   }
 
   const SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
@@ -179,16 +277,53 @@ const Sound = (() => {
     [-1, 2, 7]
   ];
 
+  /* Same tune, different clothes — the sky rearranges the pad rather than
+     replacing it. `hold` is how many bars a chord stays put, which is how a sky
+     slows down without touching the clock every other sky is counting on. */
+  const ARRANGE = {
+    clear: { hold: 1, lp: 16000, pad: 'sine', padGain: 0.09, arp: 6, arpType: 'triangle', arpGain: 0.045, arpOct: 12, arpGap: 0.42, arpDur: 0.5, level: 1 },
+    rain: { hold: 1, lp: 900, pad: 'sine', padGain: 0.085, arp: 3, arpType: 'sine', arpGain: 0.042, arpOct: 12, arpGap: 0.84, arpDur: 0.6, level: 0.92 },
+    storm: { hold: 1, lp: 620, pad: 'sine', padGain: 0.09, arp: 2, arpType: 'sine', arpGain: 0.038, arpOct: 0, arpGap: 1.2, arpDur: 0.7, level: 0.86 },
+    aurora: { hold: 2, lp: 16000, pad: 'sine', padGain: 0.06, arp: 4, arpType: 'sine', arpGain: 0.062, arpOct: 24, arpGap: 1.4, arpDur: 1.6, level: 1 },
+    sunbreak: { hold: 1, lp: 16000, pad: 'triangle', padGain: 0.08, arp: 6, arpType: 'triangle', arpGain: 0.05, arpOct: 19, arpGap: 0.42, arpDur: 0.6, level: 1.05 },
+    wonderfall: { hold: 1, lp: 16000, pad: 'triangle', padGain: 0.06, arp: 8, arpType: 'square', arpGain: 0.03, arpOct: 12, arpGap: 0.34, arpDur: 0.4, level: 0.9 }
+  };
+
+  const chains = {};
+  let dress = 'clear';
+
+  /* One chain per arrangement, kept alive once built: cross-fading two live
+     chains is what makes this a change of clothes rather than a cut. */
+  function chain(id) {
+    if (chains[id]) return chains[id];
+    const a = ARRANGE[id];
+    const f = biquad('lowpass', a.lp, 0.6);
+    const g = ctx.createGain();
+    g.gain.value = id === dress ? a.level : 0.0001;
+    f.connect(g);
+    g.connect(musicBus);
+    chains[id] = { filt: f, out: g };
+    return chains[id];
+  }
+
+  function layPad(id, chord, dur) {
+    const a = ARRANGE[id];
+    const bus = chain(id).filt;
+    chord.forEach((s, i) =>
+      tone({ freq: note(s - 12), type: a.pad, dur, gain: a.padGain, at: i * 0.02, bus })
+    );
+  }
+
   function startMusic() {
     if (musicTimer || !ready) return;
     const step = () => {
-      const chord = PROG[bar % PROG.length];
-      chord.forEach((s, i) =>
-        tone({ freq: note(s - 12), type: 'sine', dur: 3.4, gain: 0.09, at: i * 0.02, bus: musicBus })
-      );
-      for (let i = 0; i < 6; i += 1) {
+      const a = ARRANGE[dress];
+      const chord = PROG[Math.floor(bar / a.hold) % PROG.length];
+      const bus = chain(dress).filt;
+      if (bar % a.hold === 0) layPad(dress, chord, 3.4 * a.hold);
+      for (let i = 0; i < a.arp; i += 1) {
         const s = chord[i % chord.length] + (i > 2 ? 12 : 0);
-        tone({ freq: note(s + 12), type: 'triangle', dur: 0.5, gain: 0.045, at: 0.35 + i * 0.42, bus: musicBus });
+        tone({ freq: note(s + a.arpOct), type: a.arpType, dur: a.arpDur, gain: a.arpGain, at: 0.35 + i * a.arpGap, bus });
       }
       bar += 1;
     };
@@ -202,5 +337,375 @@ const Sound = (() => {
     musicTimer = null;
   }
 
-  return { init, resume, play, setSfx, setMusic, prefs };
+  function arrange(id) {
+    if (!ARRANGE[id] || !wake()) return false;
+    if (id === dress) return true;
+    const from = chains[dress];
+    const to = chain(id);
+    const t = ctx.currentTime;
+    if (from) from.out.gain.setTargetAtTime(0.0001, t, 0.5);
+    to.out.gain.setTargetAtTime(ARRANGE[id].level, t, 0.5);
+    dress = id;
+    /* Pick the current chord up in the new dress straight away, otherwise the
+       handover falls into the gap before the next downbeat. */
+    if (prefs.music) {
+      const a = ARRANGE[id];
+      layPad(id, PROG[Math.floor(Math.max(0, bar - 1) / a.hold) % PROG.length], 2.6);
+    }
+    return true;
+  }
+
+  /* --- the ambience beds --- */
+  /* Levels arrive from the caller, because this file knows nothing about the
+     game. The spec's starting points stand in so a missing one is never a bed
+     that plays silently. */
+  const BED_DEFAULT = { rain: 0.3, storm: 0.34, aurora: 0.26, wonderfall: 0.34 };
+  /* Filtered noise and a stack of sines are wildly different loudnesses for the
+     same number, so the knob stays a feel value and the calibration lives here:
+     each trim lands its bed near a peak of 0.10 at the speaker with the default,
+     which is under the 0.22 of the game's loudest one-shot and about half again
+     the ambient pad. The two tonal beds carry a little less, because a held sine
+     is heard as louder than a hiss at the same height. */
+  const BED_TRIM = { rain: 1.35, storm: 1.9, aurora: 1.55, wonderfall: 1.15 };
+  /* The ceiling is not a tuning value, it is the point past which a level
+     dragged to its end stops being something anyone would hold a phone to. */
+  const BED_CEILING = 0.85;
+
+  const levels = {};
+  const live = {};
+
+  const knob = (id) => clamp(typeof levels[id] === 'number' ? levels[id] : BED_DEFAULT[id], 0, 1);
+  const bedGain = (id) => Math.min(knob(id) * BED_TRIM[id], BED_CEILING);
+  const rel = (id) => clamp(knob(id) / BED_DEFAULT[id], 0.35, 1.4);
+
+  /* One buffer, reused. Filling four seconds of random samples per bed start is
+     a visible hitch on a phone and nobody can hear the difference. The seam is
+     cross-faded and the loop stops short of it, because heavy lowpassing turns
+     a one-sample jump into a tick you hear once a loop. */
+  const LOOP_SECONDS = 4;
+  const SEAM_SECONDS = 0.06;
+  let loopBuf = null;
+  let loopEnd = 0;
+
+  function loopNoise() {
+    if (loopBuf) return loopBuf;
+    const rate = ctx.sampleRate;
+    const len = Math.floor(rate * LOOP_SECONDS);
+    const seam = Math.floor(rate * SEAM_SECONDS);
+    loopBuf = ctx.createBuffer(1, len, rate);
+    const d = loopBuf.getChannelData(0);
+    for (let i = 0; i < len; i += 1) d[i] = Math.random() * 2 - 1;
+    for (let i = 0; i < seam; i += 1) {
+      const k = i / seam;
+      d[i] = d[i] * k + d[len - seam + i] * (1 - k);
+    }
+    loopEnd = (len - seam) / rate;
+    return loopBuf;
+  }
+
+  function loopSource() {
+    const src = ctx.createBufferSource();
+    src.buffer = loopNoise();
+    src.loop = true;
+    src.loopStart = 0;
+    src.loopEnd = loopEnd;
+    return src;
+  }
+
+  /* Each builder wires itself into `out` and hands back the nodes to start and
+     the timers to clear, so a bed that is not playing costs nothing. */
+  const BUILD = {};
+
+  BUILD.rain = (out) => {
+    const src = loopSource();
+    const body = biquad('lowpass', 1250, 0.5);
+    const air = biquad('highpass', 220, 0.4);
+    /* A minute is a long time to sit inside an unmoving hiss; a sky that
+       breathes never gets to be fatiguing. */
+    const breath = lfo(0.07, 380, body.frequency);
+    const bodyG = ctx.createGain();
+    bodyG.gain.value = 0.9;
+    /* A narrow tap off the same source is the patter — enough to read as drops,
+       kept below 2.5k and low in the mix because this is a sound a player sits
+       inside for a minute, and the ear tires there first. */
+    const patter = biquad('bandpass', 2200, 0.9);
+    const patterG = ctx.createGain();
+    patterG.gain.value = 0.16;
+    src.connect(air);
+    air.connect(body);
+    body.connect(bodyG);
+    bodyG.connect(out);
+    air.connect(patter);
+    patter.connect(patterG);
+    patterG.connect(out);
+    return { nodes: [src, breath], timers: [], rise: 2.2, fall: 2.4 };
+  };
+
+  BUILD.storm = (out) => {
+    const src = loopSource();
+    const deep = biquad('lowpass', 190, 1.2);
+    const deepG = ctx.createGain();
+    deepG.gain.value = 1;
+    /* A phone speaker cannot reproduce the bottom of a rumble at all, so the
+       weight has to live in a second band it can actually move — and that band
+       has to carry most of the bed, or the storm is silent on the only device
+       anyone plays this on. */
+    const roll = biquad('lowpass', 620, 0.7);
+    const rollHp = biquad('highpass', 160, 0.6);
+    const rollG = ctx.createGain();
+    rollG.gain.value = 0.6;
+    const swell = lfo(0.05, 0.4, deepG.gain);
+    src.connect(deep);
+    deep.connect(deepG);
+    deepG.connect(out);
+    src.connect(rollHp);
+    rollHp.connect(roll);
+    roll.connect(rollG);
+    rollG.connect(out);
+    return { nodes: [src, swell], timers: [], rise: 2.6, fall: 3 };
+  };
+
+  BUILD.aurora = (out) => {
+    /* The pad slowed until it stops being a chord change and becomes a light.
+       Voiced wide and high with one low anchor rather than stacked down where
+       the game's pad lives: a phone speaker gives back almost nothing under
+       400Hz, and a sky described as brightened cannot spend itself down there.
+       Every voice shimmers at its own rate so the pattern never comes round. */
+    const chord = [-12, 4, 12, 19];
+    const gains = [0.2, 0.22, 0.26, 0.18];
+    const rates = [0.09, 0.13, 0.11, 0.07];
+    const nodes = [];
+    chord.forEach((s, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = note(s) * (i % 2 ? 1.003 : 1);
+      const g = ctx.createGain();
+      g.gain.value = gains[i] / chord.length;
+      const shimmer = lfo(rates[i], g.gain.value * 0.75, g.gain);
+      osc.connect(g);
+      g.connect(out);
+      nodes.push(osc, shimmer);
+    });
+    /* Chimes on top, sprinkled rather than played: the prettiest sound in the
+       game should not sound like it is counting. They ride the bed's own gain
+       so one knob moves the whole sky, and the makeup for sitting behind that
+       knob is a node rather than tone() gains written out of house scale. */
+    const chimeBus = ctx.createGain();
+    chimeBus.gain.value = 2.4;
+    chimeBus.connect(out);
+    const chime = () => {
+      const s = SCALE[Math.floor(Math.random() * SCALE.length)];
+      const f = note(s + 24);
+      tone({ freq: f, type: 'sine', dur: 1.8, gain: 0.11, bus: chimeBus });
+      tone({ freq: f * 1.004, type: 'sine', dur: 2.2, gain: 0.07, at: 0.03, bus: chimeBus });
+      tone({ freq: note(s + 12), type: 'triangle', dur: 1.2, gain: 0.05, at: 0.08, bus: chimeBus });
+    };
+    const timer = setInterval(() => {
+      if (Math.random() < 0.72) chime();
+    }, 1500);
+    /* The opening chime is tracked like the interval is: a sky cancelled inside
+       its first second must not ring after it has gone. */
+    const first = setTimeout(chime, 600);
+    return { nodes, timers: [timer, first], rise: 3.4, fall: 3.4 };
+  };
+
+  BUILD.wonderfall = (out) => {
+    /* The takeover: a wider chord than the garden ever uses, plus a low drone
+       borrowed from the Wonder fanfare, so the sky reads as the rare thing it
+       is before the first note of melody. */
+    const chord = [4, 9, 16, 21];
+    const gains = [0.26, 0.22, 0.16, 0.11];
+    const nodes = [];
+    chord.forEach((s, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = i > 1 ? 'triangle' : 'sine';
+      osc.frequency.value = note(s);
+      const g = ctx.createGain();
+      g.gain.value = gains[i] / chord.length;
+      const shimmer = lfo(0.12 + i * 0.03, g.gain.value * 0.6, g.gain);
+      osc.connect(g);
+      g.connect(out);
+      nodes.push(osc, shimmer);
+    });
+    /* The whole low end of the sky in one voice, an octave above where the
+       fanfare puts it, because two octaves down is a frequency a phone owns
+       none of. */
+    const drone = ctx.createOscillator();
+    drone.type = 'sawtooth';
+    drone.frequency.value = note(-12);
+    const droneLp = biquad('lowpass', 260, 0.7);
+    const droneG = ctx.createGain();
+    droneG.gain.value = 0.055;
+    drone.connect(droneLp);
+    droneLp.connect(droneG);
+    droneG.connect(out);
+    nodes.push(drone);
+    /* Gold you can hear falling — the drizzle's audible half, kept quiet
+       enough that the flower's melody still sits on top of it. */
+    const drizzle = ctx.createGain();
+    drizzle.gain.value = 2;
+    drizzle.connect(out);
+    let step = 0;
+    const timer = setInterval(() => {
+      const s = SCALE[(step * 3) % SCALE.length];
+      tone({ freq: note(s + 24), type: 'triangle', dur: 0.5, gain: 0.035, bus: drizzle });
+      step += 1;
+    }, 420);
+    return { nodes, timers: [timer], rise: 1.6, fall: 2 };
+  };
+
+  /* --- the ambience bus --- */
+  let holdUntil = 0;
+  let holdTimer = null;
+
+  function ambLevel() {
+    if (!prefs.sfx) return 0;
+    return prefs.music ? AMB_LEVEL : AMB_LEVEL * MUSIC_OFF_TRIM;
+  }
+
+  function ambTarget() {
+    const busy = Object.keys(live).length > 0 || ctx.currentTime < holdUntil;
+    return busy ? ambLevel() : 0;
+  }
+
+  function rampAmb(tau) {
+    if (!ready) return;
+    ambBus.gain.setTargetAtTime(ambTarget(), ctx.currentTime, tau || 0.4);
+  }
+
+  /* A crack or a closing rumble can outlive its bed, so the bus opens for the
+     length of the sound and closes again behind it. */
+  function openAmb(seconds) {
+    holdUntil = Math.max(holdUntil, ctx.currentTime + seconds);
+    ambBus.gain.setTargetAtTime(ambLevel(), ctx.currentTime, 0.04);
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTimer = setTimeout(() => {
+      holdTimer = null;
+      rampAmb(0.5);
+    }, (seconds + 0.25) * 1000);
+  }
+
+  function startBed(id) {
+    if (!wake()) return false;
+    /* Restarting a bed that is already playing follows the level rather than
+       resetting it, so a sequence that calls bed() on every phase change does
+       not throw away a sky already in progress. */
+    if (live[id]) {
+      live[id].gain.gain.setTargetAtTime(bedGain(id), ctx.currentTime, 0.08);
+      return true;
+    }
+    const t = ctx.currentTime;
+    const g = ctx.createGain();
+    g.gain.value = 0.0001;
+    g.connect(ambBus);
+    const rec = BUILD[id](g);
+    rec.gain = g;
+    live[id] = rec;
+    rec.nodes.forEach((n) => n.start(t));
+    g.gain.setTargetAtTime(bedGain(id), t, (rec.rise || 1.6) / 3);
+    rampAmb(0.3);
+    return true;
+  }
+
+  function stopBed(id, fade) {
+    const rec = live[id];
+    if (!rec) return false;
+    const f = typeof fade === 'number' ? fade : (rec.fall || 2);
+    const t = ctx.currentTime;
+    rec.timers.forEach(clearInterval);
+    rec.gain.gain.setTargetAtTime(0.0001, t, f / 4);
+    rec.nodes.forEach((n) => n.stop(t + f));
+    delete live[id];
+    setTimeout(() => rec.gain.disconnect(), (f + 0.4) * 1000);
+    rampAmb(f / 3);
+    return true;
+  }
+
+  /* `level` is the caller's feel value for this sky, 0–1; it is remembered, so
+     the storm's one-shots keep moving with a bed that was set once. */
+  function bed(id, on, level) {
+    if (!BUILD[id]) return false;
+    if (typeof level === 'number' && isFinite(level)) levels[id] = clamp(level, 0, 1);
+    return on ? startBed(id) : stopBed(id);
+  }
+
+  /* An interrupted sky has to be able to hand a clean bus to the next one. */
+  function bedsOff(fade) {
+    if (!ready) return;
+    Object.keys(live).forEach((id) => stopBed(id, typeof fade === 'number' ? fade : 0.8));
+    holdUntil = 0;
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+    ambBus.gain.setTargetAtTime(0, ctx.currentTime, 0.25);
+  }
+
+  /* --- the storm's two one-shots --- */
+  /* The split first, then a tail that rolls away in overlapping decays; a
+     single burst reads as a door slamming, not as weather. */
+  function crack(power = 1) {
+    if (!wake()) return;
+    /* Capped above as well as below: the bed's level is allowed to move the
+       crack with it, but never past the house ceiling for a one-shot. */
+    const k = clamp(clamp(power, 0, 1) * rel('storm'), 0.25, 1.1);
+    openAmb(2.2);
+    noise({ dur: 0.09, gain: 0.2 * k, at: 0.06, hp: 2600, bus: stinger });
+    noise({ dur: 0.5, gain: 0.13 * k, at: 0.07, hp: 300, lp: 2200, bus: stinger });
+    tone({ freq: 150, type: 'triangle', dur: 0.7, gain: 0.11 * k, at: 0.07, slide: 0.5, bus: stinger });
+    [0.28, 0.62, 1.05].forEach((at, i) =>
+      noise({ dur: 1 + i * 0.4, gain: (0.09 - i * 0.025) * k, at: 0.07 + at, hp: 120, lp: 700 - i * 140, bus: stinger })
+    );
+  }
+
+  /* Distant is a colour, not an absence: the roll keeps enough midrange to
+     survive a phone speaker and is quiet because it is far away, not because
+     it has been filtered into nothing. */
+  function rumble() {
+    if (!wake()) return;
+    const k = rel('storm');
+    openAmb(4.5);
+    [0, 0.5, 1.2].forEach((at, i) =>
+      noise({ dur: 2.4 - i * 0.4, gain: (0.095 - i * 0.022) * k, at, hp: 140, lp: 620 - i * 120, bus: stinger })
+    );
+    tone({ freq: 152, type: 'triangle', dur: 2.4, gain: 0.055 * k, at: 0.1, slide: 0.72, bus: stinger });
+  }
+
+  /* --- the flower's hummed melody --- */
+  /* Three phrases so a sky that sings four times does not sound like a loop. */
+  const PHRASES = [
+    [4, 7, 9, 7, 12, 9, 7],
+    [0, 4, 7, 12, 9, 7, 4],
+    [7, 9, 12, 14, 12, 9, 7]
+  ];
+  let phrase = 0;
+
+  function sing(which) {
+    if (!wake()) return;
+    const p = PHRASES[typeof which === 'number' ? which % PHRASES.length : phrase % PHRASES.length];
+    phrase += 1;
+    openAmb(p.length * 0.34 + 1.4);
+    p.forEach((s, i) => {
+      const last = i === p.length - 1;
+      hum({
+        freq: note(s + 12),
+        dur: last ? 1.1 : 0.46,
+        gain: (last ? 0.11 : 0.13) * rel('wonderfall'),
+        at: 0.1 + i * 0.34,
+        bus: ambBus
+      });
+    });
+  }
+
+  /* --- the effects duck --- */
+  function duck(on) {
+    if (!ready && !init()) return false;
+    sfxFilter.frequency.setTargetAtTime(on ? DUCK_HZ : OPEN_HZ, ctx.currentTime, 0.35);
+    return !!on;
+  }
+
+  return {
+    init, resume, play, setSfx, setMusic, prefs,
+    bed, bedsOff, arrange, duck, crack, rumble, sing
+  };
 })();

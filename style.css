@@ -692,6 +692,11 @@ button:focus-visible{
   background:var(--weather-tint,transparent);
   opacity:0;transition:opacity var(--weather-fade) ease, background var(--weather-fade) ease;
   mix-blend-mode:multiply;
+  /* The same stop `.season-tint` takes below, and for the same reason: a storm
+     is heavy enough that a tint running to the bottom edge draws the join
+     against the flat lawn iOS paints below a short window. */
+  -webkit-mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
 }
 /* The year ripening — Summer's palette warming toward autumn as the meter
    fills. Visual only, derived from the meter every slow tick and never saved;
@@ -711,10 +716,16 @@ button:focus-visible{
   -webkit-mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
   mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
 }
-.game[data-weather="rain"] .scenery::after{opacity:.30}
-.game[data-weather="storm"] .scenery::after{opacity:.52}
-.game[data-weather="aurora"] .scenery::after{opacity:.26;mix-blend-mode:screen}
-.game[data-weather="wonderfall"] .scenery::after{opacity:.34;mix-blend-mode:screen}
+/* The flat colour fade this pass exists to replace. `.wx-wash` now carries the
+   sky — a gradient rather than a wall of one colour, phased with the front and
+   folded into `theme-color` — so these stay at zero. The layer itself is kept
+   because `--weather-tint` is still written and a future sky may want a flat
+   wash again, and because deleting it would take the reduced-motion rule under
+   it with no replacement. Two tints over one sky darkened every sky twice. */
+.game[data-weather="rain"] .scenery::after,
+.game[data-weather="storm"] .scenery::after,
+.game[data-weather="aurora"] .scenery::after,
+.game[data-weather="wonderfall"] .scenery::after{opacity:0}
 @media (prefers-reduced-motion:reduce){
   .scenery::after{transition:none}
 }
@@ -906,7 +917,14 @@ button:focus-visible{
 }
 
 .plot-inner.watered{animation:wetFlash .8s ease-out}
-@keyframes wetFlash{0%{filter:brightness(1) saturate(1)}30%{filter:brightness(.8) saturate(1.3)}100%{filter:brightness(1) saturate(1)}}
+/* Multiplies whatever the sky has already put on the plot rather than replacing
+   it, so watering during rain reads as a splash on wet soil instead of the rain
+   briefly stopping. */
+@keyframes wetFlash{
+  0%{filter:brightness(var(--wx-wet-b,1)) saturate(var(--wx-wet-s,1))}
+  30%{filter:brightness(calc(var(--wx-wet-b,1) * .8)) saturate(calc(var(--wx-wet-s,1) * 1.3))}
+  100%{filter:brightness(var(--wx-wet-b,1)) saturate(var(--wx-wet-s,1))}
+}
 
 .plot .bar i.flash{animation:barFlash .6s ease-out}
 @keyframes barFlash{
@@ -4256,6 +4274,1046 @@ button:focus-visible{
 .news .big-btn{margin-top:12px}
 @media (prefers-reduced-motion:reduce){
   .news-card{transition:none;transform:none}
+}
+
+/* =========================================================
+   THE SKY PASS — the staged weather layers
+   =========================================================
+   The approved motion is `tools/sky-spike.html`; this is that stylesheet moved
+   onto the game's own root. Three systematic differences and nothing else: the
+   stage's `#frame[data-sky][data-phase]` is `#game[data-weather][data-wx-phase]`
+   here, every tuned number arrives as a `--wx-<section>-<key>` custom property
+   written onto `#game` from `DATA.weatherStage` (so each `var()` carries the
+   approved value as its fallback and a sheet that loads before the first write
+   still paints), and the stage's reduced-motion toggle is the media query that
+   closes this section.
+
+   Markup, inside `#world` between `.scenery` and `.fall-layer`:
+
+     <div class="wx" id="wx" aria-hidden="true">
+       <div class="wx-wash"></div>
+       <div class="wx-front"><i class="wx-front-cloud"></i> x6</div>
+       <div class="wx-bolt"></div>
+       <div class="wx-dusk"></div>
+       <div class="wx-ribbons"><i class="wx-ribbon" style="--i:0"></i> x3</div>
+       <div class="wx-ground"></div>
+       <div class="wx-veil"></div>
+       <div class="wx-takeover"></div>
+       <div class="wx-sunbreak"><i class="wx-ray"></i> x4</div>
+       <div class="wx-flash-under"></div>
+     </div>
+
+   and, as direct children of `#world` AFTER `.ui`, because a flash that does not
+   silhouette the garden is a grey rectangle and the leaf is a character beat
+   rather than a tint over one:
+
+     <div class="wx-umbrella" id="wxUmbrella"><i></i></div>
+     <div class="wx-flash" id="wxFlash"></div>
+
+   Opt-in hooks the world wears, so this section never has to know what the
+   garden is called: `.wx-wet` on plot interiors, the meadow layer and the fence
+   · `.wx-glint`, `.wx-lean` and `.wx-lit` on plants · `.wx-shelter` on tending
+   creatures · `.wx-splashed` for ~340ms where a drop lands on one.
+   ========================================================= */
+
+#game{
+  /* Storm grey and a sun shaft have no name in the palette, and inventing one in
+     `--wx-*` space would collide with the knob mirror `DATA.weatherStage` writes. */
+  --wxr-wash-a:#6d829a;
+  --wxr-wash-b:#93a5b6;
+  --wxr-wash-c:#b3c0cc;
+  --wxr-cloud:#94a4b4;
+  --wxr-cloud-d:#7e8fa1;
+  --wxr-ray:#fff6d8;
+  --wxr-bolt:#eaf6ff;
+  --wxr-pulse:#bcd3e6;
+  --wxr-leaf:#57c15b;
+  /* iOS paints the strip below a short window with the flat lawn, so anything
+     tinting the whole screen stops short of the bottom exactly as `.season-tint`
+     does, or it draws the join three rounds of layout work went into hiding. */
+  --wxr-mask:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
+
+  /* Blue, purple and gold are the rarity vocabulary and cyan is the gem, so a
+     sky-wide band borrowing any of them would read as a tier. */
+  --wx-aurora-1:#5ff0b6;
+  --wx-aurora-2:#49c9d8;
+  --wx-aurora-3:#a86ee0;
+}
+#game[data-weather="storm"]{
+  --wxr-wash-a:#41506a;
+  --wxr-wash-b:#5f6f88;
+  --wxr-wash-c:#8390a4;
+  --wxr-cloud:#7a8798;
+  --wxr-cloud-d:#5d6b7d;
+}
+
+/* THE WEATHER LAYER. Above the living sky, below the interface.
+   NO z-index, and nothing here may grow one. A positioned element with a
+   z-index is a stacking context, and a stacking context is an isolated blending
+   group — every multiply, screen and overlay inside would blend against
+   transparency instead of against the sky, which is the one thing the
+   compositing order exists to prevent. `isolation`, `opacity` under 1, `filter`
+   and `transform` on this box are the same bug spelled differently. DOM order
+   already puts it above `.scenery` and below `.fall-layer`, `.ui` and
+   `.fx-canvas`, each of which carries its own. */
+.wx{position:absolute;inset:0;pointer-events:none}
+
+/* ---------------------------------------------------------
+   THE FRONT — the announce channel. One channel: clouds.
+   --------------------------------------------------------- */
+.wx-front{
+  position:absolute;left:0;right:0;top:0;height:34%;
+  pointer-events:none;
+  opacity:0;
+  transform:translateX(-14%);
+  transition:opacity 2.4s linear, transform 2.4s ease-out;
+}
+.wx-front-cloud{
+  position:absolute;display:block;
+  left:var(--x,20%);top:var(--t,8%);
+  width:var(--w,120px);height:calc(var(--w,120px) * .44);
+  margin-left:calc(var(--w,120px) * -.4);
+  background:var(--wxr-cloud);
+  border-radius:999px;
+  opacity:var(--o,.9);
+  filter:drop-shadow(0 5px 0 rgba(70,92,112,.22));
+  animation:wxCloudDrift var(--dur,10s) ease-in-out infinite alternate;
+  animation-delay:var(--delay,0s);
+}
+.wx-front-cloud::before,
+.wx-front-cloud::after{
+  content:'';position:absolute;background:var(--wxr-cloud);border-radius:50%;
+}
+.wx-front-cloud::before{width:56%;height:112%;left:8%;top:-54%}
+.wx-front-cloud::after{width:44%;height:94%;right:10%;top:-40%}
+.wx-front-cloud:nth-child(1){--x:6%;--t:3%;--w:132px;--dur:9.2s;--o:.94;--delay:0s}
+.wx-front-cloud:nth-child(2){--x:44%;--t:1%;--w:104px;--dur:11.4s;--o:.88;--delay:-3.1s}
+.wx-front-cloud:nth-child(3){--x:70%;--t:9%;--w:150px;--dur:8.6s;--o:.96;--delay:-1.4s}
+.wx-front-cloud:nth-child(4){--x:18%;--t:17%;--w:96px;--dur:12.8s;--o:.80;--delay:-5.2s}
+.wx-front-cloud:nth-child(5){--x:56%;--t:22%;--w:120px;--dur:10.1s;--o:.74;--delay:-2.3s}
+.wx-front-cloud:nth-child(6){--x:88%;--t:13%;--w:88px;--dur:13.6s;--o:.70;--delay:-6.8s}
+@keyframes wxCloudDrift{
+  from{transform:translateX(-22px)}
+  to{transform:translateX(26px)}
+}
+
+/* The front takes the whole announce window to arrive; the sequence writes
+   `--wx-front-dur` from `frontSeconds` or `calledFrontSeconds`. */
+#game:is([data-weather="rain"],[data-weather="storm"]) .wx-front{
+  opacity:1;
+  transform:translateX(0);
+  transition-duration:var(--wx-front-dur, var(--wx-front-seconds, 30s));
+}
+/* The storm's front is heavier: it reaches further down the sky and moves faster. */
+#game[data-weather="storm"] .wx-front{height:44%}
+#game[data-weather="storm"] .wx-front-cloud{
+  animation-duration:calc(var(--dur,10s) * max(.15, 1 - var(--wx-storm-wind,.42) * .9));
+}
+/* The clouds part at the end — this is what the rays come through. */
+#game:is([data-weather="rain"],[data-weather="storm"])[data-wx-phase="end"] .wx-front{
+  opacity:.26;
+  transform:translateX(6%);
+  transition-duration:7s;
+}
+
+/* ---------------------------------------------------------
+   THE WASH — weather is a tint over the living sky, never a
+   replacement, so this multiplies and the season tint stays under it.
+   --------------------------------------------------------- */
+.wx-wash{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,
+    var(--wxr-wash-a) 0%,
+    var(--wxr-wash-b) 58%,
+    var(--wxr-wash-c) 100%);
+  mix-blend-mode:multiply;
+  opacity:0;
+  transition:opacity 3.6s ease;
+  -webkit-mask-image:var(--wxr-mask);
+  mask-image:var(--wxr-mask);
+}
+#game[data-weather="rain"] .wx-wash{opacity:var(--wx-rain-wash,.46)}
+#game[data-weather="storm"] .wx-wash{opacity:var(--wx-storm-wash,.68)}
+/* Announced, not landed: the sky only half-commits during the front. */
+#game[data-weather="rain"][data-wx-phase="front"] .wx-wash{
+  opacity:calc(var(--wx-rain-wash,.46) * .5);
+  transition-duration:var(--wx-front-dur, var(--wx-front-seconds, 30s));
+}
+#game[data-weather="storm"][data-wx-phase="front"] .wx-wash{
+  opacity:calc(var(--wx-storm-wash,.68) * .58);
+  transition-duration:var(--wx-front-dur, var(--wx-front-seconds, 30s));
+}
+#game:is([data-weather="rain"],[data-weather="storm"])[data-wx-phase="end"] .wx-wash{
+  opacity:0;
+  transition-duration:6.5s;
+}
+
+/* ---------------------------------------------------------
+   WET GROUND — the trace that outlasts the rain.
+   The BASE rule is the drying state, so the ground keeps drying over
+   `--wx-rain-linger` even after `data-weather` has gone back to clear.
+   --------------------------------------------------------- */
+.wx-ground{
+  position:absolute;left:0;right:0;bottom:0;height:48%;
+  pointer-events:none;
+  background:linear-gradient(180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--soil-dd) 55%, #ffffff) 34%,
+    var(--soil-dd) 100%);
+  mix-blend-mode:multiply;
+  opacity:0;
+  transition:opacity var(--wx-rain-linger, 30s) linear;
+  -webkit-mask-image:var(--wxr-mask);
+  mask-image:var(--wxr-mask);
+}
+#game[data-weather="rain"] .wx-ground{opacity:var(--wx-rain-wetness,.34);transition-duration:3.2s}
+#game[data-weather="storm"] .wx-ground{opacity:var(--wx-storm-wetness,.46);transition-duration:2.4s}
+#game:is([data-weather="rain"],[data-weather="storm"])[data-wx-phase="front"] .wx-ground{
+  opacity:0;transition-duration:1.2s;
+}
+#game:is([data-weather="rain"],[data-weather="storm"])[data-wx-phase="end"] .wx-ground{
+  opacity:0;transition-duration:var(--wx-rain-linger, 30s);
+}
+
+/* The board and the cobbles are the world too, and they live above `.wx`, so
+   they carry the wetness on themselves: darker AND richer, which is what wet
+   material actually does. */
+/* Two writers want this element's `filter` — the sky's wetness and the watering
+   can's flash — and `filter` is one property, so the flash would snap a rain-dark
+   plot back to dry for its whole 0.8s. They compose through the numbers instead:
+   the sky sets these two, the flash animates them, and neither restates the other. */
+.wx-wet{
+  filter:brightness(var(--wx-wet-b,1)) saturate(var(--wx-wet-s,1));
+  transition:filter var(--wx-rain-linger, 30s) linear;
+}
+#game[data-weather="rain"] .wx-wet{
+  --wx-wet-b:calc(1 - var(--wx-rain-wetness,.34) * .40);
+  --wx-wet-s:calc(1 + var(--wx-rain-wetness,.34) * .55);
+  transition-duration:3.2s;
+}
+#game[data-weather="storm"] .wx-wet{
+  --wx-wet-b:calc(1 - var(--wx-storm-wetness,.46) * .40);
+  --wx-wet-s:calc(1 + var(--wx-storm-wetness,.46) * .55);
+  transition-duration:2.4s;
+}
+#game:is([data-weather="rain"],[data-weather="storm"])[data-wx-phase="front"] .wx-wet{
+  --wx-wet-b:1;--wx-wet-s:1;transition-duration:1.2s;
+}
+#game:is([data-weather="rain"],[data-weather="storm"])[data-wx-phase="end"] .wx-wet{
+  --wx-wet-b:1;--wx-wet-s:1;transition-duration:var(--wx-rain-linger, 30s);
+}
+
+/* ---------------------------------------------------------
+   GLISTEN — a wet rim on the plants. The declared filter is the state;
+   the keyframe only breathes it, so a collapsed animation loses nothing.
+   --------------------------------------------------------- */
+/* `filter` is one property, so a rim written flat deletes whatever the plant was
+   already wearing — and `.plant.has-glow` is the bloom a sheen should flatter
+   most. The plant's own glow composes in through a variable rather than the rim
+   being restated for every combination: a restatement would need its own rule
+   and its own keyframe, and both would out-rank `.wx-lean` and quietly take the
+   storm's sway off exactly the plants that glow. `opacity(1)` is the no-op that
+   stands in its place. */
+.wx-glint{transition:filter 2.4s ease;--wx-own-glow:opacity(1)}
+.plant.has-glow.wx-glint{--wx-own-glow:drop-shadow(0 0 7px var(--glow))}
+/* A mutated bloom carries its own glow for the whole time it is in the ground,
+   and that permanence is the mechanic rather than a flourish. It composes in the
+   same way, and a bloom that is both mutated and a glower keeps both. */
+.plot[data-mutation] .plant.wx-glint{--wx-own-glow:drop-shadow(0 0 6px var(--mut-glow,#cfeeff))}
+.plot[data-mutation] .plant.has-glow.wx-glint{
+  --wx-own-glow:drop-shadow(0 0 7px var(--glow)) drop-shadow(0 0 6px var(--mut-glow,#cfeeff));
+}
+/* `animation` is one property too, and these hooks out-rank the ripe wiggle at
+   style.css's `.plot[data-state="ready"] .plant`. Listing the wiggle alongside
+   keeps a ready bloom inviting the tap through a shower — it is the only thing
+   on the board saying "pick me", and losing it for a quarter of all slots is a
+   worse bug than the sheen is a feature. A plant that is not ready simply has
+   nothing to run for that name. */
+#game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-glint{
+  filter:var(--wx-own-glow) drop-shadow(0 -1.5px 0 rgba(255,255,255,.62)) saturate(1.06);
+  animation:wxGlint 3.4s ease-in-out infinite, plantWiggle .8s ease-in-out infinite;
+}
+#game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .plot:not([data-state="ready"]) .wx-glint{
+  animation:wxGlint 3.4s ease-in-out infinite;
+}
+@keyframes wxGlint{
+  0%,100%{filter:var(--wx-own-glow) drop-shadow(0 -1.5px 0 rgba(255,255,255,.62)) saturate(1.06)}
+  50%{filter:var(--wx-own-glow) drop-shadow(0 -1.5px 0 rgba(255,255,255,.95))
+             drop-shadow(0 0 4px rgba(220,242,255,.6)) saturate(1.13)}
+}
+
+/* A drop landing on a plant gets the house squash-and-bounce. */
+.wx-splashed{
+  transform-origin:50% 100%;
+  animation:wxSquash .32s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes wxSquash{
+  0%{transform:scale(1,1)}
+  35%{transform:scale(1.16,.84)}
+  70%{transform:scale(.92,1.1)}
+  100%{transform:scale(1,1)}
+}
+
+/* ---------------------------------------------------------
+   THE LEAF UMBRELLA — the character acknowledges before any UI does.
+   The talking flower's own `.tf-leaf-r` is lifted over its head wherever the
+   flower is on screen; the drawn leaf is the stand-in for anywhere it is not.
+   --------------------------------------------------------- */
+.wx-umbrella{
+  position:absolute;
+  left:var(--wx-umbrella-x,50%);
+  top:var(--wx-umbrella-y,58%);
+  width:66px;height:34px;margin-left:-33px;
+  pointer-events:none;
+  z-index:26;
+  background:var(--wxr-leaf);
+  border:3px solid var(--ink);
+  border-radius:100% 10% 100% 10%;
+  box-shadow:0 3px 0 rgba(44,26,16,.18);
+  opacity:0;
+  transform-origin:50% 100%;
+  transform:translateY(12px) rotate(0deg) scale(.78);
+  transition:opacity .45s ease, transform .5s cubic-bezier(.34,1.56,.64,1);
+}
+/* the midrib */
+.wx-umbrella > i{
+  position:absolute;left:8%;right:14%;top:52%;height:3px;display:block;
+  background:var(--ink);opacity:.42;border-radius:3px;
+  transform:rotate(-7deg);
+}
+/* `:has()` takes its argument's specificity, so keep the argument cheap and the
+   rule to one property — that is what silently out-ranked `.dock.five`. */
+#game:has(.talker) .wx-umbrella{display:none}
+
+#game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-umbrella{
+  opacity:1;
+  transform:translateY(0) rotate(-6deg) scale(1);
+  animation:wxUmbrellaTilt 2.8s ease-in-out infinite;
+}
+@keyframes wxUmbrellaTilt{
+  0%,100%{transform:translateY(0) rotate(-6deg) scale(1)}
+  50%{transform:translateY(-2px) rotate(-1deg) scale(1.02)}
+}
+
+/* The flower's right leaf swings up and lies across the top of its head. */
+#game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .tf-leaf-r{
+  animation:wxLeafHold 2.8s ease-in-out infinite;
+  transform:translate(-17px,-80px) rotate(31deg) scale(1.35);
+  transition:transform .55s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes wxLeafHold{
+  0%,100%{transform:translate(-17px,-80px) rotate(31deg) scale(1.35)}
+  50%{transform:translate(-15px,-83px) rotate(26deg) scale(1.38)}
+}
+
+/* ---------------------------------------------------------
+   THE WIND — a storm channel only. Rain's wind is the drops' lean and
+   nothing else; rarity buys the layer.
+   --------------------------------------------------------- */
+.wx-lean{transform-origin:50% 100%;transition:transform 1.6s ease}
+#game[data-weather="storm"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-lean{
+  transform:rotate(calc(var(--wx-storm-wind,.42) * 9deg));
+  animation:wxLean 2.2s ease-in-out infinite, plantWiggle .8s ease-in-out infinite;
+}
+#game[data-weather="storm"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .plot:not([data-state="ready"]) .wx-lean{
+  animation:wxLean 2.2s ease-in-out infinite;
+}
+@keyframes wxLean{
+  0%,100%{transform:rotate(calc(var(--wx-storm-wind,.42) * 5deg))}
+  50%{transform:rotate(calc(var(--wx-storm-wind,.42) * 13deg))}
+}
+
+/* Pets duck under the nearest leaves and peek out.
+
+   `transform` is one property and `.critter` uses it to sit on its own anchor:
+   `left: var(--x)` puts its left edge on the spot and `translateX(-50%)` slides
+   it back onto it. A pose written without that centring does not just crouch a
+   creature, it shifts every one of them half their own width to the right — so
+   the centring is restated in the pose and in every frame of the peek. */
+.wx-shelter{transform-origin:50% 100%;transition:transform .55s cubic-bezier(.34,1.56,.64,1)}
+#game[data-weather="storm"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-shelter{
+  transform:translateX(-50%) translateY(7px) scale(.88) rotate(-4deg);
+  animation:wxPeek 4.4s ease-in-out infinite;
+}
+@keyframes wxPeek{
+  0%,100%{transform:translateX(-50%) translateY(7px) scale(.88) rotate(-4deg)}
+  46%{transform:translateX(-50%) translateY(3px) scale(.92) rotate(1deg)}
+  62%{transform:translateX(-50%) translateY(3px) scale(.92) rotate(1deg)}
+}
+
+/* ---------------------------------------------------------
+   THE FLASH — asked for through `data-wx-flash`, never painted by the layer
+   that asks, which is what leaves the ~3-in-10s ceiling something to enforce.
+   Two layers: the under-flash whites out the SKY so the garden reads as a
+   silhouette, the over-flash is the flicker across everything.
+   --------------------------------------------------------- */
+.wx-flash-under{
+  position:absolute;inset:0;pointer-events:none;
+  background:#fff;
+  opacity:0;
+  -webkit-mask-image:var(--wxr-mask);
+  mask-image:var(--wxr-mask);
+}
+.wx-flash{
+  position:absolute;inset:0;pointer-events:none;
+  z-index:40;
+  background:linear-gradient(180deg,
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,.92) 40%,
+    rgba(255,255,255,.34) 74%,
+    rgba(255,255,255,.12) 100%);
+  opacity:0;
+  -webkit-mask-image:var(--wxr-mask);
+  mask-image:var(--wxr-mask);
+}
+#game[data-wx-flash="1"] .wx-flash{animation:wxFlash 120ms linear}
+#game[data-wx-flash="1"] .wx-flash-under{animation:wxFlashUnder 120ms linear}
+@keyframes wxFlash{
+  0%{opacity:0}
+  10%{opacity:var(--wx-storm-flash-bright,.72)}
+  34%{opacity:calc(var(--wx-storm-flash-bright,.72) * .22)}
+  52%{opacity:calc(var(--wx-storm-flash-bright,.72) * .78)}
+  100%{opacity:0}
+}
+@keyframes wxFlashUnder{
+  0%{opacity:0}
+  10%{opacity:min(1, calc(var(--wx-storm-flash-bright,.72) * 1.25))}
+  34%{opacity:calc(var(--wx-storm-flash-bright,.72) * .3)}
+  52%{opacity:min(1, calc(var(--wx-storm-flash-bright,.72) * .95))}
+  100%{opacity:0}
+}
+
+/* The bolt is glimpsed, not watched: it runs from the cloud base down to the
+   horizon and stops there, so it reads as being behind the hills rather than
+   pasted over them. */
+.wx-bolt{
+  position:absolute;
+  top:12%;left:var(--wx-bolt-x,62%);
+  width:46px;height:60%;
+  margin-left:-23px;
+  pointer-events:none;
+  background:linear-gradient(180deg,#fff 0%,var(--wxr-bolt) 100%);
+  clip-path:polygon(62% 0%, 20% 50%, 46% 50%, 26% 100%, 80% 44%, 52% 44%, 78% 0%);
+  filter:drop-shadow(0 0 7px rgba(216,240,255,.9));
+  opacity:0;
+  -webkit-mask-image:linear-gradient(180deg,#000 0 80%,transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0 80%,transparent 100%);
+}
+#game[data-weather="storm"][data-wx-flash="1"] .wx-bolt{animation:wxBolt 120ms linear}
+@keyframes wxBolt{
+  0%{opacity:0}
+  12%{opacity:.95}
+  40%{opacity:.2}
+  56%{opacity:.8}
+  100%{opacity:0}
+}
+
+/* ---------------------------------------------------------
+   THE SUNBREAK — the sun shooting through after a shower.
+   Light wedges, screen blend, low opacity, slow drift. Never particles.
+   Ray count responds in pure CSS: rays 3 and 4 fade in as
+   `--wx-sunbreak-rays` climbs past 2 and 3, so the knob needs no JS.
+   --------------------------------------------------------- */
+.wx-sunbreak{
+  position:absolute;inset:0;pointer-events:none;
+  overflow:hidden;
+  mix-blend-mode:screen;
+  opacity:0;
+  transition:opacity 2.8s ease;
+  -webkit-mask-image:var(--wxr-mask);
+  mask-image:var(--wxr-mask);
+}
+.wx-ray{
+  position:absolute;display:block;
+  left:var(--x,20%);top:-26%;
+  width:var(--w,90px);height:132%;
+  background:linear-gradient(90deg,
+    rgba(255,246,216,0) 0%,
+    var(--wxr-ray) 50%,
+    rgba(255,246,216,0) 100%);
+  clip-path:polygon(42% 0%, 58% 0%, 92% 100%, 8% 100%);
+  /* A shaft attenuates as it travels; the container keeps the canonical bottom
+     mask and this one only shapes the falloff. */
+  -webkit-mask-image:linear-gradient(180deg,#000 0 32%,rgba(0,0,0,.42) 78%,transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0 32%,rgba(0,0,0,.42) 78%,transparent 100%);
+  filter:blur(9px);
+  /* The phase animation owns opacity from here; this is the value it returns to
+     if the animation is ever cancelled, so a ray is never invisible by default. */
+  opacity:calc(var(--wx-sunbreak-opacity,.28) * var(--k,1));
+  transform-origin:50% 0%;
+  /* Two motions, deliberately on different clocks. The sweep is the shafts
+     crossing the sky — off the left edge to off the right, so there is no wrap to
+     hide and a ray is never seen to jump. The phase is each shaft brightening and
+     dissolving on its own offset, which is what keeps three rays from reading as
+     one object sliding sideways. Together: always moving, never busy. */
+  transform:rotate(var(--a,17deg)) translateX(calc(var(--vw,1vw) * -45));
+  animation:
+    wxRaySweep calc(45s / max(.05, var(--wx-sunbreak-drift-speed,.5))) linear infinite,
+    wxRayPhase calc(11s / max(.05, var(--wx-sunbreak-drift-speed,.5))) ease-in-out infinite;
+}
+/* Every ray is at a different point of BOTH cycles, so the sky is never
+   symmetrical and never all-bright at once. The negative delays are what put
+   them mid-journey the moment the sun comes out, rather than all lined up at the
+   left edge waiting to start. */
+.wx-ray:nth-child(1){--x:0%;--w:96px;--a:15deg;--k:1;
+  animation-delay:-26s,-1s}
+.wx-ray:nth-child(2){--x:0%;--w:70px;--a:19deg;--k:1;
+  animation-delay:-45s,-7s}
+.wx-ray:nth-child(3){--x:0%;--w:112px;--a:13deg;
+  --k:clamp(0, calc(var(--wx-sunbreak-rays,3) - 2), 1);
+  animation-delay:-64s,-13s}
+.wx-ray:nth-child(4){--x:0%;--w:62px;--a:21deg;
+  --k:clamp(0, calc(var(--wx-sunbreak-rays,3) - 3), 1);
+  animation-delay:-35s,-17s}
+/* Off the left edge to off the right, so the loop point is never on screen and a
+   ray is never seen to jump back. At the default drift a shaft crosses about a
+   third of the sky in the thirty seconds the sunbreak lives — slow enough to be
+   weather, fast enough to be movement.
+
+   The distance is a share of the VIEWPORT, never a percentage of the ray: the
+   four shafts are deliberately different widths, and a percentage translate would
+   give each of them a different journey and bunch them together in the middle. */
+@keyframes wxRaySweep{
+  from{transform:rotate(var(--a,17deg)) translateX(calc(var(--vw,1vw) * -45))}
+  to{transform:rotate(calc(var(--a,17deg) + 4deg)) translateX(calc(var(--vw,1vw) * 145))}
+}
+/* At phase 0 a shaft simply crosses at a steady brightness; at 1 it arrives out
+   of nothing and dissolves back into it. The sweep runs off both edges either
+   way, so the knob only ever decides how much of the coming and going you see. */
+@keyframes wxRayPhase{
+  0%,100%{opacity:calc(var(--wx-sunbreak-opacity,.28) * var(--k,1)
+                       * (1 - var(--wx-sunbreak-phase,.75)))}
+  34%,58%{opacity:calc(var(--wx-sunbreak-opacity,.28) * var(--k,1))}
+}
+
+/* Visible is the base style; the life animation only shapes the fade so the rays
+   go out as the soil dries. Remove `data-sunbreak` and the base transition takes
+   them. */
+#game[data-sunbreak="1"] .wx-sunbreak{
+  opacity:1;
+  animation:wxSunbreakLife var(--wx-sunbreak-duration,30s) ease-in-out forwards;
+}
+@keyframes wxSunbreakLife{
+  0%{opacity:0}
+  14%{opacity:1}
+  62%{opacity:1}
+  100%{opacity:.06}
+}
+/* Daytime only — the sun is not behind those clouds at night. */
+#game[data-wx-night="1"][data-sunbreak="1"] .wx-sunbreak{opacity:0;animation:none}
+
+/* =========================================================
+   AURORA — dusk at noon
+   ========================================================= */
+/* The light rules bend: the sky dims toward dusk whatever the hour, which is
+   the whole reason an aurora reads at midday. A multiply over the living sky,
+   never a replacement, and masked over the last 44px like the season tint. */
+.wx-dusk{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,
+    rgba(19,42,82,.94) 0%,
+    rgba(43,74,122,.88) 52%,
+    rgba(90,122,158,.74) 100%);
+  mix-blend-mode:multiply;
+  opacity:0;
+  transition:opacity var(--wx-aurora-dusk-seconds,4s) ease;
+  -webkit-mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
+}
+/* Both of the aurora's sky channels name the aurora as well as the dark, where
+   the stage keyed them on the dark alone. On the stage `data-night` was only
+   ever raised by the aurora or by a slider nobody left in the night; in the game
+   it is true every night from the hour, and an ungated dusk multiplies the moon
+   and the stars out of every ordinary night — a state no sky in this pass
+   stages. The sunbreak still asks `data-wx-night` on its own, because "is it
+   dark" is the question it needs answered. */
+#game[data-weather="aurora"][data-wx-night="1"] .wx-dusk{opacity:var(--wx-aurora-dusk,.62)}
+
+/* The stars come up with the dusk and never come down below the hour's own
+   value, so a real night keeps the sky it already had. */
+#game[data-weather="aurora"][data-wx-night="1"] .stars{
+  opacity:max(var(--star-op), var(--wx-aurora-star-boost,.85));
+  transition:opacity var(--wx-aurora-dusk-seconds,4s) linear;
+}
+
+/* =========================================================
+   AURORA — the ribbons
+   ========================================================= */
+/* Layered gradients, not particles. The softness is in the gradient stops
+   rather than a blur filter, so each band stays one cheap composited layer
+   while it drifts. */
+.wx-ribbons{
+  position:absolute;left:0;right:0;top:0;height:58%;
+  pointer-events:none;
+}
+.wx-ribbon{
+  position:absolute;left:-34%;right:-34%;
+  display:block;
+  --ray:30px;
+  --ray-angle:96deg;
+  /* One soft ellipse of light: a band with edges reads as a stripe, and the
+     stripe is what makes a coloured rectangle instead of a curtain. The
+     gradient reaches transparent inside its own box, or the box clips it and
+     puts the edge back. */
+  background:radial-gradient(72% 58% at 50% 50%,
+    color-mix(in srgb, var(--c) 95%, transparent) 0%,
+    color-mix(in srgb, var(--c) 52%, transparent) 34%,
+    color-mix(in srgb, var(--c) 14%, transparent) 60%,
+    transparent 78%);
+  /* The rays. One mask layer that dims rather than cuts, so it needs no
+     mask-composite to fall back on, and all ramps, because a hard stop here
+     reads as a barcode. */
+  -webkit-mask-image:repeating-linear-gradient(var(--ray-angle),
+    rgba(0,0,0,.34) 0px, #000 calc(var(--ray) * .46), rgba(0,0,0,.34) var(--ray));
+  mask-image:repeating-linear-gradient(var(--ray-angle),
+    rgba(0,0,0,.34) 0px, #000 calc(var(--ray) * .46), rgba(0,0,0,.34) var(--ray));
+  mix-blend-mode:screen;
+  translate:0 0;
+  opacity:0;
+  transition:opacity 1.6s ease;
+}
+/* Tilted, unevenly stacked and overlapping: three parallel bands at even
+   spacing is a flag, not a sky. */
+.wx-ribbon:nth-child(1){--c:var(--wx-aurora-1);top:-3%;height:38%;rotate:-7deg}
+.wx-ribbon:nth-child(2){--c:var(--wx-aurora-2);top:11%;height:32%;rotate:-3deg;--ray:44px;--ray-angle:88deg}
+.wx-ribbon:nth-child(3){--c:var(--wx-aurora-3);top:25%;height:28%;rotate:-12deg;--ray:23px;--ray-angle:101deg}
+
+/* A sway rather than a loop: an alternating ease has no seam to snap at, and a
+   curtain that breathes back and forth is what an aurora actually does.
+   Duration is the tuned speed inverted, so the knob reads as "faster". */
+@keyframes wxRibbonDrift{
+  0%{transform:translate3d(-13%,0,0) skewY(-2.4deg) scaleY(1)}
+  50%{transform:translate3d(2%,4%,0) skewY(1.2deg) scaleY(1.16)}
+  100%{transform:translate3d(15%,-1%,0) skewY(3deg) scaleY(.94)}
+}
+#game[data-weather="aurora"] .wx-ribbon{
+  animation:wxRibbonDrift calc(2.8s / var(--wx-aurora-ribbon-speed,.16))
+    ease-in-out infinite alternate;
+  animation-delay:calc(var(--i) * -9s);
+  will-change:transform;
+}
+#game[data-weather="aurora"] .wx-ribbon:nth-child(2){
+  animation-duration:calc(3.7s / var(--wx-aurora-ribbon-speed,.16));
+}
+#game[data-weather="aurora"] .wx-ribbon:nth-child(3){
+  animation-duration:calc(4.6s / var(--wx-aurora-ribbon-speed,.16));
+}
+
+/* An aurora begins: the first ribbon alone, while the dusk is still arriving. */
+#game[data-weather="aurora"][data-wx-phase="front"] .wx-ribbon{
+  opacity:0;
+  transition:opacity 2.6s ease 1.2s;
+}
+#game[data-weather="aurora"][data-wx-phase="front"] .wx-ribbon:first-child{
+  opacity:calc(var(--wx-aurora-ribbon-opacity,.42) * .55);
+}
+
+/* Count and depth in one product: a band whose index the count has not reached
+   resolves to zero, so the knob adds and removes ribbons without JS. */
+#game[data-weather="aurora"][data-wx-phase="transform"] .wx-ribbon,
+#game[data-weather="aurora"][data-wx-phase="linger"] .wx-ribbon{
+  opacity:calc(var(--wx-aurora-ribbon-opacity,.42)
+    * clamp(0, calc(var(--wx-aurora-ribbons,3) - var(--i)), 1));
+}
+
+/* They leave the way they came: off-edge, under their own drift. The slide is a
+   transition on `translate` rather than a second animation, so it composes with
+   the drift on `transform` instead of replacing it. */
+#game[data-weather="aurora"][data-wx-phase="end"] .wx-ribbon{
+  opacity:0;
+  translate:132% -5%;
+  transition:opacity 3.2s ease .8s, translate 4s ease-in;
+}
+
+/* =========================================================
+   AURORA — glow rims
+   ========================================================= */
+/* Every plant takes the sky's light on its edge. `.wx-lit` is the hook for
+   anything that is a growing thing but is not a `.plant`. */
+#game[data-weather="aurora"] .plant,
+#game[data-weather="aurora"] .talker,
+#game[data-weather="aurora"] .wx-lit{
+  transition:filter 1.4s ease;
+}
+/* `filter` is one property, so a rim written flat deletes whatever the plant was
+   already wearing — and `.plant.has-glow` is the flower a glow rim should flatter
+   most. Its own glow is restated beside the rim instead of being overwritten. */
+#game[data-weather="aurora"][data-wx-phase="transform"] .plant.has-glow,
+#game[data-weather="aurora"][data-wx-phase="linger"] .plant.has-glow{
+  filter:drop-shadow(0 6px 0 rgba(44,26,16,.22))
+         drop-shadow(0 0 7px var(--glow))
+         drop-shadow(0 0 calc(var(--wx-aurora-rim-glow,.5) * 9px) var(--wx-aurora-2))
+         drop-shadow(0 0 calc(var(--wx-aurora-rim-glow,.5) * 16px) var(--wx-aurora-1));
+}
+#game[data-weather="aurora"][data-wx-phase="transform"] .plant,
+#game[data-weather="aurora"][data-wx-phase="transform"] .talker,
+#game[data-weather="aurora"][data-wx-phase="transform"] .wx-lit,
+#game[data-weather="aurora"][data-wx-phase="linger"] .plant,
+#game[data-weather="aurora"][data-wx-phase="linger"] .talker,
+#game[data-weather="aurora"][data-wx-phase="linger"] .wx-lit{
+  /* The talker's own drop shadow is restated here for the same reason. */
+  filter:
+    drop-shadow(0 0 5px color-mix(in srgb, var(--wx-aurora-1) calc(var(--wx-aurora-rim-glow,.5) * 100%), transparent))
+    drop-shadow(0 0 11px color-mix(in srgb, var(--wx-aurora-2) calc(var(--wx-aurora-rim-glow,.5) * 70%), transparent))
+    drop-shadow(0 6px 0 rgba(44,26,16,.22));
+}
+
+/* =========================================================
+   AURORA — looking up
+   ========================================================= */
+/* Creatures stop and look up, and that stillness IS the acknowledgment — the
+   one sky where the world reacts by doing less. Blink and glow stay: those are
+   signs of life, not work. */
+#game[data-weather="aurora"][data-wx-phase="transform"] .critter-svg,
+#game[data-weather="aurora"][data-wx-phase="linger"] .critter-svg{
+  animation:none;
+}
+#game[data-weather="aurora"][data-wx-phase="transform"] .cr-body,
+#game[data-weather="aurora"][data-wx-phase="transform"] .cr-sprout,
+#game[data-weather="aurora"][data-wx-phase="linger"] .cr-body,
+#game[data-weather="aurora"][data-wx-phase="linger"] .cr-sprout{
+  animation:none;
+  transform:rotate(-4deg);
+  transition:transform .7s ease;
+}
+#game[data-weather="aurora"][data-wx-phase="transform"] .cr-eyes,
+#game[data-weather="aurora"][data-wx-phase="linger"] .cr-eyes{
+  transform:translate(0,-3px);
+  transition:transform .7s ease;
+}
+
+/* The flower gazes up on the same hook the game already aims its eyes with. */
+#game[data-weather="aurora"] .tf-head{transition:transform .9s ease}
+#game[data-weather="aurora"][data-wx-phase="transform"] .flower-btn,
+#game[data-weather="aurora"][data-wx-phase="linger"] .flower-btn{--py:-3.4}
+#game[data-weather="aurora"][data-wx-phase="transform"] .tf-head,
+#game[data-weather="aurora"][data-wx-phase="linger"] .tf-head{
+  transform:translate(60px,52px);
+}
+
+/* =========================================================
+   WONDERFALL — the veil it was always owed
+   ========================================================= */
+/* The Wonder Effect's own veil and breathing saturation, run at weather
+   strength: same treatment, quieter, so it reads as a sky rather than as the
+   x3 event. The warp follows the veil by the same ratio (.62 is what the
+   Wonder Effect runs), so one number moves the whole dress. */
+#game[data-weather="wonderfall"]{--wx-warp:calc(var(--wx-wonderfall-veil,.3) / .62)}
+
+.wx-veil{
+  position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(125deg,#ff6b6b,#ffd43b,#69db7c,#4dabf7,#b197fc,#ff8fab);
+  background-size:400% 400%;
+  mix-blend-mode:overlay;
+  transition:opacity 2s ease;
+  /* The Wonder Effect's veil is a twelve-second event and never needed this;
+     a sky hangs for a whole slot, so it joins the season tint's mask or the
+     iOS strip below the window stops matching the garden above it. */
+  -webkit-mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
+}
+/* The shimmer is the Wonder Effect's own `wonderShift`, unchanged. The warp is
+   NOT: `wonderWarp` is the x3 event's, at its own fixed strength, and one
+   `@keyframes` name has one body — redefining it here would have re-dressed the
+   Wonder Effect in a variable it never sets. */
+@keyframes wxWonderWarp{
+  0%,100%{filter:saturate(calc(1 + var(--wx-warp) * .5)) hue-rotate(0deg)}
+  50%{filter:saturate(calc(1 + var(--wx-warp) * .9)) hue-rotate(calc(var(--wx-warp) * 22deg))}
+}
+#game[data-weather="wonderfall"][data-wx-phase="transform"] .wx-veil,
+#game[data-weather="wonderfall"][data-wx-phase="linger"] .wx-veil{
+  opacity:var(--wx-wonderfall-veil,.3);
+  animation:wonderShift 5s linear infinite;
+}
+/* The breathing saturation, on everything ABOVE the lawn rather than on the
+   whole scene. A `filter` cannot carry a mask, and the strip iOS paints below a
+   short window is filled with the untinted lawn colour — so a warp that reached
+   the bottom edge would draw the join three rounds of layout work went into
+   hiding. The veil over the top is masked and covers the lawn anyway. */
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .sky,
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .celestial,
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .stars,
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .clouds-far,
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .clouds-near,
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-far,
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-mid,
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-near{
+  animation:wxWonderWarp 7s ease-in-out infinite;
+}
+
+/* =========================================================
+   WONDERFALL — ripe plants bob in rhythm
+   ========================================================= */
+/* One period for every ripe plant and no per-plot delay: the point is that the
+   board moves together, on the bar. The default is half of the music's 3.2s bar
+   — two bobs per bar, which is the beat the Wonder Effect already bobs on. */
+@keyframes wxRipeBob{
+  0%,100%{
+    transform:translateY(calc(var(--wx-wonderfall-bob,.5) * 2px))
+      rotate(calc(var(--wx-wonderfall-bob,.5) * -1.4deg));
+  }
+  50%{
+    transform:translateY(calc(var(--wx-wonderfall-bob,.5) * -5px))
+      rotate(calc(var(--wx-wonderfall-bob,.5) * 1.4deg));
+  }
+}
+@keyframes wxRipeSettle{
+  from{transform:translateY(calc(var(--wx-wonderfall-bob,.5) * -3px))}
+  to{transform:none}
+}
+#game[data-weather="wonderfall"][data-wx-phase="transform"] .plot[data-state="ready"] .plant,
+#game[data-weather="wonderfall"][data-wx-phase="linger"] .plot[data-state="ready"] .plant{
+  animation:wxRipeBob var(--wx-wonderfall-bob-period,1.6s) ease-in-out infinite;
+  transform-origin:50% 92%;
+}
+#game[data-weather="wonderfall"][data-wx-phase="end"] .plot[data-state="ready"] .plant{
+  animation:wxRipeSettle .9s ease-out;
+  transform-origin:50% 92%;
+}
+
+/* =========================================================
+   WONDERFALL — the singing flower
+   ========================================================= */
+/* A mouth on the melody and eyes wide open. The head keeps the bob's period so
+   the flower is singing along with the garden rather than at it. */
+@keyframes wxSing{
+  0%,100%{transform:translate(0,0) scale(1,1)}
+  25%{transform:translate(0,1px) scale(1.1,1.55)}
+  50%{transform:translate(0,0) scale(.94,.8)}
+  75%{transform:translate(0,1px) scale(1.22,1.8)}
+}
+@keyframes wxHum{
+  0%,100%{transform:translate(60px,56px) rotate(-2.2deg)}
+  50%{transform:translate(60px,53px) rotate(2.2deg)}
+}
+#game[data-weather="wonderfall"][data-wx-phase="transform"] .tf-mouth,
+#game[data-weather="wonderfall"][data-wx-phase="linger"] .tf-mouth{
+  transform-origin:0 12px;
+  animation:wxSing var(--wx-wonderfall-bob-period,1.6s) ease-in-out infinite;
+}
+#game[data-weather="wonderfall"][data-wx-phase="transform"] .tf-head,
+#game[data-weather="wonderfall"][data-wx-phase="linger"] .tf-head{
+  animation:wxHum var(--wx-wonderfall-bob-period,1.6s) ease-in-out infinite;
+}
+#game[data-weather="wonderfall"][data-wx-phase="transform"] .tf-lid,
+#game[data-weather="wonderfall"][data-wx-phase="linger"] .tf-lid{
+  animation:none;transform:scaleY(0);
+}
+#game[data-weather="wonderfall"][data-wx-phase="transform"] .tf-cheek,
+#game[data-weather="wonderfall"][data-wx-phase="linger"] .tf-cheek{
+  animation:none;opacity:1;
+}
+
+/* =========================================================
+   WONDERFALL — the takeover cue
+   ========================================================= */
+/* The banner and the forced line carry the announcement; this is only the light
+   around them — the Wonder fanfare's gentler cousin, one bloom, then gone.
+   `.wx-cue` goes on `#game` for the length of the bloom.
+
+   The 44px stop measures against the ELEMENT, and this one is inset -20% — 1.4x
+   the screen in both axes — so the canonical stop would land ~125px BELOW the
+   bottom edge and mask nothing anyone can see. 85.71% is 100/1.4: the screen's
+   own bottom edge, expressed in this element's box. */
+.wx-takeover{
+  position:absolute;inset:-20%;pointer-events:none;opacity:0;
+  /* Plain alpha, not screen: a screened white bloom is invisible over a noon
+     sky, and the cue has to land at any hour. */
+  background:radial-gradient(circle at 50% 44%,
+    rgba(255,255,255,.55) 0%,
+    rgba(255,214,245,.4) 18%,
+    rgba(140,224,255,.22) 34%,
+    transparent 58%);
+  -webkit-mask-image:linear-gradient(180deg,#000 0 calc(85.71% - 44px),transparent 92%);
+  mask-image:linear-gradient(180deg,#000 0 calc(85.71% - 44px),transparent 92%);
+}
+/* The Wonder halo's ring, once, on its way out — the fanfare's gentler cousin
+   in the palette the effect already owns. It carries the read; the bloom behind
+   it only glows where the sky is dark enough to take one. */
+.wx-takeover::after{
+  content:'';position:absolute;left:50%;top:44%;
+  width:62%;aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:conic-gradient(#ff6b6b,#ffd43b,#69db7c,#4dabf7,#b197fc,#ff8fab,#ff6b6b);
+  -webkit-mask:radial-gradient(farthest-side,
+    transparent calc(100% - 30px), #000 calc(100% - 20px) calc(100% - 8px), transparent 100%);
+  mask:radial-gradient(farthest-side,
+    transparent calc(100% - 30px), #000 calc(100% - 20px) calc(100% - 8px), transparent 100%);
+  filter:blur(5px);
+  opacity:.82;
+}
+@keyframes wxTakeover{
+  0%{opacity:0;transform:scale(.3)}
+  20%{opacity:.9}
+  100%{opacity:0;transform:scale(1.9)}
+}
+#game.wx-cue .wx-takeover{
+  animation:wxTakeover 1.15s cubic-bezier(.22,.9,.3,1);
+}
+
+/* =========================================================
+   THE SKY PASS — THE QUIET VERSIONS
+   =========================================================
+   Last in this section on purpose. A media query adds no specificity, so a
+   cancel written beside the rule it cancels loses the cascade and does nothing —
+   the failure the meadow's clouds shipped with. Every rule below mirrors exactly
+   the selector it cancels and follows it.
+
+   The global clamp near line 2288 gets here first with
+   `animation-duration:.001ms !important` and `transition-duration:.08s
+   !important`, so a quiet version whose whole substance is a duration has to say
+   `!important` to survive it. Two do, and both are marked.
+   ========================================================= */
+@media (prefers-reduced-motion:reduce){
+
+  /* The front still arrives — it just stops drifting. */
+  #game .wx-front-cloud{animation-name:none}
+  #game .wx-front{transition-property:opacity;transform:translateX(0)}
+  #game:is([data-weather="rain"],[data-weather="storm"]) .wx-front{transform:translateX(0)}
+  #game:is([data-weather="rain"],[data-weather="storm"])[data-wx-phase="end"] .wx-front{transform:translateX(0)}
+
+  /* Static wet ground: it arrives without a long ramp, and it still dries over
+     the linger, because the drying IS the trace. Both durations out-shout the
+     global clamp, which would otherwise snap the trace away in 80ms. */
+  #game .wx-ground,
+  #game .wx-wet{transition-duration:1.2s !important}
+  #game:is([data-weather="rain"],[data-weather="storm"])[data-wx-phase="end"] .wx-ground,
+  #game:is([data-weather="rain"],[data-weather="storm"])[data-wx-phase="end"] .wx-wet{
+    transition-duration:var(--wx-rain-linger, 30s) !important;
+  }
+
+  /* The rim stays — it is what says "wet" — the breathing stops. */
+  #game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-glint{
+    animation-name:none;
+  }
+  #game .wx-splashed{animation-name:none}
+
+  /* The pose holds, the sway does not. */
+  #game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-umbrella,
+  #game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .tf-leaf-r{
+    animation-name:none;
+  }
+  #game[data-weather="storm"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-lean,
+  #game[data-weather="storm"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-shelter{
+    animation-name:none;
+  }
+
+  /* No strobe: one brief, soft tint pulse says "lightning" and stops there. It
+     is a real pulse rather than a dead channel — the clamp would run it once for
+     .001ms and leave a player with the preference on no storm signal at all,
+     which is the regression the Turn button's ring already made once. */
+  #game[data-wx-flash="1"] .wx-flash-under{animation-name:none;opacity:0}
+  #game[data-weather="storm"][data-wx-flash="1"] .wx-bolt{animation-name:none;opacity:0}
+  #game .wx-flash{background:var(--wxr-pulse)}
+  #game[data-wx-flash="1"] .wx-flash{
+    animation:wxFlashPulse 700ms ease-out;
+    animation-duration:700ms !important;
+  }
+  @keyframes wxFlashPulse{
+    0%{opacity:0}
+    22%{opacity:min(.24, calc(var(--wx-storm-flash-bright,.72) * .3))}
+    100%{opacity:0}
+  }
+
+  /* One static, faint ray. */
+  #game[data-sunbreak="1"] .wx-sunbreak{animation-name:none}
+  /* The base transform starts a ray off the left edge — that is where its journey
+     begins — so the quiet version has to place it somewhere worth looking at
+     rather than inherit a position that means "not yet". */
+  #game .wx-ray{
+    animation-name:none,none;
+    transform:rotate(var(--a,17deg)) translateX(calc(var(--vw,1vw) * 26));
+  }
+  #game .wx-ray:nth-child(1){opacity:calc(var(--wx-sunbreak-opacity,.28) * .6)}
+  #game .wx-ray:nth-child(n+2){opacity:0}
+
+  /* The dusk still arrives; it just arrives. */
+  #game .wx-dusk,
+  #game[data-weather="aurora"][data-wx-night="1"] .stars{transition:none}
+
+  /* One dim ribbon, holding still. */
+  #game[data-weather="aurora"] .wx-ribbon{
+    animation:none;
+    transform:skewY(-2deg);
+  }
+  #game[data-weather="aurora"][data-wx-phase="front"] .wx-ribbon,
+  #game[data-weather="aurora"][data-wx-phase="transform"] .wx-ribbon,
+  #game[data-weather="aurora"][data-wx-phase="linger"] .wx-ribbon{
+    opacity:0;
+  }
+  #game[data-weather="aurora"][data-wx-phase="front"] .wx-ribbon:first-child,
+  #game[data-weather="aurora"][data-wx-phase="transform"] .wx-ribbon:first-child,
+  #game[data-weather="aurora"][data-wx-phase="linger"] .wx-ribbon:first-child{
+    opacity:calc(var(--wx-aurora-ribbon-opacity,.42) * .62);
+  }
+  /* It fades where it stands rather than sliding off the edge. */
+  #game[data-weather="aurora"][data-wx-phase="end"] .wx-ribbon{
+    translate:0 0;
+    transition:opacity 1.2s ease;
+  }
+
+  /* Nobody was moving anyway — but the pose stops being a move. */
+  #game[data-weather="aurora"][data-wx-phase="transform"] .cr-body,
+  #game[data-weather="aurora"][data-wx-phase="transform"] .cr-sprout,
+  #game[data-weather="aurora"][data-wx-phase="transform"] .cr-eyes,
+  #game[data-weather="aurora"][data-wx-phase="linger"] .cr-body,
+  #game[data-weather="aurora"][data-wx-phase="linger"] .cr-sprout,
+  #game[data-weather="aurora"][data-wx-phase="linger"] .cr-eyes,
+  #game[data-weather="aurora"] .tf-head{transition:none}
+
+  /* The veil hangs there, one colour, no shimmer and no breathing. */
+  #game[data-weather="wonderfall"][data-wx-phase="transform"] .wx-veil,
+  #game[data-weather="wonderfall"][data-wx-phase="linger"] .wx-veil{
+    animation:none;
+    background-position:38% 50%;
+  }
+  /* Held, not breathing — and on the same layers the moving version uses, never
+     on `.scenery`, whose box owns the bottom edge and whose filter cannot be
+     masked away from it. */
+  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .sky,
+  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .celestial,
+  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .stars,
+  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .clouds-far,
+  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .clouds-near,
+  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-far,
+  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-mid,
+  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-near{
+    animation:none;
+    filter:saturate(calc(1 + var(--wx-warp) * .5));
+  }
+
+  /* No bobbing, no singing mouth — the flower keeps the wide-open eyes, because
+     a held pose is not motion. */
+  #game[data-weather="wonderfall"][data-wx-phase="transform"] .plot[data-state="ready"] .plant,
+  #game[data-weather="wonderfall"][data-wx-phase="linger"] .plot[data-state="ready"] .plant,
+  #game[data-weather="wonderfall"][data-wx-phase="end"] .plot[data-state="ready"] .plant{
+    animation:none;
+  }
+  #game[data-weather="wonderfall"][data-wx-phase="transform"] .tf-head,
+  #game[data-weather="wonderfall"][data-wx-phase="linger"] .tf-head{
+    animation:none;
+    transform:translate(60px,54px);
+  }
+  #game[data-weather="wonderfall"][data-wx-phase="transform"] .tf-mouth,
+  #game[data-weather="wonderfall"][data-wx-phase="linger"] .tf-mouth{
+    animation:none;
+    transform:translate(0,1px) scale(1.1,1.4);
+  }
+
+  /* The cue becomes a light coming up and going down again. */
+  #game.wx-cue .wx-takeover{
+    animation:none;
+    opacity:.3;
+  }
+  /* The global clamp above is `transition-duration:.08s !important` on every
+     element, and an `!important` declaration beats a plain one whatever the
+     specificity — so the cue's fade has to be important too or it becomes a
+     step, which is the flash this block exists to replace. */
+  #game .wx-takeover{
+    transition:opacity .5s ease;
+    transition-duration:.5s !important;
+  }
 }
 
 /* ---------- REDUCED MOTION: the ready Turn button ----------

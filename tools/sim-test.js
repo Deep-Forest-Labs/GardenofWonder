@@ -82,8 +82,18 @@ const check = (name, cond, extra = '') => {
   else { fail += 1; console.log(`  FAIL ${name} ${extra}`); }
 };
 
-/* Fast-forward without waiting. */
-let clock = Date.now() / 1000;
+/* Fast-forward without waiting.
+
+   The clock starts at a FIXED epoch, not at the real one. Weather is a pure
+   function of wall-clock time, so a suite seeded from `Date.now()` sees a
+   different sky on every run — and since the Sky Pass, the sky changes how fast
+   things grow. Assertions about growth then passed or failed depending on what
+   the weather happened to be doing while the suite ran, which is the flakiest
+   possible kind of test and the hardest to diagnose. This epoch's slot and the
+   two after it are Clear and it sits in daylight: the neutral conditions an
+   unrelated test should see. Anything that wants a sky asks for one with
+   `G.Dev.setWeather()` and puts it back. */
+let clock = 1767269100;
 Date.now = () => clock * 1000;
 const advance = (seconds, step = 1) => {
   for (let t = 0; t < seconds; t += step) { clock += step; G.tick(step); }
@@ -1238,6 +1248,11 @@ check('the clock can be put at midday', !G.isNight());
 check('it pays half by day', Math.abs(G.verbPayoutMult(0) - 0.5) < 1e-9, `${G.verbPayoutMult(0)}`);
 check('it does not touch its neighbours',
   G.verbPayoutMult(1) === 1 && G.verbPayoutMult(3) === 1);
+/* The hour's half of the trade, on its own. Seven hundred and twenty samples of a six-minute
+   cycle span six weather slots and no more, so a single aurora among them would read as a sixth
+   of the day rather than as the 2.5% of slots it actually is. The sky is held Clear here; the
+   real long-run shift an aurora makes is measured in the sky pass at the foot of this file. */
+G.Dev.setWeather('clear');
 check('over a whole cycle it is close to neutral', (() => {
   let total = 0;
   const N = 720;
@@ -1248,6 +1263,7 @@ check('over a whole cycle it is close to neutral', (() => {
   const mean = total / N;
   return mean > 0.85 && mean < 1.15;
 })(), 'mean multiplier across a cycle');
+G.Dev.setWeather(null);
 
 group('Keeper shortens growth both ways round');
 clearGarden();
@@ -1258,8 +1274,12 @@ check('an adjacent keeper shortens the modifier',
   Math.abs(G.keeperModifier(1) - 0.85) < 1e-9, `${G.keeperModifier(1)}`);
 G.plant(1, G.seedById('daisy'));
 const keptGrow = S.grid[1].grow;
+/* The sky is a factor in the same product since the sky pass, and this group runs at whatever
+   hour the suite reached — so rain's share goes in the expectation rather than the assertion
+   being pinned to a dry day. rainGrowMult() is 1 under every sky but rain. */
 check('planting beside a keeper bakes the bonus in',
-  Math.abs(keptGrow - G.seedById('daisy').grow * G.growModifier() * 0.85) < 1e-6, `${keptGrow}`);
+  Math.abs(keptGrow - G.seedById('daisy').grow * G.growModifier() * 0.85 * G.rainGrowMult()) < 1e-6,
+  `${keptGrow}`);
 clearGarden();
 G.plant(1, G.seedById('daisy'));
 const plainGrow = S.grid[1].grow;
@@ -1559,6 +1579,11 @@ check('every seed still yields exactly 1.4x its cost',
 /* The assertion the whole ladder is tuned against. One roll per plant makes the share even
    across seeds, which is the property that keeps mutations present at every stage of the game
    rather than dominant late and invisible early. Deliberately statistical: wide band. */
+/* The sky pass was checked against this group and moved nothing in it: rain's nudge is a growth
+   factor and never reaches a catch, and the rig below sets each plant's grow and its rolling
+   moment by hand — so the measurement reads the roll rather than the clock, whatever sky the
+   suite happens to be standing under. The structural guards under that claim are in the sky
+   pass at the foot of this file. */
 group('mutations contribute a fifth of income, evenly across seeds');
 const incomeShare = (seedId, cycles) => {
   clearGarden();
@@ -1614,6 +1639,12 @@ check('phase stays inside 0..1', (() => {
 check('a full cycle later is the same phase',
   Math.abs(G.dayPhase(500) - G.dayPhase(500 + DAY.cycle)) < 1e-9);
 check('half a cycle later is not', Math.abs(G.dayPhase(500) - G.dayPhase(500 + DAY.cycle / 2)) > 0.4);
+/* Two things answer "is it dark" since the sky pass — the hour, and an aurora bending the light
+   rules whatever the hour. These three are the HOUR's contract, so the sky is held Clear across
+   them; the aurora's own window is asserted with the rest of phase 3.9 at the foot of this file.
+   Without the hold, 55 of the 2,000 instants below fall inside an aurora slot and the bounds
+   check reads as broken when it is the other rule speaking. */
+G.Dev.setWeather('clear');
 check('night and day both occur across a cycle', (() => {
   let night = 0, day = 0;
   for (let i = 0; i < DAY.cycle; i += 1) { if (G.isNight(i)) night += 1; else day += 1; }
@@ -1631,6 +1662,7 @@ check('night is the minority of the cycle', (() => {
   for (let i = 0; i < DAY.cycle; i += 1) if (G.isNight(i)) night += 1;
   return night / DAY.cycle < 0.5;
 })());
+G.Dev.setWeather(null);
 
 group('development tools force the real path');
 G.reset();
@@ -6545,12 +6577,16 @@ check('the grow label is the time the plant actually gets', (() => {
   S.grid[0].seed = null;
   return Math.abs(G.plantGrowth(tulipDef, 0) - baked) < 1e-9;
 })());
+/* The label quotes the whole stack, and since the sky pass the sky is part of it — so rain's
+   share belongs in the expectation. rainGrowMult() is 1 under every sky but rain, and reading it
+   beside plantGrowth() reads it at the same instant, which is the only way the two agree. */
 check('and Quick Sprout moves it — the bug that started this pass', (() => {
   const before = G.plantGrowth(tulipDef, 0);
   S.savedSeeds = 1e9;
   G.buyPetal('tulip', 'quick');
   const after = G.plantGrowth(tulipDef, 0);
-  return after < before - 0.5 && Math.abs(after - tulipDef.grow * (1 - DATA.petals.shared.quick.value)) < 1e-6;
+  return after < before - 0.5
+    && Math.abs(after - tulipDef.grow * (1 - DATA.petals.shared.quick.value) * G.rainGrowMult()) < 1e-6;
 })());
 check('the payout label carries Rich Bloom', (() => {
   S.petals = {};
@@ -7140,6 +7176,396 @@ const linelessGoods = GOODS.filter((g) => typeof g.line !== 'string' || g.line.t
 check('every good has a line, and it says something',
   linelessGoods.length === 0,
   `no usable line on: ${linelessGoods.map((g) => g.id).join(', ')}`);
+/* ============================================================
+   THE SKY PASS — phase 3.9
+   docs/41-weather-staging.md stages five skies, and exactly two of them reach
+   the simulation: rain waters, and an aurora reports night. Everything else the
+   pass built is presentation this file cannot see — so the last group asserts an
+   ABSENCE, because testifying that the staging stayed out of the save is the
+   only evidence the engine layer is able to give.
+   ============================================================ */
+
+const RAIN_GROWTH = DATA.weatherStage.rainGrowth;
+const skyDaisy = G.seedById('daisy');
+
+group('rain waters what is sown into it');
+G.reset();
+clearGarden();
+S.petals = {};
+S.boosters = {};
+S.credits = 1e12;
+unlockTo(20);
+G.Dev.setWeather('clear');
+check('a clear sky waters nothing',
+  G.rainGrowthActive() === false && G.rainGrowMult() === 1, `${G.rainGrowMult()}`);
+check('and a seed sown under one gets exactly the time its data row promises',
+  Math.abs(G.plantGrowth(skyDaisy, 0) - skyDaisy.grow) < 1e-9, `${G.plantGrowth(skyDaisy, 0)}`);
+G.Dev.setWeather('rain');
+check('a rain shortens the clock by its share',
+  G.rainGrowthActive() === true && Math.abs(G.rainGrowMult() - (1 - RAIN_GROWTH)) < 1e-9,
+  `${G.rainGrowMult()}`);
+check('and the seed sown into it comes up that much sooner',
+  Math.abs(G.plantGrowth(skyDaisy, 0) - skyDaisy.grow * (1 - RAIN_GROWTH)) < 1e-9,
+  `${G.plantGrowth(skyDaisy, 0)}`);
+check('no other sky touches growth at all — one sky, one message', (() => {
+  const quiet = ['clear', 'storm', 'aurora', 'wonderfall'].every((id) => {
+    G.Dev.setWeather(id);
+    return G.rainGrowthActive() === false && G.rainGrowMult() === 1;
+  });
+  G.Dev.setWeather('rain');
+  return quiet;
+})());
+/* It is a FACTOR in the existing product, not a term beside it — which is what keeps the one
+   floor everything else is already clamped by in charge of the answer. */
+S.upgrades.autoWater = 20;
+G.plant(1, G.seedById('bluebell'));
+check('it composes into the stack rather than sitting beside it', (() => {
+  const stacked = G.plantGrowth(skyDaisy, 0);
+  return Math.abs(stacked - skyDaisy.grow * G.growModifier() * G.keeperModifier(0)
+    * (1 - RAIN_GROWTH)) < 1e-9;
+})(), `${G.plantGrowth(skyDaisy, 0)}`);
+S.upgrades.autoWater = 100;
+check('and the 0.3 floor still clamps the product, rain and all', (() => {
+  G.Dev.setWeather('clear');
+  const dry = G.plantGrowth(skyDaisy, 0);
+  G.Dev.setWeather('rain');
+  const wet = G.plantGrowth(skyDaisy, 0);
+  return Math.abs(dry - skyDaisy.grow * 0.3) < 1e-9 && wet === dry;
+})(), `${G.plantGrowth(skyDaisy, 0)}`);
+S.upgrades.autoWater = 0;
+G.Dev.setWeather(null);
+
+group('a bought rain is the same rain');
+G.reset();
+clearGarden();
+S.petals = {};
+S.boosters = {};
+S.gems = 1000;
+/* Stand in a slot the table was going to call Clear before buying anything: bought in a slot
+   that was going to rain regardless, every assertion below holds with the purchase deleted, and
+   the group measures nothing whatever. */
+clock = (() => {
+  const from = G.weatherSlotOf(clock) + 1;
+  for (let s = from; s < from + 1000; s += 1) {
+    if (G.weatherForSlot(s).id === 'clear') return s * SLOT + SLOT / 2;
+  }
+  return clock;
+})();
+check('the slot it is bought in was going to be Clear, so the sky can only be the purchase',
+  G.currentWeather().id === 'clear' && G.rainGrowthActive() === false, G.currentWeather().id);
+check('calling one stands it up as the active sky',
+  Boolean(G.callWeather('rain')) && G.currentWeather().id === 'rain');
+check('and it waters like the free one, with no dev hold anywhere near it',
+  G.Dev.weatherOverride() === null && G.rainGrowthActive() === true
+  && Math.abs(G.rainGrowMult() - (1 - RAIN_GROWTH)) < 1e-9, `${G.rainGrowMult()}`);
+check('a seed sown into a bought rain is shortened by exactly the same share',
+  Math.abs(G.plantGrowth(skyDaisy, 0) - skyDaisy.grow * (1 - RAIN_GROWTH)) < 1e-9,
+  `${G.plantGrowth(skyDaisy, 0)}`);
+
+group('and it waters what it finds already growing');
+/* The second half of the nudge, and the reason there are two: growth is baked in at plant time,
+   so without a retro pass the gift only ever reaches a player who happened to sow at the right
+   moment. It rides the dry-to-wet TRANSITION, which is why every step here is driven through
+   processWeather() rather than by reaching for the helper. */
+G.reset();
+clearGarden();
+S.petals = {};
+S.boosters = {};
+S.credits = 1e12;
+G.Dev.setWeather('clear');
+G.processWeather();
+G.plant(0, G.seedById('daisy'));
+const skySownDry = S.grid[0].grow;
+clock += 4;
+G.Dev.setWeather('rain');
+G.processWeather();
+check('a plant in the ground when the rain lands has its remainder shaved',
+  Math.abs(S.grid[0].grow - (4 + (skySownDry - 4) * (1 - RAIN_GROWTH))) < 1e-6,
+  `${S.grid[0].grow} from ${skySownDry}`);
+const skyShaved = S.grid[0].grow;
+G.processWeather();
+clock += 2;
+G.processWeather();
+check('and one rain never shaves the same plant twice', S.grid[0].grow === skyShaved,
+  `${S.grid[0].grow}`);
+G.plant(1, G.seedById('daisy'));
+const skySownWet = S.grid[1].grow;
+check('a seed sown into a standing rain pays at planting instead',
+  Math.abs(skySownWet - skySownDry * (1 - RAIN_GROWTH)) < 1e-9, `${skySownWet}`);
+clock += 2;
+G.processWeather();
+check('and the retro pass leaves it exactly where planting left it',
+  S.grid[1].grow === skySownWet, `${S.grid[1].grow}`);
+G.Dev.setWeather('clear');
+G.processWeather();
+const skyDryAgain = S.grid[1].grow;
+clock += 2;
+G.processWeather();
+check('a clear sky following a clear sky shaves nothing', S.grid[1].grow === skyDryAgain,
+  `${S.grid[1].grow}`);
+G.Dev.setWeather('rain');
+G.processWeather();
+check('but the NEXT rain is a second gift — the shave rides the transition, not the sky',
+  S.grid[1].grow < skyDryAgain, `${S.grid[1].grow} from ${skyDryAgain}`);
+G.Dev.setWeather(null);
+
+group('an aurora brings the night with it');
+G.reset();
+clearGarden();
+/* An aurora slot that lands in broad daylight with an ordinary sky in the slot after it — the
+   only shape that can tell "the sky brought the night" apart from "it was night anyway". */
+const skyDaylight = (t) => { const p = G.dayPhase(t); return p >= DAY.dawn && p < DAY.dusk; };
+const skyDaylitAurora = (() => {
+  for (let s = 1; s < 200000; s += 1) {
+    if (G.weatherForSlot(s).id !== 'aurora' || G.weatherForSlot(s + 1).id === 'aurora') continue;
+    if (skyDaylight(s * SLOT + SLOT / 2) && skyDaylight((s + 1) * SLOT + SLOT / 2)) return s;
+  }
+  return -1;
+})();
+check('the table offers an aurora that hangs in the middle of the afternoon',
+  skyDaylitAurora > 0, `${skyDaylitAurora}`);
+check('it reports night at noon, and the daylight is back the slot after', (() => {
+  if (skyDaylitAurora < 0) return false;
+  const during = skyDaylitAurora * SLOT + SLOT / 2;
+  const after = (skyDaylitAurora + 1) * SLOT + SLOT / 2;
+  return skyDaylight(during) && skyDaylight(after)
+    && G.isNight(during) === true && G.isNight(after) === false;
+})(), `slot ${skyDaylitAurora}`);
+setPhase(0.5);
+G.Dev.setWeather('clear');
+check('and a held aurora wakes the night rules at midday, then hands the day back', (() => {
+  const before = G.isNight();
+  G.Dev.setWeather('aurora');
+  const during = G.isNight();
+  G.Dev.setWeather('clear');
+  const after = G.isNight();
+  return before === false && during === true && after === false;
+})());
+G.Dev.setWeather(null);
+
+group('and the shift that makes to Nightbell is under a twentieth of a multiplier');
+/* The epsilon, stated: 0.05. Nightbell trades 2x after dark for 0.5x before it, so the whole
+   move an aurora can make is the share of DAYTIME slots it steals, times that 1.5 gap — 2.5% of
+   slots times two-thirds daylight times 1.5, which is 0.025. Sampling slot midpoints rather than
+   a fine sweep is deliberate: the aurora is a per-slot lottery, so the long run that matters is
+   a long run of SLOTS, and 12,000 of them carry ~300 auroras. */
+G.reset();
+clearGarden();
+S.grid[0] = {
+  locked: false, seed: 'moonflower', plantedAt: 0, grow: 1e9, ready: false, aura: '',
+  luckyBug: false, mutation: null, mutateAt: 0, packDrop: false
+};
+const skyClockKeep = clock;
+const nightbellMean = (slots) => {
+  let total = 0;
+  for (let s = 0; s < slots; s += 1) {
+    clock = s * SLOT + SLOT / 2;
+    total += G.verbPayoutMult(0);
+  }
+  return total / slots;
+};
+G.Dev.setWeather('clear');
+const skyHourOnly = nightbellMean(12000);
+G.Dev.setWeather(null);
+const skyWithAurora = nightbellMean(12000);
+clock = skyClockKeep;
+check('the aurora really does move it, or there is nothing here to bound',
+  skyWithAurora > skyHourOnly, `${skyHourOnly.toFixed(4)} then ${skyWithAurora.toFixed(4)}`);
+check('but the long-run expected value moves by less than 0.05',
+  Math.abs(skyWithAurora - skyHourOnly) < 0.05,
+  `moved ${(skyWithAurora - skyHourOnly).toFixed(4)}`);
+
+group('and none of it reached the mutation income share');
+/* The share the whole ladder is tuned against is measured near the top of this file and is
+   unmoved. These are the structural guards underneath that measurement, because a band as wide
+   as 12-32% only goes red once the damage is already large. */
+G.reset();
+clearGarden();
+check('the catch multiplier cannot hear the sky at all', (() => {
+  const seen = new Set();
+  ['clear', 'rain', 'storm', 'aurora', 'wonderfall'].forEach((id) => {
+    G.Dev.setWeather(id);
+    seen.add(G.catchMultiplier(0));
+  });
+  G.Dev.setWeather(null);
+  return seen.size === 1 && seen.has(1);
+})());
+check('a rain catches at exactly the rate its table row names, however hard it waters', (() => {
+  const rng = Math.random;
+  const keep = DATA.weatherStage.rainGrowth;
+  const rainType = DATA.weather.types.find((t) => t.id === 'rain');
+  const catches = (r) => {
+    Math.random = () => r;
+    clearGarden();
+    dueIn(0, 'daisy', rainSlot);
+    G.rollMutations();
+    return S.grid[0].mutation === 'dew';
+  };
+  const shape = [keep, 0, 0.9].map((g) => {
+    DATA.weatherStage.rainGrowth = g;
+    return `${catches(rainType.catch - 1e-6)}/${catches(rainType.catch + 1e-6)}`;
+  });
+  DATA.weatherStage.rainGrowth = keep;
+  Math.random = rng;
+  return shape.every((s) => s === 'true/false');
+})());
+/* The one thing the pass genuinely moved, kept where it can be seen: the retro shave rewrites
+   `grow` and deliberately leaves `mutateAt` alone, so a roll booked inside the original window
+   can now come due after the plant is ripe. It still fires — rollMutations() never asks whether
+   a plant is ready — but a plant picked the instant it ripens can walk past its own roll. The
+   assertion is what stops the shave from ever becoming a RE-BOOKING instead, which is the thing
+   that would actually move the share. */
+check('the shave rewrites the clock and never the booked roll', (() => {
+  const rng = Math.random;
+  clearGarden();
+  S.credits = 1e12;
+  G.Dev.setWeather('clear');
+  G.processWeather();
+  Math.random = () => 0.9;                    // booked late in the window, so it is still pending
+  G.plant(0, G.seedById('daisy'));
+  Math.random = rng;
+  const booked = S.grid[0].mutateAt;
+  const grew = S.grid[0].grow;
+  clock += 1;
+  G.Dev.setWeather('rain');
+  G.processWeather();
+  G.Dev.setWeather(null);
+  return booked > 0 && S.grid[0].mutateAt === booked && S.grid[0].grow < grew;
+})());
+
+group('a front reads the computed next slot, and Clear to Clear says nothing');
+G.reset();
+clearGarden();
+check('the forecast is the slot after this one, worked out on the spot', (() => {
+  for (let i = 0; i < 500; i += 1) {
+    const t = i * 977 + 13;
+    if (G.nextWeather(t).id !== G.weatherForSlot(G.weatherSlotOf(t) + 1).id) return false;
+  }
+  return true;
+})());
+check('a bought sky is the forecast too, which a stored answer could not be', (() => {
+  S.gems = 1000;
+  const bought = G.callWeather('rain');
+  const forecast = G.nextWeather().id;
+  const remaining = G.weatherSlotRemaining();
+  G.reset();
+  return Boolean(bought) && forecast === 'rain' && remaining > 0 && remaining <= SLOT;
+})());
+/* Four hundred real slot boundaries, driven through processWeather() rather than through a
+   mocked emit, because the rule under test is WHEN the engine speaks. Each boundary is visited
+   twice at the same instant: an announcement is once per upcoming slot, not once per tick. */
+const skyFronts = [];
+G.on('front', (p) => skyFronts.push(p));
+const skyFrontSeconds = DATA.weatherStage.frontSeconds;
+let skyAnnounced = 0;
+let skySilent = 0;
+let skyRepeats = 0;
+let skyWrong = 0;
+clearGarden();
+const skySweepBase = G.weatherSlotOf(clock) + 2;
+for (let s = skySweepBase; s < skySweepBase + 400; s += 1) {
+  clock = s * SLOT + SLOT - skyFrontSeconds + 0.5;
+  skyFronts.length = 0;
+  G.processWeather();
+  G.processWeather();
+  const to = G.weatherForSlot(s + 1);
+  if (to.id === 'clear') {
+    if (skyFronts.length) skyWrong += 1; else skySilent += 1;
+  } else if (skyFronts.length !== 1 || skyFronts[0].to.id !== to.id
+    || Math.abs(skyFronts[0].seconds - Math.min(skyFrontSeconds, G.weatherSlotRemaining())) > 1e-6
+    || skyFronts[0].called !== false) {
+    /* The lead it advertises has to be the lead that is actually left, capped at
+       the tuned value — a phone that unlocks a second before a boundary would
+       otherwise be told five and hold the arrival long after the sky had turned. */
+    skyWrong += 1;
+  } else {
+    skyAnnounced += 1;
+    if (G.weatherForSlot(s).id === to.id) skyRepeats += 1;
+  }
+}
+check('every slot that brings a real sky is announced exactly once, and none of them lies',
+  skyAnnounced > 80 && skyWrong === 0, `${skyAnnounced} announced, ${skyWrong} wrong`);
+check('and Clear to Clear is the silence the other four are heard against',
+  skySilent > skyAnnounced, `${skySilent} silent of 400`);
+check('the rule reads the next slot, not the change — a rain after a rain is announced too',
+  skyRepeats > 0, `${skyRepeats} repeats`);
+G.reset();
+clearGarden();
+S.gems = 1000;
+skyFronts.length = 0;
+const skyBought = G.callWeather('rain');
+check('a bought sky arrives with its own compressed front', Boolean(skyBought)
+  && skyFronts.length === 1 && skyFronts[0].called === true && skyFronts[0].to.id === 'rain'
+  && skyFronts[0].seconds === DATA.weatherStage.calledFrontSeconds,
+  JSON.stringify(skyFronts.map((f) => [f.to.id, f.seconds, f.called])));
+
+group('the staging never reaches the save — only the two nudges do');
+/* game.js cannot see a stage sequence, so what it CAN testify to is that no sky's staged values
+   are readable from the simulation and that crossing a front writes nothing. Everything the
+   engine can be asked for goes into one string; if any leaf of a sky ever leaks into game.js,
+   this is what notices, whichever leaf it is. */
+G.reset();
+clearGarden();
+S.credits = 1e12;
+const skyReadings = () => JSON.stringify({
+  grow: DATA.seeds.map((s) => G.plantGrowth(s, 0)),
+  passive: G.passiveIncomeRate(),
+  offline: [G.offlineRate(), G.offlineHours()],
+  catches: [G.catchMultiplier(0), G.catchMultiplier(1)],
+  stack: [G.growModifier(), G.keeperModifier(0), G.verbPayoutMult(0)],
+  sky: Array.from({ length: 200 }, (_, i) => G.weatherAt(i * 137).id),
+  dark: Array.from({ length: 200 }, (_, i) => G.isNight(i * 137))
+});
+const skyStage = DATA.weatherStage;
+const skyStageKeep = JSON.parse(JSON.stringify(skyStage));
+const skyRestore = () => Object.keys(skyStageKeep).forEach((k) => {
+  if (skyStageKeep[k] && typeof skyStageKeep[k] === 'object') {
+    Object.assign(skyStage[k], skyStageKeep[k]);
+  } else skyStage[k] = skyStageKeep[k];
+});
+const skyReadingsBefore = skyReadings();
+['rain', 'storm', 'aurora', 'wonderfall', 'sunbreak'].forEach((id) => {
+  Object.keys(skyStage[id]).forEach((k) => { skyStage[id][k] = 999; });
+});
+check('no leaf of a sky\'s staging is readable from the simulation, the sunbreak included',
+  skyReadings() === skyReadingsBefore, 'a staged value reached the engine');
+skyRestore();
+check('and the guard put every one of them back',
+  JSON.stringify(skyStage) === JSON.stringify(skyStageKeep));
+check('the one leaf that IS the simulation still moves it, so the guard is not vacuous', (() => {
+  const keep = skyStage.rainGrowth;
+  G.Dev.setWeather('rain');
+  const wet = skyReadings();
+  skyStage.rainGrowth = 0.5;
+  const wetter = skyReadings();
+  skyStage.rainGrowth = keep;
+  G.Dev.setWeather(null);
+  return wet !== wetter;
+})());
+check('the engine publishes no sunbreak of any kind — the rays are presentation start to finish',
+  Object.keys(G).every((k) => !/sunbreak/i.test(k))
+  && Object.keys(G.Dev).every((k) => !/sunbreak/i.test(k)));
+check('and crossing a front changes nothing in the save but the moment it was crossed at', (() => {
+  const slot = (() => {
+    const from = G.weatherSlotOf(clock) + 2;
+    for (let s = from; s < from + 400; s += 1) if (G.weatherForSlot(s + 1).id !== 'clear') return s;
+    return -1;
+  })();
+  if (slot < 0) return false;
+  clearGarden();
+  clock = slot * SLOT + 1;
+  G.processWeather();                          // settle the slot and the rain watch on this sky
+  clock = slot * SLOT + SLOT - DATA.weatherStage.frontSeconds + 0.5;
+  const before = JSON.parse(JSON.stringify(S));
+  skyFronts.length = 0;
+  G.processWeather();
+  const after = JSON.parse(JSON.stringify(S));
+  before.lastSeen = 0;
+  after.lastSeen = 0;
+  return skyFronts.length === 1 && JSON.stringify(before) === JSON.stringify(after);
+})());
+G.Dev.setWeather(null);
+G.reset();
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);
