@@ -967,11 +967,19 @@ of it.
 
 ### ~~Nothing enforces any of this~~ — BUILT 2026-08-30
 
-`tools/style-check.js` is the thing that notices. Zero dependencies, one file, five checks: raw hex
-outside `:root`, translucent `box-shadow` lips, custom properties used but never declared, corner
-radii outside the ladder, and a count of distinct border widths. The first three fail; the last two
-only report, because the geometry sweep below is deliberately deferred and a measurement should not
-smuggle in a decision.
+`tools/style-check.js` is the thing that notices. Zero dependencies, one file, six checks: raw hex
+outside `:root`, translucent `box-shadow` lips, undeclared custom properties with no fallback,
+undeclared custom properties with one, corner radii outside the ladder, and a count of distinct
+border widths. The first three fail; the last three only report, because the geometry sweep below is
+deliberately deferred and a measurement should not smuggle in a decision.
+
+**The missing-variable check is split, and the split was found by running the tool on code it had
+never seen.** Pointed at the in-flight Sky Pass branch it reported 26 undeclared properties — every
+`--wx-*` knob the weather CSS reads before `DATA.weatherStage` exists to set them. All of them carry
+a fallback, all of them are deliberate, and a gate that fails on those is a gate that fires on
+correct work in progress. `var(--x)` with no fallback drops the declaration at computed-value time
+and paints nothing; `var(--x, 12px)` paints the fallback. Only the first fails, and its baseline is
+**zero** — so the next one is caught the day it appears.
 
 **It fails on new drift, not on the debt already there.** `tools/style-check.json` records the
 counts as found. This is the part that makes it survive: a check that is red on its first run and

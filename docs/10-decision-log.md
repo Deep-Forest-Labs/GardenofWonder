@@ -50,6 +50,16 @@ and the petal tracks replaced the mastery goal line — so the collision the iss
 unreachable. One heading remains, and whether it is still a problem is now the question, not what to
 rename it to. Panel copy stayed the owner's call, which is where doc 11 had already put it.
 
+**The undeclared-variable check is split by fallback, and testing found it rather than reasoning.**
+The tool was pointed at the in-flight Sky Pass CSS — code it had never seen — and reported 26
+undeclared custom properties. Every one was a `--wx-*` weather knob written with a fallback, waiting
+for a `DATA.weatherStage` that phase 3.9 has deliberately not built yet. They are correct. A gate
+that fails on them is a gate that fires on work in progress, which is the same "cries wolf" failure
+the baseline exists to avoid, and it would have landed on another session's desk as a false alarm.
+So `var(--x)` with no fallback — which drops the declaration and paints nothing — fails at a
+baseline of **zero**, and `var(--x, 12px)` is reported and does not. The one that is silent is the
+one that is fatal.
+
 **`Icons.get()` warns once per missing name, and only where a developer is looking.** The suite
 asserts every icon a data table names, but both icons that went missing for a whole session were
 named at hand-written call sites, which no table covers. The gate is `location.hostname` —

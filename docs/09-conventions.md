@@ -249,20 +249,26 @@ Covered fully in [07-save-data.md](07-save-data.md). The short version:
 
 1. Write the change. Use a token, never a raw hex — the palette table is in
    [05-art-direction.md](05-art-direction.md).
-2. Run `node tools/style-check.js`. It reads `style.css` and reports five things: raw hex outside
-   `:root`, translucent `box-shadow` lips, custom properties used but never declared, corner radii
-   outside the ladder, and a count of every distinct border width.
-3. **The first three fail the check; the last two only report.** Radius and border are the geometry
-   sweep, deliberately deferred — the check measures it so the sweep can be scoped, and refuses to
-   be the thing that decides to do it.
-4. **It fails on new drift, not on old.** `tools/style-check.json` records the debt that already
+2. Run `node tools/style-check.js`. It reads `style.css` and reports six things: raw hex outside
+   `:root`, translucent `box-shadow` lips, undeclared custom properties **with no fallback**,
+   undeclared custom properties **with** one, corner radii outside the ladder, and a count of every
+   distinct border width.
+3. **The first three fail the check; the last three only report.** Radius and border are the
+   geometry sweep, deliberately deferred — the check measures it so the sweep can be scoped, and
+   refuses to be the thing that decides to do it.
+4. **A missing variable is two different bugs and only one of them fails.** `var(--x)` with no
+   fallback drops the whole declaration at computed-value time and paints nothing — silent, and the
+   reason this check exists. `var(--x, 12px)` paints the fallback, which is how you write a knob
+   *before* the data that feeds it lands. Failing on the second would fire on correct work in
+   progress, so it is reported loudly and gated at zero for the first.
+5. **It fails on new drift, not on old.** `tools/style-check.json` records the debt that already
    existed. A check that goes red on its first run and every run after it gets switched off within
    a week, so this one goes red only when a change *adds* to the count.
-5. If a new value is deliberate, it goes in [05-art-direction.md](05-art-direction.md) with the
+6. If a new value is deliberate, it goes in [05-art-direction.md](05-art-direction.md) with the
    reason — check 5 of that document's five questions — and then
    `node tools/style-check.js --update-baseline` re-records the count. Raising the baseline without
    writing down why is how a style guide becomes fiction.
-6. `--strict` ignores the baseline and lists every violation in the file. That is the sweep's
+7. `--strict` ignores the baseline and lists every violation in the file. That is the sweep's
    worklist, not the gate.
 
 ## Testing

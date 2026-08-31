@@ -21,13 +21,21 @@
 //
 //   hex     a raw hex colour outside :root                     FAILS
 //   lip     a box-shadow lip that is translucent               FAILS
-//   var     a custom property used but never declared          FAILS
+//   var     an undeclared custom property with NO fallback      FAILS
+//   varSoft an undeclared custom property WITH a fallback       reports
 //   radius  a corner radius outside the documented ladder      reports
 //   border  how many distinct border widths exist              counts only
 //
 // Radius and border only report because the geometry sweep is deliberately
 // deferred (docs/11-known-issues.md) — this measures it so the sweep can be
 // scoped, and refuses to be the thing that decides to do it.
+//
+// `varSoft` reports for a different reason. `var(--x)` with no fallback drops
+// the whole declaration at computed-value time and shows nothing, which is the
+// bug this check exists for. `var(--x, 12px)` draws the fallback — which is how
+// a knob is written BEFORE the data that feeds it lands, and failing on that
+// would fire on correct work in progress. Reported so it cannot hide, not
+// gated so it cannot be worked around.
 //
 // The baseline is the point. A check that fails on the first run and every run
 // after it gets switched off within a week. `tools/style-check.json` records
@@ -321,7 +329,8 @@ const FATAL = ['hex', 'lip', 'var'];
 const TITLES = {
   hex: 'Raw hex colours outside :root  — use a token (docs/05, Palette)',
   lip: 'Translucent box-shadow lips  — a lip is opaque (docs/05, the house material)',
-  var: 'Custom properties used but never declared  — the --ink-soft class of bug',
+  var: 'Custom properties used with NO fallback and never declared  — the --ink-soft class of bug',
+  varSoft: 'Custom properties never declared, but written with a fallback  — reported, not enforced',
   radius: 'Corner radii outside 12 / 18 / 26 / 999px / 50%  — reported, not enforced',
   border: 'Border widths  — counted, not enforced (the geometry sweep is deferred)',
 };
@@ -338,10 +347,12 @@ function main() {
   const lineAt = lineIndex(src);
   const decls = declarations(masked);
 
+  const undeclared = checkVars(decls, lineAt, jsDeclaredProps());
   const results = {
     hex: checkHex(decls, lineAt),
     lip: checkLips(decls, lineAt),
-    var: checkVars(decls, lineAt, jsDeclaredProps()),
+    var: undeclared.filter((f) => !f.hasFallback),
+    varSoft: undeclared.filter((f) => f.hasFallback),
     radius: checkRadii(decls, lineAt),
     border: checkBorders(decls, lineAt),
   };
@@ -361,7 +372,7 @@ function main() {
   }
 
   let failed = false;
-  for (const key of ['hex', 'lip', 'var', 'radius', 'border']) {
+  for (const key of ['hex', 'lip', 'var', 'varSoft', 'radius', 'border']) {
     const found = results[key];
     const distinct = tally(found);
     const cap = STRICT ? 0 : (baseline[key] ?? 0);
@@ -380,7 +391,7 @@ function main() {
     console.log(`\n${TITLES[key]}`);
     console.log(`${found.length} occurrence${found.length === 1 ? '' : 's'}, ${distinct.length} distinct${status}`);
 
-    if (key === 'border' || QUIET) {
+    if (key === 'border' || (key === 'varSoft' && found.length > 12) || QUIET) {
       for (const [value, n] of distinct) console.log(`    ${String(n).padStart(4)} ×  ${value}`);
       continue;
     }
