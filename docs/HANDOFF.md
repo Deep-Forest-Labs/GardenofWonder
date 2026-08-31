@@ -1334,6 +1334,52 @@ ladder and the Almanac's milestones are the only road to every level gate in the
 fourth habitat slot at level 16, so **do not bench another ladder quest without re-checking that
 headroom.**
 
+### Alongside phase 3.9: the overnight housekeeping round, 2026-08-30
+
+**Tooling and mechanical fixes only — no design, no economy number, no phase work.** It ran in a
+separate worktree cut from `origin/main` and pushed to `main` from there, precisely so it could not
+sweep the Sky Pass's uncommitted work out of the shared checkout. Full account, including everything
+it declined to decide, in [42-overnight-housekeeping.md](42-overnight-housekeeping.md).
+
+**What it built.** `tools/style-check.js` — the enforcement doc 11 called "the single
+highest-leverage item on this page" — and twenty design-rule assertions in `tools/sim-test.js`,
+which now runs 1,405 checks. Both ratchet.
+
+**What it fixed.** The quest bar and the Almanac meter reveal their gradient instead of compressing
+it; 32 raw hexes became tokens, including all 25 `#2c1a10`; a keyboard focus ring on every button;
+three missing `aria-label`s; the quest card's contact shadow; a drifted translucent lip; and
+`Icons.get()` now warns once per missing name where a developer can hear it.
+
+**Three things it was asked to fix and deliberately did not**, because each turned out to need you:
+
+1. **The "Garden Mastery" rename rests on a premise that is not true.** The brief said the glossary
+   implied it. [32-the-garden-year.md](32-the-garden-year.md)'s glossary has sixteen entries and
+   names none of these things. And the issue is stale — "Bloom Mastery" is in **zero** player-facing
+   strings and the "Tier N" toast cannot fire, so the collision it describes is unreachable. **The
+   question is now whether there is still a problem, not what to rename it to.**
+2. **The creature arrival bar has no display-side fix left.** The clamp is already there and is what
+   produces the wrong string; the state itself is impossible. A second clamp moves the lie.
+3. **The `innerHTML` hardening is priced rather than done.** 908 interpolations reach an
+   `innerHTML` and **468 of them return markup that must not be escaped**, against 120 that want it.
+   Nothing player-supplied can reach a panel today. The filed ruling is a rule, not a helper:
+   player text never enters a template literal.
+
+**And it found five documentation faults** by trying to assert what the docs say — including
+`33-year-one-economy.md`'s "every level grants something", which is false at six levels, and the
+currency policy in doc 12, which its own game broke twice. All in
+[11-known-issues.md](11-known-issues.md#five-documentation-faults-the-design-rule-pass-turned-up).
+
+### The two-minute check, the overnight round — do this one first
+
+1. **Watch the new check pass, then watch it fail.** `node tools/style-check.js` ends
+   `OK — no new drift`. Add `.x{color:#123456}` to the bottom of `style.css`, run it again: it names
+   the file and line and exits 1. Delete the line. That is the whole feature.
+2. **Look at the quest strip.** Tap the flower a dozen times. The fill is green and stays green
+   until the bar is nearly full; before tonight it reached full gold at 44%. Same fix on the
+   Almanac's Collection meter.
+3. **`node tools/sim-test.js`** — 1,405 passed, 0 failed.
+4. **Then read the three things it would not decide**, above.
+
 ### The five-minute check, phase 3.8 — the polish round, on the phone
 
 **Every step was walked in the live build before it was written down.** Developer tools is the
@@ -1881,11 +1927,14 @@ Full list in [11-known-issues.md](11-known-issues.md). The four that affect desi
   2026-08-14: leave them.** The audience is friends, their sessions are not clean data, and the game
   has no analytics either way. Revisit before any real external audience; don't re-raise it before
   then.
-- **Nothing enforces the visual standard.** Every rule in
-  [05-art-direction.md](05-art-direction.md) is script-checkable except taste, and none of it is
-  checked. That is how `--ink-soft` reached 23 uses without ever being declared, and it is why the
-  drift will come back the moment nobody is looking at it. See
-  [11-known-issues.md](11-known-issues.md#visual-standard).
+- ~~**Nothing enforces the visual standard.**~~ **`tools/style-check.js` does, as of 2026-08-30.**
+  Run it whenever you touch `style.css`; `node tools/sim-test.js` now also holds twenty *design*
+  rules, not only economy ones. Both **ratchet against a recorded baseline** rather than failing on
+  the debt that was already there, so they pass today and go red on what you add. **What is left is
+  a palette decision, not a sweep**: ~94 distinct colours with no token near them, and 29 more
+  within a hair of one — `#fff8e8` against `--paper` `#fff8e7` — where the file cannot tell you
+  which are typos. `node tools/style-check.js --strict` prints the worklist. See
+  [42-overnight-housekeeping.md](42-overnight-housekeeping.md).
 
 That inversion was inherited from the frozen economy port; it is fixed. What remains from the port is
 the Orchid throughput dip and the identical Aurora/Celestial rates.

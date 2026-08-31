@@ -82,6 +82,29 @@ documented design decision.
 
 All 25 raw `#2c1a10` are gone. The ink can be adjusted globally now, which was the point.
 
+### The design rules become checks too
+
+Twenty assertions at the end of `tools/sim-test.js`, in five groups, each one a sentence a doc
+already states turned into something that can go red — the offline `CORE` list matching the scripts
+the page actually loads, every badge in `DATA.upgrades` reaching a surface a player can see, every
+announcement image precached and **lowercase**, decor staying cosmetic and boosters staying
+unbuyable, and every good carrying the `line` its customer speaks.
+
+**Every one was sabotaged individually and confirmed to be the assertion that fails**, in a
+throwaway copy so the tree was never dirty. Two of those sabotages are worth repeating:
+
+- Changing an announcement path to `Garden-Year.png` left the *on-disk* check **green**, because a
+  Mac disk is case-insensitive and GitHub Pages is not. Doc 09's "this bit once already", reproducing
+  exactly, which is why the lowercase check is its own assertion rather than folded into the other.
+- Adding `cost: 50` to a booster walked straight past the existing check, which asks only whether
+  the word `tickets` is present. The new one asks about six price fields.
+
+**Two of the four candidates the known-issues entry named were not written, and both refusals are
+the finding.** The place taxonomy is dead — the map was retired the same day that entry was written,
+and `overworld.js` and `ui-map.js` are not on disk. And the currency policy's "adding anything to
+this list requires removing something else" is **a constraint on a diff, not on a snapshot**: a test
+only ever sees one state. It also turns out to be already broken, which is in the list below.
+
 ### Three progress bars — two of which existed
 
 Full write-up in [11-known-issues.md](11-known-issues.md). The short version: `.q-bar i` and
@@ -94,6 +117,42 @@ ratio one line above the bar and a percentage two panels away. `calc(100% - 0.44
 an invalid `clip-path` **shows the whole bar** — so that collision fails by reading 100%.
 
 The third named bar, `.mastery-bar b`, is emitted by nothing and was left exactly as found.
+
+### Four smaller repairs
+
+- **`Icons.get()` warns once per missing name**, gated on `location.hostname` being `localhost`,
+  `127.0.0.1` or `''` — the same test `index.html` uses to skip the service worker, and the only
+  honest dev signal in a project with no build step. The fallback is byte-identical. **The suite
+  cannot test this** (Node has no `location`) and `probe.js` drops every console message that is not
+  an error, so it was proved by driving a real browser and capturing `console.warn`: two warnings
+  for three bad calls, none for a good one.
+- **A focus ring on every button**, as an `outline` and never a `box-shadow` — because every surface
+  here carries its lip in `box-shadow`, and a ring written that way deletes the lip of whatever it
+  lands on. On a bare `button` rule that is every button at once. Confirmed by reading `boxShadow`
+  on a focused dock button and finding its 5px lip intact.
+- **Three `aria-label`s**, each copied from text already beside it. The plot buttons were left alone:
+  their name depends on plot state, and guessing is worse than the gap.
+- **The quest card's contact shadow.** It had the seed row's material and not its `0 8px 14px`, so
+  two rows from one recipe sat at different heights. The seed row's *press* was deliberately not
+  copied — that is a different question from height.
+
+### The check found a flaw in itself, by being pointed at code it had never seen
+
+Run against the in-flight Sky Pass CSS in the shared checkout — read-only, nothing written — the
+checker reported **26 undeclared custom properties**. Every one is a `--wx-*` weather knob written
+with a fallback, waiting for a `DATA.weatherStage` that phase 3.9 has deliberately not built yet.
+They are correct.
+
+A gate that fails on those is a gate that fires on work in progress, on somebody else's desk. So the
+check is split: `var(--x)` with **no** fallback drops the whole declaration at computed-value time
+and paints nothing — that is the `--ink-soft` bug, and it now fails at a baseline of **zero**, so
+the next one is caught the day it appears. `var(--x, 12px)` paints the fallback, is reported loudly,
+and does not fail. **The one that is silent is the one that is fatal.**
+
+Worth knowing: the Sky Pass work will meet this gate when it merges. On tonight's snapshot it also
+carries 65 new raw hexes and 2 new translucent lips. That is not a criticism of unfinished work — it
+is what the gate is for, and doc 05's check 5 already asks for a new value to be written down with
+its reason.
 
 ## What was filed, not fixed
 
@@ -144,6 +203,30 @@ state, which is the design change the entry already reserved for the owner.**
   the fallback. Stage 2 next door uses a literal `scale(.34)`, so this looks like a deliberate
   extension point that was never wired up rather than a typo. Deleting a hook and declaring one are
   both guesses about intent.
+
+### The `innerHTML` hardening — priced, not done
+
+The entry said "add escaping before adding any naming feature" and had said it long enough to become
+furniture. It is now measured: **908 interpolations reach an `innerHTML`, and 468 of them return
+markup that must not be escaped** — an icon SVG, a drawn creature, a nested conditional fragment —
+against 120 that want escaping. A blanket `esc()` is 468 hand-judged opt-outs whose failure mode is a
+panel printing tag source, in files no test in this repo can see.
+
+**Nothing player-supplied can reach a panel today.** Checked rather than assumed: no `input`, no
+`textarea`, no `contenteditable`, no `prompt()`, no URL parameters, no `postMessage`, no `fetch`
+outside `sw.js`.
+
+The filed ruling is a rule rather than a helper — **player text never enters a template literal** —
+with the sixteen sites a naming feature would actually touch named individually. Full plan in
+[11-known-issues.md](11-known-issues.md).
+
+### Five documentation faults, found by trying to assert what the docs say
+
+The most load-bearing: **[33-year-one-economy.md](33-year-one-economy.md)'s "every level grants
+something" is false** — six levels have no entry — and **the currency policy in doc 12 is violated by
+its own terms**, since `savedSeeds`, `petals` and `tickets` are all tracked and none of them is in
+that document's currency table. The Garden Year added two currencies without the trade the rule asks
+for. All five are listed in [11-known-issues.md](11-known-issues.md).
 
 ### The near-miss hexes
 

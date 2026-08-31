@@ -1165,14 +1165,55 @@ hardest and should be fixed regardless of what gets decided:
 because a later session adds a new section rather than retracting an old one. Body text usually
 gets its retraction; headers rarely do.
 
-### Nothing enforces a design rule the way `sim-test.js` enforces an economy rule
+### ~~Nothing enforces a design rule the way `sim-test.js` enforces an economy rule~~ — BUILT 2026-08-30
 
-The suite holds the economy's invariants beautifully — never ask for the unproducible, delivering
-beats selling, hives work unstaffed, no pair touches the yield pool. Nothing holds the design ones,
-and every one of them is script-checkable: the place taxonomy (no two adjacent places of the same
-type), the goods catalog's one-line test (every good has a `line` field), "no two adjacent
-unlockables share an effect category", and the currency policy's "adding anything to this list
-requires removing something else."
+Twenty assertions, in five groups at the end of `tools/sim-test.js`, each one a sentence a doc
+already states turned into something that can go red. Every one was **sabotaged individually and
+confirmed to be the assertion that fails** — in a throwaway copy, so the tree was never dirty.
 
-Same shape as [the visual standard](#nothing-enforces-any-of-this), same cause, and the same fix
-would work: a check that fails, rather than a rule everyone agrees with and nobody notices breaking.
+- **The offline list still lists the game.** Every `<script>` in `index.html` is in `CORE` in
+  `sw.js`, every `CORE` path is a file that still exists, no path starts with a slash, and every
+  script on disk is one the page loads. `sw.js` precaches with `Promise.allSettled`, so a file left
+  out fails without a sound and the symptom is an installed app that will not boot on a train.
+- **Every badge in the data reaches a surface a player can see** — step 3 of the add-an-upgrade
+  playbook, plus a check that this suite's own hand-kept `UI_BADGE_KEYS` still matches the tab.
+- **Every announcement image survives the trip to a real phone**: precached, on disk, and
+  **lowercase**. That last one earns its place — sabotaging the path to `Garden-Year.png` left the
+  on-disk check **green**, because a Mac disk is case-insensitive and GitHub Pages is not. Doc 09's
+  "this bit once already" reproduced exactly.
+- **Decor stays cosmetic and boosters stay unbuyable**, read against the *catalogue* rather than a
+  migrated save, and asking about six price fields rather than the one word `tickets` that the
+  existing check was written for.
+- **Every good carries the line its customer speaks**, and names the offender when it does not.
+
+Of the four candidates this entry originally named, one is dead and one is not a data rule:
+
+- **The place taxonomy is gone with the map.** `overworld.js` and `ui-map.js` are not on disk and
+  `docs/25-world-map.md` was retired the same day this entry was written.
+- **The currency policy is a constraint on a diff, not on a snapshot.** "Adding anything to this
+  list requires removing something else" is a rule about a change; a test only ever sees one state.
+  It cannot be asserted, and see the Documentation section below — it is also already broken.
+
+### Five documentation faults the design-rule pass turned up
+
+Found by trying to assert what the docs say and discovering the docs are wrong. None are code bugs.
+
+- **[33-year-one-economy.md](33-year-one-economy.md) says "every level grants something, and no two
+  adjacent levels grant the same category."** The **first half is false**: `DATA.levelGrants` has no
+  entry at levels 9, 11, 13, 14, 16 or 17. The rotation half holds and is now asserted. The sentence
+  needs its first half retracted, or the ladder needs filling — that is a design call.
+- **The currency policy is violated by its own terms.**
+  [12-meta-layer-design.md](12-meta-layer-design.md) says adding a currency requires removing one,
+  and `defaultState()` tracks `savedSeeds`, `petals` and `tickets`, none of which appear in that
+  document's currency table. The Garden Year added two currencies without the trade the rule asks
+  for.
+- **[26-goods-catalog.md](26-goods-catalog.md)'s schema example does not match shipped `GOODS`.** It
+  shows `chain: { rung }` and `inputs: [...]`, which no shipped good carries, and omits `icon`,
+  which all ten have. Ahead of the data in one direction and behind it in the other.
+- **[33-year-one-economy.md](33-year-one-economy.md) cites `ui-map.js:257`** as the sole caller of
+  `UI.enterMeadow()`. That file was deleted 2026-08-30, so the argument around it — 114 reputation
+  of meadow-dependent quests — rests on a reference that no longer resolves.
+- **The rotation rule has to be read at the grain of the reward, not the row key.** Read as
+  `boost`/`hive`/`decor`/`gems` it fails at nine consecutive pairs today, because levels 2–15 are
+  all boost rows. Read as *which* boost, the ladder rotates exactly as the doc describes. Anyone
+  re-asserting this should know which reading is meant.

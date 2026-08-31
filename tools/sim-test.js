@@ -6956,5 +6956,168 @@ check('every announcement carries what the dialog needs to draw itself',
 G.clearNewsSeen();
 G.reset();
 
+/* ---------------- what the playbooks promise, against what shipped ----------------
+
+   Every check below is a sentence a doc already states, turned into something
+   that can go red. They sit together because they share a failure mode rather
+   than a system: each one is invisible in a passing playthrough, on an online
+   load, and on a case-insensitive Mac disk, and surfaces weeks later as an app
+   that will not boot on a train or a dialog with a broken square in it.
+
+   index.html, sw.js and ui-sheet.js are read as text because none of them can be
+   loaded headless. A copy of their contents kept here would be the thing that
+   goes stale, which is the failure this group exists to catch. */
+const indexSrc = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+const swSource = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
+const sheetSource = fs.readFileSync(path.join(ROOT, 'ui-sheet.js'), 'utf8');
+
+/* Line comments are stripped first: an apostrophe in the prose beside an entry
+   would otherwise be parsed as a list member and fail the on-disk check for a
+   file nobody ever named. */
+const arrayLiteral = (src, decl) => {
+  const open = src.indexOf(decl);
+  if (open < 0) return [];
+  const body = src.slice(open + decl.length, src.indexOf('];', open)).replace(/\/\/[^\n]*/g, '');
+  return [...body.matchAll(/'([^']*)'/g)].map((m) => m[1]);
+};
+const bare = (p) => p.replace(/^\.\//, '');
+
+const coreList = arrayLiteral(swSource, 'const CORE = [');
+const coreBare = new Set(coreList.map(bare));
+const scriptTags = [...indexSrc.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].map((m) => m[1]);
+/* sw.js is deliberately absent from both sides: the worker is registered rather
+   than loaded by a tag, and a worker that precached itself would serve players
+   the old worker forever. */
+const shippedScripts = fs.readdirSync(ROOT).filter((f) => f.endsWith('.js') && f !== 'sw.js');
+
+group('the offline list still lists the game');
+/* THE GUARD ON EVERY CHECK BELOW IT. Both lists are scraped, and a scrape that
+   matches nothing returns an empty array, on which every() is true — four green
+   assertions testing an empty set against an empty set. If a rename to CORE or
+   to the script tags ever breaks the scrape, this is the check that says so. */
+check('both lists were actually found and read',
+  coreList.length > 20 && scriptTags.length > 10,
+  `${coreList.length} precached, ${scriptTags.length} script tags`);
+/* docs/09-conventions.md:45-46 and docs/23-installable-pwa.md:57-58. sw.js
+   precaches with Promise.allSettled, so a file left out of CORE fails without a
+   sound; the symptom is an installed app that will not boot with no network. */
+check('every script the page loads is precached for offline play',
+  scriptTags.every((s) => coreBare.has(bare(s))),
+  scriptTags.filter((s) => !coreBare.has(bare(s))).join(', '));
+/* The other direction, and not hypothetical: overworld.js and ui-map.js were
+   deleted and had to be lifted out of CORE by hand. A stale entry is the same
+   silent install failure as a missing one. */
+check('every precached path is a file that still exists',
+  coreList.every((p) => p === './' || fs.existsSync(path.join(ROOT, bare(p)))),
+  coreList.filter((p) => p !== './' && !fs.existsSync(path.join(ROOT, bare(p)))).join(', '));
+/* docs/09-conventions.md:42-43 — the game is served from /gardenwonder/, so a
+   leading slash 404s on the live site and nowhere else. */
+check('no precached path starts with a slash',
+  coreList.every((p) => p.indexOf('/') !== 0),
+  coreList.filter((p) => p.indexOf('/') === 0).join(', '));
+check('every script on disk is one the page actually loads',
+  shippedScripts.every((f) => scriptTags.some((s) => bare(s) === f)),
+  shippedScripts.filter((f) => !scriptTags.some((s) => bare(s) === f)).join(', '));
+
+group('every badge in the data reaches a surface a player can see');
+/* docs/09-conventions.md:168, step 3 of the add-an-upgrade playbook. A badge
+   authored into DATA.upgrades and left out of CORE_UPGRADES costs gold, levels
+   up, and renders on no screen. The tab list is read out of ui-sheet.js rather
+   than compared against UI_BADGE_KEYS at the top of this file, because the
+   hand-kept copy is exactly what would drift. */
+const tabBadges = arrayLiteral(sheetSource, 'const CORE_UPGRADES = [');
+const surfacedBadges = new Set(tabBadges.concat(PLOT_AUTOPLANTERS.map((p) => p.key)));
+check('the tab list was actually found and read', tabBadges.length > 5, `${tabBadges.length} badges`);
+check('every upgrade the data defines is on the tab or on a plot',
+  Object.keys(DATA.upgrades).every((k) => surfacedBadges.has(k)),
+  Object.keys(DATA.upgrades).filter((k) => !surfacedBadges.has(k)).join(', '));
+check('and the tab names no badge the data does not have',
+  [...surfacedBadges].every((k) => k in DATA.upgrades),
+  [...surfacedBadges].filter((k) => !(k in DATA.upgrades)).join(', '));
+/* Closes the loop on the list at the top of this file, whose comment asks a
+   human to keep it in step and until now had nothing checking that they did. */
+check('the badge list this suite keeps by hand still matches the tab',
+  UI_BADGE_KEYS.length === surfacedBadges.size && UI_BADGE_KEYS.every((k) => surfacedBadges.has(k)),
+  UI_BADGE_KEYS.filter((k) => !surfacedBadges.has(k)).join(', '));
+
+group('every announcement image survives the trip to a real phone');
+/* docs/09-conventions.md:31-34, and the same warning again in data.js beside the
+   rows. All three of these fail only where nobody is looking: a Mac disk is
+   case-insensitive where GitHub Pages is not, and an online load fetches the
+   image whether or not it was ever precached. */
+const newsImages = (DATA.announcements || []).map((a) => a.img);
+check('every announcement image is precached with its announcement',
+  newsImages.every((img) => coreBare.has(bare(img))),
+  newsImages.filter((img) => !coreBare.has(bare(img))).join(', '));
+check('every announcement image is on disk',
+  newsImages.every((img) => fs.existsSync(path.join(ROOT, bare(img)))),
+  newsImages.filter((img) => !fs.existsSync(path.join(ROOT, bare(img)))).join(', '));
+check('every announcement image path is all lowercase',
+  newsImages.every((img) => img === img.toLowerCase()),
+  newsImages.filter((img) => img !== img.toLowerCase()).join(', '));
+
+group('the last two tables that name icons name real ones');
+/* The group above at "every icon a data table names actually exists" covers the
+   creature, bench, upgrade and decor tables. GOODS and DATA.boosters were the
+   two it never reached, and Icons.get() answers a typo with the sparkle glyph
+   rather than with an error, so a wrong icon looks deliberate. */
+check('every good names an icon that exists',
+  GOODS.every((g) => Icons.has(g.icon)),
+  GOODS.filter((g) => !Icons.has(g.icon)).map((g) => g.id).join(', '));
+check('every booster names an icon that exists',
+  DATA.boosters.every((b) => Icons.has(b.icon)),
+  DATA.boosters.filter((b) => !Icons.has(b.icon)).map((b) => b.id).join(', '));
+
+group('decor stays cosmetic and boosters stay unbuyable');
+/* docs/09-conventions.md:182-184. There is a check further up that no decor in a
+   MIGRATED SAVE carries a stat; this is the catalogue it was migrated from, and
+   the two are different data. The save check would stay green for as long as it
+   took someone to author a stat-carrying row straight into data.js. */
+const STAT_FIELDS = ['type', 'val'];
+check('no decor row in the catalogue carries a stat',
+  DATA.decor.every((d) => STAT_FIELDS.every((f) => !(f in d))),
+  DATA.decor.filter((d) => STAT_FIELDS.some((f) => f in d)).map((d) => d.id).join(', '));
+check('every decor price is one flat number that never escalates',
+  DATA.decor.every((d) => typeof d.cost === 'number' && d.cost > 0),
+  DATA.decor.filter((d) => typeof d.cost !== 'number' || d.cost <= 0).map((d) => d.id).join(', '));
+/* docs/09-conventions.md:189-190 — boosts are earned, not bought. The existing
+   check that boosters carry no `tickets` was written for the ticket retirement
+   and asks about that one word; a booster given a `cost` or a `gems` price would
+   walk straight past it. */
+const PRICE_FIELDS = ['cost', 'price', 'gems', 'credits', 'tickets', 'currency'];
+check('no booster carries a price of any kind',
+  DATA.boosters.every((b) => PRICE_FIELDS.every((f) => !(f in b))),
+  DATA.boosters.filter((b) => PRICE_FIELDS.some((f) => f in b)).map((b) => b.id).join(', '));
+
+group('the level ladder keeps rotating what it hands out');
+/* docs/33-year-one-economy.md:298-299, read at the grain of the reward itself:
+   two bags of Bloom Burst back to back is the repeat a player would feel, and
+   the ladder rotates bloom, golden, seedrush and fortune to avoid it.
+   Deliberately NOT read at the grain of the row key (boost/hive/decor/gems),
+   which would call levels 2 through 15 nine repeats in a row and go red for a
+   ladder doing exactly what the doc asks. The first half of that same sentence,
+   "every level grants something", is left unasserted on purpose: levels 9, 11,
+   13, 14, 16 and 17 have no entry today and the doc marks the passage unbuilt,
+   so writing it would file a bug report dressed as a test. */
+const grantLevels = Object.keys(DATA.levelGrants).map(Number).sort((a, b) => a - b);
+const grantSig = (g) => (g.boost ? `boost:${g.boost}` : Object.keys(g)[0]);
+const grantRepeats = grantLevels.filter((lv, i) => i > 0
+  && grantSig(DATA.levelGrants[lv]) === grantSig(DATA.levelGrants[grantLevels[i - 1]]));
+check('the ladder was actually found and read', grantLevels.length > 5, `${grantLevels.length} levels`);
+check('no two levels in a row hand out the same reward',
+  grantRepeats.length === 0,
+  `repeated at level ${grantRepeats.join(', ')}`);
+
+group('every good carries the line its customer speaks');
+/* docs/26-goods-catalog.md:166-167 — the `line` field is the catalogue's
+   one-line test made structural. The customer says it out loud when they order,
+   so a good without one is a spreadsheet row wearing a name, and the player
+   hears the gap. Named rather than counted on failure: "expected 10, got 9"
+   sends someone hunting through the catalogue for the row that broke. */
+const linelessGoods = GOODS.filter((g) => typeof g.line !== 'string' || g.line.trim().length <= 8);
+check('every good has a line, and it says something',
+  linelessGoods.length === 0,
+  `no usable line on: ${linelessGoods.map((g) => g.id).join(', ')}`);
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);
