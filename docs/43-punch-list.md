@@ -1,0 +1,200 @@
+# The Punch List — the working queue of bugs and polish
+
+**This is the day's working queue, fed by the owner playing the game.** Items arrive as they are
+noticed, get a number, and get investigated far enough that a fix agent starts warm rather than
+cold. Nothing here is fixed by the keeper of this file — the list becomes the brief for a separate
+fix round.
+
+The permanent record is [11-known-issues.md](11-known-issues.md). This file is the short-lived half:
+a fixed item is pruned to the graveyard at the bottom with its commit, and anything that turns out
+to be long-lived — accepted, deferred, or a decision rather than a defect — graduates into
+`11-known-issues.md` and leaves here. **The repo is the source of truth; where this file and the
+code disagree, this file is stale.**
+
+Severity is `blocker` (cannot play past it), `annoying` (the player notices and minds), or
+`cosmetic` (the player might notice).
+
+---
+
+## Tonight's round
+
+1. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
+   minute. Contained to `audio.js` and one `data.js` knob, no layout, no new surface.
+2. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
+   the rail, tap for what it does. Real work: a new tappable surface where the rail has never had
+   one, and it brushes a standing ruling (see the item).
+
+---
+
+## Items
+
+### #1 · POLISH · The Thunderstorm's bed is a featureless drone, not rain · annoying · reported 2026-08-31
+
+**What the owner saw.** "The background sound for the storm is a little overbearing… the constant,
+steady sound is a little too much… It does need to sound like it's raining, but I think it's just a
+little overbearing and really jarring. Some simple light rain noises that are more cozy would fit
+much better for this with a nice little track."
+
+**Repro.** Settings → Developer tools → hold the weather on Thunderstorm, then sit in it for a
+minute. Or `node tools/probe.js` after driving the sky there — but this one is heard, not seen, so
+a screenshot proves nothing and the ear is the instrument.
+
+**The likely cause — and it is not the volume.** Two separate things, both in
+`audio.js`.
+
+*It has no rain in it at all.* `BUILD.rain` (`audio.js:419`) is two bands: a body
+of noise highpassed at 220 Hz and lowpassed at 1250 Hz, plus a narrow 2200 Hz bandpass tap that is
+the patter — the part the ear reads as *drops*. `BUILD.storm` (`audio.js:444`) is
+two bands as well, but both are low: a sub lowpassed at 190 Hz, and a "roll" band between 160 Hz and
+620 Hz. **There is nothing above 620 Hz in a storm.** No patter, no hiss, no drops. A storm plays
+only its own bed — `arriveRain()` in `ui-weather.js:241` calls `bed(id, …)`
+with the one id — so the rain bed is never underneath it. What the owner is describing as "not
+sounding like rain" is exactly that: it is a band-limited roar with the rain removed.
+
+*The half you can hear never moves.* Rain breathes — `lfo(0.07, 380, body.frequency)` walks its
+filter, so the hiss opens and closes. The storm's only motion is `lfo(0.05, 0.4, deepG.gain)`, and
+that rides the **sub** band, which the file's own comment says a phone speaker "cannot reproduce…
+at all". The roll band — the one a phone actually plays — is pinned at `rollG.gain.value = 0.6`
+with no modulation whatsoever. So on the only device anyone plays this on, the storm is literally
+constant.
+
+**Measured, because "too loud" was the obvious theory and it is wrong.** `Sound`'s builders are
+private and the ambience bus cannot be reached from the page, so the two graphs were rebuilt in an
+`OfflineAudioContext` from the same constants and rendered for 20 seconds at the real in-game gain
+chain (`bedGain × ambLevel(music off) × master`). Peak and RMS at the speaker, and the swing is the
+loudest second against the quietest across the 20 s:
+
+| Bed / band | peak | RMS | swing over 20 s |
+| --- | --- | --- | --- |
+| Rain, whole bed | 0.090 | 0.0199 | 2.74 dB |
+| — rain body (220–1250 Hz) | 0.095 | 0.0204 | 2.74 dB |
+| — rain patter (2200 Hz) | 0.019 | 0.0045 | 0.15 dB |
+| **Storm, whole bed** | **0.069** | **0.0168** | 2.93 dB |
+| — storm sub (<190 Hz) | 0.089 | 0.0147 | 7.56 dB |
+| — **storm roll (160–620 Hz)** | 0.061 | 0.0154 | **0.66 dB** |
+
+**The storm measures quieter than the rain.** `BED_TRIM` (`audio.js:369`) is doing
+its job — both land near the 0.10 peak its comment promises. So **turning it down produces a quieter
+featureless drone, not a cosier rain**, and the knob the owner offered as an option is the one thing
+that will not help. The 0.66 dB on the roll band is the finding: that is the "constant, steady"
+the owner heard, measured.
+
+**On "a different music track".** `prefs = { sfx: true, music: false }` (`audio.js:12`)
+— **music is off by default.** The storm's arrangement (`ARRANGE.storm`,
+`audio.js:286`) is a pad at `lp: 620` with `arpOct: 0`, an arpeggio sitting at the
+bass octave where rain's sits an octave up — dark on dark, and it would compound the problem if it
+were audible. But unless the owner turned Music on in Settings, **they have never heard it**, and
+the thing they are calling the storm's track is the bed. Both want the same treatment either way.
+
+**Related.** The storm's two one-shots — `crack()` and `rumble()` — are separate from the bed, sit
+on the `stinger` bus, and are not part of this complaint. Don't let a bed rewrite quietly change
+them: `rel('storm')` scales both off the bed's level knob, so **moving `DATA.weatherStage.storm.bed`
+moves the thunder too**. The flash ceiling in `ui-weather.js:120` is
+photosensitivity and is untouchable regardless.
+
+**Fix sketch.** Give the storm the rain's two upper bands and keep a reduced version of its weight —
+a storm is rain *plus* thunder, and right now it is thunder minus rain. Concretely: build the storm
+from the rain graph (air + body + patter, patter a touch softer and the body a little darker) with
+the roll band underneath at a lower gain than 0.6, and move the swell LFO onto `rollG.gain` so the
+audible half breathes the way rain's does. Then re-measure against the table above rather than
+trusting the ear on a Mac speaker. **What it might break:** `BED_TRIM.storm` (1.9) is calibrated for
+an all-low graph and will be wrong the moment high bands are added — the whole bed will jump. It has
+to be re-derived, and `rel('storm')` carries any level change straight into the thunder. A second
+trap: `loopNoise()` is one shared 4-second buffer, so the rain and storm beds running the same
+source through different filters is fine, but two taps off one source is a fixed relationship — the
+patter cannot be given its own independent rhythm without a second buffer, which the file
+deliberately avoided for a phone hitch.
+
+**Open question.** Whether the storm should keep any low weight at all once it sounds like rain, or
+become "cosy rain plus the thunder cracks". The owner's words lean cosy; the sketch above keeps a
+little weight so a storm still reads as different from a rain. A fix round can build one and let the
+owner hear it rather than deciding on paper.
+
+---
+
+### #2 · POLISH · A standing sky pays the player and nothing on screen says so · annoying · reported 2026-08-31
+
+**What the owner saw.** "When a weather effect happens, we should place a buff and a timer under the
+quest bar, exactly how we do the power-ups. If it's thunderstorming or the Aurora of Beryllis, they
+could see that they're getting some benefit from it… they could tap on whatever the power-up or buff
+is active, and it does a quick tooltip that they can close. It explains what the weather is doing or
+the modifier it's adding to the game."
+
+**Repro.** Not a defect to reproduce — it is a missing surface. Confirmed absent: nothing in the
+game draws a weather readout of any kind. `grep` for a weather chip, pill or badge across the `js`,
+`html` and `css` returns nothing, and the rail (`ui.js:556`) renders boosters and the
+Wonder Effect only.
+
+**What a sky is actually worth**, so a tooltip can be true. Every value below is live in
+`data.js` and read by `game.js`:
+
+| Sky | What it does, right now | Where |
+| --- | --- | --- |
+| Clear | Nothing. `mutation: null`, `catch: 0` | `data.js:162` |
+| Rain | Dewkissed **×2** at a 25% catch, **and grows 10% faster** | `rainGrowMult()`, `game.js:818` |
+| Thunderstorm | Gilded **×10** at a 15% catch. **No growth nudge** — `rainGrowthActive()` tests `id === 'rain'` exactly | `game.js:817` |
+| Aurora | Prismatic **×25** at a 12% catch, **and the garden counts as night** whatever the hour — so Nightbell and Luna wake and Nightbloom's tier bump can fire | `isNight()`, `game.js:827` |
+| Wonderfall | Wonderstruck **×100** at a 10% catch | `data.js:166` |
+
+The owner's instinct is right on the numbers: a Thunderstorm is a ×10 and an Aurora is a ×25 plus a
+free night, and today the player's only clue is that the screen got darker.
+
+**The trap in the copy, and it is the hard part.** A plant gets **exactly one** mutation roll, at a
+moment chosen randomly inside its grow window when it is sown (`mutationMoment()`,
+`game.js:865`), resolved against whatever sky stands *at that moment*
+(`rollMutations()`, `game.js:870`). So a storm standing now only pays the plants
+whose booked moment happens to land inside it. **A chip reading "Gilded ×10" promises a per-harvest
+multiplier the game does not give**, and a player who harvests through a whole storm with nothing to
+show will read it as broken. The wording has to be about the chance, not the payout.
+
+**The engineering traps.** Three, all real:
+
+- **`renderRail()` rewrites `el.rail.innerHTML` wholesale** whenever its signature changes, and the
+  signature contains the countdown, so it changes about once a second. **Any tooltip anchored to a
+  chip inside the rail is destroyed on the next tick.** The tooltip has to live outside the rail, or
+  the rail has to stop rebuilding the node the tooltip hangs off.
+- **The rail has no listener at all** — no click handler anywhere in `ui.js`, `ui-events.js` or
+  `ui-shared.js` touches `el.rail`. Its chips are `<div>`s, not buttons. A tappable chip is a new
+  interactive surface, and it needs a real button and a real `aria-label`, not a click on a div.
+- **The rail is already in `noSwipe`** (`ui.js:708`), so a tap target there will not
+  fight the vertical ladder gesture. That one is good news; keep it that way.
+
+**Related — this brushes a standing ruling, and a fix agent must read it before starting.**
+[18-mutations-and-weather.md](18-mutations-and-weather.md#open-questions), answered 2026-08-31:
+*can the player see the forecast?* **No — the flower speaks it, it is never displayed**, because
+"the moment planting is scheduled against a readout the garden stops being a place and becomes an
+optimisation problem." The owner is asking for something different: a badge for the sky **standing
+now**, not the one coming. That is a status light, not a timetable, and it does not reopen the
+ruling — **but the timer is where the two touch.** A countdown to the end of the current sky is also
+a countdown to when the next one starts, and paired with the flower's spoken forecast it rebuilds
+most of the panel that was ruled out. Worth the owner's word before it ships.
+
+Also related: `weatherSlotRemaining()` (`game.js:800`) already returns the seconds
+left, so the timer needs no new engine work — but a **called** sky (bought with
+`Game.callWeather()`) and a **held** sky (Developer tools) both outlast their slot, and
+`weatherSlotRemaining()` measures the *slot*, not the sky. A chip that trusts it will count down to
+zero and then keep going while the storm stands.
+
+**Fix sketch.** A fifth chip class in `renderRail()`, tinted from `DATA.weather.types[].tint` (the
+tints are already there and unused by the rail), shown when `Game.currentWeather().id !== 'clear'`,
+with the same ring-and-countdown shape the boosters use so it reads as one family. Make it a
+`<button>`; hang the tooltip off `.coach`'s existing arrow-and-`.tip` markup
+(`style.css:2157`) rather than inventing a second callout style, and render it
+outside `.rail` so the per-second rebuild cannot eat it. Copy comes from the table above, written as
+a chance rather than a promise. **What it might break:** the rail is the row that *hides on short
+screens* (the 640 px viewport case in the conventions checklist, and the reason the grid rows are
+pinned — see the 2026-08-01 entry in [10-decision-log.md](10-decision-log.md)), so a weather chip
+must not be the only place a sky is announced. `.coach` is positioned against a target's measured
+box and has two recorded traps of its own — a hidden target measures 0×0, and a coach mark over the
+garden gets covered by an open sheet — so check both. And the ceiling on rail width: with two
+boosters and a Wonder running, a fifth chip is the one that overflows.
+
+**Open question.** Whether the chip carries a countdown at all, given the forecast ruling above. A
+tinted chip with no timer says "the sky is doing something" without saying when it stops; a timer
+turns it into a small clock the player can plant against. The owner's call.
+
+---
+
+## Fixed and pruned
+
+*Nothing yet.*

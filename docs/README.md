@@ -57,6 +57,7 @@ Read it before anything else if you're picking the project up cold.
 | [40-financial-model.md](40-financial-model.md) | You want to know what any of this earns — three scenarios in plain tables, the install volume needed to hold them, the cost side, the kill/scale signals, and the 2026 rules that change the plan; math in an appendix — **model, owner picking** |
 | [41-weather-staging.md](41-weather-staging.md) | You're staging the sky — the Weather Ladder, the fronts, the motion gate, and the two math nudges — **owner-specced, not built** |
 | [42-overnight-housekeeping.md](42-overnight-housekeeping.md) | You're wondering what the overnight round of 2026-08-30 did — the style check, the hex sweep, the bars, and the four things it filed rather than decided — **done, with a two-minute morning check** |
+| [43-punch-list.md](43-punch-list.md) | Something looks wrong today and you want to know whether it is already tracked — the working queue of bugs and polish fed by the owner's play, each one investigated with a fix sketch, ordered for the next fix round — **short-lived; [11-known-issues.md](11-known-issues.md) is the permanent record** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

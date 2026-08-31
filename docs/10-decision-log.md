@@ -5,6 +5,28 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (process) — The owner's play gets a queue of its own, and its keeper never fixes anything
+
+**The owner plays the live build and notices things, and until now those went into a conversation
+and then nowhere.** [43-punch-list.md](43-punch-list.md) is the queue they land in: numbered on
+arrival, investigated to the point where a fix agent starts warm — file and line, engine or display,
+what the fix might break — and ordered for the night's fix round.
+
+**The keeper of that file tracks and never fixes.** That is the whole point of the split. An agent
+that can fix what it finds stops looking the moment it finds something, and the second bug in the
+same area is never reported; an agent that cannot fix anything keeps reading. It also keeps the
+owner's reporting cheap: they say what they saw in one line and get one line back, because the
+investigation goes in the file rather than into the chat. The file is the only thing it writes.
+
+**Two files, two lifetimes.** The punch list is the day's working queue and is meant to empty — a
+fixed item is pruned to a one-line graveyard with the commit that fixed it, so nothing is
+re-reported. [11-known-issues.md](11-known-issues.md) stays the permanent record, and anything that
+turns out to be a decision, an acceptance or a deferral rather than a defect graduates there and
+leaves the queue. Without that rule the punch list becomes a second known-issues file that nobody
+prunes, which is the failure mode a daily queue has.
+
+---
+
 ## 2026-08-31 (project) — The docs get a wiki mirror, and 755 links had to lose their `.md`
 
 **Two Unity engineers now need to read this folder, and neither of them should have to clone it to
