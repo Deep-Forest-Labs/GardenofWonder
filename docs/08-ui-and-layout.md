@@ -744,8 +744,13 @@ Present:
 
 Missing, and worth knowing before claiming accessibility:
 
-- **No keyboard navigation or visible focus styles.** Buttons are focusable by default but nothing
-  is styled for it, and the game is unplayable without a pointer.
+- **No keyboard navigation.** Every button takes a `:focus-visible` ring as of 2026-08-30 — 3px of
+  `var(--ink)` at 3px offset, written as an `outline` and never a `box-shadow`, because every
+  surface in this game carries its lip in `box-shadow` and a ring written that way would delete the
+  lip off every button at once. `:focus-visible` and not `:focus`, so a thumb tap leaves nothing
+  behind. But there are still no key handlers, and the game is unplayable without a pointer.
+  `.dev-btn`, `.mw-cell` and `.mw-keeper` each set their own `outline` in a state rule that
+  outranks the ring.
 - **No screen-reader narration of the garden.** A blind player gets no plot states.
 - **Colour is the only channel for rarity.** No shape or text differentiation.
 - Contrast has not been formally audited.

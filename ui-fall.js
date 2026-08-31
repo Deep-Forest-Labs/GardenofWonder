@@ -48,7 +48,7 @@
       if (cell === 4) {
         const mid = document.createElement('div');
         mid.className = 'fl-flower-cell';
-        mid.innerHTML = `<button class="flower-btn fl-flower" id="fallFlower">${Flora.talkingFlower()}</button>`;
+        mid.innerHTML = `<button class="flower-btn fl-flower" id="fallFlower" aria-label="Tap the talking flower">${Flora.talkingFlower()}</button>`;
         board.appendChild(mid);
         continue;
       }

@@ -1955,11 +1955,11 @@
     return `
       <div class="set-row">
         <span class="lbl">${Icons.get('sound')} Sound effects</span>
-        <button class="toggle" data-toggle="sfx" aria-pressed="${S.prefs.sfx}"><i></i></button>
+        <button class="toggle" data-toggle="sfx" aria-pressed="${S.prefs.sfx}" aria-label="Sound effects"><i></i></button>
       </div>
       <div class="set-row">
         <span class="lbl">${Icons.get('music')} Ambient music</span>
-        <button class="toggle" data-toggle="music" aria-pressed="${S.prefs.music}"><i></i></button>
+        <button class="toggle" data-toggle="music" aria-pressed="${S.prefs.music}" aria-label="Ambient music"><i></i></button>
       </div>
       <p class="sheet-note">Your garden saves automatically to this browser.</p>
       <button class="big-btn magic" data-act="cheat">${Icons.get('gem')} Grant 50 Gems</button>

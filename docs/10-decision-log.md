@@ -60,6 +60,20 @@ knows nothing about the game and doc 09 says to keep it that way). Worth recordi
 cannot test this** — Node has no `location`, and probe.js drops every console message that is not an
 error — so it was proved by driving a real browser on 127.0.0.1 and capturing `console.warn`.
 
+**The focus ring is an `outline`, and that is the whole decision.** A ring is the natural job for
+`box-shadow` in this codebase — every surface already composes one — and that is exactly why it
+could not be used. `box-shadow` is one property, so a focus ring written that way deletes the lip of
+whatever it lands on, and a rule on bare `button` lands on all of them at once. It is the
+state-modifier trap doc 05 records, arriving everywhere simultaneously instead of one component at a
+time. `outline` is a separate property, follows the border radius on its own, and cannot reach the
+stack; confirmed by reading `boxShadow` on a focused dock button and seeing its 5px lip intact.
+`:focus-visible` rather than `:focus` because this is played with a thumb.
+
+Three `aria-label`s went in beside it — the Fall room's talking flower, which the garden and the
+meadow both already label, and the two settings toggles, whose visible siblings read "Sound effects"
+and "Ambient music". Nothing ambiguous was guessed: the plot buttons' names depend on plot state and
+are left for whoever does that properly.
+
 **Not done: the creature arrival bar, and the reason is not the one expected.** The search was for a
 display-only fix that avoided the design change. There is none, because the display fix is already
 there — `ui-sheet.js` clamps that line in three places, and the clamp is what produces "24 / 24 Rose

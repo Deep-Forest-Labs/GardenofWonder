@@ -111,6 +111,20 @@ html,body{
 
 button{font-family:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
 
+/* The keyboard's ring, and it is an `outline` for one reason: every surface in
+   this game carries its lip in `box-shadow`, so a ring written that way deletes
+   the lip of whatever it lands on — the state-modifier trap doc 05 records,
+   arriving on every button at once instead of one component at a time. `outline`
+   is a separate property, follows the border radius on its own, and cannot reach
+   the stack. `:focus-visible` rather than `:focus` because this is played with a
+   thumb: a tap must not leave a ring sitting behind it. Ink one step out from the
+   contour the button already wears, so it reads as emphasis and borrows nothing
+   from the rarity and currency colours. */
+button:focus-visible{
+  outline:3px solid var(--ink);
+  outline-offset:3px;
+}
+
 /* The box the whole game is measured against, and the layout's one hard
    requirement: it has to end exactly at the bottom of the screen. Two attempts
    missed it on an installed iPhone — `inset: 0` alone, then `height: 100dvh` —
