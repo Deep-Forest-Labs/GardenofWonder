@@ -18,9 +18,12 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 
 ## Tonight's round
 
-1. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
+1. **#3 · Split the sound into three channels — effects, ambient, music** — do this one FIRST. The
+   three buses already exist; only the settings conflate them. It also moves every bed's level, so
+   tuning #1 before it would be tuning a number that is about to change.
+2. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
    minute. Contained to `audio.js` and one `data.js` knob, no layout, no new surface.
-2. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
+3. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
    the rail, tap for what it does. Real work: a new tappable surface where the rail has never had
    one, and it brushes a standing ruling (see the item).
 
@@ -86,7 +89,9 @@ bass octave where rain's sits an octave up — dark on dark, and it would compou
 were audible. But unless the owner turned Music on in Settings, **they have never heard it**, and
 the thing they are calling the storm's track is the bed. Both want the same treatment either way.
 
-**Related.** The storm's two one-shots — `crack()` and `rumble()` — are separate from the bed, sit
+**Related — do `#3` first.** Splitting the sound into three channels retires `MUSIC_OFF_TRIM`, which lifts every bed by about 2.9 dB for a player with music off. Tuning this storm before that lands means tuning it twice.
+
+The storm's two one-shots — `crack()` and `rumble()` — are separate from the bed, sit
 on the `stinger` bus, and are not part of this complaint. Don't let a bed rewrite quietly change
 them: `rel('storm')` scales both off the bed's level knob, so **moving `DATA.weatherStage.storm.bed`
 moves the thunder too**. The flash ceiling in `ui-weather.js:120` is
@@ -192,6 +197,87 @@ boosters and a Wonder running, a fifth chip is the one that overflows.
 **Open question.** Whether the chip carries a countdown at all, given the forecast ruling above. A
 tinted chip with no timer says "the sky is doing something" without saying when it stops; a timer
 turns it into a small clock the player can plant against. The owner's call.
+
+---
+
+### #3 · POLISH · Effects, ambient and music are three buses behind two switches · annoying · reported 2026-08-31
+
+**What the owner asked for.** "Create three different settings for the sound… sound effects,
+ambient, music. We can separate the things on those different channels. The wind effect that's going
+behind the rain would obviously be on ambient, and we could turn that down very low. Eventually, we
+can have different sounds on the ambient track that would be like birds, wind, leaves rustling…
+Let's go ahead and separate those three styles of tracks moving forward."
+
+**Repro.** Settings shows two switches: *Sound effects* and *Ambient music*
+(`renderSettings()`, `ui-sheet.js:1953`). There is no way to reach the sky's sound on its own.
+
+**The likely cause, and it is smaller than it looks: the buses are already right, the switches are
+not.** `audio.js` builds three separate buses and `06-audio-and-fx.md:10` already documents them as
+"three buses so effects, music and the sky mute independently":
+
+| Bus | What rides it |
+| --- | --- |
+| `sfxBus` (0.65) → `sfxFilter` | every `RECIPES` sound through `play()` |
+| `musicBus` | the `ARRANGE` chains — the pad and arpeggio, per sky |
+| `ambBus` (0.5) | the four weather beds, the flower's hummed song (`sing()`), and thunder via the `stinger` makeup gain |
+
+**What conflates them is one function.** `ambLevel()` (`audio.js:561`) reads *both* preferences:
+effects-off silences the ambience outright, and music-off trims it to `MUSIC_OFF_TRIM` (0.72). The
+comment above it at `audio.js:15` is a deliberate argument for that — "a bed is the world making a
+sound rather than a tune, so the effects mute governs it outright" — and a third channel **retires
+that reasoning rather than extending it**. Whoever does this should read it and then delete it; it
+is not a trap, it is a decision being overturned on purpose.
+
+So the work is: a third `prefs` key, `ambLevel()` reading only that key, `MUSIC_OFF_TRIM` gone, a
+third row in `renderSettings()`, and a third branch where `ui-sheet.js:2767` currently reads
+`if (k === 'sfx') … else …` — a two-way branch that silently sends any third key to `setMusic`.
+
+**This moves #1's numbers, which is why it goes first.** The owner plays with music off, so today
+every bed is multiplied by `0.5 × 0.72 = 0.36`. Give ambient its own level and the natural default
+is the untrimmed `0.5` — **about 2.9 dB louder on every sky, including the storm the owner just
+called overbearing.** Tune `#1` after this lands, or tune it twice.
+
+**Related.**
+- **`#1`** — same file, and the storm's bed level is the shared number. Do `#3` first.
+- **The duck crosses the channels.** `duck()` (`audio.js:108` in `06-audio-and-fx.md`) drops
+  `sfxFilter` to 950 Hz while rain stands, so **ambient ducks effects**. That link must survive the
+  split, and it raises a real question: should the duck still fire for a player who turned ambient
+  off? Today it cannot happen, because ambient-off means effects-off. After the split it can.
+- **The save needs no migration for the new key, but does for the old ones.**
+  `state.prefs = Object.assign(d.prefs, parsed.prefs || {})` (`game.js:219`) merges onto the default
+  object, so a new key in `defaultState().prefs` is backfilled correctly for every existing save —
+  the nested-object trap in `09-conventions.md` does **not** bite here. What does bite: an existing
+  player with `sfx: false` deliberately silenced the beds too, and a fresh `amb: true` default hands
+  them a garden that suddenly makes noise. Derive the new key from the old prefs on first load
+  rather than defaulting it flat.
+- **`sing()` is the ambiguous one.** The flower's hummed melody during a Wonderfall is on `ambBus`
+  today, and it is the one thing on that bus that is a *tune*. It is either the exception that stays
+  on ambient or the one thing that moves to music. Pick deliberately and write it down.
+
+**Fix sketch.** Add `amb` to `defaultState().prefs` and to `Sound.prefs`; add `setAmb()` beside
+`setSfx()`/`setMusic()`; reduce `ambLevel()` to `prefs.amb ? AMB_LEVEL : 0` and delete
+`MUSIC_OFF_TRIM`; make the settings handler a lookup rather than an if/else so a fourth channel
+cannot silently land on music; add the row with its own icon and `aria-label`. Rename the existing
+row's label while there — it says *Ambient music* and will now mean music only. **What it might
+break:** `play()` returns early on `!prefs.sfx` *and* the bus gain is zeroed, so effects are gated
+twice and the beds are gated in a third place — check all three read the right key after the split.
+`openAmb()` and `rampAmb()` both call `ambLevel()`, so a stale read leaves the bus open at the wrong
+height behind a crack. And `06-audio-and-fx.md` documents the current mute behaviour in prose at
+lines 15–25; that paragraph becomes false in the same commit.
+
+**Not in scope tonight: the nature bed.** Birds, wind and rustling leaves are what the owner wants
+the ambient channel *for*, and they are the reason to build the switch — but they are new content
+with their own tuning, and a fix round that builds both will ship a channel nobody has heard on its
+own. Ship the split, let the owner sit in a clear garden with the switch, then write the bed. When
+it comes: `BUILD` is a table keyed by id and `loopNoise()` already shares one 4-second buffer, so a
+`BUILD.nature` costs almost nothing structurally — but a bed that plays under *clear* skies is the
+first one that never stops, and `ambTarget()` is written on the assumption that clear weather
+carries no idle gain.
+
+**Open question, and it is the one that sizes the job.** Three on/off switches, or three sliders?
+"Turn that down very low" reads like a level, but it may mean the developer setting it low rather
+than the player. Switches are an afternoon; sliders add a saved number per channel, a new control
+the game does not have anywhere yet, and a decision about what the default positions are.
 
 ---
 
