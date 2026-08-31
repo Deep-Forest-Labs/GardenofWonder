@@ -81,10 +81,20 @@ The point of this folder is that it stays true as the game grows. When you chang
 2. Add a dated entry to [10-decision-log.md](10-decision-log.md) explaining *why*, not what.
 3. If you found and fixed something in [11-known-issues.md](11-known-issues.md), remove it.
 4. If you knowingly left something broken or unfinished, add it there instead.
+5. Run `node tools/wiki-sync.js` last, once the docs above are true — it mirrors this folder to
+   the wiki.
 
 Numbers matter. Every value quoted in these docs is copied from the code. If you rebalance
 something, search the docs folder for the old number — it is probably quoted in more than one
 place.
+
+The wiki is a mirror, not a second place to write. `tools/wiki-sync.js` copies this folder to the
+project's [GitHub wiki](https://github.com/Deep-Forest-Labs/GardenofWonder/wiki) so the Unity
+engineers can read the design in a browser without cloning the repo, rewriting the links on the way
+— wiki page URLs carry no `.md`, so an unrewritten link 404s. Every run overwrites the wiki
+wholesale, so **nothing is ever edited on the wiki side**: an edit made there survives until the
+next sync and then vanishes, unreviewed and unrecorded. If something on the wiki is wrong, it is
+wrong here — fix it in `docs/` and run the sync again. `legacy/` is deliberately not mirrored.
 
 ## Legacy material
 

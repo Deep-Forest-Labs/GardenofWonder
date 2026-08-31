@@ -5,6 +5,94 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (project) — The docs get a wiki mirror, and 755 links had to lose their `.md`
+
+**Two Unity engineers now need to read this folder, and neither of them should have to clone it to
+do that.** They are porting the game, not editing the design: what they want is a link they can open
+on a second monitor, search, and send to each other — not a git checkout, a markdown viewer and a
+merge conflict waiting to happen. `tools/wiki-sync.js` mirrors `docs/*.md` to the project's wiki at
+<https://github.com/Deep-Forest-Labs/GardenofWonder/wiki>, which is the cheapest reading surface
+GitHub gives us: it already exists, it renders our markdown the way GitHub renders it everywhere
+else, it has search, and it needs no hosting decision.
+
+**`docs/` is the source of truth forever; the wiki is generated and overwritten.** Every run
+replaces the wiki wholesale — each page is deleted and rewritten — so the mirror cannot quietly
+become a second copy somebody maintains, and a renamed document leaves no ghost page behind.
+Nothing there is authored, nothing is merged back, and a page is only ever as true as the last sync.
+A generated `_Footer.md` says so on every page. The sync is the **last** step of the definition of
+done, after the handoff, for the same reason the handoff is last: it is derived, so it runs on docs
+that are already true rather than on memory.
+
+**The one real engineering problem is that a wiki URL carries no extension.** A page committed as
+`03-systems.md` is served at `/wiki/03-systems`, so `[03-systems.md](03-systems.md)` — the form used
+everywhere in this folder — would resolve to `/wiki/03-systems.md` and 404. That is **755 links**,
+154 of them carrying an anchor that has to survive the rewrite, and one written with a `./` prefix.
+Sixteen more leave `docs/` altogether — `../AGENTS.md#definition-of-done`, `../sw.js`,
+`../tools/order-gold.js` and friends — and a wiki is a *different repository*, so on the mirror
+those have no target at all; they are rewritten to absolute `github.com` URLs, or to the live
+GitHub Pages copy where the thing is better run than read (the spikes, and the playable `legacy/`
+build). Everything else the tool does is a file copy. **The link text is never touched** — 753 of
+the 755 links carry `.md` in the words the reader sees, and in most of them the visible text is
+character-identical to the target, so a rewrite that is not anchored on the `](...)` parentheses
+edits the prose instead of the URL. The words ship exactly as written.
+
+**The failure mode is why this ends in a check rather than a careful regex.** A link form the
+rewriter misses does not throw and does not look wrong: it renders an ordinary page with one dead
+link, and the only person who ever finds out is the engineer the mirror was built for. Worse, a
+GitHub wiki does not 404 a missing page — it redirects to the wiki's Home and answers **HTTP 200**,
+so a link checker that trusts status codes reports a clean wiki while every dead target hides. So
+the sync resolves every link it rewrites against the set of pages it is about to write, and refuses
+to push if one dangles — the argument `tools/style-check.js` was built on, that a rule nobody
+notices breaking is not a rule. It also reports the three anchors in this folder that were already
+stale before any of this (in `03-systems.md`, `10-decision-log.md` and `27-design-audit.md`) rather
+than repairing them silently; they are the docs' bug to fix, not the mirror's.
+
+**`docs/legacy/` is not mirrored, and that is not a softening of the keep-everything policy.** Those
+are the *Idle Garden Reborn* documents; they are kept permanently, and this folder's README already
+says plainly that they are wrong about the current game. But a wiki is one flat list of pages, so
+mirroring them drops a document describing a different build into the sidebar beside `03-systems`
+with nothing around it to say so — for a reader whose only context *is* that sidebar, that is a trap
+rather than an archive. The repository is the archive; the mirror is a reading surface, and it
+carries only what an engineer should build from. `docs/feedback.md` is skipped too, for the duller
+reason that it is empty and gitignored.
+
+**The wiki's Home is not this folder's README.** It is generated: the same documents, reordered for
+someone who has to build the thing — start here, then what the Unity build needs, then the build
+plan and open work, then design history, then the playable spikes at their live URLs. `README.md` is
+still mirrored as its own page, unchanged: the links that point at this folder's own index still
+resolve, and the reordering is a reading aid, not a correction.
+
+**This is the plain working mirror, and deliberately not the styled one.** The 2026-08-30 entry
+[*Everything is kept, and the bible will one day be published*](#2026-08-30-project--everything-is-kept-and-the-bible-will-one-day-be-published)
+records the standing intent: the whole corpus is kept and eventually published as a styled public
+record of how much work went into the game. That is a different artifact for a different audience
+and it is still a future phase. What this round does is cash that entry's central claim — that the
+corpus is consistent, cross-linked markdown, so a wiki is cheap to generate whenever the moment
+comes. It was cheap. The link rewriting was the entire bill, and it is now paid and written down.
+
+### Rejected
+
+**Hand-copying the pages into the wiki.** Forty-six documents and 27,242 lines, touched on twenty of
+the last thirty days — a copy made by hand is accurate the day it is made and wrong within the week.
+The cost is not the typing, it is that the staleness is invisible: nothing on a stale page says it
+is stale, so the engineer builds from it and finds out in code. Anything the definition of done
+cannot reach with one command does not stay true.
+
+**Letting the engineers edit the wiki and merging their changes back.** A GitHub wiki is a git
+repository, so this is nearly free to build, and that is the trap. It creates a second place where
+the design can change — with no review, no decision log, and no way for a correction to arrive with
+its reasoning attached, which is the one thing this file exists to carry. An engineer who finds
+something wrong sends it back to `docs/`, where the fix gets an entry. The wholesale overwrite is
+what enforces it: wiki edits do not count *and* do not survive, so nobody has to remember the policy.
+
+**Building the styled showcase wiki now.** Different audience, different job — design, navigation
+and an edit for a reader who is not on the team, none of which two engineers reading a spec need.
+Doing it now would have put a working-day tool behind a marketing artifact, and would have had to
+guess at a public shape nobody has decided. The mirror is due this week; the showcase keeps its own
+moment.
+
+---
+
 ## 2026-08-31 (phase 3.9) — The Sky Pass ships, and one property at a time is how it nearly did not
 
 **The owner approved all five skies on the motion stage and handed back their tuned values, so

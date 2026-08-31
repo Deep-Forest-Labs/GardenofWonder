@@ -1140,11 +1140,18 @@ The current build is a **prototype and design reference**, not the shipping prod
 | Person | Role |
 | --- | --- |
 | Owner | Design and web prototyping. Not the implementer. |
-| Engineer | Porting to Unity for iOS and Android. |
+| Engineers | Two, porting to Unity for iOS and Android. |
 | Agent | Design advisor, prototype implementation, documentation. |
 
 The web build is the **design lab** — cheap and fast to test ideas. Unity is the **shipping
 product**. Keep them in that relationship; don't gold-plate the web build.
+
+**The engineers read `docs/` as a wiki, not as a clone.** `tools/wiki-sync.js` mirrors this folder
+to <https://github.com/Deep-Forest-Labs/GardenofWonder/wiki>, so run it after any docs change — it
+is step 5 in [README.md](README.md). Treat the wiki as read-only: every run overwrites it wholesale,
+and an edit made there is gone at the next sync with nothing recording it. `docs/` is the source of
+truth; the wiki is a window onto it. Why, and what was rejected: the 2026-08-31 wiki-mirror entry in
+[10-decision-log.md](10-decision-log.md).
 
 ## Decisions already made
 
