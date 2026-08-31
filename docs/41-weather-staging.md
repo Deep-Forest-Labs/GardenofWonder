@@ -42,8 +42,15 @@ starting points; **the motion stage is where they get tuned, by hand, by the own
   everything grows 10% faster while it rains. Stardew's most-loved rule: a gift you can see.
   Applies through the existing growth-modifier stack (the 0.3 floor already clamps the product);
   a called Rain (8 gems) inherits it, which is fine — the bought sky is the same sky.
-- **End:** drops thin over ~5s, soil dries over ~30s (the lingering wet ground is the "that
-  happened" trace), music re-brightens.
+- **End — the sunbreak (owner-added, 2026-08-30):** drops thin over ~5s, and then, when the
+  next slot is Clear and it is daytime, **god rays**: two to four soft diagonal light shafts
+  fade in through the parting clouds — very simple, very mild, the sun shooting through after a
+  shower. They drift slowly, live ~20–40s, and fade as the soil dries (~30s — the lingering wet
+  ground and the rays together are the "that happened" trace). Music re-brightens under them.
+  Built as CSS light-wedge layers (screen blend, low opacity, slow drift), never particles;
+  daytime only; masked near the bottom like the season tint so the iOS strip stays clean.
+  `DATA.weatherStage.sunbreak = { rays, opacity, driftSpeed, duration }` — all on the motion
+  stage's sliders.
 
 ### Thunderstorm — the dramatic one (5 channels)
 
@@ -57,7 +64,9 @@ starting points; **the motion stage is where they get tuned, by hand, by the own
 - **Creatures:** shelter — tending pets duck under the nearest plant's leaves and peek out.
 - **Math:** none new. Gilded ×10 already pays; the storm-crit idea is **cut** for legibility —
   one sky, one message.
-- **End:** one last distant rumble, wind eases, the rain end plays out.
+- **End:** one last distant rumble, wind eases, and the rain end plays out — **including the
+  sunbreak** when the next slot is Clear in daytime. The storm earning the rays is the bigger
+  payoff of the two.
 
 ### Aurora — the beautiful one (6 channels)
 
@@ -138,10 +147,12 @@ switch. You bought a sky; it should arrive like one.
 1. **The builder's first deliverable is `tools/sky-spike.html`** — a motion stage, loading the
    real `audio.js` and a copy of the fx patterns (spikes may lean on the real modules where they
    are DOM-light; note any divergence). One button per sky plays its **entire sequence** —
-   front → transform → linger → end — on a garden mock at 390×844, repeatable at will. A
-   reduced-motion toggle shows each sky's quiet version.
+   front → transform → linger → end, **the sunbreak included on Rain's and the Storm's ends** —
+   on a garden mock at 390×844, repeatable at will. A reduced-motion toggle shows each sky's
+   quiet version (the sunbreak's is a single static faint ray, or nothing).
 2. **Knobs on the stage.** Sliders for the values the feel depends on: drop count, wind lean,
-   flash interval and brightness, ribbon speed, veil opacity, bed volumes, front duration. The
+   flash interval and brightness, ribbon speed, veil opacity, bed volumes, front duration, and
+   the sunbreak's ray count, opacity, drift and duration. The
    owner fiddles until each sky feels right **and the spike displays the current values as a
    copyable block** — those numbers go into `data.js` verbatim. The owner tunes; the builder
    transcribes.
