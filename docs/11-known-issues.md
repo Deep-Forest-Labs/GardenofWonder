@@ -710,6 +710,19 @@ together or not at all. Deliberately not touched here: the ruling was about the 
 *shape*, re-pricing it wants playtest data, and phase 4 owns the calibration. Both numbers
 above are recomputed rather than quoted, and a sim-test pins the 636,378 figure.
 
+## Performance
+
+### The Sky Pass dips frame rate on an iPhone 16 — owner-reported, 2026-08-31
+
+Reported from live play the morning the five skies landed. Untriaged; the likely suspects are the
+new compositing load, in rough order: the mix-blend-mode layers now stacked over the living sky
+(weather tint + season tint + Wonderfall's veil), the aurora's animated gradient ribbons, any
+animated filter (the veil's breathing saturate/hue-rotate class of cost), and the weather particle
+layer's draw on a DPR-2 canvas. iOS Safari pays for blend modes and filters in full-screen
+compositing passes; several at once is the classic cliff. Needs a measured pass — instrument,
+find the top two costs, and fix or degrade gracefully — not a guess. The owner's slider-approved
+feel is the spec; performance work may not change what a sky looks like, only what it costs.
+
 ## Balance
 
 ### Orchid is a throughput trap — half fixed
