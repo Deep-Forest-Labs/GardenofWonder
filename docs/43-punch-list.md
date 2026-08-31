@@ -27,9 +27,15 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
    and the highest value for the effort: rewrite one SVG from a function that already exists, run
    three documented shell commands. It shares no file with anything else here, so it can run
    alongside the audio work rather than behind it.
-3. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
+3. **#6 · Fall's board sits 23px high and its flower is 73% the size** — the season swipe is the
+   game's signature move and it visibly jumps. Both causes measured and named; one `style.css` fix
+   plus a glow element.
+4. **#5 · No cheat jumps ahead Turns** — the owner cannot reach the season gates to test them.
+   Dev-panel only, touches no player surface. **Read the item first**: it will not show anyone a
+   Spring garden, because there is not one.
+5. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
    minute. Contained to `audio.js` and one `data.js` knob, no layout, no new surface.
-4. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
+6. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
    the rail, tap for what it does. Real work: a new tappable surface where the rail has never had
    one, and it brushes a standing ruling (see the item).
 
@@ -395,6 +401,158 @@ installed app keeps the *old* icon until the worker updates; note that rather th
 splash consistent.
 
 **No open question.** The owner named the target and the source art for it is already in the repo.
+
+---
+
+### #5 · POLISH · No cheat jumps ahead Turns, so the season gates cannot be reached · annoying · reported 2026-08-31
+
+**What the owner asked for.** "Add some new cheats that allow players to get to different states in
+the game… we're trying to test all the different seasons or turns in the game. I want to be able to
+get to spring and winter, so we need to be able to cheat and get to different turns or jump ahead
+turns."
+
+**Repro.** Developer tools → *The Garden Year* has one Turn button: *Run the Turn*. Reaching Turn 6
+means driving a year's earnings and running the ceremony six separate times.
+
+**Read this before building it: Spring and Winter are not there to be tested.** `ui.js:867` declares
+the season table with `built: false` on both, and `seasonReady()` is `built && turned`. So a cheat
+that lands the owner on Turn 6 opens the *gate*, and behind the gate is the gate — the plate simply
+changes its line from "Opens at Turn 6" to **"Still growing in"** (`showGate()`, `ui.js:912`). That
+string exists precisely for this case. Spring and Winter are slices C and E in
+`32-the-garden-year.md` and no garden has been written for either. **The cheat is still worth
+building** — it reaches the Turn ceremony repeatedly, the plot gate at `plotTurnGate`, Fall opening
+at Turn 1, the seed unlock ladder, and the gate copy flipping, which is real testable content — but
+it will not show anyone a Spring garden, because there is not one.
+
+**The likely cause — nothing is broken, the cheat was never written.** `Game.Dev` (`game.js:4024`)
+has `driveYear(coins)`, `projectTurn()` and `runTurn(blessedId)`, and the panel wires them at
+`ui-sheet.js:2281`. Everything needed for a jump exists; nothing loops it.
+
+**The trap, and it is arithmetic — a naive loop stalls at Turn 4, two Turns short of Spring.** The
+Turn has two gates (`turnReady()`, `game.js:3686`): this year's `coinsEarned >= minCoins` (100,000)
+**and** the un-tallied mint increment `>= minSeeds` (10). The mint is cumulative —
+`0.1 x sqrt(lifetimeCoins)` minus what has already been drawn (`projectedMint()`, `game.js:3674`) —
+so each Turn needs `sqrt(lifetime)` to have risen by another 100, and a loop that credits a flat
+`minCoins` per year gives a shrinking increment:
+
+| Turn | increment on a flat 100K/year | |
+| --- | --- | --- |
+| 1 | 31.6 | ok |
+| 2 | 13.1 | ok |
+| 3 | 10.1 | ok — Winter's gate, and it clears by 0.1 |
+| 4 | **8.5** | **stalls, `turnYear()` returns `null`** |
+
+**Winter is reachable by luck and Spring is not**, and the failure is silent: `turnYear()` returns
+`null` and a loop that ignores the return value reports success having done nothing. The fix is to
+credit **until `turnReady()` is true** rather than a fixed amount — which needs about 719K lifetime
+coins to reach Turn 6, and about 160K in the sixth year alone.
+
+**Related.**
+- **The dev-cheat playbook forbids the shortcut.** `09-conventions.md` says a cheat must "force the
+  real code path", so this loops `turnYear()`; it does **not** write `state.year.turnsCompleted`
+  directly. Writing that field would open Fall, the plot gates and both season gates while Saved
+  Seeds, `mintedBase` and `year.number` all disagree with it — a garden in a state no player can
+  ever be in, which is worse than no cheat.
+- **A Turn wipes the garden, and six Turns wipe it six times.** `turnYear()` clears upgrades,
+  `boostInv` and the tap ladder, and regenerates every Stand slot (`game.js:3760`). That is correct
+  — it is a prestige — but the owner should expect to land on a bare Turn-6 garden with Saved Seeds
+  banked, not a loaded one.
+- **The ceremony will NOT fire six times.** Worth stating, because it is the obvious fear:
+  `Game.on('turn')` in `ui-events.js:497` only calls `renderSeasonEdges()`. The five-beat ceremony
+  is a sheet the player opens from the dock, so an engine-side loop runs silently. No suppression
+  needed.
+- **The gate copy is the one thing a jump makes newly visible.** `showGate()` picks between
+  "Opens at Turn N" and "Still growing in" on `seasonTurned()`, and the second branch has never been
+  reachable in normal play. Look at it while you are there.
+
+**Fix sketch.** `Game.Dev.jumpTurns(n)`: loop n times, and in each pass credit through the real
+`credit()` in a small loop until `turnReady()` is true, then call `turnYear(blessId)` with the same
+"cheapest flower whose Rich Bloom has room" pick the panel already uses (`ui-sheet.js:2411`). Bail
+out and return the count actually completed if `turnYear()` returns `null`, so a stall reports
+itself rather than lying. Then a dev row — *+1 Turn*, *+3 Turns (Winter)*, *+6 Turns (Spring)* — with
+each button's label naming the season it opens, and a sim-test asserting a jump to 6 leaves
+`turnsCompleted === 6` and that nothing leaks into an unforced run, per the playbook's step 5.
+**What it might break:** `credit()` is the mint's single faucet and cheat grants normally carry
+`{ cheat: true }` so they never reach it (`data.js:349`) — this cheat must deliberately **omit** that
+flag, exactly as `driveYear()` does, or the pool never grows and the loop spins forever. Cap the
+inner credit loop. `saveNow()` runs once per Turn, so six jumps are six writes.
+
+**Open question, already answered by the code but worth the owner hearing it.** Reaching Turn 6
+shows a locked plate, not a Spring garden. If what is actually wanted is *Spring and Winter to
+exist*, that is slices C and E of the build plan, not a cheat — and it is a much bigger ask than
+this item.
+
+---
+
+### #6 · BUG · Fall's board sits 23px high and its flower is three-quarters the size · annoying · reported 2026-08-31
+
+**What the owner saw.** "The gardens need to be perfectly lined up in terms of placement when
+scrolling through the different seasons. If I'm on the main garden and I swipe to go to fall, I
+notice that the garden is higher on the screen… Another example of visual fidelity is that the
+flower in the center is not the same size as the flower in the garden. The fall flower isn't the
+same size; it's like a smaller version of it."
+
+**Repro.** Turn once so Fall opens, then swipe from the garden to Fall and watch the board jump.
+Driven headlessly and measured:
+
+```
+node tools/probe.js wait:900 tap:#newsOk wait:600 \
+  'eval:(()=>{Game.Dev.driveYear(400000);Game.Dev.runTurn("daisy");return Game.fallOpen();})()' \
+  'tap:[data-season="fall"]' wait:1400 shot:fall
+```
+
+**Measured, both at 390×844.** Two separate faults, both confirmed:
+
+| | Summer | Fall | |
+| --- | --- | --- | --- |
+| Frame (`.garden-frame` / `.fall-frame`) | top 157, h 507 | top 157, h 507 | identical |
+| Board | top **226**, 370×370 | top **203**, 370×370 | **23px high** |
+| Centre cell | 110×110 | 110×110 | identical |
+| The flower's rendered `<svg>` | **130 × 166** | **95 × 103** | **73% the width** |
+
+**Cause 1, the 23px — an odd margin halved by a centring grid.** `.fl-wrap` carries
+`margin-bottom:46px` (`style.css:4110`). Both frames are `display:grid; place-items:center` over the
+same 507px box, so a bottom margin on the centred child shifts it up by **half of it — exactly the
+23px measured**. The margin is not stray: it reserves the room for the *"Fill all 8 for +50%"* chip,
+`#fallChip`, which measures 6px below the board's bottom edge. Delete the margin and the board lines
+up but the chip lands on the lawn or under the dock.
+
+**Cause 2, the flower — a specificity collision, not a chosen size.** `Flora.talkingFlower()` returns
+`<svg class="talker">`, and `.talker` is sized `width:118%; height:118%` (`style.css:1040`). In Fall
+the same SVG is wrapped by `.fl-flower`, and `.fl-flower svg{width:100%;height:auto}`
+(`style.css:4103`) is specificity (0,1,1) against `.talker`'s (0,1,0) — so **the later, more specific
+rule silently wins and the 118% overscale never applies**. On top of that `.fl-flower` is itself
+`width:86%` of the cell (`style.css:4102`). The two compound: `0.86 × 1.00` in Fall against
+`1.00 × 1.18` in Summer, which is the 95 against 130 on the ruler. Nobody chose 73%; it fell out.
+
+**Related.**
+- **Fall's flower has no glow.** `.flower-glow` — the pulsing radial halo at `style.css:1017` — is a
+  sibling element built into Summer's flower cell. `ui-fall.js:50` builds only the button, so Fall's
+  centre has no halo at all. That is the same complaint as the size and belongs in the same fix.
+- **Most of what differs between the two boards is deliberate.** Fall's planter is a darker gradient
+  with a crosshatch weave at ±52° against Summer's single 96° pass, and its stubble fringe is
+  `#7d8b40` rather than `var(--grass-d)`. Both carry the same 4px ink border, the same 26px radius
+  and the same `0 9px 0` lip. **"Same visual fidelity" should mean the two faults above, not
+  repainting Fall as Summer** — a season is allowed its own palette. Worth the owner confirming.
+- Touches the recorded trap that a `box-shadow` state modifier deletes the base lip — `.fl-board.armed`
+  already restates its whole stack for that reason (`style.css:4006`). Don't undo that while in here.
+
+**Fix sketch.** For the offset: make `.fl-wrap`'s box equal the board so the two frames centre the
+same content box, and hang the chip off it without adding height — `.fl-wrap` is already
+`position:relative`, so absolutely positioning `.fl-chip` below the board and dropping the
+`margin-bottom` is the smallest change that keeps the chip where it looks right. For the flower:
+raise `.talker`'s sizing above `.fl-flower svg`, or better, give Fall's flower the same
+cell-filling button Summer uses (`width:100%;height:100%`) and let one rule own the 118% for both —
+then add the glow element. **What it might break:** the chip is measured or positioned by
+`ui-fall.js`, so check there before moving it; the 46px was also doing the work of keeping the chip
+clear of the dock on a short viewport, so re-check the ~640px case from the conventions checklist.
+Growing Fall's flower by a third puts it closer to the four `.fl-plot` cells around it — confirm it
+does not overlap what it sits between, since `.fl-flower-cell` is `overflow:visible`. Run
+`node tools/style-check.js`; this is a `style.css` change.
+
+**Open question.** Should the two boards match beyond position and flower size — same planter
+colour and weave — or is Fall's darker autumn planter deliberate? Read here as deliberate, and left
+alone.
 
 ---
 
