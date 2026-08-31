@@ -4,7 +4,10 @@ A cozy tap-and-grow idle garden for phones. Plant seeds, tend a 3×3 planter box
 talking flower company while your harvesters do the boring parts.
 
 Everything is drawn with CSS and inline SVG, and every sound is synthesized with the Web Audio
-API — the only binary files in the repo are the home screen icons in `icons/`.
+API. Binary files are the exception and there are three folders of them: the home screen icons in
+`icons/`, the announcement art in `art/announcements/`, and the screenshots in `docs/screens/` that
+the screens gallery is made of. Nothing else in the repo is a raster — see
+[`docs/09-conventions.md`](docs/09-conventions.md).
 
 ## Play it
 

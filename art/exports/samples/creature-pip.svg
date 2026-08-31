@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="critter-svg" viewBox="0 0 100 100" aria-hidden="true"><style>.cr-eyes-shut,.cr-zzz{display:none}</style>
+      <ellipse class="cr-glow" cx="50" cy="62" rx="42" ry="40" fill="#b6f2c8" opacity="0.32"/>
+      
+      
+      <g class="cr-sprout">
+      <path d="M50 34 L50 9" stroke="#2c1a10" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+      <path d="M50 15 C41 5 30 7 28 15 C36 22 45 21 50 15 Z" fill="#69db7c" stroke="#2c1a10" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M50 21 C59 11 70 13 72 21 C64 28 55 27 50 21 Z" fill="#69db7c" stroke="#2c1a10" stroke-width="3.5" stroke-linejoin="round"/>
+    </g>
+      <g class="cr-body">
+        <path d="M50 30 C70 30 81 46 81 64 C81 82 68 93 50 93 C32 93 19 82 19 64 C19 46 30 30 50 30 Z" fill="#f4fdf5" stroke="#2c1a10" stroke-width="4.5" stroke-linejoin="round"/>
+        
+        <path d="M50 30 C70 30 81 46 81 64 C81 82 68 93 50 93 C32 93 19 82 19 64 C19 46 30 30 50 30 Z" fill="none" stroke="#2c1a10" stroke-width="4.5" stroke-linejoin="round"/>
+        <g opacity="0.7" fill="#c9e8d5">
+      <circle cx="32" cy="47" r="2.8"/>
+      <circle cx="69" cy="43" r="2.1"/>
+      <circle cx="64" cy="84" r="2.4"/>
+    </g>
+        <g opacity="0.85">
+      <ellipse cx="32" cy="74" rx="6.4" ry="4.2" fill="#ff9ec4"/>
+      <ellipse cx="68" cy="74" rx="6.4" ry="4.2" fill="#ff9ec4"/>
+    </g>
+        <g class="cr-eyes">
+      <ellipse class="cr-eye" cx="37" cy="60" rx="7.5" ry="9.5" fill="#2c1a10"/>
+      <ellipse class="cr-eye" cx="63" cy="60" rx="7.5" ry="9.5" fill="#2c1a10"/>
+      <circle cx="39.5" cy="56.5" r="2.6" fill="#fff"/>
+      <circle cx="65.5" cy="56.5" r="2.6" fill="#fff"/>
+    </g>
+    <g class="cr-eyes-shut" fill="none" stroke="#2c1a10" stroke-width="3.6" stroke-linecap="round">
+      <path d="M30.5 60 q6.5 6 13 0"/>
+      <path d="M56.5 60 q6.5 6 13 0"/>
+    </g>
+        <ellipse class="cr-mouth" cx="50" cy="78" rx="4.2" ry="5" fill="#2c1a10"/>
+      </g>
+      <g class="cr-zzz" fill="#ffffff">
+      <path class="cr-z" style="--i:0" d="M50 -2 H61 V1.7400000000000002 L55.236 5.26 H61 V9 H50 V5.26 L55.764 1.7400000000000002 H50 Z"/>
+      <path class="cr-z" style="--i:1" d="M64 -18 H77 V-13.58 L70.188 -9.42 H77 V-5 H64 V-9.42 L70.812 -13.58 H64 Z"/>
+      <path class="cr-z" style="--i:2" d="M79 -36 H94 V-30.9 L86.14 -26.1 H94 V-21 H79 V-26.1 L86.86 -30.9 H79 Z"/>
+    </g>
+    </svg>

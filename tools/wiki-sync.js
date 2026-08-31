@@ -175,7 +175,9 @@ const DESC = {
   '07-save-data.md': 'The shape of saved state — what persists, what migrates, and what the Turn does and does not wipe.',
   '33-year-one-economy.md': "The Year's numbers: unlock prices, the Saved Seeds mint, petal costs and effects, Fall's plants and migration.",
   '06-audio-and-fx.md': 'Sound, particles and game feel. All audio is synthesized at runtime — there are no audio files to port.',
-  '05-art-direction.md': 'How everything is drawn, styled and animated. All art is inline SVG and CSS; the only binary files in the project are the home-screen icons.',
+  '05-art-direction.md': 'How everything is drawn, styled and animated. All art is inline SVG and CSS — see 45-asset-inventory for the exported icon set and the full list of what has to be recreated.',
+  '44-screens.md': 'Every key screen as a picture, at true phone size — what the game actually looks like, in each state that matters. Regenerated from the live build by one command, so it cannot drift.',
+  '45-asset-inventory.md': 'Every visual asset the Unity build needs: the whole icon set exported as SVG files you can lift directly, and a table of every other art class with where its drawing code lives and how many variants it has.',
 
   '34-build-plan.md': 'The phases, the review gates, and the critic gauntlet every phase runs. Phase 1 is built and reviewed.',
   '11-known-issues.md': 'Everything known to be broken or unfinished, including what was knowingly left behind.',
@@ -212,6 +214,7 @@ const DESC = {
   '41-the-preserve.md': "What last year's harvest becomes at the Turn — craftable, but no longer a thing a customer will take. Owner-ruled, specced, not built.",
   '41-weather-staging.md': 'The Sky Pass — the Weather Ladder, the fronts, and the motion gate. Built 2026-08-31.',
   '42-overnight-housekeeping.md': 'What the overnight round of 2026-08-30 did, and the four things it filed rather than decided.',
+  '43-punch-list.md': "The working queue of bugs and polish from the owner's own play, each one investigated with a sketch of the fix. Short-lived by design — 11-known-issues.md is the permanent record.",
   'README.md': 'The docs folder’s own index, mirrored exactly as written. This Home page is a reordering of it for the Unity team.',
 };
 
@@ -224,6 +227,8 @@ const GROUP_2 = [
   '33-year-one-economy.md',
   '06-audio-and-fx.md',
   '05-art-direction.md',
+  '44-screens.md',
+  '45-asset-inventory.md',
 ];
 const GROUP_3 = ['34-build-plan.md', '11-known-issues.md'];
 
@@ -239,6 +244,8 @@ const SHORT = {
   '33-year-one-economy.md': '33 · Year-one economy',
   '06-audio-and-fx.md': '06 · Audio and FX',
   '05-art-direction.md': '05 · Art direction',
+  '44-screens.md': '44 · Screens gallery',
+  '45-asset-inventory.md': '45 · Asset inventory',
   '34-build-plan.md': '34 · Build plan',
   '11-known-issues.md': '11 · Known issues',
 
@@ -274,6 +281,7 @@ const SHORT = {
   '41-the-preserve.md': '41 · The Preserve',
   '41-weather-staging.md': '41 · Weather staging',
   '42-overnight-housekeeping.md': '42 · Housekeeping',
+  '43-punch-list.md': '43 · Punch list',
   'README.md': 'The docs index',
 };
 
@@ -340,6 +348,8 @@ function buildHome(allDocs) {
   out.push('- **[12-meta-layer-design → What the Unity engineer needs](12-meta-layer-design#what-the-unity-engineer-needs)** — the section written for you specifically: what the port has to carry across, and what it does not.');
   out.push(bullet('06-audio-and-fx.md'));
   out.push(bullet('05-art-direction.md'));
+  out.push(bullet('44-screens.md'));
+  out.push(bullet('45-asset-inventory.md'));
   out.push('');
 
   out.push('## 3. The build plan and open work');

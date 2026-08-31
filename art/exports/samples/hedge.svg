@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="hedge-svg" viewBox="0 0 128 108" preserveAspectRatio="none" aria-hidden="true"
+      style="transform:scaleX(1)">
+      <path d="M0 108 V54 Q4 34 20 36 Q26 16 46 22 Q62 8 78 22 Q98 16 106 38 Q124 40 128 58 V108 Z" fill="#3f7d43" stroke="#2c1a10" stroke-width="4" stroke-linejoin="round"
+        vector-effect="non-scaling-stroke"/>
+      <path d="M0 70 V54 Q4 34 20 36 Q26 16 46 22 Q62 8 78 22 Q98 16 106 38 Q124 40 128 58 V70
+               Q96 62 64 70 Q32 78 0 70 Z"
+        fill="#57a25c" stroke="#2c1a10" stroke-width="2.6" stroke-linejoin="round"
+        vector-effect="non-scaling-stroke"/>
+      <path d="M0 108 V96 Q32 88 64 96 Q96 104 128 96 V108 Z" fill="#2f6236" opacity=".8"/>
+      <!-- No blossom dots. This shape is used at two very different aspects —
+           a 42%-wide card panel and a full-width gate screen — and
+           preserveAspectRatio="none" turns any circle into a tell-tale
+           ellipse. The lumps and the bands survive stretching; a circle does
+           not. -->
+    </svg>

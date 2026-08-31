@@ -58,6 +58,8 @@ Read it before anything else if you're picking the project up cold.
 | [41-weather-staging.md](41-weather-staging.md) | You're staging the sky — the Weather Ladder, the fronts, the motion gate, and the two math nudges — **owner-specced, not built** |
 | [42-overnight-housekeeping.md](42-overnight-housekeeping.md) | You're wondering what the overnight round of 2026-08-30 did — the style check, the hex sweep, the bars, and the four things it filed rather than decided — **done, with a two-minute morning check** |
 | [43-punch-list.md](43-punch-list.md) | Something looks wrong today and you want to know whether it is already tracked — the working queue of bugs and polish fed by the owner's play, each one investigated with a fix sketch, ordered for the next fix round — **short-lived; [11-known-issues.md](11-known-issues.md) is the permanent record** |
+| [44-screens.md](44-screens.md) | You want to see what the game actually looks like — every key screen at true phone size, each driven into the state that matters before it was photographed — **generated; regenerate with `node tools/capture-screens.js`** |
+| [45-asset-inventory.md](45-asset-inventory.md) | You're recreating the art — the whole icon set exported as SVG files you can lift, and a table of every other art class with where its drawing code lives, what drives it and how many variants it has — **generated in part; regenerate with `node tools/export-icons.js`** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).
@@ -72,7 +74,9 @@ It is a static site: nineteen plain `<script>` tags, no build step, no dependenc
 files. All art is inline SVG and CSS. All sound is synthesized at runtime with the Web Audio API.
 It is deployed straight from the repository root to GitHub Pages, and installs to a phone's home
 screen as a PWA that plays offline — see [23-installable-pwa.md](23-installable-pwa.md). The only
-binary files in the repository are the home screen icons in `icons/`.
+binary files in the repository are the home screen icons in `icons/`, the announcement art in
+`art/announcements/`, and the screenshots in `docs/screens/` — three deliberate exceptions, listed
+with their rules in [09-conventions.md](09-conventions.md).
 
 ## Keeping these docs current
 

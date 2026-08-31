@@ -34,7 +34,26 @@ exception rather than a precedent:
   the middle of a dialog it cannot dismiss around.
 - **It is never load-bearing.** The dialog draws and dismisses with the image missing.
 
-Neither exception is permission to add a PNG anywhere else in the game.
+**The third exception is `docs/screens/`, and it is the first one that is not in the game at
+all.** The screens gallery in [44-screens.md](44-screens.md) is a photograph of each key screen,
+written for the Unity team and for anyone they forward it to. A screenshot of a running game
+cannot be SVG, and a gallery that has to be rebuilt by hand is a gallery that goes stale. The
+rules that keep it an exception rather than a precedent:
+
+- **This folder only.** `docs/screens/<slug>.png`, one image per section of `44-screens.md`.
+- **Nothing in the game loads them.** They are documentation imagery, like the diagrams in these
+  docs would be if we had any — not assets, and never referenced from a `ui-*` file or `sw.js`.
+  Adding one to `CORE` would make an installed app precache the design docs.
+- **Generated, never hand-made.** `node tools/capture-screens.js` writes every one of them from
+  the live build. A screenshot edited by hand, cropped, or dropped in from a phone is a lie the
+  next regeneration silently deletes.
+- **Kept small deliberately.** The tool quantises each PNG to an adaptive palette and refuses to
+  finish if one lands over 300KB. These are regenerated often and every run is a new blob in git
+  history forever, so the ceiling is the point.
+- **Lowercase paths**, for the same case-sensitivity reason as the folder above.
+
+None of the three exceptions is permission to add a PNG anywhere else, and the first two are the
+only ones that ship inside the game.
 
 **No `<script type="module">`.** Modules break under `file://`. Plain scripts and globals, loaded in
 dependency order.

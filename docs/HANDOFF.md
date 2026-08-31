@@ -13,6 +13,27 @@ seeds in eight plots, harvest with rarity multipliers, spend on **upgrades** (th
 retired everywhere a player reads, 2026-08-30), and earn **power-ups** from a starting bag, quests,
 levels, the daily and the Almanac.
 
+> **THE UNITY TEAM GOT PICTURES AND AN ASSET LIST, 2026-08-31 — docs-only, no game code touched.**
+> [44-screens.md](44-screens.md) is every key screen of the live build at true phone size;
+> [45-asset-inventory.md](45-asset-inventory.md) is the whole icon set exported as `.svg` files
+> they can lift, plus a table of every other art class with where its drawing code lives and how
+> many variants it has. Both sit in **"What the Unity build needs"** on the wiki.
+>
+> **Both are generated, and neither may be hand-edited** — the next run overwrites it.
+> `node tools/capture-screens.js` drives the real build headlessly through 26 states and writes
+> the PNGs *and* the page that indexes them from one scene table. `node tools/export-icons.js`
+> writes all 46 icons, six representative art samples, and its own manifest table. Add a screen to
+> the table in `tools/capture-screens.js` and it appears in the doc on the next run.
+>
+> **A screen is DRIVEN to its state and photographed second, and the run asserts that state before
+> the shutter.** A screenshot taken in the wrong state exits zero and looks entirely plausible, so
+> a failed assertion stops the run and refuses to rewrite the page. Three things had to be pinned
+> or the gallery differed every run — the announcement, the sky, and the six-minute day cycle. See
+> the traps below and the 2026-08-31 (docs) entry in [10-decision-log.md](10-decision-log.md).
+>
+> `docs/screens/` is the **third deliberate binary exception** and the first that is not in the
+> game at all — recorded in [09-conventions.md](09-conventions.md) with the other two.
+
 > **THE STRATEGY REFRESH LANDED 2026-08-30 — three new documents, docs-only, no code and no economy knob.**
 > [38-market-refresh.md](38-market-refresh.md) (the lane as it stands), [39-growth-and-launch.md](39-growth-and-launch.md)
 > (a dated calendar) and [40-financial-model.md](40-financial-model.md) (what it earns). Reasoning and the full
@@ -2001,6 +2022,45 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
 
+**A gallery of screenshots is a different sky every run unless three separate things are pinned,
+and none of them is obvious until the pictures come out wrong.** `tools/capture-screens.js` hit
+all three. (1) **The What's New announcement goes up over a fresh boot**, so it was in front of
+every screenshot — it is marked read once for the whole run, and still gets its own picture
+through `UI.previewAnnouncement()`, which shows it without resetting the save. (2) **Weather is a
+hash of epoch time**, so roughly a third of runs boot straight into rain or a storm, and asking
+for clear does not undo it in the same frame: ending a sky holds the layers for `HOLD[standing]`
+— eight seconds for rain and storm — and rain or storm ending into *daylight* hands over to a
+thirty-second sunbreak on its own timer, on purpose. Wait for `UI.wxHoldsSky()` to go false
+rather than guessing a delay, then call `UI.startWeather()`, which is the only public entry point
+that runs `sunbreakOff()`. (3) **The day/night cycle is six minutes long**, so scenes captured
+minutes apart get different skies. Pin it through `DAY.offset`, **not** by stubbing
+`Game.dayPhase` — `offset` is the knob both readers go through, and stubbing the getter pins the
+picture while leaving `Game.isNight()` still answering from the real clock, which is how you get
+a moonlit Hollow behind a midday garden.
+
+**`.dock-btn` matches thirteen elements, not five.** The Hollow and the Wild Meadow each carry
+their own dock, and all three are in the DOM at once. Anything counting or addressing the garden's
+Big Five has to scope to `#dock`. Found by an assertion that failed on a screenshot that looked
+perfect.
+
+**An icon added to `icons.js` in the second `Object.assign` block is invisible to anything that
+parses the file.** `LIB` is built in two parts — an object literal, then `Object.assign(LIB, {…})`
+— and the public surface is `{ get, has, hydrate }` with `LIB` private and `get()` falling back to
+`sparkle` for an unknown name. So the registry can be neither parsed reliably nor enumerated by
+probing. `tools/export-icons.js` runs the module with one anchored substitution that hands `LIB`
+back, and refuses to run if that anchor has moved. The count assertion is the point of the script:
+an icon with no `.svg` beside it leaves the directory looking complete and one glyph missing from
+everything downstream.
+
+**Three art files draw every state at once and let CSS choose one.** `critters.js` and
+`customers.js` emit all the eyes and mouths together — exported raw, a creature has open eyes,
+shut eyes and floating Zs simultaneously — and the Talking Flower's eyelids are full-height rects
+that `style.css` collapses with `transform: scaleY(0)`, so it exports **asleep**. Separately,
+`flora.js` writes `fill="url(#gp-daisy)"` and keeps those gradients in a hidden `<svg>` that
+`injectDefs()` appends to the page, so every bloom exports as a hollow outline. All four are fine
+in the game and all four break the moment the markup leaves it. See the samples section of
+[45-asset-inventory.md](45-asset-inventory.md).
+
 **`transform`, `filter` and `animation` are one property each, exactly as `box-shadow` is, and the
 Sky Pass stepped on all three in one round.** The storm's crouch wrote a bare `transform` and
 deleted the `translateX(-50%)` that centres a creature on its `left` anchor, so every pet jumped
@@ -2550,6 +2610,8 @@ node tools/sim-test.js          # 1,444 assertions over the simulation layer
 node tools/year-sim.js 12 all   # the pacing model — see the caveat below before trusting its exit code
 node tools/order-gold.js 25 4   # is a delivered order worth a minute of the player's time, per tier?
 node --check <file>.js          # no build step, so this is the only syntax gate
+node tools/capture-screens.js    # redraw the whole screens gallery, and the page that indexes it
+node tools/export-icons.js --check # do the icon exports still match icons.js?
 python3 -m http.server 8899     # then open http://localhost:8899/
 ```
 

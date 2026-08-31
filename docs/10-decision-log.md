@@ -5,6 +5,87 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (docs) — The Unity team gets pictures and an asset list, and both are commands rather than snapshots
+
+**Two Unity engineers can now read the design, but they had never seen the game.** The wiki
+mirror gave them every word and not one picture, and nothing anywhere said what art exists.
+[44-screens.md](44-screens.md) is the game photographed screen by screen;
+[45-asset-inventory.md](45-asset-inventory.md) is every visual asset, what draws it, and how
+many variants it has. Both are for people who will rebuild this in another engine, not for us.
+
+**The tool is the deliverable and the output is only its latest run.** A gallery of screenshots
+pasted in by hand is out of date the week after it is made, and worse, nobody can tell which
+picture went stale. So `tools/capture-screens.js` drives the real build headlessly through
+twenty-six states and writes both the PNGs *and the page that indexes them* from one scene
+table; `tools/export-icons.js` writes every icon in the registry as an `.svg` and rewrites its
+own manifest table. Regenerating is one command each. Nothing in either document is hand-made,
+and both say so at the top, because a generated page that looks authored is a page somebody
+will eventually edit.
+
+**A screen is DRIVEN to its state and photographed second, and the run asserts the state before
+the shutter.** This is the whole reason the gallery is trustworthy. A screenshot taken in the
+wrong state is silent — it exits zero and it looks completely plausible — so every scene names
+what must be true at the moment of capture and the run stops if it is not. That guard has
+already paid for itself twice: two scenes failed on the first full run, and both were wrong
+assertions rather than wrong recipes, which is exactly the failure a green run would have
+hidden. A failed scene also refuses to rewrite the page, because a gallery that is 24/26 correct
+is worse than one that will not build.
+
+**Three things had to be pinned or the gallery would differ on every run**, and none of them was
+obvious until the pictures came out wrong. The **announcement** goes up over a fresh boot, so it
+was in front of every screenshot until it was marked read once for the whole run — and it still
+gets its own picture, through `UI.previewAnnouncement()`, which shows it without resetting the
+save. The **sky** is a hash of epoch time, so roughly a third of runs boot into rain or a storm;
+asking for clear does not undo that in the same frame, because ending a sky is an eight-second
+sequence that hands over to a thirty-second sunbreak in daylight. The run now waits for the
+layers to report clear rather than guessing a delay. And the **day/night cycle** is six minutes
+long, so an unpinned gallery is a blue garden, an orange one two scenes later and a purple dusk
+for whatever ran at the wrong moment. It is pinned through `DAY.offset` rather than by stubbing
+`Game.dayPhase`, because `offset` is the knob both readers go through — stubbing the getter
+would pin the picture and leave `Game.isNight()` still thinking it was midnight, which is how
+you get a moonlit Hollow behind a midday garden.
+
+**`docs/screens/` is the third binary exception, and the first that is not in the game at all.**
+Recorded in [09-conventions.md](09-conventions.md) beside the other two. A screenshot cannot be
+SVG, so the rule had to bend; what keeps it narrow is that nothing in the game loads these,
+they are generated rather than dropped in, and the tool refuses to finish if one lands over
+300KB. That ceiling is load-bearing rather than tidy: these are regenerated often and every run
+is a new blob in git history forever. Chrome's own PNGs run 500–900KB at 2×, so the tool
+quantises each one to an adaptive palette — flat art with thick outlines is visually
+indistinguishable at 256 colours and about a quarter of the bytes. Dithering was measured and
+deliberately not used: it costs more than the extra colours buy and makes flat art look noisy.
+
+**The icon exporter reaches the registry by running the module, not by parsing it**, and the
+assertion that the file count equals the registry count is the point of the script. `icons.js`
+builds `LIB` in two parts — an object literal and a later `Object.assign` — which is exactly the
+shape a regex loses half of, and an icon that is never exported is invisible: the directory
+looks complete, the manifest looks complete, and one glyph is quietly missing from everything
+the Unity team builds. All three guards were tested by breaking them. The manifest's "used by"
+column is scanned rather than written, because an icon is asked for in four different shapes and
+one of them — `Icons.get(d.icon)` fed by a data row — names no icon at the call site at all.
+
+**Six representative `.svg` samples ship beside the icons, and each needed a stated fix.** None
+of the art classes is quite standalone: `flora.js` keeps its gradients in a hidden `<svg>` that
+`injectDefs()` appends to the page, so raw exports paint as hollow outlines; `critters.js` and
+`customers.js` draw every state at once and let CSS choose one; the Talking Flower's eyelids are
+full-height rectangles that CSS collapses, so it exports asleep. Each fix lives **inside** the
+file, and the flora one runs the game's own `injectDefs()` against a DOM stub rather than
+restating the gradients — a hand-written copy of a palette is a copy that drifts. The two big
+backdrops are exportable and deliberately have no sample, because they compose against a
+measured screen size and any file would be one arbitrary window; the inventory gives the recipe
+instead. **Rejected: exporting everything.** A class earns a file when it draws to a fixed
+viewBox, and forcing the rest would have produced assets that are wrong in a way nobody notices.
+
+**Three findings the inventory turned up, recorded here because they are design facts rather
+than defects.** Decor is bought, counted and **never drawn in the world** — `state.decor` is read
+by exactly one function, the shop card's "Owned ×N" caption. The card album has 108 named slots
+and **no real card art**, filled today by nine placeholder motifs cycled by index, so every set's
+card #1 is the same sprout on the same green disc. And the `flask` icon is drawn by no code in
+the game at all. None of these is broken; all three are things a Unity estimate would otherwise
+get wrong.
+
+---
+
 ## 2026-08-31 (process) — The owner's play gets a queue of its own, and its keeper never fixes anything
 
 **The owner plays the live build and notices things, and until now those went into a conversation

@@ -56,6 +56,32 @@ someone reconciles them.
   the knobs to fetched JSON, flip the wrapped build to cache-first), expensive to discover in review.**
   Moot if the answer to the question above is Unity.
 
+## Three things the asset inventory found (2026-08-31)
+
+All three turned up while building [45-asset-inventory.md](45-asset-inventory.md), by running the
+code rather than reading it. None is a defect and none was fixed: they are recorded because a
+Unity estimate made from the docs alone would get all three wrong.
+
+- **Decor is bought, counted, and never drawn in the world.** Every consumer of `state.decor` was
+  traced: it is written by `buyDecor()` and by the level-19 grant, and read by exactly one
+  function, `decorCount(id)`, which the shop card uses for its "Owned ×N" caption. The four
+  pieces are content that exists; the feature that places one in the garden does not. Deliberate
+  as far as anything records, but the docs describe decor as if it were visible.
+- **The card album has 108 named slots and no card art.** Twelve sets × nine cards, with
+  rarities, set tints and the whole reveal staging — all filled today by nine placeholder motifs
+  cycled by the card's index *within its set*, so every set's card #1 is the same sprout on the
+  same green disc. The slot mechanism is real and finished; the art is the pipeline in
+  [20-card-art-prompts.md](20-card-art-prompts.md) and it has not been run.
+- **The `flask` icon is drawn by no code in the game.** One of forty-six, referenced by nothing —
+  no `Icons.get`, no `data-icon`, no `icon:` field on any data row. Either a glyph waiting for
+  its feature or dead weight; the manifest flags it on every run, so it cannot quietly become
+  either.
+
+One caveat on the gallery itself: **the Wild Meadow's jar counts drift by one between runs**,
+because the hive clock keeps running through the waits that set the scene up. The badges come out
+3/3/3/2 or 3/3/2/2. Nothing else in the twenty-six screens is non-deterministic — the sky, the
+day phase, the pack roll and the Stand's board are all pinned.
+
 ## What the Sky Pass knowingly left (2026-08-31, phase 3.9)
 
 **All five skies are in the game.** `DATA.weatherStage` holds the owner's tuned values, both engine
