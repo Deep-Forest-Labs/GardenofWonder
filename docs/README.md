@@ -55,6 +55,7 @@ Read it before anything else if you're picking the project up cold.
 | [41-the-preserve.md](41-the-preserve.md) | You're touching what fills an order, or the Turn's partition — last year's harvest becomes pressed flowers and kept jars, craftable but no longer a thing a customer will take — **owner-ruled, specced, not built** |
 | [39-growth-and-launch.md](39-growth-and-launch.md) | You're planning a launch — the dated calendar from September 2026 to June 2027, the Reddit playbook, the ASO correction, what in this game is actually filmable, and the one sentence with the fork underneath it — **plan, owner picking** |
 | [40-financial-model.md](40-financial-model.md) | You want to know what any of this earns — three scenarios in plain tables, the install volume needed to hold them, the cost side, the kill/scale signals, and the 2026 rules that change the plan; math in an appendix — **model, owner picking** |
+| [41-weather-staging.md](41-weather-staging.md) | You're staging the sky — the Weather Ladder, the fronts, the motion gate, and the two math nudges — **owner-specced, not built** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

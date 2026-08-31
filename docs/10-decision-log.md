@@ -1678,6 +1678,42 @@ the retired design stays legible next to what replaced it.
 
 ---
 
+## 2026-08-30 (design) — The Sky Pass: weather gets staged, and a motion gate guards the feel
+
+**The owner's pick from the weather brainstorm:** the full Weather Ladder plus fronts, the world
+acknowledging, the music rearrangement, and the two math nudges — specced in
+[41-weather-staging.md](41-weather-staging.md). **The grounding audit found the gap plainly:**
+weather carries 20–30% of all income under test, and each state's entire presentation was one
+flat colour fade — no sound exists for any weather, nothing on the board reacts, and Wonderfall
+never received the Wonder veil doc 18 promised it. The Wonder Effect stages on nine channels;
+the sky it names stages on one. The staging grammar came from the games that do this best:
+foreshadow → transform in layers → legible payoff → graceful end; rearrangement for common
+skies, takeover for the rarest; existing things reacting beats new particles.
+
+**The rule the ladder runs on: rarity buys layers.** Rain moves three channels, Wonderfall all
+of them, and nothing fires on Clear→Clear — the 70% silence is what makes the rest events.
+
+**Math kept honest:** two nudges only, both data-knobbed and sim-asserted — rain waters (+10%
+growth while raining, the Stardew gift-you-can-see) and the aurora brings the night (isNight()
+true under ribbons, waking Nightbell and Luna, with an epsilon assertion on Nightbell's expected
+value). **Storm-crits cut** — one sky, one message. The mutation income share may not move.
+
+**A new gate joins the process: the MOTION GATE**, the wireframe gate's sibling — the owner's
+words: *get this right the first time.* The builder's first deliverable is a motion stage
+(`tools/sky-spike.html`) where each sky's whole sequence plays on demand **with sliders on the
+values the feel depends on**; the owner tunes by hand, the spike prints the chosen values as a
+copyable block, and those numbers enter `data.js` verbatim. No sky integrates before its motion
+is approved.
+
+### Rejected
+
+**Storm-crits** (legibility). **The petal-recolour in this round** — not picked; it stays filed
+where the film pass left it. **Fronts on every slot change** — only a real incoming sky earns
+one; four cues an hour is noise, which doc 18 knew from the start. **Letting the stage write
+game state** — staging is presentation; the two nudges live in the engine.
+
+---
+
 ## 2026-08-30 (rulings, polish) — Seven polish calls from the owner's play, before the strategy talk resumes
 
 **All seven are the owner's, from playing the live build.** Recorded here as the spec for the
