@@ -1342,8 +1342,8 @@ sweep the Sky Pass's uncommitted work out of the shared checkout. Full account, 
 it declined to decide, in [42-overnight-housekeeping.md](42-overnight-housekeeping.md).
 
 **What it built.** `tools/style-check.js` — the enforcement doc 11 called "the single
-highest-leverage item on this page" — and twenty design-rule assertions in `tools/sim-test.js`,
-which now runs 1,405 checks. Both ratchet.
+highest-leverage item on this page" — and twenty-one design-rule assertions in `tools/sim-test.js`,
+which now runs 1,408 checks. Both ratchet.
 
 **What it fixed.** The quest bar and the Almanac meter reveal their gradient instead of compressing
 it; 32 raw hexes became tokens, including all 25 `#2c1a10`; a keyboard focus ring on every button;
@@ -1377,7 +1377,7 @@ currency policy in doc 12, which its own game broke twice. All in
 2. **Look at the quest strip.** Tap the flower a dozen times. The fill is green and stays green
    until the bar is nearly full; before tonight it reached full gold at 44%. Same fix on the
    Almanac's Collection meter.
-3. **`node tools/sim-test.js`** — 1,405 passed, 0 failed.
+3. **`node tools/sim-test.js`** — 1,408 passed, 0 failed.
 4. **Then read the three things it would not decide**, above.
 
 ### The five-minute check, phase 3.8 — the polish round, on the phone
@@ -2461,7 +2461,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,385 assertions over the simulation layer
+node tools/sim-test.js          # 1,408 assertions over the simulation layer
 node tools/year-sim.js 12 all   # the pacing model — see the caveat below before trusting its exit code
 node tools/order-gold.js 25 4   # is a delivered order worth a minute of the player's time, per tier?
 node --check <file>.js          # no build step, so this is the only syntax gate
@@ -2574,7 +2574,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,385 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,408 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

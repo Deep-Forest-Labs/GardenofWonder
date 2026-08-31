@@ -18,7 +18,7 @@ Then read `docs/HANDOFF.md` and `docs/09-conventions.md` as always — the rules
 not relaxed because the session is remote. Make the change, then prove it:
 
 ```bash
-node tools/sim-test.js          # 1,385 assertions, about 2 seconds
+node tools/sim-test.js          # 1,408 assertions, about 2 seconds
 node --check <every file touched>
 node tools/probe.js shot:after  # see it, don't just believe it
 ```

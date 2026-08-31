@@ -875,7 +875,7 @@ It is gated on `location.hostname` being `localhost`, `127.0.0.1` or `''` — th
 `index.html` already uses to skip the service worker, and the only honest dev/production signal in a
 project with no build step to strip a branch. **The `typeof location !== 'undefined'` half of that
 gate is load-bearing:** Node has no `location`, `tools/sim-test.js` evaluates `icons.js` at global
-scope, and a bare `location.hostname` there is a `ReferenceError` that takes all 1,385 checks with
+scope, and a bare `location.hostname` there is a `ReferenceError` that takes all 1,408 checks with
 it.
 
 **Two things it does not do, on purpose.** It never warns in production, and it cannot be caught by
@@ -1098,10 +1098,10 @@ things can hold it instead, and both have a precedent in `tools/`:
 All fixed. The first two on 2026-08-14 (**4 of 50 runs failed** beforehand), the second two on
 2026-08-15.
 
-**Re-measured 2026-08-30 at 1,407 assertions: 45 consecutive runs, 0 divergent.** Ten was the ask;
+**Re-measured 2026-08-30 at 1,408 assertions: 45 consecutive runs, 0 divergent.** Ten was the ask;
 ten is not enough to believe, because the flakes recorded below were 4-in-50 and roughly 1-in-25, and
 ten runs would miss a 1-in-25 flake two times in three. Forty-five is the number that makes "it does
-not flake" mean something. The twenty design-rule assertions added the same day read files and data
+not flake" mean something. The twenty-one design-rule assertions added the same day read files and data
 tables and roll no dice, so they cannot introduce this class of bug.
 
 - **`gems move by the milestone`** asserted an exact gem count while the harvest that triggered it
@@ -1133,7 +1133,7 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,385 assertions over the
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,408 assertions over the
 economy, progression, saves and mastery. Everything above that line — the six `ui-*` files,
 layout, the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI
@@ -1167,7 +1167,7 @@ gets its retraction; headers rarely do.
 
 ### ~~Nothing enforces a design rule the way `sim-test.js` enforces an economy rule~~ — BUILT 2026-08-30
 
-Twenty assertions, in five groups at the end of `tools/sim-test.js`, each one a sentence a doc
+Twenty-one assertions, in five groups at the end of `tools/sim-test.js`, each one a sentence a doc
 already states turned into something that can go red. Every one was **sabotaged individually and
 confirmed to be the assertion that fails** — in a throwaway copy, so the tree was never dirty.
 

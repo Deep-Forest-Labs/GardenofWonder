@@ -84,7 +84,7 @@ All 25 raw `#2c1a10` are gone. The ink can be adjusted globally now, which was t
 
 ### The design rules become checks too
 
-Twenty assertions at the end of `tools/sim-test.js`, in five groups, each one a sentence a doc
+Twenty-one assertions at the end of `tools/sim-test.js`, in five groups, each one a sentence a doc
 already states turned into something that can go red — the offline `CORE` list matching the scripts
 the page actually loads, every badge in `DATA.upgrades` reaching a surface a player can see, every
 announcement image precached and **lowercase**, decor staying cosmetic and boosters staying
@@ -294,7 +294,7 @@ and doc 11 already says to confirm against both branches first.
    node tools/sim-test.js
    ```
 
-   1,407 passed, 0 failed. It was run **45 times consecutively with 0 divergent** — ten was the ask,
+   1,408 passed, 0 failed. It was run **45 times consecutively with 0 divergent** — ten was the ask,
    but the flakes this project has recorded were 4-in-50 and about 1-in-25, and ten runs would miss
    a 1-in-25 flake two times in three. Nothing flaked, so there was no unpinned randomness to hunt.
 
