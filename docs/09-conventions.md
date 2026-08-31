@@ -36,6 +36,11 @@ exception rather than a precedent:
 
 Neither exception is permission to add a PNG anywhere else in the game.
 
+**Third exception — `skin/aaa-v1` branch only** (2026-08-31): raster assets under
+`art/stage/` and `art/ui/` for the AAA preliminary skin. This branch is not merged to
+`main` until the skin pipeline is proven. Every file must still join `CORE` in `sw.js`.
+See `popz-portal/docs/artifacts/aaa-skin-v1-spec.md` for the chop list.
+
 **No `<script type="module">`.** Modules break under `file://`. Plain scripts and globals, loaded in
 dependency order.
 

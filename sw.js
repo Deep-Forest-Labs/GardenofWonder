@@ -10,7 +10,7 @@
    still gets to garden, and forgetting to bump VERSION below strands nobody — the
    version only controls when old caches get swept up. */
 
-const VERSION = 6;
+const VERSION = 7;
 const CACHE = `gw-v${VERSION}`;
 const FONTS = 'gw-fonts';
 const NET_TIMEOUT = 4000;   // slow network -> fall back to cache rather than hang
@@ -26,7 +26,10 @@ const CORE = [
   // Announcement art is the only raster the game itself loads, and an installed
   // app that cannot reach it shows a broken square in the middle of the dialog.
   // Every row added to DATA.announcements adds its image here.
-  './art/announcements/garden-year.png'
+  './art/announcements/garden-year.png',
+  // AAA skin v1 (skin/aaa-v1 branch) — stage + overlay stylesheet
+  './style-skin-aaa.css',
+  './art/stage/backdrop.jpg'
 ];
 
 self.addEventListener('install', (e) => {

@@ -1,0 +1,90 @@
+/* Garden Wonder — AAA skin v1 overlay (skin/aaa-v1 branch).
+   Loaded when <html data-skin="aaa">. Presentation only; does not replace game logic. */
+
+html[data-skin="aaa"] {
+  --skin-glass: rgba(255, 255, 255, 0.55);
+  --skin-glass-border: rgba(255, 255, 255, 0.85);
+  --skin-shadow: 0 8px 32px rgba(27, 67, 50, 0.18);
+}
+
+html[data-skin="aaa"] body {
+  font-family: "Nunito", "Baloo 2", system-ui, sans-serif;
+}
+
+/* Backdrop replaces procedural scenery */
+html[data-skin="aaa"] .scenery .sky,
+html[data-skin="aaa"] .scenery .celestial,
+html[data-skin="aaa"] .scenery .stars,
+html[data-skin="aaa"] .scenery .layer,
+html[data-skin="aaa"] .scenery .meadow,
+html[data-skin="aaa"] .scenery .fence {
+  opacity: 0;
+}
+
+html[data-skin="aaa"] .scenery::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0.08) 100%),
+    url("art/stage/backdrop.jpg") center top / cover no-repeat;
+  z-index: 0;
+}
+
+html[data-skin="aaa"] .scenery .vignette {
+  opacity: 0.35;
+}
+
+/* Glass HUD wallets */
+html[data-skin="aaa"] .wallet,
+html[data-skin="aaa"] .round-btn,
+html[data-skin="aaa"] .quest-strip,
+html[data-skin="aaa"] .dock-btn {
+  background: var(--skin-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: var(--skin-glass-border);
+  box-shadow: var(--skin-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: var(--ink);
+}
+
+html[data-skin="aaa"] .quest-strip.ready {
+  background: linear-gradient(180deg, rgba(255, 230, 102, 0.85), rgba(255, 201, 60, 0.75));
+}
+
+/* Wooden tray — moodboard frame language over CSS garden */
+html[data-skin="aaa"] .garden {
+  border-width: 6px;
+  border-color: #6b4423;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 40%),
+    url("art/stage/backdrop.jpg") center 42% / 180% auto no-repeat,
+    linear-gradient(180deg, #c8956a 0%, #8b5e34 55%, #5c3a1e 100%);
+  box-shadow:
+    inset 0 6px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -10px 0 rgba(0, 0, 0, 0.22),
+    0 12px 0 #4a2f18,
+    0 24px 40px rgba(27, 67, 50, 0.35);
+}
+
+html[data-skin="aaa"] .plot {
+  border-color: rgba(255, 255, 255, 0.65);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 45%),
+    linear-gradient(180deg, var(--soil) 0%, var(--soil-d) 72%, var(--soil-dd) 100%);
+  box-shadow:
+    inset 0 4px 12px rgba(255, 255, 255, 0.2),
+    inset 0 -6px 0 rgba(0, 0, 0, 0.15),
+    0 6px 16px rgba(27, 67, 50, 0.2);
+}
+
+html[data-skin="aaa"] .garden::before {
+  opacity: 0.35;
+}
+
+/* Rail chips — softer glass */
+html[data-skin="aaa"] .chip {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
