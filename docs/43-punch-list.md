@@ -18,12 +18,18 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 
 ## Tonight's round
 
-1. **#3 · Split the sound into three channels — effects, ambient, music** — do this one FIRST. The
-   three buses already exist; only the settings conflate them. It also moves every bed's level, so
-   tuning #1 before it would be tuning a number that is about to change.
-2. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
+1. **#3 · Split the sound into three channels — effects, ambient, music, each with a slider and a
+   mute** — do this one FIRST. The three buses already exist; only the settings conflate them. It
+   also moves every bed's level, so tuning #1 before it would be tuning a number that is about to
+   change. **Bigger than when it was filed**: the owner ruled sliders in, and a range input would be
+   the first form control in the entire game.
+2. **#4 · The app icon is a yellow faceless flower, not the hero** — the cheapest item on the list
+   and the highest value for the effort: rewrite one SVG from a function that already exists, run
+   three documented shell commands. It shares no file with anything else here, so it can run
+   alongside the audio work rather than behind it.
+3. **#1 · The Thunderstorm's bed has no rain in it and never moves** — a flat mid-low roar for a
    minute. Contained to `audio.js` and one `data.js` knob, no layout, no new surface.
-3. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
+4. **#2 · A standing sky pays the player and nothing on screen says so** — a chip and a timer in
    the rail, tap for what it does. Real work: a new tappable surface where the rail has never had
    one, and it brushes a standing ruling (see the item).
 
@@ -200,13 +206,15 @@ turns it into a small clock the player can plant against. The owner's call.
 
 ---
 
-### #3 · POLISH · Effects, ambient and music are three buses behind two switches · annoying · reported 2026-08-31
+### #3 · POLISH · Effects, ambient and music are three buses behind two switches · annoying · reported 2026-08-31 · scope raised 2026-08-31
 
 **What the owner asked for.** "Create three different settings for the sound… sound effects,
 ambient, music. We can separate the things on those different channels. The wind effect that's going
 behind the rain would obviously be on ambient, and we could turn that down very low. Eventually, we
 can have different sounds on the ambient track that would be like birds, wind, leaves rustling…
-Let's go ahead and separate those three styles of tracks moving forward."
+Let's go ahead and separate those three styles of tracks moving forward." Then, asked switches or sliders:
+**"Actually, I think we should have sliders and an on and off to mute them."** So every
+channel gets a level *and* a mute — decided 2026-08-31, and the open question below is closed.
 
 **Repro.** Settings shows two switches: *Sound effects* and *Ambient music*
 (`renderSettings()`, `ui-sheet.js:1953`). There is no way to reach the sky's sound on its own.
@@ -254,16 +262,52 @@ called overbearing.** Tune `#1` after this lands, or tune it twice.
   today, and it is the one thing on that bus that is a *tune*. It is either the exception that stays
   on ambient or the one thing that moves to music. Pick deliberately and write it down.
 
-**Fix sketch.** Add `amb` to `defaultState().prefs` and to `Sound.prefs`; add `setAmb()` beside
-`setSfx()`/`setMusic()`; reduce `ambLevel()` to `prefs.amb ? AMB_LEVEL : 0` and delete
-`MUSIC_OFF_TRIM`; make the settings handler a lookup rather than an if/else so a fourth channel
-cannot silently land on music; add the row with its own icon and `aria-label`. Rename the existing
-row's label while there — it says *Ambient music* and will now mean music only. **What it might
-break:** `play()` returns early on `!prefs.sfx` *and* the bus gain is zeroed, so effects are gated
-twice and the beds are gated in a third place — check all three read the right key after the split.
-`openAmb()` and `rampAmb()` both call `ambLevel()`, so a stale read leaves the bus open at the wrong
-height behind a crack. And `06-audio-and-fx.md` documents the current mute behaviour in prose at
-lines 15–25; that paragraph becomes false in the same commit.
+**Fix sketch — three levels and three mutes.** Per channel, a saved level (0–1) and a saved mute
+boolean; the mute preserves the slider's position, which is the whole reason for having both. A bus
+gain becomes `house × level × (muted ? 0 : 1)`.
+
+**The sliders must MULTIPLY the house levels, never replace them.** Those three numbers are
+calibrated against each other and against every recipe's own gain — `sfxBus` 0.65 (`audio.js:43`),
+`musicBus` 0.16 (`audio.js:87`), `ambBus` `AMB_LEVEL` 0.5 (`audio.js:14`), with `BED_TRIM` and the
+`stinger` makeup gain sitting downstream of the last one. A slider written as a raw bus gain throws
+all of that away, and every measurement in `#1` with it. Default each slider to 1.0 = the house level
+exactly as it stands today, so a player who never touches one hears what they hear now.
+
+**A slider at zero is not a mute, and this one is load-bearing.** `setMusic(false)` calls
+`stopMusic()` on purpose — the comment at `audio.js:83` records that muting by bus gain alone left
+the scheduler building oscillator nodes every 3.2 s forever. So the **mute** must stop the scheduler
+and the **slider** must not, and dragging music to zero has to leave the timer running. Keep the two
+independent; do not make zero imply muted.
+
+**A range input would be the first form control in the game.** There is no `<input>` of any kind in
+`index.html` or in any `ui-*` file — the game is buttons and gestures end to end — so this brings a
+whole new surface with it:
+
+- **It needs full custom styling** or it reads as a system control in a hand-drawn game:
+  `::-webkit-slider-thumb`, `::-webkit-slider-runnable-track` and the Firefox pair, none of which
+  inherit. `tools/sky-spike.html` has working range markup to crib the mechanics from, but its
+  styling is bench styling, not the game's.
+- **Run `node tools/style-check.js`.** New colours, radii and border widths on a brand-new control
+  are precisely what it ratchets on, and a slider is several of each.
+- **The sheet's drag-to-dismiss will NOT fight it.** That handler is bound to `el.sheetGrip` alone
+  (`ui-sheet.js:2911`), not to the sheet body, and `.sheet` is already in `noSwipe` (`ui.js:708`),
+  so the world swipe is out of the way too. Both were worth checking; both are clear.
+- **Keep the native element.** A range input carries keyboard support and its role for free, and a
+  slider rebuilt from divs loses both — `08-ui-and-layout.md` owns that promise. Note the recorded
+  trap that `setPointerCapture` retargets every later pointer event to the capturing element: the
+  native control does that to itself correctly, and a hand-rolled one would have to reproduce it.
+
+**The rest of the split.** `ambLevel()` (`audio.js:561`) reduces to the ambient channel's own level
+and mute; `MUSIC_OFF_TRIM` and the argument above it at `audio.js:15` are deleted, deliberately;
+`setAmb()` joins `setSfx()`/`setMusic()`; and the settings handler at `ui-sheet.js:2767` stops being
+a two-way `if (k === 'sfx') … else …` that would silently route a third key to `setMusic`. Three rows
+in `renderSettings()`, and rename the existing *Ambient music* label — it will mean music only.
+
+**What it might break.** `play()` returns early on `!prefs.sfx` *and* the bus gain is zeroed, so
+effects are gated twice and the beds a third time — check all three read the right key. `openAmb()`
+and `rampAmb()` both call `ambLevel()`, so a stale read leaves the bus open at the wrong height
+behind a thunder crack. `06-audio-and-fx.md` documents the current mute behaviour in prose at lines
+15–25 and the bus diagram at lines 10–12; both go false in the same commit.
 
 **Not in scope tonight: the nature bed.** Birds, wind and rustling leaves are what the owner wants
 the ambient channel *for*, and they are the reason to build the switch — but they are new content
@@ -274,10 +318,83 @@ it comes: `BUILD` is a table keyed by id and `loopNoise()` already shares one 4-
 first one that never stops, and `ambTarget()` is written on the assumption that clear weather
 carries no idle gain.
 
-**Open question, and it is the one that sizes the job.** Three on/off switches, or three sliders?
-"Turn that down very low" reads like a level, but it may mean the developer setting it low rather
-than the player. Switches are an afternoon; sliders add a saved number per channel, a new control
-the game does not have anywhere yet, and a decision about what the default positions are.
+**Open question — CLOSED 2026-08-31.** ~~Three on/off switches, or three sliders?~~ **Both: a
+slider per channel plus a mute**, the owner's call. What is left is a smaller decision the fix round
+can make and write down — whether the six values share one saved shape
+(`prefs.audio.{sfx,amb,music}.{level,muted}`) or sit as six flat keys. The nested form reads better
+and costs nothing: `state.prefs` is merged onto the default object at `game.js:219`, so either shape
+backfills correctly for every existing save.
+
+---
+
+### #4 · POLISH · The app icon is a yellow faceless flower, not the hero · annoying · reported 2026-08-31
+
+**What the owner asked for.** "I added `01-flower-hero.png` into the art folder. I want to update our
+App icon to look more like our Hero Flower and not just a random flower."
+
+**Repro.** Add the game to a home screen, or look at `icons/icon-512.png`. Confirmed by eye against a
+live screenshot of the garden (`.probe/garden-flower.png`).
+
+**The gap, named.** The icon and the game's flower are not the same character:
+
+| | The icon today | The talking flower in the game |
+| --- | --- | --- |
+| Petals | Yellow, layered rose-like bloom on an orange centre | Eight pink petals in a ring, `#ffb3d1` → `#ff5d95` |
+| Face | **None** | A `#ffe9a8` disc with two eyes, pink blush and a smile |
+| Stem | A short green stub | A `#4bb257` stem with two waving leaves |
+
+**The face is the whole thing.** The owner's hero art and the What's New illustration
+(`art/announcements/garden-year.png`) both lead with a pink flower that is *looking at you*; the icon
+is a botanical drawing of a different plant. That is why it reads as "a random flower".
+
+**The likely cause — nothing is broken, the icon simply predates the character.** `icons/icon.svg`
+was authored on 2026-08-18 from the generic `round` petal path in `flora.js`, which is the shape used
+for *planted seeds*, not for the hero. The hero has its own function and always has.
+
+**The source to build from already exists.** `Flora.talkingFlower()` (`flora.js:205`) is the exact
+SVG: eight copies of one petal path at `rotate(i × 45)`, a face circle at `r=26` fill `#ffe9a8`, two
+eyes, `#ff9ec1` cheeks, the mouth path, a stem and two leaves, all on the `#2c1a10` ink. The two
+gradients it references are at `flora.js:266` — `gp-talker` (`#ffb3d1` → `#ff5d95`) and `gface`. An
+icon can be assembled from those numbers directly; no new art is needed.
+
+**The trap that will bite a copy-paste, and it is silent.** `.tf-lid` is a `#ffd98a` rect drawn
+across each eye at full size in the markup, and it is collapsed to nothing **by CSS**
+(`style.css:1054`, `transform:scaleY(0)` with a blink keyframe). `icon.svg` is a standalone file with
+no stylesheet, so pasting the markup verbatim produces **a flower with both eyes shut behind two
+yellow blocks** — and it will look deliberate rather than broken. Drop the lids. This is the recorded
+"a visual state must never depend on a keyframe having run" trap wearing new clothes.
+
+**Related.**
+- **The pipeline is documented and unchanged.** `23-installable-pwa.md:71` — `icons/icon.svg` is the
+  source of truth and the three PNGs are rasterised from it with `qlmanage` and `sips`, commands
+  given at lines 88–92. All four files ship; `icon.svg` is also the browser tab favicon, so it must
+  be self-contained — inline both gradients rather than referencing the game's `flora-defs`.
+- **The maskable safe zone is the real design constraint.** Doc 23 promises the artwork sits inside
+  a centred circle of 40% radius so Android can crop to any mask. A face large enough to read at
+  40 px *plus* a stem and leaves will not both fit — the stem is what gives. Whatever is decided,
+  the doc's promise has to end up true or be rewritten.
+- **Check it at 40 px, not at 512.** Same principle as the "check the bloom at 22 px" rule in
+  `09-conventions.md` for Almanac art. Two eyes and a mouth at icon size is a tighter test than the
+  petals are.
+- **`art/01-flower-hero.png` must not become the icon.** Two reasons. It is a photoreal 3D render
+  and the game's art direction is flat ink outline — doc 05 is the moat, and an icon that promises
+  a render the game never delivers is a worse first impression than a plain icon. And the raster
+  exception in `09-conventions.md` is explicitly `art/announcements/` **only**, "no other folder
+  inherits this". As unloaded reference art next to the announcements folder it is fine and no rule
+  is broken; wiring it into the game or adding it to `CORE` in `sw.js` would break one.
+
+**Fix sketch.** Rewrite `icons/icon.svg` as the talking flower on the existing sky-and-turf
+background: keep the `#7ec8f2` → `#e9f8ff` sky gradient and the turf path already in the file, swap
+the yellow bloom for the eight-petal pink ring with the face, sized so the face clears the 40%
+maskable circle. Inline `gp-talker` and `gface`. Then run the three documented commands to
+regenerate the 512, 192 and 180. **What it might break:** nothing in the running game — `icons/` is
+packaging and nothing loads it — but all four files are precached in `CORE` in `sw.js`, so an
+installed app keeps the *old* icon until the worker updates; note that rather than chasing it.
+`manifest.json` needs no edit, since the filenames do not change. `theme_color` and
+`background_color` are both `#7ec8f2`, the sky the icon opens on, so keeping that sky keeps the
+splash consistent.
+
+**No open question.** The owner named the target and the source art for it is already in the repo.
 
 ---
 
