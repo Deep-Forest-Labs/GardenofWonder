@@ -1884,7 +1884,7 @@
       <div class="stat-block">
         <h3>${Icons.get('book')} Collection</h3>
         <div class="almanac-meter" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${found}" aria-label="${found} of ${total} discovered">
-          <i style="transform:scaleX(${fill})"></i>
+          <i style="--fill:${pct(fill, 1)}"></i>
           <span>${found} / ${total} discovered</span>
         </div>
         ${milestoneRows}

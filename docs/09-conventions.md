@@ -245,9 +245,32 @@ Covered fully in [07-save-data.md](07-save-data.md). The short version:
    step people forget, and it breaks loading for existing players.
 3. Renaming a field requires a fixup like the existing `plot1Gardener` one.
 
+## Playbook: change `style.css`
+
+1. Write the change. Use a token, never a raw hex — the palette table is in
+   [05-art-direction.md](05-art-direction.md).
+2. Run `node tools/style-check.js`. It reads `style.css` and reports five things: raw hex outside
+   `:root`, translucent `box-shadow` lips, custom properties used but never declared, corner radii
+   outside the ladder, and a count of every distinct border width.
+3. **The first three fail the check; the last two only report.** Radius and border are the geometry
+   sweep, deliberately deferred — the check measures it so the sweep can be scoped, and refuses to
+   be the thing that decides to do it.
+4. **It fails on new drift, not on old.** `tools/style-check.json` records the debt that already
+   existed. A check that goes red on its first run and every run after it gets switched off within
+   a week, so this one goes red only when a change *adds* to the count.
+5. If a new value is deliberate, it goes in [05-art-direction.md](05-art-direction.md) with the
+   reason — check 5 of that document's five questions — and then
+   `node tools/style-check.js --update-baseline` re-records the count. Raising the baseline without
+   writing down why is how a style guide becomes fiction.
+6. `--strict` ignores the baseline and lists every violation in the file. That is the sweep's
+   worklist, not the gate.
+
 ## Testing
 
-There is no test suite. Verification is manual plus ad-hoc Playwright scripts.
+`node tools/sim-test.js` plays the whole economy forward in Node and is the cheapest check in the
+project; `node tools/style-check.js` holds the visual standard. Everything above the simulation —
+the six `ui-*` files, layout, the sheet, FX — is verified by hand against this checklist, plus
+`tools/probe.js` for a screenshot when you cannot open the game yourself.
 
 Before calling a change done:
 

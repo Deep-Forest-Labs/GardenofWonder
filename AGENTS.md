@@ -24,7 +24,10 @@ DOM; `ui.js` never does economy math.
 
 ## Verifying
 
-Run `node tools/sim-test.js` and `node --check` on every file you touched.
+Run `node tools/sim-test.js` and `node --check` on every file you touched. If you touched
+`style.css`, run `node tools/style-check.js` — it holds the four rules in
+[docs/05-art-direction.md](docs/05-art-direction.md) that a script can hold, and it fails on new
+drift rather than on the debt already there.
 `node tools/probe.js shot:after` screenshots the running game in headless Chrome when you cannot
 open it yourself — see [docs/24-remote-sessions.md](docs/24-remote-sessions.md), which also covers
 why a session working from a phone commits to a branch rather than `main`. Add sim-test coverage for

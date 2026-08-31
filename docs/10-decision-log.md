@@ -5,6 +5,60 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-30 (overnight housekeeping) — The style guide becomes a check, and a rename that was not authorised
+
+**`tools/style-check.js` exists because a rule nobody notices breaking is not a rule.** The
+2026-08-26 Garden Standard audit found that every item it counted was already agreed with. Doc 11
+put it exactly: *"The rules did not fail because anyone disagreed with them. They failed because
+nothing noticed."* Four of doc 05's rules are properties of a text file, and this checks them.
+
+**Rejected: a check that fails on the existing debt.** It is the obvious design and it is why this
+kind of tool does not survive. Run strictly it opens on 402 raw hexes, so every task after it starts
+with a red gate that has nothing to do with that task — and the fix everyone reaches for is to stop
+running it. `tools/style-check.json` records the counts as found and the check fails only when a
+change *adds* to them. Raising the baseline is deliberate and takes a flag.
+
+**Rejected: the literal reading of the lip rule.** Doc 05 says "a `box-shadow` with a zero blur and
+an `rgba()` colour is always the bug", and implemented literally that fires 18 times — 16 of them on
+rarity rings, pressed states and the aura ladder, all of which doc 05 blesses in other paragraphs.
+The rule doc 05 *means* is the one its checklist tells you to grep for: `0 3px 0 rgba(`, a shadow
+with a **vertical offset** and no blur. Tightened to that it fires twice and both are real. A gate
+that cries wolf is a gate someone turns off, so precision beat recall.
+
+**Rejected: swapping every hex that equals a token.** That was the brief, and it is wrong in about a
+third of cases. `#ffd43b` equals `--legend`, but on `.hollow-gift` and `.plot .bar i` it is a gold
+that merely *happens* to be the rarity colour — writing `var(--legend)` there states something false
+and drags those components along the next time rarity gold is retuned. On `.fl-plot.century` it
+would have been worse: doc 05 says the Century Bloom is "deliberately outside every existing family,
+because it is an exception", so tokenising it to `--epic` would have silently cancelled a documented
+decision. The rule used instead: **replace only where the token's name matches the site's evident
+meaning.** 32 substitutions, including all 25 raw `#2c1a10`.
+
+**The bars use `--fill`, not the album's `--p`.** `--p` already means a unitless ratio on
+`.q-pip-wrap` one line above the quest bar, and a percentage in `.turn-fill::before` and the album.
+They are siblings today, so nothing inherits across and `--p` would work. It was rejected anyway
+because of how that collision fails: `calc(100% - 0.44)` is invalid, an invalid `clip-path` paints
+the **whole** element, and a progress meter whose failure mode is reading 100% is the wrong failure
+mode to leave lying around. `.mastery-bar b` was left untouched — it is emitted by nothing, and
+giving dead code a `--fill` contract nothing satisfies hands its reviver an empty bar and no clue.
+
+**Not done: the "Garden Mastery" rename, because the premise was false.** The round was told the
+rename was "already implied by the glossary". The glossary in doc 32 has sixteen entries and names
+none of these things. Checking further, the issue itself is stale: "Bloom Mastery" is in zero
+player-facing strings, `recordHarvest()` returns `mastery: []` so the "Tier N" toast cannot fire,
+and the petal tracks replaced the mastery goal line — so the collision the issue describes is
+unreachable. One heading remains, and whether it is still a problem is now the question, not what to
+rename it to. Panel copy stayed the owner's call, which is where doc 11 had already put it.
+
+**Not done: the creature arrival bar, and the reason is not the one expected.** The search was for a
+display-only fix that avoided the design change. There is none, because the display fix is already
+there — `ui-sheet.js` clamps that line in three places, and the clamp is what produces "24 / 24 Rose
+to ★2". The panel renders faithfully; the *state* is impossible, because `level` and `discovered`
+are independent and the bar exists to show their relationship. A second clamp moves the lie rather
+than removing it.
+
+---
+
 ## 2026-08-30 (phase 3.9, the motion gate) — The stage goes up, and six knobs the spec did not name
 
 **`tools/sky-spike.html` is built and nothing has integrated**, which is the whole point of the

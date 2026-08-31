@@ -113,14 +113,29 @@ chip's strip is reserved out of the frame. On an SE-class screen the board also 
 are the price of Fall's one rule being readable, and both are deliberate — see
 [08-ui-and-layout.md](08-ui-and-layout.md#the-vertical-ladder).
 
-**Three progress bars still compress their gradient instead of revealing it.** `.q-bar i`,
-`.almanac-meter i` and `.mastery-bar b` all draw a green-to-gold ramp and then show a fraction of it
-with `transform:scaleX()` — and a transform scales an element's *painted output*, so the whole ramp
-is squeezed into the sliver and an 8% bar ends in the same gold as a full one. The colour therefore
-carries no progress information on any of them. The album's two bars were fixed on 2026-08-30 with
-`clip-path: inset(0 calc(100% - var(--p)) 0 0)`, which hides the rest of a full-width fill instead of
-resampling it; the same one line repairs these three. Left because they are three other panels and
-the round was the Cards pass.
+**~~Three progress bars still compress their gradient instead of revealing it.~~** — FIXED
+2026-08-30, and there were two. `.q-bar i` and `.almanac-meter i` now clip a full-width fill the way
+the album's bars do, so a part-full bar shows its green end instead of a squeezed copy of the whole
+ramp. Measured before and after at 11/25: the quest bar used to reach full gold at 44%.
+
+**The fill goes out as `--fill`, not `--p`.** `renderQuest()` writes `--p` as a *unitless ratio* on
+`.q-pip-wrap` one line above, and `.turn-fill::before` reads `--p` as a *percentage*; the album
+reads it as a percentage too. They are siblings today so nothing inherits across, but
+`calc(100% - 0.44)` is invalid and an invalid `clip-path` **shows the whole bar**, so the failure
+mode of that collision is a meter that reads 100% when it is not. One name carrying two units inside
+one button is how that stops being hypothetical.
+
+**The third bar was never live.** `.mastery-bar b`, and the `.almanac-row-goal` block it sits in, are
+emitted by no `ui-*.js` file — the mastery ladder is retired and the petal tracks replaced its goal
+line. It was left exactly as it was: giving dead code a `--fill` contract that nothing satisfies
+would hand whoever revives it an empty bar and no clue why. Dead CSS, filed as dead CSS.
+
+**`.critter-grow i` also scales, and it is a different bug.** It is a solid `#8ce99a` with no ramp,
+so its colour has nothing to get wrong; what `scaleX()` distorts is the 2px ink border and the 999px
+cap — at 20% the vertical strokes thin to 0.4px while the horizontal ones stay 2px, in an art
+direction whose whole grammar is an even contour. The album's line will not fix it: the `<i>` **is**
+the bar and has no track behind it, so clipping would cut away its own right border and leave a
+three-sided stub. The honest fix is giving it a track, which is new markup and a new rule.
 
 **The season coach mark stands over the board at 390×667.** In Summer it grazes the bottom of the
 planter by 22px; in Fall it flips to the stacked shape, clears the bed chip by 6px and then covers a
@@ -848,12 +863,27 @@ with a colour change where a regression would be impossible to bisect.
 When it happens, do it in the order the ladder is used, not file order: chips and small badges to 12,
 cards / plots / dock to 18, the board to 26, and everything already at `999px` or `50%` left alone.
 
-### Raw hex where a token exists
+### Raw hex where a token exists — the exact matches are swept, the rest is a design pass
 
-`#2c1a10` is written out **26 times** instead of `var(--ink)`, and `style.css` holds **176 distinct
-hex values** against the 22 the palette names (re-counted 2026-08-30, comments stripped; the Cards
-pass moved both). Nobody chose most of them; they accreted. The ink can
-never be adjusted globally while this is true, which undoes the reason for having tokens at all.
+**Swept 2026-08-30.** `#2c1a10` is gone: all 25 raw uses outside `:root` are `var(--ink)`, and the
+ink can now be adjusted globally. 32 substitutions in total, and the rule for choosing them was
+narrow on purpose — **a hex was only replaced where the token's NAME matches the site's evident
+MEANING.** `#ffd43b` on `.toast.legend` became `var(--legend)`; the same hex on `.hollow-gift` did
+not, because that is a gold that happens to equal the rarity colour without meaning the rarity.
+Encoding the wrong meaning is worse than a raw hex, because it also breaks the next retune.
+
+`node tools/style-check.js --strict` prints what is left. Sorted against the palette it is three
+different problems, and only the first is a sweep:
+
+- **29 distinct near-misses, 74 occurrences** — a hex within a hair of a token. `#fff8e8` against
+  `--paper` `#fff8e7` is one step of red; `#5c3a22` against `--ink-2` `#5a3a1f`; `#ffd23f` against
+  `--legend` `#ffd43b`. Each is either a typo or a deliberate half-shade, and **nobody can tell
+  which from the file** — which is exactly why they need the owner rather than a script.
+- **~94 distinct colours with no token near them**, the real accretion. A palette pass, not a sweep.
+- **Two golds that mean different things.** `--coin` `#ffc93c` and `--legend` `#ffd43b` are both in
+  the palette; `#f08c00` is a third, deeper gold used for legendary text on cream and for coin
+  figures, and it has no name. It wants either a `--legend-d` or an admission that it is `--coin-d`
+  doing double duty.
 
 ### ~~`.card-desc` is the last `opacity: .7` description text~~ — DONE 2026-08-30 (phase 3.8)
 
@@ -879,14 +909,30 @@ icon was correctly dead when the polish branch was cut and load-bearing on `main
 landed. Confirm against **both** branches, and against data-driven references, before removing any
 of it.
 
-### Nothing enforces any of this
+### ~~Nothing enforces any of this~~ — BUILT 2026-08-30
 
-Every rule in [05-art-direction.md](05-art-direction.md) is checkable by a script except taste: a
-raw hex outside `:root`, a radius outside the allowed set, a `box-shadow` with zero blur and an
-`rgba()` colour, an undeclared custom property. A pre-commit check on those four would have caught
-every item the 2026-08-26 audit counted, including `--ink-soft`, which was undefined long enough to
-be used 23 times. **The rules did not fail because anyone disagreed with them. They failed because
-nothing noticed.** This is the single highest-leverage item on this page.
+`tools/style-check.js` is the thing that notices. Zero dependencies, one file, five checks: raw hex
+outside `:root`, translucent `box-shadow` lips, custom properties used but never declared, corner
+radii outside the ladder, and a count of distinct border widths. The first three fail; the last two
+only report, because the geometry sweep below is deliberately deferred and a measurement should not
+smuggle in a decision.
+
+**It fails on new drift, not on the debt already there.** `tools/style-check.json` records the
+counts as found. This is the part that makes it survive: a check that is red on its first run and
+every run after it gets switched off within a week, and then the rules fail the same way they
+failed before. Raising the baseline is allowed and is a deliberate act — `--update-baseline` — and
+doc 05 check 5 says the new value gets written down with its reason.
+
+Three things it deliberately does not flag, each blessed by doc 05: an `inset` shadow (the house
+material's lit top and shaded bottom edge are translucent on purpose), a ring (`0 0 0 3px rgba(…)`,
+which the rarity and state vocabulary uses), and a hex assigned to a component-local custom property
+(the `--mw-stone-*` pattern). A lip is the shadow with a **vertical offset and no blur**, which is
+the signature doc 05 tells you to grep for.
+
+It was sabotaged before it was believed, per the trap recorded in
+[HANDOFF.md](HANDOFF.md#traps-in-this-codebase): each of the three failing checks was broken in turn
+and confirmed to be the one that goes red, and the three blessed patterns above were confirmed to
+stay green.
 
 ## Structural
 

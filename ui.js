@@ -1,7 +1,7 @@
 /* Garden Wonder — presentation, input and glue. */
 
 (() => {
-  const { $, $$, S, el, fmt, fmtTime, pickLine } = UI;
+  const { $, $$, S, el, fmt, fmtTime, pct, pickLine } = UI;
 
   /* ============ garden ============ */
   const plotEls = [];
@@ -438,7 +438,7 @@
     el.questStrip.dataset.sig = sig;
     el.qPip.textContent = lv;
     if (el.qPipWrap) el.qPipWrap.style.setProperty('--p', repP.toFixed(3));
-    el.qBar.style.transform = `scaleX(${questP})`;
+    el.qBar.style.setProperty('--fill', pct(questP, 1));
     el.qText.textContent = text;
     el.qCount.textContent = count;
     if (el.qReward) {
