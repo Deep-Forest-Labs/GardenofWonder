@@ -750,8 +750,11 @@ Fine for a single-player local game. It would matter if leaderboards were ever a
 
 ## Accessibility
 
-- **No keyboard support and no focus styles.** Buttons are focusable but nothing is styled, and the
-  game can't be played without a pointer.
+- **No keyboard support.** Every button now takes a visible `:focus-visible` ring — 3px of ink, 3px
+  clear of the contour, written as an `outline` because a `box-shadow` ring would have deleted the
+  lip off every button in the game at once. But there are still no key handlers, and the game can't
+  be played without a pointer. Three components override it: `.dev-btn`, `.mw-cell` and `.mw-keeper`
+  set their own `outline` in a state rule that outranks it.
 - **No screen-reader narration of the garden.** Plot states are invisible to assistive tech.
 - **Rarity is communicated by colour alone** — no shape or text alternative.
 - **Contrast is unaudited.** White outlined text over bright scenery is the likeliest problem.
@@ -836,6 +839,23 @@ were both quietly drawing a sparkle.
 suite now asserts every icon named by `CREATURE_TRAITS`, `CREATURE_PAIRS`, `BENCH`, `DATA.upgrades`
 and `DATA.decor` really exists. The fallback itself is left in place — a missing glyph should not
 crash a panel — but it can no longer hide.
+
+**Extended 2026-08-30.** The suite only covers names that come from a data table, so a **hand-written
+call site** could still hide a typo — and both of the original two were hand-written. `get()` now
+warns to the console the first time it is asked for a name it does not have, **once per name**, kept
+in a private `Set`. The fallback is byte-identical; only the silence is gone.
+
+It is gated on `location.hostname` being `localhost`, `127.0.0.1` or `''` — the same test
+`index.html` already uses to skip the service worker, and the only honest dev/production signal in a
+project with no build step to strip a branch. **The `typeof location !== 'undefined'` half of that
+gate is load-bearing:** Node has no `location`, `tools/sim-test.js` evaluates `icons.js` at global
+scope, and a bare `location.hostname` there is a `ReferenceError` that takes all 1,385 checks with
+it.
+
+**Two things it does not do, on purpose.** It never warns in production, and it cannot be caught by
+the suite — Node has no `location`, and sim-test only ever calls `has()`. `tools/probe.js` will not
+catch it either: its console handler drops everything that is not an `error`. This is a check for a
+human with devtools open, and a green suite is not evidence it works.
 
 **Note for whoever writes that kind of test next:** the obvious check —
 `Icons.get(name) !== Icons.get('nonsense')` — is wrong, because anything legitimately using `sparkle`

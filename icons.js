@@ -201,7 +201,20 @@ const Icons = (() => {
       <path d="M12 15.4c-1.8-1.6-3.4-2-5-1.6.4 2 1.8 3.2 5 3.4Z" fill="#57c15b" stroke-width="1.4"/>`)
   });
 
+  /* Only where a developer is looking. There is no build step to strip a branch,
+     so the gate is all there is: GitHub Pages answers on a real hostname, a dev
+     server and file:// do not — the same test index.html uses to skip the service
+     worker. Node has no `location`, and the suite loads this file. */
+  const LOCAL = typeof location !== 'undefined'
+    && ['localhost', '127.0.0.1', ''].includes(location.hostname);
+  const warned = new Set();
+
   function get(name) {
+    /* Once per name: a missing glyph in a list would otherwise warn per row. */
+    if (LOCAL && !has(name) && !warned.has(name)) {
+      warned.add(name);
+      console.warn('Unknown icon, drawing a sparkle instead:', name);
+    }
     return LIB[name] || LIB.sparkle;
   }
 

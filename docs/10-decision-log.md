@@ -50,6 +50,16 @@ and the petal tracks replaced the mastery goal line — so the collision the iss
 unreachable. One heading remains, and whether it is still a problem is now the question, not what to
 rename it to. Panel copy stayed the owner's call, which is where doc 11 had already put it.
 
+**`Icons.get()` warns once per missing name, and only where a developer is looking.** The suite
+asserts every icon a data table names, but both icons that went missing for a whole session were
+named at hand-written call sites, which no table covers. The gate is `location.hostname` —
+`localhost`, `127.0.0.1` or `''` for `file://`, the same test `index.html` uses to skip the service
+worker. Rejected: a `?dev=1` URL flag (invisible unless you already suspect something), a
+`const DEV = true` edit-before-release (a release step nobody performs), and `Game.Dev` (icons.js
+knows nothing about the game and doc 09 says to keep it that way). Worth recording that **the suite
+cannot test this** — Node has no `location`, and probe.js drops every console message that is not an
+error — so it was proved by driving a real browser on 127.0.0.1 and capturing `console.warn`.
+
 **Not done: the creature arrival bar, and the reason is not the one expected.** The search was for a
 display-only fix that avoided the design change. There is none, because the display fix is already
 there — `ui-sheet.js` clamps that line in three places, and the clamp is what produces "24 / 24 Rose

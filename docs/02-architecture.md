@@ -190,8 +190,10 @@ of the container stops agreeing with a position in the art. `tools/hollow-spike.
 screen both draw from here, so the art cannot drift between them.
 
 **`icons.js`** — Thirty-eight hand-built outlined SVG icons, every one of them referenced.
-`get(name)` falls back to `sparkle` for an unknown name, so a typo degrades instead of throwing;
-`hydrate(root)` replaces every `<span data-icon="…">` in a subtree. Static markup in
+`get(name)` falls back to `sparkle` for an unknown name, so a typo degrades instead of throwing —
+and **warns to the console once per name while you are on `localhost` or `file://`**, so it degrades
+without hiding. `has(name)` is the exact check, for tests. `hydrate(root)` replaces every
+`<span data-icon="…">` in a subtree. Static markup in
 `index.html` uses `data-icon`; JavaScript-generated markup calls `Icons.get`.
 
 **`audio.js`** — Web Audio synthesis. Two gain buses (effects and music) under a master. Sounds
