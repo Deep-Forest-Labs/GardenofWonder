@@ -1267,11 +1267,11 @@ Found by trying to assert what the docs say and discovering the docs are wrong. 
   adjacent levels grant the same category."** The **first half is false**: `DATA.levelGrants` has no
   entry at levels 9, 11, 13, 14, 16 or 17. The rotation half holds and is now asserted. The sentence
   needs its first half retracted, or the ladder needs filling — that is a design call.
-- **The currency policy is violated by its own terms.**
-  [12-meta-layer-design.md](12-meta-layer-design.md) says adding a currency requires removing one,
-  and `defaultState()` tracks `savedSeeds`, `petals` and `tickets`, none of which appear in that
-  document's currency table. The Garden Year added two currencies without the trade the rule asks
-  for.
+- ~~**The currency policy is violated by its own terms.**~~ **Fixed 2026-08-31 by the design
+  session:** Saved Seeds joined doc 12's table in the slot retired tickets vacated — the trade the
+  rule demands existed all along and was simply never written down. Petals are recorded there as
+  purchases, not a currency (an upgrade level is not a wallet), and `tickets` stays a dead field
+  for old saves.
 - **[26-goods-catalog.md](26-goods-catalog.md)'s schema example does not match shipped `GOODS`.** It
   shows `chain: { rung }` and `inputs: [...]`, which no shipped good carries, and omits `icon`,
   which all ten have. Ahead of the data in one direction and behind it in the other.
