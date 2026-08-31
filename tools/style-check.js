@@ -382,11 +382,13 @@ function main() {
 
     const status = !gate
       ? ''
-      : over
-        ? `  ← ${found.length - cap} MORE THAN THE BASELINE OF ${cap}`
-        : found.length === 0
-          ? '  ← clean'
-          : `  ← at or under the baseline of ${cap}`;
+      : STRICT
+        ? (found.length ? '  ← strict: the whole worklist, baseline ignored' : '  ← clean')
+        : over
+          ? `  ← ${found.length - cap} MORE THAN THE BASELINE OF ${cap}`
+          : found.length === 0
+            ? '  ← clean'
+            : `  ← at or under the baseline of ${cap}`;
 
     console.log(`\n${TITLES[key]}`);
     console.log(`${found.length} occurrence${found.length === 1 ? '' : 's'}, ${distinct.length} distinct${status}`);

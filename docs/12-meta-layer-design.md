@@ -187,11 +187,20 @@ video), not a gem shop. Migrated saves convert leftover tickets to gems at 5:1.
 gain. Watering stays a *tap interaction* that speeds growth — which the existing `hasten()` already
 implements.
 
-**Storage caps on raw materials**, generous and upgradeable. Standard lever for return visits, and
-capacity upgrades are a good coin sink. No caps on crafted goods.
+**~~Storage caps on raw materials~~, generous and upgradeable.** Standard lever for return visits,
+and capacity upgrades are a good coin sink. No caps on crafted goods. **Never built, in any version
+of this game** (checked 2026-08-30). The only capacity in the engine is `APIARY.capacity` — the five
+jars a hive holds before the bees stop working — which is a hive stopping, not a store filling up.
+This document already contradicts itself about it: "Deliberately left out" in the prototype scope
+below. Treat it as an idea, not a decision.
 
-**Offline production runs at full rate, capped around eight hours.** Generous enough to feel kind,
-bounded enough that daily play matters. A longer cap is a plausible premium upgrade later.
+**~~Offline production runs at full rate, capped around eight hours.~~** **Superseded — it is two
+axes, and both numbers here are wrong.** What shipped is a *rate* and a *duration*, each with its own
+upgrade: `baseRate` 0.25 climbing to 1.0 through Moonlight Tending, and `baseHours` 4 climbing to 24
+through Lantern Oil, with a `trickle` of 0.1 still earned past the cap rather than a hard stop. The
+live values are in [04-economy.md](04-economy.md#offline-earnings) and `DATA.offline`, and the
+economy doc's tuning note — "if offline feels stingy, raise the rate, not the cap" — is the guidance
+that replaced the sentence above.
 
 **Honey type follows current blooms.** See the Apiary section.
 

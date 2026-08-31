@@ -1075,12 +1075,14 @@ Left unfixed on purpose: several of them sit in sections the pending design deci
 anyway, and correcting a paragraph that is about to be replaced is churn. The two that mislead
 hardest and should be fixed regardless of what gets decided:
 
-- **[13-order-system.md](13-order-system.md) opens "Status: specification, not built."** The Garden
-  Stand shipped 2026-08-25. A cold session reading top-down will believe the order system does not
-  exist.
-- **[12-meta-layer-design.md](12-meta-layer-design.md) locked decisions** still specify a flat
-  eight-hour offline cap (superseded by the two-axis 25% / 4h model) and "storage caps on raw
-  materials, generous and upgradeable" — which has never existed in any build.
+- ~~**[13-order-system.md](13-order-system.md) opens "Status: specification, not built."**~~ —
+  **already fixed, and this bullet was the stale one.** Its header has read "Status: built
+  2026-08-25" for some time. Checked 2026-08-30.
+- ~~**[12-meta-layer-design.md](12-meta-layer-design.md) locked decisions**~~ — **FIXED 2026-08-30.**
+  Both are struck through in place with what replaced them: the offline cap is two axes rather than
+  one flat eight hours, and storage caps were confirmed never built by grepping the engine — the
+  only capacity in it is the five jars a hive holds. Struck rather than deleted, because a locked
+  decision that quietly disappears reads as though it was never made.
 
 **The pattern is the point.** Status lines and "locked decisions" go stale faster than body text,
 because a later session adds a new section rather than retracting an old one. Body text usually
