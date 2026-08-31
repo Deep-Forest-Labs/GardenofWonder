@@ -283,8 +283,11 @@
 
   // The singing flowers of the Wonder Effect, come home. Three phrases, so a sky
   // that sings four times is not a loop.
+  /* Reduced motion is a preference about MOTION. The flower's mouth is held
+     still by the stylesheet, and the melody is the half of the singing that was
+     never moving — taking the sound away as well would be answering a question
+     nobody asked. */
   function sing(which) {
-    if (quiet()) return;
     audio(() => Sound.sing(which));
   }
 

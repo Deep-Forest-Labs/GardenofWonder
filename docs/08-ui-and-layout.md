@@ -516,13 +516,23 @@ and it is what separates a mutation from a rarity roll revealed at the end.
 Written through the `renderPlots()` cache like every other plot property, so an unchanged mutation
 touches no DOM.
 
-**Weather** sets `data-weather` on `.game` and `--weather-tint`, painted as an overlay on
-`.scenery::after` rather than by replacing the sky — so the day/night cycle keeps running underneath.
-Rain and Thunderstorm `multiply`; Aurora and Wonderfall `screen`. Opacity is per-weather and tops out
-at .52 for a storm, which reads as overcast without hiding the garden.
+**Weather** sets `data-weather` on `.game`, plus `data-wx-phase`, `data-sunbreak`, `data-wx-flash`
+and `data-wx-night` since the Sky Pass. The sky itself is `.wx-wash`, a gradient inside the `.wx`
+layer — an overlay over the living sky rather than a repaint of it, so the day/night cycle keeps
+running underneath. It tops out at `--wx-storm-wash`, 0.68 for a storm, which reads as overcast
+without hiding the garden. The flat `.scenery::after` fade that used to carry this is retired: its
+four per-sky opacities are zero, because two tints over one sky darkened every sky twice.
 
-**Cue discipline.** The sky is the only cue for ordinary weather; a banner four times an hour would
-be noise. Aurora and Wonderfall get a line from the flower, and Wonderfall alone gets a banner.
+**`.wx` carries no `z-index`, and nothing may give it one.** A positioned element with a z-index is
+a stacking context, and a stacking context is an isolated blending group — every multiply, screen
+and overlay inside would then blend against transparency instead of against the sky, which looks
+plausible and is wrong. DOM order alone places it.
+
+**Cue discipline.** Every real sky now speaks twice: a forecast line a few seconds before it lands,
+and its arrival line when it does. **Wonderfall alone gets a banner** — that ruling stands, and a
+banner four times an hour would still be noise. Rarity buys the interruption: only the aurora and
+Wonderfall talk over the speech cooldown. The ladder is in
+[06-audio-and-fx.md](06-audio-and-fx.md#the-feedback-ladder).
 Catching a mutation is celebrated per rank — sparks and a float for the lower two, plus shake,
 confetti and a banner for the top two. Both honour reduced motion.
 

@@ -6,6 +6,13 @@ measurement during the build — see "Exposure" below. Reasoning in
 [10-decision-log.md](10-decision-log.md). Market evidence in
 [17-market-and-positioning.md](17-market-and-positioning.md#why-plant-this-flower).
 
+**The sky itself was restaged on 2026-08-31.** Until then, weather was one flat colour fade over the
+garden and nothing else — no sound, no reaction from the world, no ending. It is now a
+sequence: it announces itself, arrives in layers, holds while it stands, and finishes. Two of those
+layers reach the simulation and are recorded here; the rest is show, and the show and every value in
+it live in [41-weather-staging.md](41-weather-staging.md). **This document stays the mechanics
+record** — what weather is worth, what it costs, and what it must never be allowed to become.
+
 ## The trap this design exists to avoid
 
 The game already rolls Common / Rare / Epic / Legendary at 70/20/8/2 for ×1/2/4/8 on every harvest.
@@ -42,7 +49,9 @@ Three things fall out of that choice, and together they are the reason for it:
    that happened while the player was away can be reconciled on load. This is what makes mutations
    feed the welcome-back scene rather than fight it.
 3. **It fixes the day/night cycle.** That cycle currently lives in `ui.js` keyed to *page boot*
-   (`CYCLE`, `bootAt`), so it restarts on every reload. Moving the clock into `game.js` on real time
+   (`CYCLE`, `bootAt`), so it restarted on every reload. **That move has happened** — `dayPhase()`
+   lives in `game.js` and derives from epoch time, which is what `Game.isNight()` and therefore the
+   sunbreak's daytime gate rest on. Moving the clock into `game.js` on real time
    makes the sky honest and **re-opens the night-blooming verb** that had to be dropped from the
    first verb pass for exactly this reason — see [10-decision-log.md](10-decision-log.md).
 
@@ -155,6 +164,40 @@ reason adjacency exists.
 **Rule:** stacking multiplies the *catch chance*, never the payout. Payout tiers stay fixed, so the
 income-share target stays computable and a well-built garden gets *more jackpots*, not bigger ones.
 
+## What the sky changes besides mutations
+
+Two skies reach into the garden itself, and they are the only two that do. Everything else weather
+does is presentation, and the line matters: a sky that quietly moved a third number would put the
+income share out of reach of the one measurement that keeps it honest.
+
+**Rain waters.** While it rains, a plant takes a tenth off its growing time — Stardew's most-loved
+weather rule, and what turns a shower from a mood into a gift. It has to pay along
+two paths to be honest, because growth is fixed at the moment a seed goes into the ground: a seed
+sown into rain comes up that much sooner, and everything *already* growing when the sky turns has a
+tenth shaved off whatever it has left to do. Neither path pays the other's plants, so one shower can
+never quicken the same flower twice. The shave rides the turn in the sky rather than the sky itself,
+which means the next rain is a fresh gift and a rain that simply carries on is not. A bought rain is
+the same rain and waters identically. It multiplies into the same growth stack as sprinklers and
+Keepers, under the same 0.3 floor, so no combination of gifts can collapse a grow time to nothing.
+
+**And rain is deliberately kept out of the offline rate.** What the garden earns while you are away
+is computed with the sky ignored on purpose. A sixty-second shower has no business setting the rate
+for a day's absence, and if it did, closing the app during rain would be worth real money — an
+incentive nobody asked for and the opposite of cosy. Rain waters what is in the ground, not what the
+drone will plant tomorrow.
+
+**An aurora brings the night with it.** While one hangs, the game answers *yes* to "is it dark"
+whatever the hour, and that is exactly what lets an aurora read at noon. Everything keyed to night
+wakes under it: a Nightbell pays its night rate, Nightbloom can lift a catch a tier, night-yield
+creature traits count, and the night errand fires. It answers for the *moment it is asked about*
+rather than for now, so a roll that came due while the tab was shut resolves against the sky that
+was actually standing — the same rule the rest of this document already runs on.
+
+The cost of that is small, and bounded on purpose: an aurora is 2.5% of slots, so night goes from
+about 32% of all moments to about 34%, and a Nightbell's long-run average moves by less than a
+twentieth of a multiplier. The suite holds that bound rather than trusting it, because the
+temptation to make a rare sky pay *a bit more* is exactly how a bounded system stops being one.
+
 ## What the player sees
 
 **While growing.** A mutated plant is visibly different the moment it catches — this is the whole
@@ -167,8 +210,39 @@ Add a per-mutation tint and let the existing machinery carry it.
 moment in the game. **Confetti stays reserved for the top of the ladder**, or it stops meaning
 anything.
 
-**When weather turns.** The sky changes and the flower comments. Rare weather deserves a banner;
-Rain does not. A cue on every slot change would be noise four times an hour.
+**When weather turns.** A sky is a sequence, not a state. It announces itself, transforms in layers,
+holds for as long as it stands, and then ends — and **rarity buys layers**: Rain moves three
+channels of the world at once, the storm five, the aurora six, and Wonderfall moves all of them. A
+Clear slot following a Clear slot does nothing whatever, and that silence is the whole reason the
+other three slots in ten land as events.
+
+**It is seen coming.** The sky is a function of the clock, so the next one can simply be read — and
+a few seconds before a real sky lands, the flower says a line about it. Rain and the storm also push
+a bank of grey cloud in ahead of themselves; the aurora and Wonderfall get the line and nothing
+else, because both of them *begin*, and a wall of cloud in front of either would spend the surprise
+the sky itself is. Nothing is announced for a Clear slot, and a sky already standing never announces
+itself a second time.
+
+**The world answers, differently for each sky.** Rain darkens the soil and cobbles, glistens the
+plants and lands the occasional drop on one. The storm leans everything into the wind, flashes, and
+sends tending creatures under the nearest leaves. The aurora rims every plant in light and stops the
+creatures where they stand to look up. Wonderfall drops the veil, sets ripe plants bobbing and has
+the flower sing. The banner ruling is unchanged and still right: **Wonderfall gets a banner and
+nothing else does.** One four times an hour would be noise.
+
+**The music rearranges rather than changing.** Every sky dresses the same four-bar progression its
+own way over its own ambience bed, cross-fading without dropping the bar — the same tune in
+different clothes. Rearrangement, never replacement.
+
+**And Rain and the storm are the two skies with an ending.** They fade rather than stop: the drops
+thin out, the ground stays wet for about half a minute after the sky has gone, and if the next slot
+is Clear and it is daytime, the sun comes through in shafts for another half-minute while the flower
+says so. That sunbreak is the payoff those two skies *earn* — it is why a storm is worth watching
+all the way out, and it is the trace that says something happened here. The aurora and Wonderfall
+simply go, because nothing could reasonably follow either.
+
+The sequences, the ladder of channels and every tuned number in them are in
+[41-weather-staging.md](41-weather-staging.md).
 
 **On harvest.** The payout number carries the mutation's colour and name.
 
@@ -263,8 +337,13 @@ exact.
 - Does a plant that catches Dewkissed and later meets a Thunderstorm upgrade to Gilded, or is the
   first catch final? **Leaning: upgrade.** A plant that can still improve is a plant worth leaving in
   the ground, which supports long grow times and full gardens.
-- Can the player *see* the forecast? A one-slot lookahead would create real anticipation and real
-  planting decisions. It also risks turning a cosy game into an optimisation problem.
+- ~~Can the player *see* the forecast?~~ **Answered 2026-08-31: the flower tells them, in one line,
+  and only when a real sky is genuinely coming.** The one-slot lookahead the question wanted is
+  there — the sky is computable, so the next slot has always been readable — but it is *spoken*,
+  never displayed. A remark from the flower is anticipation; a forecast panel is a timetable, and
+  the moment planting is scheduled against a readout the garden stops being a place and becomes an
+  optimisation problem, which is precisely the risk this question named. A Clear slot is announced
+  by nothing at all, so the lookahead is silent for most of the day.
 - Does Wonderfall also trigger the existing Wonder Effect, or are they deliberately separate events
   that can coincide?
 - Should mutation affect anything besides payout — gem chance, growth, card rarity only?

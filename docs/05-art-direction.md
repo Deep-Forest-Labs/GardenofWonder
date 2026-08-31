@@ -81,8 +81,8 @@ seeds**, because a green glyph on the green fill disappeared.
 palette toward autumn as the year meter fills — one `multiply` overlay on the scenery
 (`.season-tint`, a real layer after `.vignette`, because `::after` already carries the weather and
 `::before` would paint under the sky), derived from the meter every slow tick and never saved. The
-weather tint tops out at `.52` for a full storm; a season is a mood and a storm is an event, so this
-stays under it. Both can be on at once and the day/night cycle keeps running under both. *Observed
+weather's sky wash tops out at `0.68` for a full storm (`--wx-storm-wash`; the flat `.52` overlay it
+replaced is retired); a season is a mood and a storm is an event, so this stays under it. Both can be on at once and the day/night cycle keeps running under both. *Observed
 and not fixed:* over a night sky the multiply reads browner than it does at noon — a phase-4
 question, since the fix is to scale the tint by daylight.
 
@@ -230,16 +230,20 @@ earlier pass and read as fog.
 
 ## Day and night
 
-A full cycle is **360 seconds**. Every session starts at `DAY_START = 0.46`, bright midday, so a
-first impression is never a dark screen.
+A full cycle is **360 seconds**, and the phase is `DAY` in `data.js` — `cycle: 360`, `offset: 0.46`,
+`dawn: 0.14`, `dusk: 0.82`. Dawn and dusk are what "daytime" means to anything that asks, including
+the sunbreak, which will not break through after dark.
 
 Seven keyframes define the cycle — midnight, dawn, morning, midday, golden hour, dusk, back to
 midnight. `updateSky()` interpolates between neighbouring keys every 0.6 s and writes the result to
 custom properties. CSS carries 1.6 s transitions on those properties, so the coarse update rate is
 invisible.
 
-The cycle is **not saved**. It's derived from time since page load, so every session begins at
-midday regardless of the real hour.
+The cycle is **not saved, and no longer keyed to page load**. It derives from epoch time, so every
+player sees the same hour at the same moment and a past instant stays answerable — which is what
+lets a mutation that came due while the tab was shut resolve against the sky and the light that
+were actually standing. `offset` only shifts the global phase now; it does not mean a session opens
+at midday.
 
 ## Motion
 
@@ -516,7 +520,7 @@ Phase 3.9, the Sky Pass, added one `:root` token and eighteen literals, declared
 | --- | --- | --- |
 | **`--wonder-sweep`** (`:root`) | `#ff6b6b, #ffd43b, #69db7c, #4dabf7, #b197fc, #ff8fab` | Not a new colour — the *existing* Wonder palette, finally named. Four layers carry this exact six-colour sweep: the Wonder Effect's veil and halo, and the weather veil and takeover cue Wonderfall borrows from them. It went in the moment there were four copies rather than two, because a rainbow written out four times is four places to forget when one of them changes. |
 | **The lit channels** — `.wx-bolt`, `.wx-flash-under` (`#fff`), `.wx-ground` (`#ffffff` inside a `color-mix`) | white | The same white `.cloud`, `.stars` and `.outlined` already use. A bolt and a flash are *light*, and light has no token because it is not a material — every surface colour in the palette is something the light falls on. |
-| **Eleven mask stops** — `.wx-bolt`, `.wx-ray`, `.wx-dusk`, `.wx-ribbon`, `.wx-veil`, `.wx-takeover` (`#000`) | black | Not a colour at all. `#000` in a `mask-image` means *fully opaque*, and it is the same stop `.season-tint`, `.meadow::after`, `.vignette` and `.fence` already use for the 44px bottom fade. Every one of these is that fade, on a new layer. `tools/style-check.js` counts them because it reads hexes rather than roles; they are recorded here rather than tokenised, because `--fully-opaque: #000` would be a name that explains less than the value. |
+| **Fourteen mask stops** — `.wx-bolt`, `.wx-ray`, `.wx-dusk`, `.wx-ribbon`, `.wx-veil`, `.wx-takeover`, `.wx-takeover::after` (`#000`), and the `#ff6b6b` that closes `.wx-takeover::after`'s conic gradient back to where it started | black, and one red | Not a colour at all. `#000` in a `mask-image` means *fully opaque*, and it is the same stop `.season-tint`, `.meadow::after`, `.vignette` and `.fence` already use for the 44px bottom fade. Every one of these is that fade, on a new layer. `tools/style-check.js` counts them because it reads hexes rather than roles; they are recorded here rather than tokenised, because `--fully-opaque: #000` would be a name that explains less than the value. |
 
 **They are literals in `style.css` rather than `:root` tokens on purpose:** each is used by exactly
 one component, and twelve more names in a palette this document already says carries 176 colours by

@@ -60,8 +60,8 @@ moment, and it will tell you if the pair drifts.
 
 ### The enforcement the standards never had
 
-`tools/style-check.js`, and `tools/style-check.json` beside it. Five checks over `style.css`; the
-first three fail a run and the last two only report. The design reasoning is in
+`tools/style-check.js`, and `tools/style-check.json` beside it. Six checks over `style.css`; the
+first three fail a run and the last three only report. The design reasoning is in
 [09-conventions.md](09-conventions.md#playbook-change-stylecss) and
 [11-known-issues.md](11-known-issues.md#nothing-enforces-any-of-this--built-2026-08-30); what
 belongs here is the two decisions that were not obvious.

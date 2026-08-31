@@ -196,8 +196,10 @@ without hiding. `has(name)` is the exact check, for tests. `hydrate(root)` repla
 `<span data-icon="…">` in a subtree. Static markup in
 `index.html` uses `data-icon`; JavaScript-generated markup calls `Icons.get`.
 
-**`audio.js`** — Web Audio synthesis. Two gain buses (effects and music) under a master. Sounds
-are declarative recipes built from two primitives, `tone()` and `noise()`. Browsers require a
+**`audio.js`** — Web Audio synthesis. Three gain buses under a master: effects, music, and an
+**ambience** bus for the weather beds, which opens only while a sky is standing on it and closes
+again behind the last one. Sounds are declarative recipes built from two primitives, `tone()` and
+`noise()`. Browsers require a
 user gesture before audio starts, so `Sound.init()` is deferred to the first `pointerdown`.
 
 **`fx.js`** — One full-screen canvas plus a DOM layer for floating text. Particle emitters, a

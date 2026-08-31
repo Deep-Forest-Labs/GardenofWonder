@@ -7,13 +7,22 @@ Every sound is synthesized with the Web Audio API at the moment it plays. There 
 ### Signal path
 
 ```
-tone() / noise()  →  sfxBus (0.65)  ┐
-                                     ├→  master (0.9)  →  destination
-ambient music     →  musicBus (0.16)┘
+tone() / noise()    →  sfxBus (0.65)  →  sfxFilter    ┐
+ambient music       →  musicBus (0.16) ───────────────┼→  master (0.9)  →  destination
+beds, thunder, song →  ambBus (0.5)    ───────────────┘
 ```
 
-Two buses so effects and music mute independently. Toggling a bus ramps its gain with
+Three buses so effects, music and the sky mute independently. Toggling a bus ramps its gain with
 `setTargetAtTime` rather than jumping, to avoid a click.
+
+**Both mutes reach the ambience bus, but not as equals.** The effects mute silences it outright: a
+bed is the world making a sound rather than a tune, and a player who turned effects off asked the
+garden to be quiet — a minute of rain hiss would be ignoring them. The music mute only trims it, to
+0.72, because with the arrangement gone the bed is the whole sky, and cutting that as well leaves a
+weather event with no weather in it.
+
+The ambience bus opens only while something is standing on it and closes again behind the last
+sound, so clear weather carries no idle gain. `sfxFilter` is the duck — see below.
 
 ### Starting audio
 
@@ -64,6 +73,47 @@ audible half of that same meter.
 
 Epic harvests deliberately reuse `legend`. There is no separate epic sound.
 
+### The weather beds
+
+A bed is not a recipe. It starts when a sky lands, hangs for as long as the sky does, and fades out
+behind it, so the four of them live on their own bus and get their own table — along with the three
+one-shots that ride the same bus, because those belong to the sky rather than to any one event. All
+of it is synthesized like everything else and pitched against the same pentatonic scale; none of it
+is a file.
+
+| Name | Character | Plays |
+| --- | --- | --- |
+| `rain` | A wide soft hiss with a narrow band of patter over it. The body opens and closes on a slow breath, because a minute inside an unmoving hiss is fatiguing | Rain |
+| `storm` | Two bands of low noise on a slow swell. The weight sits where a phone speaker can actually move it — the true bottom of a rumble is a frequency a phone owns none of | Thunderstorm |
+| `aurora` | Four sine voices spread wide and high, each shimmering at its own rate so the pattern never comes round, with chimes sprinkled on top rather than played in time. Deliberately the prettiest sound in the game | Aurora |
+| `wonderfall` | A wider chord than the garden ever uses, a low drone borrowed from the Wonder fanfare, and a high note falling every few tenths of a second — gold you can hear landing | Wonderfall |
+| `crack` | The split, then a tail rolling away in overlapping decays. A single burst reads as a door slamming, not as weather | Every storm flash |
+| `rumble` | The same roll heard from further off — quiet because it is distant, not because it has been filtered into nothing | The storm leaving |
+| `sing` | The flower's hummed melody, closed mouth: slow in, slow out, dark on top. Three phrases, so a sky that sings four times is not a loop | Wonderfall, three times |
+
+`Sound.bed(id, on, level)` starts and stops one; `Sound.bedsOff(fade)` clears the bus so an
+interrupted sky can hand the next one something clean.
+
+**The level is the caller's.** `ui-weather.js` reads it out of `DATA.weatherStage.<sky>.bed` and
+passes it in, because `audio.js` knows nothing about the game and the knob has to stay where a
+remote config can reach it. What `audio.js` owns is the calibration: filtered noise and a stack of
+held sines are wildly different loudnesses at the same number, so each bed is trimmed to land in
+the same place — under the game's loudest one-shot, a little above the pad. There is a hard ceiling
+too, and it is not a tuning value: it is the point past which a level dragged to its end stops
+being something anyone would hold a phone to.
+
+### Ducking under the rain
+
+While it rains, everything else in the game gets a little further away. `Sound.duck(true)` closes a
+lowpass filter sitting between the effects bus and master — wide open at 18 kHz, down to 950 Hz
+when the rain lands, eased across about a third of a second — so taps, harvests and purchases go
+soft-edged for as long as the sky lasts and come back when it clears.
+
+It is a real node on the bus rather than a change to each recipe, which is what makes it free: a
+sound written a year from now sits under the rain without knowing the rain exists. Only Rain and
+the storm duck. The aurora and Wonderfall do not, because those two are meant to be the loudest
+thing that has happened all session.
+
 ### Ambient music
 
 Off by default. A four-bar chord progression — `[0,4,7]`, `[-3,2,5]`, `[-5,0,4]`, `[-1,2,7]` —
@@ -75,6 +125,22 @@ It's the only recurring timer outside the frame loop. `setMusic(true)` starts it
 `startMusic()`'s re-entry guard stays honest. Muting used to take the bus gain to zero and leave the
 scheduler running, quietly building oscillator nodes every 3.2 s for as long as the tab stayed open.
 Notes already scheduled are untouched and fade out with the bus, so stopping is silent.
+
+**Every sky rearranges that music rather than replacing it.** The progression, the bar clock and the
+timer are the same ones running in clear weather; what changes is the dress — how open the filter
+is, what the pad is made of, how many notes the arpeggio has, how far apart they fall and which
+octave they sit in. Rain closes the top down and thins the arpeggio, as if you were hearing the
+tune from indoors. The storm goes darker and slower still. The aurora holds each chord for two bars
+and lifts the arpeggio two octaves, which is what makes it read as light rather than as a melody.
+The sunbreak brightens. Wonderfall is the one dress that is genuinely its own.
+
+`Sound.arrange(id)` cross-fades between them over about half a second. Both arrangements stay live
+and only their output levels move, so the handover is a change of clothes rather than a cut — and
+**the bar clock is never restarted**, which is the whole point. The tune you were half-listening to
+keeps its place and the sky is something that happened to it. That is the Animal Crossing move, and
+it is the reason weather never feels like a different game has started. A new dress also picks up
+the chord already playing straight away, or the handover falls into the gap before the next
+downbeat and the sky arrives to silence.
 
 ## Visual effects
 
@@ -104,6 +170,29 @@ Independent of the particle pool, seeded at init and on resize. Count is `min(18
 zero under reduced motion. They drift down with a sine sway, wrap at the edges, and are drawn at
 55% alpha so they never compete with gameplay.
 
+### The weather layer
+
+Rain, the storm's heavier rain and Wonderfall's gold drizzle all share one layer, built in the
+ambient petals' pattern rather than as a spawner. The pool is seeded once at the size that was
+asked for and every drop leaving the bottom comes back in at the top, so the budget is the count
+and never a function of how long the sky has been standing. Ninety-six is the ceiling whatever the
+data asks for.
+
+`FX.weather(kind, opts)` sets the kind and its count, speed and wind; `FX.weatherOff(seconds)` ends
+it. Ending is a thinning, not a stop: the share of the pool in play ramps down over the seconds
+asked for, and the drops still falling reach the ground and are not replaced — which is what a
+shower stopping actually looks like. The layer is zero under reduced motion and the wet ground
+carries the sky instead.
+
+Rain and the storm draw as streaks whose length is their own speed, so the storm's faster,
+wind-blown drops are visibly harder without a second pool to keep in step. **Gold drizzle has no
+wallet magnet, and that is deliberate.** The magnet is the thing that makes a coin read as money;
+this is light falling out of the sky, and gold that visibly landed in the counter would promise a
+payout Wonderfall does not make.
+
+`FX.splashAt(x, y)` is a ring and three droplets where a drop lands. It only ever lands on a plant,
+never on bare soil, because the squash it sets off is the plant's.
+
 ### Floating text
 
 DOM, not canvas, because it needs the game font and outlined text style. `float(x, y, text, kind)`
@@ -116,6 +205,25 @@ appends an absolutely positioned element with a random horizontal drift, then re
 requested rather than adding, so simultaneous triggers don't compound into nausea. Each frame it
 writes random offsets into `--shake-x/y/r` on `#game`, decaying to zero. Rotation is 9% of
 translation magnitude. Fully disabled under reduced motion.
+
+### The flash ceiling
+
+The storm asks for a lightning flash every few seconds, jittered so it never falls into a rhythm.
+It does not get one every time it asks. A gate sits between the storm and the screen and allows
+**no more than three flashes in any ten-second window, whatever the data says** — the storm only
+ever asks, and the gate answers.
+
+The reason it is a hard limit rather than a tuned one is that photosensitivity is not a knob.
+Every other number in the sky lives in `data.js` where a remote config can move it, and this is
+precisely the kind of number that eventually gets moved by someone chasing drama.
+
+Under reduced motion the flicker is off entirely and a slow tint pulse stands in — roughly seven
+hundred milliseconds of soft colour instead of a hundred and twenty of white — and the storm asks
+for it a little over twice as rarely. A dead channel would have been worse than either: with no
+substitute at all, a player with the preference on gets a thunderstorm that never announces itself.
+
+Each flash also picks a fresh position for the bolt behind the hills. A bolt that strikes the same
+spot twice reads as a decal rather than as weather.
 
 ### Haptics
 
@@ -135,6 +243,11 @@ try/catch because some browsers expose it and then throw. Silently absent on iOS
 | Unlock | `[15, 30, 15]` |
 | Legendary | `[20, 40, 20, 40, 40]` |
 | Wonder | `[30, 40, 30, 40, 60]` |
+| Storm flash | `[12, 30, 22]` |
+| Wonderfall arrives | `[18, 40, 18, 40, 30]` |
+
+The flash deliberately reuses the crit's pattern. It is the same shape of moment — short, bright
+and unasked for — and giving it a thump of its own would have said it was a bigger one.
 
 ## The feedback ladder
 
@@ -157,6 +270,11 @@ than a Rare one.
 | Mastery tier | — | 9 stars + ring + 2 float texts | — | `quest` | first or gem tier only | — |
 | Level-up | — | 34 confetti + ring | 9 | `levelup` | yes | — |
 | Wonder Effect | — | rainbow burst + 5 confetti waves | 10 | `wonder` | banner | forced |
+| Rain (3 channels) | — | 74 drops + splashes on plants | — | `rain` bed, rain dress, effects ducked | — | forecast line, then arrival |
+| Thunderstorm (5) | — | 70 faster, wind-blown drops + the flash | — | `storm` bed and dress, a `crack` per flash, one `rumble` leaving | — | forecast line, then arrival |
+| Aurora (6) | — | none — every channel is CSS | — | `aurora` bed and dress | — | forced |
+| Wonderfall (all) | — | 26 gold coins, no magnet | — | `wonderfall` bed and dress, `sing` three times | banner | forced |
+| Sunbreak | — | none — light wedges, never particles | — | sunbreak dress | — | yes |
 
 Rare harvests deliberately get no toast. At 20% frequency they generated constant notification
 noise; stars and floating text carry the moment instead. Toasts are also capped at two on screen
@@ -168,6 +286,31 @@ toasts when it is genuinely rare: a seed's **first** tier, or a **gem-paying** f
 other tier gets the full Rare-tier juice on the plot itself — stars, ring, the `quest` sound, and
 two floating texts naming the flower, the tier, and the new yield — and no toast. A gem tier does
 not escalate to Epic or Legendary juice; the gem is in the toast body, not in more confetti.
+
+**Rarity buys layers** is the sky's version of the same contract. Rain moves three channels, the
+storm five, the aurora six, and Wonderfall moves all of them. Seven slots in ten are clear, and
+clear giving way to clear moves nothing at all — that silence is the thing that makes the rest
+events. A sky earns its place here the way an event does, by how rarely a player sees it.
+
+**No sky shakes the screen.** Shake is the game's punctuation for a single moment landing, and a
+sky that lasts a minute punctuating itself every few seconds would be exhausting rather than
+dramatic. The storm's flash and its haptic thump carry the impact instead, under the ceiling above.
+
+**The sunbreak is a payoff, not an event.** Nothing rolls it, it is not one of the five skies, and
+it moves no number: it is what the garden looks like after the rain, and it only happens when the
+next slot is clear and it is daytime. The shafts cross the sky on a slow sweep while fading in and
+out on a shorter clock of their own, so they never settle into a loop, and they deliberately outlive
+the sky that earned them. The storm earning them is the bigger of the two payoffs, which is the
+right way round — you sat through the loud one.
+
+**Reduced motion is honoured by the sequence, not only by the CSS.** Every sky has an honest quiet
+version rather than a missing one: the front still arrives, it just stops drifting; the ground still
+darkens and still dries slowly afterwards, because the drying is the trace the rain leaves; one
+ribbon holds still where three would drift; the veil hangs without shimmering; and the flash becomes
+the tint pulse. The particle layer goes to zero, weather haptics sit out, and the flower does not
+sing — the mouth that would be moving is held still, so the sound would be coming from nowhere.
+What must never happen is a channel that simply disappears. A sky that reads as nothing at all is
+worse than one that reads quietly.
 
 This ladder is a design contract. If you add an event, place it on the ladder deliberately rather
 than giving it maximum juice.

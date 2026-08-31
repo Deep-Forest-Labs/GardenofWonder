@@ -1207,27 +1207,80 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
-**PHASE 3.9 — THE SKY PASS — IS AT ITS MOTION GATE.** `tools/sky-spike.html` is built and pushed.
-**Nothing has integrated and nothing should**, until the owner has approved each sky's feel on the
-stage: no `DATA.weatherStage`, no engine nudges, no change to any file the game loads. The spec is
-[41-weather-staging.md](41-weather-staging.md), whose as-built section describes the stage; the
-reasoning is the phase-3.9 entry at the top of [10-decision-log.md](10-decision-log.md).
+**PHASE 3.9 — THE SKY PASS — IS BUILT AND WAITING FOR THE OWNER'S REVIEW.** The owner approved all
+five skies on the motion stage, handed back their tuned values, and asked for one change to the
+sunbreak; the values are `DATA.weatherStage` verbatim and the change is in. The spec and the
+as-built notes are [41-weather-staging.md](41-weather-staging.md); the reasoning is the phase-3.9
+entry at the top of [10-decision-log.md](10-decision-log.md); the five-minute phone check is below.
 
-**What the stage does.** Six buttons — Rain, Thunderstorm, Aurora, Wonderfall, called Rain and the
-Sunbreak — each playing a sky's whole shape (front, transform, linger, end) on the garden at
-390×844 with a real handset's insets. Thirty-six sliders, a block that prints the current state as
-the exact `DATA.weatherStage` object, and a reduced-motion toggle showing every sky's honest quiet
-version. It loads the repository's own `data.js`, `flora.js`, `critters.js` and `audio.js`, so the
-plants, the flower, the creatures and the sounds are the game's.
+**What landed.** Weather used to be one flat colour fade per state, with no sound and nothing on the
+board reacting. Now every sky is a sequence — it announces itself, transforms in layers, holds, and
+ends — and **rarity buys layers**: Rain moves three channels, the storm five, the aurora six, and
+Wonderfall all of them. Seven slots in ten are Clear, and Clear giving way to Clear moves nothing at
+all; that silence is what makes the rest events.
 
-**The owner reviews sky by sky, and one approval at a time is fine** — an approved sky may integrate
-while another is still being tuned. Their annotations and chosen values become the spec from that
-moment; the builder transcribes the numbers into `data.js` verbatim.
+- **The sunbreak** rides the ends of Rain and the Storm when the next slot is Clear and it is
+  daytime. Two to four soft shafts crossing the sky on a slow sweep while fading in and out on a
+  separate clock — the owner's note after the stage review, and the reason `sunbreak.phase` exists.
+- **Two nudges reach the simulation, and only two.** *Rain waters* — a tenth off growing time,
+  through both paths a growth effect needs here, and deliberately kept out of the offline rate.
+  *An aurora brings the night* — `isNight()` true while one hangs, for the moment it is asked about,
+  so Nightbell wakes and an away roll resolves against the sky that actually stood.
+- **The world answers**: wet ground and glisten, wind and sheltering pets, glow rims and creatures
+  looking up, the veil and the bobbing and the singing flower. The flower forecasts every real sky a
+  few seconds ahead, and only the aurora and Wonderfall may talk over its cooldown.
+- **The music rearranges rather than being replaced** — same progression, a per-weather dress, over
+  a new ambience bus carrying four synthesized beds. Full record in
+  [06-audio-and-fx.md](06-audio-and-fx.md).
 
-**Read before touching this**: the four things the stage knowingly carries, in
-[11-known-issues.md](11-known-issues.md#what-the-sky-passs-motion-stage-knowingly-left-2026-08-30-phase-39)
-— especially the bottom-44px mask, which is load-bearing, and the wash defaults, which are not
-comparable to the live tint opacities.
+**Five bugs the pass found and closed**, four of them the recorded one-property traps and one of
+them older than the pass: the storm's crouch deleted the transform that centres a creature on its
+anchor; the glisten deleted a mutated bloom's glow; both plant hooks replaced the ripe wiggle; a
+`filter` on the lawn and on `.scenery` reached the bottom edge, where a filter cannot be masked; and
+**the slot tick had been announcing the slot's own weather over a bought sky since weather shipped**,
+so a four-minute called rain stopped raining every sixty seconds.
+
+**The suite's clock is pinned to a fixed epoch.** Weather is a function of wall-clock time and now
+decides how fast things grow, so a suite seeded from `Date.now()` saw a different sky every run.
+1,444 assertions, byte-identical across runs.
+
+**Read before touching this**: what the pass knowingly left, in
+[11-known-issues.md](11-known-issues.md#what-the-sky-pass-knowingly-left-2026-08-31-phase-39) — the
+retro shave missed while nothing is watching, the once-per-rain compounding, and the 44px bright
+strip along the bottom, which is load-bearing and must not be "fixed".
+
+### The five-minute check, phase 3.9 — the sky, on the phone
+
+Sound on. Music on in Settings, or you will miss half of it. Weather turns on the minute, and seven
+minutes in ten are Clear, so the two rare skies are held from Developer tools — the unlabelled dot
+beside the gem wallet, then **Hold the weather**. Release it when you are done or the sky stays put.
+
+1. **Watch a front roll in.** Do nothing for a couple of minutes. When a real sky is coming the
+   flower says so about five seconds early — *"Smells like rain coming"* — and the cloud bank
+   thickens before anything falls. That is the whole announcement: no banner, no toast.
+2. **Stand in the rain.** Look at the ground rather than the sky: the soil and the lawn go dark and
+   stay dark, the plants pick up a wet sheen, and the flower puts a leaf over its head. Listen for
+   the hiss, and for the music putting on a coat — same tune, heard from indoors. Tap something and
+   notice the taps have gone soft too.
+3. **Call a storm and feel it arrive.** Shop → 25 gems. It does not switch on; it comes. Then the
+   flash, the bolt behind the hills, the wind leaning the plants sideways, and the pets ducking
+   under the nearest leaves to peek out. It cannot flash more than three times in ten seconds
+   however hard it tries — that ceiling is not a knob.
+4. **Watch the sun break through after it.** When the storm ends into a clear minute in daylight,
+   the shafts fade in and cross the sky while the ground is still drying. That drying is the trace:
+   the garden stays wet for half a minute after the last drop.
+5. **Catch an aurora at noon.** Hold *Aurora*. The sky goes down to dusk whatever the hour, the
+   ribbons drift in, the stars come up, every plant takes a faint glow, and the creatures stop and
+   look up. Nothing else moves; that stillness is the acknowledgment. Nightbell pays its night rate
+   while it hangs.
+6. **Be there when the sky does something wonderful.** Hold *Wonderfall*. The banner, the veil, the
+   ripe flowers bobbing on the beat, gold falling out of the sky, and the flower singing. **The one
+   number worth arguing with is the veil** — it is deliberately far under the Wonder Effect's, so it
+   reads as weather rather than the ×3 event, and it may be too quiet.
+
+**And once with Reduced Motion on**, in the phone's accessibility settings. Every sky has an honest
+quiet version: no drops, a still wet ground, one dim ribbon, a slow tint pulse instead of the flash,
+and a single faint shaft. The question is whether you can still tell what the sky is doing.
 
 ---
 
@@ -1343,7 +1396,7 @@ it declined to decide, in [42-overnight-housekeeping.md](42-overnight-housekeepi
 
 **What it built.** `tools/style-check.js` — the enforcement doc 11 called "the single
 highest-leverage item on this page" — and twenty-one design-rule assertions in `tools/sim-test.js`,
-which now runs 1,408 checks. Both ratchet.
+which now runs 1,444 checks. Both ratchet.
 
 **What it fixed.** The quest bar and the Almanac meter reveal their gradient instead of compressing
 it; 32 raw hexes became tokens, including all 25 `#2c1a10`; a keyboard focus ring on every button;
@@ -1377,7 +1430,7 @@ currency policy in doc 12, which its own game broke twice. All in
 2. **Look at the quest strip.** Tap the flower a dozen times. The fill is green and stays green
    until the bar is nearly full; before tonight it reached full gold at 44%. Same fix on the
    Almanac's Collection meter.
-3. **`node tools/sim-test.js`** — 1,408 passed, 0 failed.
+3. **`node tools/sim-test.js`** — 1,444 passed, 0 failed.
 4. **Then read the three things it would not decide**, above.
 
 ### The five-minute check, phase 3.8 — the polish round, on the phone
@@ -1941,6 +1994,24 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
 
+**`transform`, `filter` and `animation` are one property each, exactly as `box-shadow` is, and the
+Sky Pass stepped on all three in one round.** The storm's crouch wrote a bare `transform` and
+deleted the `translateX(-50%)` that centres a creature on its `left` anchor, so every pet jumped
+half its own width sideways. The rain's glisten wrote a flat `filter` and deleted a mutated bloom's
+glow — the single visual the whole mutation mechanic rests on, gone for the length of every shower.
+And both plant hooks wrote `animation` and replaced the ripe wiggle, so a ready flower stopped
+inviting the tap for a quarter of all slots. None threw, none failed a test, and two were in
+screenshots nobody had questioned. **Where the added value varies, compose through a custom property
+the base sets** (`--wx-own-glow`, `--wx-wet-b`); where it does not, **list the existing value
+alongside yours**. The recorded lesson said `box-shadow`; the lesson is the property list.
+
+**A `filter` cannot carry a mask, so nothing that owns the bottom edge may take one.** Every other
+tint in the game fades out over the last 44px because iOS paints the strip below a short window with
+the flat lawn colour — but `mask-image` does not reach a `filter`, and two of them reached the
+bottom: the lawn's wetness and Wonderfall's breathing saturation on `.scenery`. Darkening or
+saturating the bottom of the world has to be done with a *layer* that can be masked, not with a
+filter on the element that owns the edge.
+
 **A `z-index` on a layer that holds blended children silently kills every blend inside it.** A
 positioned element with a `z-index` is a stacking context, and a stacking context is an isolated
 blending group — so `mix-blend-mode: multiply` on its children blends against *transparency*
@@ -2451,6 +2522,13 @@ planted next to an existing Keeper gets the bonus for free — but a Keeper plan
 do nothing without `quickenNeighbours()`. Any future growth-affecting verb needs the same pair, or it
 only works when the player happens to plant in the right order.
 
+**The suite's clock was seeded from the real wall clock, and weather is a function of that clock.**
+Once the Sky Pass made the sky change how fast things grow, three assertions passed or failed
+depending on what the weather happened to be doing while the suite ran — proved by watching the
+failure count go 3 → 2 → 3 with no code change at all. `clock` is pinned to a fixed epoch whose slot
+and the two after it are Clear, in daylight. **A test that wants a sky asks for one with
+`G.Dev.setWeather()` and puts it back**, and note that `G.reset()` clears the hold.
+
 **Sim-tests that touch a harvest must pin `Math.random`.** Two were flaky and both are fixed —
 together they failed 4 runs in 50. Harvest pays rarity, gems, mastery tiers and Wonder rolls from the
 same call, so any assertion on a payout or a currency delta is flaky until the RNG is pinned.
@@ -2461,7 +2539,7 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,408 assertions over the simulation layer
+node tools/sim-test.js          # 1,444 assertions over the simulation layer
 node tools/year-sim.js 12 all   # the pacing model — see the caveat below before trusting its exit code
 node tools/order-gold.js 25 4   # is a delivered order worth a minute of the player's time, per tier?
 node --check <file>.js          # no build step, so this is the only syntax gate
@@ -2574,7 +2652,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,408 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 1,444 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.

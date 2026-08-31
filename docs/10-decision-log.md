@@ -5,6 +5,80 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (phase 3.9) — The Sky Pass ships, and one property at a time is how it nearly did not
+
+**The owner approved all five skies on the motion stage and handed back their tuned values, so
+`DATA.weatherStage` is those numbers verbatim.** The gate worked exactly as intended: nothing was
+argued about after the fact, because the feel had already been agreed. The one note that came back
+— *the sun rays just hang in one spot* — was correct, and it was correct because the drift was 24px
+over 76 seconds on `alternate`, so each shaft rocked in place. Rebuilt on two clocks: a slow linear
+sweep off one edge to the other, and a separate, shorter fade with per-ray offsets. Two clocks is
+what stops three rays reading as one object sliding sideways, and running the sweep off both edges
+is what makes the loop point invisible without needing the fade to hide it. `sunbreak.phase` is the
+knob for how much of the coming and going you see.
+
+**Rain waters through two code paths, because growth is baked in at plant time here.** A factor in
+`plantGrowth()` for anything sown while it rains, and a one-shot shave of what is left for
+everything already in the ground when the sky turns — the Keeper's own pair, which the conventions
+playbook already demanded of any growth effect. Neither pays the other's plants. **`passiveIncomeRate()`
+deliberately excludes it:** a sixty-second sky must not set the rate for a twenty-four-hour absence,
+and letting it would have quietly made *closing the app during a shower* worth money — an incentive
+nobody asked for and the exact opposite of cosy.
+
+**The mutation share did not move**, which was the invariant to protect: `rainGrowth` touches
+growth, not catches.
+
+### What the build discovered, and why it is worth writing down
+
+**A `z-index` on the weather layer silently killed every blend inside it.** A stacking context is an
+isolated blending group, so the wash, the dusk, the ribbons and the veil all composited against
+transparency instead of against the sky. Nothing errored. It *looked* plausible — a flat haze rather
+than light — for long enough to be screenshotted and approved by eye. It is a new entry in the
+handoff's traps because the class of bug is general: any future layer that blends with the scene has
+the same constraint, and `isolation: isolate` is the same bug spelled differently.
+
+**A `filter` cannot carry a mask, and two of them owned the bottom edge.** The lawn's wetness and
+Wonderfall's breathing saturation both reached the strip iOS paints below a short window — the join
+three rounds of layout work went into hiding. The lawn's wetness moved onto the masked multiply that
+exists for exactly that, and the saturation moved off `.scenery` onto the layers above the lawn.
+
+**`transform`, `filter` and `animation` are each one property, and this pass stepped on all three.**
+The storm's crouch deleted the transform that centres a creature on its anchor, so every pet jumped
+half its own width sideways. The glisten deleted a mutated bloom's glow — the single visual the
+whole mutation mechanic rests on, gone for the duration of every shower. And both plant hooks
+replaced the ripe wiggle, so a ready flower stopped inviting the tap for a quarter of all slots.
+None of the three threw, none showed up in a passing suite, and two of them were in screenshots
+nobody had questioned. The recorded trap said `box-shadow`; the lesson is the property list, not the
+property.
+
+**The slot tick had been announcing the slot's own weather over a bought sky since weather shipped.**
+`processWeather()` emitted `weatherForSlot(slot)` where everything else asks `weatherAt(now)`, so a
+four-minute called rain stopped raining every sixty seconds. Invisible while a sky was one tint;
+with a sky that is a sequence it aborts an arrival mid-flight. Found by driving a dev hold and
+watching the aurora restart.
+
+**The suite's clock was seeded from the real wall clock**, and weather is a pure function of that
+clock, and weather now decides how fast things grow. So three assertions passed or failed depending
+on what the sky happened to be doing while the suite ran — the flakiest kind of test and the
+hardest to diagnose, and it was proved by watching the failure count change from 3 to 2 to 3 with
+no code change at all. The clock is pinned to a fixed epoch whose slot and the two after it are
+Clear, in daylight.
+
+### Rejected
+
+**Letting the momentary sky into offline income** — see above; it is the one place a transient
+becomes a strategy. **A retro shave that fires on page load** — reproduced paying the same plant
+again on every reload, so the retro half fires only on a false→true transition the running game
+actually saw, and a rain that began while the tab was shut is simply missed. **Keeping the old flat
+weather tint alongside the new wash** — two tints over one sky darkened every sky twice, and the
+wash is the better object: a gradient, phased with the front, masked at the bottom, and foldable
+into `theme-color`. **The drawn stand-in leaf** — it could never be drawn, because the stylesheet
+hides it on sight of a talking flower and the garden always has one; the flower's own leaf had been
+doing the job all along. **Patching the three flaky assertions individually** — the flakiness was
+structural and a patch would have left the next growth assertion to find it again.
+
+---
+
 ## 2026-08-30 (overnight housekeeping) — The style guide becomes a check, and a rename that was not authorised
 
 **`tools/style-check.js` exists because a rule nobody notices breaking is not a rule.** The

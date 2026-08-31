@@ -1,7 +1,8 @@
 # The Sky Pass — weather you can feel
 
-**Status: the owner's spec, 2026-08-30. The MOTION STAGE is built and waiting for the owner's
-review; no sky has integrated yet.** Weather already carries 20–30% of all income
+**Status: BUILT, 2026-08-31. The owner approved all five skies on the motion stage, handed back
+their tuned values, and asked for one change to the sunbreak; the values below ship in `data.js`
+verbatim and the as-built notes are at the foot of this document.** Weather already carries 20–30% of all income
 through mutations (a tested invariant) and its entire presentation is one flat colour fade per
 state — no sound exists for any weather, nothing on the board reacts, and Wonderfall, the rarest
 sky in the game, never received the Wonder veil doc 18 promised it. **This pass stages the sky
@@ -29,7 +30,8 @@ starting points; **the motion stage is where they get tuned, by hand, by the own
 ### Rain — the cosy one (3 channels)
 
 - **Arrival (the front):** the game knows the next slot in advance (the sky is computable), so
-  ~30s before rain lands, grey clouds thicken and drift in from the edge, and the flower gets a
+  `frontSeconds` before rain lands — five seconds, as tuned — grey clouds thicken and drift in
+  from the edge, and the flower gets a
   forecast line ("Smells like rain coming"). One channel announces; no banner, no toast.
 - **Transform:** a falling-drop layer on the ambient particle system (the petal-drift pattern
   with a different draw — tens of drops, not hundreds); the sky wash deepens; **soil and cobbles
@@ -71,7 +73,9 @@ starting points; **the motion stage is where they get tuned, by hand, by the own
 
 ### Aurora — the beautiful one (6 channels)
 
-- **Arrival:** no front — an aurora *begins*: the sky dims toward dusk over ~4s **whatever the
+- **Arrival:** no cloud front — an aurora *begins*. Its only warning is the flower's line, a few
+  seconds ahead, and it is allowed to talk over the speech cooldown. The sky dims toward dusk over
+  ~4s **whatever the
   hour** (the light rules bend, which is what makes it read at noon), and the first ribbon
   fades in.
 - **Transform:** **actual ribbons** — two or three soft colour bands drifting slowly across the
@@ -102,8 +106,14 @@ starting points; **the motion stage is where they get tuned, by hand, by the own
 
 ### Called skies arrive like weather
 
-Paying gems for Rain or a Thunderstorm plays a compressed front (~5s) instead of flipping a
-switch. You bought a sky; it should arrive like one.
+Paying gems for Rain or a Thunderstorm plays a front instead of flipping a switch. You bought a
+sky; it should arrive like one.
+
+*As tuned, `calledFrontSeconds` and `frontSeconds` are both five, so a bought sky arrives on exactly
+the same front a natural one does. The compression this section originally called for was written
+against a thirty-second front; with the slot itself only sixty seconds long the owner set five, and
+at five there is nothing left to compress. The two knobs stay separate so the day a natural front
+lengthens, the bought one does not have to.*
 
 ## The four supports, specced
 
@@ -191,7 +201,8 @@ iPhone 16 Pro's insets on, because a sky judged at the wrong proportions is not 
 1. **The particle canvas is frame-local.** It mirrors `fx.js` — the same pool shape, the same
    `rnd`/`easeOut`, the same DPR-2 cap, the same clamped `step(dt)` — but sizes itself to the frame
    rather than to the window, because the stage is one element on a tuning page.
-2. **The beds own their own `AudioContext`.** `Sound` exports `{ init, resume, play, setSfx,
+2. **The beds own their own `AudioContext`.** *(At the time. `audio.js` has the ambience bus and the
+   bed API now — see [06-audio-and-fx.md](06-audio-and-fx.md).)* `Sound` exported `{ init, resume, play, setSfx,
    setMusic, prefs }` and no context, no bus and no handle on its pad, so the spike cannot reach in
    to add a third bus or re-instrument the music. The bed module is written the way it will be
    written *into* `audio.js` — an ambience bus beside sfx and music, gains ramped with
@@ -226,7 +237,7 @@ they are in the copyable block with the rest:
 | `wonderfall.bobPeriod` | the ripe-plant bob's period, so "in rhythm" can be put on the 3.2s bar | 1.6s |
 | `stageHoldSeconds` | **stage only** — how long the stage sits in the transform. Never reaches `data.js`. | 18 |
 
-`rain.wash` and `storm.wash` deliberately start higher than the live `.scenery::after` opacities
+`rain.wash` and `storm.wash` deliberately started higher than the then-live `.scenery::after` opacities
 (0.30 / 0.52): the spike's wash is its own gradient layer rather than a flat tint, so the numbers
 are not comparable and the live values are not the thing to match. **Whatever the owner lands on is
 the number.**
@@ -259,7 +270,7 @@ still. After that, the little FRONT / TRANSFORM / LINGER / END pills drop you ba
 part you are tuning without sitting through the announcement again. Every slider is live: move it
 while the rain is falling and the rain changes under your hand.
 
-**Rain — the cosy one.** Thirty seconds of clouds thickening and the flower saying it can smell
+**Rain — the cosy one.** Five seconds of clouds thickening and the flower saying it can smell
 rain, then it lands: drops fall, the sky deepens, the soil and the lawn go dark and wet, the plants
 pick up a sheen, and the flower puts a leaf over its head. It sits there for a while, then the drops
 thin out over five seconds and the sun breaks through. The sliders that decide how it feels are
@@ -276,7 +287,8 @@ it — wind the gap down as far as you like and the stage will refuse anything p
 ten seconds and tell you how many it held back, because that ceiling is not negotiable. **Wind lean**
 is how hard it is blowing.
 
-**Aurora — the beautiful one.** No warning at all: an aurora simply begins. The sky goes down to
+**Aurora — the beautiful one.** No bank of cloud — an aurora simply begins, and the only warning is
+the flower saying the light has gone odd. The sky goes down to
 dusk over four seconds *whatever the time of day* — that bending of the light rules is what makes it
 read at noon — and the ribbons fade in, the stars come up, every plant takes a faint glow, and the
 creatures stop what they are doing and look up. Nothing else moves; that stillness is the point.
@@ -300,8 +312,8 @@ rides the end of Rain and the end of the Storm, and the Storm earning it is the 
 correct. **Rays**, **Opacity**, **Drift** and **Duration** are all of it. It is meant to be very
 simple and very mild, so the question to ask is whether anyone would notice it at all.
 
-**Called Rain** is the same rain arriving in five seconds instead of thirty — what a bought sky
-should feel like. **Reduced motion** shows the honest quiet version of whichever sky you press: no
+**Called Rain** is the same rain, arriving with a front rather than being switched on — what a
+bought sky should feel like. As tuned it is the same five seconds a natural rain takes. **Reduced motion** shows the honest quiet version of whichever sky you press: no
 drops, a still wet ground, one dim ribbon, a slow tint pulse instead of the flash, no bobbing, and a
 single faint ray for the sunbreak. Worth a pass through all five.
 
@@ -310,3 +322,80 @@ installed app, and it takes its colour from the sky. Switch the toggle off durin
 it stop matching — that is the bug this pass has to avoid, made visible.
 
 When a sky feels right, press **Copy**. That block is what goes into `data.js` word for word.
+
+---
+
+## As built (2026-08-31)
+
+The owner approved every sky on the stage and captured the values; they are `DATA.weatherStage`
+word for word. **The stage is still the reference for how a sky moves** — when the game and
+`tools/sky-spike.html` disagree about motion, the spike is right and the game is the bug.
+
+### The one change the owner asked for
+
+**The sun rays hung in one spot.** They did: the drift was 24px over 76 seconds on `alternate`, so
+each shaft rocked in place and never went anywhere and never changed. Rebuilt on **two clocks** —
+a slow linear sweep that carries a shaft from off the left edge to off the right, and a separate,
+shorter fade cycle with its own per-ray offset. Two clocks is what stops three rays reading as one
+object sliding sideways: at any moment they are in different places at different brightnesses, and
+because the sweep runs off both edges the loop point is never on screen and nothing is ever seen to
+jump back. The journey is a share of the viewport rather than a percentage of the ray, because the
+four shafts are deliberately different widths and a percentage translate gave each of them a
+different distance and bunched them in the middle.
+
+**New knob: `sunbreak.phase`** (0.75) — how much of the coming and going you see. At 0 a shaft
+simply crosses at a steady brightness; at 1 it arrives out of nothing and dissolves back into it.
+
+### Six knobs the spec did not name
+
+`rain.wash` / `storm.wash` (how far the sky wash commits — a different decision from the wet
+ground), `aurora.rimGlow`, `aurora.starBoost`, `wonderfall.bobPeriod` (so "bob in rhythm" can be put
+on the 3.2s bar) and `sunbreak.phase`. `stageHoldSeconds` was a stage control and never reached
+`data.js`.
+
+### How rain waters, exactly
+
+Growth is baked in at plant time in this codebase, so the nudge needs **two code paths**, the same
+pair a Keeper needs:
+
+- **Sown while it rains** — the factor composes into `plantGrowth()`'s existing product, under the
+  0.3 floor that already clamps it.
+- **Already in the ground when the sky turns** — `quickenForRain()` shaves rain's share off what is
+  left, once, on the transition. The `quickenNeighbours()` pattern.
+
+Neither pays the other's plants. A plant that lives through several rains is watered by each of
+them, which is the chosen reading and is asserted rather than assumed. **`passiveIncomeRate()`
+excludes it** (`plantGrowth(seed, idx, { sky: false })`): a sixty-second sky must not set the rate
+for a twenty-four-hour absence, and letting it would have made closing the app during a shower
+worth real money.
+
+### The old flat tint is retired
+
+`.scenery::after`'s four per-sky opacities are zero. `.wx-wash` carries the sky now — a gradient
+rather than a wall of one colour, phased with the front, masked at the bottom and folded into
+`theme-color`. Two tints over one sky darkened every sky twice, which is what the game looked like
+for the first hour of this build.
+
+### What the build had to discover
+
+Six things the spec could not have known, all now recorded where the next person will meet them:
+
+1. **A `z-index` on the weather layer kills every blend inside it.** A stacking context is an
+   isolated blending group, so multiply, screen and overlay all composite against transparency
+   instead of against the sky. It looked plausible the whole time. The layer carries no `z-index`
+   and nothing may give it one — nor `isolation`, `opacity` under 1, `filter` or `transform`.
+2. **A `filter` cannot be masked**, so nothing that owns the bottom edge may take one. The lawn's
+   wetness moved to `.wx-ground`, which is a masked multiply; Wonderfall's breathing saturation
+   moved off `.scenery` onto the layers above the lawn.
+3. **`transform`, `filter` and `animation` are each one property**, and the pass stepped on all
+   three: the storm's crouch deleted the transform that centres a creature on its anchor, the
+   glisten deleted a mutated bloom's glow, and both plant hooks replaced the ripe wiggle. Composed
+   now, through a custom property where the value varies and by listing where it does not.
+4. **The slot tick announced the slot's own weather over a bought or held sky**, so a four-minute
+   called rain stopped raining every sixty seconds. Pre-existing and invisible while weather was
+   only a tint.
+5. **The drawn stand-in leaf could never be drawn.** The stylesheet hides it on sight of a talking
+   flower and the garden always has one; the flower's own leaf was doing the job all along.
+6. **The suite's clock was seeded from the real wall clock**, and weather now decides how fast
+   things grow — so three assertions passed or failed depending on what the sky happened to be
+   doing. Pinned to a fixed epoch.

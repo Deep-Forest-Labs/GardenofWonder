@@ -194,8 +194,9 @@ phase.
 
 **The season tint runs 0 → 0.18 → 0.38** of `#ffb066`, `multiply`, composed exactly like the weather
 tint — an overlay on the scenery, never a repaint of the sky, so the day/night cycle keeps running
-underneath it. The weather tint tops out at .52 for a full storm; a season is a mood and a storm is
-an event, so this stays below it. **These three numbers are the only tuning I invented tonight**,
+underneath it. The weather's sky wash tops out at 0.68 for a full storm (the flat .52 overlay it
+was composed against was retired by the Sky Pass); a season is a mood and a storm is an event, so
+this stays below it. **These three numbers are the only tuning I invented tonight**,
 they are visual-only with no state behind them, and they are a phase-4 knob — not an economy one.
 
 ---

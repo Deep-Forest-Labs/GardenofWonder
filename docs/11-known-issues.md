@@ -56,29 +56,72 @@ someone reconciles them.
   the knobs to fetched JSON, flip the wrapped build to cache-first), expensive to discover in review.**
   Moot if the answer to the question above is Unity.
 
-## What the Sky Pass's motion stage knowingly left (2026-08-30, phase 3.9)
+## What the Sky Pass knowingly left (2026-08-31, phase 3.9)
 
-**Nothing has integrated, and that is the gate working.** `tools/sky-spike.html` is up; no sky
-is in the game, `DATA.weatherStage` does not exist yet, and neither engine nudge — `rainGrowth`
-or the aurora's night window — is built. All of it waits on the owner approving each sky's feel.
+**All five skies are in the game.** `DATA.weatherStage` holds the owner's tuned values, both engine
+nudges are built, and the motion stage has stopped being a gate. What follows is what the pass chose
+not to solve, so nobody files one as a bug or re-proposes one as an easy win.
 
-Four things the stage carries deliberately, so nobody files them as bugs:
+**A rain that begins while nothing is watching never waters what was already in the ground.** The
+shave rides the dry-to-wet *change*, and only something watching can see a change happen. A phone
+that sleeps under a clear sky and wakes into a rain still gets it once, because the watch survives a
+sleep — but a page that *reloads* into that same rain gets nothing, because the first look sets the
+watch rather than paying it. The reload half is deliberate: paying on arrival at the page pays the
+same rain again on every reload, and that was reproduced before it was closed. Nothing else about a
+rain is missed. It still waters what is sown into it while it stands, and a plant still catches the
+sky for its mutation at its own scheduled moment, whoever was watching. Only the growth nudge.
 
-- **The bottom 44px of the lawn stays bright under a dark sky.** Every full-frame tint is masked
-  out over the last stretch, because iOS paints the strip below a short window with the flat lawn
-  colour and a tint running to the edge draws the join three rounds of layout work went into
-  hiding. The same compromise the season tint already makes. Load-bearing; do not "fix" it.
-- **`rain.wash` and `storm.wash` start above the live `.scenery::after` opacities** (0.46/0.68
-  against 0.30/0.52). The spike's wash is its own gradient layer rather than a flat tint, so the
-  two numbers are not comparable and the live values are not the target. Whatever the owner
-  lands on is the number.
-- **The beds run on a second `AudioContext`.** `Sound` exports no context and no bus, so the
-  spike cannot reach in. Written in the shape it will take inside `audio.js`, so the build is a
-  transcription — but on the stage there really are two graphs, and the stage's own music is the
-  arrangement rather than `Sound`'s pad.
-- **`stageHoldSeconds` is a stage control, not a value.** It sets how long the stage sits in the
-  transform, and it deliberately never reaches `data.js`. Same for the hour and the year-ripening
-  sliders: those are viewing conditions.
+**A plant that lives through several rains is shaved once per rain, and it compounds.** *Every* rain
+waters is the chosen reading, and each one takes its share off what is *left* rather than off the
+original clock. A rain starts about ten times an hour, so the longest seed on the ladder — the
+Eternal Crown at thirteen minutes — meets two of them on a good run and comes up about a tenth
+sooner than its data row promises, a fifth at the outside. It is small only because the ladder is
+short, and it grows with the seed: an hour-long seed would sit through ten rains. **Re-measure this
+before any seed slower than the Crown ships.** The suite pins the size of a single shave and asserts
+that a second rain shaves again, rather than assuming either.
+
+**Rain does not reach Fall's bed**, which is where the slow crops are — a Pumpkin is three hours and
+the Century Bloom is a fortnight. That follows from Fall's bed sitting outside every growth modifier
+rather than from anything this pass decided: `fallPlant()` writes the crop's raw grow time, and no
+petal or Keeper reaches it either. Recorded because "rain waters" sounds like a promise about the
+whole garden and is a promise about the eight plots.
+
+**A shaved plant can walk past its own mutation roll.** Every plant books its one roll at a moment
+picked when it is sown, and the shave rewrites the growing clock while deliberately leaving that
+booking where it is. So a roll booked in the last stretch of the original window can now come due
+after the plant is already ripe — and the drone picks a plot within a couple of seconds of readiness,
+which clears the booking unfired. At most the last tenth of the window, per rain. The alternative,
+re-booking the roll into the shortened window, would let the sky move the mutation income share the
+whole seed ladder is tuned against; a sim-test holds the booking exactly where it is so that nobody
+changes their mind about that quietly.
+
+**Two flower lines land five seconds apart at the start of a real sky, and three around a rain that
+ends in daylight** — the forecast as the front opens, the arrival on the boundary, and the sunbreak
+five seconds after the drops thin. The speech cooldown is 3.2 seconds, so none of them holds the
+next one back. Each was specced and each is worth having on its own. Whether the run of them is
+chatty is a judgement for the owner with a phone in their hand, not a bug — and the cheapest cut, if
+it wants one, is rain's and the storm's arrival line, because the forecast has just said it.
+
+**An aurora standing at the moment you come back prices the whole absence.** `passiveIncomeRate()`
+deliberately excludes rain — a sixty-second sky must not set the rate for a day away — but it reads
+a Moonflower's Nightbell through `isNight()`, which an aurora now answers true for whatever the
+hour. The hour has always done this, and night is a third of a six-minute cycle, so returning after
+dark already quoted an absence at the night rate; the aurora is a second writer on the same
+momentary reading rather than a new fault, and it lifts night from about 32% of moments to about
+34%. Recorded because the rain half was closed on exactly this reasoning and this half was not.
+
+**The bottom 44px of the lawn stays bright under a dark sky.** Every full-frame layer is masked out
+over the last stretch, because iOS paints the strip below a short window with the flat lawn colour
+and a tint running to the edge draws the join three rounds of layout work went into hiding. The same
+compromise the season tint already makes, now carried by `--wxr-mask`. Load-bearing; do not "fix" it.
+
+**The motion stage survives as the tuning bench, and it is a second copy of the sky.**
+`tools/sky-spike.html` still carries all five skies, the sunbreak and every knob in
+`DATA.weatherStage` on a slider, which is the fastest way to retune a feel — but its CSS is a copy
+of the game's kept in step by hand. The two are in step today, the sunbreak's crossing sweep
+included. A motion change made in `style.css` and not carried across leaves the bench quietly lying
+about the game. Its hour, year-ripening and hold sliders are viewing conditions and deliberately
+reach no data file.
 
 ---
 
@@ -875,7 +918,7 @@ It is gated on `location.hostname` being `localhost`, `127.0.0.1` or `''` — th
 `index.html` already uses to skip the service worker, and the only honest dev/production signal in a
 project with no build step to strip a branch. **The `typeof location !== 'undefined'` half of that
 gate is load-bearing:** Node has no `location`, `tools/sim-test.js` evaluates `icons.js` at global
-scope, and a bare `location.hostname` there is a `ReferenceError` that takes all 1,408 checks with
+scope, and a bare `location.hostname` there is a `ReferenceError` that takes all 1,444 checks with
 it.
 
 **Two things it does not do, on purpose.** It never warns in production, and it cannot be caught by
@@ -969,9 +1012,11 @@ deliberately deferred and a measurement should not smuggle in a decision.
 
 **The missing-variable check is split, and the split was found by running the tool on code it had
 never seen.** Pointed at the in-flight Sky Pass branch it reported 26 undeclared properties — every
-`--wx-*` knob the weather CSS reads before `DATA.weatherStage` exists to set them. All of them carry
-a fallback, all of them are deliberate, and a gate that fails on those is a gate that fires on
-correct work in progress. `var(--x)` with no fallback drops the declaration at computed-value time
+`--wx-*` knob the weather CSS reads. They are still undeclared and always will be: the stylesheet
+never sets them, `ui-weather.js` mirrors them onto `#game` from `DATA.weatherStage` at runtime so a
+layer can be pure CSS and still be retuned without a build. All of them carry a fallback, all of
+them are deliberate, and a gate that fails on those is a gate that fires on correct work.
+`var(--x)` with no fallback drops the declaration at computed-value time
 and paints nothing; `var(--x, 12px)` paints the fallback. Only the first fails, and its baseline is
 **zero** — so the next one is caught the day it appears.
 
@@ -1093,10 +1138,10 @@ things can hold it instead, and both have a precedent in `tools/`:
 `ui-hollow.js` (10), `ui-news.js` (6), `ui-scenery.js` (2). The sink to leave alone is
 `ui-sheet.js:151`; the problem was never the sink.
 
-### Four sim-tests have been flaky, and the class of bug keeps recurring
+### Five flakes have been found in this suite, and the class of bug keeps recurring
 
-All fixed. The first two on 2026-08-14 (**4 of 50 runs failed** beforehand), the second two on
-2026-08-15.
+All fixed. The first two on 2026-08-14 (**4 of 50 runs failed** beforehand), the next two on
+2026-08-15, the fifth on 2026-08-30.
 
 **Re-measured 2026-08-30 at 1,408 assertions: 45 consecutive runs, 0 divergent.** Ten was the ask;
 ten is not enough to believe, because the flakes recorded below were 4-in-50 and roughly 1-in-25, and
@@ -1116,12 +1161,24 @@ tables and roll no dice, so they cannot introduce this class of bug.
 - **`a lantern roughly doubles gem drops next door`** sampled a Daisy, whose base gem chance fell
   from 5% to 0.6% when the faucet was fixed. The effect was still real; the instrument had silently
   become eight times too small. It now measures an Eternal Crown at 39%.
+- **Three growth assertions read the real weather**, because the suite started its clock at
+  `Date.now()` and the sky is a function of wall-clock time. That was harmless until rain began
+  changing how fast things grow; from that moment the same three assertions passed or failed
+  depending on what the weather happened to be doing while the suite ran. The clock is pinned to a
+  fixed epoch now, chosen because its slot and the two after it are Clear and in daylight — the
+  neutral conditions an unrelated test should see. Anything that wants a sky asks for one and puts
+  it back.
 
 **The general rule:** any assertion touching a harvest **or a tap** has to pin `Math.random`, because
 both pay rarity, gems, mastery tiers and Wonder rolls from the same call. Prefer asserting an exact
 value on one harvest over a tolerance on a sampled mean — a statistical test that passes
 forty-nine times in fifty reads as a real regression the one time it doesn't, and the person who
 hits it will go looking for a balance bug that isn't there.
+
+**The clock is a die too.** `Math.random` is not the only unpinned input: the sky, the hour and the
+day all fall out of the wall clock, and any one of them can be wired to something a test measures
+without the test ever mentioning it. A suite that starts at "now" runs a slightly different
+experiment every time it is run.
 
 **And re-check your instruments after an economy change.** The lantern flake was not a bad test when
 it was written; a faucet fix eight times smaller made it one. A sampled test is coupled to whatever
@@ -1133,15 +1190,23 @@ the question does not arise.
 
 ### No automated tests for anything above the simulation
 
-`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,408 assertions over the
-economy, progression, saves and mastery. Everything above that line — the six `ui-*` files,
-layout, the sheet, FX — is verified by hand against the checklist in
+`tools/sim-test.js` runs the real `game.js` headlessly and now covers 1,444 assertions over the
+economy, progression, saves and mastery. Everything above that line — every `ui-*` file, layout,
+the sheet, FX — is verified by hand against the checklist in
 [09-conventions.md](09-conventions.md). That is the right split for a prototype, but a UI
 regression has no net under it.
 
 **This bit during the `ui.js` split.** The suite stays green through a change that breaks the plant
 picker, because it never loads a DOM. A UI change has to be played, panel by panel, or it is not
 checked at all.
+
+**`ui-weather.js` is the largest thing yet on the wrong side of that line.** It is not a renderer —
+it holds which sky the layers are wearing, which phase it is in and a fan of timers, and it hands
+over between one sky and the next. The suite can testify that none of it reaches the save, and the
+probe can photograph any sky standing still (`UI.weatherSequence()` exists to be driven from an
+`eval:` step, and the live game never calls it). What nothing checks is a *handover*: a sky
+interrupted mid-arrival, a bought sky landing on a front, a tail cut short by the next front. Those
+were played by hand, and they are where the next weather bug will be.
 
 ## Documentation
 
