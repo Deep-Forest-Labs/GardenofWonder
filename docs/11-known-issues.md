@@ -1096,7 +1096,13 @@ things can hold it instead, and both have a precedent in `tools/`:
 ### Four sim-tests have been flaky, and the class of bug keeps recurring
 
 All fixed. The first two on 2026-08-14 (**4 of 50 runs failed** beforehand), the second two on
-2026-08-15. The suite now runs clean 40 times out of 40.
+2026-08-15.
+
+**Re-measured 2026-08-30 at 1,407 assertions: 45 consecutive runs, 0 divergent.** Ten was the ask;
+ten is not enough to believe, because the flakes recorded below were 4-in-50 and roughly 1-in-25, and
+ten runs would miss a 1-in-25 flake two times in three. Forty-five is the number that makes "it does
+not flake" mean something. The twenty design-rule assertions added the same day read files and data
+tables and roll no dice, so they cannot introduce this class of bug.
 
 - **`gems move by the milestone`** asserted an exact gem count while the harvest that triggered it
   rolled its own independent **5% gem chance**. `Math.random` is now pinned across the block.

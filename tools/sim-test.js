@@ -7057,6 +7057,9 @@ group('every announcement image survives the trip to a real phone');
    case-insensitive where GitHub Pages is not, and an online load fetches the
    image whether or not it was ever precached. */
 const newsImages = (DATA.announcements || []).map((a) => a.img);
+check('the announcement table was actually found and read',
+  newsImages.length > 0 && newsImages.every((img) => typeof img === 'string'),
+  `${newsImages.length} announcements`);
 check('every announcement image is precached with its announcement',
   newsImages.every((img) => coreBare.has(bare(img))),
   newsImages.filter((img) => !coreBare.has(bare(img))).join(', '));
@@ -7084,13 +7087,19 @@ group('decor stays cosmetic and boosters stay unbuyable');
    MIGRATED SAVE carries a stat; this is the catalogue it was migrated from, and
    the two are different data. The save check would stay green for as long as it
    took someone to author a stat-carrying row straight into data.js. */
-const STAT_FIELDS = ['type', 'val'];
+const STAT_FIELDS = ['type', 'val', 'effect', 'effects', 'yield', 'mult', 'bonus', 'rate'];
 check('no decor row in the catalogue carries a stat',
   DATA.decor.every((d) => STAT_FIELDS.every((f) => !(f in d))),
   DATA.decor.filter((d) => STAT_FIELDS.some((f) => f in d)).map((d) => d.id).join(', '));
+/* "Decor stacks and never escalates in price" is two claims, and the price being
+   a number is only the first. A `scale` beside the cost is the whole of the
+   second, and it is what a copied upgrade row would bring with it. */
+const LADDER_FIELDS = ['scale', 'costScale', 'growth', 'step'];
 check('every decor price is one flat number that never escalates',
-  DATA.decor.every((d) => typeof d.cost === 'number' && d.cost > 0),
-  DATA.decor.filter((d) => typeof d.cost !== 'number' || d.cost <= 0).map((d) => d.id).join(', '));
+  DATA.decor.every((d) => typeof d.cost === 'number' && d.cost > 0
+    && LADDER_FIELDS.every((f) => !(f in d))),
+  DATA.decor.filter((d) => typeof d.cost !== 'number' || d.cost <= 0
+    || LADDER_FIELDS.some((f) => f in d)).map((d) => d.id).join(', '));
 /* docs/09-conventions.md:189-190 — boosts are earned, not bought. The existing
    check that boosters carry no `tickets` was written for the ticket retirement
    and asks about that one word; a booster given a `cost` or a `gems` price would
@@ -7101,15 +7110,17 @@ check('no booster carries a price of any kind',
   DATA.boosters.filter((b) => PRICE_FIELDS.some((f) => f in b)).map((b) => b.id).join(', '));
 
 group('the level ladder keeps rotating what it hands out');
-/* docs/33-year-one-economy.md:298-299, read at the grain of the reward itself:
-   two bags of Bloom Burst back to back is the repeat a player would feel, and
-   the ladder rotates bloom, golden, seedrush and fortune to avoid it.
-   Deliberately NOT read at the grain of the row key (boost/hive/decor/gems),
-   which would call levels 2 through 15 nine repeats in a row and go red for a
-   ladder doing exactly what the doc asks. The first half of that same sentence,
-   "every level grants something", is left unasserted on purpose: levels 9, 11,
-   13, 14, 16 and 17 have no entry today and the doc marks the passage unbuilt,
-   so writing it would file a bug report dressed as a test. */
+/* docs/33-year-one-economy.md:298-299. The signature below is a HYBRID, and it
+   has to be: a boost row is read at the grain of WHICH boost, because ten of the
+   thirteen rungs are boosts and reading them all as "boost" would call levels 2
+   through 15 nine repeats in a row and go red for a ladder doing exactly what
+   the doc asks. Every other row — hive, decor, gems — is read at the grain of
+   its key, so two decor grants in a row do count as a repeat. That is the
+   reading the doc's word "category" supports at both ends.
+   The first half of that same sentence, "every level grants something", is left
+   unasserted on purpose: levels 9, 11, 13, 14, 16 and 17 have no entry today and
+   the doc marks the passage unbuilt, so writing it would file a bug report
+   dressed as a test. */
 const grantLevels = Object.keys(DATA.levelGrants).map(Number).sort((a, b) => a - b);
 const grantSig = (g) => (g.boost ? `boost:${g.boost}` : Object.keys(g)[0]);
 const grantRepeats = grantLevels.filter((lv, i) => i > 0

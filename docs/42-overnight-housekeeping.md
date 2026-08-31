@@ -91,7 +91,16 @@ announcement image precached and **lowercase**, decor staying cosmetic and boost
 unbuyable, and every good carrying the `line` its customer speaks.
 
 **Every one was sabotaged individually and confirmed to be the assertion that fails**, in a
-throwaway copy so the tree was never dirty. Two of those sabotages are worth repeating:
+throwaway copy so the tree was never dirty — and then sabotaged again by a second pass whose only
+job was to refute the first. That second pass earned its keep: it found **two assertions whose names
+promised more than their code tested.** "No decor row carries a stat" only looked for `type` and
+`val`, so a bare `yield: 2` stayed green; "every decor price never escalates" only checked that the
+cost was a positive number, so a `costScale: 2` beside it stayed green too. Both predicates are
+widened and both sabotages now go red. It also caught a comment describing a reading its own code
+does not use, and a scraped group missing the "was actually found and read" guard its three
+siblings have.
+
+Two of the original sabotages are worth repeating:
 
 - Changing an announcement path to `Garden-Year.png` left the *on-disk* check **green**, because a
   Mac disk is case-insensitive and GitHub Pages is not. Doc 09's "this bit once already", reproducing
@@ -284,6 +293,10 @@ and doc 11 already says to confirm against both branches first.
    ```
    node tools/sim-test.js
    ```
+
+   1,407 passed, 0 failed. It was run **45 times consecutively with 0 divergent** — ten was the ask,
+   but the flakes this project has recorded were 4-in-50 and about 1-in-25, and ten runs would miss
+   a 1-in-25 flake two times in three. Nothing flaked, so there was no unpinned randomness to hunt.
 
 4. **Then read [What was filed, not fixed](#what-was-filed-not-fixed)** — particularly the first
    item, which asks you a different question than the one the round was sent to answer.
