@@ -1450,6 +1450,35 @@ three missing `aria-label`s; the quest card's contact shadow; a drifted transluc
 currency policy in doc 12, which its own game broke twice. All in
 [11-known-issues.md](11-known-issues.md#five-documentation-faults-the-design-rule-pass-turned-up).
 
+### The two-minute check, the visual reference — do this one on a laptop, not the phone
+
+Everything here is on the wiki, so no checkout is needed and you can send any of these links
+straight to the Unity engineers.
+
+1. **Open the wiki and find the two new pages.** <https://github.com/Deep-Forest-Labs/GardenofWonder/wiki>
+   — they are the last two lines of **"What the Unity build needs"**, and they are in the sidebar
+   under the same heading.
+2. **Open [44-screens](https://github.com/Deep-Forest-Labs/GardenofWonder/wiki/44-screens) and
+   scroll it.** Twenty-six pictures of the game, grouped garden → seasons → the Turn → the other
+   places → the panels → the weather. **Every picture should load.** They are linked by full web
+   address rather than by file path, which is what makes this page work identically in the repo,
+   on the wiki and in anything you forward it to.
+3. **Look at the four Turn shots in particular.** The ask, the blessing picker, the Tally caught
+   *mid-count* with "counting…" under it, and the spring return. If the ceremony ever stops
+   reading in that order, that is the sequence to compare against.
+4. **Open [45-asset-inventory](https://github.com/Deep-Forest-Labs/GardenofWonder/wiki/45-asset-inventory)
+   and click three icons in the manifest table** — the little pictures are links to real `.svg`
+   files. Try `coin`, `sprout` and `plantSpot`. Each opens as a standalone drawing the Unity team
+   can drop straight into the engine. Forty-six of them, and the table says where each one is used.
+5. **Scroll to the bottom of that page**, to *"The six things most likely to cost you a rebuild"*.
+   That is the part worth reading yourself rather than only forwarding — in particular that
+   **decor is bought and counted but never actually drawn in the garden**, and that the card album
+   has **108 slots and no real card art**, filled today by nine placeholder shapes on a loop.
+
+**If a screen ever looks wrong, nothing here is fixed by hand** — the pictures and the page are
+both written by `node tools/capture-screens.js`, and the icon files and their table by
+`node tools/export-icons.js`. Run the command and the mistake goes away or it is a real bug.
+
 ### The two-minute check, the overnight round — do this one first
 
 1. **Watch the new check pass, then watch it fail.** `node tools/style-check.js` ends
