@@ -187,18 +187,6 @@
     dropTimer = setTimeout(again, 1400);
   }
 
-  /* The drawn leaf is the stand-in for wherever the talking flower is not: the
-     stylesheet hides it on sight of one and lifts the flower's own leaf instead.
-     It still has to be told where the flower stands, because the board is sized
-     from the stage row and moves with the viewport. */
-  function placeUmbrella() {
-    const f = UI.flowerBtn && UI.flowerBtn();
-    if (!f) return;
-    const r = f.getBoundingClientRect();
-    if (!r.width) return;
-    el.game.style.setProperty('--wx-umbrella-x', (r.left + r.width / 2) + 'px');
-    el.game.style.setProperty('--wx-umbrella-y', (r.top + r.height * 0.06) + 'px');
-  }
 
   /* ============ the sequence ============ */
   const FRONT_LINE = {
@@ -228,7 +216,6 @@
     standing = to.id;
     setPhase('front');
     syncNight();
-    placeUmbrella();
   }
 
   function arrive(w) {
@@ -261,7 +248,6 @@
     bed(id, true);
     arrange(id);
     duck(true);
-    placeUmbrella();
     rainOnPlants();
     if (id === 'storm') askForFlashes();
   }
@@ -430,7 +416,6 @@
     else arrive(weather);
   });
 
-  window.addEventListener('resize', placeUmbrella);
 
   /* Called from `boot()` once the rest of `UI` exists, because a sky already
      standing when the page opens has to be put on screen: `processWeather()`

@@ -6,6 +6,11 @@
 
 :root{
   /* ink + paper */
+  /* The Wonder palette, said once. Four layers carry this exact six-colour
+     sweep — the Wonder Effect's veil and halo, and the weather veil and takeover
+     cue that Wonderfall borrows from them — and a rainbow copied four times is
+     four places to forget when one of them changes. */
+  --wonder-sweep:#ff6b6b,#ffd43b,#69db7c,#4dabf7,#b197fc,#ff8fab;
   --ink:#2c1a10;
   --ink-2:#5a3a1f;
   --ink-soft:#7a6047;
@@ -284,7 +289,7 @@ button:focus-visible{
    ========================================================= */
 .wonder-veil{
   position:absolute;inset:0;pointer-events:none;opacity:0;
-  background:linear-gradient(125deg,#ff6b6b,#ffd43b,#69db7c,#4dabf7,#b197fc,#ff8fab);
+  background:linear-gradient(125deg,var(--wonder-sweep));
   background-size:400% 400%;
   mix-blend-mode:overlay;
   transition:opacity .6s ease;
@@ -298,7 +303,7 @@ button:focus-visible{
 /* rainbow halo on the planter so the effect reads even over the UI layer */
 .wonder .garden::after{
   content:'';position:absolute;inset:-8px;border-radius:32px;pointer-events:none;
-  background:conic-gradient(#ff6b6b,#ffd43b,#69db7c,#4dabf7,#b197fc,#ff8fab,#ff6b6b);
+  background:conic-gradient(var(--wonder-sweep),#ff6b6b);
   filter:blur(9px);opacity:.75;z-index:-1;
   animation:haloSpin 3.6s linear infinite;
 }
@@ -4303,11 +4308,9 @@ button:focus-visible{
        <div class="wx-flash-under"></div>
      </div>
 
-   and, as direct children of `#world` AFTER `.ui`, because a flash that does not
-   silhouette the garden is a grey rectangle and the leaf is a character beat
-   rather than a tint over one:
+   and, as a direct child of `#world` AFTER `.ui`, because a flash that does not
+   silhouette the garden is a grey rectangle:
 
-     <div class="wx-umbrella" id="wxUmbrella"><i></i></div>
      <div class="wx-flash" id="wxFlash"></div>
 
    Opt-in hooks the world wears, so this section never has to know what the
@@ -4554,44 +4557,7 @@ button:focus-visible{
   100%{transform:scale(1,1)}
 }
 
-/* ---------------------------------------------------------
-   THE LEAF UMBRELLA — the character acknowledges before any UI does.
-   The talking flower's own `.tf-leaf-r` is lifted over its head wherever the
-   flower is on screen; the drawn leaf is the stand-in for anywhere it is not.
-   --------------------------------------------------------- */
-.wx-umbrella{
-  position:absolute;
-  left:var(--wx-umbrella-x,50%);
-  top:var(--wx-umbrella-y,58%);
-  width:66px;height:34px;margin-left:-33px;
-  pointer-events:none;
-  z-index:26;
-  background:var(--wxr-leaf);
-  border:3px solid var(--ink);
-  border-radius:100% 10% 100% 10%;
-  box-shadow:0 3px 0 rgba(44,26,16,.18);
-  opacity:0;
-  transform-origin:50% 100%;
-  transform:translateY(12px) rotate(0deg) scale(.78);
-  transition:opacity .45s ease, transform .5s cubic-bezier(.34,1.56,.64,1);
-}
-/* the midrib */
-.wx-umbrella > i{
-  position:absolute;left:8%;right:14%;top:52%;height:3px;display:block;
-  background:var(--ink);opacity:.42;border-radius:3px;
-  transform:rotate(-7deg);
-}
-/* `:has()` takes its argument's specificity, so keep the argument cheap and the
-   rule to one property — that is what silently out-ranked `.dock.five`. */
-#game:has(.talker) .wx-umbrella{display:none}
 
-#game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-umbrella{
-  opacity:1;
-  transform:translateY(0) rotate(-6deg) scale(1);
-  animation:wxUmbrellaTilt 2.8s ease-in-out infinite;
-}
-@keyframes wxUmbrellaTilt{
-  0%,100%{transform:translateY(0) rotate(-6deg) scale(1)}
   50%{transform:translateY(-2px) rotate(-1deg) scale(1.02)}
 }
 
@@ -5002,7 +4968,7 @@ button:focus-visible{
 
 .wx-veil{
   position:absolute;inset:0;pointer-events:none;opacity:0;
-  background:linear-gradient(125deg,#ff6b6b,#ffd43b,#69db7c,#4dabf7,#b197fc,#ff8fab);
+  background:linear-gradient(125deg,var(--wonder-sweep));
   background-size:400% 400%;
   mix-blend-mode:overlay;
   transition:opacity 2s ease;
@@ -5135,7 +5101,7 @@ button:focus-visible{
   width:62%;aspect-ratio:1;
   transform:translate(-50%,-50%);
   border-radius:50%;
-  background:conic-gradient(#ff6b6b,#ffd43b,#69db7c,#4dabf7,#b197fc,#ff8fab,#ff6b6b);
+  background:conic-gradient(var(--wonder-sweep),#ff6b6b);
   -webkit-mask:radial-gradient(farthest-side,
     transparent calc(100% - 30px), #000 calc(100% - 20px) calc(100% - 8px), transparent 100%);
   mask:radial-gradient(farthest-side,
@@ -5190,7 +5156,6 @@ button:focus-visible{
   #game .wx-splashed{animation-name:none}
 
   /* The pose holds, the sway does not. */
-  #game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-umbrella,
   #game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .tf-leaf-r{
     animation-name:none;
   }
