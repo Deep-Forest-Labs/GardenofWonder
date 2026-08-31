@@ -714,6 +714,23 @@ because panel copy is the owner's call.
 
 *Where:* `ui-sheet.js` `renderBonuses()`.
 
+**Re-examined 2026-08-30, and the question has changed.** Two things were checked because an
+overnight round was told the rename was "already implied by the glossary":
+
+- **The glossary does not imply it.** [32-the-garden-year.md](32-the-garden-year.md) has sixteen
+  entries and names none of "Garden Mastery", "Bloom Mastery", "Mastery" or "Garden Bonuses". There
+  is nothing there to derive a replacement word from, so this is still exactly what the paragraph
+  above says it is: the owner's call.
+- **The collision this entry describes is unreachable.** "Bloom Mastery" appears in **zero**
+  player-facing strings — all five hits in the shipped code are comments — `recordHarvest()` returns
+  `mastery: []` so the "Tier N" toast cannot fire, and the petal tracks replaced the mastery goal
+  line in the Almanac. A player scrolling the Almanac today sees `<h3>Garden Mastery</h3>` at
+  `ui-sheet.js:1933` with nothing above it to confuse it with.
+
+**So the question for the owner is no longer "what should it be renamed to". It is "is there still
+a problem here at all?"** If Bloom Mastery is gone for good, this entry can be deleted rather than
+actioned.
+
 ### A creature that arrives with progress already banked shows a full growth bar at ★1
 
 `checkCritters()` returns immediately after a creature moves in, so it cannot arrive **and** grow on
@@ -734,6 +751,21 @@ Fixing it means falling through to the growth loop after an arrival, which would
 **arrive at ★3** — and arriving small is a designed beat, not an accident
 ([22-creatures.md](22-creatures.md#stars--a-creature-is-raised-not-found)). Worth deciding
 deliberately rather than as a side effect.
+
+**Checked 2026-08-30 for a display-only fix that would dodge that decision. There is not one, and
+the reason is the useful part.** The display fix is already in the code: `ui-sheet.js` clamps that
+growth line in three places, and the clamp is precisely what turns the true state — say 40 lifetime
+Rose against a goal of 24 — into the string "24 / 24 Rose to ★2".
+
+The panel is not lying about the state. It is faithfully rendering a state that is itself
+impossible, because `state.critters[id].level` and `state.discovered[seed]` are two independent
+numbers and the growth bar's only job is to show the relationship between them. When they disagree
+**every** rendering of that relationship is wrong in one direction: believe `level` and the count is
+a lie, believe `discovered` and the stars row is a lie. That is also why the summon cheat's empty bar
+is the honest number and this one is not — they are the same disagreement read from opposite ends.
+
+A second clamp would move the lie, not remove it. **The fix is in the state**, which is the design
+decision this entry already reserved.
 
 ### `harvestsThisSession` is not per session
 
