@@ -910,12 +910,16 @@ different problems, and only the first is a sweep:
 Fixed alongside the Cards pass, which cleared the same family out of `.album-lede`,
 `.cardcell:not(.have) .cardname`, `.setbar small` and the pack's duplicate state.
 
-### `.quest-card` has the seed row's material but not its contact shadow
+### ~~`.quest-card` has the seed row's material but not its contact shadow~~ — FIXED 2026-08-30
 
-Same 3px ink, same gradient, same `0 4px 0 var(--ink-2)` lip. `.seed-row` gained
-`0 8px 14px rgba(44,26,16,.24)` on 2026-08-26 and `.quest-card` did not, so two rows built from the
-same recipe now sit at different heights above the paper. Give it the same shadow next time the
-quest panel is open on the bench.
+It has it now. Measured on a live quest card: `0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24)`,
+which is `.seed-row`'s stack exactly, so the two rows built from the same recipe finally sit at the
+same height above the paper. Doc 05 pairs a 4px lip with that shadow and says they scale together or
+the object looks like it is hovering at the wrong height.
+
+`.seed-row`'s press — the `translateY(4px)` and the `:active` shadow swap — was **not** copied
+across. That is a separate decision about whether a quest card is a thing you press, and the ruling
+here was about height, not behaviour.
 
 ### Some creature-panel CSS is unreachable
 

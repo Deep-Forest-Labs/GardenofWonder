@@ -1565,7 +1565,7 @@ button:focus-visible{
   padding:10px 12px;margin-bottom:9px;
   background:linear-gradient(180deg,#fff,#fff5e2);
   border:3px solid var(--ink);border-radius:var(--r-md);
-  box-shadow:0 4px 0 var(--ink-2);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
 }
 .quest-card.ready{
   background:linear-gradient(180deg,#fff6c2,#ffe066);
