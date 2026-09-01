@@ -117,7 +117,10 @@ harvest signal.
 proven one-line fix in the exact `style.css` stage block this pass rewrites. `#14` lands first in
 the fix round as queued; the stages prompt tells its builder to check whether it has landed before
 taking any before-screenshots, and to carry its rule — a restated SVG transform keeps
-`transform-origin: 0 0` — into every new stage rule.
+`transform-origin: 0 0` — into every new stage rule. *(Superseded the same afternoon: the owner
+ruled `#14` out of the fix round entirely — the stages pass owns that block, and its integration
+commit `db43231` retired the faulty rule with the rest of the numeric stages, gone by construction.
+`#14` is pruned to the punch list's graveyard, never separately fixed.)*
 
 ---
 
