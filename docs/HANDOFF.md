@@ -1,6 +1,6 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-30**
+Last updated: **2026-08-31** (the overnight fix round)
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
@@ -1235,6 +1235,126 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**THE OVERNIGHT FIX ROUND IS DONE — nine items off the punch list, all nine shipped and pushed.**
+Two of them want the owner's *ear* before anything else, and two carry a decision made in their
+absence that is theirs to overturn. The morning script is below; do it in that order, because the
+first two things need a quiet room and the rest do not.
+
+**Each item's commit, so the punch list can be pruned in the morning:**
+
+| # | What | Commit |
+| --- | --- | --- |
+| **#3** | Three sound channels, each a slider and a mute | `b196d3c` |
+| **#8** | The gem chip loses its countdown | `ef19afc` |
+| **#4** | The app icon becomes the talking flower | `e6a0540` |
+| **#6 + #7** | Fall's board aligned, its flower resized, the pill above, Collect All below | `d4687c3` |
+| **#5** | The Turn-jump cheat | `9297273` |
+| **#1** | The Thunderstorm becomes rain plus thunder | `3f4de68` |
+| **#9** | The daily changelog | `ba63379` |
+| **#2** | The sky's chip | `abb55f1` |
+
+`docs/43-punch-list.md` was deliberately **not** touched — it belongs to the agent who keeps it.
+
+**One thing was found rather than done.** The working tree held a complete, uncommitted frame-rate
+instrument from another session — `ui-perf.js`, `tools/skybench.js`, a `.scenery-warp` box and a
+three-state sunbreak fade. It passed every check and the game booted clean, so it went in on its own
+commit (`bc74b3b`) before the round started, rather than being swept into nine commits that are not
+about it. **It is not this round's work and has not been reviewed by anyone.**
+
+### The morning script — ears first, then eyes, then thumbs
+
+**LISTEN. Do this one in a quiet room, with the phone, before anything else.**
+
+1. **The storm.** Menu → Settings → Developer tools → hold the weather on **Thunderstorm**, and sit
+   in it for a full minute. It should now sound like *rain* — a hiss with drops in it — with weight
+   underneath, and it should **breathe** rather than sit on one note. Measured above 300 Hz, which is
+   the band a phone can actually reproduce, it used to swing 0.59 dB across twenty seconds and now
+   swings 2.27 dB; rain swings 2.68. It is also a hair quieter than the rain, which is the honest
+   answer to "overbearing" — note that turning it *down* was the one thing that would not have
+   helped, because it already measured quieter than the rain. What was missing was the rain.
+   Re-measure any time with `node tools/bedbench.js`.
+2. **The three sliders.** Settings, at the top: **Sound effects · Ambience · Music**, each with a
+   mute and a level. **They should sound exactly like yesterday until you touch one** — that is
+   deliberate, and it is why the ambient house level is written as 0.36 rather than 0.5. Drag
+   Ambience down while a sky is running and it should fade under the effects, not with them. Mute
+   Music and the tune stops; drag Music to zero instead and it goes silent but keeps running, so it
+   comes back the moment you drag it up.
+
+**LOOK.**
+
+3. **The icon.** Add the game to your home screen (or re-add it — an app already installed keeps the
+   operating system's copy of the old picture). It is the pink flower with the face now, the one the
+   game opens on, not the yellow bloom. It was checked at 40 px, which is where a face has to
+   survive.
+4. **Fall's board.** Turn once, then swipe between the garden and Fall and back, watching the board.
+   **It should not move and it should not resize** — the two are the same square in the same place
+   now, at 390×844, 375×667 and 390×640, measured to the pixel. Fall's flower is Summer's flower and
+   has its glow back.
+5. **Fall's Collect All moment.** Fill and ripen the bed (Developer tools has both buttons). The pill
+   above the board says *The whole bed — +50%*; below it, a gold **Collect all · +33,600**. Tap it
+   once: confetti, coins, one sound, and a toast that says the bonus was applied. **The ripe Century
+   Bloom is left standing** — that is the decision, and it is in the table below.
+6. **The calmer plots.** Plant a few things and watch the top-right of each. Just a gem and a price.
+   No second number counting down on eight plots at once.
+
+**TAP.**
+
+7. **The Turn jump.** Developer tools → *Jump ahead* → **+3 Turns (Winter's gate)**. It earns its way
+   there through the real faucet and runs the real Turn three times, so expect a **bare garden with
+   Saved Seeds banked** — that is a prestige, three times, not a bug. Then look at Winter's tab: it
+   says *Soon* rather than *Turn 3*, and tapping it reads **"Still growing in"**. That plate has
+   never been reachable before. **It opens the gate, not a garden** — Spring and Winter are not
+   built, and this cheat cannot conjure them.
+8. **The weather chip.** Hold any sky that is not Clear. A tinted chip appears at the left of the row
+   under the quest bar with the sky's name. **Tap it** for one paragraph about what that sky is
+   doing. Read the wording carefully: it promises a **chance**, never a payout, and that is
+   deliberate — see the table below.
+9. **What's New.** Menu → *What's New*. It now opens the **changelog** — a dated list of what changed
+   — with the Garden Year announcement as a tappable row at the top. It also puts itself up on its
+   own, at most once a day, never beside an announcement and never to a brand-new player.
+
+### The two decisions made in your absence, both one line to reverse
+
+| Decision | What was chosen, and why | To overturn |
+| --- | --- | --- |
+| **The weather chip has no timer** | You asked for one. A countdown to the end of this sky is also a countdown to when the next one starts, and paired with the flower's spoken forecast it rebuilds most of the forecast panel *you* ruled out this morning — "the garden stops being a place and becomes an optimisation problem". A tinted chip says the sky is doing something without becoming a clock to plant against. | Everything is in place. **The trap:** `weatherSlotRemaining()` measures the **slot**, and a bought or held sky outlasts its slot — a chip that trusted it would count to zero and then keep going. |
+| **A storm keeps some rumble** | The item left it open: cosy rain plus thunder cracks, or rain with weight still under it. The roll band is kept at half its old height and the sub at 0.45, so a storm still reads as different from a rain. | Two numbers in `BUILD.storm` in `audio.js`: `rollG.gain` and `deepG.gain`. Take them toward zero for pure cosy rain, then re-run `node tools/bedbench.js`. |
+| **Collect All leaves a ripe Century Bloom** | It is outside the bed in both directions — it neither blocks nor collects the windfall — so the fortnight showpiece stays yours to pick. | One `def.century` guard in `fallHarvestAll()`, and the sim-test that asserts it. |
+
+### What this round got wrong first, and what caught each one
+
+Four, and **not one of them threw, failed a check, or looked wrong in a screenshot.**
+
+1. **The weather chip was a full-screen box that swallowed every tap on the garden.** `.chip.wx`
+   picked up `.wx{position:absolute;inset:0}`, the Sky Pass's weather layer. It measured 390×844
+   while looking perfectly correct in the rail; the first probe tap summoned a Wonder Effect from the
+   flower underneath it. Renamed to `.chip.sky` — **which is also taken**, by the scenery's sky, and
+   did exactly the same thing. It is `.chip.weather` now. The recorded "check for an existing class
+   before naming a new one" rule earned itself twice in ten minutes, and the check that found it was
+   `getBoundingClientRect()`, not the eye.
+2. **Equal margins looked like the fix for Fall's offset and were not.** A margin on one side of a
+   `place-items:center` child shifts it by half of itself — that was the 23px. Equal margins cancel
+   *while they fit*: a grid falls back to start-alignment the moment an item overflows its track, so
+   on a 640-tall screen the same trick pushed the board down by a whole strip instead of half of one.
+   No margin at all is the only version that holds at every height.
+3. **`display:none` on the rail broke the very alignment it was added to protect.** Hiding a grid row
+   in Fall gives its height back to `.stage` **in Fall only**, and a taller stage in one season is
+   the exact fault the round existed to remove. `visibility:hidden` keeps the box.
+4. **The tooltip's own `white-space` lost the cascade.** `.coach .tip` and `.weather-tip .tip` are
+   the same specificity, so source order decides — written up beside the rail, the bubble ran off
+   both edges of the phone in one unwrapped line. Same lesson the reduced-motion block already
+   records.
+
+**And one test that passed for the wrong reason and had to be rewritten.** The Century Bloom
+assertion in `fallHarvestAll()`'s group survived a sabotage that deliberately took the Century
+Bloom — because a Century Bloom never carries a `windfall` mark, so the explicit guard is belt and
+braces rather than the thing doing the work. It now asserts the fixture is genuinely ripe first, and
+the sabotage that must go red is the *realistic* wrong implementation: a loop over everything ripe.
+**Every new group this round was broken on purpose before it was believed** — three sabotages each
+for Collect All, the Turn jump and the changelog.
+
+### The round before this one — the hamburger menu
+
 **THE HAMBURGER MENU IS BUILT AND WAITING FOR THE OWNER'S REVIEW.** The wireframe gate opened first
 (`tools/menu-spike.html`, five frames), the owner approved all six questions on 2026-08-31 and added
 one condition — *"this thing needs to be somewhat modular where we can move things in and out"* — and
@@ -2133,6 +2253,55 @@ That inversion was inherited from the frozen economy port; it is fixed. What rem
 the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
+
+**A class name in a 250KB stylesheet is taken until you have PROVED it is not, and the collision is
+silent AND invisible.** `.chip.wx` and then `.chip.sky` both picked up a
+`position:absolute; inset:0` layer — the Sky Pass's weather layer and the scenery's sky. The chip
+looked perfectly correct in its row while measuring 390×844 and swallowing every tap on the garden;
+the first automated tap on it summoned a Wonder Effect from the flower underneath. Nothing threw,
+nothing failed a check, and a screenshot of the rail was reassuring. **Grep for the bare name first**
+(`grep -cE '\.name([{ ,:.]|$)' style.css`) and **measure the box after**, because the rendered
+picture will not tell you.
+
+**A margin on one side of a `place-items:center` child shifts it by HALF of itself, and equal margins
+only cancel while they fit.** `.fl-wrap{margin-bottom:46px}` is where Fall's measured 23px board
+offset came from. The obvious repair — the same margin on both sides — works until the item overflows
+its track, at which point a grid falls back to start-alignment and the child moves by a whole strip
+instead of half of one. On a 640-tall screen that turned a 23px error into a 52px one. **If two
+things must line up, give them no margin and let whatever hangs off them be positioned absolutely.**
+
+**Hiding a grid row in ONE state gives its height back to the container in that state only.**
+`.in-fall .rail{display:none}` was added to give the bed chip its band on a short screen and
+immediately broke the board alignment it was there to protect, because `.stage` grew in Fall and not
+in Summer. `visibility:hidden` keeps the box. Anything that hides a row conditionally has to ask what
+the row's height was holding up.
+
+**Two seasons that must look identical cannot each measure their own room.** Summer sized its board
+from `.stage` minus the **measured** creature yard; Fall sized its from its own frame minus a chip
+strip — and Fall hides the creatures, so that node measures zero there. Two formulas, two answers,
+and they agreed at 390×844 only because width happened to bind at that size. `UI.boardSide()` is the
+single function both call now, and it reads the yard's **reservation** (`.stage`'s bottom padding)
+rather than the node. **`--yard-h` is therefore load-bearing for alignment**: anything that changes
+how that room is reserved silently resizes one season's board against the other's.
+
+**A guard can be belt-and-braces while its test looks load-bearing.** `fallHarvestAll()` carries an
+explicit `def.century` check, and a sabotage that removed it **passed every assertion** — because a
+Century Bloom never carries a `windfall` mark, so the real exclusion happens a line earlier. The test
+was asserting a ruling that nothing in the code path could violate. Sabotage with the *realistic*
+wrong implementation (here, a loop over everything ripe), not with the removal of the line you just
+wrote, and assert the fixture itself is in the state you think it is.
+
+**`tools/probe.js`'s documented lawn point no longer starts a season swipe.** `drag:@30,600:...` at
+390×844 is in the usage header as "the lawn", and it does nothing now — verified against `HEAD` as
+well, so it is not a regression from any recent change. The season tabs
+(`tap:[data-season="fall"]`) work and are how everything in the fix round was driven. Anything
+relying on that drag point should re-derive it before believing a red result.
+
+**A long dev sheet scrolls, and `tap:` cannot reach what is below the fold.** The probe taps an
+element's measured centre, and an element scrolled out of the viewport gets no event — the Turn-jump
+button reported a successful tap and did nothing. `scrollIntoView({block:'center'})` then `.click()`
+in a single `eval:` goes through the same delegated handler a thumb does.
+
 
 **A depth counter over backticks does not find a nested template literal, and the miss is silent.**
 The first backtick *inside* a template opens a new one — it can only appear inside a `${}` — so
