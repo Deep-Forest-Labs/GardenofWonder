@@ -1,4 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- The Talking Flower, the character the game opens on, lifted from
+       `Flora.talkingFlower()` in flora.js: the same petal path at rotate(i x 45),
+       the same r=26 face, the same eyes, cheeks and mouth, the same #2c1a10 ink.
+       Three deliberate differences, all of them because this file has to stand on
+       its own with no stylesheet and no game:
+
+       1. NO EYELIDS. `.tf-lid` is a full-size #ffd98a rect drawn across each eye
+          and collapsed to nothing by a CSS `transform:scaleY(0)`. Pasted here it
+          would be a flower with both eyes shut behind two yellow blocks, and it
+          would look deliberate rather than broken.
+       2. NO STEM AND NO LEAVES. The maskable safe zone is a centred circle of 40%
+          radius, and a face large enough to read at 40px plus a stem does not fit
+          inside it. The face is the character; the stem is what gave.
+       3. The face shading is a plain radial rather than flora's `gface` under
+          `mix-blend-mode:multiply`. Same warmth, and it survives being rasterised
+          by `qlmanage` and drawn as a favicon by anything.
+
+       Regenerate the three PNGs from this file - the commands are in
+       docs/23-installable-pwa.md. -->
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#7ec8f2"/>
@@ -9,43 +28,51 @@
       <stop offset="0" stop-color="#8fe08a"/>
       <stop offset="1" stop-color="#3f9d45"/>
     </linearGradient>
+    <!-- flora.js `gp-talker`, inlined verbatim. -->
+    <linearGradient id="petal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffb3d1"/><stop offset="100%" stop-color="#ff5d95"/>
+    </linearGradient>
+    <!-- flora.js `gface`, without the blend mode: warm at the rim, clear in the middle. -->
+    <radialGradient id="face" cx="50%" cy="35%" r="70%">
+      <stop offset="55%" stop-color="#ffb74f" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#ffb74f" stop-opacity="0.34"/>
+    </radialGradient>
   </defs>
 
   <rect width="512" height="512" fill="url(#sky)"/>
-  <circle cx="398" cy="112" r="46" fill="#fff3bf" opacity="0.95"/>
+  <circle cx="78" cy="84" r="42" fill="#fff3bf" opacity="0.95"/>
   <path d="M-20,432 C120,392 200,404 256,404 C320,404 400,392 532,432 L532,532 L-20,532 Z"
         fill="url(#turf)" stroke="#2c1a10" stroke-width="9" stroke-linejoin="round"/>
 
-  <g transform="translate(256,246)">
-    <path d="M0,44 C-10,110 10,150 0,196" fill="none" stroke="#2c1a10"
-          stroke-width="20" stroke-linecap="round"/>
-    <path d="M0,44 C-10,110 10,150 0,196" fill="none" stroke="#5cc45c"
-          stroke-width="11" stroke-linecap="round"/>
-    <g transform="translate(-4,112) rotate(-26)">
-      <ellipse cx="-34" cy="0" rx="36" ry="19" fill="#69db7c" stroke="#2c1a10" stroke-width="8"/>
+  <!-- Centred on the icon, so the face sits well inside the 40% safe circle and
+       only the petal tips ever meet a mask. Scale 4.7 puts those tips at radius
+       199 of the 205 the safe zone allows. -->
+  <g transform="translate(256,256) scale(4.7)">
+    <g stroke="#2c1a10" stroke-width="3" stroke-linejoin="round">
+      <path d="M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z" fill="url(#petal)" transform="rotate(0) scale(1.02)"/>
+      <path d="M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z" fill="url(#petal)" transform="rotate(45) scale(1.02)"/>
+      <path d="M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z" fill="url(#petal)" transform="rotate(90) scale(1.02)"/>
+      <path d="M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z" fill="url(#petal)" transform="rotate(135) scale(1.02)"/>
+      <path d="M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z" fill="url(#petal)" transform="rotate(180) scale(1.02)"/>
+      <path d="M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z" fill="url(#petal)" transform="rotate(225) scale(1.02)"/>
+      <path d="M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z" fill="url(#petal)" transform="rotate(270) scale(1.02)"/>
+      <path d="M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z" fill="url(#petal)" transform="rotate(315) scale(1.02)"/>
     </g>
-    <g transform="translate(4,142) rotate(22)">
-      <ellipse cx="32" cy="0" rx="31" ry="17" fill="#8fe08a" stroke="#2c1a10" stroke-width="8"/>
+    <circle r="26" fill="#ffe9a8" stroke="#2c1a10" stroke-width="3"/>
+    <circle r="26" fill="url(#face)"/>
+    <g transform="translate(-9.5 -4)">
+      <ellipse rx="6.2" ry="7.4" fill="#fffdf6" stroke="#2c1a10" stroke-width="2.4"/>
+      <circle r="3.4" fill="#2c1a10"/>
+      <circle cx="-1.4" cy="-2" r="1.3" fill="#fff"/>
     </g>
-    <g>
-      <g transform="rotate(0.00) scale(3.4)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffd43b" stroke="#2c1a10" stroke-width="3.2" stroke-linejoin="round"/></g>
-      <g transform="rotate(45.00) scale(3.4)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffd43b" stroke="#2c1a10" stroke-width="3.2" stroke-linejoin="round"/></g>
-      <g transform="rotate(90.00) scale(3.4)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffd43b" stroke="#2c1a10" stroke-width="3.2" stroke-linejoin="round"/></g>
-      <g transform="rotate(135.00) scale(3.4)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffd43b" stroke="#2c1a10" stroke-width="3.2" stroke-linejoin="round"/></g>
-      <g transform="rotate(180.00) scale(3.4)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffd43b" stroke="#2c1a10" stroke-width="3.2" stroke-linejoin="round"/></g>
-      <g transform="rotate(225.00) scale(3.4)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffd43b" stroke="#2c1a10" stroke-width="3.2" stroke-linejoin="round"/></g>
-      <g transform="rotate(270.00) scale(3.4)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffd43b" stroke="#2c1a10" stroke-width="3.2" stroke-linejoin="round"/></g>
-      <g transform="rotate(315.00) scale(3.4)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffd43b" stroke="#2c1a10" stroke-width="3.2" stroke-linejoin="round"/></g>
+    <g transform="translate(9.5 -4)">
+      <ellipse rx="6.2" ry="7.4" fill="#fffdf6" stroke="#2c1a10" stroke-width="2.4"/>
+      <circle r="3.4" fill="#2c1a10"/>
+      <circle cx="-1.4" cy="-2" r="1.3" fill="#fff"/>
     </g>
-    <g>
-      <g transform="rotate(30.00) scale(2)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffe066" stroke="#2c1a10" stroke-width="4" stroke-linejoin="round"/></g>
-      <g transform="rotate(90.00) scale(2)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffe066" stroke="#2c1a10" stroke-width="4" stroke-linejoin="round"/></g>
-      <g transform="rotate(150.00) scale(2)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffe066" stroke="#2c1a10" stroke-width="4" stroke-linejoin="round"/></g>
-      <g transform="rotate(210.00) scale(2)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffe066" stroke="#2c1a10" stroke-width="4" stroke-linejoin="round"/></g>
-      <g transform="rotate(270.00) scale(2)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffe066" stroke="#2c1a10" stroke-width="4" stroke-linejoin="round"/></g>
-      <g transform="rotate(330.00) scale(2)"><path d="M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z" fill="#ffe066" stroke="#2c1a10" stroke-width="4" stroke-linejoin="round"/></g>
-    </g>
-    <circle cx="0" cy="0" r="30" fill="#f08c00" stroke="#2c1a10" stroke-width="8"/>
-    <circle cx="-9" cy="-10" r="8" fill="#ffe9a8" opacity="0.9"/>
+    <ellipse cx="-16" cy="6" rx="4.6" ry="3.2" fill="#ff9ec1" opacity=".8"/>
+    <ellipse cx="16" cy="6" rx="4.6" ry="3.2" fill="#ff9ec1" opacity=".8"/>
+    <path d="M-8,10 Q0,17 8,10" fill="#a83250" stroke="#2c1a10"
+          stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>

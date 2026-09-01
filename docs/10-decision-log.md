@@ -5,6 +5,54 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (fix round) — The app icon becomes the flower the game actually stars
+
+**The owner's words: "I want to update our App icon to look more like our Hero Flower and not just
+a random flower."** He was describing a real gap, not a preference. The icon was a yellow, faceless,
+rose-like bloom built on 2026-08-18 from the generic `round` petal path — the shape used for
+*planted seeds*. The character the game opens on is an eight-petal pink flower with a face, and it
+has had its own function in `flora.js` the whole time. The icon simply predated the character.
+
+**The face is the whole thing.** A botanical drawing of a plant says "a gardening game"; a flower
+looking at you says *this* game. Nothing new was drawn: the icon is `Flora.talkingFlower()`'s own
+numbers — the same petal path at `rotate(i × 45)`, the same `r=26` face, the same eyes, cheeks and
+mouth, the same ink — on the sky and turf the old icon already had.
+
+**The eyelids had to be dropped, and that is a trap rather than a taste.** `.tf-lid` is a full-size
+`#ffd98a` rect over each eye, collapsed to nothing by a CSS `transform: scaleY(0)` with a blink
+keyframe. `icon.svg` is standalone with no stylesheet, so a verbatim paste is a flower with both eyes
+shut behind two yellow blocks — and it reads as a design choice, not as a bug. This is the recorded
+"a visual state must never depend on a keyframe having run" trap in new clothes.
+
+**The stem is what gave, and the maskable safe zone is why.** Doc 23 promises the artwork sits inside
+a centred circle of 40% radius so Android can crop to any mask. A face big enough to read at 40 px
+plus a stem and two leaves does not fit inside that circle. The flower is centred and scaled 4.7×,
+which puts the petal tips at radius 199 of the 205 allowed — the whole bloom inside the safe zone,
+only sky and turf ever cropped — and the head rests in the grass rather than floating. **Checked at
+40 px**, where two eyes, two blushes and a smile still read, which is the test that mattered.
+
+**Rejected: `art/01-flower-hero.png`.** The owner supplied it and it is what prompted the ask, but it
+is a photoreal 3D render and this game's art direction is flat ink outline. An icon promising a
+render the game never delivers is a worse first impression than a plain icon — doc 05 is the moat.
+It also would have broken the raster exception, which is `art/announcements/` **only**. It stays in
+`art/` as unloaded reference, which breaks no rule.
+
+**Rejected: keeping the sun where it was.** At (398,112) it sat directly under the new bloom's petal
+ring and was simply hidden. Moved to the top-left corner, where it clears the flower and still puts
+some warmth in the sky.
+
+**Rejected: `gface` verbatim.** It relies on `mix-blend-mode: multiply`, and this file is rasterised
+by `qlmanage` and drawn as a favicon by every browser. An equivalent radial — clear in the middle,
+warm at the rim — gets the same face without depending on a compositing mode surviving the trip.
+
+**`VERSION` in `sw.js` goes to 8.** The four filenames did not change, so an installed app would
+otherwise keep the old picture out of its own cache. The worker is network-first, so an online player
+sees the new icon regardless; the bump is what sweeps the stale copy. An app already sitting on a
+home screen keeps the operating system's copy until it is re-added, and nothing in the game can
+reach that.
+
+---
+
 ## 2026-08-31 (fix round) — The gem skip chip loses its countdown, and this reverses a logged ruling
 
 **The owner overruled a decision made yesterday, from live play**, and the reversal is the point of

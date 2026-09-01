@@ -70,9 +70,22 @@ change.
 
 ## Icons
 
-`icons/icon.svg` is the source of truth, generated in the game's own style: the `round` petal path
-lifted from [`flora.js`](../flora.js), the `#2c1a10` ink outline, the sky gradient from
-[`style.css`](../style.css). The PNGs are rasterised from it.
+`icons/icon.svg` is the source of truth. **It is the Talking Flower** (rewritten 2026-08-31),
+assembled from `Flora.talkingFlower()`'s own numbers — the same petal path at `rotate(i × 45)`, the
+same `r=26` face, the same eyes, cheeks and mouth, the same `#2c1a10` ink — on the sky gradient from
+[`style.css`](../style.css). Both of flora's gradients are inlined, because this file is also the
+browser tab favicon and has to be self-contained. The PNGs are rasterised from it.
+
+**Three things the icon does differently from the game's own markup, and all three are because a
+standalone file has no stylesheet:**
+
+- **No eyelids.** `.tf-lid` is a full-size `#ffd98a` rect drawn across each eye and collapsed to
+  nothing by a CSS `transform: scaleY(0)`. Copied verbatim it produces a flower with both eyes shut
+  behind two yellow blocks — and it looks deliberate rather than broken.
+- **No stem and no leaves.** See the safe zone below: a face large enough to read at 40 px and a
+  stem do not both fit inside it, and the face is the character.
+- **The face shading is a plain radial**, not `gface` under `mix-blend-mode: multiply`. Same warmth,
+  and it survives `qlmanage` and every favicon renderer.
 
 | File | Used by |
 | --- | --- |
@@ -82,7 +95,18 @@ lifted from [`flora.js`](../flora.js), the `#2c1a10` ink outline, the sky gradie
 | `icons/apple-touch-icon.png` (180×180) | iOS home screen |
 
 The artwork sits inside the maskable safe zone (a centred circle of 40% radius), so Android can crop
-it to any device mask without clipping the flower.
+it to any device mask without clipping the flower. **This is the constraint that decided the
+composition.** The flower is centred and scaled 4.7×, which puts its petal tips at radius 199 of the
+205 the safe zone allows — the whole bloom is inside it, and only the sky, the sun and the turf
+behind it are ever cropped. There is no room left under it for a stem, and there was never a version
+where both fitted: the face has to be big enough to read at 40 px, and at that size a stem is three
+green pixels. **Check it at 40 px, not at 512** — the same rule as the 22 px bloom check in
+[09-conventions.md](09-conventions.md), and a tighter test than the petals are.
+
+**An installed app keeps the old icon until its worker updates**, because the four filenames did not
+change. `VERSION` is **8** as of this change, which sweeps the stale cache; an app already on a home
+screen may still show the old picture until it is re-added, and that is the operating system's copy
+rather than anything the game can reach.
 
 To regenerate after an art change, rasterise the SVG and downscale:
 
