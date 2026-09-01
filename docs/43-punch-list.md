@@ -18,17 +18,21 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 
 ## Tonight's round
 
-1. **#12 · Fall's empty-plot marker is 1.5x Summer's** — two CSS declarations, measured, and the
-   owner asked for it by name. Cheapest fix on the list.
-2. **#9 · A running power-up cannot say what it is doing** — the weather chip beside it now can, and
-   the whole tooltip mechanism is built and reusable. Mostly wiring plus one copy function.
-3. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
-   **Gated on #11 and on an owner decision**: 132px is a documented clearance, not a taste, and the
-   way to widen it is to settle whether the band's buttons belong in Fall at all.
-4. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+1. **#13 · Halve the rain and storm beds** — one number each, and the instrument to prove it already
+   exists. **Read the item**: the obvious knob also halves the thunder, and there is a knob that
+   does not.
+2. **#12 · Fall's empty-plot marker is 1.5x Summer's** — three CSS declarations, measured, and the
+   owner asked for it by name.
+3. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
+4. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+   reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
+   point making a chip tappable in a room where it is about to stop being shown.
+5. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+   **Still gated on an owner decision**: 132px is a documented clearance, and `#11`'s ruling frees at
+   most half the strip.
 
 ---
 
@@ -290,6 +294,71 @@ identical and lift only the opacity, with a comment saying why the two differ. R
 half that only shows up there.
 
 **No open question.** The owner named which of the two is right.
+
+---
+
+### #13 · POLISH · The rain and storm beds are twice as loud as the owner wants · annoying · reported 2026-09-01
+
+**What the owner asked for.** "Reduce the background rain/wind noise that we moved to the ambient
+track by 50%."
+
+**Read as rain and storm, not the whole channel.** Those are the two *noise* beds — filtered hiss,
+which is what "rain/wind noise" describes. The aurora and the Wonderfall are tonal pads, and the
+flower's hummed song and the thunder ride the same bus. Halving the channel would take all of them
+down. If the owner did mean everything on the ambient track, that is `HOUSE.amb` instead
+(`audio.js:23`) and it is the same size of change — one number — so this is a note, not a blocker.
+
+**Where they stand today**, measured with `node tools/bedbench.js`, which renders the real graph
+offline through `Sound.renderBed()` rather than a copy of its constants:
+
+| bed | rms | phone rms | phone swing |
+| --- | --- | --- | --- |
+| **rain** | 0.02063 | 0.02200 | 2.92 dB |
+| **storm** | 0.02034 | 0.02179 | 2.19 dB |
+| aurora | 0.01195 | 0.01229 | 8.78 dB |
+| wonderfall | 0.01005 | 0.01118 | 7.35 dB |
+
+Rain and storm sit at roughly **1.7x the aurora and 2x the Wonderfall**, which is consistent with
+them being the two the owner notices. A 50% amplitude cut is **−6.02 dB** and lands them near 0.0103
+rms — level with the Wonderfall and a little under the aurora, i.e. the quietest things on the bus.
+That is the predicted outcome, not an objection; it is here so the fix round knows what it should
+measure afterwards.
+
+**THE TRAP: the obvious knob takes the thunder with it.** `DATA.weatherStage.storm.bed` (0.34) is
+the tempting place to halve, and it is the wrong one. `rel(id)` (`audio.js:422`) is
+`knob(id) / BED_DEFAULT[id]`, and **`crack()` and `rumble()` both scale their gain by
+`rel('storm')`** — so halving the storm's bed knob halves every thunderclap along with the hiss, and
+the owner asked for neither. The same shape applies to `sing()`, which scales by `rel('wonderfall')`.
+
+**The knob that does only what was asked is `BED_TRIM`.** `bedGain(id)` is
+`min(knob(id) x BED_TRIM[id], BED_CEILING)` (`audio.js:421`), and `BED_TRIM` sits **downstream of
+`knob`** — `rel()` never reads it. So halving `BED_TRIM.rain` (1.35 → 0.675) and `BED_TRIM.storm`
+(1.2 → 0.6) halves exactly the two beds and touches nothing else. `BED_CEILING` (0.85) is nowhere
+near binding: the current products are 0.405 and 0.408, and halved they are ~0.203 and ~0.204.
+
+**Related.**
+- **`#1` re-derived `BED_TRIM.storm` last night** — 1.9 → 1.2 — as part of putting rain back into the
+  storm, and the point of that work was that the number is *measured*. Changing it again is fine, but
+  it is a deliberate loudness change layered on a calibration, so **re-run `bedbench.js` and record
+  the new figures** rather than leaving the doc quoting the old ones.
+- **The ambient slider is not the place either.** `#3` shipped `ambVol`, and dropping its default to
+  0.5 would work — but it halves the whole channel (same over-reach as `HOUSE.amb`) and it makes the
+  slider's own maximum louder than the owner wants, so a player who nudges it up gets today's level
+  back. The default should stay 1.0 = the intended sound.
+- `06-audio-and-fx.md` carries the beds' table and the bus diagram; both quote levels.
+
+**Fix sketch.** Halve `BED_TRIM.rain` and `BED_TRIM.storm` in `audio.js:412`, leaving `BED_DEFAULT`,
+`DATA.weatherStage.*.bed`, `HOUSE.amb` and every slider alone. Re-run `node tools/bedbench.js` and
+put the new rms figures into `06-audio-and-fx.md` in the same commit. **What it might break:** the
+comment above `BED_TRIM` explains the trims as a *calibration* that lands each bed near a common
+loudness — after this they are a calibration plus a deliberate 6 dB cut on two of four, so the
+comment has to say that or it becomes false. Check the phone-swing column has not moved: the breath
+is a proportion of the level, so it should hold at ~2-3 dB, and a bed that stops breathing at low
+volume is the exact fault `#1` was filed for. Also check the duck still reads — `duck()` drops the
+effects bus to 950 Hz while rain stands, and a rain half as loud ducking the same amount may now be
+quieter than the thing it is ducking.
+
+**No open question**, beyond the reading noted at the top: rain and storm, not the whole bus.
 
 ---
 
