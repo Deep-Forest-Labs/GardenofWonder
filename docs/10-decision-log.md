@@ -96,6 +96,49 @@ zero new colours against `HEAD`'s distinct set.
 
 ---
 
+## 2026-09-01 (ruling) — Holly keeps Winter's nights, and every season will one day have a face
+
+**The owner ruled on Winter's hero flower: her name is Holly**, and she is the game's second
+character-grade flower — a punk-cute foil to the Summer flower, a dark character in a sweet world
+in the classic mascot-rival tradition. Grounded in real botany like everything here: **the winter
+rose, the flower that blooms in snow** — which makes her Winter's whole identity in one character,
+because Winter is the night shift and Holly is the one who keeps the garden while you sleep (and
+will insist she didn't do it for you).
+
+**The design brief's hard rules, recorded as rules rather than taste:**
+
+- **The silhouette test.** Filled in as a plain black shape, Holly must read as no one but
+  herself. No two-point dark silhouette over a pale face — her frost crown carries five points or
+  more; her forehead mark, if any, is drawn from winter botany (snowflake, berry, thorn), never a
+  skull; no tail. The character spike must include a black-silhouette row so this is judged by
+  eye, not argued.
+- **Her sass aims at the Summer flower, never at the player.** Doc 17's own tonal table ("flat
+  positivity reads as a system"; the one-unresolved-thread device) finally gets its thread: a
+  two-character rivalry, one swipe apart, each commenting from her own room.
+- **The Summer flower keeps the icon, the tutorial voice and the ceremony** — Holly is additive,
+  never a replacement. "Ice princess" survives as attitude, not title: no royalty vocabulary
+  enters the world.
+
+**Scope ruled: one foil first.** Holly ships with slice C and is judged with the playtest group
+before Fall or Spring get a character of their own. **And the ambition is on the record: the owner
+wants each season to have its own hero flower eventually, each with their own little story, the
+Summer flower carrying the biggest part** — because the game is to grow a larger story over time,
+milestones opening story beats the way the big cozy hits pace theirs. The story meta is
+deliberately NOT designed yet; it is a named future thread. Two observations parked with it: the
+Turn's season gates already ARE a chapter structure (a gate lifting is a story beat and a first
+meeting — no new system needed), and `state.decor` is bought, counted and never drawn in the world
+(doc 45's finding) — an empty socket a story-decoration meta would plug into. Fall borrowing
+Summer's flower today is part of the same eventual-cast question.
+
+**Rejected:** copying-adjacent design of any existing mascot — Holly is an original archetype-mate,
+and the archetype (mischief, contrast, dark-and-hot-pink attitude) is nobody's property while a
+silhouette is; four heroes built at once — the foil is a hypothesis with an exit, not a
+commitment; and **frost damage or any overnight-loss mechanic in Winter**, pre-rejected here so no
+builder ever proposes it — nothing is ever taken by a night (the fork in doc 39, and doc 40's
+PEGI note, both point the same way).
+
+---
+
 ## 2026-09-01 (ruling) — Growth stages are commissioned, and the bud holds until almost ready
 
 **The owner commissioned the Growth Stages pass**: every flower in the main garden gets four
