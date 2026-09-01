@@ -5,6 +5,34 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## What the overnight fix round knowingly left (2026-08-31)
+
+**The status rail is invisible in Fall on a screen shorter than 700px.** Both boards are now the
+same square in the same place, so on a 667-tall phone the bed chip's row and the rail's row are the
+same 48px of band. `visibility:hidden` in Fall only, deliberately — `display:none` would give the
+row's height back to `.stage` in Fall and re-create the misalignment the round exists to remove.
+Traded rather than solved: a booster and the Wonder Effect act on the *garden*, so there is nothing
+in Fall for them to do and nothing there to tap, and one swipe brings them back. Above 700px both
+are shown and neither moves. If Fall ever gains something a rail chip must announce, this needs a
+different answer.
+
+**Fall's flower cannot speak.** `UI.say()` writes into `#speech`, which lives inside the garden's
+flower cell and is hidden by `.in-fall .garden-frame{display:none}` — so the `windfall` beat's
+`UI.say('windfall', true)` in `ui-events.js` has always gone into a hidden node when it fires in
+Fall, which is the only place it can fire. Collect All does not call `say()` and uses a toast
+instead. The fix is either a speech node of Fall's own (it cannot reuse the id) or moving the
+bubble out of the flower cell; neither belongs in a fix round.
+
+**The gem skip chip still overflows its plot in landscape.** Narrower than it was now the wait is
+gone, still a 34px chip on a 31px tile. Landscape is not a supported orientation. See the entry
+further down.
+
+**The `--yard-h` reservation is now load-bearing for alignment.** `UI.boardSide()` reads `.stage`'s
+bottom padding to find the yard's height, because the yard node measures zero in Fall. Anything that
+changes how the yard reserves its room — a different property, a grid row, a media query on one
+season only — silently changes Fall's board size relative to Summer's, which is the exact fault this
+round fixed. Change it in one place or check both seasons.
+
 ## The live web build loses saves after a week on iOS Safari (found 2026-08-30, strategy pass)
 
 **Safari's tracking prevention deletes all script-writeable storage — localStorage, IndexedDB,

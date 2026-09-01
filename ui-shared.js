@@ -56,6 +56,7 @@ const UI = (() => {
     fallFrame: $('#fallFrame'),
     fallBoard: $('#fallBoard'),
     fallChip: $('#fallChip'),
+    fallCollect: $('#fallCollect'),
     gateLayer: $('#gateLayer'),
     seasonEdges: $('#seasonEdges')
   };

@@ -4500,29 +4500,52 @@ button:focus-visible{
 .fl-plot.century .fl-wait{background:linear-gradient(180deg,#efe7ff,#d8ccff)}
 .fl-plot.century .fl-bar i{background:linear-gradient(180deg,#e5dbff,#b197fc)}
 
-.fl-flower-cell{display:grid;place-items:center;position:relative}
-.fl-flower{background:none;border:0;padding:0;width:86%;line-height:0;pointer-events:auto}
-.fl-flower svg{width:100%;height:auto;overflow:visible}
+/* Fall's flower is Summer's flower. `.talker` (118%/118%) is set inside
+   `Flora.talkingFlower()` and belongs to the SVG, not to a season — Fall only
+   ever looked smaller because a `.fl-flower svg{width:100%}` rule here was more
+   specific (0,1,1 against 0,1,0) and silently won, on top of an 86%-wide button.
+   Nobody chose 73%; it fell out. One rule owns the size for both now, and the
+   cell keeps `overflow:visible` so the 118% has somewhere to go. */
+.fl-flower-cell{display:grid;place-items:center;position:relative;overflow:visible}
+.fl-flower{
+  background:none;border:0;padding:0;line-height:0;pointer-events:auto;
+  width:100%;height:100%;display:grid;place-items:center;
+}
 
-/* THE BED CHIP — Fall's whole rule as one object, UNDER the board, on screen
+/* THE BED CHIP — Fall's whole rule as one object, ABOVE the board, on screen
    from the first second. Everything else about the windfall is this chip
-   changing state. */
-/* The margin is UNDER the board now, not over it: it is the chip's room, and
-   the frame centres board-plus-room so the reserve cannot be squeezed out. */
-.fl-wrap{position:relative;display:grid;place-items:center;margin-bottom:46px}
+   changing state.
+
+   THE WRAP IS THE BOARD'S BOX AND NOTHING MORE. It used to carry a 46px bottom
+   margin to reserve the chip's row, and a margin on one side of a
+   `place-items:center` child shifts it by HALF of itself — which is exactly the
+   23px Fall's board sat above Summer's, on the swipe that is this game's
+   signature move. Equal margins on both sides cancel while they fit and then
+   stop cancelling: a grid falls back to start-alignment the moment an item
+   overflows its track, so on a short screen the same trick pushed the board down
+   by a whole strip instead of half of one. No margin at all is the only version
+   that holds at every height. Both the pill above and Collect All below are
+   positioned against this box and take no space in it, so neither can ever move
+   the board — and the board is sized by `UI.boardSide()`, the same square Summer
+   gets from the same function. */
+.fl-wrap{position:relative;display:grid;place-items:center}
 .fl-chip{
   position:absolute;left:50%;transform:translateX(-50%);
-  /* MOVED BELOW THE BOARD, 2026-08-30, on the owner's word that it intrudes.
-     Above it, the chip's last 2px sat inside the board and its lower third lay
-     across the stubble fringe — so Fall's one rule was drawn on top of Fall's
-     one picture, and on a notched phone the board fills the frame and the chip
-     was pushed off the top of it entirely. Below, it sits in the strip the
-     yard already reserves and Fall deliberately empties: no creatures stand
-     there in this season, and it reads as the board's caption rather than as
-     something laid over it. Anchored to `.fl-wrap`, which IS the board's box,
-     so it tracks the board at every viewport instead of being measured from a
-     frame the board does not fill. */
-  bottom:-42px;z-index:6;pointer-events:none;
+  /* ABOVE THE BOARD, 2026-08-31, on the owner's word — a reversal of the move
+     below it made the day before, and the three failures that caused that move
+     are all answered here rather than reintroduced. The chip sat 2px inside the
+     board and lay across the stubble fringe because it was anchored 4px clear;
+     it is 46px clear now, and the fringe occupies -10px to +2px, so there is
+     5px of air under the chip at every viewport. The notched-phone case, where
+     the board filled the frame and pushed the chip off the top, is answered by
+     the strip: 52px is reserved above the board and `sizeBoard()` subtracts it,
+     so the board cannot reach the chip's row however tall the phone is.
+
+     It goes above because the strip BELOW is now Collect All's, and a payoff
+     button under the board is where a thumb already is. Anchored to `.fl-wrap`,
+     which IS the board's box, so it tracks the board at every viewport instead
+     of being measured from a frame the board does not fill. */
+  top:-46px;z-index:6;pointer-events:none;
   display:flex;align-items:center;gap:7px;
   max-width:96%;padding:6px 13px;white-space:nowrap;
   border:3px solid var(--ink);border-radius:999px;
@@ -4531,12 +4554,64 @@ button:focus-visible{
   font-size:12.5px;font-weight:800;line-height:1;
 }
 .fl-chip svg{width:18px;height:18px;flex:none}
+/* THE RAIL STANDS DOWN IN FALL ON A SHORT SCREEN — and it keeps its box while it
+   does, which is the whole trick. Both boards are now the same square in the
+   same place, so on a 667-tall phone the bed chip's row and the status rail's
+   row are the same 48px of band and there is no arrangement in which both fit.
+   `visibility` rather than `display`, because `display:none` would give the row
+   back to `.stage` in Fall only — and a taller stage in one season is exactly
+   the misalignment this round exists to remove.
+
+   The rail loses the tie-break because a booster and the Wonder Effect act on
+   the GARDEN: there is nothing in Fall for them to do and nothing there to tap,
+   while the chip is the whole of Fall's one rule. Swipe back and it is there.
+   Above 700px there is room for both and neither moves. */
+@media (max-height:700px){
+  .in-fall .rail{visibility:hidden}
+}
 .fl-chip.close{background:linear-gradient(180deg,#fff6c2,#ffe066)}
 /* The pulse lives on a pseudo-element, never on the chip: affordPulse writes
    `transform`, which would silently throw away the chip's own centring — the
    same collision that eats a lip when a state modifier writes box-shadow. */
 .fl-chip.armed{background:linear-gradient(180deg,#ffe98a,var(--coin))}
 .fl-chip.armed::before{
+  content:'';position:absolute;inset:-6px;border-radius:999px;
+  background:rgba(255,201,60,.35);z-index:-1;
+  animation:affordPulse 1.4s ease-in-out infinite;
+}
+
+/* COLLECT ALL — the payoff of Fall's only rule, and the one moment the season
+   has. Absolutely positioned against `.fl-wrap` so appearing and disappearing
+   can never move the board: it lands in a `place-items:center` grid, and a new
+   row there would slide the board up at the exact instant the player is looking
+   at it. `pointer-events:auto` because the chip beside it is `none`, and this
+   one has to be pressable — it is also in `noSwipe`, or a tap that drifts a few
+   pixels leaves the season instead of collecting the bed. */
+.fl-collect{
+  position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);
+  z-index:6;pointer-events:auto;
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  /* NARROW ON PURPOSE, and this number is a clearance rather than a taste. The
+     band's two buttons live in the same strip — UPGRADE 34px in from the left,
+     POWER-UP 34px in from the right — and they are NOT hidden in Fall. A
+     full-width pill overlapped both on a 667-tall phone. 132px centred leaves at
+     least 10px of daylight either side at every viewport this game supports,
+     which is why the label is two lines instead of one. */
+  max-width:132px;padding:6px 14px;white-space:nowrap;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#ffe98a,var(--coin));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.22);
+  font-weight:800;line-height:1.15;color:var(--ink);
+}
+.fl-collect[hidden]{display:none}
+.fl-collect .fc-do{display:flex;align-items:center;gap:5px;font-size:11.5px}
+.fl-collect .fc-val{font-size:15px}
+.fl-collect svg{width:15px;height:15px;flex:none}
+.fl-collect:active{transform:translateX(-50%) translateY(2px);box-shadow:0 1px 0 var(--ink-2), 0 4px 8px rgba(44,26,16,.2)}
+/* The halo rides a pseudo-element, never the button: `affordPulse` writes
+   `transform`, which would throw away the centring the same way a state
+   modifier writing `box-shadow` eats a lip. */
+.fl-collect::before{
   content:'';position:absolute;inset:-6px;border-radius:999px;
   background:rgba(255,201,60,.35);z-index:-1;
   animation:affordPulse 1.4s ease-in-out infinite;
@@ -4649,6 +4724,7 @@ button:focus-visible{
 @media (prefers-reduced-motion:reduce){
   .g-leaf{animation:none}
   .fl-chip.armed::before{animation:none}
+  .fl-collect::before{animation:none}
   .fl-ready{animation:none}
 }
 

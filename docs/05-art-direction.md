@@ -446,6 +446,14 @@ veiling them produced four identical white discs on the one badge that carries a
 highlight geometry, no wash. Use the veil when a token would otherwise fight the ink; use the
 highlight when it would otherwise disappear.
 
+**Gold means "you can have this", and Fall's Collect All wears the armed chip's exact gold.**
+`linear-gradient(180deg, #ffe98a, var(--coin))` is already the bed chip's armed body, the affordable
+price's body and the armed board's rim. The Collect All button restates it rather than inventing a
+warmer one, because the button and the chip above it are the same fact said twice — the bed is
+ready, and here is what it pays. This adds one *use* of a colour the palette already had and **zero
+new colours**: `--strict`'s distinct set is unchanged at 133, which is the difference between a
+re-baseline and a conversation (2026-08-31).
+
 ### 3. Objects must be anchored, not floated
 
 Every plant in the garden sits on a soil line with a shadow under it. The meadow's tenders sit in

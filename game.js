@@ -3710,6 +3710,69 @@ const Game = (() => {
     if (ripened) checkFallWindfall();
   }
 
+  /** What Collect All is about to pay, before it pays it.
+
+      The UI needs this number ON the button, so the dev cheat's approach — sum
+      `r.payout` after harvesting — cannot be copied: a `ui-*` file does no
+      economy math, and the value has to exist before the tap or not at all.
+      Counts only marked, ripe bed plots, which is exactly what
+      `fallHarvestAll()` will take. */
+  function fallBedValue() {
+    let total = 0;
+    let plots = 0;
+    fallBedCells().forEach((c) => {
+      if (!c.seed || !c.windfall || !fallCellRipe(c)) return;
+      const def = fallPlantById(c.seed);
+      if (!def) return;
+      total += Math.round(def.yield * (1 + FALL().windfall));
+      plots += 1;
+    });
+    return { total, plots };
+  }
+
+  /** Collect the whole marked bed in one commit.
+
+      Shaped on `turnYear()`, and for the same reason: every plot is paid and
+      cleared in ONE body, the save runs once at the end, and the emits go out
+      after the state is already correct — so nothing can ever see a bed half
+      collected. Looping `fallHarvest()` eight times would be eight credits,
+      eight saves and up to seventeen emits inside a single frame, and the HUD's
+      coin counter animates off `currency`, so the wallet would lurch through
+      all eight.
+
+      THE CENTURY BLOOM IS LEFT STANDING, deliberately. It is outside the bed in
+      both directions — it does not block the windfall and it does not collect
+      it — so the fortnight showpiece stays the player's own to pick. */
+  function fallHarvestAll() {
+    /* A bed that completed while the tab was shut still pays — arm before paying. */
+    checkFallWindfall();
+    const taken = [];
+    let payout = 0;
+    state.fall.grid.forEach((cell, idx) => {
+      if (!cell || !cell.seed || !cell.windfall) return;
+      const def = fallPlantById(cell.seed);
+      if (!def || def.century || !fallCellRipe(cell)) return;
+      payout += Math.round(def.yield * (1 + FALL().windfall));
+      taken.push({ idx, plant: def });
+      cell.seed = null;
+      cell.plantedAt = 0;
+      cell.grow = 0;
+      cell.ready = false;
+      cell.windfall = false;
+    });
+    if (!taken.length) return null;
+    credit(payout);
+    /* Every mark this fill had is spent, so the latch re-derives to false and
+       the bed is free to arm on the next full ripe fill. */
+    state.fall.bedPaid = fallBedCells().some((c) => c.seed && c.windfall);
+    taken.forEach((t) => noteQuest('harvest', t.plant.id, 1));
+    saveNow();
+    emit('currency');
+    const result = { payout, plots: taken.length, taken };
+    emit('fallHarvestAll', result);
+    return result;
+  }
+
   function fallHarvest(idx) {
     const cell = fallCell(idx);
     if (!cell || !cell.seed) return null;
@@ -4741,6 +4804,7 @@ const Game = (() => {
     petalsOf, petalCost, buyPetal, petalMult, petalGrowMult, petalEffect,
     plantGrowth, plantPayout,
     fallOpen, fallPlantById, fallCell, fallCenturyGrowing, fallPlant, fallHarvest,
+    fallBedValue, fallHarvestAll,
     processFall, checkFallWindfall,
     projectedTally, projectedMint, turnReady, turnYear,
     seedById, activeBoost, boostVal, growModifier, rollRarity,

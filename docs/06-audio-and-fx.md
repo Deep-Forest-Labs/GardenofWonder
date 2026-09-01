@@ -291,12 +291,31 @@ than a Rare one.
 | Almanac milestone | 9 | 9 stars + ring | — | `quest` | yes | — |
 | Mastery tier | — | 9 stars + ring + 2 float texts | — | `quest` | first or gem tier only | — |
 | Level-up | — | 34 confetti + ring | 9 | `levelup` | yes | — |
+| Fall's bed arms | — | ring + 12 sparks | — | `crit` | — | attempted |
+| Fall's Collect All | 20 | 22 confetti + ring | 7 | `levelup` | yes | — |
 | Wonder Effect | — | rainbow burst + 5 confetti waves | 10 | `wonder` | banner | forced |
 | Rain (3 channels) | — | 74 drops + splashes on plants | — | `rain` bed, rain dress, effects ducked | — | forecast line, then arrival |
 | Thunderstorm (5) | — | 70 faster, wind-blown drops + the flash | — | `storm` bed and dress, a `crack` per flash, one `rumble` leaving | — | forecast line, then arrival |
 | Aurora (6) | — | none — every channel is CSS | — | `aurora` bed and dress | — | forced |
 | Wonderfall (all) | — | 26 gold coins, no magnet | — | `wonderfall` bed and dress, `sing` three times | banner | forced |
 | Sunbreak | — | none — light wedges, never particles | — | sunbreak dress | — | yes |
+
+**Fall's two beats are one rung apart on purpose.** The bed *arming* is a promise — the board goes
+gold and says so from across the room — and it gets a crit's worth of noise. Collect All is the
+promise being *kept*, and it is the biggest single moment the season has, so it takes the level-up's
+sound and confetti and adds the toast that names the bonus. Collecting plot by plot still pays
+exactly the same, so the difference between them is genuinely a difference of occasion rather than
+of reward.
+
+**One celebration, not eight.** `Game.fallHarvestAll()` commits the whole bed in one go precisely so
+this can be a single beat: eight taps would be eight coin bursts, eight floats, eight `crit` sounds
+and a coin counter lurching through eight `currency` emits, which is noise where the payoff should
+be.
+
+**Fall speaks in a toast, not in a speech bubble.** `UI.say()` writes into `#speech`, which lives in
+the garden's flower cell — and `.in-fall .garden-frame{display:none}` hides it. A line spoken in
+Fall goes into a hidden node. The `windfall` beat still calls `say()` and has always been silent
+there; Collect All does not, and the toast carries the sentence instead.
 
 Rare harvests deliberately get no toast. At 20% frequency they generated constant notification
 noise; stars and floating text carry the moment instead. Toasts are also capped at two on screen

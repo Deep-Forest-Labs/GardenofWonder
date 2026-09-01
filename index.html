@@ -170,6 +170,12 @@
             <div class="fl-wrap">
               <div class="fl-chip" id="fallChip"></div>
               <div class="fl-board" id="fallBoard" aria-label="Fall's bed"></div>
+              <!-- Absolutely positioned against the wrap, never a row in it. A
+                   button that appears in a centring grid grows the wrap and
+                   slides the board up — a jump at the exact instant the player
+                   is looking at the board. Its strip is reserved whether it is
+                   showing or not. -->
+              <button class="fl-collect" id="fallCollect" type="button" hidden></button>
             </div>
           </div>
           <div class="critter-yard" id="critterYard" aria-label="Creatures living in your garden"></div>

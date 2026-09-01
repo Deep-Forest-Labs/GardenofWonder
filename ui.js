@@ -106,11 +106,24 @@
 
   /** Keep the board a perfect square that fills whatever the stage row offers,
       less the strip reserved for the creature yard beneath it. */
-  function sizeGarden() {
+  /* ONE square for both seasons. The swipe between them is this game's signature
+     move, so the two boards have to be the same size in the same place at every
+     viewport — and they were not, because each season measured its own room.
+
+     The yard's height is read from the reservation `.stage` makes for it, never
+     from the yard itself: Fall hides the creatures, so measuring the node
+     returns zero there and Fall's board came out sized against a taller box than
+     Summer's on any screen where height binds. The padding is the reservation
+     and it is the same in both seasons, which is exactly the property wanted. */
+  function boardSide() {
     const st = $('.stage');
     const r = st.getBoundingClientRect();
-    const yard = el.critterYard ? el.critterYard.getBoundingClientRect().height : 0;
-    const s = Math.max(150, Math.floor(Math.min(r.width, r.height - yard)));
+    const yard = parseFloat(getComputedStyle(st).paddingBottom) || 0;
+    return Math.max(150, Math.floor(Math.min(r.width, r.height - yard)));
+  }
+
+  function sizeGarden() {
+    const s = boardSide();
     el.garden.style.width = s + 'px';
     el.garden.style.height = s + 'px';
   }
@@ -708,7 +721,7 @@
      Making them wait for `pointerup` instead would fix that and cost the tap
      latency the whole core loop is built on, which is a far worse trade. */
   const NAV_SWIPE = 70;
-  const noSwipe = '.plot,.fl-plot,.flower-btn,.fpill,.fround,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,.drawer,[data-critter],.coach,.s-edge,.g-back';
+  const noSwipe = '.plot,.fl-plot,.flower-btn,.fpill,.fround,.fl-collect,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,.drawer,[data-critter],.coach,.s-edge,.g-back';
   let navY0 = null;
   let navX0 = null;
   let navId = null;
@@ -1062,7 +1075,7 @@
        rather than guessing a constant, and look for a gap rather than only
        pushing upward: beside a tall tab there is usually room BELOW the chip as
        well as above it. */
-    const blockers = [el.btnUpgrade, el.btnPower, el.fallChip]
+    const blockers = [el.btnUpgrade, el.btnPower, el.fallChip, el.fallCollect]
       .map((n) => n && n.getBoundingClientRect())
       .filter((b) => b && b.height > 0);
     if (coachWanted) {
@@ -1566,6 +1579,7 @@
   UI.toast = toast;
   UI.showBanner = showBanner;
   UI.buildGarden = buildGarden;
+  UI.boardSide = boardSide;
   UI.say = say;
   UI.faceReact = faceReact;
   UI.popWallet = popWallet;

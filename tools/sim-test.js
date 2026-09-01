@@ -4957,6 +4957,53 @@ G.processFall(clock);
 check('the next full fill arms a second windfall', S.year.stats.windfalls === 2);
 for (let i = 0; i < DATA.fall.plots; i += 1) G.fallHarvest(i);
 
+group('bill 12b — Collect All pays exactly what it promised, and leaves the Century Bloom');
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+for (let i = 0; i < DATA.fall.plots; i += 1) G.fallPlant(i, 'strawberry');
+S.fall.grid.forEach((c) => { c.plantedAt = clock - 9999; });
+G.processFall(clock);
+const promised = G.fallBedValue();
+check('the getter counts every marked plot', promised.plots === DATA.fall.plots
+  && promised.total === DATA.fall.plots * Math.round(G.fallPlantById('strawberry').yield * 1.5),
+  JSON.stringify(promised));
+const yrBeforeAll = S.year.coinsEarned;
+const walletBeforeAll = S.credits;
+const bedTook = G.fallHarvestAll();
+check('and the harvest pays exactly that, to the coin',
+  bedTook.payout === promised.total && S.credits === walletBeforeAll + promised.total,
+  `${bedTook.payout} vs ${promised.total}`);
+check('it earns into the year like every other faucet',
+  S.year.coinsEarned === yrBeforeAll + promised.total);
+check('every plot it took is empty afterwards',
+  bedTook.plots === DATA.fall.plots && S.fall.grid.every((c) => !c.seed));
+check('the marks are spent, so the bed can arm again', S.fall.bedPaid === false
+  && G.fallBedValue().total === 0);
+/* THE RULING, asserted rather than described: Collect All is about the BED, and
+   the Century Bloom is outside the bed in both directions. A run that took the
+   fortnight showpiece would pass every other assertion here. */
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+G.fallPlant(0, 'century');
+for (let i = 1; i < DATA.fall.plots; i += 1) G.fallPlant(i, 'strawberry');
+S.fall.grid.forEach((c) => { c.plantedAt = clock - 9999999; });
+G.processFall(clock);
+/* The fixture first. A Century Bloom that is not actually ripe would make every
+   assertion below pass for the wrong reason — the same shape of vacuous test the
+   handoff records twice, and the reason this line exists at all. */
+check('the fixture really does hold a RIPE Century Bloom',
+  S.fall.grid[0].seed === 'century' && S.fall.grid[0].ready === true);
+const withCentury = G.fallHarvestAll();
+check('a ripe Century Bloom is left standing', S.fall.grid[0].seed === 'century'
+  && withCentury.plots === DATA.fall.plots - 1,
+  JSON.stringify(S.fall.grid.map((c) => c.seed)));
+check('and its value was never promised either',
+  withCentury.payout === (DATA.fall.plots - 1) * Math.round(G.fallPlantById('strawberry').yield * 1.5));
+check('an empty bed refuses rather than paying nothing quietly', G.fallHarvestAll() === null);
+G.fallHarvest(0);
+
 group('bill 12c — the windfall survives the way a player actually harvests');
 /* THE REGRESSION THIS GROUP EXISTS FOR: the latch used to be a sticky flag
    cleared only when the bed fell simultaneously empty, so a player who

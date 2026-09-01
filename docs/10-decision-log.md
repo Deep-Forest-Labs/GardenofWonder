@@ -5,6 +5,107 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (fix round) — Fall's board lines up with Summer's, and the windfall gets its moment
+
+Punch-list `#6` and `#7`, done together because they are one piece of geometry: the margin causing
+the offset existed only to hold the pill that `#7` moves.
+
+**The owner:** *"If I'm on the main garden and I swipe to go to fall, I notice that the garden is
+higher on the screen… the flower in the center is not the same size."* And: *"we should have that be
+a 'Collect All' button… a way for the player to feel like, 'Boom! They completed a challenge.'"*
+
+### The 23px was a margin halved, and equal margins are not the fix
+
+`.fl-wrap` carried `margin-bottom:46px` to reserve the chip's row, and a margin on one side of a
+`place-items:center` child shifts it by **half of it** — 23px, exactly what was measured. The
+obvious repair is equal margins top and bottom, which cancel. They cancel *while they fit*: a grid
+falls back to start-alignment the moment an item overflows its track, so on a 640-tall screen the
+same trick pushed the board down by a whole strip instead of half of one. **No margin at all** is
+the only version that holds at every height, and it is affordable because both the pill and Collect
+All are absolutely positioned and take no space.
+
+### The deeper fault: each season measured its own room
+
+Removing the margin was not enough. Summer sized its board from `.stage` minus the **measured**
+creature yard; Fall sized its board from its own frame minus a chip strip. Fall hides the creatures,
+so measuring that node returns zero there — two formulas, two answers, and the boards only agreed at
+390×844 because width happened to bind at that size. `UI.boardSide()` is now the single function
+both call, and it reads the yard's **reservation** (`.stage`'s bottom padding) rather than the node,
+which is the same number in both seasons by construction. Measured at 390×844, 375×667 and 390×640:
+top, left, width and height agree to the pixel.
+
+**Rejected: reserving the strips inside `boardSide()` for both seasons.** It keeps the boards equal
+and costs Summer up to 46px of board on a short screen for a chip Summer does not have. The main
+screen does not pay for Fall's furniture.
+
+### The flower was never sized; it fell out
+
+`.talker` is `118%/118%`, set inside `Flora.talkingFlower()` and belonging to the SVG rather than to
+a season — so it already applied to Fall. Fall looked smaller because `.fl-flower svg{width:100%}`
+was specificity (0,1,1) against `.talker`'s (0,1,0) and silently won, on top of an 86%-wide button:
+`0.86 × 1.00` against `1.00 × 1.18`, which is the 95px against 130px on the ruler. Deleting one rule
+and letting the button fill its cell is the whole fix — no Fall-specific size was added. The glow is
+Summer's `.flower-glow`, copied as a sibling. The combo ring and the speech bubble deliberately did
+not come with it: there is no combo in Fall, and `.speech` carries an id `buildGarden()` owns.
+
+### The chip goes back above the board, and answers the reasons it left
+
+This reverses the 2026-08-30 move below the board, made on the owner's word that above it
+*"intrudes"*. Three specific failures caused that move and all three are answered rather than
+reintroduced: the chip sat 2px inside the board and across the stubble fringe because it was
+anchored 4px clear — at `top:-46px` there is 5px of air over a fringe occupying -10px to +2px; and
+the notched-phone case, where the board filled the frame and pushed the chip off the top, cannot
+recur now that the board is the same square Summer's is and the chip hangs outside it.
+
+### The rail stands down in Fall on a short screen — with `visibility`, not `display`
+
+Once both boards are the same size, on a 667-tall phone the chip's row and the status rail's row are
+the same 48px and neither can move. `display:none` was tried first and **broke the alignment it was
+meant to protect**: hiding the row gives its height back to `.stage` in Fall only, and a taller stage
+in one season is the exact fault this round exists to remove. `visibility:hidden` keeps the box. The
+rail loses the tie-break because a booster and the Wonder Effect act on the garden — there is nothing
+in Fall for them to do and nothing there to tap. Recorded in `11-known-issues.md` as knowingly
+traded.
+
+### Collect All
+
+**`Game.fallHarvestAll()` is one commit, shaped on `turnYear()`** — pay and clear every marked ripe
+plot in one body, credit once, `saveNow()` once, emit after the state is already correct. Looping
+`fallHarvest()` eight times would be eight credits, eight saves and up to seventeen emits in a
+single frame, and the HUD's coin counter animates off `currency`, so the wallet would lurch through
+all eight. **`Game.fallBedValue()`** returns what that call will pay, before it pays it, because the
+number has to be on the button before the tap — the dev cheat's trick of summing `r.payout` after
+harvesting cannot be copied into a `ui-*` file, which does no economy math.
+
+**Nothing in the economy moves.** Picking the bed plot by plot already pays +50% on every plot,
+because the promise is a per-cell mark rather than a live clock reading. Collect All is a convenience
+and a celebration.
+
+**It leaves a ripe Century Bloom standing** — the ruling in the owner's absence, and it is the
+consistent one: the Century Bloom is outside the bed in both directions, so the fortnight showpiece
+stays theirs to pick. In practice the mark already excludes it; the explicit `century` guard restates
+the ruling rather than implementing it, and the sim-test asserts the ruling against the *realistic*
+wrong implementation (a loop over everything ripe) rather than against the guard.
+
+**One celebration, one rung above the bed arming.** Arming is the promise — a crit's worth of noise;
+Collect All is the promise kept — the level-up's confetti and sound, plus the toast that names the
+bonus, which is the sentence the owner asked for. Placed on the ladder in `06-audio-and-fx.md`.
+
+**The button is 132px wide and its label is two lines, and that is a clearance rather than a taste.**
+UPGRADE and POWER-UP are hidden in the Hollow, the meadow and at a gate — but **not** in Fall — and
+they sit 34px in from each edge of the same strip. A full-width pill overlapped both on a 667-tall
+phone; measured, 132px leaves at least 24px of daylight either side at every supported viewport.
+
+**Fall's darker planter is left alone**, as the punch list read it: a season is allowed its own
+palette, and "same visual fidelity" meant the two faults above, not repainting Fall as Summer.
+
+**Found while in here, not fixed:** Fall's flower has no speech node. `UI.say()` writes into
+`#speech` inside the garden's flower cell, which `.in-fall .garden-frame{display:none}` hides — so
+the existing `windfall` beat has always spoken into a hidden node in Fall. Collect All does not call
+`say()`; its toast carries the line. Filed in `11-known-issues.md`.
+
+---
+
 ## 2026-08-31 (fix round) — The app icon becomes the flower the game actually stars
 
 **The owner's words: "I want to update our App icon to look more like our Hero Flower and not just

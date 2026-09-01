@@ -902,7 +902,8 @@ never move**. Nothing in Fall re-states the column because nothing in Fall leave
 | --- | --- | --- |
 | `.fall-layer` (the scene) | a sibling of `.ui` inside `#world`, `z-index: 2` | above the CSS scenery, below `.ui`, so the HUD stays up and the dock stays tappable |
 | `.fall-frame` / `.fl-board` | inside `.stage`, beside `.garden-frame` | one board swaps for another in the same square the garden already sizes |
-| `.fl-chip` | absolute inside `.fl-wrap`, `bottom:-42px` | Fall's one rule, hanging under the board it describes — anchored to the board's own box so it tracks it at every viewport |
+| `.fl-chip` | absolute inside `.fl-wrap`, `top:-46px` | Fall's one rule, standing over the board it describes — anchored to the board's own box so it tracks it at every viewport |
+| `.fl-collect` | absolute inside `.fl-wrap`, `bottom:-58px`, max 132px wide | the payoff button, in the strip the chip left — narrow so it clears UPGRADE and POWER-UP, which are NOT hidden in Fall |
 | `.gate-layer` | a sibling of `.ui`, `z-index: 3` | a locked season is a screen, and `.in-gate` hides the stage, dock, rail and quest strip exactly as `.in-map` does |
 | `.season-edges` | **absolutely positioned against `.ui`**, not a grid item | see below |
 
@@ -925,26 +926,48 @@ map, and the ceremony's last beat returns the player to Summer — a Turn opened
 otherwise end with the player looking at a bed the Turn did not touch while their garden was rebuilt
 behind them.
 
-**Fall's board keeps the yard's padding even though its creatures do not follow it.** Both boards are
-then the same size, which is what sharing the grammar means; the strip below Fall's board is where
-the bed chip stands.
+**ONE SQUARE FOR BOTH SEASONS, from one function** (2026-08-31). `UI.boardSide()` measures `.stage`
+and subtracts the yard's *reservation* — `.stage`'s own bottom padding — and both `sizeGarden()` and
+Fall's `sizeBoard()` call it. Each season used to measure its own room, and that is where the
+misalignment lived: Summer sized itself against the stage minus the **measured** creature yard, Fall
+against its frame minus a chip strip, and Fall hides the creatures, so measuring the node returns
+zero there. Reading the reservation instead of the node gives a number that is the same in both
+seasons by construction. Measured at 390×844, 375×667 and 390×640, Summer's garden and Fall's board
+now agree on top, left, width and height to the pixel at all three.
 
-**The bed chip moved under the board on 2026-08-30, on the owner's word that it intrudes.** Above
-it, the chip's last 2px sat inside the board and its lower third lay across the stubble fringe — so
-Fall's one rule was drawn on top of Fall's one picture, and on a notched phone, where the board
-fills the frame, it was pushed off the top of the board entirely. It now hangs under the board like
-a caption.
+**Nothing is reserved out of that square any more, and nothing may be.** `.fl-wrap` is exactly the
+board's box: the pill above it and Collect All below it are both absolutely positioned and take no
+space in the layout, so neither can move the board — including at the moment Collect All appears,
+which is precisely when the player is looking at it.
 
-**The strip it stands in is reserved, not borrowed.** `.fl-wrap` carries `margin-bottom:46px` and
-`sizeBoard()` subtracts the same 46 from the height it will accept, so the board can never grow into
-the chip's room. On a phone the board is **width**-bound and this costs nothing; on a short screen
-(SE-class, ≤700px tall) it is height-bound and the board gives up about 45px. That is the price of
-Fall's rule being readable instead of lying across the bed, and it is paid only where the screen
-genuinely cannot hold both.
+**The 23px offset was a margin halved.** `.fl-wrap` carried `margin-bottom:46px` to reserve the
+chip's row, and a margin on one side of a `place-items:center` child shifts that child by **half of
+it**. Equal margins on both sides look like the fix and are not: a grid falls back to
+start-alignment the moment an item overflows its track, so on a short screen the same trick pushed
+the board down by a whole strip instead of half of one. No margin at all is the only version that
+holds at every height.
 
-**Fall's board therefore sits ~23px above the garden's**, where it used to sit ~12px below. It is
-the *board plus its chip* that is centred now, which is the more honest object: the caption belongs
-to the board, and the pair is what the eye reads.
+**The bed chip moved back above the board on 2026-08-31, on the owner's word** — a reversal of the
+move below it made the day before, and the three failures that caused that move are answered rather
+than reintroduced. It sat 2px inside the board and across the stubble fringe because it was anchored
+4px clear; at `top:-46px` there is 5px of air between the chip and the fringe (which occupies -10px
+to +2px) at every viewport. The notched-phone case, where the board filled the frame and pushed the
+chip off the top of it, cannot recur: the board is now the same square Summer's is, and the chip
+hangs outside it.
+
+**The rail stands down in Fall below 700px, and keeps its box while it does.** With both boards the
+same size, on a 667-tall phone the chip's row and the status rail's row are the same 48px of band
+and there is no arrangement in which both fit. `visibility:hidden`, never `display:none` — hiding
+the row would give its height back to `.stage` in Fall only, and a taller stage in one season is
+exactly the misalignment this round removes. The rail loses the tie-break because a booster and the
+Wonder Effect act on the **garden**: there is nothing in Fall for them to do and nothing there to
+tap. Swipe back and they are there.
+
+**Collect All is narrow because the band is not hidden in Fall.** `.fpill` (UPGRADE) and `.fround`
+(POWER-UP) are hidden in the Hollow, the meadow and at a gate, but not in Fall, and they sit 34px in
+from each edge of the same strip. A full-width pill overlapped both on a 667-tall phone. At 132px,
+centred, it keeps at least 24px of daylight either side at every supported viewport — which is why
+its label is two lines rather than one.
 
 **The bed chip's pulse lives on a pseudo-element.** `affordPulse` animates `transform`, and the chip
 is centred with `translateX(-50%)` — a running animation outranks that declaration and would throw

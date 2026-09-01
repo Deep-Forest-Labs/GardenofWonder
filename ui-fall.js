@@ -48,7 +48,13 @@
       if (cell === 4) {
         const mid = document.createElement('div');
         mid.className = 'fl-flower-cell';
-        mid.innerHTML = `<button class="flower-btn fl-flower" id="fallFlower" aria-label="Tap the talking flower">${Flora.talkingFlower()}</button>`;
+        /* The glow is a sibling of the button, exactly as it is in Summer's
+           cell — the same halo, so the same flower is standing in both seasons.
+           The combo ring and the speech bubble deliberately do NOT come with
+           it: there is no combo in Fall, and `.speech` carries the id `#speech`
+           that `buildGarden()` already owns. */
+        mid.innerHTML = `<div class="flower-glow"></div>
+          <button class="flower-btn fl-flower" id="fallFlower" aria-label="Tap the talking flower">${Flora.talkingFlower()}</button>`;
         board.appendChild(mid);
         continue;
       }
@@ -82,15 +88,20 @@
   /* The garden's own rule, restated: CSS cannot express "square, fitting the
      smaller dimension of a flexible parent", so the frame is measured and the
      board is written explicit pixels. */
-  /* The strip the bed chip stands in, reserved so the board can never grow into
-     it. On a phone the board is WIDTH-bound and this costs nothing; on a short
-     screen it is height-bound and the board gives up about 45px, which is the
-     price of Fall's one rule being readable instead of lying across the bed. */
-  const CHIP_ROOM = 46;
+  /* The same square Summer gets, from the same function — `UI.boardSide()`. The
+     two boards are one board the player swipes between, and any second opinion
+     about how big it is shows up as a jump at the moment of the swipe.
+
+     The chip's strip and Collect All's strip are `.fl-wrap`'s two EQUAL margins
+     and are not subtracted here. Equal is what matters: `.fl-wrap` is centred by
+     its frame, so an odd margin on one side shifts the board by half of it —
+     which is precisely where the measured 23px offset came from. Equal margins
+     cancel, so the board lands where Summer's lands whether or not the frame is
+     tall enough to hold the strips; where it is not, they simply overhang into
+     the lawn, which is empty in this season. */
   function sizeBoard() {
     if (!el.fallFrame || !el.fallBoard) return;
-    const r = el.fallFrame.getBoundingClientRect();
-    const side = Math.max(150, Math.floor(Math.min(r.width, r.height - CHIP_ROOM)));
+    const side = UI.boardSide();
     el.fallBoard.style.width = `${side}px`;
     el.fallBoard.style.height = `${side}px`;
   }
@@ -203,6 +214,29 @@
       el.fallChip.dataset.sig = cls + html;
     }
     el.fallBoard.classList.toggle('armed', b.armed || b.collecting);
+    renderCollect(b);
+  }
+
+  /* The payoff button. OUTSIDE the chip's `dataset.sig` guard on purpose: that
+     guard skips the write whenever the chip's text is unchanged, and the value
+     on this button moves with the bed while the sentence above it does not.
+
+     The number comes from `Game.fallBedValue()` and is never summed here — a
+     `ui-*` file does no economy math, and the label needs the total BEFORE the
+     tap, which rules out reading it off the harvest the way the dev cheat does. */
+  function renderCollect(b) {
+    if (!el.fallCollect) return;
+    const show = b.marked > 0;
+    el.fallCollect.hidden = !show;
+    if (!show) { el.fallCollect.dataset.sig = ''; return; }
+    const v = Game.fallBedValue();
+    const sig = String(v.total) + ':' + v.plots;
+    if (el.fallCollect.dataset.sig === sig) return;
+    el.fallCollect.dataset.sig = sig;
+    el.fallCollect.innerHTML = `<span class="fc-do">${Icons.get('star')}Collect all</span>
+      <span class="fc-val">+${fmt(v.total)}</span>`;
+    el.fallCollect.setAttribute('aria-label',
+      `Collect all ${v.plots} ripe ${v.plots === 1 ? 'crop' : 'crops'} for ${fmt(v.total)} gold, bonus applied`);
   }
 
   /* ---------- per-cell render ---------- */
@@ -286,6 +320,36 @@
     render();
   }
 
+  /* ONE celebration, not eight. Eight taps is eight coin bursts, eight floats,
+     eight `crit` sounds and a wallet counter lurching through eight `currency`
+     emits — which is noise where the season's biggest moment should be. The
+     engine commits the whole bed in one go and this celebrates it once, one rung
+     above an ordinary windfall plot on the ladder in docs/06: confetti and a
+     ring where a single plot gets coins, `levelup` where a plot gets `crit`, and
+     the toast that names the bonus, which is the sentence the owner asked for. */
+  function collectAll() {
+    const res = Game.fallHarvestAll();
+    if (!res) { Sound.play('deny'); FX.shake(4); return; }
+    const c = FX.centerOf(el.fallBoard);
+    FX.ring(c.x, c.y, '#ffc93c', 0.6, 150);
+    FX.confetti(c.x, c.y, 22);
+    FX.coins(c.x, c.y, 20);
+    FX.float(c.x, c.y - 10, `+${fmt(res.payout)}`, 'crit');
+    FX.shake(7);
+    FX.haptic([20, 40, 20, 40, 40]);
+    Sound.play('levelup');
+    UI.toast({
+      title: `The whole bed &middot; +${fmt(res.payout)}`,
+      body: `${res.plots} ${res.plots === 1 ? 'crop' : 'crops'} collected \u2014 +${Math.round(FALL().windfall * 100)}% bonus applied`,
+      art: Icons.get('star')
+    });
+    /* No `UI.say()` here, and that is not an oversight. The speech bubble is
+       `#speech` inside `.flower-cell`, which `buildGarden()` owns and
+       `.in-fall .garden-frame{display:none}` hides — so a line spoken in Fall is
+       written into a hidden node. The toast above is Fall's voice. */
+    render();
+  }
+
   /* ---------- open / close ---------- */
   function enter() {
     if (open) return;
@@ -325,6 +389,7 @@
       if (!b) return;
       onCellTap(Number(b.dataset.fall));
     });
+    if (el.fallCollect) el.fallCollect.addEventListener('click', collectAll);
     addEventListener('resize', () => { if (open) { sizeBoard(); syncScene(); } });
   }
 
@@ -333,5 +398,6 @@
   UI.fallOpen = () => open;
   UI.renderFall = render;
   UI.sizeFallBoard = sizeBoard;
+  UI.fallCollectAll = collectAll;
   UI.initFall = init;
 })();

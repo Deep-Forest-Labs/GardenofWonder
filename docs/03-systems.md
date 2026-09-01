@@ -1025,6 +1025,20 @@ replants each plot as they harvest it never does, so the flag stuck and every la
 was silently refused its windfall for the life of the save (found and fixed 2026-08-29;
 five consecutive full beds paid one windfall).
 
+**Collect All is one commit, not eight harvests.** `Game.fallHarvestAll()` (2026-08-31) pays and
+clears every marked, ripe bed plot in a single body, credits the total once, saves once with
+`saveNow()` and emits `currency` and `fallHarvestAll` after the state is already correct — shaped on
+`turnYear()` and for the same reason: a bed that can half-happen is a corrupted save at the worst
+moment. `Game.fallBedValue()` returns `{ total, plots }` for exactly the plots that call will take,
+so the button can name its price before the tap without `ui-fall.js` doing arithmetic. Collecting
+plot by plot still pays identically — the marks are the promise, not the button — so Collect All is
+a convenience and a celebration rather than a new payout rule, and no economy number moves.
+
+**Collect All leaves a ripe Century Bloom standing** (ruled 2026-08-31). It is outside the bed in
+both directions, so the consistent answer is that the showpiece is the player's own to pick. In
+practice the mark already excludes it — a Century Bloom is never given a `windfall` flag — and the
+explicit `def.century` guard restates the ruling rather than implementing it.
+
 The **Century Bloom** is data-flagged `century: true`: one growing at a
 time, excluded from the bed math (it neither blocks nor collects a windfall), and like
 every running long timer it survives the Turn untouched. Fall opens at
