@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="plant stage-stem has-glow" viewBox="0 0 100 120" preserveAspectRatio="xMidYMax meet" style="--glow:#a9d8ff" aria-hidden="true"><defs>
+        <linearGradient id="gp-daisy" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffeef6"/><stop offset="100%" stop-color="#ffffff"/>
+        </linearGradient>
+        <linearGradient id="gh-daisy" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#ffeef6"/>
+        </linearGradient>
+        <linearGradient id="gp-tulip" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ff9dbd"/><stop offset="100%" stop-color="#ff5d8f"/>
+        </linearGradient>
+        <linearGradient id="gh-tulip" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#ff9dbd"/>
+        </linearGradient>
+        <linearGradient id="gp-bluebell" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#a5adff"/><stop offset="100%" stop-color="#6f7bff"/>
+        </linearGradient>
+        <linearGradient id="gh-bluebell" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#a5adff"/>
+        </linearGradient>
+        <linearGradient id="gp-lavender" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#cba3f0"/><stop offset="100%" stop-color="#a06cd5"/>
+        </linearGradient>
+        <linearGradient id="gh-lavender" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#cba3f0"/>
+        </linearGradient>
+        <linearGradient id="gp-rose" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ff7a7a"/><stop offset="100%" stop-color="#e03131"/>
+        </linearGradient>
+        <linearGradient id="gh-rose" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#ff7a7a"/>
+        </linearGradient>
+        <linearGradient id="gp-peony" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ff93c4"/><stop offset="100%" stop-color="#ff4f9a"/>
+        </linearGradient>
+        <linearGradient id="gh-peony" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#ff93c4"/>
+        </linearGradient>
+        <linearGradient id="gp-marigold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffc857"/><stop offset="100%" stop-color="#ff9f1c"/>
+        </linearGradient>
+        <linearGradient id="gh-marigold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#ffc857"/>
+        </linearGradient>
+        <linearGradient id="gp-orchid" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffd4ec"/><stop offset="100%" stop-color="#ff8fd0"/>
+        </linearGradient>
+        <linearGradient id="gh-orchid" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#ffd4ec"/>
+        </linearGradient>
+        <linearGradient id="gp-sunlotus" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fff3b0"/><stop offset="100%" stop-color="#ffc93c"/>
+        </linearGradient>
+        <linearGradient id="gh-sunlotus" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#fff3b0"/>
+        </linearGradient>
+        <linearGradient id="gp-jadefern" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#8ce99a"/><stop offset="100%" stop-color="#43aa5a"/>
+        </linearGradient>
+        <linearGradient id="gh-jadefern" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#8ce99a"/>
+        </linearGradient>
+        <linearGradient id="gp-moonflower" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#b9dcff"/>
+        </linearGradient>
+        <linearGradient id="gh-moonflower" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#ffffff"/>
+        </linearGradient>
+        <linearGradient id="gp-starlit" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e7dcff"/><stop offset="100%" stop-color="#b197fc"/>
+        </linearGradient>
+        <linearGradient id="gh-starlit" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#e7dcff"/>
+        </linearGradient>
+        <linearGradient id="gp-aurora" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#a5f3fc"/><stop offset="100%" stop-color="#3bc9db"/>
+        </linearGradient>
+        <linearGradient id="gh-aurora" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#a5f3fc"/>
+        </linearGradient>
+        <linearGradient id="gp-celestial" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#93a9ff"/><stop offset="100%" stop-color="#4c6ef5"/>
+        </linearGradient>
+        <linearGradient id="gh-celestial" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#93a9ff"/>
+        </linearGradient>
+        <linearGradient id="gp-nebula" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f9a3c1"/><stop offset="100%" stop-color="#d6336c"/>
+        </linearGradient>
+        <linearGradient id="gh-nebula" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#f9a3c1"/>
+        </linearGradient>
+        <linearGradient id="gp-solstice" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffdfae"/><stop offset="100%" stop-color="#ff922b"/>
+        </linearGradient>
+        <linearGradient id="gh-solstice" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#ffdfae"/>
+        </linearGradient>
+        <linearGradient id="gp-auroracrown" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffe6a7"/><stop offset="100%" stop-color="#7ce0ff"/>
+        </linearGradient>
+        <linearGradient id="gh-auroracrown" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#ffe6a7"/>
+        </linearGradient>
+        <linearGradient id="gp-mythicstar" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fff6cc"/><stop offset="100%" stop-color="#ffd43b"/>
+        </linearGradient>
+        <linearGradient id="gh-mythicstar" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#fff6cc"/>
+        </linearGradient>
+        <linearGradient id="gp-eternal" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fffdf0"/><stop offset="100%" stop-color="#ffcf5c"/>
+        </linearGradient>
+        <linearGradient id="gh-eternal" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".85"/><stop offset="100%" stop-color="#fffdf0"/>
+        </linearGradient>
+      <linearGradient id="gp-talker" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffb3d1"/><stop offset="100%" stop-color="#ff5d95"/>
+      </linearGradient>
+      <radialGradient id="gface" cx="50%" cy="35%" r="70%">
+        <stop offset="55%" stop-color="#ffffff"/><stop offset="100%" stop-color="#ffc978"/>
+      </radialGradient></defs><style>.has-glow{filter:drop-shadow(0 0 7px var(--glow))}
+.f-stemwrap{transform-origin:50% 120px;transform:scaleY(var(--sg,1))}
+.f-leaves{transform-origin:50px 96px;transform:scale(var(--lg,1));opacity:var(--lo,1)}
+.f-stemwrap,.f-head,.f-leaves,.f-petals{transition:transform .6s cubic-bezier(.34,1.4,.64,1)}
+.f-sprout,.f-bud{display:none;opacity:0}
+.stage-stem .f-sprout,
+.stage-stem .f-bud,
+.stage-bloom .f-bud{display:inline}
+.f-sprout,.f-bud{transition:opacity .45s ease}
+.f-bud-body{transform-origin:0 0;transition:transform .6s cubic-bezier(.34,1.4,.64,1)}
+.f-petals{transition:transform .6s cubic-bezier(.34,1.4,.64,1),opacity .5s ease}
+.f-core,.f-ring{transition:opacity .5s ease}
+.stage-sprout{--sg:0;--lg:0;--lo:0}
+.stage-sprout .f-sprout{display:inline;opacity:1}
+.stage-sprout .f-head{transform:translate(50px,44px) scale(0);transform-origin:0 0}
+.stage-stem{--sg:.62;--lg:.88;--lo:1}
+.stage-stem .f-head{transform:translate(50px,44px) scale(0);transform-origin:0 0}
+.stage-bud{--sg:.92;--lg:.97;--lo:1}
+.stage-bud .f-bud{display:inline;opacity:1}
+.stage-bud .f-bud-body{transform:translateY(var(--bud-drop,5px))}
+.stage-bud .f-head{transform:translate(50px,44px) scale(.22);transform-origin:0 0}
+.stage-bud .f-petals,.stage-bud .f-core,.stage-bud .f-ring{opacity:0}
+.stage-bloom{--sg:1;--lg:1}
+.stage-bloom .f-head{transform:translate(50px,44px) scale(var(--bloom,1));transform-origin:0 0;transition:transform var(--unfurl,.9s) cubic-bezier(.3,1.25,.5,1)}
+.stage-bloom .f-petals,.stage-bloom .f-core,.stage-bloom .f-ring{transition:transform .6s cubic-bezier(.34,1.4,.64,1),opacity .5s ease .12s}
+.stage-bloom .f-bud{transition:opacity .55s ease .1s}</style>
+      <g class="f-stemwrap">
+        <path class="f-stem" d="M50,120 C50,96 49,74 50,54" fill="none" stroke="#4a8fa8" stroke-width="7" stroke-linecap="round"/>
+        <path class="f-stem-hi" d="M50,116 C50,96 49,76 50,58" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="2.4" stroke-linecap="round"/>
+      </g>
+      <g class="f-leaves">
+        <path class="f-leaf f-leaf-l" d="M50,96 C36,98 24,90 20,78 C34,72 46,82 50,96 Z" fill="#4a8fa8" stroke="#2c1a10" stroke-width="2.6" stroke-linejoin="round"/>
+        <path class="f-leaf f-leaf-r" d="M50,86 C64,88 76,80 80,68 C66,62 54,72 50,86 Z" fill="#4a8fa8" stroke="#2c1a10" stroke-width="2.6" stroke-linejoin="round"/>
+      </g>
+      
+      <g class="f-sprout" transform="translate(50 99)">
+        <g class="f-sprout-body" stroke="#2c1a10" stroke-width="2.6" stroke-linejoin="round">
+          <path d="M0,21 C0,13 0,7 0,1" fill="none" stroke="#4a8fa8" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M0,2 C-5,-7 -14,-11 -21,-9 C-20,-1 -11,5 0,2 Z" fill="#4a8fa8"/>
+          <path d="M0,2 C5,-7 14,-11 21,-9 C20,-1 11,5 0,2 Z" fill="#4a8fa8"/>
+        </g>
+      </g>
+      <g class="f-head" transform="translate(50 44)">
+        
+        <g class="f-petals" stroke="#2c1a10" stroke-width="2.6" stroke-linejoin="round">
+          <g class="pt-group"><path class="pt pt-0" style="--i:0" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gp-moonflower)" transform="rotate(0) scale(1)"/><path class="pt pt-0" style="--i:1" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gp-moonflower)" transform="rotate(51.42857142857143) scale(1)"/><path class="pt pt-0" style="--i:2" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gp-moonflower)" transform="rotate(102.85714285714286) scale(1)"/><path class="pt pt-0" style="--i:3" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gp-moonflower)" transform="rotate(154.28571428571428) scale(1)"/><path class="pt pt-0" style="--i:4" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gp-moonflower)" transform="rotate(205.71428571428572) scale(1)"/><path class="pt pt-0" style="--i:5" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gp-moonflower)" transform="rotate(257.14285714285717) scale(1)"/><path class="pt pt-0" style="--i:6" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gp-moonflower)" transform="rotate(308.57142857142856) scale(1)"/><path class="pt pt-1" style="--i:0" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gh-moonflower)" transform="rotate(25.714285714285715) scale(0.64)"/><path class="pt pt-1" style="--i:1" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gh-moonflower)" transform="rotate(97.71428571428572) scale(0.64)"/><path class="pt pt-1" style="--i:2" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gh-moonflower)" transform="rotate(169.71428571428572) scale(0.64)"/><path class="pt pt-1" style="--i:3" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gh-moonflower)" transform="rotate(241.71428571428572) scale(0.64)"/><path class="pt pt-1" style="--i:4" d="M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z" fill="url(#gh-moonflower)" transform="rotate(313.7142857142857) scale(0.64)"/></g>
+        </g>
+        <g class="f-core"><circle cx="0" cy="0" r="11" fill="#7aa8ff" stroke="#2c1a10" stroke-width="2.4"/><circle cx="5.5" cy="0.0" r="1.7" fill="#2c1a10" opacity=".22"/><circle cx="2.8" cy="4.8" r="1.7" fill="#2c1a10" opacity=".22"/><circle cx="-2.7" cy="4.8" r="1.7" fill="#2c1a10" opacity=".22"/><circle cx="-5.5" cy="0.0" r="1.7" fill="#2c1a10" opacity=".22"/><circle cx="-2.8" cy="-4.8" r="1.7" fill="#2c1a10" opacity=".22"/><circle cx="2.8" cy="-4.8" r="1.7" fill="#2c1a10" opacity=".22"/></g>
+      </g>
+      
+      <g class="f-bud" transform="translate(50 44)">
+        <g class="f-bud-body" stroke="#2c1a10" stroke-width="2.6" stroke-linejoin="round">
+          <path d="M0,-22 C9,-15 13,-6 11,3 C9,11 5,15 0,15 C-5,15 -9,11 -11,3 C-13,-6 -9,-15 0,-22 Z" fill="url(#gp-moonflower)"/>
+          <path d="M0,-22 C-8,-15 -11,-6 -9,2 C-8,8 -4,13 0,15 C-2,4 -2,-10 0,-22 Z" fill="url(#gh-moonflower)"/>
+          <path d="M-9,6 C-12,14 -5,18 0,18 C5,18 12,14 9,6 C5,11 -5,11 -9,6 Z" fill="#4a8fa8"/></g>
+      </g>
+    </svg>

@@ -69,14 +69,14 @@ only evidence it is used at all, and the table attributes it to the table that h
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/butterfly.svg" width="26" height="26" alt="butterfly"> | `butterfly` | `0 0 24 24` | `CARD_MOTIFS`, `DATA.decor` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/cards.svg" width="26" height="26" alt="cards"> | `cards` | `0 0 24 24` | `index.html`, `ui-sheet.js`, `ui.js`, `CREATURE_PAIRS`, `DATA.packLuck` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/check.svg" width="26" height="26" alt="check"> | `check` | `0 0 24 24` | `ui-menu.js`, `ui-sheet.js` |
-| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/chevron.svg" width="26" height="26" alt="chevron"> | `chevron` | `0 0 24 24` | `ui-menu.js` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/chevron.svg" width="26" height="26" alt="chevron"> | `chevron` | `0 0 24 24` | `ui-menu.js`, `ui-news.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/clock.svg" width="26" height="26" alt="clock"> | `clock` | `0 0 24 24` | `ui-fall.js`, `ui-sheet.js`, `DATA.upgrades` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/close.svg" width="26" height="26" alt="close"> | `close` | `0 0 24 24` | `index.html` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/clover.svg" width="26" height="26" alt="clover"> | `clover` | `0 0 24 24` | `ui-hollow.js`, `ui-sheet.js`, `CARD_MOTIFS`, `CREATURE_FOOD`, `DATA.boosters`, `DATA.upgrades`, `GOODS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/coin.svg" width="26" height="26" alt="coin"> | `coin` | `0 0 24 24` | `index.html`, `ui-meadow.js`, `ui-sheet.js`, `ui.js`, `DATA.boosters` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/decor.svg" width="26" height="26" alt="decor"> | `decor` | `0 0 24 24` | `index.html`, `ui-hollow.js`, `ui.js`, `ui-hollow.js DOCK`, `ui-menu.js ROWS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/drone.svg" width="26" height="26" alt="drone"> | `drone` | `0 0 24 24` | `ui-sheet.js`, `DATA.upgrades` |
-| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/drop.svg" width="26" height="26" alt="drop"> | `drop` | `0 0 24 24` | `DATA.upgrades` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/drop.svg" width="26" height="26" alt="drop"> | `drop` | `0 0 24 24` | `DATA.upgrades`, `ui-sheet.js AUDIO_CHANNELS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/fist.svg" width="26" height="26" alt="fist"> | `fist` | `0 0 24 24` | `ui-sheet.js`, `DATA.upgrades` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/flame.svg" width="26" height="26" alt="flame"> | `flame` | `0 0 24 24` | `DATA.upgrades` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/flask.svg" width="26" height="26" alt="flask"> | `flask` | `0 0 24 24` | **not referenced anywhere** |
@@ -95,7 +95,7 @@ only evidence it is used at all, and the table attributes it to the table that h
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/lock.svg" width="26" height="26" alt="lock"> | `lock` | `0 0 24 24` | `ui-meadow.js`, `ui-sheet.js`, `ui.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/menu.svg" width="26" height="26" alt="menu"> | `menu` | `0 0 24 24` | `index.html` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/moon.svg" width="26" height="26" alt="moon"> | `moon` | `0 0 24 24` | `CREATURE_PAIRS` ×2, `DATA.nightYield` |
-| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/music.svg" width="26" height="26" alt="music"> | `music` | `0 0 24 24` | `ui-sheet.js` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/music.svg" width="26" height="26" alt="music"> | `music` | `0 0 24 24` | `ui-sheet.js AUDIO_CHANNELS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/orders.svg" width="26" height="26" alt="orders"> | `orders` | `0 0 24 24` | `index.html` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/pencil.svg" width="26" height="26" alt="pencil"> | `pencil` | `0 0 24 24` | `ui-menu.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/people.svg" width="26" height="26" alt="people"> | `people` | `0 0 24 24` | `ui-menu.js ROWS` |
@@ -104,8 +104,8 @@ only evidence it is used at all, and the table attributes it to the table that h
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/plantSpot.svg" width="26" height="26" alt="plantSpot"> | `plantSpot` | `0 0 24 24` | `ui-fall.js`, `ui.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/pouch.svg" width="26" height="26" alt="pouch"> | `pouch` | `0 0 24 24` | `index.html`, `ui-sheet.js`, `ui.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/salve.svg" width="26" height="26" alt="salve"> | `salve` | `0 0 24 24` | `CRAFT_RECIPES` |
-| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/scroll.svg" width="26" height="26" alt="scroll"> | `scroll` | `0 0 24 24` | `ui-menu.js ROWS` |
-| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/sound.svg" width="26" height="26" alt="sound"> | `sound` | `0 0 24 24` | `ui-sheet.js` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/scroll.svg" width="26" height="26" alt="scroll"> | `scroll` | `0 0 24 24` | `ui-sheet.js`, `ui-menu.js ROWS` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/sound.svg" width="26" height="26" alt="sound"> | `sound` | `0 0 24 24` | `ui-sheet.js AUDIO_CHANNELS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/sparkle.svg" width="26" height="26" alt="sparkle"> | `sparkle` | `0 0 24 24` | `ui-sheet.js`, `ui.js`, `CARD_MOTIFS`, `DATA.mutationLuck`, `DATA.upgrades` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/sprout.svg" width="26" height="26" alt="sprout"> | `sprout` | `0 0 24 24` | `index.html`, `ui-events.js`, `ui-hollow.js`, `ui-meadow.js`, `ui-sheet.js`, `ui.js`, `CARD_MOTIFS`, `DATA.boosters`, `DATA.upgrades`, `ui-hollow.js DOCK`, `ui-meadow.js DOCK` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/star.svg" width="26" height="26" alt="star"> | `star` | `0 0 24 24` | `ui-events.js`, `ui-fall.js`, `ui-sheet.js`, `ui.js`, `CARD_MOTIFS`, `DATA.upgrades`, `GOODS`, `ui-hollow.js DOCK` |
@@ -132,7 +132,7 @@ Every count here was taken by running the code, not by reading a document.
 | Asset class | Generated in | What drives it | How many | Sample |
 | --- | --- | --- | --- | --- |
 | **Flower heads** | `flora.js` `Flora.head(seed)` | the seed's `art` block — `shape`, `petals`, `c1`/`c2`, `core`, `glow`, `ring`, `rainbow` | **19 blooms** over 11 shape recipes, built from 6 petal primitives | [`bloom-daisy.svg`](../art/exports/samples/bloom-daisy.svg) |
-| **Whole plants + growth stages** | `flora.js` `Flora.plant(seed)`; stages in `style.css` | one `data-stage` attribute — `sprout` / `stem` / `bud` / `bloom` — from `stageOf()` in `ui.js`, thresholds in `DATA.growth` | 19 plants × **4 visible stages** = 76 appearances, but only **19 SVG strings** (each carries hidden `f-sprout` and per-family `f-bud` groups CSS reveals) | [`plant-rose.svg`](../art/exports/samples/plant-rose.svg) |
+| **Whole plants + growth stages** | `flora.js` `Flora.plant(seed)`; stages in `style.css` | one `data-stage` attribute — `sprout` / `stem` / `bud` / `bloom` — from `stageOf()` in `ui.js`, thresholds in `DATA.growth` | 19 plants × **4 visible stages** = 76 appearances, but only **19 SVG strings** (each carries hidden `f-sprout` and per-family `f-bud` groups CSS reveals) | **all 76 exported** to [`art/exports/stages/`](../art/exports/stages/), stage pose baked from the real `style.css` rules — plus [`plant-rose.svg`](../art/exports/samples/plant-rose.svg) |
 | **The Talking Flower** | `flora.js` `Flora.talkingFlower()` | nothing — hardcoded; all variety is applied live by `ui.js` | 1 character, 4 mouths, 3 eyelid states, continuous pupil tracking | [`talking-flower.svg`](../art/exports/samples/talking-flower.svg) |
 | **Rarity treatments** | *no draw function* — `style.css` `.plot[data-aura]` + `ui-events.js` bursts | `DATA.rarity[].a`, set at **harvest** | 4 tiers, 3 with a visual | — |
 | **Mutation treatments** | *no draw function* — `style.css` `.plot[data-mutation]` | `DATA.mutations[id].tint` / `.glow`, written to two CSS variables | 4 mutations in 2 visual bands | — |
@@ -151,11 +151,16 @@ Every count here was taken by running the code, not by reading a document.
 
 ## The six things most likely to cost you a rebuild
 
-**Growth is one attribute, not three sprites.** A flower has 19 SVG strings, not 57. Stages
-1 and 2 are pure CSS transforms on the same markup — stem `scaleY` from the base, head scale
-from `(50, 44)`, petal-group scale at stage 2 only. Build one prefab driven by a single 0–1
-float. The project's own performance rule says it plainly: growth is one attribute flip, not
-new SVG.
+**Growth is one attribute, not four sprites.** A flower has 19 SVG strings, not 76. Each string
+carries the bloom **plus a hidden seedling (`f-sprout`) and a hidden closed bud (`f-bud`)**, and
+one word attribute — `sprout` / `stem` / `bud` / `bloom`, thresholds in `DATA.growth` — decides
+what shows: the sprout and bud toggle with `display`, the stem and leaves scale (`--sg`/`--lg`
+from the base), and the head scales from `(50, 44)` with `transform-origin: 0 0` — opening from
+the bud's footprint (`.22 → 1`) as the bud fades on top, which is the unfurl. Build one prefab
+driven by a single 0–1 float **plus the two extra meshes it swaps in below the bloom threshold**;
+every state is already exported to [`art/exports/stages/`](../art/exports/stages/) so nothing
+needs reverse-engineering. The project's own performance rule still holds: growth is one
+attribute flip, not new SVG.
 
 **Rarity and mutations are never flower variants.** Nobody draws a "rare daisy". Rarity is
 rolled at *harvest* and shows as a burst plus a ring left on the empty plot; a mutation is a

@@ -100,6 +100,24 @@ const EXTERNAL_REFS = [
   [/@import/, '@import'],
 ];
 
+/* The stage exports carry the game's growth-staging rules, which speak in custom
+   properties on purpose — so for THOSE files the blunt no-var() rule above is
+   replaced by the real question: does every var() resolve inside the file? It
+   does when the property is declared somewhere in the file (`--sg:` in a stage
+   rule, `--glow:` in the root's own style attribute) or the call carries a
+   fallback. Anything else still reaches out, and still fails. */
+function unresolvedVars(svg) {
+  const bad = new Set();
+  for (const m of svg.matchAll(/var\(\s*(--[a-zA-Z0-9-]+)\s*([,)])/g)) {
+    const hasFallback = m[2] === ',';
+    const declared = svg.includes(`${m[1]}:`);
+    if (!hasFallback && !declared) bad.add(m[1]);
+  }
+  return [...bad];
+}
+
+const SELF_CONTAINED_WITH_VARS = EXTERNAL_REFS.filter(([, what]) => what !== 'CSS custom property');
+
 // ---------------------------------------------------------------- the samples
 
 /*
@@ -194,8 +212,10 @@ function buildSamples() {
     });
     out.push({
       name: 'plant-rose',
-      what: 'A whole plant, stem and leaves and head, as it stands in a plot at full growth.',
-      svg: withInternals(run(`Flora.plant(${seed('rose')})`), defs),
+      what: 'A whole plant at full growth. Since the Growth Stages pass the markup also carries the hidden sprout and bud groups, so the shipped stage rules are baked in and the bloom stage selected — the per-stage set lives in art/exports/stages/.',
+      svg: withInternals(run(`Flora.plant(${seed('rose')})`), `${defs}<style>${stageCss()}</style>`)
+        .replace('class="plant', 'class="plant stage-bloom'),
+      /* rose carries no glow, so the halo rule stays out of this file on purpose */
     });
     out.push({
       name: 'talking-flower',
@@ -259,11 +279,12 @@ function writeSamples() {
   const problems = [];
   for (const s of samples) {
     if (!/viewBox="/.test(s.svg)) problems.push(`${s.name}: no viewBox`);
-    for (const [re, what] of EXTERNAL_REFS) {
+    for (const [re, what] of SELF_CONTAINED_WITH_VARS) {
       /* url(#…) is fine here and only here: these files carry their own <defs>, so a
          reference into the same document resolves. Anything reaching OUT still fails. */
       if (re.test(s.svg)) problems.push(`${s.name}: not self-contained — ${what}`);
     }
+    for (const v of unresolvedVars(s.svg)) problems.push(`${s.name}: var(${v}) resolves nowhere in the file`);
   }
   if (problems.length) {
     console.error(`  ! samples not written:`);
@@ -275,6 +296,114 @@ function writeSamples() {
   fs.mkdirSync(SAMPLES_OUT, { recursive: true });
   for (const s of samples) fs.writeFileSync(path.join(SAMPLES_OUT, `${s.name}.svg`), s.svg);
   return samples;
+}
+
+// ---------------------------------------------------------------- the stages
+
+/*
+ * Every species at every growth stage, for the Unity team — the Growth Stages
+ * pass's commissioned deliverable ("the team needs to see every state,
+ * exported", docs/10-decision-log.md, 2026-09-01). In the game a stage is CSS:
+ * `Flora.plant()` draws bloom, sprout and bud together and `.plot[data-stage]`
+ * rules choose one. A raw export therefore shows every state at once, exactly
+ * like the creatures' eyes.
+ *
+ * The fix stays inside each file, and it is NOT a hand copy: the growth-staging
+ * block is read out of style.css itself on every run, its `.plot[data-stage=X]`
+ * selectors rewritten to a `.stage-X` class carried on the exported <svg> root.
+ * If the block moves or loses its anchors, this refuses to run rather than
+ * writing 76 confidently wrong files.
+ */
+const STAGES_OUT = path.join(ROOT, 'art', 'exports', 'stages');
+const STAGE_WORDS = ['sprout', 'stem', 'bud', 'bloom'];
+
+function stageCss() {
+  const css = read('style.css');
+  const start = css.indexOf('/* growth staging');
+  const end = css.indexOf('/* progress bar */');
+  if (start === -1 || end === -1 || end < start) {
+    throw new Error('style.css growth-staging anchors moved — stage exports would be a guess');
+  }
+  let block = css
+    .slice(start, end)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\.plot\[data-stage="(\w+)"\]/g, '.stage-$1')
+    .replace(/\.plant \./g, '.')
+    .replace(/\.plot \./g, '.')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+  for (const word of STAGE_WORDS) {
+    if (!block.includes(`.stage-${word}`)) {
+      throw new Error(`style.css growth-staging block carries no .stage-${word} rule after rewrite`);
+    }
+  }
+  if (/\.plot|\.plant|data-stage/.test(block)) {
+    throw new Error('stage-rule rewrite left a game-DOM selector behind — the pattern no longer fits');
+  }
+  return block;
+}
+
+/* The glow halo lives just above the staging block and is part of how a glowing
+   species looks at every stage, so it rides along — extracted, not copied. Only
+   glowing species get it: a non-glow file declaring var(--glow) nowhere would
+   carry an unresolvable reference, and the self-containment check rightly
+   refuses that. */
+function glowRule() {
+  const m = /\.plant\.has-glow\{[^}]*\}/.exec(read('style.css'));
+  if (!m) throw new Error('style.css .plant.has-glow rule not found — the glow halo would silently drop from the exports');
+  return m[0].replace('.plant.has-glow', '.has-glow');
+}
+
+function writeStageExports() {
+  let run, defs, style;
+  try {
+    const context = vm.createContext({});
+    vm.runInContext(read('data.js'), context, { filename: 'data.js' });
+    vm.runInContext(read('flora.js'), context, { filename: 'flora.js' });
+    run = (expr) => vm.runInContext(expr, context);
+    run.context = context;
+    defs = floraDefs(run);
+    style = (glowing) => `<style>${glowing ? glowRule() + '\n' : ''}${stageCss()}</style>`;
+  } catch (err) {
+    console.error(`  ! stage exports not written — ${err.message}`);
+    return null;
+  }
+  const seedExpr = (id) => `DATA.seeds.find((s) => s.id === ${JSON.stringify(id)})`;
+
+  const files = [];
+  const problems = [];
+  for (const seed of run('DATA.seeds.map((s) => s.id)')) {
+    for (const stage of STAGE_WORDS) {
+      const plantMarkup = run(`Flora.plant(${seedExpr(seed)})`);
+      const raw = withInternals(plantMarkup, defs + style(plantMarkup.includes('has-glow')));
+      const svg = raw.replace('class="plant', `class="plant stage-${stage}`);
+      const name = `plant-${seed}-${stage}`;
+      if (!svg.includes(`stage-${stage}`)) problems.push(`${name}: stage class not applied`);
+      if (!/viewBox="/.test(svg)) problems.push(`${name}: no viewBox`);
+      for (const [re, what] of SELF_CONTAINED_WITH_VARS) {
+        if (re.test(svg)) problems.push(`${name}: not self-contained — ${what}`);
+      }
+      for (const v of unresolvedVars(svg)) problems.push(`${name}: var(${v}) resolves nowhere in the file`);
+      files.push({ name, svg });
+    }
+  }
+  if (problems.length) {
+    console.error(`  ! stage exports not written:`);
+    for (const p of problems) console.error(`      ${p}`);
+    return null;
+  }
+
+  fs.rmSync(STAGES_OUT, { recursive: true, force: true });
+  fs.mkdirSync(STAGES_OUT, { recursive: true });
+  for (const f of files) fs.writeFileSync(path.join(STAGES_OUT, `${f.name}.svg`), f.svg);
+
+  /* The count assertion, same shape as the icons': measured from the directory. */
+  const written = fs.readdirSync(STAGES_OUT).filter((f) => f.endsWith('.svg')).length;
+  const expected = run('DATA.seeds.length') * STAGE_WORDS.length;
+  if (written !== expected) {
+    throw new Error(`stage exports: ${expected} expected (species × 4) but ${written} written`);
+  }
+  return files;
 }
 
 // ---------------------------------------------------------------- the manifest
@@ -486,6 +615,7 @@ function main() {
   }
 
   const samples = writeSamples();
+  const stages = writeStageExports();
   const manifest = writeManifest(files);
 
   const bytes = files.reduce((a, f) => a + Buffer.byteLength(f.svg), 0);
@@ -493,6 +623,9 @@ function main() {
   console.log(`  registry count and export count agree at ${registry}`);
   if (samples) {
     console.log(`  ${samples.length} art samples in ${path.relative(ROOT, SAMPLES_OUT)}/ — ${samples.map((x) => x.name).join(', ')}`);
+  }
+  if (stages) {
+    console.log(`  ${stages.length} stage exports in ${path.relative(ROOT, STAGES_OUT)}/ — every species at sprout, stem, bud and bloom, stage rules read out of style.css`);
   }
   if (manifest) {
     console.log(

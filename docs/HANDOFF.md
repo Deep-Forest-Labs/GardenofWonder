@@ -10,7 +10,7 @@ Last updated: **2026-09-01** (the growth stages pass)
 > .9s — approved values shipped verbatim in `DATA.growth`). The shrunken-bloom middle stage is
 > gone; so are the numeric `data-stage` rules, the orphan stage-0 rule, and the
 > `transform-origin:50px 44px` line whose double-count was punch list `#14` — that bug is gone by
-> construction, and the item's keeper should close it against the decision log.
+> construction, and the punch list's keeper has already pruned `#14` against this pass's commit.
 >
 > **The blooms did not move: zero differing pixels on a full ripe board, before vs after,
 > re-derived independently.** The instrument is committed — `node tools/stage-parity.js` shoots two
@@ -23,6 +23,13 @@ Last updated: **2026-09-01** (the growth stages pass)
 > along in the same commit. Both 2026-09-01 (stages) entries in
 > [10-decision-log.md](10-decision-log.md) carry the reasoning; the spike stays live for future
 > tuning at `tools/stage-spike.html`, now reading the shipped `DATA.growth`.
+>
+> **The Unity handoff shipped with it: all 76 per-stage renders** — every species at every stage —
+> **exported to `art/exports/stages/`** by `node tools/export-icons.js`, each file self-contained
+> with the stage pose baked from the REAL `style.css` block (read and rewritten at export time, so
+> it cannot drift; the exporter refuses to run if the block's anchors move). The screens gallery
+> was regenerated the same day, so [44-screens.md](44-screens.md)'s summer garden shows the
+> four-stage board the players see.
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.

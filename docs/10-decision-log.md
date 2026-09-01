@@ -25,6 +25,17 @@ who keeps it); `#14`'s keeper should re-verify and likely close it against this 
 `tools/sky-spike.html`'s hand-copied block and hardcoded `data-stage="2"/"3"` markup came along in
 the same commit, as recorded. `var(--bloom,1)` stays as the ripe rule's knob, still writer-less.
 
+**The Unity deliverable the pass was commissioned for shipped the same day:** all **76 per-stage
+renders** (19 species × 4 stages) in `art/exports/stages/`, written by `tools/export-icons.js`.
+The stated fix stays inside each file and is generated, not hand-copied: the exporter reads the
+growth-staging block out of `style.css` at run time, rewrites `.plot[data-stage=X]` to a
+`.stage-X` class on the exported root, and refuses to run if the block's anchors move — so the
+exports cannot drift from the shipped rules. The blunt no-`var()` self-containment test gave way
+to the real question (does every `var()` resolve inside the file — declared in-file or carrying a
+fallback), which also let `plant-rose.svg` bake full growth honestly now that the hidden stage
+groups ride in the markup. `docs/44-screens.md` and its gallery were regenerated — the
+summer-garden scene now photographs buds and seedlings, 28/28 state assertions green.
+
 **Proof, re-run after the switchover:** the ripe board diffs to **zero pixels** against the
 pre-pass baseline — the growing board now differs, which is the feature shipping.
 `tools/stage-parity.js` writes its stages from the live `DATA.growth` and grew a `ripe`/`grow`
