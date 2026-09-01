@@ -23,7 +23,11 @@
 // The two boards between them plant all eleven shape families: the ripe board
 // takes the eight fast seeds (daisy through orchid), the growing board the slow
 // half of the ladder, on the staggered fractions capture-screens.js composed for
-// the summer-garden scene.
+// the summer-garden scene. Stages are written from the live DATA.growth
+// thresholds. Since the 2026-09-01 switchover, a diff on the GROWING board
+// against a pre-switchover arm is the feature shipping; the ripe board must
+// diff to zero against any arm, forever — use `diff A B ripe` to hold that
+// line on its own.
 //
 // ---
 //
@@ -99,7 +103,7 @@ function boardSteps(name, seeds, fractions) {
     'eval:DAY.offset = ((0.32 - (Date.now() / 1000) / DAY.cycle) % 1 + 1) % 1; UI.updateSky(); DAY.offset',
     /* The loop is stopped, so the bars and stages are written by hand — the same
        strings in both arms, however many milliseconds each arm took to get here. */
-    `eval:JSON.stringify((()=>{const f=${JSON.stringify(fractions)};const stage=(p)=>p<0.25?1:p<0.7?2:3;const plots=[...document.querySelectorAll('#garden .plot')];return plots.map((el)=>{const i=+el.dataset.idx;if(f[i]==null)return null;const p=Math.min(1,f[i]);el.dataset.stage=stage(p);const bar=el.querySelector('.bar i');if(bar)bar.style.width=(p*100).toFixed(1)+'%';return el.dataset.stage;});})())`,
+    `eval:JSON.stringify((()=>{const f=${JSON.stringify(fractions)};const g=DATA.growth;const stage=(p)=>p>=g.bloom?'bloom':p>=g.stem?'bud':p>=g.sprout?'stem':'sprout';const plots=[...document.querySelectorAll('#garden .plot')];return plots.map((el)=>{const i=+el.dataset.idx;if(f[i]==null)return null;const p=Math.min(1,f[i]);el.dataset.stage=stage(p);const bar=el.querySelector('.bar i');if(bar)bar.style.width=(p*100).toFixed(1)+'%';return el.dataset.stage;});})())`,
     'wait:800',
     /* Transitions are FINISHED (snapped to their end values) — pinning one
        mid-flight freezes it part-way from wherever the boot happened to start
@@ -219,9 +223,9 @@ function shoot(label) {
   console.log(`wrote .probe/stage-${label}-ripe.png and .probe/stage-${label}-grow.png`);
 }
 
-function resolvePair(a, b) {
+function resolvePair(a, b, only) {
   if (a.endsWith('.png') || b.endsWith('.png')) return [[a, b, path.basename(a)]];
-  return ['ripe', 'grow'].map((board) => [
+  return ['ripe', 'grow'].filter((board) => !only || board === only).map((board) => [
     path.join(OUT, `stage-${a}-${board}.png`),
     path.join(OUT, `stage-${b}-${board}.png`),
     board,
@@ -232,10 +236,11 @@ function main() {
   const [mode, a, b] = process.argv.slice(2);
   if (mode === 'shoot' && a) return shoot(a);
   if (mode === 'diff' && a && b) {
+    const only = ['ripe', 'grow'].includes(process.argv[5]) ? process.argv[5] : null;
     const allowIdx = process.argv.indexOf('--allow');
     const allow = allowIdx === -1 ? 0 : Number(process.argv[allowIdx + 1]);
     let bad = false;
-    for (const [fileA, fileB, name] of resolvePair(a, b)) {
+    for (const [fileA, fileB, name] of resolvePair(a, b, only)) {
       const r = diffPair(fileA, fileB);
       if (r.size) {
         console.log(`${name.padEnd(6)} SIZE MISMATCH ${r.size}`);
@@ -248,7 +253,7 @@ function main() {
     }
     process.exit(bad ? 1 : 0);
   }
-  console.error('usage: node tools/stage-parity.js shoot LABEL | diff A B [--allow N]');
+  console.error('usage: node tools/stage-parity.js shoot LABEL | diff A B [ripe|grow] [--allow N]');
   process.exit(2);
 }
 

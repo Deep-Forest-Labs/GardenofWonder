@@ -189,14 +189,30 @@ its definitions automatically; a new *gradient kind* means editing `injectDefs()
 
 ## Growth animation
 
-Growth is CSS, not markup. `Flora.plant()` renders the full-grown plant once, then `ui.js` sets
-`data-stage` on the plot and CSS scales the parts:
+Growth is CSS, not markup. `Flora.plant()` renders the whole plant once — bloom, plus a hidden
+`f-sprout` group (shared cotyledons in the species' leaf colour) and a hidden `f-bud` group (one
+closed shape per family, tinted from the species' own `gp-`/`gh-` gradients) — then `ui.js` sets
+`data-stage` on the plot and CSS shows and scales the parts. Four word stages since 2026-09-01,
+thresholds in `DATA.growth` (ruled on `tools/stage-spike.html`; the values ship verbatim):
 
-| Stage | Stem scale | Head scale | Petals |
+| Stage | Ends at | Stem scale | What shows |
 | --- | --- | --- | --- |
-| 1 | 0.42 | 0 (hidden) | — |
-| 2 | 0.78 | 0.34 | 0.55 |
-| 3 | 1.0 | 1.0 | 1.0 |
+| `sprout` | 14% | 0 | the cotyledon seedling, low to the soil |
+| `stem` | 45% | 0.62 | stem and true leaves, no head |
+| `bud` | 90% | 0.92 | the closed bud — species identity before the flower |
+| `bloom` | ripe | 1.0 | the flower opens, `.9s`, just ahead of the ripe wiggle |
+
+The unfurl rides the head: entering `bloom`, `f-head` swells from the bud's footprint
+(`scale(.22)` → 1) while the bud fades on top and the petals, core and ring fade in — softer and
+longer than the `.6s` stage bounce on purpose. Every stage's pose is static declarations in the
+stage rules, so reduced motion shows the correct stage with no transition at all.
+
+Three rules the block obeys, learned the hard way: a CSS transform that restates an SVG transform
+keeps `transform-origin: 0 0` (punch list #14 — the old numeric stage 2 double-counted the head's
+translate); the hidden groups are hidden with `display`, not opacity, because an invisible child
+still widens the paint bounds a glowing species' `drop-shadow` rasterises from; and
+`tools/sky-spike.html` carries a hand-copy of the whole block that moves in the same commit.
+`tools/stage-parity.js` re-proves after any change here that a ripe board diffs to **zero pixels**.
 
 Cheap and smooth, and it means growth needs no per-frame DOM work beyond one attribute flip.
 

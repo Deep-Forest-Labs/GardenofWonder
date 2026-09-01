@@ -866,25 +866,20 @@ button:focus-visible{
 .plant{width:100%;height:100%;overflow:visible;display:block}
 .plant.has-glow{filter:drop-shadow(0 0 7px var(--glow))}
 
-/* growth staging */
-.plot[data-stage="0"] .plant{opacity:0}
+/* growth staging — the numeric stages (0-3) retired with the Growth Stages
+   pass, 2026-09-01, along with the orphan data-stage="0" rule (it never had a
+   writer) and the base `.f-head{transform-origin:50px 44px}` line that punch
+   list #14 measured double-counting the head's authored translate: every stage
+   rule below restates its transform WITH transform-origin:0 0, so the bug is
+   gone by construction. tools/sky-spike.html carries a hand-copy of this
+   block; a change here goes there in the same commit. */
 .plot .f-stemwrap{transform-origin:50% 120px;transform:scaleY(var(--sg,1))}
-.plot .f-head{transform-origin:50px 44px}
 .plot .f-leaves{transform-origin:50px 96px;transform:scale(var(--lg,1));opacity:var(--lo,1)}
-
-.plot[data-stage="1"]{--sg:.42;--lg:.7;--lo:1}
-.plot[data-stage="1"] .f-head{transform:translate(50px,44px) scale(0)}
-.plot[data-stage="2"]{--sg:.78;--lg:.9}
-.plot[data-stage="2"] .f-head{transform:translate(50px,44px) scale(.34)}
-.plot[data-stage="2"] .f-petals{transform:scale(.55)}
-.plot[data-stage="3"]{--sg:1;--lg:1}
-.plot[data-stage="3"] .f-head{transform:translate(50px,44px) scale(var(--bloom,1))}
 .plot .f-stemwrap,.plot .f-head,.plot .f-leaves,.plot .f-petals{transition:transform .6s cubic-bezier(.34,1.4,.64,1)}
 
-/* Four-stage growth, keyed to the plain words the game will speak once stageOf()
-   switches over: sprout → stem → bud → bloom. Until then no writer emits these
-   values, so they are inert on the live board and drive tools/stage-spike.html.
-   An element whose CSS transform restates its SVG transform keeps
+/* Four-stage growth: sprout → stem → bud → bloom, written by stageOf() in
+   ui.js from the DATA.growth thresholds (owner-ruled on tools/stage-spike.html,
+   2026-09-01). An element whose CSS transform restates its SVG transform keeps
    transform-origin:0 0, or the authored translate is counted twice at every
    scale below 1 — the growing head that sat off its stem (punch list #14). */
 /* Hidden with display, not opacity alone: an invisible child still widens the

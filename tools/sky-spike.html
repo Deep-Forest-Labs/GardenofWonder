@@ -535,20 +535,32 @@
 .plant{width:100%;height:100%;overflow:visible;display:block}
 .plant.has-glow{filter:drop-shadow(0 0 7px var(--glow))}
 
-/* growth staging */
-.plot[data-stage="0"] .plant{opacity:0}
+/* growth staging — hand-copied from style.css (the recorded hazard: a change
+   there comes here in the same commit). Word stages since 2026-09-01. */
 .plot .f-stemwrap{transform-origin:50% 120px;transform:scaleY(var(--sg,1))}
-.plot .f-head{transform-origin:50px 44px}
 .plot .f-leaves{transform-origin:50px 96px;transform:scale(var(--lg,1));opacity:var(--lo,1)}
-
-.plot[data-stage="1"]{--sg:.42;--lg:.7;--lo:1}
-.plot[data-stage="1"] .f-head{transform:translate(50px,44px) scale(0)}
-.plot[data-stage="2"]{--sg:.78;--lg:.9}
-.plot[data-stage="2"] .f-head{transform:translate(50px,44px) scale(.34)}
-.plot[data-stage="2"] .f-petals{transform:scale(.55)}
-.plot[data-stage="3"]{--sg:1;--lg:1}
-.plot[data-stage="3"] .f-head{transform:translate(50px,44px) scale(var(--bloom,1))}
 .plot .f-stemwrap,.plot .f-head,.plot .f-leaves,.plot .f-petals{transition:transform .6s cubic-bezier(.34,1.4,.64,1)}
+.plant .f-sprout,.plant .f-bud{display:none;opacity:0}
+.plot[data-stage="stem"] .f-sprout,
+.plot[data-stage="stem"] .f-bud,
+.plot[data-stage="bloom"] .f-bud{display:inline}
+.plot .f-sprout,.plot .f-bud{transition:opacity .45s ease}
+.plot .f-bud-body{transform-origin:0 0;transition:transform .6s cubic-bezier(.34,1.4,.64,1)}
+.plot .f-petals{transition:transform .6s cubic-bezier(.34,1.4,.64,1),opacity .5s ease}
+.plot .f-core,.plot .f-ring{transition:opacity .5s ease}
+.plot[data-stage="sprout"]{--sg:0;--lg:0;--lo:0}
+.plot[data-stage="sprout"] .f-sprout{display:inline;opacity:1}
+.plot[data-stage="sprout"] .f-head{transform:translate(50px,44px) scale(0);transform-origin:0 0}
+.plot[data-stage="stem"]{--sg:.62;--lg:.88;--lo:1}
+.plot[data-stage="stem"] .f-head{transform:translate(50px,44px) scale(0);transform-origin:0 0}
+.plot[data-stage="bud"]{--sg:.92;--lg:.97;--lo:1}
+.plot[data-stage="bud"] .f-bud{display:inline;opacity:1}
+.plot[data-stage="bud"] .f-bud-body{transform:translateY(var(--bud-drop,5px))}
+.plot[data-stage="bud"] .f-head{transform:translate(50px,44px) scale(.22);transform-origin:0 0}
+.plot[data-stage="bud"] .f-petals,.plot[data-stage="bud"] .f-core,.plot[data-stage="bud"] .f-ring{opacity:0}
+.plot[data-stage="bloom"]{--sg:1;--lg:1}
+.plot[data-stage="bloom"] .f-head{transform:translate(50px,44px) scale(var(--bloom,1));transform-origin:0 0;transition:transform var(--unfurl,.9s) cubic-bezier(.3,1.25,.5,1)}
+.plot[data-stage="bloom"] .f-petals,.plot[data-stage="bloom"] .f-core,.plot[data-stage="bloom"] .f-ring{transition:transform .6s cubic-bezier(.34,1.4,.64,1),opacity .5s ease .12s}
 
 /* progress bar */
 .plot .bar{
@@ -2254,7 +2266,7 @@ html,body{
                 <div class="garden" id="garden" data-wx="board" aria-label="Your garden">
 
                   <button class="plot" type="button" data-wx="plot" data-idx="0" data-ripe="1"
-                          data-state="ready" data-stage="3" data-seed="sunlotus">
+                          data-state="ready" data-stage="bloom" data-seed="sunlotus">
                     <div class="plot-inner wx-wet" data-wx="soil">
                       <div class="plant-slot wx-glint wx-lean" data-wx="plant"></div>
                     </div>
@@ -2263,7 +2275,7 @@ html,body{
                   </button>
 
                   <button class="plot" type="button" data-wx="plot" data-idx="1" data-ripe="0"
-                          data-state="grow" data-stage="2" data-seed="tulip">
+                          data-state="grow" data-stage="bud" data-seed="tulip">
                     <div class="plot-inner wx-wet" data-wx="soil">
                       <div class="plant-slot wx-glint wx-lean" data-wx="plant"></div>
                     </div>
@@ -2272,7 +2284,7 @@ html,body{
                   </button>
 
                   <button class="plot" type="button" data-wx="plot" data-idx="2" data-ripe="1"
-                          data-state="ready" data-stage="3" data-seed="rose">
+                          data-state="ready" data-stage="bloom" data-seed="rose">
                     <div class="plot-inner wx-wet" data-wx="soil">
                       <div class="plant-slot wx-glint wx-lean" data-wx="plant"></div>
                     </div>
@@ -2281,7 +2293,7 @@ html,body{
                   </button>
 
                   <button class="plot" type="button" data-wx="plot" data-idx="3" data-ripe="0"
-                          data-state="grow" data-stage="2" data-seed="bluebell">
+                          data-state="grow" data-stage="bud" data-seed="bluebell">
                     <div class="plot-inner wx-wet" data-wx="soil">
                       <div class="plant-slot wx-glint wx-lean" data-wx="plant"></div>
                     </div>
@@ -2298,7 +2310,7 @@ html,body{
                   </div>
 
                   <button class="plot" type="button" data-wx="plot" data-idx="4" data-ripe="0"
-                          data-state="grow" data-stage="2" data-seed="peony">
+                          data-state="grow" data-stage="bud" data-seed="peony">
                     <div class="plot-inner wx-wet" data-wx="soil">
                       <div class="plant-slot wx-glint wx-lean" data-wx="plant"></div>
                     </div>
@@ -2307,7 +2319,7 @@ html,body{
                   </button>
 
                   <button class="plot" type="button" data-wx="plot" data-idx="5" data-ripe="1"
-                          data-state="ready" data-stage="3" data-seed="marigold">
+                          data-state="ready" data-stage="bloom" data-seed="marigold">
                     <div class="plot-inner wx-wet" data-wx="soil">
                       <div class="plant-slot wx-glint wx-lean" data-wx="plant"></div>
                     </div>
@@ -2316,7 +2328,7 @@ html,body{
                   </button>
 
                   <button class="plot" type="button" data-wx="plot" data-idx="6" data-ripe="0"
-                          data-state="grow" data-stage="2" data-seed="daisy">
+                          data-state="grow" data-stage="bud" data-seed="daisy">
                     <div class="plot-inner wx-wet" data-wx="soil">
                       <div class="plant-slot wx-glint wx-lean" data-wx="plant"></div>
                     </div>
@@ -2325,7 +2337,7 @@ html,body{
                   </button>
 
                   <button class="plot" type="button" data-wx="plot" data-idx="7" data-ripe="1"
-                          data-state="ready" data-stage="3" data-seed="orchid">
+                          data-state="ready" data-stage="bloom" data-seed="orchid">
                     <div class="plot-inner wx-wet" data-wx="soil">
                       <div class="plant-slot wx-glint wx-lean" data-wx="plant"></div>
                     </div>

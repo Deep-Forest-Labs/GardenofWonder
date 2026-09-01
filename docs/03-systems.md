@@ -156,13 +156,20 @@ idle plots something to do with active attention.
 
 ### Visual growth stages
 
-`ui.js` maps progress to three stages, used by CSS to scale the plant:
+`stageOf()` in `ui.js` maps progress to four word stages from `DATA.growth`
+(thresholds ruled on the stage spike, 2026-09-01 — purely visual, growth speed
+untouched):
 
 | Progress | Stage | Appearance |
 | --- | --- | --- |
-| 0 – 25% | 1 | Stem and leaves only, head hidden |
-| 25 – 70% | 2 | Small head, petals part-scaled |
-| 70 – 100% | 3 | Full bloom |
+| 0 – 14% | `sprout` | Two cotyledon leaves low to the soil, in the species' leaf colour |
+| 14 – 45% | `stem` | Stem and true leaves at growing height, no head |
+| 45 – 90% | `bud` | A closed bud shaped per family, tinted from the species' own gradients |
+| 90 – 100% | `bloom` | The flower opens — its own beat, just ahead of the ripe wiggle |
+
+Comparisons are inclusive (`p >= threshold`) because `progressOf()` clamps to
+exactly 1 at ripeness. Stage is derived from progress alone, never saved — a
+mid-grow garden simply re-reads under the thresholds on next paint.
 
 ## Harvesting
 

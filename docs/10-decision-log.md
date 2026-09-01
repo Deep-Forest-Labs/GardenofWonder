@@ -5,6 +5,37 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-01 (stages, built) — The owner ruled on the spike, and the garden grows in four stages
+
+**The gate closed the same day it opened.** The owner tuned the spike and ruled: **sprout until
+14%, stem until 45%, opens at 90%, the opening takes 0.9s** — earlier into the stem and the bud
+than the proposal (.25/.55), the opening exactly where the ruling put it. The values ship verbatim:
+`DATA.growth = { sprout: 0.14, stem: 0.45, bloom: 0.9 }` in `data.js`, the `.9s` unfurl already the
+shipped default in `style.css`. `stageOf()` now speaks the four words from `DATA.growth` with
+inclusive comparisons (`progressOf()` clamps to exactly 1, so `>=` fires at ripeness where `>`
+never would); stage stays derived from progress alone — no migration, a mid-grow garden re-reads
+under the new thresholds on next paint, which is the feature.
+
+**What retired with the numeric stages:** the `data-stage` 0–3 rules, the orphan
+`[data-stage="0"]` rule that never had a writer, and the base
+`.plot .f-head{transform-origin:50px 44px}` line — **punch list `#14`'s measured bug is gone by
+construction**, because every stage rule that scales the head restates its translate with
+`transform-origin:0 0`. The punch list itself is deliberately untouched (it belongs to the agent
+who keeps it); `#14`'s keeper should re-verify and likely close it against this entry.
+`tools/sky-spike.html`'s hand-copied block and hardcoded `data-stage="2"/"3"` markup came along in
+the same commit, as recorded. `var(--bloom,1)` stays as the ripe rule's knob, still writer-less.
+
+**Proof, re-run after the switchover:** the ripe board diffs to **zero pixels** against the
+pre-pass baseline — the growing board now differs, which is the feature shipping.
+`tools/stage-parity.js` writes its stages from the live `DATA.growth` and grew a `ripe`/`grow`
+board filter so the zero-forever line can be held on its own. Suite **1,495** (four new assertions
+pin the `DATA.growth` contract — three ordered keys, the ruled values verbatim, the bud opening
+strictly before ripeness — sabotage-proven red then green). The changelog tells the players in one
+line; doc 32's glossary gains the four words; docs 03, 05, 08 and 45's hand-written half now
+describe four stages.
+
+---
+
 ## 2026-09-01 (stages, the gate) — The four stages are on main, invisible, and the spike is live
 
 **The Growth Stages pass landed its pre-gate half: every species' sprout and bud geometry ships

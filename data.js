@@ -196,6 +196,14 @@ const DATA = {
     wonderstruck: { name: 'Wonderstruck', rank: 4, mult: 100, tint: '#ff8fd0', glow: '#ffd4ec' }
   },
 
+  /* Where a growing plant changes its look: sprout until .14 of the grow, stem
+     until .45, then the closed bud — which holds until the flower opens at .9,
+     a little before it is ready, so the opening is its own beat ahead of the
+     ripe wiggle. Ruled by the owner on the stage spike's sliders, 2026-09-01;
+     these are the approved values verbatim (docs/10-decision-log.md). Purely
+     visual: nothing here changes how fast anything grows. */
+  growth: { sprout: 0.14, stem: 0.45, bloom: 0.9 },
+
   seeds: [
     {
       id: 'daisy', name: 'Daisy', cost: 50, grow: 12, yield: 70, spr: '🌼', unlockLevel: 1,
@@ -635,6 +643,12 @@ const DATA = {
      here in the same commit. One sentence, no version numbers, no file names:
      write what it feels like to play, not what was done. */
   changelog: [
+    {
+      date: '2026-09-01',
+      lines: [
+        'Flowers grow up properly now — a sprout, then a stem, then a closed bud in the flower’s own colours, opening just before it’s ready to pick.'
+      ]
+    },
     {
       date: '2026-08-31',
       lines: [

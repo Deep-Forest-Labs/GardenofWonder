@@ -633,7 +633,7 @@ Driven by `data-state` on each plot button:
 | `grow` | Plant at its growth stage, progress bar beneath |
 | `ready` | Full bloom, bouncing `!` badge, sweep shine |
 
-Plots also carry `data-stage` (1–3) for growth and `data-aura` (rarity name) tinting the soil after
+Plots also carry `data-stage` (`sprout` / `stem` / `bud` / `bloom`, from `DATA.growth`) for growth and `data-aura` (rarity name) tinting the soil after
 a harvest.
 
 ### The developer hit area

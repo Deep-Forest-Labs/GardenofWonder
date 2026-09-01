@@ -128,10 +128,17 @@
     el.garden.style.height = s + 'px';
   }
 
+  /* The four looks a growing flower wears, from DATA.growth — thresholds ruled
+     on the stage spike, 2026-09-01. Comparisons are INCLUSIVE on purpose:
+     progressOf() clamps to exactly 1 at ripeness, so `p >= bloom` fires at
+     100% where `p > bloom` never would. Stage is derived from progress alone —
+     never saved, and never from cell.ready, which belongs to data-state. */
   function stageOf(p) {
-    if (p < 0.25) return 1;
-    if (p < 0.7) return 2;
-    return 3;
+    const g = DATA.growth;
+    if (p >= g.bloom) return 'bloom';
+    if (p >= g.stem) return 'bud';
+    if (p >= g.sprout) return 'stem';
+    return 'sprout';
   }
 
   /* The wait a skip deletes. Spoken only now — it is what the `aria-label` says

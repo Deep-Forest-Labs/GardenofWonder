@@ -9,14 +9,13 @@
 
   Every plant here renders through the REAL data.js, flora.js and style.css —
   no hand-copied rules; the sky spike's copied block is the recorded hazard
-  this page exists to avoid. The stage words are the ones stageOf() will speak
-  after the verdict: sprout, stem, bud, bloom.
+  this page exists to avoid. The stage words are the ones stageOf() speaks:
+  sprout, stem, bud, bloom.
 
-  THE NUMBERS ON THIS PAGE SHIP VERBATIM. The three thresholds default to the
-  proposed DATA.growth = { sprout: .25, stem: .55, bloom: .9 } — the bud holds
-  until almost ready and the flower opens a little before ripeness, as ruled.
-  The sliders tune the exact moment and the softness of the opening; whatever
-  is approved here lands in data.js and style.css unchanged.
+  THE NUMBERS ON THIS PAGE ARE THE SHIPPED ONES. The owner ruled at the gate
+  (2026-09-01): DATA.growth = { sprout: .14, stem: .45, bloom: .9 }, opening
+  takes .9s — the sliders start where the game is and stay live for future
+  tuning; a change ships by editing data.js and style.css, never this page.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -81,8 +80,8 @@
 <div class="wrap">
   <h1>Growth stages</h1>
   <p class="sub">Every flower, four stages: <b>sprout · stem · bud · bloom</b>.
-  Rendered by the real game files. The sliders below are the motion gate —
-  <b>whatever is approved here ships verbatim.</b></p>
+  Rendered by the real game files. The sliders start on the shipped values —
+  <b>ruled at the gate, 2026-09-01.</b></p>
 
   <div class="card">
     <h2>Watch one grow</h2>
@@ -111,9 +110,9 @@
   </div>
 
   <div class="card">
-    <h2>The thresholds (ship as DATA.growth)</h2>
-    <div class="row"><label for="s-sprout">sprout until</label><input type="range" id="s-sprout" min="0.05" max="0.5" step="0.01" value="0.25"/><output id="o-sprout">25%</output></div>
-    <div class="row"><label for="s-stem">stem until</label><input type="range" id="s-stem" min="0.3" max="0.8" step="0.01" value="0.55"/><output id="o-stem">55%</output></div>
+    <h2>The thresholds (shipped as DATA.growth)</h2>
+    <div class="row"><label for="s-sprout">sprout until</label><input type="range" id="s-sprout" min="0.05" max="0.5" step="0.01" value="0.14"/><output id="o-sprout">14%</output></div>
+    <div class="row"><label for="s-stem">stem until</label><input type="range" id="s-stem" min="0.3" max="0.8" step="0.01" value="0.45"/><output id="o-stem">45%</output></div>
     <div class="row"><label for="s-bloom">opens at</label><input type="range" id="s-bloom" min="0.6" max="0.99" step="0.01" value="0.9"/><output id="o-bloom">90%</output></div>
     <div class="row"><label for="s-unfurl">opening takes</label><input type="range" id="s-unfurl" min="0.3" max="1.6" step="0.05" value="0.9"/><output id="o-unfurl">0.9s</output></div>
     <p class="sub" style="margin:8px 0 0">The bud holds from the stem mark to the
@@ -136,9 +135,8 @@
 (() => {
   Flora.injectDefs();
 
-  /* Proposed DATA.growth — these default values and the slider values ship
-     verbatim on approval. */
-  const T = { sprout: 0.25, stem: 0.55, bloom: 0.9 };
+  /* The shipped thresholds, read from the real data.js. */
+  const T = Object.assign({ sprout: 0.14, stem: 0.45, bloom: 0.9 }, DATA.growth);
   let unfurl = 0.9;
 
   const stageFor = (p) =>
@@ -252,6 +250,10 @@
     playing = requestAnimationFrame(step);
   });
 
+  ['sprout', 'stem', 'bloom'].forEach((k) => {
+    $('#s-' + k).value = T[k];
+    $('#o-' + k).textContent = Math.round(T[k] * 100) + '%';
+  });
   drawTrack();
   setSpecies(seeds[0].id);
 })();

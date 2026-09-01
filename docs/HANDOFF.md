@@ -1,6 +1,28 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-09-01** (the sky performance pass)
+Last updated: **2026-09-01** (the growth stages pass)
+
+> **THE GROWTH STAGES PASS LANDED 2026-09-01 — every flower grows through four stages, and the
+> ripe blooms are proven untouched.** Sprout (shared cotyledons in the species' leaf colour), stem,
+> a closed **bud** shaped per family and tinted from the species' own gradients, and the bloom —
+> which now **opens at 90% of the grow, a visible beat ahead of the ripe wiggle**, exactly as the
+> owner ruled on `tools/stage-spike.html`'s sliders (sprout .14 / stem .45 / bloom .9, opening
+> .9s — approved values shipped verbatim in `DATA.growth`). The shrunken-bloom middle stage is
+> gone; so are the numeric `data-stage` rules, the orphan stage-0 rule, and the
+> `transform-origin:50px 44px` line whose double-count was punch list `#14` — that bug is gone by
+> construction, and the item's keeper should close it against the decision log.
+>
+> **The blooms did not move: zero differing pixels on a full ripe board, before vs after,
+> re-derived independently.** The instrument is committed — `node tools/stage-parity.js` shoots two
+> deterministic boards through the real build and diffs arms pixel by pixel; its freeze sequence
+> answers every recorded probe trap plus four new ones (the ambient petal canvas, the pending rAF
+> frame, transitions that must be finished not pinned, promoted-layer antialiasing) and one real
+> leak it caught: **an invisible child still widens the paint bounds a glow's `drop-shadow`
+> rasterises from**, which is why the hidden stage groups are hidden with `display`, not opacity.
+> Suite **1,495**; zero new colours; the stage rules' hand-copy in `tools/sky-spike.html` came
+> along in the same commit. Both 2026-09-01 (stages) entries in
+> [10-decision-log.md](10-decision-log.md) carry the reasoning; the spike stays live for future
+> tuning at `tools/stage-spike.html`, now reading the shipped `DATA.growth`.
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.

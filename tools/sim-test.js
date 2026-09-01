@@ -481,6 +481,24 @@ const LIVE_QUESTS = DATA.quests.filter((q) => !q.paused);
 const ladderRep = LIVE_QUESTS.reduce((a, q) => a + q.rep, 0);
 check('the ladder reaches Eternal (level 17)', ladderRep >= 760, `sum ${ladderRep}`);
 
+group('growth stages are data, ordered, and the ruled values');
+/* stageOf() in ui.js derives sprout/stem/bud/bloom from these three thresholds
+   with INCLUSIVE comparisons (progressOf clamps to exactly 1, so `>=` fires at
+   ripeness where `>` never would). The suite cannot see ui.js, but it can hold
+   the data contract stageOf depends on: three keys, strictly ordered, inside
+   (0,1]. The exact values are the owner's ruling from the stage spike
+   (2026-09-01, docs/10-decision-log.md) and ship verbatim — a retune is a
+   conversation that edits this test knowingly, not a drive-by. */
+check('DATA.growth carries exactly sprout, stem, bloom',
+  DATA.growth && Object.keys(DATA.growth).sort().join(',') === 'bloom,sprout,stem');
+check('thresholds are strictly ordered inside (0,1]',
+  DATA.growth.sprout > 0 && DATA.growth.sprout < DATA.growth.stem
+  && DATA.growth.stem < DATA.growth.bloom && DATA.growth.bloom <= 1);
+check('the ruled values ship verbatim: .14 / .45 / .9',
+  DATA.growth.sprout === 0.14 && DATA.growth.stem === 0.45 && DATA.growth.bloom === 0.9);
+check('the bud opens BEFORE ripeness, never at it',
+  DATA.growth.bloom < 1);
+
 group('seed unlocks are one-time prices, not levels');
 G.reset();
 check('a fresh game holds exactly two free seeds', DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length === 2);
