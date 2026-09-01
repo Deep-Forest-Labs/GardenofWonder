@@ -283,6 +283,67 @@ Behaviour:
 - Re-rendering preserves `scrollTop` unless the mode changed, so buying an upgrade doesn't jump you
   back to the top of a long list.
 
+## The side drawer — the menu (2026-08-31, PROPOSED AT THE GATE)
+
+**Drawn in `tools/menu-spike.html`, not built.** Nothing in this section is in `style.css` yet.
+It is here so the surface has a written definition before it has an implementation; when the
+build lands, this heading loses its PROPOSED and gains what actually shipped.
+
+**A drawer is a third surface class, and the game now has three.** The distinction is worth being
+exact about, because calling this a sheet is the mistake that would break it:
+
+| Surface | Comes from | Holds | Dismissed by |
+| --- | --- | --- | --- |
+| **The bottom sheet** (`.sheet`) | the bottom | one panel at a time, from a mode map | drag down 110px, scrim tap, close button |
+| **The What's New dialog** (`#news`) | nowhere — it is simply there | one announcement | its own button, and nothing else |
+| **The drawer** (proposed) | the right edge | a menu — a scrolling column of rows | drag right, scrim tap, the hamburger again |
+
+Rules it inherits, and the one it adds:
+
+- **It obeys the column.** `min(86%, 332px)`, pinned right, inside `.ui`'s 560px cap. A drawer
+  that filled a desktop window would be the meadow's mistake on a new surface.
+- **It pays the FULL safe-area inset, top and bottom.** `--bottom-gap` is `max(10px, calc(var(--sab)
+  - 12px))` and it is right for the dock, which is a row of buttons nobody swipes from. A panel
+  that reaches both edges of the screen takes `var(--sat)` and `var(--sab)` whole, the way
+  `.news-card` does. `env()` is still never called directly — the four `:root` variables only.
+- **It shares the sheet's scrim and z-order** — scrim 45, surface 50 — and the same two-property
+  dance: `hidden` off first, `.show` on the next frame, and `hidden` back only after the slide.
+- **NEW: it is a column of rows, so no row may depend on the drawer's height.** The sheet's panels
+  are laid out against a fixed height; a menu scrolls, and a row that centres itself against the
+  panel is a row that moves when the list grows.
+- **Its state lives in a module local, never in the DOM**, exactly as `sheetMode` does. A `panels`
+  emit rebuilds markup from scratch and anything held in an attribute vanishes mid-interaction.
+- **Reduced motion gets a real version, not a fast one.** The global clamp runs an animation once
+  for `.001ms` and drops it, so the drawer's arrival is named explicitly rather than left to the
+  clamp, and nothing about the drawer's state is carried by movement alone.
+
+**The strip of garden down the left is load-bearing.** 332px of 390 leaves 58px of the game
+visible. Full-bleed would make this a screen rather than a drawer, and the visible strip is what
+makes the scrim tap discoverable.
+
+### What is in it
+
+Rows are `icon left · label · optional badge`, in the house's card material — the cream five-layer
+recipe, a 3px opaque `var(--ink-2)` lip, and the icon in the round tinted badge `.seed-art`
+already uses (a **saturated** tint under the white veil, never a pale one — four pale tints under
+that veil produce four identical white discs, which is `.set-ring`'s named failure reached from
+the other direction).
+
+Ours, in order: **Shop · Almanac · What's New · Settings.** Then three reserved rows in the
+drained `--paper-dim` family, marked *Soon* and non-interactive: **Friends · Daily Gift · Garden
+Record.** Three is a cap, not a coincidence — past three the menu advertises more game than
+exists.
+
+**Settings moves off the HUD and into the drawer.** The gear button becomes the hamburger; every
+one of Settings' six controls stays reachable, one tap deeper. Nothing else in the HUD moves.
+
+**The profile header is the drawer's own, and it appears nowhere else.** A round avatar, the
+player's name and a pencil. The avatar is generated from what the player owns — a bloom through
+`Flora.head` or a creature through `Critters.draw` — never uploaded. The name is the first
+player-typed text in this game and is governed by the escaping rule in
+[11-known-issues.md](11-known-issues.md): it renders through `textContent`, never inside a
+template literal, at every site.
+
 ## The What's New dialog (2026-08-30)
 
 **The one thing on screen that is not a sheet.** An announcement is a card in the middle of the

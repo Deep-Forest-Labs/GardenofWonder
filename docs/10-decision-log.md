@@ -5,6 +5,66 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (gate) — The hamburger menu, drawn before it is built
+
+**The owner's reference is Monopoly Go's slide-out menu, and what is being borrowed is its
+LAYOUT.** A panel off the right edge, a round face and a name at the top, then a clean column of
+feature rows with icons and the odd red dot. `tools/menu-spike.html` draws that shape in this
+house's paper, ink and opaque lip, at 390x844 with a real handset's insets on, static and with no
+game files loaded — the same terms as `dock-spike.html` and for the same reason: a spike that
+imports the game breaks when the game moves, and a layout judged at the wrong proportions is not
+judged at all.
+
+**The drawer is a new SURFACE CLASS, and calling it a sheet would be the mistake.** The bottom
+sheet comes up, holds one panel and is dismissed downward; this comes in from the right, holds a
+menu and is dismissed rightward. It shares the sheet's scrim, its z-order and its material, and it
+differs in three ways that matter: it is `min(86%, 332px)` pinned right so it obeys the 560px
+column, it pays the **full** top and bottom safe-area inset because it touches both screen edges
+(the dock's `--bottom-gap` shortcut is wrong for a panel that reaches the bottom), and it is a
+scrolling column of rows rather than one panel, so a row may never depend on the drawer's height.
+
+**The strip of garden down the left is deliberate and it is 58px of design, not slack.**
+Full-bleed makes this a screen; leaving the garden visible makes it a drawer over the game you are
+still standing in — and it is what makes the scrim tap discoverable at all.
+
+**The gear becomes the hamburger, and Settings becomes a row inside.** A gear promises one panel;
+the menu holds seven things, so the glyph had to change or the button would be lying. Nothing the
+gear reached is lost — every one of its six controls is one tap deeper. The button keeps its
+44px target and its place, and nothing else in the HUD moves: the wallets, the Almanac book and
+the whole dock are untouched.
+
+**The badge dot is the dock's attention dot, on a HUD button for the first time.** Same red disc,
+same ink contour, same opaque lip. It lights when the newest announcement has not been seen. It is
+deliberately **not** a count: one announcement is one thing to look at, and a "1" on a badge is a
+number nobody needs. That question is worth reopening the day two rows can badge at once.
+
+**Three reserved rows, capped at three, in the drained not-now treatment.** Friends is the slot
+[15-navigation-and-ia.md](15-navigation-and-ia.md) has protected since 2026-08-25 — it is a
+backend, not a button. Daily Gift and Garden Record are the owner's. They wear the same
+`--paper-dim` family the locked seed row and the locked season tab wear, they restate their own
+lip, they are marked *Soon* and they cannot be pressed. **The cap is the honesty:** past three, a
+menu is advertising more game than exists.
+
+**Your garden is your face — no uploads, no photos, ever.** The avatar picker is generated from
+what the player owns: unlocked blooms through `Flora.head`, then creatures they have met. It costs
+no backend, no moderation and no storage, and it turns the picker into a second collection screen
+rather than a settings field. Two groups rather than one grid, because blooms and creatures are
+different kinds of thing and a single grid reads as a bag of stickers. An unlocked-yet bloom is
+drained and padlocked rather than hidden, exactly as the locked seed row is — the cell is an
+advert for the flower you are saving for.
+
+**What was asked and not decided.** Whether the avatar and name should also appear in the HUD —
+the spec says menu only, and the spike agrees: the HUD has just bought its 44px tap targets back
+by losing two elements, and a face there spends that win. Whether 332px is the right width.
+Whether the Almanac having two doors (the HUD book and the menu row) is right. Whether a creature
+you have met but never housed should be pickable. All four are on the frames.
+
+**Nothing is built yet.** No state field, no icon, no CSS in `style.css`. The gate is the point:
+`dock-spike.html` found three functions the phase-3.5 spec had forgotten, and it found them
+because it was drawn first.
+
+---
+
 ## 2026-08-31 (docs) — The Unity team gets pictures and an asset list, and both are commands rather than snapshots
 
 **Two Unity engineers can now read the design, but they had never seen the game.** The wiki

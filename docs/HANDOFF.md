@@ -1235,6 +1235,38 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**THE HAMBURGER MENU IS AT ITS WIREFRAME GATE. NOTHING IS BUILT.** `tools/menu-spike.html` draws
+the whole feature in five static frames at 390x844 with a real handset's insets on — the garden with
+the hamburger in the gear's place, the menu open, the name being edited, the avatar picker, and the
+reduced-motion version. **Open it, judge it against the reference screenshots, and answer the six
+questions in the table at the bottom of the page.** Nothing lands in `style.css`, `game.js` or any
+`ui-*.js` until it is approved.
+
+- **What it proposes** is written up as a new surface class in
+  [08-ui-and-layout.md](08-ui-and-layout.md#the-side-drawer--the-menu-2026-08-31-proposed-at-the-gate),
+  marked PROPOSED. The reasoning, including what was rejected, is the 2026-08-31 gate entry at the
+  top of [10-decision-log.md](10-decision-log.md).
+- **The one non-negotiable in the build that follows** is the escaping ruling in
+  [11-known-issues.md](11-known-issues.md#sheet-panels-use-innerhtml-with-interpolation-measured-2026-08-30-overnight-round).
+  `state.profile.name` is **the first player-typed text this game has ever held**, and that entry was
+  written for exactly this feature: the name never enters a template literal, it goes into a labelled
+  empty node with `.textContent`, and `tools/html-check.js` — which does not exist yet — is what
+  stops the next agent doing it the other way.
+- **The build order after approval**, for whoever picks it up: the hamburger icon and the badge dot;
+  the drawer surface and its three dismissals; `state.profile` in `defaultState()`, in `load()`'s
+  re-merge list, and in the **`SURVIVES`** list in `tools/sim-test.js` bill 1 (a Turn must not touch
+  identity, and the partition's completeness check fails the suite if a new top-level key is not
+  classified); the avatar picker; the seven rows. Then the gauntlet, then the five-step docs pass.
+
+**Two things about this checkout.** The tree carries uncommitted work from another session
+(`fx.js`, `index.html`, `style.css`, `sw.js`, `ui.js`, `ui-sheet.js`, `ui-weather.js`,
+`tools/probe.js`, plus an untracked `ui-perf.js`). The gate commit touches only
+`tools/menu-spike.html` and `docs/`. And the polish worktree is on `polish` — check `git branch -r`
+and re-read this file's parent commit before writing step 5, per the trap below about a design
+session committing into the same directory.
+
+---
+
 **PHASE 3.9 — THE SKY PASS — IS BUILT AND WAITING FOR THE OWNER'S REVIEW.** The owner approved all
 five skies on the motion stage, handed back their tuned values, and asked for one change to the
 sunbreak; the values are `DATA.weatherStage` verbatim and the change is in. The spec and the

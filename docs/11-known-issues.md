@@ -1125,8 +1125,19 @@ a CSS-value guard, not an HTML one. And escaping destroys the HTML entities that
 through interpolations: `skyLine()` at `ui-sheet.js:280` returns a string containing `&middot;` and is
 interpolated at `:298`, so a blanket pass would print a literal `&middot;` on the weather card.
 
-**Nothing is reachable today, and that was checked rather than assumed.** Across every non-legacy
-script and `index.html`: zero `<input>`, zero `<textarea>`, zero `contenteditable`, zero `prompt()`,
+**The first player-typed text is arriving, and it is the player's NAME, not a creature's.**
+`tools/menu-spike.html` (2026-08-31) draws a menu whose header holds an editable name in
+`state.profile.name`. That is the feature this plan was written for, and it is being built to the
+plan's ruling rather than to a new one: the name never enters a template literal, it is written
+with `.textContent` into a labelled empty node at every site, and attribute cases go through
+`setAttribute`. **The count below is still right — the sites are the drawer's header, its edit
+field and anywhere the name is said back to the player, and there are a handful, not 908.** What
+changes when the build lands is that the "named list of state fields that can hold free text
+(today: empty)" below stops being empty: `profile.name` is its first entry, and
+`tools/html-check.js` fails on any `ui-*.js` template literal that reaches it.
+
+**Nothing else is reachable today, and that was checked rather than assumed.** Across every
+non-legacy script and `index.html`: zero `<input>`, zero `<textarea>`, zero `contenteditable`, zero `prompt()`,
 zero `location.search` / `location.hash` / `URLSearchParams`, zero `postMessage`, and no `fetch`
 outside `sw.js`. Every string in state is an id from `data.js` or a number, and no string value in
 `data.js` contains a tag. The only route is hand-editing `gw-save` in devtools, which is a player

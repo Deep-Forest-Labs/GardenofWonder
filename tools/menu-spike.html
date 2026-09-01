@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Hamburger Menu — wireframe spike</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   menu-spike.html — the wireframe gate for the hamburger
+   menu: a right-side drawer in the Monopoly Go shape,
+   drawn in the house's paper, ink and lip.
+
+   Static. No game dependencies: no data.js, no flora.js, no
+   game.js. Every bloom, creature and icon here is a
+   hand-drawn stand-in, so the spike can never break because
+   the game moved underneath it.
+
+   The tokens, the metrics and the material recipe below are
+   COPIED from style.css on purpose. Layout is the question a
+   spike answers, and a layout judged at the wrong
+   proportions is not judged at all.
+
+   Borrowed shape, house material: Monopoly Go's LAYOUT — a
+   panel off the right edge, a round face at the top, a
+   column of feature rows with icons and dots — never its
+   look. Nothing here is chrome, glass or neon.
+   ========================================================= */
+
+:root{
+  --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+  --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad;
+  --paper-dim:#ebe5d9; --paper-dim-2:#d8d0c0; --paper-dim-edge:#bcb0a0;
+  --grass:#5cc45c; --grass-d:#3f9d45; --grass-l:#8fe08a;
+  --soil:#a9713f; --soil-d:#7d4f2a; --soil-dd:#5f3a1e;
+  --coin:#ffc93c; --coin-d:#f08c00; --gem:#8ce0ff;
+  --seed:#7bd88f; --seed-d:#3f9d45; --seed-l:#c9f5cf;
+  --rare:#4dabf7; --epic:#b197fc; --legend:#ffd43b;
+  --sky1:#7ec8f2; --sky2:#bfe9ff; --sky3:#e9f8ff;
+  --r-lg:26px; --r-md:18px; --r-sm:12px;
+  --font:'Baloo 2', ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+
+  /* Insets. The game reads four :root variables and never env(), which is what
+     lets a desktop preview stand in for a notched phone. The frames below set
+     them to a real iPhone 16 Pro so the drawer is judged with the insets on —
+     a full-height panel is exactly the surface that gets this wrong. */
+  --sat:0px; --sar:0px; --sab:0px; --sal:0px;
+  --bottom-gap:max(10px, calc(var(--sab) - 12px));
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#efe3cd;color:var(--ink);
+  font-family:var(--font);font-weight:700;-webkit-text-size-adjust:100%}
+
+/* ---------- the page around the frames ---------- */
+.page{max-width:1700px;margin:0 auto;padding:14px 12px 80px}
+.page > h1{font-size:20px;margin:0 0 4px}
+.lede{font-size:13px;font-weight:600;line-height:1.45;color:#4a3524;margin:0 0 12px;max-width:74ch}
+.lede b{font-weight:800}
+.controls{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px;position:sticky;top:0;z-index:50;
+  background:#efe3cdEE;padding:8px 0;backdrop-filter:blur(3px)}
+.toggle{border:3px solid var(--ink);border-radius:999px;background:#e8d5b0;color:var(--ink);
+  padding:5px 12px;font:inherit;font-size:12px;box-shadow:0 3px 0 rgba(44,26,16,.35);cursor:pointer}
+.toggle[data-on="1"]{background:linear-gradient(180deg,#ffe066,var(--coin))}
+.toggle:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(44,26,16,.35)}
+
+.grid{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+figure{margin:0;width:390px;max-width:100%}
+figcaption{font-size:12.5px;font-weight:800;margin:0 0 6px;line-height:1.3}
+figcaption i{display:block;font-style:normal;font-weight:600;font-size:11.5px;color:#5c452f;margin-top:2px}
+.tag{display:inline-block;background:var(--ink);color:#ffeecd;border-radius:999px;
+  padding:1px 8px;font-size:10.5px;font-weight:800;margin-right:5px;vertical-align:1px}
+
+.note{font-size:11.5px;font-weight:600;line-height:1.4;color:#4a3524;margin:7px 0 0;
+  border-left:4px solid var(--ink-2);padding-left:8px}
+.note.q{border-color:#e8590c}
+.note.q::before{content:'QUESTION — ';font-weight:800;color:#e8590c}
+.note.d::before{content:'DECIDED — ';font-weight:800}
+body[data-notes="0"] .note{display:none}
+
+/* the closing table */
+.table-wrap{width:100%;margin-top:26px}
+.table-wrap h2{font-size:17px;margin:0 0 8px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;font-weight:600;line-height:1.4}
+td{border-top:2px solid rgba(44,26,16,.18);padding:8px 10px 8px 0;vertical-align:top}
+td:first-child{width:30%;font-weight:700}
+.keep{font-weight:800;color:#2b8a3e}
+.move{font-weight:800;color:#e8590c}
+
+/* ---------- the phone ---------- */
+/* 390x844 exactly, because that is what the game is composed at, with a real
+   handset's insets on so nothing is judged against a desktop's zeroes. */
+.phone{box-sizing:content-box;position:relative;width:390px;height:844px;overflow:hidden;
+  border:5px solid var(--ink);border-radius:36px;box-shadow:0 8px 0 rgba(44,26,16,.3);
+  background:#4fae54;--sat:59px;--sab:34px;user-select:none;
+  --bottom-gap:max(10px, calc(var(--sab) - 12px))}
+.phone.no-inset{--sat:0px;--sab:0px}
+
+/* scenery: eleven CSS layers in the game; four is enough to judge a layout on */
+.scenery{position:absolute;inset:0}
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 58%,var(--sky3) 100%)}
+.sun{position:absolute;left:74%;top:14%;width:66px;height:66px;border-radius:50%;
+  background:radial-gradient(circle,#fff6c9 40%,#ffe9a3 70%,rgba(255,233,163,0) 72%)}
+.hills{position:absolute;left:-6%;right:-6%;bottom:31%;height:150px;
+  background:radial-gradient(ellipse 60% 100% at 30% 100%,#59b463 0 70%,transparent 72%),
+             radial-gradient(ellipse 70% 100% at 78% 100%,#4da657 0 70%,transparent 72%)}
+.lawn{position:absolute;left:0;right:0;bottom:0;height:34%;
+  background:repeating-linear-gradient(92deg,#59b95d 0 26px,#4fae54 26px 52px)}
+.lawn::after{content:'';position:absolute;left:0;right:0;bottom:0;height:44px;
+  background:linear-gradient(180deg,rgba(79,174,84,0),#4fae54)}
+.fence{position:absolute;left:0;right:0;bottom:31%;height:20px;
+  background:repeating-linear-gradient(90deg,#c98f52 0 7px,transparent 7px 26px),
+             linear-gradient(180deg,transparent 0 6px,#c98f52 6px 11px,transparent 11px)}
+.vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 90% 70% at 50% 42%,transparent 40%,rgba(44,26,16,.28) 100%);
+  -webkit-mask-image:linear-gradient(180deg,#000 0 74%,transparent 92%);
+  mask-image:linear-gradient(180deg,#000 0 74%,transparent 92%)}
+
+/* ---------- the interface column ---------- */
+.ui{position:absolute;inset:0;z-index:20;display:grid;
+  grid-template-rows:auto auto auto minmax(0,1fr) auto;
+  grid-template-columns:minmax(0,1fr);
+  padding:calc(var(--sat) + 8px) calc(var(--sar) + 10px) var(--bottom-gap) calc(var(--sal) + 10px);
+  gap:6px;max-width:560px;margin:0 auto}
+.hud{grid-row:1} .quest-strip{grid-row:2} .rail{grid-row:3} .stage{grid-row:4} .dock{grid-row:5}
+
+.hud{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.wallets{display:flex;gap:6px;flex-wrap:wrap;position:relative}
+.wallet{display:flex;align-items:center;gap:5px;padding:5px 11px 5px 6px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:999px;
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18);
+  font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;line-height:1}
+.w-icon{width:22px;height:22px;display:block;flex:none}
+.w-icon svg{width:100%;height:100%;display:block}
+.hud-actions{display:flex;gap:6px;flex:none}
+.round-btn{position:relative;width:44px;height:44px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:50%;
+  box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.2)}
+.round-btn svg{width:24px;height:24px}
+
+/* THE BADGE DOT. The dock's attention dot, on a HUD button for the first time.
+   Same vocabulary — a small red disc with the ink contour and its own lip, so
+   it reads as an object stuck to the button rather than as a coloured pixel. */
+.badge-dot{position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;
+  background:linear-gradient(180deg,#ff8787,#e03131);border:2.5px solid var(--ink);
+  box-shadow:0 2px 0 #a11414}
+.badge-dot.count{width:auto;min-width:19px;height:19px;padding:0 4px;display:grid;place-items:center;
+  border-radius:999px;font-size:11px;font-weight:800;color:#fff;
+  text-shadow:0 1px 0 rgba(44,26,16,.6)}
+
+.quest-strip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;
+  width:100%;padding:5px 8px 5px 5px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:18px;
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.16)}
+.q-pip{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(180deg,#ffe066,var(--coin));border:3px solid var(--ink);
+  font-size:13px;font-weight:800}
+.q-bar{position:relative;height:22px;border-radius:999px;border:2.5px solid var(--ink);
+  background:#e9dcc3;overflow:hidden}
+.q-bar i{position:absolute;left:0;top:0;bottom:0;width:46%;background:linear-gradient(180deg,#8ce99a,#51cf66)}
+.q-bar > span{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;
+  padding:0 8px;font-size:11px;font-weight:800}
+.q-reward{width:26px;height:26px}
+
+.rail{display:flex;gap:6px}
+.stage{position:relative;display:grid;place-items:center;min-height:0;padding:2px 0 88px}
+.garden{--gap:10px;position:relative;display:grid;width:330px;height:330px;
+  grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:var(--gap);padding:calc(var(--gap) * .85);
+  border:4px solid var(--ink);border-radius:26px;
+  background:repeating-linear-gradient(96deg,rgba(255,255,255,.07) 0 3px,transparent 3px 14px),
+             linear-gradient(180deg,#d9a870 0%,#bd8551 42%,#97643a 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.28), inset 0 -9px 0 rgba(0,0,0,.2),
+             0 9px 0 #6b4423, 0 18px 26px rgba(44,26,16,.3)}
+.plot{position:relative;border-radius:var(--r-md);border:3px solid var(--ink);
+  background:radial-gradient(circle at 26% 22%,rgba(255,255,255,.16) 0 12%,transparent 13%),
+             radial-gradient(circle at 72% 62%,rgba(0,0,0,.10) 0 9%,transparent 10%),
+             linear-gradient(180deg,var(--soil) 0%,var(--soil-d) 72%,var(--soil-dd) 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.16), inset 0 -7px 0 rgba(0,0,0,.18),
+             0 4px 0 var(--soil-dd), 0 8px 14px rgba(44,26,16,.24);
+  display:grid;place-items:center}
+.plot.mid{background:radial-gradient(circle at 26% 22%,rgba(255,255,255,.16) 0 12%,transparent 13%),
+             linear-gradient(180deg,#e8d5a8,#cbb182);border-style:dashed;box-shadow:none}
+.plot svg{width:78%;height:78%;overflow:visible}
+
+.dock{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;align-items:end}
+.dock-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  padding:7px 4px 6px;min-height:56px;height:56px;background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22)}
+.dock-btn.home{height:74px;border-radius:22px}
+.dock-ico{width:24px;height:24px} .dock-ico svg{width:100%;height:100%;display:block}
+.dock-label{font-size:11px;font-weight:800;line-height:1}
+
+/* =========================================================
+   THE DRAWER — the new surface class.
+
+   It is not a sheet. The sheet slides up from the bottom,
+   holds one panel at a time and is dismissed downward; this
+   slides in from the right, holds a MENU, and is dismissed
+   rightward. Same scrim, same paper, same lip; a different
+   axis and a different job.
+
+   Three rules it inherits and one it adds:
+   - It obeys the 560px column: `right:0`, `width:min(86%,
+     332px)`, and `max-width` so a desktop window never gets
+     a drawer wider than the phone column it belongs to.
+   - It pays the FULL safe-area inset top and bottom, because
+     unlike the dock it reaches both edges of the screen.
+   - It carries the sheet's scrim and the sheet's z-order.
+   - NEW: it is a scrolling column of rows, so the rows
+     themselves must never depend on the drawer's height.
+   ========================================================= */
+.drawer{position:absolute;top:0;bottom:0;right:0;z-index:50;
+  width:min(86%, 332px);
+  display:flex;flex-direction:column;
+  background:linear-gradient(180deg,var(--paper) 0%,var(--paper-2) 62%,var(--paper-3) 100%);
+  border-left:4px solid var(--ink);
+  box-shadow:-8px 0 30px rgba(44,26,16,.32);
+  padding:calc(var(--sat) + 10px) 14px calc(var(--sab) + 12px);
+  transform:translateX(0)}
+.drawer.shut{transform:translateX(100%);box-shadow:none}
+
+/* The grip. The sheet's grip is a horizontal bar you pull down; this one is a
+   vertical bar you pull right, on the drawer's own left edge, so the gesture
+   is legible before it is discovered. Its hit area is the full height. */
+.dr-grip{position:absolute;left:0;top:0;bottom:0;width:22px;display:grid;place-items:center}
+.dr-grip span{width:6px;height:52px;border-radius:999px;background:rgba(44,26,16,.28)}
+
+/* ---- the profile header ---- */
+.dr-head{display:flex;align-items:center;gap:11px;padding:2px 0 12px 12px;
+  border-bottom:3px solid rgba(44,26,16,.14);margin-bottom:10px}
+
+/* The round frame. Your garden is your face: the portrait inside is a bloom
+   you have unlocked or a creature you have met, drawn in the same ink, in the
+   same cream disc every art badge in the game already uses. Never a photo. */
+.avatar{position:relative;width:62px;height:62px;flex:none;border-radius:50%;
+  display:grid;place-items:center;overflow:hidden;
+  border:3.5px solid var(--ink);
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.95),rgba(255,255,255,.6)),
+             var(--av,#8fe08a);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.5), inset 0 -7px 0 rgba(44,26,16,.07),
+             0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24)}
+.avatar svg{width:78%;height:78%;display:block;overflow:visible}
+.avatar.big{width:88px;height:88px}
+
+.dr-who{flex:1;min-width:0;display:grid;gap:3px}
+.dr-name{display:flex;align-items:center;gap:6px;min-width:0}
+.dr-name b{font-size:19px;font-weight:800;line-height:1.15;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dr-sub{font-size:11.5px;font-weight:600;color:var(--ink-soft);line-height:1.2}
+/* The pencil. A 32px control on a 44px hit box — small enough not to compete
+   with the name, large enough for a thumb. */
+.pencil{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:50%;
+  border:2.5px solid var(--ink);background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2)}
+.pencil svg{width:17px;height:17px}
+
+/* ---- the rows ---- */
+.dr-rows{flex:1;min-height:0;overflow:hidden;display:grid;gap:8px;align-content:start;
+  padding:2px 0 0 0}
+.dr-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:11px;
+  padding:11px 12px;text-align:left;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:radial-gradient(circle at 26% 22%,rgba(255,255,255,.55) 0 12%,transparent 13%),
+             radial-gradient(circle at 72% 62%,rgba(44,26,16,.05) 0 9%,transparent 10%),
+             linear-gradient(180deg,#fffdf7 0%,var(--paper) 72%,var(--paper-2) 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.5), inset 0 -7px 0 rgba(44,26,16,.07),
+             0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24)}
+.dr-ico{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  border:2.5px solid var(--ink);
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.9),rgba(255,255,255,.55)),
+             var(--rt,#ffe0ad);
+  box-shadow:0 2px 0 var(--ink-2)}
+.dr-ico svg{width:22px;height:22px;display:block}
+.dr-lab{min-width:0}
+.dr-lab b{display:block;font-size:15.5px;font-weight:800;line-height:1.15}
+.dr-lab i{display:block;font-style:normal;font-size:11px;font-weight:600;color:var(--ink-soft);
+  line-height:1.25;margin-top:1px}
+.dr-end{display:flex;align-items:center;gap:6px}
+/* A row's own dot. Same object as the button's badge, one size down. */
+.row-dot{width:13px;height:13px;border-radius:50%;
+  background:linear-gradient(180deg,#ff8787,#e03131);border:2.5px solid var(--ink);
+  box-shadow:0 2px 0 #a11414}
+.chev{width:16px;height:16px;opacity:.4}
+
+/* THE NOT-NOW TREATMENT. The drained paper family every "not yet" state in the
+   game already wears — the locked seed row, the locked season tab, the sleeping
+   creature. It restates its own lip, because a modifier that sets box-shadow
+   and forgets is how the lip gets deleted in exactly the states a player looks
+   at. Non-interactive: no press, no pointer. */
+.dr-row.soon{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 4px 0 var(--paper-dim-edge), 0 7px 11px rgba(44,26,16,.14);
+  pointer-events:none}
+.dr-row.soon .dr-ico{filter:saturate(.28);box-shadow:0 2px 0 var(--paper-dim-edge);
+  border-color:rgba(44,26,16,.55)}
+.dr-row.soon .dr-lab b{color:#6c6252}
+.dr-row.soon .dr-lab i{color:#8b8171}
+.soon-chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;
+  border:2.5px solid rgba(44,26,16,.55);
+  background:linear-gradient(180deg,#f4f0e6,var(--paper-dim-2));
+  box-shadow:0 2px 0 var(--paper-dim-edge);
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6c6252}
+
+.dr-foot{padding-top:10px;font-size:11px;font-weight:600;color:var(--ink-soft);text-align:center;
+  line-height:1.35}
+
+/* A hairline between our rows and the reserved ones, so the drawer never
+   pretends the bottom half is finished. */
+.dr-sep{display:flex;align-items:center;gap:8px;margin:4px 2px 0;
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.dr-sep::before,.dr-sep::after{content:'';flex:1;height:2px;border-radius:2px;background:rgba(44,26,16,.16)}
+
+/* ---- frame 3: renaming in place ---- */
+/* A text field is the first one in this game, so it is drawn as a house
+   surface rather than as a browser input: cream body, ink contour, its own
+   lip, and a caret the player can see. */
+.name-edit{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;flex:1}
+.name-field{position:relative;display:flex;align-items:center;padding:8px 11px;
+  border:3px solid var(--ink);border-radius:var(--r-sm);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:inset 0 3px 0 rgba(44,26,16,.07), 0 3px 0 var(--ink-2);
+  font-size:17px;font-weight:800;line-height:1.1;min-width:0}
+.name-field .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.name-field .caret{display:inline-block;width:2.5px;height:19px;margin-left:1px;
+  background:var(--ink);border-radius:2px}
+.name-field .cnt{position:absolute;right:8px;bottom:-15px;font-size:10px;font-weight:700;
+  color:var(--ink-soft)}
+.save-btn{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:50%;
+  border:3px solid var(--ink);background:linear-gradient(180deg,#d3f9d8,#8ce99a);
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18)}
+.save-btn svg{width:20px;height:20px}
+
+/* the keyboard stand-in — drawn only so the drawer is judged at the height it
+   really has while a name is being typed */
+.keyboard{position:absolute;left:0;right:0;bottom:0;height:300px;z-index:60;
+  background:linear-gradient(180deg,#d8d0c4,#c8c0b4);border-top:3px solid rgba(44,26,16,.4);
+  display:grid;grid-template-rows:repeat(4,1fr);gap:7px;padding:9px 5px calc(var(--sab) + 8px)}
+.krow{display:flex;gap:5px;justify-content:center}
+.key{flex:1;max-width:34px;border-radius:6px;background:#fdfcfa;box-shadow:0 2px 0 rgba(44,26,16,.28)}
+.key.wide{max-width:120px}
+
+/* ---- frame 4: the avatar picker ---- */
+.pick-head{display:grid;gap:3px;padding:0 2px 10px 12px}
+.pick-head b{font-size:19px;font-weight:800}
+.pick-head i{font-style:normal;font-size:11.5px;font-weight:600;color:var(--ink-soft);line-height:1.3}
+.pick-group{margin:0 0 4px;font-size:10.5px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-soft);padding-left:2px}
+.pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}
+.pick-cell{position:relative;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;
+  border:3px solid var(--ink);overflow:hidden;
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.95),rgba(255,255,255,.6)),
+             var(--av,#8fe08a);
+  box-shadow:inset 0 4px 0 rgba(255,255,255,.5), 0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18)}
+.pick-cell svg{width:80%;height:80%;display:block;overflow:visible}
+.pick-cell.on{border-width:4px;box-shadow:inset 0 4px 0 rgba(255,255,255,.5),
+  0 0 0 3px var(--coin), 0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24)}
+.pick-cell.on::after{content:'';position:absolute;right:-1px;bottom:-1px;width:20px;height:20px;
+  border-radius:50%;background:linear-gradient(180deg,#8ce99a,#51cf66);border:2.5px solid var(--ink)}
+/* Locked: the same drained family, and the bloom is still legible inside it —
+   the cell is an advert for the flower you have not grown yet. */
+.pick-cell.locked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 3px 0 var(--paper-dim-edge)}
+.pick-cell.locked svg{filter:saturate(.3);opacity:.55}
+.pick-cell.locked::after{content:'';position:absolute;inset:0;display:grid;place-items:center;
+  background:no-repeat center/16px 16px
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c1a10' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='5' y='10.5' width='14' height='9.5' rx='3' fill='%23ebe5d9'/%3E%3Cpath d='M8.5 10.5V8a3.5 3.5 0 017 0v2.5'/%3E%3C/svg%3E")}
+
+/* the reduced-motion frame's caption strip */
+.rm-band{position:absolute;left:0;right:0;top:0;z-index:70;padding:4px 10px;
+  background:var(--ink);color:#ffeecd;font-size:10.5px;font-weight:800;letter-spacing:.04em}
+
+/* ---------- house pills reused ---------- */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 4px;
+  border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);font-size:12px;font-weight:700;line-height:1;white-space:nowrap}
+.chip svg{width:17px;height:17px;display:block}
+.scrim{position:absolute;inset:0;z-index:45;background:rgba(30,18,10,.45);backdrop-filter:blur(2px)}
+</style>
+</head>
+
+<body data-notes="1">
+<div class="page">
+<h1>The Hamburger Menu — wireframe spike</h1>
+<p class="lede">The owner's reference is <b>Monopoly Go's slide-out menu</b>: a panel off the right edge, a round face and a name at the top, then a clean column of feature rows with icons and the odd red dot. This spike takes that <b>layout</b> and draws it in the house's paper, ink and opaque lip — never the reference's look.
+Drawn at <b>390&times;844</b> with a real handset's insets on, because a full-height drawer is exactly the surface that gets insets wrong.
+<b>Static:</b> no <code>data.js</code>, no <code>game.js</code> — every bloom, creature and icon here is a hand-drawn stand-in and every name is a placeholder.
+Notes marked QUESTION are for the owner; notes marked DECIDED are calls I made and can unmake.
+<b>Frame 2 is the one that matters most</b> — it is the whole menu, and it is where Settings now lives.</p>
+<div class="controls">
+  <button class="toggle" data-on="1" id="tNotes">Notes</button>
+  <button class="toggle" data-on="1" id="tInset">Phone insets (59 / 34)</button>
+</div>
+<div class="grid" id="grid"></div>
+<div class="table-wrap" id="tail"></div>
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   Hand-drawn stand-ins. No game files are loaded, so a spike
+   can never break because the game moved underneath it.
+   --------------------------------------------------------- */
+const INK = '#2c1a10';
+const S = (inner, vb) => '<svg viewBox="' + (vb || '0 0 24 24') + '" fill="none" stroke="' + INK +
+  '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+
+const ICON = {
+  coin: S('<circle cx="12" cy="12" r="8.5" fill="#ffc93c"/><circle cx="12" cy="12" r="4.6" fill="#f7b100"/>'),
+  gem: S('<path d="M5 10 12 3l7 7-7 10z" fill="#8ce0ff"/><path d="M5 10h14M12 3v17"/>'),
+  book: S('<path d="M4 5.5h6a2.5 2.5 0 012.5 2.5v11A2.5 2.5 0 0010 16.5H4z" fill="#fff8e7"/>' +
+          '<path d="M20 5.5h-6A2.5 2.5 0 0011.5 8v11A2.5 2.5 0 0114 16.5h6z" fill="#ffeecd"/>'),
+  gear: S('<circle cx="12" cy="12" r="3.4" fill="#cfd8e3"/><path d="M12 3.5v2.6M12 17.9v2.6M20.5 12h-2.6M6.1 12H3.5' +
+          'M18 6l-1.8 1.8M7.8 16.2 6 18M18 18l-1.8-1.8M7.8 7.8 6 6"/>'),
+  /* THE HAMBURGER. Three bars in the house's own weight — 3.4 units against the
+     icon set's 2, because at 24px a 2-unit bar is a hairline next to the gear's
+     solid body, and the whole point of this button is that it is found. */
+  menu: '<svg viewBox="0 0 24 24" fill="none" stroke="' + INK +
+        '" stroke-width="3.4" stroke-linecap="round"><path d="M4.6 7h14.8M4.6 12h14.8M4.6 17h14.8"/></svg>',
+  close: S('<path d="M7 7l10 10M17 7L7 17"/>'),
+  chev: S('<path d="M9.5 5.5 16 12l-6.5 6.5"/>'),
+  check: S('<path d="M5 12.5l4.5 4.5L19 7.5" stroke-width="3"/>'),
+  pencil: S('<path d="M16.5 4.2l3.3 3.3-10 10-4.3 1 1-4.3z" fill="#ffe0ad"/><path d="M14.6 6.1l3.3 3.3"/>'),
+  shop: S('<path d="M4.5 10h15v9.5a1.5 1.5 0 01-1.5 1.5H6a1.5 1.5 0 01-1.5-1.5z" fill="#fff8e7"/>' +
+          '<path d="M3.2 5.5h17.6L19.5 10h-15z" fill="#ff8fab"/><path d="M9.5 21v-6.5h5V21"/>'),
+  sparkle: S('<path d="M12 3.2l1.9 4.9 4.9 1.9-4.9 1.9L12 16.8l-1.9-4.9L5.2 10l4.9-1.9z" fill="#ffd43b"/>' +
+             '<path d="M18.4 15.4l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" fill="#fff3bf"/>'),
+  people: S('<circle cx="9" cy="8.6" r="3.4" fill="#a5d8ff"/><circle cx="16.4" cy="9.4" r="2.7" fill="#c9f5cf"/>' +
+            '<path d="M3.6 19.4c0-3 2.4-5 5.4-5s5.4 2 5.4 5" fill="#a5d8ff"/>' +
+            '<path d="M15.2 14.6c2.8-.2 5.2 1.5 5.2 4.8" fill="#c9f5cf"/>'),
+  gift: S('<path d="M4 10.5h16V20a1.4 1.4 0 01-1.4 1.4H5.4A1.4 1.4 0 014 20z" fill="#ffd6a5"/>' +
+          '<path d="M3.2 7h17.6v3.5H3.2z" fill="#ff8fab"/><path d="M12 7v14.4"/>' +
+          '<path d="M12 7C10.4 4 8.6 3.2 7.6 4.2 6.6 5.2 8 7 12 7zM12 7c1.6-3 3.4-3.8 4.4-2.8 1 1-.4 2.8-4.4 2.8z" fill="#ffe8cc"/>'),
+  scroll: S('<path d="M6 3.6h11a2 2 0 012 2v12.8a2 2 0 01-2 2H6z" fill="#fff8e7"/>' +
+            '<path d="M6 3.6a2 2 0 00-2 2v1.8h2M6 20.4a2 2 0 01-2-2v-1.6h2" />' +
+            '<path d="M8.6 8.4h6.8M8.6 12h6.8M8.6 15.6h4.4"/>'),
+  bell: S('<path d="M12 3.4a5.4 5.4 0 015.4 5.4v3.4l1.6 3H5l1.6-3V8.8A5.4 5.4 0 0112 3.4z" fill="#ffe066"/>' +
+          '<path d="M9.8 15.2a2.2 2.2 0 004.4 0"/>'),
+  trash: S('<path d="M6 7.5h12l-1 12a1.6 1.6 0 01-1.6 1.5H8.6A1.6 1.6 0 017 19.5z" fill="#ffc9c9"/>' +
+           '<path d="M4.5 7.5h15M9.5 7.5V5.2a1.4 1.4 0 011.4-1.4h2.2a1.4 1.4 0 011.4 1.4v2.3"/>')
+};
+const ico = (k) => ICON[k] || '';
+
+/* A bloom, at whatever size the caller places it. Six petals and a core is
+   enough to read a flower at 22px, which is the size the Almanac uses. */
+function bloom(c1, c2, core, petals) {
+  petals = petals || 6;
+  let p = '';
+  for (let i = 0; i < petals; i++) {
+    const a = (360 / petals) * i;
+    p += '<ellipse cx="50" cy="27" rx="13" ry="19" fill="' + c1 + '" stroke="' + INK +
+         '" stroke-width="3" transform="rotate(' + a + ' 50 50)"/>';
+  }
+  return '<svg viewBox="0 0 100 100">' + p +
+    '<circle cx="50" cy="50" r="13" fill="' + core + '" stroke="' + INK + '" stroke-width="3"/>' +
+    '<circle cx="46" cy="46" r="4" fill="' + c2 + '"/></svg>';
+}
+
+/* The talking flower — the default face, and the one every save starts with. */
+function talker() {
+  let p = '';
+  for (let i = 0; i < 8; i++) {
+    p += '<ellipse cx="55" cy="22" rx="12" ry="17" fill="#ffd6ea" stroke="' + INK +
+         '" stroke-width="3.4" transform="rotate(' + (45 * i) + ' 55 52)"/>';
+  }
+  return '<svg viewBox="8 5 94 94">' + p +
+    '<circle cx="55" cy="52" r="22" fill="#fff3bf" stroke="' + INK + '" stroke-width="3.4"/>' +
+    '<circle cx="46" cy="48" r="4.6" fill="' + INK + '"/><circle cx="64" cy="48" r="4.6" fill="' + INK + '"/>' +
+    '<path d="M47 60q8 7 16 0" stroke="' + INK + '" stroke-width="3.4" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="37" cy="58" r="4" fill="#ffb3c9" opacity=".85"/>' +
+    '<circle cx="73" cy="58" r="4" fill="#ffb3c9" opacity=".85"/></svg>';
+}
+
+/* A creature portrait — a body, a crown, a face. Enough to tell four of them
+   apart in a 62px round frame, which is the only question this spike asks. */
+function critter(skin, shade, accent, crown) {
+  /* The crown is drawn ABOVE the body's crest (y=26) rather than through it —
+     at 38px a silhouette is the only thing telling four creatures apart. */
+  const crowns = {
+    sprout: '<path d="M50 26V6" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>' +
+            '<path d="M50 20c0-9 7-15 16-15 0 9-7 15-16 15z" fill="' + accent + '" stroke="' + INK + '" stroke-width="4.5" stroke-linejoin="round"/>',
+    ears:   '<path d="M30 30C18 16 20 2 29 2c8 0 13 11 13 22z" fill="' + accent + '" stroke="' + INK + '" stroke-width="4.5" stroke-linejoin="round"/>' +
+            '<path d="M70 30C82 16 80 2 71 2c-8 0-13 11-13 22z" fill="' + accent + '" stroke="' + INK + '" stroke-width="4.5" stroke-linejoin="round"/>',
+    horn:   '<path d="M50 0 34 30h32z" fill="' + accent + '" stroke="' + INK + '" stroke-width="4.5" stroke-linejoin="round"/>' +
+            '<path d="M42 18h16" stroke="' + INK + '" stroke-width="3.4"/>',
+    leaf:   '<path d="M50 28V10" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>' +
+            '<path d="M50 18c-2-11 4-17 12-17 3 10-3 17-12 17z" fill="' + accent + '" stroke="' + INK + '" stroke-width="4.5" stroke-linejoin="round"/>' +
+            '<path d="M50 26c-8-2-13-8-12-16 8 1 13 7 12 16z" fill="' + accent + '" stroke="' + INK + '" stroke-width="4.5" stroke-linejoin="round"/>'
+  };
+  return '<svg viewBox="2 -2 96 96">' +
+    (crowns[crown] || crowns.sprout) +
+    '<path d="M50 26c19 0 32 13 32 31 0 17-14 27-32 27S18 74 18 57c0-18 13-31 32-31z" fill="' + skin +
+    '" stroke="' + INK + '" stroke-width="4.5" stroke-linejoin="round"/>' +
+    '<ellipse cx="34" cy="66" rx="7" ry="5" fill="#ff9ec4" opacity=".8"/>' +
+    '<ellipse cx="66" cy="66" rx="7" ry="5" fill="#ff9ec4" opacity=".8"/>' +
+    '<circle cx="39" cy="55" r="6" fill="' + INK + '"/><circle cx="61" cy="55" r="6" fill="' + INK + '"/>' +
+    '<circle cx="41" cy="52.5" r="2" fill="#fff"/><circle cx="63" cy="52.5" r="2" fill="#fff"/>' +
+    '<ellipse cx="50" cy="72" rx="4.2" ry="5" fill="' + INK + '"/>' +
+    '<circle cx="70" cy="40" r="3.4" fill="' + shade + '"/><circle cx="32" cy="43" r="2.6" fill="' + shade + '"/></svg>';
+}
+</script>
+
+<script>
+/* ---------------------------------------------------------
+   The phone, and the chrome that is on screen in every frame.
+   Metrics copied from style.css so proportions are true.
+   --------------------------------------------------------- */
+const SEEDS = {
+  daisy:      { n: 'Daisy',      c1: '#ffe066', c2: '#fff9db', core: '#ffc93c', p: 8 },
+  tulip:      { n: 'Tulip',      c1: '#ff6b8a', c2: '#ffd6e0', core: '#ffe066', p: 6 },
+  bluebell:   { n: 'Bluebell',   c1: '#5c7cfa', c2: '#dbe4ff', core: '#ffe066', p: 6 },
+  lavender:   { n: 'Lavender',   c1: '#b197fc', c2: '#eee5ff', core: '#f3d9fa', p: 7 },
+  rose:       { n: 'Rose',       c1: '#e03131', c2: '#ffc9c9', core: '#ffd43b', p: 6 },
+  marigold:   { n: 'Marigold',   c1: '#ff922b', c2: '#ffe8cc', core: '#e8590c', p: 8 },
+  peony:      { n: 'Peony',      c1: '#f783ac', c2: '#ffdeeb', core: '#fff3bf', p: 7 },
+  sunlotus:   { n: 'Sun Lotus',  c1: '#ffd43b', c2: '#fff9db', core: '#ff922b', p: 8 },
+  moonflower: { n: 'Moonflower', c1: '#d0ebff', c2: '#f8f9fa', core: '#a5d8ff', p: 6 }
+};
+const head = (k) => bloom(SEEDS[k].c1, SEEDS[k].c2, SEEDS[k].core, SEEDS[k].p);
+
+const PETS = {
+  pip:     { n: 'Pip',     skin: '#f4fdf5', shade: '#c9e8d5', accent: '#69db7c', crown: 'sprout' },
+  thistle: { n: 'Thistle', skin: '#ffe8cc', shade: '#f0c9a0', accent: '#e8935c', crown: 'ears' },
+  moth:    { n: 'Moth',    skin: '#e5dbff', shade: '#c9b8f2', accent: '#b197fc', crown: 'horn' },
+  fern:    { n: 'Fern',    skin: '#d3f9d8', shade: '#a5e0b0', accent: '#40a86a', crown: 'leaf' }
+};
+const pet = (k) => critter(PETS[k].skin, PETS[k].shade, PETS[k].accent, PETS[k].crown);
+
+/* The garden behind the drawer. Static, and identical in every frame, so the
+   only thing that changes across the four is the drawer itself. */
+function scenery() {
+  return '<div class="scenery"><div class="sky"></div><div class="sun"></div>' +
+    '<div class="hills"></div><div class="fence"></div><div class="lawn"></div>' +
+    '<div class="vignette"></div></div>';
+}
+
+function hud(o) {
+  o = o || {};
+  const right = o.menu
+    ? '<button class="round-btn">' + ico('menu') +
+      (o.dot ? '<span class="badge-dot"></span>' : '') + '</button>'
+    : '<button class="round-btn">' + ico('gear') + '</button>';
+  return '<header class="hud">' +
+    '<div class="wallets">' +
+      '<div class="wallet"><span class="w-icon">' + ico('coin') + '</span><span>18.4K</span></div>' +
+      '<div class="wallet"><span class="w-icon">' + ico('gem') + '</span><span>27</span></div>' +
+    '</div>' +
+    '<div class="hud-actions">' +
+      '<button class="round-btn">' + ico('book') + '</button>' + right +
+    '</div></header>';
+}
+
+function garden() {
+  const cells = [
+    { s: 'tulip', st: 3 }, { s: 'daisy', st: 3 }, { s: null },
+    { s: 'bluebell', st: 2 }, { s: 'flower' }, { s: 'marigold', st: 3 },
+    { s: null }, { s: 'rose', st: 2 }, { s: 'lavender', st: 3 }
+  ];
+  return '<div class="stage"><div class="garden">' + cells.map((c) => {
+    if (c.s === 'flower') return '<div class="plot mid">' + talker() + '</div>';
+    if (!c.s) return '<div class="plot"></div>';
+    return '<div class="plot">' + head(c.s) + '</div>';
+  }).join('') + '</div></div>';
+}
+
+function dock() {
+  const B = [['scroll', 'Orders'], ['book', 'Cards'], ['sparkle', 'GARDEN'], ['coin', 'Turn'], ['shop', 'Shop']];
+  return '<nav class="dock">' + B.map((b, i) =>
+    '<button class="dock-btn' + (i === 2 ? ' home' : '') + '"><span class="dock-ico">' + ico(b[0]) +
+    '</span><span class="dock-label">' + b[1] + '</span></button>').join('') + '</nav>';
+}
+
+function questStrip() {
+  return '<button class="quest-strip"><span class="q-pip">7</span>' +
+    '<span class="q-bar"><i></i><span><b>Harvest 3 roses</b><b>1 / 3</b></span></span>' +
+    '<span class="q-reward">' + ico('gem') + '</span></button>';
+}
+
+/* The whole garden screen. `o.menu` swaps the gear for the hamburger. */
+function screen(o) {
+  o = o || {};
+  return scenery() + '<div class="ui">' + hud(o) + questStrip() +
+    '<div class="rail"></div>' + garden() + dock() + '</div>';
+}
+</script>
+
+<script>
+/* ---------------------------------------------------------
+   The drawer.
+   --------------------------------------------------------- */
+
+/* Our four rows, in the order the owner asked for, then the three reserved
+   ones in the drained not-now treatment. Three is a cap, not a coincidence:
+   past three the menu starts advertising more game than exists. */
+const OURS = [
+  { ic: 'shop',    t: 'Shop',        s: 'Gems, decor and the odd bundle', tint: '#ff922b' },
+  { ic: 'book',    t: 'Almanac',     s: 'Every flower, every creature',   tint: '#5c7cfa' },
+  { ic: 'bell',    t: "What's New",  s: 'The latest announcement',        tint: '#ffe066', dot: true },
+  { ic: 'gear',    t: 'Settings',    s: 'Sound, music, and your save',    tint: '#8b9bb0' }
+];
+const SOON = [
+  { ic: 'people',  t: 'Friends',      s: 'Visit a garden, send a seed', tint: '#74c0fc' },
+  { ic: 'gift',    t: 'Daily Gift',   s: 'Something small, every day',  tint: '#f783ac' },
+  { ic: 'scroll',  t: 'Garden Record',s: 'What your garden has done',   tint: '#69db7c' }
+];
+
+function row(r) {
+  return '<button class="dr-row" style="--rt:' + r.tint + '">' +
+    '<span class="dr-ico">' + ico(r.ic) + '</span>' +
+    '<span class="dr-lab"><b>' + r.t + '</b><i>' + r.s + '</i></span>' +
+    '<span class="dr-end">' + (r.dot ? '<span class="row-dot"></span>' : '') +
+    '<span class="chev">' + ico('chev') + '</span></span></button>';
+}
+function soonRow(r) {
+  return '<div class="dr-row soon" style="--rt:' + r.tint + '" aria-disabled="true">' +
+    '<span class="dr-ico">' + ico(r.ic) + '</span>' +
+    '<span class="dr-lab"><b>' + r.t + '</b><i>' + r.s + '</i></span>' +
+    '<span class="dr-end"><span class="soon-chip">Soon</span></span></div>';
+}
+
+/* The profile header. `mode` is 'read' (name + pencil) or 'edit' (field + save). */
+function profileHead(o) {
+  o = o || {};
+  const face = o.face || talker();
+  const av = '<span class="avatar" style="--av:' + (o.tint || '#ffd6ea') + '">' + face + '</span>';
+  if (o.mode === 'edit') {
+    return '<div class="dr-head">' + av +
+      '<div class="name-edit"><span class="name-field">' +
+        '<span class="txt">' + o.name + '</span><span class="caret"></span>' +
+        '<span class="cnt">' + o.name.length + ' / 16</span></span>' +
+      '<button class="save-btn">' + ico('check') + '</button></div></div>';
+  }
+  return '<div class="dr-head">' + av +
+    '<div class="dr-who"><span class="dr-name"><b>' + o.name + '</b>' +
+      '<button class="pencil">' + ico('pencil') + '</button></span>' +
+    '<span class="dr-sub">' + (o.sub || 'Year 3 &middot; 12 flowers found') + '</span></div></div>';
+}
+
+function drawer(o) {
+  o = o || {};
+  const body = o.body || (
+    '<div class="dr-rows">' + OURS.map(row).join('') +
+    '<div class="dr-sep">Coming soon</div>' +
+    SOON.map(soonRow).join('') + '</div>' +
+    '<p class="dr-foot">Garden Wonder &middot; your garden saves to this browser</p>');
+  return '<div class="scrim"></div>' +
+    '<aside class="drawer' + (o.shut ? ' shut' : '') + '">' +
+      '<div class="dr-grip"><span></span></div>' +
+      profileHead(o) + body + '</aside>';
+}
+
+function keyboard() {
+  const r = (n, wide) => '<div class="krow">' +
+    Array.from({ length: n }, () => '<span class="key' + (wide ? ' wide' : '') + '"></span>').join('') + '</div>';
+  return '<div class="keyboard">' + r(10) + r(9) + r(9) + r(3, true) + '</div>';
+}
+
+/* The avatar picker. Two groups, because the two sources are two different
+   kinds of thing and mixing them into one grid loses that. */
+function pickerBody() {
+  const blooms = ['daisy', 'tulip', 'bluebell', 'marigold', 'rose', 'lavender', 'peony', 'sunlotus'];
+  const locked = ['moonflower'];
+  const pets = ['pip', 'thistle', 'moth', 'fern'];
+  const cell = (k, cls) => '<button class="pick-cell' + (cls || '') + '" style="--av:' +
+    SEEDS[k].c1 + '">' + head(k) + '</button>';
+  const pcell = (k, cls) => '<button class="pick-cell' + (cls || '') + '" style="--av:' +
+    PETS[k].accent + '">' + pet(k) + '</button>';
+  return '<div class="dr-rows">' +
+    '<p class="pick-group">Your blooms</p>' +
+    '<div class="pick-grid">' +
+      '<button class="pick-cell" style="--av:#ffd6ea">' + talker() + '</button>' +
+      blooms.map((k) => cell(k)).join('') +
+      locked.map((k) => cell(k, ' locked')).join('') +
+    '</div>' +
+    '<p class="pick-group">Creatures you have met</p>' +
+    '<div class="pick-grid">' +
+      pcell('pip') + pcell('thistle', ' on') + pcell('moth') + pcell('fern') +
+    '</div>' +
+    '<p class="dr-foot">Your garden is your face. Grow a flower or meet a creature and it turns up here.</p>' +
+    '</div>';
+}
+</script>
+
+<script>
+/* ---------------------------------------------------------
+   The four frames.
+   --------------------------------------------------------- */
+const F = [];
+
+F.push({
+  tag: 'THE BUTTON',
+  t: 'The garden, with the hamburger in the gear’s place',
+  s: 'Badge dot on — the latest announcement is unseen. Nothing else in the HUD moves.',
+  html: '<div class="phone">' + screen({ menu: true, dot: true }) + '</div>',
+  notes: [
+    ['d', '<b>The gear becomes the hamburger; Settings becomes a row inside.</b> A gear promises one panel and the menu holds seven things, so the glyph had to change or the button would be lying. Every function the gear reached is still one tap deeper, never gone.'],
+    ['d', '<b>The dot is the dock’s attention dot, on a HUD button for the first time.</b> Same red disc, same ink contour, same lip — it lights when the latest What’s New has not been seen, and goes out when it has. Not a count: one announcement is one thing to look at.'],
+    ['q', '<b>Should the dot also carry a number?</b> Monopoly Go’s does. I say no while the only source is one announcement — a “1” on a badge is a number nobody needs. It becomes worth asking the day two rows can badge at once.']
+  ]
+});
+
+F.push({
+  tag: 'THE MENU',
+  t: 'Open: scrim, panel in from the right, profile, rows',
+  s: 'Four of ours, then three reserved. The garden stays visible down the left — you have not left it.',
+  html: '<div class="phone">' + screen({ menu: true }) + drawer({ name: 'Gardener' }) + '</div>',
+  notes: [
+    ['d', '<b>A drawer is a new surface class, not a sheet.</b> The sheet comes up from the bottom and holds one panel; this comes in from the right and holds a menu. It obeys the 560px column (<code>min(86%, 332px)</code>, pinned right), it pays the full top and bottom safe-area inset because it touches both screen edges, and it dismisses three ways — drag right, tap the scrim, tap the hamburger again.'],
+    ['d', '<b>The strip of garden down the left is deliberate.</b> Full-bleed would make this a screen; 332px makes it a drawer over the game you are still standing in. It is also what makes the scrim tap discoverable.'],
+    ['d', '<b>Every row is icon · label · optional badge</b> — the reference’s grammar, in the house’s material: the cream card recipe, a 3px opaque lip, and the icon in the round tinted badge the plant picker already uses.'],
+    ['q', '<b>Should the avatar and name ALSO appear in the HUD?</b> <b>The spec says menu only, and I agree.</b> The HUD is two wallets and two round buttons and it has just been bought back to 44px targets; a third element there costs the thing that fix bought. Your face lives where you go to change it. Say the word if you want it on the garden screen and I will find the width.'],
+    ['q', '<b>Three reserved rows, capped at three.</b> Friends is the slot doc 15 has protected all along; Daily Gift and Garden Record are yours. They are drained, marked <b>Soon</b> and cannot be pressed. If you want a fourth, tell me which — the cap is what keeps the menu honest.'],
+    ['q', '<b>Do the reserved rows sit under a “Coming soon” rule, or just below ours?</b> Drawn with the rule. It stops the drained rows reading as broken buttons.']
+  ]
+});
+
+F.push({
+  tag: 'THE NAME',
+  t: 'Renaming, in place',
+  s: 'The pencil swaps the name for a field and a green tick. The rows stay put underneath.',
+  html: '<div class="phone">' + screen({ menu: true }) +
+    drawer({ name: 'Rosalind', mode: 'edit' }) + keyboard() + '</div>',
+  notes: [
+    ['d', '<b>Editing happens in the header, not in a dialog.</b> One field, one confirm, and the menu never leaves the screen — a modal for one short word would be the heaviest thing in the game.'],
+    ['d', '<b>16 characters, newlines stripped, trimmed.</b> 16 fits the header at 19px without ellipsis on the narrowest phone, and it is long enough for a real name. Empty falls back to <b>Gardener</b>.'],
+    ['d', '<b>The name is the first player-typed text in this game.</b> It renders through <code>textContent</code> at every single site, per the plan already filed in docs/11 — never inside a template string. A grep-style check will fail the build if anyone ever writes it the other way.'],
+    ['q', '<b>Default name: “Gardener”.</b> Warm, and true before you have typed anything. Alternatives if you prefer: “Friend”, or leaving it blank with the field open on first look.'],
+    ['q', '<b>Should renaming cost anything, ever?</b> No, and I would keep it that way — a rename fee is a mobile-game reflex with nothing behind it here.']
+  ]
+});
+
+F.push({
+  tag: 'THE FACE',
+  t: 'The avatar picker — your garden is your face',
+  s: 'Portraits generated from what you own: unlocked blooms, then creatures you have met.',
+  html: '<div class="phone">' + screen({ menu: true }) +
+    drawer({ name: 'Rosalind', face: pet('thistle'), tint: '#e8935c', body: pickerBody() }) + '</div>',
+  notes: [
+    ['d', '<b>No uploads, no photos, ever.</b> Every face here is drawn by the game from something the player earned. It costs no backend, no moderation and no storage, and it turns the picker into a second collection screen.'],
+    ['d', '<b>Two groups, not one grid.</b> Blooms and creatures are different kinds of thing; a single grid would read as a bag of stickers. The talking flower leads the blooms and is the default.'],
+    ['d', '<b>A bloom you have not unlocked is drained and padlocked, not hidden</b> — the same rule the locked seed row follows. The cell is an advert for the flower you are saving for.'],
+    ['q', '<b>Does the picker replace the drawer’s rows, or open as its own panel?</b> Drawn as a replacement, so the drawer never stacks on itself. The back path is the tick in the header and the same three dismissals.'],
+    ['q', '<b>Should a creature you have met but never housed be pickable?</b> Drawn as yes — “met” is the warmer rule and the roster already knows. Tell me if you want it to mean housed.']
+  ]
+});
+
+F.push({
+  tag: 'REDUCED MOTION',
+  t: 'The honest instant version',
+  s: 'Preference on: the drawer is simply there. No slide, no fade — and no state carried only by an animation.',
+  html: '<div class="phone"><div class="rm-band">prefers-reduced-motion: reduce</div>' +
+    screen({ menu: true, dot: true }) + drawer({ name: 'Gardener' }) + '</div>',
+  notes: [
+    ['d', '<b>Reduced motion gets a real version, not a fast one.</b> The clamp runs an animation once for a thousandth of a second and drops it, so anything whose whole signal is movement has no signal at all. The drawer arrives instantly, the scrim is opaque in its base style, and the badge dot is a solid disc rather than a pulse — it reads with the clock stopped.']
+  ]
+});
+
+const TAIL =
+  '<h2>What this spike is asking you</h2><table>' +
+  '<tr><td><b>1. Does the avatar and name also belong in the HUD?</b></td>' +
+  '<td><span class="keep">SPEC SAYS MENU ONLY — I AGREE.</span> The HUD just won its 44px tap targets back by losing two elements. Putting a face there spends that win. Your identity lives where you change it.</td></tr>' +
+  '<tr><td><b>2. Is 332px the right width?</b></td>' +
+  '<td><span class="keep">DRAWN AT min(86%, 332px).</span> Wide enough for a two-line row, narrow enough that the garden is still visible down the left — which is what says <i>drawer</i> rather than <i>screen</i>, and what makes the scrim tap findable.</td></tr>' +
+  '<tr><td><b>3. Four rows of ours, three reserved. Right shape?</b></td>' +
+  '<td><span class="keep">SHOP · ALMANAC · WHAT’S NEW · SETTINGS,</span> then Friends · Daily Gift · Garden Record, drained and capped at three. A menu that is half promises is a menu nobody trusts.</td></tr>' +
+  '<tr><td><b>4. Almanac is in the menu AND on the HUD book button.</b></td>' +
+  '<td><span class="move">DELIBERATE, AND WORTH YOUR RULING.</span> Two doors to one room is normal in this shape — the book is the fast one, the row is the one you find while browsing. If you would rather the book button went, that is a separate change and I would want to make it on its own.</td></tr>' +
+  '<tr><td><b>5. What’s New reopens the announcement read-only.</b></td>' +
+  '<td><span class="keep">NEVER THE RESET PATH.</span> The row opens the newest announcement exactly as the developer preview already does: it shows it, it does not mark it seen a second time, and it can never hand anyone a fresh garden. The dot is what tracks unseen.</td></tr>' +
+  '<tr><td><b>6. Nothing else moves.</b></td>' +
+  '<td><span class="keep">THE DOCK, THE WALLETS AND EVERY OTHER HUD ELEMENT ARE UNTOUCHED.</span> One glyph changes on one button. That is the whole footprint outside the drawer.</td></tr>' +
+  '</table>';
+
+/* ---------- render ---------- */
+const grid = document.getElementById('grid');
+grid.innerHTML = F.map((f, i) =>
+  '<figure><figcaption><span class="tag">' + (i + 1) + ' · ' + f.tag + '</span>' + f.t +
+  (f.s ? '<i>' + f.s + '</i>' : '') + '</figcaption>' + f.html +
+  (f.notes || []).map(([k, txt]) => '<p class="note ' + k + '">' + txt + '</p>').join('') +
+  '</figure>').join('');
+document.getElementById('tail').innerHTML = TAIL;
+
+document.getElementById('tNotes').addEventListener('click', (e) => {
+  const on = e.currentTarget.dataset.on === '1' ? '0' : '1';
+  e.currentTarget.dataset.on = on;
+  document.body.dataset.notes = on;
+});
+document.getElementById('tInset').addEventListener('click', (e) => {
+  const on = e.currentTarget.dataset.on === '1' ? '0' : '1';
+  e.currentTarget.dataset.on = on;
+  document.querySelectorAll('.phone').forEach((p) => p.classList.toggle('no-inset', on === '0'));
+});
+</script>
+</body>
+</html>
