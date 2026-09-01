@@ -614,10 +614,11 @@ button:focus-visible{
 .plot[data-skip] .skip-chip{display:inline-flex}
 .plot[data-skip="no"] .skip-chip{background:#e6e0d8;opacity:.65}
 .skip-chip svg{width:11px;height:11px}
-/* The price and the wait are one fact, so they never wrap apart. Landscape is
-   not a supported orientation and collapses the board to ~100px, where the chip
-   is wider than the tile it labels — it was already overflowing there before
-   the wait joined it, and this at least keeps it on one line. */
+/* The clamp outlives the wait it was written for. Landscape is not a supported
+   orientation and collapses the board to ~100px, where a 34px chip is wider than
+   the 31px tile it labels — so the chip is held to its plot and kept on one
+   line, which is the difference between a chip that overhangs and one that
+   reflows the tile under it. */
 .skip-chip{white-space:nowrap;max-width:calc(100% - 10px)}
 .skip-chip:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
 @media (max-height:600px){ .skip-chip{padding:1px 5px 1px 3px;font-size:9px} }

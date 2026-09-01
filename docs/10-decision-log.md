@@ -5,6 +5,49 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (fix round) — The gem skip chip loses its countdown, and this reverses a logged ruling
+
+**The owner overruled a decision made yesterday, from live play**, and the reversal is the point of
+this entry. On 2026-08-30 the phase-3.8 sweep put a real number on every surface, and one of the
+things it found was that *"a gem skip named a price and never the wait it deleted"*.
+`Game.skipSaving()` was written for that one label. It was right about the surface and wrong about
+the room: `skipWait()` renders seconds below a minute, so inside the last minute of a grow window the
+chip re-rendered **every second, on up to eight plots at once**, at exactly the moment the player is
+watching the board.
+
+**One chip explaining itself is informative; eight ticking together is noise.** That is the cost the
+sweep did not weigh, and it is only visible from a seat in front of the game. The owner's words:
+*"Remove the timer that spawns that shows how many seconds are counting down. Just show the gem and
+how much it costs."*
+
+**The wait is removed from the eye, not from the game.** It stays in the `aria-label` — "Finish now
+for 3 gems, saving 13 minutes" is the accessible description of what the button *does*, spoken on
+demand rather than flickering on screen, and the complaint was about visual noise. That also keeps
+`Game.skipSaving()` in use, which avoids the recorded trap of removing a method from `Game` and
+leaving a `ui-*` caller behind.
+
+**The render cache relaxes with it.** `c.skipLeft` existed to notice the countdown changing. The key
+is now the price and the afford state — what the visible chip is actually made of — so the branch
+stops firing once a second per plot. `skipCost()` is `ceil(remaining / 30)`, so the spoken wait now
+refreshes on the same thirty-second quantum the price is quoted in: the player is told what the
+gems on offer buy, which is the deal actually being made.
+
+**Rejected: keeping the wait and slowing its tick.** A countdown that updates every five seconds is
+still a countdown, still eight of them, and now also wrong for four seconds at a time.
+
+**Rejected: deleting `skipWait()`.** The short form (`13m`) is the same fact one word shorter and
+something visible will want it again; it costs six lines to keep.
+
+**The CSS comment above `.skip-chip` was rewritten rather than left standing.** It justified
+`white-space:nowrap` and the `max-width` clamp with "the price and the wait are one fact, so they
+never wrap apart" — false the moment the wait left. The clamp is still right, for the landscape
+overflow in `11-known-issues.md`, so the reason had to be replaced rather than the rule.
+
+**One thing fixed in passing:** the `aria-label` said "1 gems". It is the line being rewritten, so
+it is now pluralised.
+
+---
+
 ## 2026-08-31 (fix round) — Three sound channels, each a level and a mute
 
 **The owner asked for effects, ambient and music as separate channels, then chose sliders *and*
@@ -983,7 +1026,9 @@ priced meadow tenders were described entirely in adjectives — **and two of the
 hives they touch** while their copy said "cool and quiet". A creature food button stamped the tin's
 `+16h` while the engine's cap handed over two. "Sell all" showed the unit price and the quantity and
 left the player to multiply. A bought sky promised "everything growing gets a shot" on an empty
-board. A gem skip named a price and never the wait it deleted.
+board. A gem skip named a price and never the wait it deleted. *(That last one was reversed by
+the owner on 2026-08-31 — see the entry at the top of this file. The wait moved to the
+`aria-label`; the chip shows the price alone.)*
 
 Every one of those numbers already existed inside the function that spends it. The pass added
 thirteen getters to `game.js` — `upgradeEffect`, `foodEffect`, `hiveProjection`, `tenderEffect`,

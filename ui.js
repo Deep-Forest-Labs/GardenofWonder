@@ -121,10 +121,10 @@
     return 3;
   }
 
-  /* The wait a skip deletes, said two ways. `13m` is what fits beside a price on
-     a 105px tile — `fmtTime`'s "12m 43s" is twice too wide and re-rendering
-     every second on eight plots to move the last digit. The spoken form is for
-     the label, because a screen reader reads `13m` as "thirteen em". */
+  /* The wait a skip deletes. Spoken only now — it is what the `aria-label` says
+     the gems buy, and the chip itself shows the price alone. The short form is
+     kept because it is the same fact one word shorter, and something visible
+     will want it again. */
   function skipWait(sec, spoken) {
     if (sec < 60) return spoken ? `${sec} second${sec === 1 ? '' : 's'}` : `${sec}s`;
     const m = Math.round(sec / 60);
@@ -153,33 +153,36 @@
         v.root.classList.toggle('has-pack', hasPack);
         c.packDrop = hasPack;
       }
-      /* A gem price with no value beside it is a number the player cannot judge.
-         What the gems buy is the wait, so the wait rides in the same pill — one
-         call for both, so the price and the time it deletes can never drift.
+      /* The chip shows the price and nothing else. It carried the wait too until
+         2026-08-31, and on eight growing plots that was eight numbers counting
+         down together inside the last minute — one chip explaining itself is
+         informative, eight ticking at once is noise, and the owner overruled it
+         from live play. The wait survives in the `aria-label`, where it is
+         spoken on demand rather than flickering.
 
-         The afford state is in the key as well. It used to hang off the price
+         So the key is the price and the afford state, which is what the visible
+         chip is made of, and the countdown is out of it — the branch stops
+         firing once a second per plot. The price steps once every thirty
+         seconds, so the spoken wait refreshes on the same quantum the price is
+         quoted in.
+
+         The afford state has to stay in the key. It used to hang off the price
          alone, so a chip greyed out at 3 gems stayed grey after a gem drop until
          the price happened to tick — a number a purchase changes, not updating
          when it changed. */
       const skip = state === 'grow' ? Game.skipSaving(i) : null;
       const skipGems = skip ? skip.gems : 0;
-      const skipLeft = skipGems ? Math.ceil(skip.seconds) : 0;
       const skipOk = skipGems && S.gems >= skipGems ? 'ok' : 'no';
-      if (c.skipLeft !== skipLeft || c.skipOk !== skipOk) {
-        c.skipLeft = skipLeft;
+      if (c.skipGems !== skipGems || c.skipOk !== skipOk) {
+        c.skipGems = skipGems;
         c.skipOk = skipOk;
         if (skipGems) {
-          const label = `${fmt(skipGems)} · ${skipWait(skipLeft)}`;
-          if (c.skipLabel !== label) {
-            c.skipLabel = label;
-            v.skipNum.textContent = label;
-            v.skip.setAttribute('aria-label',
-              `Finish now for ${fmt(skipGems)} gems, saving ${skipWait(skipLeft, true)}`);
-          }
+          v.skipNum.textContent = fmt(skipGems);
+          v.skip.setAttribute('aria-label',
+            `Finish now for ${fmt(skipGems)} gem${skipGems === 1 ? '' : 's'}, saving ${skipWait(Math.ceil(skip.seconds), true)}`);
           v.root.dataset.skip = skipOk;
         } else {
           delete v.root.dataset.skip;
-          c.skipLabel = '';
         }
       }
       const mut = cell.mutation || '';

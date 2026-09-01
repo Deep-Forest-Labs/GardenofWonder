@@ -308,10 +308,11 @@ on the clock alone with the panel open and nothing redrawing. Accepted: both pan
 you open to make a decision, and the drift is downward — you are never shown more than you have.
 The fix, if the owner wants it, is a `data-*` hook on those rows so `syncAfford()` can reach them.
 
-**In landscape the gem skip chip hangs off its plot.** It did before this pass (34px chip on a 31px
-tile) and the wait it now carries makes it worse. Landscape is not a supported orientation for this
-game and nothing else in the phase touches it; the chip is clamped to `white-space: nowrap` and
-`max-width` so it stays one line rather than wrapping into the neighbouring plot.
+**In landscape the gem skip chip hangs off its plot.** A 34px chip on a 31px tile. *Amended
+2026-08-31:* the wait that was making it worse is gone — the chip now shows the price alone — so
+what is left is the original overflow, narrower than it was but still there. Landscape is not a
+supported orientation for this game; the chip stays clamped to `white-space: nowrap` and `max-width`
+so it holds one line rather than wrapping into the neighbouring plot.
 
 **The announcement art is a JPEG carrying a `.png` extension**, 692 KB at 1152×1728. Browsers sniff
 the content and render it, and the service worker stores whatever the server sends, so it works —
