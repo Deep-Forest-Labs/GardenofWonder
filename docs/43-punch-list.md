@@ -25,9 +25,10 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 3. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Gated on #11 and on an owner decision**: 132px is a documented clearance, not a taste, and the
    way to widen it is to settle whether the band's buttons belong in Fall at all.
-4. **#11 · "Credits from all sources" does not reach Fall** — found while investigating `#10`.
-   Small, but it is a doc and a booster contradicting the code, and it decides `#10`'s layout. Wants
-   the owner's ruling before anyone changes a number.
+4. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+   owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
+   round already wrote this reasoning into a comment but shipped it only under a short-screen media
+   query. Applies to all three chip kinds, and one booster's copy is false.
 
 ---
 
@@ -155,50 +156,85 @@ gradient, radius or border width is what it ratchets on. And reduced motion: a s
 *only* thing marking the button as special fails the recorded rule that a visual state must never
 depend on a keyframe having run, so the size and colour have to carry it with motion off.
 
-**Open question.** Should UPGRADE and POWER-UP hide in Fall? It is the cheapest way to give this
-button real room, and `#11` suggests neither does anything there — but it changes what Fall's screen
-is, so it is the owner's call rather than a fix agent's.
+**Open question, narrowed by `#11`'s ruling on 2026-09-01.** The owner has ruled that a power-up
+doing nothing in a room should not be *shown* there. That settles the rail chip; it does not settle
+this button, and the two are different — hiding a chip removes information, hiding a button removes
+an action, and a boost spent in Fall still runs when the player swipes home. **UPGRADE is out of
+scope either way**: the shop works fine from Fall, so the ruling does not touch it, and it is the
+button 34px in from the LEFT. So the most this item can currently assume is half the strip. If the
+owner wants the full width, they have to say the POWER-UP button hides too.
 
 ---
 
-### #11 · BUG · "Credits from all sources" does not reach Fall · cosmetic · found while investigating #10, 2026-09-01
+### #11 · POLISH · A chip that does nothing in this room should not be in this room · annoying · found while investigating #10, 2026-09-01 · RULED 2026-09-01
 
-**Not something the owner reported** — found while measuring `#10`'s clearance problem.
+**Found while measuring `#10`'s clearance problem**, filed as a question, and answered by the owner
+the same day.
 
-**The contradiction.** Golden Popups is described as **"+25% credits from all sources"** in its own
-data (`data.js:325`) and in the boosters table at `03-systems.md:651`. Fall's harvest is a source it
-does not reach: `fallHarvest()` and `fallHarvestAll()` (`game.js:3812`) both compute
-`Math.round(def.yield * (1 + FALL().windfall))` and hand it straight to `credit()`, and `credit()`
-(`game.js:121`) is a plain add with no multiplier in it. Every other payout path applies
-`boostVal('globalCredits')` at its own call site — `game.js:1240`, `1574`, `2248`, `2429`, `4810` —
-and Fall is the one that does not.
+**The finding.** Golden Popups is described as **"+25% credits from all sources"** in its own data
+(`data.js:325`) and in the boosters table at `03-systems.md:651`, and Fall's harvest is a source it
+does not reach. `fallHarvest()` and `fallHarvestAll()` (`game.js:3812`) compute
+`Math.round(def.yield * (1 + FALL().windfall))` and hand it straight to `credit()`, which
+(`game.js:121`) is a plain add. Every other payout path applies `boostVal('globalCredits')` at its
+own call site — `game.js:1240`, `1574`, `2248`, `2429`, `4810`. Fall is the only one that does not.
 
-**Repro.** Spend Golden Popups, then harvest a ripe Fall crop. The payout is the plain yield.
-Confirmed by reading both paths; not yet driven live.
+**THE OWNER'S RULING, 2026-09-01.** *"If a user scrolls to fall or winter or wherever else that you
+can't use power-ups, then we just hide the power-up that's in effect on that garden. Obviously, if
+they move back to the garden where the power-up is in effect, it should show."*
 
-**It may be deliberate, which is why this is filed as a question.** Fall's bed sits outside every
-*growth* modifier by design, and that is recorded — no rain, no petal, no Keeper reaches it
-(`11-known-issues.md`, the Sky Pass section). But that reasoning is about **growth**, and this is a
-**payout** multiplier. Nothing found says a payout boost should stop at Fall's fence, and the
-booster's own copy says the opposite.
+**So Fall stays outside boosts, and the fix is display, not economy.** Nothing about the payout
+changes; no number moves; `33-year-one-economy.md` is untouched. What changes is that a running
+power-up's chip stops being shown in a room where it is doing nothing, and comes back when the
+player swipes home. The booster copy still has to stop saying "all sources" — that half is a real
+correction and it lands in `data.js` and `03-systems.md:651`.
 
-**Related.** `#10` — if boosts genuinely do nothing in Fall, that is the argument for hiding the
-band's POWER-UP button there and giving the Collect All its room. If this is a bug and gets fixed,
-that argument evaporates and Golden Popups before a Collect All becomes a real piece of play. **So
-this wants ruling before `#10` decides the layout.**
+**Last night's fix round already reached this conclusion and only half-applied it.** The comment at
+`style.css:4613` says it outright: *"The rail loses the tie-break because a booster and the Wonder
+Effect act on the GARDEN: there is nothing in Fall for them to do and nothing there to tap… Swipe
+back and it is there."* But it is written as a **space** tie-break and shipped inside
+`@media (max-height:700px)`, so on any phone taller than 700px the useless chip is still sitting
+there. **The owner's ruling promotes that from a short-screen compromise to a rule that holds at
+every height**, and the media query can go.
 
-**Fix sketch.** Two honest options and they are opposite. **Either** apply
-`(1 + boostVal('globalCredits'))` in `fallHarvest()` and `fallHarvestAll()`, which makes the copy
-true and gives power-ups a job in Fall — and then re-measure, because a +25% on a 2.8M Century Bloom
-is not the same size of gift as +25% on a Daisy. **Or** rule that Fall is outside boosts entirely,
-and fix the *copy* in `data.js` and `03-systems.md` so nothing claims "all sources". Whichever way,
-`03-systems.md:496` already discusses what a running boost does across the Turn and will need
-re-reading. **What it might break:** the first option moves Fall's income share, and Fall's yields
-are tuned at `cost x 1.4`; anything that multiplies them wants a sim-test and a look at
-`33-year-one-economy.md`. The second option is free.
+**Apply it to all three chip kinds, because all three fail the same test in Fall.**
 
-**Open question for the owner.** Should a power-up's payout bonus reach Fall's bed, or is Fall
-deliberately outside every boost? Nothing found in the docs answers it either way.
+| Chip | Does it reach Fall's bed? | |
+| --- | --- | --- |
+| The four boosters | No — no `boostVal` in either Fall harvest path, and growth boosts do not reach Fall either (`11-known-issues.md`, Sky Pass section) | hide |
+| The Wonder Effect | No — `wonderMult()` (`game.js:2103`) is not called anywhere in Fall's payout | hide |
+| The sky | No — rain does not water Fall's bed, and **Fall's cells carry no mutation at all** (nothing in `ui-fall.js` or Fall's cell shape references one) | hide |
+
+The sky chip is the one worth pausing on: it shipped last night with a tooltip whose first sentence
+is *"Every plant rolls for a mutation once, at a moment of its own while it grows"* — **which is
+false of everything on Fall's board.** Hiding it in Fall is the same ruling and it also stops a
+tooltip lying.
+
+**Related.**
+- **`#10`** — this was gating it. See the fix sketch for what it does and does not unblock.
+- **`#9`** — if the boost chips become tappable there, they must be tappable only where they are
+  shown; the two items touch the same `renderRail()`.
+
+**Fix sketch.** Filter in `renderRail()` (`ui.js:648`) on the room rather than hiding with CSS, and
+delete the `@media (max-height:700px)` block at `style.css:4625`. **The rail's box is already
+reserved and this is why it is safe**: `.rail{min-height:33px}` (`style.css:506`) exists precisely so
+the track never collapses — a logged decision, because a board that changes size when a chip appears
+is the layout moving under the player. So an empty rail in Fall keeps its row, `.stage` does not
+grow, and `#6`'s alignment holds. That also makes the JS filter *cleaner* than the `visibility:hidden`
+workaround it replaces. **What it might break:** the sig-cache at `ui.js:672` keys on the markup, so
+the row rebuilds correctly on a season change only if `renderRail()` actually runs then — check that
+`goSeason()` triggers it, or the chips linger until the next tick. `#9`'s tooltip close-when-gone
+guard has to fire on a season change too, or a tooltip is left floating over Fall.
+
+**The copy fix, which is separate and unconditional.** `data.js:325` and `03-systems.md:651` both say
+"+25% credits from all sources". Whatever happens to the chips, that sentence is false and should say
+what it means — the garden's sources.
+
+**Open question — still the owner's, and NOT settled by this ruling.** Should the band's **POWER-UP
+button** also hide in Fall? It is a different kind of thing: hiding a *chip* removes information
+that is irrelevant here, which costs the player nothing, while hiding the *button* removes an action
+— and spending a boost in Fall is not useless so much as badly timed, since it keeps running when
+the player swipes home. `#10` wants that room, so the answer matters. Note that UPGRADE does not fall
+under the ruling either way: the shop works fine from Fall.
 
 ---
 
