@@ -277,6 +277,13 @@
       <div class="banner" id="banner" aria-hidden="true"></div>
       <div class="meadow-layer" id="meadow" aria-label="The Wild Meadow" hidden></div>
       <div class="coach" id="coach" hidden></div>
+      <!-- The sky chip's tooltip. A sibling of the coach and NOT a child of the
+           rail: the rail's signature carries every countdown, so it rewrites its
+           whole markup about once a second and would eat anything anchored
+           inside it. It borrows the coach's arrow-and-bubble shape rather than
+           inventing a second callout, and none of the coach's machinery — it is
+           placed by its own tap and closed by the next one. -->
+      <div class="coach weather-tip" id="wxTip" hidden></div>
     </div>
 
     <!-- WHAT'S NEW. Outside `.world` on purpose: FX builds its float layer as a

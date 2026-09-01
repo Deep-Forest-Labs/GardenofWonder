@@ -344,6 +344,14 @@ exact.
   the moment planting is scheduled against a readout the garden stops being a place and becomes an
   optimisation problem, which is precisely the risk this question named. A Clear slot is announced
   by nothing at all, so the lookahead is silent for most of the day.
+- ~~Can the player see what the sky STANDING NOW is worth?~~ **Answered 2026-08-31: yes, and it does
+  not reopen the forecast ruling above.** A tinted chip in the status rail names the sky, and a tap
+  gives one paragraph about what it is doing. That is a status light for the sky that is here, not a
+  timetable for the one that is coming — the distinction the ruling above turns on. **It carries no
+  countdown**, and that is where the two touch: a countdown to the end of this sky is also a
+  countdown to when the next one starts, and paired with the flower's spoken forecast it would
+  rebuild most of the panel that was ruled out. **The timer is on the table for the owner**, with
+  everything already in place if they want it.
 - Does Wonderfall also trigger the existing Wonder Effect, or are they deliberately separate events
   that can coincide?
 - Should mutation affect anything besides payout — gem chance, growth, card rarity only?

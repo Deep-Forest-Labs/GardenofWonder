@@ -537,6 +537,33 @@ button:focus-visible{
 }
 .chip .chip-price svg{width:12px;height:12px}
 
+/* THE SKY'S CHIP. A real button, because it is the first thing in this row that
+   has ever been tappable — the rail's other chips are `<div>`s, and a click on a
+   div carries no role, no keyboard and no focus ring. Its body is the sky's own
+   `tint` under the white veil the palette uses everywhere a saturated token has
+   to sit behind ink; the dot beside the name is the tint at full strength, so
+   the sky is named twice, in a word and in a colour.
+
+   NOT `.wx`, AND NOT `.sky`. Both are taken and both are
+   `position:absolute;inset:0` — `.wx` is the Sky Pass's weather layer and `.sky`
+   is the scenery's sky. A chip wearing either silently became a full-screen
+   absolutely-positioned box that swallowed every tap on the garden: nothing
+   threw, and the chip still looked correct in the rail. This is the recorded
+   "check for an existing class before naming a new one" trap, walked into twice
+   in a row — `style.css` is 250KB and the collision is invisible until you
+   measure the box. */
+.chip.weather{
+  padding:3px 10px 3px 7px;
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.62)),var(--tint,var(--sky1));
+  cursor:pointer;
+}
+.chip.weather:active{transform:translateY(1px);box-shadow:0 1px 0 var(--ink-2)}
+.weather-dot{
+  width:11px;height:11px;flex:none;border-radius:50%;
+  background:var(--tint,var(--sky1));border:2px solid var(--ink);
+}
+
+
 /* ---------- stage / garden ---------- */
 /* The yard is reserved as padding rather than overlaying, or the garden board
    grows down over it and a creature ends up standing on a plot — which reads as
@@ -2592,6 +2619,35 @@ button:focus-visible{
 .coach.side-r .arrow{border-left-color:var(--ink);--nudge:6px}
 @keyframes coachBobX{0%,100%{transform:translateX(0)}50%{transform:translateX(var(--nudge,-6px))}}
 @keyframes coachBob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+/* THE SKY CHIP'S TOOLTIP — the coach's shape, none of the coach's machinery. It
+   is placed by its own tap and closed by the next one, so it never joins
+   `refreshCoach()`'s 0.6s tick, and it is a paragraph rather than a label.
+
+   IT HAS TO SIT BELOW `.coach`, not beside the chip it belongs to. `.coach .tip`
+   and `.weather-tip .tip` are the same specificity (0,2,0), so whichever comes
+   last wins — written up beside the rail it lost `white-space` and the bubble
+   ran off both edges of the phone in one unwrapped line. Same cascade lesson the
+   reduced-motion block records. */
+.weather-tip{z-index:66;pointer-events:auto;transform:none}
+.weather-tip .arrow{
+  animation:none;
+  /* POINTING UP, because this bubble hangs BELOW its chip where a coach mark
+     stands above its target — the same triangle turned over. A coach's arrow
+     colours its top border; leaving that alone here would have drawn a wedge
+     pointing down at the bubble's own roof. */
+  border-top-color:transparent;border-bottom-color:var(--ink);
+  /* The bubble slides to stay inside the 560px column; the arrow stays on the
+     chip, which is the whole point of splitting the two. */
+  margin-left:calc(var(--ax,0px) - 11px);align-self:flex-start;
+}
+.weather-tip .tip{
+  display:block;white-space:normal;text-align:left;
+  width:min(280px, calc(100vw - 28px));
+  font-size:12.5px;font-weight:600;line-height:1.42;
+  transform:none;
+}
+.weather-tip .tip b{font-weight:800}
 /* A coach mark points at something in the garden, so an open sheet has covered
    the thing it is pointing at — it was floating over the panel's own title.
    Declarative and keyed off the sheet being open, like .sheet-art, so no close

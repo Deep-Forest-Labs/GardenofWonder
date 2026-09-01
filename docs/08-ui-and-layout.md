@@ -819,7 +819,47 @@ Rebuilt every 0.25 s, but the generated HTML is compared against a stored signat
 written when it differs — otherwise a countdown that only changes once a second would thrash the
 DOM four times as often as needed.
 
-Hidden entirely below 600 px height and in short landscape.
+Hidden entirely below 600 px height and in short landscape, and `visibility:hidden` in **Fall** below
+700 px, where its row and the bed chip's row are the same band — see the season section above.
+
+### The sky's chip (2026-08-31)
+
+**A standing sky is worth real money and the player's only clue was that the screen got darker.**
+A fifth chip, tinted from `DATA.weather.types[].tint`, shown whenever `Game.currentWeather()` is not
+Clear.
+
+| Rule | Why |
+| --- | --- |
+| **It is FIRST in the row** | The rail overflows horizontally with two boosters and a Wonder running — measured 437px of chips in a 370px row. This is the only chip that can be tapped, and a control you have to scroll to find is a control nobody finds |
+| **A real `<button>` with an `aria-label`**, and the rail's first listener ever | Its neighbours are `<div>`s. A click on a div carries no role, no keyboard and no focus ring. The listener is delegated off `.rail`, because the row is rewritten wholesale about once a second |
+| **The tooltip lives OUTSIDE the rail** (`#wxTip`, a sibling of `.coach` in `.world`) | `renderRail()`'s signature carries every countdown, so it rewrites the row roughly once a second. Anything anchored to a node inside it is destroyed on the next tick |
+| **Clamped to `.ui`'s measured box**, not to the window | The tooltip lives outside `.ui` and inherits none of its 560px column; clamped to the window it would sail into the grey on a desktop while its chip stayed in the middle |
+| **No countdown, v1** | See below |
+| **Three ways out**: tap it, tap the chip again, tap anything else | The third is a capture-phase `pointerdown` on the document, so a tap that lands on a control still closes this on its way through |
+
+**The copy is about a CHANCE, never a payout, and that is the hard part of the whole feature.** A
+plant rolls for a mutation **exactly once**, at a moment chosen randomly inside its grow window when
+it is sown, resolved against whatever sky stands at that moment. So a storm standing now only pays
+the plants whose booked moment happens to land inside it. A chip reading "Gilded ×10" promises a
+per-harvest multiplier the game does not give, and a player who harvests through a whole storm with
+nothing to show reads it as broken. Every tooltip therefore states the rule first and the sky's odds
+second, and both the odds and the multiplier are read from `DATA` rather than written out — a
+tooltip that drifts from the table it describes is worse than no tooltip.
+
+**No timer, deliberately, and it is the owner's to reopen.** A countdown to the end of this sky is
+also a countdown to when the next one starts, and paired with the flower's spoken forecast that
+rebuilds most of the forecast panel ruled out in
+[18-mutations-and-weather.md](18-mutations-and-weather.md#open-questions). A tinted chip says "the
+sky is doing something" without becoming a small clock to plant against. `weatherSlotRemaining()`
+already returns the seconds if the ruling changes — but note it measures the **slot**, and a called
+or held sky outlasts its slot, so a chip that trusted it would count down to zero and keep going.
+
+**`.chip.weather`, not `.chip.wx` and not `.chip.sky`.** Both of those class names are taken and both
+are `position:absolute; inset:0` — `.wx` is the Sky Pass's weather layer, `.sky` is the scenery's
+sky. A chip wearing either silently became a full-screen absolutely-positioned box that swallowed
+every tap on the garden, while still looking correct in the rail. Walked into twice in a row; the
+recorded "check for an existing class before naming a new one" rule is not optional in a 250KB
+stylesheet.
 
 ## Toasts, banners, coach marks
 

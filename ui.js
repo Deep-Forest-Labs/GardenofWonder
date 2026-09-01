@@ -569,6 +569,82 @@
      the band's POWER-UP button now; what is left here is the countdown of
      whatever is already running, plus the Wonder. It is `:empty{display:none}`,
      so most of the time it costs nothing at all. */
+  /* THE SKY'S OWN CHIP. A standing sky is worth real money and until now the
+     player's only clue was that the screen got darker.
+
+     NO COUNTDOWN, v1. A countdown to the end of this sky is also a countdown to
+     when the next one starts, and paired with the flower's spoken forecast that
+     rebuilds most of the forecast panel ruled out on 2026-08-31 in
+     `18-mutations-and-weather.md`. A tinted chip says "the sky is doing
+     something" without becoming a small clock to plant against. It is the
+     owner's call to reopen. */
+  function weatherChip() {
+    const w = Game.currentWeather();
+    if (!w || w.id === 'clear') return '';
+    return `<button class="chip weather" type="button" data-wx="${w.id}" style="--tint:${w.tint}"
+      aria-label="${w.name} — what this sky is doing">
+      <span class="weather-dot"></span><span>${w.name}</span></button>`;
+  }
+
+  /* THE COPY IS ABOUT A CHANCE, NEVER A PAYOUT, and this is the hard part of the
+     whole item. A plant rolls for a mutation EXACTLY ONCE, at a moment chosen
+     randomly inside its grow window when it is sown, resolved against whatever
+     sky stands at that moment — so a storm standing now only pays the plants
+     whose booked moment happens to land inside it. A chip reading "Gilded x10"
+     promises a per-harvest multiplier the game does not give, and a player who
+     harvests through a whole storm with nothing to show reads it as broken.
+
+     So every tooltip states the rule first and the sky's odds second. The odds
+     and the multiplier are read from the data rather than written out, because a
+     tooltip that drifts from the table it describes is worse than no tooltip. */
+  function weatherTip(id) {
+    const w = (DATA.weather.types || []).find((t) => t.id === id);
+    if (!w) return '';
+    const m = w.mutation ? DATA.mutations[w.mutation] : null;
+    const odds = w.catch ? Math.round(1 / w.catch) : 0;
+    const extra = {
+      rain: ' Everything in the garden also grows a tenth faster while it lasts.',
+      storm: ' It does not change how fast anything grows.',
+      aurora: ' The garden counts as night while it hangs there too, whatever the hour, so the night-lovers wake.',
+      wonderfall: ' The rarest sky there is.'
+    }[id] || '';
+    const roll = m
+      ? ` If that moment lands under ${w.name}, it has about a <b>1 in ${odds}</b> chance of coming up
+         <b>${m.name}</b> — worth <b>&times;${m.mult}</b>.`
+      : '';
+    return `<b>${w.name}</b><br>Every plant rolls for a mutation once, at a moment of its own while
+      it grows.${roll}${extra}`;
+  }
+
+  function showWeatherTip(btn) {
+    const id = btn.dataset.wx;
+    if (el.wxTip.dataset.wx === id && !el.wxTip.hidden) { hideWeatherTip(); return; }
+    el.wxTip.dataset.wx = id;
+    el.wxTip.innerHTML = `<div class="arrow"></div><div class="tip">${weatherTip(id)}</div>`;
+    el.wxTip.hidden = false;
+    /* Placed in viewport coordinates, like the coach it sits beside — but
+       CLAMPED to `.ui`'s measured box rather than to the window. This element
+       lives outside `.ui` and inherits none of its 560px column, so a bubble
+       clamped to the window would sail off into the grey on a desktop while the
+       chip it belongs to stayed in the middle. */
+    const host = el.ui.getBoundingClientRect();
+    const r = btn.getBoundingClientRect();
+    const w = el.wxTip.offsetWidth;
+    const centre = r.left + r.width / 2;
+    const left = Math.max(host.left + 6, Math.min(host.right - w - 6, centre - w / 2));
+    el.wxTip.style.left = `${left}px`;
+    el.wxTip.style.top = `${r.bottom + 8}px`;
+    /* The bubble slides to stay in the column; the arrow stays on the chip. */
+    el.wxTip.style.setProperty('--ax', `${centre - left}px`);
+    Sound.play('open');
+  }
+
+  function hideWeatherTip() {
+    if (el.wxTip.hidden) return;
+    el.wxTip.hidden = true;
+    el.wxTip.dataset.wx = '';
+  }
+
   function renderRail() {
     const now = Game.nowSeconds();
     let html = '';
@@ -586,9 +662,20 @@
         <span class="ring" style="--p:${(remain / WONDER.duration).toFixed(3)}"><i>${Math.ceil(remain)}</i></span>
         <span>WONDER x${WONDER.payoutMult}</span></div>` + html;
     }
+    /* FIRST in the row, so the one chip in here that can be TAPPED is the one
+       that never needs scrolling to. The rail overflows horizontally with two
+       boosters and a Wonder running, and a control you have to scroll to find is
+       a control nobody finds. */
+    html = weatherChip() + html;
     if (el.rail.dataset.sig !== html) {
       el.rail.innerHTML = html;
       el.rail.dataset.sig = html;
+      /* THE TOOLTIP LIVES OUTSIDE THE RAIL, and this is why: the signature
+         carries every countdown, so this branch fires about once a second and
+         takes the whole row's markup with it. Anything anchored to a node in
+         here is destroyed on the next tick. What is left is to close the tooltip
+         when the chip it belongs to has gone. */
+      if (!el.wxTip.hidden && !el.rail.querySelector(`[data-wx="${el.wxTip.dataset.wx}"]`)) hideWeatherTip();
     }
   }
 
@@ -789,6 +876,29 @@
      confirmation package with it for free — the purchase event plays the boost
      sound, buzzes 14ms and toasts the booster's own name and icon. Nothing else
      needs writing; the local sparks are the only addition. */
+  /* THE RAIL'S FIRST LISTENER. It has never had one — its chips were `<div>`s
+     and nothing in any UI file touched it. Delegated, because the row is
+     rewritten wholesale about once a second and a listener bound to a chip would
+     go with it. `click`, not `pointerdown`: the rail is already in `noSwipe`, so
+     there is no gesture to beat, and a tap that drifts should do nothing rather
+     than fire on the way past. */
+  el.rail.addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-wx]');
+    if (!chip) return;
+    Sound.resume();
+    showWeatherTip(chip);
+  });
+
+  /* Tap it, tap anywhere, or open anything: three ways out, and the third is
+     what a bubble that cannot be scrolled with its anchor needs. `capture`, so a
+     tap that lands on a control still closes this on its way through. */
+  document.addEventListener('pointerdown', (e) => {
+    if (el.wxTip.hidden) return;
+    if (e.target.closest('#wxTip') || e.target.closest('[data-wx]')) return;
+    hideWeatherTip();
+  }, true);
+  el.wxTip.addEventListener('click', hideWeatherTip);
+
   el.btnUpgrade.addEventListener('click', () => {
     Sound.resume();
     noteActivity();

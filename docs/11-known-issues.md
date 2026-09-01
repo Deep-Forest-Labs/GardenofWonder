@@ -12,9 +12,18 @@ same square in the same place, so on a 667-tall phone the bed chip's row and the
 same 48px of band. `visibility:hidden` in Fall only, deliberately — `display:none` would give the
 row's height back to `.stage` in Fall and re-create the misalignment the round exists to remove.
 Traded rather than solved: a booster and the Wonder Effect act on the *garden*, so there is nothing
-in Fall for them to do and nothing there to tap, and one swipe brings them back. Above 700px both
-are shown and neither moves. If Fall ever gains something a rail chip must announce, this needs a
-different answer.
+in Fall for them to do and nothing there to tap, and one swipe brings them back. **The sky's chip
+joined the rail later the same night and is covered by the same trade** — Fall crops take no
+mutations and Fall's grow times are fixed, so a sky changes nothing a Fall player can act on either.
+Above 700px both rows are shown and neither moves. If Fall ever gains something a rail chip must
+announce, this needs a different answer.
+
+**The sky's chip carries no countdown, and that is a decision waiting on the owner.** A timer would
+turn a status light into a small clock to plant against, and paired with the flower's spoken
+forecast it rebuilds most of the forecast panel ruled out in `18-mutations-and-weather.md`. Shipped
+without one; everything needed is in place if the ruling changes. Note the trap if it does:
+`weatherSlotRemaining()` measures the **slot**, and a called or held sky outlasts its slot, so a
+chip that trusted it would count to zero and then keep going.
 
 **Fall's flower cannot speak.** `UI.say()` writes into `#speech`, which lives inside the garden's
 flower cell and is hidden by `.in-fall .garden-frame{display:none}` — so the `windfall` beat's

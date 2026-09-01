@@ -5,6 +5,80 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (fix round) — The sky gets a chip, and it says a chance rather than a payout
+
+**The owner:** *"When a weather effect happens, we should place a buff and a timer under the quest
+bar… they could tap on whatever the buff is and it does a quick tooltip that explains what the
+weather is doing."* A standing sky is worth real money — a Thunderstorm is a ×10 and an Aurora a ×25
+plus a free night — and the player's only clue was that the screen got darker.
+
+### The hard part was the copy, not the chip
+
+A plant rolls for a mutation **exactly once**, at a moment chosen randomly inside its grow window
+when it is sown, resolved against whatever sky stands *at that moment*. So a storm standing now only
+pays the plants whose booked moment happens to land inside it. **A chip reading "Gilded ×10"
+promises a per-harvest multiplier the game does not give**, and a player who harvests through a whole
+storm with nothing to show reads the chip as broken and the game as lying.
+
+Every tooltip therefore states the rule first and the sky's odds second — *"Every plant rolls for a
+mutation once, at a moment of its own while it grows. If that moment lands under Thunderstorm, it has
+about a 1 in 7 chance of coming up Gilded — worth ×10."* Both the odds and the multiplier are read
+out of `DATA` rather than written into the string, because a tooltip that drifts from the table it
+describes is worse than no tooltip at all.
+
+### No timer, and it is on the table for the morning
+
+The owner asked for one. **The design desk's ruling in their absence is to ship without it**, and to
+say so plainly rather than quietly. A countdown to the end of this sky is also a countdown to when
+the next one starts, and paired with the flower's spoken forecast it rebuilds most of the forecast
+panel that was ruled out this morning in `18-mutations-and-weather.md` — *"the moment planting is
+scheduled against a readout the garden stops being a place and becomes an optimisation problem."*
+A tinted chip says *the sky is doing something* without becoming a small clock to plant against.
+
+That ruling is the owner's to reverse and everything is in place if they do. **The trap if they
+do:** `weatherSlotRemaining()` measures the **slot**, and a called sky (bought) or a held one
+(Developer tools) both outlast their slot — a chip that trusted it would count down to zero and then
+keep going.
+
+### The engineering, and the two things that bit
+
+**It is first in the row.** The rail overflows with two boosters and a Wonder running — measured, 437
+px of chips in a 370 px row — and this is the only chip in there that can be tapped. A control you
+have to scroll sideways to find is a control nobody finds.
+
+**The tooltip lives outside the rail.** `renderRail()` rewrites `el.rail.innerHTML` whenever its
+signature changes and the signature carries every countdown, so it fires about once a second:
+anything anchored inside would be destroyed on the next tick. `#wxTip` is a sibling of `.coach`,
+borrowing its arrow-and-bubble shape and none of its machinery — it is placed by its own tap and
+closed by the next one, so it never joins `refreshCoach()`'s slow tick.
+
+**`.chip.wx` silently became a full-screen box, and then `.chip.sky` did it again.** Both class names
+are taken and both are `position:absolute; inset:0` — `.wx` is the Sky Pass's weather layer, `.sky`
+is the scenery's sky. The chip looked perfectly correct in the rail while measuring 390×844 and
+swallowing every tap on the garden; the first probe run tapped it and summoned a Wonder Effect from
+the flower underneath. **Nothing threw and nothing failed a check.** It is `.chip.weather` now, and
+the recorded "check for an existing class before naming a new one" rule earned its place twice in
+ten minutes.
+
+**And the cascade caught the tooltip.** `.coach .tip` and `.weather-tip .tip` are the same
+specificity, so whichever is written last wins — the block written up beside the rail lost
+`white-space` and the bubble ran off both edges of the phone in one unwrapped line. It sits below
+`.coach` now. Same lesson the reduced-motion block already records.
+
+**Rejected: reusing `.coach` itself.** It carries `refreshCoach()`'s 0.6s tick, a measured target, a
+0×0 hidden-target trap and two declarative hides. Borrowing the shape costs nothing; joining the
+system costs all of that.
+
+**Rejected: making the chips `<div>`s like their neighbours.** The rail has never had a listener and
+its chips have never been interactive; this one is, so it is a real `<button>` with a real
+`aria-label`.
+
+**Verified:** every sky's copy read back from the running game, the chip fully visible at the head of
+an overflowing rail, Clear showing no chip at all, three dismissals, the arrow pointing up at its
+chip rather than down at its own roof, and no animation to lose under reduced motion.
+
+---
+
 ## 2026-08-31 (fix round) — The daily changelog ships, and the What's New row becomes its door
 
 Built to the spec logged this morning (see *"The daily changelog: the What's New popup's little

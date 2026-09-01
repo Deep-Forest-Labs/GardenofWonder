@@ -47,6 +47,7 @@ const UI = (() => {
     toasts: $('#toasts'),
     banner: $('#banner'),
     coach: $('#coach'),
+    wxTip: $('#wxTip'),
     cloudsFar: $('#cloudsFar'),
     cloudsNear: $('#cloudsNear'),
     sky: $('#sky'),
