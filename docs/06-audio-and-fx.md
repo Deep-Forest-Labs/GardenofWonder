@@ -106,7 +106,7 @@ is a file.
 | Name | Character | Plays |
 | --- | --- | --- |
 | `rain` | A wide soft hiss with a narrow band of patter over it. The body opens and closes on a slow breath, because a minute inside an unmoving hiss is fatiguing | Rain |
-| `storm` | Two bands of low noise on a slow swell. The weight sits where a phone speaker can actually move it — the true bottom of a rumble is a frequency a phone owns none of | Thunderstorm |
+| `storm` | **Rain's own three bands, darker, with the patter held back — plus the roll band underneath at about half its old weight.** A storm is rain *plus* thunder; this used to be thunder minus rain. The swell rides the roll band, which is the half a phone can reproduce | Thunderstorm |
 | `aurora` | Four sine voices spread wide and high, each shimmering at its own rate so the pattern never comes round, with chimes sprinkled on top rather than played in time. Deliberately the prettiest sound in the game | Aurora |
 | `wonderfall` | A wider chord than the garden ever uses, a low drone borrowed from the Wonder fanfare, and a high note falling every few tenths of a second — gold you can hear landing | Wonderfall |
 | `crack` | The split, then a tail rolling away in overlapping decays. A single burst reads as a door slamming, not as weather | Every storm flash |
@@ -115,6 +115,41 @@ is a file.
 
 `Sound.bed(id, on, level)` starts and stops one; `Sound.bedsOff(fade)` clears the bus so an
 interrupted sky can hand the next one something clean.
+
+### Measuring a bed
+
+**A sky is heard, not seen, and an ear on a laptop speaker is the wrong instrument** — the game is
+played on a handset, which gives back almost nothing under a few hundred hertz. `node
+tools/bedbench.js` renders each bed offline through the real graph and prints four numbers: peak,
+RMS, the RMS of everything above 300 Hz (*what a phone can reproduce*), and **swing** — the loudest
+second against the quietest, in dB.
+
+`Sound.renderBed(id, seconds, opts)` is what it drives. It swaps the module's context for an
+`OfflineAudioContext`, builds through the same `BUILD[id]` the game plays and down the same chain —
+bed trim × the ambient channel × master — and puts the live context back in a `finally`. Measuring
+the real graph is the point: a bench that copies the constants stops measuring this file the first
+time either changes. Nothing in the game calls it.
+
+**Swing is the number that found the Thunderstorm bug.** The old storm measured a respectable
+3.0 dB whole-bed and **0.59 dB across the band a phone can actually play**, because its only
+modulation rode a sub-190 Hz band the speaker throws away — so on the only device anyone plays this
+on it was literally constant. "Overbearing" and "constant, steady" were a measurement, not an
+impression. A bed under about 1 dB of phone swing does not breathe, and a minute inside it is
+fatiguing however quiet it measures.
+
+| Bed | peak | rms | phone rms | swing | phone swing |
+| --- | --- | --- | --- | --- | --- |
+| Rain | 0.106 | 0.0207 | 0.0220 | 3.05 dB | 2.68 dB |
+| **Storm, before 2026-08-31** | 0.083 | 0.0177 | **0.0156** | 3.03 dB | **0.59 dB** |
+| **Storm, after** | 0.092 | 0.0203 | 0.0218 | 2.38 dB | **2.27 dB** |
+| Aurora | 0.047 | 0.0120 | 0.0123 | 8.48 dB | 8.78 dB |
+| Wonderfall | 0.036 | 0.0101 | 0.0112 | 6.22 dB | 7.35 dB |
+
+Three runs each, 20-second window. **RMS is the comparator; peak moves run to run**, because the
+shared noise buffer is regenerated per render. The storm now sits with the rain on every column and
+a hair under it on loudness — which is the right answer to "a little overbearing", and note that
+turning it *down* was the one thing that would not have helped: it already measured quieter than the
+rain, because what was missing was the rain.
 
 **The level is the caller's.** `ui-weather.js` reads it out of `DATA.weatherStage.<sky>.bed` and
 passes it in, because `audio.js` knows nothing about the game and the knob has to stay where a

@@ -400,8 +400,16 @@ const Sound = (() => {
      each trim lands its bed near a peak of 0.10 at the speaker with the default,
      which is under the 0.22 of the game's loudest one-shot and about half again
      the ambient pad. The two tonal beds carry a little less, because a held sine
-     is heard as louder than a hiss at the same height. */
-  const BED_TRIM = { rain: 1.35, storm: 1.9, aurora: 1.55, wonderfall: 1.15 };
+     is heard as louder than a hiss at the same height.
+
+     The storm's trim fell from 1.9 to 1.2 on 2026-08-31: 1.9 was calibrated for
+     a graph with nothing above 620Hz, and the moment the rain went back into it
+     the bed jumped half again. Re-derived by measurement rather than by ear —
+     `node tools/bedbench.js` renders these and prints them. NOTE that the trim
+     is NOT what the thunder rides: `rel()` reads the caller's knob, so this
+     number can be retuned without touching `crack()` or `rumble()`. Moving
+     `DATA.weatherStage.storm.bed` is what would move them. */
+  const BED_TRIM = { rain: 1.35, storm: 1.2, aurora: 1.55, wonderfall: 1.15 };
   /* The ceiling is not a tuning value, it is the point past which a level
      dragged to its end stops being something anyone would hold a phone to. */
   const BED_CEILING = 0.85;
@@ -476,28 +484,56 @@ const Sound = (() => {
     return { nodes: [src, breath], timers: [], rise: 2.2, fall: 2.4 };
   };
 
+  /* A storm is rain PLUS thunder, and this one used to be thunder minus rain:
+     two low bands and nothing at all above 620Hz — no patter, no hiss, no drops,
+     just a band-limited roar. It is built from the rain graph now, darker and
+     with the patter held back, so it reads as heavier weather rather than as a
+     louder shower. The roll band stays underneath at about half its old height:
+     a storm still has to carry some weight or it stops being different from a
+     rain, but it is no longer the whole bed. */
   BUILD.storm = (out) => {
     const src = loopSource();
-    const deep = biquad('lowpass', 190, 1.2);
-    const deepG = ctx.createGain();
-    deepG.gain.value = 1;
-    /* A phone speaker cannot reproduce the bottom of a rumble at all, so the
-       weight has to live in a second band it can actually move — and that band
-       has to carry most of the bed, or the storm is silent on the only device
-       anyone plays this on. */
+    const air = biquad('highpass', 200, 0.4);
+    const body = biquad('lowpass', 1050, 0.5);
+    /* Rain's breath, a little narrower. A minute is a long time to sit inside an
+       unmoving hiss, and this is the half a phone can hear moving. */
+    const breath = lfo(0.07, 340, body.frequency);
+    const bodyG = ctx.createGain();
+    bodyG.gain.value = 0.85;
+    const patter = biquad('bandpass', 2200, 0.9);
+    const patterG = ctx.createGain();
+    patterG.gain.value = 0.1;
+    /* THE SWELL RIDES THIS BAND NOW, not the sub. It used to modulate the
+       sub-190Hz band, which a phone speaker cannot reproduce at all — so on the
+       only device anyone plays this on the storm was pinned at a flat 0.6 for
+       the whole minute, and "constant, steady" was a measurement rather than an
+       impression. */
     const roll = biquad('lowpass', 620, 0.7);
     const rollHp = biquad('highpass', 160, 0.6);
     const rollG = ctx.createGain();
-    rollG.gain.value = 0.6;
-    const swell = lfo(0.05, 0.4, deepG.gain);
-    src.connect(deep);
-    deep.connect(deepG);
-    deepG.connect(out);
+    rollG.gain.value = 0.3;
+    const swell = lfo(0.05, 0.12, rollG.gain);
+    /* Kept, and quiet. Nobody hears this on a handset, but on headphones it is
+       the difference between weather and a hiss, and at this height it no longer
+       spends the bed's headroom on a band the speaker throws away. */
+    const deep = biquad('lowpass', 190, 1.2);
+    const deepG = ctx.createGain();
+    deepG.gain.value = 0.45;
+    src.connect(air);
+    air.connect(body);
+    body.connect(bodyG);
+    bodyG.connect(out);
+    air.connect(patter);
+    patter.connect(patterG);
+    patterG.connect(out);
     src.connect(rollHp);
     rollHp.connect(roll);
     roll.connect(rollG);
     rollG.connect(out);
-    return { nodes: [src, swell], timers: [], rise: 2.6, fall: 3 };
+    src.connect(deep);
+    deep.connect(deepG);
+    deepG.connect(out);
+    return { nodes: [src, breath, swell], timers: [], rise: 2.6, fall: 3 };
   };
 
   BUILD.aurora = (out) => {
@@ -731,6 +767,86 @@ const Sound = (() => {
     });
   }
 
+  /* --- measurement --- */
+  /* A bed rendered offline, so the skies can be compared with numbers rather than
+     with an ear on a laptop speaker. It builds through the SAME `BUILD[id]` the
+     game plays and down the same gain chain — bed trim, the ambient channel,
+     master — so what comes back is what a player would hear.
+
+     It swaps the module's context for an `OfflineAudioContext` and puts the live
+     one back in a `finally`. That is the price of measuring the real graph, and
+     it is the right price: a bench that copies the constants stops measuring
+     this file the first time either of them changes. Nothing in the game calls
+     this; `tools/bedbench.js` does.
+
+     `swing` is the loudest second against the quietest, in dB — the number that
+     says whether a sky BREATHES or simply sits there. */
+  async function renderBed(id, seconds = 20, opts = {}) {
+    if (!BUILD[id]) return null;
+    const OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!OC) return null;
+    const rate = 44100;
+    const live = ctx;
+    const liveLoop = loopBuf;
+    const off = new OC(1, Math.round(rate * seconds), rate);
+    let data;
+    try {
+      ctx = off;
+      /* The shared 4-second noise buffer belongs to whichever context made it. */
+      loopBuf = null;
+      const g = off.createGain();
+      g.gain.value = bedGain(id) * chLevel('amb') * 0.9;
+      if (opts.phoneHz) {
+        /* A phone speaker gives back almost nothing under a few hundred hertz,
+           so a bed measured whole can read as lively while the half anyone
+           actually hears sits still. This is that half. */
+        const hp = off.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.value = opts.phoneHz;
+        hp.Q.value = 0.7;
+        g.connect(hp);
+        hp.connect(off.destination);
+      } else {
+        g.connect(off.destination);
+      }
+      const rec = BUILD[id](g);
+      rec.nodes.forEach((n) => n.start(0));
+      const rendered = await off.startRendering();
+      rec.timers.forEach(clearInterval);
+      data = rendered.getChannelData(0);
+    } finally {
+      ctx = live;
+      loopBuf = liveLoop;
+    }
+    let peak = 0;
+    let sum = 0;
+    const windows = [];
+    for (let sec = 0; sec < seconds; sec += 1) {
+      let wsum = 0;
+      const from = sec * rate;
+      const to = Math.min(data.length, from + rate);
+      for (let i = from; i < to; i += 1) {
+        const v = data[i];
+        const a = v < 0 ? -v : v;
+        if (a > peak) peak = a;
+        wsum += v * v;
+        sum += v * v;
+      }
+      windows.push(Math.sqrt(wsum / Math.max(1, to - from)));
+    }
+    /* The first second is the bed's fade-in, not the bed. */
+    const settled = windows.slice(1).filter((w) => w > 0);
+    const lo = Math.min(...settled);
+    const hi = Math.max(...settled);
+    return {
+      id,
+      peak,
+      rms: Math.sqrt(sum / data.length),
+      swingDb: lo > 0 ? 20 * Math.log10(hi / lo) : 0,
+      windows
+    };
+  }
+
   /* --- the effects duck --- */
   let ducked = false;
 
@@ -746,6 +862,6 @@ const Sound = (() => {
 
   return {
     init, resume, play, setSfx, setAmb, setMusic, setLevel, prefs,
-    bed, bedsOff, arrange, duck, crack, rumble, sing
+    bed, bedsOff, arrange, duck, crack, rumble, sing, renderBed
   };
 })();

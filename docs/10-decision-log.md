@@ -5,6 +5,82 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (fix round) — The Thunderstorm becomes rain plus thunder
+
+**The owner:** *"The background sound for the storm is a little overbearing… the constant, steady
+sound is a little too much… It does need to sound like it's raining."* Both halves of that turned
+out to be literally true, and the obvious repair — turn it down — was the one thing that would not
+have helped.
+
+**It had no rain in it at all.** `BUILD.storm` was two low bands: a sub under 190 Hz and a roll
+between 160 and 620 Hz. **Nothing above 620 Hz** — no patter, no hiss, no drops. A storm plays only
+its own bed, so the rain bed was never underneath it. What the owner heard as "not sounding like
+rain" was exactly that: a band-limited roar with the rain removed.
+
+**And the half you can hear never moved.** Its only modulation rode the **sub** band, which a phone
+speaker cannot reproduce; the roll band — the one a handset actually plays — sat pinned at 0.6 with
+no modulation at all. Measured across everything above 300 Hz, the old storm swung **0.59 dB** over
+twenty seconds against rain's 2.75. "Constant, steady" was a number.
+
+**It measured QUIETER than the rain** — 0.0177 RMS against 0.0207, and 0.0156 against 0.0220 in the
+band a phone plays. So turning it down produces a quieter featureless drone, not a cosier rain. That
+is why the volume knob the owner offered as an option was declined.
+
+**The fix is the rain graph, darker, plus a reduced roll.** Air, body and patter from `BUILD.rain`
+with the body closed from 1250 Hz to 1050 and the patter held back from 0.16 to 0.10 — heavier
+weather rather than a louder shower — and the roll band underneath at 0.30 rather than 0.6. **The
+swell moved onto the roll**, so the half a phone can hear is the half that breathes.
+
+**Default decided in the owner's absence: a storm keeps some rumble.** The item left it open —
+cosy rain plus thunder cracks, or rain with weight still under it. The sketch's own reading was to
+keep a little, so a storm still reads as different from a rain, and that is what shipped. The sub is
+kept too, at 0.45 of its old height: inaudible on a handset, but on headphones it is the difference
+between weather and a hiss, and at that level it no longer spends the bed's headroom on a band the
+speaker throws away. **Both are one-line reversals if the owner wants pure cosy rain** — see the
+morning script.
+
+**`BED_TRIM.storm` fell from 1.9 to 1.2, re-derived by measurement.** 1.9 was calibrated for a graph
+with nothing above 620 Hz, and the whole bed jumped half again the moment the rain went back into
+it. Note that the trim is *not* what the thunder rides: `rel()` reads the caller's knob, so the trim
+can be retuned freely — it is `DATA.weatherStage.storm.bed` that would move `crack()` and
+`rumble()`, and it was not touched.
+
+### The instrument, because this one cannot be checked by looking
+
+`Sound.renderBed()` and `node tools/bedbench.js` are new. The bench renders each bed offline through
+the **real** `BUILD[id]` and the real gain chain and prints peak, RMS, the RMS above 300 Hz, and
+swing. `renderBed` swaps the module's audio context for an `OfflineAudioContext` and restores it in
+a `finally` — the price of measuring the actual graph, and the right price: a bench that copies the
+constants stops measuring the file it is about the first time either changes. It reproduced the
+punch list's independently-taken table to within 4% on RMS before anything was altered, which is
+what made it trustworthy enough to tune against.
+
+**The phone-band column is the addition.** Whole-bed swing said the old storm was fine (3.03 dB);
+above 300 Hz it said 0.59. The game is played on a handset, so the second number is the one that
+describes what anybody experiences.
+
+| Bed | peak | rms | phone rms | swing | phone swing |
+| --- | --- | --- | --- | --- | --- |
+| Rain | 0.106 | 0.0207 | 0.0220 | 3.05 dB | 2.68 dB |
+| Storm, before | 0.083 | 0.0177 | 0.0156 | 3.03 dB | **0.59 dB** |
+| Storm, after | 0.092 | 0.0203 | 0.0218 | 2.38 dB | **2.27 dB** |
+
+Three runs each, 20-second window; RMS is the comparator because peak moves with the shared noise
+buffer, which is regenerated per render.
+
+**Rejected: giving the patter its own rhythm.** `loopNoise()` is one shared 4-second buffer, so two
+taps off one source are a fixed relationship. Independent patter needs a second buffer, which the
+file deliberately avoided for a phone hitch.
+
+**Rejected: playing the rain bed underneath the storm bed.** Two beds on one bus is two fades, two
+levels and a second thing for `bedsOff()` to get wrong, for a result one graph produces.
+
+**Untouched: the storm's arrangement.** `ARRANGE.storm` is dark on dark and would compound this — but
+music is off by default and the owner has almost certainly never heard it. It is a separate call,
+and it belongs with the nature bed rather than with a bug fix.
+
+---
+
 ## 2026-08-31 (fix round) — A Turn-jump cheat that earns its way there
 
 **The owner:** *"I want to be able to get to spring and winter, so we need to be able to cheat and
