@@ -18,19 +18,22 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 
 ## Tonight's round
 
-1. **#13 · Halve the rain and storm beds** — one number each, and the instrument to prove it already
+1. **#14 · A growing plant's bud sits down and to the right of its stem** — one stray CSS
+   declaration on the game's main screen, on every plant, every time. Cause measured, fix proven in
+   the browser. Do this one first.
+2. **#13 · Halve the rain and storm beds** — one number each, and the instrument to prove it already
    exists. **Read the item**: the obvious knob also halves the thunder, and there is a knob that
    does not.
-2. **#12 · Fall's empty-plot marker is 1.5x Summer's** — three CSS declarations, measured, and the
+3. **#12 · Fall's empty-plot marker is 1.5x Summer's** — three CSS declarations, measured, and the
    owner asked for it by name.
-3. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+4. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-4. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+5. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-5. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+6. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Still gated on an owner decision**: 132px is a documented clearance, and `#11`'s ruling frees at
    most half the strip.
 
@@ -359,6 +362,79 @@ effects bus to 950 Hz while rain stands, and a rain half as loud ducking the sam
 quieter than the thing it is ducking.
 
 **No open question**, beyond the reading noted at the top: rain and storm, not the whole bus.
+
+---
+
+### #14 · BUG · A growing plant's bud sits down and to the right of its stem · annoying · reported 2026-09-01
+
+**What the owner saw.** "If I plant a tulip or a daisy, the bud or the flower that's on top of the
+stem doesn't appear on top of the stem. It appears to the right. All of the flowers seem to do this…
+1. When I first plant the plant, the flower or bud is not anywhere on the screen. 2. After a few
+seconds, it appears to the right side. 3. After a few more seconds, it appears on top."
+
+**Repro.** Plant anything in the garden and watch it through its three growth stages. Driven and
+measured:
+
+```
+node tools/probe.js wait:900 tap:#newsOk wait:400 eval:Game.Dev.fillGarden() wait:5200 \
+  'eval:...getScreenCTM() of .f-head mapped back into the plant viewBox...'
+```
+
+**Measured. Where the head's own origin actually lands, in the plant's 100×120 viewBox:**
+
+| Stage | head scale | head lands at | should be | error |
+| --- | --- | --- | --- | --- |
+| 1 | `scale(0)` | **(100, 88)** | (50, 44) | +50, +44 — invisible only because it is scaled to nothing |
+| 2 | `scale(.34)` | **(83, 73)** | (50, 44) | **+33, +29** — this is what the owner is seeing |
+| 3 | `scale(1)` | (49.8, 43.8) | (50, 44) | correct |
+
+**All three of the owner's steps are the same bug**, and the error is exactly `(1 − scale) × (50, 44)`
+— which is why it vanishes at full bloom and why the flower appears to fly into place at the end.
+
+**The cause is one stray declaration: `style.css:872`, `.plot .f-head{transform-origin:50px 44px}`.**
+
+`plant()` in `flora.js:180` authors the head as `<g class="f-head" transform="translate(50 44)">`. The
+stage rules correctly restate that translate — `transform:translate(50px,44px) scale(s)` at
+`style.css:876`, `878` and `881` — because a CSS `transform` **replaces** an SVG `transform`
+attribute rather than composing with it, which is a recorded trap and was handled properly. **But the
+`transform-origin` then applies the same offset a second time.** With origin `O` the effective
+transform is `O + M·(p − O)`, so the head's local `(0,0)` lands at
+`(100 − 50s, 88 − 44s)` instead of `(50, 44)`. The two numbers cancel only when `s = 1`.
+
+**The fix is proven, not proposed.** Injecting `.plot .f-head{transform-origin:0 0}` into the running
+page and re-measuring gives **(50, 44) at stage 2 and stage 3** — dead on at every stage. The head
+still scales about its own centre, because its content is authored around its local origin.
+
+**The other two origins on this SVG are correct — do not touch them.**
+`.plot .f-stemwrap{transform-origin:50% 120px}` and `.plot .f-leaves{transform-origin:50px 96px}`
+belong to groups with **no SVG `transform` attribute**, whose CSS transforms are pure `scale()`.
+There an origin is exactly the right tool: it grows the stem from its base and the leaves from their
+joint. `.f-head` is the only element carrying both an authored SVG transform and a CSS transform that
+restates it, and that is precisely where an origin double-counts. Verified that `.f-petals`, which
+also scales at stage 2, computes `transform-origin: 0px 0px` and is displaced only by inheriting the
+head's error — so this is **one bug and one line**, not a family.
+
+**Related.**
+- **It is contained to the garden.** `Flora.plant()` is called in exactly one place, `ui.js:260`, and
+  every stage rule is scoped `.plot ...`. Fall draws its crops by another route and has no
+  `[data-stage]` rules at all; the Almanac and pickers use `Flora.head()`, which has no stages.
+- **This is a corollary of a trap already in the handoff** — "a CSS `transform` REPLACES an SVG
+  `transform` attribute". The half that is not yet written down is the follow-on: **an element that
+  restates its SVG transform in CSS must keep `transform-origin: 0 0`, because the restated translate
+  is already doing the positioning.** Worth adding to the traps section, since the codebase has the
+  first half and this bug is what the missing second half looks like.
+
+**Fix sketch.** Change `style.css:872` to `transform-origin:0 0`, or delete the declaration — `0 0` is
+the used value for these SVG groups anyway, so deleting it is the smaller diff, but keeping it
+explicit with a one-line comment about why is worth more to the next reader. **What it might break:**
+almost nothing, but check the transition — `style.css:882` transitions `transform` on
+`.f-stemwrap, .f-head, .f-leaves, .f-petals` over 0.6s, so the head currently *animates* along the
+wrong path between stages and will now travel a much shorter one; confirm the growth beat still reads
+as a pop rather than looking static. Check `--bloom`, which stage 3 multiplies into the head's scale
+(a mutation or Wonder may set it), still lands centred. Run `node tools/style-check.js`, and look at
+a plant at each stage at 390×844 with reduced motion on as well as off.
+
+**No open question.**
 
 ---
 
