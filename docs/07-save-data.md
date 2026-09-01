@@ -44,7 +44,7 @@ lost if the player clears site data.
   harvestsTowardRep: 0,
   stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
   wonder: { until: 0, last: 0 },
-  prefs: { sfx: true, music: false },
+  prefs: { sfx: true, amb: true, music: false, sfxVol: 1, ambVol: 1, musicVol: 1 },
   seen: { intro: false, plot: false, apiary: false, meadow: false, fallSwipe: false, gardenSwipe: false },
   quests: {
     active: [ { id: 'q_tap_25', progress: 0 } ],
@@ -116,6 +116,19 @@ finds none, a load whose save will not parse, and the Settings reset. It is deli
 bag declared there would be handed to any old save predating `boostInv`.
 
 **`prefs.music` defaults to `false`.** Deliberate: unrequested audio on load is hostile.
+
+**Six flat audio keys, not a nested `prefs.audio` object.** The nested shape reads better and would
+backfill correctly *today*, because `prefs` is one of the objects re-merged over its defaults
+individually — but the re-merge is shallow, so the day a fourth channel is added an existing save's
+`prefs.audio` replaces the default wholesale and the new channel arrives `undefined`. That is the
+nested-object trap in `09-conventions.md` wearing a name that reads better. Flat keys cannot fall
+into it.
+
+**`prefs.amb` is derived on first load, never defaulted flat.** Until the third channel existed the
+beds were governed by the effects switch, so a save with `sfx: false` had deliberately silenced the
+sky too. `load()` reads `parsed.prefs.sfx` for any save that has no `amb` key of its own, so nobody
+comes back to a garden that has started making noise on its own. A save written after the split
+carries its own value and the derivation never fires again.
 
 ## Writing
 

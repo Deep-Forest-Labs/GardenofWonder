@@ -258,7 +258,7 @@ All shopping happens in one sheet that slides up from the bottom, holding eight 
 | `seeds` | Choose a seed | Tapping an empty plot | Sort: tier / balanced / cheapest / priciest |
 | `quests` | Quests | Tapping the quest strip | none |
 | `bonuses` | Garden Almanac | Book button in HUD | none |
-| `settings` | Settings | Gear button in HUD | none |
+| `settings` | Settings | Menu drawer → Settings row | none |
 | `dev` | Developer tools | Unlabelled hit area beside the gem wallet | none |
 | `welcome` | While you were away | Opens itself on load after a real absence | none |
 | `turn` | *(per beat)* | The year-meter pill when the meter is full | none |
@@ -362,7 +362,26 @@ Record.** Three is a cap, not a coincidence — past three the menu advertises m
 exists.
 
 **Settings moves off the HUD and into the drawer.** The gear button becomes the hamburger; every
-one of Settings' six controls stays reachable, one tap deeper. Nothing else in the HUD moves.
+one of Settings' controls stays reachable, one tap deeper. Nothing else in the HUD moves.
+
+**The audio rows are the first form controls in the game.** Three channels — Sound effects,
+Ambience, Music — each a two-line row: name, note and mute switch on the first line, a level on the
+second. The level is a real `<input type="range">`, and it stays native on purpose: keyboard
+support and the slider role come with the element, and a slider rebuilt from divs would have to
+reproduce both, including the `setPointerCapture` retarget the native control already does to
+itself correctly. It is fully restyled — `::-webkit-slider-runnable-track`,
+`::-webkit-slider-thumb` and the Firefox pair, none of which inherits from the others — because a
+system control in a hand-drawn garden reads as something that got left in. The filled half of the
+track is one gradient stop driven by a `--lvl` custom property the input handler writes, so the
+paint follows the thumb without rebuilding the row.
+
+A muted row wears the drained `--paper-dim` family the locked seed row wears, and **keeps its
+slider position**: the mute is a switch, not a level, which is the whole reason there are two
+controls rather than one.
+
+Ranges report through `input`, not `click`, so `ui-sheet.js` carries a second delegated listener on
+`#sheetBody` for `[data-level]`. The save is written on `change` — the end of the drag — while the
+level follows the thumb, so hearing a slider never costs eight writes.
 
 **Coach marks are hidden under it twice, and both are needed.** `.drawer.open ~ .coach` stops the
 mark being *painted* — the drawer precedes the coach in the DOM, the same route
@@ -838,6 +857,8 @@ Present:
 - `aria-label` on icon-only controls, `aria-hidden` on decorative scenery, canvas and SVG.
 - `aria-live="polite"` on the rail and toast container.
 - `role="tab"` with `aria-selected` on sheet tabs; `aria-pressed` on settings toggles.
+- The three audio levels are native `<input type="range">` controls with their own
+  `aria-label`, so they are keyboard-operable and announced as sliders.
 - `aria-hidden` toggled on the sheet as it opens and closes.
 - Full `prefers-reduced-motion` support.
 - **Minimum 44 px tap targets everywhere in the HUD, at every size** (fixed

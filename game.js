@@ -86,7 +86,15 @@ const Game = (() => {
       pairsSeen: [],
       mementos: {},
       luckyPacks: 0,
-      prefs: { sfx: true, music: false },
+      /* Six flat keys rather than a nested `audio` object, deliberately. The
+         merge below is shallow, so a nested shape backfills correctly today and
+         silently stops the day a fourth channel is added to an existing save —
+         which is the nested-object trap in `09-conventions.md` wearing a name
+         that reads better. Flat keys cannot fall into it. */
+      prefs: {
+        sfx: true, amb: true, music: false,
+        sfxVol: 1, ambVol: 1, musicVol: 1
+      },
       seen: { intro: false, plot: false, apiary: false, meadow: false, fallSwipe: false, gardenSwipe: false },
       quests: { active: [], done: [], daily: { id: null, progress: 0, day: '', claimed: false } },
       rep: 0,
@@ -228,6 +236,12 @@ const Game = (() => {
       state.stats = Object.assign(d.stats, parsed.stats || {});
       state.wonder = Object.assign(d.wonder, parsed.wonder || {});
       state.prefs = Object.assign(d.prefs, parsed.prefs || {});
+      /* The ambient channel is new, and its default cannot be flat. Until it
+         existed the beds were governed by the effects switch, so a player who
+         turned effects off had deliberately silenced the sky too — and a fresh
+         `amb: true` would hand them a garden that starts making noise on its
+         own. Derive it from the switch they actually set. */
+      if (parsed.prefs && !('amb' in parsed.prefs)) state.prefs.amb = parsed.prefs.sfx !== false;
       /* Identity is nested, so `Object.assign` above replaced it wholesale and a
          save written before the menu existed has no `profile` at all. Both
          fields are re-validated rather than merely defaulted: the name goes back

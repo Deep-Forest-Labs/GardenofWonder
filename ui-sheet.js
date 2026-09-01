@@ -1951,16 +1951,31 @@
   }
 
   let resetArmed = false;
+  /* One channel: a name, a switch and a level. The switch and the slider are two
+     controls rather than one, because a muted channel that forgot where its
+     slider was would come back at full height. The slider is a real
+     `<input type=range>` — the first form control in the game — so it carries
+     keyboard support and its own role rather than borrowing them. */
+  const AUDIO_CHANNELS = [
+    { key: 'sfx', icon: 'sound', name: 'Sound effects', note: 'Taps, coins, harvests' },
+    { key: 'amb', icon: 'drop', name: 'Ambience', note: 'Rain, thunder, the sky' },
+    { key: 'music', icon: 'music', name: 'Music', note: 'The garden\u2019s tune' }
+  ];
+
+  function audioRow(ch) {
+    const on = S.prefs[ch.key];
+    const pct = Math.round((S.prefs[ch.key + 'Vol'] ?? 1) * 100);
+    return `<div class="set-row audio${on ? '' : ' muted'}">
+      <span class="lbl">${Icons.get(ch.icon)}<span class="chn">${ch.name}<small>${ch.note}</small></span></span>
+      <button class="toggle" data-toggle="${ch.key}" aria-pressed="${on}" aria-label="${ch.name}"><i></i></button>
+      <input class="lvl" type="range" min="0" max="100" step="1" value="${pct}" style="--lvl:${pct}%"
+        data-level="${ch.key}" aria-label="${ch.name} volume">
+    </div>`;
+  }
+
   function renderSettings() {
     return `
-      <div class="set-row">
-        <span class="lbl">${Icons.get('sound')} Sound effects</span>
-        <button class="toggle" data-toggle="sfx" aria-pressed="${S.prefs.sfx}" aria-label="Sound effects"><i></i></button>
-      </div>
-      <div class="set-row">
-        <span class="lbl">${Icons.get('music')} Ambient music</span>
-        <button class="toggle" data-toggle="music" aria-pressed="${S.prefs.music}" aria-label="Ambient music"><i></i></button>
-      </div>
+      ${AUDIO_CHANNELS.map(audioRow).join('')}
       <p class="sheet-note">Your garden saves automatically to this browser.</p>
       <button class="big-btn magic" data-act="cheat">${Icons.get('gem')} Grant 50 Gems</button>
       <button class="big-btn magic" data-act="cheatGold">${Icons.get('coin')} Grant 1,000,000 Gold</button>
@@ -2502,6 +2517,33 @@
     else if (tab.dataset.sort) { seedSort = tab.dataset.sort; renderSheet(true); }
   });
 
+  /* A second listener on the same element, because a range is the one control in
+     this game that reports through `input` rather than `click`. It is delegated
+     the same way, so the panel stays a string of markup with no bindings in it.
+     The save is written on `change` — the end of the drag — while the level
+     follows the thumb, so hearing the slider never costs eight writes. */
+  el.sheetBody.addEventListener('input', (e) => {
+    const lvl = e.target.closest('[data-level]');
+    if (!lvl) return;
+    const k = lvl.dataset.level;
+    S.prefs[k + 'Vol'] = Number(lvl.value) / 100;
+    /* The track's fill is a gradient stop, so the paint follows the thumb by
+       writing one custom property rather than by rebuilding the row. */
+    lvl.style.setProperty('--lvl', `${lvl.value}%`);
+    Sound.resume();
+    Sound.setLevel(k, S.prefs[k + 'Vol']);
+  });
+
+  el.sheetBody.addEventListener('change', (e) => {
+    const lvl = e.target.closest('[data-level]');
+    if (!lvl) return;
+    Game.save();
+    /* One sound at the end of the drag, on the channel being set, so the player
+       hears what they just chose. Music has no one-shot of its own and ambience
+       is already playing itself, so only the effects slider speaks. */
+    if (lvl.dataset.level === 'sfx') Sound.play('buy');
+  });
+
   el.sheetBody.addEventListener('click', (e) => {
     /* Its own data attribute rather than data-buy — syncAfford()'s final else
        treats anything unrecognised as a booster and throws. */
@@ -2764,7 +2806,10 @@
       S.prefs[k] = !S.prefs[k];
       tog.setAttribute('aria-pressed', String(S.prefs[k]));
       Sound.resume();
-      if (k === 'sfx') Sound.setSfx(S.prefs[k]); else Sound.setMusic(S.prefs[k]);
+      tog.closest('.set-row').classList.toggle('muted', !S.prefs[k]);
+      if (k === 'sfx') Sound.setSfx(S.prefs[k]);
+      else if (k === 'amb') Sound.setAmb(S.prefs[k]);
+      else Sound.setMusic(S.prefs[k]);
       Game.save();
       if (S.prefs[k]) Sound.play('buy');
       return;

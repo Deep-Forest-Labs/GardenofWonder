@@ -5,6 +5,76 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (fix round) — Three sound channels, each a level and a mute
+
+**The owner asked for effects, ambient and music as separate channels, then chose sliders *and*
+mutes** — "sliders and an on and off to mute them". Both, per channel. The buses were already
+three; only the two switches on top of them conflated them.
+
+**The three sliders multiply the house levels; they never replace them.** `sfx 0.65`, `amb 0.36`
+and `music 0.16` are calibrated against each other and against every recipe's own gain, with
+`BED_TRIM` and the stinger makeup downstream of the ambient one. A slider written as a raw bus gain
+throws all of that away and every measurement taken against it with it. Each slider defaults to 1.0,
+so a player who never touches one hears exactly what they heard yesterday.
+
+**`MUSIC_OFF_TRIM` is deleted, and its level is kept.** The old `ambLevel()` read *both*
+preferences: effects-off silenced the sky outright, music-off trimmed it to 0.72. The argument for
+that coupling was written down and is now overturned on purpose — a channel the player can reach is
+the thing that makes it wrong. But retiring the reasoning is not a licence to move the number:
+0.5 × 0.72 = **0.36** is the height the ambience has actually been playing at for every player, since
+music is off by default. Naming 0.36 as the house level keeps the sky exactly as loud as it was, and
+keeps the storm measurements taken for punch-list `#1` valid rather than obsolete on arrival.
+
+**Rejected: letting the ambient default rise to 0.5.** It is the literal reading of "slider 1.0 = the
+house level", and it would have handed every player a 2.9 dB louder sky on the same night the owner
+called the storm overbearing.
+
+**Rejected: `prefs.audio.{sfx,amb,music}.{level,muted}`.** The nested shape reads better and
+backfills correctly *today*. `state.prefs` is re-merged over its defaults shallowly, so the day a
+fourth channel is added an existing save's `audio` object replaces the default wholesale and the new
+channel arrives `undefined` — the nested-object trap wearing a name that reads well. Six flat keys
+cannot fall into it.
+
+**`prefs.amb` is derived from the old prefs, not defaulted.** A player with `sfx: false` had
+silenced the beds too, because until now that was the only way to. A flat `amb: true` would have
+handed them a garden that starts making noise by itself. `load()` derives `amb` from `parsed.prefs.sfx`
+for any save with no `amb` of its own.
+
+**A slider at zero is not a mute, and this one is load-bearing.** `setMusic(false)` calls
+`stopMusic()` because muting by bus gain alone left the scheduler building oscillator nodes every
+3.2 s forever. `setLevel()` therefore only ever touches a gain — dragging music to zero leaves the
+timer running, because the player is turning something down rather than switching it off, and a
+channel that tore itself down at zero could not be dragged back up.
+
+**Muting Ambience cancels the duck; turning it down does not.** `duck()` drops the effects filter to
+950 Hz while rain stands. Before the split this question could not arise, because ambient-off meant
+effects-off. The duck is the sky leaning on the effects, so a muted sky has nothing to lean with —
+but a bed turned to zero is still a bed, and the effects still belong under it. `duck()` remembers
+the caller's intent so `setAmb()` can re-apply it.
+
+**The flower's hummed song stays on Ambience.** It is the one *tune* on that bus, so moving it to
+Music is arguable — and wrong: music is off by default, and the Wonderfall's signature moment would
+go silent for almost everyone. It is the garden singing at you, not a score.
+
+**A range input is the first form control in the game**, and it stays a native `<input type=range>`.
+The keyboard support and the slider role come free with the element; a slider rebuilt from divs
+loses both and has to reproduce the `setPointerCapture` retarget by hand. It is restyled to the last
+pseudo-element — the webkit track and thumb, the Firefox track, progress and thumb, none of which
+inherits from another — because a system control in a hand-drawn garden reads as something that got
+left in. `node tools/style-check.js --strict` reports zero violations on the new rules: every colour
+is a token.
+
+**Verified:** an old save with `{sfx:false, music:false}` loads as `amb:false`; one with
+`{sfx:true, music:true}` loads as `amb:true`; a fresh save gets the flat defaults. Slider drags
+write through to `Game.state.prefs`, `Sound.prefs` and the save file, and the mute drains its row
+without moving the slider.
+
+**Not in scope: the nature bed.** Birds, wind and rustling leaves are what the owner wants this
+channel *for*, and they are new content with their own tuning. Ship the switch, let the owner sit in
+a clear garden with it, then write the bed.
+
+---
+
 ## 2026-08-31 — The menu is built, and the drawer is the third surface class
 
 **The owner approved every one of the gate's six questions**, adding one condition: *"I imagine

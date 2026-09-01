@@ -9,17 +9,39 @@ Every sound is synthesized with the Web Audio API at the moment it plays. There 
 ```
 tone() / noise()    →  sfxBus (0.65)  →  sfxFilter    ┐
 ambient music       →  musicBus (0.16) ───────────────┼→  master (0.9)  →  destination
-beds, thunder, song →  ambBus (0.5)    ───────────────┘
+beds, thunder, song →  ambBus (0.36)   ───────────────┘
 ```
 
-Three buses so effects, music and the sky mute independently. Toggling a bus ramps its gain with
+Three buses, and since 2026-08-31 **three channels the player can reach**: Sound effects, Ambience
+and Music, each with a level and a mute of its own. Toggling a bus ramps its gain with
 `setTargetAtTime` rather than jumping, to avoid a click.
 
-**Both mutes reach the ambience bus, but not as equals.** The effects mute silences it outright: a
-bed is the world making a sound rather than a tune, and a player who turned effects off asked the
-garden to be quiet — a minute of rain hiss would be ignoring them. The music mute only trims it, to
-0.72, because with the arrangement gone the bed is the whole sky, and cutting that as well leaves a
-weather event with no weather in it.
+**A channel is worth `HOUSE[ch] × slider`, or nothing when muted.** The three house levels —
+`sfx 0.65`, `amb 0.36`, `music 0.16` — are calibrated against each other and against every recipe's
+own gain, with `BED_TRIM` and the stinger makeup downstream of the ambient one. **A slider
+multiplies its house level and never replaces it.** Written as a raw bus gain it would throw the
+whole calibration away, and every measurement taken against it with it. Every slider defaults to
+1.0, so a player who never touches one hears exactly what they heard before the channel existed.
+
+**0.36 is not a new number, it is the old one said once.** Ambience used to be `0.5` trimmed by
+`0.72` whenever music was off — which is the default, and is how the game is actually played. The
+two mutes reaching one bus was the thing being retired, not the level, so the height the sky has
+been playing at is now written down as a single house level.
+
+**A slider at zero is not a mute, and the difference is load-bearing.** Muting music calls
+`stopMusic()`, because muting by bus gain alone left the scheduler building oscillator nodes every
+3.2 s forever. Dragging music to zero must leave that timer running: the player is turning something
+down, not switching it off, and a channel that quietly tore itself down at zero could not be dragged
+back up. `setLevel()` therefore only ever touches a gain; `setSfx()`, `setAmb()` and `setMusic()`
+are the switches.
+
+**Muting Ambience cancels the duck; turning it down does not.** The duck is the sky leaning on the
+effects, so a muted sky has nothing to lean with. A bed turned to zero is still a bed, and the
+effects still belong under it.
+
+**The flower's hummed song stays on Ambience.** It is the one *tune* on that bus and the argument
+for moving it to Music is real — but music is off by default, and the Wonderfall's signature moment
+would then be silent for almost every player. It is the garden singing at you, not a score.
 
 The ambience bus opens only while something is standing on it and closes again behind the last
 sound, so clear weather carries no idle gain. `sfxFilter` is the duck — see below.

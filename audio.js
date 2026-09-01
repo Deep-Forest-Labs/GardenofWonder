@@ -9,20 +9,33 @@ const Sound = (() => {
   let ambBus = null;
   let stinger = null;
   let ready = false;
-  const prefs = { sfx: true, music: false };
+  /* Three channels, each a level and a mute. The boolean is the mute and the
+     number is the slider, and they are kept apart on purpose: a slider at zero
+     is a channel turned down, a mute is a channel switched off, and only the
+     second one is allowed to stop a scheduler. */
+  const prefs = {
+    sfx: true, amb: true, music: false,
+    sfxVol: 1, ambVol: 1, musicVol: 1
+  };
 
-  const AMB_LEVEL = 0.5;
-  /* Both mutes reach the ambience bus, but not as equals. A bed is the world
-     making a sound rather than a tune, so the effects mute governs it outright:
-     a player who silenced effects asked the garden to be quiet, and a minute of
-     rain hiss would be ignoring them. The music mute only trims it, because
-     with the arrangement gone the bed is the whole sky, and cutting that too
-     leaves a weather event with no weather in it. */
-  const MUSIC_OFF_TRIM = 0.72;
+  /* The house levels. These three are calibrated against each other and against
+     every recipe's own gain, with BED_TRIM and the stinger makeup sitting
+     downstream of the ambient one. A slider MULTIPLIES the number beside it and
+     never replaces it — written as a raw bus gain it would throw the whole
+     calibration away, and every measurement taken against it with it. */
+  const HOUSE = { sfx: 0.65, amb: 0.36, music: 0.16 };
+  /* 0.36 is the height the ambience has actually been playing at: the old
+     ambient level of 0.5 times the 0.72 it was trimmed by whenever music was
+     off, which is the default and is how the game is played. Naming it once
+     keeps the sky exactly as loud as it was on the day the third channel
+     arrived, so a slider left alone changes nothing. */
   const DUCK_HZ = 950;
   const OPEN_HZ = 18000;
 
   const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+
+  /* A channel is worth its house level times its slider, or nothing at all. */
+  const chLevel = (ch) => (prefs[ch] ? HOUSE[ch] * clamp(prefs[ch + 'Vol'], 0, 1) : 0);
 
   function init() {
     if (ready) return true;
@@ -40,10 +53,10 @@ const Sound = (() => {
     sfxFilter.Q.value = 0.4;
     sfxFilter.connect(master);
     sfxBus = ctx.createGain();
-    sfxBus.gain.value = prefs.sfx ? 0.65 : 0;
+    sfxBus.gain.value = chLevel('sfx');
     sfxBus.connect(sfxFilter);
     musicBus = ctx.createGain();
-    musicBus.gain.value = 0;
+    musicBus.gain.value = chLevel('music');
     musicBus.connect(master);
     ambBus = ctx.createGain();
     ambBus.gain.value = 0;
@@ -73,21 +86,43 @@ const Sound = (() => {
   }
 
   function setSfx(on) {
-    prefs.sfx = on;
+    prefs.sfx = !!on;
     if (!ready) return;
-    sfxBus.gain.setTargetAtTime(on ? 0.65 : 0, ctx.currentTime, 0.02);
+    sfxBus.gain.setTargetAtTime(chLevel('sfx'), ctx.currentTime, 0.02);
+  }
+
+  /* The sky's own channel — every bed, the thunder through the stinger, and the
+     flower's hummed song. Muting it is the one thing that cancels the duck. */
+  function setAmb(on) {
+    prefs.amb = !!on;
+    if (!ready) return;
     rampAmb(0.3);
+    duck(ducked);
   }
 
   function setMusic(on) {
-    prefs.music = on;
+    prefs.music = !!on;
     if (!ready) return;
     // Muting used to take the bus to zero and leave the scheduler running, so a
     // muted game kept building oscillator nodes every 3.2s forever. Notes already
     // scheduled are unaffected and fade out with the bus.
     if (on) startMusic(); else stopMusic();
-    musicBus.gain.setTargetAtTime(on ? 0.16 : 0, ctx.currentTime, 0.4);
-    rampAmb(0.6);
+    musicBus.gain.setTargetAtTime(chLevel('music'), ctx.currentTime, 0.4);
+  }
+
+  /* The slider, and it is deliberately not the mute. Dragging music to zero
+     leaves the scheduler running, because a level is a level: the player is
+     turning something down, not switching it off, and a channel that quietly
+     tore itself down at zero could not be dragged back up again. */
+  function setLevel(ch, v) {
+    if (!(ch + 'Vol' in prefs)) return false;
+    const n = Number(v);
+    prefs[ch + 'Vol'] = clamp(isFinite(n) ? n : 1, 0, 1);
+    if (!ready) return true;
+    if (ch === 'sfx') sfxBus.gain.setTargetAtTime(chLevel('sfx'), ctx.currentTime, 0.02);
+    else if (ch === 'music') musicBus.gain.setTargetAtTime(chLevel('music'), ctx.currentTime, 0.06);
+    else rampAmb(0.06);
+    return true;
   }
 
   /* --- tiny synth voices --- */
@@ -559,8 +594,7 @@ const Sound = (() => {
   let holdTimer = null;
 
   function ambLevel() {
-    if (!prefs.sfx) return 0;
-    return prefs.music ? AMB_LEVEL : AMB_LEVEL * MUSIC_OFF_TRIM;
+    return chLevel('amb');
   }
 
   function ambTarget() {
@@ -698,14 +732,20 @@ const Sound = (() => {
   }
 
   /* --- the effects duck --- */
+  let ducked = false;
+
   function duck(on) {
     if (!ready && !init()) return false;
-    sfxFilter.frequency.setTargetAtTime(on ? DUCK_HZ : OPEN_HZ, ctx.currentTime, 0.35);
-    return !!on;
+    ducked = !!on;
+    /* The duck is the sky leaning on the effects, so a muted sky has nothing to
+       lean with and the filter stays open. A slider does not cancel it: a bed
+       turned down is still a bed, and the effects still belong under it. */
+    sfxFilter.frequency.setTargetAtTime(ducked && prefs.amb ? DUCK_HZ : OPEN_HZ, ctx.currentTime, 0.35);
+    return ducked;
   }
 
   return {
-    init, resume, play, setSfx, setMusic, prefs,
+    init, resume, play, setSfx, setAmb, setMusic, setLevel, prefs,
     bed, bedsOff, arrange, duck, crack, rumble, sing
   };
 })();

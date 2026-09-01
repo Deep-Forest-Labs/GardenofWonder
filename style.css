@@ -1877,6 +1877,69 @@ button:focus-visible{
 .toggle[aria-pressed="true"]{background:#8ce99a}
 .toggle[aria-pressed="true"] i{transform:translateX(26px)}
 
+/* An audio channel is a name, a switch and a level, so the row becomes two lines
+   rather than three things fighting over one. The switch stays beside the name
+   because it answers the same question the name asks; the slider gets the full
+   width underneath, where a thumb can actually reach it. */
+.set-row.audio{
+  display:grid;grid-template-columns:1fr auto;align-items:center;
+  gap:9px 10px;
+}
+.set-row.audio .lbl{align-items:center}
+.set-row.audio .chn{display:flex;flex-direction:column;line-height:1.18;text-align:left}
+.set-row.audio .chn small{font-size:11px;font-weight:700;color:var(--ink-soft)}
+.set-row.audio .lvl{grid-column:1 / -1}
+/* Muted is the drained family the locked seed row and the locked season tab
+   wear — the slider keeps its position and stops promising to be heard. */
+.set-row.audio.muted{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2))}
+.set-row.audio.muted .lbl{opacity:.6}
+
+/* The first form control in the whole game, and it is dressed from the ground
+   up: a native range wears the operating system, and a system control in a
+   hand-drawn garden reads as something that got left in. It stays a real
+   `<input type=range>` rather than divs, because the keyboard support and the
+   role come free with the element and would have to be rebuilt without it.
+   None of the four pseudo-elements below inherits from the others; every one
+   of them has to be written out. */
+.lvl{
+  -webkit-appearance:none;appearance:none;
+  --lvl:100%;
+  width:100%;height:30px;background:none;
+  touch-action:none;
+}
+.lvl::-webkit-slider-runnable-track{
+  box-sizing:border-box;height:20px;border-radius:999px;
+  border:3px solid var(--ink);
+  background:linear-gradient(90deg,var(--grass-l) 0 var(--lvl),var(--paper-3) var(--lvl) 100%);
+}
+.lvl::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  box-sizing:border-box;width:30px;height:30px;margin-top:-5px;
+  border-radius:50%;
+  background:var(--paper);border:3px solid var(--ink);
+  box-shadow:0 3px 0 var(--ink-2);
+}
+.lvl::-moz-range-track{
+  box-sizing:border-box;height:20px;border-radius:999px;
+  border:3px solid var(--ink);background:var(--paper-3);
+}
+.lvl::-moz-range-progress{
+  height:20px;border-radius:999px;background:var(--grass-l);
+}
+.lvl::-moz-range-thumb{
+  box-sizing:border-box;width:30px;height:30px;border-radius:50%;
+  background:var(--paper);border:3px solid var(--ink);
+  box-shadow:0 3px 0 var(--ink-2);
+}
+/* `button:focus-visible` cannot reach an input, and a keyboard is the reason
+   this stayed a native control in the first place. */
+.lvl:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.set-row.audio.muted .lvl::-webkit-slider-runnable-track{
+  background:linear-gradient(90deg,var(--paper-dim-edge) 0 var(--lvl),var(--paper-dim-2) var(--lvl) 100%);
+}
+.set-row.audio.muted .lvl::-moz-range-track{background:var(--paper-dim-2)}
+.set-row.audio.muted .lvl::-moz-range-progress{background:var(--paper-dim-edge)}
+
 .big-btn{
   width:100%;padding:13px;margin-top:6px;
   border:3px solid var(--ink);border-radius:var(--r-md);

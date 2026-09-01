@@ -1408,8 +1408,7 @@
 
     const info = Game.load();
     if (!S.seen.plot) el.game.classList.add('onboard');
-    Sound.prefs.sfx = S.prefs.sfx;
-    Sound.prefs.music = S.prefs.music;
+    Object.assign(Sound.prefs, S.prefs);
 
     /* The glint's interval is a data knob, written to CSS once. It never
        changes at runtime, so it does not belong on the 0.6s tick beside the
@@ -1467,7 +1466,7 @@
     document.addEventListener('visibilitychange', () => { if (document.hidden) Game.saveNow(); });
     window.addEventListener('pagehide', () => Game.saveNow());
     // unlock audio on the very first interaction
-    const unlock = () => { Sound.init(); Sound.setSfx(S.prefs.sfx); Sound.setMusic(S.prefs.music); Sound.resume(); };
+    const unlock = () => { Sound.init(); Sound.setSfx(S.prefs.sfx); Sound.setAmb(S.prefs.amb); Sound.setMusic(S.prefs.music); Sound.resume(); };
     window.addEventListener('pointerdown', unlock, { once: true });
 
     /* After the coach mark, never over it — a returning player who has not planted yet is being
