@@ -24,6 +24,7 @@
 //   page:PATH          navigate elsewhere in the repo (default index.html)
 //   media:reduce       turn prefers-reduced-motion on (media:normal turns it off)
 //   paint:on           force real rasterisation (paint:off stops it) - see tools/skybench.js
+//   layers:DPR         count composited layers and what they cost in memory at that DPR
 //   drag:SEL:DX,DY     a real one-finger drag from SEL's centre, DX/DY in CSS px
 //   drag:@X,Y:DX,DY    the same, starting at a viewport point (the lawn, not an element)
 //
@@ -204,6 +205,14 @@ function parseSteps(argv) {
         }
         steps.push({ kind, on: rest === 'on' });
         break;
+
+      /* `layers:DPR` counts what the compositor is holding. iOS Safari kills a tab that
+         asks for too much layer memory, and every promoted layer costs width x height x
+         DPR^2 x 4 bytes whether or not anything about it changed this frame — which is
+         the one budget a frame-rate readout cannot see. */
+      case 'layers':
+        steps.push({ kind, dpr: Number(rest) || 3 });
+        break;
       case 'eval':
         steps.push({ kind, expr: rest });
         break;
@@ -352,6 +361,82 @@ async function main() {
       case 'wait':
         await new Promise((r) => setTimeout(r, step.ms));
         break;
+
+      case 'layers': {
+        await call('LayerTree.enable');
+        const got = new Promise((resolve) => {
+          const h = (p2) => { resolve(p2.layers || []); };
+          cdp.on('LayerTree.layerTreeDidChange', h);
+          setTimeout(() => resolve([]), 3000);
+        });
+        // Nudge the tree so a snapshot is emitted even if nothing changed on its own.
+        await call('Runtime.evaluate', { expression: 'void document.body.offsetHeight' });
+        const layers = await got;
+        await call('LayerTree.disable');
+        const px = step.dpr * step.dpr;
+        // A size is not a diagnosis — resolve each layer back to the element that asked
+        // for it, or the report says a lot of layers are big and nothing about which.
+        const named = [];
+        for (const l of layers) {
+          if (!(l.width > 1 && l.height > 1)) continue;
+          let who = '(no node)';
+          if (l.backendNodeId) {
+            try {
+              const { object } = await call('DOM.resolveNode', { backendNodeId: l.backendNodeId });
+              const { result } = await call('Runtime.callFunctionOn', {
+                objectId: object.objectId,
+                returnByValue: true,
+                functionDeclaration: `function () {
+                  const n = this.nodeType === 1 ? this : this.parentElement;
+                  if (!n) return '(text)';
+                  const cs = getComputedStyle(n);
+                  const why = [];
+                  if (cs.mixBlendMode !== 'normal') why.push('blend:' + cs.mixBlendMode);
+                  if (cs.filter !== 'none') why.push('filter');
+                  if (cs.willChange !== 'auto') why.push('will-change');
+                  if (cs.animationName !== 'none') why.push('anim');
+                  if (cs.position === 'fixed') why.push('fixed');
+                  if (cs.transform !== 'none') why.push('transform');
+                  if (cs.maskImage && cs.maskImage !== 'none') why.push('mask');
+                  return (n.tagName.toLowerCase()
+                    + (n.id ? '#' + n.id : '')
+                    + (n.className && typeof n.className === 'string'
+                        ? '.' + n.className.trim().split(/\s+/).join('.') : ''))
+                    .slice(0, 46) + '  [' + (why.join(' ') || 'no obvious reason') + ']';
+                }`,
+              });
+              who = result.value || who;
+            } catch { /* the node may already be gone */ }
+          }
+          named.push({
+            who,
+            w: Math.round(l.width),
+            h: Math.round(l.height),
+            mb: (l.width * l.height * px * 4) / 1048576,
+          });
+        }
+        named.sort((x, y) => y.mb - x.mb);
+        const total = named.reduce((a2, r) => a2 + r.mb, 0);
+        console.log(`  layers at DPR ${step.dpr}: ${named.length} composited, ${total.toFixed(1)} MB total`);
+        named.slice(0, 16).forEach((r) => {
+          console.log(`    ${String(r.w).padStart(5)}x${String(r.h).padStart(5)} ${String(r.mb.toFixed(1)).padStart(6)} MB  ${r.who}`);
+        });
+        // Grouped by WHY, because the fix is per-reason and not per-element.
+        const byReason = {};
+        named.forEach((r) => {
+          const why = (r.who.match(/\[(.*)\]$/) || [null, 'unknown'])[1];
+          why.split(' ').forEach((k) => {
+            byReason[k] = byReason[k] || { n: 0, mb: 0 };
+            byReason[k].n += 1;
+            byReason[k].mb += r.mb;
+          });
+        });
+        console.log('  by reason (a layer can have more than one):');
+        Object.entries(byReason).sort((x, y) => y[1].mb - x[1].mb).forEach(([k, v]) => {
+          console.log(`    ${k.padEnd(22)} ${String(v.n).padStart(3)} layers  ${v.mb.toFixed(1)} MB`);
+        });
+        break;
+      }
 
       case 'paint':
         if (step.on) {

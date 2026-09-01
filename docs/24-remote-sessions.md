@@ -44,13 +44,19 @@ node tools/probe.js 'drag:@30,600:0,-160' wait:800 shot:hollow       # a real sw
 
 Steps run in order: `shot:NAME`, `tap:SELECTOR` or `tap:SELECTOR*25`, `wait:MS`, `eval:EXPR`,
 `size:WxH`, `page:PATH`, `media:reduce` / `media:normal`, `paint:on` / `paint:off`,
-`drag:SEL:DX,DY` or `drag:@X,Y:DX,DY`. An unrecognised step is an error rather than a no-op, so a
+`layers:DPR`, `drag:SEL:DX,DY` or `drag:@X,Y:DX,DY`. An unrecognised step is an error rather than a no-op, so a
 typo fails loudly instead of silently skipping a tap. It exits non-zero if the page threw.
 
 **`paint:on` makes headless Chrome actually rasterise**, by opening a screencast and throwing the
 frames away. Without it, a `--disable-gpu` headless page nobody is looking at composites lazily —
 which is fine for a screenshot, and ruinous for a measurement: the frame bench happily reported
 2 ms a frame for a sky running full-screen blends. Only `tools/skybench.js` needs it.
+
+**`layers:3` prices what the compositor is holding**, and it is the only instrument here that can
+see the budget iOS actually kills tabs for. It walks the layer tree, resolves each layer back to the
+element that asked for it, says WHY that element was promoted, and totals width x height x dpr² x 4
+bytes. A frame timer cannot see any of this: a promoted layer that never changes costs nothing per
+frame and everything in memory. Use 3 for an iPhone.
 
 `PROBE_FLAGS` in the environment appends extra Chrome flags. `skybench.js` uses it to turn the
 frame limiter off. `CHROME` still picks the binary, and it is worth knowing that **two sessions

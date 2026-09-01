@@ -124,6 +124,97 @@ commit `db43231` retired the faulty rule with the rest of the numeric stages, go
 
 ---
 
+## 2026-09-01 (performance, second pass) — The crash is memory, not frame rate, and `opacity:0` does not put a layer down
+
+**The owner reported that the game CRASHES when you spam the flower, harvest and plant, and that
+10 fps is easy to reach.** The first performance pass had just finished measuring frame time and
+finding the game healthy, so the two reports had to be reconciled before anything was changed.
+
+### The game logic is not the problem, and that was worth proving
+
+A hundred harvest-and-replant cycles with two thousand taps, driven headlessly: **DOM nodes flat at
+~1,250, JS heap flat at 3 MB, no console errors, a steady 16.5 ms a frame.** Eight hundred taps
+with the proc rate forced created ~1,750 oscillators and ~1,850 gain nodes and the heap did not
+move. There is no leak in the game, in the particle pool, in the audio graph or in the DOM.
+
+**So the failure is not something that accumulates in JavaScript. It is something iOS runs out of.**
+
+### 343 MB of composited layers on an empty sky
+
+The instrument for this is not a frame timer. `tools/probe.js layers:3` walks Chrome's layer tree,
+resolves every layer back to the element that asked for it, and prices it at width x height x dpr²
+x 4 bytes. On a **clear** sky, doing nothing:
+
+**80 composited layers, 343 MB at DPR 3 — and 118 MB of that was held by `mask-image` alone,
+across fourteen layers, every one of them a weather layer that was invisible.**
+
+**`opacity:0` hides a layer. It does not release it.** A `mask-image` or a `mix-blend-mode` puts an
+element on its own composited layer and keeps a full-window backing store there for as long as it is
+in the tree, whether or not one pixel of it is ever drawn. Eleven of those hung over a clear sky,
+which is seventy percent of all slots. That is invisible to every frame-rate measurement ever taken
+on this game, because on a desktop it costs nothing — and it is exactly the budget iOS Safari kills a
+tab for exceeding.
+
+**It fits every symptom the owner reported**, which no frame-time explanation did: it crashes rather
+than stutters, it gets worse the longer a session runs and the more the sky has cycled, and it does
+not reproduce on a desk.
+
+Dropping the mask and the blend on each layer whose sky is not standing: **80 layers to 59, 343 MB
+to 266 MB, and the mask line from 131.6 MB to 17.4 MB.** Every sky is pixel-identical.
+
+### Why the mask and the blend, and not `display:none`
+
+`display:none` releases more, and it would have been wrong. **You cannot transition out of
+`display:none`** — a layer that appears in the same frame its opacity is told to rise has nothing to
+rise from, so every fade-in in the Sky Pass would have become a pop. Dropping only the mask and the
+blend leaves the element in the tree with its opacity transition intact, and while it is off it sits
+at `opacity:0`, where a mask and a blend mode have nothing to change. Verified rather than assumed:
+sampled the wash's computed opacity every 250 ms through a rain arrival and watched it climb
+0.006 → 0.224 with the mask present from the first sample.
+
+`.wx-ground` is deliberately left alone. The wet ground dries for thirty seconds *after* the sky has
+gone back to clear — that trace is the point of it, so it keeps its layer and earns it.
+
+### The pass's own veil fix was the biggest single layer in the game
+
+Wonderfall came to **404 MB**, and 90 MB of it was one element: the `.wx-veil::before` this pass had
+introduced that morning, eight tiles wide so its slide could wrap seamlessly. **A fix for one budget
+that is a liability in another**, and it took a layer census to see it — the frame timer had called
+the same change a clean win.
+
+It stayed, because measuring it three ways said it was worth keeping: the slide holds a **steady
+16.67 ms** where the repainting form runs 19.6–21.1 ms and drops about one frame in seven. But it is
+now **five tiles wide and not one more** — the minimum that still covers the window at the far end of
+the travel, which took Wonderfall from 404 MB to 363 MB.
+
+**The arithmetic bit twice in one day.** `background-size` percentages resolve against the element's
+own box, so narrowing the child from eight tiles to five changes the tile fraction from 50% to 80%,
+and getting it wrong makes a tile the wrong size — a quarter of the screen different, and completely
+invisible in a diff of the CSS. Caught by the pixel diff both times. **Neither error was findable by
+reading.**
+
+### Rejected
+
+- **`display:none` on the inactive layers.** Frees more, breaks every fade-in. Above.
+- **`contain:paint` on `.wx-veil` to let the browser clip the oversized child.** Measured: no
+  change at all, 399.7 MB before and after.
+- **Reverting the veil to `background-position` to reclaim its 56 MB.** Tempting once memory turned
+  out to be the binding constraint, and rejected on the measurement: it is the difference between a
+  steady 60 and a sky that drops a seventh of its frames, and 56 MB is now a fifth of what it was.
+- **Blaming the audio graph.** `tone()` and `noise()` never disconnect their gain nodes, which looks
+  exactly like the classic iOS Web Audio leak. Counted it: 1,750 oscillators over 800 taps, heap
+  flat throughout. Chrome collects them. Recorded as *unproven on Safari* rather than dismissed.
+
+### What is still unknown, and it is the same thing as before
+
+**Whether 266 MB is over or under an iPhone 16's limit.** These are Chrome's layers, priced by hand,
+on a machine with no such ceiling — the number is a budget, not a verdict, and Safari's layerisation
+is its own. What can be said is that the direction is right and the size is not small. The remaining
+309 MB is mostly layers with no obvious cause, which is the next thread to pull if the handset still
+crashes after this.
+
+---
+
 ## 2026-09-01 (performance) — The frame dip was one sky, and the instrument is worth more than the fix
 
 The owner reported a visible frame-rate dip on an iPhone 16 the morning the five skies landed, and

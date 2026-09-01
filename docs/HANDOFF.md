@@ -2305,6 +2305,19 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
 
+**`opacity:0` HIDES a layer. It does not RELEASE it — and the bill is memory, which no frame timer
+can see.** A `mask-image` or a `mix-blend-mode` puts an element on its own composited layer and
+holds a full-window backing store there (width x height x dpr² x 4 bytes) for as long as it is in
+the tree, drawn or not. Eleven of those hung over a clear sky: **80 layers, 343 MB at DPR 3**, of
+which 118 MB was masks on invisible weather. On a desktop that costs nothing, which is why every
+frame measurement ever taken on this game called it healthy; on iOS it is the budget a tab gets
+killed for. `node tools/probe.js layers:3` is the instrument. The fix is to drop the mask and the
+blend under a `:not()` gate naming the state that needs them — **not `display:none`, because you
+cannot transition out of `display:none`** and every fade-in becomes a pop. And watch for the
+opposite trap in the same breath: a fix that helps frame time can be a liability in memory. This
+pass's own veil rewrite was a clean win on the timer and the single largest layer in the game at
+90 MB.
+
 **A custom property written on a HIGH element invalidates everything beneath it, and the cost is
 WHICH ELEMENT — not which property, and not how many.** Three `--shake-*` writes on `#game` measured
 2.5–3.4 ms a frame; the identical transform written straight onto `.world` measured 0.004 ms. Seven

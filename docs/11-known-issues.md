@@ -776,6 +776,41 @@ above are recomputed rather than quoted, and a sim-test pins the 636,378 figure.
 
 ## Performance
 
+### The game crashes and drops to ~10 fps under heavy play — owner-reported 2026-09-01, part-answered
+
+**The likely cause is composited-layer MEMORY, not frame time, and the first fix is in.** Reasoning
+in the 2026-09-01 (second pass) entry in [10-decision-log.md](10-decision-log.md).
+
+**What was ruled out, with numbers.** A hundred harvest-and-replant cycles with two thousand taps
+leave DOM nodes flat at ~1,250, the JS heap flat at 3 MB, no console errors and a steady 16.5 ms a
+frame. Eight hundred taps created ~1,750 oscillators and ~1,850 gain nodes with no heap growth.
+**There is no leak in the game logic, the particle pool, the DOM or the audio graph** — at least not
+one Chrome can be made to show. So the failure is not something that accumulates in JavaScript.
+
+**What was found.** `node tools/probe.js layers:3` prices the compositor's backing stores. On a
+**clear** sky, doing nothing: **80 composited layers, 343 MB at DPR 3**, of which 118 MB was held by
+`mask-image` on fourteen layers that were all invisible. `opacity:0` hides a layer; it does not
+release it. Dropping the mask and the blend on every sky layer that is not standing takes that to
+**59 layers and 266 MB**, with every sky pixel-identical. Wonderfall came to 404 MB and is now 363 MB.
+
+**Why this is a better fit for the report than anything in the frame timings**: it crashes rather
+than stutters, it worsens the longer a session runs and the more the sky has cycled, and it does not
+reproduce on a desktop — which is where every other measurement said the game was healthy.
+
+**What is NOT known.** Whether 266 MB is over or under an iPhone 16's ceiling. These are Chrome's
+layers priced by hand on a machine with no such limit; Safari layerises differently and publishes no
+number. **The remaining 266 MB is mostly layers with no obvious cause, and that is the next thread
+to pull.** If the handset still crashes after this change, that is where to look — and the fastest
+way to know is the Frame rate readout plus whether the crash is a reload, a freeze or a white screen.
+
+**Still wanted from the owner:** a video of the crash. Safari's "A problem repeatedly occurred" is a
+memory kill and confirms the above; a freeze with the page intact is something else entirely; and a
+white screen is a third thing. The three have different fixes and the symptom is the cheapest way to
+tell them apart.
+
+*Where:* the `:not()` gate block after `.wx` in `style.css`, and `tools/probe.js`'s `layers:` step.
+
+
 ### The Sky Pass dips frame rate on an iPhone 16 — measured 2026-09-01, and it needs the owner's eyes
 
 Reported from live play the morning the five skies landed. **Measured, and mostly fixed — but the

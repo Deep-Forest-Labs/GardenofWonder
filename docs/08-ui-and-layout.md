@@ -685,12 +685,32 @@ and the far hills lose their own `saturate(.8) brightness(1.04)`. Both were true
 now. If the far hills should *keep* their haze during a Wonderfall, that is a look decision and the
 owner's to make.
 
+**An inactive sky layer gives up its mask and its blend, and that is a memory rule rather than a
+frame-rate one.** `opacity:0` hides a layer; it does not release it. A `mask-image` or a
+`mix-blend-mode` puts an element on its own composited layer and holds a full-window backing store
+there — width x height x dpr² x 4 bytes — for as long as it is in the tree, drawn or not. Eleven of
+those hung over a clear sky. Each one now drops both under a `:not()` gate naming exactly the sky it
+belongs to, which took the page from 80 composited layers to 59 and from 343 MB to 266 MB at DPR 3.
+
+**Not `display:none`, and the reason is load-bearing: you cannot transition out of `display:none`.**
+A layer that appears in the same frame its opacity is told to rise has nothing to rise from, so every
+fade-in in the Sky Pass would become a pop. Dropping only the mask and the blend leaves the opacity
+transition intact, and while a layer is off it is at `opacity:0`, where a mask and a blend mode have
+nothing to change. **`.wx-ground` is deliberately not gated** — the wet ground dries for thirty
+seconds after the sky has gone back to clear, which is the trace the pass exists to leave.
+
 **The Wonderfall veil slides; it does not repaint.** `.wx-veil` is the blend, the mask and the
 opacity; `.wx-veil::before` is a two-tile-wide child carrying the rainbow, moved by `transform`.
 The tile is `background-size:50% 400%` of that child — the same 4×window tile the old
 `background-size:400% 400%` made, repeating the same way. **The repeat is the load-bearing part**:
 a first attempt used one un-repeated tile and slid it off the left edge, which drained the colour
 out of the lawn for most of the cycle. Nothing in the code looked wrong; a pixel diff found it.
+**It is five tiles wide and not one more** — a composited layer costs its own area in memory, and at
+eight tiles this was the single largest thing the game asked the compositor for, at 90 MB. Five is
+the minimum that still covers the window at the far end of the travel. Note that narrowing it also
+changes the tile fraction, because `background-size` percentages resolve against the element's own
+box: at five tiles the tile is 80%, at eight it was 50%. Getting that wrong makes the tile the wrong
+size, which is a quarter of the screen different and invisible in a diff of the CSS.
 
 **Cue discipline.** Every real sky now speaks twice: a forecast line a few seconds before it lands,
 and its arrival line when it does. **Wonderfall alone gets a banner** — that ruling stands, and a

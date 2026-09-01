@@ -4999,6 +4999,42 @@ button:focus-visible{
 .wx{position:absolute;inset:0;pointer-events:none}
 
 /* ---------------------------------------------------------
+   PUTTING THE SKY DOWN WHEN IT IS NOT ON
+   ---------------------------------------------------------
+   `opacity:0` hides a layer. It does not RELEASE it. A `mask-image` or a
+   `mix-blend-mode` forces the element onto its own composited layer, and that layer
+   holds a full-window backing store — width x height x dpr² x 4 bytes — for as long as
+   the element is in the tree, whether or not a single pixel of it is ever drawn. Eleven
+   of these hung over a clear sky, which is seventy percent of all slots, and a phone
+   pays for every one of them in the budget that kills tabs rather than the one that
+   drops frames. Measured: dropping them takes the mask-held layers from 131.6 MB to
+   41.6 MB at DPR 3.
+
+   `mask-image` and `mix-blend-mode` rather than `display:none`, and that is the whole
+   care in this block: **you cannot transition out of `display:none`.** A layer that
+   appears in the same frame its opacity is told to rise has nothing to rise from, so
+   every fade-in in the Sky Pass would become a pop. Dropping only the mask and the blend
+   leaves the element in the tree with its opacity transition intact — and while it is
+   off, it is at `opacity:0`, where a mask and a blend mode have nothing to change.
+
+   Each gate is the exact condition under which its layer can have any opacity, including
+   the tail: `data-weather` is held through the end phase and released after the tail
+   (`HOLD` in `ui-weather.js`), which outlives every fade-out here. **`.wx-ground` is
+   deliberately absent** — the wet ground dries for thirty seconds after the sky has gone
+   back to clear, on the base rule, which is the "that happened" trace the pass exists to
+   leave. It keeps its layer and earns it. */
+#game:not([data-weather="rain"]):not([data-weather="storm"]) :is(.wx-wash,.wx-front),
+#game:not([data-weather="storm"]) :is(.wx-bolt,.wx-flash,.wx-flash-under),
+#game:not([data-weather="aurora"]) :is(.wx-dusk,.wx-ribbon),
+#game:not([data-weather="wonderfall"]) .wx-veil,
+#game:not([data-sunbreak="1"]):not([data-sunbreak="fade"]) .wx-sunbreak,
+#game:not(.wx-cue) .wx-takeover{
+  -webkit-mask-image:none;
+  mask-image:none;
+  mix-blend-mode:normal;
+}
+
+/* ---------------------------------------------------------
    THE FRONT — the announce channel. One channel: clouds.
    --------------------------------------------------------- */
 .wx-front{
@@ -5664,25 +5700,35 @@ button:focus-visible{
    clipping the padding box used to do. */
 .wx-veil::before{
   content:'';position:absolute;
-  left:0;top:0;width:800%;height:100%;
+  left:0;top:0;width:500%;height:100%;
   background:linear-gradient(125deg,var(--wonder-sweep));
   /* One TILE, and the tile is the thing to get right. `background-size:400% 400%` on the
      veil made an image 4x the window in both axes and — because backgrounds repeat by
-     default — TILED it. Percentages here resolve against this child's own box, so 50% of
-     8W is 4W and 400% of H is 4H: the same tile, repeating the same way. A first attempt
+     default — TILED it. Percentages here resolve against this child's own box, so 80% of
+     5W is 4W and 400% of H is 4H: the same tile, repeating the same way. Get that
+     fraction wrong and the tile is the wrong size, which is a quarter of the screen
+     different and completely invisible in the diff of the CSS. A first attempt
      used one un-repeated tile and slid it off the left edge, which drained the colour out
      of the lawn for most of the cycle and was caught by a pixel diff rather than by
      reading the code. */
-  background-size:50% 400%;
+  background-size:80% 400%;
   background-position:0 50%;
 }
-/* Two tiles wide, and the slide is exactly one tile — so the wrap lands on identical
-   pixels and there is no seam to see. The old form crossed three tiles in five seconds,
-   which is one tile every five-thirds of a second: same speed, same picture, and the
-   engine slides a layer instead of repainting a full-window gradient every frame. */
+/* The slide is exactly ONE TILE, so the wrap lands on identical pixels and there is no
+   seam to see. The old form crossed three tiles in five seconds — one tile every
+   five-thirds of a second: same speed, same picture, and the engine slides a layer
+   instead of repainting a full-window gradient every frame. Measured on a full board:
+   a steady 16.67 ms against 19.6-21.1 ms and about one frame in seven dropped.
+
+   **Five tiles wide, and not one more.** A composited layer costs its own area in
+   memory — width x height x dpr² x 4 bytes — so this element is the single largest
+   thing the game asks the compositor for, and at eight tiles it was 90 MB at DPR 3. Five
+   is the minimum that works: the layer starts at [0, 5W] and ends at [-4W, W], which
+   covers the window exactly at the far end of the travel. Widening it buys nothing and
+   costs 11 MB a tile. */
 @keyframes wxVeilShift{
   from{transform:translate3d(0,0,0)}
-  to{transform:translate3d(-50%,0,0)}
+  to{transform:translate3d(-80%,0,0)}
 }
 /* Both keyframes are this sky's own. `wxVeilShift` is the shimmer rebuilt as a slide
    (see `.wx-veil::before`); `wxWonderWarp` is the breathing at weather strength, and it
@@ -5953,13 +5999,13 @@ button:focus-visible{
   #game[data-weather="aurora"][data-wx-phase="linger"] .cr-eyes,
   #game[data-weather="aurora"] .tf-head{transition:none}
 
-  /* The veil hangs there, one colour, no shimmer and no breathing. 38% of the sweep
-     was 0.38 × −3W against the old background-position; against the child's own 4W box
-     that is −28.5%, which is the same stripe of rainbow standing still. */
+  /* The veil hangs there, one colour, no shimmer and no breathing. 38% of the old
+     sweep was 0.38 x -12W = -4.56W, and the tiles repeat every 4W — so -0.56W shows the
+     same stripe, which against this child's own 5W box is -11.2%. */
   #game[data-weather="wonderfall"][data-wx-phase="transform"] .wx-veil::before,
   #game[data-weather="wonderfall"][data-wx-phase="linger"] .wx-veil::before{
     animation:none;
-    transform:translate3d(-57%,0,0);
+    transform:translate3d(-11.2%,0,0);
   }
   /* Held, not breathing — and on the same layers the moving version uses, never
      on `.scenery`, whose box owns the bottom edge and whose filter cannot be
