@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Growth stages — the spike</title>
+<!--
+  The Growth Stages gate (docs/10-decision-log.md, 2026-09-01 ruling).
+
+  Every plant here renders through the REAL data.js, flora.js and style.css —
+  no hand-copied rules; the sky spike's copied block is the recorded hazard
+  this page exists to avoid. The stage words are the ones stageOf() will speak
+  after the verdict: sprout, stem, bud, bloom.
+
+  THE NUMBERS ON THIS PAGE SHIP VERBATIM. The three thresholds default to the
+  proposed DATA.growth = { sprout: .25, stem: .55, bloom: .9 } — the bud holds
+  until almost ready and the flower opens a little before ripeness, as ruled.
+  The sliders tune the exact moment and the softness of the opening; whatever
+  is approved here lands in data.js and style.css unchanged.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../style.css"/>
+<style>
+  /* The spike's own chrome. Everything inside a .plot is the game's. */
+  html,body{height:auto;overflow:auto;position:static}
+  body{
+    background:#f6efdf;margin:0;padding:18px 0 60px;
+    font-family:'Baloo 2',system-ui,sans-serif;color:#2c1a10;
+  }
+  .wrap{max-width:390px;margin:0 auto;padding:0 12px}
+  h1{font-size:22px;margin:0 0 2px}
+  .sub{font-size:13px;opacity:.75;margin:0 0 14px;line-height:1.35}
+  .card{
+    background:#fffdf6;border:3px solid #2c1a10;border-radius:16px;
+    box-shadow:0 3px 0 #2c1a10;padding:12px;margin-bottom:14px;
+  }
+  .card h2{font-size:15px;margin:0 0 8px}
+  .row{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .row label{font-size:13px;font-weight:700;width:104px;flex:none}
+  .row input[type=range]{flex:1;min-width:0}
+  .row output{font-size:12px;width:44px;text-align:right;flex:none;font-variant-numeric:tabular-nums}
+  select,button.sp-btn{
+    font-family:inherit;font-weight:700;font-size:14px;color:#2c1a10;
+    background:#ffe9a8;border:2.5px solid #2c1a10;border-radius:10px;
+    padding:6px 10px;box-shadow:0 2px 0 #2c1a10;
+  }
+  button.sp-btn:active{transform:translateY(2px);box-shadow:none}
+  .live-zone{display:flex;gap:12px;align-items:flex-end}
+  .live-zone .plot{width:230px;height:230px;flex:none}
+  .live-side{flex:1;min-width:0;font-size:13px;line-height:1.4}
+  .live-side b{font-size:15px}
+  .track{
+    position:relative;height:14px;border:2.5px solid #2c1a10;border-radius:999px;
+    background:linear-gradient(90deg,#8ce99a,#51cf66 60%,#ffd43b);margin:8px 0 2px;
+  }
+  .track .tick{position:absolute;top:-5px;bottom:-5px;width:3px;background:#2c1a10;border-radius:2px}
+  .track .dot{
+    position:absolute;top:50%;width:16px;height:16px;border-radius:50%;
+    background:#fffdf6;border:3px solid #2c1a10;transform:translate(-50%,-50%);
+  }
+  .ticklabels{position:relative;height:14px;font-size:10px;font-weight:700;opacity:.7}
+  .ticklabels span{position:absolute;transform:translateX(-50%)}
+  /* the grid */
+  .stagehead{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:2px 0 6px}
+  .stagehead span{font-size:12px;font-weight:800;text-align:center;opacity:.75}
+  .species{margin-bottom:14px}
+  .species h3{font-size:14px;margin:0 0 4px;display:flex;justify-content:space-between;align-items:baseline}
+  .species h3 small{font-weight:600;opacity:.6;font-size:11px}
+  .stages,.stages-small{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .stages .plot{width:100%;aspect-ratio:1;height:auto}
+  .stages-small{margin-top:4px}
+  .stages-small .plot{width:44px;height:44px;justify-self:center;border-radius:8px}
+  .foot{font-size:12px;opacity:.7;line-height:1.4;margin-top:16px}
+  /* spike plots never wiggle or glow ready — the live cell is the one that moves */
+  .stages .plot .plant,.stages-small .plot .plant{animation:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Growth stages</h1>
+  <p class="sub">Every flower, four stages: <b>sprout · stem · bud · bloom</b>.
+  Rendered by the real game files. The sliders below are the motion gate —
+  <b>whatever is approved here ships verbatim.</b></p>
+
+  <div class="card">
+    <h2>Watch one grow</h2>
+    <div class="live-zone">
+      <button class="plot" id="livePlot" data-state="grow" data-stage="sprout">
+        <div class="plot-inner"><div class="plant-slot" id="liveSlot"></div></div>
+        <div class="bar"><i id="liveBar"></i></div>
+        <div class="ready-pop">!</div>
+      </button>
+      <div class="live-side">
+        <b id="liveStage">sprout</b><br/>
+        <span id="liveInfo"></span>
+      </div>
+    </div>
+    <div class="track" id="track"></div>
+    <div class="ticklabels" id="tickLabels"></div>
+    <div class="row">
+      <label for="scrub">progress</label>
+      <input type="range" id="scrub" min="0" max="1000" value="0"/>
+      <output id="scrubOut">0%</output>
+    </div>
+    <div class="row">
+      <select id="speciesSel"></select>
+      <button class="sp-btn" id="playBtn" type="button">Grow it ▸</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>The thresholds (ship as DATA.growth)</h2>
+    <div class="row"><label for="s-sprout">sprout until</label><input type="range" id="s-sprout" min="0.05" max="0.5" step="0.01" value="0.25"/><output id="o-sprout">25%</output></div>
+    <div class="row"><label for="s-stem">stem until</label><input type="range" id="s-stem" min="0.3" max="0.8" step="0.01" value="0.55"/><output id="o-stem">55%</output></div>
+    <div class="row"><label for="s-bloom">opens at</label><input type="range" id="s-bloom" min="0.6" max="0.99" step="0.01" value="0.9"/><output id="o-bloom">90%</output></div>
+    <div class="row"><label for="s-unfurl">opening takes</label><input type="range" id="s-unfurl" min="0.3" max="1.6" step="0.05" value="0.9"/><output id="o-unfurl">0.9s</output></div>
+    <p class="sub" style="margin:8px 0 0">The bud holds from the stem mark to the
+    opening mark, and the flower opens a little before it is ready — then the
+    ripe wiggle invites the pick. <span id="openNote"></span></p>
+  </div>
+
+  <div class="stagehead"><span>sprout</span><span>stem</span><span>bud</span><span>bloom</span></div>
+  <div id="grid"></div>
+
+  <p class="foot">Small row is the readability check — art that reads as mush
+  small has failed. Buds are tinted from each species' own petal gradients;
+  the rainbow species (Aurora Crown) buds in its two data colours, since a
+  closed bud showing all seven would read as a different flower.</p>
+</div>
+
+<script src="../data.js"></script>
+<script src="../flora.js"></script>
+<script>
+(() => {
+  Flora.injectDefs();
+
+  /* Proposed DATA.growth — these default values and the slider values ship
+     verbatim on approval. */
+  const T = { sprout: 0.25, stem: 0.55, bloom: 0.9 };
+  let unfurl = 0.9;
+
+  const stageFor = (p) =>
+    p >= T.bloom ? 'bloom' : p >= T.stem ? 'bud' : p >= T.sprout ? 'stem' : 'sprout';
+
+  const $ = (s, el) => (el || document).querySelector(s);
+  const seeds = DATA.seeds;
+
+  /* ---------- the grid: 19 species x 4 stages, plus the small row ---------- */
+  const STAGES = ['sprout', 'stem', 'bud', 'bloom'];
+  const cell = (seed, stage, small) => `
+    <button class="plot" data-state="grow" data-stage="${stage}" tabindex="-1"
+            aria-label="${seed.name}, ${stage}">
+      <div class="plot-inner"><div class="plant-slot">${Flora.plant(seed)}</div></div>
+    </button>`;
+  $('#grid').innerHTML = seeds.map((seed) => `
+    <div class="species">
+      <h3><span>${seed.name}</span><small>${seed.art.shape}</small></h3>
+      <div class="stages">${STAGES.map((st) => cell(seed, st)).join('')}</div>
+      <div class="stages-small">${STAGES.map((st) => cell(seed, st, true)).join('')}</div>
+    </div>`).join('');
+
+  /* ---------- the live cell ---------- */
+  const livePlot = $('#livePlot');
+  const liveSlot = $('#liveSlot');
+  const liveBar = $('#liveBar');
+  const sel = $('#speciesSel');
+  sel.innerHTML = seeds.map((s) => `<option value="${s.id}">${s.name}</option>`).join('');
+
+  let current = seeds[0];
+  function setSpecies(id) {
+    current = seeds.find((s) => s.id === id) || seeds[0];
+    liveSlot.innerHTML = Flora.plant(current);
+    apply(+$('#scrub').value / 1000, true);
+  }
+
+  function apply(p, force) {
+    const st = stageFor(p);
+    if (force || livePlot.dataset.stage !== st) livePlot.dataset.stage = st;
+    livePlot.dataset.state = p >= 1 ? 'ready' : 'grow';
+    liveBar.style.width = (Math.min(1, p) * 100).toFixed(1) + '%';
+    livePlot.style.setProperty('--unfurl', unfurl + 's');
+    $('#liveStage').textContent = st + (p >= 1 ? ' · ready' : '');
+    $('#scrubOut').textContent = Math.round(p * 100) + '%';
+    $('#track').querySelector('.dot').style.left = (Math.min(1, p) * 100) + '%';
+    const early = Math.round(current.grow * (1 - T.bloom) * 10) / 10;
+    $('#liveInfo').innerHTML =
+      `${current.name} grows in ${current.grow}s.<br/>` +
+      `Opens at ${Math.round(T.bloom * 100)}% — ${early}s before it is ready.`;
+  }
+
+  /* ---------- track ticks ---------- */
+  function drawTrack() {
+    const tr = $('#track');
+    tr.innerHTML =
+      `<div class="tick" style="left:${T.sprout * 100}%"></div>` +
+      `<div class="tick" style="left:${T.stem * 100}%"></div>` +
+      `<div class="tick" style="left:${T.bloom * 100}%"></div>` +
+      `<div class="dot" style="left:0%"></div>`;
+    $('#tickLabels').innerHTML =
+      `<span style="left:${T.sprout * 100}%">stem</span>` +
+      `<span style="left:${T.stem * 100}%">bud</span>` +
+      `<span style="left:${T.bloom * 100}%">opens</span>`;
+    $('#openNote').textContent =
+      `A ${seeds[0].grow}s Daisy opens ${(seeds[0].grow * (1 - T.bloom)).toFixed(1)}s early; ` +
+      `a ${seeds[seeds.length - 1].grow}s ${seeds[seeds.length - 1].name} opens ` +
+      `${Math.round(seeds[seeds.length - 1].grow * (1 - T.bloom))}s early.`;
+  }
+
+  /* ---------- wiring ---------- */
+  sel.addEventListener('change', () => setSpecies(sel.value));
+  $('#scrub').addEventListener('input', () => apply(+$('#scrub').value / 1000));
+
+  const sliders = [
+    ['sprout', (v) => { T.sprout = Math.min(v, T.stem - 0.05); }],
+    ['stem', (v) => { T.stem = Math.max(T.sprout + 0.05, Math.min(v, T.bloom - 0.05)); }],
+    ['bloom', (v) => { T.bloom = Math.max(T.stem + 0.05, v); }],
+  ];
+  sliders.forEach(([key, set]) => {
+    $('#s-' + key).addEventListener('input', (e) => {
+      set(+e.target.value);
+      ['sprout', 'stem', 'bloom'].forEach((k) => {
+        $('#s-' + k).value = T[k];
+        $('#o-' + k).textContent = Math.round(T[k] * 100) + '%';
+      });
+      drawTrack();
+      apply(+$('#scrub').value / 1000, true);
+    });
+  });
+  $('#s-unfurl').addEventListener('input', (e) => {
+    unfurl = +e.target.value;
+    $('#o-unfurl').textContent = unfurl.toFixed(2).replace(/0$/, '') + 's';
+    apply(+$('#scrub').value / 1000);
+  });
+
+  /* Grow it: sweep 0 to just past ready in 14 seconds, real thresholds, so the
+     unfurl and the wiggle arrive as beats rather than as slider positions. */
+  let playing = null;
+  $('#playBtn').addEventListener('click', () => {
+    if (playing) { cancelAnimationFrame(playing); playing = null; $('#playBtn').textContent = 'Grow it ▸'; return; }
+    const t0 = performance.now();
+    const DUR = 14000;
+    $('#playBtn').textContent = 'Stop ■';
+    const step = (t) => {
+      const p = Math.min(1, (t - t0) / DUR);
+      $('#scrub').value = Math.round(p * 1000);
+      apply(p);
+      if (p < 1) { playing = requestAnimationFrame(step); }
+      else { playing = null; $('#playBtn').textContent = 'Grow it ▸'; }
+    };
+    playing = requestAnimationFrame(step);
+  });
+
+  drawTrack();
+  setSpecies(seeds[0].id);
+})();
+</script>
+</body>
+</html>

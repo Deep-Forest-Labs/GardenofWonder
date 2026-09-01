@@ -159,6 +159,80 @@ const Flora = (() => {
     return `<ellipse class="f-ring" cx="0" cy="0" rx="40" ry="13" fill="none" stroke="${art.c2}" stroke-width="4" opacity=".85" transform="rotate(-18)"/>`;
   }
 
+  /* A seedling low to the soil: two cotyledon leaves in the species' own leaf
+     colour. A seedling honestly doesn't show its flower yet, so the leaf colour
+     is the whole variation. Hidden by base style; [data-stage="sprout"] shows it. */
+  function sprout(seed) {
+    const leaf = (seed.art && seed.art.leaf) || '#4bb257';
+    return `
+      <g class="f-sprout" transform="translate(50 99)">
+        <g class="f-sprout-body" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round">
+          <path d="M0,21 C0,13 0,7 0,1" fill="none" stroke="${leaf}" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M0,2 C-5,-7 -14,-11 -21,-9 C-20,-1 -11,5 0,2 Z" fill="${leaf}"/>
+          <path d="M0,2 C5,-7 14,-11 21,-9 C20,-1 11,5 0,2 Z" fill="${leaf}"/>
+        </g>
+      </g>`;
+  }
+
+  /* The closed bud: where species identity lands before the flower opens. One
+     hand-tuned shape per family, tinted from the species' own gradients so the
+     player can read what is coming. Hidden by base style; [data-stage="bud"]
+     shows it, and the unfurl fades it out as the head swells open underneath. */
+  function bud(seed) {
+    const art = seed.art;
+    const p = `url(#gp-${seed.id})`;
+    const h = `url(#gh-${seed.id})`;
+    const leaf = art.leaf || '#4bb257';
+    const calyx = `<path d="M-9,6 C-12,14 -5,18 0,18 C5,18 12,14 9,6 C5,11 -5,11 -9,6 Z" fill="${leaf}"/>`;
+    let body = '';
+    switch (art.shape) {
+      case 'tulip':
+        body = `
+          <path d="M-14,-2 C-15,-18 -10,-28 -4,-31 C-3,-20 -4,-8 -3,2 Z" fill="${h}"/>
+          <path d="M14,-2 C15,-18 10,-28 4,-31 C3,-20 4,-8 3,2 Z" fill="${h}"/>
+          <path d="M0,-33 C10,-28 14,-14 12,-2 C10,7 6,10 0,10 C-6,10 -10,7 -12,-2 C-14,-14 -10,-28 0,-33 Z" fill="${p}"/>
+          <path d="M0,-29 C2,-20 2,-8 1,4" fill="none" stroke="${INK}" stroke-opacity=".18" stroke-width="2.4" stroke-linecap="round"/>`;
+        break;
+      case 'spike': {
+        let s = `<path d="M0,16 L0,-14" fill="none" stroke="${leaf}" stroke-width="4.5" stroke-linecap="round"/>`;
+        for (let i = 0; i < 4; i += 1) {
+          const off = i % 2 === 0 ? -1.5 : 1.5;
+          s += `<ellipse cx="${off}" cy="${10 - i * 7}" rx="${8.5 - i}" ry="5" fill="${i % 2 ? h : p}"/>`;
+        }
+        body = s;
+        break;
+      }
+      case 'fern':
+        body = `
+          <path d="M0,10 C-5,8 -9,5 -11,1 C-6,0 -2,4 0,10 Z" fill="${h}"/>
+          <path d="M0,10 C5,8 9,5 11,1 C6,0 2,4 0,10 Z" fill="${h}"/>
+          <path d="M0,18 C-1,8 -1,-2 1,-8 C3,-14 9,-16 12,-12 C15,-8 12,-3 8,-4 C5,-5 5,-8 7,-9" fill="none" stroke="${art.core}" stroke-width="4.5" stroke-linecap="round"/>`;
+        break;
+      case 'orb':
+        body = `
+          <circle cx="0" cy="0" r="13" fill="${p}"/>
+          <circle cx="-4" cy="-5" r="4" fill="#ffffff" opacity=".25" stroke="none"/>
+          ${calyx.replace('C5,11 -5,11', 'C5,12 -5,12')}`;
+        break;
+      case 'bell':
+        body = `
+          <path d="M0,16 C0,8 -2,2 -6,-2" fill="none" stroke="${leaf}" stroke-width="4" stroke-linecap="round"/>
+          <path d="M-10,-6 C-5,-3 -3,4 -5,10 C-7,15 -13,15 -15,10 C-17,4 -15,-3 -10,-6 Z" fill="${p}"/>
+          <path d="M9,-5 C14,-2 16,5 14,11 C12,16 6,16 4,11 C2,5 4,-2 9,-5 Z" fill="${h}"/>
+          <path d="M-1,-8 C4,-5 6,2 4,8 C2,13 -4,13 -6,8 C-8,2 -6,-5 -1,-8 Z" fill="${p}"/>`;
+        break;
+      default:
+        body = `
+          <path d="M0,-22 C9,-15 13,-6 11,3 C9,11 5,15 0,15 C-5,15 -9,11 -11,3 C-13,-6 -9,-15 0,-22 Z" fill="${p}"/>
+          <path d="M0,-22 C-8,-15 -11,-6 -9,2 C-8,8 -4,13 0,15 C-2,4 -2,-10 0,-22 Z" fill="${h}"/>
+          ${calyx}`;
+    }
+    return `
+      <g class="f-bud" transform="translate(50 44)">
+        <g class="f-bud-body" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round">${body}</g>
+      </g>`;
+  }
+
   /**
    * Full plant: stem, leaves and head. Growth is driven from CSS via
    * data-stage so the same markup covers sprout through full bloom.
@@ -177,6 +251,7 @@ const Flora = (() => {
         <path class="f-leaf f-leaf-l" d="M50,96 C36,98 24,90 20,78 C34,72 46,82 50,96 Z" fill="${leaf}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>
         <path class="f-leaf f-leaf-r" d="M50,86 C64,88 76,80 80,68 C66,62 54,72 50,86 Z" fill="${leaf}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>
       </g>
+      ${sprout(seed)}
       <g class="f-head" transform="translate(50 44)">
         ${decoration(seed)}
         <g class="f-petals" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round">
@@ -184,6 +259,7 @@ const Flora = (() => {
         </g>
         ${core(seed)}
       </g>
+      ${bud(seed)}
     </svg>`;
   }
 

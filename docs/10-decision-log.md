@@ -5,6 +5,55 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-01 (stages, the gate) — The four stages are on main, invisible, and the spike is live
+
+**The Growth Stages pass landed its pre-gate half: every species' sprout and bud geometry ships
+inside `Flora.plant()`'s SVG, and the live game renders pixel-identically with it there.** The
+spike's chicken-and-egg — it must render through the real `data.js`/`flora.js`/`style.css`, which
+means the art reaches `main` before the gate — is resolved exactly as commissioned: the new groups
+are hidden by base style (`display:none`, not opacity — see below), and every new stage rule is
+keyed to the string values `sprout`/`stem`/`bud`/`bloom`, which nothing in the live game emits.
+`stageOf()`, `ui.js` and the `DATA.growth` thresholds all wait for the owner's word at
+[tools/stage-spike.html](../tools/stage-spike.html).
+
+**The proof is a camera, not a claim.** `tools/stage-parity.js` shoots two deterministic boards
+through the real build — all-ripe on the eight fast seeds, staggered growth on the slow half, the
+eleven shape families covered between them — and diffs arms pixel by pixel. Before-vs-after:
+**zero differing pixels on both boards**, re-derived by an independent critic. Getting the camera
+honest found five things that will lie to any future diff, all now answered in the tool: the
+ambient petal canvas holds boot-random particles when the frame loop stops; the loop's
+already-scheduled last frame fires after a naive stub; a mid-flight transition pinned at a fixed
+time freezes the sun at a boot-dependent height (transitions are *finished*, animations killed to
+base pose); a merely paused animation keeps its layer promoted and promoted edges rasterise a
+shade differently run to run; and `--disable-lcd-text`/`--force-color-profile` must pin the
+rasteriser or edge antialiasing flips between runs.
+
+**One real leak was caught before it shipped: an invisible child still widens the paint bounds a
+`drop-shadow` rasterises from.** With the new groups hidden by `opacity:0`, every *glowing*
+species' glow fringe moved by a few channels at small stages — 683 pixels on the growing board,
+found only because the camera demands zero. The base hide is `display:none`, each stage that needs
+a fade keeps its neighbour stage's group displayed at opacity 0, and the bud's bounds sit inside
+the full bloom's, so the ripe glow can never move.
+
+**Art decisions, made and standing for the gate:** the bud is one hand-tuned closed shape per
+family, tinted from the species' own `gp-`/`gh-` gradients with sepals in its own leaf colour —
+radial families get a wrapped teardrop with a calyx, the tulip closes its cup, the spike stacks
+short and tight, the fern curls a crozier, the orb dulls its sphere, the bell hangs three closed
+drops. The sprout is shared cotyledons in the species' leaf colour. The unfurl rides the proven
+`f-head` pattern — the head swells open out of the bud's footprint while the bud fades on top —
+so no new transform-origin arithmetic exists anywhere (`#14`'s rule is carried:
+`transform-origin:0 0` on every restated transform). The rainbow species buds in its two data
+colours; a closed bud showing all seven would read as a different flower.
+
+**Recorded for integration, not acted on:** `.plot[data-stage="0"] .plant{opacity:0}` has no
+writer (it dates to the initial commit) and `var(--bloom,1)` in the ripe rule has no JS writer —
+both retire with the numeric rules when `stageOf()` switches, and
+[tools/sky-spike.html](../tools/sky-spike.html)'s hand-copied stage block and hardcoded
+`data-stage="2"/"3"` markup must be brought along in the same commit. Suite 1,491, zero failed;
+zero new colours against `HEAD`'s distinct set.
+
+---
+
 ## 2026-09-01 (ruling) — Growth stages are commissioned, and the bud holds until almost ready
 
 **The owner commissioned the Growth Stages pass**: every flower in the main garden gets four

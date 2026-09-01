@@ -35,9 +35,10 @@
 // (dismissed), toasts and FX particles ride wall-clock timers (a long settle
 // before the freeze), and growth itself advances between eval and shutter — so
 // the frame loop and every interval are stopped and the bars and stages are
-// then written explicitly, the same values in both arms. Animations are pinned
-// at one currentTime, not merely paused, or the ripe wiggle photographs
-// mid-beat in one arm and at rest in the other.
+// then written explicitly, the same values in both arms. Transitions are
+// snapped to their ends and keyframe animations killed to base pose, because a
+// paused animation keeps its layer promoted and promoted edges rasterise a
+// shade differently from plain ones, run to run.
 
 'use strict';
 
@@ -57,6 +58,9 @@ const GROW_FRACTIONS = [0.12, 0.5, 0.88, 1.05, 0.3, 0.78, 0.95, 0.2];
 function boardSteps(name, seeds, fractions) {
   const unlocks = seeds.filter((id) => !['daisy', 'tulip'].includes(id));
   const steps = [
+    /* A headless page nobody is looking at composites lazily and rasterises a
+       shade differently run to run; the screencast forces honest frames. */
+    'paint:on',
     'wait:600',
     "eval:(document.getElementById('newsOk')||{click(){}}).click()||'news-ok'",
     'wait:400',
@@ -67,11 +71,16 @@ function boardSteps(name, seeds, fractions) {
     'eval:Game.Dev.driveYear(160000)',
     'eval:Game.Dev.runTurn().turnsCompleted',
     'eval:Game.Dev.grantGold(2000000000)',
-    /* Rain and storm hold their layers for eight seconds after ending; the same
-       wait lets the level-up toasts and confetti die before anything is frozen. */
-    'wait:9200',
+    /* Rain and storm hold their layers for eight seconds after ending, and an
+       ending shower can hand over to a sunbreak on its own timer; the long wait
+       drains the hold, startWeather() is the one entry point that runs
+       sunbreakOff(), and it is called again at the freeze in case a late
+       handover slipped in. The same wait lets the level-up toasts and confetti
+       die before anything is frozen. */
+    'wait:13000',
+    "eval:Game.currentWeather().id + ' holds:' + UI.wxHoldsSky()",
     'eval:UI.startWeather()',
-    'wait:700',
+    'wait:1500',
     'eval:JSON.stringify([4,5,6,7].map(i=>Game.unlockPlot(i)))',
     `eval:JSON.stringify(${JSON.stringify(unlocks)}.map(id=>Game.unlockSeed(id)))`,
     `eval:JSON.stringify(${JSON.stringify(seeds)}.map((id,i)=>Game.plant(i,Game.seedById(id))))`,
@@ -86,16 +95,30 @@ function boardSteps(name, seeds, fractions) {
        frame loop stopped the canvas holds its last frame, so wipe it. */
     "eval:(()=>{const c=document.getElementById('fx');const x=c.getContext('2d');x.save();x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,c.width,c.height);x.restore();return 'fx-wiped'})()",
     "eval:document.getElementById('speech').classList.remove('show')||'speech-hidden'",
+    "eval:UI.startWeather()||Game.currentWeather().id",
     'eval:DAY.offset = ((0.32 - (Date.now() / 1000) / DAY.cycle) % 1 + 1) % 1; UI.updateSky(); DAY.offset',
     /* The loop is stopped, so the bars and stages are written by hand — the same
        strings in both arms, however many milliseconds each arm took to get here. */
     `eval:JSON.stringify((()=>{const f=${JSON.stringify(fractions)};const stage=(p)=>p<0.25?1:p<0.7?2:3;const plots=[...document.querySelectorAll('#garden .plot')];return plots.map((el)=>{const i=+el.dataset.idx;if(f[i]==null)return null;const p=Math.min(1,f[i]);el.dataset.stage=stage(p);const bar=el.querySelector('.bar i');if(bar)bar.style.width=(p*100).toFixed(1)+'%';return el.dataset.stage;});})())`,
     'wait:800',
-    /* Transitions are FINISHED, not pinned: pinning one mid-flight freezes it
-       part-way from wherever the boot happened to start it — the sun hangs at a
-       different height every run. Only looping animations take the fixed clock. */
-    "eval:(()=>{let n=0;document.getAnimations().forEach(a=>{try{if(typeof CSSTransition!=='undefined'&&a instanceof CSSTransition){a.finish()}else{a.currentTime=1500;a.pause()}n++}catch(e){try{a.currentTime=1500;a.pause();n++}catch(_){}}});return n+' animations settled'})()",
-    'wait:200',
+    /* Transitions are FINISHED (snapped to their end values) — pinning one
+       mid-flight freezes it part-way from wherever the boot happened to start
+       it, and the sun hangs at a different height every run. Keyframe
+       animations are then killed outright with an injected style: a merely
+       paused animation keeps its layer promoted, and a promoted layer's edges
+       rasterise a shade differently from a plain one — which layers are
+       promoted differs run to run, so every wiggling plant and breathing chip
+       photographed with a different antialiasing fringe. Base pose, no layers. */
+    "eval:(()=>{let n=0;document.getAnimations().forEach(a=>{try{if(typeof CSSTransition!=='undefined'&&a instanceof CSSTransition){a.finish();n++}}catch(e){}});return n+' transitions finished'})()",
+    "eval:(()=>{const st=document.createElement('style');st.id='parity-freeze';st.textContent='*,*::before,*::after{animation:none!important;transition:none!important}';document.head.appendChild(st);return 'animations killed'})()",
+    /* Partial invalidation rasterises edge antialiasing a shade differently
+       depending on which tiles repainted last, and that history differs per
+       run. Hide and reshow the whole page so every tile paints fresh, the same
+       way, in both arms. */
+    "eval:(()=>{document.body.style.visibility='hidden';void document.body.offsetHeight;return 'blanked'})()",
+    'wait:300',
+    "eval:(()=>{document.body.style.visibility='';void document.body.offsetHeight;return 'repainted'})()",
+    'wait:400',
     `shot:${name}`,
   ];
   return steps;
@@ -178,9 +201,15 @@ function shoot(label) {
   ];
   for (const board of boards) {
     console.log(`— shooting ${board.name}`);
+    /* Grayscale text AA, one colour profile and full-tile raster, or the edge
+       antialiasing of every inked outline flips a shade between runs. */
     const res = spawnSync('node', [path.join(__dirname, 'probe.js'), ...boardSteps(board.name, board.seeds, board.fractions)], {
       cwd: ROOT,
       stdio: 'inherit',
+      env: {
+        ...process.env,
+        PROBE_FLAGS: `${process.env.PROBE_FLAGS || ''} --disable-lcd-text --force-color-profile=srgb --disable-partial-raster`.trim(),
+      },
     });
     if (res.status !== 0) {
       console.error(`probe failed on ${board.name}`);

@@ -881,6 +881,44 @@ button:focus-visible{
 .plot[data-stage="3"] .f-head{transform:translate(50px,44px) scale(var(--bloom,1))}
 .plot .f-stemwrap,.plot .f-head,.plot .f-leaves,.plot .f-petals{transition:transform .6s cubic-bezier(.34,1.4,.64,1)}
 
+/* Four-stage growth, keyed to the plain words the game will speak once stageOf()
+   switches over: sprout → stem → bud → bloom. Until then no writer emits these
+   values, so they are inert on the live board and drive tools/stage-spike.html.
+   An element whose CSS transform restates its SVG transform keeps
+   transform-origin:0 0, or the authored translate is counted twice at every
+   scale below 1 — the growing head that sat off its stem (punch list #14). */
+/* Hidden with display, not opacity alone: an invisible child still widens the
+   paint bounds `.plant.has-glow`'s drop-shadow rasterises from, and the glow
+   fringe of every glowing species shifts a shade. Each stage that needs a fade
+   keeps the neighbouring stage's group displayed at opacity 0 — and the bud's
+   bounds sit inside the full bloom's, so the ripe glow never moves. */
+.plant .f-sprout,.plant .f-bud{display:none;opacity:0}
+.plot[data-stage="stem"] .f-sprout,
+.plot[data-stage="stem"] .f-bud,
+.plot[data-stage="bloom"] .f-bud{display:inline}
+.plot .f-sprout,.plot .f-bud{transition:opacity .45s ease}
+.plot .f-bud-body{transform-origin:0 0;transition:transform .6s cubic-bezier(.34,1.4,.64,1)}
+.plot .f-petals{transition:transform .6s cubic-bezier(.34,1.4,.64,1),opacity .5s ease}
+.plot .f-core,.plot .f-ring{transition:opacity .5s ease}
+.plot[data-stage="sprout"]{--sg:0;--lg:0;--lo:0}
+.plot[data-stage="sprout"] .f-sprout{display:inline;opacity:1}
+.plot[data-stage="sprout"] .f-head{transform:translate(50px,44px) scale(0);transform-origin:0 0}
+.plot[data-stage="stem"]{--sg:.62;--lg:.88;--lo:1}
+.plot[data-stage="stem"] .f-head{transform:translate(50px,44px) scale(0);transform-origin:0 0}
+.plot[data-stage="bud"]{--sg:.92;--lg:.97;--lo:1}
+.plot[data-stage="bud"] .f-bud{display:inline;opacity:1}
+.plot[data-stage="bud"] .f-bud-body{transform:translateY(var(--bud-drop,5px))}
+.plot[data-stage="bud"] .f-head{transform:translate(50px,44px) scale(.22);transform-origin:0 0}
+.plot[data-stage="bud"] .f-petals,.plot[data-stage="bud"] .f-core,.plot[data-stage="bud"] .f-ring{opacity:0}
+/* The unfurl: entering bloom, the head swells open out of the bud's footprint
+   while the bud gives way — its own visible beat, softer and longer than the
+   stage bounce, arriving just ahead of the ripe wiggle. Tuned at the gate on
+   tools/stage-spike.html; the approved values ship verbatim. */
+.plot[data-stage="bloom"]{--sg:1;--lg:1}
+.plot[data-stage="bloom"] .f-head{transform:translate(50px,44px) scale(var(--bloom,1));transform-origin:0 0;transition:transform var(--unfurl,.9s) cubic-bezier(.3,1.25,.5,1)}
+.plot[data-stage="bloom"] .f-petals,.plot[data-stage="bloom"] .f-core,.plot[data-stage="bloom"] .f-ring{transition:transform .6s cubic-bezier(.34,1.4,.64,1),opacity .5s ease .12s}
+.plot[data-stage="bloom"] .f-bud{transition:opacity .55s ease .1s}
+
 /* progress bar */
 .plot .bar{
   position:absolute;left:8%;right:8%;bottom:6px;height:9px;
