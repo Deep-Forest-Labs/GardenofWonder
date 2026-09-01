@@ -18,14 +18,16 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 
 ## Tonight's round
 
-1. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
-   **Read the item before touching the width**: 132px is a documented clearance, not a taste, and
-   growing it means solving the band-button collision underneath it first.
+1. **#12 · Fall's empty-plot marker is 1.5x Summer's** — two CSS declarations, measured, and the
+   owner asked for it by name. Cheapest fix on the list.
 2. **#9 · A running power-up cannot say what it is doing** — the weather chip beside it now can, and
    the whole tooltip mechanism is built and reusable. Mostly wiring plus one copy function.
-3. **#11 · "Credits from all sources" does not reach Fall** — found while investigating `#10`.
-   Small, but it is a doc and a booster contradicting the code, so it wants the owner's ruling
-   before anyone changes a number.
+3. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+   **Gated on #11 and on an owner decision**: 132px is a documented clearance, not a taste, and the
+   way to widen it is to settle whether the band's buttons belong in Fall at all.
+4. **#11 · "Credits from all sources" does not reach Fall** — found while investigating `#10`.
+   Small, but it is a doc and a booster contradicting the code, and it decides `#10`'s layout. Wants
+   the owner's ruling before anyone changes a number.
 
 ---
 
@@ -197,6 +199,61 @@ are tuned at `cost x 1.4`; anything that multiplies them wants a sim-test and a 
 
 **Open question for the owner.** Should a power-up's payout bonus reach Fall's bed, or is Fall
 deliberately outside every boost? Nothing found in the docs answers it either way.
+
+---
+
+### #12 · BUG · Fall's empty-plot marker is half again the size of Summer's · cosmetic · reported 2026-09-01
+
+**What the owner saw.** "The boxes, the dotted outline boxes with the plus sign in the center that
+you tap to choose a crop or plant a seed, are different sizes… The main garden has the ones I really
+like: the smaller outlines with the plus in the center. The fall garden has much larger ones that are
+more prominent… Please match the original garden ones." Two screenshots attached, and they show
+exactly what the ruler says.
+
+**Repro.** Look at an empty plot in the garden, swipe to Fall, look at an empty plot there.
+
+**Measured live at 390×844, both boards.** The tiles are identical, so nothing here is a knock-on
+from layout — it is the marker itself:
+
+| | Summer `.empty-mark` | Fall `.fl-empty` |
+| --- | --- | --- |
+| Tile | 110 × 110 | 110 × 110 |
+| Marker `<svg>` | **32 × 32** | **48 × 48** — exactly 1.5× |
+| Declared size | `width:30%;height:30%` | `width:46%;height:46%` |
+| Ceiling | `max-width:44px` | **none** |
+| Opacity | `.62` | `.85` |
+| Extra | — | `filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))` |
+
+**The likely cause — it is three declarations, and it looks unconsidered.** Both markers draw the
+same glyph: `Icons.get('plantSpot')`, from `ui.js:42` and `ui-fall.js:68`. Only the CSS differs —
+Summer at `style.css:902`, Fall at `style.css:4502`. Worth noting for whoever picks this up: nearly
+every deliberate number in this file carries a comment explaining itself (`.fl-collect`'s width has a
+whole paragraph); `.fl-empty` has none. The 46% reads as a value typed while building Fall's board
+rather than a decision anyone made.
+
+**The gap widens on bigger screens, which is the part the screenshots cannot show.** Summer's
+`max-width:44px` caps its marker; Fall has no cap and keeps scaling with the tile. At 390px it is
+32 against 48. At the 560px column cap the tile is ~172px, where Summer holds at 44 and Fall reaches
+~79 — **nearly double.** So matching Summer means carrying the ceiling across too, not only the
+percentage.
+
+**Related.** Nothing in `docs/` specifies either number; `08-ui-and-layout.md` does not describe the
+empty marker at either size, so no document goes stale. `#6` and `#7` were the other two
+Summer-versus-Fall consistency items and both are fixed — this is the third of the same family and
+suggests a sweep is worth doing once rather than a fault at a time.
+
+**Fix sketch.** Give `.fl-empty svg` Summer's numbers: `width:30%; height:30%; max-width:44px`, and
+take `.fl-empty`'s opacity from `.85` to `.62`. Drop the `drop-shadow` — Summer's has none, and
+"consistent" is what was asked for. **What it might break:** Fall's soil is a darker gradient than
+Summer's (`#7e5e42 → #453221` against Summer's lighter plot), so a marker that reads comfortably at
+.62 on Summer's soil may go faint on Fall's. That is the neighbouring case to the recorded trap that
+a dark contact shadow on a dark surface is not a contact shadow — **look at it after the change
+rather than trusting the numbers matching.** If it genuinely does not read, keep the size and cap
+identical and lift only the opacity, with a comment saying why the two differ. Run
+`node tools/style-check.js`. Check the ~640px short viewport and a wide one, since the ceiling is the
+half that only shows up there.
+
+**No open question.** The owner named which of the two is right.
 
 ---
 
