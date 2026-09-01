@@ -347,6 +347,29 @@ the escaping ruling. Everything above the simulation —
 the six `ui-*` files, layout, the sheet, FX — is verified by hand against this checklist, plus
 `tools/probe.js` for a screenshot when you cannot open the game yourself.
 
+`node tools/skybench.js LABEL` holds each sky in turn on a full board and reports what one frame
+costs under it, so a rendering change can be measured rather than argued about. **Read its header
+before quoting a number from it.** It runs headless with software rasterisation: it is good at
+*ranking* skies, useless for absolute numbers, and blind to anything that only happens under a
+finger. The device figure comes off the dev sheet's Frame rate row, on the handset.
+
+**For a rendering change, prefer an A/B in one session over a before-and-after across two runs.**
+Inject the rules you replaced back on top of the live ones, alternate which arm goes first, and
+compare within the run. A before-and-after on a shared machine measures whatever else the machine
+was doing — this pass produced a whole baseline table that was mostly another session's Chrome.
+The same trick gives look-parity for free: freeze every animation at the same `currentTime`, stub
+`requestAnimationFrame` so the particle canvas holds still, shoot both arms, and diff the pixels.
+Three things that will lie to you if you skip them, each of which did:
+
+- **Dismiss the What's New sheet first** (`tap:#newsOk`). Its backdrop blur costs more than any sky,
+  and a bench that leaves it up measures the dialog.
+- **A stubbed `requestAnimationFrame` must remember the callback**, because the frame loop
+  reschedules itself — a stub that drops it kills the loop for the rest of the run, and every later
+  screenshot is a stale canvas that looks entirely plausible.
+- **Injected rules create new animation objects that do not exist until the next style recalc**, so
+  winding "every animation" in the same tick misses them and shoots one arm at t=0 against the other
+  at t=2.6 s.
+
 Before calling a change done:
 
 1. **Load at 390×844** with device emulation on.

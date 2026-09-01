@@ -5,6 +5,147 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-01 (performance) — The frame dip was one sky, and the instrument is worth more than the fix
+
+The owner reported a visible frame-rate dip on an iPhone 16 the morning the five skies landed, and
+[11-known-issues.md](11-known-issues.md) filed a suspect list in rough order of guilt. **Four of the
+five suspects were innocent, the one nobody named cost eight times more than any other sky, and the
+thing this pass leaves behind that matters most is not a fix — it is a readout on the handset.**
+
+### Measure first, and the first three measurements were wrong
+
+The bench was rebuilt three times, and each wrong version looked entirely convincing.
+
+**The first baseline measured a dialog.** What's New opens over the garden on a fresh save, and its
+backdrop blur costs more than any sky. Every row in that table was the same dialog with slightly
+different weather behind it, which is why Thunderstorm came out *cheaper* than a clear sky and
+nobody blinked.
+
+**The second measured another session's Chrome.** Two runs an hour apart differed by a factor of
+five with no code change at all — the machine had a second headless browser on it the first time.
+That is what killed before-and-after as a method here and replaced it with an A/B: inject the old
+rules back on top of the live ones, alternate which arm goes first, and compare inside one run.
+
+**The third did not paint at all.** A `--disable-gpu` headless page nobody is looking at composites
+lazily, so the bench reported 2 ms a frame for a sky running nine full-screen blends. `paint:on`
+opens a screencast and throws the frames away, purely to make Chrome produce real ones.
+
+None of the three threw, and all three produced a plausible table. **A performance number that
+nobody has tried to disprove is a rumour.**
+
+### What it cost, measured
+
+Milliseconds per frame, software rasterisation, five reps, arms alternated, one session:
+
+| Sky | Before | After | |
+| --- | --- | --- | --- |
+| Clear | 2.29 | 2.31 | the floor |
+| Aurora | 2.51 | 2.38 | inside the noise |
+| Rain | 2.73 | 2.71 | inside the noise |
+| Thunderstorm | 2.66 | 2.55 | inside the noise |
+| **Wonderfall** | **4.09** | **2.62** | **80% dearer than clear → 13% dearer** |
+
+**Wonderfall was the whole dip.** Two rules did it. Its breathing warp was one animated
+`saturate()`/`hue-rotate()` duplicated across eight separate full-window scenery layers — eight
+colour-matrix passes a frame and eight filter buffers held for the whole slot. And its veil animated
+`background-position`, which is not a compositor property in any engine, so a six-stop rainbow was
+re-rasterised across the entire window every frame and then read back through an overlay blend.
+
+The warp now runs once, on a new `.scenery-warp` box holding all eight. **The pixels are the same
+pixels**: `saturate()` and `hue-rotate()` are linear colour matrices, and for a linear matrix over
+source-over compositing, filtering each layer then compositing equals compositing then filtering the
+group. Nothing in the group is a spatial filter, which is the case where that would not hold. The
+veil now slides a two-tile child on a `transform` instead.
+
+### The one that nearly shipped a difference
+
+The veil's first rewrite was a single un-repeated tile, translated the same distance. The arithmetic
+was right and the result was wrong, because **backgrounds repeat by default** — the old form tiled a
+4×window image, and the new one slid its only copy off the left edge and drained the colour out of
+the lawn for most of the cycle. It read as fine in the code and in the diff of the code.
+
+**It was caught by a pixel diff, not by a reading.** That is the argument for the look-parity method
+this pass leaves behind: freeze every animation at the same point, stub the frame loop so the
+particle canvas holds still, shoot both arms, subtract. Final verdict, on a full board:
+
+| Sky | Pixels differing by more than 2/255 |
+| --- | --- |
+| Clear, Rain, Thunderstorm, Aurora, Sunbreak | **0** — bit-for-bit |
+| Wonderfall | 0.006%, worst channel delta 3 — the animated filter a frame apart |
+
+### The two always-on animations, fixed on the evidence and not on the measurement
+
+`.wx-ray` and `.wx-front-cloud` declared their infinite animations in **base rules**, so four
+blurred, masked, clip-pathed ray layers and six drop-shadowed clouds animated under every sky, from
+page load, forever — for elements that are invisible except during a sunbreak or a front. They are
+the only two of roughly a hundred and fifty animations in the stylesheet that were ungated.
+
+**They show no measurable win on this bench, and they are gated anyway.** Desktop software
+rasterisation does not charge for a promoted layer that paints nothing; iOS walks and commits every
+promoted layer each frame whether its content changed or not. That is ten layers of pure overhead
+the page did not have before the Sky Pass. Recorded as unproven rather than claimed as a win — the
+handset readout is where it can be settled.
+
+Both are written as `:not()` gates rather than the obvious positive selector, for three reasons that
+each cost a rediscovery: the `animation` shorthand resets `animation-delay`, which would line all
+four rays up at the left edge and delete the point of their negative delays; a positive gate
+out-ranks the reduced-motion cancel and would hand sweeping rays back to a player who asked for
+stillness; and `animation-play-state:paused` keeps the layer promoted, so it removes the motion and
+none of the cost.
+
+The rays needed one engine change to go with it: `sunbreakOff()` now writes **`fade` before `0`**,
+because the layer takes 2.8 s to fade out and killing the sweep at the flip would freeze four shafts
+mid-journey in full view.
+
+### Two costs that are nothing to do with the weather, and are bigger
+
+Both pre-existed the Sky Pass and both were made worse by it, because the cost is *which element*
+and not *which property*.
+
+**The screen shake wrote three custom properties on `#game` every frame.** A custom property
+changing on an ancestor makes every descendant re-resolve its inherited map: 2.5–3.4 ms a frame
+against 0.004 ms for the same transform written straight onto `.world`. The Sky Pass added a
+twenty-four element subtree reading ninety-odd `var(--wx-*)`, which took a full recalc up by about
+40%. It fires on every crit tap and holds 0.28 s, so during held tapping it is close to continuous.
+
+**`updateSky()` wrote seven custom properties on `document.documentElement`** — the whole document
+invalidated 1.67 times a second, forever, at 3.7 ms a call against 0.19 ms for the same values
+written on the three elements that read them.
+
+Neither is visible in the sky bench, which never taps and averages over six seconds. Both are the
+best-evidenced answer to *why it started dipping when the Sky Pass landed*: the cost pre-existed, and
+the Sky Pass pushed it past the budget.
+
+### Rejected
+
+- **Capping the weather canvas DPR to 1.5.** It was on the brief's own list of classic wins, and it
+  is the one lever there that cannot be taken without changing the look: every particle edge softens.
+  The canvas also turned out not to be a top cost — particles cover under 1.2% of the surface under
+  every sky. [41-weather-staging.md](41-weather-staging.md) records "the DPR-2 canvas cap stays" as
+  an owner-specced constraint, and reversing that needs a device measurement and the owner's word,
+  not a quiet one-line change in `fx.js`.
+- **`contain`, `isolation` or a `z-index` on `#wx`** — the standard iOS playbook for taming a blend
+  stack, and every one of them is the recorded blend-killer trap spelled a different way.
+- **Hoisting `mix-blend-mode:screen` from the three aurora ribbons onto their container.** Screen is
+  not associative across a group when the members overlap, and they are drawn overlapping on purpose.
+- **Shortening Wonderfall's veil period or dropping the glisten's 4 px halo.** Both would make the
+  numbers better by making the sky different. `DATA.weatherStage` is the owner's approved feel and
+  this pass may not touch it.
+- **Reporting the mean as the headline number.** One machine stall moves a mean and moves nothing
+  else. The median is the headline and the mean is printed beside it, because the *gap* between them
+  is its own finding: a sky whose median is fine and whose mean is four times that is not slow, it
+  is stalling.
+
+### What this does not answer
+
+**Whether the web build holds 60 on the handset.** Nothing on a Mac can tell you that — iOS Safari
+pays for `mix-blend-mode` and animated filters in full-screen compositing passes that desktop Skia
+simply does not charge for, which is the entire reason the dip was reported from a phone and not
+from a desk. That is what `ui-perf.js` is for, and it is the deliverable this pass would keep if it
+could keep only one thing.
+
+---
+
 ## 2026-08-31 (fix round) — The sky gets a chip, and it says a chance rather than a payout
 
 **The owner:** *"When a weather effect happens, we should place a buff and a timer under the quest

@@ -776,16 +776,81 @@ above are recomputed rather than quoted, and a sim-test pins the 636,378 figure.
 
 ## Performance
 
-### The Sky Pass dips frame rate on an iPhone 16 — owner-reported, 2026-08-31
+### The Sky Pass dips frame rate on an iPhone 16 — measured 2026-09-01, and it needs the owner's eyes
 
-Reported from live play the morning the five skies landed. Untriaged; the likely suspects are the
-new compositing load, in rough order: the mix-blend-mode layers now stacked over the living sky
-(weather tint + season tint + Wonderfall's veil), the aurora's animated gradient ribbons, any
-animated filter (the veil's breathing saturate/hue-rotate class of cost), and the weather particle
-layer's draw on a DPR-2 canvas. iOS Safari pays for blend modes and filters in full-screen
-compositing passes; several at once is the classic cliff. Needs a measured pass — instrument,
-find the top two costs, and fix or degrade gracefully — not a guess. The owner's slider-approved
-feel is the spec; performance work may not change what a sky looks like, only what it costs.
+Reported from live play the morning the five skies landed. **Measured, and mostly fixed — but the
+last word belongs to the handset and nobody has read it there yet.** Reasoning, method and what was
+rejected are in the 2026-09-01 entry in [10-decision-log.md](10-decision-log.md).
+
+**Wonderfall was the dip.** It cost eighty percent more per frame than a clear sky; every other sky
+sat inside the bench's noise floor. Two rules did it, and both are fixed with the pixels proven
+unchanged: the breathing warp was one animated colour-matrix filter duplicated across eight
+full-window scenery layers and is now one, on `.scenery-warp`; the veil animated
+`background-position`, a full-window repaint every frame, and now slides a tiled child on a
+transform. Wonderfall now costs thirteen percent more than a clear sky rather than eighty.
+
+**Two bigger costs were not on the suspect list at all, and are not about weather.** The screen shake
+wrote three custom properties on `#game` every frame and `updateSky()` wrote seven on the document
+root 1.67 times a second — invalidating everything beneath them, at 2.5–3.4 ms and 3.7 ms a call
+against 0.004 ms and 0.19 ms for the same values written on the elements that read them. Both
+pre-existed the Sky Pass; the Sky Pass added a subtree reading ninety-odd `var(--wx-*)` that made a
+full recalc about 40% dearer, which is the best-evidenced answer to *why it started dipping when the
+skies landed*. Both are fixed.
+
+**Two Sky Pass animations were never gated** — `.wx-ray` and `.wx-front-cloud` declared infinite
+animations in base rules, so ten invisible promoted layers animated under every sky from page load.
+They are gated now. **This one is unproven rather than fixed**: it shows no measurable win on a
+desktop bench, which does not charge for a promoted layer that paints nothing, where iOS commits
+every promoted layer every frame. It is recorded honestly as a fix made on the evidence rather than
+on a measurement.
+
+**The suspects that were innocent**, so nobody re-chases them: the standing stack of blend layers
+(they are cheap when they are not animating), the aurora's ribbons (inside the noise floor), and the
+DPR-2 particle canvas — particles cover under 1.2% of the surface under every sky, and capping the
+DPR is the one lever on the brief's list that cannot be taken without softening every particle edge.
+[41-weather-staging.md](41-weather-staging.md) records the DPR-2 cap as an owner-specced constraint;
+reversing it needs a device measurement and the owner's word.
+
+**What is still open, and it is the part that matters.** Every number above comes from headless
+Chrome with software rasterisation on a Mac. It ranks skies honestly and **it cannot tell you what an
+A18 does with a `mix-blend-mode`** — iOS Safari pays for blends and animated filters in full-screen
+compositing passes that desktop Skia does not charge for, which is exactly why this was reported from
+a phone and not from a desk. The instrument for that is built and shipped off: **Settings →
+Developer tools → Frame rate**, which prints the frame interval split into `js` and `rest` so a big
+`rest` with a small `js` reads as "this sky costs paint, not code". Somebody has to hold each sky on
+the handset and read it. Until then, "the web build holds 60 with all five skies live" is a
+reasonable expectation and not a finding.
+
+The owner's slider-approved feel is the spec; performance work may not change what a sky looks like,
+only what it costs. `DATA.weatherStage` is untouched, and the look-parity diff is bit-for-bit on
+Clear, Rain, Thunderstorm, Aurora and the Sunbreak.
+
+#### The two-minute check, on the phone
+
+Open the game on the handset, then **Settings → Developer tools**. Turn **Frame rate** on — a small
+black panel appears under the quest bar. Tap the panel itself at any point to start a fresh window.
+
+Then, from the same sheet, **hold the weather** on each sky in turn and give it about twenty seconds
+before reading:
+
+1. **Clear** first, and write the number down. It is the floor everything else is judged against.
+2. **Rain**, then **Thunderstorm**, then **Aurora**, then **Wonderfall**.
+3. **Play the whole sky → Sunbreak** if it is daytime — the panel's last line says whether it is.
+
+What to read:
+
+- **`fps` and `int`** are what your hand feels. `hz` is the refresh rate it detected — 60 on a base
+  16, 120 on a Pro. A frame at or under `int 16.7` on a 60 Hz phone is a full frame rate.
+- **`js` vs `rest`** is the diagnosis. `js` is our code; `rest` is paint, blend and composite. **A
+  big `rest` with a small `js` means the sky is expensive to draw**, which is the class of cost this
+  pass was hunting and the class no desktop can measure.
+- **`>1.5x` and `>2.5x`** count frames that missed the budget. A handful over twenty seconds is
+  normal; dozens is the dip.
+
+**The answer that is wanted is one line per sky.** If Clear and Rain hold and only Wonderfall
+struggles, this pass did its job and the remaining work is Wonderfall alone — which is 0.5% of slots.
+If Clear does not hold, the problem is not weather at all and the two custom-property fixes above are
+where to look first.
 
 ## Balance
 

@@ -23,6 +23,7 @@
 //   size:WxH           re-emulate at a new viewport (default 390x844)
 //   page:PATH          navigate elsewhere in the repo (default index.html)
 //   media:reduce       turn prefers-reduced-motion on (media:normal turns it off)
+//   paint:on           force real rasterisation (paint:off stops it) - see tools/skybench.js
 //   drag:SEL:DX,DY     a real one-finger drag from SEL's centre, DX/DY in CSS px
 //   drag:@X,Y:DX,DY    the same, starting at a viewport point (the lawn, not an element)
 //
@@ -193,6 +194,16 @@ function parseSteps(argv) {
       case 'wait':
         steps.push({ kind, ms: Number(rest) });
         break;
+      /* `paint:on` makes headless Chrome actually rasterise. Without a screencast asking
+         for frames, a `--disable-gpu` headless page composites lazily and a bench reads
+         2ms for a sky doing full-screen blends — which is the difference between
+         measuring paint and only thinking you are. */
+      case 'paint':
+        if (rest !== 'on' && rest !== 'off') {
+          throw new Error(`paint step wants "on" or "off", got "${rest}"`);
+        }
+        steps.push({ kind, on: rest === 'on' });
+        break;
       case 'eval':
         steps.push({ kind, expr: rest });
         break;
@@ -340,6 +351,21 @@ async function main() {
 
       case 'wait':
         await new Promise((r) => setTimeout(r, step.ms));
+        break;
+
+      case 'paint':
+        if (step.on) {
+          /* The frames are thrown away; asking for them is the whole point. Low quality
+             keeps the encode cheap, so what is measured stays the page's compositing
+             rather than the screencast's. */
+          cdp.on('Page.screencastFrame', (f) => {
+            call('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => {});
+          });
+          await call('Page.startScreencast', { format: 'jpeg', quality: 20, everyNthFrame: 1 });
+        } else {
+          await call('Page.stopScreencast');
+        }
+        console.log(`  paint ${step.on ? 'on' : 'off'}`);
         break;
 
       case 'eval': {

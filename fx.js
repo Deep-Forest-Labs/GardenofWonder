@@ -5,7 +5,7 @@ const FX = (() => {
   let parts = [];
   let ambient = [];
   let shakeAmt = 0, shakeT = 0;
-  let gameEl = null, textLayer = null;
+  let gameEl = null, worldEl = null, textLayer = null;
   let reduced = false;
   let magnetTargets = {};
 
@@ -15,6 +15,7 @@ const FX = (() => {
   function init() {
     canvas = document.getElementById('fx');
     gameEl = document.getElementById('game');
+    worldEl = document.getElementById('world');
     ctx = canvas.getContext('2d');
     reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     textLayer = document.createElement('div');
@@ -25,15 +26,23 @@ const FX = (() => {
     seedAmbient();
   }
 
+  /* iOS fires `resize` when the URL bar collapses, and it used to re-seed both pools —
+     so every raindrop on screen teleported the moment the player scrolled. The backing
+     store is re-applied either way; the pools are only rebuilt when the window really
+     changed size, which is an orientation change and nothing else. */
   function resize() {
+    const nw = window.innerWidth;
+    const nh = window.innerHeight;
+    const same = nw === W && nh === H;
+    W = nw;
+    H = nh;
     dpr = Math.min(2, window.devicePixelRatio || 1);
-    W = window.innerWidth;
-    H = window.innerHeight;
     canvas.width = Math.floor(W * dpr);
     canvas.height = Math.floor(H * dpr);
     canvas.style.width = W + 'px';
     canvas.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (same) return;
     seedAmbient();
     seedWeather();
   }
@@ -152,6 +161,9 @@ const FX = (() => {
      the wet ground carry the sky, so there is nothing for a drop to land from. */
   function splashAt(x, y) {
     if (reduced) return;
+    // A belt for the guards in ui-weather.js: whatever calls this, the pool cannot grow
+    // without bound. Four particles per splash, so this is sixteen splashes in flight.
+    if (wxSplash.length > 64) return;
     wxSplash.push({ kind: 'ring', x, y, life: 0, max: 0.42, size: 26 });
     for (let i = 0; i < 3; i += 1) {
       const a = rnd(-Math.PI * 0.85, -Math.PI * 0.15);
@@ -424,7 +436,12 @@ const FX = (() => {
     // The sky falls over the drifting petals and under everything the player did.
     if (wxKind || wxSplash.length) stepWeather(dt);
 
-    const coinTarget = targetPoint('coin');
+    /* A layout read, and it sat above the loop unconditionally — so every frame in the
+       game forced a flush for a magnet that only exists for about a second after a
+       harvest. The guard below already handles null. Not cached across frames on
+       purpose: the wallet lives inside `.world`, which the shake moves, so a stale
+       point would drag the coins off target for the length of a shake. */
+    const coinTarget = parts.length ? targetPoint('coin') : null;
 
     for (let i = parts.length - 1; i >= 0; i -= 1) {
       const p = parts[i];
@@ -496,14 +513,21 @@ const FX = (() => {
       shakeT -= dt;
       const f = Math.max(0, shakeT / 0.28);
       const a = shakeAmt * f;
-      gameEl.style.setProperty('--shake-x', `${rnd(-a, a).toFixed(2)}px`);
-      gameEl.style.setProperty('--shake-y', `${rnd(-a, a).toFixed(2)}px`);
-      gameEl.style.setProperty('--shake-r', `${rnd(-a * 0.09, a * 0.09).toFixed(3)}deg`);
+      /* Written straight onto the element that moves, not as three custom properties
+         on `#game`. A custom property changing on an ancestor makes every descendant
+         re-resolve its inherited map, and `#game` has the whole game under it — measured
+         at 2.5-3.4ms a frame against 0.004ms for the same transform written here, and
+         the Sky Pass made it dearer still by adding a subtree that reads ninety-odd
+         `var(--wx-*)`. The shake runs for 0.28s on every crit tap, which in a tapper is
+         most of the time the thumb is down.
+         `style.css`'s `--shake-*` defaults stay exactly where they are: they are the
+         resting transform, and the inline value is removed rather than zeroed so the
+         stylesheet takes the element back. */
+      worldEl.style.transform = `translate3d(${rnd(-a, a).toFixed(2)}px,${
+        rnd(-a, a).toFixed(2)}px,0) rotate(${rnd(-a * 0.09, a * 0.09).toFixed(3)}deg)`;
       if (shakeT <= 0) {
         shakeAmt = 0;
-        gameEl.style.setProperty('--shake-x', '0px');
-        gameEl.style.setProperty('--shake-y', '0px');
-        gameEl.style.setProperty('--shake-r', '0deg');
+        worldEl.style.removeProperty('transform');
       }
     }
   }

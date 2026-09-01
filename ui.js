@@ -434,7 +434,6 @@
       c.disp += (target - c.disp) * Math.min(1, dt * 9);
       c.node.textContent = fmt(c.disp);
     });
-    renderQuestStrip();
   }
 
   function renderQuestStrip() {
@@ -1349,6 +1348,7 @@
   let comboAcc = 0;
   let railAcc = 0;
   let slowAcc = 0;
+  let lastComboP = -1;
 
   /* ============ creatures ============ */
 
@@ -1487,11 +1487,23 @@
       if (now2 - idleSince > 26 && !UI.sheetMode()) { idleNudge(now2); idleSince = now2; }
     }
     const cp = S.tap.combo / S.tap.comboMax;
-    comboRing.style.setProperty('--combo', cp.toFixed(3));
-    comboRing.style.setProperty('--combo-op', (0.3 + cp * 0.7).toFixed(2));
+    // Byte-identical values written sixty times a second do nothing but invalidate.
+    if (cp !== lastComboP) {
+      lastComboP = cp;
+      comboRing.style.setProperty('--combo', cp.toFixed(3));
+      comboRing.style.setProperty('--combo-op', (0.3 + cp * 0.7).toFixed(2));
+    }
 
     railAcc += dt;
-    if (railAcc >= 0.25) { railAcc = 0; renderRail(); renderPowerUp(); UI.tickSheetTimers(); }
+    /* The quest strip moved off `hudTick` and onto this tier. It is signature-guarded,
+       so what it DRAWS is unchanged — but the guard runs after `Game.stripQuest()`,
+       which allocates a Date and two Sets, and every frame is sixty times a second to
+       decide nothing changed. Every update that matters is event-driven and still calls
+       it directly; the clock-driven half is a countdown, which is what this tier is for. */
+    if (railAcc >= 0.25) {
+      railAcc = 0;
+      renderRail(); renderPowerUp(); renderQuestStrip(); UI.tickSheetTimers();
+    }
 
     slowAcc += dt;
     if (slowAcc >= 0.6) {

@@ -37,6 +37,12 @@
 // `--disable-gpu-vsync`). With vsync on, every frame time is a multiple of 16.7 ms and
 // the only signal is how many were missed; with it off, the interval IS the cost of the
 // frame, which is a continuous number and about ten times less noisy.
+//
+// AND IT TURNS PAINTING ON (`paint:on`). This is not optional and it is the thing most
+// easily got wrong: a headless page nobody is looking at composites lazily, so the bench
+// happily reported 2 ms a frame for a sky running full-screen blends. A screencast makes
+// Chrome produce real frames, which is the only way the numbers are about paint at all.
+// If a future edit drops that step, every row goes fast and every row stays wrong.
 // ---------------------------------------------------------------------------
 
 const { spawn } = require('node:child_process');
@@ -80,6 +86,7 @@ const SKIES = ['clear', 'rain', 'storm', 'aurora', 'wonderfall'];
 const SETUP = [
   'tap:#newsOk',
   'wait:700',
+  'paint:on',
   'eval:(async () => {'
   + ' const wait = (ms) => new Promise((r) => setTimeout(r, ms));'
   + ' Game.Dev.grantGold(1e8); Game.Dev.grantLevels(40);'

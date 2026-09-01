@@ -207,6 +207,29 @@ the interface and ignores pointer events.
 The canvas is sized to `devicePixelRatio` capped at 2 — uncapped DPR on a 3× phone triples fill
 cost for no visible benefit.
 
+**A resize only re-seeds the pools when the window really changed size.** iOS fires `resize` when
+the URL bar collapses, and the old `resize()` rebuilt both particle pools every time — so every
+raindrop on screen teleported the moment the player scrolled. The backing store is re-applied
+either way; only a real dimension change reseeds, which is an orientation change and nothing else.
+
+**The screen shake writes a transform, not custom properties.** It used to set `--shake-x/y/r` on
+`#game`, which makes every element under it re-resolve its inherited custom properties — measured at
+2.5–3.4 ms a frame against 0.004 ms for the same transform written straight onto `.world`, and the
+Sky Pass made it dearer still by adding a subtree that reads ninety-odd `var(--wx-*)`. It runs for
+0.28 s on every crit tap, which in a tapper is most of the time the thumb is down. `style.css`'s
+`--shake-*` defaults stay exactly where they are — they are the resting transform, and the inline
+value is *removed* rather than zeroed so the stylesheet takes the element back.
+
+**`FX.step` only measures the wallet when a coin could use it.** `targetPoint('coin')` is a layout
+read and it sat above the particle loop unconditionally, so every frame in the game forced a flush
+for a magnet that exists for about a second after a harvest. It is not cached across frames on
+purpose: the wallet lives inside `.world`, which the shake moves, and a stale point would drag the
+coins off target for the length of a shake.
+
+`FX.partCount` and `FX.canvasInfo` are readouts for the frame-rate instrument, the same shape
+`FX.weatherCount` already was — pure reports of this file's own state, so "fx.js knows nothing about
+the game" still holds.
+
 ### Particle types
 
 | Type | Behaviour | Used for |

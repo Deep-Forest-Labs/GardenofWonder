@@ -152,7 +152,10 @@
     const S = sect('storm');
     const slow = quiet() ? 2.2 : 1;
     const again = () => {
-      flash();
+      // The cadence keeps its schedule; only the flash itself is skipped, so a storm
+      // that was on screen the whole time and one that was backgrounded look the same
+      // when you come back — and a hidden page does not spend its flash allowance.
+      if (!document.hidden) flash();
       const gap = (num(S, 'flashMinGap', 3.4) + Math.random() * num(S, 'flashJitter', 4)) * 1000;
       flashers.push(setTimeout(again, Math.max(400, gap * slow)));
     };
@@ -165,14 +168,20 @@
      already owns the plant's `animation` and would out-rank a bare class. */
   function dropLands() {
     if (quiet()) return;
+    // Nothing is on screen and the frame loop is not running, so a drop landed now is a
+    // drop that never draws — and the splash it queues would all arrive in one burst on
+    // the frame the player comes back to.
+    if (document.hidden) return;
     const slots = (UI.plotEls || []).filter((v) => v && v.slot && v.slot.firstElementChild);
     if (!slots.length) return;
     const slot = slots[(Math.random() * slots.length) | 0].slot;
     const r = slot.getBoundingClientRect();
     if (!r.width) return;
-    slot.classList.remove('wx-splashed');
-    void slot.offsetWidth;
-    slot.classList.add('wx-splashed');
+    /* The remove/read/add dance is the standard restart-an-animation trick, and here it
+       was buying nothing: this runs from a timer at least 2.2s apart and the class is
+       taken off again after 340ms, so it is never on when we arrive. The `offsetWidth`
+       read was a second forced layout in a function that already has one. */
+    if (!slot.classList.contains('wx-splashed')) slot.classList.add('wx-splashed');
     later(() => slot.classList.remove('wx-splashed'), 340);
     FX.splashAt(r.left + r.width / 2, r.top + r.height * 0.3);
   }
@@ -298,7 +307,10 @@
   function endSky(next) {
     cancelTimers();
     setPhase('end');
-    FX.weatherOff(THIN);
+    /* The thinning ramp is a per-frame animation, and rAF does not run while the page
+       is hidden — so a sky that ends in the background would keep its whole drop pool
+       alive until the player came back and then thin it in front of them. */
+    if (document.hidden) FX.weather(null); else FX.weatherOff(THIN);
     if (standing === 'storm') audio(() => Sound.rumble());
     bed(standing, false);
     duck(false);

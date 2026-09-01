@@ -1,9 +1,33 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-08-31** (the overnight fix round)
+Last updated: **2026-09-01** (the sky performance pass)
 
 Read this first if you're picking up the project cold. It covers where things stand, what's been
 decided, and what to do next. Update it at the end of any significant session.
+
+> **THE SKY PERFORMANCE PASS LANDED 2026-09-01 — and it ends with two minutes of your time, not with
+> a green tick.**
+>
+> The iPhone 16 frame dip was measured rather than guessed. **Wonderfall was the dip**: it cost 80%
+> more per frame than a clear sky and now costs 13% more, because its breathing warp was one animated
+> filter duplicated across eight full-window layers (now one) and its veil repainted a full-screen
+> gradient every frame (now a sliding tile). Two costs nobody had suspected turned out to be bigger
+> and are nothing to do with weather — the screen shake and the sky's own colour update were writing
+> custom properties on `#game` and on the document root, invalidating everything beneath them; both
+> now write on the elements that read them. Four of the five filed suspects were innocent.
+>
+> **Every sky is bit-for-bit identical to before** — Clear, Rain, Thunderstorm, Aurora and the
+> Sunbreak diff to zero pixels; Wonderfall to 0.006% at a worst channel delta of 3, which is one
+> animated filter a frame apart. `DATA.weatherStage` is untouched. `node tools/sim-test.js` is
+> unchanged at 1,491 passing, which is the proof that no game logic was touched.
+>
+> **What is NOT answered: whether an iPhone holds 60.** No Mac can tell you — iOS pays for blends
+> and animated filters in a way desktop Skia does not, which is why this was reported from a phone.
+> So the pass built the thing that can: **Settings → Developer tools → Frame rate**, a readout that
+> splits each frame into `js` (our code) and `rest` (paint, blend, composite). Hold each sky on the
+> handset for twenty seconds and read it. A big `rest` with a small `js` is the sky costing paint.
+> **The owner's two-minute check is in [11-known-issues.md](11-known-issues.md); until it is done,
+> "the web build holds the frame" is an expectation and not a finding.**
 
 ## Where the project stands
 
@@ -1259,7 +1283,12 @@ first two things need a quiet room and the rest do not.
 instrument from another session — `ui-perf.js`, `tools/skybench.js`, a `.scenery-warp` box and a
 three-state sunbreak fade. It passed every check and the game booted clean, so it went in on its own
 commit (`bc74b3b`) before the round started, rather than being swept into nine commits that are not
-about it. **It is not this round's work and has not been reviewed by anyone.**
+about it.
+
+*(2026-09-01: that session came back and finished the pass — the instrument is now documented in
+docs 02, 03, 09 and 24, the Wonderfall fix it had half-made turned out to hide a real look
+regression that a pixel diff caught, and the whole thing is written up in the performance entry
+below and in the decision log. Nothing about it is unreviewed any more.)*
 
 ### The morning script — ears first, then eyes, then thumbs
 
@@ -2253,6 +2282,39 @@ That inversion was inherited from the frozen economy port; it is fixed. What rem
 the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
+
+**A custom property written on a HIGH element invalidates everything beneath it, and the cost is
+WHICH ELEMENT — not which property, and not how many.** Three `--shake-*` writes on `#game` measured
+2.5–3.4 ms a frame; the identical transform written straight onto `.world` measured 0.004 ms. Seven
+sky values on `document.documentElement` measured 3.7 ms a call against 0.19 ms for the same seven
+on the three elements that read them. Nothing about this is visible in a profile as "custom
+properties are slow" — the same write on a leaf is free. **The corollary bit this project twice
+over:** adding a subtree that reads a lot of `var()`s makes every unrelated root-scoped write dearer
+for the whole page, so the Sky Pass's twenty-four element `#wx` box — three percent of the tree —
+took a full recalc up about 40% and pushed two pre-existing per-frame writes past the frame budget.
+The feature that got slower was not the feature that changed. Write a value on the element that
+reads it, and keep the `:root` declaration as the first-paint default.
+
+**A headless page nobody is looking at does not paint, and a bench that does not know that is
+confidently wrong.** `tools/probe.js` runs Chrome with `--disable-gpu`, and an offscreen page
+composites lazily — so a frame bench reported 2 ms for a sky running nine full-screen blends and
+looked entirely healthy. `paint:on` opens a screencast and throws the frames away purely to force
+real ones. Two siblings of the same trap, both of which produced a plausible table before they were
+caught: **the What's New sheet's backdrop blur costs more than any sky**, so a bench that does not
+`tap:#newsOk` first measures the dialog; and **a second session's Chrome on the same machine moves
+every number by a factor of five**, which is why a rendering change is A/B'd inside one run —
+inject the rules you replaced, alternate which arm goes first — rather than measured before and
+after. See [09-conventions.md](09-conventions.md).
+
+**An infinite animation declared in a BASE rule runs forever, on elements nobody can see.**
+`.wx-ray` and `.wx-front-cloud` were the only two of roughly a hundred and fifty animations in the
+stylesheet that carried no state gate, so ten promoted layers — four of them blurred and masked —
+animated under every sky from page load, for a sunbreak that lives thirty seconds an hour. Gate it,
+and gate it with a **`:not()`** rather than the obvious positive selector: the `animation` shorthand
+resets `animation-delay` (which deletes the whole point of a staggered set), a positive gate
+out-ranks the reduced-motion cancel at the foot of the file and hands the motion back to a player
+who asked for stillness, and `animation-play-state:paused` keeps the layer promoted so it removes
+the motion and none of the cost.
 
 **A class name in a 250KB stylesheet is taken until you have PROVED it is not, and the collision is
 silent AND invisible.** `.chip.wx` and then `.chip.sky` both picked up a

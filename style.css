@@ -5145,14 +5145,22 @@ button:focus-visible{
    worse bug than the sheen is a feature. A plant that is not ready simply has
    nothing to run for that name. */
 #game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .wx-glint{
-  filter:var(--wx-own-glow) drop-shadow(0 -1.5px 0 rgba(255,255,255,.62)) saturate(1.06);
+  filter:var(--wx-own-glow) drop-shadow(0 -1.5px 0 rgba(255,255,255,.62))
+         drop-shadow(0 0 0 rgba(220,242,255,0)) saturate(1.06);
   animation:wxGlint 3.4s ease-in-out infinite, plantWiggle .8s ease-in-out infinite;
 }
 #game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .plot:not([data-state="ready"]) .wx-glint{
   animation:wxGlint 3.4s ease-in-out infinite;
 }
+/* The two frames carry the SAME number of filter functions, and the extra one at 0% is
+   spelled out at zero rather than left off. `drop-shadow(0 0 0 transparent)` is exactly
+   what the interpolation rules pad a shorter list with, so every computed filter along
+   the timeline is the value it always was — what the padding removes is the list-length
+   mismatch, which is what pushes an engine off its fast path for an animated filter
+   running on every plant on the board for a whole sky. */
 @keyframes wxGlint{
-  0%,100%{filter:var(--wx-own-glow) drop-shadow(0 -1.5px 0 rgba(255,255,255,.62)) saturate(1.06)}
+  0%,100%{filter:var(--wx-own-glow) drop-shadow(0 -1.5px 0 rgba(255,255,255,.62))
+             drop-shadow(0 0 0 rgba(220,242,255,0)) saturate(1.06)}
   50%{filter:var(--wx-own-glow) drop-shadow(0 -1.5px 0 rgba(255,255,255,.95))
              drop-shadow(0 0 4px rgba(220,242,255,.6)) saturate(1.13)}
 }
@@ -5623,12 +5631,25 @@ button:focus-visible{
    clipping the padding box used to do. */
 .wx-veil::before{
   content:'';position:absolute;
-  left:0;top:-150%;width:400%;height:400%;
+  left:0;top:0;width:800%;height:100%;
   background:linear-gradient(125deg,var(--wonder-sweep));
+  /* One TILE, and the tile is the thing to get right. `background-size:400% 400%` on the
+     veil made an image 4x the window in both axes and — because backgrounds repeat by
+     default — TILED it. Percentages here resolve against this child's own box, so 50% of
+     8W is 4W and 400% of H is 4H: the same tile, repeating the same way. A first attempt
+     used one un-repeated tile and slid it off the left edge, which drained the colour out
+     of the lawn for most of the cycle and was caught by a pixel diff rather than by
+     reading the code. */
+  background-size:50% 400%;
+  background-position:0 50%;
 }
+/* Two tiles wide, and the slide is exactly one tile — so the wrap lands on identical
+   pixels and there is no seam to see. The old form crossed three tiles in five seconds,
+   which is one tile every five-thirds of a second: same speed, same picture, and the
+   engine slides a layer instead of repainting a full-window gradient every frame. */
 @keyframes wxVeilShift{
   from{transform:translate3d(0,0,0)}
-  to{transform:translate3d(-300%,0,0)}
+  to{transform:translate3d(-50%,0,0)}
 }
 /* Both keyframes are this sky's own. `wxVeilShift` is the shimmer rebuilt as a slide
    (see `.wx-veil::before`); `wxWonderWarp` is the breathing at weather strength, and it
@@ -5645,7 +5666,7 @@ button:focus-visible{
 }
 #game[data-weather="wonderfall"][data-wx-phase="transform"] .wx-veil::before,
 #game[data-weather="wonderfall"][data-wx-phase="linger"] .wx-veil::before{
-  animation:wxVeilShift 5s linear infinite;
+  animation:wxVeilShift calc(5s / 3) linear infinite;
 }
 /* The breathing saturation, on everything ABOVE the lawn rather than on the
    whole scene. A `filter` cannot carry a mask, and the strip iOS paints below a
@@ -5905,7 +5926,7 @@ button:focus-visible{
   #game[data-weather="wonderfall"][data-wx-phase="transform"] .wx-veil::before,
   #game[data-weather="wonderfall"][data-wx-phase="linger"] .wx-veil::before{
     animation:none;
-    transform:translate3d(-28.5%,0,0);
+    transform:translate3d(-57%,0,0);
   }
   /* Held, not breathing — and on the same layers the moving version uses, never
      on `.scenery`, whose box owns the bottom edge and whose filter cannot be

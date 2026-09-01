@@ -2,7 +2,7 @@
 
 ## Shape of the project
 
-Twenty JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
+Twenty-two JavaScript files, one stylesheet, one HTML shell. No build step, no bundler, no modules, no
 dependencies. Each file defines exactly one global and they load in dependency order as plain
 `<script>` tags.
 
@@ -29,12 +29,14 @@ reference globals defined above it.
 | 11 | `game.js` | `Game` | `DATA`, `WONDER`, `PLOT_AUTOPLANTERS`, `CREATURES`, `STAND`, `MEADOW` |
 | 12 | `ui-shared.js` | `UI` | `Game`, the DOM |
 | 13 | `ui-scenery.js` | *(attaches to `UI`)* | `UI` |
+| 13b | `ui-weather.js` | *(attaches to `UI`)* | `UI`, `Game`, `DATA`, `FX`, `Sound` |
 | 14 | `ui-sheet.js` | *(attaches to `UI`)* | `UI` |
 | 15 | `ui-hollow.js` | *(attaches to `UI`)* | `UI`, `Hollow`, `Critters` |
 | 17 | `ui-meadow.js` | *(attaches to `UI`)* | `UI`, `Meadow` |
 | 17b | `ui-fall.js` | *(attaches to `UI`)* | `UI`, `Fall`, `Game` |
 | 17c | `ui-news.js` | *(attaches to `UI`)* | `UI`, `Game`, `DATA`, `Sound` |
 | 18 | `ui-events.js` | *(attaches nothing)* | `UI` |
+| 18b | `ui-perf.js` | *(attaches `UI.perf`)* | `UI`, `FX` |
 | 19 | `ui.js` | *(attaches to `UI`)* | everything above |
 
 `ui-news.js` is the What's New dialog and nothing else — one announcement, once, on the way in. It
@@ -43,10 +45,20 @@ the game a player cannot swipe away and its button wipes the save: it deserves t
 one screen. It publishes `UI.maybeAnnounce()`, `UI.previewAnnouncement()` and `UI.newsOpen()`, and
 `boot()` calls the first of those before anything else can take the screen.
 
+`ui-weather.js` plays the sky the engine decides — see [41-weather-staging.md](41-weather-staging.md).
+It is registered **before** `ui-events.js` on purpose: both subscribe to `weather`, and the tail of
+an ending sky has to be standing before that file asks `paintWeather()` to hand the attribute over.
+
+`ui-perf.js` is the frame-rate readout — a development instrument, never a feature. It publishes
+`UI.perf` and nothing else, starts switched off, is reachable only from the dev sheet, and keeps its
+flag in a module `let` rather than in the save, so a reload always turns it off. `ui.js`'s `frame()`
+calls it in exactly two places: a clock read on the first line and `UI.perf.frame(now, t0)` on the
+last, *after* `requestAnimationFrame(frame)`, so the instrument can never delay the next frame.
+
 *(The table stood at fourteen from 2026-08-16 until 2026-08-29 — the five files added with the
 Stand, the map and the meadow on 2026-08-25 were documented in this file's prose but never added
-here. That is the second time this table has gone stale the same way; the count in the first
-sentence is the thing to check when a file is added.)*
+here. `ui-weather.js` and `ui-perf.js` were the third and fourth to go the same way, caught on
+2026-09-01. The count in the first sentence is the thing to check when a file is added.)*
 
 The UI files touch the DOM on load, and only `ui.js` calls `boot()`. Every other file is inert
 until something calls into it.

@@ -572,6 +572,19 @@ accident (re-counted 2026-08-30) would be a worse trade than three named ramps i
 properties on their components (the `--mw-stone-*` pattern) is the tidy if a second component ever
 wants one — a phase-4 job, not a phase-2 one.
 
+### The one surface that is deliberately outside the palette
+
+**The frame-rate readout (`.perf-hud`, `.dev-perf`) does not follow this document, and it must not.**
+It is a development instrument, off by default and reachable only from the dev sheet — never a
+screen a player sees. It uses a monospace stack, tabular figures and its own near-black panel
+because a number that shifts as its digits change is unreadable at a glance on a handset.
+
+The rule it *does* obey is stricter than this document's: **no `filter`, no `mix-blend-mode`, no
+`box-shadow`, no `backdrop-filter`.** Those are precisely the costs it exists to measure, and an
+instrument wearing them reads its own reflection. It carries `translateZ(0)` so it owns its own tile
+and its four writes a second never dirty the page's, and `contain:layout paint style` so a changing
+number cannot reach layout.
+
 ### The check to run before calling any screen done
 
 Not from memory. Put the new screen **next to the garden at the same size**, on a phone-shaped

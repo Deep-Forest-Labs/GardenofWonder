@@ -429,6 +429,37 @@ cheat exercises the feature it claims to test, and the animation seen is the one
 | Simulate an absence | Winds the world back 3 / 6 / 12 / 24 hours and opens the real welcome-back scene |
 | Give | Gold, gems, levels, one of every power-up |
 | Jump ahead | +1 / +3 / +6 Turns (`Dev.jumpTurns`). Each Turn earns its way there through the real faucet and runs the real `turnYear()`; the garden is wiped once per Turn and the player lands bare with Saved Seeds banked |
+| Play the whole sky | Runs a sky's entire sequence — front, arrive, linger, end — through `UI.weatherSequence()`, which is the real code path. Holding a sky can only ever park on the transform; this is the only way to see a front or an end on demand. The Sunbreak button is **daytime only** (it early-returns at night), and the panel's last line prints the day phase so you know whether to wait |
+| Frame rate | Shows and hides the frame-rate readout (`UI.perf`), and starts a fresh measuring window. See below |
+
+### The frame-rate readout
+
+**Added 2026-09-01, for the Sky Pass performance pass.** A `position:fixed` panel that hangs off
+`#game`, off by default, switched on only from this sheet, and never saved — a reload turns it off.
+It exists so the owner can hold a sky **on the handset** and read what it costs, because no
+desktop bench can reproduce what iOS Safari charges for a blend.
+
+It splits every frame into three numbers rather than reporting one, and the split is the whole
+point:
+
+| Line | What it means |
+| --- | --- |
+| `int` | the raw gap between frames — what the hand actually feels |
+| `js` | our own script, the top of `frame()` to the bottom of it |
+| `rest` | everything else: style, layout, paint, blend, composite |
+
+**A big `rest` with a small `js` is the sky costing paint, not code.** That is the reading the
+suspect list in [11-known-issues.md](11-known-issues.md) needed and could not otherwise get. It also
+detects the refresh rate rather than assuming 60 Hz, because a 120 Hz handset dropping half its
+frames would otherwise read as flawless.
+
+Costs nothing while it is off — `frame()` returns on its first line — and about five microseconds
+while it is on: two clock reads and three array increments into fixed histograms allocated once, so
+the instrument never allocates and never measures itself. It may not call `getComputedStyle` or
+`getBoundingClientRect`, because both force the very flush it is hunting.
+
+`tools/skybench.js` drives the same `UI.perf` headlessly, so the bench and the handset report the
+same numbers out of the same code — see [09-conventions.md](09-conventions.md).
 
 **The proc buttons are toggles, not one-shots.** A single forced fire meant reopening the panel for
 every look at an animation; held at 50% per tap you can leave the sheet closed and just tap. The

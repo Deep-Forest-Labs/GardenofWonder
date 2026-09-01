@@ -187,6 +187,47 @@ lengthens, the bought one does not have to.*
 
 ---
 
+## The performance pass (2026-09-01) — what it cost, and what changed to make it cost less
+
+**The approved feel did not move. `DATA.weatherStage` is untouched, and every sky diffs bit-for-bit
+against the rules it replaced** — Clear, Rain, Thunderstorm, Aurora and the Sunbreak to zero pixels,
+Wonderfall to 0.006% at a worst channel delta of 3, which is one animated filter caught a frame
+apart. The stage is still the reference for how a sky moves.
+
+**Wonderfall was the frame dip the owner reported**, at eighty percent more per frame than a clear
+sky; every other sky sat inside the bench's noise. Two of its rules were doing it, and both are now
+built differently and drawn identically:
+
+- **The breathing warp is one filter, not eight.** It was `wxWonderWarp` duplicated across `.sky`,
+  `.celestial`, `.stars`, both cloud bands and all three hill layers — eight full-window colour-matrix
+  passes a frame. All eight now live in one `.scenery-warp` box that the warp runs on once. The
+  eight-selector form existed because a filter cannot carry a mask and `.scenery` owns the bottom
+  edge; the box keeps that constraint by holding only the layers above the lawn.
+- **The veil slides instead of repainting.** It animated `background-position`, which no engine
+  composites, so a six-stop rainbow was re-rasterised across the whole window every frame and then
+  read back through an overlay blend. It is now a two-tile child on a `transform`. **The tiling is
+  the load-bearing part** — backgrounds repeat by default, and a first attempt with one un-repeated
+  tile slid it off the left edge and drained the colour out of the lawn for most of the cycle.
+
+**Two Sky Pass animations were never gated.** `.wx-ray` and `.wx-front-cloud` declared their infinite
+animations in base rules, so four blurred, masked ray layers and six drop-shadowed clouds animated
+under every sky from page load — for elements that are invisible except during a sunbreak or a front.
+They are gated now, with `:not()` selectors rather than positive ones so they cannot out-rank the
+reduced-motion cancels. `sunbreakOff()` gained a third state, **`fade`**, because the layer takes
+2.8 s to go and cutting the sweep at the flip would freeze four shafts mid-journey in full view.
+
+**The DPR-2 cap this document calls a constraint stayed a constraint.** It was on the performance
+brief's list of classic wins and it is the only one there that cannot be taken without softening
+every particle edge — and the canvas turned out not to be a top cost anyway: particles cover under
+1.2% of the surface under every sky. Reversing that line needs a device measurement and the owner's
+word, not a quiet change in `fx.js`.
+
+**What is still open** is the only question that matters and the one no Mac can answer: what an A18
+does with these blends. The instrument is built — Settings → Developer tools → **Frame rate** — and
+the two-minute check is written up in [11-known-issues.md](11-known-issues.md).
+
+---
+
 ## As built: the motion stage (2026-08-30)
 
 `tools/sky-spike.html` is up. Open it beside the garden and press a button.

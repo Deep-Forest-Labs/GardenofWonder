@@ -670,6 +670,28 @@ a stacking context, and a stacking context is an isolated blending group — eve
 and overlay inside would then blend against transparency instead of against the sky, which looks
 plausible and is wrong. DOM order alone places it.
 
+**`.scenery-warp` wraps everything above the lawn** — the sky, the sun, the stars, both cloud bands
+and all three hill layers, in one `inset:0` box inside `.scenery`. It exists so Wonderfall's
+breathing warp is one animated filter instead of eight, and its geometry deliberately matches
+`.scenery`'s so every percentage inside resolves against the same rectangle it always did.
+**`.meadow`, `.fence`, `.vignette` and `.season-tint` stay outside it**, and that is the whole
+reason the box exists at all rather than the warp simply moving to `.scenery`: a filter cannot carry
+a mask, `.scenery` owns the bottom edge, and a warp reaching that edge draws the iOS strip join
+three rounds of layout work went into hiding.
+
+Two things the eight-selector form was silently cancelling had to be restated when it collapsed,
+because `animation` and `filter` are one property each: the stars stop twinkling under a Wonderfall,
+and the far hills lose their own `saturate(.8) brightness(1.04)`. Both were true before and are true
+now. If the far hills should *keep* their haze during a Wonderfall, that is a look decision and the
+owner's to make.
+
+**The Wonderfall veil slides; it does not repaint.** `.wx-veil` is the blend, the mask and the
+opacity; `.wx-veil::before` is a two-tile-wide child carrying the rainbow, moved by `transform`.
+The tile is `background-size:50% 400%` of that child — the same 4×window tile the old
+`background-size:400% 400%` made, repeating the same way. **The repeat is the load-bearing part**:
+a first attempt used one un-repeated tile and slid it off the left edge, which drained the colour
+out of the lawn for most of the cycle. Nothing in the code looked wrong; a pixel diff found it.
+
 **Cue discipline.** Every real sky now speaks twice: a forecast line a few seconds before it lands,
 and its arrival line when it does. **Wonderfall alone gets a banner** — that ruling stands, and a
 banner four times an hour would still be noise. Rarity buys the interruption: only the aurora and
