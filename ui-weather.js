@@ -315,14 +315,29 @@
      they would be cancelled by the handover, and the arrangement they hand back
      would land in the middle of whatever came next. */
   let sunTimer = 0;
+  let fadeTimer = 0;
+  /* Three states, not two. The layer takes 2.8s to fade out, and the rays' sweep is
+     gated on this attribute — so going straight to '0' would freeze four shafts
+     mid-journey with the sunbreak still plainly on screen. `fade` is "going, but still
+     moving"; it reaches '0' once the fade is over. */
+  const FADE = 3000;
   function sunbreakOff() {
     clearTimeout(sunTimer);
     sunTimer = 0;
+    clearTimeout(fadeTimer);
+    if (el.game.dataset.sunbreak === '1') {
+      el.game.dataset.sunbreak = 'fade';
+      fadeTimer = setTimeout(() => {
+        if (el.game.dataset.sunbreak === 'fade') el.game.dataset.sunbreak = '0';
+      }, FADE);
+      return;
+    }
     el.game.dataset.sunbreak = '0';
   }
 
   function sunbreak() {
     if (Game.isNight()) { arrange('clear'); return; }
+    clearTimeout(fadeTimer);
     el.game.dataset.sunbreak = '1';
     arrange('sunbreak');
     UI.say('sunbreak');

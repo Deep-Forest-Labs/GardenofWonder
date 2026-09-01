@@ -36,14 +36,23 @@
 
       <!-- ============ PARALLAX SCENERY ============ -->
       <div class="scenery" id="scenery" aria-hidden="true">
-        <div class="sky" id="sky"></div>
-        <div class="celestial" id="celestial"></div>
-        <div class="stars" id="stars"></div>
-        <div class="layer clouds-far" id="cloudsFar"></div>
-        <div class="layer hills-far"></div>
-        <div class="layer clouds-near" id="cloudsNear"></div>
-        <div class="layer hills-mid"></div>
-        <div class="layer hills-near"></div>
+        <!-- Everything above the lawn, in one box, so Wonderfall's breathing warp is
+             ONE filter rather than eight. It cannot go on `.scenery` itself: a filter
+             cannot carry a mask, `.scenery` owns the bottom edge, and a warp reaching
+             the edge draws the iOS strip join three rounds of layout went into hiding.
+             `.meadow`, `.fence`, `.vignette` and `.season-tint` stay outside it for
+             exactly that reason. The box is `inset:0` like `.scenery`, so every
+             percentage inside resolves against the same rectangle it always did. -->
+        <div class="scenery-warp">
+          <div class="sky" id="sky"></div>
+          <div class="celestial" id="celestial"></div>
+          <div class="stars" id="stars"></div>
+          <div class="layer clouds-far" id="cloudsFar"></div>
+          <div class="layer hills-far"></div>
+          <div class="layer clouds-near" id="cloudsNear"></div>
+          <div class="layer hills-mid"></div>
+          <div class="layer hills-near"></div>
+        </div>
         <!-- The fence is the world too, so it takes the rain on itself:
              `.wx-wet` is an opt-in hook the stylesheet decides when to darken,
              never a state this markup knows about.
@@ -296,6 +305,9 @@
   <script src="ui-news.js"></script>
   <script src="ui-menu.js"></script>
   <script src="ui-events.js"></script>
+  <!-- The frame-rate readout. A development instrument: it starts off, the dev
+       sheet is its only switch, and nothing shipped ever shows it. -->
+  <script src="ui-perf.js"></script>
   <script src="ui.js"></script>
 
   <script>

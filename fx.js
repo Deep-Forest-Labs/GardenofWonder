@@ -534,6 +534,11 @@ const FX = (() => {
     float, floatAt, shake, haptic, setMagnet, centerOf,
     weather, weatherOff, splashAt,
     get reduced() { return reduced; },
-    get weatherCount() { return Math.round(wxPool.length * wxThin); }
+    get weatherCount() { return Math.round(wxPool.length * wxThin); },
+    /* Two readouts for the frame-rate instrument. Pure reports of this file's own
+       state, the shape `weatherCount` already is, so "fx.js knows nothing about the
+       game" still holds. */
+    get partCount() { return parts.length + ambient.length + wxSplash.length; },
+    get canvasInfo() { return { dpr, w: canvas.width, h: canvas.height }; }
   };
 })();

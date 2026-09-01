@@ -33,6 +33,8 @@
 //   node tools/probe.js media:reduce wait:400 shot:calm
 //   node tools/probe.js 'drag:@30,600:0,-160' wait:600 shot:hollow   # swipe UP
 //
+// PROBE_FLAGS in the environment appends extra Chrome flags — see tools/skybench.js.
+//
 // Exits non-zero if the page threw an uncaught error, so it is usable in a
 // check-before-you-commit loop.
 
@@ -246,6 +248,10 @@ async function main() {
     '--mute-audio',
     '--disable-dev-shm-usage',
     '--user-data-dir=' + fs.mkdtempSync('/tmp/probe-'),
+    /* Extra Chrome flags, space-separated. `tools/skybench.js` uses it to turn the
+       frame limiter off, which is what turns a vsync-quantised cadence into a
+       straight measurement of what a frame costs. */
+    ...(process.env.PROBE_FLAGS ? process.env.PROBE_FLAGS.trim().split(/\s+/) : []),
     'about:blank',
   ]);
 

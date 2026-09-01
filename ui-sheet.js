@@ -2222,6 +2222,16 @@
       animation you see is the one players get.</p>
       ${armed.length ? `<p class="dev-armed">Armed — ${armed.join(' · ')}</p>` : ''}
       ${devRow('Hold the weather', wx + '<button class="dev-btn warn" data-dev="weather" data-arg="">Release</button>')}
+      ${devRow('Play the whole sky — front, arrive, linger, end', DATA.weather.types
+        .filter((w) => w.id !== 'clear')
+        .map((w) => `<button class="dev-btn" data-dev="wxSeq" data-arg="${w.id}">${w.name}</button>`)
+        .join('') + '<button class="dev-btn" data-dev="wxSeq" data-arg="sunbreak">Sunbreak (daytime only)</button>')}
+      ${devRow(`Frame rate — ${UI.perf.on() ? 'on' : 'off'}. Hold a sky and read it on the handset;
+        a big <b>rest</b> with a small <b>js</b> is the sky costing paint and blend rather than script`, `
+        <button class="dev-btn${UI.perf.on() ? ' on' : ''}" data-dev="perf" data-arg="toggle">${
+          UI.perf.on() ? 'Hide the readout' : 'Show the readout'}</button>
+        <button class="dev-btn" data-dev="perf" data-arg="reset">Start a fresh window</button>`)}
+      ${UI.perf.on() ? `<pre class="dev-perf">${UI.perf.line()}</pre>` : ''}
       ${devRow('Mutate a growing plot now', muts)}
       ${devRow('Arm the next harvest', rars + '<button class="dev-btn" data-dev="gem" data-arg="1">Gem drop</button>')}
       ${devRow('Boost a tap proc — stays on, then just tap the flower', `
@@ -2309,6 +2319,13 @@
     let deny = 'That cheat needs something in the garden first.';
     switch (what) {
       case 'weather': D.setWeather(arg); break;
+      /* Presentation, so it never reaches `Game.Dev` — the same line screenReport()
+         walks. `weatherSequence` plays the whole shape through the real code path;
+         holding a sky can only ever park on the transform. */
+      case 'wxSeq': UI.weatherSequence(arg); redraw = false; break;
+      case 'perf':
+        if (arg === 'reset') { UI.perf.reset(); redraw = false; } else UI.perf.toggle();
+        break;
       case 'mutate': ok = Boolean(D.mutate(arg)); redraw = false; break;
       case 'rarity': D.armRarity(arg); break;
       case 'gem': D.armGem(); break;

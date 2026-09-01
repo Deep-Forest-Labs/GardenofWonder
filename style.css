@@ -174,6 +174,11 @@ button:focus-visible{
    SCENERY
    ========================================================= */
 .scenery{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+/* The eight layers above the lawn, in one box. Its only job is to give Wonderfall's
+   breathing warp ONE element to run on instead of eight — same rectangle as `.scenery`,
+   so nothing inside it moves by a pixel. See the note in index.html for why the warp
+   cannot simply go on `.scenery`. */
+.scenery-warp{position:absolute;inset:0}
 
 .sky{
   position:absolute;inset:0;
@@ -681,6 +686,38 @@ button:focus-visible{
   margin:8px 0;padding:6px 10px;border-radius:9px;
   background:rgba(81,207,102,.18);border-left:4px solid #51cf66;
   font-size:11.5px;font-weight:800;
+}
+
+/* The frame-rate readout — a development instrument, never a feature. It hangs off
+   `#game` as a sibling of `#world`, because a fixed element inside a transformed
+   ancestor is positioned against that ancestor and would ride every shake frame.
+
+   It carries NO filter, NO blend mode and NO shadow, and that is not a style choice:
+   those are the exact costs it exists to measure, and an instrument wearing them reads
+   its own reflection. `translateZ(0)` gives it its own tile so its four writes a second
+   never dirty the page's, and `contain` keeps a changing number from reaching layout. */
+.dev-perf{
+  margin:6px 0 0;padding:7px 9px;border-radius:var(--r-sm);
+  background:rgba(20,14,10,.86);color:rgb(240,248,255);
+  font:600 10.5px/1.4 ui-monospace,Menlo,monospace;
+  font-variant-numeric:tabular-nums;
+  white-space:pre;overflow-x:auto;
+}
+.perf-hud{
+  position:fixed;
+  top:calc(var(--sat,0px) + 52px);left:50%;
+  transform:translate(-50%,0) translateZ(0);
+  z-index:90;
+  max-width:92vw;padding:5px 7px;
+  border-radius:var(--r-sm);
+  background:rgba(20,14,10,.78);
+  color:rgb(240,248,255);
+  font:600 9.5px/1.3 ui-monospace,Menlo,monospace;
+  font-variant-numeric:tabular-nums;
+  white-space:pre;
+  contain:layout paint style;
+  pointer-events:auto;
+  touch-action:manipulation;
 }
 
 /* A mutation is visible the moment it lands and stays visible until harvest — that permanence is
@@ -4733,6 +4770,14 @@ button:focus-visible{
 .wx-front-cloud:nth-child(4){--x:18%;--t:17%;--w:96px;--dur:12.8s;--o:.80;--delay:-5.2s}
 .wx-front-cloud:nth-child(5){--x:56%;--t:22%;--w:120px;--dur:10.1s;--o:.74;--delay:-2.3s}
 .wx-front-cloud:nth-child(6){--x:88%;--t:13%;--w:88px;--dur:13.6s;--o:.70;--delay:-6.8s}
+/* ...and only while a front is showing. Same story as the rays: the drift was declared
+   in the base rule, so six drop-shadowed layers transform-animated behind an opacity:0
+   parent for the whole session. Same `:not()` form for the same two reasons — the
+   shorthand would reset the six delays, and a positive gate would out-rank the
+   reduced-motion cancel. Correct before first paint too: `data-weather` is absent until
+   `paintWeather()` runs at boot, and an absent attribute satisfies both `:not()`s, so
+   the clouds start still — which is what an invisible front should be. */
+#game:not([data-weather="rain"]):not([data-weather="storm"]) .wx-front-cloud{animation-name:none}
 @keyframes wxCloudDrift{
   from{transform:translateX(-22px)}
   to{transform:translateX(26px)}
@@ -5069,6 +5114,23 @@ button:focus-visible{
 .wx-ray:nth-child(4){--x:0%;--w:62px;--a:21deg;
   --k:clamp(0, calc(var(--wx-sunbreak-rays,3) - 3), 1);
   animation-delay:-35s,-17s}
+/* ...and they only run while there is a sunbreak. The two animations above were
+   declared in the base rule, so four blurred, masked, clip-pathed layers swept across
+   an invisible screen-blend group forever — under every sky, from page load, for the
+   rays' sake about thirty seconds an hour.
+
+   Written as a `:not()` rather than the obvious `[data-sunbreak="1"] .wx-ray{animation:…}`,
+   and both halves of that matter. The `animation` SHORTHAND resets `animation-delay`,
+   which would line all four rays up at the left edge and delete the whole point of the
+   negative delays above; and a positive gate at (1,2,0) would out-rank the
+   reduced-motion cancel at the foot of this file, quietly handing sweeping rays back to
+   a player who asked for stillness. This form only ever MATCHES when the animation
+   should be off, so it agrees with that cancel instead of fighting it.
+
+   `animation-name:none`, never `animation-play-state:paused`: a paused animation is
+   still an animation, so the layer stays promoted and the backing store is never
+   released, which is the cost being removed. */
+#game:not([data-sunbreak="1"]):not([data-sunbreak="fade"]) .wx-ray{animation-name:none,none}
 /* Off the left edge to off the right, so the loop point is never on screen and a
    ray is never seen to jump back. At the default drift a shaft crosses about a
    third of the sky in the thirty seconds the sunbreak lives — slow enough to be
@@ -5306,8 +5368,7 @@ button:focus-visible{
 
 .wx-veil{
   position:absolute;inset:0;pointer-events:none;opacity:0;
-  background:linear-gradient(125deg,var(--wonder-sweep));
-  background-size:400% 400%;
+  overflow:hidden;
   mix-blend-mode:overlay;
   transition:opacity 2s ease;
   /* The Wonder Effect's veil is a twelve-second event and never needed this;
@@ -5316,10 +5377,35 @@ button:focus-visible{
   -webkit-mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
   mask-image:linear-gradient(180deg,#000 0 calc(100% - 44px),transparent 100%);
 }
-/* The shimmer is the Wonder Effect's own `wonderShift`, unchanged. The warp is
-   NOT: `wonderWarp` is the x3 event's, at its own fixed strength, and one
-   `@keyframes` name has one body — redefining it here would have re-dressed the
-   Wonder Effect in a variable it never sets. */
+/* The rainbow moves by being SLID, not by being repainted.
+
+   `background-position` is not a compositor property in any engine, so the Wonder
+   Effect's `wonderShift` re-rasterises a six-stop gradient across the whole window
+   every frame — under an overlay blend that then reads the whole window back. Over
+   twelve seconds nobody notices; over a whole weather slot it is the dearest rule in
+   the game. The same picture comes out of an oversized child on a transform.
+
+   The arithmetic is exact rather than approximate. `background-size:400% 400%` on a
+   W×H box makes the image 4W×4H, and `background-position-x:p%` puts its left edge at
+   p% × (W − 4W) = −3W·p — so 0% → 400% is a journey of 0 → −12W. `background-position-y:50%`
+   puts the image top at 0.5 × (H − 4H) = −1.5H. This child is `top:-150%` and
+   `width:400%`, and −300% of its own 4W box is −12W. Same gradient, same size, same
+   start, same finish, same five seconds; the box's own `overflow:hidden` does the
+   clipping the padding box used to do. */
+.wx-veil::before{
+  content:'';position:absolute;
+  left:0;top:-150%;width:400%;height:400%;
+  background:linear-gradient(125deg,var(--wonder-sweep));
+}
+@keyframes wxVeilShift{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-300%,0,0)}
+}
+/* Both keyframes are this sky's own. `wxVeilShift` is the shimmer rebuilt as a slide
+   (see `.wx-veil::before`); `wxWonderWarp` is the breathing at weather strength, and it
+   could not reuse `wonderWarp` because that one is the x3 event's at its own fixed
+   values and one `@keyframes` name has one body — redefining it would have re-dressed
+   the Wonder Effect in a variable it never sets. */
 @keyframes wxWonderWarp{
   0%,100%{filter:saturate(calc(1 + var(--wx-warp) * .5)) hue-rotate(0deg)}
   50%{filter:saturate(calc(1 + var(--wx-warp) * .9)) hue-rotate(calc(var(--wx-warp) * 22deg))}
@@ -5327,22 +5413,41 @@ button:focus-visible{
 #game[data-weather="wonderfall"][data-wx-phase="transform"] .wx-veil,
 #game[data-weather="wonderfall"][data-wx-phase="linger"] .wx-veil{
   opacity:var(--wx-wonderfall-veil,.3);
-  animation:wonderShift 5s linear infinite;
+}
+#game[data-weather="wonderfall"][data-wx-phase="transform"] .wx-veil::before,
+#game[data-weather="wonderfall"][data-wx-phase="linger"] .wx-veil::before{
+  animation:wxVeilShift 5s linear infinite;
 }
 /* The breathing saturation, on everything ABOVE the lawn rather than on the
    whole scene. A `filter` cannot carry a mask, and the strip iOS paints below a
    short window is filled with the untinted lawn colour — so a warp that reached
    the bottom edge would draw the join three rounds of layout work went into
    hiding. The veil over the top is masked and covers the lawn anyway. */
-#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .sky,
-#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .celestial,
-#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .stars,
-#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .clouds-far,
-#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .clouds-near,
-#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-far,
-#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-mid,
-#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-near{
+/* ONE animated filter, on the box that holds all eight. Eight of them was eight
+   full-window colour-matrix passes a frame and eight filter buffers held for the whole
+   slot, and it measured as the most expensive thing in the game by a factor of five.
+
+   The pixels are the same pixels. `saturate()` and `hue-rotate()` are linear colour
+   matrices and leave alpha alone, and for a linear matrix M over source-over,
+   M(a·Ca + (1-a)·Cb) equals a·M(Ca) + (1-a)·M(Cb) — filter each layer then composite,
+   or composite then filter the group, and you land on the same colour. Nothing in the
+   group is a SPATIAL filter (no blur, no drop-shadow), which is the case where that
+   identity would not hold.
+
+   Two things the per-layer form was quietly cancelling, restated here because
+   `animation` and `filter` are one property each and the group form no longer reaches
+   them: the stars stopped twinkling under a Wonderfall, and the far hills lost their
+   own desaturation. Both are preserved exactly as they were — if the owner would
+   rather the far hills kept their haze during a Wonderfall, that is a look decision
+   and a separate one. */
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .scenery-warp{
   animation:wxWonderWarp 7s ease-in-out infinite;
+}
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .stars{
+  animation:none;
+}
+#game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-far{
+  filter:none;
 }
 
 /* =========================================================
@@ -5565,23 +5670,18 @@ button:focus-visible{
   #game[data-weather="aurora"][data-wx-phase="linger"] .cr-eyes,
   #game[data-weather="aurora"] .tf-head{transition:none}
 
-  /* The veil hangs there, one colour, no shimmer and no breathing. */
-  #game[data-weather="wonderfall"][data-wx-phase="transform"] .wx-veil,
-  #game[data-weather="wonderfall"][data-wx-phase="linger"] .wx-veil{
+  /* The veil hangs there, one colour, no shimmer and no breathing. 38% of the sweep
+     was 0.38 × −3W against the old background-position; against the child's own 4W box
+     that is −28.5%, which is the same stripe of rainbow standing still. */
+  #game[data-weather="wonderfall"][data-wx-phase="transform"] .wx-veil::before,
+  #game[data-weather="wonderfall"][data-wx-phase="linger"] .wx-veil::before{
     animation:none;
-    background-position:38% 50%;
+    transform:translate3d(-28.5%,0,0);
   }
   /* Held, not breathing — and on the same layers the moving version uses, never
      on `.scenery`, whose box owns the bottom edge and whose filter cannot be
      masked away from it. */
-  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .sky,
-  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .celestial,
-  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .stars,
-  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .clouds-far,
-  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .clouds-near,
-  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-far,
-  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-mid,
-  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .hills-near{
+  #game[data-weather="wonderfall"]:is([data-wx-phase="transform"],[data-wx-phase="linger"]) .scenery-warp{
     animation:none;
     filter:saturate(calc(1 + var(--wx-warp) * .5));
   }

@@ -1343,6 +1343,7 @@
   }
 
   function frame(now) {
+    const t0 = performance.now();
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
 
@@ -1392,6 +1393,10 @@
     }
 
     requestAnimationFrame(frame);
+    /* After the request, never before it: an instrument that delays the next frame is
+       measuring itself. Costs nothing while it is off, which is always, unless someone
+       has turned it on from the dev sheet. */
+    UI.perf.frame(now, t0);
   }
 
   /* ============ boot ============ */
