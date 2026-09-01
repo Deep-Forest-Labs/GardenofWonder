@@ -5,6 +5,60 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (fix round) — The daily changelog ships, and the What's New row becomes its door
+
+Built to the spec logged this morning (see *"The daily changelog: the What's New popup's little
+sibling"* further down). What follows is what the build decided that the spec left open.
+
+**It is the same dialog, not a second one.** `ui-news.js` grew a changelog mode rather than a new
+file: same `#news` node, same card, same bullets, same button. That is the "exactly like our other
+popup" ask taken literally — and sharing the module's single `open` variable makes **"never two
+popups" structural** rather than a rule somebody has to keep remembering.
+
+**The marker is `gw-log`, outside the save, holding `{ seen: [dates], day }`.** `seen` is dates
+rather than indices, so inserting an old entry cannot silently re-show a newer one — **and it is why
+a shipped entry's date must never be edited.** `day` is what enforces once-a-day without a timer.
+
+**The three gates are all about not being a nuisance:** something unread, nothing shown yet today,
+and no announcement pending. A brand-new player is seeded as read on a fresh save — their first
+changelog is the game — and `seedChangelogSeen()` refuses if anything is already recorded, so a
+returning player's history can never be wiped by a mis-fire.
+
+**The badge dot's meaning changed, and both places had to change together.** The What's New row now
+leads to the changelog with the announcement as its top row, so the dot means *there is something
+behind here you have not read* — either kind. The **hamburger's** dot was still testing only
+`pendingAnnouncement()`, which would have badged the row inside a menu whose button stayed quiet: a
+menu nobody opens. Same condition in both places now.
+
+**The announcement is a row inside the changelog, not a second destination.** One door to "what
+changed". It opens the announcement in **preview**, so its `reset` can never fire from there — that
+path belongs to the once-per-build dialog on boot and to nothing else.
+
+**Rejected: a separate `ui-changelog.js`.** A new file in `CORE`, a second copy of the show/close
+dance, and a second `open` flag that would have to be coordinated with the first — which is exactly
+the coordination the shared module gives away free.
+
+**Rejected: indices instead of dates as the marker.** Cheaper to write and wrong the first time an
+entry is inserted or removed.
+
+**Rejected: making the popup dismissible by tapping the scrim.** It inherits the announcement's
+"the button is the only way out", which is right for the announcement (its button does something)
+and only *harmless* here — but two dialogs on one node with two dismissal rules is a bug waiting for
+a distracted afternoon.
+
+**AGENTS.md's definition of done gains its line, and this round obeys it.** A change a player can see
+adds one plain sentence, in the glossary's words, in the same commit. `09-conventions.md` has the
+playbook. The first entry is this round's own visible work: the sound sliders, the storm, the icon,
+Fall's Collect All, Fall's alignment and the calmer gem chip.
+
+**Verified in the browser across all four rules** — a brand-new player is seeded and shown nothing,
+a returning player with an unread entry gets it once, a second load the same day is quiet, and an
+unread announcement holds it back. Ten sim-test assertions, sabotaged three ways: moving the marker
+into `defaultState()` (which the Turn-partition test catches as well), removing the announcement
+gate, and letting seeding overwrite an existing marker.
+
+---
+
 ## 2026-08-31 (fix round) — The Thunderstorm becomes rain plus thunder
 
 **The owner:** *"The background sound for the storm is a little overbearing… the constant, steady

@@ -95,5 +95,19 @@ const UI = (() => {
   /* Rarity mastery goals count that rarity or better; the plus carries that. */
   const MASTERY_TRACK = { total: 'total', rare: 'Rare+', epic: 'Epic+' };
 
-  return { $, $$, S, el, fmt, fmtTime, pct, signed, rnd, pickLine, MASTERY_TRACK };
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
+  /* A changelog date, said the way a person would. Parsed by hand rather than
+     through `new Date('2026-08-31')`, which reads a bare date as UTC midnight —
+     so west of Greenwich it renders as the day before, which is the wrong day on
+     every American phone. */
+  function logDate(iso) {
+    const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(iso || ''));
+    if (!m) return String(iso || '');
+    const month = MONTHS[Number(m[2]) - 1] || '';
+    const year = new Date().getFullYear() === Number(m[1]) ? '' : ` ${m[1]}`;
+    return `${Number(m[3])} ${month}${year}`;
+  }
+
+  return { $, $$, S, el, fmt, fmtTime, pct, signed, rnd, pickLine, logDate, MASTERY_TRACK };
 })();

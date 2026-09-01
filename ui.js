@@ -1423,6 +1423,11 @@
     FX.setMagnet('coin', el.walletCredits);
 
     const info = Game.load();
+    /* A first-time player's first changelog is the game itself, so everything
+       already shipped is marked read before anything can go up. Only on a fresh
+       save, and `seedChangelogSeen()` refuses if anything is already recorded,
+       so a returning player's history is never touched. */
+    if (info.fresh) Game.seedChangelogSeen();
     if (!S.seen.plot) el.game.classList.add('onboard');
     Object.assign(Sound.prefs, S.prefs);
 

@@ -268,7 +268,7 @@ Last year's harvest, kept: `{ flowers: {}, honey: {} }`, id to count, additive a
 in the partition sweep. Orders may not spend from it; crafting and selling may. Spec in
 [41-the-preserve.md](41-the-preserve.md).
 
-### The one flag that is NOT in the save (added 2026-08-30)
+### The two markers that are NOT in the save (2026-08-30, second one 2026-08-31)
 
 `gw-news` holds a JSON array of the announcement ids the player has already read, and it is the
 only piece of persistence in the game that lives outside `gw-save` on purpose.
@@ -279,8 +279,21 @@ reset the button performs, and the dialog would open on every load for ever. Its
 `reset()` by construction — and survives a player's own Settings reset for the same reason, which
 is also correct: an announcement is news, and news is not progress.
 
-It is read and written through `Game.newsSeen()`, `Game.markNewsSeen()`, `Game.clearNewsSeen()` and
-`Game.pendingAnnouncement()`. It needs **no** `defaultState()` entry, no `load()` backfill and no
+**`gw-log` is the changelog's marker, and it lives out here for the same reason and one more.**
+It holds `{ seen: [<entry dates>], day: '<the last day a popup went up>' }`. A Turn wipes the garden
+and a `reset` announcement replaces it outright, and neither is a reason to hand somebody a list of
+changes they have already read. `seen` is a list of **dates**, which is why a shipped changelog
+entry's date must never be edited — changing one re-shows the whole entry to every player. `day`
+enforces "at most once a day" without a timer.
+
+Read and written through `Game.changelogUnseen()`, `Game.changelogDue()`,
+`Game.markChangelogSeen()`, `Game.seedChangelogSeen()` and `Game.clearChangelogSeen()`.
+`seedChangelogSeen()` is called from boot on a **fresh save only** and refuses if anything is
+already recorded: a first-time player's first changelog is the game itself, not a list of what
+changed before they arrived.
+
+The announcement flags are read and written through `Game.newsSeen()`, `Game.markNewsSeen()`,
+`Game.clearNewsSeen()` and `Game.pendingAnnouncement()`. It needs **no** `defaultState()` entry, no `load()` backfill and no
 Turn-partition classification — which is the whole reason to keep it out. A sim-test asserts it
 survives a `reset()` that demonstrably clears the wallet; that assertion is false the moment anyone
 moves the flag into `state`.

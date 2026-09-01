@@ -52,6 +52,14 @@ through this in order, in the **same commit** as the code:
 5. **Update `HANDOFF.md` last**, from the docs above rather than from memory: where the project
    stands, the current task, what comes after, and any new trap you hit.
 
+**And one more, for anything a player can see.** A change a player would notice adds **one plain
+sentence to `DATA.changelog`** in `data.js`, in the same commit — the words of the glossary at the
+top of [docs/32-the-garden-year.md](docs/32-the-garden-year.md), not the words of the code. Newest
+entry first; append a line to today's entry if there is one, and start a new dated entry if there is
+not. **A shipped entry's date is its identity and must never be edited** — the seen-marker records
+dates, so changing one re-shows the whole entry to everybody. If a change is genuinely invisible to
+a player, it adds nothing, and saying so in a line is the right answer.
+
 `HANDOFF.md` is **derived, never authored alone.** It summarizes the other documents, so a handoff
 written without steps 1–4 will confidently describe a game that the specific docs contradict — and
 the next agent will believe the specific doc. Written in this order the handoff is nearly free,

@@ -452,7 +452,11 @@ price's body and the armed board's rim. The Collect All button restates it rathe
 warmer one, because the button and the chip above it are the same fact said twice — the bed is
 ready, and here is what it pays. This adds one *use* of a colour the palette already had and **zero
 new colours**: `--strict`'s distinct set is unchanged at 133, which is the difference between a
-re-baseline and a conversation (2026-08-31).
+re-baseline and a conversation (2026-08-31). The changelog dialog's `.log-ann` row is the same case
+one more time — it restates `#fffdf7 → var(--paper-3)`, the card top every panel in the game already
+wears, rather than inventing a lighter one for a row inside a card. **The rule the two of them share:
+when a new component is the same object as an existing one, restate that object's recipe exactly and
+re-baseline; when it needs a colour the file does not have, that is a conversation.**
 
 ### 3. Objects must be anchored, not floated
 

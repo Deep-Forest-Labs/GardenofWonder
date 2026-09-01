@@ -377,6 +377,21 @@ Consequences:
 - A rebuild takes roughly a minute.
 - Never add a leading-slash path.
 
+## Playbook: ship a change a player can see
+
+1. Add **one plain sentence** to `DATA.changelog` in `data.js`, in the same commit. Newest entry
+   first; append to today's dated entry if there is one, start a new one if there is not.
+2. Write it the way the glossary at the top of [32-the-garden-year.md](32-the-garden-year.md)
+   writes: what it feels like to play. No version numbers, no file names, no mechanics vocabulary a
+   player has not met.
+3. **Never edit a shipped entry's date.** The date is its identity — the seen-marker records dates,
+   outside the save, and changing one re-shows the whole entry to every player.
+4. If the change is genuinely invisible to a player, it adds nothing here. Say so in a line and move
+   on; the rule exists so that visible work is announced, not so that every commit is.
+
+The popup itself needs no work: it batches everything unread into one list, shows at most once a
+day, never stands beside a What's New announcement, and never greets a brand-new player.
+
 ## Documentation duty
 
 The checklist is in [AGENTS.md](../AGENTS.md#definition-of-done) and runs in the **same commit** as

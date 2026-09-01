@@ -750,6 +750,72 @@ const Game = (() => {
     return null;
   }
 
+  /* --- the changelog --- */
+  /* Its marker lives beside the announcement flags and outside the save, for the
+     same reason and one more: a Turn wipes the garden and a `reset`
+     announcement replaces it outright, and neither is a reason to hand somebody
+     a list of changes they have already read.
+
+     Two things are recorded. `seen` is the set of entry dates read — the date is
+     the identity, which is why a shipped entry's date must never be edited —
+     and `day` is the last day a popup went up, which is how "at most once a day"
+     is enforced without a timer. */
+  const LOG_KEY = 'gw-log';
+
+  function logMark() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(LOG_KEY) || 'null');
+      if (!raw || typeof raw !== 'object') return { seen: [], day: '' };
+      return {
+        seen: Array.isArray(raw.seen) ? raw.seen.filter((d) => typeof d === 'string') : [],
+        day: typeof raw.day === 'string' ? raw.day : ''
+      };
+    } catch (e) {
+      return { seen: [], day: '' };
+    }
+  }
+
+  /** Every entry this player has not read, newest first. Ignores the once-a-day
+      rule on purpose: the menu row's badge asks "is there anything new here",
+      and a dot that goes out for the rest of the day would be lying. */
+  function changelogUnseen() {
+    const all = DATA.changelog || [];
+    const seen = logMark().seen;
+    return all.filter((e) => e && e.date && seen.indexOf(e.date) === -1);
+  }
+
+  /** Whether one should go up on its own right now. Three gates, all of them
+      about not being a nuisance: something unread, nothing shown yet today, and
+      no What's New announcement waiting — that one wins and this waits for the
+      next open, because two popups on one boot is one too many. */
+  function changelogDue() {
+    if (!changelogUnseen().length) return false;
+    if (logMark().day === todayKey()) return false;
+    return !pendingAnnouncement();
+  }
+
+  /** Read: every entry marked, and today spent. */
+  function markChangelogSeen() {
+    const all = DATA.changelog || [];
+    try {
+      localStorage.setItem(LOG_KEY, JSON.stringify({ seen: all.map((e) => e.date), day: todayKey() }));
+    } catch (e) { /* quota */ }
+    return true;
+  }
+
+  /** A player arriving for the first time does not need a list of what changed
+      before they got here — their first changelog is the game. Called from boot
+      on a fresh save only, and only when nothing has been recorded yet, so it
+      can never wipe a returning player's history. */
+  function seedChangelogSeen() {
+    if (localStorage.getItem(LOG_KEY)) return false;
+    return markChangelogSeen();
+  }
+
+  function clearChangelogSeen() {
+    try { localStorage.removeItem(LOG_KEY); } catch (e) { /* private mode */ }
+  }
+
   function reset() {
     localStorage.removeItem(SAVE_KEY);
     // Without this the next load() re-imports the old Idle Garden Reborn save
@@ -4845,6 +4911,7 @@ const Game = (() => {
   return {
     state, on, emit, load, save, saveNow, reset, nowSeconds,
     newsSeen, markNewsSeen, clearNewsSeen, pendingAnnouncement,
+    changelogUnseen, changelogDue, markChangelogSeen, seedChangelogSeen, clearChangelogSeen,
     profile, profileName, setProfileName, setProfileAvatar, avatarChoices,
     PROFILE_NAME_MAX,
     credit,

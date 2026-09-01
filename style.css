@@ -4792,6 +4792,39 @@ button:focus-visible{
   font-size:12px;font-weight:800;font-style:italic;color:var(--ink-soft);
 }
 .news .big-btn{margin-top:12px}
+
+/* THE CHANGELOG — the same card, the same bullets, no art of its own. It differs
+   from the announcement in one way that matters: it is a list of DAYS rather
+   than one event, so it needs a date rule and a way in to the announcement that
+   does have a picture. */
+.log-day + .log-day{margin-top:12px;padding-top:12px;border-top:2px dashed var(--paper-3)}
+.log-day h3{
+  margin:0 0 7px;
+  font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-soft);
+}
+/* The one row in the changelog with a picture behind it, so it is allowed to
+   look like one — and it is a real button, because it goes somewhere. */
+.log-ann{
+  width:100%;margin:0 0 12px;padding:7px 9px;
+  display:flex;align-items:center;gap:10px;text-align:left;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+  box-shadow:0 3px 0 var(--ink-2);
+  font:inherit;color:var(--ink);
+}
+.log-ann:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink-2)}
+.log-ann-art{
+  flex:none;width:52px;height:52px;overflow:hidden;
+  border:2.5px solid var(--ink);border-radius:var(--r-sm);
+  background:var(--paper-3);
+}
+.log-ann-art img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
+.log-ann-txt{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.log-ann-txt b{font-size:14px;font-weight:800;line-height:1.15}
+.log-ann-txt small{font-size:11px;font-weight:700;color:var(--ink-soft)}
+.log-ann svg{width:18px;height:18px;flex:none;color:var(--ink-soft)}
+
 @media (prefers-reduced-motion:reduce){
   .news-card{transition:none;transform:none}
 }

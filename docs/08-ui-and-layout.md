@@ -420,6 +420,32 @@ fresh garden.
 before the flower's greeting, and both stand down while it is up — the welcome sheet takes its turn
 from `UI.afterNews()` if the announcement did not send the player back to the start.
 
+### The changelog (2026-08-31)
+
+**The same dialog, wearing a list of days instead of one event.** No art of its own, no `reset`, and
+it is the What's New popup's little sibling in the most literal sense: same `#news` node, same
+`ui-news.js`, same card, same seed-green bullets, same "Got it!". Sharing the module's single `open`
+variable is also what makes "never two popups" structural rather than a rule somebody has to
+remember.
+
+| Rule | Why |
+| --- | --- |
+| **At most once a day**, batching everything unread into one list | A popup on every load is a tax on opening the game |
+| **Never beside an announcement.** If one is pending it wins and the changelog waits for the next open | Two modals on one boot is one too many, and the one with the fresh-garden button cannot wait |
+| **Never to a brand-new player.** The marker is seeded as read on a fresh save | Their first changelog is the game |
+| **The marker is `gw-log`, outside the save** | A Turn and a `reset` both wipe the save, and neither is a reason to re-show a list somebody has read |
+| **The newest art announcement is its top row**, a real button into the announcement dialog | One door to "what changed", rather than a menu row that only ever showed the last big announcement and went quiet between builds |
+| **Newest entry first**, unlike `DATA.announcements` | This one is read top-down |
+
+**The menu's What's New row opens it**, and the badge dot on both the row and the hamburger now
+means *there is something behind here you have not read* — an announcement **or** a changelog entry.
+Those two conditions must stay identical: a menu that badges inside itself while the button that
+opens it stays quiet is a menu nobody opens.
+
+**Adding an entry is a rule, not a chore.** AGENTS.md's definition of done says a change a player can
+see adds its plain sentence to `DATA.changelog` in the same commit — see the playbook in
+[09-conventions.md](09-conventions.md).
+
 ### The plant picker row
 
 A `seeds` row is a shelf item, not a table row. Left to right: a circular art badge tinted from the

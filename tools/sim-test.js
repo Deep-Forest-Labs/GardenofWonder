@@ -7206,6 +7206,64 @@ check('every announcement carries what the dialog needs to draw itself',
   (DATA.announcements || []).every((a) => a.id && a.title && a.img
     && Array.isArray(a.bullets) && a.bullets.length >= 1
     && a.img.indexOf('/') !== 0));
+
+group('the changelog is a second marker outside the save, with three gates on it');
+G.clearChangelogSeen();
+G.clearNewsSeen();
+check('every entry is unread on a fresh install',
+  G.changelogUnseen().length === DATA.changelog.length && DATA.changelog.length > 0);
+/* GATE 1: an unread announcement wins outright. Two popups on one boot is one
+   too many, and the one with the picture and the fresh-garden button is the one
+   that cannot wait. */
+check('an unread announcement holds the changelog back',
+  Boolean(G.pendingAnnouncement()) && G.changelogDue() === false);
+G.markNewsSeen(DATA.announcements[DATA.announcements.length - 1].id);
+check('and with the announcement read it is due', G.changelogDue() === true);
+/* GATE 2: once a day. `markChangelogSeen()` spends today as well as marking the
+   entries, so a second load the same afternoon is quiet. */
+G.markChangelogSeen();
+check('reading it marks every entry and spends the day',
+  G.changelogUnseen().length === 0 && G.changelogDue() === false);
+check('and nothing unread means nothing due even on a new day',
+  (() => {
+    G.clearChangelogSeen();
+    /* Everything seen, but the day is long past — still nothing to show. */
+    localStorage.setItem('gw-log', JSON.stringify({ seen: DATA.changelog.map((e) => e.date), day: '1999-1-1' }));
+    return G.changelogUnseen().length === 0 && G.changelogDue() === false;
+  })());
+/* GATE 3, and the whole reason the marker is not in the save: a Turn wipes the
+   garden and a `reset` announcement replaces it outright. Neither is a reason to
+   hand somebody a list they have already read. FALSE if the marker ever moves
+   into state, which is what makes it worth writing. */
+check('the marker survives the wipe, exactly as the announcement flags do', (() => {
+  G.clearChangelogSeen();
+  G.markChangelogSeen();
+  S.credits = 987654;
+  G.saveNow();
+  G.reset();
+  return S.credits !== 987654 && G.changelogUnseen().length === 0;
+})());
+check('a first-time player is seeded, not shown', (() => {
+  G.clearChangelogSeen();
+  const seeded = G.seedChangelogSeen();
+  return seeded && G.changelogUnseen().length === 0 && G.changelogDue() === false;
+})());
+check('and seeding refuses to touch a marker that already exists', (() => {
+  localStorage.setItem('gw-log', JSON.stringify({ seen: [], day: '1999-1-1' }));
+  const seeded = G.seedChangelogSeen();
+  return seeded === false && G.changelogUnseen().length === DATA.changelog.length;
+})());
+/* The dates are the identity, so a duplicate would make one entry unreachable
+   and editing a shipped one would re-show it to everybody. */
+check('every entry has a unique date and at least one plain line',
+  (DATA.changelog || []).every((e, i) => e.date && /^\d{4}-\d{2}-\d{2}$/.test(e.date)
+    && Array.isArray(e.lines) && e.lines.length >= 1
+    && e.lines.every((l) => typeof l === 'string' && l.length > 10)
+    && DATA.changelog.findIndex((o) => o.date === e.date) === i));
+check('and the newest entry is FIRST, which is the order the popup reads',
+  (DATA.changelog || []).every((e, i, a) => i === 0 || a[i - 1].date >= e.date));
+G.clearChangelogSeen();
+G.clearNewsSeen();
 G.clearNewsSeen();
 G.reset();
 

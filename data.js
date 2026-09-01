@@ -623,6 +623,31 @@ const DATA = {
      exception is written down in docs/09-conventions.md, and anything added
      here has to join the CORE list in sw.js or an installed app shows a
      broken square. */
+  /* THE CHANGELOG — the What's New popup's little sibling. No art, no reset,
+     never more than once a day: a short list of what changed since a player last
+     looked, in the plain words of the glossary at the top of doc 32. Newest
+     FIRST here, unlike `announcements`, because this list is read top-down.
+
+     `date` is the identity as well as the label — the seen-marker records dates,
+     so an entry's date must never be edited after it ships.
+
+     AGENTS.md's definition of done says a change a player can see adds its line
+     here in the same commit. One sentence, no version numbers, no file names:
+     write what it feels like to play, not what was done. */
+  changelog: [
+    {
+      date: '2026-08-31',
+      lines: [
+        'Sound now has three sliders — effects, ambience and music — each with its own mute, in Settings.',
+        'A thunderstorm sounds like rain again, and it breathes instead of sitting on one note.',
+        'The app icon on your home screen is the flower that talks to you.',
+        'Fall has a Collect All button when the whole bed is ready, with the bonus applied in one go.',
+        'Fall\u2019s garden lines up with your summer garden when you swipe between them.',
+        'The gem chip on a growing plant shows its price and no longer counts down at you.'
+      ]
+    }
+  ],
+
   announcements: [
     {
       id: 'garden-year',

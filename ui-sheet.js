@@ -2204,8 +2204,12 @@
   function newsReport() {
     const all = DATA.announcements || [];
     const next = Game.pendingAnnouncement();
+    const log = DATA.changelog || [];
+    const unread = Game.changelogUnseen().length;
     return `${all.length} announcement${all.length === 1 ? '' : 's'} · ${
-      next ? `"${next.title}" would show on the next load${next.reset ? ' and start a fresh garden' : ''}` : 'all seen'}`;
+      next ? `"${next.title}" would show on the next load${next.reset ? ' and start a fresh garden' : ''}` : 'all seen'}
+      · ${log.length} changelog entr${log.length === 1 ? 'y' : 'ies'}, ${unread} unread${
+      Game.changelogDue() ? ', due on the next load' : ''}`;
   }
 
   function petalReport() {
@@ -2314,7 +2318,9 @@
         <button class="dev-btn" data-dev="fallHarvestAll" data-arg="1">Harvest the bed</button>`)}
       ${devRow(`What's New — ${newsReport()}`, `
         <button class="dev-btn" data-dev="newsShow" data-arg="1">Preview announcement</button>
-        <button class="dev-btn warn" data-dev="newsClear" data-arg="1">Clear announcement flags</button>`)}
+        <button class="dev-btn warn" data-dev="newsClear" data-arg="1">Clear announcement flags</button>
+        <button class="dev-btn" data-dev="logShow" data-arg="1">Open the changelog</button>
+        <button class="dev-btn warn" data-dev="logClear" data-arg="1">Clear changelog flags</button>`)}
       <button class="big-btn" data-dev="clear" data-arg="1">Clear everything armed</button>
       ${devRow('Screen', `<p class="sheet-note">${screenReport()}</p>`)}
       <p class="sheet-note">Day phase ${(Game.dayPhase() * 100).toFixed(0)}% · ${Game.isNight() ? 'night' : 'day'} ·
@@ -2476,6 +2482,16 @@
       case 'newsClear':
         Game.clearNewsSeen();
         UI.toast({ title: 'Announcements forgotten', body: 'The next load shows the newest one again.', art: Icons.get('book') });
+        break;
+      case 'logClear':
+        Game.clearChangelogSeen();
+        UI.toast({ title: 'Changelog forgotten', body: 'The next load shows every entry again.', art: Icons.get('scroll') });
+        break;
+      case 'logShow':
+        ok = Boolean(UI.openChangelog && UI.openChangelog());
+        deny = 'There is nothing in DATA.changelog to show.';
+        redraw = false;
+        if (ok) closeSheet();
         break;
       case 'yearSeeds': D.grantSeeds(Number(arg) || 50); break;
       case 'petalBuy':

@@ -66,9 +66,15 @@
       note: 'Gems, decor and the odd bundle', open: () => UI.openSheet('shop') },
     { id: 'bonuses', icon: 'book', tint: '#5c7cfa', label: 'Almanac',
       note: 'Every flower, every creature', open: () => UI.openSheet('bonuses') },
+    /* One door to "what changed": the daily changelog, with the latest art
+       announcement as its top row rather than as a second destination. The dot
+       means "there is something behind this row you have not read", which is
+       either kind of new thing — a row that badged only for announcements went
+       quiet between builds and stopped being worth looking at. */
     { id: 'news', icon: 'bell', tint: '#ffe066', label: "What's New",
-      note: 'The latest announcement', dot: () => Boolean(Game.pendingAnnouncement()),
-      open: () => UI.openAnnouncement() },
+      note: 'What changed, and when',
+      dot: () => Boolean(Game.pendingAnnouncement()) || Game.changelogUnseen().length > 0,
+      open: () => UI.openChangelog() },
     { id: 'settings', icon: 'gear', tint: '#8b9bb0', label: 'Settings',
       note: 'Sound, music, and your save', open: () => UI.openSheet('settings') },
 
@@ -83,14 +89,17 @@
   /* ---------------- the badge dot ----------------
 
      The dock's attention dot, on a HUD button for the first time. It lights
-     when the newest announcement has not been read and goes out when it has.
-     Deliberately not a count: one announcement is one thing to look at.
+     when there is something behind the hamburger nobody has read — an
+     announcement, or a changelog entry — and goes out when there is not. It has
+     to be the SAME condition the What's New row badges on: a menu that badges
+     inside itself while the button that opens it stays quiet is a menu nobody
+     opens. Deliberately not a count: one thing to look at is one thing.
 
      It is a solid disc in its base style with no animation of its own, because
      a state whose only carrier is movement has no carrier at all with the
      reduced-motion preference on. */
   function updateDot() {
-    const want = Boolean(Game.pendingAnnouncement());
+    const want = Boolean(Game.pendingAnnouncement()) || Game.changelogUnseen().length > 0;
     if (dot.hidden === !want) return;
     dot.hidden = !want;
   }
