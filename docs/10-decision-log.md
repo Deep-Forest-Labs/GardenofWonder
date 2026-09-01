@@ -5,6 +5,34 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (design) — The daily changelog: the What's New popup's little sibling
+
+**The owner's ask:** when a player opens the game and there are new features since they last
+looked, show a simple popup — same house styling as the What's New popup, no art required, no
+reset ever — listing what changed, in plain words. "Got it" and gone.
+
+**The spec, small on purpose:**
+- Entries are data: `DATA.changelog = [{ date, lines: [...] }]` — one entry per shipped batch,
+  each line a plain-glossary sentence a player understands ("The sky sounds like rain now").
+- The popup shows only when entries exist that this player has not seen, at most once per day,
+  batching everything unseen into one list. A brand-new player never sees it — their first
+  changelog is the game itself; the seen-marker initialises to now on first run.
+- **Never two popups:** if a What's New announcement is pending, it wins and the changelog waits
+  for the next open.
+- The seen-marker lives beside the announcement flags, outside the save, surviving resets and
+  Turns alike.
+- Reuses `ui-news.js`'s pattern and styling — the "exactly like our other popup" ask taken
+  literally.
+
+**And the rule that keeps it alive:** AGENTS.md's definition of done gains a line — a change a
+player can see adds a changelog entry, one plain sentence, same commit. The first entry is a
+backfill of the recent run: the seasons, the skies, the Big Five, the menu.
+
+**Build home:** the upcoming fix round (it is a contained feature beside eight investigated
+fixes), sequenced after the hamburger menu lands.
+
+---
+
 ## 2026-08-31 (gate) — The hamburger menu, drawn before it is built
 
 **The owner's reference is Monopoly Go's slide-out menu, and what is being borrowed is its
