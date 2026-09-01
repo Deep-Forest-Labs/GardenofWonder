@@ -5,6 +5,42 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-01 (ruling) — Growth stages are commissioned, and the bud holds until almost ready
+
+**The owner commissioned the Growth Stages pass**: every flower in the main garden gets four
+distinct visual stages — sprout, stem, bud, bloom — the way Animal Crossing draws them, replacing
+today's three stages whose middle is the finished bloom scaled to a third ("the game goes from a
+small, scaled-down version of the bloom to a larger one"). Scope, ruled at commissioning: the
+Summer garden's nineteen flowers only — not Fall, not the meadow, not the Talking Flower; the ripe
+blooms are **locked** ("I think we did a good job on them"); and the stages are a Unity handoff
+deliverable — the team needs to see every state, exported. The pass runs as its own builder
+session behind a spike gate: all nineteen species at all four stages on the owner's phone, with
+threshold sliders, before any of it reaches the live plots. The prompt is written and
+pressure-tested (three adversarial critics, two of the advisor's own instructions refuted and
+corrected — the spike's chicken-and-egg with `flora.js` on main, and a byte-identical demand that
+one-markup-CSS-chooses makes impossible as first written).
+
+**And the one design question inside it is ruled: the bud holds until the plant is ALMOST ready,
+opening a little before ripeness** — "exactly like Animal Crossing... so they can kind of see it
+opening up." The opening is its own visible beat, arriving just ahead of the ripe wiggle rather
+than underneath it. Default `DATA.growth.bloom = 0.9` of the grow (a 12s Daisy opens ~1.2s before
+ready; a slow seed opens a minute-plus early), fine-tuned on the spike's slider at the gate —
+approved values ship verbatim, per the motion gate's contract.
+
+**Rejected: opening at 25% progress** — today's behaviour, and the shrunken-bloom read the whole
+pass exists to remove. **Rejected: opening exactly at ready** — the advisor's recommendation
+(bud = growing, open flower = pick me, one clean signal), overruled because it lands the opening
+on the same beat as the ripe wiggle and the owner wants the opening watched, not merged into the
+harvest signal.
+
+**Coordination note for tonight's round:** punch-list `#14` (the head that sits off its stem) is a
+proven one-line fix in the exact `style.css` stage block this pass rewrites. `#14` lands first in
+the fix round as queued; the stages prompt tells its builder to check whether it has landed before
+taking any before-screenshots, and to carry its rule — a restated SVG transform keeps
+`transform-origin: 0 0` — into every new stage rule.
+
+---
+
 ## 2026-09-01 (performance) — The frame dip was one sky, and the instrument is worth more than the fix
 
 The owner reported a visible frame-rate dip on an iPhone 16 the morning the five skies landed, and
