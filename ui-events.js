@@ -30,7 +30,8 @@
       const c = FX.centerOf(UI.flowerBtn());
       FX.rainbowBurst(c.x, c.y);
       for (let i = 0; i < 5; i += 1) {
-        setTimeout(() => FX.confetti(Math.random() * window.innerWidth, window.innerHeight * 0.35, 20), i * 220);
+        const g = document.getElementById('game').getBoundingClientRect();
+        setTimeout(() => FX.confetti(Math.random() * g.width, g.height * 0.35, 20), i * 220);
       }
       UI.faceReact('wow');
       UI.say('wonder', true);
@@ -350,7 +351,8 @@
   /* A creature arriving is a moment, not a notification. It gets the garden's
      attention: confetti, the flower reacting, and the creature introducing
      itself in its own voice rather than the flower's. */
-  Game.on('critter', ({ def, arrived, levelled, level }) => {
+  Game.on('critter', (payload = {}) => {
+    const { def, arrived, levelled, level } = payload;
     if (!arrived && !levelled) return;
     UI.renderCritters();
     const c = critterStage();

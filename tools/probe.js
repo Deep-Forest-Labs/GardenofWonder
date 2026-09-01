@@ -90,6 +90,9 @@ const MIME = {
   '.json': 'application/json',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.mp4': 'video/mp4',
   '.webmanifest': 'application/manifest+json',
 };
 

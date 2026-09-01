@@ -2237,6 +2237,7 @@
     if (boosted.length) armed.push(`procs boosted to 50%: ${boosted.join(', ')}`);
 
     return `
+      <button class="big-btn magic" data-dev="unlockAll" data-arg="1">${Icons.get('sparkle')} Unlock all (Luke mode)</button>
       <p class="sheet-note">Nothing here is random. Each button forces the real system, so the
       animation you see is the one players get.</p>
       ${armed.length ? `<p class="dev-armed">Armed — ${armed.join(' · ')}</p>` : ''}
@@ -2344,6 +2345,17 @@
     let ok = true;
     let deny = 'That cheat needs something in the garden first.';
     switch (what) {
+      case 'unlockAll':
+        D.unlockAll();
+        UI.toast({
+          title: 'Luke mode',
+          body: 'Plots, seeds, seasons, meadow, creatures, cards and upgrades — garden left as-is.',
+          art: Icons.get('sparkle')
+        });
+        UI.buildGarden();
+        UI.renderSeasonEdges();
+        UI.syncPlanterArt && UI.syncPlanterArt();
+        break;
       case 'weather': D.setWeather(arg); break;
       /* Presentation, so it never reaches `Game.Dev` — the same line screenReport()
          walks. `weatherSequence` plays the whole shape through the real code path;

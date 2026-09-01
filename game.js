@@ -4708,6 +4708,60 @@ const Game = (() => {
       return n;
     },
 
+    /** Designer review — unlock the world without running the Turn (the garden
+        stays as-is). Turn count is raised only to open season edges; it does not
+        call turnYear(). */
+    unlockAll() {
+      const LUKE_LEVEL = 20;
+      if (state.level < LUKE_LEVEL) {
+        state.rep = cumulativeRep(LUKE_LEVEL);
+        state.level = LUKE_LEVEL;
+      }
+      state.year.turnsCompleted = Math.max(state.year.turnsCompleted, YEAR().springTurn);
+      state.grid.forEach((cell) => { cell.locked = false; });
+      DATA.seeds.forEach((s) => { state.seedUnlocks[s.id] = true; });
+      for (let i = 0; i < MEADOW.cells; i += 1) state.apiary.locked[i] = false;
+      state.bench.side = BENCH.cols;
+      Object.keys(UPGRADE_EFFECTS).forEach((key) => {
+        let guard = 0;
+        while (!upgradeMaxed(key) && guard < 200) {
+          UPGRADE_EFFECTS[key]();
+          guard += 1;
+        }
+      });
+      ['tapPower', 'critChance', 'critMult', 'comboMeter', 'autoHarvest'].forEach((key) => {
+        for (let i = 0; i < 25; i += 1) UPGRADE_EFFECTS[key]();
+      });
+      CREATURES.forEach((def) => {
+        if (!critterHere(def.id)) moveIn(def, CREATURE_STARS);
+      });
+      tendFreeSlots();
+      CREATURES.forEach((def) => {
+        const home = critterHome(def.id);
+        if (home) home.fedUntil = nowSeconds() + 86400 * 7;
+      });
+      ALBUM.sets.forEach((set) => {
+        set.cards.forEach((c) => { state.cards[c.id] = Math.max(1, cardCount(c.id)); });
+        if (state.setsClaimed.indexOf(set.id) === -1) state.setsClaimed.push(set.id);
+      });
+      DATA.seeds.forEach((s) => {
+        state.discovered[s.id] = Math.max(state.discovered[s.id] || 0, 10);
+      });
+      Dev.grantGold(5e6);
+      state.gems = Math.max(state.gems, 500);
+      state.savedSeeds = Math.max(state.savedSeeds, 5000);
+      state.packs = Math.max(state.packs, 20);
+      DATA.boosters.forEach((b) => {
+        state.boostInv[b.id] = Math.max((state.boostInv[b.id] || 0), 5);
+      });
+      save();
+      emit('currency');
+      emit('grid');
+      emit('panels');
+      notePairs();
+      return true;
+    },
+
     clearAll() {
       dev.rarity = null;
       dev.gem = false;

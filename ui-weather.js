@@ -183,7 +183,8 @@
        read was a second forced layout in a function that already has one. */
     if (!slot.classList.contains('wx-splashed')) slot.classList.add('wx-splashed');
     later(() => slot.classList.remove('wx-splashed'), 340);
-    FX.splashAt(r.left + r.width / 2, r.top + r.height * 0.3);
+    const p = FX.gamePoint(r.left + r.width / 2, r.top + r.height * 0.3);
+    FX.splashAt(p.x, p.y);
   }
 
   function rainOnPlants() {

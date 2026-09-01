@@ -1,7 +1,7 @@
 /* Garden Wonder — juice: canvas particles, screen shake, floating text, haptics. */
 
 const FX = (() => {
-  let canvas, ctx, dpr = 1, W = 0, H = 0;
+  let canvas, ctx, dpr = 1, W = 0, H = 0, OX = 0, OY = 0;
   let parts = [];
   let ambient = [];
   let shakeAmt = 0, shakeT = 0;
@@ -31,11 +31,16 @@ const FX = (() => {
      store is re-applied either way; the pools are only rebuilt when the window really
      changed size, which is an orientation change and nothing else. */
   function resize() {
-    const nw = window.innerWidth;
-    const nh = window.innerHeight;
-    const same = nw === W && nh === H;
+    const rect = gameEl ? gameEl.getBoundingClientRect() : null;
+    const nw = Math.round(rect ? rect.width : (window.innerWidth || 0));
+    const nh = Math.round(rect ? rect.height : (window.innerHeight || 0));
+    const nox = rect ? rect.left : 0;
+    const noy = rect ? rect.top : 0;
+    const same = nw === W && nh === H && nox === OX && noy === OY;
     W = nw;
     H = nh;
+    OX = nox;
+    OY = noy;
     dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = Math.floor(W * dpr);
     canvas.height = Math.floor(H * dpr);
@@ -55,7 +60,11 @@ const FX = (() => {
     const el = magnetTargets[name];
     if (!el) return null;
     const r = el.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    return { x: r.left + r.width / 2 - OX, y: r.top + r.height / 2 - OY };
+  }
+
+  function gamePoint(x, y) {
+    return { x: x - OX, y: y - OY };
   }
 
   /* ---------- ambient drifting petals ---------- */
@@ -391,7 +400,7 @@ const FX = (() => {
   function floatAt(el, text, kind = '') {
     if (!el) return;
     const r = el.getBoundingClientRect();
-    float(r.left + r.width / 2, r.top + r.height * 0.35, text, kind);
+    float(r.left + r.width / 2 - OX, r.top + r.height * 0.35 - OY, text, kind);
   }
 
   /* ---------- screen shake ---------- */
@@ -550,12 +559,12 @@ const FX = (() => {
 
   function centerOf(el) {
     const r = el.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    return { x: r.left + r.width / 2 - OX, y: r.top + r.height / 2 - OY };
   }
 
   return {
     init, step, coins, sparks, stars, confetti, ring, rainbowBurst,
-    float, floatAt, shake, haptic, setMagnet, centerOf,
+    float, floatAt, shake, haptic, setMagnet, centerOf, gamePoint,
     weather, weatherOff, splashAt,
     get reduced() { return reduced; },
     get weatherCount() { return Math.round(wxPool.length * wxThin); },

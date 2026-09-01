@@ -20,6 +20,13 @@
         wrap.innerHTML = `
           <div class="flower-glow"></div>
           <div class="combo-ring"></div>
+          <span class="art-fb-eye-patch" aria-hidden="true"></span>
+          <div class="art-fb-stack">
+            <canvas class="art-fb-layer is-front" aria-hidden="true"></canvas>
+            <video class="art-fb-src" muted loop playsinline preload="auto" aria-hidden="true" hidden></video>
+            <canvas class="art-fb-layer" aria-hidden="true"></canvas>
+            <video class="art-fb-src" muted loop playsinline preload="auto" aria-hidden="true" hidden></video>
+          </div>
           <button class="flower-btn" id="flowerBtn" aria-label="Tap the talking flower">${Flora.talkingFlower()}</button>
           <div class="speech" id="speech"></div>`;
         el.garden.appendChild(wrap);
@@ -38,7 +45,10 @@
          for the life of the node and the stylesheet decides when a sky darkens
          it. Nothing here has to know what the weather is. */
       b.innerHTML = `
-        <div class="plot-inner wx-wet"><div class="plant-slot"></div></div>
+        <span class="plot-art plot-art-soil" aria-hidden="true"></span>
+        <div class="plot-inner wx-wet"></div>
+        <span class="plot-art plot-art-frame" aria-hidden="true"></span>
+        <div class="plant-slot"></div>
         <div class="empty-mark">${Icons.get('plantSpot')}</div>
         <div class="lock-badge">${Icons.get('lock')}<div class="lock-cost">${Icons.get('coin')}<span></span></div></div>
         <div class="bar"><i></i></div>
@@ -253,32 +263,43 @@
           const afford = S.credits >= cost ? '1' : '0';
           if (c.afford !== afford) { v.root.dataset.afford = afford; c.afford = afford; }
         }
-        if (c.seed !== null) { v.slot.innerHTML = ''; c.seed = null; c.stage = null; }
+        if (c.seed !== null) { clearArtPlant(v.slot); v.slot.innerHTML = ''; c.seed = null; c.stage = null; }
         continue;
       }
 
       if (!cell.seed) {
-        if (c.seed !== null) { v.slot.innerHTML = ''; c.seed = null; c.stage = null; }
+        if (c.seed !== null) { clearArtPlant(v.slot); v.slot.innerHTML = ''; c.seed = null; c.stage = null; }
         continue;
       }
 
       if (c.seed !== cell.seed) {
-        const sdef = Game.seedById(cell.seed);
-        v.slot.innerHTML = sdef ? Flora.plant(sdef) : '';
-        /* The sheen and the wind lean are opt-in hooks the sky reads, so they go
-           on once with the plant rather than being written every frame. Only
-           here, where the plant is already being replaced — a class flipped on
-           the frame tier would be eight DOM writes a frame for a state that
-           changes four times an hour. */
-        const grown = v.slot.firstElementChild;
-        if (grown) grown.classList.add('wx-glint', 'wx-lean');
+        if (artPlantOn()) {
+          clearArtPlant(v.slot);
+          v.slot.innerHTML = artPlantHtml();
+        } else {
+          const sdef = Game.seedById(cell.seed);
+          v.slot.innerHTML = sdef ? Flora.plant(sdef) : '';
+          const grown = v.slot.firstElementChild;
+          if (grown) grown.classList.add('wx-glint', 'wx-lean');
+        }
         c.seed = cell.seed;
         c.stage = null;
       }
 
+      if (artPlantOn()) {
+        syncArtPlant(v.slot, cell, state);
+        if (state === 'ready') {
+          if (c.stage !== 'bloom') { v.root.dataset.stage = 'bloom'; c.stage = 'bloom'; }
+        } else if (c.stage !== 'grow-vid') {
+          delete v.root.dataset.stage;
+          c.stage = 'grow-vid';
+        }
+      } else {
+        const p = Game.progressOf(cell);
+        const st = stageOf(p);
+        if (c.stage !== st) { v.root.dataset.stage = st; c.stage = st; }
+      }
       const p = Game.progressOf(cell);
-      const st = stageOf(p);
-      if (c.stage !== st) { v.root.dataset.stage = st; c.stage = st; }
       const w = (p * 100).toFixed(1) + '%';
       if (c.bar !== w) { v.bar.style.width = w; c.bar = w; }
     }
@@ -287,7 +308,74 @@
   /* ============ talking flower ============ */
   let speechTimer = null;
   let lastSpeech = 0;
+  const SPEECH_SHOW_MS = 2400;
   let idleSince = Date.now() / 1000;
+
+  /* Speech queue — mapped clips wait their turn; generic laugh/aha never queue. */
+  const speechQueue = [];
+  let speechBusy = false;
+  let speechToken = 0;
+
+  function hideSpeechBubble() {
+    if (!speechEl) return;
+    speechEl.classList.remove('show');
+    clearTimeout(speechTimer);
+    speechTimer = null;
+  }
+
+  function showSpeechBubble(text) {
+    if (!speechEl) return;
+    speechEl.textContent = text;
+    speechEl.classList.add('show');
+    clearTimeout(speechTimer);
+    speechTimer = null;
+  }
+
+  function finishSpeechItem(token) {
+    if (token !== speechToken) return;
+    speechBusy = false;
+    hideSpeechBubble();
+    if (speechQueue.length) drainSpeechQueue();
+    else returnArtFbIdle();
+  }
+
+  function drainSpeechQueue() {
+    if (speechBusy || !speechQueue.length || !speechEl) return;
+    if (!el.coach.hidden) return;
+
+    const item = speechQueue.shift();
+    speechBusy = true;
+    const token = ++speechToken;
+    lastSpeech = Date.now() / 1000;
+    showSpeechBubble(item.text);
+    Sound.resume();
+
+    if (!el.game.classList.contains('art-planters')) {
+      speechTimer = setTimeout(() => finishSpeechItem(token), SPEECH_SHOW_MS);
+      return;
+    }
+
+    const clip = item.clipUrl || fbClipForSpeech(item.text);
+    if (!clip) {
+      speechTimer = setTimeout(() => finishSpeechItem(token), SPEECH_SHOW_MS);
+      return;
+    }
+
+    playArtFbClip(clip, false, true, () => finishSpeechItem(token));
+  }
+
+  function enqueueSpeech(text, force, clipUrl) {
+    if (!text) return false;
+    if (!el.coach.hidden) return false;
+    const now = Date.now() / 1000;
+    const mapped = fbSpeechMapped(text, clipUrl);
+    const backlog = speechBusy || speechQueue.length > 0;
+    if (!mapped && backlog) return false;
+    if (!force && !backlog && now - lastSpeech < 3.2) return false;
+    speechQueue.push({ text, clipUrl });
+    drainSpeechQueue();
+    return true;
+  }
 
   function noteActivity() {
     idleSince = Date.now() / 1000;
@@ -325,7 +413,7 @@
 
   function say(bucket, force) {
     const lines = FLOWER_LINES[bucket] || FLOWER_LINES.idle;
-    sayText(lines[(Math.random() * lines.length) | 0], force);
+    sayText(lines[(Math.random() * lines.length) | 0], force, bucket);
   }
 
   /* The same bubble and the same cooldown, for lines that live somewhere other
@@ -333,17 +421,8 @@
   /* Returns whether it actually drew. Every existing caller ignores it; the
      meadow's one-time signpost does not, because a line it never showed must
      not be counted as shown. */
-  function sayText(text, force) {
-    const now = Date.now() / 1000;
-    if (!text) return false;
-    if (!el.coach.hidden) return false; // don't stack a bubble on top of a coach mark
-    if (!force && now - lastSpeech < 3.2) return false;
-    lastSpeech = now;
-    speechEl.textContent = text;
-    speechEl.classList.add('show');
-    clearTimeout(speechTimer);
-    speechTimer = setTimeout(() => speechEl.classList.remove('show'), 2400);
-    return true;
+  function sayText(text, force, bucket, clipUrl) {
+    return enqueueSpeech(text, force, clipUrl);
   }
 
   let faceTimer = null;
@@ -938,6 +1017,7 @@
       const c = FX.centerOf(el.btnPower);
       FX.sparks(c.x, c.y, 12, '#ffe066');
       FX.ring(c.x, c.y, '#ffffff', 0.45, 70);
+      playArtFbClip(ART_VIDEO.fbPowerup());
       /* The seat empties the instant it is spent, so the next held boost takes
          its place and "a running boost cannot be refreshed" stays true by
          construction rather than by a check. */
@@ -969,7 +1049,11 @@
     else UI.openSheet(tab);
   });
 
-  $('#btnDev').addEventListener('click', () => UI.openSheet('dev'));
+  $('#btnDev').addEventListener('click', () => {
+    Sound.resume();
+    if (el.game.classList.contains('art-planters')) UI.sayCheater();
+    UI.openSheet('dev');
+  });
   el.seasonEdges.addEventListener('click', (e) => {
     const b = e.target.closest('[data-season]');
     if (b) goSeason(b.dataset.season);
@@ -1035,7 +1119,503 @@
       }
       season = 'summer';
     }
+    syncPlanterArt();
     renderSeasonEdges();
+  }
+
+  /* Raster art — art/video/ (bgs per season; spring flower for all seasons for now). */
+  const BG_VIDEO_SEASON = { spring: 'summer', summer: 'spring', fall: 'fall', winter: 'winter' };
+  const ART_VIDEO = {
+    bg: (s) => `art/video/bg/${BG_VIDEO_SEASON[s] || s}.mp4`,
+    fbPowerup: () => 'art/video/flower/spring-powerup-1.mp4',
+    plantGrow: () => 'art/video/plant/sunflower-grow.mp4',
+    plantReady: () => 'art/video/plant/sunflower-finish-loop.mp4'
+  };
+
+  const FB_IDLE_CLIPS = [
+    'art/video/flower/spring-idle1.mp4',
+    'art/video/flower/idle-2.mp4',
+    'art/video/flower/idle-3.mp4'
+  ];
+  const fbIdleIdx = new WeakMap();
+
+  const FB_SPEECH_DIR = 'art/video/flower/speech-batch-1/';
+  const FB_SPEECH_DIR_2 = 'art/video/flower/speech-batch-2/';
+  const FB_GENERIC_TALK = [
+    'art/video/bg/generic-laugh.mp4',
+    'art/video/bg/generic-aha.mp4'
+  ];
+  /* Line → clip. Unmapped lines still pick a generic talk clip. */
+  const FB_SPEECH = {
+    'Well hello, gardener!': [`${FB_SPEECH_DIR}hello-friend.mp4`, `${FB_SPEECH_DIR}hello-there2.mp4`],
+    'You came back!': `${FB_SPEECH_DIR}you-came-back.mp4`,
+    'The soil missed you.': `${FB_SPEECH_DIR}the-soil-missed-you.mp4`,
+    'Ready to grow something?': `${FB_SPEECH_DIR}ready-to-grow-something.mp4`,
+    'Ooh, do that again!': `${FB_SPEECH_DIR}ooh-do-that-again.mp4`,
+    'Tickles!': `${FB_SPEECH_DIR}tickles.mp4`,
+    'Cheater!': `${FB_SPEECH_DIR}cheater.mp4`,
+    'Keep it coming!': `${FB_SPEECH_DIR_2}keep-it-coming.mp4`,
+    'That is the spirit!': `${FB_SPEECH_DIR_2}that-is the-spirit.mp4`,
+    'More petals, please!': `${FB_SPEECH_DIR_2}more-petals-please.mp4`,
+    'Beautiful harvest!': `${FB_SPEECH_DIR_2}beautiful-harvest.mp4`,
+    'WOW! Critical bloom!': `${FB_SPEECH_DIR_2}wow-critical-blooom.mp4`,
+    'New ground to grow on!': `${FB_SPEECH_DIR_2}new-ground-to-grow-on.mp4`,
+    'Save up a few coins first!': `${FB_SPEECH_DIR_2}save-up-a-few-coins.mp4`,
+    'Rain! The garden loves this.': `${FB_SPEECH_DIR_2}rain-the-garden-loves-this.mp4`,
+    'WONDERRRR!': `${FB_SPEECH_DIR_2}wonder.mp4`,
+    'A LEGENDARY bloom!': `${FB_SPEECH_DIR_2}a-l-bloomed.mp4`,
+    'Swipe down for the wild meadow.': `${FB_SPEECH_DIR_2}swipe down fopr the wild meadow.mp4`
+  };
+
+  const FB_CHEATER_LINE = 'Cheater!';
+
+  function sayCheater() {
+    return sayText(FB_CHEATER_LINE, true, 'dev', FB_SPEECH[FB_CHEATER_LINE]);
+  }
+
+  function fbSpeechForLine(text) {
+    const hit = FB_SPEECH[text];
+    if (!hit) return '';
+    return Array.isArray(hit) ? hit[(Math.random() * hit.length) | 0] : hit;
+  }
+
+  function fbSpeechMapped(text, clipUrl) {
+    if (clipUrl) return true;
+    return Boolean(FB_SPEECH[text]);
+  }
+
+  function fbClipForSpeech(text) {
+    return fbSpeechForLine(text)
+      || FB_GENERIC_TALK[(Math.random() * FB_GENERIC_TALK.length) | 0];
+  }
+
+  function applyFbVideoAudio(video, withAudio = true) {
+    video.muted = !withAudio || !Sound.prefs.sfx;
+    video.volume = withAudio ? Math.min(1, Math.max(0, Sound.prefs.sfxVol)) : 1;
+  }
+
+  function artPlantOn() {
+    return el.game.classList.contains('art-planters');
+  }
+
+  function artPlantHtml() {
+    return `<div class="art-plant-grow wx-glint wx-lean">
+      <video class="art-plant-src" muted playsinline preload="auto" aria-hidden="true" hidden></video>
+      <canvas class="art-plant-layer" aria-hidden="true"></canvas>
+    </div>`;
+  }
+
+  const artPlantState = new WeakMap();
+
+  function applyArtPlantSync(video, cell, state) {
+    if (state === 'ready') {
+      video.loop = true;
+      if (video.paused && video.readyState >= 2) video.play().catch(() => {});
+      return;
+    }
+    video.loop = false;
+    const dur = video.duration;
+    if (dur && Number.isFinite(dur)) {
+      const progress = Game.progressOf(cell);
+      const target = Math.min(Math.max(0, dur - 0.033), Math.max(0, progress * dur));
+      if (Math.abs(video.currentTime - target) > 0.008) {
+        try { video.currentTime = target; } catch (_) { /* seek while loading */ }
+      }
+    }
+    video.pause();
+  }
+
+  function bindArtPlantVideo(video, state) {
+    const ready = state === 'ready';
+    video.loop = ready;
+    video.onended = ready ? null : () => { video.pause(); };
+  }
+
+  function syncArtPlant(slot, cell, state) {
+    if (!slot || !cell || !cell.seed) return;
+    const wrap = slot.querySelector('.art-plant-grow');
+    if (!wrap) return;
+    const video = $('.art-plant-src', wrap);
+    const canvas = $('.art-plant-layer', wrap);
+    if (!video || !canvas) return;
+    bindArtPlantVideo(video, state);
+    const mode = state === 'ready' ? 'ready' : 'grow';
+    const url = mode === 'ready' ? ART_VIDEO.plantReady() : ART_VIDEO.plantGrow();
+    const sig = `${cell.plantedAt}:${cell.grow}:${mode}`;
+    const st = artPlantState.get(slot);
+    const paint = () => {
+      startFbPaint(video, canvas);
+      applyArtPlantSync(video, cell, state);
+    };
+    if (!st || st.sig !== sig || video.dataset.artSrc !== url) {
+      stopFbPaint(canvas);
+      artPlantState.set(slot, { sig });
+      video.dataset.artSrc = '';
+      setArtVideo(video, url, (ok) => {
+        if (ok !== false) {
+          if (mode === 'grow') {
+            try { video.currentTime = 0; } catch (_) {}
+          }
+          paint();
+        }
+      }, false, { play: mode === 'ready' });
+      return;
+    }
+    applyArtPlantSync(video, cell, state);
+  }
+
+  function clearArtPlant(slot) {
+    if (!slot) return;
+    const canvas = $('.art-plant-layer', slot);
+    if (canvas) stopFbPaint(canvas);
+    artPlantState.delete(slot);
+  }
+
+  const FB_FADE_MS = 520;
+  const fbStackState = new WeakMap();
+  const fbClipEnd = new WeakMap();
+  const fbFadeTimers = new WeakMap();
+  const fbFadeDone = new WeakMap();
+
+  function fbFadeDur() {
+    return FX.reduced ? 0 : FB_FADE_MS;
+  }
+
+  function clearFbFadeDone(stack) {
+    const done = fbFadeDone.get(stack);
+    if (done) {
+      done.canvas.removeEventListener('transitionend', done.fn);
+      fbFadeDone.delete(stack);
+    }
+  }
+
+  /** Do not start a crossfade until the incoming clip has a keyed frame on canvas. */
+  function whenFbFirstFrame(video, canvas, cb) {
+    let tries = 0;
+    const attempt = () => {
+      paintFbFrame(video, canvas);
+      if (video.readyState >= 2 && video.videoWidth > 0) {
+        cb();
+        return;
+      }
+      if (++tries < 90) requestAnimationFrame(attempt);
+      else cb();
+    };
+    attempt();
+  }
+
+  function fbStacks() {
+    return $$('.art-fb-stack');
+  }
+
+  function fbStackLayers(stack) {
+    if (!fbStackState.has(stack)) {
+      const canvases = $$('.art-fb-layer', stack);
+      const videos = $$('.art-fb-src', stack);
+      fbStackState.set(stack, {
+        front: canvases[0] && canvases[0].classList.contains('is-front') ? 0 : 1,
+        layers: canvases.map((canvas, i) => ({ canvas, video: videos[i] }))
+      });
+    }
+    return fbStackState.get(stack);
+  }
+
+  function clearFbClipEnd(video) {
+    const prev = fbClipEnd.get(video);
+    if (prev) {
+      video.removeEventListener('ended', prev);
+      fbClipEnd.delete(video);
+    }
+  }
+
+  function crossfadeFbStack(stack, url, loop, afterFront, withAudio = true) {
+    const state = fbStackLayers(stack);
+    const fromIdx = state.front;
+    const toIdx = 1 - fromIdx;
+    const from = state.layers[fromIdx];
+    const to = state.layers[toIdx];
+    if (!from || !to) return;
+    const dur = fbFadeDur();
+    clearFbClipEnd(from.video);
+    clearFbClipEnd(to.video);
+    clearFbFadeDone(stack);
+    const pending = fbFadeTimers.get(stack);
+    if (pending) clearTimeout(pending);
+
+    const finish = () => {
+      if (finish.done) return;
+      finish.done = true;
+      clearFbFadeDone(stack);
+      const pendingDone = fbFadeTimers.get(stack);
+      if (pendingDone) clearTimeout(pendingDone);
+      fbFadeTimers.delete(stack);
+      stopFbPaint(from.canvas);
+      applyFbVideoAudio(from.video, false);
+      state.front = toIdx;
+      afterFront && afterFront(to);
+    };
+    finish.done = false;
+
+    const beginFade = () => {
+      stack.style.setProperty('--fb-fade', `${dur}ms`);
+      whenFbFirstFrame(to.video, to.canvas, () => {
+        startFbPaint(to.video, to.canvas);
+        /* One painted frame before opacity moves — avoids a blank flash on the incoming layer. */
+        requestAnimationFrame(() => {
+          to.canvas.classList.add('is-front');
+          from.canvas.classList.remove('is-front');
+          if (dur <= 0) {
+            finish();
+            return;
+          }
+          const onEnd = (ev) => {
+            if (ev.propertyName !== 'opacity') return;
+            finish();
+          };
+          fbFadeDone.set(stack, { canvas: to.canvas, fn: onEnd });
+          to.canvas.addEventListener('transitionend', onEnd);
+          fbFadeTimers.set(stack, setTimeout(finish, dur + 96));
+        });
+      });
+    };
+
+    to.video.loop = loop;
+    applyFbVideoAudio(to.video, withAudio);
+    to.video.dataset.artSrc = '';
+    setArtVideo(to.video, url, (ok) => {
+      if (ok === false) return;
+      beginFade();
+    }, withAudio);
+  }
+
+  function fbIdleClip(i) {
+    const n = FB_IDLE_CLIPS.length;
+    return FB_IDLE_CLIPS[((i % n) + n) % n];
+  }
+
+  function armIdleAdvance(stack, video, idx) {
+    clearFbClipEnd(video);
+    const onEnd = () => {
+      clearFbClipEnd(video);
+      const next = (idx + 1) % FB_IDLE_CLIPS.length;
+      fbIdleIdx.set(stack, next);
+      playIdleClip(stack, next);
+    };
+    fbClipEnd.set(video, onEnd);
+    video.addEventListener('ended', onEnd);
+  }
+
+  function playIdleClip(stack, idx) {
+    const i = typeof idx === 'number' ? idx : (fbIdleIdx.get(stack) ?? 0);
+    crossfadeFbStack(stack, fbIdleClip(i), false, (to) => {
+      armIdleAdvance(stack, to.video, i);
+    }, false);
+  }
+
+  function returnArtFbIdle() {
+    fbStacks().forEach((stack) => playIdleClip(stack));
+  }
+
+  function playArtFbClip(url, returnOnEnd = true, withAudio = true, onComplete) {
+    if (!el.game.classList.contains('art-planters') || !url) {
+      if (onComplete) onComplete();
+      return;
+    }
+    const stacks = fbStacks();
+    if (!stacks.length) {
+      if (onComplete) onComplete();
+      return;
+    }
+    let completed = false;
+    const completeOnce = () => {
+      if (completed) return;
+      completed = true;
+      if (onComplete) onComplete();
+    };
+    stacks.forEach((stack, i) => {
+      crossfadeFbStack(stack, url, false, (to) => {
+        if (onComplete) {
+          if (i !== 0) return;
+          const onEnd = () => {
+            clearFbClipEnd(to.video);
+            completeOnce();
+          };
+          fbClipEnd.set(to.video, onEnd);
+          to.video.addEventListener('ended', onEnd);
+          return;
+        }
+        if (!returnOnEnd) return;
+        const onEnd = () => {
+          clearFbClipEnd(to.video);
+          returnArtFbIdle();
+        };
+        fbClipEnd.set(to.video, onEnd);
+        to.video.addEventListener('ended', onEnd);
+      }, withAudio);
+    });
+  }
+
+  function initFbStack(stack) {
+    const state = fbStackLayers(stack);
+    const start = fbIdleIdx.get(stack) ?? 0;
+    state.layers.forEach((layer, i) => {
+      clearFbClipEnd(layer.video);
+      if (i === 0) {
+        layer.canvas.classList.add('is-front');
+        setArtFb(layer.canvas, layer.video, fbIdleClip(start), false);
+        armIdleAdvance(stack, layer.video, start);
+        fbIdleIdx.set(stack, (start + 1) % FB_IDLE_CLIPS.length);
+      } else {
+        layer.canvas.classList.remove('is-front');
+        stopFbPaint(layer.canvas);
+      }
+    });
+    state.front = 0;
+  }
+
+  function setArtVideo(video, url, onReady, withAudio = false, opts = {}) {
+    if (!video) return;
+    const shouldPlay = opts.play !== false;
+    applyFbVideoAudio(video, withAudio);
+    const ready = () => {
+      applyFbVideoAudio(video, withAudio);
+      if (shouldPlay) video.play().catch(() => {});
+      else video.pause();
+      onReady && onReady();
+    };
+    if (video.dataset.artSrc === url) {
+      if (video.readyState >= 2) ready();
+      return;
+    }
+    video.dataset.artSrc = url;
+    video.onloadeddata = ready;
+    video.onerror = () => {
+      video.dataset.artSrc = '';
+      onReady && onReady(false);
+    };
+    video.src = encodeURI(url);
+    video.load();
+  }
+
+  const fbPaintLoops = new Map();
+  const fbKeyCache = new WeakMap();
+
+  function stopFbPaint(canvas) {
+    const id = fbPaintLoops.get(canvas);
+    if (id) cancelAnimationFrame(id);
+    fbPaintLoops.delete(canvas);
+  }
+
+  /* Matte key — neutral near-black only, so ink strokes on the flower survive. */
+  function fbKeyAlpha(r, g, b) {
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const spread = max - min;
+    if (max <= 12 && spread <= 10) return 0;
+    if (max <= 44 && spread <= 24) {
+      const t = (max - 12) / (44 - 12);
+      return Math.round(t * t * 255);
+    }
+    return 255;
+  }
+
+  function keyedFrame(video) {
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    if (!vw || !vh) return null;
+    let cache = fbKeyCache.get(video);
+    if (!cache || cache.w !== vw || cache.h !== vh) {
+      const c = document.createElement('canvas');
+      c.width = vw;
+      c.height = vh;
+      cache = { w: vw, h: vh, canvas: c, ctx: c.getContext('2d', { willReadFrequently: true }) };
+      fbKeyCache.set(video, cache);
+    }
+    const { ctx, canvas: keyC } = cache;
+    if (!ctx) return null;
+    ctx.drawImage(video, 0, 0, vw, vh);
+    const id = ctx.getImageData(0, 0, vw, vh);
+    const d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      d[i + 3] = fbKeyAlpha(d[i], d[i + 1], d[i + 2]);
+    }
+    ctx.putImageData(id, 0, 0);
+    return keyC;
+  }
+
+  function paintFbFrame(video, canvas) {
+    const keyC = keyedFrame(video);
+    if (!keyC) return;
+    const vw = keyC.width;
+    const vh = keyC.height;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const cw = Math.max(1, Math.round(rect.width * dpr));
+    const ch = Math.max(1, Math.round(rect.height * dpr));
+    if (canvas.width !== cw || canvas.height !== ch) {
+      canvas.width = cw;
+      canvas.height = ch;
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    const scale = Math.min(cw / vw, ch / vh);
+    const dw = vw * scale;
+    const dh = vh * scale;
+    const dx = (cw - dw) / 2;
+    const dy = ch - dh;
+    /* Matte key removes near-black irises; an opaque disc under the face restores them. */
+    if (canvas.classList.contains('art-fb-layer')) {
+      const headCx = dx + dw * 0.5;
+      const headCy = dy + dh * 0.40;
+      const headR = dw * 0.145;
+      ctx.fillStyle = '#0a0a0a';
+      ctx.beginPath();
+      ctx.arc(headCx, headCy, headR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.drawImage(keyC, dx, dy, dw, dh);
+  }
+
+  function startFbPaint(video, canvas) {
+    stopFbPaint(canvas);
+    const tick = () => {
+      paintFbFrame(video, canvas);
+      fbPaintLoops.set(canvas, requestAnimationFrame(tick));
+    };
+    fbPaintLoops.set(canvas, requestAnimationFrame(tick));
+  }
+
+  function setArtFb(canvas, video, url, loop = true) {
+    if (!canvas || !video) return;
+    video.loop = loop;
+    setArtVideo(video, url, (ok) => {
+      if (ok === false) stopFbPaint(canvas);
+      else startFbPaint(video, canvas);
+    }, false);
+  }
+
+  function syncPlanterArt() {
+    if (!el.game.classList.contains('art-planters')) return;
+    const artSeason = season || 'summer';
+    /* Summer #garden plots keep summer chops while the Fall trug board is showing. */
+    el.game.dataset.planterSeason = season === 'fall' ? 'summer' : artSeason;
+    const bg = document.getElementById('artBg');
+    if (bg) {
+      setArtVideo(bg, ART_VIDEO.bg(artSeason), (ok) => {
+        if (ok === false) {
+          el.game.classList.remove('art-has-bg');
+          bg.hidden = true;
+          return;
+        }
+        el.game.classList.add('art-has-bg');
+        bg.hidden = false;
+      });
+    }
+    fbStacks().forEach((stack) => initFbStack(stack));
   }
 
   /* ---------- the gate ---------- */
@@ -1237,6 +1817,7 @@
   function hideCoach() {
     coachTarget = null;
     el.coach.hidden = true;
+    drainSpeechQueue();
   }
   function refreshCoach() {
     // hideCoach(), not just hidden=true: leaving coachTarget set means the next
@@ -1482,6 +2063,7 @@
 
     Game.tick(dt);
     renderPlots();
+    if (UI.fallOpen && UI.fallOpen()) UI.syncFallArtPlants();
     hudTick(dt);
     FX.step(dt);
 
@@ -1581,6 +2163,7 @@
     // have banked does not sit there pretending to still be accruing.
     Game.settleCritters();
     buildGarden();
+    syncPlanterArt();
     UI.initFall();
     renderSeasonEdges();
     renderCritters();
@@ -1740,7 +2323,12 @@
   /* Whichever flower the player can actually see. Every tap effect centres on
      this, so it has to follow them between rooms. */
   UI.flowerBtn = () => guestFlower || flowerBtn;
+  UI.syncPlanterArt = syncPlanterArt;
+  UI.artPlantHtml = artPlantHtml;
+  UI.syncArtPlant = syncArtPlant;
+  UI.clearArtPlant = clearArtPlant;
   UI.sayText = sayText;
+  UI.sayCheater = sayCheater;
   UI.renderCritters = renderCritters;
   UI.tapCritter = tapCritter;
   UI.critterLine = critterLine;

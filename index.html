@@ -25,9 +25,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style-art.css"/>
 </head>
 <body>
-  <div class="game" id="game">
+  <div class="game art-planters" id="game" data-planter-season="summer">
     <!-- Everything the shake moves lives in .world, so .game itself stays an
          untransformed fixed box. A transform on .game made it its own containing
          block, and that is the shape of box iOS has twice sized short of the
@@ -44,6 +45,7 @@
              exactly that reason. The box is `inset:0` like `.scenery`, so every
              percentage inside resolves against the same rectangle it always did. -->
         <div class="scenery-warp">
+          <video class="art-bg" id="artBg" muted loop playsinline autoplay preload="auto" aria-hidden="true" hidden></video>
           <div class="sky" id="sky"></div>
           <div class="celestial" id="celestial"></div>
           <div class="stars" id="stars"></div>

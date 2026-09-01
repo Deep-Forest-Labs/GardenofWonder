@@ -10,13 +10,13 @@
    still gets to garden, and forgetting to bump VERSION below strands nobody — the
    version only controls when old caches get swept up. */
 
-const VERSION = 8;
+const VERSION = 29;
 const CACHE = `gw-v${VERSION}`;
 const FONTS = 'gw-fonts';
 const NET_TIMEOUT = 4000;   // slow network -> fall back to cache rather than hang
 
 const CORE = [
-  './', './index.html', './style.css', './manifest.json',
+  './', './index.html', './style.css', './style-art.css', './manifest.json',
   './data.js', './flora.js', './critters.js', './customers.js', './hollow.js', './meadow.js', './fall.js', './icons.js',
   './audio.js', './fx.js', './game.js',
   './ui-shared.js', './ui-scenery.js', './ui-weather.js', './ui-sheet.js', './ui-hollow.js', './ui-meadow.js', './ui-fall.js',
@@ -26,7 +26,43 @@ const CORE = [
   // Announcement art is the only raster the game itself loads, and an installed
   // app that cannot reach it shows a broken square in the middle of the dialog.
   // Every row added to DATA.announcements adds its image here.
-  './art/announcements/garden-year.png'
+  './art/announcements/garden-year.png',
+  './art/images/planter-spring.png', './art/images/planter-summer.png',
+  './art/images/planter-fall.png', './art/images/planter-winter.png',
+  './art/images/soil-spring.png', './art/images/soil-summer.png',
+  './art/images/soil-fall.png', './art/images/soil-winter.png',
+  './art/images/fb-spring.png', './art/images/fb-summer.png',
+  './art/images/fb-fall.png', './art/images/fb-winter.png',
+  './art/images/bg-spring.jpg', './art/images/bg-summer.jpg',
+  './art/images/bg-fall.jpg', './art/images/bg-winter.jpg',
+  './art/video/bg/spring.mp4', './art/video/bg/summer.mp4',
+  './art/video/bg/fall.mp4', './art/video/bg/winter.mp4',
+  './art/video/bg/generic-laugh.mp4', './art/video/bg/generic-aha.mp4',
+  './art/video/flower/spring-idle1.mp4',
+  './art/video/flower/idle-2.mp4',
+  './art/video/flower/idle-3.mp4',
+  './art/video/flower/spring-powerup-1.mp4',
+  './art/video/flower/speech-batch-1/hello-friend.mp4',
+  './art/video/flower/speech-batch-1/hello-there2.mp4',
+  './art/video/flower/speech-batch-1/you-came-back.mp4',
+  './art/video/flower/speech-batch-1/the-soil-missed-you.mp4',
+  './art/video/flower/speech-batch-1/ready-to-grow-something.mp4',
+  './art/video/flower/speech-batch-1/ooh-do-that-again.mp4',
+  './art/video/flower/speech-batch-1/tickles.mp4',
+  './art/video/flower/speech-batch-1/cheater.mp4',
+  './art/video/flower/speech-batch-2/keep-it-coming.mp4',
+  './art/video/flower/speech-batch-2/that-is%20the-spirit.mp4',
+  './art/video/flower/speech-batch-2/more-petals-please.mp4',
+  './art/video/flower/speech-batch-2/beautiful-harvest.mp4',
+  './art/video/flower/speech-batch-2/wow-critical-blooom.mp4',
+  './art/video/flower/speech-batch-2/new-ground-to-grow-on.mp4',
+  './art/video/flower/speech-batch-2/save-up-a-few-coins.mp4',
+  './art/video/flower/speech-batch-2/rain-the-garden-loves-this.mp4',
+  './art/video/flower/speech-batch-2/wonder.mp4',
+  './art/video/flower/speech-batch-2/a-l-bloomed.mp4',
+  './art/video/flower/speech-batch-2/swipe%20down%20fopr%20the%20wild%20meadow.mp4',
+  './art/video/plant/sunflower-grow.mp4',
+  './art/video/plant/sunflower-finish-loop.mp4'
 ];
 
 self.addEventListener('install', (e) => {

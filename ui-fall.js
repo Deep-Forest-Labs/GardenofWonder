@@ -54,6 +54,13 @@
            it: there is no combo in Fall, and `.speech` carries the id `#speech`
            that `buildGarden()` already owns. */
         mid.innerHTML = `<div class="flower-glow"></div>
+          <span class="art-fb-eye-patch" aria-hidden="true"></span>
+          <div class="art-fb-stack">
+            <canvas class="art-fb-layer is-front" aria-hidden="true"></canvas>
+            <video class="art-fb-src" muted loop playsinline preload="auto" aria-hidden="true" hidden></video>
+            <canvas class="art-fb-layer" aria-hidden="true"></canvas>
+            <video class="art-fb-src" muted loop playsinline preload="auto" aria-hidden="true" hidden></video>
+          </div>
           <button class="flower-btn fl-flower" id="fallFlower" aria-label="Tap the talking flower">${Flora.talkingFlower()}</button>`;
         board.appendChild(mid);
         continue;
@@ -249,11 +256,22 @@
       if (!v) return;
       const def = c && c.seed ? plantById(c.seed) : null;
       const ready = Boolean(def) && now >= c.plantedAt + c.grow;
-      const look = def ? `${def.id}:${ready ? 3 : (now - c.plantedAt) / c.grow < 0.5 ? 1 : 2}` : 'empty';
+      const progress = def && !ready ? Math.min(1, Math.max(0, (now - c.plantedAt) / c.grow)) : 1;
+      const artPlant = el.game.classList.contains('art-planters');
+      const look = def
+        ? (artPlant
+          ? `art:${c.plantedAt}:${c.grow}:${ready ? 'ready' : 'grow'}`
+          : `${def.id}:${ready ? 3 : progress < 0.5 ? 1 : 2}`)
+        : 'empty';
       if (v.cache.look !== look) {
-        v.slot.innerHTML = def
-          ? Fall.crop(def.id, ready ? 3 : (now - c.plantedAt) / c.grow < 0.5 ? 1 : 2)
-          : '';
+        if (def && artPlant) {
+          UI.clearArtPlant(v.slot);
+          v.slot.innerHTML = UI.artPlantHtml();
+        } else {
+          v.slot.innerHTML = def
+            ? Fall.crop(def.id, ready ? 3 : progress < 0.5 ? 1 : 2)
+            : '';
+        }
         v.cache.look = look;
       }
       const state = !def ? 'empty' : ready ? 'ready' : 'grow';
@@ -354,7 +372,7 @@
   function enter() {
     if (open) return;
     open = true;
-    if (!built) { buildBoard(); built = true; }
+    if (!built) { buildBoard(); built = true; UI.syncPlanterArt(); }
     /* Bound on every entry, not once at build. leave() clears it, so a second
        visit left UI.flowerBtn() falling back to the garden's flower — which
        .in-fall has display:none'd — and every coin, float and speech bubble
@@ -393,10 +411,23 @@
     addEventListener('resize', () => { if (open) { sizeBoard(); syncScene(); } });
   }
 
+  function syncArtPlants() {
+    if (!open || !el.game.classList.contains('art-planters')) return;
+    const now = nowSec();
+    ((S.fall && S.fall.grid) || []).forEach((c, i) => {
+      const v = cellEls.get(i);
+      if (!v || !c || !c.seed) return;
+      if (!plantById(c.seed)) return;
+      const ready = now >= c.plantedAt + c.grow;
+      UI.syncArtPlant(v.slot, c, ready ? 'ready' : 'grow');
+    });
+  }
+
   UI.enterFall = enter;
   UI.leaveFall = leave;
   UI.fallOpen = () => open;
   UI.renderFall = render;
+  UI.syncFallArtPlants = syncArtPlants;
   UI.sizeFallBoard = sizeBoard;
   UI.fallCollectAll = collectAll;
   UI.initFall = init;

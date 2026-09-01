@@ -1,0 +1,340 @@
+/* art/aaa-v1 — raster planter + soil layers (see art/images/, art/video/) */
+
+/* CSS sky stays up until a season bg video loads (see syncPlanterArt) */
+.game.art-planters.art-has-bg .scenery-warp .sky,
+.game.art-planters.art-has-bg .scenery-warp .celestial,
+.game.art-planters.art-has-bg .scenery-warp .stars,
+.game.art-planters.art-has-bg .scenery-warp .layer,
+.game.art-planters.art-has-bg .meadow,
+.game.art-planters.art-has-bg .fence,
+.game.art-planters.art-has-bg .vignette,
+.game.art-planters.art-has-bg .season-tint{
+  display:none;
+}
+
+.game.art-planters .art-bg{
+  display:none;
+}
+
+
+.game.art-planters.art-has-bg .art-bg{
+  display:block;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center bottom;
+  pointer-events:none;
+  z-index:0;
+  filter:blur(3px);
+  transform:scale(1.015);
+  transform-origin:center bottom;
+}
+
+.game.art-planters .art-fb-src{
+  display:none;
+}
+
+/* ---------- Flower Buddy (centre cell) ---------- */
+.game.art-planters .flower-glow,
+.game.art-planters .fl-flower-cell .flower-glow{
+  display:none;
+}
+
+.game.art-planters .flower-btn .talker,
+.game.art-planters .fl-flower .talker{
+  display:none;
+}
+
+/* Legacy DOM patch retired — head disc is painted in paintFbFrame (ui.js). */
+.game.art-planters .flower-cell .art-fb-eye-patch,
+.game.art-planters .fl-flower-cell .art-fb-eye-patch{
+  display:none;
+}
+
+/* Flower Buddy — stem base at the centre-cell floor; bottom row plots paint over it. */
+.game.art-planters .flower-cell .art-fb-stack,
+.game.art-planters .fl-flower-cell .art-fb-stack{
+  --fb-fade:520ms;
+  position:absolute;
+  left:50%;
+  bottom:-15%;
+  top:auto;
+  right:auto;
+  width:160%;
+  height:182%;
+  transform:translateX(-50%);
+  pointer-events:none;
+  z-index:0;
+  overflow:visible;
+}
+
+.game.art-planters .art-fb-layer{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  opacity:0;
+  will-change:opacity;
+  transition:opacity var(--fb-fade) ease-in-out;
+}
+
+.game.art-planters .art-fb-layer.is-front{
+  opacity:1;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .game.art-planters .art-fb-layer{transition:none}
+}
+
+.game.art-planters .flower-btn,
+.game.art-planters .fl-flower{
+  z-index:2;
+}
+
+.game.art-planters .flower-cell .speech,
+.game.art-planters .fl-flower-cell .speech{
+  bottom:calc(100% + 22px);
+}
+
+/* No shared wooden tray — flat planters tile evenly in a tight 3×3 */
+.game.art-planters .garden{
+  background:none;
+  border:none;
+  box-shadow:none;
+  padding:0;
+  overflow:visible;
+  --col-gap:0;
+  --row-gap:clamp(12px, 5%, 26px);
+  column-gap:var(--col-gap);
+  row-gap:var(--row-gap);
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  grid-template-rows:repeat(3, minmax(0, 1fr));
+  align-items:center;
+  justify-items:center;
+}
+
+.game.art-planters .garden::before,
+.game.art-planters.wonder .garden::after{
+  display:none;
+}
+
+/* Square plots — uniform scale (planters are flat/frontal, no row perspective) */
+.game.art-planters .plot,
+.game.art-planters .garden > .flower-cell{
+  width:auto;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
+  aspect-ratio:1;
+  min-height:0;
+  min-width:0;
+  transform:scale(1.06);
+  transform-origin:50% 50%;
+  margin:0;
+}
+
+/* Centre cell keeps the tap target; the video stack paints outside it. */
+.game.art-planters .garden > .flower-cell{
+  overflow:visible;
+}
+
+/* Soil window from art/images/soil-*.png opaque bounds (tools/png-bounds.js) */
+.game.art-planters .plot{
+  --soil-top:9%;
+  --soil-bottom:24%;
+  --plant-anchor:34%;
+}
+
+.game.art-planters .plot-inner{
+  z-index:1;
+  overflow:visible;
+}
+
+/* Stem anchor uses plot % (bottom inset), not translateY — see tools/png-bounds.js */
+.game.art-planters .plot .plant-slot{
+  z-index:3;
+  position:absolute;
+  left:6%;
+  right:6%;
+  top:-6%;
+  bottom:var(--plant-anchor);
+  display:grid;
+  place-items:end center;
+  pointer-events:none;
+  overflow:visible;
+}
+
+.game.art-planters .plot .plant{
+  width:138%;
+  height:155%;
+}
+
+/* Grow test — keyed video scaled to the plot slot (see syncArtPlant in ui.js) */
+.game.art-planters .art-plant-grow{
+  position:relative;
+  width:138%;
+  height:155%;
+  display:block;
+  transform:translateY(6%);
+}
+
+.game.art-planters .art-plant-src{display:none}
+
+.game.art-planters .art-plant-layer{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+
+.game.art-planters .fl-slot .art-plant-grow{
+  width:100%;
+  height:100%;
+}
+
+.game.art-planters .plot[data-state="empty"] .empty-mark{
+  position:absolute;
+  left:0;
+  right:0;
+  top:var(--soil-top);
+  bottom:var(--soil-bottom);
+  display:grid;
+  place-items:center;
+}
+
+.game.art-planters .plot:not([data-state="empty"]) .empty-mark{display:none}
+
+.game.art-planters .plot .lock-badge{
+  position:absolute;
+  left:0;
+  right:0;
+  top:var(--soil-top);
+  bottom:var(--soil-bottom);
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+}
+
+.game.art-planters .plot[data-state="locked"] .lock-badge{display:flex}
+
+.game.art-planters .plot .bar{
+  left:10%;
+  right:10%;
+  bottom:calc(var(--soil-bottom) - 4%);
+}
+
+.game.art-planters .plot .ready-pop{
+  top:calc(var(--soil-top) - 18%);
+  right:2%;
+}
+
+.game.art-planters .plot .skip-chip{
+  top:calc(var(--soil-top) + 2%);
+}
+
+.game.art-planters .plot .pack-drop{
+  bottom:calc(var(--soil-bottom) - 4%);
+}
+
+.game.art-planters .plot .auto-tag{
+  bottom:calc(var(--soil-bottom) + 2%);
+}
+
+.game.art-planters .plot .lucky-badge{
+  top:calc(var(--soil-top) + 2%);
+  left:4%;
+}
+
+.game.art-planters .plot{
+  background:none;
+  border:none;
+  box-shadow:none;
+  filter:drop-shadow(0 5px 7px rgba(44,26,16,.22));
+}
+
+.game.art-planters .plot:active{
+  box-shadow:none;
+  filter:drop-shadow(0 2px 4px rgba(44,26,16,.18));
+  transform:scale(1.06) translateY(3px);
+}
+
+.game.art-planters .plot[data-state="locked"]{
+  background:none;
+  filter:drop-shadow(0 4px 6px rgba(44,26,16,.16));
+}
+
+.game.art-planters .plot[data-state="locked"] .plot-art-soil{
+  filter:saturate(.35) brightness(.88);
+}
+
+.game.art-planters .plot[data-state="ready"]{
+  animation:readyBounceArt 1.05s ease-in-out infinite;
+  box-shadow:none;
+  filter:
+    drop-shadow(0 0 10px rgba(255,212,59,.55))
+    drop-shadow(0 6px 10px rgba(44,26,16,.24));
+}
+
+@keyframes readyBounceArt{
+  0%,100%{transform:scale(1.06) translateY(0)}
+  50%{transform:scale(1.06) translateY(-4px)}
+}
+
+.game.art-planters .plot[data-aura="rare"],
+.game.art-planters .plot[data-aura="epic"],
+.game.art-planters .plot[data-aura="legend"]{
+  background:none;
+  box-shadow:none;
+}
+
+.game.art-planters .plot[data-aura="rare"]{
+  filter:drop-shadow(0 0 0 2px rgba(77,171,247,.75)) drop-shadow(0 5px 7px rgba(44,26,16,.22));
+}
+.game.art-planters .plot[data-aura="epic"]{
+  filter:drop-shadow(0 0 0 2px rgba(177,151,252,.85)) drop-shadow(0 5px 7px rgba(44,26,16,.22));
+}
+.game.art-planters .plot[data-aura="legend"]{
+  filter:drop-shadow(0 0 0 2px rgba(255,212,59,.95)) drop-shadow(0 0 12px rgba(255,212,59,.45)) drop-shadow(0 5px 7px rgba(44,26,16,.22));
+}
+
+.game.art-planters .plot-art{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:contain;
+}
+
+.game.art-planters .plot-art-soil{z-index:0}
+.game.art-planters .plot-inner{z-index:1}
+.game.art-planters .plot-art-frame{z-index:2}
+
+.game.art-planters .plot-inner::after{display:none}
+
+/* Ready sweep sheen off while art planters are in test — style.css ::before sweep */
+.game.art-planters .plot[data-state="ready"] .plot-inner::before{display:none}
+
+.game.art-planters .plot .empty-mark,
+.game.art-planters .plot .lock-badge,
+.game.art-planters .plot .bar,
+.game.art-planters .plot .auto-tag,
+.game.art-planters .plot .lucky-badge,
+.game.art-planters .plot .skip-chip,
+.game.art-planters .plot .pack-drop{
+  z-index:4;
+}
+
+.game.art-planters[data-planter-season="spring"] .plot-art-soil{background-image:url('art/images/soil-spring.png')}
+.game.art-planters[data-planter-season="spring"] .plot-art-frame{background-image:url('art/images/planter-spring.png')}
+.game.art-planters[data-planter-season="summer"] .plot-art-soil{background-image:url('art/images/soil-summer.png')}
+.game.art-planters[data-planter-season="summer"] .plot-art-frame{background-image:url('art/images/planter-summer.png')}
+.game.art-planters[data-planter-season="fall"] .plot-art-soil{background-image:url('art/images/soil-fall.png')}
+.game.art-planters[data-planter-season="fall"] .plot-art-frame{background-image:url('art/images/planter-fall.png')}
+.game.art-planters[data-planter-season="winter"] .plot-art-soil{background-image:url('art/images/soil-winter.png')}
+.game.art-planters[data-planter-season="winter"] .plot-art-frame{background-image:url('art/images/planter-winter.png')}
