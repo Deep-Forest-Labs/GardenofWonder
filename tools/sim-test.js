@@ -5546,6 +5546,48 @@ check('re-earning the coins floor alone does not re-open the Turn',
   && G.turnReady() === false,
   `increment ${G.projectedMint().base}`);
 
+group('the Turn-jump cheat loops the real Turn, and a flat loop would have stalled at four');
+G.reset();
+/* THE STALL, PROVED FIRST, so the cheat's shape is a measured decision rather
+   than a claim. A loop that hands over a flat `minCoins` a year gives a
+   shrinking increment, because the pool is sqrt(lifetime) minus what has been
+   drawn. Winter (Turn 3) is reachable by luck; Spring (Turn 6) is not. */
+{
+  let flatTurns = 0;
+  for (let i = 0; i < 6; i += 1) {
+    G.Dev.driveYear(DATA.year.minCoins);
+    if (!G.Dev.runTurn(null)) break;
+    flatTurns += 1;
+  }
+  check('a flat minCoins-per-year loop stalls short of Spring',
+    flatTurns < DATA.year.springTurn, `reached Turn ${flatTurns}`);
+}
+G.reset();
+const turnsJumped = G.Dev.jumpTurns(DATA.year.springTurn);
+check('the jump completes every Turn it was asked for',
+  turnsJumped === DATA.year.springTurn && S.year.turnsCompleted === DATA.year.springTurn,
+  `${turnsJumped} turns, at ${S.year.turnsCompleted}`);
+check('and Spring\'s gate is open behind it',
+  S.year.turnsCompleted >= DATA.year.springTurn && S.year.turnsCompleted >= DATA.year.winterTurn
+  && S.year.turnsCompleted >= DATA.year.fallTurn);
+/* It went through the real faucet, unflagged, or the pool could not have grown
+   at all — this is the assertion that would fail if someone copied grantGold's
+   `{ cheat: true }` into the loop. */
+check('it earned through the real faucet: the ledger and the mint both moved',
+  S.lifetimeCoins > 0 && S.mintedBase > 0, `lifetime ${Math.round(S.lifetimeCoins)}`);
+check('and every Turn actually minted, so Saved Seeds are banked', S.savedSeeds > 0,
+  `${S.savedSeeds} seeds`);
+check('the year rolled over with the turns', S.year.number === DATA.year.springTurn + 1);
+/* NOTHING LEAKS — the playbook's step 5. The gates are shut again the instant
+   the jump ends, and the cheat left no armed state behind it. */
+check('the gates are shut again immediately after the jump',
+  G.turnReady() === false && G.turnYear(null) === null);
+G.reset();
+check('and a reset garden is back to Turn zero with no Turn available',
+  S.year.turnsCompleted === 0 && G.turnReady() === false && G.turnYear(null) === null);
+check('a jump of one is a single Turn', G.Dev.jumpTurns(1) === 1 && S.year.turnsCompleted === 1);
+G.reset();
+
 group('bill 17b — the cumulative mint: the pool is lifetime-only, and cadence buys nothing');
 /* The owner's ruling, 2026-08-29. The pool a garden will ever mint is
    mintK x sqrt(lifetimeCoins); a Turn draws the undrawn part of it. These are

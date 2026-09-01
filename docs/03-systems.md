@@ -428,6 +428,7 @@ cheat exercises the feature it claims to test, and the animation seen is the one
 | Wind the world forward | Warps every production clock 1 / 8 / 24 hours — plants, Fall's bed and the Century Bloom, jars, crafts, orders, food and keepsakes — then catches the world up through one real `tick(0)`. No welcome sheet, no offline income |
 | Simulate an absence | Winds the world back 3 / 6 / 12 / 24 hours and opens the real welcome-back scene |
 | Give | Gold, gems, levels, one of every power-up |
+| Jump ahead | +1 / +3 / +6 Turns (`Dev.jumpTurns`). Each Turn earns its way there through the real faucet and runs the real `turnYear()`; the garden is wiped once per Turn and the player lands bare with Saved Seeds banked |
 
 **The proc buttons are toggles, not one-shots.** A single forced fire meant reopening the panel for
 every look at an animation; held at 50% per tap you can leave the sheet closed and just tap. The
@@ -1047,12 +1048,38 @@ every running long timer it survives the Turn untouched. Fall opens at
 **Developer drivers** (the phase-1 review surface): the dev sheet's Garden Year rows show
 the live projection — year, earnings against the floor, base × tally → pouch, gate status
 — with Earn +25K/+100K/+400K (`Dev.driveYear`, real earnings), a canned mid-game Tally
-(`Dev.setYearStats`), Run the Turn (`Dev.runTurn`, blessing Daisy), Saved Seeds and petal
+(`Dev.setYearStats`), Run the Turn (`Dev.runTurn`, blessing the cheapest flower with room),
+**Jump ahead +1/+3/+6 Turns** (`Dev.jumpTurns`), Saved Seeds and petal
 purchases through the real `buyPetal`, **Unlock the next seed** (`Game.unlockSeed` through the
 real charge path, so the gold wall can be paid and felt), and Fill/Ripen/Harvest the Fall bed.
 `Dev.grantGold`
 is the cheat faucet — wallet only, never the meter — and the Settings gold button routes
 through it.
+
+**`Dev.jumpTurns(n)` credits UNTIL `turnReady()`, never a flat amount, and never writes
+`turnsCompleted`.** Both halves are load-bearing. The mint pool is `mintK × √lifetimeCoins` minus
+what has been drawn, so a loop handing over a flat `minCoins` per year gives a shrinking increment —
+31.6, 13.1, 10.1, then 8.5, which is under `minSeeds` — and `turnYear()` returns `null` on the
+fourth pass. Winter (Turn 3) is reachable that way by luck and Spring (Turn 6) is not; the sim-test
+asserts the stall so the cheat's shape stays a measured decision. Crediting until the gates open
+costs about 719K lifetime coins to reach Turn 6, and about 160K in the sixth year alone. The grant
+deliberately **omits** the cheat flag, exactly as `driveYear` does — `credit()` skips both
+`year.coinsEarned` and `lifetimeCoins` when flagged, and those are the two numbers the gates read, so
+a flagged loop spins against a pool that never grows. Writing `state.year.turnsCompleted` directly
+would open Fall, both plot gates and both season gates while Saved Seeds, `mintedBase` and
+`year.number` all disagreed with it — a garden in a state no player can reach. The inner credit loop
+is capped, and the method returns the count actually completed so a stall reports itself.
+
+**Reaching Turn 6 opens Spring's GATE, not a Spring garden.** `ui.js`'s season table carries
+`built: false` on Spring and Winter and `seasonReady` is `built && turned`, so the jump flips the
+plate's line from "Opens at Turn 6" to **"Still growing in"** and the edge tab's label from a turn
+number to *Soon*. That string had never been reachable in normal play; it is now, and it reads
+correctly. Spring and Winter are slices C and E of the build plan, not a cheat.
+
+**The ceremony does not fire six times.** `Game.on('turn')` only re-renders the season edges; the
+five-beat ceremony is a sheet the player opens from the dock, so an engine-side loop runs silently
+and the edges refresh for free. Six Turns are six `saveNow()` writes and six garden wipes, which is
+correct — it is a prestige, six times.
 
 `tools/year-sim.js` drives whole simulated days of casual play through the real `game.js`
 and reports against doc 33's pacing targets; `tools/sim-test.js` carries the 18-item bill

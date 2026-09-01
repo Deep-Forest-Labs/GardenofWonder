@@ -4553,6 +4553,54 @@ const Game = (() => {
       return r;
     },
 
+    /** Jump `n` Turns, through the real Turn every time.
+
+        CREDIT UNTIL READY, NEVER A FLAT AMOUNT. The mint pool is
+        `mintK x sqrt(lifetimeCoins)` minus what has been drawn, so a loop that
+        hands over `minCoins` per year yields a SHRINKING increment — 31.6, 13.1,
+        10.1, then 8.5, which is under `minSeeds` and makes `turnYear()` return
+        null on the fourth pass. Winter is reachable by luck that way and Spring
+        is not. Crediting until `turnReady()` is true costs about 719K lifetime
+        coins to reach Turn 6, and about 160K in the sixth year alone.
+
+        THE CHEAT FLAG IS OMITTED ON PURPOSE, exactly as `driveYear` omits it.
+        `credit()` skips both `year.coinsEarned` and `lifetimeCoins` when the
+        grant is flagged, and those are the two numbers the gates read — a
+        flagged loop would spin against a pool that never grows.
+
+        And it never writes `state.year.turnsCompleted`. That field alone would
+        open Fall, both plot gates and both season gates while Saved Seeds,
+        `mintedBase` and `year.number` all disagreed with it: a garden in a state
+        no player can reach, which is worse than no cheat. Looping the real
+        `turnYear()` is the only sanctioned path.
+
+        Returns the number of Turns actually completed, so a stall reports itself
+        rather than lying. */
+    jumpTurns(n) {
+      const want = Math.max(1, Math.round(Number(n) || 1));
+      let done = 0;
+      for (let i = 0; i < want; i += 1) {
+        /* Capped, because a cheat that can hang the phone is not a cheat. Each
+           pass hands over a whole year's floor, so a few hundred is far beyond
+           any real distance to the next gate. */
+        let guard = 0;
+        while (!turnReady() && guard < 400) {
+          credit(YEAR().minCoins);
+          guard += 1;
+        }
+        /* The blessing is re-picked EVERY Turn, not once: six Turns cap a
+           flower's Rich Bloom ladder partway through, and a stale id makes
+           every later blessing land nowhere while the ceremony still says it
+           happened. Same rule the panel and `tools/year-sim.js` use. */
+        const blessId = (DATA.seeds.find((sd) => seedUnlocked(sd.id)
+          && petalsOf(sd.id).rich < PETALS().shared.rich.cap) || {}).id || null;
+        if (!turnYear(blessId)) break;
+        done += 1;
+      }
+      if (done) { save(); emit('currency'); emit('panels'); }
+      return done;
+    },
+
     /** Saved Seeds for petal testing, outside the mint on purpose. */
     grantSeeds(n) {
       state.savedSeeds += Math.max(0, Math.round(Number(n) || 0));

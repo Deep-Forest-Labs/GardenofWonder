@@ -2298,6 +2298,11 @@
         <button class="dev-btn" data-dev="yearEarn" data-arg="400000">Earn +400K</button>
         <button class="dev-btn" data-dev="yearStats" data-arg="1">A good year's Tally</button>
         <button class="dev-btn warn" data-dev="yearTurn" data-arg="1">Run the Turn (blesses a flower with room)</button>`)}
+      ${devRow(`Jump ahead — each Turn earns its way there and wipes the garden, so you land bare with
+        Saved Seeds banked. Spring and Winter open their GATE, not a garden: neither is built yet`, `
+        <button class="dev-btn warn" data-dev="yearJump" data-arg="1">+1 Turn</button>
+        <button class="dev-btn warn" data-dev="yearJump" data-arg="${DATA.year.winterTurn}">+${DATA.year.winterTurn} Turns (Winter's gate)</button>
+        <button class="dev-btn warn" data-dev="yearJump" data-arg="${DATA.year.springTurn}">+${DATA.year.springTurn} Turns (Spring's gate)</button>`)}
       ${devRow(`Petals — ${petalReport()}`, `
         <button class="dev-btn" data-dev="yearSeeds" data-arg="50">+50 Saved Seeds</button>
         <button class="dev-btn" data-dev="petalBuy" data-arg="rich">Daisy: Rich Bloom</button>
@@ -2436,6 +2441,24 @@
           UI.toast({
             title: `The year turned — ${fmt(turn.pouch)} Saved Seeds`,
             body: `drew ${turn.base.toFixed(1)} of a ${turn.total.toFixed(1)} pool · Tally ×${turn.tally.mult.toFixed(2)}${lines.length ? ' · ' + lines.join(' · ') : ''}${blessNote}`,
+            art: Icons.get('sprout')
+          });
+          UI.buildGarden();
+        }
+        break;
+      }
+      case 'yearJump': {
+        const want = Number(arg) || 1;
+        const done = D.jumpTurns(want);
+        ok = done > 0;
+        deny = 'The Turn stalled — the pool could not reach another increment.';
+        if (ok) {
+          const at = S.year.turnsCompleted;
+          const opened = [['Fall', DATA.year.fallTurn], ['Winter', DATA.year.winterTurn], ['Spring', DATA.year.springTurn]]
+            .filter(([, gate]) => at >= gate).map(([name]) => name);
+          UI.toast({
+            title: `${done} of ${want} Turn${want === 1 ? '' : 's'} — now at Turn ${at}`,
+            body: `${opened.length ? `${opened.join(', ')} unlocked. ` : ''}The garden is bare and your Saved Seeds are banked.`,
             art: Icons.get('sprout')
           });
           UI.buildGarden();

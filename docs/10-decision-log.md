@@ -5,6 +5,54 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 (fix round) — A Turn-jump cheat that earns its way there
+
+**The owner:** *"I want to be able to get to spring and winter, so we need to be able to cheat and
+jump ahead turns."* Everything needed already existed — `driveYear`, `runTurn`, `turnYear` — and
+nothing looped it.
+
+**It credits until `turnReady()`, not a flat amount, and the sim-test proves why.** The mint pool is
+`mintK × √lifetimeCoins` minus what has been drawn, so a loop handing over a flat `minCoins` a year
+gives a *shrinking* increment: 31.6, 13.1, 10.1, then 8.5 — under `minSeeds`, and `turnYear()`
+returns `null` on the fourth pass, silently. Winter is reachable that way by luck and Spring is not.
+The suite runs that flat loop and asserts it stalls short of Spring, so the decision stays measured
+rather than remembered. Crediting until the gates open needs about 719K lifetime coins for Turn 6.
+
+**The cheat flag is omitted on purpose.** `credit()` skips both `year.coinsEarned` and
+`lifetimeCoins` when a grant is flagged, and those are precisely the two numbers the gates read — so
+copying `grantGold`'s `{ cheat: true }` would spin the loop against a pool that never grows.
+`driveYear` is the right precedent, and it is unflagged for the same reason.
+
+**It never writes `state.year.turnsCompleted`.** The conventions playbook says a cheat forces the
+real code path, and this one is a good illustration of why: that field alone opens Fall, both plot
+gates and both season gates while Saved Seeds, `mintedBase` and `year.number` all disagree with it —
+a garden in a state no player can ever reach, which is worse than no cheat at all.
+
+**The blessing is re-picked every Turn, not once.** Six Turns cap a flower's Rich Bloom ladder
+partway through, and a stale id makes every later blessing land nowhere while the ceremony still
+reports it. Same rule the panel and `tools/year-sim.js` use: the cheapest unlocked flower with room.
+
+**The inner loop is capped, and the method returns what it actually completed.** A cheat that can
+hang the phone is not a cheat, and a loop that ignores `turnYear()`'s null reports success having
+done nothing — the panel needs the count so its deny can fire.
+
+**Rejected: a "set the Turn to N" cheat.** It is the obvious shape and it is the one the playbook
+forbids, for the reason above.
+
+**What it does NOT do, and the owner should hear it plainly: it does not show anyone a Spring
+garden.** `ui.js` carries `built: false` on Spring and Winter, so the jump opens the *gate* and
+behind the gate is the gate — the plate's line changes from "Opens at Turn 6" to **"Still growing
+in"**, a string that had never been reachable in normal play. It is now, and it reads correctly. If
+what is actually wanted is Spring and Winter to *exist*, that is slices C and E of the build plan.
+
+**Verified end to end:** through the real dev button, a +6 jump lands at Turn 6 with 95 Saved Seeds
+banked, 900K lifetime coins earned through the unflagged faucet, six blessings recorded (one per
+Turn, so the re-pick works) and the wallet back to a fresh purse. Ten sim-test assertions, sabotaged
+three ways — flagging the grant, flattening the credit, and writing `turnsCompleted` directly — and
+each one goes red.
+
+---
+
 ## 2026-08-31 (fix round) — Fall's board lines up with Summer's, and the windfall gets its moment
 
 Punch-list `#6` and `#7`, done together because they are one piece of geometry: the margin causing
