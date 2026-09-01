@@ -61,7 +61,9 @@ above the row.
   the map come out. Never a push where the meadow has no door. The Stand's queue re-homes into
   the Orders & Quests button in the same phase.
 - **Stays:** the top HUD's wallets, the Almanac book (the species/petal *record* — the Turn
-  panel is where petals are *bought*), the gear, the quest strip for now (it is the one
+  panel is where petals are *bought*), the gear — **superseded 2026-08-31: the gear is now the
+  hamburger, and Settings is a row inside the menu it opens; the button, its place and its 44px
+  target are unchanged, and so is everything else in the HUD** — the quest strip for now (it is the one
   always-visible goal; whether the Orders & Quests badge replaces it long-term is a gate
   question, not tonight's).
 - **Rooms keep their own docks.** The Hollow (and the parked meadow) are places with per-place

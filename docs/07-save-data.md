@@ -19,6 +19,7 @@ lost if the player clears site data.
 ```js
 {
   version: 4,
+  profile: { name: 'Gardener', avatar: 'flower' },   // who the player is — see below
   credits: 100,
   tickets: 0,                 // kept so old saves parse; zeroed after conversion
   gems: 0,
@@ -160,14 +161,54 @@ see [10-decision-log.md](10-decision-log.md).
 
 `Object.assign(state, defaultState(), parsed)` is shallow, so a legacy save missing `stats`
 entirely would leave that key absent and crash on first write. Each nested object is therefore
-re-merged over its defaults individually: `tap`, `stats`, `wonder`, `prefs`, `seen`, `boostInv`,
-`discovered`, `bestRarity`, `mastery`, `rarityCounts`. `almanacClaimed` is copied as an array when
+re-merged over its defaults individually: `tap`, `stats`, `wonder`, `prefs`, `seen`, `profile`,
+`boostInv`, `discovered`, `bestRarity`, `mastery`, `rarityCounts`. `almanacClaimed` is copied as an array when
 present, else `[]`. `rarityCounts` is nested a second level — a missing seed key reads as
 `{ rare: 0, epic: 0, legend: 0 }` through `rarityCountsOf()`, which is the only thing that should
 read it.
 
 **When you add a nested object to state, add it to that list.** Forgetting is the single most likely
 way to break loading for existing players.
+
+### `state.profile` — who the player is (added 2026-08-31)
+
+```js
+profile: { name: 'Gardener', avatar: 'flower' }
+```
+
+**Two fields, and neither is progress.** A Turn must not touch identity, so `profile` sits in the
+`SURVIVES` column of the never-resets partition and `tools/sim-test.js` bill 1 asserts it verbatim,
+with the rig writing a non-default name *and* a non-default avatar so the assertion cannot pass on a
+value that happens to equal its own default. The **Settings reset is a different thing** and does
+clear it: that path is an explicit, twice-confirmed erasure of the whole save, and the name goes back
+to `Gardener` with everything else. See "The Turn is not the Settings reset" below.
+
+**`name` is the first player-typed text this game has ever stored, and nothing here escapes it.**
+The ruling is in [11-known-issues.md](11-known-issues.md): storing `esc(name)` puts `&lt;` in the
+save and makes every future reader keep a promise nobody wrote down. What the engine guarantees is
+narrower and more useful — that the name is **short, single-line and never empty**:
+
+- newlines, tabs and the two Unicode line separators become spaces, so `a\nb` is `a b` and not `ab`;
+- runs of whitespace collapse and the ends are trimmed;
+- **the 16-character cap is applied after collapsing**, or a padded name would spend its whole
+  allowance on nothing;
+- an empty result, or a non-string, falls back to `Gardener`.
+
+`setProfileName()` returns **what was stored**, not what it was sent, so a caller can render the
+trimmed form rather than the raw keystrokes. The same sanitiser runs on `load()`, so a save
+hand-edited in devtools to hold a tag or a 900-character monster comes back clean — the cap is
+enforced in two places on purpose, because the field's own `maxlength` is a courtesy and a save file
+is not.
+
+**`avatar` is an id, never markup.** `flower` for the talking flower, `seed:<id>` for a bloom,
+`critter:<id>` for a creature — a string the art files resolve, so a save can never carry a drawing.
+It is re-validated on every load and on every write: a bloom the player has not unlocked, a creature
+that has not moved in, or anything unrecognised falls back to `flower` rather than rendering
+nothing. `setProfileAvatar()` returns `false` when it refuses, which is what stops an unearned face
+being worn by hand-editing the save.
+
+**A save written before the menu existed has no `profile` at all**, which is why it is in the nested
+re-merge list above. It gets the default pair, and both fields are then validated like any other.
 
 ### Schema fixups
 

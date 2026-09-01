@@ -4225,6 +4225,119 @@ const primeYear = (earned, lifetime) => {
 const expectedPouch = (lifetime, drawn, tallyMult) =>
   Math.round(Math.max(0, DATA.year.mintK * Math.sqrt(lifetime) - drawn) * tallyMult);
 
+group('the profile — identity, migration and the sanitiser');
+/* The name is the first free text this game holds. This group covers the three
+   things that can go wrong with it in the ENGINE — a save that predates it, a
+   save that has been hand-edited, and the Turn. What the escaping rule buys is
+   not testable here at all: `tools/sim-test.js` cannot see a `ui-*.js` file, so
+   that half is held by `tools/html-check.js` and by a probe run. */
+G.reset();
+check('a fresh garden is a Gardener with the flower for a face',
+  S.profile.name === 'Gardener' && S.profile.avatar === 'flower',
+  JSON.stringify(S.profile));
+
+check('a save written before the menu existed gets the default profile', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  delete raw.profile;
+  raw.credits = 4242;                       // false on a fresh save, so this cannot pass vacuously
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return S.credits === 4242 && S.profile.name === 'Gardener' && S.profile.avatar === 'flower';
+})());
+
+check('a half-written profile is completed rather than replaced', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.profile = { name: 'Mo' };             // no avatar at all
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return S.profile.name === 'Mo' && S.profile.avatar === 'flower';
+})());
+
+check('a hostile name in a hand-edited save survives load as literal text', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.profile = { name: '<b>x&y</b>', avatar: 'flower' };
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  /* NOT escaped, and that is the ruling: `&lt;` in the save is a promise every
+     future reader has to keep. The engine stores what was typed; the render
+     site is what makes it safe. */
+  return S.profile.name === '<b>x&y</b>';
+})());
+
+check('a 40-character monster is cut to the cap on load, not just in the editor', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.profile = { name: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcd', avatar: 'flower' };
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return S.profile.name.length === G.PROFILE_NAME_MAX && S.profile.name === 'ABCDEFGHIJKLMNOP';
+})());
+
+check('an avatar naming a bloom the player has not unlocked falls back to the flower', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.profile = { name: 'Gardener', avatar: 'seed:moonflower' };
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return S.profile.avatar === 'flower';
+})());
+
+check('and one naming a creature that has not moved in does the same', (() => {
+  G.reset();
+  const raw = JSON.parse(JSON.stringify(S));
+  raw.profile = { name: 'Gardener', avatar: 'critter:pip' };
+  raw.critters = {};
+  globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  return S.profile.avatar === 'flower';
+})());
+
+G.reset();
+check('the sanitiser flattens newlines to spaces rather than deleting them',
+  G.setProfileName('a\nb') === 'a b', S.profile.name);
+check('runs of whitespace collapse, and the ends are trimmed',
+  G.setProfileName('   Rose   of   Sharon   ') === 'Rose of Sharon', S.profile.name);
+check('the cap is applied after collapsing, so padding cannot spend the allowance',
+  G.setProfileName('        Marigold        ') === 'Marigold', S.profile.name);
+check('an empty name falls back rather than being stored',
+  G.setProfileName('   ') === 'Gardener', S.profile.name);
+check('a non-string falls back too', G.setProfileName(null) === 'Gardener', S.profile.name);
+check('setProfileName returns what was STORED, not what was sent',
+  G.setProfileName('ABCDEFGHIJKLMNOPQRST') === 'ABCDEFGHIJKLMNOP', S.profile.name);
+check('the name it stores is exactly what a caller reads back',
+  G.profileName() === S.profile.name && G.profile() === S.profile);
+
+check('a face has to be earned before it can be worn', (() => {
+  G.reset();
+  const refusedSeed = G.setProfileAvatar('seed:moonflower');   // priced at millions, not unlocked
+  const refusedPet = G.setProfileAvatar('critter:pip');        // has not moved in
+  const refusedJunk = G.setProfileAvatar('<img src=x>');
+  const tookFree = G.setProfileAvatar('seed:daisy');           // one of the two free seeds
+  return refusedSeed === false && refusedPet === false && refusedJunk === false
+    && tookFree === true && S.profile.avatar === 'seed:daisy';
+})());
+
+check('a creature that has moved in can be worn', (() => {
+  S.critters.pip = { since: clock, fed: 0, gifts: 0, met: true, level: 1, tending: true, fedUntil: 0 };
+  return G.setProfileAvatar('critter:pip') === true && S.profile.avatar === 'critter:pip';
+})());
+
+check('the picker offers every bloom, marks which are earned, and only creatures that arrived', (() => {
+  G.reset();
+  S.critters.pip = { since: clock, fed: 0, gifts: 0, met: true, level: 1, tending: true, fedUntil: 0 };
+  const c = G.avatarChoices();
+  const freeSeeds = DATA.year.freeSeeds;
+  return c.flower.id === 'flower'
+    && c.blooms.length === DATA.seeds.length
+    && c.blooms.filter((b) => b.unlocked).length === freeSeeds
+    && c.blooms[0].seed.id === DATA.seeds[0].id      // ladder order, not sorted
+    && c.pets.length === 1 && c.pets[0].id === 'critter:pip';
+})());
+G.reset();
+
 group('bill 1 — the never-resets partition, field by field');
 /* Generated from the rule: EVERYTHING not named in the clears column survives
    verbatim. The rig puts something NON-DEFAULT in every field it asserts —
@@ -4317,6 +4430,10 @@ const buildTurnRig = (inFlight) => {
      permanent maxed hold speed and crit multiplier. */
   Object.keys(S.upgrades).forEach((k, i) => { S.upgrades[k] = 1 + (i % 3); });
   S.tap = { power: 7, critChance: 0.21, critMult: 26, combo: 12, comboMax: 90, holdInterval: 420 };
+  /* Identity, non-default in BOTH fields. A Turn that reset either one would
+     otherwise pass here on the strength of the name matching its own default. */
+  S.critters.pip = { since: clock - 5000, fed: 0, gifts: 0, met: true, level: 2, tending: true, fedUntil: clock + 3600 };
+  S.profile = { name: 'Rosalind', avatar: 'critter:pip' };
   /* Fall mid-flight: a crop and the Century Bloom, both growing, on a bed
      whose windfall latch is CLOSED and whose cells carry their marks — the
      state that makes "once per fill" structural, and the state a Turn must
@@ -4344,7 +4461,7 @@ const SURVIVES = ['version', 'gems', 'tickets', 'decor', 'boosters', 'weatherCal
   'setsClaimed', 'stats', 'wonder', 'apiary', 'flowers', 'craft', 'goods', 'bench', 'critters',
   'pairsSeen', 'mementos', 'luckyPacks', 'prefs', 'seen', 'quests', 'rep', 'level', 'discovered',
   'bestRarity', 'almanacClaimed', 'mastery', 'rarityCounts', 'seedUnlocks', 'petals', 'blessed',
-  'fall', 'harvestsTowardRep', 'lastSeen', 'lifetimeCoins'];
+  'fall', 'harvestsTowardRep', 'lastSeen', 'lifetimeCoins', 'profile'];
 /* CHANGED, not "cleared": doc 32's never-touched column means never reset or
    decreased — savedSeeds sits here because the mint WRITES it (upward, by
    exactly the projection, asserted below), and petals/blessed sit in SURVIVES

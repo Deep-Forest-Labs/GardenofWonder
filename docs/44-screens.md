@@ -47,6 +47,22 @@ What a returning player is shown first: what the garden banked while they were a
 
 Owned by [03-systems.md](03-systems.md) · drawn by [ui-sheet.js](../ui-sheet.js)
 
+### The menu
+
+[![The menu](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/the-menu.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/the-menu.png)
+
+The hamburger opens a drawer off the right edge: your face and your name, then everywhere else. Four rows built, three reserved and drained.
+
+Owned by [08-ui-and-layout.md](08-ui-and-layout.md) · drawn by [ui-menu.js](../ui-menu.js)
+
+### Your garden is your face
+
+[![Your garden is your face](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/the-avatar-picker.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/the-avatar-picker.png)
+
+Every portrait is drawn by the game from something the player earned — unlocked blooms, then creatures that have moved in. No uploads, no photographs, ever.
+
+Owned by [03-systems.md](03-systems.md) · drawn by [ui-menu.js](../ui-menu.js)
+
 ### The What's New announcement
 
 [![The What's New announcement](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/whats-new.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/whats-new.png)
@@ -243,6 +259,6 @@ Owned by [41-weather-staging.md](41-weather-staging.md) · drawn by [ui-weather.
 
 ---
 
-_26 screens. The scene table that produced them — what each one drives, and what it
+_28 screens. The scene table that produced them — what each one drives, and what it
 asserts before capturing — is the top of [`tools/capture-screens.js`](../tools/capture-screens.js).
 Add a screen there and it appears here on the next run._

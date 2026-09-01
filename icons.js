@@ -23,6 +23,33 @@ const Icons = (() => {
       <path d="M12 2.8l1.6 2.2 2.6-.6.5 2.7 2.5 1-1.2 2.4 1.7 2.1-2.2 1.6.3 2.7-2.7.2-1.3 2.4-2.4-1.2-2.3 1.4-1.3-2.4-2.7-.4.1-2.7-2.3-1.4 1.5-2.2-1.1-2.5 2.6-.8.7-2.6 2.6.8Z" fill="#cfd8e3"/>
       <circle cx="12" cy="12" r="3.4" fill="#8b9bb0"/>`),
     close: S(`<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" stroke-width="2.6"/>`),
+    /* Three bars at 3.4 rather than the set's 2, and rounded caps. Beside the
+       gear's solid grey body a 2-unit bar reads as a hairline at 24px, and this
+       is the button the whole menu is found through. */
+    menu: S(`<path d="M4.6 7h14.8M4.6 12h14.8M4.6 17h14.8" stroke-width="3.4"/>`),
+    /* The five below are generic interface vocabulary the set had never needed,
+       because until the menu there was nothing in this game to navigate, edit,
+       or reserve a slot for. They are the only monochrome glyphs here besides
+       `close` and `check`, and for the same reason: a chevron is punctuation,
+       not an object. */
+    chevron: S(`<path d="M9.4 5.6 15.8 12l-6.4 6.4" stroke-width="2.8"/>`),
+    pencil: S(`
+      <path d="M16.4 3.9a1.7 1.7 0 0 1 2.4 0l1.3 1.3a1.7 1.7 0 0 1 0 2.4l-9.7 9.7-4 1.3 1.3-4Z" fill="#ffe0ad"/>
+      <path d="M14.6 5.7 18.3 9.4" stroke-width="1.8"/>
+      <path d="M6.4 18.6 4 21l2.4-.6Z" fill="#2c1a10"/>`),
+    bell: S(`
+      <path d="M12 3.2a5.6 5.6 0 0 1 5.6 5.6v3.5l1.7 3.1a.9.9 0 0 1-.8 1.4H5.5a.9.9 0 0 1-.8-1.4l1.7-3.1V8.8A5.6 5.6 0 0 1 12 3.2Z" fill="#ffe066"/>
+      <path d="M12 3.2V1.8" stroke-width="1.8"/>
+      <path d="M9.7 16.8a2.3 2.3 0 0 0 4.6 0" fill="#ffd43b"/>`),
+    people: S(`
+      <circle cx="9.2" cy="8.4" r="3.5" fill="#a5d8ff"/>
+      <circle cx="16.6" cy="9.4" r="2.7" fill="#c9f5cf"/>
+      <path d="M3.4 19.8c0-3.2 2.6-5.4 5.8-5.4s5.8 2.2 5.8 5.4Z" fill="#a5d8ff"/>
+      <path d="M15.6 14.6c3 0 5 1.9 5 4.6h-3.4" fill="#c9f5cf"/>`),
+    scroll: S(`
+      <path d="M7 3.6h9.6a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7Z" fill="#fff8e7"/>
+      <path d="M7 3.6a2 2 0 0 0-2 2v1.8h2M7 20.6a2 2 0 0 1-2-2v-1.7h2" fill="#ffeecd"/>
+      <path d="M9.6 8.4h6.4M9.6 12h6.4M9.6 15.6h4.2" stroke-width="1.7"/>`),
     badge: S(`
       <path d="M12 2.6l2.7 1.9 3.3-.2.9 3.2 2.5 2.2-1.7 2.8.4 3.3-3.2.9-2.1 2.6-3-1.4-3 1.4-2.1-2.6-3.2-.9.4-3.3L2.2 9.7l2.5-2.2.9-3.2 3.3.2Z" fill="#ffd43b"/>
       <circle cx="12" cy="11.4" r="4.2" fill="#fff3bf"/>

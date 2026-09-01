@@ -1235,35 +1235,86 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
-**THE HAMBURGER MENU IS AT ITS WIREFRAME GATE. NOTHING IS BUILT.** `tools/menu-spike.html` draws
-the whole feature in five static frames at 390x844 with a real handset's insets on — the garden with
-the hamburger in the gear's place, the menu open, the name being edited, the avatar picker, and the
-reduced-motion version. **Open it, judge it against the reference screenshots, and answer the six
-questions in the table at the bottom of the page.** Nothing lands in `style.css`, `game.js` or any
-`ui-*.js` until it is approved.
+**THE HAMBURGER MENU IS BUILT AND WAITING FOR THE OWNER'S REVIEW.** The wireframe gate opened first
+(`tools/menu-spike.html`, five frames), the owner approved all six questions on 2026-08-31 and added
+one condition — *"this thing needs to be somewhat modular where we can move things in and out"* — and
+the build followed. The two-minute phone script is below.
 
-- **What it proposes** is written up as a new surface class in
-  [08-ui-and-layout.md](08-ui-and-layout.md#the-side-drawer--the-menu-2026-08-31-proposed-at-the-gate),
-  marked PROPOSED. The reasoning, including what was rejected, is the 2026-08-31 gate entry at the
-  top of [10-decision-log.md](10-decision-log.md).
-- **The one non-negotiable in the build that follows** is the escaping ruling in
-  [11-known-issues.md](11-known-issues.md#sheet-panels-use-innerhtml-with-interpolation-measured-2026-08-30-overnight-round).
-  `state.profile.name` is **the first player-typed text this game has ever held**, and that entry was
-  written for exactly this feature: the name never enters a template literal, it goes into a labelled
-  empty node with `.textContent`, and `tools/html-check.js` — which does not exist yet — is what
-  stops the next agent doing it the other way.
-- **The build order after approval**, for whoever picks it up: the hamburger icon and the badge dot;
-  the drawer surface and its three dismissals; `state.profile` in `defaultState()`, in `load()`'s
-  re-merge list, and in the **`SURVIVES`** list in `tools/sim-test.js` bill 1 (a Turn must not touch
-  identity, and the partition's completeness check fails the suite if a new top-level key is not
-  classified); the avatar picker; the seven rows. Then the gauntlet, then the five-step docs pass.
+**What landed, in one picture.** The settings gear in the top-right is now a hamburger with a red
+badge dot. Tapping it slides a drawer in from the right edge over a scrim, with the garden still
+visible down the left. At the top: a round portrait, the player's name, and a pencil. Below: **Shop ·
+Almanac · What's New · Settings**, then a *Coming soon* rule and three drained, unpressable rows —
+**Friends · Daily Gift · Garden Record**. Settings kept every one of its six controls; nothing else
+in the HUD or the dock moved at all.
 
-**Two things about this checkout.** The tree carries uncommitted work from another session
-(`fx.js`, `index.html`, `style.css`, `sw.js`, `ui.js`, `ui-sheet.js`, `ui-weather.js`,
-`tools/probe.js`, plus an untracked `ui-perf.js`). The gate commit touches only
-`tools/menu-spike.html` and `docs/`. And the polish worktree is on `polish` — check `git branch -r`
-and re-read this file's parent commit before writing step 5, per the trap below about a design
-session committing into the same directory.
+- **The drawer is a third surface class**, and calling it a sheet is the mistake that breaks it.
+  Definition, rules and the two dismissals:
+  [08-ui-and-layout.md](08-ui-and-layout.md#the-side-drawer--the-menu-2026-08-31). The reasoning and
+  what was rejected: the 2026-08-31 build entry at the top of
+  [10-decision-log.md](10-decision-log.md).
+- **`state.profile` is `{ name, avatar }`**, top-level, and it is identity rather than progress —
+  [07-save-data.md](07-save-data.md#stateprofile--who-the-player-is-added-2026-08-31). The mechanic
+  is in [03-systems.md](03-systems.md#the-menu--who-the-player-is-and-where-everything-else-lives-2026-08-31).
+- **The rows are a table**, `ROWS` at the top of `ui-menu.js`. Moving one in or out is one line;
+  the playbook is in [09-conventions.md](09-conventions.md#playbook-add-or-move-a-menu-row).
+- **`tools/html-check.js` is new and is now part of checking your work.** It holds the escaping
+  ruling. Run it beside `sim-test` and `style-check`.
+
+### The five things this round got wrong first, and what caught each one
+
+Worth reading before the next surface, because none was visible from the code.
+
+1. **The drawer flew to the corner of a desktop window.** It is a *sibling* of `.ui` — it has to be,
+   or the FX float layer paints coin drops over it — so it inherits nothing and must re-state the
+   560px column itself. Perfect on a phone, wrong on a laptop. Caught by comparing
+   `getBoundingClientRect()` against `.ui`'s, not by looking. This is the meadow's own recorded trap,
+   stepped in again on a new surface.
+2. **Every row wore a 39px grey blob.** `.dr-row` shipped with the plot's full five-layer recipe, and
+   the two blemish radials are sized in *percentages of the box* — a speck on a 100px plot, a bruise
+   on a 300px row. The scale trap, in CSS. Every wide card in this game is a two-stop gradient.
+3. **"Tap the flower!" sat on top of the menu for half a second.** `refreshCoach()` runs on the 0.6s
+   tick, so the JS guard alone leaves a window. It needs the declarative half too —
+   `.drawer.open ~ .coach{display:none}`, the same route the sheet uses.
+4. **The escaping checker passed a planted attack.** A template literal cannot be found by counting
+   backticks: the first one *inside* a template opens a nested one rather than closing the outer, so
+   a two-level case reads as a closed span. It keeps a mode stack now. **It was re-broken four ways
+   before being believed** — and that is the rule, not the anecdote.
+5. **The spike promised a dismissal that cannot exist.** An open drawer covers the button that opened
+   it, so "tap the hamburger again" is unreachable with a thumb. Two dismissals: drag the grip right,
+   or tap the 58px strip of garden. The spike's note was corrected in place.
+
+**And one trap that behaved exactly as designed, which is worth saying too.** Adding `profile` to
+`defaultState()` turned sim-test's partition completeness check red on the very next run, exactly as
+its comment promises. It is classified `SURVIVES` — **a Turn must never touch identity** — and the
+rig writes a non-default name *and* avatar so the assertion cannot pass on a value that equals its
+own default. The Settings reset is a different thing and does clear it.
+
+### The two-minute check — the menu, on the phone
+
+Do this one first. Everything is behind one button.
+
+1. **Find the button.** Top right, where the gear was: three bars, with a **red dot** if there is an
+   announcement you have not read. Tap it. The menu slides in from the right and the garden stays
+   visible down the left edge — you have not left it.
+2. **Rename yourself.** Tap the pencil beside *Gardener*. The name becomes a field with a green tick;
+   type something and tap the tick. Try a long one: it stops at 16 characters and the header
+   ellipsises rather than breaking. Try `<b>hello</b>` if you like — it shows up as those exact
+   letters, which is the whole point of the fuss in the code.
+3. **Pick a creature as your face.** Tap the round portrait. Your blooms come first, then any
+   creature that has moved in; flowers you have not unlocked are greyed with a padlock, like a locked
+   seed row. Tap one — a gold ring and a green tick say it is yours, and the menu goes back to the
+   list.
+4. **Reopen What's New.** Third row. It shows the newest announcement again; the button only closes
+   it and the red dot goes out. **It can never start you over** — that only ever happens once, on the
+   dialog that greets a new build.
+5. **Find Settings in its new home.** Fourth row. Sound, music, the two grants, the Wonder and the
+   reset are all exactly where they were, one tap deeper.
+6. **Get out two ways.** Drag the little bar on the drawer's left edge to the right. Then reopen it
+   and tap the garden strip beside it. Both close it. (Tapping the hamburger again does not — the
+   drawer is covering it.)
+
+Then check nothing else moved: the coins and gems pills, the Almanac book, the quest strip, the
+UPGRADE and POWER-UP buttons and all five dock buttons are untouched.
 
 ---
 
@@ -2083,6 +2134,66 @@ the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
 
+**A depth counter over backticks does not find a nested template literal, and the miss is silent.**
+The first backtick *inside* a template opens a new one — it can only appear inside a `${}` — so
+counting them as one depth makes a nested case read as a closed span. `tools/html-check.js` shipped
+that way for an hour and passed a deliberately planted
+``${a ? `<span title="${S.profile.name}">` : ''}`` without a word. It keeps a mode stack now, `tpl`
+and `expr` frames with a brace counter per expression so an object literal cannot end one. **The
+general rule is the one that found it: a check that has never gone red is not a check.** Break a new
+guard four ways — the obvious one, a nested one, a different file, a different spelling of the same
+accessor — and confirm a *fifth* case that is legal stays green.
+
+**The five-layer material recipe does not survive a change of aspect ratio.** Its two blemishes are
+`radial-gradient(circle at 26% 22%, … 12%, …)` — a *percentage* radius, resolved against the box —
+so the speck that reads as dirt on a 100px plot is a 39px grey bruise across a 300px menu row. Every
+wide card in this game is a two-stop gradient for this reason; `.seed-row` is the one to copy. Same
+family as the meadow's oversized stones: a recipe composed at one size, reused at another.
+
+**A surface that must not be painted over cannot live inside `.ui`, and one that lives outside it
+inherits nothing.** These two pull in opposite directions and the menu drawer sits between them.
+Inside `.ui` it would be covered by the FX float layer at `z-index: 40`; outside, it loses the
+`max-width: 560px` column and flies to the corner of a desktop window — which is exactly what it did
+first, while looking perfect on a phone. `.sheet` re-states the column with `max-width` +
+`margin: 0 auto` because it spans it; the drawer is pinned to one edge, so it says the same thing as
+`right: max(0px, calc((100% - 560px) / 2))`. **Whichever side you land on, measure it against
+`.ui`'s own rect on a wide viewport before believing it.**
+
+**Hiding a coach mark needs BOTH halves, because `refreshCoach()` runs on the 0.6s tick.** The JS
+guard stops a hidden target being *measured* (a 0×0 rect parks the bubble over the wallets); the
+declarative rule stops it being *painted*. With only the guard, "Tap the flower!" sat on top of the
+new menu for up to half a second every time it opened — long enough to photograph, which is how it
+was found. `.sheet.open ~ .coach` and `.drawer.open ~ .coach` are the two rules; both work by DOM
+order, so anything new that covers the garden has to come *before* `.coach` in `index.html`.
+
+**A panel that slides in cannot be tapped until it has arrived, and automation will not wait for
+you.** `tools/probe.js` taps an element's centre, and a drawer at `translateX(102%)` has its centre
+outside the viewport, where events are not delivered. Two runs of this suite reported "nothing
+matches .pencil" and looked like a broken render. Put `wait:450` after opening any transformed
+surface before tapping into it — the transition is 340ms.
+
+**A drawer covers the button that opened it.** So "tap the toggle again to close" is not a dismissal
+a thumb can reach, however reasonable it sounds in a spec — the spike promised it and it was wrong.
+`document.elementFromPoint()` over the button's own centre is the one-line way to check. What is
+left is the gesture and the scrim, which is why the strip of garden the drawer deliberately leaves
+visible is load-bearing rather than decorative.
+
+**`tools/style-check.js` counts occurrences, so a correct change still turns it red.** A new
+component that reuses the house recipe exactly — same gradients, same lip, same drained family —
+adds *uses* of colours the file already had, and the ratchet cannot tell that apart from drift. The
+check that actually answers docs/05's fifth question is the **distinct set**: dump it from
+`--strict` before and after and diff them. The menu drawer added eight occurrences and **zero** new
+colours, which is a re-baseline; a change that adds a colour is a conversation. It caught two real
+violations on the way, so do not skip it — a hex fallback inside `var()`, and a drained ink invented
+where the locked seed row already proves the drained *surface* is enough.
+
+**`tools/export-icons.js` scanned only `data.js` for `icon:` rows.** The menu is the first table of
+icons that does not live there, and four live glyphs reported as `**not referenced anywhere**` in the
+manifest the Unity team reads — a lie in a generated document, which is worse than a blank. It reads
+`ui-*.js` too now. Any future table of icons outside `data.js` should check the manifest afterwards
+rather than assume.
+
+
 **A gallery of screenshots is a different sky every run unless three separate things are pinned,
 and none of them is obvious until the pictures come out wrong.** `tools/capture-screens.js` hit
 all three. (1) **The What's New announcement goes up over a fresh boot**, so it was in front of
@@ -2667,7 +2778,8 @@ at once. See [11-known-issues.md](11-known-issues.md).
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 1,444 assertions over the simulation layer
+node tools/sim-test.js          # 1,463 assertions over the simulation layer
+node tools/html-check.js        # the escaping ruling: no player text inside a template literal
 node tools/year-sim.js 12 all   # the pacing model — see the caveat below before trusting its exit code
 node tools/order-gold.js 25 4   # is a delivered order worth a minute of the player's time, per tier?
 node --check <file>.js          # no build step, so this is the only syntax gate

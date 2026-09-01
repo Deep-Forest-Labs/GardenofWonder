@@ -11,6 +11,11 @@
      cue that Wonderfall borrows from them — and a rainbow copied four times is
      four places to forget when one of them changes. */
   --wonder-sweep:#ff6b6b,#ffd43b,#69db7c,#4dabf7,#b197fc,#ff8fab;
+  /* The attention red. Not a new colour — the dock dot's own, named the day the
+     menu button grew a second one. It is the only red in the game that means
+     "there is something here", and two dots that drift apart is two dots that
+     stop reading as the same promise. */
+  --dot:#ff6b6b;
   --ink:#2c1a10;
   --ink-2:#5a3a1f;
   --ink-soft:#7a6047;
@@ -378,6 +383,10 @@ button:focus-visible{
 
 .hud-actions{display:flex;gap:6px;flex:none}
 .round-btn{
+  /* Positioned so the menu's badge dot has a containing block. Without it an
+     absolutely-positioned child resolves against `.hud`, which is the nearest
+     positioned ancestor, and the dot lands over the wallets. */
+  position:relative;
   width:44px;height:44px;flex:none;
   display:grid;place-items:center;
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
@@ -390,6 +399,24 @@ button:focus-visible{
 .round-btn:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink-2), 0 3px 6px rgba(44,26,16,.25)}
 .round-btn.ghost{width:38px;height:38px;box-shadow:0 3px 0 var(--ink-2)}
 .round-btn.ghost svg{width:20px;height:20px}
+
+/* THE HUD'S ATTENTION DOT. The dock's dot, on a HUD button for the first time —
+   same red disc, same ink contour, same opaque lip, one size down because a
+   44px round button is smaller than a dock tile. It lights when the newest
+   announcement has not been read.
+
+   It does NOT pulse, and that is deliberate rather than an omission. The dock's
+   dot can afford `tagPop` because a dock button carries a label saying what it
+   is; this one is the only mark on an icon-only control, and a state whose sole
+   carrier is movement has no carrier at all under the reduced-motion clamp. */
+.hud-dot{
+  position:absolute;top:-3px;right:-3px;
+  width:15px;height:15px;border-radius:50%;
+  background:var(--dot);
+  border:2.5px solid var(--ink);
+  box-shadow:0 2px 0 var(--ink-2);
+}
+.hud-dot[hidden]{display:none}
 
 /* ---------- quest strip ---------- */
 .quest-strip{
@@ -1087,7 +1114,7 @@ button:focus-visible{
 .dock-dot{
   position:absolute;top:-6px;right:-4px;
   width:16px;height:16px;border-radius:50%;
-  background:#ff6b6b;border:2.5px solid var(--ink);
+  background:var(--dot);border:2.5px solid var(--ink);
   box-shadow:0 2px 0 var(--ink-2);
   display:grid;place-items:center;
   font-size:9.5px;font-weight:800;line-height:1;color:#fff;
@@ -2025,6 +2052,310 @@ button:focus-visible{
 }
 
 /* =========================================================
+   THE MENU DRAWER — the third surface class
+
+   Not a sheet. The bottom sheet comes UP, holds one panel from a mode map, and
+   is dismissed downward; this comes in from the RIGHT, holds a menu, and is
+   dismissed rightward. It borrows the sheet's material, its scrim and its
+   z-order, and it differs in three ways that matter:
+
+   - It obeys the 560px column. `min(86%, 332px)` pinned right, and a max-width
+     so a desktop window never gets a drawer wider than the phone column it
+     belongs to. The 58px of garden left visible down the left edge is design,
+     not slack: full-bleed would make this a screen, and the visible strip is
+     what makes the scrim tap findable.
+   - It pays the FULL safe-area inset, top and bottom. `--bottom-gap` shaves 12px
+     off the bottom inset and is right for the dock — a row of buttons nobody
+     swipes from does not need the whole gesture area. A panel that reaches both
+     edges of the screen takes `--sat` and `--sab` whole, the way `.news-card`
+     does. Nothing here calls env(); the four :root variables are the only door.
+   - It is a scrolling COLUMN OF ROWS, so no row may size itself against the
+     drawer's height.
+
+   See docs/08-ui-and-layout.md.
+   ========================================================= */
+.drawer{
+  position:absolute;top:0;bottom:0;z-index:50;
+  width:min(86%, 332px);
+  /* THE COLUMN, RE-STATED. This is a sibling of `.ui`, not a child — it has to
+     be, or the FX float layer at z-index 40 would paint coin floats over it and
+     the sheet at 50 would too. That puts it in the same position `.sheet` and
+     `.meadow-layer` are in: outside the 560px cap, inheriting nothing, and
+     therefore obliged to say the cap itself. `.sheet` does it with
+     `max-width` + `margin:0 auto` because it spans the column; a drawer is
+     pinned to one EDGE of it, so it says the same thing as an offset. On a
+     phone the offset is zero and this is `right:0`; on a laptop it is the
+     gutter, and the drawer lands on the column's right edge rather than the
+     window's. Without it the menu was the only surface in the game that flew
+     out to the corner of a desktop window — the meadow's own bug, on a new
+     surface, and invisible on a phone. */
+  right:max(0px, calc((100% - 560px) / 2));
+  display:flex;flex-direction:column;
+  background:linear-gradient(180deg,var(--paper) 0%, var(--paper-2) 62%, var(--paper-3) 100%);
+  border-left:4px solid var(--ink);
+  /* Parked with no shadow, for the sheet's reason: a 30px blur cast sideways
+     from a drawer sitting just off the right edge paints a dark band down the
+     scenery, and `.game` clips it square. */
+  transform:translateX(102%);
+  transition:transform .34s cubic-bezier(.22,1,.28,1), box-shadow .34s ease;
+  will-change:transform;
+  padding:calc(var(--sat) + 10px) calc(var(--sar) + 14px) calc(var(--sab) + 12px) 14px;
+}
+.drawer.open{transform:translateX(0);box-shadow:-8px 0 30px rgba(44,26,16,.32)}
+.drawer.dragging{transition:none}
+.drawer[hidden]{display:none}
+
+/* The grip. The sheet's is a horizontal bar you pull down; this is a vertical
+   bar you pull right, on the drawer's own left edge, so the gesture is legible
+   before it is discovered. `touch-action:none` is the only thing stopping the
+   browser's own scroll from stealing the drag. */
+.dr-grip{
+  position:absolute;left:0;top:0;bottom:0;width:22px;
+  display:grid;place-items:center;touch-action:none;cursor:grab;z-index:2;
+}
+.dr-grip span{width:6px;height:52px;border-radius:999px;background:rgba(44,26,16,.28)}
+
+/* ---------- the profile header ---------- */
+.dr-head{
+  display:flex;align-items:center;gap:11px;
+  padding:2px 0 12px 12px;
+  border-bottom:3px solid rgba(44,26,16,.14);
+  margin-bottom:10px;
+}
+
+/* The round frame. Your garden is your face: what sits inside is a bloom the
+   player has unlocked or a creature that has moved in, drawn by the game and
+   never uploaded. The white radial is a VEIL over the token, `.seed-art`'s
+   recipe — it is what lets nineteen saturated seed hues read as nineteen legible
+   discs without a second hex per seed. */
+.avatar{
+  /* --av is written inline from the bloom's or creature's own token. Declared
+     here rather than as a var() fallback: docs/05 forbids a hex inside var(),
+     and a component default is where a knob's resting value belongs. */
+  --av:var(--grass-l);
+  position:relative;width:62px;height:62px;flex:none;
+  border-radius:50%;display:grid;place-items:center;overflow:hidden;
+  border:3.5px solid var(--ink);
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)),
+    var(--av);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.5),
+    inset 0 -7px 0 rgba(44,26,16,.07),
+    0 4px 0 var(--ink-2),
+    0 8px 14px rgba(44,26,16,.24);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.avatar:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink-2), 0 3px 6px rgba(44,26,16,.25)}
+/* The Zs a sleeping creature carries rise above its viewBox, and the talking
+   flower's stem falls below its own — both are clipped to the disc on purpose,
+   because a portrait is a face and not a scene. */
+.avatar svg{width:82%;height:82%;display:block}
+.avatar .critter-svg{width:96%;height:96%}
+.avatar .cr-eyes-shut,.avatar .cr-zzz{display:none}
+
+.dr-who{flex:1;min-width:0;display:grid;gap:3px}
+.dr-name{display:flex;align-items:center;gap:6px;min-width:0}
+/* The name ellipsises rather than wrapping. The engine caps it at 16 characters,
+   which fits here at every phone width — this is the belt to that brace, for a
+   font that falls back to something wider. */
+.dr-name b{
+  font-size:19px;font-weight:800;line-height:1.15;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.dr-sub{font-size:11.5px;font-weight:600;color:var(--ink-soft);line-height:1.2}
+
+.pencil{
+  width:32px;height:32px;flex:none;display:grid;place-items:center;
+  border-radius:50%;border:2.5px solid var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.pencil svg{width:17px;height:17px}
+.pencil:active{transform:translateY(2px);box-shadow:0 0 0 var(--ink-2)}
+
+/* ---------- renaming, in place ----------
+   The first text field in this game, so it is drawn as a house surface rather
+   than as a browser input: cream body, ink contour, its own lip, and an inset
+   top edge so it reads as a well rather than as a card. */
+.name-edit{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;flex:1}
+.name-field{
+  min-width:0;width:100%;
+  padding:8px 11px;
+  border:3px solid var(--ink);border-radius:var(--r-sm);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:inset 0 3px 0 rgba(44,26,16,.07), 0 3px 0 var(--ink-2);
+  font:inherit;font-size:17px;font-weight:800;line-height:1.2;color:var(--ink);
+  -webkit-appearance:none;appearance:none;
+}
+.name-field:focus{outline:3px solid var(--ink);outline-offset:3px}
+.save-btn{
+  width:40px;height:40px;flex:none;display:grid;place-items:center;
+  border-radius:50%;border:3px solid var(--ink);
+  background:linear-gradient(180deg,#d3f9d8,#8ce99a);
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.save-btn svg{width:20px;height:20px}
+.save-btn:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink-2)}
+
+/* ---------- the rows ---------- */
+.dr-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.dr-rows{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  display:grid;gap:8px;align-content:start;padding:2px 2px 4px;
+}
+.dr-rows::-webkit-scrollbar{width:0}
+
+/* `.seed-row`'s material verbatim — the house's wide list card, at the same 4px
+   lip and the same contact shadow. NOT `.seed-row` itself: that class is the
+   plant picker's button and reusing it collapses the columns (see the traps in
+   docs/HANDOFF.md). Only the recipe travels.
+
+   A wide row takes the plain gradient and NOT the plot's two blemish radials.
+   Those percentages resolve against the box, so a 9% dirt mark that is a speck
+   on a 100px plot is a 39px grey blob across a 300px row — the scale trap, in
+   CSS. Every wide card in this game is a two-stop gradient for that reason. */
+.dr-row{
+  display:grid;grid-template-columns:38px minmax(0,1fr) auto;
+  align-items:center;gap:11px;
+  padding:11px 12px;text-align:left;width:100%;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fff,#fff5e2);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
+  transition:transform .09s ease, box-shadow .09s ease;
+}
+.dr-row:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink-2), 0 4px 8px rgba(44,26,16,.22)}
+
+/* The icon disc. `--rt` must be a SATURATED token: this is the veil again, and
+   four pale tints under it produce four identical white discs — the failure
+   docs/05 names under `.set-ring`, reached from the other direction. */
+.dr-ico{
+  --rt:var(--paper-3);
+  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  border:2.5px solid var(--ink);
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.78), rgba(255,255,255,.26)),
+    var(--rt);
+  box-shadow:0 2px 0 var(--ink-2);
+}
+.dr-ico svg{width:22px;height:22px;display:block}
+
+.dr-lab{min-width:0}
+.dr-lab b{
+  display:block;font-size:15.5px;font-weight:800;line-height:1.15;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.dr-lab i{
+  display:block;font-style:normal;font-size:11px;font-weight:600;
+  color:var(--ink-soft);line-height:1.25;margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.dr-end{display:flex;align-items:center;gap:6px;flex:none}
+/* A row's own dot: the same object as the HUD's, one size down again. */
+.row-dot{
+  width:13px;height:13px;border-radius:50%;
+  background:var(--dot);border:2.5px solid var(--ink);
+  box-shadow:0 2px 0 var(--ink-2);
+}
+.chev{width:16px;height:16px;display:grid;place-items:center;opacity:.4}
+.chev svg{width:100%;height:100%;display:block}
+
+/* THE NOT-NOW TREATMENT. The drained paper family every "not yet" state in this
+   game already wears — the locked seed row, the locked season tab, the sleeping
+   creature. It RESTATES ITS OWN LIP, because a modifier that writes box-shadow
+   and forgets deletes the lip in exactly the states a player is looking at. */
+.dr-row.soon{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 4px 0 var(--paper-dim-edge), 0 7px 11px rgba(44,26,16,.14);
+  pointer-events:none;
+}
+.dr-row.soon .dr-ico{
+  filter:saturate(.28);
+  border-color:rgba(44,26,16,.55);
+  box-shadow:0 2px 0 var(--paper-dim-edge);
+}
+/* No drained ink of its own. The locked seed row keeps `--ink` and `--ink-soft`
+   and lets the drained SURFACE carry the state — a second grey would be a new
+   value doing a job the paper already does. The labels stay readable on purpose:
+   a reserved row is an advert for what is coming, exactly as a locked seed row
+   is an advert for the flower you are saving for. */
+.soon-chip{
+  display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;
+  border:2.5px solid rgba(44,26,16,.55);
+  background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));
+  box-shadow:0 2px 0 var(--paper-dim-edge);
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-soft);line-height:1;
+}
+
+/* A rule between what is built and what is reserved, so the drained rows read as
+   promises rather than as broken buttons. */
+.dr-sep{
+  display:flex;align-items:center;gap:8px;margin:4px 2px 0;
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.dr-sep::before,.dr-sep::after{content:'';flex:1;height:2px;border-radius:2px;background:rgba(44,26,16,.16)}
+
+.dr-foot{
+  padding-top:10px;margin:0;
+  font-size:11px;font-weight:600;color:var(--ink-soft);
+  text-align:center;line-height:1.35;
+}
+
+/* ---------- the avatar picker ---------- */
+.pick-group{
+  margin:0 0 6px;padding-left:2px;
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:0 0 12px}
+.pick-cell{
+  --av:var(--grass-l);
+  position:relative;aspect-ratio:1;border-radius:50%;
+  display:grid;place-items:center;overflow:hidden;
+  border:3px solid var(--ink);
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)),
+    var(--av);
+  box-shadow:inset 0 4px 0 rgba(255,255,255,.5), 0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.pick-cell svg{width:84%;height:84%;display:block}
+.pick-cell .critter-svg{width:96%;height:96%}
+.pick-cell .cr-eyes-shut,.pick-cell .cr-zzz{display:none}
+.pick-cell:active{transform:translateY(3px);box-shadow:inset 0 4px 0 rgba(255,255,255,.5), 0 0 0 var(--ink-2)}
+/* The one you are wearing. A gold ring and a green tick, and the ring restates
+   the lip beneath it rather than replacing it. */
+.pick-cell.on{
+  box-shadow:inset 0 4px 0 rgba(255,255,255,.5), 0 0 0 3px var(--coin),
+             0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
+}
+.pick-cell.on::after{
+  content:'';position:absolute;right:-1px;bottom:-1px;width:20px;height:20px;
+  border-radius:50%;border:2.5px solid var(--ink);
+  background:
+    linear-gradient(180deg,#8ce99a,#51cf66),
+    no-repeat center;
+}
+/* Not unlocked: drained and padlocked rather than hidden, exactly as the locked
+   seed row is. The bloom stays legible under the mark — the cell is an advert
+   for the flower you are saving for. */
+.pick-cell.locked{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 3px 0 var(--paper-dim-edge);
+}
+.pick-cell.locked svg{filter:saturate(.3);opacity:.5}
+.pick-cell.locked::after{
+  content:'';position:absolute;inset:0;
+  background:no-repeat center/17px 17px
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c1a10' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='5' y='10.5' width='14' height='9.5' rx='3' fill='%23ebe5d9'/%3E%3Cpath d='M8.5 10.5V8a3.5 3.5 0 017 0v2.5'/%3E%3C/svg%3E");
+}
+
+/* =========================================================
    OVERLAYS
    ========================================================= */
 .float-layer{position:absolute;inset:0;pointer-events:none;z-index:44;overflow:hidden}
@@ -2165,6 +2496,13 @@ button:focus-visible{
    Declarative and keyed off the sheet being open, like .sheet-art, so no close
    path can forget it. The coach follows the sheet in the DOM, hence `~`. */
 .sheet.open ~ .coach{display:none}
+/* And the same for the drawer, for the same reason and by the same route — it
+   covers the right two thirds of the screen, so a mark pointing into the garden
+   lands on top of it. `refreshCoach()` also names the drawer in its guard, and
+   both are needed: the guard stops a hidden target being MEASURED, and this stops
+   the mark being PAINTED in the half-second before the next slow tick runs. The
+   drawer precedes the coach in the DOM, hence `~`. */
+.drawer.open ~ .coach{display:none}
 
 /* =========================================================
    RESPONSIVE
@@ -5301,4 +5639,21 @@ button:focus-visible{
     top:0;bottom:0;left:0;width:auto;right:0;transform:none;
     background:linear-gradient(180deg,rgba(255,201,60,.3),rgba(255,201,60,.14));
   }
+}
+
+/* ---------- REDUCED MOTION: the menu drawer ----------
+   After the Turn button's block, because this file's last rule wins and a media
+   query adds no specificity. The global clamp at the top of the RESPONSIVE
+   section already collapses every transition to 80ms, so the drawer would
+   "work" without this. It is here because 80ms of travel on a full-height panel
+   is not a calm arrival, it is a flinch — and because the requirement is an
+   HONEST instant version rather than a fast one.
+
+   Nothing about the drawer's state is carried by movement in the first place:
+   the badge dot is a solid disc in its base style, the scrim's dim is a plain
+   opacity, and the rows never animate. So there is no state to substitute for
+   here — which is the check docs/05 asks for, answered rather than assumed. */
+@media (prefers-reduced-motion:reduce){
+  .drawer{transition:none !important}
+  .drawer-scrim{transition:none !important}
 }

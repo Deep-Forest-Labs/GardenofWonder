@@ -240,6 +240,55 @@ All of this is in `ui-sheet.js`.
 6. Make sure the frequently-changing parts are updatable by `syncAfford()` so it doesn't need a full
    rebuild on every tap.
 
+## Playbook: add or move a menu row
+
+The menu drawer is deliberately a table, because the owner's condition at the wireframe gate was
+that this menu will keep changing and things must move in and out of it easily. All of it is `ROWS`
+at the top of `ui-menu.js`.
+
+1. Add a row: `{ id, icon, tint, label, note, open }`. `open` is a thunk — usually
+   `() => UI.openSheet('mode')`. The drawer closes itself before calling it, so a panel never opens
+   behind a scrim.
+2. **`tint` must be a saturated colour, and should be one the palette already has** — the seed art
+   colours in `DATA.seeds[].art.c1` are the source the four live rows use. The disc draws it under
+   `.seed-art`'s white veil, and a pale tint under that veil is a white disc: docs/05 names that
+   failure under `.set-ring`.
+3. A row that should badge gets `dot: () => <boolean>`, recomputed on every `panels` emit.
+4. A reserved slot gets `soon: true` instead of `open`. It renders drained, non-interactive, with a
+   Soon chip where a live row wears its badge. **Three is the cap** — past that the menu is
+   advertising more game than exists, which is the whole reason it is honest.
+5. Order in the array is order on screen; live rows are drawn first and reserved ones fall below the
+   rule automatically, whatever order they are written in.
+6. **The icon has to exist in `icons.js`**, and adding one means `node tools/export-icons.js` —
+   which also rewrites the manifest in `45-asset-inventory.md`. Its "Used by" scan reads `icon: 'x'`
+   in `data.js` *and* in `ui-*.js` files, so a row's icon is attributed to `ui-menu.js ROWS` rather
+   than reported as an orphan.
+
+Nothing else needs touching. There is no mode map and no title map — a drawer holds one list.
+
+## Playbook: add a state field that can hold free text
+
+There is exactly one today (`state.profile.name`) and the rule that governs it is not obvious, so it
+is written down rather than inferred.
+
+1. **Player text never enters a template literal.** No `esc()` helper exists and none should be
+   written; the reasoning, and the four alternatives that were priced and rejected, are in
+   [11-known-issues.md](11-known-issues.md).
+2. Give the template an **empty labelled node** — `<b data-pname></b>` — and fill it with
+   `.textContent` in one pass after the markup is written. One function, one call site per view:
+   `paintName()` in `ui-menu.js` is the worked example.
+3. An **attribute** goes through `setAttribute`; an **input** goes through `.value`. Never an
+   interpolated attribute — a name holding a quote closes it and everything after becomes markup.
+4. **Sanitise in `game.js`, do not escape there.** The engine's job is that the value is short,
+   single-line and never empty; making it *safe* is the render site's. Escaping at the boundary puts
+   `&lt;` in the save file and strands every existing save the day anyone changes their mind.
+5. **Add every spelling of the accessor to `FIELDS` in `tools/html-check.js`.** `state.x.y`,
+   `S.x.y` and a `Game.getter()` are the same fact three ways, and a check that knows one of them
+   passes while the other two ship the bug.
+6. Run `node tools/html-check.js`, then **break it on purpose and check it goes red** — including a
+   nested case (`${a ? \`<b>${name}</b>\` : ''}`), which is the one that slipped through the first
+   version of that walker.
+
 ## Playbook: add a development cheat
 
 Panel is `renderDev()` in `ui-sheet.js`; the logic is `Game.Dev` in `game.js`. Full description in
@@ -293,7 +342,8 @@ Covered fully in [07-save-data.md](07-save-data.md). The short version:
 ## Testing
 
 `node tools/sim-test.js` plays the whole economy forward in Node and is the cheapest check in the
-project; `node tools/style-check.js` holds the visual standard. Everything above the simulation —
+project; `node tools/style-check.js` holds the visual standard and `node tools/html-check.js` holds
+the escaping ruling. Everything above the simulation —
 the six `ui-*` files, layout, the sheet, FX — is verified by hand against this checklist, plus
 `tools/probe.js` for a screenshot when you cannot open the game yourself.
 

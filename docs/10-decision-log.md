@@ -5,6 +5,113 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-08-31 — The menu is built, and the drawer is the third surface class
+
+**The owner approved every one of the gate's six questions**, adding one condition: *"I imagine
+things will change later, so this thing needs to be somewhat modular where we can move things in
+and out."* So the menu is a table. `ROWS` at the top of `ui-menu.js` is the whole thing — an entry
+is `{ id, icon, tint, label, note, open }`, a reserved slot is `soon: true`, and moving a row in or
+out is one line. There is no mode map and no title map, because a drawer holds one list.
+
+**A drawer is not a sheet, and the difference is load-bearing rather than pedantic.** The sheet
+comes up, holds one panel chosen from a mode map, and is dismissed downward. This comes in from the
+right, holds a menu, and is dismissed rightward. It borrows the sheet's scrim, its z-order and its
+material; it differs in obeying the column by *offset* rather than by centring, in paying the full
+top and bottom inset because it touches both screen edges, and in being a scrolling column of rows
+rather than one panel.
+
+**It is a sibling of `.ui`, and that decided the column bug.** A child of `.ui` would inherit the
+560px cap for free — and would be painted over by the FX float layer at `z-index: 40`, so a coin
+from a harvest would draw across the menu. Outside `.ui` it has to re-state the cap itself, which
+is the rule [08-ui-and-layout.md](08-ui-and-layout.md) has carried since the meadow, and **it was
+got wrong exactly as the trap predicts**: the first build pinned `right: 0` and looked perfect on a
+phone while flying out to the corner of a desktop window. `right: max(0px, calc((100% - 560px)/2))`
+is the fix — on a phone the offset is zero, on a laptop it is the gutter. Found by measuring
+`getBoundingClientRect()` against `.ui`'s, not by looking.
+
+**Two dismissals, not three, and the spike's note was corrected in place.** Drag the grip right past
+90px, or tap the 58px strip of garden the drawer deliberately leaves visible. The third the spike
+claimed — tap the hamburger again — **cannot happen**: an open drawer covers the button that opened
+it, which `elementFromPoint` says plainly. The toggle stays wired because the button is still
+focusable and Enter fires a click without hit-testing, but it is not a dismissal anyone will find.
+That is why the visible strip is not negotiable: it is the second exit, not decoration.
+
+**Nothing carries state in movement, so reduced motion needed no substitute — and that was checked
+rather than assumed.** The badge dot is a solid disc in its base style, the scrim's dim is a plain
+opacity, the rows never animate. What the block at the end of the file adds is honesty about the
+arrival: the global clamp leaves 80ms of travel, which on a full-height panel is a flinch rather
+than a calm entrance, so the drawer says `transition: none` for itself. The close path's 340ms wait
+goes to zero with it, or an invisible scrim eats taps for a third of a second after an instant
+close.
+
+**The escaping ruling met its feature, and it held.** `state.profile.name` is the first
+player-typed text this game has ever stored. The plan filed in
+[11-known-issues.md](11-known-issues.md) on 2026-08-30 predicted a handful of sites rather than 908;
+the real number is **two** — `paintName()`, which writes `.textContent` into a node the template
+left empty, and the edit field's `.value`. No `esc()` was written. The engine sanitises rather than
+escapes: short, single-line, never empty, capped at 16 *after* collapsing whitespace so padding
+cannot spend the allowance. Storing `esc(name)` was re-priced and re-rejected — `&lt;` in a save
+file is a promise every future reader has to keep, and it strands every existing save the day
+anyone changes their mind.
+
+**`tools/html-check.js` exists now, and the interesting part is that its first version was wrong.**
+A template literal cannot be found with a regular expression, because the thing being looked for is
+nesting. The first walker counted backticks as a single depth — and a nested backtick *opens* a
+template rather than closing one, so a planted `${a ? `<span title="${S.profile.name}">` : ''}`
+read as a closed span and passed without a word. It keeps a mode stack now, with a brace counter
+per expression so an object literal cannot end one, and it was re-broken four ways before being
+believed. The general lesson is the one this file already records about vacuous tests, arriving
+from a new direction: **a check that has never gone red is not a check.**
+
+**Your garden is your face — no uploads, no photographs, ever.** Every portrait is drawn by the game
+from something the player earned: an unlocked bloom through `Flora.head`, a creature that has moved
+in through `Critters.draw`, stored as an id rather than as a drawing. It costs no backend, no
+moderation and no storage, and it turns the picker into a second collection screen. An unlocked-yet
+bloom is drained and padlocked rather than hidden — the locked seed row's rule on a new surface,
+because the cell is an advert for the flower you are saving for. Two groups rather than one grid:
+blooms and creatures are different kinds of thing and a single grid reads as a bag of stickers.
+
+**A Turn must not touch identity, and the suite says so before anyone can forget.** `profile` went
+into `defaultState()` and the partition's completeness check went red on the next run, which is
+exactly what it is for. It is classified `SURVIVES`, and the rig writes a non-default name *and* a
+non-default avatar so the assertion cannot pass on a value that equals its own default. The Settings
+reset is a different thing and does clear it — that path is an explicit, twice-confirmed erasure of
+the whole save.
+
+**One token, no new colour, and the distinct-hex set is byte-identical to the commit before it.**
+`--dot` names the attention red the day it got a second home; the drawer itself reuses `.seed-row`'s
+card, `.seed-art`'s veil, `.seed-row.locked`'s drained family and `.seed-lock.no`'s `#f6f2ea`. The
+style check still went red, because it counts *occurrences* and a new component that correctly
+reuses the recipe still adds them — which is the one thing that ratchet cannot tell apart from
+drift. **Diffing the distinct set against `HEAD` is the check that actually answers docs/05's fifth
+question**, and it is worth running before any re-baseline. It caught two real violations on the way:
+a hex fallback inside `var()` (twice), and a drained ink invented for the reserved rows when the
+locked seed row already proves the drained *surface* is enough.
+
+**A wide row does not take the plot's blemishes.** `.dr-row` shipped with the full five-layer recipe
+and drew a 39px grey blob across every row, because those radials are sized in percentages of the
+box and a 9% dirt mark is a speck on a 100px plot and a bruise on a 300px row. That is the scale
+trap — the meadow's oversized stones — written in CSS. Every wide card in this game is a two-stop
+gradient, and now this one is too.
+
+**Six icons in one commit, which is a lot and was still right.** `menu`, `chevron`, `pencil`,
+`bell`, `people`, `scroll`. Each is generic interface vocabulary the set genuinely lacked, because
+until now this game had nothing to navigate, nothing to edit and no slot to reserve. `menu` is drawn
+at stroke 3.4 rather than the set's 2: beside the gear's solid grey body a 2-unit bar is a hairline
+at 24px, and this is the button the whole menu is found through. `tools/export-icons.js` was taught
+to scan `icon:` rows in `ui-*.js` as well as `data.js` at the same time — the menu is the first
+table of icons that does not live in `data.js`, and without it four live glyphs reported as orphans
+in the manifest the Unity team reads.
+
+**Rejected: a close button in the drawer's header.** It would be a fourth control beside the avatar,
+the name and the pencil, and the two dismissals that exist are the ones every drawer of this shape
+has. **Rejected: putting the avatar and name in the HUD** — the owner's call at the gate, and the
+right one; the HUD has just bought its 44px tap targets back by losing two elements. **Rejected:
+a count on the badge dot** — one announcement is one thing to look at, and it becomes worth asking
+again the day two rows can badge at once.
+
+---
+
 ## 2026-08-31 (design) — The daily changelog: the What's New popup's little sibling
 
 **The owner's ask:** when a player opens the game and there are new features since they last

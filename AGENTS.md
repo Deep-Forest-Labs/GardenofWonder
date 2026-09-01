@@ -24,8 +24,10 @@ DOM; `ui.js` never does economy math.
 
 ## Verifying
 
-Run `node tools/sim-test.js` and `node --check` on every file you touched. If you touched
-`style.css`, run `node tools/style-check.js` — it holds the four rules in
+Run `node tools/sim-test.js` and `node --check` on every file you touched. If you touched a
+`ui-*.js` file or `index.html`, run `node tools/html-check.js` — it holds the one rule in
+[docs/11-known-issues.md](docs/11-known-issues.md) that a script can hold: player-typed text never
+enters a template literal. If you touched `style.css`, run `node tools/style-check.js` — it holds the four rules in
 [docs/05-art-direction.md](docs/05-art-direction.md) that a script can hold, and it fails on new
 drift rather than on the debt already there.
 `node tools/probe.js shot:after` screenshots the running game in headless Chrome when you cannot

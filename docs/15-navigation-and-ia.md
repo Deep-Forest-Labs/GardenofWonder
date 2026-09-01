@@ -76,7 +76,7 @@ The shape it is heading for is the one every large mobile casual game converges 
 
 | Slot | One word | Contains |
 | --- | --- | --- |
-| **Friends** | *Social* | Invites and whatever social exists. **Reserve the slot; do not build it** — it is a backend, not a button, and this is a two-person team with no server. |
+| **Friends** | *Social* | Invites and whatever social exists. **Reserve the slot; do not build it** — it is a backend, not a button, and this is a two-person team with no server. **Since 2026-08-31 the reservation is visible**: Friends is a drained, unpressable row in the menu drawer, marked *Soon*, beside Daily Gift and Garden Record. Three reserved rows is a cap, not a coincidence — past three a menu is advertising more game than exists. Whether the slot ends up here or in the dock is still open; what is settled is that it is drawn before it is built. |
 | **Cards** | *Collection* | The card sets and albums. |
 | **World** | *Where* | The centre pedestal — raised, round, larger than the rest. Takes you to the map, and from the map into a place. |
 | **Quests** | *Goals* | Quests, levels, reputation, the Almanac, the creature roster — the progression surface. |

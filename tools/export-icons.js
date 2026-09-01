@@ -307,9 +307,10 @@ function usageSources() {
  *   Icons.get('coin')      the direct call
  *   ico('coin')            the short helper, still used in ui-meadow.js
  *   data-icon="coin"       markup hydrated later by Icons.hydrate()
- *   icon: 'coin'           a data row in data.js, reached at runtime through the
- *                          DYNAMIC form Icons.get(d.icon) — which names no icon at
- *                          the call site, so the data row is the only evidence there is
+ *   icon: 'coin'           a table row — in data.js, or in a ui-*.js file that keeps
+ *                          its own table (the menu's ROWS) — reached at runtime through
+ *                          the DYNAMIC form Icons.get(d.icon), which names no icon at
+ *                          the call site, so the row is the only evidence there is
  *
  * Matching the bare quoted name instead would be worse than useless: 'grid' is a game
  * event, 'star' and 'leaf' are ordinary words in this codebase, and the column would
@@ -327,22 +328,26 @@ function scanUsage(names) {
     for (const m of text.matchAll(/data-icon\s*=\s*["']([A-Za-z0-9_]+)["']/g)) add(m[1], file);
   }
 
-  /* Data rows are attributed to the table that holds them, because "used by
-     DATA.upgrades" tells the Unity team something that "used in data.js" does not. */
-  const dataPath = path.join(ROOT, 'data.js');
-  const lines = fs.readFileSync(dataPath, 'utf8').split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const m = /\bicon:\s*(['"])([A-Za-z0-9_]+)\1/.exec(lines[i]);
-    if (!m || !known.has(m[2])) continue;
-    let table = 'data.js';
-    for (let j = i; j >= 0; j--) {
-      const t = /^ {2}([a-zA-Z0-9_]+):\s*[[{]/.exec(lines[j]);
-      const c = /^const\s+([A-Za-z0-9_]+)\s*=/.exec(lines[j]);
-      if (t) { table = `DATA.${t[1]}`; break; }
-      if (c) { table = c[1]; break; }
+  /* Rows are attributed to the table that holds them, because "used by
+     DATA.upgrades" tells the Unity team something that "used in data.js" does not.
+     `data.js` is where almost all of them are; the exception is a ui file with a
+     table of its own, and the menu's ROWS is the first — an icon named only there
+     read as an orphan until this loop stopped being data.js-only. */
+  for (const file of ['data.js', ...usageSources().filter((f) => /^ui-.*\.js$/.test(f))]) {
+    const lines = fs.readFileSync(path.join(ROOT, file), 'utf8').split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const m = /\bicon:\s*(['"])([A-Za-z0-9_]+)\1/.exec(lines[i]);
+      if (!m || !known.has(m[2])) continue;
+      let table = file;
+      for (let j = i; j >= 0; j--) {
+        const t = /^ {2}([a-zA-Z0-9_]+):\s*[[{]/.exec(lines[j]);
+        const c = /^ *const\s+([A-Za-z0-9_]+)\s*=/.exec(lines[j]);
+        if (t) { table = `DATA.${t[1]}`; break; }
+        if (c) { table = file === 'data.js' ? c[1] : `${file} ${c[1]}`; break; }
+      }
+      const tables = usage.get(m[2]).tables;
+      tables.set(table, (tables.get(table) || 0) + 1);
     }
-    const tables = usage.get(m[2]).tables;
-    tables.set(table, (tables.get(table) || 0) + 1);
   }
 
   return usage;

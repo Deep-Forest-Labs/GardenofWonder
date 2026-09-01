@@ -283,11 +283,10 @@ Behaviour:
 - Re-rendering preserves `scrollTop` unless the mode changed, so buying an upgrade doesn't jump you
   back to the top of a long list.
 
-## The side drawer — the menu (2026-08-31, PROPOSED AT THE GATE)
+## The side drawer — the menu (2026-08-31)
 
-**Drawn in `tools/menu-spike.html`, not built.** Nothing in this section is in `style.css` yet.
-It is here so the surface has a written definition before it has an implementation; when the
-build lands, this heading loses its PROPOSED and gains what actually shipped.
+**Drawn in `tools/menu-spike.html` first, approved at the gate, then built.** `.drawer` in
+`style.css`, `ui-menu.js` for the behaviour, `#menu` in `index.html`.
 
 **A drawer is a third surface class, and the game now has three.** The distinction is worth being
 exact about, because calling this a sheet is the mistake that would break it:
@@ -300,8 +299,15 @@ exact about, because calling this a sheet is the mistake that would break it:
 
 Rules it inherits, and the one it adds:
 
-- **It obeys the column.** `min(86%, 332px)`, pinned right, inside `.ui`'s 560px cap. A drawer
-  that filled a desktop window would be the meadow's mistake on a new surface.
+- **It obeys the column, and it has to say so itself.** `min(86%, 332px)`, pinned to the column's
+  right edge with `right: max(0px, calc((100% - 560px) / 2))`. **It is a SIBLING of `.ui`, not a
+  child** — a child would be painted over by the FX float layer at `z-index: 40` and by the sheet
+  at 50 — which puts it in exactly the position `.sheet` and `.meadow-layer` are in: outside the
+  cap, inheriting nothing, obliged to re-state it. `.sheet` does that with `max-width` +
+  `margin: 0 auto` because it spans the column; a drawer is pinned to one *edge* of it, so it says
+  the same thing as an offset. **This was got wrong first and caught by measuring**: without the
+  offset the menu flew out to the corner of a desktop window while looking perfect on a phone —
+  the meadow's own bug, on a new surface, exactly as the trap predicts.
 - **It pays the FULL safe-area inset, top and bottom.** `--bottom-gap` is `max(10px, calc(var(--sab)
   - 12px))` and it is right for the dock, which is a row of buttons nobody swipes from. A panel
   that reaches both edges of the screen takes `var(--sat)` and `var(--sab)` whole, the way
@@ -310,16 +316,37 @@ Rules it inherits, and the one it adds:
   dance: `hidden` off first, `.show` on the next frame, and `hidden` back only after the slide.
 - **NEW: it is a column of rows, so no row may depend on the drawer's height.** The sheet's panels
   are laid out against a fixed height; a menu scrolls, and a row that centres itself against the
-  panel is a row that moves when the list grows.
+  panel is a row that moves when the list grows. `.dr-rows` scrolls; the footer sits under it and
+  does not.
+- **A wide row takes the plain gradient, not the plot's blemish radials.** `.dr-row` is
+  `.seed-row`'s material verbatim — two-stop gradient, 3px ink, a 4px opaque lip, the matching
+  contact shadow. The five-layer recipe's two blemishes are positioned and sized in *percentages of
+  the box*, so a 9% dirt mark that is a speck on a 100px plot is a 39px grey blob across a 300px
+  row. That is the scale trap written in CSS, and it is why every wide card in this game is a
+  two-stop gradient. (The class is `.dr-row`, never `.seed-row` — that one is the plant picker's
+  button and reusing it collapses the columns.)
 - **Its state lives in a module local, never in the DOM**, exactly as `sheetMode` does. A `panels`
   emit rebuilds markup from scratch and anything held in an attribute vanishes mid-interaction.
-- **Reduced motion gets a real version, not a fast one.** The global clamp runs an animation once
-  for `.001ms` and drops it, so the drawer's arrival is named explicitly rather than left to the
-  clamp, and nothing about the drawer's state is carried by movement alone.
+- **Reduced motion gets a real version, not a fast one.** The global clamp collapses every
+  transition to 80ms, which on a full-height panel is a flinch rather than a calm arrival, so the
+  drawer names `transition: none` for itself in a block at the very end of the file. Nothing about
+  its state is carried by movement in the first place — the badge dot is a solid disc in its base
+  style, the scrim's dim is a plain opacity, the rows never animate — so there is no state needing a
+  static substitute, which is the check docs/05 asks for, answered rather than assumed. The close
+  path's 340ms wait also goes to zero, or an invisible scrim eats taps for a third of a second
+  after an instant close.
 
 **The strip of garden down the left is load-bearing.** 332px of 390 leaves 58px of the game
-visible. Full-bleed would make this a screen rather than a drawer, and the visible strip is what
-makes the scrim tap discoverable.
+visible (50px at 360 wide, 45px at 320). Full-bleed would make this a screen rather than a drawer,
+and **the visible strip is the second dismissal** — measured, not assumed: `elementFromPoint` in
+that strip returns the scrim.
+
+**There are TWO dismissals, not three.** Drag the grip right past 90px, or tap the garden beside it.
+The spike's third — tap the hamburger again — **is not reachable with a thumb**, because an open
+drawer covers the button that opened it; that was measured after the build and the spike's note was
+corrected in place. The toggle is still wired, because the button stays focusable and Enter on it
+fires a click without hit-testing, but it is not a dismissal a player will find. Two is what every
+drawer of this shape has, and it is why the strip is not negotiable.
 
 ### What is in it
 
@@ -337,12 +364,21 @@ exists.
 **Settings moves off the HUD and into the drawer.** The gear button becomes the hamburger; every
 one of Settings' six controls stays reachable, one tap deeper. Nothing else in the HUD moves.
 
+**Coach marks are hidden under it twice, and both are needed.** `.drawer.open ~ .coach` stops the
+mark being *painted* — the drawer precedes the coach in the DOM, the same route
+`.sheet.open ~ .coach` uses — and `refreshCoach()` names the drawer in its guard so a hidden target
+is never *measured*. The CSS half exists because `refreshCoach()` runs on the 0.6s slow tick: with
+the JS guard alone, "Tap the flower!" sat on top of the menu for up to half a second after it
+opened, which is exactly long enough to photograph.
+
 **The profile header is the drawer's own, and it appears nowhere else.** A round avatar, the
 player's name and a pencil. The avatar is generated from what the player owns — a bloom through
 `Flora.head` or a creature through `Critters.draw` — never uploaded. The name is the first
 player-typed text in this game and is governed by the escaping rule in
 [11-known-issues.md](11-known-issues.md): it renders through `textContent`, never inside a
-template literal, at every site.
+template literal, at every site. `paintName()` in `ui-menu.js` is the only place it reaches the DOM
+in the rows view and the field's `.value` is the only place in the edit view;
+`node tools/html-check.js` fails the build if a third appears.
 
 ## The What's New dialog (2026-08-30)
 

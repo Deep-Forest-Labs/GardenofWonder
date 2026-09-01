@@ -202,8 +202,10 @@ Cheap and smooth, and it means growth needs no per-frame DOM work beyond one att
 
 ## Icons
 
-Thirty-three icons in `icons.js`, drawn as 24×24 SVG with the shared ink stroke and flat colour
-fills.
+Fifty-two icons in `icons.js`, drawn as 24×24 SVG with the shared ink stroke and flat colour
+fills. The count is not written down anywhere that can go stale: `tools/export-icons.js` asserts
+that the number of `.svg` files it writes equals the number of keys in the registry, and rewrites
+the manifest table in [45-asset-inventory.md](45-asset-inventory.md) from the registry itself.
 They are deliberately *not* monochrome — a coin is gold, a gem is cyan, a leaf is green — because
 colour is how you identify them at a glance on a phone.
 
@@ -213,8 +215,16 @@ Two consumption patterns:
   `Icons.hydrate(document)`.
 - Generated markup calls `Icons.get('coin')` inline.
 
-`seed` and `mute` are defined but unused. `plantSpot` replaced `seed` for empty plots because a
-dashed square with a plus reads as "put something here" where a seed shape did not.
+`plantSpot` replaced `seed` for empty plots because a dashed square with a plus reads as "put
+something here" where a seed shape did not.
+
+**Six of them are monochrome, and that is the exception the rule needs.** `close`, `check`,
+`chevron`, `menu` and the two halves of the pencil are punctuation rather than objects — a chevron
+is not a thing in the garden, it is a direction. The menu (2026-08-31) added six glyphs in one go
+because this game had never had an interface to navigate before: `menu`, `chevron`, `pencil`,
+`bell`, `people` and `scroll`. `menu` is drawn at stroke 3.4 rather than the set's 2, because
+beside the gear's solid grey body a 2-unit bar reads as a hairline at 24px and this is the button
+the whole menu is found through.
 
 ## Scenery and parallax
 
@@ -521,6 +531,28 @@ Phase 3.9, the Sky Pass, added one `:root` token and eighteen literals, declared
 | **`--wonder-sweep`** (`:root`) | `#ff6b6b, #ffd43b, #69db7c, #4dabf7, #b197fc, #ff8fab` | Not a new colour — the *existing* Wonder palette, finally named. Four layers carry this exact six-colour sweep: the Wonder Effect's veil and halo, and the weather veil and takeover cue Wonderfall borrows from them. It went in the moment there were four copies rather than two, because a rainbow written out four times is four places to forget when one of them changes. |
 | **The lit channels** — `.wx-bolt`, `.wx-flash-under` (`#fff`), `.wx-ground` (`#ffffff` inside a `color-mix`) | white | The same white `.cloud`, `.stars` and `.outlined` already use. A bolt and a flash are *light*, and light has no token because it is not a material — every surface colour in the palette is something the light falls on. |
 | **Fourteen mask stops** — `.wx-bolt`, `.wx-ray`, `.wx-dusk`, `.wx-ribbon`, `.wx-veil`, `.wx-takeover`, `.wx-takeover::after` (`#000`), and the `#ff6b6b` that closes `.wx-takeover::after`'s conic gradient back to where it started | black, and one red | Not a colour at all. `#000` in a `mask-image` means *fully opaque*, and it is the same stop `.season-tint`, `.meadow::after`, `.vignette` and `.fence` already use for the 44px bottom fade. Every one of these is that fade, on a new layer. `tools/style-check.js` counts them because it reads hexes rather than roles; they are recorded here rather than tokenised, because `--fully-opaque: #000` would be a name that explains less than the value. |
+
+The menu drawer (2026-08-31) added **one** token and **no** literal:
+
+| Where | Value | Why |
+| --- | --- | --- |
+| **`--dot`** (`:root`) | `#ff6b6b` | Not a new colour — the dock's attention dot, finally named. The menu button's badge is the second thing in the game that means *there is something here*, and two dots that drift apart are two dots that stop reading as the same promise. It went in on the `--wonder-sweep` terms: the moment there were two copies rather than one. Net effect on the raw-hex count is **minus one**. |
+
+**The drawer itself introduced no value at all**, and that was checked rather than asserted: the
+distinct-hex set in `style.css` is byte-identical before and after it. Every surface in it is an
+existing recipe reused — `.seed-row`'s cream material for the rows, `.seed-art`'s veil for the icon
+discs and the avatar, `.seed-row.locked`'s drained family for the reserved rows, and
+`.seed-lock.no`'s `#f6f2ea` for the Soon chip. The `tools/style-check.js` baseline moved from 409
+to 417 occurrences for that reason and no other: eight more *uses* of colours the file already had.
+A new component that correctly reuses the house recipe still costs occurrences, which is the one
+thing this ratchet cannot tell apart from drift — so the diff of the distinct set is the check that
+actually answers question 5, and it is worth running before any re-baseline.
+
+Two things the drawer deliberately did **not** do, both of them docs/05 rules caught by the check
+rather than by review: it does not write a hex fallback inside `var()` (`--av` and `--rt` declare
+their defaults on the component, where a knob's resting value belongs), and it invents no drained
+ink for its reserved rows — those keep `--ink` and `--ink-soft` and let the drained *surface* carry
+the state, exactly as the locked seed row does.
 
 **They are literals in `style.css` rather than `:root` tokens on purpose:** each is used by exactly
 one component, and twelve more names in a palette this document already says carries 176 colours by

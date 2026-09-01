@@ -124,9 +124,15 @@
                album star moved to the Cards button. That is what buys the round
                buttons back to 44px at 390px wide — see the max-width:430px block
                in style.css, which asked for exactly this. -->
+          <!-- The gear became the hamburger on 2026-08-31. A gear promises one
+               panel and the menu holds seven things, so the glyph had to change
+               or the button would be lying; Settings is a row inside it now and
+               every control it used to reach is one tap deeper. The dot is the
+               dock's attention dot on a HUD button for the first time, and it
+               is a child of the button, which is why .round-btn is positioned. -->
           <div class="hud-actions">
             <button class="round-btn" id="btnBonuses" aria-label="Garden almanac and bonuses"><span data-icon="book"></span></button>
-            <button class="round-btn" id="btnSettings" aria-label="Settings"><span data-icon="gear"></span></button>
+            <button class="round-btn" id="btnMenu" aria-label="Menu" aria-expanded="false"><span data-icon="menu"></span><i class="hud-dot" id="menuDot" hidden></i></button>
           </div>
         </header>
 
@@ -235,6 +241,22 @@
         <div class="sheet-body" id="sheetBody"></div>
       </section>
 
+      <!-- ============ THE MENU DRAWER ============
+           A third surface class, and not a sheet: it comes in from the RIGHT,
+           holds a menu rather than a panel, and is dismissed rightward. It has
+           its own scrim because #scrim is wired straight to closeSheet(), and
+           it is a SIBLING of .ui rather than a child — a child would be painted
+           over by the FX float layer above it — so, like the sheet and the
+           meadow, it has to re-state the 560px column itself. Full height, so
+           it pays the whole top and bottom inset rather than the shaved
+           --bottom-gap a row of buttons takes. See docs/08-ui-and-layout.md. -->
+      <div class="scrim drawer-scrim" id="menuScrim" hidden></div>
+      <aside class="drawer" id="menu" aria-hidden="true" aria-label="Menu" hidden>
+        <div class="dr-grip" id="menuGrip"><span></span></div>
+        <div class="dr-head" id="menuHead"></div>
+        <div class="dr-body" id="menuBody"></div>
+      </aside>
+
       <!-- ============ OVERLAYS ============ -->
       <div class="toasts" id="toasts" aria-live="polite"></div>
       <div class="banner" id="banner" aria-hidden="true"></div>
@@ -272,6 +294,7 @@
   <script src="ui-meadow.js"></script>
   <script src="ui-fall.js"></script>
   <script src="ui-news.js"></script>
+  <script src="ui-menu.js"></script>
   <script src="ui-events.js"></script>
   <script src="ui.js"></script>
 

@@ -531,9 +531,20 @@ async function captureScene(ctx, scene) {
      rebuilds state in memory; the navigate that follows is what puts a freshly
      booted UI on top of it. Doing it in the other order would leave the previous
      scene's rooms, sheets and toasts on screen over a state that no longer
-     matches them. reset() does NOT clear the announcement's seen-flag, which is
-     why the popup does not come back on every scene. */
+     matches them. reset() does NOT clear the announcement's seen-flag.
+
+     But a SCENE can, and one does: the menu's badge dot means "there is an
+     announcement you have not read", so photographing it means clearing the
+     flag. Marking every announcement read once per RUN was therefore not enough
+     — everything after that scene booted with the dialog over it and four Turn
+     screens failed on taps that landed on its scrim. Re-marking here costs one
+     evaluate per scene and makes the guard robust against any scene that touches
+     the flag, rather than against the ones that happened to exist. */
   await ctx.call('Runtime.evaluate', { expression: 'Game.reset()', returnByValue: true });
+  await ctx.call('Runtime.evaluate', {
+    expression: '(DATA.announcements || []).forEach((a) => Game.markNewsSeen(a.id))',
+    returnByValue: true,
+  });
   await ctx.goto('index.html');
 
   /* Weather is a pure function of epoch time, so an unpinned sky makes this
@@ -678,6 +689,65 @@ const SCENES = [
       'wait:1500',
     ],
     expect: 'UI.sheetMode() === \'welcome\' && document.getElementById(\'sheetBody\').textContent.trim().length > 40',
+  },
+  {
+    slug: 'the-menu',
+    group: 'The garden',
+    title: 'The menu',
+    line:
+      'The hamburger opens a drawer off the right edge: your face and your name, then everywhere else. Four rows built, three reserved and drained.',
+    doc: '08-ui-and-layout.md',
+    file: 'ui-menu.js',
+    steps: [
+      'eval:JSON.stringify(Game.state.critters.pip=({since:Game.nowSeconds(),fed:0,gifts:0,met:true,level:2,tending:true,fedUntil:0}))',
+      'eval:JSON.stringify(Game.state.critters.thistle=({since:Game.nowSeconds(),fed:0,gifts:0,met:true,level:1,tending:true,fedUntil:0}))',
+      'eval:JSON.stringify([Game.state.year.number=3,Game.setProfileName("Rosalind"),Game.setProfileAvatar("critter:pip")])',
+      /* The dot and the row badge both read pendingAnnouncement(), so this scene
+         un-marks the announcement to photograph the state a player actually
+         meets. Nothing here puts it back — captureScene() re-marks it before
+         every scene, which is what stops this one leaking a modal over the rest
+         of the gallery. */
+      'eval:JSON.stringify([Game.clearNewsSeen(),UI.updateMenuDot()])',
+      'eval:UI.openMenu()',
+      'wait:900',
+    ],
+    expect: 'UI.menuOpen() === true && document.querySelectorAll(\'#menuBody .dr-row\').length === 7'
+      + ' && document.querySelector(\'.dr-name b\').textContent === \'Rosalind\''
+      + ' && document.getElementById(\'menuDot\').hidden === false',
+  },
+  {
+    slug: 'the-avatar-picker',
+    group: 'The garden',
+    title: 'Your garden is your face',
+    line:
+      'Every portrait is drawn by the game from something the player earned — unlocked blooms, then creatures that have moved in. No uploads, no photographs, ever.',
+    doc: '03-systems.md',
+    file: 'ui-menu.js',
+    steps: [
+      'eval:JSON.stringify(Game.state.critters.pip=({since:Game.nowSeconds(),fed:0,gifts:0,met:true,level:2,tending:true,fedUntil:0}))',
+      'eval:JSON.stringify(Game.state.critters.thistle=({since:Game.nowSeconds(),fed:0,gifts:0,met:true,level:1,tending:true,fedUntil:0}))',
+      'eval:JSON.stringify([\'bluebell\',\'lavender\',\'rose\',\'marigold\'].map(id=>Game.state.seedUnlocks[id]=true))',
+      'eval:JSON.stringify([Game.setProfileName("Rosalind"),Game.setProfileAvatar("critter:pip")])',
+      'eval:UI.openMenu()',
+      'wait:600',
+      /* .click() rather than tap:, and for a reason worth knowing: a tap is
+         delivered at the element's centre, and for the first 340ms the drawer is
+         still sliding in from translateX(102%) — so the avatar's centre is off
+         the right of the viewport, where events are not delivered. The scene
+         failed intermittently on exactly that. `turn-ask` uses .click() for the
+         same class of reason; it still drives the real handler. */
+      'eval:document.querySelector(\'.avatar\').click()',
+      'wait:900',
+    ],
+    /* Asserted against the data rather than against a count, so a twentieth seed
+       moves the picture without breaking the gallery: the flower, every bloom,
+       and every creature that has moved in — with exactly the un-unlocked blooms
+       drained, and exactly one face worn. */
+    expect: 'document.querySelectorAll(\'.pick-cell\').length'
+      + ' === 1 + DATA.seeds.length + Object.keys(Game.state.critters).length'
+      + ' && document.querySelectorAll(\'.pick-cell.locked\').length'
+      + ' === DATA.seeds.filter(function (s) { return !Game.seedUnlocked(s.id); }).length'
+      + ' && document.querySelectorAll(\'.pick-cell.on\').length === 1',
   },
   {
     slug: 'whats-new',

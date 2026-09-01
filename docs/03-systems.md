@@ -864,6 +864,45 @@ pays once. A save with leftover flowers backfills `discovered` on load and grant
 already-reached unclaimed rungs. Numbers and the UI are in
 [16-progression-and-quests.md](16-progression-and-quests.md#phase-4--the-almanac-as-a-completion-goal).
 
+## The menu — who the player is, and where everything else lives (2026-08-31)
+
+The hamburger in the top-right corner opens a drawer off the right edge. It holds two things: the
+player's **identity**, and a list of **everywhere else**.
+
+**`state.profile` is `{ name, avatar }`, and it is identity rather than progress.** The Turn never
+touches it — that is asserted field by field in `tools/sim-test.js` bill 1, where `profile` sits in
+the `SURVIVES` column. The Settings reset does clear it, because that path erases the whole save on
+purpose. The field's shape, its sanitiser and its migration are in
+[07-save-data.md](07-save-data.md#stateprofile--who-the-player-is-added-2026-08-31).
+
+**Your garden is your face.** The avatar is generated from what the player owns — an unlocked bloom
+through `Flora.head`, or a creature that has moved in through `Critters.draw` — and stored as an id
+(`flower`, `seed:<id>`, `critter:<id>`) rather than as a drawing. **There are no uploads and no
+photographs, and there never will be:** it costs no backend, no moderation and no storage, and it
+makes the picker a second collection screen rather than a settings field. `Game.avatarChoices()`
+returns every bloom with an `unlocked` flag plus the creatures that have arrived, so the picker can
+draw the ones still to come drained and padlocked — the locked seed row's rule, on a new surface.
+
+**The name is the first free text this game holds.** The engine guarantees it is short, single-line
+and never empty; it does **not** escape it, and the reason is the ruling in
+[11-known-issues.md](11-known-issues.md). Making it safe is the render site's job, and the render
+site does it with `.textContent`.
+
+**Four live rows, three reserved.** Shop, Almanac, What's New and Settings; then Friends, Daily
+Gift and Garden Record in the drained not-now treatment, non-interactive, capped at three. The rows
+are a table in `ui-menu.js`, so moving one in or out is one line — the owner's condition at the
+wireframe gate, on the grounds that this menu will keep changing.
+
+**What's New here is a re-read and can never reset.** The row opens the newest announcement through
+the same preview path the developer panel uses, so its button only closes the dialog even on a row
+marked `reset`; it does mark the row seen, because that is what makes the badge dot go out. The
+fresh-garden path belongs to the dialog that goes up once on boot and to nothing else. The badge dot
+lights whenever `Game.pendingAnnouncement()` returns a row.
+
+**Settings moved here from the HUD gear**, with all six of its controls intact — sound, music, the
+two grants, the Wonder, and the two-tap reset. The gear button became the hamburger; nothing else in
+the HUD moved.
+
 ## Bloom Mastery — retired into petals
 
 **The ladder froze with the Garden Year's phase 1 (2026-08-29).** Two permanent per-seed yield

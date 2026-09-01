@@ -108,6 +108,20 @@
   }
 
   UI.maybeAnnounce = maybeAnnounce;
+  /* The menu's What's New row. A RE-READ: it shows the newest announcement in
+     preview mode, so the button is only a way out and `reset` can never fire
+     from here — the fresh-garden path belongs to the dialog that goes up on
+     boot, once, and to nothing else. It does mark the row seen, because reading
+     it is what the badge dot is asking for, and the dot has to be able to go
+     out. `UI.previewAnnouncement` below is the developer's look and deliberately
+     marks nothing. */
+  UI.openAnnouncement = () => {
+    const all = DATA.announcements || [];
+    const a = all[all.length - 1];
+    if (!a || !show(a, true)) return false;
+    if (Game.markNewsSeen(a.id) && UI.updateMenuDot) UI.updateMenuDot();
+    return true;
+  };
   UI.previewAnnouncement = () => {
     const all = DATA.announcements || [];
     return show(all[all.length - 1], true);

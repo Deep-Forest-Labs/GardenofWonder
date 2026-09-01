@@ -1125,16 +1125,29 @@ a CSS-value guard, not an HTML one. And escaping destroys the HTML entities that
 through interpolations: `skyLine()` at `ui-sheet.js:280` returns a string containing `&middot;` and is
 interpolated at `:298`, so a blanket pass would print a literal `&middot;` on the weather card.
 
-**The first player-typed text is arriving, and it is the player's NAME, not a creature's.**
-`tools/menu-spike.html` (2026-08-31) draws a menu whose header holds an editable name in
-`state.profile.name`. That is the feature this plan was written for, and it is being built to the
-plan's ruling rather than to a new one: the name never enters a template literal, it is written
-with `.textContent` into a labelled empty node at every site, and attribute cases go through
-`setAttribute`. **The count below is still right — the sites are the drawer's header, its edit
-field and anywhere the name is said back to the player, and there are a handful, not 908.** What
-changes when the build lands is that the "named list of state fields that can hold free text
-(today: empty)" below stops being empty: `profile.name` is its first entry, and
-`tools/html-check.js` fails on any `ui-*.js` template literal that reaches it.
+**The first player-typed text has now shipped, and it is the player's NAME, not a creature's.**
+The menu drawer (2026-08-31) holds an editable `state.profile.name`. This entry was written for that
+feature before it existed, and it was built to this ruling rather than to a new one. **The plan
+predicted a handful of sites rather than 908, and the real number is TWO:** `paintName()` in
+`ui-menu.js`, which writes `.textContent` into a `<b data-pname>` the template left empty, and the
+edit field's `.value`. There is no third, and there is no `esc()`.
+
+**Both halves of "what would hold it" are now built.** `tools/html-check.js` exists in the shape
+this entry specified — no dependencies, a small text reader, a `html-check.json` baseline that
+ratchets — and its named list of free-text fields is no longer empty: `state.profile.name` is its
+first entry, listed by all three of its spellings (`profileName()`, `profile().name`,
+`state.profile.name`), because a check that knew one would pass while the other two shipped the bug.
+The probe regression the entry asked for was run with the name set to
+`<img src=x onerror=alert(1)>`: `document.querySelectorAll('img[onerror]').length === 0`, the `<b>`
+has zero element children, and the console is clean.
+
+**One thing the entry did not anticipate, found by sabotaging the checker.** A template literal has
+to be found by walking the file, and a *depth counter over backticks is not enough* — the first
+backtick inside a template opens a nested one rather than closing the outer, so a nested case reads
+as a closed span and slips through in silence. The first version of that walker did exactly that and
+passed a planted `${a ? `<span title="${S.profile.name}">` : ''}` without a word. It keeps a mode
+stack now, with a brace counter per expression so an object literal cannot end one, and it was
+re-broken four ways before being believed. **A check that has never gone red is not a check.**
 
 **Nothing else is reachable today, and that was checked rather than assumed.** Across every
 non-legacy script and `index.html`: zero `<input>`, zero `<textarea>`, zero `contenteditable`, zero `prompt()`,
@@ -1174,15 +1187,20 @@ contains no reference to `document` or `window`. It cannot see any of this and s
 `game.js` staying DOM-free is what makes that suite cheap and what is meant to survive the port. Two
 things can hold it instead, and both have a precedent in `tools/`:
 
-- **`tools/html-check.js`, in the shape of `tools/style-check.js`** — no dependencies, a small text
-  reader, and a `html-check.json` baseline that ratchets rather than judges. One rule to start: a
-  named list of state fields that can hold free text (today: empty) and a failure if an accessor for
-  one appears inside a template literal in a `ui-*.js` file. It passes green on an empty list, which
-  is the only way a check written before the feature lives long enough to meet it.
+- **`tools/html-check.js`, in the shape of `tools/style-check.js`** — BUILT 2026-08-31. No
+  dependencies, a small text reader, and a `html-check.json` baseline that ratchets rather than
+  judges. One rule: a named list of state fields that can hold free text and a failure if an
+  accessor for one appears inside a template literal in a `ui-*.js` file, `ui.js` or `index.html`.
+  `game.js` is excluded on purpose — it never touches the DOM, so a template there is a string for
+  something else to decide about. It passed green on an empty list for as long as the list was
+  empty, which is the only way a check written before its feature lives long enough to meet it.
 - **`tools/probe.js`**, which already drives headless Chrome over CDP, takes `eval:EXPR` and exits
-  non-zero on an uncaught page error. The regression test for the day the feature lands: set a
-  creature's name to `<img src=x onerror=alert(1)>`, open the Almanac and the creature panel, and
-  assert `document.querySelectorAll('img[onerror]').length === 0` with no console errors.
+  non-zero on an uncaught page error. RUN 2026-08-31 against the real thing: set the name to
+  `<img src=x onerror=alert(1)>` through the field the player uses, and
+  `document.querySelectorAll('img[onerror]').length === 0` with no console errors. Also run with
+  `<b>x&y</b>`, which renders as the literal five characters and whose `innerHTML` reads back as
+  `&lt;b&gt;x&amp;y&lt;/b&gt;` — the browser escaping on the way out of `textContent`, which is the
+  whole mechanism working.
 
 *Where:* `ui-sheet.js` (796 of the 908), `ui.js` (53), `ui-fall.js` (21), `ui-meadow.js` (20),
 `ui-hollow.js` (10), `ui-news.js` (6), `ui-scenery.js` (2). The sink to leave alone is

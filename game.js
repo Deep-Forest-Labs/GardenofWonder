@@ -6,6 +6,12 @@ const Game = (() => {
   const SAVE_KEY = 'gw-save';
   const LEGACY_KEY = 'igr-save';
 
+  // Up here rather than beside the rest of the profile because `defaultState()`
+  // reads them and is invoked while this module is still evaluating.
+  const PROFILE_NAME_MAX = 16;
+  const PROFILE_DEFAULT_NAME = 'Gardener';
+  const PROFILE_DEFAULT_AVATAR = 'flower';
+
   const listeners = {};
   const on = (evt, fn) => ((listeners[evt] = listeners[evt] || []).push(fn), fn);
   const emit = (evt, payload) => (listeners[evt] || []).forEach((fn) => fn(payload));
@@ -21,6 +27,11 @@ const Game = (() => {
     PLOT_AUTOPLANTERS.forEach(({ key }) => { upgrades[key] = 0; });
     return {
       version: 4,
+      /* Who the player is. Identity, not progress — the Turn must never touch
+         it, and `tools/sim-test.js` bill 1 puts it in SURVIVES to say so. The
+         name is the only free text this game holds; see PROFILE_NAME_MAX and
+         the escaping rule in docs/11-known-issues.md. */
+      profile: { name: PROFILE_DEFAULT_NAME, avatar: PROFILE_DEFAULT_AVATAR },
       credits: 100,
       /* The Garden Year. `coinsEarned` is the year's own earnings — written
          only by credit(), never decremented, zeroed at the Turn. It is what
@@ -217,6 +228,16 @@ const Game = (() => {
       state.stats = Object.assign(d.stats, parsed.stats || {});
       state.wonder = Object.assign(d.wonder, parsed.wonder || {});
       state.prefs = Object.assign(d.prefs, parsed.prefs || {});
+      /* Identity is nested, so `Object.assign` above replaced it wholesale and a
+         save written before the menu existed has no `profile` at all. Both
+         fields are re-validated rather than merely defaulted: the name goes back
+         through the same sanitiser the editor uses, so a save hand-edited to
+         hold a tag or a 900-character monster comes back clean, and an avatar
+         naming a bloom or creature that no longer exists falls back to the
+         flower rather than rendering nothing. */
+      state.profile = Object.assign(d.profile, parsed.profile || {});
+      state.profile.name = cleanProfileName(state.profile.name);
+      state.profile.avatar = cleanAvatar(state.profile.avatar);
       state.seen = Object.assign(d.seen, parsed.seen || {});
       // Merged defaults-first, so a save written before one of these keys
       // existed comes back false and replays onboarding over a garden the
@@ -593,6 +614,80 @@ const Game = (() => {
       giveOpeningBag();
       return { migrated: false, fresh: true };
     }
+  }
+
+  /* ---------------- who the player is ----------------
+
+     The name is the FIRST player-typed text this game has ever held, and the
+     rule that governs it is filed in docs/11-known-issues.md: it never enters a
+     template literal, it is written with `.textContent` into an empty labelled
+     node, and `tools/html-check.js` fails the build if anyone writes it the
+     other way. Nothing here escapes anything — escaping at the boundary was
+     priced and rejected, because `&lt;` in the save is a promise every future
+     reader has to keep. What this layer owes the UI is a name that is short,
+     single-line and never empty; making it SAFE is the render site's job.
+
+     The avatar is an id, never markup: `flower` for the talking flower,
+     `seed:<id>` for a bloom, `critter:<id>` for a creature. A string the art
+     files resolve, so a save can never carry a drawing. */
+  /** Short, single-line, trimmed, never empty. Newlines and tabs become spaces
+      rather than being dropped, so `a\nb` is `a b` and not `ab`; runs collapse.
+      The cap is applied AFTER collapsing, or a name padded with whitespace could
+      spend its whole allowance on nothing. */
+  function cleanProfileName(raw) {
+    const s = typeof raw === 'string' ? raw : '';
+    const flat = s.replace(/[\r\n\t\u2028\u2029]+/g, ' ').replace(/\s+/g, ' ').trim();
+    return flat.slice(0, PROFILE_NAME_MAX) || PROFILE_DEFAULT_NAME;
+  }
+
+  /** An avatar id the art can actually draw today. A bloom the player has not
+      unlocked, or a creature that has not moved in, resolves to the flower —
+      the picker only offers earned faces, and a save can outlive a data table. */
+  function cleanAvatar(raw) {
+    const id = typeof raw === 'string' ? raw : '';
+    if (id.indexOf('seed:') === 0) {
+      const seed = id.slice(5);
+      return seedUnlocked(seed) ? id : PROFILE_DEFAULT_AVATAR;
+    }
+    if (id.indexOf('critter:') === 0) {
+      const who = id.slice(8);
+      return critterById(who) && state.critters[who] ? id : PROFILE_DEFAULT_AVATAR;
+    }
+    return PROFILE_DEFAULT_AVATAR;
+  }
+
+  const profile = () => state.profile;
+  const profileName = () => state.profile.name;
+
+  /** Returns what was actually stored, so a caller can render the trimmed form
+      rather than the raw keystrokes it sent. */
+  function setProfileName(raw) {
+    state.profile.name = cleanProfileName(raw);
+    save();
+    return state.profile.name;
+  }
+
+  function setProfileAvatar(id) {
+    const next = cleanAvatar(id);
+    if (next !== id) return false;      // refused: not earned, or not a real id
+    state.profile.avatar = next;
+    save();
+    return true;
+  }
+
+  /** Every face the player has earned, in the order the picker draws them: the
+      flower first because it is where everyone starts, then unlocked blooms in
+      ladder order, then creatures that have moved in. The locked blooms travel
+      with them so the picker can draw the ones still to come without
+      re-deriving the rule. */
+  function avatarChoices() {
+    const blooms = DATA.seeds.map((s) => ({
+      id: `seed:${s.id}`, kind: 'seed', seed: s, unlocked: seedUnlocked(s.id)
+    }));
+    const pets = CREATURES
+      .filter((c) => Boolean(state.critters[c.id]))
+      .map((c) => ({ id: `critter:${c.id}`, kind: 'critter', critter: c, unlocked: true }));
+    return { flower: { id: PROFILE_DEFAULT_AVATAR, kind: 'flower', unlocked: true }, blooms, pets };
   }
 
   /* ---------------- what's new ----------------
@@ -4625,6 +4720,8 @@ const Game = (() => {
   return {
     state, on, emit, load, save, saveNow, reset, nowSeconds,
     newsSeen, markNewsSeen, clearNewsSeen, pendingAnnouncement,
+    profile, profileName, setProfileName, setProfileAvatar, avatarChoices,
+    PROFILE_NAME_MAX,
     credit,
     seedUnlockPrice, unlockSeed,
     petalsOf, petalCost, buyPetal, petalMult, petalGrowMult, petalEffect,

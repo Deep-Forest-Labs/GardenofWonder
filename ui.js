@@ -705,14 +705,14 @@
      Making them wait for `pointerup` instead would fix that and cost the tap
      latency the whole core loop is built on, which is a far worse trade. */
   const NAV_SWIPE = 70;
-  const noSwipe = '.plot,.fl-plot,.flower-btn,.fpill,.fround,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,[data-critter],.coach,.s-edge,.g-back';
+  const noSwipe = '.plot,.fl-plot,.flower-btn,.fpill,.fround,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,.drawer,[data-critter],.coach,.s-edge,.g-back';
   let navY0 = null;
   let navX0 = null;
   let navId = null;
   el.game.addEventListener('pointerdown', (e) => {
     navY0 = null;
     navId = null;
-    if (UI.hollowOpen() || UI.meadowOpen() || UI.sheetMode()) return;
+    if (UI.hollowOpen() || UI.meadowOpen() || UI.sheetMode() || UI.menuOpen()) return;
     if (e.target.closest(noSwipe)) return;
     navY0 = e.clientY;
     navX0 = e.clientX;
@@ -837,7 +837,6 @@
     else UI.openSheet(tab);
   });
 
-  $('#btnSettings').addEventListener('click', () => UI.openSheet('settings'));
   $('#btnDev').addEventListener('click', () => UI.openSheet('dev'));
   el.seasonEdges.addEventListener('click', (e) => {
     const b = e.target.closest('[data-season]');
@@ -1115,8 +1114,10 @@
        tabs or on the coach itself, and a hidden node measures 0x0 — which parks
        the bubble in the top-left corner over the wallets rather than failing.
        Naming every room that can be up is the same rule the vertical swipe's
-       guard follows. */
-    if (UI.sheetMode() || gateOn || UI.hollowOpen() || UI.meadowOpen()) { hideCoach(); return; }
+       guard follows, and the menu drawer joined the list on 2026-08-31 — it
+       covers the right two thirds of the screen, so a mark pointing into the
+       garden lands on top of it. */
+    if (UI.sheetMode() || gateOn || UI.hollowOpen() || UI.meadowOpen() || UI.menuOpen()) { hideCoach(); return; }
     if (!S.seen.intro) {
       if (coachTarget !== flowerBtn) showCoach(flowerBtn, 'Tap the flower!');
       el.coach.hidden = false;
