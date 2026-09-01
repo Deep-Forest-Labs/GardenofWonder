@@ -643,7 +643,8 @@ const DATA = {
         'The app icon on your home screen is the flower that talks to you.',
         'Fall has a Collect All button when the whole bed is ready, with the bonus applied in one go.',
         'Fall\u2019s garden lines up with your summer garden when you swipe between them.',
-        'The gem chip on a growing plant shows its price and no longer counts down at you.'
+        'The gem chip on a growing plant shows its price and no longer counts down at you.',
+        'When a sky is doing something, it now says so \u2014 tap the chip beside your quest bar to find out what.'
       ]
     }
   ],
