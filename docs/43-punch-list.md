@@ -30,12 +30,16 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-5. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+5. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
+   it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
+   **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
+   a working ready-notification.
+6. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-6. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
-   **Still gated on an owner decision**: 132px is a documented clearance, and `#11`'s ruling frees at
-   most half the strip.
+7. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+   **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
+   open question may answer itself.
 
 ---
 
@@ -435,6 +439,96 @@ as a pop rather than looking static. Check `--bloom`, which stage 3 multiplies i
 a plant at each stage at 390×844 with reduced motion on as well as off.
 
 **No open question.**
+
+---
+
+### #15 · POLISH · Retire the season tabs and push the band buttons to the edges · cosmetic · reported 2026-09-01
+
+**What the owner asked for.** "Let's remove the tabs for Spring and Fall. Now that we show the user
+how to swipe left and right, let's go ahead and take them off and move the Upgrade and Power Up
+buttons to the edge of the screen because it's a little too crowded at the bottom. We might also make
+a note that if a player has something ready on one of the other gardens, we could slide the tab in or
+show some type of notification to get their attention to move over."
+
+**One correction to the premise, and it is load-bearing: the tabs ARE how the swipe is taught.** The
+two coach marks that teach it are anchored to the tab nodes —
+`el.seasonEdges.querySelector('.s-edge.l[data-season="summer"]')` and the matching right-hand one at
+`ui.js:1266` and `ui.js:1271`. Both bail out with `hideCoach()` when the node is missing, so removing
+the tabs **does not break anything visibly — it silently deletes both lessons.** *"Swipe left for
+Fall"* and *"Swipe right for the garden"* simply stop appearing, and a player who has not learned the
+gesture yet never will. The whole `.season-edges` block was written as the answer to exactly this:
+*"How a player finds out sideways exists. The horizontal answer to the burrow door: a labelled thing
+you can tap, beside a gesture that does the same"* (`style.css:4682`), and the burrow door it names —
+the meadow's invisible gesture — is a filed known issue for this reason
+(`11-known-issues.md`, *"The meadow's only door is a gesture nobody can see"*).
+
+**So this is buildable exactly as asked, and the coach marks need a new anchor in the same commit.**
+That is the work, not a reason to refuse it. They can hang off the board's edge or the screen edge
+instead of a tab; the `.coach` machinery places against any measured node.
+
+**And the notification the owner wants to add already exists — on the tab being removed.**
+`seasonWaiting(id)` (`ui.js:1074`) is live and returns true when Fall has a ripe crop or an unspent
+windfall mark, and `renderSeasonEdges()` renders it as `<span class="s-dot">` — a red 16px dot on the
+tab (`style.css:4713`). **Removing the tabs deletes a working feature.** The owner's idea is
+therefore not "build a notification" but "re-home the one we have", which is a much smaller job — and
+their "slide the tab in" instinct is a good fit, because the dot's only job is to make the tab worth
+looking at. Note `seasonWaiting()` is hard-coded to Fall (`if (id !== 'fall')`), so it will need
+widening the day another season is built.
+
+**Measured, at 390×844** — the numbers say the crowding is real and quantify what the move buys:
+
+| | left | right |
+| --- | --- | --- |
+| Season tab | 0 → 38 | 352 → 390 |
+| Band button | `.fpill` 44 → 111 | `.fround` 288 → 346 |
+| Daylight between them | 6px | 6px |
+
+The band buttons are inset **34px** (`style.css:1317`, `1326`) for one reason: to clear the tabs —
+`index.html:172` says so. Take the tabs away and both can move 38px outward, which widens the gap
+between them from **177px to about 253px**.
+
+**Related — this materially unblocks `#10`.** The Collect All's 132px cap is derived from exactly
+this clearance. With the buttons at the edges, a centred pill could be about **233px** wide and still
+keep 10px of daylight either side — nearly double. **That very likely retires `#10`'s open question
+entirely**, because the room can be found without hiding the POWER-UP button in Fall. Do `#15` first
+and re-measure before deciding anything about `#10`.
+
+Also related:
+- **The tabs carry the gate copy.** A locked tab reads `Turn 3` or `Soon` beside a padlock
+  (`ui.js:1094`), which is how a player learns Winter and Spring exist and when they open, without
+  swiping into a gate screen. With Spring and Winter both unbuilt, removing that may well be an
+  improvement — fewer locks in the player's face — but it is a real thing being removed, not just
+  chrome.
+- **`.in-fall .coach:not(.season){display:none}` becomes dead.** That carve-out exists solely so the
+  summer-tab coach survives in Fall (`style.css:3975`); with no tab to point at, the `.season` class
+  and its exception have no job.
+- **`.season-edges` positions itself absolutely against `.ui` for a recorded reason** — it is *not* a
+  grid item, because an item with a definite row and an auto column forced an implicit second column
+  and squashed the whole interface (`style.css:4685`). If the container goes, make sure nothing
+  moves into the grid to replace it.
+
+**Fix sketch.** Stop rendering `.s-edge` buttons (keep `goSeason()`, `stepSeason()` and the swipe —
+they are untouched), re-anchor the two teaching coach marks to something that still exists, and move
+the ready dot to whatever replaces the tab. Change `.fpill{left:34px}` → the edge margin and
+`.fround{right:34px}` likewise. **What it might break:** `.s-edge` is in the `noSwipe` list
+(`ui.js:708`) and buttons moved to the very edge become the new gesture-edge neighbours — check a
+swipe that starts on or beside them still reads as a season swipe rather than a button press, since
+`.fpill`/`.fround` are also in `noSwipe`. Check `env(safe-area-inset-*)` on a real phone: the
+recorded trap is that it is always 0 on the desktop, so a button flush to the edge looks right in the
+preview and sits under the home indicator or the curve on hardware — **keep a margin rather than
+going to 0**. Landscape and the ~640px short viewport both need a look. Run
+`node tools/style-check.js`.
+
+**The owner's note, recorded as the follow-on it is.** "Slide the tab in when another garden has
+something ready" is the right shape and it is a *separate* item once this lands — it needs
+`seasonWaiting()` widened beyond Fall, a slide-in animation, and a rule for when the tab retreats
+again. Filed here rather than as its own number because it is contingent on this one; split it out
+the moment this ships.
+
+**Open question.** With the tabs gone, is a first-time player expected to learn the swipe from the
+coach marks alone, or should something permanent hint at sideways — a peeked edge, a chevron? The
+owner's "slide the tab in" idea answers it for a garden with something *ready*, but not for an empty
+Fall on the day it opens.
 
 ---
 
