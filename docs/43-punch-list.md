@@ -25,7 +25,8 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
    exists. **Read the item**: the obvious knob also halves the thunder, and there is a knob that
    does not.
 3. **#12 · Fall's empty-plot marker is 1.5x Summer's** — three CSS declarations, measured, and the
-   owner asked for it by name.
+   owner asked for it by name. **Widen it to a three-room sweep**: the meadow hand-draws its own copy
+   of the same glyph at a third size (see `#16`), so fixing Fall alone leaves the set inconsistent.
 4. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
@@ -37,7 +38,11 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 6. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-7. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+7. **#16 · The meadow's art is off-style and its board does not match** — **not one job**: the
+   marker folds into `#12` tonight, the board is a bounded next step, and the background is its own
+   session that should start with a `meadow-spike.html` for the owner to judge. Do not hand this to a
+   fix round as one lump.
+8. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
    open question may answer itself.
 
@@ -529,6 +534,104 @@ the moment this ships.
 coach marks alone, or should something permanent hint at sideways — a peeked edge, a chevron? The
 owner's "slide the tab in" idea answers it for a garden with something *ready*, but not for an empty
 Fall on the day it opens.
+
+---
+
+### #16 · POLISH · The meadow's art is off-style, and its board does not match the garden's · annoying · reported 2026-09-01
+
+**What the owner said.** "I really dislike the background and look and feel of the meadow where you
+place the bees. I don't think our art style does well with long, stringy vines or grass textures. I
+think it looks good at the top part of the meadow, but not at the bottom where the stone is. The tree
+to the right, maybe the willow shade or whatever it is, looks really bad as well. Can we give the
+meadow a nicer update to the background that's more in line with our garden with rolling hills? We've
+got the fence. You could still have cobblestone… Also, we need to have and make sure that the grid
+for the flowers and the honey hives match our garden. Also, the plus symbols with a little square
+around them are the same type of work we're doing for fall… I think we're close, but it just needs a
+fresh pass on it."
+
+**Repro.** `node tools/probe.js wait:900 tap:#newsOk wait:500 'eval:UI.enterMeadow()' wait:1600 shot:meadow`
+— the swipe is gated, so drive it through `UI.enterMeadow()` rather than a drag.
+
+**This is three separable jobs and they are very different sizes.** Splitting them is the most useful
+thing this entry does; a single "make the meadow nicer" brief produces something arbitrary.
+
+**A · The named art faults, all in `meadow.js`.**
+
+| The owner's words | What it is | Where |
+| --- | --- | --- |
+| "long, stringy vines or grass textures" | `grassBand()` — up to `w/11` individual bezier blades with seed-head ellipses, drawn twice as a back and front band | `meadow.js:85` |
+| "the bottom where the stone is" | `wall()` — a dry-stone wall in three uneven courses plus a coping row, with the blades pushing through it | `meadow.js:188` |
+| "the tree to the right… looks really bad" | `willow()` — thirteen hanging `mw-frond` strokes under a lumpy leaf blob on a `#8a5a33` trunk | `meadow.js:165` |
+| "looks good at the top part" | `sky()` and `clouds()` — leave these alone | `meadow.js:57`, `65` |
+
+The blades and the fronds are the same idiom — long thin strokes — and they are the two things named.
+The wall's own comment argues for it (*"what a meadow has instead of a painted fence… nobody built
+this last summer"*), which was a defensible call and the owner has now overruled it: they want the
+garden's fence language, with cobblestone allowed to stay.
+
+**B · The board does not match the garden's, and this is the concrete half.** The garden's plots are
+brown soil in a wooden planter with a grass fringe on the rim (`.garden` / `.plot`, `style.css:518`);
+the meadow's are stone setts in a tan frame (`.mw-board` / `.mw-cell`, `style.css:4140`), with locked
+cells in grey cobble against the garden's grey slab. Fall's board was already brought into line with
+Summer's this week (`#6`), so **the meadow is the third of three and the only one still out of
+family.**
+
+**C · The plant-here marker is a third independent copy of one glyph.** This is the piece that pairs
+directly with `#12`:
+
+| Room | How it is drawn | Size |
+| --- | --- | --- |
+| Summer | `Icons.get('plantSpot')` | 30% of the cell, capped 44px |
+| Fall | `Icons.get('plantSpot')` | 46%, no cap — `#12` |
+| **Meadow** | **hand-drawn inline in `meadow.js:269`** — its own `rect rx=11` + dashed ring + plus path | 34% |
+
+The meadow does not use the shared icon at all; it re-draws it, with its own dash pattern
+(`6 5.4`), its own stroke width and its own colours. **Fixing `#12` by matching Fall's numbers to
+Summer's leaves a third set of numbers here.** Do all three at once and make the meadow call
+`Icons.get('plantSpot')` like the others, so there is one glyph and one size rule.
+
+**The structural fact that decides how much A costs.** The garden's world is **CSS layers** —
+`.hills-far`, `.hills-mid`, `.hills-near` and `.fence` are `<div class="layer">` elements in
+`index.html:51-67`, styled in `style.css:234-272`, with `ui-scenery.js` driving the sky gradient,
+building the clouds as DOM and tinting everything for weather. The meadow's world is **one generated
+SVG** from `Meadow.scene()` (`meadow.js:411`). So "give it the garden's rolling hills and fence" is
+not copy-paste — it is either re-authoring those shapes as SVG paths inside the meadow scene, or
+letting the meadow use the garden's CSS layers and drawing only its own furniture. **That choice is
+the first decision of this job**, and the second route is much the better one if it works, because it
+makes the two rooms share a world instead of imitating one.
+
+**Recommend a spike, because this is the house practice for exactly this.** `tools/` holds eleven
+`*-spike.html` benches — `fall-spike`, `hollow-spike`, `dock-spike`, `menu-spike`, `sky-spike` — and
+**there is no `meadow-spike.html`**, which may be why this room is the one that drifted. An art pass
+judged by eye needs the owner's eye on it before it lands in `style.css`, and a bench is how every
+other room got that.
+
+**Related.**
+- **`#12`** — fold C into it as a three-room sweep rather than fixing Fall alone.
+- **`#15`** — also moves furniture at the bottom of the screen; different room, but both are the
+  "bottom of the screen is crowded" complaint.
+- **The meadow's door is a filed known issue** (`11-known-issues.md`, *"The meadow's only door is a
+  gesture nobody can see"*). Not this item, but anyone spending a session in this room should know
+  the room is hard to reach at all.
+- `05-art-direction.md` owns the standard this is being measured against, and
+  `tools/style-check.js` enforces the part a script can hold.
+
+**Fix sketch.** Split it: **C tonight**, folded into `#12`. **B next**, since it is bounded — bring
+`.mw-board` and `.mw-cell` onto `.garden` and `.plot`'s material, borders, radii and lip. **A as its
+own session**, starting with `tools/meadow-spike.html` carrying the current scene beside a
+garden-language version — rolling hills, the fence, garden clouds, cobblestone kept as ground rather
+than as a wall — for the owner to pick from. **What it might break:** `Meadow.scene()` is composed
+against a fixed `VIEW` and a `HORIZON` constant with the willow and wall positioned against them
+(`meadow.js:37`), so removing a layer shifts everything keyed to that horizon. The `mw-blade`,
+`mw-frond` and `mw-flower` classes carry CSS animations that become dead selectors — grep and remove
+them rather than leaving them. `.mw-jar-badge` is a recorded trap (`[hidden]` losing to a later
+`display:grid`); do not disturb it. Run `node tools/style-check.js`, and check reduced motion — the
+blades and fronds are what most of this room's motion currently is.
+
+**Open question.** Should the meadow use the garden's actual CSS scenery layers, or keep its own SVG
+scene re-authored in the garden's language? The first is less code and guarantees they can never
+drift again; the second keeps the room able to differ. The owner asked for "in line with our garden",
+which points at the first.
 
 ---
 
