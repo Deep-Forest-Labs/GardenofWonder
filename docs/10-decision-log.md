@@ -178,6 +178,61 @@ commit `db43231` retired the faulty rule with the rest of the numeric stages, go
 
 ---
 
+## 2026-09-01 (performance, third pass) — The handset answered, and it said the frame is all paint
+
+**The owner filmed the readout on an iPhone 16 Pro.** On a **clear sky, doing nothing**: 29 fps, a
+34 ms frame, **`js 0`** and **`rest 34`**, four frames in five over budget, a worst frame of 990 ms.
+Twelve particles on screen. Identical with a sheet open and closed.
+
+**That one screen settles three arguments at once.** The game logic is not the problem *on the
+device*, not just on a bench. The weather is not the problem, because this is a clear sky. And 34 ms
+is 2 x 16.7 — **iOS has stopped trying for 60 and is holding the page at 30**, which is what it does
+when a page cannot make the budget.
+
+The crash is a **white screen followed by a reload**: the renderer being killed and restarted, which
+is memory rather than a script error, and consistent with the layer census.
+
+### One more free layer, found by looking rather than measuring
+
+`.wonder-veil` was holding a full-window `overlay` blend **at all times** for an effect that runs
+twelve seconds now and then — the identical mistake the weather layers were making, in the file's
+oldest block, missed on the pass that fixed the others because that pass went looking under `.wx`.
+Gated: 266 MB to 241 MB, and pixel-identical because the element is at `opacity:0` the whole time
+the blend is now off.
+
+**The lesson is the search, not the layer.** "Which layers hold a blend they are not using" is a
+question about the whole stylesheet, and it was asked about one section.
+
+### Why the next move is a switch panel and not another fix
+
+**Nothing on a Mac reproduces this.** The same clear sky measures 2.3 ms here and 34 ms there — a
+factor of fifteen — so every candidate ranking a desktop can produce is a guess about which of a
+dozen full-screen layers iOS is actually choking on.
+
+So rather than guess, the pass ships **Developer tools → "Find the cost"**: one switch per suspect,
+each removing a layer, so the owner can turn one off and watch `rest` move on the only device where
+the number is real. Ten seconds a switch, ten switches, and the answer is measured instead of argued.
+Ordered by suspicion — weather layer, season tint, sky and clouds, particles — and ending with two
+blunt ones, **ALL blends** and **ALL masks**, which answer a different question: if either of those
+moves the number a long way and none of the specific ones do, the cost is the technique rather than
+any single layer, and that is a design conversation rather than a bug.
+
+They change how the game looks, deliberately. **A measuring tool is allowed to break the picture; a
+setting is not.** They live behind the dev sheet with every other cheat.
+
+### Rejected
+
+- **Guessing and fixing the most likely layer.** The season tint is the obvious candidate — a
+  full-window multiply that is always visible — but it is a designed effect that cannot be removed
+  without changing the look, and there is no evidence yet that it is the one. Fixing it blind would
+  spend the one thing this pass has been careful with all day, which is that nothing changes how a
+  sky looks.
+- **Reaching for a rewrite.** `js 0` is the whole reason not to. The simulation, the board and the
+  tap loop are free on the device; what is expensive is a specific rendering technique used about a
+  dozen times. That is a budget to bring down, not an engine to replace.
+
+---
+
 ## 2026-09-01 (performance, second pass) — The crash is memory, not frame rate, and `opacity:0` does not put a layer down
 
 **The owner reported that the game CRASHES when you spam the flower, harvest and plant, and that

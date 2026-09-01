@@ -438,6 +438,7 @@ cheat exercises the feature it claims to test, and the animation seen is the one
 | Jump ahead | +1 / +3 / +6 Turns (`Dev.jumpTurns`). Each Turn earns its way there through the real faucet and runs the real `turnYear()`; the garden is wiped once per Turn and the player lands bare with Saved Seeds banked |
 | Play the whole sky | Runs a sky's entire sequence — front, arrive, linger, end — through `UI.weatherSequence()`, which is the real code path. Holding a sky can only ever park on the transform; this is the only way to see a front or an end on demand. The Sunbreak button is **daytime only** (it early-returns at night), and the panel's last line prints the day phase so you know whether to wait |
 | Frame rate | Shows and hides the frame-rate readout (`UI.perf`), and starts a fresh measuring window. See below |
+| Find the cost | Switches one layer off so the readout can say what it was costing. **These change how the game looks on purpose** — they are a measuring tool, not settings, and there is no desktop substitute for them because no desktop reproduces what iOS charges for a full-screen blend |
 
 ### The frame-rate readout
 

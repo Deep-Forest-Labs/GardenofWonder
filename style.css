@@ -295,6 +295,28 @@ button:focus-visible{
 }
 
 /* =========================================================
+   FINDING THE COST — development only, never a player's screen
+   =========================================================
+   These DO change the look, and that is the point. No desktop reproduces what iOS
+   charges for a full-screen blend, so the only way to find out which layer is costing
+   the frame is to switch each one off ON THE HANDSET and watch the readout move. One
+   class per suspect, applied from the dev sheet, removed the same way. Nothing here is
+   reachable without opening Developer tools. */
+#game.cost-tint .season-tint{display:none}
+#game.cost-vignette .vignette{display:none}
+#game.cost-wx .wx,
+#game.cost-wx .wx-flash{display:none}
+#game.cost-canvas .fx-canvas{display:none}
+#game.cost-scenery :is(.clouds-far,.clouds-near,.stars,.celestial){animation:none;display:none}
+#game.cost-critters .critter{display:none}
+#game.cost-flower .talker{display:none}
+/* The blunt ones. If either of these moves the number a long way, the answer is the
+   technique rather than any one layer. */
+#game.cost-blends *{mix-blend-mode:normal !important}
+#game.cost-masks *{-webkit-mask-image:none !important;mask-image:none !important}
+#game.cost-anims *{animation:none !important}
+
+/* =========================================================
    WONDER EFFECT
    ========================================================= */
 .wonder-veil{
@@ -304,6 +326,10 @@ button:focus-visible{
   mix-blend-mode:overlay;
   transition:opacity .6s ease;
 }
+/* Same rule as the weather layers: `opacity:0` hides this, it does not put it down. A
+   full-window `overlay` blend is held — and re-blended against everything under it —
+   for the whole game, for an effect that runs for twelve seconds now and then. */
+#game:not(.wonder) .wonder-veil{mix-blend-mode:normal}
 .wonder .wonder-veil{opacity:.62;animation:wonderShift 5s linear infinite}
 @keyframes wonderShift{from{background-position:0% 50%}to{background-position:400% 50%}}
 .wonder .scenery{animation:wonderWarp 7s ease-in-out infinite}

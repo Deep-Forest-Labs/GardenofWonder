@@ -7,6 +7,23 @@
 (() => {
   const { $, $$, S, el, fmt, fmtTime, pct, signed, MASTERY_TRACK } = UI;
 
+  /* The suspects, in the order worth trying them. Each one is a class on `#game` and a
+     rule in the "FINDING THE COST" block in `style.css`. Blends and masks are last on
+     purpose: if either of those moves the number a long way, the answer is the technique
+     rather than any one layer, and that is a different conversation. */
+  const COST_SWITCHES = [
+    { id: 'wx', label: 'Weather layer' },
+    { id: 'tint', label: 'Season tint' },
+    { id: 'canvas', label: 'Particles' },
+    { id: 'scenery', label: 'Sky & clouds' },
+    { id: 'vignette', label: 'Vignette' },
+    { id: 'critters', label: 'Creatures' },
+    { id: 'flower', label: 'The flower' },
+    { id: 'blends', label: 'ALL blends' },
+    { id: 'masks', label: 'ALL masks' },
+    { id: 'anims', label: 'ALL animation' }
+  ];
+
   /* ============ bottom sheet ============ */
   let sheetMode = null;
   let sheetArg = null;
@@ -2251,6 +2268,12 @@
           UI.perf.on() ? 'Hide the readout' : 'Show the readout'}</button>
         <button class="dev-btn" data-dev="perf" data-arg="reset">Start a fresh window</button>`)}
       ${UI.perf.on() ? `<pre class="dev-perf">${UI.perf.line()}</pre>` : ''}
+      ${devRow(`Find the cost — switch a layer OFF and watch <b>rest</b> on the readout for ten
+        seconds. Whichever one moves the number is the answer. These change how the game LOOKS
+        on purpose; they are a measuring tool, not a setting`, COST_SWITCHES.map((c) =>
+        `<button class="dev-btn${UI.el.game.classList.contains('cost-' + c.id) ? ' on' : ''}"
+          data-dev="cost" data-arg="${c.id}">${c.label}</button>`).join('')
+        + '<button class="dev-btn warn" data-dev="cost" data-arg="">All back on</button>')}
       ${devRow('Mutate a growing plot now', muts)}
       ${devRow('Arm the next harvest', rars + '<button class="dev-btn" data-dev="gem" data-arg="1">Gem drop</button>')}
       ${devRow('Boost a tap proc — stays on, then just tap the flower', `
@@ -2351,6 +2374,14 @@
       case 'wxSeq': UI.weatherSequence(arg); redraw = false; break;
       case 'perf':
         if (arg === 'reset') { UI.perf.reset(); redraw = false; } else UI.perf.toggle();
+        break;
+      /* Presentation, and deliberately destructive — see the note in the row. Resets the
+         measuring window too, or the first ten seconds of the new number are averaged in
+         with the ten before it and say nothing. */
+      case 'cost':
+        if (arg) UI.el.game.classList.toggle('cost-' + arg);
+        else COST_SWITCHES.forEach((c) => UI.el.game.classList.remove('cost-' + c.id));
+        UI.perf.reset(arg ? 'cost-' + arg : 'all-on');
         break;
       case 'mutate': ok = Boolean(D.mutate(arg)); redraw = false; break;
       case 'rarity': D.armRarity(arg); break;

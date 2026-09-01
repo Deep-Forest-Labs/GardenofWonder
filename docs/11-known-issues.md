@@ -803,6 +803,54 @@ number. **The remaining 266 MB is mostly layers with no obvious cause, and that 
 to pull.** If the handset still crashes after this change, that is where to look — and the fastest
 way to know is the Frame rate readout plus whether the crash is a reload, a freeze or a white screen.
 
+### THE DEVICE NUMBERS ARE IN — 29 fps on a CLEAR sky, and the frame is all paint (2026-09-01)
+
+**The owner recorded the readout on an iPhone 16 Pro.** This is the measurement the whole pass was
+built to get, and it is unambiguous:
+
+```
+fps 29.4  int 34  hz 60
+p50 34 p95 54 max 125          ... later in the clip: p95 145 max 990
+js   0 / 2   n 243
+rest 34 / 54   >1.5x 197 >2.5x 47
+clear/idle night0 sun0
+dpr 2 cv 804x1624 wx 0 fx 12
+```
+
+Read it line by line, because every line rules something out:
+
+- **`clear/idle`** — this is a CLEAR sky doing nothing. Not weather. The standing cost.
+- **`js 0 / 2`** — our JavaScript costs nothing. **The game logic is exonerated on the device**, not
+  just on the bench.
+- **`rest 34`** — the entire frame is paint, blend and composite.
+- **`fps 29.4`, `int 34`** — that is 2 x 16.7. **iOS has given up on 60 and is holding the page at
+  30**, which is what it does when a page cannot make the budget.
+- **`>1.5x 197` of `n 243`** — four frames in five miss.
+- **`max 990`** — a frame took a full second.
+- **`fx 12`, `wx 0`** — twelve particles on screen. It is not the particles.
+
+The numbers are identical with a sheet open and closed, so the seed picker's backdrop blur is not
+it either.
+
+**The crash is a white screen followed by a reload**, which is the renderer process being killed and
+restarted — the memory signature, not a script error. It is consistent with the layer budget above.
+
+**What has been done since:** the weather layers give up their masks and blends when their sky is
+not standing (343 MB to 266 MB), and the Wonder Effect's veil does the same (266 MB to 241 MB) — it
+was holding a full-window `overlay` blend at all times for an effect that runs twelve seconds now and
+then. Neither changes a pixel.
+
+**What has NOT been established: which layer costs the 34 ms.** No desktop reproduces it — the same
+clear sky measures 2.3 ms here. So the next measurement has to happen on the handset, and there is
+now a tool for it: **Developer tools → "Find the cost"**, a row of switches that each remove one
+layer. Turn one off, watch `rest` for ten seconds, turn it back on. Whichever one moves the number is
+the answer. They change how the game looks on purpose; they are a measuring tool, not settings.
+
+Try them in this order: **Weather layer, Season tint, Sky & clouds, Particles**, then the blunt ones —
+**ALL blends** and **ALL masks**. If one of the blunt two moves the number a long way and none of the
+specific ones do, the answer is the technique rather than any single layer, and that is a design
+conversation rather than a bug.
+
 **Still wanted from the owner:** a video of the crash. Safari's "A problem repeatedly occurred" is a
 memory kill and confirms the above; a freeze with the page intact is something else entirely; and a
 white screen is a third thing. The three have different fixes and the symptom is the cheapest way to
