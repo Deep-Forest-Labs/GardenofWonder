@@ -24,29 +24,32 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 2. **#12 · The plant-here marker is a different size in all three rooms** — Summer 30% capped at
    44px, Fall 46% uncapped, and the meadow hand-draws its own copy at 34% (see `#16`). **One glyph,
    one size rule**, all three at once.
-3. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
+3. **#19 · "Discover 5 species" arrives in minutes and needs ~1.8 years of gold** — a first-session
+   bug that also jams a third of the quest strip forever. Data plus a three-line gate `fillActive()`
+   does not have yet. The same fault sits in `q_discover_8` and `q_discover_12`.
+4. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
    design change: Clover in gold, Petal Cake in gems, Honeypot behind a rewarded ad. **Read the item
    before pricing anything**: four pets can tend at once, which makes this twelve gem purchases and
    six ads a day, and the ad half collides head-on with `37-monetization.md`'s whole daily budget.
    Two numbers are the owner's to pick.
-4. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
+5. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
    the house register is already written in `data.js`. Also closes a hard-coded number that can
    drift from its knob. **Read the item**: the length exists to keep a promise honest, so keep that.
-5. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+6. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-6. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
+7. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
    it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
    **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
    a working ready-notification.
-7. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+8. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-8. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+9. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
    open question may answer itself.
-9. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
+10. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
    round**: the marker folds into `#12` tonight, the board is a bounded next step, and the background
    is its own session that should start with a `meadow-spike.html` for the owner to judge.
 
@@ -780,6 +783,93 @@ these prices. Run `node tools/sim-test.js`.
 2. **How does the ad-fed Honeypot fit in a 3–6 ads/day plan?** Four pets on Honeypot is six ads
    before any other offer exists. Cap it, keep Honeypot rare, or accept that feeding is where the ad
    budget goes and re-plan the three placements in `37-monetization.md`.
+
+---
+
+### #19 · BUG · "Discover 5 species" arrives in minutes and needs almost two years of gold · annoying · reported 2026-09-02
+
+**What the owner saw.** "I get the 'Discover Five Species' quest way too early… On my first
+playthrough, I get it in about three or four minutes of gameplay, and it's impossible to get because
+I need to unlock five species… I don't think we should introduce that quest until they're close to
+unlocking the blue bell. I would change the quest… or add a new quest for 'Discover Three Species'…
+Keep the 'Discover Five Species' quest for later, maybe after their fourth flower unlock."
+
+**Repro.** Start a fresh save and clear the first ten quests — tap 25, plant a seed, harvest a bloom,
+five daisies, buy Power Punch, tap 50, three tulips, buy Quick Grip, hold 20, plant 8. All are
+minutes of work. `q_discover_5` is the **eleventh** entry in `DATA.quests` (`data.js:631`), so it
+lands in the strip immediately behind them.
+
+**The owner is right, and the size of it is worse than "too early".** Discovery is written only by
+`recordHarvest()` (`game.js:2207`) — a species is discovered by harvesting a seed you have never
+harvested — and it counts garden seeds only (`game.js:2090`). Just two seeds are free
+(`freeSeeds: 2`), so five species means buying the third, fourth and fifth unlocks, at
+`unlockBase × unlockRatio^(i − freeSeeds)` (`game.js:1621`):
+
+| Species | Seed | Unlock price | Cumulative |
+| --- | --- | --- | --- |
+| 1–2 | Daisy, Tulip | free | 0 |
+| **3** | **Bluebell** | **150,000** | **150,000** |
+| 4 | — | 225,000 | 375,000 |
+| **5** | — | **337,500** | **712,500** |
+
+**And `DATA.quests`' own header says a year earns ~370–410K gold** (`data.js:612`). So
+`q_discover_5` asks for **roughly 1.8 years of a garden's entire income**, spent on nothing but
+unlocks, and it asks four minutes in.
+
+**It is not merely uncompletable — it jams a third of the quest strip, permanently.** `fillActive()`
+(`game.js:1955`) walks the array in order and holds **three** slots; a quest that can never be
+claimed never leaves one. `ensureProgression()`'s own comment says exactly this a few lines below:
+*"Either one can never be claimed, so it holds one of the three slots forever."* That is the failure
+the `paused` flag exists to prevent.
+
+**The benching pass that should have caught this caught four of its neighbours and missed this one.**
+The header comment at `data.js:612` records it: *"THE GARDEN YEAR benches four more the same way… seed
+unlock prices replaced level gates, and a year earns ~370–410K, so `q_peony_3` and `q_marigold_3`
+name seeds genuinely unreachable in year one… a quest that sometimes jams is the same bug on a
+timer."* Those four were paused because they **name** a seed. `q_discover_5` does not name one — it
+just requires three of them — so it slipped through a filter that was looking for seed keys.
+
+**The rest of the track has the same fault, further along.** Fixing only `q_discover_5` moves the jam
+rather than removing it:
+
+| Quest | Species | Unlocks needed | Cumulative gold | Position |
+| --- | --- | --- | --- | --- |
+| `q_discover_5` | 5 | 3 | ~713K | 11th |
+| `q_discover_8` | 8 | 6 | **~3.1M** | 16th |
+| `q_discover_12` | 12 | 10 | **~17M** | last |
+
+`q_discover_8` sits five places later and will jam the strip the same way as soon as a player clears
+past it. Whatever gate is built should cover all three.
+
+**Nothing today can express "when they are close to the Bluebell".** `fillActive()` has exactly two
+gates: `paused`, which benches a quest outright, and `after`, which waits on **another quest** being
+done. **There is no gate on seed unlocks, gold, or anything else.** That is the one piece of new
+machinery this needs, and it is small — a `needSeeds: N` field checked alongside `paused` and
+`after` is three lines, and it retires the need to bench the two later discover quests as well.
+
+**One honest note on the target.** Even gated behind the fourth unlock, `q_discover_5` still asks
+for the fifth seed at 337,500 on top of 375,000 already spent — a **year-two-plus** goal. That is
+fine, because seed unlocks are permanent across the Turn (*"Paid once, yours forever"*,
+`32-the-garden-year.md`), so the discover track is a legitimate long ladder like the Century Bloom.
+The bug is that it sits in an active slot while it waits, not that it is long.
+
+**Fix sketch.** Add `q_discover_3` (three species, one paid unlock at 150,000 — comfortably inside a
+single year at ~40% of its income) where `q_discover_5` sits now, at the same `rep: 12` so the rung
+does not move. Add a `needSeeds` gate to `fillActive()` and hang `q_discover_5` on four unlocked
+seeds, `q_discover_8` and `q_discover_12` on their own thresholds. Leave the rep ladder's total
+alone — the header warns that benching rep out of it strands players short of the Eternal Crown, so
+`q_discover_3` should carry the 12 rep `q_discover_5` was carrying at that rung, and `q_discover_5`
+keeps its own where it lands. **What it might break:** the ladder totals **777 rep** by design and
+`16-progression-and-quests.md` quotes it — adding a quest changes that number and the doc must move
+with it. `ensureProgression()` drops active instances whose definition vanished or became paused, but
+a quest that becomes *gated* is a third case it has never seen; make sure an existing save with
+`q_discover_5` already sitting in a slot has it removed rather than stranded. A sim-test should
+assert that no quest reachable in the first N minutes requires a paid unlock — that is the general
+form of this bug and it would have caught it.
+
+**Open question.** "After their fourth flower unlock" — four species *owned* (two free plus two
+bought, 375,000 spent), or four unlocks *purchased* (six species, 1.2M)? Read here as the first,
+which is the gentler reading and matches "fourth flower". Say the word if it should be the other.
 
 ---
 
