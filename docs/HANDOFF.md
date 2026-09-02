@@ -1360,14 +1360,33 @@ this model's poorest Turn-3-to-6 player sits at 52.5M. That is a thin margin on 
 hot against doc 33's own year-one target. Every number in `DATA.winter` is provisional and the ladder
 is the owner's to rule on; raising the top rung's cost lowers its net and widens the margin.
 
-**What is still open, honestly:** the gauntlet's last pass (docs 34) has not had a clean second
-round, and the fix round's five collision surfaces have STILL not landed as of this writing — slice C
-touched four of them (`goSeason` is ternary, `seasonWaiting` is widened, `renderRail` has the #11
-room filter, and Winter's controls joined `noSwipe`). **#15's season-tab retirement is the one that
-will conflict**: `renderSeasonEdges()` is unchanged and Winter now has a tab. Re-verify with
-`git fetch` before touching `ui.js`.
+**What is still open, honestly.**
 
----
+1. **Gate 5 has not had a clean round.** Two rounds of critics ran, every finding is fixed and the
+   suite is green at 1,642 — but the critics have not been re-run against the result. That is the
+   next thing anyone picking this up should do.
+2. **The fix round's five collision surfaces have STILL not landed.** Slice C touched four of them:
+   `goSeason()` is ternary, `seasonWaiting()` is widened, `renderRail()` carries the #11 room filter
+   (which is RULED and names Winter in its own words), and Winter's controls joined `noSwipe`.
+   **#15's season-tab retirement is the one that will conflict** — `renderSeasonEdges()` is
+   unchanged, Winter now has a tab, and `tools/capture-screens.js` drives three scenes through those
+   tabs. `git fetch` before touching `ui.js`.
+3. **The economy number the owner should rule on**, from `node tools/year-sim.js 14 winter`:
+   guardrail one passes **by 7.5%**. Below a lifetime of **48.9M gold** the richest kept night
+   (eight Camellia, net 1.408M) clears both Turn gates on its own, and this model's poorest
+   Turn-3-to-6 player sits at 52.5M. Thin, on a model that runs hot against doc 33's own year-one
+   target. Raising the top rung's cost lowers its net and widens the margin. **Every number in
+   `DATA.winter` is provisional and the ladder is the owner's.**
+4. **Winter buys gold and spends Turns.** Over thirty days the arm that plays Winter turns 16 times
+   against 21, and the Turn is where the compounding is. Reported and not tuned — the capital Winter
+   parks is capital a sleeping player was not cycling anyway. Doc 46's own metric is the one to
+   read: **a kept morning is worth a median 23% of that day's income.**
+5. **Fall is still not in the welcome-back report**, and Winter's arrival makes that louder rather
+   than quieter — two of the three gardens now report an overnight and the middle one does not.
+   Deliberately left, because Fall is not this slice: it is a `fallRipe` count beside Winter's in
+   the same payload.
+6. **Fall's bed chip double-spaces around its bold words** — the same flex-gap leak Winter's chip
+   had, and one line of CSS. It is `.fl-chip`'s, not Winter's.
 
 ---
 
