@@ -32,24 +32,27 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
    before pricing anything**: four pets can tend at once, which makes this twelve gem purchases and
    six ads a day, and the ad half collides head-on with `37-monetization.md`'s whole daily budget.
    Two numbers are the owner's to pick.
-5. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
+5. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
+   the harvest float does not; the payload does not even carry the number. Pairs naturally with
+   `#17`, both being "say the true thing in the fewest words".
+6. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
    the house register is already written in `data.js`. Also closes a hard-coded number that can
    drift from its knob. **Read the item**: the length exists to keep a promise honest, so keep that.
-6. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+7. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-7. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
+8. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
    it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
    **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
    a working ready-notification.
-8. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+9. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-9. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+10. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
    open question may answer itself.
-10. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
+11. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
    round**: the marker folds into `#12` tonight, the board is a bounded next step, and the background
    is its own session that should start with a `meadow-spike.html` for the owner to judge.
 
@@ -870,6 +873,87 @@ form of this bug and it would have caught it.
 **Open question.** "After their fourth flower unlock" — four species *owned* (two free plus two
 bought, 375,000 spent), or four unlocks *purchased* (six species, 1.2M)? Read here as the first,
 which is the gentler reading and matches "fourth flower". Say the word if it should be the other.
+
+---
+
+### #20 · POLISH · A running boost is invisible at the moment it pays · annoying · reported 2026-09-02
+
+**What the owner saw.** "I had the Golden Pop-Up Power-Up active, and it said it does a 25% bonus to
+payouts, but it's hard to tell that it's doing that… If I go look at the Tulip, it says it pays me
+between 154 and 1,232, but when I activate it, I can go in there and see it gives me 193 through
+1,540. Somehow, we need to start showing that these power-ups are affecting the payouts… maybe when
+you tap the Collect button… it shows the original value plus the bonus, or maybe it shows the icon of
+that power-up boost with the total value. Overthinking it, though."
+
+**Their numbers are exact. Driven and confirmed:**
+
+```
+Game.plantPayout(tulip, 0)  ->  before {min:154, max:1232, mult:1}
+Game.activateBoost('golden')
+Game.plantPayout(tulip, 0)  ->  after  {min:193, max:1540, mult:1.25}
+```
+
+**Three of the four surfaces already say it. The fourth — the one they were looking at — does not.**
+
+| Surface | Says the boost is working? | |
+| --- | --- | --- |
+| Activation | **Yes** — a toast: *"Golden Popups active! +25% credits from all sources for 30s."* | |
+| The rail | **Yes** — a tinted chip counting down (and `#9` will make it tappable) | |
+| The seed picker | **Yes, technically** — the pill reads `193–1,540 ×1.25`, via `mx(pay.mult)` (`ui-sheet.js:1123`) | see below |
+| **The harvest itself** | **No. Nothing at all.** | `FX.float(c.x, c.y - 6, '+' + fmt(p.payout), …)` (`ui-events.js:295`) |
+
+**So the real gap is the harvest moment, and the owner found it by feel before they could name it.**
+Read live from the DOM with the boost running, the picker's pills genuinely say
+`88–700 ×1.25`, `193–1,540 ×1.25`, `315–2,520 ×1.25`. The owner read those same numbers and still
+could not tell — which is itself the finding.
+
+**Why the picker's signal did not land: `.stat .mx` is 9.5px at 0.72 opacity** (`style.css:1812`) —
+a faint superscript at the end of a number range. It is *technically* honest and practically
+invisible. **That sets the bar for the harvest one: whatever goes on the float has to be legible at a
+glance, or it will be the same non-answer twice.**
+
+**The harvest float cannot say it today, for two separate reasons.**
+
+1. **The payload does not carry the boost.** `emit('harvest', payload)` (`game.js:2768`) ships
+   `verbMult`, `beacons`, `lanterns`, `mutation` and `mutMult` — but **not** `yieldBonus`
+   (`1 + boostVal('globalCredits')`), nor `pollination`, `wonderMult`, `petalMult` or
+   `critterPayoutMult`. The UI has no way to know a boost was in the number.
+2. **`FX.float()` writes `textContent`** (`fx.js:383`), so a float is plain text — it cannot carry a
+   styled pill or an icon without the helper learning markup or a second element.
+
+**The design line worth drawing, because eight multipliers stack here.** `payout` is
+`yieldBase × yieldBonus × (1+pollination) × wonderMult × petalMult × verbMult × mutMult ×
+critterPayoutMult` (`game.js:2731`). Showing all of them on a floating number would ruin it.
+**Suggested rule: name only the multipliers the player deliberately switched on** — a boost and the
+Wonder. Rarity already has its own whole language (colour, stars, sound, toast); petals, verbs,
+creatures and hives are permanent background the player is not checking. A boost is the one thing
+they spent and are watching the clock on, which is exactly why this is the one they noticed missing.
+
+**A gotcha in the owner's second idea.** *"Show the icon of that power-up boost with the total
+value"* — **Golden Popups' icon is `coin`** (`data.js:325`), the same glyph the payout is already
+denominated in, so an icon beside `+1,540` would read as decoration rather than as a cause. Its
+`tint` (`#ffc93c`) is usable, but `×1.25` is unambiguous, already exists as `mx()`, and carries a
+rule the codebase already believes: *"A number the garden has changed is never silently different
+from the one on the seed's data row… a quietly smaller number is the same lie as a quietly larger
+one"* (`ui-sheet.js:184`). **The float is that rule's missing surface.**
+
+**Fix sketch — the smallest thing that answers it.** Add `boostMult` (and `wonderMult`) to the
+harvest payload; in `ui-events.js`, when it exceeds 1.005, float `+1,540` as it does now and a second,
+smaller tinted float reading `×1.25` just under it, on the boost's own tint. Two floats rather than
+one string keeps `FX.float()` text-only and lets the multiplier carry its own colour and timing. The
+owner's first idea — *"the original value plus the bonus"* — is the more explicit version
+(`+1,232 → +1,540`) and worth trying on the bench, but it doubles the digits on screen at the busiest
+moment in the game. **What it might break:** the float layer already runs eight plots plus the
+auto-harvester, so a second float per harvest doubles the busiest tier — check it with the drone
+running and a full board, which is the state the perf rules in `09-conventions.md` care about. Rare,
+Epic and Legendary harvests already stack stars, rings, confetti and a toast; make sure the
+multiplier is not the thing that tips a Legendary into noise. And **raise `.stat .mx` while in
+there** — 9.5px at .72 is what let this go unnoticed in the picker for weeks, and the same fix serves
+both surfaces.
+
+**Open question.** Should the Wonder Effect get the same treatment? It is the other multiplier a
+player deliberately switches on, it is far larger, and it currently has the same silence at the
+harvest moment. Including it costs nothing extra; excluding it means this item comes back.
 
 ---
 
