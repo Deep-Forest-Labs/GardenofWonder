@@ -175,27 +175,27 @@ Owned by [25-world-map.md](25-world-map.md) · drawn by [ui-meadow.js](../ui-mea
 
 ## The panels
 
-### The plant picker — a locked unlock price
+### The plant picker — the curtain’s three bands
 
-[![The plant picker — a locked unlock price](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/plant-picker.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/plant-picker.png)
+[![The plant picker — the curtain’s three bands](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/plant-picker.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/plant-picker.png)
 
-Seeds no longer gate on level: past the free two, every flower carries a price, and the picker shows exactly what the next one costs.
+Seeds no longer gate on level: unlocked, then the next wall priced and waiting, then everything past it a silhouette until you’ve grown enough to earn the reveal.
 
-Owned by [33-year-one-economy.md](33-year-one-economy.md) · drawn by [ui-sheet.js](../ui-sheet.js)
+Owned by [47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md) · drawn by [ui-sheet.js](../ui-sheet.js)
 
-### The Upgrades sheet
+### The Upgrades sheet — the drip
 
-[![The Upgrades sheet](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/upgrades.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/upgrades.png)
+[![The Upgrades sheet — the drip](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/upgrades.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/upgrades.png)
 
-What coins buy inside a year — harder taps, faster growth, automation — with some bought, one affordable and the rest out of reach.
+The shop opens on four cards; the rest queue up in the ladder’s real order and step forward as lifetime gold clears their thresholds — some bought, one affordable, the rest still earning their way in.
 
-Owned by [04-economy.md](04-economy.md) · drawn by [ui-sheet.js](../ui-sheet.js)
+Owned by [47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md) · drawn by [ui-sheet.js](../ui-sheet.js)
 
 ### The Almanac — petal tracks
 
 [![The Almanac — petal tracks](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/almanac.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/almanac.png)
 
-Every flower ever grown, and the permanent petal ladders that Saved Seeds buy — the part of the game that outlives a year.
+Every flower ever grown, and the permanent petal ladders that Saved Seeds buy — the part of the game that outlives a year. A seed you own but never planted stays named and dimmed; one the curtain has not lifted on yet goes ???.
 
 Owned by [16-progression-and-quests.md](16-progression-and-quests.md) · drawn by [ui-sheet.js](../ui-sheet.js)
 

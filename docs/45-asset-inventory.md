@@ -23,6 +23,10 @@ inventory:
 - **`art/announcements/`**, the What's New art. It is first-party but **owner-supplied**, not
   generated in this repo, and re-exporting it is the owner's call. See the exception list in
   [09-conventions.md](09-conventions.md).
+- **`art/reveals/`**, the moments dialog's art — one piece per seed or upgrade reveal, plus the
+  shared `placeholder.jpg`. Also owner-supplied, and the one place in the repo an agent is
+  explicitly permitted to compress and resize what the owner drops in, against a 300KB-per-file
+  cap. See the same exception list.
 
 ---
 

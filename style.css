@@ -1714,6 +1714,9 @@ button:focus-visible{
 .seed-row.masked{
   background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
   box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.14);
+  /* Row is also `[disabled]`, which carries its own grayscale/opacity filter
+     above — undo it, or "fully opaque" gets re-washed on top of. */
+  filter:none;
 }
 .seed-art.cv-mask{
   background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.5), transparent 62%), var(--paper-dim-2);
@@ -5290,9 +5293,11 @@ button:focus-visible{
    seed's own bloom or the upgrade's own badge, larger, centred where the
    photo window would be. Never blocks the dialog on an art file existing. */
 .news-fallback{display:grid;place-items:center;padding:16px 0 8px}
-.news-fallback .seed-art{width:96px;height:96px}
+/* Same radius ladder as `.unlock-art` at this footprint: border and lip step
+   up with size rather than staying at the small badge's 3px. */
+.news-fallback .seed-art{width:96px;height:96px;border-width:4px;box-shadow:0 5px 0 var(--ink-2)}
 .news-fallback .seed-art svg{width:56px;height:56px}
-.news-fallback .card-badge{width:88px;height:88px}
+.news-fallback .card-badge{width:88px;height:88px;border-width:4px;box-shadow:0 5px 0 var(--ink-2)}
 .news-fallback .card-badge svg{width:50px;height:50px}
 .news h2{margin:0 0 6px;font-size:21px;font-weight:800;text-align:center;line-height:1.15}
 .news-list{margin:0;padding:0;list-style:none;display:grid;gap:7px}
@@ -5307,6 +5312,20 @@ button:focus-visible{
   width:8px;height:8px;border-radius:50%;
   background:var(--seed,#57c15b);border:2px solid var(--ink);
 }
+/* An upgrade reveal has exactly one line, not a list of facts, so it trades
+   the green dot for the upgrade's own badge — the same one its shop card
+   wears, at mini scale, so the popup and the card agree on what this is. */
+.news-list li.news-list-icon{
+  padding-left:0;display:flex;align-items:center;gap:8px;
+}
+.news-list li.news-list-icon::before{content:none}
+.news-list .mini-badge{
+  flex:none;width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;
+  background:radial-gradient(circle at 34% 28%, #fff, #ffe9a8);
+  border:2px solid var(--ink);box-shadow:0 2px 0 var(--ink-2);
+}
+.news-list .mini-badge svg{width:15px;height:15px}
 .news-note{
   margin:10px 0 0;text-align:center;
   font-size:12px;font-weight:800;font-style:italic;color:var(--ink-soft);

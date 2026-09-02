@@ -5,6 +5,174 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-02 (gauntlet) — Five independent critics, one live playtest, and what survived contact with both
+
+**The gauntlet closed 3 of 5 clean.** Economy scope and reduced motion came back with zero
+findings — confirmed independently that no price, yield, grow time or unlock value moved, and that
+every new animation (the reveal-fresh flash, the moments dialog's entrance) respects
+`prefers-reduced-motion` the same way the rest of the game does. The other three each found
+something real.
+
+**Visual — the masked seed row was not actually opaque.** `<button class="seed-row masked" ...
+disabled>` inherits the pre-existing `.seed-row[disabled]{filter:grayscale(.6) opacity(.6)}` meant
+for ordinary can't-afford rows, re-washing the "drained paper, still fully legible" surface docs/47
+asks for on top of — and directly contradicting this same pass's own comment on the Almanac's masked
+row, one file over: "Not opacity-dimmed like `.dim` above: the row is fully opaque." Only one of the
+two masked-row implementations actually was. Fixed with one line — `.seed-row.masked{filter:none}`,
+which wins on source order at equal specificity (`.seed-row[disabled]` and `.seed-row.masked` are
+both a class plus one more simple selector) — and confirmed live via `getComputedStyle` before and
+after.
+
+**Grammar — the upgrade reveal's tagline broke the popup's one rule, and the owner found the same
+bug live before the report even finished.** "In the shop now." is retail language under a
+celebratory headline, and it is not even true — the upgrade sits in the *upgrades* sheet, never the
+shop. Doc 47 says "the popup sells nothing," twice. Independently, watching the real Star Strike
+reveal on his phone, the owner flagged the exact same line, asked for "upgrade available" instead,
+asked to drop the gold cost from the popup entirely (a second thing that bullet was doing that the
+spec never asked for), and asked for the circle bullet in front of the remaining description to be
+"some icon that represents critical multiplier" rather than the shared green dot every `.news-list`
+line wears. All three landed as one change: `upgradeMoment()` now reads `tagline: 'Upgrade
+available.'`, drops the cost bullet, and its one remaining bullet renders through a new `{icon,
+text}` form of `bullets()` — a small badge (`.mini-badge`, the `.card-badge` recipe at 26px) showing
+the upgrade's own `icon`, which every hand-authored upgrade already carries in `data.js` and already
+wears on its shop card. No new art was drawn; the fix was showing art that already existed in a
+second place. `seedMoment()` keeps its plain green-dot bullets — it is a real multi-fact list (cost,
+grow time, payout, sometimes a verb), not one line standing in for an icon, and nothing asked for it
+to change.
+
+**Grammar, low severity, a judgement call — both reveal titles dropped their exclamation point.**
+"X revealed!" was the sole punctuated line in the whole pass; every sibling line (the curtain hint,
+the away-reveal line, the changelog entry, `pairRows()`'s own precedent) stays calm and unpunctuated.
+The critic flagged it as debatable rather than required — the phrase stood unchanged in the
+owner-reviewed spike — but dropping it costs nothing and buys consistency, so both titles now read
+"X revealed." rather than "X revealed!".
+
+**Visual, medium — doc 05 never recorded that `.news-art` can be a photograph.** Not a new problem:
+the What's New announcement dialog has rendered owner-supplied raster art in `.news-art`/
+`.log-ann-art` since before this feature existed, entirely undocumented in doc 05's own "no binary
+assets" rule. The moments dialog just added a second user of the same pattern
+(`art/reveals/placeholder.jpg`, logged in the entry below this one), which is what surfaced the gap.
+Added a short exception note to doc 05 covering both.
+
+**Visual, low — the art-fallback chain only survived one failure, not the two its own comment
+promised.** `wireMomentArtFallback`'s `error` listener was `{once:true}`; a custom `revealArt` 404
+followed by the shared placeholder *also* failing would have left a permanently broken `<img>` with
+the SVG tier never reached. Unreachable today (no seed or upgrade sets `revealArt` yet, and the
+placeholder file exists), but a real landmine for the day custom art starts shipping. Fixed by
+tracking `triedPlaceholder` instead of consuming the listener, and verified live by forcing both
+failures in sequence — the seed's own inline bloom correctly renders on the second failure.
+
+**Visual, low, polish — the fallback badges were enlarged without their border and lip scaling with
+them.** `.news-fallback .seed-art`/`.card-badge` grew to ~90–96px but kept the small badge's 3px
+border and lip, off the ladder doc 05 states explicitly (`.unlock-art`, the nearest same-recipe
+precedent at 100px, steps to 4px/5px). Matched it.
+
+**Popup-discipline — one finding was the reviewer and this session colliding, not the game.** The
+critic saw dialogs open and close, and sheets change, that it never triggered — while testing against
+the same shared `localhost:8899` dev tab this session was independently using at the same moment, to
+chase down the tagline bug above. Its own report says as much: "in every one of these incidents the
+guards still held — never more than one `.news-card` at once, never a moment dialog coexisting with
+an open sheet." No fix, because there was nothing to fix; noted here so a future gauntlet knows to
+ask for (or verify) a dedicated tab. The other four popup-discipline findings were plain passes, and
+one is worth calling out on its own: the burst scenario (`Game.Dev.driveYear(3000000)`, 15 moments
+queued at once) confirmed the owner's own per-Turn cap request, two entries below this one, actually
+holds under a real adversarial burst — not just in `sim-test.js`'s mocked clock.
+
+**Not done, on purpose.** The owner's broader "start sprucing up these screens to feel more gaming"
+is a real direction, not a scoped task — nothing else changed on its say-so. Whichever screen it
+lands on next should be its own pass, not a rider on this one.
+
+---
+
+## 2026-09-02 (build) — The curtain and the drip's verdict, and what got built past it
+
+**The owner's verdict on the gate-1 spike, live on the phone: go with the builder's recommendation
+on everything, plus four rulings of his own.** Arm 2 (the always-revealed next wall) and the whole
+reveal system shipped exactly as spiked — neither veto point was taken. The four rulings:
+
+**1. Land Deed is out of the shop, permanently.** The owner's own observation, verified against the
+code before building anything: tapping a locked plot 5–8 in the garden already unlocks it at its
+own price through `unlockPlot()`, entirely independent of the Land Deed upgrade card. Land Deed
+duplicated that unlock through `unlockNextPlots()` at a second, differently-priced, confusing path.
+Built as a UI-only removal — `plotExpansion` is simply no longer in `CORE_UPGRADES` — rather than a
+full deletion: its data, effect and any existing save's level stay in `game.js`/`data.js` untouched,
+so nothing about an existing save's numbers moves and the change stays scoped to this pass rather
+than becoming an unrelated cleanup. This also retires doc 47's own Land Deed reveal carve-out
+outright — a card that never renders needs no reveal condition, so the second veto point resolved
+itself rather than being taken either way.
+
+**2. Every reveal gets custom art, seeds and upgrades alike — M1 is the standard, not a fallback.**
+The owner wants painted art for all nineteen seeds and every upgrade eventually, and the same M1
+treatment (a photo window, full advert-form stats) used for both, never the icon-only tier as the
+default for upgrades. The engineering does not change — the three-tier art chain (custom, the
+shared placeholder, the seed's bloom or the upgrade's badge) still exists and still never blocks the
+dialog on a file that has not been painted yet — but the ART PLAN does: `art/reveals/<id>.jpg` is
+the target for every entry, not an optional nicety. Nothing today declares a custom file (none has
+been painted), so every reveal currently renders at the placeholder tier; the code is ready to light
+up per-entry the moment a builder or the owner adds a file and sets `revealArt` on that seed or
+upgrade's data row.
+
+**3. The UPGRADE pill's dot is a number, not a boolean.** Confirmed the builder's own recommended
+option (Frame D1): the existing `.dock-dot.wide` convention every other dock badge already uses,
+counting revealed cards that are either affordable or unseen, one card counted once even if it is
+both.
+
+**4. A new rule: at most two seeds reveal per Turn, through arm 3 only.** The owner's own scenario,
+watched actually happen while testing: leaving a harvester and the Harvest Drone running, coming
+back to a large offline windfall, and worrying about "a bunch of unlock pop-ups happening" all at
+once. Two clarifying calls were made before building it, both confirmed by the owner rather than
+assumed:
+
+- **The cap gates arm 3 alone — never arm 2 (the next wall) and never arm 4 (the affordability
+  law).** Arm 4 is the one sim-tested guarantee the whole feature stands on — "no moment may exist
+  where a seed is affordable and still hidden" — and capping it would have broken that law for the
+  sake of the exact burst scenario it exists to protect against. A big windfall can still reveal
+  several seeds outright if the player can afford them; only the "almost there, 85%-earned" reveals
+  are throttled.
+- **The cap resets on the prestige Turn, not on returning to the game.** Turns are days apart in
+  this economy, so this is a real throttle rather than one that clears itself on the next visit.
+  Implemented as `state.year.revealsThisTurn`, zeroed in `turnYear()` alongside the half-dozen other
+  year-scoped fields that function already resets — a deliberate, named exception to doc 47's
+  "`credit()` and `turnYear()` are not touched": that line was protecting the mint's own math from
+  this feature, and a throttle counter that touches nothing the mint reads was never what it meant
+  to forbid. Verified live: `jumpTurns`, the burst adversary, credits a huge windfall in one call and
+  a single `refreshReveals()` afterward adds at most the cap's worth of new arm-3 reveals, never the
+  whole crossed set.
+
+**Two things found and fixed only by driving the real game, that no headless test could have
+caught, named so the next agent does not rediscover them the slow way.** `.seed-go` is the plant
+affordance's slot and nothing else — an existing scan in `tools/sim-test.js` (from a prior pass)
+asserts no go slot ever renders a padlock, and the first version of the masked row put its padlock
+there. It belongs in `.seed-lock`, the same slot the locked-but-revealed row already uses. And
+`el` — ui.js's own module-local element cache — is not part of the shared `UI` surface the way `$`,
+`S` and `fmt` are; a coach-visibility check reaching for it directly from `ui-news.js` threw on the
+very first real reveal, caught only by actually opening the picker in a browser rather than trusting
+the headless suite, which loads no UI file and could not have seen it.
+
+**`tools/capture-screens.js`'s three curtain-adjacent scenes (plant-picker, upgrades, almanac) moved
+from `Game.Dev.grantGold()` to `Game.Dev.driveYear()`.** `grantGold` is deliberately a cheat that
+never reaches `lifetimeCoins` — exactly the property arm 4's own sim-test bill item relies on — so
+under the curtain it exercises only the affordability arm, leaving everything not literally
+affordable masked regardless of what a real year of play would have revealed by then. The gallery
+these three scenes feed is meant to show what the game actually looks like; `driveYear` earns the
+same total legitimately and lets arms 2 and 3 fire the way real play does. A fourth, silent risk
+found along the way: several OTHER scenes in the same file also call `driveYear`/`grantGold` for
+unrelated reasons, and any of them could now legitimately cross a reveal threshold and pop a moments
+dialog mid-capture, over a Turn screen's scrim, the same failure class the announcement popup was
+already guarded against. Fixed the same way: `UI.tryMoment` is neutered to a no-op for the duration
+of every scene, re-applied after each scene's own page reload — not by pre-marking everything
+celebrated, which would have erased the very masked-vs-revealed distinction these screenshots exist
+to show.
+
+**Rejected, in the order they came up:** capping every reveal arm uniformly (breaks the affordability
+law); resetting the per-Turn cap on session return rather than on the Turn (too weak a throttle given
+how rarely Turns happen); pre-celebrating everything to suppress capture-run popups (destroys the
+screenshots' whole point); a full deletion of Land Deed's data and effect (real cleanup, but
+unrelated scope with real save-migration risk, better done as its own deliberate pass if ever
+wanted — recorded here rather than done quietly).
+
+---
+
 ## 2026-09-02 (gate) — The curtain and the drip, drawn before it is built
 
 **Gate 1 of [47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md), the spec the ruling

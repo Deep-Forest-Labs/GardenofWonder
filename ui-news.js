@@ -26,7 +26,10 @@
   let preview = false;
 
   function bullets(list) {
-    return (list || []).map((b) => `<li>${b}</li>`).join('');
+    return (list || []).map((b) => (b && typeof b === 'object')
+      ? `<li class="news-list-icon"><span class="mini-badge">${Icons.get(b.icon || 'badge')}</span>${b.text}</li>`
+      : `<li>${b}</li>`
+    ).join('');
   }
 
   function build(a) {
@@ -222,7 +225,7 @@
     if (v) bullets.push(`<b>${v.name}</b> — ${v.desc}`);
     return {
       key: `seed:${s.id}`,
-      title: `${s.name} revealed!`,
+      title: `${s.name} revealed.`,
       bullets,
       tagline: price > 0 ? `Yours whenever you’ve saved ${fmt(price)} gold.` : 'Yours from the very first day.',
       img: s.revealArt ? `art/reveals/${s.revealArt}` : 'art/reveals/placeholder.jpg',
@@ -231,12 +234,11 @@
   }
   function upgradeMoment(key) {
     const def = DATA.upgrades[key];
-    const cost = Game.upgradePrice(key);
     return {
       key: `upgrade:${key}`,
-      title: `${def.short || def.name} revealed!`,
-      bullets: [`<b>${fmt(cost)} gold</b> to buy`, def.desc],
-      tagline: 'In the shop now.',
+      title: `${def.short || def.name} revealed.`,
+      bullets: [{ icon: def.icon, text: def.desc }],
+      tagline: 'Upgrade available.',
       img: def.revealArt ? `art/reveals/${def.revealArt}` : 'art/reveals/placeholder.jpg',
       fallback: () => `<div class="news-fallback"><span class="card-badge">${Icons.get(def.icon || 'badge')}</span></div>`
     };
@@ -252,13 +254,14 @@
   function wireMomentArtFallback(entry) {
     const img = $('#momentArt img', node);
     if (!img) return;
-    img.addEventListener('error', () => {
-      const usingCustom = entry.img !== 'art/reveals/placeholder.jpg';
+    let triedPlaceholder = entry.img === 'art/reveals/placeholder.jpg';
+    img.addEventListener('error', function onError() {
       const artNode = $('#momentArt', node);
       if (!artNode) return;
-      if (usingCustom) { img.src = 'art/reveals/placeholder.jpg'; return; }
+      if (!triedPlaceholder) { triedPlaceholder = true; img.src = 'art/reveals/placeholder.jpg'; return; }
+      img.removeEventListener('error', onError);
       artNode.outerHTML = entry.fallback();
-    }, { once: true });
+    });
   }
 
   function buildMoment(entry) {
@@ -296,6 +299,12 @@
      ANY sheet is open (the picker included — it is a sheet, not a dialog),
      while the coach is visible, or before the session's first interaction. */
   function momentsQuiet() {
+    /* tools/capture-screens.js sets this — checked inside the guard itself,
+       never by overriding UI.tryMoment from outside, because dismiss()'s own
+       queue-drain calls the private `tryMoment` binding directly and would
+       not see an external override of the exported copy. A global flag is
+       seen by every path regardless of which one calls in. */
+    if (window.__noMoments) return false;
     if (open) return false;
     if (UI.sheetMode && UI.sheetMode()) return false;
     /* `el` is ui.js's own module-local cache, not part of the shared UI

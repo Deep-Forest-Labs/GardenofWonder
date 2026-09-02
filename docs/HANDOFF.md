@@ -1288,43 +1288,65 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
-**THE CURTAIN AND THE DRIP IS AT ITS WIREFRAME GATE. NOTHING IS BUILT.** The spec is
-[47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md) — read it twice before touching
-anything here. `tools/curtain-spike.html` draws all three pieces (the seed picker's three bands,
-the upgrade shop's drip, the moments dialog) in twelve static frames, live at
-<https://deep-forest-labs.github.io/GardenofWonder/tools/curtain-spike.html>. **Open it on the
-phone and answer the notes on the frames** — green is decided and ready to build, orange is a real
-open question, red is one of two rulings flagged for possible veto. No state field, no getter, no
-line of `game.js` or any `ui-*.js` exists yet; the reasoning for every frame is the 2026-09-02
-(gate) entry at the top of [10-decision-log.md](10-decision-log.md).
+**THE CURTAIN AND THE DRIP IS BUILT, PUSHED, AND LIVE — all four gates are closed.** The spec is
+[47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md). The reasoning for every call made
+along the way is three same-day decision-log entries, newest first: (gauntlet) — the gate-4 findings
+and the owner's live playtest, fixed in one round; (build) — the owner's four rulings on the gate-1
+spike; (ruling) — the original spec decisions. Read all three in
+[10-decision-log.md](10-decision-log.md) before touching any of this.
 
-- **The two veto points, plainly.** Arm 2 — the next locked seed is ALWAYS revealed, before a
-  single coin is earned — shown in frames P1/P3. Land Deed's reveal reads
-  `turnsCompleted ≥ plotTurnGate` on top of the usual 400K gold gate, the one card in the drip
-  that isn't earnings-only — shown in frame U3. Veto either and the spike names exactly what
-  changes.
-- **One open question worth an answer before the build**, beyond the frames' own notes: what the
-  UPGRADE pill's dot should mean now that "affordable" and "unseen" are two different facts
-  (frame D1) — doc 36 never pinned the pill's colour or a numbered form, so nothing here is a
-  regression to protect.
-- **Build order once approved**: the derive-then-latch getters and the three new SURVIVES keys
-  (`state.seedRevealed`, `state.upgradeRevealed`, `state.celebrated`) with the full save-plumbing
-  checklist in doc 47, the grandfather migration, and the moments queue as a third `#news` mode —
-  then the surface, faithful to whatever the owner's annotations change — then the gauntlet
-  (invariant coverage, the visual critic against the spike then doc 05, the grammar critic, and a
-  popup-discipline critic that drives the burst, open-sheet and session-start cases by name).
-- **Coordination for whoever picks up gate 2.** Winter's gauntlet has not had a clean round (see
+- **What shipped.** The picker's three bands with the sort-sink rule; the Almanac's masked row
+  keyed to the same latch as the picker, never to `discoveredOf`; the shop's opening four cards
+  with the rest revealing on lifetime gold alone; a numbered UPGRADE-pill dot (`.dock-dot.wide`,
+  the same convention every other dock badge uses); the moments dialog as a third `#news` mode with
+  its three-tier art chain; the per-Turn reveal cap (owner-ruled, mid-build); Land Deed pulled from
+  the shop entirely (owner-ruled — it duplicated the in-garden plot-tap unlock at a second,
+  confusing price). **Not one economy number moved** — Land Deed's own price is untouched in the
+  data, it simply no longer renders. Confirmed independently again by gate 4's economy-scope critic.
+- **Gate 4 closed 3 of 5 clean** (economy scope, reduced motion) and found six real things across
+  visual and grammar — worst was the masked seed row silently inheriting a generic `[disabled]`
+  grayscale filter that re-washed the "fully opaque" surface the Almanac's masked row already got
+  right. All six fixed and re-verified live; full writeup in the (gauntlet) decision-log entry.
+- **The owner playtested live and found, independently, the same bug the grammar critic found
+  before the report had even landed** — the upgrade reveal's tagline ("In the shop now.") was both
+  tone-wrong (doc 47: "the popup sells nothing," twice) and factually wrong (it's the upgrades
+  sheet, never the shop). Fixed alongside two more asks from that same message: the gold-cost
+  bullet is gone from upgrade reveals, and the remaining description line now shows the upgrade's
+  own icon — already defined per-upgrade in `data.js`, already worn on its shop card — instead of
+  the shared green bullet dot every other `.news-list` line uses. No new art was drawn; the fix was
+  showing art that already existed in a second place.
+- **Two bugs no headless test could have caught, found only by driving the real game in a
+  browser**, both fixed and both worth knowing before touching this code again: a padlock belongs
+  in `.seed-lock`, never `.seed-go` (an existing scan in `tools/sim-test.js` catches this now, but
+  the first draft of the masked row got it wrong); and `el` (ui.js's own module-local element
+  cache) is not part of the shared `UI` surface the way `$`/`S`/`fmt` are — reach for the coach
+  through `$('#coach')` instead, the way `sayText()` already does.
+- **`tools/capture-screens.js` needed two real fixes**, not just three updated scenes. The three
+  curtain-adjacent scenes (`plant-picker`, `upgrades`, `almanac`) moved from `Game.Dev.grantGold()`
+  to `Game.Dev.driveYear()` — a cheat gold grant never reaches `lifetimeCoins`, so under the
+  curtain it only ever proves the affordability arm and leaves everything else masked, which is
+  not what a real year of play looks like. And the moments dialog itself leaked through onto the
+  **`welcome-back`** scene on the first attempt: suppressing it by overriding the exported
+  `UI.tryMoment` from outside was not enough, because `dismiss()`'s own queue-drain calls the
+  *private* `tryMoment` binding directly. The working fix is a `window.__noMoments` flag checked
+  **inside** `momentsQuiet()` itself, so every path in — internal or external — sees the same
+  answer. Regenerated clean afterward; `docs/44-screens.md` is current.
+- **Not done, on purpose.** The owner's broader "start sprucing up these screens to feel more
+  gaming" is a real direction, not a scoped task this pass took on. It should be its own pass, not
+  a rider on this one.
+- **Coordination, unchanged from gate 1.** Winter's gauntlet still has not had a clean round (see
   below, "What is still open, honestly") and punch-list fix-round #15 (season-tab retirement) is
-  still queued against `ui.js` — this gate's own work never touched it, but the surface pass will.
-  `git fetch` and re-read the top of [10-decision-log.md](10-decision-log.md) before starting;
-  this tree takes commits mid-session most days.
+  still queued against `ui.js` — this pass's own `ui.js` edits (the UPGRADE pill's dot, the
+  once-a-second moments poll) did not touch `renderSeasonEdges()` or anything #15 owns, but
+  `git fetch` and re-read the top of the decision log before editing that file next. This tree
+  takes commits mid-session most days.
 
 | Gate | State |
 | --- | --- |
-| 1 · The wireframe spike, then stop | **Closed.** `tools/curtain-spike.html` live, twelve frames, two rulings flagged for veto |
-| 2 · Engine | Not started — waiting on the owner's annotations |
-| 3 · The surface | Not started |
-| 4 · The gauntlet | Not started |
+| 1 · The wireframe spike, then stop | **Closed.** Owner's verdict: build the spike's recommendations verbatim, plus four rulings of his own (Land Deed out, M1 art for everything, a numbered dot, the per-Turn cap) |
+| 2 · Engine | **Closed.** `node tools/sim-test.js`: 1,744 assertions, every guard sabotaged and restored |
+| 3 · The surface | **Closed.** Verified live in the browser, not only headlessly |
+| 4 · The gauntlet | **Closed.** Five independent critics — 3 clean, 2 with real findings — all six fixed and re-verified live. See the (gauntlet) decision-log entry |
 
 ---
 

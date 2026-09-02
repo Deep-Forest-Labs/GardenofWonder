@@ -546,6 +546,24 @@ async function captureScene(ctx, scene) {
     returnByValue: true,
   });
   await ctx.goto('index.html');
+  /* The same lesson as the announcement above, on the curtain's own popup,
+     docs/47 — several scenes drive a year's earnings straight through real
+     thresholds, and a moments dialog over a Turn screen fails taps on its
+     scrim exactly the way the announcement did. A GLOBAL FLAG, not an
+     override of UI.tryMoment: the first version of this fix overrode the
+     export, and a real moment still leaked through on the welcome-back scene
+     — ui-news.js's own dismiss() calls its private `tryMoment` binding
+     directly to drain the queue, which an external override of the exported
+     copy never touches. `momentsQuiet()` checks this flag itself, so every
+     path in, internal or external, sees the same answer. Neutered rather
+     than pre-celebrated: marking everything celebrated would erase the very
+     masked-vs-revealed distinction the plant-picker and Almanac scenes exist
+     to photograph. Re-applied every scene because the navigate above reloads
+     the page `window` that holds it. */
+  await ctx.call('Runtime.evaluate', {
+    expression: 'window.__noMoments = true;',
+    returnByValue: true,
+  });
 
   /* Weather is a pure function of epoch time, so an unpinned sky makes this
      gallery different on every run — rain over one week's summer garden and sun
@@ -1042,13 +1060,17 @@ const SCENES = [
   {
     slug: 'plant-picker',
     group: 'The panels',
-    title: 'The plant picker — a locked unlock price',
+    title: 'The plant picker — the curtain’s three bands',
     line:
-      'Seeds no longer gate on level: past the free two, every flower carries a price, and the picker shows exactly what the next one costs.',
-    doc: '33-year-one-economy.md',
+      'Seeds no longer gate on level: unlocked, then the next wall priced and waiting, then everything past it a silhouette until you’ve grown enough to earn the reveal.',
+    doc: '47-the-curtain-and-the-drip.md',
     file: 'ui-sheet.js',
     steps: [
-      'eval:(()=>{Game.Dev.grantGold(400000);Game.unlockSeed(\'bluebell\');return \'credits \'+Game.state.credits})()',
+      /* driveYear, not grantGold — a cheat gold grant never reaches
+         lifetimeCoins, so under the curtain only arm 4 (affordability) would
+         fire and everything past what 400K can literally buy would sit
+         masked, which is not what a real year of play looks like. */
+      'eval:(()=>{Game.Dev.driveYear(400000);Game.unlockSeed(\'bluebell\');return \'credits \'+Game.state.credits+\' lifetime \'+Game.state.lifetimeCoins})()',
       'wait:600',
       'eval:UI.openSheet(\'seeds\',0)',
       'wait:1800',
@@ -1060,13 +1082,17 @@ const SCENES = [
   {
     slug: 'upgrades',
     group: 'The panels',
-    title: 'The Upgrades sheet',
+    title: 'The Upgrades sheet — the drip',
     line:
-      'What coins buy inside a year — harder taps, faster growth, automation — with some bought, one affordable and the rest out of reach.',
-    doc: '04-economy.md',
+      'The shop opens on four cards; the rest queue up in the ladder’s real order and step forward as lifetime gold clears their thresholds — some bought, one affordable, the rest still earning their way in.',
+    doc: '47-the-curtain-and-the-drip.md',
     file: 'ui-sheet.js',
     steps: [
-      'eval:(()=>{Game.Dev.grantGold(11000);[\'tapPower\',\'tapPower\',\'tapPower\',\'tapPower\',\'holdSpeed\',\'holdSpeed\',\'holdSpeed\',\'critChance\',\'critChance\',\'autoWater\',\'autoWater\',\'autoWater\',\'ladybug\',\'rainDance\',\'rainDance\',\'comboMeter\'].forEach(k=>Game.buyUpgrade(k));return \'credits \'+Game.state.credits})()',
+      /* driveYear, not grantGold — autoWater alone needs 300K lifetime to
+         reveal at all under the curtain, and a cheat gold grant would leave
+         its card simply absent rather than bought. 350K clears every
+         threshold this scene buys against, with room to spare. */
+      'eval:(()=>{Game.Dev.driveYear(350000);[\'tapPower\',\'tapPower\',\'tapPower\',\'tapPower\',\'holdSpeed\',\'holdSpeed\',\'holdSpeed\',\'critChance\',\'critChance\',\'autoWater\',\'autoWater\',\'autoWater\',\'ladybug\',\'rainDance\',\'rainDance\',\'comboMeter\'].forEach(k=>Game.buyUpgrade(k));return \'credits \'+Game.state.credits})()',
       'wait:1500',
       'eval:UI.openSheet(\'upgrades\')',
       'wait:1800',
@@ -1079,11 +1105,15 @@ const SCENES = [
     group: 'The panels',
     title: 'The Almanac — petal tracks',
     line:
-      'Every flower ever grown, and the permanent petal ladders that Saved Seeds buy — the part of the game that outlives a year.',
+      'Every flower ever grown, and the permanent petal ladders that Saved Seeds buy — the part of the game that outlives a year. A seed you own but never planted stays named and dimmed; one the curtain has not lifted on yet goes ???.',
     doc: '16-progression-and-quests.md',
     file: 'ui-sheet.js',
     steps: [
-      'eval:(()=>{Game.Dev.grantGold(500000);[\'bluebell\',\'lavender\'].forEach(id=>Game.unlockSeed(id));return DATA.seeds.filter(s=>Game.seedUnlocked(s.id)).map(s=>s.id).join(\',\')})()',
+      /* driveYear, not grantGold — the curtain masks the Almanac the same way
+         it masks the picker, keyed to lifetimeCoins, so a cheat gold grant
+         would leave most of the collection as silhouettes instead of the
+         dimmed-but-named rows this scene is illustrating. */
+      'eval:(()=>{Game.Dev.driveYear(500000);[\'bluebell\',\'lavender\'].forEach(id=>Game.unlockSeed(id));return DATA.seeds.filter(s=>Game.seedUnlocked(s.id)).map(s=>s.id).join(\',\')})()',
       'eval:(()=>{let n=0;const U=DATA.seeds.filter(s=>Game.seedUnlocked(s.id));for(let r=0;r<4;r++){for(let p=0;p<4;p++){const s=U[(r*4+p)%U.length];if(Game.state.grid[p].seed)Game.harvest(p);Game.plant(p,s,false);}Game.Dev.ripenAll();for(let p=0;p<4;p++)if(Game.harvest(p))n++;}return n+\' harvests\'})()',
       'wait:6000',
       'eval:(()=>{Game.Dev.grantSeeds(600);[[\'daisy\',\'rich\',4],[\'daisy\',\'quick\',3],[\'tulip\',\'rich\',3],[\'tulip\',\'quick\',1],[\'bluebell\',\'rich\',2],[\'lavender\',\'rich\',1]].forEach(b=>{for(let i=0;i<b[2];i++)Game.buyPetal(b[0],b[1])});return \'pouch \'+Game.state.savedSeeds})()',

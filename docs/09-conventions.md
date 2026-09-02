@@ -52,8 +52,23 @@ rules that keep it an exception rather than a precedent:
   history forever, so the ceiling is the point.
 - **Lowercase paths**, for the same case-sensitivity reason as the folder above.
 
-None of the three exceptions is permission to add a PNG anywhere else, and the first two are the
-only ones that ship inside the game.
+**The fourth exception is `art/reveals/`, and it is an explicitly WIDENED cousin of the second**
+(owner's ruling, docs/47, 2026-09-02) — the moments dialog that celebrates a seed or upgrade
+reveal, one image per entry. Same shape as `art/announcements/`: owner-supplied, this folder only,
+lowercase paths, joins `sw.js` `CORE` with a version bump the moment a file is added or changed,
+never load-bearing (the dialog's art chain falls back to the shared `placeholder.jpg`, then to the
+seed's own bloom or the upgrade's own badge — see doc 47's art chain). **The one term that
+differs, and the reason this is a cousin rather than a reuse of the second exception outright: the
+agent MAY compress and resize reveal art on the way in.** The announcements folder forbids that —
+that art is a single flashy hero image, hand-picked and hand-sized by the owner. This folder is up
+to nineteen-plus pieces of art landing over time against a hard 300KB-per-file cap (the phone
+payload, not the screenshot tool's git-churn budget those bytes elsewhere in this doc are about),
+so an agent re-encoding a dropped-in source image under that cap is expected work, not a liberty.
+`placeholder.jpg` itself was re-encoded this way, from the owner's untracked `art/IMG_3718.jpg`
+(394KB) down to 124KB.
+
+None of the four exceptions is permission to add a PNG anywhere else, and only `docs/screens/`
+does not ship inside the game.
 
 **No `<script type="module">`.** Modules break under `file://`. Plain scripts and globals, loaded in
 dependency order.

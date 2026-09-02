@@ -12,6 +12,17 @@ costs about eight lines of data rather than an art commission.
 If you need new visual content, generate it. If you think you truly need a raster asset, that's a
 decision for the log.
 
+**The one standing exception is owner-supplied photography, in `.news-art`/`.log-ann-art`.** The
+What's New announcement dialog has shown a raster `<img>` this way since before this document had a
+"curtain and the drip" section to write; the moments dialog added in that pass (2026-09-02, logged in
+[docs/10-decision-log.md](10-decision-log.md)) reuses the same `.news-art` window and the same
+discipline for the same reason — a photograph is not something JavaScript generates. Every reveal is
+meant to eventually carry its own piece at `art/reveals/<id>.jpg`; until that exists, every reveal
+shares one placeholder (`art/reveals/placeholder.jpg` — the fourth exception in
+[docs/09-conventions.md](09-conventions.md)). If the file is ever missing, the dialog does not break:
+it falls back to the seed's own bloom or the upgrade's own badge, both inline SVG, both governed by
+the rest of this document same as anywhere else.
+
 ## Visual language
 
 Four rules, in priority order:

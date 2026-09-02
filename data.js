@@ -693,6 +693,12 @@ const DATA = {
      write what it feels like to play, not what was done. */
   changelog: [
     {
+      date: '2026-09-02',
+      lines: [
+        'Seeds and upgrades you haven’t grown into yet now wait behind a silhouette instead of showing everything at once — grow enough and each one reveals itself with a small celebration.'
+      ]
+    },
+    {
       date: '2026-09-01',
       lines: [
         'Flowers grow up properly now — a sprout, then a stem, then a closed bud in the flower’s own colours, opening just before it’s ready to pick.',

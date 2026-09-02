@@ -673,3 +673,60 @@ lifetime figure exists to reconstruct.
 partition in [32-the-garden-year.md](32-the-garden-year.md#what-the-turn-clears-and-what-it-never-touches);
 the `gw-save` wipe remains what it always was. Sim-test bill item 1 asserts the partition field
 by field and fails the suite if a future save field is not classified as cleared-or-surviving.
+
+## The curtain and the drip (added 2026-09-02)
+
+**Three new top-level fields**, all in `defaultState()`, all individually re-merged in `load()`
+with unknown ids dropped, all `SURVIVES` in the Turn's partition, all explicitly kept out of
+`HARVEST_WRITES` — see [47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md):
+
+```js
+seedRevealed: {},     // seedId -> true; latched once a seed's reveal condition is ever true, never cleared
+upgradeRevealed: {},  // upgradeKey -> true; same rule, for the shop's drip cards only (never the per-plot harvesters)
+celebrated: {},        // "seed:<id>" | "upgrade:<key>" -> true; has the moments dialog shown for this yet
+```
+
+Plus one Turn-scoped counter, inside the existing `year` block:
+
+```js
+year: {
+  // ...as above...
+  revealsThisTurn: 0    // how many seeds arm 3 (the "you've saved 85%" reveal) has latched since the last Turn
+}
+```
+
+Rules that matter:
+
+- **The latch never clears.** No path — Turn, save/load, spending below a threshold — ever sets a
+  `seedRevealed` or `upgradeRevealed` entry back to falsy. `turnYear()` resets `revealsThisTurn`
+  only (a throttle counter, not a reveal) alongside the half-dozen other year-scoped fields it
+  already zeroes; `credit()` itself is untouched.
+- **`celebrated` is namespaced by kind** (`seed:` / `upgrade:`) specifically so a future bespoke
+  moment (an album completion, a Winter beat) can never collide with a seed or upgrade id sharing
+  the same string.
+- **`upgradeRevealed` never covers the eight per-plot harvester keys** `PLOT_AUTOPLANTERS` appends
+  to `DATA.upgrades` — they are not the drip (`docs/47`: "hide-until-plot, unchanged") and carry
+  no `revealAt`. `game.js`'s own `DRIP_UPGRADE_KEYS` constant is what every reveal function,
+  the re-merge, and the grandfather below all filter through, so this exclusion cannot drift out
+  of step across the four call sites that need it.
+- **The moments queue is never stored.** There is no fourth field for "what's pending" — the
+  UI reads the gap between `seedRevealed`/`upgradeRevealed` and `celebrated` fresh every time.
+
+### The reveals migration — `migrateReveals()`, keyed on the missing `seedRevealed` key
+
+A save from before this feature enters it fully lit, exactly once (the `boostInv` presence
+pattern): every seed and every upgrade latches `revealed`, and everything already latched also
+latches `celebrated` in the same pass — so nothing pops a popup for a row a returning player has
+already been looking at. Deriving instead (checking each seed's condition against the save's own
+numbers) was rejected: `lifetimeCoins` does not honestly exist on an old save — it is backfilled
+as the *standing year's* earnings, zeroed at every Turn — so a veteran with fifteen seeds bought
+across many Turns can carry a tiny ledger nowhere near what fifteen unlock prices would sum to,
+and deriving from it would re-hide rows the picker has shown for weeks. The test fixture is a
+deep veteran (many `seedUnlocks`, a small `lifetimeCoins`, pending offline income to credit on the
+very load that grandfathers it) booting fully revealed with an empty moments queue.
+
+A **brand-new** save (no save at all, or the Settings reset creating one in place) is not
+grandfathered — it derives normally, which latches the free seeds and the next wall (arms 1 and 2)
+immediately so the picker never opens on a wall of silhouettes with no advert. Those are then
+pre-celebrated too, by the same call, for the same reason: nobody needs telling that Daisy or the
+first locked seed exist.
