@@ -5,6 +5,52 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-01 (ruling) — The night shift is specified: the tuck-in, the snowfall, and a spec that was attacked before it was believed
+
+**The owner adopted the design desk's Winter recommendation in full** — the two-beat ritual (tuck
+the bed in at night, collect at first light), the whole-bed bonus grammar, six real winter
+bloomers outside the flower systems, and Holly's small introduction — and the spec went through
+two adversarial critics **before** entering the folder. Three blockers and thirteen highs were
+found and folded in; **[46-the-night-shift.md](46-the-night-shift.md)** is the corrected result,
+and slice C builds from it. What the pressure test changed, so the reasoning survives:
+
+- **The tuck's lifecycle was unspecified — the season's centre, not an edge.** Nothing said what
+  ends a tuck, whether planting into a standing tuck covers the plant, or how "ripened while
+  tucked" could even be known when Winter ripens with the app closed (no code runs at that
+  moment). Ruled: timestamps are the stored truth, `kept` derives from *ripen instant inside the
+  tuck window* whenever ripeness is first observed, first light is an event (the first
+  post-ripening collect ends the night), and **tucking after ripeness earns nothing** — the
+  fishing case, closed by construction and named in the test bill.
+- **The bonus was renamed twice by collision.** "First light" is a live card set; "dewfall" is a
+  card in it. The name is **the snowfall** — Fall has the windfall, Winter has the snowfall, one
+  grammar met twice, and the pair coexists the way windfall/Wonderfall already do.
+- **Two economy seams surfaced and are ruled, not discovered later.** A kept night could open
+  both Turn gates by itself at modest costs (and every extra Turn pays the unpriced blessing) —
+  now a measured guardrail on the cost ladder. And ripe Winter crossing the Turn into a fresh
+  purse is a bounded gold vault — **accepted as cosy planning**, sized as a tuning input, with
+  the Preserve's grammar as the ready answer if live play shows it distorting; doc 32's in-flight
+  auto-collect bullet is scoped to the main garden so no builder auto-eats a kept Camellia.
+- **The 8h draft entry broke the season's own law** (doc 33's 12–48h band; it also sat on Fall's
+  apple clock and would have dominated it). The floor is 12h, and Winter prices below Fall
+  per-hour at any shared clock — the tuck's convenience premium, paid in rate.
+- **Holly's intro would have spoken into a hidden node** — the meadow-signpost blocker reborn.
+  Split into two beats: the ceremony's gate card, then `hollyIntro` on first entry to her own
+  room, consumed only after it draws.
+- **A literal `fallHarvestAll` mirror was wrong** for Winter's mixed mornings (kept beside
+  unkept-ripe): the collect takes everything ripe and pays the snowfall on the kept subset only,
+  with the mixed bed a named test.
+- **The measurement's prerequisites are named as gates**: seed `year-sim`, extract the shared
+  play model (both already-ruled, unbuilt), add a Winter arm, run seeded and paired.
+
+**Rejected:** frost damage or any overnight loss (pre-rejected with Holly's ruling — restated
+because every critic instinctively reached for it); a wall-clock evening gate on the tuck (a
+time-free ritual punishes no time zone or shift); a Tally line and Stand orders for Winter at
+slice C (the quiet season stays quiet; slice D owns cross-season demand); auto-collecting Winter
+at the Turn (it would eat the morning the season exists for); and the names "first light" and
+"dewfall" (collisions, above).
+
+---
+
 ## 2026-09-01 (stages, built) — The owner ruled on the spike, and the garden grows in four stages
 
 **The gate closed the same day it opened.** The owner tuned the spike and ruled: **sprout until

@@ -42,6 +42,9 @@ Agents talking to the owner lead with the feel and keep the math in the docs.
 | **The seasons** | Gardens at different speeds. Summer is seconds, Fall is hours, Winter is days, Spring is the long game |
 | **Sprout, stem, bud, bloom** | The four looks a growing flower wears, like Animal Crossing. The bud holds until almost ready, in the flower's own colours, and opens just before the pick |
 | **The windfall** | Fall's bonus for harvesting the whole bed at once — the dinner appointment |
+| **The tuck-in** | Winter's bedtime ritual: one free tap puts the bed under quilts for the night. It only ever adds — nothing is lost to a night, ever |
+| **The snowfall** | Winter's bonus: a plant that ripens while tucked in pays extra in the morning. Fall has the windfall, Winter has the snowfall |
+| **Holly** | Winter's hero flower — the winter rose, who keeps the garden while you sleep and insists she didn't do it for you |
 | **The Century Bloom** | The fourteen-day showpiece plant. Survives every Turn |
 | **Signatures** | Each flower's one special petal skill (arrives in a later phase) |
 
@@ -129,7 +132,7 @@ every page of research warns about. Each season is a different **clock class** a
 | --- | --- | --- | --- |
 | **Summer** | Seconds–minutes | The garden as built: tapping, combos, verbs, mutations, creatures. The high-touch place | From the first tap |
 | **Fall** | Hours | **The bed pays together** — harvesting a fully ripe bed pays a windfall bonus, so Fall is planted in the morning and popped at dinner. Home of the cottage crops and orchard trees ([26-goods-catalog.md](26-goods-catalog.md)) | **Turn 1** |
-| **Winter** | A day or more | **The night shift** — long clocks that ripen while the app is closed (plants already grow on timestamps; Winter's clocks are simply sized to sleep). Tuck it in at night, collect in the morning. No automation required | **~Turn 3** |
+| **Winter** | A day or more | **The night shift** — long clocks that ripen while the app is closed (plants already grow on timestamps; Winter's clocks are simply sized to sleep). Tuck it in at night, collect in the morning. No automation required. **Specified 2026-09-01: [46-the-night-shift.md](46-the-night-shift.md)** — the tuck-in, the snowfall, and Holly | **~Turn 3** |
 | **Spring** | The meta | **The nursery** — where Saved Seeds are spent in ceremony, where heirloom lines and breeding live later, where creatures hatch one day. The garden *about* the other three | **~Turn 6** |
 
 Fall and Winter get their own small seed lists on their own clocks
@@ -253,7 +256,8 @@ Owner-decided 2026-08-29: **the Turn clears the fast annuals in the main garden 
 
 **In-flight things at the moment of the Turn**, so nothing is ever silently eaten:
 
-- A **ready, unharvested bloom** is auto-collected — paid into the year *before* the mint, so
+- A **ready, unharvested bloom in the main garden** is auto-collected — paid into the year
+  *before* the mint, so
   turning never costs a harvest.
 - An **unopened card pack on a plot** is banked into `state.packs`. Packs are never touched by
   the Turn, so they cannot be destroyed by it either.
@@ -360,8 +364,11 @@ already pays reputation; in the Year it becomes load-bearing:
   every season; the customers want what the whole year grows.
 - **The catalog follows the year.** Flower lines draw from unlocked seeds (unlocks are permanent,
   so the pool only widens); Fall produce joins when Fall opens; honeys when the meadow has a
-  hive. The two anti-frustration invariants stand unchanged: never ask for the unproducible, and
-  delivering always beats selling.
+  hive. *(Corrected 2026-09-01: the Stand's pools today know only flowers and honey — "Fall
+  produce joins" is slice D's unbuilt future, not a shipped behaviour, and Winter's plants stay
+  out of the pools at slice C per [46-the-night-shift.md](46-the-night-shift.md).)* The two
+  anti-frustration invariants stand unchanged: never ask for the unproducible, and delivering
+  always beats selling.
 - **The Turn regenerates the three open slots** so no standing order names a bloom the fresh year
   cannot yet afford to plant — the audit's cheap guard, one line in the turn path.
 
