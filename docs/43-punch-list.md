@@ -31,39 +31,43 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 4. **#19 · "Discover 5 species" arrives in minutes and needs ~1.8 years of gold** — a first-session
    bug that also jams a third of the quest strip forever. Data plus a three-line gate `fillActive()`
    does not have yet. The same fault sits in `q_discover_8` and `q_discover_12`.
-5. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
+5. **#24 · Move the gem skip out of Summer into Fall, at twice the price** — **read the item before
+   pricing**: Summer's linear formula makes a Pumpkin skip cost 51 hours of gem income to save 3, so
+   Fall needs its own shape rather than a ×2. Also reverses a written rule and must not touch the
+   Century Bloom.
+6. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
    design change: Clover in gold, Petal Cake in gems, Honeypot behind a rewarded ad. **Read the item
    before pricing anything**: four pets can tend at once, which makes this twelve gem purchases and
    six ads a day, and the ad half collides head-on with `37-monetization.md`'s whole daily budget.
    Two numbers are the owner's to pick.
-6. **#21 · Move the drone to the Shop, rent it for an ad, and build the ad button once** — pair
+7. **#21 · Move the drone to the Shop, rent it for an ad, and build the ad button once** — pair
    with `#18`: both need the same "Watch an ad" component and neither should build it twice. **There
    is no video icon in `icons.js`**, and `Icons.get()` falls back silently.
-7. **#22 · The Turn's "this year goes" reads as a confiscation list** — copy plus one type
+8. **#22 · The Turn's "this year goes" reads as a confiscation list** — copy plus one type
    treatment, at the game's most important decision. **Read the item**: the bluntness is a fixed bug
    ("an irreversible commit may never understate its own price"), so it must get kinder without
    naming one thing less.
-8. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
+9. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
    the harvest float does not; the payload does not even carry the number. Pairs naturally with
    `#17`, both being "say the true thing in the fewest words".
-9. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
+10. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
    the house register is already written in `data.js`. Also closes a hard-coded number that can
    drift from its knob. **Read the item**: the length exists to keep a promise honest, so keep that.
-10. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+11. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-11. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
+12. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
    it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
    **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
    a working ready-notification.
-12. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+13. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-13. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+14. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
    open question may answer itself.
-14. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
+15. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
    round**: the marker folds into `#12` tonight, the board is a bounded next step, and the background
    is its own session that should start with a `meadow-spike.html` for the owner to judge.
 
@@ -1226,6 +1230,97 @@ node tools/probe.js wait:700 tap:#newsOk wait:400 '<patch window.AudioContext to
 ```
 
 **No open question.**
+
+---
+
+### #24 · POLISH · Move the gem skip out of Summer into Fall, at twice the price · annoying · reported 2026-09-02
+
+**What the owner said.** "I think we should move the Gem Spin for speeding up flowers to fall and
+remove it from Summer. The Summer plants are just so fast that it's kind of meant for that Twitch
+gameplay of waiting around, seeing what happens, spamming through them. Feels kind of fun, but it's
+so cheap it just feels like it's cheating. I think we should again move the Gem Spin to Fall and
+increase the cost of gems by two and see what that feels like."
+
+**Why it feels like cheating, measured: the price floor, not the formula.** `skipCost()`
+(`game.js:999`) is `max(1, ceil(remaining / 30))` with `skipSecondsPerGem: 30`. **Every seed whose
+grow time is 30 s or less costs exactly one gem to skip from the moment it is planted** — that is
+Daisy (12 s), Tulip (18 s), Bluebell (24 s) and Lavender (28 s), the first four rungs and the whole
+early game. And **every seed on the ladder falls to one gem in its last thirty seconds**, right up to
+the Eternal Crown. With eight plots earning ~14 gems/hour (`04-economy.md:275`), a one-gem skip is
+free in practice. The owner's "spamming through them" is the floor doing exactly what a floor does.
+
+| Seed | Grow | Skip from full |
+| --- | --- | --- |
+| Daisy · Tulip · Bluebell · Lavender | 12–28 s | **1 gem** |
+| Rose · Peony · Marigold | 32–55 s | 2 gems |
+| Eternal Crown | 780 s | 26 gems |
+
+**Fall has no hasten on purpose, and the reason is written down.** `ui-fall.js:304`: *"Fall has no
+hasten — **its clocks are the mechanic** — but the same tap hastens in Summer, so the refusal has to
+say something rather than nothing."* The refusal is already built and already speaks. **This item
+reverses that ruling**, which is fine — it is the owner's — but it needs a dated decision-log entry
+saying so, not a quiet deletion of the comment.
+
+**THE FORMULA DOES NOT TRANSFER, and this is the finding that decides the whole item.**
+`skipCost` is linear in remaining seconds. That is sane against Summer's 12–780 s crops and nonsense
+against Fall's, which run twenty minutes to a fortnight. At the owner's doubled rate:
+
+| Fall crop | Grow | Skip ×2 | In gem income (~14/h) |
+| --- | --- | --- | --- |
+| Strawberry | 20 m | 80 gems | **6 hours** to save 20 minutes |
+| Pumpkin | 3 h | 720 gems | **51 hours** to save 3 hours |
+| Apple | 8 h | 1,920 gems | **137 hours** to save 8 hours |
+| Century Bloom | 14 d | 80,640 gems | **5,760 hours** |
+
+**Every one of these costs far more gem-income time than the wall-clock time it buys**, so as written
+the feature would exist and never be used — which is a different failure from the one being fixed.
+**Fall needs its own pricing shape**, not Summer's with a multiplier: a flat price per crop tier, or
+a price on the *hours* rather than the seconds, or a cap. That is the real work in this item.
+
+**Two hard constraints, and one of them is a written promise.**
+
+1. **The Century Bloom must be excluded outright.** `37-monetization.md:114`, the never-sell table:
+   *"The Century Bloom's time — the wait is the monument. Sell it a cosmetic pot; **never the exit**."*
+   Promise 2 repeats it at line 28. Gems are not money, but this is a never-sell-the-exit rule and a
+   gem skip reachable on that plot breaks it. The bed already excludes the Century Bloom from the
+   windfall in both directions (`game.js:3532`), so there is an existing pattern to follow.
+2. **A skip can buy the windfall, which changes what Fall is.** The bonus pays only when the whole
+   bed stands ripe together — doc 32 calls it *"the dinner appointment"*, and `03-systems.md:1348`
+   says *"a count is a status, a wait is an appointment."* A player with seven ripe and one crop
+   hours out could pay to complete the bed and unlock +50% on all eight. That is not obviously an
+   exploit — priced at the table above it is roughly gold-neutral — but it converts Fall's one
+   scheduling mechanic into a purchase, and that is a design call rather than a balance one.
+
+**The code is Summer's, all the way down.** `skipCost()` and `skipGrow()` (`game.js:999`, `1010`)
+read and write `state.grid`, not `state.fall.grid`; `skipGrow` resolves the plant's booked mutation
+roll, which Fall's cells do not have; `onSkipTap()` (`ui.js`) and the `.skip-chip` markup and CSS are
+the garden's. **Fall needs its own `fallSkipCost` / `fallSkip` and its own chip** — this is a port,
+not a flag.
+
+**Fix sketch.** Delete the skip from Summer: `.skip-chip` and its `data-skip` state out of
+`renderPlots()`, `onSkipTap()` out of `ui.js`, and `skipCost`/`skipGrow` either removed or left
+exported and unused (prefer removed, and then grep the `ui-*` files, which is a recorded trap). Add
+`fallSkipCost(idx)` and `fallSkip(idx)` in `game.js` with a **tier-based or capped price** rather
+than Summer's linear one, refusing on `def.century`. Give Fall its own chip, styled like the
+garden's was — `#8` took the countdown off that chip on the owner's ruling, so the Fall version
+should ship without one from the start. **What it might break:** `04-economy.md`'s gem-sink table
+lists *"Skip a timer — `ceil(remaining / 30)`, min 1"* and must move with the code;
+`22-creatures.md` and `03-systems.md` describe the garden's hasten. The Fall refusal float at
+`ui-fall.js:307` becomes wrong for everything except the Century Bloom — it should keep saying
+*"Growing all fortnight"* there and stop saying *"Ripe in 4h"* on a plot that is now tappable. Add
+sim-test coverage that no Fall skip can touch a Century Bloom and that a skipped plot still marks
+for the windfall the same way a naturally ripe one does.
+
+**Two open questions, both the owner's.**
+
+1. **"Increase the cost of gems by two" — double the price, or something else?** Read here as ×2
+   (equivalently `skipSecondsPerGem` 30 → 15). Say the word if it meant two gems flat, or ×2 on top
+   of a new Fall shape.
+2. **What shape should Fall's price be?** Summer's linear rate makes every Fall skip cost more gem
+   income than the time it saves, so a ×2 on the existing formula ships a button nobody presses. A
+   flat price per crop, or one priced against the ~14 gems/hour rate the way the sky calls are
+   (`04-economy.md:275` — *"price sinks against that rate"*), would give the owner something they can
+   actually feel.
 
 ---
 
