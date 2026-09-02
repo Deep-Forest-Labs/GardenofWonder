@@ -6,35 +6,18 @@
    time. So every same-origin request goes to the network FIRST and only falls
    back to the cache when the network fails or stalls.
 
-   The upshot: an online player is always on the current build, an offline player
-   still gets to garden, and forgetting to bump VERSION below strands nobody — the
-   version only controls when old caches get swept up. */
+   Video is the exception. `<video>` streams with byte-range requests; routing
+   those through network-first (or caching partial 206 responses) stalls playback.
+   Range requests pass straight to the network/CDN. Full-file fetches are
+   cache-first in a separate video bucket so repeat views are instant offline. */
 
-const VERSION = 29;
+const VERSION = 30;
 const CACHE = `gw-v${VERSION}`;
+const VIDEO_CACHE = `gw-video-v${VERSION}`;
 const FONTS = 'gw-fonts';
 const NET_TIMEOUT = 4000;   // slow network -> fall back to cache rather than hang
 
-const CORE = [
-  './', './index.html', './style.css', './style-art.css', './manifest.json',
-  './data.js', './flora.js', './critters.js', './customers.js', './hollow.js', './meadow.js', './fall.js', './icons.js',
-  './audio.js', './fx.js', './game.js',
-  './ui-shared.js', './ui-scenery.js', './ui-weather.js', './ui-sheet.js', './ui-hollow.js', './ui-meadow.js', './ui-fall.js',
-  './ui-news.js', './ui-menu.js', './ui-events.js', './ui-perf.js', './ui.js',
-  './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
-  './icons/apple-touch-icon.png',
-  // Announcement art is the only raster the game itself loads, and an installed
-  // app that cannot reach it shows a broken square in the middle of the dialog.
-  // Every row added to DATA.announcements adds its image here.
-  './art/announcements/garden-year.png',
-  './art/images/planter-spring.png', './art/images/planter-summer.png',
-  './art/images/planter-fall.png', './art/images/planter-winter.png',
-  './art/images/soil-spring.png', './art/images/soil-summer.png',
-  './art/images/soil-fall.png', './art/images/soil-winter.png',
-  './art/images/fb-spring.png', './art/images/fb-summer.png',
-  './art/images/fb-fall.png', './art/images/fb-winter.png',
-  './art/images/bg-spring.jpg', './art/images/bg-summer.jpg',
-  './art/images/bg-fall.jpg', './art/images/bg-winter.jpg',
+const VIDEOS = [
   './art/video/bg/spring.mp4', './art/video/bg/summer.mp4',
   './art/video/bg/fall.mp4', './art/video/bg/winter.mp4',
   './art/video/bg/generic-laugh.mp4', './art/video/bg/generic-aha.mp4',
@@ -65,25 +48,53 @@ const CORE = [
   './art/video/plant/sunflower-finish-loop.mp4'
 ];
 
+const CORE = [
+  './', './index.html', './style.css', './style-art.css', './manifest.json',
+  './data.js', './flora.js', './critters.js', './customers.js', './hollow.js', './meadow.js', './fall.js', './icons.js',
+  './audio.js', './fx.js', './game.js',
+  './ui-shared.js', './ui-scenery.js', './ui-weather.js', './ui-sheet.js', './ui-hollow.js', './ui-meadow.js', './ui-fall.js',
+  './ui-news.js', './ui-menu.js', './ui-events.js', './ui-perf.js', './ui.js',
+  './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
+  './icons/apple-touch-icon.png',
+  './art/announcements/garden-year.png',
+  './art/images/planter-spring.png', './art/images/planter-summer.png',
+  './art/images/planter-fall.png', './art/images/planter-winter.png',
+  './art/images/soil-spring.png', './art/images/soil-summer.png',
+  './art/images/soil-fall.png', './art/images/soil-winter.png',
+  './art/images/fb-spring.png', './art/images/fb-summer.png',
+  './art/images/fb-fall.png', './art/images/fb-winter.png',
+  './art/images/bg-spring.jpg', './art/images/bg-summer.jpg',
+  './art/images/bg-fall.jpg', './art/images/bg-winter.jpg'
+];
+
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const cache = await caches.open(CACHE);
+    const videoCache = await caches.open(VIDEO_CACHE);
     // Individually, so one 404 can't fail the whole install.
-    await Promise.allSettled(CORE.map((u) => cache.add(new Request(u, { cache: 'reload' }))));
+    await Promise.allSettled([
+      ...CORE.map((u) => cache.add(new Request(u, { cache: 'reload' }))),
+      ...VIDEOS.map((u) => videoCache.add(new Request(u, { cache: 'reload' })))
+    ]);
     await self.skipWaiting();
   })());
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
+    const keep = new Set([CACHE, VIDEO_CACHE, FONTS]);
     const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k === CACHE || k === FONTS ? null : caches.delete(k))));
+    await Promise.all(keys.map((k) => (keep.has(k) ? null : caches.delete(k))));
     await self.clients.claim();
   })());
 });
 
 function timeout(ms) {
   return new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
+}
+
+function isVideoPath(pathname) {
+  return pathname.endsWith('.mp4');
 }
 
 /* Network first, cache as the safety net. */
@@ -96,11 +107,29 @@ async function fresh(req, cacheName) {
   } catch (err) {
     const hit = await cache.match(req, { ignoreSearch: true });
     if (hit) return hit;
-    // A navigation with nothing cached for that exact URL still deserves the shell.
     if (req.mode === 'navigate') {
       const shell = await cache.match('./index.html') || await cache.match('./');
       if (shell) return shell;
     }
+    throw err;
+  }
+}
+
+/* Cache-first for whole clips; byte-range streaming stays on the network. */
+async function video(req) {
+  if (req.headers.get('range')) return fetch(req);
+
+  const cache = await caches.open(VIDEO_CACHE);
+  const hit = await cache.match(req, { ignoreSearch: true });
+  if (hit) return hit;
+
+  try {
+    const res = await fetch(req);
+    if (res && res.ok) cache.put(req, res.clone());
+    return res;
+  } catch (err) {
+    const fallback = await cache.match(req, { ignoreSearch: true });
+    if (fallback) return fallback;
     throw err;
   }
 }
@@ -127,7 +156,12 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  if (url.origin !== self.location.origin) return;   // anything else: browser's problem
+  if (url.origin !== self.location.origin) return;
+
+  if (isVideoPath(url.pathname) || req.destination === 'video') {
+    e.respondWith(video(req));
+    return;
+  }
 
   e.respondWith(fresh(req, CACHE));
 });

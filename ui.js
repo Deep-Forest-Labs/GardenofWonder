@@ -1214,15 +1214,9 @@
       return;
     }
     video.loop = false;
-    const dur = video.duration;
-    if (dur && Number.isFinite(dur)) {
-      const progress = Game.progressOf(cell);
-      const target = Math.min(Math.max(0, dur - 0.033), Math.max(0, progress * dur));
-      if (Math.abs(video.currentTime - target) > 0.008) {
-        try { video.currentTime = target; } catch (_) { /* seek while loading */ }
-      }
+    if (video.readyState >= 2 && video.paused && !video.ended) {
+      video.play().catch(() => {});
     }
-    video.pause();
   }
 
   function bindArtPlantVideo(video, state) {
@@ -1258,7 +1252,7 @@
           }
           paint();
         }
-      }, false, { play: mode === 'ready' });
+      }, false, { play: true });
       return;
     }
     applyArtPlantSync(video, cell, state);
@@ -1616,6 +1610,25 @@
       });
     }
     fbStacks().forEach((stack) => initFbStack(stack));
+    warmArtVideos(artSeason);
+  }
+
+  let artVideoWarmed = false;
+
+  /* Low-priority full-file fetches populate the video cache without blocking playback. */
+  function warmArtVideos(artSeason) {
+    if (artVideoWarmed || !('fetch' in window)) return;
+    artVideoWarmed = true;
+    [
+      ART_VIDEO.bg(artSeason),
+      FB_IDLE_CLIPS[0],
+      FB_IDLE_CLIPS[1],
+      ART_VIDEO.plantGrow(),
+      ART_VIDEO.plantReady(),
+      FB_GENERIC_TALK[0]
+    ].forEach((u) => {
+      fetch(encodeURI(u), { mode: 'same-origin', priority: 'low' }).catch(() => {});
+    });
   }
 
   /* ---------- the gate ---------- */
