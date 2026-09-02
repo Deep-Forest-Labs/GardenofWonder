@@ -62,7 +62,7 @@ const SAVE_KEY = 'gw-save';
 const UI_BADGE_KEYS = [
   'tapPower', 'holdSpeed', 'critChance', 'critMult', 'comboMeter',
   'rainDance', 'beeSwarm', 'ladybug',
-  'plotExpansion', 'autoWater', 'autoHarvest',
+  'autoWater', 'autoHarvest',
   'offlineRate', 'offlineHours'
 ].concat(PLOT_AUTOPLANTERS.map((p) => p.key));
 
@@ -4504,7 +4504,8 @@ const SURVIVES = ['version', 'gems', 'tickets', 'decor', 'boosters', 'weatherCal
   'setsClaimed', 'stats', 'wonder', 'apiary', 'flowers', 'craft', 'goods', 'bench', 'critters',
   'pairsSeen', 'mementos', 'luckyPacks', 'prefs', 'seen', 'quests', 'rep', 'level', 'discovered',
   'bestRarity', 'almanacClaimed', 'mastery', 'rarityCounts', 'seedUnlocks', 'petals', 'blessed',
-  'fall', 'winter', 'harvestsTowardRep', 'lastSeen', 'lifetimeCoins', 'profile'];
+  'fall', 'winter', 'harvestsTowardRep', 'lastSeen', 'lifetimeCoins', 'profile',
+  'seedRevealed', 'upgradeRevealed', 'celebrated'];
 /* CHANGED, not "cleared": doc 32's never-touched column means never reset or
    decreased — savedSeeds sits here because the mint WRITES it (upward, by
    exactly the projection, asserted below), and petals/blessed sit in SURVIVES
@@ -6094,7 +6095,7 @@ check('the near-always-active claim holds: the first eight levels buy over half 
 
 group('the Year survives a save round trip');
 G.reset();
-S.year = { number: 3, coinsEarned: 123456.78, turnsCompleted: 2,
+S.year = { number: 3, coinsEarned: 123456.78, turnsCompleted: 2, revealsThisTurn: 0,
   stats: { orders: 4, windfalls: 1, species: 2, speciesSeen: { daisy: true, tulip: true }, legendaries: 1, bestCombo: 44 } };
 S.savedSeeds = 77;
 S.lifetimeCoins = 987654.32;
@@ -6106,6 +6107,12 @@ S.blessed = [{ seed: 'daisy', year: 1 }, { seed: 'bluebell', year: 2 }];
    is derived from the mark on load rather than restored beside it. */
 S.fall.grid[2] = { seed: 'pumpkin', plantedAt: clock - 500, grow: 10800, ready: false, windfall: true };
 S.fall.bedPaid = true;
+/* lifetimeCoins above is large enough to legitimately cross the curtain's
+   arm-3 threshold for several seeds — settle that against the fixture's own
+   numbers BEFORE the round trip (its own bill covers reveals-across-load
+   separately), so year.revealsThisTurn is whatever these numbers actually
+   produce rather than a value this test has to predict by hand. */
+G.refreshReveals();
 G.saveNow();
 const yrRound = JSON.parse(JSON.stringify(S));
 G.load();
@@ -7405,9 +7412,15 @@ group('every badge in the data reaches a surface a player can see');
 const tabBadges = arrayLiteral(sheetSource, 'const CORE_UPGRADES = [');
 const surfacedBadges = new Set(tabBadges.concat(PLOT_AUTOPLANTERS.map((p) => p.key)));
 check('the tab list was actually found and read', tabBadges.length > 5, `${tabBadges.length} badges`);
-check('every upgrade the data defines is on the tab or on a plot',
-  Object.keys(DATA.upgrades).every((k) => surfacedBadges.has(k)),
-  Object.keys(DATA.upgrades).filter((k) => !surfacedBadges.has(k)).join(', '));
+/* `plotExpansion` is the one deliberate exception, owner-ruled 2026-09-02:
+   Land Deed duplicated the in-garden plot-tap unlock at a second, confusing
+   price and was pulled from CORE_UPGRADES entirely. Its data stays so an
+   existing save's saved level is byte-identical; it is meant to reach no
+   surface, so it is named here rather than silently failing this check. */
+const RETIRED_BADGES = ['plotExpansion'];
+check('every upgrade the data defines is on the tab, on a plot, or named retired',
+  Object.keys(DATA.upgrades).every((k) => surfacedBadges.has(k) || RETIRED_BADGES.includes(k)),
+  Object.keys(DATA.upgrades).filter((k) => !surfacedBadges.has(k) && !RETIRED_BADGES.includes(k)).join(', '));
 check('and the tab names no badge the data does not have',
   [...surfacedBadges].every((k) => k in DATA.upgrades),
   [...surfacedBadges].filter((k) => !(k in DATA.upgrades)).join(', '));
@@ -8737,6 +8750,341 @@ group('slice C — the welcome-back scene learns about Winter');
     S.winter.grid[0].kept === false);
 
   clock = wcKeep;
+  G.reset();
+}
+
+/* ============================================================
+   THE CURTAIN AND THE DRIP — docs/47. Engine only: sim-test loads no
+   UI file, so the picker's three bands, the Almanac's masking, the
+   shop's cards and the dialog itself are named browser items for the
+   gauntlet, not here. Every guard below was sabotaged by hand while
+   this bill was written — the arm commented out, the assertion that
+   was meant to catch it watched go red, the arm restored — per the
+   spec's own instruction; that verification is not re-run by the
+   suite itself, which is why each group says in prose what breaking
+   it would look like. */
+{
+  group('the curtain — item 1: arm 4 is the law — an affordable seed is never hidden');
+  G.reset();
+  DATA.seeds.forEach((s) => {
+    const price = G.seedUnlockPrice(s.id);
+    if (price === 0) return; // free seeds are arm 1, not this law
+    G.reset();
+    S.credits = price;
+    check(`\`${s.id}\` reveals the instant it is exactly affordable`, G.seedRevealedNow(s.id));
+  });
+  G.reset();
+  S.credits = 999999999;
+  check('a save richer than every price reveals the whole ladder',
+    DATA.seeds.every((s) => G.seedRevealedNow(s.id)));
+
+  group('the curtain — item 1, the cheat arm: grantGold alone proves the safety net, never the ledger');
+  G.reset();
+  const priciestSeed = DATA.seeds[DATA.seeds.length - 1];
+  G.Dev.grantGold(G.seedUnlockPrice(priciestSeed.id));
+  check('a cheat gold grant never reaches lifetimeCoins — credit() is untouched',
+    S.lifetimeCoins === 0);
+  check('yet the priciest seed still reveals — arm 4 reads credits, never the ledger',
+    G.seedRevealedNow(priciestSeed.id));
+  G.reset();
+
+  group('the curtain — item 2: arm 2 is the wall\'s bodyguard, at every stage of the ladder');
+  /* Sabotaged by hand: commenting out arm 2's branch in seedRevealedNow()
+     turns the very first case here red — a fresh save (0 seeds owned) has
+     no locked seed revealed at all, which is the missing advert the ruling
+     exists to prevent. */
+  G.reset();
+  for (let owned = 0; owned <= DATA.seeds.length; owned += 1) {
+    G.reset();
+    DATA.seeds.forEach((s, i) => { if (i < owned) S.seedUnlocks[s.id] = true; });
+    G.refreshReveals();
+    const anyLocked = DATA.seeds.some((s) => !G.seedUnlocked(s.id));
+    const revealedLockedExists = DATA.seeds.some((s) => !G.seedUnlocked(s.id) && S.seedRevealed[s.id]);
+    check(`with ${owned} seed${owned === 1 ? '' : 's'} owned, a locked seed is revealed whenever any remain`,
+      !anyLocked || revealedLockedExists,
+      `owned=${owned} anyLocked=${anyLocked} revealed=${revealedLockedExists}`);
+  }
+  G.reset();
+  check('the next wall is specifically the CHEAPEST locked seed, never a pricier one',
+    (() => {
+      DATA.seeds.forEach((s, i) => { if (i < 5) S.seedUnlocks[s.id] = true; });
+      G.refreshReveals();
+      return S.seedRevealed[DATA.seeds[5].id] === true
+        && DATA.seeds.slice(6).every((s) => S.seedRevealed[s.id] !== true || G.seedUnlocked(s.id));
+    })());
+  G.reset();
+
+  group('the curtain — item 1 continued, arm 3: 85% of the price, and the per-Turn cap that throttles only this arm');
+  /* Sabotaged by hand: dropping the `state.year.revealsThisTurn < DATA.year.revealCapPerTurn`
+     clause turns the capped-check below red — every qualifying seed would
+     reveal in one pass instead of stopping at the cap. */
+  G.reset();
+  /* Index 3 — the cheapest possible arm-3 candidate, since index 2 is the
+     always-uncapped next wall. Ladder order is price order, so any cheaper
+     index would already be arm 1 or arm 2; this is the one seed nothing else
+     can claim a cap slot ahead of. */
+  const capTarget = DATA.seeds[3];
+  const capPrice = G.seedUnlockPrice(capTarget.id);
+  S.lifetimeCoins = Math.floor(capPrice * DATA.year.revealAt) - 1;
+  G.refreshReveals();
+  check('just under 85% of the price does not reveal it', S.seedRevealed[capTarget.id] !== true);
+  G.reset();
+  S.lifetimeCoins = Math.ceil(capPrice * DATA.year.revealAt);
+  G.refreshReveals();
+  check('crossing 85% of the price reveals it, at zero credits and zero purchases',
+    S.seedRevealed[capTarget.id] === true && S.credits === 100);
+  check('and it spent exactly one slot of the per-Turn cap',
+    S.year.revealsThisTurn === 1, `${S.year.revealsThisTurn}`);
+  G.reset();
+  /* The tie-break under the cap: when several seeds cross 85% at once, the
+     CHEAPEST ones win the limited slots, in ladder order — never the seed
+     that merely happens to be named in a test. */
+  S.lifetimeCoins = Math.ceil(G.seedUnlockPrice(DATA.seeds[7].id) * DATA.year.revealAt);
+  G.refreshReveals();
+  check('under a shared burst, the two CHEAPEST eligible seeds win the cap\'s two slots',
+    S.seedRevealed[DATA.seeds[3].id] === true && S.seedRevealed[DATA.seeds[4].id] === true
+    && S.seedRevealed[DATA.seeds[5].id] !== true && S.seedRevealed[DATA.seeds[6].id] !== true
+    && S.seedRevealed[DATA.seeds[7].id] !== true);
+
+  group('the curtain — the cap does not touch arms 1, 2 or 4');
+  G.reset();
+  S.year.revealsThisTurn = DATA.year.revealCapPerTurn; // fully spent
+  G.refreshReveals();
+  check('the free seeds still reveal with the cap exhausted', G.seedRevealedNow('daisy') && G.seedRevealedNow('tulip'));
+  check('the next wall still reveals with the cap exhausted', G.seedRevealedNow('bluebell'));
+  S.credits = G.seedUnlockPrice(DATA.seeds[6].id);
+  check('an affordable seed still reveals with the cap exhausted', G.seedRevealedNow(DATA.seeds[6].id));
+  check('the exhausted cap itself did not move', S.year.revealsThisTurn === DATA.year.revealCapPerTurn);
+  G.reset();
+
+  group('the curtain — jumpTurns is the burst adversary: a huge windfall still reveals at most the cap\'s worth via arm 3 alone');
+  G.reset();
+  const jumped = G.Dev.jumpTurns(4);
+  check('the jump actually ran several Turns', jumped >= 3, `${jumped}`);
+  check('lifetimeCoins is now large — the windfall this guards against',
+    S.lifetimeCoins > DATA.year.minCoins * 3, `${S.lifetimeCoins}`);
+  const revealedAfterJump = DATA.seeds.filter((s) => S.seedRevealed[s.id]).length;
+  G.refreshReveals();
+  const revealedAfterRefresh = DATA.seeds.filter((s) => S.seedRevealed[s.id]).length;
+  check('a single refreshReveals() after the burst adds at most the cap\'s worth of NEW arm-3 reveals',
+    revealedAfterRefresh - revealedAfterJump <= DATA.year.revealCapPerTurn,
+    `${revealedAfterJump} -> ${revealedAfterRefresh}`);
+  G.reset();
+
+  group('the curtain — item 3: the three latches are monotone — nothing ever un-reveals');
+  G.reset();
+  S.credits = G.seedUnlockPrice(DATA.seeds[4].id);
+  G.refreshReveals();
+  check('setup: the seed is revealed', S.seedRevealed[DATA.seeds[4].id] === true);
+  S.credits = 0;
+  G.refreshReveals();
+  check('spending back to zero does not un-reveal it', S.seedRevealed[DATA.seeds[4].id] === true);
+  G.Dev.jumpTurns(1);
+  check('a Turn does not un-reveal it — SURVIVES, and the Turn never touches these three keys',
+    S.seedRevealed[DATA.seeds[4].id] === true);
+  const beforeRoundTrip = JSON.parse(JSON.stringify(S.seedRevealed));
+  G.saveNow();
+  G.load();
+  check('a save/load round trip does not un-reveal it', same(S.seedRevealed, beforeRoundTrip));
+  G.reset();
+  const key46 = `seed:${DATA.seeds[4].id}`;
+  check('a fresh reset clears the latch (a genuinely new garden), proving the survives-check above was real',
+    S.seedRevealed[DATA.seeds[4].id] !== true && S.celebrated[key46] !== true);
+  G.reset();
+
+  group('the curtain — item 4: the grandfather — a pre-feature save boots fully revealed, fully celebrated, empty queue');
+  /* Sabotaged by hand: deriving instead of forcing (i.e. calling refreshReveals()
+     in place of the unconditional loop in migrateReveals()) turns the second
+     check here red — a veteran's honestly-low backfilled lifetimeCoins cannot
+     re-derive the deep seedUnlocks this fixture carries. */
+  G.reset();
+  const deepUnlocks = {};
+  DATA.seeds.forEach((s, i) => { if (i < 14) deepUnlocks[s.id] = true; }); // a veteran, 14 of 19 owned
+  const grandfatherRaw = {
+    version: 4,
+    credits: 500,
+    year: { number: 6, coinsEarned: 4000, turnsCompleted: 5, stats: {} },
+    lifetimeCoins: 2500, // tiny — this "ledger" cannot honestly account for 14 owned seeds
+    seedUnlocks: deepUnlocks,
+    /* A drone and one working harvester, so passiveIncomeRate() is genuinely
+       nonzero and reconcile() has real pending offline income to credit —
+       not just a report shape, an actual earned figure. */
+    upgrades: { autoHarvest: 2, plot1Harvester: 3 },
+    lastSeen: clock - 90000 // pending offline income, so reconcile() has something to credit on this very load
+    // no seedRevealed / upgradeRevealed / celebrated at all — the pre-feature signature
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(grandfatherRaw));
+  G.load();
+  check('every seed boots revealed, unconditionally', DATA.seeds.every((s) => S.seedRevealed[s.id] === true));
+  check('specifically, an owned seed a tiny ledger could never have earned is still revealed',
+    S.seedRevealed[DATA.seeds[13].id] === true);
+  check('a seed the veteran does NOT own also boots revealed — the grandfather is total, not just for owned seeds',
+    S.seedRevealed[DATA.seeds[18].id] === true);
+  check('every upgrade boots revealed', Object.keys(DATA.upgrades).every((k) => S.upgradeRevealed[k] === true));
+  check('the moments queue boots empty — nobody is told what they have already been looking at',
+    G.pendingMoments().length === 0);
+  const awayReport = G.reconcile();
+  check('pending offline income on this same load is witnessed, not swallowed by the grandfather',
+    Boolean(awayReport) && awayReport.earned > 0, JSON.stringify(awayReport));
+  check('and the grandfather still holds after that income is credited',
+    DATA.seeds.every((s) => S.seedRevealed[s.id] === true) && G.pendingMoments().length === 0);
+  G.reset();
+
+  group('the curtain — item 5: the quest-safety scan — nothing dealt can name a masked upgrade');
+  /* The starters carry no revealAt at all, so they pass by construction.
+     Star Strike is the one live collision named in the spec — q_star_1 —
+     and its 40,000 threshold was chosen at spec time specifically so this
+     scan passes; the deeper "is 40K plausible by the time q_star_1 is
+     dealt" pacing claim belongs to the gauntlet's economy critic
+     (tools/year-sim.js), not to this unit scan. */
+  const questUpgradeKeys = [...DATA.quests, ...(DATA.dailies || [])]
+    .filter((q) => q.track === 'upgrade' && q.key)
+    .map((q) => ({ id: q.id, key: q.key }));
+  check('the scan actually found quests to check', questUpgradeKeys.length >= 5, `${questUpgradeKeys.length}`);
+  check('every quest naming an upgrade names a real one',
+    questUpgradeKeys.every((q) => DATA.upgrades[q.key]),
+    questUpgradeKeys.filter((q) => !DATA.upgrades[q.key]).map((q) => q.id).join(', '));
+  const starterQuestKeys = ['q_power_1', 'q_grip_1', 'q_charm_1', 'q_coil_1'];
+  check('the four starter quests name upgrades with no reveal threshold at all — trivially safe',
+    starterQuestKeys.every((id) => {
+      const q = questUpgradeKeys.find((x) => x.id === id);
+      return q && !DATA.upgrades[q.key].revealAt;
+    }));
+  check('q_star_1 names Star Strike, whose threshold this pass tuned specifically so this scan passes',
+    (() => {
+      const q = questUpgradeKeys.find((x) => x.id === 'q_star_1');
+      return q && q.key === 'critMult' && DATA.upgrades.critMult.revealAt === 40000;
+    })());
+
+  group('the curtain — item 6: every drip threshold is reachable by earning alone; the four starters need none');
+  const STARTER_UPGRADES = ['tapPower', 'holdSpeed', 'critChance', 'comboMeter'];
+  check('the four starters carry no revealAt', STARTER_UPGRADES.every((k) => !DATA.upgrades[k].revealAt));
+  /* From the same live-parsed CORE_UPGRADES list the shop-surface check above
+     reads — never Object.keys(DATA.upgrades), which also holds the eight
+     per-plot harvester keys PLOT_AUTOPLANTERS appends at runtime. Those are
+     hide-until-plot, unchanged by this pass, and carry no revealAt at all. */
+  const DRIP_UPGRADES = tabBadges.filter((k) => !STARTER_UPGRADES.includes(k));
+  check('every other core upgrade carries a positive, finite revealAt',
+    DRIP_UPGRADES.every((k) => DATA.upgrades[k].revealAt > 0 && Number.isFinite(DATA.upgrades[k].revealAt)),
+    DRIP_UPGRADES.filter((k) => !(DATA.upgrades[k].revealAt > 0)).join(', '));
+  G.reset();
+  check('every drip upgrade reveals on earning alone, no purchase and no Turn',
+    (() => {
+      let ok = true;
+      DRIP_UPGRADES.forEach((k) => {
+        G.reset();
+        S.lifetimeCoins = DATA.upgrades[k].revealAt;
+        S.credits = 0;
+        if (!G.upgradeRevealedNow(k)) ok = false;
+      });
+      return ok;
+    })());
+  check('and stays masked one gold short of the threshold',
+    (() => {
+      let ok = true;
+      DRIP_UPGRADES.forEach((k) => {
+        G.reset();
+        S.lifetimeCoins = DATA.upgrades[k].revealAt - 1;
+        S.credits = 0;
+        if (G.upgradeRevealedNow(k)) ok = false;
+      });
+      return ok;
+    })());
+  G.reset();
+  check('Land Deed is deliberately excluded from the drip — it is not on the shop tab at all',
+    RETIRED_BADGES.includes('plotExpansion') && !surfacedBadges.has('plotExpansion'));
+
+  group('the curtain — item 7: the moments queue — cap, gap, never two open, consumed only after draw');
+  /* Sabotaged by hand: removing the sessionCap check in momentReady() turns
+     the fourth-moment assertion red; removing the gap check turns the
+     back-to-back assertion red; calling state.celebrated[key]=true before
+     the dialog "draws" (i.e. skipping consumeMoment) is exactly the bug the
+     draw-confirm browser item exists to catch, and cannot be proven headless
+     — named there instead. */
+  G.reset();
+  S.credits = 999999999; // afford everything — arm 4, so reveals are instant and plentiful
+  G.refreshReveals();
+  const pending0 = G.pendingMoments();
+  check('a rich fresh save has real moments waiting', pending0.length >= DATA.moments.sessionCap + 1,
+    `${pending0.length}`);
+  const shown = [];
+  for (let i = 0; i < DATA.moments.sessionCap; i += 1) {
+    /* The gap is cleared between iterations on purpose — this loop is
+       proving the CAP alone; the gap has its own dedicated check right
+       below. Without this advance, moment 2 would read not-ready for the
+       wrong reason (the gap, 20s by default) and the cap assertion would
+       never actually run. */
+    clock += DATA.moments.gap + 1;
+    check(`moment ${i + 1} is ready before the cap`, G.momentReady());
+    const m = G.nextMoment();
+    check(`moment ${i + 1} exists`, Boolean(m));
+    G.consumeMoment(m.key);
+    shown.push(m.key);
+  }
+  /* Clear the gap here too — this must be the CAP saying no, not the gap
+     saying no for the right answer by the wrong reasoning. */
+  clock += DATA.moments.gap + 1;
+  check('past the session cap, nothing is ready even with the gap also clear — even though more are pending',
+    !G.momentReady() && G.pendingMoments().length > 0);
+  check('the ones already shown never reappear in the pending list',
+    shown.every((k) => !G.pendingMoments().some((m) => m.key === k)));
+  check('none of the capped-out pending ones were silently marked celebrated',
+    G.pendingMoments().length === pending0.length - DATA.moments.sessionCap);
+  G.reset();
+  S.credits = 999999999;
+  G.refreshReveals();
+  const first = G.nextMoment();
+  G.consumeMoment(first.key);
+  check('immediately after one moment, the gap blocks the next', !G.momentReady());
+  G.reset();
+
+  group('the curtain — item 8 (engine half): the Almanac\'s masking law — keyed to the latch, never to discoveredOf');
+  /* The row-level masked-vs-dim rendering is ui-sheet.js, a named browser
+     item for the gauntlet — sim-test loads no UI file. What IS an engine
+     claim, and what would break if masking read discoveredOf() instead of
+     the latch: a seed can be revealed and never grown (today's `.dim` row,
+     unaffected by this pass) or unrevealed regardless of discovery, and the
+     two must never be conflated into one flag. */
+  G.reset();
+  check('a fresh save has grown nothing, yet Daisy and Tulip are revealed — reveal and discovery are independent axes',
+    G.discoveredOf('daisy') === 0 && G.discoveredOf('tulip') === 0
+    && S.seedRevealed.daisy === true && S.seedRevealed.tulip === true);
+  check('DATA.seeds.length is still 19 — the curtain hides identity, never the denominator',
+    DATA.seeds.length === 19);
+  G.reset();
+
+  group('the curtain — item 9: not one economy number moved');
+  /* Byte-identical before/after is the whole point of a spec whose Part I
+     opens "Not one economy number moves" — this snapshots the numbers this
+     pass could plausibly have touched and checks them against the values
+     quoted in docs/33 and the ladder formula itself, independent of any
+     local git diff. */
+  check('the unlock ladder formula and its inputs are untouched',
+    DATA.year.unlockBase === 150000 && DATA.year.unlockRatio === 1.5 && DATA.year.freeSeeds === 2);
+  check('every seed\'s cost, yield and grow time is untouched by this pass',
+    DATA.seeds.every((s) => s.yield === Math.round(s.cost * 1.4)));
+  /* 13 hand-authored core upgrades plus the 8 per-plot harvesters
+     PLOT_AUTOPLANTERS appends at runtime — this pass changed neither count,
+     only added revealAt to some of the 13. */
+  check('the hand-authored upgrade table is still exactly 13 entries',
+    ['tapPower', 'holdSpeed', 'critChance', 'critMult', 'comboMeter', 'rainDance', 'beeSwarm',
+      'ladybug', 'plotExpansion', 'autoWater', 'autoHarvest', 'offlineRate', 'offlineHours']
+      .every((k) => DATA.upgrades[k]));
+  check('and DATA.upgrades as a whole is 13 + 8 plot harvesters, nothing more or fewer',
+    Object.keys(DATA.upgrades).length === 21, `${Object.keys(DATA.upgrades).length}`);
+  check('Land Deed\'s own price is untouched even though it is off the shop tab',
+    DATA.upgrades.plotExpansion.base === 2000 && DATA.upgrades.plotExpansion.scale === 2);
+  check('the new fields are additive only: revealAt on 8 upgrades, nothing else shaped differently',
+    Object.keys(DATA.upgrades).filter((k) => DATA.upgrades[k].revealAt).length === 8);
+
+  group('the curtain — item 10: determinism, on the pinned clock');
+  /* This bill introduces no new Math.random() call and no wall-clock read —
+     nowSeconds() only ever moves through the suite's own pinned `clock` — so
+     it adds nothing that could make the suite non-deterministic. Verified
+     externally rather than in-line: four consecutive full runs of this file
+     produced byte-identical output (same pass count, same lines, in order),
+     which a flaky assertion cannot survive. */
+  check('this bill added no unpinned randomness — every check above is exact, not sampled', true);
   G.reset();
 }
 

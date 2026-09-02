@@ -302,20 +302,29 @@ const DATA = {
     }
   ],
 
+  /* revealAt (docs/47, PROVISIONAL — phase 4 owns the retune) is lifetime
+     gold, earnings-only, never a purchase or a Turn: absent means always
+     visible, which is why the four starters carry no field at all.
+     `plotExpansion` (Land Deed) deliberately carries none either — the owner
+     removed it from the shop 2026-09-02 (it only ever unlocked plots the
+     in-garden tap already unlocks, at a second, confusing price) and
+     CORE_UPGRADES in ui-sheet.js no longer renders it. The entry stays here,
+     untouched, so an existing save's saved level and every other number are
+     byte-identical; it is simply never drawn. */
   upgrades: {
     tapPower:      { name: 'Tap Power +1',      short: 'Power Punch',   base: 100,  scale: 2,   icon: 'fist',  desc: 'Increase base tap payout by +1 credit per tap.' },
     holdSpeed:     { name: 'Quick Grip',        short: 'Quick Grip',    base: 150,  scale: 1.9, icon: 'clock', desc: 'Hold the flower instead of tapping it — each level speeds up the hold, up to a full rapid-tap pace.' },
     critChance:    { name: '+1% Crit',          short: 'Lucky Charm',   base: 500,  scale: 1.5, icon: 'clover', desc: 'Raise tap critical hit chance by +1%.' },
-    critMult:      { name: '+2x Crit Mult',     short: 'Star Strike',   base: 1000, scale: 2,   icon: 'star',  desc: 'Boost tap crit multiplier by +2x (up to 50x).' },
+    critMult:      { name: '+2x Crit Mult',     short: 'Star Strike',   base: 1000, scale: 2,   icon: 'star',  desc: 'Boost tap crit multiplier by +2x (up to 50x).', revealAt: 40000 },
     comboMeter:    { name: 'Tap Combo Boost',   short: 'Combo Coil',    base: 2500, scale: 2,   icon: 'flame', desc: 'Extend combo cap by +10 taps.' },
-    rainDance:     { name: 'Rain Dance',        short: 'Rain Dance',    base: 250,  scale: 1.8, icon: 'sprout', desc: 'A rare chance on every tap to instantly water a random growing plot, shaving 3s off its remaining time (up to 2%).' },
-    beeSwarm:      { name: 'Bee Swarm',         short: 'Bee Swarm',     base: 2000, scale: 2,   icon: 'bee',   desc: 'A rare chance on every tap to send a wild swarm to fill a jar in a hive with room (up to 1%).' },
-    ladybug:       { name: 'Lucky Ladybug',     short: 'Lucky Ladybug', base: 800,  scale: 1.9, icon: 'ladybug', desc: 'A rare chance on every tap to land a ladybug on a growing plot, boosting its rarity odds when harvested (up to 1.6%).' },
+    rainDance:     { name: 'Rain Dance',        short: 'Rain Dance',    base: 250,  scale: 1.8, icon: 'sprout', desc: 'A rare chance on every tap to instantly water a random growing plot, shaving 3s off its remaining time (up to 2%).', revealAt: 4000 },
+    beeSwarm:      { name: 'Bee Swarm',         short: 'Bee Swarm',     base: 2000, scale: 2,   icon: 'bee',   desc: 'A rare chance on every tap to send a wild swarm to fill a jar in a hive with room (up to 1%).', revealAt: 20000 },
+    ladybug:       { name: 'Lucky Ladybug',     short: 'Lucky Ladybug', base: 800,  scale: 1.9, icon: 'ladybug', desc: 'A rare chance on every tap to land a ladybug on a growing plot, boosting its rarity odds when harvested (up to 1.6%).', revealAt: 120000 },
     plotExpansion: { name: 'Plot Expansion +2', short: 'Land Deed',     base: 2000, scale: 2,   icon: 'grid',  desc: 'Unlock two garden plots your reputation has already opened.' },
-    autoWater:     { name: 'Sprinkler Network', short: 'Sprinklers',    base: 400,  scale: 1.7, icon: 'drop',  desc: 'Increase grow speed by 1% per level for all plants (up to 10%).' },
-    autoHarvest:   { name: 'Drone Harvester',   short: 'Harvest Drone', base: 4500, scale: 2.4, icon: 'drone', desc: 'Automatically harvest a ready plot on a timer.' },
-    offlineRate:   { name: 'Moonlight Tending', short: 'Moonlight',     base: 4000, scale: 1.9, icon: 'sparkle', desc: 'More of the garden\u2019s work carries on while you are away.' },
-    offlineHours:  { name: 'Lantern Oil',       short: 'Lantern Oil',   base: 6000, scale: 2.0, icon: 'lantern', desc: 'Keeps the lantern lit longer, so the garden works at full pace for more of your absence.' }
+    autoWater:     { name: 'Sprinkler Network', short: 'Sprinklers',    base: 400,  scale: 1.7, icon: 'drop',  desc: 'Increase grow speed by 1% per level for all plants (up to 10%).', revealAt: 300000 },
+    autoHarvest:   { name: 'Drone Harvester',   short: 'Harvest Drone', base: 4500, scale: 2.4, icon: 'drone', desc: 'Automatically harvest a ready plot on a timer.', revealAt: 2500000 },
+    offlineRate:   { name: 'Moonlight Tending', short: 'Moonlight',     base: 4000, scale: 1.9, icon: 'sparkle', desc: 'More of the garden\u2019s work carries on while you are away.', revealAt: 600000 },
+    offlineHours:  { name: 'Lantern Oil',       short: 'Lantern Oil',   base: 6000, scale: 2.0, icon: 'lantern', desc: 'Keeps the lantern lit longer, so the garden works at full pace for more of your absence.', revealAt: 1200000 }
   },
 
   /* Purely cosmetic — no gameplay effect. See docs/15-navigation-and-ia.md for why. */
@@ -393,6 +402,16 @@ const DATA = {
        one is played on four plots and Turn 1's gift is Fall AND a bigger
        garden. A migrated save keeps whatever plots it already owned. */
     plotTurnGate: 1,
+
+    /* The curtain and the drip, docs/47. `revealAt` is arm 3's threshold: a
+       locked seed reveals once lifetime gold clears this fraction of its
+       unlock price (the next wall reveals unconditionally through arm 2, and
+       an affordable seed reveals unconditionally through arm 4 — this number
+       governs only the proactive "you're getting close" arm). `revealCapPerTurn`
+       throttles that same arm alone, so a big offline windfall cannot un-mask
+       a whole column of the ladder in one sitting — owner-ruled, 2026-09-02. */
+    revealAt: 0.85,
+    revealCapPerTurn: 2,
 
     /* Old Bloom Mastery's one-time conversion: Saved Seeds per ladder tier. */
     masteryConvert: 2,
@@ -708,7 +727,15 @@ const DATA = {
       ],
       reset: true
     }
-  ]
+  ],
+
+  /* The moments dialog, docs/47 — the knobs for the reveal-celebration queue.
+     PROVISIONAL, phase 4's to retune. `gap` is the minimum seconds between
+     two moments popping in the same session; `sessionCap` is how many can pop
+     in one session at all. Entries themselves are never authored here — they
+     are generated at runtime from DATA.seeds and DATA.upgrades, so this stays
+     two numbers and nothing else. */
+  moments: { gap: 20, sessionCap: 3 }
 };
 
 PLOT_AUTOPLANTERS.forEach((cfg) => {

@@ -41,7 +41,13 @@ const Game = (() => {
         number: 1,
         coinsEarned: 0,
         turnsCompleted: 0,
-        stats: { orders: 0, windfalls: 0, species: 0, speciesSeen: {}, legendaries: 0, bestCombo: 0 }
+        stats: { orders: 0, windfalls: 0, species: 0, speciesSeen: {}, legendaries: 0, bestCombo: 0 },
+        /* The curtain's own throttle — how many seeds arm 3 (the "you've saved
+           85%" reveal) has latched since the last Turn. Cleared in turnYear()
+           beside the other year-scoped counters; arms 1, 2 and 4 never read it,
+           so a seed that is free, the next wall, or outright affordable still
+           reveals with nothing left in the cap. */
+        revealsThisTurn: 0
       },
       /* The cumulative mint's two ledgers, neither of which ever resets.
          `lifetimeCoins` is every coin the garden has honestly earned, and it
@@ -54,6 +60,15 @@ const Game = (() => {
       savedSeeds: 0,
       petals: {},
       seedUnlocks: {},
+      /* The curtain and the drip, docs/47. Three top-level, SURVIVES, never
+         cleared by the Turn: a seed or upgrade that has been revealed stays
+         revealed, and a moment already celebrated is never shown twice. Keyed
+         by id (`seedRevealed`/`upgradeRevealed`) or by a namespaced moment key
+         (`celebrated`, e.g. `seed:bluebell` / `upgrade:critMult`) so a future
+         bespoke entry can never collide with a seed or upgrade id. */
+      seedRevealed: {},
+      upgradeRevealed: {},
+      celebrated: {},
       blessed: [],
       fall: {
         grid: Array(DATA.fall.plots).fill(0).map(() => ({ seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false })),
@@ -216,6 +231,30 @@ const Game = (() => {
     return { grant, tiers, unlocked: Object.keys(state.seedUnlocks).length };
   }
 
+  /** A save from before the curtain and the drip enters it fully lit, exactly
+      once — keyed on the missing `seedRevealed` key, the boostInv pattern.
+      `lifetimeCoins` does not honestly exist on an old save (it is backfilled
+      as the standing year's earnings, zeroed at every Turn), so deriving reveal
+      state from it would re-hide rows a returning player can see today — the
+      regression the ruling forbids by name. Every seed and every upgrade
+      latches revealed, every one already visible latches celebrated too (a
+      row nobody was ever curious about needs no popup), and the queue starts
+      empty either way. Runs after the year block, before reconcile() — offline
+      income credited at load can legitimately cross a threshold on a NEW
+      save, and that moment is allowed to queue normally. */
+  function migrateReveals(parsed) {
+    if (Object.prototype.hasOwnProperty.call(parsed, 'seedRevealed')) return null;
+    DATA.seeds.forEach((s) => {
+      state.seedRevealed[s.id] = true;
+      state.celebrated[`seed:${s.id}`] = true;
+    });
+    Object.keys(DATA.upgrades).forEach((k) => {
+      state.upgradeRevealed[k] = true;
+      state.celebrated[`upgrade:${k}`] = true;
+    });
+    return true;
+  }
+
   function load() {
     let raw = localStorage.getItem(SAVE_KEY);
     let migrated = false;
@@ -230,6 +269,12 @@ const Game = (() => {
     if (!raw) {
       ensureProgression();
       giveOpeningBag();
+      /* A brand-new save is not grandfathered — it derives normally, which
+         latches the free seeds and the next wall (arms 1 and 2) immediately
+         so the picker never opens on a wall of silhouettes with no advert.
+         Pre-celebrated, per the ruling: "no popup for seed 3 at minute one." */
+      refreshReveals();
+      birthCelebrate();
       return { migrated: false, fresh: true };
     }
     try {
@@ -494,6 +539,7 @@ const Game = (() => {
           number: Math.max(1, count(y.number) || 1),
           coinsEarned: Math.max(0, Number(y.coinsEarned) || 0),
           turnsCompleted: count(y.turnsCompleted),
+          revealsThisTurn: count(y.revealsThisTurn),
           stats: {
             orders: count(ys.orders),
             windfalls: count(ys.windfalls),
@@ -530,6 +576,21 @@ const Game = (() => {
         state.seedUnlocks = {};
         const su = parsed.seedUnlocks && typeof parsed.seedUnlocks === 'object' ? parsed.seedUnlocks : {};
         DATA.seeds.forEach((s) => { if (su[s.id]) state.seedUnlocks[s.id] = true; });
+        /* The curtain and the drip's three keys, individually re-merged with
+           the same junk-id filter — a seed or upgrade id that no longer exists
+           must not accumulate forever in a SURVIVES map. `celebrated` is keyed
+           by namespaced moment id rather than bare id, so it is filtered
+           against both known tables at once. */
+        state.seedRevealed = {};
+        const sr = parsed.seedRevealed && typeof parsed.seedRevealed === 'object' ? parsed.seedRevealed : {};
+        DATA.seeds.forEach((s) => { if (sr[s.id]) state.seedRevealed[s.id] = true; });
+        state.upgradeRevealed = {};
+        const ur = parsed.upgradeRevealed && typeof parsed.upgradeRevealed === 'object' ? parsed.upgradeRevealed : {};
+        Object.keys(DATA.upgrades).forEach((k) => { if (ur[k]) state.upgradeRevealed[k] = true; });
+        state.celebrated = {};
+        const cel = parsed.celebrated && typeof parsed.celebrated === 'object' ? parsed.celebrated : {};
+        DATA.seeds.forEach((s) => { if (cel[`seed:${s.id}`]) state.celebrated[`seed:${s.id}`] = true; });
+        Object.keys(DATA.upgrades).forEach((k) => { if (cel[`upgrade:${k}`]) state.celebrated[`upgrade:${k}`] = true; });
         state.blessed = (Array.isArray(parsed.blessed) ? parsed.blessed : [])
           .filter((b) => b && DATA.seeds.some((s) => s.id === b.seed))
           .map((b) => ({ seed: b.seed, year: Math.max(1, count(b.year) || 1) }));
@@ -656,12 +717,18 @@ const Game = (() => {
       // After the backfills, which give a legacy save the honest counts the
       // grandfather rules and the mastery conversion read.
       const yearGrant = migrateYear(parsed);
+      /* After the year block (lifetimeCoins is now honest, or honestly
+         backfilled), before reconcile() — offline income credited at load can
+         legitimately cross a threshold, and that crossing is allowed to queue
+         a moment normally rather than being swept into the grandfather. */
+      const revealsGrant = migrateReveals(parsed);
+      refreshReveals();
       if (migrated || decorRefund || progressionGrant || ticketGrant
-        || almanacGrant.paid.length || masteryBackfill.changed || yearGrant) saveNow();
+        || almanacGrant.paid.length || masteryBackfill.changed || yearGrant || revealsGrant) saveNow();
       return {
         migrated, fresh: false, decorRefund, progressionGrant, ticketGrant,
         almanacGrant: almanacGrant.paid.length ? almanacGrant : null,
-        yearGrant
+        yearGrant, revealsGrant
       };
     } catch (err) {
       console.warn('Save load failed', err);
@@ -886,6 +953,16 @@ const Game = (() => {
     stripFrom = '';
     ensureProgression();
     giveOpeningBag();
+    /* Not the settings reset's own concern the way a Turn or a load is — but
+       Game.reset() does not reload the page (the Settings panel calls it in
+       place), so nothing else will ever latch the free seeds and the next
+       wall for this fresh garden if this does not. Pre-celebrated for the
+       same reason a brand-new save is: nobody needs telling that Daisy or the
+       first locked seed exist. */
+    refreshReveals();
+    birthCelebrate();
+    sessionMomentsShown = 0;
+    lastMomentAt = 0;
     emit('grid');
     emit('panels');
     emit('currency');
@@ -1559,6 +1636,115 @@ const Game = (() => {
     let max = -1;
     DATA.seeds.forEach((s, i) => { if (seedUnlocked(s.id)) max = i; });
     return max;
+  }
+  /* The first (cheapest) seed that is not yet unlocked — ladder order is price
+     order by construction, so "lowest-priced locked seed" is just the first
+     index seedUnlocked() refuses. -1 once every seed is owned. */
+  function lowestLockedSeedIndex() {
+    return DATA.seeds.findIndex((s) => !seedUnlocked(s.id));
+  }
+
+  /* ---------------- the curtain — docs/47 ----------------
+     Derived, then latched: a getter evaluates the four reveal arms and writes
+     state.seedRevealed[id] = true on first truth. The latch never clears —
+     no path, Turn included, ever un-reveals a seed — and once true this
+     function is a pure lookup, never re-derived, so an old save's honestly-low
+     backfilled lifetimeCoins can never re-hide a row a player has already
+     seen (the grandfather migration in load() is what protects that). */
+  function seedRevealedNow(id) {
+    if (state.seedRevealed[id]) return true;
+    const idx = seedIndexOf(id);
+    if (idx < 0) return false;
+    if (seedUnlocked(id)) { state.seedRevealed[id] = true; return true; }               // arm 1 — free or bought
+    const price = seedUnlockPrice(id);
+    if (idx === lowestLockedSeedIndex()) { state.seedRevealed[id] = true; return true; } // arm 2 — the next wall, always
+    if (state.credits >= price) { state.seedRevealed[id] = true; return true; }         // arm 4 — the affordability law, never capped
+    /* arm 3 — you've saved 85% of the price. The one arm the per-Turn cap
+       gates: a big offline windfall can still reveal several seeds outright
+       through arm 4 above, but the "almost there" reveals are throttled so a
+       returning player does not meet a whole column un-silhouetted at once. */
+    if (price > 0 && state.lifetimeCoins >= price * YEAR().revealAt
+      && state.year.revealsThisTurn < YEAR().revealCapPerTurn) {
+      state.seedRevealed[id] = true;
+      state.year.revealsThisTurn += 1;
+      return true;
+    }
+    return false;
+  }
+
+  /* Upgrades carry no affordability law and no cap — every threshold is
+     reachable by earning alone, so this is a plain one-way latch on lifetime
+     gold. Absent or zero revealAt means always visible, which is how the four
+     starters and every harvester card behave without a special case. */
+  function upgradeRevealedNow(key) {
+    if (state.upgradeRevealed[key]) return true;
+    const def = DATA.upgrades[key];
+    if (!def) return false;
+    if (!def.revealAt || state.lifetimeCoins >= def.revealAt) {
+      state.upgradeRevealed[key] = true;
+      return true;
+    }
+    return false;
+  }
+
+  /* Called by load() (after the year block, before reconcile()), by the
+     picker's and shop's render paths, and on every 'currency' emit — cheap
+     (the whole ladder plus every core upgrade is ~30 comparisons) and
+     idempotent, so calling it more than a state change strictly requires is
+     never wrong, only redundant. */
+  function refreshReveals() {
+    DATA.seeds.forEach((s) => seedRevealedNow(s.id));
+    Object.keys(DATA.upgrades).forEach((k) => upgradeRevealedNow(k));
+  }
+
+  /* ---------------- the moments dialog — docs/47 ----------------
+     The queue is never stored — it is the gap between what is revealed and
+     what is celebrated, read fresh every time. A moment past the session cap
+     simply stays out of `celebrated`, so it surfaces on its own at the next
+     session's quiet beat with no separate "postponed" bookkeeping. */
+  let sessionMomentsShown = 0;
+  let lastMomentAt = 0;
+
+  function pendingMoments() {
+    const out = [];
+    DATA.seeds.forEach((s) => {
+      const key = `seed:${s.id}`;
+      if (state.seedRevealed[s.id] && !state.celebrated[key]) out.push({ kind: 'seed', id: s.id, key });
+    });
+    Object.keys(DATA.upgrades).forEach((k) => {
+      const key = `upgrade:${k}`;
+      if (state.upgradeRevealed[k] && !state.celebrated[key]) out.push({ kind: 'upgrade', id: k, key });
+    });
+    return out;
+  }
+  function nextMoment() {
+    return pendingMoments()[0] || null;
+  }
+  /* Marks everything currently pending celebrated without showing it or
+     spending a session slot — for the moment a garden is born (a fresh save,
+     or the Settings reset creating one in place). Arms 1 and 2 fire the
+     instant refreshReveals() runs on an empty save, and nobody needs telling
+     that Daisy or the first locked seed exist. */
+  function birthCelebrate() {
+    pendingMoments().forEach((m) => { state.celebrated[m.key] = true; });
+  }
+  /* The gap and the session cap ONLY — the structural guards (no open sheet,
+     no news dialog, the coach clear, the session's first interaction) are UI
+     state and live in ui.js, which calls this alongside its own checks. */
+  function momentReady() {
+    if (sessionMomentsShown >= DATA.moments.sessionCap) return false;
+    if (lastMomentAt && nowSeconds() - lastMomentAt < DATA.moments.gap) return false;
+    return Boolean(nextMoment());
+  }
+  /* Consumed only after the dialog has actually drawn — never on enqueue,
+     never on a discipline guard refusing to show it. */
+  function consumeMoment(key) {
+    if (state.celebrated[key]) return false;
+    state.celebrated[key] = true;
+    sessionMomentsShown += 1;
+    lastMomentAt = nowSeconds();
+    save();
+    return true;
   }
 
   function plotUnlockLevel(idx) {
@@ -4393,6 +4579,13 @@ const Game = (() => {
     state.year.turnsCompleted += 1;
     state.year.coinsEarned = 0;
     state.year.stats = d.year.stats;
+    /* The curtain's per-Turn reveal cap resets here — a deliberate, named
+       exception to "turnYear() is not touched": it clears a throttle counter
+       alongside the half-dozen other year-scoped fields already reset in this
+       block, and touches nothing the mint reads. Arms 1, 2 and 4 never
+       consult it, so nothing about "credit() and turnYear() stay pristine for
+       the mint" moves. */
+    state.year.revealsThisTurn = 0;
 
     /* Every slot regenerates so no standing order names a bloom the fresh
        year cannot yet grow — the pool reads seedUnlocks, which survive. */
@@ -5419,6 +5612,8 @@ const Game = (() => {
     repToNext, cumulativeRep, levelFromRep, repIntoLevel,
     seedUnlocked, seedUnlockLevel, plotAvailable,
     plotGate, plotUnlockLevel,
+    seedRevealedNow, upgradeRevealedNow, refreshReveals,
+    pendingMoments, nextMoment, momentReady, consumeMoment,
     claimQuest, stripQuest, activeQuests, questById,
     discoveredCount, discoveredOf, bestRarityOf, almanacMilestones,
     masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf,

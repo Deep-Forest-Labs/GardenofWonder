@@ -194,10 +194,17 @@
     return `<div class="pips">${s}${level > max ? `<span class="lvl-text">+${level - max}</span>` : ''}</div>`;
   }
 
+  /* Land Deed (`plotExpansion`) is deliberately absent — owner's ruling,
+     2026-09-02. It only ever unlocked plots the in-garden tap (`unlockPlot()`
+     in game.js) already unlocks, at a second, differently-priced path, so the
+     card was a confusing duplicate rather than a real choice. Its data,
+     effect and saved level all stay intact in game.js/data.js; it simply
+     never renders here, which also retires the whole "Land Deed reveal
+     carve-out" doc 47 specced — a card that never draws needs no reveal rule. */
   const CORE_UPGRADES = [
     'tapPower', 'holdSpeed', 'critChance', 'critMult', 'comboMeter',
     'rainDance', 'beeSwarm', 'ladybug',
-    'plotExpansion', 'autoWater', 'autoHarvest',
+    'autoWater', 'autoHarvest',
     'offlineRate', 'offlineHours'
   ];
 
