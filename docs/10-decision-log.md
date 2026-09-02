@@ -5,6 +5,57 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-01 (slice C, gate 5) — The gauntlet ran twice, and what it found was mostly invisible to a green suite
+
+**Eight critics over the shipped slice, every finding verified before it was believed.** The
+interesting thing is the shape of what it caught: the suite was green at 1,592 assertions
+throughout, and the four worst findings were things no assertion was ever going to see.
+
+- **Holly failed her own build gate.** Filled in plain black only **three** crown points read
+  against a ruling that says five or more and never two. The cause was arithmetic, not art: the
+  short points alternated to 0.66 of the long ones and topped out at 43.5 units against a petal ring
+  reaching 44, so four of seven were swallowed whole. 0.82 keeps the rhythm and loses none of them.
+  **The alternation, the base radius, the crown length and the petal scale are ONE measurement**,
+  and the code says so now — the next person to move any of them has to re-run the test.
+- **The sleeping face was unreachable code.** A tucked plant is by definition not ripe, so it is
+  never at stage 3, and the shut-eye arcs only existed there. **The entire sleeping study the owner
+  chose had never rendered once.** A screenshot of a ripe board cannot show you that, and neither
+  can a passing test.
+- **A power-up spent in Winter bought nothing**, silently. The band's POWER-UP button is not hidden
+  in a season room and boosts do not reach one, so a tap burned an unrepeatable consumable. The
+  owner's #11 ruling hides the running chip in a room it does not reach; this is the same rule one
+  step earlier, at the moment of spending.
+- **Holly's introduction was spent behind the plant picker.** Tapping a plot is the likeliest first
+  thing anybody does in a new room and it covers the screen; the lines went on drawing behind it and
+  the one-shot burned on lines nobody saw. `sayText()` cannot know — the bubble is genuinely
+  painted, just covered. **The meadow-signpost lesson at one more remove**, and the same answer.
+
+**And two tests that could not fail.** The Turn partition rig replaced `state.seen` with a
+three-key object, so both of this slice's new flags were witnessed at their DEFAULT and "`seen`
+survives the Turn verbatim" was testing nothing; it is built from `defaultState()`'s own keys now.
+And the Winter half of `reconcile()` — which doc 46 calls "new ground, not a mirror" — had no test
+at all. Bill 4 was vacuous for a third reason: `passiveIncomeRate()` returns zero on its first line
+without the drone, so it compared zero to zero. **The bill is 1,642 assertions now.**
+
+**One fix was itself wrong and had to be put back.** The `max-height:700px` rail rule was deleted as
+a leftover of the #11 filter — and it is not one. #11 is about MEANING (a chip doing nothing here
+should not be here); that rule is about SPACE (on a 667-tall phone the bed chip's row and the rail's
+row are the same 48px of band). Restored, and widened to Winter, which collides identically. **Two
+rules that look like one is how a correct rule gets deleted.**
+
+**Rejected:** widening the speech bubble for Holly (every one of her lines is inside the
+37-character budget the game already ships instead — a character does not get its own layout rule);
+a face on the stage-1 seedling (it has no head, the quilt covers the cotyledons, and forcing one is
+art made worse by a rule); and counting `currency` emits as the atomicity assertion (eight harvests
+drip reputation and a level grant emits on its own — the claim that survives is one write to the
+save and a wallet that moved once by the whole payout, and the realistic wrong implementation, a
+loop of eight single harvests, goes red on both).
+
+**Not done: a third clean round.** Every finding is fixed and the suite is green, but the critics
+have not been re-run against the result. That is the honest state of gate 5.
+
+---
+
 ## 2026-09-01 (slice C, the referee) — The play model is one file, seeded, and it found two things
 
 **`tools/play-model.js` exists**, and `year-sim.js` and `order-gold.js` both run on it. This is
