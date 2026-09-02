@@ -151,13 +151,21 @@ const Winter = (() => {
              iOS paints any strip below a short window with the flat body
              colour, and a hard edge there is the line the whole layout pass
              went looking for once already. -->
+        <linearGradient id="winter-haze" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="${P.haze}" stop-opacity="0"/>
+          <stop offset="0.45" stop-color="${P.haze}"/>
+          <stop offset="1" stop-color="${P.haze}" stop-opacity="0"/>
+        </linearGradient>
         <linearGradient id="winter-foot" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="${P.groundDark}" stop-opacity="0"/>
           <stop offset="1" stop-color="#4fae54"/>
         </linearGradient>
       </defs>
       <rect x="0" y="0" width="${w}" height="${h}" fill="url(#winter-sky)"/>
-      <rect x="0" y="${horizon - 40}" width="${w}" height="${h * 0.4}" fill="${P.haze}"/>
+      <!-- The haze fades. A flat rect drew a ruler-straight seam across the
+           sky at its own top edge — a hard line in a gradient is the one thing
+           a sky cannot have. -->
+      <rect x="0" y="${horizon - 40}" width="${w}" height="${Math.round(h * 0.4)}" fill="url(#winter-haze)"/>
       ${hills}
       ${hedge}
       ${trees}
@@ -183,12 +191,15 @@ const Winter = (() => {
       <rect x="0" y="0" width="100" height="100" fill="url(#wp-body-${i})"/>
       <ellipse cx="26" cy="22" rx="13" ry="11" fill="rgba(255,255,255,.14)"/>
       <ellipse cx="72" cy="62" rx="10" ry="8" fill="rgba(0,0,0,.12)"/>
-      <ellipse cx="50" cy="${80 + tilt * 0.3}" rx="22" ry="7" fill="#8d97a7" opacity=".55"/>
-      <ellipse cx="${34 + tilt}" cy="34" rx="9" ry="6" fill="#8a94a4" opacity=".5"/>
-      <ellipse cx="${70 - tilt}" cy="54" rx="7" ry="5" fill="#4f5763" opacity=".5"/>
-      <!-- Frost along the cell's own rim: the season on the object, not only
-           behind it. -->
-      <path d="M0 8 Q14 2 28 8 Q42 14 56 7 Q70 1 84 8 Q94 13 100 8 V0 H0 Z" fill="#e9f1f8" opacity=".7"/>
+      <!-- THE CELL'S OWN RAMP, and nothing else. Four values were invented here
+           on the first pass — including a second frost white two percent from
+           the declared one — which is exactly the silent addition docs/05's
+           fifth question exists to catch. The blemishes are the ramp's own
+           light and dark ends; the frost is the declared #eaf4fb. -->
+      <ellipse cx="50" cy="${80 + tilt * 0.3}" rx="22" ry="7" fill="#7d8798" opacity=".55"/>
+      <ellipse cx="${34 + tilt}" cy="34" rx="9" ry="6" fill="#7d8798" opacity=".5"/>
+      <ellipse cx="${70 - tilt}" cy="54" rx="7" ry="5" fill="#414854" opacity=".5"/>
+      <path d="M0 8 Q14 2 28 8 Q42 14 56 7 Q70 1 84 8 Q94 13 100 8 V0 H0 Z" fill="#eaf4fb" opacity=".7"/>
     </svg>`;
   }
 
@@ -328,7 +339,13 @@ const Winter = (() => {
         <g transform="translate(50 40)"><g ${st}>${f}</g>
           <circle r="6" fill="#fff3c4" stroke="${INK}" stroke-width="2.4"/>${eyes(-2, 5, 10)}</g>`;
     }
-    return `<svg viewBox="6 6 100 106" class="winter-bloom" aria-hidden="true">${body}</svg>`;
+    /* 88 WIDE FROM x=6, so the box's centre is 50 — which is where every one of
+       these drawings is centred. It was 100 wide from the same origin, putting
+       the centre at 56, and every ripe Winter bloom sat six percent left in its
+       cell. The height runs the full 106 to y=112 because that is where the
+       stems end; the sprout and bud boxes are shorter because their drawings
+       are. */
+    return `<svg viewBox="6 6 88 106" class="winter-bloom" aria-hidden="true">${body}</svg>`;
   }
 
   const wrap = (inner) => `<svg viewBox="6 6 88 92" class="winter-bloom" aria-hidden="true">${inner}</svg>`;
@@ -374,12 +391,18 @@ const Winter = (() => {
   }
 
   /* ---------- the Zs ----------
-     Solid white and DELIBERATELY UNOUTLINED, which is the one place the house
-     rule of "flat fill inside one thick outline" is broken on purpose — the
-     same exception critters.js takes, and for the same reason: these are a
-     wisp coming off a sleeper rather than a thing in the world. Geometry
-     copied from critters.js so a plant's sleep and a pet's sleep are one
-     grammar. Visible at rest; the drift is a flourish on top. */
+     critters.js draws these UNOUTLINED — the one place the house rule of "flat
+     fill inside one thick outline" is broken on purpose, because a Z is a wisp
+     off a sleeper rather than a thing in the world, and outlined at that size
+     they read as three hard graphic shapes stuck to its head.
+
+     WINTER PUTS THE OUTLINE BACK, and the reason is the exception's own
+     reason. That call was made over a GREEN garden, where white reads. Winter's
+     world is snow: unoutlined white Zs over it are invisible, which is not a
+     softer version of the effect but the absence of one. The outline is thin —
+     1.6 rather than the house 2.6 — so they stay a wisp rather than becoming
+     three signs. Geometry is still critters.js's, so a plant's sleep and a
+     pet's sleep are one grammar. Visible at rest; the drift is the flourish. */
   function zGlyph(x, y, s, i) {
     const t = s * 0.34;
     const d = `M${x} ${y} H${x + s} V${y + t} L${x + t * 1.4} ${y + s - t} H${x + s} V${y + s}`
@@ -387,7 +410,8 @@ const Winter = (() => {
     return `<path class="wi-z" style="--i:${i}" d="${d}"/>`;
   }
   function zzz() {
-    return `<svg viewBox="0 0 60 50" class="wi-zzz" aria-hidden="true"><g fill="#ffffff">
+    return `<svg viewBox="-2 -6 64 60" class="wi-zzz" aria-hidden="true">
+      <g fill="#ffffff" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round">
       ${zGlyph(2, 30, 10, 0)}${zGlyph(16, 15, 12, 1)}${zGlyph(32, -2, 14, 2)}
     </g></svg>`;
   }

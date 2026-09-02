@@ -3085,6 +3085,13 @@
           setTimeout(() => { if (resetArmed) { resetArmed = false; if (sheetMode === 'settings') renderSheet(false); } }, 4000);
         } else {
           resetArmed = false;
+          /* HOME FIRST, THEN RESET. A reset zeroes `turnsCompleted`, which
+             re-locks every season — and `season` is a plain module local that
+             the reset does not touch. Taken while standing in Fall or Winter it
+             left the player in a room their save could no longer reach: the
+             board renders, the gate never fires because nothing re-evaluates
+             it, and the way out is a swipe they have no reason to make. */
+          if (UI.seasonHere && UI.seasonHere() !== 'summer') UI.enterSeason('summer');
           Game.reset();
           UI.buildGarden();
           renderSheet(true);

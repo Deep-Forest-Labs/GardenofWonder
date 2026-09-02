@@ -395,12 +395,7 @@
     clearTimeout(introTimer);
     if (introStep < 0 || !open) return;
     const lines = (typeof FLOWER_LINES !== 'undefined' && FLOWER_LINES.hollyIntro) || [];
-    if (introStep >= lines.length) {
-      /* Every line has drawn. NOW the flag is spent. */
-      Game.consumeHollyIntro();
-      introStep = -1;
-      return;
-    }
+    if (introStep >= lines.length) { introStep = -1; return; }
     /* NOT BEHIND A SHEET. Tapping a plot is the likeliest first thing a player
        does in a new room, and it opens the plant picker over the whole screen —
        the intro would go on drawing behind it and spend its one-shot on lines
@@ -419,6 +414,13 @@
       return;
     }
     introStep += 1;
+    /* SPENT THE MOMENT THE LAST LINE HAS DRAWN, not on the tick after it. The
+       flag used to be consumed by the NEXT scheduled call, 2.9 seconds later —
+       so a player who swiped out of Winter in that window left it unspent and
+       got the whole introduction again on their next visit. "Consumed only
+       after the line has actually drawn" is satisfied here: this line is on
+       screen. */
+    if (introStep >= lines.length) { Game.consumeHollyIntro(); introStep = -1; return; }
     introTimer = setTimeout(queueIntro, 2900);
   }
 

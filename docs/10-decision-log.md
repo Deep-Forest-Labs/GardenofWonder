@@ -43,6 +43,27 @@ should not be here); that rule is about SPACE (on a 667-tall phone the bed chip'
 row are the same 48px of band). Restored, and widened to Winter, which collides identically. **Two
 rules that look like one is how a correct rule gets deleted.**
 
+**A third round, from the verifiers' own output, found seven more — and two of them were live.**
+The one-shot was **spent 2.9 seconds after the last line drew** rather than on the draw itself, so a
+player who swiped out in that window got the whole introduction again on their next visit; and a
+**Settings reset taken in Winter** left them standing in a season their save could no longer reach
+(the reset zeroes `turnsCompleted`, `season` is a module local it does not touch, and nothing
+re-evaluates the gate). Both fixed. Plus: every ripe Winter bloom sat **six percent left of centre**
+in its cell, because the stage-3 viewBox was 100 wide from x=6 while every drawing is centred on 50;
+the sky carried a **ruler-straight seam** where a flat haze rect met the gradient; the cell floor
+had **invented four values**, one of them a second frost white two percent from the declared one;
+and the Zs had been put somewhere white **twice** — first over the board's snow rail, then inside
+the top-right cell, which carries its own frost rim. They hang off the board's shoulder now and
+they carry the house outline, which `critters.js` deliberately omits: **that exception was decided
+over a green garden**, and the reason for it inverts over snow.
+
+**And Turn 3's gift was findable only by accident.** Fall gets two coach marks teaching its swipe;
+Winter got none, and `seen.winterSwipe` was written by `goSeason()` and read by nothing. It has a
+mark now, in Fall, pointing at Winter's tab — and the coach guard that suppresses the garden-facing
+marks in a season room had to be **narrowed rather than blanket**, because the season marks point at
+a tab, which is a real visible node there. That `:not(.season)` in the CSS is the same distinction,
+and a blanket JS guard would have silently cancelled the mark it was written beside.
+
 **Rejected:** widening the speech bubble for Holly (every one of her lines is inside the
 37-character budget the game already ships instead — a character does not get its own layout rule);
 a face on the stage-1 seedling (it has no head, the quilt covers the cotyledons, and forcing one is

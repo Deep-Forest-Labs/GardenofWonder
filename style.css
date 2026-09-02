@@ -4951,7 +4951,15 @@ button:focus-visible{
 /* CLEAR OF THE SNOW RAIL. White Zs over the board's white cap is white on
    white; they hang over the dark frame's right shoulder instead, which is the
    one part of this board that is reliably dark in both skies. */
-.wi-sleep{position:absolute;right:6px;top:12px;z-index:9;display:none;pointer-events:none}
+/* OUTSIDE the board, off its right shoulder. Twice now these have been put
+   somewhere white: first over the board's snow rail, then inside the top-right
+   cell — which carries its own white frost rim, so it was the same white-on-
+   white one step over. The board's own dark frame does not extend far enough
+   to hold them, so they hang beyond it, where the world is snow and the ink
+   outline is what makes them read. `overflow:visible` on the board is what
+   lets them. */
+.wi-sleep{position:absolute;right:-30px;top:-6px;z-index:9;display:none;pointer-events:none}
+.wi-board{overflow:visible}
 .wi-board.sleeping .wi-sleep{display:block}
 .wi-zzz{width:54px;height:44px;overflow:visible;display:block}
 /* Visible at rest, drifting as a flourish on top — the same rule the pack badge

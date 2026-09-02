@@ -1381,14 +1381,18 @@
        guard follows, and the menu drawer joined the list on 2026-08-31 — it
        covers the right two thirds of the screen, so a mark pointing into the
        garden lands on top of it. */
-    /* THE SEASON ROOMS JOIN THE LIST, 2026-09-01. `.in-fall`/`.in-winter`
-       display:none the coach in CSS, so it was never PAINTED there — but
-       `refreshCoach()` went on measuring a hidden node every 0.6s and parking
-       the bubble against a 0x0 rect, which is the recorded trap word for word.
-       Naming every room that can be up is the rule; two of them had been
-       missing since Fall shipped. */
-    if (UI.sheetMode() || gateOn || UI.hollowOpen() || UI.meadowOpen() || UI.menuOpen()
-      || season === 'fall' || season === 'winter') { hideCoach(); return; }
+    if (UI.sheetMode() || gateOn || UI.hollowOpen() || UI.meadowOpen() || UI.menuOpen()) { hideCoach(); return; }
+    /* THE SEASON ROOMS, and it has to be NARROW rather than a blanket bail.
+       `.in-fall`/`.in-winter` display:none every coach mark EXCEPT `.season` —
+       the ones teaching the way in and out point at a season tab, which is a
+       real visible node in those rooms and is the whole reason the CSS rule
+       carries a `:not()`. But the two marks below this line point INTO THE
+       GARDEN, which those rooms have hidden, so `refreshCoach()` measured a
+       0x0 rect every 0.6s and parked the bubble over the wallets — the
+       recorded trap word for word, and two rooms had been missing from the
+       list since Fall shipped. */
+    const inGarden = season === 'summer';
+    if (!inGarden && (!S.seen.intro || !S.seen.plot)) { hideCoach(); return; }
     if (!S.seen.intro) {
       if (coachTarget !== flowerBtn) showCoach(flowerBtn, 'Tap the flower!');
       el.coach.hidden = false;
@@ -1417,6 +1421,18 @@
       const node = el.seasonEdges.querySelector('.s-edge.r[data-season="fall"]');
       if (!node) { hideCoach(); return; }
       if (coachTarget !== node) showCoach(node, 'Swipe left for Fall', { swipe: 'left', side: 'r' });
+      el.coach.hidden = false;
+    /* AND ONE MORE FOR WINTER, once Fall has been found. Turn 3's gift is a
+       whole season, and a gift nobody can find is not a gift — the ceremony
+       names the tab and then the player is standing in a garden that looks
+       exactly as it did, which is the reason Fall got its pair. It waits for
+       `fallSwipe` so the two marks never compete for the same edge, and
+       `seen.winterSwipe` — written by `goSeason()` since the day Winter
+       shipped, and read by nothing until now — is what retires it. */
+    } else if (season === 'fall' && Game.winterOpen() && !S.seen.winterSwipe) {
+      const node = el.seasonEdges.querySelector('.s-edge.r[data-season="winter"]');
+      if (!node) { hideCoach(); return; }
+      if (coachTarget !== node) showCoach(node, 'Swipe left for Winter', { swipe: 'left', season: true, side: 'r' });
       el.coach.hidden = false;
     } else {
       hideCoach();
