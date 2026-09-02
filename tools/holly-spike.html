@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Holly — the character spike, slice C</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   holly-spike.html — the character gate for slice C.
+
+   Static. No game dependencies: no data.js, no flora.js, no
+   game.js. Everything here is drawn from scratch so the spike
+   can never break because the game moved, and so it stays
+   readable on a phone from the live URL.
+
+   The tokens and the material recipe below are COPIED from
+   style.css on purpose, and the Summer flower beside every
+   row is a hand-copy of Flora.talkingFlower(). A character
+   judged without the character she stands next to is not
+   judged at all.
+
+   THREE ROWS ARE THE GATE, not decoration:
+     * the 46px face row — the avatar picker's real size
+     * the black-silhouette row — the build gate from the
+       2026-09-01 Holly ruling
+     * the sleeping-plants row — new art, no stake attached
+   ========================================================= */
+
+:root{
+  --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+  --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad;
+  --paper-dim:#ebe5d9; --paper-dim-2:#d8d0c0;
+  --grass:#5cc45c; --coin:#ffc93c; --coin-d:#f08c00;
+  --r-lg:26px; --r-md:18px; --r-sm:12px;
+  --font:'Baloo 2', ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#efe3cd;color:var(--ink);
+  font-family:var(--font);font-weight:700;-webkit-text-size-adjust:100%}
+
+.page{max-width:1500px;margin:0 auto;padding:14px 12px 90px}
+h1{font-size:21px;margin:0 0 4px}
+h2{font-size:15px;margin:30px 0 4px;padding-top:14px;border-top:3px solid var(--ink)}
+.lede{font-size:13px;font-weight:600;line-height:1.5;color:#4a3524;margin:0 0 14px;max-width:74ch}
+.lede b{font-weight:800}
+.controls{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px;position:sticky;top:0;z-index:50;
+  background:#efe3cdEE;padding:8px 0;backdrop-filter:blur(3px)}
+.toggle{border:3px solid var(--ink);border-radius:999px;background:#e8d5b0;color:var(--ink);
+  padding:5px 12px;font:inherit;font-size:12px;box-shadow:0 3px 0 rgba(44,26,16,.35);cursor:pointer}
+.toggle[data-on="1"]{background:linear-gradient(180deg,#ffe066,var(--coin))}
+.toggle:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(44,26,16,.35)}
+
+.grid{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+figure{margin:0}
+figcaption{font-size:12.5px;font-weight:800;margin:0 0 6px;line-height:1.3}
+figcaption i{display:block;font-style:normal;font-weight:600;font-size:11.5px;color:#5c452f;margin-top:2px}
+.tag{display:inline-block;background:var(--ink);color:#ffeecd;border-radius:999px;
+  padding:1px 8px;font-size:10.5px;font-weight:800;margin-right:5px;vertical-align:1px}
+.note{font-size:11.5px;font-weight:600;line-height:1.45;color:#4a3524;margin:7px 0 0;
+  border-left:4px solid var(--ink-2);padding-left:8px;max-width:44ch}
+.note.q{border-color:#e8590c}
+.note.q::before{content:'QUESTION — ';font-weight:800;color:#e8590c}
+.note.d::before{content:'DECIDED — ';font-weight:800}
+body[data-notes="0"] .note{display:none}
+
+/* ---------- the stage a character is judged on ----------
+   A Winter cell at the size the board really gives it. The board is judged in
+   winter-spike.html; here it is only the ground Holly has to stand on, because
+   docs/05 says nothing is judged floating. */
+.stand{width:216px;height:250px;position:relative;border:4px solid var(--ink);
+  border-radius:var(--r-lg);overflow:hidden;
+  background:linear-gradient(180deg,#9fb6cc 0%,#cfe0ea 52%,#eef4f8 100%);
+  box-shadow:0 6px 0 rgba(44,26,16,.3)}
+.stand .snow{position:absolute;left:-6%;right:-6%;bottom:0;height:34%;
+  background:linear-gradient(180deg,#ffffff,#e4eef6 62%,#cfdfec);
+  border-radius:44% 56% 0 0 / 26px 26px 0 0}
+.stand .snow::after{content:'';position:absolute;left:0;right:0;top:9px;height:6px;
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,0))}
+.stand svg{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);
+  width:184px;height:auto;overflow:visible;
+  filter:drop-shadow(0 6px 0 rgba(44,26,16,.18))}
+.stand.dark{background:linear-gradient(180deg,#1c2740 0%,#2e3a58 56%,#46506e 100%)}
+.stand.dark .snow{background:linear-gradient(180deg,#c8d6e8,#9fb2cb 62%,#7b8fab)}
+
+/* ---------- the 46px face row ----------
+   The avatar picker's real size. A face that only works at 180px has failed. */
+.faces{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.face-col{text-align:center;font-size:11px;font-weight:800}
+.av{width:46px;height:46px;border-radius:50%;border:3px solid var(--ink);overflow:hidden;
+  background:radial-gradient(circle at 34% 28%,#ffffff,#e9eff5);
+  box-shadow:0 2px 0 var(--ink-2);display:grid;place-items:center;margin:0 auto 4px}
+.av svg{width:44px;height:44px;overflow:visible}
+.av.big{width:92px;height:92px}
+.av.big svg{width:88px;height:88px}
+.av.on{box-shadow:0 0 0 3px var(--coin),0 2px 0 var(--ink-2)}
+
+/* ---------- the black-silhouette row ----------
+   The build gate. brightness(0) flattens every fill and stroke to black, so
+   what is left is the contour and nothing else. */
+.sil svg{filter:brightness(0)}
+.sil .av{background:#fff}
+.sil-strip{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
+  background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);
+  padding:12px 14px;box-shadow:0 4px 0 var(--ink-2)}
+
+/* ---------- sleeping plants ---------- */
+.cell{width:150px;height:150px;position:relative;border:3.5px solid var(--ink);
+  border-radius:var(--r-md);overflow:hidden;
+  background:
+    radial-gradient(circle at 26% 22%,rgba(255,255,255,.20) 0 12%,transparent 13%),
+    radial-gradient(circle at 72% 62%,rgba(0,0,0,.10) 0 9%,transparent 10%),
+    linear-gradient(180deg,#7b8494,#656d7c 72%,#545b68);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.16),inset 0 -7px 0 rgba(0,0,0,.18),
+    0 4px 0 #3f4550,0 8px 14px rgba(44,26,16,.24)}
+.cell svg{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
+  width:140px;height:auto;overflow:visible}
+.cell .snowcap{position:absolute;left:-4px;right:-4px;top:-6px;height:16px;
+  background:#fff;border-radius:0 0 40% 40% / 0 0 14px 14px}
+
+/* ---------- the sleeping grammar, redrawn for plants ----------
+   Visibility is base style; motion is the flourish on top. A Z that only
+   exists once a keyframe has run is invisible wherever the clock is stopped —
+   the recorded lesson, and it caught the creature Zs already. */
+.hz{opacity:.72;transform-origin:50% 50%;
+  animation:hz-float 4.8s ease-in-out infinite;animation-delay:calc(var(--i) * -1.6s)}
+@keyframes hz-float{
+  0%{opacity:0;transform:translate(0,3px)}
+  14%{opacity:.75}
+  32%{transform:translate(-3.5px,-6px)}
+  56%{transform:translate(3.5px,-13px)}
+  80%{opacity:.5;transform:translate(-2.5px,-20px)}
+  100%{opacity:0;transform:translate(1px,-27px)}}
+.breathe{animation:hl-breathe 3.6s ease-in-out infinite;transform-origin:50% 96%}
+@keyframes hl-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.028)}}
+body[data-motion="0"] .hz{animation:none;opacity:.8}
+body[data-motion="0"] .breathe{animation:none}
+@media (prefers-reduced-motion:reduce){
+  .hz{animation:none;opacity:.8}
+  .breathe{animation:none}}
+
+.spec{background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);
+  padding:10px 14px;box-shadow:0 4px 0 var(--ink-2);font-size:12px;font-weight:600;
+  line-height:1.55;max-width:78ch;margin:10px 0 0}
+.spec b{font-weight:800}
+.spec ul{margin:6px 0 0;padding-left:18px}
+.swatch{display:inline-block;width:13px;height:13px;border:2px solid var(--ink);
+  border-radius:3px;vertical-align:-2px;margin-right:3px}
+</style>
+</head>
+<body data-notes="1" data-motion="1">
+<div class="page">
+<h1>Holly — the winter rose. Character spike, slice C.</h1>
+<p class="lede">Four takes on Winter's hero flower, drawn to the Talking Flower's construction and
+judged beside her. The brief is the 2026-09-01 Holly ruling: <b>pale porcelain face, near-black plum
+outer petals with hot-pink undersides, a frost crown of five points or more, angled lashed eyes, a
+smug smile, one hot-pink accent.</b> Flat inks, the house outline, no translucency and no sparkle
+shaders — the ice lives in palette and shape. <b>Her sass aims at the Summer flower, never at the
+player.</b> Three rows below are gates rather than decoration: the 46px face row is the avatar
+picker's real size, the black-silhouette row is the ruling's own build gate, and the sleeping-plants
+row is new art with no stake attached.</p>
+
+<div class="controls">
+  <button class="toggle" data-on="1" id="tNotes">Notes</button>
+  <button class="toggle" data-on="1" id="tMotion">Motion</button>
+  <button class="toggle" data-on="0" id="tNight">Night</button>
+</div>
+
+<h2>1 · The four takes, standing where she stands</h2>
+<p class="lede">All four share the face, the eyes and the mouth. What differs is the
+<b>silhouette</b> — which is the only thing row 3 can see.</p>
+<div class="grid" id="takes"></div>
+
+<h2>2 · GATE — the face at 46px, and at 92px beside it</h2>
+<p class="lede">The avatar picker renders faces at 46px. The Summer flower is on the left as the
+ruler. A take that mushes here has failed, however good it looks at full size.</p>
+<div class="sil-strip"><div class="faces" id="faces46"></div></div>
+<p class="note q">The picker draws a face at the Talking Flower's scale inside a circular mask, and
+Holly's crown is <b>entirely outside that circle</b> — every take above is wearing a crown you
+cannot see. Fitting the whole head inside the disc costs her face size:</p>
+<div style="height:8px"></div>
+<div class="sil-strip"><div class="faces" id="faces46fit"></div></div>
+<p class="note">Fitted, at the same 46px. Her face is 17% smaller and the eyes are close to their
+floor — but she is <i>Holly</i> in the row rather than a dark disc.</p>
+<div style="height:12px"></div>
+<div class="sil-strip"><div class="faces" id="faces92"></div></div>
+
+<h2>3 · GATE — the black silhouette</h2>
+<p class="lede">Filled as a plain black shape, Holly must read as no one but herself. The ruling's
+own words: <b>no two-point dark silhouette over a pale face</b> — the crown carries five points or
+more, the forehead mark is winter botany, and there is no tail. The Summer flower is on the left so
+the pair can be told apart at a glance.</p>
+<div class="sil-strip sil"><div class="faces" id="sil46"></div></div>
+<p class="note q">Unfitted, in black, at picker size: <b>four identical discs.</b> This is the row
+that decides whether the crown is worth the face size.</p>
+<div style="height:8px"></div>
+<div class="sil-strip sil"><div class="faces" id="sil46fit"></div></div>
+<p class="note">Fitted, in black, at picker size — the same four takes, now telling themselves
+apart.</p>
+<div style="height:12px"></div>
+<div class="sil-strip sil"><div class="grid" id="silFull"></div></div>
+
+<h2>4 · New art — plants asleep under quilts</h2>
+<p class="lede">The sleeping grammar the creatures already have — <b>shut-eye arcs, drifting Zs, the
+slow breathe</b> — redrawn for a plant. Four studies of where the sleep actually lands. Nothing is
+staked on this: the tuck-in takes nothing away and adds nothing but the snowfall, so these must read
+as <i>cosy</i>, never as a warning.</p>
+<div class="grid" id="sleepers"></div>
+
+<h2>5 · What this spike decided, and what it is asking</h2>
+<div class="spec" id="specBox"></div>
+</div>
+
+<script>
+/* ===========================================================
+   The palette. Every value is either an existing token restated
+   or a declared component ramp with a reason — docs/05 check 5.
+   =========================================================== */
+const INK = '#2c1a10';
+const P = {
+  /* Holly's plum ramp. Near-black on purpose: the ruling asks for a dark
+     character in a sweet world, and a mid-purple would read as Epic. */
+  plumD:'#241426', plumM:'#3b2140', plumL:'#563462',
+  /* NOT A NEW PINK. #ff5d95 / #ffb3d1 is gp-talker — the Summer flower's own
+     petal gradient. The rival wears her rival's colour, on the inside. */
+  pink:'#ff5d95', pinkL:'#ffb3d1',
+  /* The frost ramp. No existing white is a material; --gem is the gem currency
+     and may not be borrowed for something that is not a gem. */
+  ice:'#eaf4fb', iceD:'#bcd6e8', iceS:'#93b6d0',
+  /* Porcelain. Summer's face is #ffe9a8, warm; this is its cool answer. */
+  face:'#f7eef2', faceS:'#cbb0c0',
+  leaf:'#2f5d43', leafL:'#3f7a57',
+  mouth:'#a83250'          /* restated from the Talking Flower's own mouth */
+};
+
+/* ---- the petal paths, copied from flora.js so shapes stay house shapes ---- */
+const PETALS = {
+  round:'M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z',
+  point:'M0,-40 C9,-28 12,-14 0,-2 C-12,-14 -9,-28 0,-40 Z',
+  lotus:'M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z',
+  slim:'M0,-40 C8,-40 12,-29 11,-19 C10,-8 6,-2 0,-2 C-6,-2 -10,-8 -11,-19 C-12,-29 -8,-40 0,-40 Z'
+};
+
+function ring(n, path, scale, rot, fill){
+  let s = '';
+  for (let i = 0; i < n; i++){
+    const a = (360 / n) * i + rot;
+    s += '<path d="' + PETALS[path] + '" fill="' + fill + '" transform="rotate(' + a.toFixed(1) + ') scale(' + scale + ')"/>';
+  }
+  return s;
+}
+
+/* An arc of petals rather than a full ring — the standing collar in take C. */
+function arc(n, path, scale, from, to, fill){
+  let s = '';
+  for (let i = 0; i < n; i++){
+    const a = from + (to - from) * (n === 1 ? 0.5 : i / (n - 1));
+    s += '<path d="' + PETALS[path] + '" fill="' + fill + '" transform="rotate(' + a.toFixed(1) + ') scale(' + scale + ')"/>';
+  }
+  return s;
+}
+
+/* THE FROST CROWN. Five points minimum — the ruling's hard number, and it is
+   drawn AFTER the petals so the points break past them: a crown buried inside
+   the petal ring is a crown that does not exist at 46px or in black. Lengths
+   alternate long/short from the centre out, because a row of equal spikes
+   reads as a comb and frost does not grow that way. Bases sit at r=23, inside
+   the face, so the face circle covers them the way a tiara's band is covered. */
+function crown(n, len, spread, tilt, w){
+  let s = '';
+  for (let i = 0; i < n; i++){
+    const t = n === 1 ? 0 : (i / (n - 1)) * 2 - 1;
+    const a = (t * spread + (tilt || 0)) * Math.PI / 180;
+    const r0 = 23;
+    const alt = Math.round(Math.abs(i - (n - 1) / 2)) % 2 === 0 ? 1 : 0.66;
+    const L = len * (1 - 0.26 * Math.abs(t)) * alt;
+    const sx = Math.sin(a), cy = -Math.cos(a);
+    const bx = sx * r0, by = cy * r0;
+    const tx = sx * (r0 + L), ty = cy * (r0 + L);
+    const px = Math.cos(a) * (w || 5.4), py = Math.sin(a) * (w || 5.4);
+    s += '<path d="M' + (bx - px).toFixed(1) + ',' + (by - py).toFixed(1)
+       + ' L' + tx.toFixed(1) + ',' + ty.toFixed(1)
+       + ' L' + (bx + px).toFixed(1) + ',' + (by + py).toFixed(1) + ' Z" fill="' + P.ice + '"/>';
+  }
+  return s;
+}
+
+/* ONE EYE, mirrored for the other. TWO passes were wrong before this one, and
+   both failures are worth keeping written down: a round ellipse under a brow
+   line reads as spectacles, and so does a pale almond inside a thick ink
+   contour — on a PORCELAIN face a white sclera ringed in ink is a lens.
+   The house already has the right grammar and it is not the Talking Flower's:
+   critters.js draws an eye as a SOLID INK shape with one white shine. The
+   Summer flower can afford a sclera because her face is saturated yellow;
+   Holly cannot. So her eye is one filled ink almond, angled down toward the
+   nose, with two short lashes off the outer tip. Flat inks, one shape, and it
+   survives 46px and black. */
+function eye(side, tilt){
+  const m = side < 0 ? '' : ' scale(-1 1)';
+  return '<g transform="translate(' + (side * 10.5) + ' -2.5)' + m + '">'
+    + '<g transform="rotate(' + (-tilt) + ')">'
+    + '<path d="M-6.8,0.1 C-4.4,-3.7 2.4,-5.8 7.4,-3.8 C6.6,1 2.4,4.8 -2.4,4.6 C-5.2,4.5 -6.9,2.4 -6.8,0.1 Z"'
+    + ' fill="' + INK + '"/>'
+    + '<circle cx="-1.9" cy="-0.9" r="1.35" fill="#fff"/>'
+    + '<path d="M7.4,-4.4 l4.1,-3.2 M8.6,-1.4 l4.4,-1.8" fill="none" stroke="' + INK
+    + '" stroke-width="2.4" stroke-linecap="round"/>'
+    + '</g></g>';
+}
+
+/* The smug smile: one corner lifted. A symmetric curve is the Summer flower's,
+   and two identical smiles is two identical characters. */
+const MOUTH = '<path d="M-8,10.4 Q0.5,15.8 8.6,8.2" fill="' + P.mouth + '" stroke="' + INK
+  + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+
+/* Winter botany for the forehead, never a skull — the ruling names it, and it
+   names the alternatives too: snowflake, berry, thorn. Six spokes with barbs
+   is a snowflake; a four-point star is a shader glint, which is the thing this
+   character is not allowed to be made of. */
+function frostMark(x, y, s){
+  let arms = '';
+  for (let i = 0; i < 3; i++){
+    const a = (i * 60) * Math.PI / 180;
+    const dx = Math.cos(a) * 7, dy = Math.sin(a) * 7;
+    const bx = Math.cos(a + 0.9) * 2.8, by = Math.sin(a + 0.9) * 2.8;
+    const cx = Math.cos(a - 0.9) * 2.8, cy = Math.sin(a - 0.9) * 2.8;
+    arms += '<path d="M' + (-dx).toFixed(1) + ',' + (-dy).toFixed(1) + ' L' + dx.toFixed(1) + ',' + dy.toFixed(1) + '"/>'
+      + '<path d="M' + (dx * 0.62).toFixed(1) + ',' + (dy * 0.62).toFixed(1) + ' l' + bx.toFixed(1) + ',' + by.toFixed(1) + '"/>'
+      + '<path d="M' + (-dx * 0.62).toFixed(1) + ',' + (-dy * 0.62).toFixed(1) + ' l' + cx.toFixed(1) + ',' + cy.toFixed(1) + '"/>';
+  }
+  return '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')" fill="none" stroke="' + P.iceS
+    + '" stroke-width="2.2" stroke-linecap="round">' + arms + '</g>';
+}
+
+function berry(x, y, r){
+  return '<g transform="translate(' + x + ' ' + y + ')">'
+    + '<path d="M0,' + (-r - 7) + ' L0,' + (-r - 1) + '" stroke="' + P.leaf + '" stroke-width="2.4" stroke-linecap="round"/>'
+    + '<circle r="' + r + '" fill="' + P.pink + '" stroke="' + INK + '" stroke-width="2.4"/>'
+    + '<circle cx="' + (-r * 0.34) + '" cy="' + (-r * 0.4) + '" r="' + (r * 0.28) + '" fill="' + P.pinkL + '"/></g>';
+}
+
+const FACE =
+  '<circle cx="0" cy="0" r="26" fill="' + P.face + '" stroke="' + INK + '" stroke-width="3"/>'
+  + '<circle cx="0" cy="0" r="26" fill="url(#ghollyface)" style="mix-blend-mode:multiply" opacity=".34"/>';
+
+/* ===========================================================
+   THE FOUR TAKES. Everything above is shared; each take is a
+   different silhouette, which is the only thing row 3 sees.
+   =========================================================== */
+const TAKES = {
+  A: {
+    name:'A · The Crown',
+    sub:'Seven tall frost points. Rose-form plum, pink showing past the tips.',
+    petals:
+      ring(8, 'round', 1.10, 22, P.pink)          /* the underside ring, showing past the plum */
+      + ring(8, 'round', 1.0, 0, P.plumD)
+      + ring(6, 'round', 0.68, 26, P.plumM),
+    crown: crown(7, 34, 68, 0, 5.0),
+    extra: frostMark(0, -15.5, 0.86),
+    tilt: 0, eyeTilt: 13
+  },
+  B: {
+    name:'B · The Winterberry',
+    sub:'Five broad points, and the accent hangs off her: two winterberries.',
+    petals:
+      ring(6, 'lotus', 1.06, 30, P.pink)
+      + ring(6, 'lotus', 1.0, 0, P.plumD)
+      + ring(5, 'lotus', 0.6, 36, P.plumM),
+    crown: crown(5, 30, 56, 0, 7.4),
+    extra: berry(-30, 15, 5.2) + berry(30, 15, 5.2),
+    tilt: 0, eyeTilt: 11
+  },
+  C: {
+    name:'C · The Ruff',
+    sub:'A standing plum collar, pink-lined, with the crown set inside it.',
+    petals:
+      arc(11, 'lotus', 1.46, -104, 104, P.plumD)
+      + arc(9, 'lotus', 1.18, -92, 92, P.pink)
+      + arc(7, 'lotus', 0.96, -76, 76, P.plumM)
+      + ring(3, 'round', 0.70, 180, P.plumD),
+    crown: crown(6, 27, 46, 0, 5.6),
+    extra: '',
+    tilt: 0, eyeTilt: 14
+  },
+  D: {
+    name:'D · The Hellebore',
+    sub:'The real flower nods. Five tepals, the crown swept with the tilt.',
+    petals:
+      ring(5, 'round', 1.16, 36, P.pink)
+      + ring(5, 'round', 1.08, 0, P.plumD)
+      + '<path d="' + PETALS.round + '" fill="' + P.pink + '" transform="rotate(72) scale(1.08)"/>'
+      + ring(5, 'round', 0.56, 36, P.plumM),
+    crown: crown(6, 37, 52, 27, 5.0),
+    extra: frostMark(0, -15.5, 0.86) + berry(31, 13, 4.8),
+    tilt: -13, eyeTilt: 12
+  }
+};
+
+function defs(){
+  return '<defs>'
+    + '<radialGradient id="ghollyface" cx="50%" cy="34%" r="70%">'
+    + '<stop offset="52%" stop-color="#ffffff"/><stop offset="100%" stop-color="' + P.faceS + '"/>'
+    + '</radialGradient>'
+    + '<linearGradient id="gtalker" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="#ffb3d1"/><stop offset="100%" stop-color="#ff5d95"/>'
+    + '</linearGradient>'
+    + '<radialGradient id="gface" cx="50%" cy="35%" r="70%">'
+    + '<stop offset="55%" stop-color="#ffffff"/><stop offset="100%" stop-color="#ffc978"/>'
+    + '</radialGradient></defs>';
+}
+
+/* The head only, centred on 0,0 — what the picker draws. Order is load-bearing:
+   petals, THEN the crown over them, then the face over the crown's bases. */
+function head(k){
+  const t = TAKES[k];
+  return '<g transform="rotate(' + t.tilt + ')">'
+    + '<g stroke="' + INK + '" stroke-width="3" stroke-linejoin="round">' + t.petals + '</g>'
+    + '<g stroke="' + INK + '" stroke-width="3" stroke-linejoin="round">' + t.crown + '</g>'
+    + FACE
+    + t.extra
+    + eye(-1, t.eyeTilt) + eye(1, t.eyeTilt)
+    + MOUTH
+    + '</g>';
+}
+
+/* The whole plant, on the Talking Flower's own construction. */
+function plant(k){
+  return '<svg viewBox="0 0 120 142" aria-hidden="true">' + defs()
+    + '<g transform="translate(0 10)">'
+    + '<path d="M60,132 C60,114 59,102 60,92" fill="none" stroke="' + P.leaf + '" stroke-width="9" stroke-linecap="round"/>'
+    + '<path d="M60,114 C46,116 34,108 30,96 C44,90 56,100 60,114 Z" fill="' + P.leafL + '" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/>'
+    + '<path d="M60,106 C74,108 86,100 90,88 C76,82 64,92 60,106 Z" fill="' + P.leafL + '" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/>'
+    + '<g transform="translate(60 56)">' + head(k) + '</g>'
+    + '</g></svg>';
+}
+
+/* Two ways to put a head in a 46px disc, and the difference is the finding.
+   `fit=false` is what the picker does today — it draws the head at the Talking
+   Flower's scale and the circular mask takes whatever hangs outside it, which
+   for Holly is her entire crown. `fit=true` shrinks the head until the crown is
+   inside the circle, and pays for it in face size. */
+function faceSvg(k, size, fit){
+  const sc = fit ? 0.78 : 0.94;
+  const cy = fit ? 55 : 52;
+  return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" aria-hidden="true">'
+    + defs() + '<g transform="translate(50 ' + cy + ') scale(' + sc + ')">' + head(k) + '</g></svg>';
+}
+
+/* ---- the Summer flower, hand-copied from Flora.talkingFlower() ---- */
+function talkerHead(){
+  const petal = 'M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z';
+  let r = '';
+  for (let i = 0; i < 8; i++) r += '<path d="' + petal + '" fill="url(#gtalker)" transform="rotate(' + (i * 45) + ') scale(1.02)"/>';
+  return '<g stroke="#2c1a10" stroke-width="3" stroke-linejoin="round">' + r + '</g>'
+    + '<circle cx="0" cy="0" r="26" fill="#ffe9a8" stroke="#2c1a10" stroke-width="3"/>'
+    + '<circle cx="0" cy="0" r="26" fill="url(#gface)" style="mix-blend-mode:multiply" opacity=".35"/>'
+    + '<g transform="translate(-9.5 -4)"><ellipse rx="6.2" ry="7.4" fill="#fffdf6" stroke="#2c1a10" stroke-width="2.4"/>'
+    + '<circle r="3.4" fill="#2c1a10"/><circle cx="-1.4" cy="-2" r="1.3" fill="#fff"/></g>'
+    + '<g transform="translate(9.5 -4)"><ellipse rx="6.2" ry="7.4" fill="#fffdf6" stroke="#2c1a10" stroke-width="2.4"/>'
+    + '<circle r="3.4" fill="#2c1a10"/><circle cx="-1.4" cy="-2" r="1.3" fill="#fff"/></g>'
+    + '<ellipse cx="-16" cy="6" rx="4.6" ry="3.2" fill="#ff9ec1"/>'
+    + '<ellipse cx="16" cy="6" rx="4.6" ry="3.2" fill="#ff9ec1"/>'
+    + '<path d="M-8,10 Q0,17 8,10" fill="#a83250" stroke="#2c1a10" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+}
+function talkerFace(size){
+  return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" aria-hidden="true">'
+    + defs() + '<g transform="translate(50 52) scale(0.94)">' + talkerHead() + '</g></svg>';
+}
+function talkerPlant(){
+  return '<svg viewBox="0 0 120 142" aria-hidden="true">' + defs()
+    + '<g transform="translate(0 10)">'
+    + '<path d="M60,132 C60,114 59,102 60,92" fill="none" stroke="#4bb257" stroke-width="9" stroke-linecap="round"/>'
+    + '<path d="M60,114 C46,116 34,108 30,96 C44,90 56,100 60,114 Z" fill="#57c15b" stroke="#2c1a10" stroke-width="3" stroke-linejoin="round"/>'
+    + '<path d="M60,106 C74,108 86,100 90,88 C76,82 64,92 60,106 Z" fill="#57c15b" stroke="#2c1a10" stroke-width="3" stroke-linejoin="round"/>'
+    + '<g transform="translate(60 56)">' + talkerHead() + '</g></g></svg>';
+}
+
+/* ===========================================================
+   SLEEPING PLANTS — new art. The creature grammar redrawn:
+   shut-eye arcs, drifting Zs, the slow breathe.
+   =========================================================== */
+
+/* The Zs. Solid white, deliberately unoutlined — the one place the house rule
+   of "flat fill inside one thick outline" is broken on purpose, because these
+   are a wisp coming off a sleeper rather than a thing in the world. Copied in
+   geometry from critters.js so a plant's sleep and a pet's sleep are one
+   grammar. */
+function zGlyph(x, y, s, i){
+  const t = s * 0.34;
+  const d = 'M' + x + ' ' + y + ' H' + (x + s) + ' V' + (y + t) + ' L' + (x + t * 1.4) + ' ' + (y + s - t)
+    + ' H' + (x + s) + ' V' + (y + s) + ' H' + x + ' V' + (y + s - t) + ' L' + (x + s - t * 1.4) + ' ' + (y + t) + ' H' + x + ' Z';
+  return '<path class="hz" style="--i:' + i + '" d="' + d + '"/>';
+}
+function zzz(x, y){
+  return '<g fill="#ffffff" transform="translate(' + x + ' ' + y + ')">'
+    + zGlyph(0, 0, 9, 0) + zGlyph(11, -13, 11, 1) + zGlyph(24, -28, 13, 2) + '</g>';
+}
+
+/* The shut eye. A creature's arc sits on a body; a plant's sits on the bloom,
+   which is the whole redraw. Same 3.6-weight round-capped arc. */
+function shutEyes(y, gap, w){
+  const h = w * 0.46;
+  return '<g fill="none" stroke="' + INK + '" stroke-width="3.4" stroke-linecap="round">'
+    + '<path d="M' + (-gap - w / 2) + ' ' + y + ' q' + (w / 2) + ' ' + h + ' ' + w + ' 0"/>'
+    + '<path d="M' + (gap - w / 2) + ' ' + y + ' q' + (w / 2) + ' ' + h + ' ' + w + ' 0"/></g>';
+}
+
+/* The quilt. Patchwork, because a plain blanket is a placeholder — and the
+   patches are the paper family plus three cool ones, declared in the notes. */
+const QUILT = ['#fff8e7','#dbe8f2','#ffeecd','#e8d7e4','#ffe0ad','#ffd0e0'];
+function quilt(w, h, y, scallop){
+  const cols = 3, rows = 2;
+  const cw = w / cols, ch = h / rows;
+  let s = '';
+  for (let r = 0; r < rows; r++){
+    for (let c = 0; c < cols; c++){
+      s += '<rect x="' + (-w / 2 + c * cw).toFixed(1) + '" y="' + (y + r * ch).toFixed(1) + '" width="' + cw.toFixed(1)
+        + '" height="' + ch.toFixed(1) + '" fill="' + QUILT[(r * cols + c) % QUILT.length] + '"/>';
+    }
+  }
+  /* The scalloped hem, so a blanket reads as cloth rather than as a box. */
+  let hem = 'M' + (-w / 2) + ' ' + (y + h);
+  const n = 5, sw = w / n;
+  for (let i = 0; i < n; i++){
+    hem += ' q' + (sw / 2) + ' ' + (scallop) + ' ' + sw + ' 0';
+  }
+  hem += ' V' + (y + h) + ' Z';
+  return '<g stroke="' + INK + '" stroke-width="3" stroke-linejoin="round">'
+    + '<g>' + s + '</g>'
+    + '<path d="' + hem + '" fill="#fff8e7"/>'
+    + '<rect x="' + (-w / 2) + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="none"/>'
+    + '</g>'
+    /* the lit top fold — the house material's own lit edge, opaque, never rgba */
+    + '<rect x="' + (-w / 2 + 2) + '" y="' + (y + 2) + '" width="' + (w - 4) + '" height="4" fill="#fffdf7"/>';
+}
+
+/* A generic winter bloom to put to bed — a Snowdrop, three hanging bells. */
+function snowdrop(scale, sleeping){
+  const s = scale || 1;
+  return '<g transform="translate(70 78) scale(' + s + ')">'
+    + '<path d="M0,44 C0,24 -1,10 0,-2" fill="none" stroke="' + P.leaf + '" stroke-width="6" stroke-linecap="round"/>'
+    + '<g stroke="' + INK + '" stroke-width="2.8" stroke-linejoin="round">'
+    + '<path d="M0,-4 C-16,-4 -22,8 -19,20 C-16,30 -8,34 0,32 C8,34 16,30 19,20 C22,8 16,-4 0,-4 Z" fill="#ffffff"/>'
+    + '<path d="M0,2 C-9,2 -12,10 -10,17 C-8,23 -4,25 0,24 Z" fill="#eef6fb"/>'
+    + '</g>'
+    + (sleeping ? shutEyes(12, 9, 9) : '')
+    + '</g>';
+}
+
+const SLEEPERS = [
+  { name:'S1 · Under the whole quilt',
+    sub:'Only the bloom is out. The plot is a made bed.',
+    note:'The strongest read of "tucked in" — and the weakest read of "there is a garden under here". A player who plants six and covers them sees six identical bumps.',
+    svg: function(){
+      return '<svg viewBox="0 0 140 150" aria-hidden="true"><g class="breathe">'
+        + snowdrop(0.7, true).replace('translate(70 78)','translate(70 52)')
+        + quilt(126, 54, 78, 9)
+        + '</g>' + zzz(96, 44) + '</svg>';
+    }},
+  { name:'S2 · Tucked to the shoulders',
+    sub:'The quilt folds across the stem. The plant sleeps above it.',
+    note:'RECOMMENDED. The bloom is still legible, which keeps the board readable while it is covered — and the sleep is on the plant, where the grammar says it goes.',
+    svg: function(){
+      return '<svg viewBox="0 0 140 150" aria-hidden="true"><g class="breathe">'
+        + snowdrop(0.86, true)
+        + quilt(122, 34, 104, 8)
+        + '</g>' + zzz(98, 50) + '</svg>';
+    }},
+  { name:'S3 · The cell sleeps, not the plant',
+    sub:'A patchwork cap over the whole cell. Nothing shows.',
+    note:'Cheapest to draw and the least to look at. It also loses the count: a tucked bed becomes six identical squares, and "2 kept blooms waiting" has nothing on the board to point at.',
+    svg: function(){
+      return '<svg viewBox="0 0 140 150" aria-hidden="true"><g class="breathe">'
+        + quilt(132, 92, 46, 11)
+        + '</g>' + zzz(96, 40) + '</svg>';
+    }},
+  { name:'S4 · No quilt — the plants just sleep',
+    sub:'Heads nod, eyes shut, Zs drift. The tuck reads on the chip.',
+    note:'The honest minimum, and it survives reduced motion for free. But the tuck-in is the season’s ritual, and a ritual with no object is a button that changes a label.',
+    svg: function(){
+      return '<svg viewBox="0 0 140 150" aria-hidden="true"><g class="breathe">'
+        + '<g transform="rotate(-9 70 130)">' + snowdrop(0.9, true) + '</g>'
+        + '</g>' + zzz(100, 54) + '</svg>';
+    }}
+];
+
+/* =========================== render =========================== */
+function figTake(k){
+  const t = TAKES[k];
+  return '<figure><figcaption><span class="tag">' + k + '</span>' + t.name.replace(/^[A-D] · /, '')
+    + '<i>' + t.sub + '</i></figcaption>'
+    + '<div class="stand"><span class="snow"></span>' + plant(k) + '</div></figure>';
+}
+
+const takesEl = document.getElementById('takes');
+takesEl.innerHTML =
+  '<figure><figcaption><span class="tag">REF</span>The Summer flower<i>The ruler. Hand-copied from Flora.talkingFlower().</i></figcaption>'
+  + '<div class="stand" style="background:linear-gradient(180deg,#7ec8f2,#bfe9ff 58%,#e9f8ff)">'
+  + '<span class="snow" style="background:linear-gradient(180deg,#79cf7d,#5cc45c 62%,#3f9d45)"></span>'
+  + talkerPlant() + '</div></figure>'
+  + Object.keys(TAKES).map(figTake).join('');
+
+function faceRow(host, size, fit){
+  let h = '<div class="face-col"><div class="av' + (size > 60 ? ' big' : '') + '">' + talkerFace(size - 2) + '</div>Summer</div>';
+  Object.keys(TAKES).forEach(function(k){
+    h += '<div class="face-col"><div class="av' + (size > 60 ? ' big' : '') + (k === 'A' ? ' on' : '') + '">'
+      + faceSvg(k, size - 2, fit) + '</div>' + k + '</div>';
+  });
+  document.getElementById(host).innerHTML = h;
+}
+faceRow('faces46', 46, false);
+faceRow('faces46fit', 46, true);
+faceRow('faces92', 92, false);
+faceRow('sil46', 46, false);
+faceRow('sil46fit', 46, true);
+
+document.getElementById('silFull').innerHTML =
+  '<figure><figcaption><span class="tag">REF</span>Summer</figcaption>'
+  + '<div class="stand" style="background:#fffdf7"><span class="snow" style="background:#fffdf7"></span>'
+  + talkerPlant() + '</div></figure>'
+  + Object.keys(TAKES).map(function(k){
+      return '<figure><figcaption><span class="tag">' + k + '</span>'
+        + TAKES[k].name.replace(/^[A-D] · /, '') + '</figcaption>'
+        + '<div class="stand" style="background:#fffdf7"><span class="snow" style="background:#fffdf7"></span>'
+        + plant(k) + '</div></figure>';
+    }).join('');
+
+document.getElementById('sleepers').innerHTML = SLEEPERS.map(function(s){
+  return '<figure><figcaption>' + s.name.replace(/^S\d · /, '<span class="tag">' + s.name.split(' · ')[0] + '</span>')
+    + '<i>' + s.sub + '</i></figcaption>'
+    + '<div class="cell"><span class="snowcap"></span>' + s.svg() + '</div>'
+    + '<p class="note">' + s.note + '</p></figure>';
+}).join('');
+
+document.getElementById('specBox').innerHTML =
+  '<b>Decided in the drawing, and reversible with one word from you:</b>'
+  + '<ul>'
+  + '<li><b>Her hot pink is the Summer flower’s own pink.</b> <span class="swatch" style="background:#ff5d95"></span><code>#ff5d95</code> is <code>gp-talker</code>’s bottom stop, already in the game. The rival wears her rival’s colour on the inside of her petals — and docs/05 adds a <i>use</i> of an existing colour rather than a new hue.</li>'
+  + '<li><b>No cheeks.</b> The Summer flower blushes; Holly does not. Takes A and D wear a small drawn frost mark instead — winter botany, per the ruling, never a skull.</li>'
+  + '<li><b>Three new ramps</b>, declared for docs/05 check 5: the plum <span class="swatch" style="background:#241426"></span><span class="swatch" style="background:#3b2140"></span><span class="swatch" style="background:#563462"></span> (near-black on purpose — a mid-purple would read as Epic), the frost <span class="swatch" style="background:#eaf4fb"></span><span class="swatch" style="background:#bcd6e8"></span><span class="swatch" style="background:#93b6d0"></span> (<code>--gem</code> is the gem currency and may not be borrowed), and porcelain <span class="swatch" style="background:#f7eef2"></span><span class="swatch" style="background:#cbb0c0"></span> (the cool answer to Summer’s <code>#ffe9a8</code>). The mouth, the eye whites and the ink are all restated, not invented.</li>'
+  + '<li><b>The quilt patches</b> are the paper family plus three cool ones <span class="swatch" style="background:#dbe8f2"></span><span class="swatch" style="background:#e8d7e4"></span><span class="swatch" style="background:#ffd0e0"></span>. A patchwork of cream alone is a bandage.</li>'
+  + '</ul>'
+  + '<b>RULED 2026-09-01 — the owner spent this gate on play rather than on reading '
+  + '(<i>"go with your recommendation on everything; I need to go in there and play with it"</i>), '
+  + 'so these closed on the builder’s picks. The reasoning is in the gate-1 entry of the decision log.</b>'
+  + '<ul>'
+  + '<li><b>Take A, the Crown.</b> Seven frost points, rose-form plum, pink past the tips. It reads loudest at 46px and it is the least ambiguous silhouette that is <i>still a flower</i> — C is more distinctive in black but reads as a sunflower at picker size.</li>'
+  + '<li><b>Sleeping study S2</b>, tucked to the shoulders. The bloom stays legible while it is covered, so a tucked bed is still a bed you can read.</li>'
+  + '<li><b>She keeps the face shading.</b> It is the Talking Flower’s own construction restated, not a new treatment.</li>'
+  + '<li><b>Fitted in the avatar picker.</b> This one was a finding, not a preference: unfitted, all four takes are four identical dark discs at 46px. Her crown is her identity and it costs 17% of her face to keep it.</li>'
+  + '</ul>';
+
+/* ---- controls ---- */
+function bind(id, attr){
+  const b = document.getElementById(id);
+  b.addEventListener('click', function(){
+    const on = b.dataset.on === '1' ? '0' : '1';
+    b.dataset.on = on;
+    document.body.dataset[attr] = on;
+  });
+}
+bind('tNotes', 'notes');
+bind('tMotion', 'motion');
+document.getElementById('tNight').addEventListener('click', function(){
+  const b = document.getElementById('tNight');
+  const on = b.dataset.on === '1' ? '0' : '1';
+  b.dataset.on = on;
+  document.querySelectorAll('#takes .stand').forEach(function(s, i){
+    if (i === 0) return;
+    s.classList.toggle('dark', on === '1');
+  });
+});
+</script>
+</body>
+</html>

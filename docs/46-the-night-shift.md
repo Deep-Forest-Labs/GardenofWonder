@@ -241,7 +241,24 @@ filter and tooltip guard rather than re-implementing; **the stages pass owns the
    studies. `tools/winter-spike.html` — every Winter screen and state: the board under snow, the
    tuck button and tucked bed, the morning shimmer and Collect All with the snowfall stated, the
    chip, the ceremony's gate card, Holly's intro moment, the plant picker with real clocks.
-2. **The owner's annotations build verbatim** — the motion-gate contract.
+   **DONE, 2026-09-01** — both are live and both are the record of what was decided:
+   [holly-spike](https://deep-forest-labs.github.io/GardenofWonder/tools/holly-spike.html) ·
+   [winter-spike](https://deep-forest-labs.github.io/GardenofWonder/tools/winter-spike.html).
+2. **The owner's annotations build verbatim** — the motion-gate contract. **CLOSED, 2026-09-01**:
+   the owner spent the gate on play rather than on reading — *"go with your recommendation on
+   everything; I need to go in there and play with it"* — so every open question on both spikes
+   was ruled by the builder and written down in the 2026-09-01 gate-1 entry of
+   [10-decision-log.md](10-decision-log.md), which is where they are argued rather than here.
+
+   **The as-built answers, so this document stays true:** Holly is **take A**, the seven-point
+   crown; she joins the avatar picker **fitted**, because the picker's circular mask clips her
+   crown off entirely and a dark disc beside the Summer flower has not identified her; the plants
+   sleep **tucked to the shoulders**, bloom above the quilt; the board is **M1**, a dark
+   cold-frame timber frame with mid frozen-earth cells and snow on the rail — the dark-body,
+   mid-cell polarity of docs/05's tier table, not Fall's inversion; the strip below the board
+   carries **one button whose verb is the bed's state** (Tuck → Tucked in → Collect all), and it
+   is absent on an empty bed exactly as Fall's Collect All is; **no falling snow this slice**.
+   Holly's hot pink is `#ff5d95`, which is `gp-talker`'s own bottom stop rather than a new hue.
 3. **Engine as simulation first** (the phase-1 pattern): `winter.js` under the live game, the
    test bill green, the measurement run with its prerequisites — the live game unchanged (Winter
    sits behind a Turn-3 gate regardless).

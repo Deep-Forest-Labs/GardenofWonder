@@ -5,6 +5,79 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-01 (slice C, gate 1) — The two spikes are up, and the owner ruled on all of them at once
+
+**`tools/holly-spike.html` and `tools/winter-spike.html` are live**, and the owner's verdict was
+not an annotation but a delegation: *"go with your recommendation on everything — I need to go in
+there and play with it and see how it feels, versus trying to read over this."* So gate 1 closed
+on the builder's picks, recorded here because a decision nobody wrote down is a decision that gets
+re-litigated. **The motion-gate contract still held**: the spikes were built, pushed and put in
+front of the owner before a line of Winter shipped, and it was the owner who chose to spend the
+gate on play rather than on reading.
+
+**The picks, each with the reason that decided it:**
+
+| Question | Ruled | Why |
+| --- | --- | --- |
+| Holly's look | **Take A, the Crown** | Seven frost points, rose-form plum, pink showing past the tips. It reads loudest at 46px and it is the least ambiguous silhouette that is still *a flower* — take C's standing ruff is more distinctive in black and reads as a sunflower at picker size. |
+| The avatar picker | **Fitted** | See below; this one was a finding, not a preference. |
+| The sleeping plants | **S2, tucked to the shoulders** | The bloom stays legible while it is covered, so a tucked bed is still a bed you can read — and the sleep lands on the plant, which is where the grammar says it goes. S3 (a quilt over the whole cell) loses the count the chip is pointing at. |
+| The board | **M1 — dark cold-frame timber, mid frozen-earth cells, snow on the rail** | docs/05's four tiers, unchanged. |
+| The empty bed | **No button** | Fall hides Collect All when there is nothing to collect; Winter hides the tuck when there is nothing to tuck. The chip teaches the rule either way. |
+| Falling snow | **Not this slice** | A layer costs its backing store whether it is drawn or not, and Winter already has the shimmer and the quilts. It is an addition, not a foundation. |
+| Holly's face shading | **Kept** | It is the Talking Flower's own construction restated, not a new treatment. |
+
+**The three things the spikes found that nobody had written down.**
+
+- **The avatar picker clips Holly's crown off entirely.** The picker draws a face at the Talking
+  Flower's scale inside a circular mask, and every point of Holly's crown is outside that circle —
+  so at 46px, in black, all four takes were four identical discs. Fitting the whole head inside
+  the disc costs 17% of her face and the eyes land near their floor. **Fitted wins**: a picker row
+  where the second character in the game is a dark circle beside the first one is a row that has
+  not identified her at all. The row is in the spike, both ways, so the trade is visible rather
+  than argued.
+- **A pale face cannot wear the Talking Flower's eyes.** Two passes failed before the third
+  worked, and both failures are worth keeping: a round ellipse under a brow line reads as
+  spectacles, and so does a pale almond inside a thick ink contour — on porcelain, a white sclera
+  ringed in ink *is* a lens. The house already had the right grammar and it is `critters.js`, not
+  `flora.js`: a creature's eye is a **solid ink shape with one white shine**. The Summer flower can
+  afford a sclera because her face is saturated yellow. Holly cannot.
+- **A crown drawn inside the petal ring does not exist.** It has to be drawn *after* the petals and
+  reach past them, with its bases hidden under the face the way a tiara's band is. The first pass
+  put it behind and it vanished at every size.
+
+**Winter's board runs Summer's polarity, not Fall's.** The world is snow, so the board is the
+**dark body** and the cells are the **mid body** inside it — the canonical arrangement in docs/05's
+tier table. The first pass inverted it (a mid frame with near-black cells) on the theory that white
+blooms need dark ground, and it cost both the ink bloom outline and the ink empty-marker, which
+simply disappeared. Two ramps are declared in docs/05 with their reasons: the frame
+`#3f4959 / #313947 / #262c37` lip `#191e26`, and the cell `#7d8798 / #68717f / #565e6b` lip
+`#414854`.
+
+**Holly's hot pink is the Summer flower's own pink.** `#ff5d95` is `gp-talker`'s bottom stop,
+already in the file. It adds a *use* of an existing colour rather than a hue, which is the standing
+rule — and the rivalry then says itself without a line of dialogue: the dark one is lined with the
+bright one's colour on the inside of her petals.
+
+**Rejected at this gate:** a tuck button and a Collect All in the same strip (they would fight for
+the same 132px clearance the band's two buttons force on Fall — one button whose *verb* is the
+bed's state says the ritual better anyway, Tuck → Tucked in → Collect all); gold on the tuck button
+(gold means *you can have this*, and a tuck pays nothing — it takes the drained paper family, which
+is what the game already uses for asleep); a pale-blue clock pill in the plant picker (it sits
+beside `.stat.gem` and a currency colour may not be borrowed for something that is not that
+currency — the clock takes plain cream, as Fall's does); cheeks on Holly (the Summer flower
+blushes; Holly does not — she wears a drawn snowflake on her brow instead, which is the ruling's
+own list of winter botany); and a four-point sparkle for that mark (a glint is a shader, and this
+character is explicitly not made of shaders).
+
+**One more, found by rendering rather than by reading:** a phone's top scenery band is almost
+entirely under the HUD, so two bare trees standing up into it landed behind the bed chip. They are
+a treeline along the horizon now. Fall's recorded lesson is that a season's scene has two visible
+bands; this is the same lesson one step further along — on a phone the *top* band is thinner than
+it looks in the file.
+
+---
+
 ## 2026-09-01 (ruling) — The night shift is specified: the tuck-in, the snowfall, and a spec that was attacked before it was believed
 
 **The owner adopted the design desk's Winter recommendation in full** — the two-beat ritual (tuck

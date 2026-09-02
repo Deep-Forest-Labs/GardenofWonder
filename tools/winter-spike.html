@@ -1,0 +1,1032 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Winter and the night shift — the wireframe spike, slice C</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   winter-spike.html — the wireframe gate for slice C.
+
+   Static. No game dependencies: no data.js, no flora.js, no
+   game.js. Everything is drawn from scratch so the spike can
+   never break because the game moved, and so it stays
+   readable on a phone from the live URL.
+
+   The tokens, the metrics and the material recipe below are
+   COPIED from style.css on purpose — including .fl-board,
+   .fl-plot, .fl-chip and .fl-collect verbatim in geometry,
+   because Winter mirrors Fall's markup and a layout judged at
+   the wrong proportions is not judged at all.
+
+   WINTER NEVER USES .plot OR data-stage. The four-stage growth
+   block is Summer's and the icon exporter's anchors live in it.
+   Every board cell below is a wi-* class, mirroring fl-*.
+   ========================================================= */
+
+:root{
+  --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+  --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad;
+  --paper-dim:#ebe5d9; --paper-dim-2:#d8d0c0; --paper-dim-edge:#bcb0a0;
+  --grass:#5cc45c; --grass-d:#3f9d45;
+  --coin:#ffc93c; --coin-d:#f08c00; --gem:#8ce0ff; --seed:#7bd88f; --seed-l:#c9f5cf;
+  --r-lg:26px; --r-md:18px; --r-sm:12px;
+  --font:'Baloo 2', ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+
+  /* WINTER'S RAMPS. Declared here for docs/05 check 5, with the reason each
+     one could not reuse something. The world is snow — near-white — so both
+     of the board's tiers have to be darker than the world, which is the
+     opposite polarity to Fall's trug on olive ground. */
+  /* The frame: a cold timber cold-frame, and it is the DARK body — the second
+     of docs/05's four tiers, doing against snow what the garden's planter does
+     against the lawn. Fall's trug is warm and Summer's planter is soil; neither
+     reads as cold, and a warm brown board in a snow field is Summer with the
+     lights off. Drawn dark rather than mid on the first pass's evidence: a
+     mid-value board on a near-white world had no figure at all. */
+  --wi-frame:#3f4959; --wi-frame-2:#313947; --wi-frame-3:#262c37; --wi-frame-lip:#191e26;
+  /* The cell: frozen earth, the MID body — lighter inside the darker board,
+     exactly as Summer's plots sit lighter inside Summer's planter. It has to
+     stay light enough for an INK empty-marker and an ink bloom outline to read
+     on it; the first pass made the cells near-black and both vanished. */
+  --wi-cell:#7d8798; --wi-cell-2:#68717f; --wi-cell-3:#565e6b; --wi-cell-lip:#414854;
+  /* Snow, and its blue shadow. */
+  --wi-snow:#ffffff; --wi-snow-2:#e4eef6; --wi-snow-3:#cfdfec; --wi-snow-sh:#b6cbdd;
+  /* Frost, for the kept mark and the crown. --gem is the gem currency and may
+     not be borrowed for something that is not a gem (docs/05). */
+  --wi-frost:#eaf4fb; --wi-frost-2:#bcd6e8; --wi-frost-3:#93b6d0;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#efe3cd;color:var(--ink);
+  font-family:var(--font);font-weight:700;-webkit-text-size-adjust:100%}
+
+.page{max-width:1600px;margin:0 auto;padding:14px 12px 90px}
+h1{font-size:21px;margin:0 0 4px}
+h2{font-size:15px;margin:32px 0 4px;padding-top:14px;border-top:3px solid var(--ink)}
+.lede{font-size:13px;font-weight:600;line-height:1.5;color:#4a3524;margin:0 0 14px;max-width:76ch}
+.lede b{font-weight:800}
+.controls{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px;position:sticky;top:0;z-index:60;
+  background:#efe3cdEE;padding:8px 0;backdrop-filter:blur(3px)}
+.toggle{border:3px solid var(--ink);border-radius:999px;background:#e8d5b0;color:var(--ink);
+  padding:5px 12px;font:inherit;font-size:12px;box-shadow:0 3px 0 rgba(44,26,16,.35);cursor:pointer}
+.toggle[data-on="1"]{background:linear-gradient(180deg,#ffe066,var(--coin))}
+.toggle:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(44,26,16,.35)}
+
+.grid{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+figure{margin:0;width:390px;max-width:100%}
+figcaption{font-size:12.5px;font-weight:800;margin:0 0 6px;line-height:1.3}
+figcaption i{display:block;font-style:normal;font-weight:600;font-size:11.5px;color:#5c452f;margin-top:2px}
+.tag{display:inline-block;background:var(--ink);color:#ffeecd;border-radius:999px;
+  padding:1px 8px;font-size:10.5px;font-weight:800;margin-right:5px;vertical-align:1px}
+.note{font-size:11.5px;font-weight:600;line-height:1.45;color:#4a3524;margin:7px 0 0;
+  border-left:4px solid var(--ink-2);padding-left:8px}
+.note.q{border-color:#e8590c}
+.note.q::before{content:'QUESTION — ';font-weight:800;color:#e8590c}
+.note.d::before{content:'DECIDED — ';font-weight:800}
+body[data-notes="0"] .note{display:none}
+
+/* ---------- the phone ---------- */
+.phone{position:relative;width:390px;height:844px;overflow:hidden;
+  border:5px solid var(--ink);border-radius:36px;box-shadow:0 8px 0 rgba(44,26,16,.3);
+  background:#dfeaf3;--sat:59px;--sab:34px;user-select:none;
+  --bottom-gap:max(10px, calc(var(--sab) - 12px))}
+
+/* ---------- Winter's scenery ----------
+   Two visible bands and not one canvas: the board covers roughly y25%–70% on a
+   phone, so the horizon and its hedge go in the top band and the ground and
+   its props go in the bottom one. Anything composed into the middle is drawn
+   and then hidden — Fall shipped that way once. */
+.scenery{position:absolute;inset:0}
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,#9fb6cc 0%,#c3d8e6 46%,#eef4f8 100%)}
+.sun{position:absolute;left:72%;top:11%;width:70px;height:70px;border-radius:50%;
+  background:radial-gradient(circle,#ffffff 38%,#e8f2fb 66%,rgba(232,242,251,0) 70%)}
+.hills{position:absolute;left:-6%;right:-6%;top:18%;height:130px;
+  background:radial-gradient(ellipse 62% 100% at 28% 100%,#b9cbdb 0 70%,transparent 72%),
+             radial-gradient(ellipse 72% 100% at 76% 100%,#a3b8cc 0 70%,transparent 72%)}
+.hedge{position:absolute;left:-2%;right:-2%;top:calc(18% + 96px);height:34px;
+  background:repeating-linear-gradient(90deg,#2f5238 0 20px,#264429 20px 40px);
+  -webkit-mask-image:radial-gradient(ellipse 60% 130% at 50% 100%,#000 0 70%,transparent 72%);
+  mask-image:radial-gradient(ellipse 60% 130% at 50% 100%,#000 0 70%,transparent 72%);
+  -webkit-mask-size:38px 100%;mask-size:38px 100%;-webkit-mask-repeat:repeat-x;mask-repeat:repeat-x}
+.hedge::after{content:'';position:absolute;left:0;right:0;top:1px;height:7px;
+  background:repeating-linear-gradient(90deg,var(--wi-snow) 0 26px,transparent 26px 38px)}
+.ground{position:absolute;left:0;right:0;bottom:0;height:36%;
+  background:linear-gradient(180deg,var(--wi-snow) 0%,var(--wi-snow-2) 46%,var(--wi-snow-3) 100%);
+  border-radius:46% 54% 0 0 / 30px 30px 0 0}
+.ground::before{content:'';position:absolute;left:6%;right:6%;top:34px;height:9px;border-radius:999px;
+  background:var(--wi-snow-sh);opacity:.5}
+.ground::after{content:'';position:absolute;left:0;right:0;bottom:0;height:44px;
+  background:linear-gradient(180deg,rgba(207,223,236,0),var(--wi-snow-3))}
+.treeline{position:absolute;left:0;right:0;top:calc(18% + 62px);height:52px;pointer-events:none}
+.vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 90% 70% at 50% 42%,transparent 40%,rgba(44,26,16,.22) 100%);
+  -webkit-mask-image:linear-gradient(180deg,#000 0 74%,transparent 92%);
+  mask-image:linear-gradient(180deg,#000 0 74%,transparent 92%)}
+
+.phone.night .sky{background:linear-gradient(180deg,#1c2740 0%,#2e3a58 52%,#46506e 100%)}
+.phone.night .sun{background:radial-gradient(circle,#eef2ff 40%,#cdd6ef 66%,rgba(205,214,239,0) 70%);left:70%;top:9%;width:52px;height:52px}
+.phone.night .hills{background:radial-gradient(ellipse 62% 100% at 28% 100%,#3d4a68 0 70%,transparent 72%),
+             radial-gradient(ellipse 72% 100% at 76% 100%,#2f3c57 0 70%,transparent 72%)}
+.phone.night .hedge{background:repeating-linear-gradient(90deg,#1e3626 0 20px,#182c1e 20px 40px)}
+.phone.night .hedge::after{background:repeating-linear-gradient(90deg,#c8d6e8 0 26px,transparent 26px 38px)}
+.phone.night .ground{background:linear-gradient(180deg,#c8d6e8 0%,#a6b8d0 46%,#8497b4 100%)}
+.phone.night .ground::after{background:linear-gradient(180deg,rgba(132,151,180,0),#8497b4)}
+
+/* ---------- the interface column, unchanged from every other room ---------- */
+.ui{position:absolute;inset:0;z-index:20;display:grid;
+  grid-template-rows:auto auto auto minmax(0,1fr) auto;
+  grid-template-columns:minmax(0,1fr);
+  padding:calc(var(--sat) + 8px) 10px var(--bottom-gap) 10px;
+  gap:6px;max-width:560px;margin:0 auto}
+.hud{grid-row:1;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.wallets{display:flex;gap:6px;flex-wrap:wrap}
+.wallet{display:flex;align-items:center;gap:5px;padding:4px 9px 4px 5px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:999px;
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18);
+  font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;line-height:1}
+.w-icon{width:19px;height:19px;flex:none} .w-icon svg{width:100%;height:100%;display:block}
+.round-btn{width:40px;height:40px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:50%;
+  box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.2)}
+.round-btn svg{width:21px;height:21px}
+.meter{position:relative;overflow:hidden;isolation:isolate}
+.meter .fill{position:absolute;left:0;top:0;bottom:0;width:var(--p,0%);z-index:-1;
+  background:linear-gradient(180deg,var(--seed-l),var(--seed));border-right:2px solid rgba(44,26,16,.25)}
+.quest-strip{grid-row:2;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;
+  width:100%;padding:5px 8px 5px 5px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  border:3px solid var(--ink);border-radius:18px;
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.16)}
+.q-pip{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(180deg,#ffe066,var(--coin));border:3px solid var(--ink);font-size:13px;font-weight:800}
+.q-bar{position:relative;height:22px;border-radius:999px;border:2.5px solid var(--ink);background:#e9dcc3;overflow:hidden}
+.q-bar i{position:absolute;left:0;top:0;bottom:0;width:46%;background:linear-gradient(180deg,#8ce99a,#51cf66)}
+.q-bar > span{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;
+  padding:0 8px;font-size:11px;font-weight:800}
+.rail{grid-row:3;display:flex;gap:6px;min-height:33px}
+.stage{grid-row:4;position:relative;display:grid;place-items:center;min-height:0;padding:2px 0 88px}
+.dock{grid-row:5;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+.dock-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  padding:7px 4px 6px;min-height:56px;background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22)}
+.dock-ico{width:24px;height:24px} .dock-ico svg{width:100%;height:100%;display:block}
+.dock-label{font-size:11px;font-weight:800;line-height:1}
+
+/* the band's two buttons — NOT hidden in Winter, and the reason Collect All is
+   narrow. 34px in from each edge, exactly as in the live game. */
+.fpill{position:absolute;left:34px;bottom:calc(var(--sab) + 74px);z-index:8;padding:7px 13px;font-size:12.5px;font-weight:800;
+  border:3px solid var(--ink);border-radius:999px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18)}
+.fround{position:absolute;right:34px;bottom:calc(var(--sab) + 66px);z-index:8;width:52px;height:52px;border-radius:50%;
+  display:grid;place-items:center;border:3px solid var(--ink);
+  background:linear-gradient(180deg,#ffe98a,var(--coin));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 13px rgba(44,26,16,.2)}
+.fround svg{width:26px;height:26px}
+
+/* ---------- THE WINTER BOARD ----------
+   Geometry copied from .fl-board / .fl-plot. Class names are wi-*, mirroring
+   fl-*, and nothing here is .plot or data-stage. */
+.wi-wrap{position:relative;display:grid;place-items:center}
+.wi-board{
+  --gap:clamp(6px, 2.2vw, 13px);
+  position:relative;display:grid;width:330px;height:330px;
+  grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:var(--gap);padding:calc(var(--gap) * .85);
+  border:4px solid var(--ink);border-radius:26px;
+  /* The board's own texture: planed timber, cross-grained. A surface with no
+     texture at all reads as a placeholder. */
+  background:
+    repeating-linear-gradient(94deg, rgba(255,255,255,.09) 0 3px, transparent 3px 15px),
+    linear-gradient(180deg,var(--wi-frame) 0%, var(--wi-frame-2) 44%, var(--wi-frame-3) 100%);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.30),
+    inset 0 -9px 0 rgba(0,0,0,.20),
+    0 9px 0 var(--wi-frame-lip),
+    0 18px 26px rgba(44,26,16,.32);
+}
+/* Snow lying along the frame's top rail — the season on the object rather than
+   only behind it. Opaque, and it sits ON the board, so it is not a lip. */
+.wi-board::before{
+  content:'';position:absolute;left:-2px;right:-2px;top:-9px;height:15px;
+  border-radius:12px 12px 40% 40% / 12px 12px 9px 9px;
+  background:linear-gradient(180deg,var(--wi-snow),var(--wi-snow-2));
+  border:3px solid var(--ink);border-bottom:0;pointer-events:none;
+}
+/* Armed restates the WHOLE stack — a box-shadow modifier that adds a rim and
+   forgets the lip deletes the lip in the one state everybody is looking at. */
+.wi-board.armed{
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.30),
+    inset 0 -9px 0 rgba(0,0,0,.20),
+    0 9px 0 var(--wi-frame-lip),
+    0 18px 26px rgba(44,26,16,.32),
+    0 0 0 4px var(--coin),
+    0 0 30px 10px rgba(255,201,60,.42);
+}
+.wi-plot{
+  position:relative;border-radius:var(--r-md);border:3px solid var(--ink);
+  background:
+    radial-gradient(circle at 26% 22%, rgba(255,255,255,.14) 0 12%, transparent 13%),
+    radial-gradient(circle at 72% 62%, rgba(0,0,0,.12) 0 9%, transparent 10%),
+    linear-gradient(180deg,var(--wi-cell) 0%, var(--wi-cell-2) 72%, var(--wi-cell-3) 100%);
+  box-shadow:0 4px 0 var(--wi-cell-lip), 0 8px 14px rgba(44,26,16,.24);
+  display:block;overflow:visible;isolation:isolate;padding:0;
+  transition:transform .1s ease, box-shadow .1s ease}
+.wi-plot:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wi-cell-lip), 0 4px 8px rgba(44,26,16,.22)}
+/* The lit top edge and the shaded bottom ride an OVERLAY — an inset box-shadow
+   paints under an element's content, and the cell has an opaque floor. */
+.wi-plot::after{content:'';position:absolute;inset:0;border-radius:15px;pointer-events:none;z-index:6;
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.12), inset 0 -7px 0 rgba(0,0,0,.22)}
+.wi-floor{position:absolute;inset:0;border-radius:15px;overflow:hidden;line-height:0}
+.wi-floor svg{width:100%;height:100%;display:block}
+.wi-slot{position:absolute;inset:0;display:grid;place-items:center;z-index:2;line-height:0}
+.wi-slot svg{width:88%;height:88%;overflow:visible}
+.wi-empty{position:absolute;inset:0;display:none;place-items:center;z-index:2;opacity:.62}
+/* Summer's own marker size (30%), not Fall's oversized 46% — punch list #12 is
+   open and Winter is not going to add a third size to the set. */
+.wi-empty svg{width:30%;height:30%;max-width:44px}
+.wi-plot[data-state="empty"] .wi-empty{display:grid}
+.wi-ready{position:absolute;top:-9px;right:-6px;z-index:8;display:none;place-items:center;
+  width:24px;height:24px;border-radius:50%;border:3px solid var(--ink);
+  background:linear-gradient(180deg,#ffe98a,var(--coin));
+  box-shadow:0 2px 0 var(--ink-2);font-size:13px;font-weight:800;line-height:1}
+.wi-plot[data-state="ready"] .wi-ready{display:grid}
+.wi-plot[data-state="ready"]{box-shadow:0 4px 0 var(--wi-cell-lip), 0 8px 14px rgba(44,26,16,.24), 0 0 0 3px var(--coin)}
+.wi-wait{position:absolute;left:50%;bottom:15px;transform:translateX(-50%);z-index:7;
+  padding:2px 7px;border:2px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);font-size:10.5px;font-weight:800;line-height:1;white-space:nowrap}
+.wi-bar{position:absolute;left:12%;right:12%;bottom:5px;height:7px;border-radius:999px;z-index:7;
+  border:2px solid var(--ink);background:#e9dcc3;overflow:hidden;display:none}
+.wi-plot[data-state="grow"] .wi-bar{display:block}
+.wi-bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#cfe6f7,#7fb6dd)}
+.wi-flower-cell{display:grid;place-items:center;position:relative;overflow:visible}
+.wi-flower-cell svg{width:112%;height:112%;overflow:visible;
+  filter:drop-shadow(0 6px 0 rgba(44,26,16,.22))}
+
+/* THE KEPT MARK — a frost rim, and it is a BASE STYLE, not an animation.
+   Where a state animates, reduced motion needs a static substitute; a shimmer
+   that only exists once a keyframe has run is a state nobody with the
+   preference on can see. The rim is the state; the travelling glint is the
+   flourish on top of it. */
+.wi-plot.kept{
+  box-shadow:0 4px 0 var(--wi-cell-lip), 0 8px 14px rgba(44,26,16,.24),
+             0 0 0 3px var(--wi-frost), 0 0 14px 3px rgba(147,182,208,.55)}
+.wi-plot.kept .wi-ready{background:linear-gradient(180deg,#ffffff,var(--wi-frost-2))}
+.wi-shimmer{position:absolute;inset:0;border-radius:15px;overflow:hidden;z-index:5;
+  pointer-events:none;display:none}
+.wi-plot.kept .wi-shimmer{display:block}
+.wi-shimmer::before{content:'';position:absolute;top:-40%;bottom:-40%;width:42%;left:-50%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.72),transparent);
+  transform:rotate(8deg);animation:wi-sweep 3.4s ease-in-out infinite}
+@keyframes wi-sweep{0%{left:-50%}55%,100%{left:118%}}
+
+/* ---------- the chip above the board — Fall's grammar, Winter's rule ---------- */
+.wi-chip{
+  position:absolute;left:50%;transform:translateX(-50%);top:-46px;z-index:6;pointer-events:none;
+  display:flex;align-items:center;gap:7px;max-width:96%;padding:6px 13px;white-space:nowrap;
+  border:3px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.2);
+  font-size:12.5px;font-weight:800;line-height:1}
+.wi-chip svg{width:18px;height:18px;flex:none}
+/* Tucked is a DRAINED state, not a new hue: the interface's own paper with the
+   warmth taken out, exactly as .cp-head.asleep does. Asleep is not a tier. */
+.wi-chip.tucked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2))}
+.wi-chip.frost{background:linear-gradient(180deg,#ffffff,var(--wi-frost-2))}
+.wi-chip.armed{background:linear-gradient(180deg,#ffe98a,var(--coin))}
+.wi-chip.armed::before{content:'';position:absolute;inset:-6px;border-radius:999px;
+  background:rgba(255,201,60,.35);z-index:-1;animation:affordPulse 1.4s ease-in-out infinite}
+@keyframes affordPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+
+/* ---------- the one button below the board ----------
+   Same box as .fl-collect, including the 132px clearance the band's two
+   buttons force. The VERB changes; the geometry never does. */
+.wi-act{
+  position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);z-index:6;pointer-events:auto;
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  max-width:132px;padding:6px 14px;white-space:nowrap;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  font-weight:800;line-height:1.15;color:var(--ink);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.22)}
+.wi-act .a-do{display:flex;align-items:center;gap:5px;font-size:11.5px}
+.wi-act .a-val{font-size:15px}
+/* Gold means "you can have this" — so ONLY the collect wears it. */
+.wi-act.pay{background:linear-gradient(180deg,#ffe98a,var(--coin))}
+/* Tucked: drained, and it says so rather than disappearing. */
+.wi-act.rest{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 3px 0 var(--paper-dim-edge), 0 6px 10px rgba(44,26,16,.16)}
+
+/* ---------- the quilt over a cell ---------- */
+.wi-quilt{position:absolute;left:-3px;right:-3px;bottom:-3px;height:44%;z-index:4;pointer-events:none;display:none}
+.wi-plot.tucked .wi-quilt{display:block}
+.wi-plot.tucked .wi-bar,.wi-plot.tucked .wi-wait{display:none}
+.wi-quilt svg{width:100%;height:100%;display:block;overflow:visible}
+.wi-plot.tucked .wi-slot svg{animation:wi-breathe 3.6s ease-in-out infinite;transform-origin:50% 96%}
+@keyframes wi-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.028)}}
+.wz{opacity:.72;transform-origin:50% 50%;
+  animation:wi-zfloat 4.8s ease-in-out infinite;animation-delay:calc(var(--i) * -1.6s)}
+@keyframes wi-zfloat{
+  0%{opacity:0;transform:translate(0,3px)}14%{opacity:.75}
+  32%{transform:translate(-3.5px,-6px)}56%{transform:translate(3.5px,-13px)}
+  80%{opacity:.5;transform:translate(-2.5px,-20px)}100%{opacity:0;transform:translate(1px,-27px)}}
+
+/* ---------- speech ----------
+   THE BUBBLE GETS A PER-SEASON HOME. It lives inside whichever hero's cell is
+   on screen, which is the fix docs/11 asks for — Fall inherits it free. */
+.speech{position:absolute;left:50%;bottom:104%;transform:translateX(-50%);z-index:12;
+  min-width:150px;max-width:280px;padding:9px 13px;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.22);
+  font-size:13px;font-weight:700;line-height:1.3;text-align:center}
+.speech::after{content:'';position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);
+  width:0;height:0;border:9px solid transparent;border-top-color:var(--ink)}
+.speech::before{content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);z-index:1;
+  width:0;height:0;border:7px solid transparent;border-top-color:var(--paper-2)}
+
+/* ---------- the sheet ---------- */
+.scrim{position:absolute;inset:0;z-index:45;background:rgba(20,28,42,.5);backdrop-filter:blur(2px)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:50;height:min(80%,660px);max-width:560px;margin:0 auto;
+  display:flex;flex-direction:column;
+  background:linear-gradient(180deg,var(--paper) 0%,var(--paper-2) 100%);
+  border:4px solid var(--ink);border-bottom:0;border-radius:28px 28px 0 0;
+  box-shadow:0 -8px 30px rgba(44,26,16,.32);padding-bottom:var(--sab)}
+.sheet.cere{height:min(94%,800px)}
+.sheet-grip{padding:9px 0 3px;display:grid;place-items:center}
+.sheet-grip span{width:52px;height:6px;border-radius:999px;background:rgba(44,26,16,.28)}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px 8px}
+.sheet-head h3{margin:0;font-size:21px;font-weight:800}
+.sheet-body{flex:1;min-height:0;overflow:hidden;padding:2px 14px 22px}
+.sheet-note{font-size:13px;font-weight:600;opacity:.72;margin:0 0 10px;line-height:1.35}
+.round-btn.ghost{width:38px;height:38px;box-shadow:0 3px 0 var(--ink-2)}
+.round-btn.ghost svg{width:20px;height:20px}
+
+/* the plant picker's rows — .seed-row's material, two-stop so the recipe
+   survives the change of aspect ratio (a percentage-radius blemish becomes a
+   grey bruise across a wide card) */
+.seed-row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:10px;
+  padding:8px 10px;margin-bottom:8px;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.16)}
+.seed-art{width:48px;height:48px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+  box-shadow:0 2px 0 var(--ink-2);overflow:hidden}
+.seed-art svg{width:44px;height:44px}
+.seed-name{font-size:14.5px;font-weight:800;line-height:1.1}
+.seed-stats{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.stat{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:999px;
+  border:2px solid var(--ink);background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);font-size:10.5px;font-weight:800;line-height:1.3}
+.stat.good{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.stat svg{width:12px;height:12px}
+.price{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;
+  border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fff,var(--paper-3));
+  font-size:12.5px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;
+  box-shadow:0 2px 0 var(--ink-2)}
+.price svg{width:15px;height:15px}
+.price.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+.price.no{background:linear-gradient(180deg,#ffe3e3,#ffc9c9)}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 4px;
+  border:2.5px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);font-size:12px;font-weight:700;line-height:1;white-space:nowrap}
+.chip svg{width:17px;height:17px;display:block}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:13px 16px;border:3.5px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#ffe98a,var(--coin));font:inherit;font-size:17px;font-weight:800;
+  color:var(--ink);box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22)}
+.btn svg{width:22px;height:22px}
+.btn-row{display:grid;gap:8px;margin-top:12px}
+.outlined{color:#fff;text-shadow:
+  2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),
+  1.5px 1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px -1.5px 0 var(--ink),
+  0 5px 0 rgba(44,26,16,.35)}
+
+/* ---------- the ceremony's gate card ---------- */
+.cere{display:flex;flex-direction:column;height:100%}
+.cere-flower{display:grid;place-items:center;margin:0 0 10px}
+.cere-flower svg{width:128px;height:128px;filter:drop-shadow(0 6px 0 rgba(44,26,16,.22))}
+.speech-block{border:3px solid var(--ink);border-radius:var(--r-md);padding:10px 13px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 3px 0 var(--ink-2);
+  font-size:14px;font-weight:700;text-align:center;line-height:1.35}
+.gate-card{margin-top:12px;border:4px solid var(--ink);border-radius:var(--r-lg);overflow:hidden;
+  box-shadow:0 6px 0 var(--ink-2), 0 12px 20px rgba(44,26,16,.28)}
+/* The gate's own scene. Fall's is an autumn sky over autumn ground because the
+   palette holds neither; Winter's is the same argument one season on. */
+.gate-scene{position:relative;height:150px;
+  background:linear-gradient(180deg,#b9cee0 0%,#dfeaf4 58%,#f2f8fc 100%)}
+.gate-scene .gg{position:absolute;left:0;right:0;bottom:0;height:52px;
+  background:linear-gradient(180deg,var(--wi-snow),var(--wi-snow-2) 60%,var(--wi-snow-3))}
+.gate-scene .pad{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+  width:96px;height:20px;border-radius:50%;background:var(--wi-snow-sh);opacity:.55}
+.gate-hedge{position:absolute;bottom:26px;width:104px;height:96px}
+.gate-hedge.l{left:-6px} .gate-hedge.r{right:-6px;transform:scaleX(-1)}
+.gate-bloom{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:104px;height:104px}
+.gate-bloom svg{width:104px;height:104px;filter:drop-shadow(0 5px 0 rgba(44,26,16,.22))}
+.gate-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 12px;background:linear-gradient(180deg,var(--paper-2),var(--paper-3));
+  border-top:4px solid var(--ink);font-size:14px;font-weight:800}
+
+/* ---------- reduced motion ----------
+   Every state must READ with all motion off. The check is not "does it calm
+   down", it is "does every state that animates still read when it does not". */
+body[data-motion="0"] .wz,
+body[data-motion="0"] .wi-shimmer::before,
+body[data-motion="0"] .wi-plot.tucked .wi-slot svg,
+body[data-motion="0"] .wi-chip.armed::before{animation:none}
+body[data-motion="0"] .wz{opacity:.8}
+body[data-motion="0"] .wi-shimmer::before{left:26%;opacity:.5}
+@media (prefers-reduced-motion:reduce){
+  .wz{animation:none;opacity:.8}
+  .wi-shimmer::before{animation:none;left:26%;opacity:.5}
+  .wi-plot.tucked .wi-slot svg{animation:none}
+  .wi-chip.armed::before{animation:none}
+}
+
+.spec{background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);
+  padding:10px 14px;box-shadow:0 4px 0 var(--ink-2);font-size:12px;font-weight:600;
+  line-height:1.55;max-width:84ch;margin:10px 0 0}
+.spec b{font-weight:800}
+.spec ul{margin:6px 0 0;padding-left:18px}
+.spec code{background:var(--paper-2);padding:0 4px;border-radius:4px;font-size:11px}
+.mat{display:flex;gap:16px;flex-wrap:wrap}
+.mat figure{width:250px}
+.mat-board{height:250px;border-radius:26px;border:4px solid var(--ink);position:relative;
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:10px;padding:9px}
+</style>
+</head>
+<body data-notes="1" data-motion="1">
+<div class="page">
+<h1>Winter, and the night shift. Wireframe spike, slice C.</h1>
+<p class="lede">Every Winter screen and state at 390×844 with a real handset's insets on.
+<b>The sentence: tuck your garden into bed, and see what the morning brings.</b> Winter's speed is
+half a day to two days; Winter's rule is that <b>the night pays extra when the garden was kept</b>,
+and the keeper of it is Holly. The board mirrors Fall's markup exactly — <code>wi-*</code> where Fall
+has <code>fl-*</code> — and never touches <code>.plot</code> or <code>data-stage</code>, which
+belong to Summer's four-stage growth block and to the icon exporter's anchors inside it.</p>
+
+<div class="controls">
+  <button class="toggle" data-on="1" id="tNotes">Notes</button>
+  <button class="toggle" data-on="1" id="tMotion">Motion</button>
+  <button class="toggle" data-on="0" id="tNight">Night</button>
+</div>
+
+<h2>1 · The board, and the ritual it exists for</h2>
+<p class="lede">Five frames, left to right, are one evening and one morning.</p>
+<div class="grid" id="ritual"></div>
+
+<h2>2 · The chip states — Fall's grammar, Winter's rule</h2>
+<p class="lede">The rule lives on the chip and Holly's lines are never load-bearing. Every state the
+bed can be in, as the chip says it.</p>
+<div class="grid" id="chips"></div>
+
+<h2>3 · The board's material — three answers to one question</h2>
+<p class="lede">The world here is snow, so both of the board's tiers have to be <i>darker</i> than
+the world — the opposite polarity to Fall's pale trug on olive ground. Same construction each time;
+only the material changes.</p>
+<div class="mat" id="materials"></div>
+
+<h2>4 · The Turn ceremony's Winter gate card</h2>
+<p class="lede">Beat one of Holly's introduction: the gate lifts where the player is standing, on
+Fall's <code>fallOpens</code> pattern.</p>
+<div class="grid" id="gate"></div>
+
+<h2>5 · Holly's first entry — beat two</h2>
+<p class="lede">The one-shot plays in her own room, and is consumed only after the line has actually
+drawn. The meadow signpost is the recorded cost of getting this wrong.</p>
+<div class="grid" id="intro"></div>
+
+<h2>6 · The plant picker, with the six real clocks</h2>
+<p class="lede">The provisional ladder from the spec, typed in as written. Twelve hours is the floor
+— doc 33's own band — so "plant at dinner, ready at breakfast" still holds at the bottom rung.</p>
+<div class="grid" id="picker"></div>
+
+<h2>7 · What this spike decided, and what it is asking</h2>
+<div class="spec" id="specBox"></div>
+</div>
+
+<script>
+const INK = '#2c1a10';
+
+/* ---- the few icons these screens need, drawn here rather than imported ---- */
+const ICO = {
+  coin:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#ffc93c" stroke="#2c1a10" stroke-width="2"/><circle cx="12" cy="12" r="4.6" fill="#ffe066" stroke="#2c1a10" stroke-width="1.6"/></svg>',
+  pouch:'<svg viewBox="0 0 24 24"><path d="M6 9h12l2 10H4z" fill="#fff8e7" stroke="#2c1a10" stroke-width="2" stroke-linejoin="round"/><circle cx="10" cy="14" r="1.6" fill="#7bd88f"/><circle cx="14" cy="15.4" r="1.6" fill="#7bd88f"/><path d="M8 9V7a4 4 0 018 0v2" fill="none" stroke="#2c1a10" stroke-width="2"/></svg>',
+  gem:'<svg viewBox="0 0 24 24"><path d="M12 3l7 6-7 12L5 9z" fill="#8ce0ff" stroke="#2c1a10" stroke-width="2" stroke-linejoin="round"/></svg>',
+  clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="#fff8e7" stroke="#2c1a10" stroke-width="2"/><path d="M12 7v5.4l3.4 2" fill="none" stroke="#2c1a10" stroke-width="2" stroke-linecap="round"/></svg>',
+  leaf:'<svg viewBox="0 0 24 24"><path d="M5 19C4 11 10 4 19 4c1 9-5 15-14 15z" fill="#5cc45c" stroke="#2c1a10" stroke-width="2" stroke-linejoin="round"/><path d="M8 16c3-4 6-6 9-7" fill="none" stroke="#2c1a10" stroke-width="1.6"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="M12 3l2.6 6h6.4l-5 4.2 1.9 6.4L12 16l-5.9 3.6L8 13.2 3 9h6.4z" fill="#ffd43b" stroke="#2c1a10" stroke-width="2" stroke-linejoin="round"/></svg>',
+  plantSpot:'<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="none" stroke="#2c1a10" stroke-width="2.2" stroke-dasharray="4.4 3.6"/><path d="M12 8v8M8 12h8" stroke="#2c1a10" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  quilt:'<svg viewBox="0 0 24 24"><path d="M3 9h18v9a2 2 0 01-2 2H5a2 2 0 01-2-2z" fill="#fff8e7" stroke="#2c1a10" stroke-width="2" stroke-linejoin="round"/><path d="M9 9v11M15 9v11M3 14.5h18" stroke="#2c1a10" stroke-width="1.5"/><path d="M3 9c2-2.6 5-4 9-4s7 1.4 9 4" fill="#dbe8f2" stroke="#2c1a10" stroke-width="2" stroke-linejoin="round"/></svg>',
+  snow:'<svg viewBox="0 0 24 24"><g fill="none" stroke="#2c1a10" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M12 6.6l-2.2-2.2M12 6.6l2.2-2.2M12 17.4l-2.2 2.2M12 17.4l2.2 2.2"/></g></svg>',
+  gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="#fff8e7" stroke="#2c1a10" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="#2c1a10" stroke-width="2" stroke-linecap="round"/></svg>',
+  menu:'<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="#2c1a10" stroke-width="3.4" stroke-linecap="round"/></svg>',
+  close:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="#2c1a10" stroke-width="3" stroke-linecap="round"/></svg>',
+  sprout:'<svg viewBox="0 0 24 24"><path d="M12 21v-8" stroke="#4bb257" stroke-width="2.6" stroke-linecap="round"/><path d="M12 13C9 13 6 11 6 7c4 0 6 2 6 6z" fill="#5cc45c" stroke="#2c1a10" stroke-width="2" stroke-linejoin="round"/><path d="M12 13c3 0 6-2 6-6-4 0-6 2-6 6z" fill="#8fe08a" stroke="#2c1a10" stroke-width="2" stroke-linejoin="round"/></svg>'
+};
+const ico = (k) => ICO[k] || '';
+
+/* ============ Holly, take A — pulled across from holly-spike.html ============ */
+const HP = { plumD:'#241426', plumM:'#3b2140', pink:'#ff5d95', pinkL:'#ffb3d1',
+  ice:'#eaf4fb', iceS:'#93b6d0', face:'#f7eef2', faceS:'#cbb0c0', leaf:'#2f5d43', leafL:'#3f7a57', mouth:'#a83250' };
+const ROUND = 'M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z';
+function hRing(n, sc, rot, fill){
+  let s = '';
+  for (let i = 0; i < n; i++) s += '<path d="' + ROUND + '" fill="' + fill + '" transform="rotate(' + ((360/n)*i + rot).toFixed(1) + ') scale(' + sc + ')"/>';
+  return s;
+}
+function hCrown(n, len, spread, w){
+  let s = '';
+  for (let i = 0; i < n; i++){
+    const t = n === 1 ? 0 : (i/(n-1))*2 - 1, a = t*spread*Math.PI/180, r0 = 23;
+    const alt = Math.round(Math.abs(i - (n-1)/2)) % 2 === 0 ? 1 : 0.66;
+    const L = len * (1 - 0.26*Math.abs(t)) * alt;
+    const sx = Math.sin(a), cy = -Math.cos(a);
+    const px = Math.cos(a)*w, py = Math.sin(a)*w;
+    s += '<path d="M' + (sx*r0-px).toFixed(1) + ',' + (cy*r0-py).toFixed(1) + ' L' + (sx*(r0+L)).toFixed(1) + ','
+      + (cy*(r0+L)).toFixed(1) + ' L' + (sx*r0+px).toFixed(1) + ',' + (cy*r0+py).toFixed(1) + ' Z" fill="' + HP.ice + '"/>';
+  }
+  return s;
+}
+function hEye(side){
+  const m = side < 0 ? '' : ' scale(-1 1)';
+  return '<g transform="translate(' + (side*10.5) + ' -2.5)' + m + '"><g transform="rotate(-13)">'
+    + '<path d="M-6.8,0.1 C-4.4,-3.7 2.4,-5.8 7.4,-3.8 C6.6,1 2.4,4.8 -2.4,4.6 C-5.2,4.5 -6.9,2.4 -6.8,0.1 Z" fill="' + INK + '"/>'
+    + '<circle cx="-1.9" cy="-0.9" r="1.35" fill="#fff"/>'
+    + '<path d="M7.4,-4.4 l4.1,-3.2 M8.6,-1.4 l4.4,-1.8" fill="none" stroke="' + INK + '" stroke-width="2.4" stroke-linecap="round"/>'
+    + '</g></g>';
+}
+function hFlake(){
+  let arms = '';
+  for (let i = 0; i < 3; i++){
+    const a = i*60*Math.PI/180, dx = Math.cos(a)*7, dy = Math.sin(a)*7;
+    arms += '<path d="M' + (-dx).toFixed(1) + ',' + (-dy).toFixed(1) + ' L' + dx.toFixed(1) + ',' + dy.toFixed(1) + '"/>';
+  }
+  return '<g transform="translate(0 -15.5) scale(0.86)" fill="none" stroke="' + HP.iceS
+    + '" stroke-width="2.2" stroke-linecap="round">' + arms + '</g>';
+}
+function hollyDefs(){
+  return '<defs><radialGradient id="ghollyface" cx="50%" cy="34%" r="70%">'
+    + '<stop offset="52%" stop-color="#ffffff"/><stop offset="100%" stop-color="' + HP.faceS + '"/></radialGradient></defs>';
+}
+function hollyHead(sleeping){
+  return '<g stroke="' + INK + '" stroke-width="3" stroke-linejoin="round">'
+    + hRing(8, 1.10, 22, HP.pink) + hRing(8, 1.0, 0, HP.plumD) + hRing(6, 0.68, 26, HP.plumM) + '</g>'
+    + '<g stroke="' + INK + '" stroke-width="3" stroke-linejoin="round">' + hCrown(7, 34, 68, 5) + '</g>'
+    + '<circle cx="0" cy="0" r="26" fill="' + HP.face + '" stroke="' + INK + '" stroke-width="3"/>'
+    + '<circle cx="0" cy="0" r="26" fill="url(#ghollyface)" style="mix-blend-mode:multiply" opacity=".34"/>'
+    + hFlake()
+    + (sleeping
+        ? '<g fill="none" stroke="' + INK + '" stroke-width="3.4" stroke-linecap="round">'
+          + '<path d="M-15,-3 q4.5 5 9 0"/><path d="M6,-3 q4.5 5 9 0"/></g>'
+        : hEye(-1) + hEye(1))
+    + '<path d="M-8,10.4 Q0.5,15.8 8.6,8.2" fill="' + HP.mouth + '" stroke="' + INK
+    + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+}
+function hollyPlant(){
+  return '<svg viewBox="0 0 120 142" aria-hidden="true">' + hollyDefs() + '<g transform="translate(0 10)">'
+    + '<path d="M60,132 C60,114 59,102 60,92" fill="none" stroke="' + HP.leaf + '" stroke-width="9" stroke-linecap="round"/>'
+    + '<path d="M60,114 C46,116 34,108 30,96 C44,90 56,100 60,114 Z" fill="' + HP.leafL + '" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/>'
+    + '<path d="M60,106 C74,108 86,100 90,88 C76,82 64,92 60,106 Z" fill="' + HP.leafL + '" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/>'
+    + '<g transform="translate(60 56)">' + hollyHead(false) + '</g></g></svg>';
+}
+function hollyHeadSvg(size){
+  return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" aria-hidden="true">'
+    + hollyDefs() + '<g transform="translate(50 55) scale(0.78)">' + hollyHead(false) + '</g></svg>';
+}
+
+/* ============ Winter's six blooms ============ */
+const PLANTS = [
+  { id:'snowdrop',  name:'Snowdrop',       grow:'12h', cost:2500,   yield:3500,   c1:'#ffffff', c2:'#dcefe4', form:'bell' },
+  { id:'jasmine',   name:'Winter Jasmine', grow:'16h', cost:6000,   yield:8400,   c1:'#ffd84d', c2:'#fff0b0', form:'star' },
+  { id:'cyclamen',  name:'Cyclamen',       grow:'20h', cost:14000,  yield:19600,  c1:'#e8437f', c2:'#ffb3d1', form:'swept' },
+  { id:'paperwhite',name:'Paperwhite',     grow:'24h', cost:30000,  yield:42000,  c1:'#fffdf7', c2:'#ffe9a8', form:'cup' },
+  { id:'hazel',     name:'Witch Hazel',    grow:'36h', cost:70000,  yield:98000,  c1:'#f08c00', c2:'#ffc93c', form:'ribbon' },
+  { id:'camellia',  name:'Camellia',       grow:'48h', cost:160000, yield:224000, c1:'#c2264f', c2:'#ff8fab', form:'rose' }
+];
+
+/* Six silhouettes, hand-built rather than one ring recipe recoloured — a
+   season whose six plants are one shape six times reads as a placeholder, and
+   these are real winter bloomers with real shapes worth stealing. Each is
+   drawn in a 0 0 100 112 box standing on the cell floor, at a size that fills
+   the cell the way Fall's crops fill theirs.
+
+   Sleeping puts the shut-eye arcs on the BLOOM, which is the whole of the
+   redraw: a creature's arcs sit on a body, and a plant's only face is its
+   flower. Position and width come per form, because a nodding snowdrop's face
+   is not where a camellia's is. */
+function bloom(p, sleeping){
+  const st = 'stroke="' + INK + '" stroke-width="2.8" stroke-linejoin="round"';
+  const LEAF = '#2f6d4a', LEAF_L = '#3f8a5c';
+  const stem = (d, w) => '<path d="' + d + '" fill="none" stroke="' + LEAF + '" stroke-width="' + (w || 6.5) + '" stroke-linecap="round"/>';
+  const strap = (d) => '<path d="' + d + '" fill="' + LEAF + '" ' + st + '/>';
+  const eyes = (y, gap, w) => sleeping
+    ? '<g fill="none" stroke="' + INK + '" stroke-width="3" stroke-linecap="round">'
+      + '<path d="M' + (-gap - w) + ' ' + y + ' q' + (w / 2) + ' ' + (w * 0.5) + ' ' + w + ' 0"/>'
+      + '<path d="M' + gap + ' ' + y + ' q' + (w / 2) + ' ' + (w * 0.5) + ' ' + w + ' 0"/></g>'
+    : '';
+  let body = '';
+
+  if (p.form === 'bell'){
+    /* Galanthus: a nodding white bell on a hooked pedicel, with the spathe
+       leaf at the bend. The nod IS the species — a snowdrop drawn upright is
+       a white crocus. */
+    body = stem('M50,112 C50,88 46,64 40,40')
+      + strap('M34,112 C29,90 32,70 40,60 C43,78 40,98 40,112 Z')
+      + stem('M40,40 C36,27 42,18 52,20', 5)
+      + strap('M41,31 C31,27 22,31 20,39 C29,43 39,39 41,31 Z')
+      + '<g ' + st + '>'
+      /* Three tepals that stay THREE: the outer pair splay wide and the inner
+         one hangs shorter between them, with the species' green mark on its
+         mouth. Drawn as one white mass on the first pass and it read as an
+         egg — the ink between the segments is the whole silhouette. */
+      + '<path d="M52,22 C30,25 19,45 26,64 C31,76 44,78 49,67 C46,49 47,32 52,22 Z" fill="' + p.c1 + '"/>'
+      + '<path d="M52,22 C74,25 85,45 78,64 C73,76 60,78 55,67 C58,49 57,32 52,22 Z" fill="' + p.c1 + '"/>'
+      + '<path d="M52,27 C43,32 39,48 43,62 C46,71 58,71 61,62 C65,48 61,32 52,27 Z" fill="' + p.c2 + '"/>'
+      + '</g>'
+      + '<path d="M46,60 q6,7 12,0" fill="none" stroke="#4f9b6d" stroke-width="3.4" stroke-linecap="round"/>'
+      + '<g transform="translate(52 46)">' + eyes(0, 3, 8) + '</g>';
+
+  } else if (p.form === 'star'){
+    /* Jasminum nudiflorum flowers on BARE green twigs — no leaves, and that is
+       the plant's whole look in winter. */
+    let f = '';
+    for (let i = 0; i < 6; i++)
+      f += '<path d="M0,0 C-9,-6 -10,-20 0,-27 C10,-20 9,-6 0,0 Z" fill="' + (i % 2 ? p.c2 : p.c1) + '" transform="rotate(' + (i * 60) + ')"/>';
+    body = stem('M50,112 C50,88 52,64 48,42')
+      + stem('M50,86 C60,80 66,70 68,58', 4.5) + stem('M50,68 C40,62 34,54 32,44', 4.5)
+      + '<g transform="translate(68 54) scale(0.5)"><g ' + st + '>' + f + '<circle r="6" fill="#fff3c4"/></g></g>'
+      + '<g transform="translate(32 40) scale(0.5)"><g ' + st + '>' + f + '<circle r="6" fill="#fff3c4"/></g></g>'
+      + '<g transform="translate(48 34)"><g ' + st + '>' + f + '<circle r="7" fill="#fff3c4"/></g>'
+      + eyes(-3, 4, 9) + '</g>';
+
+  } else if (p.form === 'swept'){
+    /* Cyclamen: the flower nods and every petal sweeps straight UP off it —
+       the one silhouette in the game nothing else has. */
+    let f = '';
+    for (let i = 0; i < 5; i++)
+      f += '<path d="M0,4 C-7,-8 -5,-24 0,-32 C5,-24 7,-8 0,4 Z" fill="' + (i % 2 ? p.c2 : p.c1) + '" transform="rotate(' + (-38 + i * 19) + ')"/>';
+    body = stem('M50,112 C50,88 54,66 48,50')
+      + strap('M34,112 C28,92 32,74 42,66 C44,82 40,98 40,112 Z')
+      + strap('M66,112 C72,94 68,78 59,70 C57,84 60,98 60,112 Z')
+      + '<g transform="translate(48 48)"><g ' + st + '>' + f + '</g>'
+      + '<path d="M-6,2 C-3,8 3,8 6,2" fill="' + p.c1 + '" ' + st + '/>'
+      + eyes(-12, 4, 9) + '</g>';
+
+  } else if (p.form === 'cup'){
+    /* Narcissus papyraceus: six flat tepals round a short cup, two or three to
+       a head. The cup is what stops it reading as a daisy. */
+    const floret = (sc) => {
+      let f = '';
+      for (let i = 0; i < 6; i++)
+        f += '<path d="M0,0 C-8,-7 -8,-19 0,-24 C8,-19 8,-7 0,0 Z" fill="' + p.c1 + '" transform="rotate(' + (i * 60) + ')"/>';
+      return '<g transform="scale(' + sc + ')"><g ' + st + '>' + f
+        + '<circle r="8.5" fill="' + p.c2 + '"/><circle r="5" fill="#ffd84d"/></g></g>';
+    };
+    body = stem('M50,112 C50,88 50,66 50,46')
+      + strap('M36,112 C32,88 36,66 44,58 C46,76 42,96 42,112 Z')
+      + '<g transform="translate(28 50)">' + floret(0.56) + '</g>'
+      + '<g transform="translate(72 46)">' + floret(0.56) + '</g>'
+      + '<g transform="translate(50 30)">' + floret(0.86) + eyes(-2, 4, 9) + '</g>';
+
+  } else if (p.form === 'ribbon'){
+    /* Hamamelis: crumpled straps straight off a bare twig, no petal shape at
+       all. Stroked rather than filled, and the strokes are fat enough not to
+       be the hairline the house style warns about. */
+    const spider = (sc) => {
+      let f = '';
+      for (let i = 0; i < 10; i++)
+        f += '<path d="M0,-3 C5,-12 2,-22 7,-30" fill="none" stroke="' + (i % 2 ? p.c2 : p.c1)
+          + '" stroke-width="4" stroke-linecap="round" transform="rotate(' + (i * 36) + ')"/>';
+      return '<g transform="scale(' + sc + ')">' + f + '<circle r="6.5" fill="#7d4f2a" stroke="' + INK + '" stroke-width="2.6"/></g>';
+    };
+    body = stem('M50,112 C50,90 46,70 40,52', 7)
+      + stem('M46,80 C58,74 66,64 70,50', 5) + stem('M44,66 C34,60 28,52 26,42', 5)
+      + '<g transform="translate(70 44)">' + spider(0.52) + '</g>'
+      + '<g transform="translate(26 38)">' + spider(0.52) + '</g>'
+      + '<g transform="translate(40 46)">' + spider(0.8) + eyes(-3, 4, 9) + '</g>';
+
+  } else {
+    /* Camellia: a formal double — three tight concentric rings and glossy dark
+       leaves. The only bloom here with any weight, which is what the top of a
+       cost ladder should look like. */
+    let f = '';
+    for (let i = 0; i < 8; i++) f += '<path d="' + ROUND + '" fill="' + p.c1 + '" transform="rotate(' + (i * 45) + ') scale(0.72)"/>';
+    for (let i = 0; i < 7; i++) f += '<path d="' + ROUND + '" fill="' + p.c2 + '" transform="rotate(' + (i * 51 + 24) + ') scale(0.5)"/>';
+    for (let i = 0; i < 5; i++) f += '<path d="' + ROUND + '" fill="' + p.c1 + '" transform="rotate(' + (i * 72 + 40) + ') scale(0.3)"/>';
+    body = stem('M50,112 C50,88 50,68 50,52')
+      + '<path d="M50,96 C34,98 22,88 18,74 C34,68 46,80 50,96 Z" fill="' + LEAF + '" ' + st + '/>'
+      + '<path d="M50,84 C66,86 78,76 82,62 C66,56 54,68 50,84 Z" fill="' + LEAF_L + '" ' + st + '/>'
+      + '<g transform="translate(50 40)"><g ' + st + '>' + f + '</g>'
+      + '<circle r="6" fill="#fff3c4" stroke="' + INK + '" stroke-width="2.4"/>'
+      + eyes(-2, 5, 10) + '</g>';
+  }
+  return '<svg viewBox="0 0 100 112" aria-hidden="true">' + body + '</svg>';
+}
+
+/* The quilt over a cell: patchwork, scalloped hem, one lit fold. A plain
+   blanket is a placeholder; six cream squares are a bandage. */
+const QUILT = ['#fff8e7','#dbe8f2','#ffeecd','#e8d7e4','#ffe0ad','#cfe0ee'];
+function quiltSvg(){
+  const W = 100, H = 40, cols = 3, rows = 2, cw = W/cols, ch = H/rows;
+  let patches = '';
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+    patches += '<rect x="' + (c*cw) + '" y="' + (8 + r*ch) + '" width="' + cw + '" height="' + ch + '" fill="' + QUILT[(r*cols+c)%6] + '"/>';
+  let hem = 'M0 ' + (8+H);
+  for (let i = 0; i < 5; i++) hem += ' q10 9 20 0';
+  hem += ' V' + (8+H) + ' Z';
+  return '<svg viewBox="0 0 100 58" preserveAspectRatio="none" aria-hidden="true">'
+    + '<g stroke="' + INK + '" stroke-width="2.6" stroke-linejoin="round" vector-effect="non-scaling-stroke">'
+    + '<g>' + patches + '</g>'
+    + '<path d="' + hem + '" fill="#fff8e7"/>'
+    + '<rect x="0" y="8" width="' + W + '" height="' + H + '" fill="none"/></g>'
+    + '<rect x="2" y="10" width="' + (W-4) + '" height="3" fill="#fffdf7"/></svg>';
+}
+function zGlyph(x, y, s, i){
+  const t = s*0.34;
+  return '<path class="wz" style="--i:' + i + '" d="M' + x + ' ' + y + ' H' + (x+s) + ' V' + (y+t)
+    + ' L' + (x+t*1.4) + ' ' + (y+s-t) + ' H' + (x+s) + ' V' + (y+s) + ' H' + x + ' V' + (y+s-t)
+    + ' L' + (x+s-t*1.4) + ' ' + (y+t) + ' H' + x + ' Z"/>';
+}
+const ZZZ = '<svg viewBox="0 0 60 50" style="position:absolute;right:-4px;top:-16px;width:46px;height:38px;z-index:9;overflow:visible" aria-hidden="true">'
+  + '<g fill="#ffffff">'
+  + zGlyph(2, 30, 10, 0) + zGlyph(16, 15, 12, 1) + zGlyph(32, -2, 14, 2) + '</g></svg>';
+
+/* ============ the frames ============ */
+function cell(o){
+  o = o || {};
+  const st = o.state || 'empty';
+  const cls = ['wi-plot', o.tucked ? 'tucked' : '', o.kept ? 'kept' : ''].filter(Boolean).join(' ');
+  return '<button class="' + cls + '" data-state="' + st + '">'
+    + '<span class="wi-slot">' + (o.plant ? bloom(o.plant, o.tucked) : '') + '</span>'
+    + '<span class="wi-empty">' + ico('plantSpot') + '</span>'
+    + '<span class="wi-shimmer"></span>'
+    + '<span class="wi-quilt">' + quiltSvg() + '</span>'
+    + (o.tucked && o.z ? ZZZ : '')
+    + '<span class="wi-ready">!</span>'
+    + (o.wait ? '<span class="wi-wait">' + o.wait + '</span>' : '')
+    + '<span class="wi-bar"><i style="width:' + (o.pct || 0) + '%"></i></span>'
+    + '</button>';
+}
+function board(cells, opts){
+  opts = opts || {};
+  let inner = '';
+  for (let i = 0; i < 9; i++){
+    if (i === 4){
+      inner += '<div class="wi-flower-cell">' + (opts.speech ? '<div class="speech">' + opts.speech + '</div>' : '') + hollyPlant() + '</div>';
+      continue;
+    }
+    inner += cell(cells[i < 4 ? i : i - 1] || {});
+  }
+  return '<div class="wi-wrap">'
+    + '<div class="wi-chip ' + (opts.chipCls || '') + '">' + (opts.chip || '') + '</div>'
+    + '<div class="wi-board' + (opts.armed ? ' armed' : '') + '">' + inner + '</div>'
+    + (opts.act || '') + '</div>';
+}
+const HUD = '<div class="hud"><div class="wallets">'
+  + '<span class="wallet"><span class="w-icon">' + ico('coin') + '</span>48.2K</span>'
+  + '<span class="wallet"><span class="w-icon">' + ico('gem') + '</span>12</span>'
+  + '<span class="wallet meter"><i class="fill" style="--p:62%"></i><span class="w-icon">' + ico('pouch') + '</span>310</span>'
+  + '</div><div style="display:flex;gap:6px"><span class="round-btn">' + ico('gear') + '</span>'
+  + '<span class="round-btn">' + ico('menu') + '</span></div></div>';
+const QUEST = '<div class="quest-strip"><span class="q-pip">7</span>'
+  + '<span class="q-bar"><i></i><span><b>Harvest 20</b><b>9/20</b></span></span>'
+  + '<span class="w-icon" style="width:26px;height:26px">' + ico('star') + '</span></div>';
+const RAIL = '<div class="rail"><span class="chip">' + ico('snow') + 'Clear</span></div>';
+const DOCK = '<div class="dock">'
+  + ['Garden','Shop','Pets','Meadow','Quests'].map(function(n, i){
+      return '<span class="dock-btn"><span class="dock-ico">' + ico(['sprout','coin','leaf','star','pouch'][i]) + '</span><span class="dock-label">' + n + '</span></span>';
+    }).join('') + '</div>';
+const SCENERY = '<div class="scenery"><div class="sky"></div><div class="sun"></div><div class="hills"></div>'
+  + '<div class="hedge"></div><div class="ground"></div>'
+  + '<svg class="treeline" viewBox="0 0 390 52" preserveAspectRatio="none" aria-hidden="true">'
+  + [26, 96, 188, 268, 344].map(function(x, i){
+      const sc = [1, .78, .92, .7, 1.04][i];
+      return '<g transform="translate(' + x + ' 52) scale(' + sc + ')">'
+        + '<path d="M0 0V-40" stroke="#4a3a30" stroke-width="4.4" stroke-linecap="round"/>'
+        + '<path d="M0 -22L-11 -33M0 -28L10 -38M0 -13L-8 -22M0 -34L7 -44" stroke="#4a3a30" stroke-width="3.2" stroke-linecap="round"/>'
+        + '<path d="M0 -23L-9 -32M0 -29L8 -37" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/></g>';
+    }).join('') + '</svg>'
+  + '<div class="vignette"></div></div>';
+
+function phone(stage, extra){
+  return '<div class="phone">' + SCENERY + '<div class="ui">' + HUD + QUEST + RAIL
+    + '<div class="stage">' + stage + '</div>' + DOCK + '</div>'
+    + '<span class="fpill">UPGRADE</span><span class="fround">' + ico('star') + '</span>'
+    + (extra || '') + '</div>';
+}
+function fig(tag, title, sub, inner, note){
+  return '<figure><figcaption><span class="tag">' + tag + '</span>' + title + '<i>' + sub + '</i></figcaption>'
+    + inner + (note ? '<p class="note ' + (note[0] === '?' ? 'q' : 'd') + '">' + note.replace(/^\?/, '') + '</p>' : '') + '</figure>';
+}
+
+const SD = PLANTS[0], CY = PLANTS[2], CA = PLANTS[5];
+const ACT_TUCK = '<button class="wi-act"><span class="a-do">' + ico('quilt') + 'Tuck the bed in</span><span class="a-val">for the night</span></button>';
+const ACT_REST = '<button class="wi-act rest"><span class="a-do">' + ico('quilt') + 'Tucked in</span><span class="a-val">goodnight</span></button>';
+const ACT_PAY  = '<button class="wi-act pay"><span class="a-do">' + ico('snow') + 'Collect all &middot; +50%</span><span class="a-val">+12,600</span></button>';
+const ACT_PAY_MIX = '<button class="wi-act pay"><span class="a-do">' + ico('snow') + 'Collect all &middot; 2 kept</span><span class="a-val">+9,800</span></button>';
+
+document.getElementById('ritual').innerHTML =
+  fig('W1', 'Evening — a planted bed, not yet tucked',
+    'The chip states the rule. The button is the ritual.',
+    phone(board([
+      {state:'grow', plant:SD, wait:'9h left', pct:26}, {state:'grow', plant:SD, wait:'9h left', pct:26},
+      {state:'grow', plant:CY, wait:'17h left', pct:14}, {state:'grow', plant:SD, wait:'9h left', pct:26},
+      {state:'grow', plant:CY, wait:'17h left', pct:14}, {state:'empty'},
+      {state:'grow', plant:SD, wait:'9h left', pct:26}, {state:'empty'}
+    ], { chip: ico('leaf') + '<b>5 growing</b> &middot; tuck in for <b>+50%</b> overnight', act: ACT_TUCK })),
+    'One button below the board, and its verb is the bed’s state. Fall’s Collect All owns this strip and is capped at 132px by the band’s two buttons; a second control here would have to fight it for the same clearance.')
+  + fig('W2', 'The tuck — quilts settle and the plants sleep',
+    'Shut eyes on the bloom, Zs drifting, the quilt breathing.',
+    phone(board([
+      {state:'grow', plant:SD, tucked:true, z:true}, {state:'grow', plant:SD, tucked:true},
+      {state:'grow', plant:CY, tucked:true}, {state:'grow', plant:SD, tucked:true, z:true},
+      {state:'grow', plant:CY, tucked:true}, {state:'empty'},
+      {state:'grow', plant:SD, tucked:true}, {state:'empty'}
+    ], { chip: ico('quilt') + '<b>Tucked in</b> &mdash; 5 growing', chipCls:'tucked', act: ACT_REST })),
+    'The tuck is TIME-FREE: 2pm is fine, it means goodnight whenever you leave. Nothing is ever lost to a night — no frost, no wilt, no decay — so the quilts have to read as cosy and never as a warning.')
+  + fig('W3', 'Morning — the kept blooms shimmer',
+    'A frost rim is the STATE; the travelling glint is the flourish.',
+    phone(board([
+      {state:'ready', plant:SD, kept:true}, {state:'ready', plant:SD, kept:true},
+      {state:'grow', plant:CY, tucked:true, wait:'8h left', pct:58}, {state:'ready', plant:SD, kept:true},
+      {state:'grow', plant:CY, tucked:true}, {state:'empty'},
+      {state:'ready', plant:SD, kept:true}, {state:'empty'}
+    ], { chip: ico('snow') + '<b>4 kept blooms</b> waiting &mdash; <b>+50%</b>', chipCls:'frost', armed:true, act: ACT_PAY })),
+    'Turn Motion off and the rim stays. A shimmer that only exists once a keyframe has run is a state that a player with reduced motion on cannot see — the Turn button’s ready ring shipped that way for weeks.')
+  + fig('W4', 'The mixed bed — kept beside unkept-ripe',
+    'The one morning a literal Fall mirror would get wrong.',
+    phone(board([
+      {state:'ready', plant:SD, kept:true}, {state:'ready', plant:SD, kept:true},
+      {state:'ready', plant:CY}, {state:'grow', plant:SD, wait:'4h left', pct:64},
+      {state:'ready', plant:CY}, {state:'empty'},
+      {state:'grow', plant:SD, wait:'4h left', pct:64}, {state:'empty'}
+    ], { chip: ico('snow') + '<b>2 kept</b>, 2 ripe &mdash; <b>+50%</b> on the kept two', chipCls:'frost', armed:true, act: ACT_PAY_MIX })),
+    'The collect takes EVERYTHING ripe and pays the snowfall on the kept subset only. The all-kept morning is the one walk that hides this, which is why the mixed bed is a named test.')
+  + fig('W5', 'Empty, and the season teaching itself',
+    'A first entry, before anything is planted.',
+    phone(board([{},{},{},{},{},{},{},{}],
+      { chip: ico('leaf') + 'Plant a bed, then <b>tuck it in</b> for <b>+50%</b>' })),
+    '?No button at all until there is a bed to tuck, or a disabled Tuck that explains itself? The empty state is the only frame here with nothing below the board, and Fall solves it by simply hiding Collect All.');
+
+/* ---------- 2 · the chip states ---------- */
+const CHIPS = [
+  ['', ico('leaf') + 'Plant a bed, then <b>tuck it in</b> for <b>+50%</b>', 'Empty bed'],
+  ['', ico('leaf') + '<b>5 growing</b> &middot; tuck in for <b>+50%</b> overnight', 'Planted, awake'],
+  ['tucked', ico('quilt') + '<b>Tucked in</b> &mdash; 5 growing', 'Tucked, nothing ripe yet'],
+  ['tucked', ico('clock') + '<b>Tucked in</b> &mdash; first up in 3h', 'Tucked, with an appointment'],
+  ['frost', ico('snow') + '<b>4 kept blooms</b> waiting &mdash; <b>+50%</b>', 'The morning'],
+  ['frost', ico('snow') + '<b>2 kept</b>, 2 ripe &mdash; <b>+50%</b> on the kept two', 'The mixed bed'],
+  ['', ico('star') + '<b>3 ripe</b> &middot; ready to pick', 'Ripe, never tucked'],
+  ['armed', ico('star') + 'The whole bed, kept &mdash; <b>+50%</b>', 'Eight for eight']
+];
+document.getElementById('chips').innerHTML =
+  '<div style="display:flex;flex-direction:column;gap:14px;background:#dfeaf3;border:4px solid var(--ink);'
+  + 'border-radius:var(--r-lg);padding:26px 18px;box-shadow:0 6px 0 rgba(44,26,16,.3)">'
+  + CHIPS.map(function(c){
+      return '<div style="position:relative;height:34px">'
+        + '<div class="wi-chip ' + c[0] + '" style="top:0">' + c[1] + '</div>'
+        + '<i style="position:absolute;left:calc(50% + 150px);top:8px;font-style:normal;font-size:11px;'
+        + 'font-weight:700;color:#4a3524;white-space:nowrap">' + c[2] + '</i></div>';
+    }).join('') + '</div>'
+  + '<p class="note" style="max-width:40ch">Every one of these is a sentence about the bed, never about Holly. '
+  + 'Her four buckets are flavour on top and are free to say nothing at all.</p>';
+
+/* ---------- 3 · the material options ---------- */
+const MATS = [
+  { tag:'M1', name:'Cold frame, snow on the rail', sub:'THE SHIP. Dark timber frame, mid frozen-earth cells — the garden’s own polarity, one season on.',
+    frame:'linear-gradient(180deg,#3f4959,#313947 44%,#262c37)', lip:'#191e26',
+    cellBg:'linear-gradient(180deg,#7d8798,#68717f 72%,#565e6b)', cellLip:'#414854', cap:true },
+  { tag:'M2', name:'Inverted — pale frame, frozen cells', sub:'Fall’s polarity instead: a light board with dark earth inside it.',
+    frame:'linear-gradient(180deg,#8494a8,#6b7c92 44%,#56677d)', lip:'#41516a',
+    cellBg:'linear-gradient(180deg,#3d4553,#2f3743 72%,#242a34)', cellLip:'#1b202a', cap:true },
+  { tag:'M3', name:'Summer’s planter, under snow', sub:'The most literal read of “snow over the familiar bones”.',
+    frame:'linear-gradient(180deg,#d9a870,#bd8551 42%,#97643a)', lip:'#6b4423',
+    cellBg:'linear-gradient(180deg,#a9713f,#7d4f2a 72%,#5f3a1e)', cellLip:'#5f3a1e', cap:true }
+];
+document.getElementById('materials').innerHTML = MATS.map(function(m){
+  let cells = '';
+  for (let i = 0; i < 9; i++){
+    cells += '<div style="border-radius:12px;border:3px solid var(--ink);background:' + m.cellBg
+      + ';box-shadow:0 4px 0 ' + m.cellLip + ';display:grid;place-items:center;overflow:visible">'
+      + (i === 4 ? '' : (i % 3 === 0 ? '<span style="width:80%;height:80%;display:block">' + bloom(SD, false) + '</span>' : '')) + '</div>';
+  }
+  return '<figure><figcaption><span class="tag">' + m.tag + '</span>' + m.name + '<i>' + m.sub + '</i></figcaption>'
+    + '<div style="background:linear-gradient(180deg,#c3d8e6,#eef4f8);padding:22px 14px 26px;border-radius:var(--r-lg);border:4px solid var(--ink)">'
+    + '<div class="mat-board" style="background:' + m.frame + ';box-shadow:inset 0 5px 0 rgba(255,255,255,.28),inset 0 -9px 0 rgba(0,0,0,.2),0 9px 0 ' + m.lip + ',0 18px 26px rgba(44,26,16,.3)">'
+    + (m.cap ? '<div style="position:absolute;left:-2px;right:-2px;top:-9px;height:14px;border-radius:12px 12px 40% 40%/12px 12px 9px 9px;background:linear-gradient(180deg,#fff,#e4eef6);border:3px solid var(--ink);border-bottom:0"></div>' : '')
+    + cells + '</div></div></figure>';
+}).join('')
+  + '<p class="note q" style="max-width:38ch">Which one? <b>M1</b> is the recommendation and it is drawn in every frame above. The reason is docs/05’s four tiers, unchanged: the board is the DARK body against a near-white world, the cells are the mid body inside it, and the cells stay light enough that an ink outline and an ink empty-marker still read on them — the first pass made them near-black and both vanished. <b>M2</b> is Fall’s polarity, which works there because Fall’s world is dark olive. <b>M3</b> is the most literal reading of the spec’s “background swap” and says <i>this is the same garden</i> loudest — but a warm brown board in a snow field is Summer with the lights off.</p>';
+
+/* ---------- 4 · the gate card ---------- */
+const HEDGE_SVG = '<svg class="gate-hedge l" viewBox="0 0 104 96" aria-hidden="true">'
+  + '<path d="M4 96V44 C4 22 22 8 44 8 C70 8 88 24 88 46 V96 Z" fill="#2f5238" stroke="' + INK + '" stroke-width="3.4" stroke-linejoin="round"/>'
+  + '<path d="M16 42 C22 28 34 20 47 20 C62 20 74 30 78 44" fill="none" stroke="#3f6b47" stroke-width="5" stroke-linecap="round"/>'
+  /* A cap, not a dome. The first pass drew a white shape the size of the hedge
+     and the gate read as two mushrooms. */
+  + '<path d="M6 40 C12 22 28 10 45 10 C64 10 80 22 86 42 C76 34 62 30 45 30 C28 30 15 33 6 40 Z" fill="#ffffff" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/></svg>';
+document.getElementById('gate').innerHTML = fig('W6', 'Turn 3 &mdash; the gate lifts where you are standing',
+  'Fall’s fallOpens pattern, one season on.',
+  '<div class="phone">' + SCENERY + '<div class="ui">' + HUD + QUEST + RAIL + '<div class="stage"></div>' + DOCK + '</div>'
+  + '<div class="scrim"></div><div class="sheet cere"><div class="sheet-grip"><span></span></div>'
+  + '<div class="sheet-head"><h3>A new year</h3><span class="round-btn ghost">' + ico('close') + '</span></div>'
+  + '<div class="sheet-body"><div class="cere">'
+  + '<div class="cere-flower"><svg viewBox="0 0 120 142">' + hollyDefs()
+  + '<g transform="translate(0 10)"><path d="M60,132 C60,114 59,102 60,92" fill="none" stroke="#4bb257" stroke-width="9" stroke-linecap="round"/>'
+  + '<path d="M60,114 C46,116 34,108 30,96 C44,90 56,100 60,114 Z" fill="#57c15b" stroke="#2c1a10" stroke-width="3" stroke-linejoin="round"/>'
+  + '<g transform="translate(60 56)"><g stroke="#2c1a10" stroke-width="3" stroke-linejoin="round">'
+  + hRing(8, 1.02, 0, '#ff8fc0') + '</g><circle r="26" fill="#ffe9a8" stroke="#2c1a10" stroke-width="3"/>'
+  + '<ellipse cx="-9.5" cy="-4" rx="6.2" ry="7.4" fill="#fffdf6" stroke="#2c1a10" stroke-width="2.4"/><circle cx="-9.5" cy="-4" r="3.4" fill="#2c1a10"/>'
+  + '<ellipse cx="9.5" cy="-4" rx="6.2" ry="7.4" fill="#fffdf6" stroke="#2c1a10" stroke-width="2.4"/><circle cx="9.5" cy="-4" r="3.4" fill="#2c1a10"/>'
+  + '<path d="M-8,10 Q0,17 8,10" fill="#a83250" stroke="#2c1a10" stroke-width="2.6" stroke-linecap="round"/></g></g></svg></div>'
+  + '<div class="speech-block">A whole new year &mdash; and somewhere cold to put it.</div>'
+  + '<div class="gate-card"><div class="gate-scene">'
+  + HEDGE_SVG + HEDGE_SVG.replace('gate-hedge l', 'gate-hedge r')
+  + '<div class="gg"></div><div class="pad"></div>'
+  + '<span class="gate-bloom">' + hollyHeadSvg(104) + '</span></div>'
+  + '<div class="gate-foot"><span>Winter is open</span><span class="chip">' + ico('snow') + 'the season on the right</span></div></div>'
+  + '<div class="btn-row"><button class="btn">' + ico('sprout') + 'Into the new year</button></div>'
+  + '</div></div></div></div>',
+  'The card says a place is open and, 200px to its right, the strip has to honour it — both halves take the same condition. Winter’s card also RETIRES a screenshot: capture-screens.js has a season-gate-winter scene whose expect asserts the locked gate, and slice C makes Winter reachable.');
+
+/* ---------- 5 · Holly's first entry ---------- */
+const LINES = [
+  'Oh. You’re here.',
+  'It’s fine. I was awake anyway.',
+  'Tuck the bed in before you go. What opens under the quilt comes out worth more.',
+  'And don’t tell the yellow one I helped.'
+];
+document.getElementById('intro').innerHTML =
+  LINES.map(function(l, i){
+    return fig('H' + (i+1), 'hollyIntro, line ' + (i+1),
+      i === 0 ? 'The one-shot is consumed only after this has drawn.' : '&nbsp;',
+      phone(board([{},{},{},{},{},{},{},{}],
+        { chip: ico('leaf') + 'Plant a bed, then <b>tuck it in</b> for <b>+50%</b>', speech: l })),
+      i === 3 ? 'Her sass aims at the Summer flower, never at the player. “The yellow one” is the whole rivalry in three words, and it needs no lore to land.' : '');
+  }).join('')
+  + '<p class="note" style="width:390px">?The bubble is <code>#speech</code> given a per-season home &mdash; it lives inside whichever hero’s cell is on screen. That is the docs/11 fix (“Fall’s flower cannot speak”), and Fall inherits it free the same day.</p>';
+
+/* ---------- 6 · the picker ---------- */
+const fmt = (n) => n >= 1000 ? (n/1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'K' : String(n);
+document.getElementById('picker').innerHTML = fig('W7', 'The plant picker &mdash; six real clocks',
+  'Provisional numbers, typed as the spec wrote them.',
+  '<div class="phone">' + SCENERY + '<div class="ui">' + HUD + QUEST + RAIL + '<div class="stage"></div>' + DOCK + '</div>'
+  + '<div class="scrim"></div><div class="sheet"><div class="sheet-grip"><span></span></div>'
+  + '<div class="sheet-head"><h3>Plant</h3><span class="round-btn ghost">' + ico('close') + '</span></div>'
+  + '<div class="sheet-body"><p class="sheet-note">Winter plants keep their own hours. Tuck the bed in and what opens overnight pays the snowfall.</p>'
+  + PLANTS.map(function(p, i){
+      return '<div class="seed-row"><span class="seed-art" style="background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.95),rgba(255,255,255,.6)),' + p.c1 + '">'
+        + bloom(p, false) + '</span>'
+        + '<span><span class="seed-name">' + p.name + '</span><span class="seed-stats">'
+        + '<span class="stat">' + ico('clock') + p.grow + '</span>'
+        + '<span class="stat good">+' + fmt(p.yield) + '</span>'
+        + '<span class="stat">+50% kept</span></span></span>'
+        + '<span class="price ' + (i < 3 ? 'ok' : 'no') + '">' + ico('coin') + fmt(p.cost) + '</span></div>';
+    }).join('')
+  + '</div></div></div>',
+  'Twelve hours is the floor and it is doc 33’s own band. Winter prices BELOW Fall per-hour at any clock the two seasons share — the tuck’s convenience premium, paid in rate — and at these values they share none: Fall’s longest ordinary clock is the apple at 8h.');
+
+/* ---------- 7 · the spec box ---------- */
+document.getElementById('specBox').innerHTML =
+  '<b>Decided in the drawing, and reversible with one word from you:</b><ul>'
+  + '<li><b>One button below the board, and its verb is the bed’s state.</b> Tuck → Tucked in → Collect all. Fall’s Collect All owns that strip and is capped at 132px by the band’s two buttons, which are <i>not</i> hidden in Winter; a second control there would fight it for the same clearance. Gold stays on the collect alone, because gold means “you can have this”.</li>'
+  + '<li><b>Tucked is DRAINED, not a new colour.</b> The chip and the resting button take <code>--paper-dim</code>, exactly as a sleeping creature’s panel does. Asleep is a state, not a tier.</li>'
+  + '<li><b>The kept mark is a static frost rim, with the glint on top.</b> Turn Motion off above: the rim stays. Where a state animates, reduced motion needs a static substitute rather than a shorter duration.</li>'
+  + '<li><b>Winter’s empty-plot marker is Summer’s 30%, not Fall’s 46%.</b> Punch list #12 is open and this season is not going to add a third size to the set.</li>'
+  + '<li><b>Two ramps, declared for docs/05 check 5:</b> the frame <code>#8494a8 / #6b7c92 / #56677d</code> lip <code>#41516a</code>, and the cell <code>#3d4553 / #2f3743 / #242a34</code> lip <code>#1b202a</code>. Plus snow and frost. Every pill, price, chip and button below is an existing recipe restated, and the snowfall’s gold is the armed chip’s exact gold.</li></ul>'
+  + '<b>RULED 2026-09-01 — the owner spent this gate on play rather than on reading '
+  + '(<i>"go with your recommendation on everything; I need to go in there and play with it"</i>), '
+  + 'so these closed on the builder’s picks. The reasoning is in the gate-1 entry of the decision log.</b><ul>'
+  + '<li><b>M1</b>, the dark cold-frame timber with mid frozen-earth cells — drawn in every frame above. docs/05’s four tiers, unchanged: the board is the dark body against a near-white world, the cells are the mid body inside it, and the cells stay light enough for an ink outline to read on them.</li>'
+  + '<li><b>The empty bed gets no button.</b> Fall hides Collect All when there is nothing to collect; Winter hides the tuck when there is nothing to tuck. The chip teaches the rule either way.</li>'
+  + '<li><b>Holly stands in the middle cell from the first visit.</b> She is the flower button; the intro is a line she says, not an arrival.</li>'
+  + '<li><b>No falling snow this slice.</b> A layer costs its backing store whether it is drawn or not, and the room already has the shimmer, the quilts and the sleeping faces moving in it. It is an addition, not a foundation.</li>'
+  + '</ul>';
+
+function bind(id, attr){
+  const b = document.getElementById(id);
+  b.addEventListener('click', function(){
+    const on = b.dataset.on === '1' ? '0' : '1';
+    b.dataset.on = on;
+    document.body.dataset[attr] = on;
+  });
+}
+bind('tNotes', 'notes'); bind('tMotion', 'motion');
+document.getElementById('tNight').addEventListener('click', function(){
+  const b = document.getElementById('tNight');
+  const on = b.dataset.on === '1' ? '0' : '1';
+  b.dataset.on = on;
+  document.querySelectorAll('.phone').forEach(function(p){ p.classList.toggle('night', on === '1'); });
+});
+</script>
+</body>
+</html>
