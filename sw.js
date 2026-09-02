@@ -11,12 +11,14 @@
    Range requests pass straight to the network/CDN. Full-file fetches are
    cache-first in a separate video bucket so repeat views are instant offline. */
 
-const VERSION = 30;
+const VERSION = 31;
 const CACHE = `gw-v${VERSION}`;
 const VIDEO_CACHE = `gw-video-v${VERSION}`;
 const FONTS = 'gw-fonts';
 const NET_TIMEOUT = 4000;   // slow network -> fall back to cache rather than hang
 
+/* Install-time video precache — season BG, idle, powerup, plants, generic talk.
+   Speech lines load on first use (cache-first after that). */
 const VIDEOS = [
   './art/video/bg/spring.mp4', './art/video/bg/summer.mp4',
   './art/video/bg/fall.mp4', './art/video/bg/winter.mp4',
@@ -25,25 +27,6 @@ const VIDEOS = [
   './art/video/flower/idle-2.mp4',
   './art/video/flower/idle-3.mp4',
   './art/video/flower/spring-powerup-1.mp4',
-  './art/video/flower/speech-batch-1/hello-friend.mp4',
-  './art/video/flower/speech-batch-1/hello-there2.mp4',
-  './art/video/flower/speech-batch-1/you-came-back.mp4',
-  './art/video/flower/speech-batch-1/the-soil-missed-you.mp4',
-  './art/video/flower/speech-batch-1/ready-to-grow-something.mp4',
-  './art/video/flower/speech-batch-1/ooh-do-that-again.mp4',
-  './art/video/flower/speech-batch-1/tickles.mp4',
-  './art/video/flower/speech-batch-1/cheater.mp4',
-  './art/video/flower/speech-batch-2/keep-it-coming.mp4',
-  './art/video/flower/speech-batch-2/that-is%20the-spirit.mp4',
-  './art/video/flower/speech-batch-2/more-petals-please.mp4',
-  './art/video/flower/speech-batch-2/beautiful-harvest.mp4',
-  './art/video/flower/speech-batch-2/wow-critical-blooom.mp4',
-  './art/video/flower/speech-batch-2/new-ground-to-grow-on.mp4',
-  './art/video/flower/speech-batch-2/save-up-a-few-coins.mp4',
-  './art/video/flower/speech-batch-2/rain-the-garden-loves-this.mp4',
-  './art/video/flower/speech-batch-2/wonder.mp4',
-  './art/video/flower/speech-batch-2/a-l-bloomed.mp4',
-  './art/video/flower/speech-batch-2/swipe%20down%20fopr%20the%20wild%20meadow.mp4',
   './art/video/plant/sunflower-grow.mp4',
   './art/video/plant/sunflower-finish-loop.mp4'
 ];

@@ -31,6 +31,9 @@ node_modules/
 # Headless screenshot output from tools/probe.js
 .probe/
 
+# ffmpeg remux backups from tools/reencode-art-video.js
+art/video/**/*.bak
+
 # Scratch / personal — never commit
 _to_delete/
 docs/feedback.md
