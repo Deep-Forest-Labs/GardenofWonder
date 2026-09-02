@@ -32,27 +32,30 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
    before pricing anything**: four pets can tend at once, which makes this twelve gem purchases and
    six ads a day, and the ad half collides head-on with `37-monetization.md`'s whole daily budget.
    Two numbers are the owner's to pick.
-5. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
+5. **#21 · Move the drone to the Shop, rent it for an ad, and build the ad button once** — pair
+   with `#18`: both need the same "Watch an ad" component and neither should build it twice. **There
+   is no video icon in `icons.js`**, and `Icons.get()` falls back silently.
+6. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
    the harvest float does not; the payload does not even carry the number. Pairs naturally with
    `#17`, both being "say the true thing in the fewest words".
-6. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
+7. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
    the house register is already written in `data.js`. Also closes a hard-coded number that can
    drift from its knob. **Read the item**: the length exists to keep a promise honest, so keep that.
-7. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+8. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-8. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
+9. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
    it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
    **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
    a working ready-notification.
-9. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+10. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-10. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+11. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
    open question may answer itself.
-11. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
+12. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
    round**: the marker folds into `#12` tonight, the board is a bounded next step, and the background
    is its own session that should start with a `meadow-spike.html` for the owner to judge.
 
@@ -954,6 +957,96 @@ both surfaces.
 **Open question.** Should the Wonder Effect get the same treatment? It is the other multiplier a
 player deliberately switches on, it is far larger, and it currently has the same silence at the
 harvest moment. Including it costs nothing extra; excluding it means this item comes back.
+
+---
+
+### #21 · POLISH · Move the drone to the Shop, rent it for an ad, and build the ad button once · annoying · reported 2026-09-02
+
+**What the owner asked for.** "I had the harvester drone in the actual shop and not the upgrades.
+Allow a person to unlock it for 30 minutes by watching an ad. Again, we don't have ads, so we're
+gonna do the same thing where it's just a button that says 'Watch an ad' with a little icon beside it
+of a little video. Let's make sure our 'Watch ad' button and iconography is consistent across the
+game. We're gonna start doing it more."
+
+**Two jobs: the drone rental, and the shared ad component. The second is the one with legs** — this
+is the owner's second ad surface in two days (`#18` is the first) and they have said plainly there
+will be more.
+
+---
+
+**A · The Shop already has this exact pattern, so this is not a new kind of thing.** `skyCards()`
+(`ui-sheet.js:323`) sells a **timed effect** — `DATA.weatherCall = { minutes: 4, prices: {rain: 8,
+storm: 25} }` — as a card at the top of the Shop, and every card disables while one is running
+(`Game.weatherCallActive()`). A thirty-minute drone is the same shape: a Shop card, a duration, an
+active state, one at a time. **And the Shop is not decor-only** — the *"Purely decorative"* note
+(`ui-sheet.js:372`) sits under the decor grid, below the sky cards, and describes that grid.
+
+**B · A timed drone is boost-shaped, not upgrade-shaped, and this decides most of the work.**
+`processAutoHarvest()` (`game.js:4759`) reads `state.upgrades.autoHarvest` — a permanent integer
+that returns early at 0 — and `autoHarvestCadence(level)` maps level to `3 − level × 0.5` seconds,
+floored at 0.7. Granting a temporary *level* means a second unfamiliar kind of timer plus a saved
+number that must never survive a reload as a permanent upgrade. **`state.boosters` already models
+exactly "this effect, for this long":** `activeBoost(id)`, `boostVal(key)`, a rail chip with a
+countdown, and — once `#9` lands — a tap-for-what-it-does tooltip. Building the rental as a booster
+gets all of that free, and the booster playbook's *"boosts are earned, never bought"* still holds,
+because watching an ad is earning it.
+
+**The reveal curtain is a real decision, not a detail.** `autoHarvest` carries
+`revealAt: 2500000` (`data.js:325`) — the card does not appear in Upgrades until 2.5M lifetime
+coins, and the overnight round has just built more reveal machinery around this idea. **If the Shop
+card sits behind the same curtain, the ad offer is invisible to exactly the newer players a
+thirty-minute taste is aimed at. If it does not, the rental reveals the drone's existence before the
+thing it is a taste of.** Pick deliberately and write it down.
+
+---
+
+**C · The shared ad button, and the reason this item matters more than the drone.**
+
+**There is no video icon.** `icons.js` holds ~50 keys — `coin gem book gear … drone swipe hand … clock
+orders cards … snow quilt hive honey` — and **none of them is a video, play or ad glyph.** One has to
+be authored, in the game's style, as SVG (no binary assets). **And the recorded trap bites here:**
+*"`Icons.get()` falls back silently, and it hid two missing icons"* (`11-known-issues.md:913`) — a
+fix agent that writes `Icons.get('video')` without adding it gets a silent, plausible-looking
+fallback rather than an error.
+
+**Build the component once, with a contract.** Both this item and `#18` need it, so whichever is
+built first owns building it properly and the second consumes it. What it has to carry:
+
+- **One label and one icon**, everywhere. *"Watch an ad"* plus the new glyph.
+- **Absent, not disabled, in a player's first session** — a standing rule in
+  `37-monetization.md:31`.
+- **Never sold for a partial grant.** `#18` found this on the food cap: a creature with 12 hours
+  banked that takes a 16-hour Honeypot gets 12, which is tolerable for gold and not for thirty
+  seconds of attention. The same rule applies here — offering the drone while it is already running
+  spends an ad for nothing.
+- **An impression counter in state**, so the day a real SDK arrives there is already somewhere to
+  count and cap.
+- **A stub that grants immediately**, which is what the owner asked for and what
+  `37-monetization.md:3` says the web build will always be: *"the web build has no ad system and
+  never will."* Doc 37 must be amended for the stub — `#18` says the same and they should say it
+  once, together.
+
+**The ad budget is now a real constraint, not a note.** `37-monetization.md:16` plans **3–6 rewarded
+impressions per player per day** total. `#18` alone could take six on feeding. This is the third ad
+surface proposed in two days, ahead of the three placements doc 37 says ship first. **Not re-argued
+here** — see `#18`'s open question — but every new ad surface makes that question more urgent.
+
+**Fix sketch.** Add a `drone` entry to `DATA.boosters` with `dur: 1800` and an effect key the drone
+loop reads, then make `processAutoHarvest()` take its level from
+`Math.max(state.upgrades.autoHarvest, activeBoost('drone') ? 1 : 0)` so the permanent upgrade and the
+rental compose instead of fighting. Render it as a card in `renderShop()` beside the sky calls, with
+the shared ad button in place of `priceTag()`. Add the video icon to `icons.js`. **What it might
+break:** a player who owns the drone at level 3 must not be offered a rental that would *slow it to
+level 1* — the `Math.max` above is what prevents that, and it needs a sim-test. `CORE_UPGRADES`
+(`ui-sheet.js:212`) still lists `autoHarvest`, so decide whether the Upgrades card stays (the owner
+said "in the actual shop and not the upgrades", which reads as a move, not a copy) — and if it goes,
+grep for the `revealAt` and reveal-arm code that referenced it. `03-systems.md` documents the drone
+and `04-economy.md` the upgrade prices; both move with it. Run `node tools/sim-test.js`.
+
+**Open question.** Does the drone *move* to the Shop or appear in both places? The owner's wording
+reads as a move, but the permanent upgrade and a thirty-minute rental are different purchases — the
+rental is a taste, the upgrade is the thing it is a taste of, and a shop with only the rental leaves
+no way to buy it for good.
 
 ---
 
