@@ -1288,6 +1288,46 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**THE CURTAIN AND THE DRIP IS AT ITS WIREFRAME GATE. NOTHING IS BUILT.** The spec is
+[47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md) — read it twice before touching
+anything here. `tools/curtain-spike.html` draws all three pieces (the seed picker's three bands,
+the upgrade shop's drip, the moments dialog) in twelve static frames, live at
+<https://deep-forest-labs.github.io/GardenofWonder/tools/curtain-spike.html>. **Open it on the
+phone and answer the notes on the frames** — green is decided and ready to build, orange is a real
+open question, red is one of two rulings flagged for possible veto. No state field, no getter, no
+line of `game.js` or any `ui-*.js` exists yet; the reasoning for every frame is the 2026-09-02
+(gate) entry at the top of [10-decision-log.md](10-decision-log.md).
+
+- **The two veto points, plainly.** Arm 2 — the next locked seed is ALWAYS revealed, before a
+  single coin is earned — shown in frames P1/P3. Land Deed's reveal reads
+  `turnsCompleted ≥ plotTurnGate` on top of the usual 400K gold gate, the one card in the drip
+  that isn't earnings-only — shown in frame U3. Veto either and the spike names exactly what
+  changes.
+- **One open question worth an answer before the build**, beyond the frames' own notes: what the
+  UPGRADE pill's dot should mean now that "affordable" and "unseen" are two different facts
+  (frame D1) — doc 36 never pinned the pill's colour or a numbered form, so nothing here is a
+  regression to protect.
+- **Build order once approved**: the derive-then-latch getters and the three new SURVIVES keys
+  (`state.seedRevealed`, `state.upgradeRevealed`, `state.celebrated`) with the full save-plumbing
+  checklist in doc 47, the grandfather migration, and the moments queue as a third `#news` mode —
+  then the surface, faithful to whatever the owner's annotations change — then the gauntlet
+  (invariant coverage, the visual critic against the spike then doc 05, the grammar critic, and a
+  popup-discipline critic that drives the burst, open-sheet and session-start cases by name).
+- **Coordination for whoever picks up gate 2.** Winter's gauntlet has not had a clean round (see
+  below, "What is still open, honestly") and punch-list fix-round #15 (season-tab retirement) is
+  still queued against `ui.js` — this gate's own work never touched it, but the surface pass will.
+  `git fetch` and re-read the top of [10-decision-log.md](10-decision-log.md) before starting;
+  this tree takes commits mid-session most days.
+
+| Gate | State |
+| --- | --- |
+| 1 · The wireframe spike, then stop | **Closed.** `tools/curtain-spike.html` live, twelve frames, two rulings flagged for veto |
+| 2 · Engine | Not started — waiting on the owner's annotations |
+| 3 · The surface | Not started |
+| 4 · The gauntlet | Not started |
+
+---
+
 **SLICE C — WINTER, THE NIGHT SHIFT — IS PLAYABLE ON `main`.** The spec is
 [46-the-night-shift.md](46-the-night-shift.md); read it twice before touching anything here.
 

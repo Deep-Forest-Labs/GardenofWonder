@@ -5,6 +5,67 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-02 (gate) — The curtain and the drip, drawn before it is built
+
+**Gate 1 of [47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md), the spec the ruling
+below produced.** `tools/curtain-spike.html` draws all three pieces — the seed picker's three
+bands, the upgrade shop's drip, the moments dialog — in twelve static frames at 390×844, no
+`data.js`/`game.js`/`style.css` loaded, every reused component's CSS copied by hand from the real
+stylesheet so the mockup cannot be righter than the game it is describing. Live at
+<https://deep-forest-labs.github.io/GardenofWonder/tools/curtain-spike.html>. **Nothing is built
+yet** — no state field, no getter, no line in `game.js` or any `ui-*.js`.
+
+**What the frames prove, not just assert.** A fresh save (P1) shows exactly the picker the spec
+promises: Daisy and Tulip open, Bluebell alone priced and padlocked, everything past it a
+silhouette. The same save under "Priciest" (P2) shows Bluebell, Tulip and Daisy reorder while the
+`???` rows underneath do not move at all — the sort-sink rule, not merely stated. A later state
+(P3) shows Lavender light up on its own once lifetime gold clears 85% of its price, wearing the
+same gold flash a purchase gets, while the wallet shown (40,000 credits) stays far under what it
+would take to actually buy it — arm 3 and arm 4 are visibly different mechanisms, not one law
+wearing two names. The Almanac frame (A1) puts a never-grown-but-revealed row (today's exact
+`.almanac-row.dim`, untouched) beside a masked one, so the difference the spec insists on is
+something to look at rather than take on faith. The shop opens on four cards (U1), Star Strike
+drops into its real ladder slot past 40K wearing the fresh flash while Rain Dance and Bee Swarm —
+cheaper, but later in ladder order — already look ordinary (U2), and Land Deed's three states
+across the Turn gate (U3) are drawn side by side rather than described. The moments dialog (M1–M4)
+is the same `.news-card` recipe four times over, proving the art chain never leaves a hole: a
+painted scene, the shared placeholder, and the bloom or badge alone all read as a finished screen.
+
+**Two rulings the spec already made are shown live rather than re-argued, because the gate exists
+to let the owner see their consequence before vetoing either.** Arm 2 — the next locked seed is
+ALWAYS revealed, from a fresh save's first frame — is why Bluebell is priced in P1 before a single
+coin is earned; veto it and the picker reads purely off the 85% line, which can leave a save with
+nothing to save up for on screen for a stretch. Land Deed's `turnsCompleted ≥ plotTurnGate` carve-out
+is why U3 has a middle state at all — a card that reveals on gold alone but cannot be bought before
+Turn 1 is a moment that celebrates a purchase the game refuses; veto it and Land Deed reveals at
+400K flat, an honest number nothing can yet spend.
+
+**Builder judgment calls made at wireframe fidelity, worth a look rather than a ruling.** One hint
+line, not nineteen — every `???` row reads "Keep growing — the garden isn't done with you," the
+same choice `pairRows()` already made for an unformed creature pair (a generic "???" plus one
+non-revealing note), not `critterRows()`'s per-creature `hint` field, which names a creature that
+already has a face on screen. The silhouette is one generic dark flower glyph for every masked row
+and Almanac slot, never a shape that hints at family or rarity — the colour is the reveal, the
+shape stays a secret twice over. The moments dialog is drawn as literally `#news`, third mode,
+reusing its class names rather than inventing a sibling dialog system, exactly as the spec asks.
+
+**Genuinely open, and asked rather than answered on the frames (D1).** The UPGRADE pill's dot —
+doc 36 documents that it exists and never pins its colour or a numbered form. Four readings are
+drawn side by side: no change, the same plain dot doing double duty for "unseen" as well as
+"affordable," a two-tone treatment, and a count like the dock tabs already carry for packs and
+quests. Also open: the moments dialog's button copy (this spike reuses "Got it!", the What's New
+dialog's own acknowledgement copy, for a dialog that unlike that one isn't asking the player to
+acknowledge anything) and whether five sampled `???` rows read right at nineteen, which wants a
+look at the real ladder before the gauntlet rather than a ruling now.
+
+**Coordination, checked at kickoff and worth re-checking at gate 2.** Winter's gauntlet has not had
+a clean round (docs/HANDOFF.md, "What is still open, honestly") and punch-list fix-round #15
+(season-tab retirement) is still queued, touching `ui.js` — this pass's engine work stays clear of
+both files; the surface pass that follows approval will need a fresh `git fetch` and a re-read of
+this log's own top before touching either.
+
+---
+
 ## 2026-09-02 (ruling) — The curtain and the drip: reveals become moments, and the shop learns to grow
 
 **The owner adopted recommendations 1 and 2 of the celebratory-progression pass** (pressure-tested
