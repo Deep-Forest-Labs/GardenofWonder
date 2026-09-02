@@ -288,29 +288,41 @@ function winterMeasurement() {
     console.log('    keeps existing, and moves when the ladder does.');
   }
 
-  /* A FULL KEPT NIGHT, priced from the data rather than from a run: eight
-     plots of one plant, every one of them kept. Every rung is checked, because
-     the guardrail is about the LADDER and not about the rung a run happened to
-     reach. */
-  console.log('\n  a full kept night, per rung — net of what the bed cost to sow:');
+  /* A FULL KEPT NIGHT, priced from the data rather than from a run: eight plots
+     of one plant, every one of them kept. Every rung is checked, because the
+     guardrail is about the LADDER and not about the rung a run happened to
+     reach.
+
+     PRICED AT GROSS, and getting that wrong is what made the first version of
+     this report say the opposite of the truth. `net` — the night's takings less
+     what the bed cost to sow — is a quantity NO TURN GATE READS. `credit()`
+     moves `year.coinsEarned` and `lifetimeCoins` by the full payout, and sowing
+     is a bare `state.credits -= cost` that touches neither: the mint reads
+     EARNINGS, never balance, which game.js says in those words and sim-test
+     bill 3 asserts by name. Net understates every rung by a constant 1.909
+     here (yield is 1.4x cost and the snowfall is another 1.5x, so gross is
+     2.1x cost and net is 1.1x), and that factor is the whole difference
+     between a pass and a fail.
+
+     Net is still printed, because "what the night actually made you" is the
+     number a player feels. It is just not the number the gates see. */
   const gate = DATA.year;
   const rungs = DATA.winter.plants.map((p) => {
     const gross = Math.round(p.yield * (1 + DATA.winter.snowfall)) * DATA.winter.plots;
     const cost = p.cost * DATA.winter.plots;
-    return { p, gross, net: gross - cost };
+    return { p, gross, cost, net: gross - cost };
   });
+  console.log('\n  a full kept night, per rung. GROSS is what the Turn gates see:');
   rungs.forEach(({ p, gross, net }) => {
     console.log(`    ${p.name.padEnd(15)} ${String(Math.round(p.grow / 3600)).padStart(2)}h  gross ${gross.toLocaleString().padStart(10)} · net ${net.toLocaleString().padStart(10)}`);
   });
 
-  /* THE ASSERTION, and getting it right took a correction worth keeping. Both
-     gates, from one night, WITH NOTHING ELSE PLAYED — measured against the
-     ledgers as they actually stand at Turns 3-6 rather than against a zero
-     baseline. The mint is CUMULATIVE (`mintK*sqrt(lifetime) - mintedBase`), so
-     pricing a night's net as `mintK*sqrt(net)` treats every night as the
-     player's first and overstates the seed side by an order of magnitude. The
-     honest question is the INCREMENT: at the lifetime this player has actually
-     reached, what does one more night's net mint? */
+  /* THE ASSERTION. Both gates, from one night, with nothing else played —
+     measured against the ledgers as they actually stand at Turns 3-6 rather
+     than against a zero baseline. The mint is CUMULATIVE
+     (`mintK*sqrt(lifetime) - mintedBase`), so the question is the INCREMENT at
+     the lifetime this player has reached: what does one more night's earnings
+     mint on top of what they have already drawn? */
   const gateTurns = withWinter.turns.filter((t) => t.turn >= 3 && t.turn <= 6);
   console.log(`\n  gates: minCoins ${gate.minCoins.toLocaleString()} · minSeeds ${gate.minSeeds}`);
   if (!gateTurns.length) {
@@ -318,48 +330,59 @@ function winterMeasurement() {
     console.log('  Run more days. A guardrail nothing exercised is not a guardrail.');
     process.exitCode = 1;
   } else {
+    const incrementAt = (life, gross) =>
+      gate.mintK * Math.sqrt(life + gross) - gate.mintK * Math.sqrt(life);
     const breaches = [];
     gateTurns.forEach((t) => {
-      rungs.forEach(({ p, net }) => {
-        if (net < gate.minCoins) return;                       // the coin gate alone
-        const minted = gate.mintK * Math.sqrt(t.lifetime + net) - t.mintedBase;
-        const already = gate.mintK * Math.sqrt(t.lifetime) - t.mintedBase;
-        const increment = minted - already;
-        if (increment >= gate.minSeeds) breaches.push({ turn: t.turn, p, net, increment });
-      });
-    });
-    const worst = {};
-    gateTurns.forEach((t) => {
-      rungs.forEach(({ p, net }) => {
-        const inc = gate.mintK * Math.sqrt(t.lifetime + net) - gate.mintK * Math.sqrt(t.lifetime);
-        const k = `${t.turn}|${p.id}`;
-        worst[k] = { turn: t.turn, name: p.name, net, inc, clearsCoins: net >= gate.minCoins };
+      rungs.forEach(({ p, gross }) => {
+        if (gross < gate.minCoins) return;                     // the coin gate
+        if (incrementAt(t.lifetime, gross) >= gate.minSeeds) {  // and the seed gate
+          breaches.push({ turn: t.turn, p, gross, increment: incrementAt(t.lifetime, gross) });
+        }
       });
     });
     console.log(`  measured at this run's Turns ${gateTurns.map((t) => t.turn).join(', ')} — lifetime ${
       gateTurns.map((t) => Math.round(t.lifetime / 1000) + 'K').join(', ')}`);
     const topRung = rungs[rungs.length - 1];
     gateTurns.forEach((t) => {
-      const inc = gate.mintK * Math.sqrt(t.lifetime + topRung.net) - gate.mintK * Math.sqrt(t.lifetime);
-      console.log(`    Turn ${t.turn}: the richest night (8 ${topRung.p.name}, net ${
-        topRung.net.toLocaleString()}) clears the coin gate ${
-        topRung.net >= gate.minCoins ? 'YES' : 'no'} · mints ${inc.toFixed(2)} seeds against a gate of ${gate.minSeeds}`);
+      console.log(`    Turn ${t.turn}: the richest night (${DATA.winter.plots} ${topRung.p.name}, gross ${
+        topRung.gross.toLocaleString()}) clears the coin gate ${
+        topRung.gross >= gate.minCoins ? 'YES' : 'no'} · mints ${
+        incrementAt(t.lifetime, topRung.gross).toFixed(2)} seeds against a gate of ${gate.minSeeds}`);
     });
     if (breaches.length) {
-      console.log(`\n  GUARDRAIL ONE: FAIL — a single full kept night clears BOTH Turn gates:`);
-      breaches.slice(0, 6).forEach(({ turn, p, net, increment }) => {
-        console.log(`    Turn ${turn}, 8 ${p.name}: net ${net.toLocaleString()} mints ${increment.toFixed(2)} seeds (gate ${gate.minSeeds})`);
+      const worstLife = Math.min(...gateTurns.map((t) => t.lifetime));
+      /* THE DIAL, SOLVED, so the report hands over a number rather than a
+         problem. The seed gate is the binding one for every rung above the coin
+         gate, and it is satisfied while
+             mintK*(sqrt(L + G) - sqrt(L)) < minSeeds
+         which rearranges to  G < 2*(minSeeds/mintK)*sqrt(L) + (minSeeds/mintK)^2.
+         Gross is `plots * cost * 1.4 * (1 + snowfall)`, so that ceiling is a
+         COST ceiling — and note which way it points: gross RISES with cost, so
+         a dearer top rung makes this worse, not better. */
+      const k = gate.minSeeds / gate.mintK;
+      const maxGross = 2 * k * Math.sqrt(worstLife) + k * k;
+      const perPlot = 1.4 * (1 + DATA.winter.snowfall);
+      const maxCost = Math.floor(maxGross / (DATA.winter.plots * perPlot));
+      const bad = [...new Set(breaches.map((b) => b.p.name))];
+      console.log(`\n  GUARDRAIL ONE: FAIL — a single full kept night clears BOTH Turn gates.`);
+      console.log(`  Rungs that do it: ${bad.join(', ')}. Worst case:`);
+      breaches.slice(0, 4).forEach(({ turn, p, gross, increment }) => {
+        console.log(`    Turn ${turn}, ${DATA.winter.plots} ${p.name}: gross ${gross.toLocaleString()} mints ${increment.toFixed(2)} seeds (gate ${gate.minSeeds})`);
       });
-      console.log('  One night should not be a whole Turn. Every extra Turn also pays the blessing,');
-      console.log('  which nothing prices — so this compounds. The dial is DATA.winter\'s cost ladder');
-      console.log('  (raise the costs, which lowers the net) or DATA.year.minCoins / minSeeds, and');
-      console.log('  the second of those is outside this slice. See docs/33 and docs/46.');
+      console.log(`\n  THE DIAL: at this run's poorest Turn-3-to-6 lifetime (${
+        Math.round(worstLife).toLocaleString()}), a night may gross at most ${
+        Math.round(maxGross).toLocaleString()} — a top rung costing at most ${
+        maxCost.toLocaleString()} against ${DATA.winter.plants[DATA.winter.plants.length - 1].cost.toLocaleString()} today.`);
+      console.log('  NOTE WHICH WAY THIS POINTS: gross rises with cost, so making the top rung');
+      console.log('  DEARER makes this worse. The dials are the top rung\'s cost coming DOWN,');
+      console.log(`  DATA.winter.snowfall coming down, or DATA.year.minSeeds going up — and the`);
+      console.log('  last of those is outside this slice. All three are the owner\'s call; docs/46');
+      console.log('  says every number in DATA.winter is provisional and measured before it ships.');
       process.exitCode = 1;
     } else {
       console.log('\n  GUARDRAIL ONE: OK — at every Turn between 3 and 6 this run reached, no rung\'s');
-      console.log('  single full kept night clears both gates. The coin gate falls to the top rungs');
-      console.log('  on its own, which is expected and is why the SEED gate is the binding one:');
-      console.log('  the mint is cumulative, so a night is worth less the further in the player is.');
+      console.log('  single full kept night clears both gates.');
     }
   }
 

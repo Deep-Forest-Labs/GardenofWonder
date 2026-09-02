@@ -41,7 +41,14 @@ const Winter = (() => {
     },
     moon: {
       sky1: '#1c2740', sky2: '#2e3a58', sky3: '#46506e',
-      hillFar: '#3d4a68', hillNear: '#2f3c57',
+      /* MOONLIT SNOW, not night sky. These were #3d4a68 / #2f3c57 — darker
+         than the board's own frame ramp, so at night the dark body had nothing
+         to be dark against and docs/05's first question failed: measured, the
+         frame read L 54 against a world of L 55 and the tier vanished. The
+         world here is SNOW in both skies, which is the gate-1 ruling's own
+         premise; snow under a moon is dim, not dark. They carry the day
+         palette's hills-to-ground relation into night. */
+      hillFar: '#8fa2bd', hillNear: '#7b8daa',
       ground: '#c8d6e8', groundDark: '#8497b4', groundLight: '#d8e2f0',
       shadow: '#7185a4',
       hedge: '#1e3626', hedgeLit: '#2a4a31',

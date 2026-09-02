@@ -8225,11 +8225,39 @@ check('the planted clock is DATA.winter\'s clock exactly, with every modifier ar
   S.winter.grid[0].grow === CAMELLIA.grow, `${S.winter.grid[0].grow} vs ${CAMELLIA.grow}`);
 check('and the modifiers really were live — growModifier() is off 1 right now',
   G.growModifier() !== 1, String(G.growModifier()));
-/* And the payout side: no verb, no boost and no petal multiplies a Winter yield. */
+/* AND THE PAYOUT SIDE, with the multipliers that actually multiply a payout.
+   The first version of this armed rain, autoWater, a Quick Sprout petal and
+   Bloom Burst — every one of which is a GROWTH or a TAP term, so it asserted a
+   flat yield against nothing. A harvest's payout multipliers are
+   `globalCredits` (Golden Popups), `petals.rich`, pollination and the Wonder;
+   those are what have to be live for the claim to mean anything. */
 S.credits = 0;
+S.boosters.golden = clock + 9999;                       // globalCredits +25%
+S.petals = { snowdrop: { rich: DATA.petals.shared.rich.cap, quick: 0, sig: 0 } };
+S.wonder = { until: clock + 9999, last: 0 };
+check('the payout multipliers really are live — the guard is not vacuous',
+  G.boostVal('globalCredits') > 0 && G.wonderActive() === true
+  && G.petalMult('snowdrop') > 1,
+  `${G.boostVal('globalCredits')} / ${G.wonderActive()} / ${G.petalMult('snowdrop')}`);
 S.winter.grid[0].plantedAt = clock - CAMELLIA.grow - 10;
 check('the payout is the flat yield with every payout multiplier armed',
-  G.winterHarvest(0).payout === CAMELLIA.yield);
+  G.winterHarvest(0).payout === CAMELLIA.yield, String(CAMELLIA.yield));
+/* AND THE COLLECT-ALL PATH, because a multiplier that leaked into only one of
+   the two survives a sabotage of the other — the same both-paths lesson the
+   Tally counter taught this suite two rounds ago, and it caught a real hole
+   here: with the multipliers still armed, a whole bed pays flat too. */
+clearWinter();
+S.credits = 0;
+S.winter.tuckedAt = clock - SNOWDROP.grow - 20;
+for (let i = 0; i < 4; i += 1) S.winter.grid[i] = wCell('snowdrop', SNOWDROP.grow + 10);
+G.winterDeriveKept(clock);
+const flatAll = G.winterHarvestAll();
+check('and the whole bed pays flat too, with the same multipliers live',
+  flatAll && flatAll.payout === withSnow(SNOWDROP) * 4,
+  `${flatAll && flatAll.payout} vs ${withSnow(SNOWDROP) * 4}`);
+S.wonder = { until: 0, last: 0 };
+S.boosters = {};
+S.petals = {};
 G.Dev.setWeather(null);
 S.petals = {};
 S.boosters = {};
@@ -8483,6 +8511,16 @@ check('the yield law holds for every Winter plant — yield is cost x 1.4',
 check('Winter prices below Fall per hour at every clock the two seasons share',
   WI.plants.every((wp) => DATA.fall.plants.every((fp) => fp.grow !== wp.grow
     || wp.yield / wp.grow < fp.yield / fp.grow)));
+/* APPEND-ONLY, PINNED. The load path drops an unknown id to an empty cell, and
+   Winter advertises two-day holds — so renaming or removing a shipped id
+   silently deletes a bloom somebody was saving, with no error and nothing in
+   the save to show it happened. The list is written out rather than derived,
+   because a guard derived from the data it is guarding cannot fail. Adding a
+   rung is appending to this array; changing one is not something to do. */
+check('every shipped Winter id is still here, in order — the ids are APPEND-ONLY',
+  ['snowdrop', 'jasmine', 'cyclamen', 'paperwhite', 'hazel', 'camellia']
+    .every((id, i) => WI.plants[i] && WI.plants[i].id === id),
+  WI.plants.map((p) => p.id).join(','));
 check('Winter plant ids are unique and none collides with a seed or a Fall crop',
   new Set(WI.plants.map((p) => p.id)).size === WI.plants.length
   && WI.plants.every((p) => !DATA.seeds.some((sd) => sd.id === p.id)

@@ -310,7 +310,7 @@ filter and tooltip guard rather than re-implementing; **the stages pass owns the
    - `goSeason()` is a table of rooms with a leave-then-enter walk, so Spring is one row.
    - Holly is in `flora.js` at the Talking Flower's construction, and in the avatar picker
      **fitted**, gated on `seen.hollyIntro`.
-   - Eleven new colours: three declared ramps and one gate literal, all in docs/05 with reasons.
+   - Twelve new colours: three declared ramps and two gate literals, all in docs/05 with reasons.
 5. **The gauntlet** (doc 34) — invariant coverage, partition, pacing, visual fidelity against
    the spikes then doc 05, the grammar critic (Winter reads as the same game at a different
    speed; Holly reads as this game's character and no one else's — silhouette test re-run), the
@@ -343,10 +343,26 @@ filter and tooltip guard rather than re-implementing; **the stages pass owns the
 
 **And the pacing measurement, reported rather than judged, because the acceptance is the owner's:**
 
-- **Guardrail one passes by 7.5%.** Below a lifetime of **48.9M gold** the richest kept night
-  (eight Camellia, net 1.408M) clears both Turn gates on its own, and the model's poorest
-  Turn-3-to-6 player sits at 52.5M. Thin, on a model that runs hot against doc 33's own year-one
-  target. Raising the top rung's cost widens it.
+- **Guardrail one FAILS, and the number to rule on is the top rung's cost.** A single full kept night
+  of **eight Camellia grosses 2,688,000**, which clears `minCoins` 100,000 twenty-six times over and
+  mints **18.3 Saved Seeds against a gate of 10** — at every Turn from 3 to 6. Driven through the real
+  engine rather than derived: `Game.turnReady()` goes false → true on that one collect with nothing
+  else played. **Only Camellia breaches**; Witch Hazel and below are clear.
+  
+  **The dial, and it points the opposite way to intuition.** At this model's poorest Turn-3-to-6
+  lifetime a night may gross at most **1,459,149**, which is a top rung costing at most **86,854**
+  against 160,000 today. Gross is `plots × cost × 1.4 × 1.5`, so it RISES with cost — making Camellia
+  dearer makes this worse. The dials are the top rung's cost coming **down**, `DATA.winter.snowfall`
+  coming down, or `DATA.year.minSeeds` going up, and the last is outside this slice. All three are the
+  owner's; doc 46 says every number in `DATA.winter` is provisional and measured before it ships.
+
+  *(This was reported as "passes by 7.5%" until 2026-09-02. That was wrong, and wrong in the
+  direction that matters: the guardrail was priced from **net** — the night's takings less what the
+  bed cost to sow — and no Turn gate reads net. `credit()` moves `year.coinsEarned` and
+  `lifetimeCoins` by the full payout and sowing is a bare `state.credits -= cost` that touches
+  neither. The mint reads EARNINGS, never balance, which `game.js` says in those words and sim-test's
+  bill 3 asserts by name. Net understates every rung by a constant 1.909, which is the whole
+  difference between the pass and the failure.)*
 - **Doc 46's own metric:** a kept morning is worth a **median 23% of that day's income** (spread
   8%–52%, eleven mornings in thirty days). The band is the owner's to set.
 - **Winter buys gold and spends Turns.** Over thirty days the arm that plays Winter turns 16 times

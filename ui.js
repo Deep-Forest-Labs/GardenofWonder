@@ -735,18 +735,40 @@
      and did nothing at all on a tall phone. `.rail` keeps `min-height`, so an
      empty row still holds its box and the board below cannot move. */
   const inSeasonRoom = () => season === 'fall' || season === 'winter';
+  /* WHICH BOOSTS ACTUALLY REACH A SEASON ROOM — and it is not "none", which is
+     what the first pass assumed. The hero flower in a season's middle cell IS
+     the flower button (docs/46: "paying exactly what taps pay everywhere"), and
+     `tapFlower()` reads `boostVal('tapPower')`, `critChance` and
+     `globalCredits`. So Bloom Burst and Golden Popups genuinely work on the
+     taps a player is making on Holly. Only Seed Rush (`growSpeed`) and Fortune
+     Aura (`rarityWeight`) cannot reach: no Winter or Fall plant takes a growth
+     modifier or rolls a rarity, by construction.
+
+     The owner's #11 ruling is "hide the power-up that's in effect on that
+     garden" where you CANNOT use power-ups. Two of the four you can, so this
+     predicate is the ruling applied to what the engine actually does rather
+     than to a premise that is only three-quarters true. It gates both halves —
+     the chip in the rail and the tap that spends one — so they can never
+     disagree about the same boost. */
+  const SEASON_DEAD_EFFECTS = ['growSpeed', 'rarityWeight'];
+  const reachesHere = (def) => !inSeasonRoom()
+    || Object.keys(def.effects || {}).some((k) => SEASON_DEAD_EFFECTS.indexOf(k) === -1);
   function renderRail() {
     const now = Game.nowSeconds();
     let html = '';
-    if (!inSeasonRoom()) DATA.boosters.forEach((b) => {
+    DATA.boosters.forEach((b) => {
       if (!Game.activeBoost(b.id)) return;
+      if (!reachesHere(b)) return;
       const remain = Math.max(0, S.boosters[b.id] - now);
       const p = Math.max(0, Math.min(1, remain / b.dur));
       html += `<div class="chip timed" style="--tint:${b.tint}">
         <span class="ring" style="--p:${p.toFixed(3)}"><i>${Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain)}</i></span>
         <span>${b.name}</span></div>`;
     });
-    if (Game.wonderActive() && !inSeasonRoom()) {
+    /* The Wonder multiplies every payout including a tap, so it reaches here
+       too — and it is the loudest thing in the game, which makes hiding it the
+       most confusing possible thing to do with it. */
+    if (Game.wonderActive()) {
       const remain = Math.max(0, S.wonder.until - now);
       html = `<div class="chip timed" style="--tint:#ff6bd6">
         <span class="ring" style="--p:${(remain / WONDER.duration).toFixed(3)}"><i>${Math.ceil(remain)}</i></span>
@@ -998,25 +1020,25 @@
   el.btnPower.addEventListener('click', () => {
     Sound.resume();
     noteActivity();
-    /* A POWER-UP SPENT IN A SEASON ROOM IS A POWER-UP THROWN AWAY. Fall and
-       Winter are outside every boost by construction, and the button sits in
-       the band, which is NOT hidden there — so a tap burned an unrepeatable
-       consumable, silently, for nothing. The owner's #11 ruling hides the
-       running chip in a room it does not reach; this is the same rule one step
-       earlier, at the moment of spending. It says where the boost DOES work
-       rather than just refusing, because a control that does nothing reads as
-       broken. */
-    if (inSeasonRoom()) {
+    const id = el.btnPower.dataset.boost;
+    /* A POWER-UP SPENT WHERE IT CANNOT REACH IS A POWER-UP THROWN AWAY — the
+       button sits in the band, which is not hidden in a season room, so a tap
+       burned an unrepeatable consumable silently. But the first version of this
+       guard refused ALL FOUR, and two of them work: Holly is the flower button
+       and a tap on her reads `tapPower` and `globalCredits` like any other.
+       Refusing a boost that would have worked is the same harm as spending one
+       that would not, so the guard asks the boost rather than the room. */
+    const seated = id && DATA.boosters.find((b) => b.id === id);
+    if (seated && !reachesHere(seated)) {
       Sound.play('deny');
       FX.shake(3);
       toast({
-        title: 'Not in this garden',
-        body: 'Power-ups work in the summer garden. Swipe back and it will still be there.',
-        art: Icons.get('sprout')
+        title: `${seated.name} does nothing here`,
+        body: 'Nothing in this garden grows faster or rolls rarer. Swipe back to the summer garden and it will still be waiting.',
+        art: Icons.get(seated.icon)
       });
       return;
     }
-    const id = el.btnPower.dataset.boost;
     /* Empty is a promise, not a dead control: it says where boosts come from
        rather than doing nothing at all. */
     if (!id) {

@@ -995,7 +995,19 @@
     const pct = Math.round(DATA.winter.snowfall * 100);
     const rows = DATA.winter.plants.map((p) => {
       const can = S.credits >= p.cost;
-      const tint = (Winter.PLANTS[p.id] || {}).c1 || '#dbe8f2';
+      /* NOT c1 FOR A WHITE BLOOMER. `.seed-art` paints the token under a white
+         veil, and two of Winter's six are white — Snowdrop and Paperwhite came
+         out the same disc to one part in 255, each carrying a white flower on
+         it. docs/05 names this failure by hand on `.set-ring`: "the veil is for
+         a SATURATED token; a family already near cream takes a highlight
+         instead". The plant's own second colour is the highlight, and it costs
+         no new value: Snowdrop's green-marked inner tepal, Paperwhite's cup. */
+      const art = Winter.PLANTS[p.id] || {};
+      const pale = (hex) => {
+        const n = parseInt((hex || '').slice(1), 16);
+        return Number.isFinite(n) && ((n >> 16) & 255) > 240 && ((n >> 8) & 255) > 240 && (n & 255) > 235;
+      };
+      const tint = (pale(art.c1) ? art.c2 : art.c1) || '#dbe8f2';
       return `<button class="seed-row" data-winter-plant="${p.id}" ${can ? '' : 'disabled'}>
         <span class="seed-art" style="--art:${tint}">${Winter.bloom(p.id, 3)}</span>
         <span>

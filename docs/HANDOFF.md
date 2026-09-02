@@ -1353,12 +1353,21 @@ not what you would guess.
 4. **The play model is one file now** — `tools/play-model.js`, shared by `year-sim` and
    `order-gold`, seeded, on a fixed epoch. See below; it found two real things on its first run.
 
-**THE ONE ECONOMY NUMBER THE OWNER SHOULD SEE.** `node tools/year-sim.js 14 winter` passes guardrail
-one — no rung's single full kept night clears both Turn gates at Turns 3–6 — **by 7.5%**. Below a
-lifetime of **48.9M gold** the richest kept night (eight Camellia, net 1.408M) does clear both, and
-this model's poorest Turn-3-to-6 player sits at 52.5M. That is a thin margin on a model that runs
-hot against doc 33's own year-one target. Every number in `DATA.winter` is provisional and the ladder
-is the owner's to rule on; raising the top rung's cost lowers its net and widens the margin.
+**THE ONE ECONOMY DECISION WAITING ON THE OWNER.** `node tools/year-sim.js 14 winter` **exits 1**.
+Guardrail one FAILS: a single full kept night of eight Camellia grosses **2,688,000**, which clears
+`minCoins` twenty-six times over and mints **18.3 Saved Seeds against a gate of 10**, at every Turn
+from 3 to 6. Verified by driving the real engine — `Game.turnReady()` goes false → true on that one
+collect with nothing else played. **Only Camellia breaches**; Witch Hazel and below are clear.
+
+**The dial points the opposite way to intuition.** A night may gross at most **1,459,149** at this
+model's poorest Turn-3-to-6 lifetime, which is a top rung costing at most **86,854** against 160,000
+today. Gross is `plots × cost × 1.4 × 1.5`, so it rises WITH cost — making Camellia dearer makes it
+worse. The dials are the top rung's cost coming down, `DATA.winter.snowfall` coming down, or
+`DATA.year.minSeeds` going up (outside this slice). All three are the owner's, and doc 46 says every
+number in `DATA.winter` is provisional.
+
+*This was reported as "passes by 7.5%" until 2026-09-02 and that was wrong: the guardrail was priced
+from NET, and no Turn gate reads net — the mint reads earnings, never balance.*
 
 **What is still open, honestly.**
 
@@ -1376,12 +1385,11 @@ is the owner's to rule on; raising the top rung's cost lowers its net and widens
    **#15's season-tab retirement is the one that will conflict** — `renderSeasonEdges()` is
    unchanged, Winter now has a tab, and `tools/capture-screens.js` drives three scenes through those
    tabs. `git fetch` before touching `ui.js`.
-3. **The economy number the owner should rule on**, from `node tools/year-sim.js 14 winter`:
-   guardrail one passes **by 7.5%**. Below a lifetime of **48.9M gold** the richest kept night
-   (eight Camellia, net 1.408M) clears both Turn gates on its own, and this model's poorest
-   Turn-3-to-6 player sits at 52.5M. Thin, on a model that runs hot against doc 33's own year-one
-   target. Raising the top rung's cost lowers its net and widens the margin. **Every number in
-   `DATA.winter` is provisional and the ladder is the owner's.**
+3. **Guardrail one FAILS and `year-sim` exits 1.** Eight kept Camellia gross 2,688,000 and mint 18.3
+   seeds against a gate of 10 at every Turn 3–6 — one night opens a Turn on its own. Only the top
+   rung breaches. The dial is its cost coming DOWN to about 86,854 (gross rises with cost, so
+   raising it makes this worse), or the snowfall down, or `minSeeds` up. **The owner's call, and
+   nothing should be tuned until they make it.**
 4. **Winter buys gold and spends Turns.** Over thirty days the arm that plays Winter turns 16 times
    against 21, and the Turn is where the compounding is. Reported and not tuned — the capital Winter
    parks is capital a sleeping player was not cycling anyway. Doc 46's own metric is the one to

@@ -438,16 +438,29 @@ const Flora = (() => {
     </g>`;
   }
 
-  /** The whole character, for Winter's centre cell. */
+  /** The whole character, for Winter's centre cell.
+
+      THE OUTER GROUP IS THE POINT, and it is the recorded trap: a CSS
+      `transform` REPLACES an SVG `transform` attribute rather than composing
+      with it. `.tf-head` carries `transform:translate(60px,56px)` and
+      `.tf-stemwrap` is animated by `stemSway`, which writes `transform` in
+      every keyframe — so both of her attributes were being silently discarded,
+      and the +10 that buys her seven-point crown its headroom above the Summer
+      flower's petal reach went with them. The remedy is the trap's own:
+      position on an outer group nothing selects, and let CSS animate an inner
+      one. Her head's attribute now MATCHES `.tf-head`'s rule rather than
+      fighting it. */
   function holly(opts = {}) {
     return `
     <svg class="talker holly" viewBox="0 0 120 142" aria-hidden="true">
-      <g class="tf-stemwrap" transform="translate(0 10)">
-        <path d="M60,132 C60,114 59,102 60,92" fill="none" stroke="${HOLLY.leaf}" stroke-width="9" stroke-linecap="round"/>
-        <path class="tf-leaf tf-leaf-l" d="M60,114 C46,116 34,108 30,96 C44,90 56,100 60,114 Z" fill="${HOLLY.leafL}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
-        <path class="tf-leaf tf-leaf-r" d="M60,106 C74,108 86,100 90,88 C76,82 64,92 60,106 Z" fill="${HOLLY.leafL}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+      <g transform="translate(0 10)">
+        <g class="tf-stemwrap">
+          <path d="M60,132 C60,114 59,102 60,92" fill="none" stroke="${HOLLY.leaf}" stroke-width="9" stroke-linecap="round"/>
+          <path class="tf-leaf tf-leaf-l" d="M60,114 C46,116 34,108 30,96 C44,90 56,100 60,114 Z" fill="${HOLLY.leafL}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+          <path class="tf-leaf tf-leaf-r" d="M60,106 C74,108 86,100 90,88 C76,82 64,92 60,106 Z" fill="${HOLLY.leafL}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        </g>
+        <g class="tf-head" transform="translate(60 56)">${hollyHead(opts)}</g>
       </g>
-      <g class="tf-head" transform="translate(60 66)">${hollyHead(opts)}</g>
     </svg>`;
   }
 

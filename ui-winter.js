@@ -21,6 +21,7 @@
      attaches it and load order is not ours to assume. */
   const span = (sec) => UI.fmtSpan(sec);
   const nowSec = () => Date.now() / 1000;
+  const winterCellReady = (c) => Boolean(c && c.seed) && nowSec() >= c.plantedAt + c.grow;
 
   let open = false;
   let sceneKey = '';
@@ -39,14 +40,10 @@
     if (!board) return;
     board.innerHTML = '';
     cellEls.clear();
-    const zs = document.createElement('span');
-    zs.className = 'wi-sleep';
-    zs.innerHTML = Winter.zzz();
-    board.appendChild(zs);
-    /* ONE glint for the whole bed, for the same reason there is one set of Zs:
-       eight infinite animations is eight layouts a frame on `left`, or sixteen
-       composited layers on `transform`, and the recorded crash here is layer
-       memory. The bed is what was kept, so the bed is what catches the light. */
+    /* ONE glint for the whole bed: eight infinite animations is eight layouts a
+       frame on `left`, or sixteen composited layers on `transform`, and the
+       recorded crash here is layer memory. The bed is what was kept, so the bed
+       is what catches the light. */
     const glint = document.createElement('span');
     glint.className = 'wi-glint';
     glint.innerHTML = '<i></i>';
@@ -74,6 +71,7 @@
         <span class="wi-slot"></span>
         <span class="wi-empty">${Icons.get('plantSpot')}</span>
         <span class="wi-quilt">${Winter.quilt()}</span>
+        <span class="wi-sleep">${Winter.zzz()}</span>
         <span class="wi-ready">!</span>
         <span class="wi-wait" hidden></span>
         <span class="wi-bar"><i></i></span>`;
@@ -161,11 +159,19 @@
       el.winterChip.dataset.sig = cls + html;
     }
     el.winterBoard.classList.toggle('armed', b.keptRipe > 0);
-    /* ONE set of Zs for the whole BED rather than one per cell. The quilt is
-       over the bed and not over a list, so the bed is what is asleep — and six
-       cells each drifting their own Zs was six promoted layers and a busy
-       board saying one thing six times. */
-    el.winterBoard.classList.toggle('sleeping', b.tucked && b.planted > b.ripe);
+    /* ONE set of Zs, drawn on the first TUCKED cell — and the choice of cell is
+       the fix rather than a detail. As a child of the BOARD the cluster had
+       nowhere to go: every cell wears its ready badge at its own top-right, so
+       the right shoulder is never free, and the board leaves ten pixels of
+       world either side on a phone, so outside it runs off screen. A tucked
+       cell is by definition NOT ripe and therefore never wears a badge, so
+       that is the one place on this board a wisp cannot collide with anything.
+       Still one element painted, not eight. */
+    let zCell = -1;
+    ((S.winter && S.winter.grid) || []).forEach((c, i) => {
+      if (zCell === -1 && c && c.seed && Game.winterTucked() && !winterCellReady(c)) zCell = i;
+    });
+    cellEls.forEach((v, i) => v.root.classList.toggle('zzz', i === zCell));
     renderAction(b);
   }
 

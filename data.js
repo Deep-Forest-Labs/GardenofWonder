@@ -1270,6 +1270,7 @@ const FLOWER_LINES = {
     'Snow is weather with better manners.',
     'He would not last a night out here.'
   ],
+  unlock: ['New ground to grow on!', 'More room for flowers!', 'Ooh, fresh soil!'],
   rain: ['Rain! The garden loves this.', 'Mmm, petrichor.', 'Drink up, everyone.'],
   storm: ['Thunder! Hold onto your petals.', 'Ooh, that one was close.', 'What a sky.'],
   aurora: ['Look up — the sky has colours!', 'I have only seen this twice.', 'The whole garden is glowing.'],

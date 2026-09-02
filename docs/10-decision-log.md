@@ -170,17 +170,26 @@ is measured per collect from a pairing the model records as each one lands — i
 reconstructed afterwards. **The band is the owner's to set**, as doc 46 says in as many words; the
 tool's job is that the number exists and moves when the ladder does.
 
-**Guardrail one passes, and the honest number is the margin.** No rung's single full kept night
-clears both Turn gates at Turns 3–6. But the first version of that assertion priced the mint as
-`mintK*sqrt(net)` — against a **zero** baseline — which treats every night as the player's first and
-overstated the seed side by an order of magnitude. The mint is cumulative, so the question is the
-INCREMENT at the lifetime the player has actually reached, and the tool measures it at the run's own
-Turns 3–6. **The threshold is now reported every run whether it passes or not**: below a lifetime of
-**48.9M gold**, the richest kept night (eight Camellia, net 1.408M) clears both gates on its own, and
-this model's poorest Turn-3-to-6 player sits at 52.5M — **7.5% above it**. That is a thin margin on a
-model that runs hot against doc 33's own year-one target. **Reported, not fixed:** every number in
-`DATA.winter` is provisional and the ladder is the owner's to rule on, and the spec is explicit that
-the builder types the numbers in rather than changing them.
+**Guardrail one FAILS, and the number to rule on is the top rung's cost.** A single full kept night
+of **eight Camellia grosses 2,688,000**, which clears `minCoins` 100,000 twenty-six times over and
+mints **18.3 Saved Seeds against a gate of 10** — at every Turn from 3 to 6. Driven through the real
+engine rather than derived: `Game.turnReady()` goes false → true on that one collect with nothing
+else played. **Only Camellia breaches**; Witch Hazel and below are clear.
+
+**The dial, and it points the opposite way to intuition.** At this model's poorest Turn-3-to-6
+lifetime a night may gross at most **1,459,149**, which is a top rung costing at most **86,854**
+against 160,000 today. Gross is `plots × cost × 1.4 × 1.5`, so it RISES with cost — making Camellia
+dearer makes this worse. The dials are the top rung's cost coming **down**, `DATA.winter.snowfall`
+coming down, or `DATA.year.minSeeds` going up, and the last is outside this slice. All three are the
+owner's; doc 46 says every number in `DATA.winter` is provisional and measured before it ships.
+
+*(This was reported as "passes by 7.5%" until 2026-09-02. That was wrong, and wrong in the
+direction that matters: the guardrail was priced from **net** — the night's takings less what the
+bed cost to sow — and no Turn gate reads net. `credit()` moves `year.coinsEarned` and
+`lifetimeCoins` by the full payout and sowing is a bare `state.credits -= cost` that touches
+neither. The mint reads EARNINGS, never balance, which `game.js` says in those words and sim-test's
+bill 3 asserts by name. Net understates every rung by a constant 1.909, which is the whole
+difference between the pass and the failure.)*
 
 **Guardrail two is reported and not failed on**, as ruled: a ripe bed held through a Turn carries at
 most 2,688,000 gold into a fresh purse — 26.9× the coin gate. Accepted as cosy planning.
@@ -237,7 +246,7 @@ that took the weather chip with it and did nothing at all on a tall phone. `.rai
 - **Winter's empty-plot marker is Summer's 30%, not Fall's 46%.** Punch list #12 is open on Fall's
   being oversized; a third size would have made the sweep worse.
 
-**The palette went in at eleven new colours, and the seven that came off it are the interesting
+**The palette went in at twelve new colours, and the six that came off it are the interesting
 part.** The first pass was eighteen. Winter's growth bar took a cream well and a frost-blue fill —
 both wrong, and both already answered in the file: a cream well draws a bright line across the
 plant (Fall's own comment says so) and **green means *growing* in every room**, learned once. And a

@@ -4951,16 +4951,24 @@ button:focus-visible{
 /* CLEAR OF THE SNOW RAIL. White Zs over the board's white cap is white on
    white; they hang over the dark frame's right shoulder instead, which is the
    one part of this board that is reliably dark in both skies. */
-/* OUTSIDE the board, off its right shoulder. Twice now these have been put
-   somewhere white: first over the board's snow rail, then inside the top-right
-   cell — which carries its own white frost rim, so it was the same white-on-
-   white one step over. The board's own dark frame does not extend far enough
-   to hold them, so they hang beyond it, where the world is snow and the ink
-   outline is what makes them read. `overflow:visible` on the board is what
-   lets them. */
-.wi-sleep{position:absolute;right:-30px;top:-6px;z-index:9;display:none;pointer-events:none}
-.wi-board{overflow:visible}
-.wi-board.sleeping .wi-sleep{display:block}
+/* ON THE FIRST TUCKED CELL, and it took four placements to find the one place
+   on this board a wisp cannot collide with anything. Over the board's snow
+   rail: white on white. Inside the top-right cell: white on its frost rim,
+   white on white again. Off the board's right shoulder: every cell wears its
+   ready badge at its own top-right, so that side is never free. Off the LEFT
+   shoulder: the board leaves ten pixels of world either side on a phone, so a
+   54px cluster runs off screen.
+
+   A TUCKED CELL IS BY DEFINITION NOT RIPE, so it never wears a badge — which
+   makes it the one anchor that is guaranteed clear, and it is also the honest
+   one: the Zs belong to something asleep. Still one element painted rather
+   than eight, because only the first tucked cell is marked.
+
+   They keep the house outline, which critters.js deliberately omits — that
+   exception was decided over a GREEN garden, and over snow the reason for it
+   inverts. */
+.wi-sleep{position:absolute;right:-16px;top:-26px;z-index:9;display:none;pointer-events:none}
+.wi-plot.zzz .wi-sleep{display:block}
 .wi-zzz{width:54px;height:44px;overflow:visible;display:block}
 /* Visible at rest, drifting as a flourish on top — the same rule the pack badge
    and the creature Zs are both on. A Z that only exists once a keyframe has run
