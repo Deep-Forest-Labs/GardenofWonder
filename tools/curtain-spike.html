@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Curtain &amp; Drip — Wireframe Spike</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  Static. No game dependencies — data.js, game.js and style.css are not loaded.
+  Everything below is drawn from scratch (tokens and component recipes copied
+  by hand from the live style.css) so this spike can never break because the
+  game moved. Real class names are reused wherever a frame is showing chrome
+  that already exists (.seed-row, .card, .almanac-row, .news, .fpill); new,
+  parallel classes are invented only for the genuinely new states this pass
+  adds (.masked, .cv-*). See docs/47-the-curtain-and-the-drip.md — this spike
+  is Gate 1 of that spec.
+
+  --sat/--sab are hardcoded to a real iPhone 16 Pro's insets rather than
+  env(), which is 0 on a desktop — docs/HANDOFF.md's own recorded trap.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+    --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad;
+    --paper-dim:#ebe5d9; --paper-dim-2:#d8d0c0; --paper-dim-edge:#bcb0a0;
+    --grass:#5cc45c; --grass-d:#3f9d45; --grass-l:#8fe08a;
+    --seed:#7bd88f; --seed-d:#3f9d45; --seed-l:#c9f5cf;
+    --coin:#ffc93c; --coin-d:#f08c00;
+    --gem:#8ce0ff; --dot:#ff6b6b;
+    --rare:#4dabf7; --epic:#b197fc; --legend:#ffd43b;
+    --r-lg:26px; --r-md:18px; --r-sm:12px;
+    --sat:59px; --sab:34px;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:#e9e2d3;color:var(--ink);
+    font-family:'Baloo 2',system-ui,sans-serif;
+    padding:0 0 80px;
+  }
+  h1,h2,h3{font-weight:800;margin:0}
+  p{margin:0}
+
+  /* ---------- page chrome (spike-only, not game chrome) ---------- */
+  .intro{max-width:920px;margin:0 auto;padding:28px 20px 10px}
+  .intro .kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .intro h1{font-size:26px;margin-top:4px}
+  .intro p.lede{font-size:14px;font-weight:600;color:var(--ink-soft);max-width:70ch;margin-top:10px;line-height:1.5}
+  .toolbar{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  .toolbar button{
+    font:inherit;font-size:12px;font-weight:800;cursor:pointer;
+    padding:8px 14px;border-radius:999px;border:2.5px solid var(--ink);
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+    box-shadow:0 3px 0 var(--ink-2);
+  }
+  .toolbar button.off{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));box-shadow:0 3px 0 var(--paper-dim-edge);opacity:.7}
+
+  section.grp{max-width:1400px;margin:0 auto;padding:34px 20px 6px}
+  section.grp h2{font-size:19px;display:flex;align-items:center;gap:10px}
+  section.grp h2 .n{
+    display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;
+    background:var(--ink);color:var(--paper);font-size:14px;
+  }
+  section.grp p.lede{font-size:13.5px;font-weight:700;color:var(--ink-soft);margin:6px 0 20px;max-width:80ch;line-height:1.45}
+
+  .row-wrap{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+
+  figure{margin:0;display:flex;flex-direction:column;gap:0}
+  figcaption{max-width:390px;margin-bottom:8px}
+  figcaption .tag{
+    display:inline-block;background:var(--ink);color:var(--paper);
+    font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:6px;
+    vertical-align:2px;margin-right:7px;
+  }
+  figcaption b{font-size:14px}
+  figcaption i{display:block;font-style:italic;font-weight:600;color:var(--ink-soft);font-size:12px;margin-top:2px}
+
+  .phone{
+    width:390px;height:844px;overflow:hidden;position:relative;
+    border-radius:36px;border:8px solid #1a120b;
+    background:linear-gradient(180deg,#cfe8ff,#fdf3d8 60%,#eadfc2);
+    box-shadow:0 14px 26px rgba(20,12,6,.35);
+    font-size:15px;
+  }
+  .phone .scroll{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .phone .notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:120px;height:28px;background:#1a120b;border-radius:0 0 16px 16px;z-index:50;
+  }
+
+  .note{max-width:390px;margin-top:9px;padding:8px 11px;border-radius:10px;font-size:12px;font-weight:700;line-height:1.45}
+  .note.d{background:#eaf6ea;border:2px solid #7bc47f;color:#245c27}
+  .note.d::before{content:'DECIDED — ';font-weight:900}
+  .note.q{background:#fff3e0;border:2px solid #f0a83f;color:#7a4a05}
+  .note.q::before{content:'QUESTION — ';font-weight:900}
+  .note.v{background:#fde3e3;border:3px solid #d9463f;color:#7a1410;font-size:12.5px}
+  .note.v::before{content:'⚠ OWNER VETO POINT — ';font-weight:900}
+  body[data-notes="0"] .note{display:none}
+
+  .strip{background:linear-gradient(180deg,#fffdf7,var(--paper-3));border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 4px 0 var(--ink-2);padding:12px 14px;max-width:390px;margin-top:6px}
+
+  /* ---------- closing summary ---------- */
+  .spec{max-width:1000px;margin:26px auto 0;padding:0 20px}
+  .spec .box{background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);box-shadow:0 4px 0 var(--ink-2);padding:16px 18px;margin-bottom:14px}
+  .spec .box h3{font-size:14px;margin-bottom:8px}
+  .spec .box ul{margin:0;padding-left:18px}
+  .spec .box li{font-size:13px;font-weight:600;line-height:1.55;margin-bottom:6px}
+  .spec .box.veto{border-color:#d9463f;background:#fff6f5}
+
+  /* =========================================================
+     REAL GAME CHROME — copied verbatim from style.css
+     ========================================================= */
+  .hud-row{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--sat) + 10px) 14px 8px}
+  .wallet{display:inline-flex;align-items:center;gap:5px;padding:6px 12px 6px 8px;border:3px solid var(--ink);border-radius:999px;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));box-shadow:0 3px 0 var(--ink-2);font-weight:800;font-size:14px}
+  .wallet svg{width:20px;height:20px}
+
+  .sheet-shell{position:absolute;left:0;right:0;bottom:0;top:64px;background:linear-gradient(180deg,#fffdf7 0%, var(--paper) 40%);
+    border-radius:26px 26px 0 0;border:4px solid var(--ink);border-bottom:none;box-shadow:0 -6px 0 var(--ink-2);
+    display:flex;flex-direction:column;overflow:hidden}
+  .sheet-grip{width:44px;height:5px;border-radius:3px;background:var(--paper-dim-edge);margin:9px auto 4px;flex:none}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;padding:2px 16px 8px;flex:none}
+  .sheet-head h3{font-size:21px}
+  .sheet-x{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--ink);display:grid;place-items:center;background:#fffdf7;box-shadow:0 2px 0 var(--ink-2);flex:none}
+  .sheet-tabs{display:flex;gap:7px;padding:0 16px 10px;flex:none;flex-wrap:wrap}
+  .tab{font:inherit;font-size:12.5px;font-weight:800;padding:7px 13px;border-radius:999px;border:2.5px solid var(--ink);background:#fff;box-shadow:0 2px 0 var(--ink-2);cursor:pointer}
+  .tab.on{background:linear-gradient(180deg,#ffe98a,var(--coin))}
+  .sheet-note{font-size:12.5px;font-weight:700;color:var(--ink-soft);padding:0 16px 10px;line-height:1.4}
+  .sheet-body{flex:1;overflow-y:auto;padding:0 14px 20px}
+
+  /* seed rows — verbatim from style.css */
+  .seed-row{
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
+    width:100%;text-align:left;padding:9px 11px;margin-bottom:9px;
+    background:linear-gradient(180deg,#fff,#fff5e2);
+    border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
+  }
+  .seed-row.faded{background:linear-gradient(180deg,#f3f0e8,#e6e2d5)}
+  .seed-row.locked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.18)}
+  .seed-row.locked .seed-art{filter:saturate(.35)}
+  .seed-row.fresh{background:linear-gradient(180deg,#fff6c2,#ffe066);box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24), 0 0 0 4px rgba(255,201,60,.5)}
+  .seed-art{width:54px;height:54px;flex:none;border-radius:50%;display:grid;place-items:center;
+    background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)), var(--art,#e8f7e3);
+    border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2)}
+  .seed-art svg{width:32px;height:32px}
+  .seed-name{font-size:15px;font-weight:800;line-height:1.15;display:flex;align-items:center;gap:6px}
+  .seed-stats{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+  .stat{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:999px;border:2px solid var(--ink);
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 2px 0 var(--ink-2);font-size:10.5px;font-weight:800}
+  .stat svg{width:12px;height:12px}
+  .stat.good{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+  .seed-desc{display:block;margin-top:3px;font-size:11px;font-weight:600;line-height:1.3;color:var(--ink-soft)}
+  .verb-chip{display:inline-block;padding:1px 7px;border-radius:999px;background:#8fd6ff;border:2px solid rgba(44,26,16,.55);
+    font-size:9.5px;font-weight:900;letter-spacing:.02em;text-transform:uppercase}
+  .seed-lock{display:inline-flex;align-items:center;gap:4px;flex:none;padding:6px 9px;border:2.5px solid var(--ink);border-radius:999px;
+    background:linear-gradient(180deg,#fff,var(--paper-3));box-shadow:0 2px 0 var(--ink-2);font-size:12px;font-weight:800}
+  .seed-lock svg{width:15px;height:15px}
+  .seed-lock.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+  .seed-lock.no{background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));box-shadow:0 2px 0 var(--paper-dim-edge)}
+  .seed-go{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;
+    background:linear-gradient(180deg,#8ce99a,#51cf66);border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2)}
+  .seed-go svg{width:22px;height:22px}
+  .seed-go.off{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));box-shadow:0 3px 0 var(--paper-dim-edge)}
+
+  /* THE NEW STATE — masked / ??? rows. Same box, same lip ladder, the
+     paper-dim family the locked row already wears (a MORE hidden cousin of
+     "not now", never a new hue), silhouette instead of a coloured bloom. */
+  .seed-row.masked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.14)}
+  .seed-art.cv-mask{background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.5), transparent 62%), var(--paper-dim-2);border-color:var(--paper-dim-edge)}
+  .cv-silhouette{width:30px;height:30px;color:rgba(44,26,16,.55)}
+  .cv-hint{display:block;margin-top:3px;font-size:11px;font-weight:700;font-style:italic;color:var(--ink-soft)}
+  .cv-qmark{font-size:15px;font-weight:800;letter-spacing:.06em;color:var(--ink-soft)}
+
+  /* sort pill row */
+  .sortbar{display:flex;gap:7px;padding:0 16px 10px;flex:none}
+
+  /* almanac */
+  .almanac-meter{position:relative;height:20px;border-radius:999px;border:2.5px solid var(--ink);background:var(--paper-2);
+    box-shadow:0 2px 0 var(--ink-2);margin-bottom:12px;overflow:hidden}
+  .almanac-meter i{position:absolute;inset:0;width:var(--fill,0%);background:linear-gradient(180deg,var(--seed-l),var(--seed));display:block}
+  .almanac-meter span{position:relative;z-index:1;display:block;text-align:center;font-size:10.5px;font-weight:800;line-height:20px}
+  .almanac-row{padding:9px 2px;border-bottom:2px dashed rgba(44,26,16,.15);display:flex;gap:10px;align-items:flex-start}
+  .almanac-row:last-child{border-bottom:0}
+  .almanac-row.dim{opacity:.45}
+  .almanac-row .a-art{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;
+    background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)), var(--art,#e8f7e3);border:2.5px solid var(--ink)}
+  .almanac-row .a-art svg{width:24px;height:24px}
+  .almanac-row.masked{opacity:1}
+  .almanac-row.masked .a-art{background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.5), transparent 62%), var(--paper-dim-2);border-color:var(--paper-dim-edge)}
+  .almanac-row.masked .cv-silhouette{width:22px;height:22px}
+  .almanac-row-top{display:flex;align-items:baseline;gap:8px;flex:1;min-width:0}
+  .almanac-row-top .n{flex:1;min-width:0;font-size:13.5px;font-weight:800}
+  .almanac-row-top .r{flex:0 0 auto;font-size:11px;font-weight:800;opacity:.7}
+  .almanac-row-top .c{flex:0 0 46px;font-size:13px;font-weight:800;text-align:right}
+
+  /* upgrade cards */
+  .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .card{position:relative;text-align:left;padding:11px 12px 12px;border:3px solid var(--ink);border-radius:var(--r-md);
+    background:linear-gradient(180deg,#fff,#fff5e2);box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.2);display:flex;flex-direction:column;gap:6px}
+  .card.affordable{background:linear-gradient(180deg,#fff,#eaffe8)}
+  .card.fresh{background:linear-gradient(180deg,#fff6c2,#ffe066);box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24), 0 0 0 4px rgba(255,201,60,.5)}
+  .card-top{display:flex;align-items:center;gap:8px}
+  .card-badge{width:38px;height:38px;flex:none;border-radius:50%;display:grid;place-items:center;border:2.5px solid var(--ink);
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 2px 0 var(--ink-2)}
+  .card-badge svg{width:22px;height:22px}
+  .card-title{display:block;font-size:14px;font-weight:800;line-height:1.1}
+  .card-sub{display:block;font-size:11px;font-weight:700;opacity:.62}
+  .card-desc{font-size:11px;font-weight:600;line-height:1.3;color:var(--ink-soft)}
+  .pips{display:flex;gap:3px;flex-wrap:wrap}
+  .pip{width:7px;height:7px;border-radius:50%;background:var(--coin);border:1.6px solid var(--ink)}
+  .pip.off{background:rgba(44,26,16,.14)}
+  .price{display:inline-flex;align-items:center;gap:3px;padding:4px 9px;border-radius:999px;border:2px solid var(--ink);
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 2px 0 var(--ink-2);font-size:12px;font-weight:800;margin-top:auto}
+  .price.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+  .price svg{width:14px;height:14px}
+  .card-newtag{position:absolute;top:-9px;right:10px;background:var(--dot);color:#fff;font-size:9.5px;font-weight:900;padding:2px 8px;
+    border-radius:999px;border:2px solid var(--ink);box-shadow:0 2px 0 var(--ink-2)}
+  .land-strip{display:flex;gap:10px}
+  .land-strip .card{width:150px;flex:none}
+  .card.absent-slot{border-style:dashed;background:transparent;box-shadow:none;align-items:center;justify-content:center;
+    color:var(--ink-soft);font-size:11px;font-weight:800;text-align:center;min-height:150px;display:flex}
+  .gate-pill{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;
+    border:2px solid var(--ink);background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));font-size:10.5px;font-weight:800}
+
+  /* the band: UPGRADE pill + POWER-UP */
+  .band-demo{display:flex;align-items:center;gap:18px;padding:18px}
+  .fpill{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;padding:9px 14px 8px;border-radius:16px;
+    border:3.5px solid var(--ink);background:linear-gradient(180deg,#fffdf7,var(--paper-3));box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.24);
+    font-size:9.5px;font-weight:800;letter-spacing:.02em}
+  .fpill svg{width:24px;height:24px}
+  .dock-dot{position:absolute;top:-6px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--dot);border:2.5px solid var(--ink);
+    box-shadow:0 2px 0 var(--ink-2);display:grid;place-items:center;font-size:9.5px;font-weight:800;color:#fff}
+  .dock-dot.wide{width:auto;min-width:16px;padding:0 4px;border-radius:999px}
+  .pill-cell{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .pill-cell span.lab{font-size:11px;font-weight:800;color:var(--ink-soft);text-align:center;max-width:110px;line-height:1.3}
+
+  /* moments dialog — reuses #news's own recipe, verbatim */
+  .news-frame{position:absolute;inset:0;z-index:90;display:grid;place-items:center;background:rgba(30,18,10,.5)}
+  .news-card{width:min(340px, calc(100% - 40px));max-height:calc(100% - 48px);overflow:auto;
+    margin:0 auto;padding:12px 14px 14px;background:linear-gradient(180deg,#fffdf7 0%, var(--paper-2) 72%, var(--paper-3) 100%);
+    border:4px solid var(--ink);border-radius:var(--r-lg);box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24)}
+  .news-art{margin:-2px -2px 10px;aspect-ratio:4/3;overflow:hidden;border:3px solid var(--ink);border-radius:var(--r-md);
+    display:grid;place-items:center;box-shadow:0 3px 0 var(--ink-2)}
+  .news-art.custom{background:linear-gradient(155deg,#ffd9ec 0%,#ffe9b8 45%,#c9f3d0 100%)}
+  .news-art.placeholder{background:linear-gradient(155deg,#cdeaff 0%,#e9f8ff 60%,#fff3d6 100%)}
+  .news-art svg{width:70%;height:70%}
+  .news-fallback{display:grid;place-items:center;padding:14px 0 6px}
+  .news-fallback .seed-art{width:96px;height:96px}
+  .news-fallback .seed-art svg{width:56px;height:56px}
+  .news-fallback .card-badge{width:88px;height:88px}
+  .news-fallback .card-badge svg{width:50px;height:50px}
+  .news-h2{margin:0 0 8px;font-size:20px;font-weight:800;text-align:center;line-height:1.15}
+  .news-list{margin:0 0 8px;padding:0;list-style:none;display:grid;gap:6px}
+  .news-list li{position:relative;padding-left:20px;font-size:12.5px;font-weight:700;line-height:1.4}
+  .news-list li::before{content:'';position:absolute;left:4px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--coin);border:2px solid var(--ink)}
+  .news-note{margin:8px 0 12px;text-align:center;font-size:11.5px;font-weight:800;font-style:italic;color:var(--ink-soft)}
+  .big-btn{display:block;width:100%;padding:13px;border-radius:999px;border:3px solid var(--ink);text-align:center;
+    background:linear-gradient(180deg,#b6f5c4,var(--seed));box-shadow:0 4px 0 var(--ink-2);font-size:16px;font-weight:800;cursor:pointer}
+  .art-caption{text-align:center;font-size:10.5px;font-weight:700;color:var(--ink-soft);margin:-4px 0 8px}
+</style>
+</head>
+<body data-notes="1">
+<div class="intro">
+  <div class="kicker">Gate 1 · Wireframe spike · docs/47-the-curtain-and-the-drip.md</div>
+  <h1>The Curtain and the Drip</h1>
+  <p class="lede">
+    Twelve frames, 390×844, no game dependencies. Three surfaces: the seed picker's three bands,
+    the upgrade shop's opening drip, and the moments dialog that celebrates both. Nothing here
+    changes a single price, yield, grow time or unlock value — every number on every real (non-???)
+    row is copied from the live game today. Green notes are decided calls, ready to build; orange
+    notes are open questions; red notes are the two rulings this gate exists to let you veto.
+  </p>
+  <div class="toolbar">
+    <button id="notesBtn" onclick="toggleNotes()">Notes: ON</button>
+  </div>
+</div>
+
+<section class="grp">
+  <h2><span class="n">1</span>The seed picker — three bands, and the sort-sink rule</h2>
+  <p class="lede">
+    Unlocked rows first, exactly as today. Then the next locked seed — always revealed, always the
+    advert. Then everything else: a silhouette, a name of <b>???</b>, and one line that never says
+    what it's hiding.
+  </p>
+  <div class="row-wrap" id="sec-picker"></div>
+</section>
+
+<section class="grp">
+  <h2><span class="n">2</span>The Almanac — masked, beside merely-unproven</h2>
+  <p class="lede">
+    Two kinds of "don't know yet," on purpose. A seed you've unlocked but never grown still shows
+    its real name and art, dimmed — that's today's row and it doesn't change. A seed the curtain
+    hasn't lifted on yet shows nothing at all.
+  </p>
+  <div class="row-wrap" id="sec-almanac"></div>
+</section>
+
+<section class="grp">
+  <h2><span class="n">3</span>The upgrade shop — four cards, then a drip</h2>
+  <p class="lede">
+    The shop opens on exactly four badges. The rest queue up in the ladder's real order and step
+    forward as lifetime gold clears their thresholds — never a purchase, never a Turn.
+  </p>
+  <div class="row-wrap" id="sec-shop"></div>
+</section>
+
+<section class="grp">
+  <h2><span class="n">4</span>The UPGRADE pill's dot — what it should mean now</h2>
+  <p class="lede">
+    Today the dot means one thing: something on the shelf is affordable. The curtain adds a second
+    fact worth flagging — something on the shelf is new and you haven't opened the shop since.
+    Four candidates, same pill.
+  </p>
+  <div class="row-wrap" id="sec-dots"></div>
+</section>
+
+<section class="grp">
+  <h2><span class="n">5</span>The moments dialog — one popup, three art tiers</h2>
+  <p class="lede">
+    Built once, reused for every reveal. It never waits on art: owner-supplied photo first, the
+    shared placeholder second, the game's own bloom or badge last — and none of those three looks
+    broken.
+  </p>
+  <div class="row-wrap" id="sec-moments"></div>
+</section>
+
+<div class="spec">
+  <div class="box">
+    <h3>Decided in this spike (build these verbatim unless annotated otherwise)</h3>
+    <ul>
+      <li><b>The sort-sink rule.</b> ??? rows never participate in Cheapest/Priciest/Balanced — they hold ladder
+        (<code>DATA.seeds</code>) order and sit under every revealed row, always. Frame P2.</li>
+      <li><b>One hint line, not nineteen.</b> Every ??? row reads the same line — "Keep growing — the garden
+        isn't done with you." This mirrors the game's own existing masking grammar in
+        <code>pairRows()</code> (an unformed creature pair shows "???" and one generic non-revealing
+        note, never bespoke per-pair flavour text) rather than <code>critterRows()</code>'s per-creature
+        <code>hint</code> field, which names a real creature that already has a face on screen.
+        Cheap to build, nothing to author per seed, and it can grow bespoke lines later without a
+        re-architecture.</li>
+      <li><b>The silhouette is generic, not per-species.</b> One flat dark flower glyph for every masked
+        row and every masked Almanac slot — never a shape that hints at family or rarity. The
+        colour is the reveal; the shape stays a secret twice over.</li>
+      <li><b>Almanac masking keys to the same latch as the picker</b>, never to <code>discoveredOf</code>. A
+        never-grown-but-<i>revealed</i> seed keeps today's dimmed-but-real row exactly as is. Frame A1.</li>
+      <li><b>The moments dialog is drawn as literally <code>#news</code>, third mode</b> — same card, same
+        bullet grammar, same button, reusing its class names rather than inventing a sibling
+        dialog system. Frames M1–M4.</li>
+    </ul>
+  </div>
+  <div class="box veto">
+    <h3>Two rulings flagged for possible veto, per the spec</h3>
+    <ul>
+      <li><b>Arm 2 — the next locked seed is ALWAYS revealed,</b> from a fresh save's first frame, regardless of
+        the 85% earnings threshold. Without it there's a real recurring window right after any
+        purchase where no advert shows at all — the wall's whole "six times everything I've earned"
+        feeling would flicker on and off. Shown live in Frame P1/P3: Bluebell stays a priced advert
+        even when Lavender is nowhere close to its own threshold. <b>Veto this and the picker reads
+        purely off the 85% line</b> — simpler rule, but a save can go quiet stretches with nothing to
+        save up for on screen.</li>
+      <li><b>Land Deed's reveal reads the Turn clock</b> (<code>turnsCompleted ≥ plotTurnGate</code>) on top of the
+        usual 400K lifetime gate — the one card in the whole drip that isn't earnings-only. Reasoning:
+        it's structurally unbuyable before your first Turn (plots 5–8 stay gated), so revealing it on
+        gold alone would pop a moment for a purchase the game refuses. Shown in Frame U3.
+        <b>Veto this and Land Deed reveals at 400K like every other card</b>, showing a real price it
+        can't yet spend — closer to "purely earnings-paced" as a rule, at the cost of one advert that
+        lies a little about what today will let you do.</li>
+    </ul>
+  </div>
+  <div class="box">
+    <h3>Open questions this spike is asking, not deciding</h3>
+    <ul>
+      <li>Which of the four UPGRADE-pill dot treatments in Frame D1 — plain reused, always numbered,
+        two-tone, or no change at all? Doc 36 never specified the pill's dot colour or a numbered
+        variant, so nothing here is a regression to preserve.</li>
+      <li>Button copy on the moments dialog. This spike reuses "Got it!" — the exact acknowledgement
+        button the What's New dialog already trained players on — rather than inventing new copy for
+        a dialog that, unlike that one, isn't asking the player to acknowledge anything. Worth a
+        different word, or is reuse the point?</li>
+      <li>How many ??? rows a real fresh save should render before the list just keeps going — this
+        spike shows five as a representative sample of the sixteen the real picker will draw. Not a
+        design question so much as a "does this look right at full length" one; worth a look at the
+        real nineteen-row build before the gauntlet.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Tiny helpers, copied in spirit (not verbatim) from ui-shared.js
+   ============================================================ */
+function trimZeros(s){ return s.includes('.') ? s.replace(/\.?0+$/,'') : s; }
+function fmt(n){
+  n = Math.round(n); const abs = Math.abs(n);
+  if (abs < 100000) return n.toLocaleString();
+  if (abs < 1e6) return trimZeros((n/1e3).toFixed(1)) + 'K';
+  if (abs < 1e9) return trimZeros((n/1e6).toFixed(2)) + 'M';
+  return trimZeros((n/1e9).toFixed(2)) + 'B';
+}
+
+/* ---------- tiny inline icon set — wireframe fidelity only ---------- */
+const ICO = {
+  coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="var(--coin)" stroke="var(--ink)" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="var(--coin-d)" stroke-width="1.6"/></svg>',
+  clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#fff" stroke="var(--ink)" stroke-width="2"/><path d="M12 7v5l3.5 2" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/></svg>',
+  lock: '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="var(--coin)" stroke="var(--ink)" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="var(--ink)" stroke-width="2"/></svg>',
+  sprout: '<svg viewBox="0 0 24 24"><path d="M12 21V11" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/><path d="M12 13c0-4 4-6 8-6 0 4-2 8-8 8" fill="#eaffe0" stroke="var(--ink)" stroke-width="1.8"/><path d="M12 15c0-3-3-5-7-5 0 3 1.5 6 7 6" fill="#eaffe0" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+  gem: '<svg viewBox="0 0 24 24"><path d="M4 9l8-6 8 6-8 11z" fill="var(--gem)" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+  star: '<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.9 6.4.6-4.9 4.2 1.5 6.3L12 16.9 6.4 20l1.5-6.3L3 9.5l6.4-.6z" fill="var(--legend)" stroke="var(--ink)" stroke-width="1.6"/></svg>',
+  hand: '<svg viewBox="0 0 24 24"><path d="M8 12V6a2 2 0 0 1 4 0v5m0-3a2 2 0 0 1 4 0v3m0-2a2 2 0 0 1 4 0v6c0 4-2 6-6 6s-6-2-7-5l-2-4a1.8 1.8 0 0 1 3-2l1 1" fill="#fff" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  badge: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 8-7 9-4-1-7-4-7-9V6z" fill="#ffe0ad" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="#ffe066" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  book: '<svg viewBox="0 0 24 24"><path d="M4 5c3-1.5 6-1.5 8 0 2-1.5 5-1.5 8 0v14c-3-1.5-6-1.5-8 0-2-1.5-5-1.5-8 0z" fill="#fff" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  fire: '<svg viewBox="0 0 24 24"><path d="M12 2c1 4-3 5-3 9a3 3 0 0 0 6 0c1 1 1.5 2.5 1.5 4a4.5 4.5 0 0 1-9 0C7.5 10 9 6 12 2z" fill="#ff9f56" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  droplet: '<svg viewBox="0 0 24 24"><path d="M12 2s7 8 7 13a7 7 0 0 1-14 0c0-5 7-13 7-13z" fill="#8ce0ff" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  wing: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="6" fill="#ffe98a" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+  bug: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="6" ry="7" fill="#ff9f9f" stroke="var(--ink)" stroke-width="1.8"/><circle cx="12" cy="6" r="2.4" fill="var(--ink)"/></svg>',
+  land: '<svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="9" fill="#c9a06a" stroke="var(--ink)" stroke-width="1.8"/><path d="M4 10l8-6 8 6" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  moon: '<svg viewBox="0 0 24 24"><path d="M15 3a9 9 0 1 0 6 15 8 8 0 0 1-6-15z" fill="#d8c9ff" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  lantern: '<svg viewBox="0 0 24 24"><rect x="7" y="6" width="10" height="12" rx="3" fill="#ffe066" stroke="var(--ink)" stroke-width="1.8"/><path d="M12 3v3M12 18v3" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+};
+function svgOf(name){ return ICO[name] || ICO.badge; }
+
+/* the one generic flower silhouette every masked row and slot shares */
+const CV_FLOWER =
+  '<svg viewBox="0 0 40 40" class="cv-silhouette" fill="currentColor">' +
+  '<circle cx="20" cy="11" r="7"/><circle cx="29" cy="17" r="7"/><circle cx="25" cy="27" r="7"/>' +
+  '<circle cx="15" cy="27" r="7"/><circle cx="11" cy="17" r="7"/><circle cx="20" cy="19" r="5" fill="rgba(255,255,255,.35)"/>' +
+  '</svg>';
+
+/* real bloom stand-ins — just enough shape variety to tell rows apart at a glance */
+function bloomSvg(petalColor, centerColor){
+  return '<svg viewBox="0 0 40 40">' +
+    '<g fill="' + petalColor + '" stroke="var(--ink)" stroke-width="1.2">' +
+    '<circle cx="20" cy="11" r="7"/><circle cx="29" cy="17" r="7"/><circle cx="25" cy="27" r="7"/>' +
+    '<circle cx="15" cy="27" r="7"/><circle cx="11" cy="17" r="7"/></g>' +
+    '<circle cx="20" cy="19" r="5.5" fill="' + centerColor + '" stroke="var(--ink)" stroke-width="1.2"/></svg>';
+}
+
+/* ============================================================
+   Frame + phone shell builders — house pattern from winter-spike.html
+   ============================================================ */
+function fig(tag, title, sub, inner, notes){
+  const notesHtml = (notes||[]).map(n => '<p class="note ' + (n[0]) + '">' + n[1] + '</p>').join('');
+  return '<figure><figcaption><span class="tag">' + tag + '</span><b>' + title + '</b><i>' + sub + '</i></figcaption>' +
+    inner + notesHtml + '</figure>';
+}
+function phone(inner, opts){
+  opts = opts || {};
+  return '<div class="phone">' + (opts.noNotch ? '' : '<div class="notch"></div>') +
+    '<div class="scroll">' + inner + '</div></div>';
+}
+function hud(wallet){
+  return '<div class="hud-row"><span class="wallet">' + svgOf('coin') + fmt(wallet) + '</span></div>';
+}
+
+const SEEDS = {
+  daisy:    { name:'Daisy',    cost:50,  grow:'12s',  pay:'70–560',      art:'#ffe9a8', petal:'#fff6e0', center:'#ffd43b' },
+  tulip:    { name:'Tulip',    cost:110, grow:'18s',  pay:'154–1,232',   art:'#ffd0e0', petal:'#ffc2d6', center:'#ff8fab' },
+  bluebell: { name:'Bluebell', cost:180, grow:'24s',  pay:'252–2,016',   art:'#dcdcff', petal:'#b7b7ff', center:'#6a6adf', verb:'KEEPER', desc:'Neighbouring plots grow 15% faster.', unlock:150000 },
+  lavender: { name:'Lavender', cost:260, grow:'28s',  pay:'328–2,621',   art:'#e6d9ff', petal:'#c9aaff', center:'#8a5fd6', verb:'NURSE',  desc:'Neighbouring plots pay 20% more. This one pays 10% less.', unlock:225000 },
+  rose:     { name:'Rose',     cost:350, grow:'34s',  pay:'490–3,920',   unlock:337500 },
+};
+
+/* ---------- a single seed row ---------- */
+function seedRow(key, kind, opts){
+  opts = opts || {};
+  const s = SEEDS[key];
+  if (kind === 'unlocked') {
+    return '<div class="seed-row' + (opts.faded?' faded':'') + '" style="--art:' + s.art + '">' +
+      '<span class="seed-art">' + bloomSvg(s.petal, s.center) + '</span>' +
+      '<span><span class="seed-name">' + s.name + '</span>' +
+      '<span class="seed-stats">' +
+      '<span class="stat">' + svgOf('coin') + s.cost + '</span>' +
+      '<span class="stat">' + svgOf('clock') + s.grow + '</span>' +
+      '<span class="stat good">' + svgOf('coin') + s.pay + '</span>' +
+      '</span></span>' +
+      '<span class="seed-go' + (opts.afford===false?' off':'') + '">' + svgOf('sprout') + '</span></div>';
+  }
+  if (kind === 'locked') {
+    const afford = opts.afford;
+    return '<div class="seed-row locked' + (opts.fresh?' fresh':'') + '" style="--art:' + s.art + '">' +
+      '<span class="seed-art">' + bloomSvg(s.petal, s.center) + '</span>' +
+      '<span><span class="seed-name">' + s.name + (s.verb?'<span class="verb-chip">'+s.verb+'</span>':'') + '</span>' +
+      '<span class="seed-stats">' +
+      '<span class="stat">' + svgOf('coin') + s.cost + '</span>' +
+      '<span class="stat">' + svgOf('clock') + s.grow + '</span>' +
+      '<span class="stat good">' + svgOf('coin') + s.pay + '</span>' +
+      '</span>' + (s.desc ? '<span class="seed-desc">'+s.desc+'</span>' : '') + '</span>' +
+      '<span class="seed-lock ' + (afford?'ok':'no') + '">' + svgOf('lock') + fmt(s.unlock) + '</span></div>';
+  }
+  /* masked — the new state */
+  return '<div class="seed-row masked">' +
+    '<span class="seed-art cv-mask">' + CV_FLOWER + '</span>' +
+    '<span><span class="seed-name"><span class="cv-qmark">???</span></span>' +
+    '<span class="cv-hint">Keep growing — the garden isn\'t done with you.</span></span>' +
+    '<span class="seed-go off">' + svgOf('lock') + '</span></div>';
+}
+
+function pickerShell(bodyInner, sortPills){
+  return '<div class="sheet-shell"><div class="sheet-grip"></div>' +
+    '<div class="sheet-head"><h3>Choose a seed</h3><span class="sheet-x">✕</span></div>' +
+    '<div class="sortbar">' + sortPills + '</div>' +
+    '<p class="sheet-note">Planting into plot 1. Times and payouts are what this plot would really give.</p>' +
+    '<div class="sheet-body">' + bodyInner + '</div></div>';
+}
+function sortPill(label, on){ return '<span class="tab' + (on?' on':'') + '">' + label + '</span>'; }
+const SORT_PILLS = ['By tier','Balanced','Cheapest','Priciest'];
+function sortRow(active){ return SORT_PILLS.map(l => sortPill(l, l===active)).join(''); }
+
+const MASK5 = seedRow('','masked').repeat ? '' : ''; // no-op guard, real rows built below
+function maskedRows(n){ let out=''; for(let i=0;i<n;i++) out += seedRow(null,'masked'); return out; }
+
+/* ================= SECTION 1 — the picker ================= */
+document.getElementById('sec-picker').innerHTML =
+  fig('P1', 'A fresh save — sorted "By tier"', 'Two open seeds, one priced advert, a column of ???.',
+    phone(hud(340) + pickerShell(
+      seedRow('daisy','unlocked') + seedRow('tulip','unlocked') +
+      seedRow('bluebell','locked',{afford:false}) +
+      maskedRows(5) +
+      '<p class="sheet-note" style="text-align:center;opacity:.6">14 more ??? rows continue below, same treatment — the real ladder is 19 seeds; this spike samples five.</p>'
+    , sortRow('By tier'))),
+    [['d','<b>Arm 1</b> — Daisy and Tulip are free and always unlocked, exactly as today.'],
+     ['v','<b>Arm 2 — Bluebell is the next wall and it is ALWAYS revealed</b>, at 0 lifetime gold, before a single coin is earned. See the veto box below.'],
+     ['d','Every row past Bluebell renders masked rather than vanishing — "a locked thing you can see is a goal, and a missing one is nothing" (doc 47, doc 10).']]
+  ) +
+  fig('P2', 'Same save — sorted "Priciest"', 'Revealed rows reorder. Masked rows never move.',
+    phone(hud(340) + pickerShell(
+      seedRow('bluebell','locked',{afford:false}) + seedRow('tulip','unlocked') + seedRow('daisy','unlocked') +
+      maskedRows(5) +
+      '<p class="sheet-note" style="text-align:center;opacity:.6">Still ladder order, still last — a cost sort would leak exactly the number the mask exists to hide.</p>'
+    , sortRow('Priciest'))),
+    [['d','Bluebell (150K) now sorts above Tulip (110) and Daisy (50) — Priciest is honest about every row it is allowed to touch.'],
+     ['d','The five ??? rows below did not reshuffle. This is the rule stated plainly, not just implemented: <code>sortedSeeds()</code> partitions revealed-vs-masked before it ever calls <code>.sort()</code>.']]
+  ) +
+  fig('P3', 'Later — 200,000 lifetime gold earned, none spent past Bluebell', 'Arm 3 wakes a row on its own.',
+    phone(hud(40000) + pickerShell(
+      seedRow('daisy','unlocked') + seedRow('tulip','unlocked') +
+      seedRow('bluebell','locked',{afford:false}) +
+      seedRow('lavender','locked',{afford:false, fresh:true}) +
+      maskedRows(4) +
+      '<p class="sheet-note" style="text-align:center;opacity:.6">Rose\'s own wall (337.5K × 0.85 = 286,875) hasn\'t been reached yet — still ???.</p>'
+    , sortRow('By tier'))),
+    [['d','Lavender crossed 191,250 gold lifetime (85% of its 225,000 unlock) and lit up on its own — nothing was bought, nothing was Turned. This is arm 3, and the gold flash is the same one a fresh purchase gets.'],
+     ['d','The wallet shown is <i>credits</i> (40,000) — well under Lavender\'s 225K price. <i>Lifetime</i> earnings, not spendable gold, drives the reveal; arm 4 (the credits-cheat safety net) is a completely different, rarer path, exercised only by <code>grantGold</code>.']]
+  );
+
+/* ================= SECTION 2 — the Almanac ================= */
+function almanacRow(kind, key){
+  if (kind === 'grown') {
+    const s = SEEDS[key];
+    return '<div class="almanac-row"><span class="a-art" style="--art:' + s.art + '">' + bloomSvg(s.petal, s.center) + '</span>' +
+      '<div class="almanac-row-top"><span class="n">' + s.name + '</span><span class="r">Common</span><span class="c">×48</span></div></div>';
+  }
+  if (kind === 'dim') {
+    const s = SEEDS[key];
+    return '<div class="almanac-row dim"><span class="a-art" style="--art:' + s.art + '">' + bloomSvg(s.petal, s.center) + '</span>' +
+      '<div><div class="almanac-row-top"><span class="n">' + s.name + '</span><span class="r">—</span><span class="c">—</span></div>' +
+      '<span class="seed-desc">Classic bloom, first of the ladder\'s tender line.</span></div></div>';
+  }
+  return '<div class="almanac-row masked"><span class="a-art"><span style="width:22px;height:22px;display:inline-block">' + CV_FLOWER + '</span></span>' +
+    '<div><div class="almanac-row-top"><span class="n cv-qmark">???</span><span class="r">—</span><span class="c">—</span></div>' +
+    '<span class="cv-hint">Keep growing — the garden isn\'t done with you.</span></div></div>';
+}
+document.getElementById('sec-almanac').innerHTML =
+  fig('A1', 'Garden Almanac — three rows, three states', 'Grown · revealed-but-ungrown (unchanged) · masked (new).',
+    phone(hud(40000) + pickerShell(
+      '<div class="almanac-meter" style="--fill:16%"><i></i><span>3 / 19 discovered</span></div>' +
+      almanacRow('grown','daisy') + almanacRow('dim','tulip') + almanacRow('masked')
+    , '')),
+    [['d','The meter reads <code>discoveredCount()</code> exactly as today — masking a row changes nothing about the 3/19 count or the milestone rewards below it.'],
+     ['d','Tulip is unlocked and revealed but never harvested — <b>today\'s exact <code>.almanac-row.dim</code> row, untouched</b>: real name, real art, "—" for rarity and count.'],
+     ['v','The masked row is a seed the curtain hasn\'t lifted on — same silhouette and hint as the picker, keyed to the identical latch. This is the reveal-condition ruling showing up a second place; nothing about the Almanac gets its own rule.']]
+  );
+
+/* ================= SECTION 3 — the upgrade shop ================= */
+const UPS = {
+  tapPower:  {short:'Power Punch', icon:'hand',   base:100,  now:'base 1 a tap', next:'next +1'},
+  holdSpeed: {short:'Quick Grip',  icon:'clock',  base:150,  now:'every 0.90s',  next:'next −0.06s'},
+  critChance:{short:'Lucky Charm', icon:'star',   base:500,  now:'5% crit',      next:'next +1%'},
+  critMult:  {short:'Star Strike', icon:'bolt',   base:1000, now:'×10 on a crit',next:'next +2', threshold:40000},
+  comboMeter:{short:'Combo Coil',  icon:'fire',   base:2500, now:'combo 0',      next:'next +1'},
+  rainDance: {short:'Rain Dance',  icon:'droplet',base:250,  now:'',             next:'next 2% a tap', threshold:4000},
+  beeSwarm:  {short:'Bee Swarm',   icon:'wing',   base:2000, now:'',             next:'next 1% a tap', threshold:20000},
+  ladybug:   {short:'Lucky Ladybug',icon:'bug',   base:800,  now:'',             next:'next 2% a tap', threshold:120000},
+  plotExpansion:{short:'Land Deed',icon:'land',   base:2000, now:'8 plots',      next:'next +2', threshold:400000},
+  autoWater: {short:'Sprinklers',  icon:'droplet',base:400,  now:'',             next:'next 5% faster', threshold:300000},
+  offlineRate:{short:'Moonlight',  icon:'moon',   base:4000, now:'',             next:'next +5% away', threshold:600000},
+  offlineHours:{short:'Lantern Oil',icon:'lantern',base:6000,now:'',             next:'next +1h away', threshold:1200000},
+};
+function upgradeCard(key, opts){
+  opts = opts || {};
+  const u = UPS[key];
+  return '<div class="card' + (opts.affordable?' affordable':'') + (opts.fresh?' fresh':'') + '">' +
+    (opts.fresh ? '<span class="card-newtag">NEW</span>' : '') +
+    '<div class="card-top"><span class="card-badge">' + svgOf(u.icon) + '</span>' +
+    '<span><span class="card-title">' + u.short + '</span><span class="card-sub">Lv 0</span></span></div>' +
+    '<div class="pips">' + Array.from({length:8}, ()=>'<span class="pip off"></span>').join('') + '</div>' +
+    '<span class="card-vals"><span class="stat">' + (u.now || u.next) + '</span></span>' +
+    '<span class="price' + (opts.affordable?' ok':'') + '">' + svgOf('coin') + fmt(u.base) + '</span></div>';
+}
+document.getElementById('sec-shop').innerHTML =
+  fig('U1', 'The opening shop', 'Four cards. Star Strike\'s slot — third in the real ladder — is simply absent.',
+    phone(hud(2400) + pickerShell(
+      '<p class="sheet-note">Buy upgrades to hit harder, grow faster and automate the garden.</p>' +
+      '<div class="card-grid">' +
+      upgradeCard('tapPower',{affordable:true}) + upgradeCard('holdSpeed',{affordable:true}) +
+      upgradeCard('critChance') + upgradeCard('comboMeter') +
+      '</div>'
+    , '')),
+    [['d','Ladder order is Power Punch → Quick Grip → Lucky Charm → <i>(Star Strike, hidden)</i> → Combo Coil. No dashed placeholder, no padlock card — the grid just reflows to a clean 2×2.'],
+     ['d','No cost on any of these four cards moved. 100 / 150 / 500 / 2,500 gold, exactly as shipped today.']]
+  ) +
+  fig('U2', 'Past 40,000 lifetime gold', 'Star Strike drops into its real slot, wearing a fresh flash.',
+    phone(hud(6000) + pickerShell(
+      '<p class="sheet-note">Buy upgrades to hit harder, grow faster and automate the garden.</p>' +
+      '<div class="card-grid">' +
+      upgradeCard('tapPower',{affordable:true}) + upgradeCard('holdSpeed',{affordable:true}) +
+      upgradeCard('critChance',{affordable:true}) + upgradeCard('critMult',{affordable:true, fresh:true}) +
+      upgradeCard('comboMeter') + upgradeCard('rainDance',{affordable:true}) +
+      upgradeCard('beeSwarm') +
+      '</div>'
+    , '')),
+    [['d','Rain Dance (4K) and Bee Swarm (20K) arrived earlier and already look ordinary — only the card that <i>just</i> crossed its line wears the flash.'],
+     ['d','<code>.card.fresh</code> reuses the seed row\'s exact gold treatment, extended with its own selector and first-view flag rather than a second copy of the same five lines of CSS.'],
+     ['q','Rain Dance and Bee Swarm are cheaper than Star Strike (4K/20K vs 40K) but sit AFTER it in ladder order and so drew later in this walk despite unlocking first — is drawing strictly by ladder position (current plan) right, or should a very-early-cheap threshold jump the queue visually? No card in the live game reorders today; keeping that also keeps this simple.']]
+  ) +
+  fig('U3', 'Land Deed — three states across one save', 'The one card whose reveal reads the Turn clock, not gold alone.',
+    '<div class="land-strip">' +
+      '<div class="card absent-slot">Before 400K lifetime<br>— not drawn —</div>' +
+      '<div class="card"><div class="card-top"><span class="card-badge">' + svgOf('land') + '</span>' +
+      '<span><span class="card-title">Land Deed</span><span class="card-sub">Lv 0</span></span></div>' +
+      '<span class="gate-pill">' + svgOf('lock') + 'After your first Turn</span>' +
+      '<span class="card-desc">Past 400K, before Turn 1</span></div>' +
+      '<div class="card affordable"><div class="card-top"><span class="card-badge">' + svgOf('land') + '</span>' +
+      '<span><span class="card-title">Land Deed</span><span class="card-sub">Lv 0</span></span></div>' +
+      '<span class="card-vals"><span class="stat">8 plots</span></span>' +
+      '<span class="price ok">' + svgOf('coin') + '2,000</span>' +
+      '<span class="card-desc" style="margin-top:2px">Past 400K, after Turn 1</span></div>' +
+    '</div>',
+    [['v','Land Deed is structurally unbuyable before a Turn (plots 5–8 are Turn-gated), so an earnings-only reveal would celebrate a card that refuses the tap — the middle state exists so that never happens. Veto this and Land Deed reveals at 400K flat, showing "8 plots · 2,000 gold" as a real, unspendable price until Turn 1.']]
+  );
+
+/* ================= SECTION 4 — the dot ================= */
+function pillDemo(label, dotHtml){
+  return '<div class="pill-cell"><div class="fpill">' + svgOf('badge') + '<span>UPGRADE</span>' + dotHtml + '</div><span class="lab">' + label + '</span></div>';
+}
+document.getElementById('sec-dots').innerHTML =
+  fig('D1', 'Four readings of the same dot', 'Doc 36 never pinned the pill\'s colour or a numbered form — genuinely open.',
+    '<div class="strip" style="max-width:none;display:flex;gap:22px;flex-wrap:wrap;padding:20px">' +
+    pillDemo('No dot — nothing revealed is affordable, nothing revealed is unseen.', '') +
+    pillDemo('A — today\'s dot, unchanged. Means only "something affordable."', '<span class="dock-dot"></span>') +
+    pillDemo('B — same plain dot, now doing double duty for "unseen" too.', '<span class="dock-dot"></span>') +
+    pillDemo('C — a count, like the dock tabs already use for packs and quests.', '<span class="dock-dot wide">2</span>') +
+    '</div>',
+    [['q','B quietly changes what the existing dot has always meant (any player who has learned "dot = I can afford something" gets a dot for "something is merely new"). C is honest but the UPGRADE pill has never carried a number before — is that promotion warranted for a control this small? A fourth option not drawn: two visually distinct dots stacked, at the cost of a busier pill.'],
+     ['d','Whatever the visual, the underlying predicate is settled by the spec: the dot fires on ANY revealed card that is either affordable or unseen, filtered to revealed cards only — Rain Dance being affordable while still masked must never light this pill.']]
+  );
+
+/* ================= SECTION 5 — the moments dialog ================= */
+function momentDialog(artInner, artClass, caption, title, statLines, tagline, extraNote){
+  return '<div class="news-frame"><div class="news-card">' +
+    (artInner ? '<div class="news-art ' + artClass + '">' + artInner + '</div>' : '') +
+    (caption ? '<p class="art-caption">' + caption + '</p>' : '') +
+    '<h2 class="news-h2">' + title + '</h2>' +
+    '<ul class="news-list">' + statLines.map(l=>'<li>'+l+'</li>').join('') + '</ul>' +
+    (tagline ? '<p class="news-note">' + tagline + '</p>' : '') +
+    '<button class="big-btn">Got it!</button>' +
+    '</div></div>';
+}
+const BLUEBELL_STATS = [
+  '<b>180 gold</b> to plant · <b>24s</b> to grow',
+  'Pays <b>252–2,016</b> a harvest',
+  '<b>KEEPER</b> — neighbouring plots grow 15% faster',
+];
+document.getElementById('sec-moments').innerHTML =
+  fig('M1', 'Bluebell revealed! — custom art', 'Tier 1: an owner-painted reveal image, art/reveals/bluebell.jpg.',
+    phone(momentDialog(
+      '<svg viewBox="0 0 40 30" width="100%" height="100%">' + Array.from({length:6},(_,i)=>
+        '<circle cx="'+(5+i*6)+'" cy="'+(8+((i%2)*10))+'" r="5" fill="rgba(255,255,255,.55)"/>').join('') + '</svg>',
+      'custom',
+      '(placeholder gradient standing in for real owner-supplied art)',
+      'Bluebell revealed!', BLUEBELL_STATS,
+      'Yours whenever you\'ve saved 150,000 gold.'
+    ), {noNotch:true}),
+    [['d','Full advert-form stats — cost, grow, payout range, its Keeper trait — exactly the Numbers-pass rule the rest of the game already follows for anything with a price.']]
+  ) +
+  fig('M2', 'Bluebell revealed! — shared placeholder', 'Tier 2: art/reveals/placeholder.jpg, used until an entry gets its own art.',
+    phone(momentDialog(
+      '<svg viewBox="0 0 40 30" width="100%" height="100%"><circle cx="20" cy="15" r="10" fill="rgba(255,255,255,.5)"/></svg>',
+      'placeholder',
+      '(the owner\'s "Garden of Wonder" cast art — today\'s art/IMG_3718.jpg, re-encoded under 300KB)',
+      'Bluebell revealed!', BLUEBELL_STATS,
+      'Yours whenever you\'ve saved 150,000 gold.'
+    ), {noNotch:true}),
+    [['d','Same card, same everything — only the picture in the window changes. A reveal never waits on the owner having painted anything yet.']]
+  ) +
+  fig('M3', 'Bluebell revealed! — programmatic fallback', 'Tier 3: no art file at all — the bloom itself, larger.',
+    phone(momentDialog(null, '', '',
+      '',[]).replace('<ul class="news-list"></ul>',''), {noNotch:true}) // placeholder, replaced below
+  ) +
+  fig('M4', 'Star Strike revealed! — upgrade, icon fallback', 'Upgrades never carry a photo — the badge is the whole art chain.',
+    phone(
+      '<div class="news-frame"><div class="news-card">' +
+      '<div class="news-fallback"><span class="card-badge">' + svgOf('bolt') + '</span></div>' +
+      '<h2 class="news-h2">Star Strike revealed!</h2>' +
+      '<ul class="news-list"><li><b>1,000 gold</b> to buy · Lv 0 → 1</li><li>×10 on a crit, up to ×50 at full level</li></ul>' +
+      '<p class="news-note">In the shop now — third badge, second row.</p>' +
+      '<button class="big-btn">Got it!</button></div></div>'
+    , {noNotch:true}),
+    [['d','Even the "last resort" tier is a real, finished-looking screen — the dialog never blocks on art existing at all, for a seed\'s bloom or an upgrade\'s badge alike.'],
+     ['d','<b>Reduced motion:</b> every frame in this section is the resting state already — nothing fades in on any of the three tiers, and the button is present from frame one. There is no separate "settled" screenshot to take.']]
+  );
+
+/* Frame M3 needed the fallback art (a large seed-art badge) rather than an
+   empty art window — built directly rather than through momentDialog(),
+   which assumes a photo. Patched in after the fact so the four frames above
+   read as one continuous section without a bespoke fifth helper function. */
+document.querySelectorAll('#sec-moments figure')[2].querySelector('.phone .scroll').innerHTML =
+  '<div class="news-frame"><div class="news-card">' +
+  '<div class="news-fallback"><span class="seed-art" style="--art:' + SEEDS.bluebell.art + '">' + bloomSvg(SEEDS.bluebell.petal, SEEDS.bluebell.center) + '</span></div>' +
+  '<h2 class="news-h2">Bluebell revealed!</h2>' +
+  '<ul class="news-list">' + BLUEBELL_STATS.map(l=>'<li>'+l+'</li>').join('') + '</ul>' +
+  '<p class="news-note">Yours whenever you\'ve saved 150,000 gold.</p>' +
+  '<button class="big-btn">Got it!</button></div></div>';
+
+function toggleNotes(){
+  const on = document.body.dataset.notes === '1';
+  document.body.dataset.notes = on ? '0' : '1';
+  document.getElementById('notesBtn').textContent = 'Notes: ' + (on ? 'OFF' : 'ON');
+  document.getElementById('notesBtn').classList.toggle('off', on);
+}
+</script>
+</body>
+</html>
