@@ -31,10 +31,9 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 4. **#19 · "Discover 5 species" arrives in minutes and needs ~1.8 years of gold** — a first-session
    bug that also jams a third of the quest strip forever. Data plus a three-line gate `fillActive()`
    does not have yet. The same fault sits in `q_discover_8` and `q_discover_12`.
-5. **#24 · Move the gem skip out of Summer into Fall, at twice the price** — **read the item before
-   pricing**: Summer's linear formula makes a Pumpkin skip cost 51 hours of gem income to save 3, so
-   Fall needs its own shape rather than a ×2. Also reverses a written rule and must not touch the
-   Century Bloom.
+5. **#24 · Move the gem skip out of Summer into Fall** — **RULED**: Century Bloom excluded, no ×2,
+   ship at the existing rate and feel it. Buildable as specced. Note the item's prediction — at this
+   rate every Fall skip still costs more gem income than the time it buys.
 6. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
    design change: Clover in gold, Petal Cake in gems, Honeypot behind a rewarded ad. **Read the item
    before pricing anything**: four pets can tend at once, which makes this twelve gem purchases and
@@ -1233,7 +1232,7 @@ node tools/probe.js wait:700 tap:#newsOk wait:400 '<patch window.AudioContext to
 
 ---
 
-### #24 · POLISH · Move the gem skip out of Summer into Fall, at twice the price · annoying · reported 2026-09-02
+### #24 · POLISH · Move the gem skip out of Summer into Fall · annoying · reported 2026-09-02 · RULED 2026-09-02
 
 **What the owner said.** "I think we should move the Gem Spin for speeding up flowers to fall and
 remove it from Summer. The Summer plants are just so fast that it's kind of meant for that Twitch
@@ -1311,16 +1310,47 @@ lists *"Skip a timer — `ceil(remaining / 30)`, min 1"* and must move with the 
 sim-test coverage that no Fall skip can touch a Century Bloom and that a skipped plot still marks
 for the windfall the same way a naturally ripe one does.
 
-**Two open questions, both the owner's.**
+**THE OWNER'S RULINGS, 2026-09-02.** *"So if we exclude the Century Bloom, then it would be fine
+because in order to get a windfall, they would have to purchase every single one of the plots anyway,
+right? If they're spending gems, it shouldn't matter because that's how we monetize. That we might not
+want to times two every cost on gems. Maybe we can just get it in there and see how it feels at
+first."*
 
-1. **"Increase the cost of gems by two" — double the price, or something else?** Read here as ×2
-   (equivalently `skipSecondsPerGem` 30 → 15). Say the word if it meant two gems flat, or ×2 on top
-   of a new Fall shape.
-2. **What shape should Fall's price be?** Summer's linear rate makes every Fall skip cost more gem
-   income than the time it saves, so a ×2 on the existing formula ships a button nobody presses. A
-   flat price per crop, or one priced against the ~14 gems/hour rate the way the sky calls are
-   (`04-economy.md:275` — *"price sinks against that rate"*), would give the owner something they can
-   actually feel.
+1. **The Century Bloom is excluded.** Settled.
+2. **No ×2 — ship at the existing rate** (`skipSecondsPerGem: 30`, unchanged) and feel it before
+   touching the number.
+3. **A bought windfall is accepted**, on the reasoning that gems spent are the point.
+
+**On the windfall reasoning — the conclusion holds, the premise does not, and the difference is worth
+knowing.** A player would **not** have to skip every plot: crops ripen at different times, so the
+natural move is to wait for the bed and pay only for the one or two stragglers. **But it does not
+matter**, because at any price in this range the gems cost far more than the gold gained. Skipping
+eight Apples to force a windfall is 7,680 gems — about **548 hours** of gem income — for ~806K gold, a
+number a garden earns by waiting. **The windfall is not meaningfully buyable**, so the concern closes
+on the arithmetic rather than on the Century Bloom exclusion.
+
+**And "that's how we monetize" is exactly the documented sequence.** `37-monetization.md:126`, the
+list of what must be true before anything ships: **"Gem sinks grow before gem packs are worth
+selling."** Gems are not sold for money anywhere today — they come from drops and the cheat button —
+so building the sink first is the order the plan already asks for. This item is gate 4.
+
+**One honest prediction, so the experiment has a hypothesis.** At the unchanged rate the Fall prices
+are half the earlier table and still cost more gem income than the time they buy:
+
+| Fall crop | Grow | Skip at 1× | In gem income (~14/h) |
+| --- | --- | --- | --- |
+| Strawberry | 20 m | 40 gems | 3 hours to save 20 minutes |
+| Pumpkin | 3 h | 360 gems | 26 hours to save 3 hours |
+| Apple | 8 h | 960 gems | 69 hours to save 8 hours |
+
+**So the likely finding of "see how it feels" is that it feels like nothing — the button sits there
+unpressed.** That is a perfectly good thing to learn from a build rather than from a table, and it is
+cheap to learn. But if the owner wants to *feel* a skip they might actually buy, the dial to move is
+the shape rather than the multiplier — a flat price per crop tier, or one priced against the ~14
+gems/hour rate the way the sky calls are (`04-economy.md:275`, *"price sinks against that rate"*).
+Worth a second look after a session with it.
+
+**No open questions remain.**
 
 ---
 
