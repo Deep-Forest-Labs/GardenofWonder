@@ -21,27 +21,29 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 1. **#13 · Halve the rain and storm beds** — one number each, and the instrument to prove it already
    exists. **Read the item**: the obvious knob also halves the thunder, and there is a knob that
    does not.
-2. **#12 · Fall's empty-plot marker is 1.5x Summer's** — three CSS declarations, measured, and the
-   owner asked for it by name. **Widen it to a three-room sweep**: the meadow hand-draws its own copy
-   of the same glyph at a third size (see `#16`), so fixing Fall alone leaves the set inconsistent.
-3. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+2. **#12 · The plant-here marker is a different size in all three rooms** — Summer 30% capped at
+   44px, Fall 46% uncapped, and the meadow hand-draws its own copy at 34% (see `#16`). **One glyph,
+   one size rule**, all three at once.
+3. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
+   the house register is already written in `data.js`. Also closes a hard-coded number that can
+   drift from its knob. **Read the item**: the length exists to keep a promise honest, so keep that.
+4. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-4. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
+5. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
    it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
    **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
    a working ready-notification.
-5. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+6. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-6. **#16 · The meadow's art is off-style and its board does not match** — **not one job**: the
-   marker folds into `#12` tonight, the board is a bounded next step, and the background is its own
-   session that should start with a `meadow-spike.html` for the owner to judge. Do not hand this to a
-   fix round as one lump.
 7. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
    open question may answer itself.
+8. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
+   round**: the marker folds into `#12` tonight, the board is a bounded next step, and the background
+   is its own session that should start with a `meadow-spike.html` for the owner to judge.
 
 ---
 
@@ -556,6 +558,94 @@ blades and fronds are what most of this room's motion currently is.
 scene re-authored in the garden's language? The first is less code and guarantees they can never
 drift again; the second keeps the room able to differ. The owner asked for "in line with our garden",
 which points at the first.
+
+---
+
+### #17 · POLISH · The weather tooltips are four to ten times longer than any other effect text · annoying · reported 2026-09-01
+
+**What the owner said.** "The description for rain and other weather effects is a little too long and
+confusing. Is there any way we can tighten it up and make it sound more normal and descriptive
+without sounding so technical?… it might be worth saying something like 'everything in the garden
+grows 10% faster' versus how it sounds right now." Screenshot of the Rain bubble attached.
+
+**Repro.** Tap the sky chip in the rail during any weather.
+
+**Measured against the game's own house style.** Every other effect description in the game lives in
+`data.js` and runs five to ten words. These run forty-two to fifty-four:
+
+| | words |
+| --- | --- |
+| Verb — Keeper: *"Neighbouring plots grow 15% faster."* | 5 |
+| Booster — Golden Popups | 9 |
+| Verb — Lantern: *"Neighbouring plots are twice as likely to drop a gem."* | 10 |
+| **Weather — Wonderfall** | **42** |
+| **Weather — Thunderstorm** | **45** |
+| **Weather — Rain** | **49** |
+| **Weather — Aurora** | **54** |
+
+**So the target register is not something to invent — it is already written, in `data.js`.** Subject,
+verb, percentage, full stop. The owner's own example — *"everything in the garden grows 10% faster"* —
+is exactly a verb description.
+
+**What makes it read as technical**, in `weatherTip()` (`ui.js:601`):
+
+1. **"rolls for a mutation"** — dice language, and **the player never sees the word "mutation"
+   anywhere else in the game.** The celebration floats the mutation's *name* and the banner says
+   *"Your bloom changed"* (`ui-events.js:261`). This tooltip is the only place that names the
+   mechanic instead of the thing.
+2. **"at a moment of its own while it grows"** and **"If that moment lands under Rain"** — two clauses
+   describing the *implementation* (one booked roll per plant) rather than anything the player does
+   or sees.
+3. **"about a 1 in 4 chance"** where the rest of the game uses percentages — and it is also **less
+   accurate**. `Math.round(1 / w.catch)` turns the storm's 0.15 into "1 in 7", which is 14.3%, and
+   the aurora's 0.12 into "1 in 8", which is 12.5%. **Percentages are both more natural and exactly
+   right.**
+4. **"a tenth faster"** — the owner's named example, and worse than a wording problem; see below.
+5. **The storm's line is about what does not happen**: *"It does not change how fast anything
+   grows."* Nothing else in the game spends a sentence on an effect it does not have.
+
+**"A tenth faster" is hard-coded, and it can drift.** The `extra` table (`ui.js:605`) holds four
+hand-written English strings, and rain's spells out `DATA.weatherStage.rainGrowth` (0.1) in words
+rather than reading it. Retune that knob and the tooltip still says "a tenth". The comment directly
+above the function insists the odds and multipliers are *"read from the data rather than written out,
+because a tooltip that drifts from the table it describes is worse than no tooltip"* — **this one
+line does not follow its own rule.** Writing it as
+`${Math.round(DATA.weatherStage.rainGrowth * 100)}% faster` answers the owner and closes the drift in
+the same edit.
+
+**THE CONSTRAINT THAT MUST SURVIVE THE CUT, and it is why the copy got long.** The comment at
+`ui.js:587` is emphatic: *"THE COPY IS ABOUT A CHANCE, NEVER A PAYOUT… A chip reading 'Gilded x10'
+promises a per-harvest multiplier the game does not give, and a player who harvests through a whole
+storm with nothing to show reads it as broken."* That is real — a plant rolls **once**, at a moment
+booked when it was sown, against whatever sky stands *then*. **Shortening must not become
+"Gilded x10".** Lose the lecture, keep the honesty.
+
+**Fix sketch.** Two short sentences, house register, every number still interpolated from `DATA`. A
+*shape*, not final copy — the wording is the fix round's to write and the owner's to approve:
+
+> **Rain**
+> A plant caught out in the rain has a **25%** chance of turning **Dewkissed**, worth **x2**.
+> Everything in the garden grows **10% faster** while it lasts.
+
+That keeps the chance framing — a plant is *caught out in it*, which is true and promises nothing
+about every harvest — drops "mutation", "rolls" and "moment" entirely, uses percentages, and lands
+near twenty words. Same treatment for the other three. The aurora's *"the garden counts as night…
+so the night-lovers wake"* is the line worth keeping most of, because it is already plain. **The
+storm's "it does not change how fast anything grows" should simply go** — say what a storm does and
+stop.
+
+**What it might break.** The bubble is sized by its content, and `showWeatherTip()` clamps it to
+`.ui`'s measured box and slides the arrow with `--ax` (`ui.js:620`) — shorter copy changes the width
+and so the clamp, so check a chip near either screen edge at 390px. Keep every number derived:
+`w.catch`, `m.mult`, and now `rainGrowth`. `18-mutations-and-weather.md` owns the mechanic these
+sentences describe. If `#9` lands first, `boostTip()` should be written in this same register rather
+than the one being replaced.
+
+**Open question — a small vocabulary decision worth making once.** What does the game call a mutation
+*to the player*? Today the banner says a bloom "changed", the float says "Dewkissed", and only this
+tooltip says "mutation". Pick one word, put it in the glossary at the top of
+`32-the-garden-year.md` — which has no entry for it — and this copy, the Almanac's, and every future
+one write themselves.
 
 ---
 
