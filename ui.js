@@ -1214,7 +1214,8 @@
       return;
     }
     video.loop = false;
-    if (video.readyState >= 2 && video.paused && !video.ended) {
+    if (video.ended) return;
+    if (video.readyState >= 2 && video.paused) {
       video.play().catch(() => {});
     }
   }
@@ -1235,19 +1236,22 @@
     bindArtPlantVideo(video, state);
     const mode = state === 'ready' ? 'ready' : 'grow';
     const url = mode === 'ready' ? ART_VIDEO.plantReady() : ART_VIDEO.plantGrow();
-    const sig = `${cell.plantedAt}:${cell.grow}:${mode}`;
+    /* plantedAt + seed + mode — not cell.grow, which Wonder/rain/keeper rewrite every tick. */
+    const sig = `${cell.plantedAt}:${cell.seed}:${mode}`;
     const st = artPlantState.get(slot);
     const paint = () => {
       startFbPaint(video, canvas);
       applyArtPlantSync(video, cell, state);
     };
-    if (!st || st.sig !== sig || video.dataset.artSrc !== url) {
+    if (!st || st.sig !== sig) {
+      const freshGrow = mode === 'grow' && (!st || st.mode !== 'grow'
+        || st.plantKey !== `${cell.plantedAt}:${cell.seed}`);
       stopFbPaint(canvas);
-      artPlantState.set(slot, { sig });
-      video.dataset.artSrc = '';
+      artPlantState.set(slot, { sig, mode, plantKey: `${cell.plantedAt}:${cell.seed}` });
       setArtVideo(video, url, (ok) => {
         if (ok !== false) {
-          if (mode === 'grow') {
+          bindArtPlantVideo(video, state);
+          if (freshGrow) {
             try { video.currentTime = 0; } catch (_) {}
           }
           paint();
@@ -1256,6 +1260,7 @@
       return;
     }
     applyArtPlantSync(video, cell, state);
+    if (!fbPaintJobs.has(canvas)) startFbPaint(video, canvas);
   }
 
   function clearArtPlant(slot) {
@@ -1473,8 +1478,9 @@
     applyFbVideoAudio(video, withAudio);
     const ready = () => {
       applyFbVideoAudio(video, withAudio);
-      if (shouldPlay) video.play().catch(() => {});
-      else video.pause();
+      if (shouldPlay) {
+        if (!video.ended || video.loop) video.play().catch(() => {});
+      } else video.pause();
       onReady && onReady();
     };
     if (video.dataset.artSrc === url) {
@@ -1482,6 +1488,8 @@
       return;
     }
     video.dataset.artSrc = url;
+    const kc = fbKeyCache.get(video);
+    if (kc) kc.time = -1;
     video.onloadeddata = ready;
     video.onerror = () => {
       video.dataset.artSrc = '';
@@ -1492,12 +1500,40 @@
   }
 
   const fbPaintLoops = new Map();
+  const fbPaintJobs = new Map();
+  let fbPaintLoopId = 0;
+  let fbLayoutGen = 0;
+  const fbLayout = new WeakMap();
   const fbKeyCache = new WeakMap();
 
+  function bumpFbLayout() {
+    fbLayoutGen += 1;
+  }
+
   function stopFbPaint(canvas) {
-    const id = fbPaintLoops.get(canvas);
-    if (id) cancelAnimationFrame(id);
+    const rvfc = fbPaintLoops.get(canvas);
+    if (rvfc && rvfc.cancel) {
+      try { rvfc.cancel(); } catch (_) {}
+    } else if (rvfc) cancelAnimationFrame(rvfc);
     fbPaintLoops.delete(canvas);
+    fbPaintJobs.delete(canvas);
+    if (!fbPaintJobs.size && fbPaintLoopId) {
+      cancelAnimationFrame(fbPaintLoopId);
+      fbPaintLoopId = 0;
+    }
+  }
+
+  function runFbPaintLoop() {
+    fbPaintLoopId = 0;
+    if (!fbPaintJobs.size) return;
+    if (!document.hidden) {
+      fbPaintJobs.forEach(({ video }, canvas) => paintFbFrame(video, canvas));
+    }
+    fbPaintLoopId = requestAnimationFrame(runFbPaintLoop);
+  }
+
+  function ensureFbPaintLoop() {
+    if (!fbPaintLoopId) fbPaintLoopId = requestAnimationFrame(runFbPaintLoop);
   }
 
   /* Matte key — neutral near-black only, so ink strokes on the flower survive. */
@@ -1522,9 +1558,12 @@
       const c = document.createElement('canvas');
       c.width = vw;
       c.height = vh;
-      cache = { w: vw, h: vh, canvas: c, ctx: c.getContext('2d', { willReadFrequently: true }) };
+      cache = { w: vw, h: vh, canvas: c, ctx: c.getContext('2d', { willReadFrequently: true }), time: -1 };
       fbKeyCache.set(video, cache);
     }
+    const t = video.currentTime;
+    if (cache.time === t) return cache.canvas;
+    cache.time = t;
     const { ctx, canvas: keyC } = cache;
     if (!ctx) return null;
     ctx.drawImage(video, 0, 0, vw, vh);
@@ -1542,16 +1581,27 @@
     if (!keyC) return;
     const vw = keyC.width;
     const vh = keyC.height;
-    const rect = canvas.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const cw = Math.max(1, Math.round(rect.width * dpr));
-    const ch = Math.max(1, Math.round(rect.height * dpr));
+    let lay = fbLayout.get(canvas);
+    if (!lay || lay.gen !== fbLayoutGen) {
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      lay = {
+        gen: fbLayoutGen,
+        cw: Math.max(1, Math.round(rect.width * dpr)),
+        ch: Math.max(1, Math.round(rect.height * dpr)),
+        ctx: null
+      };
+      fbLayout.set(canvas, lay);
+    }
+    const { cw, ch } = lay;
     if (canvas.width !== cw || canvas.height !== ch) {
       canvas.width = cw;
       canvas.height = ch;
+      lay.ctx = null;
     }
-    const ctx = canvas.getContext('2d');
+    if (!lay.ctx) lay.ctx = canvas.getContext('2d');
+    const ctx = lay.ctx;
     if (!ctx) return;
     ctx.clearRect(0, 0, cw, ch);
     ctx.imageSmoothingEnabled = true;
@@ -1576,11 +1626,23 @@
 
   function startFbPaint(video, canvas) {
     stopFbPaint(canvas);
-    const tick = () => {
-      paintFbFrame(video, canvas);
-      fbPaintLoops.set(canvas, requestAnimationFrame(tick));
-    };
-    fbPaintLoops.set(canvas, requestAnimationFrame(tick));
+    fbPaintJobs.set(canvas, { video });
+    if (typeof video.requestVideoFrameCallback === 'function') {
+      const handle = { id: 0 };
+      const step = () => {
+        if (!fbPaintJobs.has(canvas)) return;
+        if (!document.hidden) {
+          const cache = fbKeyCache.get(video);
+          if (cache) cache.time = -1;
+          paintFbFrame(video, canvas);
+        }
+        handle.id = video.requestVideoFrameCallback(step);
+      };
+      handle.id = video.requestVideoFrameCallback(step);
+      fbPaintLoops.set(canvas, { cancel: () => video.cancelVideoFrameCallback(handle.id) });
+      return;
+    }
+    ensureFbPaintLoop();
   }
 
   function setArtFb(canvas, video, url, loop = true) {
@@ -2189,7 +2251,7 @@
       sizeGarden();
     }, t));
     sizeGarden();
-    if (window.ResizeObserver) new ResizeObserver(() => { sizeGarden(); if (UI.sizeFallBoard) UI.sizeFallBoard(); }).observe($('.stage'));
+    if (window.ResizeObserver) new ResizeObserver(() => { sizeGarden(); bumpFbLayout(); if (UI.sizeFallBoard) UI.sizeFallBoard(); }).observe($('.stage'));
     renderRail();
     renderPowerUp();
     renderQuestStrip();
@@ -2198,7 +2260,7 @@
     el.game.addEventListener('pointermove', (e) => {
       if (e.pointerType === 'mouse' && flowerBtn) lookAt(e.clientX, e.clientY);
     });
-    window.addEventListener('resize', () => { sizeViewport(); sizeGarden(); placeCoach(); });
+    window.addEventListener('resize', () => { sizeViewport(); sizeGarden(); placeCoach(); bumpFbLayout(); });
     // Coming back from the app switcher is the other moment iOS hands over a
     // window it never mentioned resizing.
     window.addEventListener('pageshow', sizeViewport);
