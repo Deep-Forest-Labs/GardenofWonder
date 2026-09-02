@@ -3252,6 +3252,9 @@ Two multipliers:
   guessing. This is the main reason the docs exist.
 - **Decide expensive, build cheap.** Advisory conversations cost a fraction of code generation. Use
   a strong model to make the call, a cheap one to implement it.
+- **Every builder prompt opens with its recommended model on the first line** (owner-requested,
+  2026-09-02) — e.g. `MODEL: Sonnet 5 (thinking)` — so the owner sees the assignment immediately
+  and deletes the line when pasting. Whoever writes a prompt picks the tier from the table above.
 
 ## Briefing a new agent
 
