@@ -1333,9 +1333,9 @@ not what you would guess.
 | --- | --- |
 | 1 · Two spikes, then stop | **Closed.** Both live. The owner spent the gate on play rather than reading — *"go with your recommendation on everything"* — so every question was ruled by the builder and argued in the 2026-09-01 gate-1 decision-log entry |
 | 2 · Annotations build verbatim | **Closed with gate 1** |
-| 3 · Engine as pure simulation | **Shipped.** 1,592 assertions, every guard sabotaged |
+| 3 · Engine as pure simulation | **Shipped.** 1,642 assertions, every guard sabotaged |
 | 4 · The surface | **Shipped.** Board, chip, the one button, Holly, the picker, the gate card, the welcome-back line, the avatar picker |
-| 5 · The gauntlet | **In progress.** An adversarial critique of the spikes ran and its findings are folded in; the visual and grammar passes are done by eye and by `tools/probe.js` |
+| 5 · The gauntlet | **Two rounds run, findings fixed, NOT re-run clean.** Eight critics; the four that mattered were things no green suite would catch — Holly failing her own silhouette gate, the sleeping face being unreachable code, a power-up spent in Winter buying nothing, and her intro spent behind the plant picker. Everything found is fixed and the suite is green. **A third round has not been run against the result** |
 
 **Four things about this slice that are not obvious from the diff.**
 
