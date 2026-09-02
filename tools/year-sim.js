@@ -109,7 +109,16 @@ function bindModel(results) {
     now: () => clock,
     dayNow,
     hooks: {
-      diary: (line) => results.diary.push(line)
+      diary: (line) => results.diary.push(line),
+      /* Each collect, with the trailing daily income standing at the moment it
+         landed. That pairing is the metric doc 46 asks for and it cannot be
+         reconstructed afterwards. */
+      onWinterCollect: (res) => {
+        (results.winterCollects || (results.winterCollects = [])).push({
+          day: dayNow(), payout: res.payout, plots: res.plots, kept: res.kept,
+          trailing: results.trailingIncome || 0
+        });
+      }
     }
   });
   return model;
@@ -227,7 +236,57 @@ function winterMeasurement() {
   console.log(`  with Winter:    lifetime ${a.cumEarned.toLocaleString().padStart(13)} · ${String(a.turns).padStart(2)} turns · ${String(a.savedSeedsMinted).padStart(5)} seeds minted`);
   console.log(`  without Winter: lifetime ${b.cumEarned.toLocaleString().padStart(13)} · ${String(b.turns).padStart(2)} turns · ${String(b.savedSeedsMinted).padStart(5)} seeds minted`);
   const lift = b.cumEarned > 0 ? (a.cumEarned / b.cumEarned - 1) * 100 : 0;
-  console.log(`  Winter's lift on lifetime coins: ${lift >= 0 ? '+' : ''}${lift.toFixed(1)}%`);
+  console.log(`  Winter's lift on lifetime coins: ${lift >= 0 ? '+' : ''}${lift.toFixed(1)}% over ${days} days`);
+  /* A LIFT ON LIFETIME TOTALS IS NOT THE METRIC, and it is printed with its
+     caveats rather than quietly. It moves with the run length — +1.4% at ten
+     days, +2.6% at twelve, -16.2% at thirty — and the sign flip is not noise:
+     the arm that plays Winter TURNS LESS OFTEN. The casual model rides each
+     year to its wall, Winter's income pushes that wall further out, and the
+     Turn is where the compounding lives (petals, and the blessing nothing
+     prices). Winter buys gold and spends Turns.
+
+     Whether that is a cost at all is the owner's question, not this tool's:
+     the capital Winter parks is capital that would otherwise be IDLE while the
+     player is asleep, and a model that charges Winter the full opportunity cost
+     of a wallet the player is not awake to cycle is being unfair to it. Which
+     is exactly why docs/46 names a per-morning metric instead. */
+  if (a.turns !== b.turns) {
+    console.log(`  ...and it TURNED ${a.turns} times against ${b.turns}. Winter buys gold and spends Turns:`);
+    console.log('  the casual model rides each year to its wall, and Winter\'s income pushes the');
+    console.log('  wall further out. The Turn is where the compounding is. Reported, not judged —');
+    console.log('  the capital Winter parks is capital a sleeping player was not cycling anyway.');
+  }
+  console.log('  (this figure moves with the run length; the metric below is docs/46\'s own.)');
+
+  /* DOC 46'S NAMED METRIC: a kept night's payout as a share of the casual
+     player's trailing daily income. Measured per collect, from the pairing the
+     model recorded as each one landed — and it is the number that says whether
+     the morning FEELS worth coming back for, which a lift on lifetime totals
+     does not.
+
+     Winter's payouts are excluded from any per-active-minute rate elsewhere for
+     the reason order-gold's preamble gives about offline income; here they are
+     the subject, measured against a DAILY figure rather than a per-minute one,
+     which is the comparison that does not inflate. */
+  const cols = (withWinter.winterCollects || []).filter((c) => c.trailing > 0 && c.kept > 0);
+  console.log('\n  THE METRIC — a kept morning as a share of that day\'s income:');
+  if (!cols.length) {
+    console.log('    NOT MEASURED — this run collected no kept Winter morning against a settled');
+    console.log('    daily income. Run more days, or the arm is not being played.');
+  } else {
+    const shares = cols.map((c) => c.payout / c.trailing).sort((x, y) => x - y);
+    const med = shares[shares.length >> 1];
+    const lo = shares[0];
+    const hi = shares[shares.length - 1];
+    console.log(`    ${cols.length} kept mornings · median ${(med * 100).toFixed(1)}% of a day's income`);
+    console.log(`    spread ${(lo * 100).toFixed(1)}% to ${(hi * 100).toFixed(1)}%`);
+    /* Reported, not judged. The band is the owner's to set at measurement, and
+       doc 46 says so in as many words — the tool's job is to make the number
+       exist and keep existing. */
+    console.log('    Reported rather than judged: docs/46 sets the target band at measurement,');
+    console.log('    and that is the owner\'s call. What this line is for is that the number');
+    console.log('    keeps existing, and moves when the ladder does.');
+  }
 
   /* A FULL KEPT NIGHT, priced from the data rather than from a run: eight
      plots of one plant, every one of them kept. Every rung is checked, because

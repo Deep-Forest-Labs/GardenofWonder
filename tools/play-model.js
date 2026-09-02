@@ -104,6 +104,10 @@ function makeModel(env) {
   });
   const onActiveSecond = h.onActiveSecond || (() => {});
   const onTurn = h.onTurn || (() => {});
+  /* Doc 46's named metric wants a kept NIGHT's payout, so the model has to hand
+     each collect over as it happens — a lift on lifetime totals is a different
+     and much noisier number. */
+  const onWinterCollect = h.onWinterCollect || (() => {});
   /* THE FIFTH DIVERGENCE, and it only showed up when the extraction was run:
      year-sim's `results.turns` is an ARRAY of turn records and order-gold's is
      a COUNTER. Both are right for their own report, so recording a turn is a
@@ -189,6 +193,7 @@ function makeModel(env) {
     if (!MODEL.winterArm || !G.winterOpen()) return 0;
     const res = G.winterHarvestAll();
     const paid = res ? res.payout : 0;
+    if (res) onWinterCollect(res);
     if (!isNightSession) return paid;
     S.winter.grid.forEach((cell, i) => {
       if (cell.seed) return;

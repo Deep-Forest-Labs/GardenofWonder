@@ -26,11 +26,25 @@
           <div class="speech" id="speech"></div>`;
         el.garden.appendChild(wrap);
         flowerBtn = $('#flowerBtn', wrap);
-        speechEl = $('#speech', wrap);
-        /* Summer's cell is the bubble's HOME, and `bindFlower()` moves it to
-           whichever hero is on screen. Recorded here because `buildGarden()`
-           runs again on every plot expansion and the node is rebuilt with it. */
+        /* THE BUBBLE SURVIVES A REBUILD, and this is the whole reason it needs
+           saying: `buildGarden()` runs again on every plot expansion, and the
+           bubble may not be in this subtree when it does — `bindFlower()` moves
+           the one `#speech` node into whichever hero's cell is on screen, so a
+           player who buys a Land Deed while standing in Winter would otherwise
+           get a SECOND `#speech`: the new one in a cell `.in-winter` has
+           display:none'd (Holly goes mute) and the old one orphaned in Winter's
+           cell with whatever it last said stuck to the board.
+
+           So the fresh markup's bubble is thrown away whenever a real one
+           already exists, and the survivor is put back wherever it belongs. */
         speechHome = wrap;
+        const fresh = $('#speech', wrap);
+        if (speechEl && speechEl !== fresh && speechEl.isConnected) {
+          fresh.remove();
+          if (!guestFlower) wrap.appendChild(speechEl);
+        } else {
+          speechEl = fresh;
+        }
         comboRing = $('.combo-ring', wrap);
         wireFlower();
         continue;
@@ -1102,6 +1116,11 @@
     const sdef = SEASONS[seasonIdx(id)];
     if (!sdef) return;
     hideGate();
+    /* The weather tooltip is anchored to a chip in the rail, and the rail's
+       chips change with the room — so a tip left open on the way out reopens
+       over the next room pointing at nothing. #9's close-on-room-change guard,
+       extended to every season rather than only to the one it was written for. */
+    hideWeatherTip();
     if (!seasonReady(sdef)) { showGate(sdef); return; }
     if (id === season) { renderSeasonEdges(); return; }
     const from = SEASON_ROOMS[season];

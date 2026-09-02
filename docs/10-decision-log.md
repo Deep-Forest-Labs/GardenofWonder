@@ -29,7 +29,23 @@ per-hour rate is far below Summer's *by design*, because the tuck's convenience 
 so a greedy refill parks the whole wallet in the slowest season in the game. **That is not a finding
 about the economy; it is a model that does not represent a person.** Modelled as the ritual instead
 — collect whenever you look, sow and tuck once on the way out — bill 17 passes both with Winter and
-without, and Winter's lift on the casual arm is a modest **+1.3%**.
+without.
+
+**A lift on lifetime totals turned out not to be the number, and the tool now says so.** It moves
+with the run length — **+1.4% at ten days, +2.6% at twelve, −16.2% at thirty** — and the sign flip is
+not noise: the arm that plays Winter **turns less often** (16 against 21 over thirty days). The
+casual model rides each year to its wall, Winter's income pushes that wall out, and the Turn is
+where the compounding lives. **Winter buys gold and spends Turns.** Whether that is a cost at all is
+the owner's question: the capital Winter parks is capital a sleeping player was not cycling anyway,
+and a model that charges Winter the full opportunity cost of a wallet nobody is awake to spend is
+being unfair to it. Reported and not tuned.
+
+**So doc 46's own metric is implemented rather than proxied**, which the first pass had skipped: **a
+kept morning is worth a median 23% of that day's income** (spread 8%–52%, over eleven kept mornings
+in thirty days). That is the number that says whether the morning is worth coming back for, and it
+is measured per collect from a pairing the model records as each one lands — it cannot be
+reconstructed afterwards. **The band is the owner's to set**, as doc 46 says in as many words; the
+tool's job is that the number exists and moves when the ladder does.
 
 **Guardrail one passes, and the honest number is the margin.** No rung's single full kept night
 clears both Turn gates at Turns 3–6. But the first version of that assertion priced the mint as

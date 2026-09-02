@@ -4416,7 +4416,12 @@ const buildTurnRig = (inFlight) => {
   S.mementos = { mossy_pebble: 2 };
   S.luckyPacks = 1;
   S.prefs = { sfx: false, music: true };
-  S.seen = { intro: true, plot: true, apiary: true };
+  /* EVERY `seen` flag at a non-default value, not three of them. The rig used
+     to replace `S.seen` with a three-key object, so a flag added later was
+     witnessed at its DEFAULT and `\`seen\` survives the Turn verbatim` passed
+     without ever testing it — a test that cannot fail. Built from
+     `defaultState()`'s own keys, so the next flag joins it for free. */
+  Object.keys(S.seen).forEach((k) => { S.seen[k] = true; });
   /* 25, not 29: the in-flight sweep's auto-collect must not land on the
      every-tenth-harvest reputation drip, which would move rep and level for a
      reason that has nothing to do with the partition. */
@@ -8381,6 +8386,105 @@ check('so the mark is refused for the reason the test claims', S.winter.grid[0].
 
 clock = wiClockKeep;
 G.reset();
+
+group('slice C — the welcome-back scene learns about Winter');
+{
+  const wcKeep = clock;
+  clock = 1767269100;
+  G.reset();
+  S.year.turnsCompleted = DATA.year.winterTurn;
+  clearGarden();
+  clearWinter();
+  S.credits = 1e7;
+  /* A morning whose ONLY news is kept Winter blooms. Summer empty, no jars, no
+     offline coins — the exact case doc 46 names, and the one the null-gate
+     would have swallowed. */
+  for (let i = 0; i < 4; i += 1) G.winterPlant(i, 'snowdrop');
+  G.winterTuck();
+  const nightBack = SNOWDROP.grow + 3600;
+  S.winter.grid.forEach((c) => { if (c.seed) c.plantedAt -= nightBack; });
+  S.winter.tuckedAt -= nightBack + 60;
+  S.lastSeen = clock - nightBack;
+  const wc = G.reconcile();
+  check('a morning of kept Winter blooms produces a scene at all', Boolean(wc),
+    'reconcile returned null — the second null-gate swallowed it');
+  check('and it reports what opened and how many were kept',
+    wc && wc.winterRipe === 4 && wc.winterKept === 4, JSON.stringify(wc && { r: wc.winterRipe, k: wc.winterKept }));
+  check('and it says the bed was tucked, so Holly can be credited', wc && wc.winterTucked === true);
+  check('the marks it derived are on the cells', S.winter.grid.slice(0, 4).every((c) => c.kept === true));
+  /* BELT AND BRACES, said out loud rather than dressed as a test. `reconcile()`
+     saves when it has derived a mark (`|| marked`), and deleting that term
+     passes this whole suite — because the tuck it derived against is still
+     standing, so a reload simply derives it again, and both collect paths save
+     the marks and the cleared tuck in one commit. The term stays because the
+     day a third thing clears `tuckedAt` it stops being redundant, and because
+     a derivation that mutates and does not persist is the shape of a bug even
+     when this particular instance is not one. Same family as
+     `winterPlant()`'s `cell.kept = false` above. */
+  G.saveNow();
+  S.winter.grid.forEach((c) => { c.kept = false; });
+  G.load();
+  check('and they round-trip — a derivation at boot is not lost on the next load',
+    S.winter.grid.slice(0, 4).every((c) => c.kept === true));
+  check('Summer contributed nothing to it', wc && wc.ripened === 0 && wc.jars === 0);
+
+  /* THE RE-ENTRY CASE. The scene reports the ABSENCE, not the state of the
+     bed — counting every ripe cell re-announced last night's bed every time
+     the player came back, which is a lie after the first time. */
+  S.lastSeen = clock - 300;
+  const again = G.reconcile();
+  check('coming straight back does NOT re-announce the same night',
+    !again || again.winterRipe === 0, JSON.stringify(again && { r: again.winterRipe }));
+
+  /* An untucked night is still news, just without the snowfall. */
+  clearWinter();
+  S.credits = 1e7;
+  for (let i = 0; i < 3; i += 1) G.winterPlant(i, 'snowdrop');
+  S.winter.grid.forEach((c) => { if (c.seed) c.plantedAt -= nightBack; });
+  S.lastSeen = clock - nightBack;
+  const plain = G.reconcile();
+  check('an untucked night still produces a scene', Boolean(plain));
+  check('with nothing kept and the bed not tucked',
+    plain && plain.winterRipe === 3 && plain.winterKept === 0 && plain.winterTucked === false);
+
+  /* And a short absence is still a short absence. */
+  S.lastSeen = clock - 10;
+  check('a ten-second absence produces no scene, Winter or not', G.reconcile() === null);
+
+  /* Dev.simulateAway winds Winter's plant clocks AND its tuck, or the cheat
+     reports a morning in which the one overnight season did nothing. */
+  clearWinter();
+  S.credits = 1e7;
+  for (let i = 0; i < 5; i += 1) G.winterPlant(i, 'snowdrop');
+  G.winterTuck();
+  const simTuck = S.winter.tuckedAt;
+  const simPlanted = S.winter.grid[0].plantedAt;
+  const sim = G.Dev.simulateAway(20);
+  check('simulateAway wound the plant clocks back', S.winter.grid[0].plantedAt === simPlanted - 20 * 3600);
+  check('and the tuck with them — a bed whose plants aged while the quilt stood still is a night that never happened',
+    S.winter.tuckedAt === simTuck - 20 * 3600);
+  check('so the cheat reports a kept Winter morning',
+    sim && sim.winterRipe === 5 && sim.winterKept === 5, JSON.stringify(sim && { r: sim.winterRipe, k: sim.winterKept }));
+  check('and it left Fall alone — winding it is a slice-A change nobody ruled on',
+    S.fall.grid.every((c) => !c.seed));
+
+  /* The pre-epoch half of the tuck clamp, which is the half that could
+     FABRICATE marks rather than refuse them: a tuck at second 42 is before
+     every ripen instant there has ever been. */
+  const preTuck = JSON.parse(JSON.stringify(S));
+  preTuck.winter.tuckedAt = 42;
+  preTuck.winter.grid[0] = { seed: 'snowdrop', plantedAt: clock - SNOWDROP.grow - 500, grow: SNOWDROP.grow, ready: false, kept: false };
+  localStorage.setItem('gw-save', JSON.stringify(preTuck));
+  G.load();
+  check('a pre-epoch tuck clamps to now rather than covering all of history',
+    S.winter.tuckedAt === clock);
+  G.winterDeriveKept(clock);
+  check('so a bloom that opened before it earns nothing — the clamp refuses, never fabricates',
+    S.winter.grid[0].kept === false);
+
+  clock = wcKeep;
+  G.reset();
+}
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

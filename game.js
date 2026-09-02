@@ -1361,7 +1361,14 @@ const Game = (() => {
     let winterRipe = 0;
     let winterKept = 0;
     state.winter.grid.forEach((cell) => {
-      if (!cell.seed || now - cell.plantedAt < cell.grow) return;
+      if (!cell.seed) return;
+      const ripenAt = cell.plantedAt + cell.grow;
+      /* WHAT OPENED WHILE YOU WERE GONE, not what is standing on the board.
+         Counting every ripe cell re-announced the same night on every re-entry
+         — come back after three minutes with last night's bed still uncollected
+         and the scene said "Winter opened six blooms overnight" again. The
+         welcome-back scene reports the ABSENCE, so the window is the absence. */
+      if (ripenAt > now || ripenAt < since) return;
       winterRipe += 1;
       if (cell.kept) winterKept += 1;
     });
@@ -4732,12 +4739,16 @@ const Game = (() => {
         if (cell.mutateAt) cell.mutateAt -= back;
       });
       hiveCells().forEach((i) => { state.apiary.cells[i].at -= back; });
-      /* Fall and Winter go back too, or "simulate an absence" reports a
-         morning in which the only two seasons that ripen overnight did
-         nothing. Winter's TUCK moves with its plants for the same reason
-         `Dev.warp()` moves it: a bed whose plants aged while the quilt stood
-         still is a night that never happened. */
-      state.fall.grid.forEach((cell) => { if (cell.seed) cell.plantedAt -= back; });
+      /* Winter goes back too, or "simulate an absence" reports a morning in
+         which the one season built to ripen overnight did nothing. Its TUCK
+         moves with its plants for the same reason `Dev.warp()` moves it: a bed
+         whose plants aged while the quilt stood still is a night that never
+         happened.
+
+         FALL IS DELIBERATELY LEFT ALONE. Adding it here was a slice-C change to
+         a slice-A cheat on a premise nobody had ruled on — Fall does not appear
+         in the welcome-back report at all (docs/11), so winding its clocks
+         would change what the cheat does without changing what it says. */
       state.winter.grid.forEach((cell) => { if (cell.seed) cell.plantedAt -= back; });
       if (state.winter.tuckedAt) state.winter.tuckedAt -= back;
       state.lastSeen = nowSeconds() - back;

@@ -4669,21 +4669,14 @@ button:focus-visible{
   font-size:12.5px;font-weight:800;line-height:1;
 }
 .fl-chip svg{width:18px;height:18px;flex:none}
-/* THE RAIL STANDS DOWN IN FALL ON A SHORT SCREEN — and it keeps its box while it
-   does, which is the whole trick. Both boards are now the same square in the
-   same place, so on a 667-tall phone the bed chip's row and the status rail's
-   row are the same 48px of band and there is no arrangement in which both fit.
-   `visibility` rather than `display`, because `display:none` would give the row
-   back to `.stage` in Fall only — and a taller stage in one season is exactly
-   the misalignment this round exists to remove.
-
-   The rail loses the tie-break because a booster and the Wonder Effect act on
-   the GARDEN: there is nothing in Fall for them to do and nothing there to tap,
-   while the chip is the whole of Fall's one rule. Swipe back and it is there.
-   Above 700px there is room for both and neither moves. */
-@media (max-height:700px){
-  .in-fall .rail{visibility:hidden}
-}
+/* THE RAIL'S CHIPS STAND DOWN IN A SEASON ROOM — and since 2026-09-01 that is
+   a JS filter in `renderRail()` rather than the media query that used to live
+   here. The owner's #11 ruling is that a power-up doing nothing in this room
+   should not be shown in this room, and the media query answered a different
+   question: it hid the WHOLE rail, weather chip included, and only below
+   700px, so on a tall phone it did nothing at all. `.rail` keeps its
+   `min-height`, so an empty row still holds its box and the board below cannot
+   move — which is what the old rule was really protecting. */
 .fl-chip.close{background:linear-gradient(180deg,#fff6c2,#ffe066)}
 /* The pulse lives on a pseudo-element, never on the chip: affordPulse writes
    `transform`, which would silently throw away the chip's own centring — the
