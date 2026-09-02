@@ -215,6 +215,7 @@ const DESC = {
   '41-weather-staging.md': 'The Sky Pass — the Weather Ladder, the fronts, and the motion gate. Built 2026-08-31.',
   '42-overnight-housekeeping.md': 'What the overnight round of 2026-08-30 did, and the four things it filed rather than decided.',
   '43-punch-list.md': "The working queue of bugs and polish from the owner's own play, each one investigated with a sketch of the fix. Short-lived by design — 11-known-issues.md is the permanent record.",
+  '46-the-night-shift.md': "Winter's spec — the tuck-in, the snowfall bonus, six real winter bloomers, and Holly the winter rose who keeps the garden overnight. Owner-ruled and pressure-tested 2026-09-01; slice C builds from it.",
   'README.md': 'The docs folder’s own index, mirrored exactly as written. This Home page is a reordering of it for the Unity team.',
 };
 
@@ -282,6 +283,7 @@ const SHORT = {
   '41-weather-staging.md': '41 · Weather staging',
   '42-overnight-housekeeping.md': '42 · Housekeeping',
   '43-punch-list.md': '43 · Punch list',
+  '46-the-night-shift.md': '46 · The night shift',
   'README.md': 'The docs index',
 };
 
