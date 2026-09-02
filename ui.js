@@ -1564,31 +1564,156 @@
     return 255;
   }
 
-  function keyedFrame(video) {
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-    if (!vw || !vh) return null;
-    let cache = fbKeyCache.get(video);
-    if (!cache || cache.w !== vw || cache.h !== vh) {
-      const c = document.createElement('canvas');
-      c.width = vw;
-      c.height = vh;
-      cache = { w: vw, h: vh, canvas: c, ctx: c.getContext('2d', { willReadFrequently: true }), time: -1 };
-      fbKeyCache.set(video, cache);
+  let fbGlKeyOk = true;
+  const FB_KEY_VERT = `
+    attribute vec2 aPos;
+    attribute vec2 aUv;
+    varying vec2 vUv;
+    void main() {
+      vUv = aUv;
+      gl_Position = vec4(aPos, 0.0, 1.0);
+    }`;
+  const FB_KEY_FRAG = `
+    precision mediump float;
+    varying vec2 vUv;
+    uniform sampler2D uTex;
+    float fbKeyAlpha(vec3 c) {
+      float maxc = max(max(c.r, c.g), c.b);
+      float minc = min(min(c.r, c.g), c.b);
+      float spread = maxc - minc;
+      if (maxc <= 0.04705882353 && spread <= 0.03921568627) return 0.0;
+      if (maxc <= 0.17254901961 && spread <= 0.09411764706) {
+        float t = (maxc - 0.04705882353) / (0.17254901961 - 0.04705882353);
+        return t * t;
+      }
+      return 1.0;
     }
-    const t = video.currentTime;
-    if (cache.time === t) return cache.canvas;
-    cache.time = t;
+    void main() {
+      vec4 c = texture2D(uTex, vec2(vUv.x, 1.0 - vUv.y));
+      gl_FragColor = vec4(c.rgb, fbKeyAlpha(c.rgb));
+    }`;
+
+  function compileFbGlShader(gl, type, src) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      gl.deleteShader(sh);
+      return null;
+    }
+    return sh;
+  }
+
+  function createFbGlKey(vw, vh) {
+    const canvas = document.createElement('canvas');
+    canvas.width = vw;
+    canvas.height = vh;
+    const gl = canvas.getContext('webgl', {
+      alpha: true,
+      premultipliedAlpha: false,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      preserveDrawingBuffer: true
+    });
+    if (!gl) return null;
+    const vs = compileFbGlShader(gl, gl.VERTEX_SHADER, FB_KEY_VERT);
+    const fs = compileFbGlShader(gl, gl.FRAGMENT_SHADER, FB_KEY_FRAG);
+    if (!vs || !fs) return null;
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      gl.deleteProgram(prog);
+      return null;
+    }
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1, 0, 0,
+      1, -1, 1, 0,
+      -1, 1, 0, 1,
+      1, 1, 1, 1
+    ]), gl.STATIC_DRAW);
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.useProgram(prog);
+    const aPos = gl.getAttribLocation(prog, 'aPos');
+    const aUv = gl.getAttribLocation(prog, 'aUv');
+    gl.enableVertexAttribArray(aPos);
+    gl.enableVertexAttribArray(aUv);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 16, 0);
+    gl.vertexAttribPointer(aUv, 2, gl.FLOAT, false, 16, 8);
+    gl.uniform1i(gl.getUniformLocation(prog, 'uTex'), 0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    return { mode: 'gl', w: vw, h: vh, canvas, gl, prog, buf, tex, time: -1 };
+  }
+
+  function keyedFrameGl(video, cache) {
+    const { gl, prog, tex, canvas: keyC } = cache;
+    gl.viewport(0, 0, cache.w, cache.h);
+    gl.bindBuffer(gl.ARRAY_BUFFER, cache.buf);
+    gl.useProgram(prog);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    return keyC;
+  }
+
+  function keyedFrameCpu(video, cache) {
     const { ctx, canvas: keyC } = cache;
     if (!ctx) return null;
-    ctx.drawImage(video, 0, 0, vw, vh);
-    const id = ctx.getImageData(0, 0, vw, vh);
+    ctx.drawImage(video, 0, 0, cache.w, cache.h);
+    const id = ctx.getImageData(0, 0, cache.w, cache.h);
     const d = id.data;
     for (let i = 0; i < d.length; i += 4) {
       d[i + 3] = fbKeyAlpha(d[i], d[i + 1], d[i + 2]);
     }
     ctx.putImageData(id, 0, 0);
     return keyC;
+  }
+
+  function keyedFrame(video) {
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    if (!vw || !vh) return null;
+    let cache = fbKeyCache.get(video);
+    if (!cache || cache.w !== vw || cache.h !== vh) {
+      cache = null;
+      if (fbGlKeyOk) {
+        cache = createFbGlKey(vw, vh);
+        if (!cache) fbGlKeyOk = false;
+      }
+      if (!cache) {
+        const c = document.createElement('canvas');
+        c.width = vw;
+        c.height = vh;
+        cache = {
+          mode: 'cpu',
+          w: vw,
+          h: vh,
+          canvas: c,
+          ctx: c.getContext('2d', { willReadFrequently: true }),
+          time: -1
+        };
+      }
+      fbKeyCache.set(video, cache);
+    }
+    const t = video.currentTime;
+    if (cache.time === t) return cache.canvas;
+    cache.time = t;
+    if (cache.mode === 'gl') return keyedFrameGl(video, cache);
+    return keyedFrameCpu(video, cache);
   }
 
   function paintFbFrame(video, canvas) {
