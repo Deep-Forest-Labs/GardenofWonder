@@ -5,6 +5,51 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-02 (ruling) — The curtain and the drip: reveals become moments, and the shop learns to grow
+
+**The owner adopted recommendations 1 and 2 of the celebratory-progression pass** (pressure-tested
+the same day — three researchers on the repo's truth, the project's own law, and the market; the
+market's verdict: the genre's winners lock visibly and never hide their shops, and the toxic shape
+is hidden + missable + random). **The seed curtain**: open seeds, then the next locked seed exactly
+as today's full-price advert (the "six times everything I've earned" wall stays on screen — its
+feeling is load-bearing), then silhouette-and-`???` rows with one directional hint each, the same
+grammar in picker and Almanac, the Almanac's 19 denominator kept so the collection stays legibly
+finishable. **The upgrade drip**: the shop opens with four cards — Power Punch, Quick Grip, Lucky
+Charm, Combo Coil, the owner's own list, all four verified as the real `short` names — and the
+rest reveal progressively; their cost rebalance belongs to phase 4 and no cost moves in this pass.
+
+**Rulings inside it:**
+
+- **The reveal trigger keys on the earnings ledger, never on Turn count.** Turn-keyed reveals
+  re-import the deleted veterancy family (a term that rewards turn count is the exploit, whatever
+  its size) and would lag for exactly the casual player the design favours. **The owner set the
+  threshold: a seed reveals at 85% of its unlock price** (`f = 0.85`, in data, remote-tunable),
+  keyed to the lifetime ledger so it is monotone across Turns. The law it must prove by sim-test
+  exit code: **no moment may exist where a seed is affordable and still hidden.** The Turn's
+  ceremony stages the *celebration* of reveals; the ledger owns the *fact*.
+- **The reveal is a moment**: a popup with custom owner-provided art and the seed's full stats in
+  advert form (the Numbers rule applies to reveals too), and the seed is still purchased from the
+  picker as ever.
+- **A reusable milestone-popup system gets built once** — the owner's explicit ask, so popups are
+  never rebuilt per feature. The What's New dialog's bones are the base; the spec carries its
+  guardrails (never two popups, never a session-start gauntlet, sacred moments stay clean).
+- **Reveal flags are lifetime** — top-level beside `seedUnlocks`, never cleared by any path, the
+  Turn included; existing saves grandfather fully revealed (re-hiding buys no surprise and sells a
+  visible regression).
+- The 2026-08-13 **"mystery names rejected" entry is superseded** — both its premises (level
+  gates; a picker that shows everything either way) are retired; a note now sits on that entry.
+
+**Parked with constraints, not designed: the golden seed** — the owner's starter-pack idea, added
+to doc 37's menu with its guardrails named at proposal time rather than discovered at build time.
+
+**Rejected:** turn-count reveal triggers (above); hiding the next wall (the advert row is the
+first wall's phenomenology — both docs 31 and 33 preserve it by name); absent rows anywhere (the
+shipped law is "a locked thing you can see is a goal, and a missing one is nothing"); re-hiding on
+migration; and any `???` slot that is missable, time-windowed, or reachable by a paid currency —
+the last is a PEGI rating cliff, not a taste call.
+
+---
+
 ## 2026-09-01 (slice C, gate 5) — The gauntlet ran twice, and what it found was mostly invisible to a green suite
 
 **Eight critics over the shipped slice, every finding verified before it was believed.** The
@@ -7884,7 +7929,10 @@ second tap to collect would make the Almanac feel like a second quest strip.
 
 **Rejected: mystery names / true silhouettes.** The seed picker already shows every bloom with a
 level gate. Hiding the name only in the Almanac would be a second secret for no pacing gain.
-Greyscale plus "Not yet grown" is enough to read as a hole.
+Greyscale plus "Not yet grown" is enough to read as a hole. *(Superseded 2026-09-02: both premises
+are retired — the level gates died with the Garden Year, and the seed-curtain ruling hides the deep
+ladder in the SAME silhouette grammar on both surfaces at once, so there is no second-secret
+asymmetry. See the 2026-09-02 curtain-and-drip entry at the top.)*
 
 **Backfill pays catch-up.** Remaining `flowers` keys seed `discovered` on load, then any
 already-reached unclaimed rung pays. That is generous (inventory undercounts true lifetime

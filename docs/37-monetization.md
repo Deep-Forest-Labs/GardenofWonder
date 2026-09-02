@@ -71,6 +71,18 @@ forever money.
 
 ## The store shelf (real money)
 
+- **The golden seed — a starter-pack candidate, owner-proposed 2026-09-02, parked with its
+  guardrails named.** A special seed slotting between Bluebell and Lavender: inexpensive, an
+  outsized payout for its tier, so a paying player feels a real boost early. The rules it must
+  ship under, recorded now so nobody rediscovers them at build time: it lives **off the 19-seed
+  ladder** (an extra species — the seed curtain's reveal law is proven on the ladder and a paid
+  seed must never sit inside that proof); it **never appears in a mystery `???` slot** (paid
+  content behind a mystery attaches PEGI's paid-random-items descriptor — a rating cliff); the
+  pack stays **untimed with fixed, listed contents** (a time-limited starter pack is PEGI 12);
+  and the store sentence *"every collectible can be earned by playing"* survives only if the
+  golden seed is **also earnable by play eventually** — buy it now, or earn it later through a
+  long quest — or the sentence is consciously given up. That last shape is the owner's
+  pricing-posture call when monetization's time comes; the recommendation is earn-or-buy.
 - **Starter pack, ~$1.99–2.99, offered day 2–3** — fixed, listed contents: gems, one named
   card, a decor piece, a few boosts. No randomness (that's a loot box), and no meaningful
   gold (gold buys seed unlocks, and year-one pacing is the tuned heart of the game).
