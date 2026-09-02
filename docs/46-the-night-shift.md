@@ -316,3 +316,40 @@ filter and tooltip guard rather than re-implementing; **the stages pass owns the
    speed; Holly reads as this game's character and no one else's — silhouette test re-run), the
    named browser items from the bill, reduced motion, and scope (zero change outside the slice).
    Then the owner's verdict on the season's own question: **does the overnight ritual form?**
+
+   **TWO ROUNDS RUN, 2026-09-01.** Eight critics, every finding verified before it was believed.
+   The four that mattered most were things no green suite would have caught:
+
+   - **Holly failed her own build gate.** Filled in plain black only THREE crown points read,
+     against a ruling that says five or more and never two — the short points alternated to 0.66
+     and topped out just under the petal ring, which swallowed four of seven. The alternation, the
+     base radius, the crown length and the petal scale are **one measurement**, and the code says
+     so now.
+   - **The sleeping face was unreachable code.** A tucked plant is never ripe, so it is never at
+     stage 3, and the shut-eye arcs only existed there — the entire study the owner chose had never
+     rendered. A screenshot of a ripe board cannot show you that.
+   - **A power-up spent in Winter bought nothing**, silently, and the button is in the band, which
+     is not hidden here.
+   - **Holly's introduction was spent behind the plant picker** — the meadow-signpost lesson at one
+     more remove, and the same answer: wait.
+
+   And two tests that could not fail: the Turn partition rig replaced `state.seen` wholesale, so
+   both of this slice's new flags were witnessed at their DEFAULT; and the Winter half of
+   `reconcile()` — which this document calls "new ground, not a mirror" — had no test at all. The
+   bill is 1,642 assertions now, and the guards that could not go red have been made to.
+
+   **What the gauntlet did NOT do:** a third clean round. Every finding above is fixed and the
+   suite is green, but the critics have not been re-run against the result.
+
+**And the pacing measurement, reported rather than judged, because the acceptance is the owner's:**
+
+- **Guardrail one passes by 7.5%.** Below a lifetime of **48.9M gold** the richest kept night
+  (eight Camellia, net 1.408M) clears both Turn gates on its own, and the model's poorest
+  Turn-3-to-6 player sits at 52.5M. Thin, on a model that runs hot against doc 33's own year-one
+  target. Raising the top rung's cost widens it.
+- **Doc 46's own metric:** a kept morning is worth a **median 23% of that day's income** (spread
+  8%–52%, eleven mornings in thirty days). The band is the owner's to set.
+- **Winter buys gold and spends Turns.** Over thirty days the arm that plays Winter turns 16 times
+  against 21, because the casual model rides each year to its wall and Winter's income pushes the
+  wall out. Whether that is a cost is the owner's question: the capital Winter parks is capital a
+  sleeping player was not cycling anyway.
