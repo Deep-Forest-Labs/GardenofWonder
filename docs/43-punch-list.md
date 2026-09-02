@@ -35,27 +35,31 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 5. **#21 · Move the drone to the Shop, rent it for an ad, and build the ad button once** — pair
    with `#18`: both need the same "Watch an ad" component and neither should build it twice. **There
    is no video icon in `icons.js`**, and `Icons.get()` falls back silently.
-6. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
+6. **#22 · The Turn's "this year goes" reads as a confiscation list** — copy plus one type
+   treatment, at the game's most important decision. **Read the item**: the bluntness is a fixed bug
+   ("an irreversible commit may never understate its own price"), so it must get kinder without
+   naming one thing less.
+7. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
    the harvest float does not; the payload does not even carry the number. Pairs naturally with
    `#17`, both being "say the true thing in the fewest words".
-7. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
+8. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
    the house register is already written in `data.js`. Also closes a hard-coded number that can
    drift from its knob. **Read the item**: the length exists to keep a promise honest, so keep that.
-8. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+9. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-9. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
+10. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
    it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
    **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
    a working ready-notification.
-10. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+11. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-11. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+12. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
    open question may answer itself.
-12. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
+13. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
    round**: the marker folds into `#12` tonight, the board is a bounded next step, and the background
    is its own session that should start with a `meadow-spike.html` for the owner to judge.
 
@@ -1047,6 +1051,81 @@ and `04-economy.md` the upgrade prices; both move with it. Run `node tools/sim-t
 reads as a move, but the permanent upgrade and a thirty-minute rental are different purchases — the
 rental is a taste, the upgrade is the thing it is a taste of, and a shop with only the rental leaves
 no way to buy it for good.
+
+---
+
+### #22 · POLISH · The Turn's "this year goes" reads as a confiscation list · annoying · reported 2026-09-02
+
+**What the owner said.** "When you go to turn the year… it says, 'Save your seeds,' we have a line
+that says, 'This year goes.' Then it says, 'Gold upgrades and power-ups.' Right now, I think we
+should just make that more of a subtext, or change the text to where it says, 'A new year washes away
+your,' and then list the gold upgrades and power-ups or whatever else. Then say something like, 'But
+this brings in new life,' something a little more narrative that doesn't feel so punishing but also
+doesn't really read well right now."
+
+**Where it is.** `turnAsk()` (`ui-sheet.js:715`), the ceremony's first beat. The panel reads, top to
+bottom:
+
+1. The flower, and a spoken line — *"The year's turning. Save your seeds?"*
+2. A plate — *"Ready to save"* and the seed count
+3. A sentence about the compost — *"All 3 plots still growing go to the compost — everything ripe is
+   picked for you first."*
+4. **`THIS YEAR GOES`** + chips: Gold · Upgrades · Power-ups · N big plots · N growing
+5. **`THESE STAY, ALWAYS`** + chips: Seeds · Unlocks · Petals · Creatures · Cards · Level (+ Fall's
+   bed)
+6. *Turn the year* / *Not yet*
+
+**Half the diagnosis is typographic, and it is the half the owner reached for with "make that more
+of a subtext".** `.cere-lab` (`style.css:2183`) is **11px, uppercase, letter-spaced, `--ink-soft`** —
+a small-caps form heading. So the panel has **one warm sentence** (the compost line) sandwiched
+between **two shouted labels**, and the register changes twice in six rows. Dropping the owner's
+narrative phrasing into `.cere-lab` unchanged would render *"A NEW YEAR WASHES AWAY YOUR"* in
+letter-spaced caps, which reads worse, not better. **The sentence and the label are two different
+type treatments and this needs both** — a line of body copy that carries the verb, with the small
+label demoted or removed.
+
+**The visual language is already gentle; only the words are blunt.** `.chip.gone` wears drained
+paper, and its comment says why: *"not red, because a cost stated in advance is not an error"*
+(`style.css:2185`). Nothing here needs re-colouring.
+
+**THE CONSTRAINT THAT MUST SURVIVE, and it is a fixed bug, not a preference.** The comment above the
+`goes` list (`ui-sheet.js:739`) records it: *"The ask used to name only the growing plots, and told
+an empty board that the Turn 'costs you nothing at all' — which is false on every board: gold zeroes
+to the fresh purse, every upgrade wipes and is rebought, power-ups go, and plots 5-8 close.*
+**An irreversible commit may never understate its own price."** Warmth is one step from
+understatement, and that step is what was already fixed once. The rewrite has to be *kinder in
+register while naming exactly the same five things*.
+
+**The narrative the owner is reaching for is already written, in the game's own documentation.**
+`32-the-garden-year.md`'s glossary defines Upgrades as *"the in-year shop… wiped at the Turn and
+rebought — **the rebuild is the ritual**"*. That is "but this brings in new life" in the project's
+own words, and copy drawn from it will sound like the rest of the game rather than like a new voice.
+
+**Two vocabulary rules to hold.**
+- **Never the word "reset"** — the glossary is explicit: the Turn is *"never the word 'reset'"*.
+  "Washes away" is fine.
+- **The chips are verb-less nouns on purpose.** The comment at `ui-sheet.js:747` says the heading
+  carries the verb so the chips do not have to, and the "stays" row uses the same grammar. **The
+  owner's proposed phrasing keeps this** — *"A new year washes away your…"* + `Gold · Upgrades ·
+  Power-ups` — which is why it works.
+
+**Fix sketch.** Replace the two `.cere-lab` headings with a matched pair in the compost line's warmer
+register — one sentence above each chip row, carrying the verb — and either drop `.cere-lab` here or
+keep it as a genuinely smaller subtext. **Rewrite both rows or neither**: the panel's whole shape is
+a balance, and a narrative "goes" against a shouted "stays" tips it the wrong way. Keep every one of
+the five `goes` chips and their conditions exactly as they are — the list is correct, only its
+framing is being changed. **What it might break:** `.cere-lab` is used elsewhere in the ceremony (the
+later beats), so scope any type change to this panel rather than the class, or check every beat.
+Longer body copy on the first ceremony screen costs vertical space at the ~640px short viewport —
+this panel already carries a plate, two chip rows and two buttons, and the conventions checklist asks
+for that viewport. `32-the-garden-year.md` describes the ceremony's beats and may quote these
+labels; grep before and after. Run `node tools/style-check.js` if the type treatment changes.
+
+**Open question.** Where does "but this brings in new life" actually go? It is not a caption for the
+"stays" row — what stays is Seeds, Unlocks, Petals, Creatures, Cards and Level, which is *permanence*
+rather than *renewal*. The renewal idea belongs either as a closing line under both rows, or on the
+ceremony's last beat, which is already called the spring beat. The owner may have a preference; the
+sentence is good and it does not obviously have a home yet.
 
 ---
 
