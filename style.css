@@ -5014,10 +5014,31 @@ button:focus-visible{
 }
 .wi-act.rest:active{transform:translate(-50%,2px);box-shadow:0 1px 0 var(--paper-dim-edge)}
 
-/* The gate card's scene, in Winter. Fall's is an autumn sky over autumn ground
-   because the palette holds neither; this is the same argument one season on. */
+/* THE GATE CARD'S SCENE, IN WINTER. Fall's is an autumn sky over autumn ground
+   because the palette holds neither; this is the same argument one season on —
+   and it has to recolour BOTH bands. The ground is `::after` rather than an
+   element, and the hedges are `UI.hedge()`'s own greens, so a sky swap alone
+   left Holly standing on Fall's brown earth between two summer hedges. */
 .gate-scene.winter{background:linear-gradient(180deg,#b9cee0 0%,#eaf4fb 58%,#ffffff 100%)}
-.gate-scene.winter .ground{background:linear-gradient(180deg,#ffffff,#eaf4fb 60%,#bcd6e8)}
+.gate-scene.winter::after{background:linear-gradient(180deg,#ffffff,#eaf4fb 60%,#bcd6e8)}
+/* The hedges keep their shape and take a winter coat. A snow CAP was drawn on
+   top of them first and removed: `.hedge` is the container and the silhouette
+   lives inside its svg, so a `::after` pinned to the container's top edge
+   floats as a white pillow above the hedge rather than lying on it. Recolouring
+   is the honest version of the same idea — the same evergreens, colder — and it
+   costs no geometry that can drift. */
+.gate-scene.winter .hedge svg{filter:saturate(.45) brightness(.82)}
+/* Holly is a FACE where Fall's card carries a bloom, and a face needs the room
+   a bloom does not: at 62px her crown and her petals share the width a
+   daisy's head has all to itself, and she came out a thumbnail. */
+.gate-scene.winter .gate-bloom{width:96px;bottom:10px}
+/* The pad is the ground and the shadow is the contact — and on snow the pad
+   has to be snow's own shadow rather than Fall's warm earth, or Holly stands
+   on a patch of autumn. Same geometry, colder. */
+.gate-scene.winter .gate-bloom::after{
+  width:62px;
+  background:radial-gradient(ellipse at 50% 40%, #b6cbdd 0 60%, rgba(182,203,221,0) 72%);
+}
 
 /* REDUCED MOTION. Every state must still READ with all motion off — the check
    is not "does it calm down". The frost rim, the quilt and the Zs are all base

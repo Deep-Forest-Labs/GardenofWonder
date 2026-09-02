@@ -1084,13 +1084,38 @@ time, excluded from the bed math (it neither blocks nor collects a windfall), an
 every running long timer it survives the Turn untouched. Fall opens at
 `turnsCompleted >= DATA.year.fallTurn`; nothing renders until phase 3.
 
+**Winter, as simulation:** `state.winter.grid` is eight cells (`DATA.winter.plots`) of
+`{ seed, plantedAt, grow, ready, kept }`, plus one bed-level `tuckedAt` timestamp.
+`winterPlant` / `processWinter` / `winterHarvest` / `winterHarvestAll` run the board.
+Winter plants pay `yield` flat and are outside every flower system — no rarity, no
+mutations, no gems, no `discovered`, no pantry, no bench, no Stand, and, unlike Fall's
+windfall, **no `state.year.stats` counter either**. They count generic `harvest` quest
+tracks and nothing else, no growth modifier reaches them, and they never enter
+`passiveIncomeRate()`.
+
+**The snowfall** is derived rather than armed, and that is the one structural difference
+from the windfall. Winter ripens with the app shut, so no code runs at the moment a plant
+opens: `winterDeriveKept()` compares each cell's computed ripen instant
+(`plantedAt + grow`) against the standing tuck window and writes `kept` wherever it lands
+inside, running at every point ripeness is first observed — `load()`, `reconcile()`,
+`processWinter()` on the tick, and both collect paths. **Tucking after a plant has opened
+earns nothing**, and an earned mark is never voided. **First light is an event**: the first
+collect after any covered plant has opened clears `tuckedAt`.
+
+`winterHarvestAll()` is **not** a `fallHarvestAll()` mirror. It takes every ripe plant, kept
+or not, in one atomic commit, and prices the snowfall onto the kept subset only — Fall's
+marks and Fall's collection are the same set and Winter's are not. `winterBedValue()`
+returns exactly what that tap will pay. Winter opens at
+`turnsCompleted >= DATA.year.winterTurn`; **the Turn never touches it**, including its ripe
+plants, so a kept bloom crosses a Turn intact and pays into the year it is collected in.
+
 **Developer drivers** (the phase-1 review surface): the dev sheet's Garden Year rows show
 the live projection — year, earnings against the floor, base × tally → pouch, gate status
 — with Earn +25K/+100K/+400K (`Dev.driveYear`, real earnings), a canned mid-game Tally
 (`Dev.setYearStats`), Run the Turn (`Dev.runTurn`, blessing the cheapest flower with room),
 **Jump ahead +1/+3/+6 Turns** (`Dev.jumpTurns`), Saved Seeds and petal
 purchases through the real `buyPetal`, **Unlock the next seed** (`Game.unlockSeed` through the
-real charge path, so the gold wall can be paid and felt), and Fill/Ripen/Harvest the Fall bed.
+real charge path, so the gold wall can be paid and felt), Fill/Ripen/Harvest the Fall bed, and Winter's own row — Plant the bed, Tuck it in, **Sleep a whole night** (`Dev.nightWinter`, which winds the plant clocks past their grow AND the tuck back further, then lets `winterDeriveKept()` write the marks through the real path rather than setting `kept` by hand) and Collect the morning.
 `Dev.grantGold`
 is the cheat faucet — wallet only, never the meter — and the Settings gold button routes
 through it.
