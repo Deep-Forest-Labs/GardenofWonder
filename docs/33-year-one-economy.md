@@ -426,6 +426,14 @@ reason `DATA.fall` is.
 drops an unknown id to an empty cell, and a season that advertises two-day holds would otherwise
 silently delete a bloom somebody was saving.
 
+**And a note for whoever builds the seed curtain** (ruled 2026-09-02, the day after Winter shipped):
+the curtain is `DATA.seeds`' and it says "the same grammar in picker and Almanac" — but **Winter's
+picker is not that picker.** `renderWinterPlants()` is its own panel over `DATA.winter.plants`, and
+Winter plants have no unlock ladder at all: they gate on gold and nothing else, exactly as Fall's
+crops do. A curtain built generically over "the picker" would hide rows behind a wall that does not
+exist, and `???` on a row a player can already afford is the one thing that ruling's own law
+forbids. Fall's picker is in the same position.
+
 ## Badges
 
 Unchanged in v1 — they reset at the Turn and are rebought, which re-prices them *in effect*
