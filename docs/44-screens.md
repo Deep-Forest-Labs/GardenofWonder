@@ -1,6 +1,6 @@
 # The screens
 
-Every key screen of the live build, at true phone size. **Captured 2026-09-01** from the
+Every key screen of the live build, at true phone size. **Captured 2026-09-02** from the
 build as it stood; regenerate the whole gallery with:
 
 ```bash
