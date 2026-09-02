@@ -5159,7 +5159,12 @@ const Game = (() => {
       winterDeriveKept(nowSeconds());
       save();
       emit('panels');
-      return state.winter.grid.filter((c) => c.seed && c.kept).length;
+      /* THE COUNT OF CLOCKS WOUND, not the count of marks earned. Returning the
+         kept count made an untucked night — which legitimately earns nothing —
+         report as a FAILURE and print "tuck the bed in first" over a bed whose
+         clocks had just moved. A cheat that changes the world and then says
+         nothing happened is worse than one that does nothing. */
+      return state.winter.grid.filter((c) => c.seed).length;
     },
 
     clearAll() {

@@ -212,7 +212,19 @@ const Winter = (() => {
            <path d="M${gap} ${y} q${ew / 2} ${ew * 0.5} ${ew} 0"/></g>`
       : '');
 
+    /* THE SLEEPING FACE HAS TO LIVE ON STAGES 1 AND 2, and it did not: a
+       tucked plant is by definition NOT ripe, so it is never at stage 3 — and
+       the shut-eye arcs were only reachable there. The whole of the sleeping
+       study the owner picked was unreachable code, which is exactly the shape
+       of bug a screenshot of a ripe board cannot show you. */
     if (s === 1) {
+      /* A SEEDLING GETS NO FACE, and that is a decision rather than an
+         oversight. It has no head — the only thing a sprout has is a pair of
+         cotyledons — and the quilt covers the bottom 38% of the cell, which is
+         where they sit, so a face drawn on them is a face nobody sees. Two
+         leaf tips over a quilt is what a tucked-in seedling looks like; the
+         quilt and the Zs carry the sleep, and the bud beside it in the next
+         cell has the face. Forcing one here would be art made worse by a rule. */
       return wrap(`${stem('M50 96 V72', 5)}
         ${strap('M50 76 c-13 0-21-7-23-17 12-2 21 4 23 17Z')}
         ${strap('M50 82 c13 0 21-7 23-17-12-2-21 4-23 17Z')}`);
@@ -222,7 +234,8 @@ const Winter = (() => {
         ${strap('M50 80 c-13 0-21-7-23-17 12-2 21 4 23 17Z')}
         <path d="M50 26 c9 6 13 15 11 24 -2 8-6 12-11 12 -5 0-9-4-11-12 -2-9 2-18 11-24Z"
           fill="${p.c1}" ${st}/>
-        <path d="M43 56 c-3 8 3 12 7 12 4 0 10-4 7-12 -4 4-10 4-14 0Z" fill="${LEAF}" ${st}/>`);
+        <path d="M43 56 c-3 8 3 12 7 12 4 0 10-4 7-12 -4 4-10 4-14 0Z" fill="${LEAF}" ${st}/>
+        <g transform="translate(50 42)">${eyes(-1, 4, 8)}</g>`);
     }
 
     let body = '';

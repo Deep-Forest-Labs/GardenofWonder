@@ -500,15 +500,21 @@ swapped in phase 3.8: the meadow is the swipe **down**, the Hollow the swipe **u
 
 **What is still open from phase 3, unchanged:**
 
-1. **Winter and Spring have gates but no gardens** (slices C and E). Their gate reads *"Opens at
-   Turn N"* while the turn is the binding gate and *"Still growing in"* once it has passed, so it
-   never tells a Turn-5 player that Winter opens at Turn 3.
+1. **Spring has a gate but no garden** (slice E). Its gate reads *"Opens at Turn N"* while the turn
+   is the binding gate and *"Still growing in"* once it has passed, so it never tells a Turn-8
+   player that Spring opens at Turn 6. *(Winter left this list on 2026-09-01 — slice C built it.
+   The `season-gate-winter` screenshot went with it: the only locked season left to photograph is
+   Spring's, and `tools/capture-screens.js` shoots that one now.)*
 2. **Collecting a full Fall bed is eight taps.** `fallHarvest(idx)` is per plot, so the bed's big
    moment arrives as eight separate toasts. A collect-all is the single biggest difference between
    Fall feeling like an appointment and Fall feeling like admin, and it needs either a new
    affordance or a change to how the engine is called.
-3. **Fall is not in the welcome-back report.** `reconcile()` walks `state.grid` only, so a Fall bed
-   that ripened while the app was shut gets no line in the away sheet.
+3. **Fall is not in the welcome-back report.** `reconcile()` walks `state.grid` and, since
+   2026-09-01, `state.winter.grid` — so a Fall bed that ripened while the app was shut still gets no
+   line in the away sheet. **Winter's arrival makes this louder rather than quieter**: two of the
+   three gardens now report an overnight and the middle one does not. Slice C deliberately did not
+   widen it — Fall is not that slice, and the honest version is a `fallRipe` count beside Winter's
+   in the same payload, which is a small job for whoever touches Fall next.
 4. **Fall has no season tint of its own.** `--season-tint` ripens *Summer* toward autumn; Fall's
    scene is already autumn and is not tinted. Whether Fall should have its own clock is a phase-4
    question.

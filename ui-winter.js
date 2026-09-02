@@ -195,6 +195,10 @@
     let cls;
     let html;
     let label;
+    /* A tucked bed's button is a STATE, not a control — it is the bed telling
+       you it is asleep. An enabled button that rejects every tap is the thing
+       docs/09 calls a cheat that quietly does nothing: it reads as broken. */
+    let rest = false;
     if (b.ripe > 0) {
       const v = Game.winterBedValue();
       sig = `pay:${v.total}:${v.plots}:${v.kept}`;
@@ -211,6 +215,7 @@
     } else if (b.tucked) {
       sig = 'rest';
       cls = 'wi-act rest';
+      rest = true;
       html = `<span class="a-do">${Icons.get('quilt')}Tucked in</span><span class="a-val">goodnight</span>`;
       label = 'The bed is tucked in for the night';
     } else {
@@ -223,6 +228,7 @@
     btn.dataset.sig = sig;
     btn.className = cls;
     btn.innerHTML = html;
+    btn.disabled = rest;
     btn.setAttribute('aria-label', label);
   }
 
@@ -393,6 +399,16 @@
       /* Every line has drawn. NOW the flag is spent. */
       Game.consumeHollyIntro();
       introStep = -1;
+      return;
+    }
+    /* NOT BEHIND A SHEET. Tapping a plot is the likeliest first thing a player
+       does in a new room, and it opens the plant picker over the whole screen —
+       the intro would go on drawing behind it and spend its one-shot on lines
+       nobody saw. `sayText()` cannot know that: the bubble is genuinely in the
+       DOM and genuinely painted, just covered. This is the meadow-signpost
+       lesson at one more remove, and the answer is the same one: wait. */
+    if (UI.sheetMode() || (UI.menuOpen && UI.menuOpen())) {
+      introTimer = setTimeout(queueIntro, 900);
       return;
     }
     const drew = UI.sayText(lines[introStep], true);

@@ -998,6 +998,24 @@
   el.btnPower.addEventListener('click', () => {
     Sound.resume();
     noteActivity();
+    /* A POWER-UP SPENT IN A SEASON ROOM IS A POWER-UP THROWN AWAY. Fall and
+       Winter are outside every boost by construction, and the button sits in
+       the band, which is NOT hidden there — so a tap burned an unrepeatable
+       consumable, silently, for nothing. The owner's #11 ruling hides the
+       running chip in a room it does not reach; this is the same rule one step
+       earlier, at the moment of spending. It says where the boost DOES work
+       rather than just refusing, because a control that does nothing reads as
+       broken. */
+    if (inSeasonRoom()) {
+      Sound.play('deny');
+      FX.shake(3);
+      toast({
+        title: 'Not in this garden',
+        body: 'Power-ups work in the summer garden. Swipe back and it will still be there.',
+        art: Icons.get('sprout')
+      });
+      return;
+    }
     const id = el.btnPower.dataset.boost;
     /* Empty is a promise, not a dead control: it says where boosts come from
        rather than doing nothing at all. */
@@ -1363,7 +1381,14 @@
        guard follows, and the menu drawer joined the list on 2026-08-31 — it
        covers the right two thirds of the screen, so a mark pointing into the
        garden lands on top of it. */
-    if (UI.sheetMode() || gateOn || UI.hollowOpen() || UI.meadowOpen() || UI.menuOpen()) { hideCoach(); return; }
+    /* THE SEASON ROOMS JOIN THE LIST, 2026-09-01. `.in-fall`/`.in-winter`
+       display:none the coach in CSS, so it was never PAINTED there — but
+       `refreshCoach()` went on measuring a hidden node every 0.6s and parking
+       the bubble against a 0x0 rect, which is the recorded trap word for word.
+       Naming every room that can be up is the rule; two of them had been
+       missing since Fall shipped. */
+    if (UI.sheetMode() || gateOn || UI.hollowOpen() || UI.meadowOpen() || UI.menuOpen()
+      || season === 'fall' || season === 'winter') { hideCoach(); return; }
     if (!S.seen.intro) {
       if (coachTarget !== flowerBtn) showCoach(flowerBtn, 'Tap the flower!');
       el.coach.hidden = false;

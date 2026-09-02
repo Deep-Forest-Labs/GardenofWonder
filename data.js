@@ -1248,8 +1248,8 @@ const FLOWER_LINES = {
   hollyIntro: [
     'Oh. You\u2019re here.',
     'It\u2019s fine. I was awake anyway.',
-    'Tuck the bed in before you go. What opens under the quilt comes out worth more.',
-    'And don\u2019t tell the yellow one I helped.'
+    'Tuck the bed in when you go.',
+    'Don\u2019t tell the yellow one I helped.'
   ],
   hollyTuck: [
     'Goodnight, then.',
@@ -1258,19 +1258,18 @@ const FLOWER_LINES = {
     'Some of us don\u2019t get a night off.'
   ],
   hollyMorning: [
-    'They came up under the quilt. You\u2019re welcome.',
-    'They did the work. I merely supervised.',
-    'Still here. Still cold. Still better at this than the yellow one.',
-    'Morning. Try to look less surprised.'
+    'They came up under the quilt.',
+    'They did the work. I supervised.',
+    'Still here. Still cold. Still better.',
+    'They managed without an audience.'
   ],
   hollyIdle: [
-    'It\u2019s not cold. You\u2019re just soft.',
-    'The yellow one gets a whole tutorial. I get a season.',
-    'Nothing is happening. That is the season.',
-    'You could plant something. Or stand there. Either way.',
-    'Snow is just weather with better manners.'
+    'It\u2019s not cold. He is just soft.',
+    'He gets a tutorial. I get a season.',
+    'Nothing is happening. That is winter.',
+    'Snow is weather with better manners.',
+    'He would not last a night out here.'
   ],
-  unlock: ['New ground to grow on!', 'More room for flowers!', 'Ooh, fresh soil!'],
   rain: ['Rain! The garden loves this.', 'Mmm, petrichor.', 'Drink up, everyone.'],
   storm: ['Thunder! Hold onto your petals.', 'Ooh, that one was close.', 'What a sky.'],
   aurora: ['Look up — the sky has colours!', 'I have only seen this twice.', 'The whole garden is glowing.'],

@@ -371,7 +371,15 @@ const Flora = (() => {
       const t = n === 1 ? 0 : (i / (n - 1)) * 2 - 1;
       const a = (t * spread * Math.PI) / 180;
       const r0 = 23;
-      const alt = Math.round(Math.abs(i - (n - 1) / 2)) % 2 === 0 ? 1 : 0.66;
+      /* 0.82, NOT 0.66 — and this is the ruling's hard rule rather than a
+         taste. The petal ring reaches ~44 units and a crown point starts at
+         r0=23, so a short point at 0.66 topped out at 43.5 and was SWALLOWED:
+         filled in plain black, only three of seven points read, against a
+         ruling that says five or more and never two. The rhythm survives at
+         0.82; the disappearance does not. Re-run the silhouette test if this
+         number, `r0`, `len` or the petal scale ever moves — they are one
+         measurement, not four. */
+      const alt = Math.round(Math.abs(i - (n - 1) / 2)) % 2 === 0 ? 1 : 0.82;
       const L = len * (1 - 0.26 * Math.abs(t)) * alt;
       const sx = Math.sin(a);
       const cy = -Math.cos(a);
