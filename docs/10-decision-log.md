@@ -2168,6 +2168,21 @@ every save after seven days without interaction unless the player installed the 
 which is live right now for the friend playtest group; it is in [11-known-issues.md](11-known-issues.md) with
 the two documentation contradictions the run also hit.
 
+**Added later the same day — the TAPCLAP case, from an owner question.** The owner asked what a Cyprus HTML5
+studio with high CrazyGames play counts might be earning. The answer turned out to be worth writing down,
+because it replaces the weakest evidence in doc 38 with the strongest: **~80 million lifetime Play installs
+across seven apps, 62 million on one game — supporting about thirty people, down from "more than 70" in
+2020.** Their whole portfolio has ~15,000 lifetime US App Store ratings, so the audience is Russia/CIS and
+emerging markets at emerging-market rates. No public revenue figure is reliable (Sensor Tower's per-country
+pages show the same game at $20K/month in one place and a $43 peak in another), so the estimate — **roughly
+$2-4M a year, trending down** — is built from headcount, which for a self-funded studio is the honest proxy.
+**Where doc 38 previously leaned on Terrarium's unverifiable four-year-old "$9K/month" to argue reach without
+revenue, it now leans on this.** It also supports doc 39's web-funnel ruling from the strongest possible
+source: TAPCLAP's CrazyGames pages link out to *their own* store listings rather than a CrazyGames-published
+bundle — a studio that has run this play for a decade treats the portal as a shop window and takes the money
+on mobile. Full entry, with the per-install comparison against The Cozy Florist and Rusty's Retirement, in
+[38-market-refresh.md](38-market-refresh.md).
+
 ---
 
 ## 2026-08-30 (phase 3.6) — The cleanup round: three ruled fixes, and a review kit so the owner can live a week in an afternoon

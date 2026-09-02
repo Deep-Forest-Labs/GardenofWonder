@@ -120,6 +120,7 @@ These are the finds. Fourteen games, all verified live on a store page this week
 | **Rusty's Retirement** (Mister Morris) | The desktop-strip idle farm: **~330,000 units, ~$1.6M gross (before Steam's 30%) in four months at $7**, on ~140K launch wishlists. Note the date — [that report is from August 2024](https://newsletter.gamediscover.co/p/how-rustys-retirement-idle-farmed), not 2026. It never came to mobile and none is announced. |
 | **Petit Planet** (HoYoverse) / **Lumi Master** (Bilibili) / **Animula Nook** (Tencent) | **The whales are entering cozy.** Petit Planet ran a closed test Apr-May 2026 and is confirmed for 2026 cross-platform. And the audience has already answered: the r/CozyGamers announcement thread's top comment is *"I have zero interest in playing legally distinct gacha AI animal crossing"* (307 upvotes). |
 | **Usagi Shima** (studio rabbiko) | The one everybody in these communities holds up as F2P done right — ad removal framed as a **tip jar** ("Coffee Tip" $4.99, "Sandwich Tip" $6.99). It is coming to **Steam in October 2026, published by Wholesome Games Presents.** Wholesome Games now runs a label. That changes what the Direct is worth to us. |
+| **TAPCLAP** (Limassol, Cyprus) | **The reach-without-revenue case, at studio scale — and better evidenced than Terrarium.** Fifteen years old, self-funded, seven Play apps, **~80 million lifetime installs**. Pirate Treasures alone has 62M. And it supports **about 30 people, down from "more than 70" in 2020.** Their CrazyGames pages point out to their own store listings, which is the funnel doc 39 recommends, run by people who have done it for a decade. Full entry below. |
 
 ---
 
@@ -269,6 +270,74 @@ doc 17 surveyed. The two most *editorially successful* botanical games of the wi
 which is the one axis where two people are structurally disadvantaged. The conclusion survives — craft is still
 the moat — but the premise ("the lane is visually uniform, so standing out is easy") is weakening. Our craft
 argument has to be about *feel*, which is cheap, rather than *fidelity*, which is not.
+
+---
+
+## What a player is actually worth — the TAPCLAP case
+
+*Added 2026-08-30, from an owner question about a studio whose HTML5 games have high play counts on
+CrazyGames. It turned out to be the best-evidenced version of an argument this document was already making
+with a four-year-old number.*
+
+**TAPCLAP is not an HTML5 indie.** It is a fifteen-year-old Cyprus studio — founded 2010 as Orange Apps,
+rebranded 2017, self-funded with no outside investment — making mobile match-3 and merge games that *also* run
+in a browser. The HTML5 part is a distribution surface, not the product.
+
+| | |
+| --- | --- |
+| Google Play, all seven apps | **~80 million lifetime installs, ~1M ratings** |
+| Pirate Treasures (2015) | **62 million installs** |
+| Candy Valley (2016) | 8.8M |
+| DesignVille (2021) · Cross Stitch Masters (2020) | 5M+ each |
+| Mansion Tale (Apr 2025) · TropicVille (2026) | 100K+ · 5K+ |
+| **US App Store ratings, whole portfolio, lifetime** | **~15,000** |
+| Headcount | **"More than 70" (2020) → about 30 (July 2024)** |
+
+Read the last two rows together. **A game with 62 million installs has 1,149 lifetime US iOS ratings.** That
+audience is Russia/CIS and emerging markets — historically VK and OK.ru, where Pirate Treasures had 1.55M daily
+users in 2020 — and it monetises at a fraction of tier-1. And the studio has more than halved.
+
+**JUDGMENT — the revenue estimate, and how it was reached.** No reliable figure is publicly retrievable; the
+cleanest datapoint found puts Pirate Treasures at roughly **$20K/month in early 2023**, and Sensor Tower's
+public per-country pages are too inconsistent to lean on (one shows the game peaking at **$43** in Georgia,
+below several games nobody has heard of). **So the estimate is built from headcount, which for a self-funded
+studio is the honest proxy:** thirty people in Limassol is roughly $1.5-2.5M a year in payroll, they are
+covering it, and they have been going fifteen years. That puts them at **roughly $2-4M a year across IAP, ads,
+browser portals and any licensing** — call it $150-350K a month, mostly ads, mostly not from the App Store.
+Trending down, on the headcount evidence.
+
+### The comparison that makes the point
+
+Lifetime revenue per install, across three storefronts. **All three are estimates and the TAPCLAP one is the
+softest** — but the spread is an order of magnitude, so the ranking survives any reasonable error.
+
+| Game | Reach | Revenue | **Per install** |
+| --- | --- | --- | --- |
+| **TAPCLAP portfolio** | ~80M installs over 15 years | ~$20M cumulative *(judgment)* | **~$0.25** |
+| **The Cozy Florist** | 7M installs since Dec 2025 | $6M (AppMagic) | **~$0.86** |
+| **Rusty's Retirement** | 330,000 units in four months | ~$1.6M gross at $7 | **~$5** |
+
+> **Eighty million installs supports thirty people. It used to support seventy.**
+
+That is the Terrarium argument — enormous reach, no reason to pay — with a fifteen-year track record behind it
+instead of a stale October-2022 estimate. **Where this doc previously leaned on Terrarium's unverifiable
+"$9K/month", lean on this instead.**
+
+### Two things it settles for us
+
+**It supports the web-funnel ruling in [39-growth-and-launch.md](39-growth-and-launch.md), from the strongest
+possible source.** TAPCLAP's CrazyGames pages carry App Store and Play Store links out to **their own**
+listings — not, as with the games CrazyGames itself ports, to a `com.CrazyGames.*` bundle. A studio that has
+been doing this for a decade uses the portal as a shop window pointing at mobile, and takes the money
+elsewhere. That is exactly the shape doc 39 recommends.
+
+**And it sharpens the premium-PC question.** The three rows above are the same kind of content on three
+storefronts, and the per-install spread is twenty-fold. It is one more reason the "$3,650 lifetime per idle
+title" graveyard should be read as a *mobile free-to-play* statistic rather than a fact about idle games.
+
+**Not verified, recorded as a gap:** the CrazyGames play counts that prompted the question. Neither the Mansion
+Tale nor the DesignVille game page displayed a plays figure on fetch. If the browser traffic really is large
+while the revenue is this thin, that is a sharper version of the same lesson and worth a second look.
 
 ---
 
