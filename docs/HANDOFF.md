@@ -1335,7 +1335,7 @@ not what you would guess.
 | 2 · Annotations build verbatim | **Closed with gate 1** |
 | 3 · Engine as pure simulation | **Shipped.** 1,642 assertions, every guard sabotaged |
 | 4 · The surface | **Shipped.** Board, chip, the one button, Holly, the picker, the gate card, the welcome-back line, the avatar picker |
-| 5 · The gauntlet | **Two rounds run, findings fixed, NOT re-run clean.** Eight critics; the four that mattered were things no green suite would catch — Holly failing her own silhouette gate, the sleeping face being unreachable code, a power-up spent in Winter buying nothing, and her intro spent behind the plant picker. Everything found is fixed and the suite is green. **A third round has not been run against the result** |
+| 5 · The gauntlet | **Three rounds run, findings fixed, NOT re-run clean.** Eight critics; the four that mattered were things no green suite would catch — Holly failing her own silhouette gate, the sleeping face being unreachable code, a power-up spent in Winter buying nothing, and her intro spent behind the plant picker. Everything found is fixed and the suite is green. **A third round has not been run against the result** |
 
 **Four things about this slice that are not obvious from the diff.**
 
@@ -1362,9 +1362,14 @@ is the owner's to rule on; raising the top rung's cost lowers its net and widens
 
 **What is still open, honestly.**
 
-1. **Gate 5 has not had a clean round.** Two rounds of critics ran, every finding is fixed and the
-   suite is green at 1,642 — but the critics have not been re-run against the result. That is the
-   next thing anyone picking this up should do.
+1. **Gate 5 has not had a clean round.** Three rounds ran — eight critics, then their verifiers —
+   every finding is fixed and the suite is green at 1,642, but the critics have not been re-run
+   against the result. That is the next thing anyone picking this up should do. Worth knowing what
+   the rounds actually caught, because it says where to point the next one: **the suite was green
+   throughout**, and the worst findings were a character failing her own silhouette gate, a sleeping
+   face that was unreachable code, a power-up spent for nothing, an intro spent behind a sheet, an
+   intro spent 2.9 seconds late, and a reset that stranded the player in a season. **None of those
+   is the kind of thing an assertion sees.**
 2. **The fix round's five collision surfaces have STILL not landed.** Slice C touched four of them:
    `goSeason()` is ternary, `seasonWaiting()` is widened, `renderRail()` carries the #11 room filter
    (which is RULED and names Winter in its own words), and Winter's controls joined `noSwipe`.
