@@ -59,6 +59,11 @@ const Game = (() => {
         grid: Array(DATA.fall.plots).fill(0).map(() => ({ seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false })),
         bedPaid: false
       },
+      winter: {
+        grid: Array(DATA.winter.plots).fill(0).map(() => ({ seed: null, plantedAt: 0, grow: 0, ready: false, kept: false })),
+        /* One timestamp for the whole bed. Zero means the quilts are off. */
+        tuckedAt: 0
+      },
       tickets: 0,
       gems: 0,
       tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50, holdInterval: 900 },
@@ -95,7 +100,7 @@ const Game = (() => {
         sfx: true, amb: true, music: false,
         sfxVol: 1, ambVol: 1, musicVol: 1
       },
-      seen: { intro: false, plot: false, apiary: false, meadow: false, fallSwipe: false, gardenSwipe: false },
+      seen: { intro: false, plot: false, apiary: false, meadow: false, fallSwipe: false, gardenSwipe: false, winterSwipe: false, hollyIntro: false },
       quests: { active: [], done: [], daily: { id: null, progress: 0, day: '', claimed: false } },
       rep: 0,
       level: 1,
@@ -563,6 +568,35 @@ const Game = (() => {
             return Boolean(def) && !def.century;
           })
         };
+
+        /* Winter's grid is positional too, and rebuilt to length rather than
+           merged. A plant id that no longer exists drops to an empty cell —
+           which is why Winter ids are APPEND-ONLY once shipped: the season
+           advertises two-day holds, so a renamed id would silently delete a
+           bloom somebody was saving.
+
+           `kept` IS restored, unlike Fall's `bedPaid`. It is not a derivation
+           of the current bed, it is a record of something that already
+           happened on a night that may be long over, and an earned mark is
+           never voided. `tuckedAt` is restored for the same reason: it is the
+           stored truth the marks derive FROM. */
+        const w = parsed.winter && typeof parsed.winter === 'object' ? parsed.winter : {};
+        const wg = Array.isArray(w.grid) ? w.grid : [];
+        state.winter = {
+          grid: Array.from({ length: DATA.winter.plots }, (_, i) => {
+            const c = wg[i];
+            const def = c && c.seed ? DATA.winter.plants.find((p) => p.id === c.seed) : null;
+            if (!def) return { seed: null, plantedAt: 0, grow: 0, ready: false, kept: false };
+            return {
+              seed: def.id,
+              plantedAt: Number(c.plantedAt) || 0,
+              grow: Number(c.grow) > 0 ? Number(c.grow) : def.grow,
+              ready: false,
+              kept: Boolean(c.kept)
+            };
+          }),
+          tuckedAt: Number(w.tuckedAt) > 0 ? Number(w.tuckedAt) : 0
+        };
       }
 
       const now = nowSeconds();
@@ -592,6 +626,22 @@ const Game = (() => {
           cell.plantedAt = now;
         }
       });
+      /* Winter's clocks take the same two rules, plus one of its own: the
+         tuck timestamp is sanitised the same way, because a bed tucked "in
+         the future" by a clock change would swallow every mark for as long as
+         it stood. */
+      state.winter.grid.forEach((cell) => {
+        if (!cell.seed) return;
+        if (typeof cell.grow !== 'number' || cell.grow <= 0) cell.grow = 1;
+        if (typeof cell.plantedAt !== 'number' || cell.plantedAt <= 0 || cell.plantedAt < 1e8) {
+          cell.plantedAt = now - cell.grow;
+        } else if (cell.plantedAt > now + 1e5) {
+          cell.plantedAt = now;
+        }
+      });
+      if (state.winter.tuckedAt && (state.winter.tuckedAt < 1e8 || state.winter.tuckedAt > now + 1e5)) {
+        state.winter.tuckedAt = now;
+      }
       let progressionGrant = null;
       if (!Object.prototype.hasOwnProperty.call(parsed, 'rep')) {
         progressionGrant = migrateProgression();
@@ -3868,6 +3918,298 @@ const Game = (() => {
     return payload;
   }
 
+  /* ---------------- Winter — the night shift ----------------
+
+     Opens at Turn 3. The garden's own grammar again — eight plots, the hero
+     flower in the middle — on the longest clock class in the game and on a
+     rule Fall does not have: THE NIGHT PAYS EXTRA WHEN THE GARDEN WAS KEPT.
+     Tuck the bed in when your day ends, and whatever opens under the quilt
+     wears the snowfall when you collect it in the morning.
+
+     Winter plants are outside every flower system, Fall's precedent extended:
+     no rarity, no mutations, no gems, never `discovered`, no pantry, no
+     bench, no Stand — and, unlike Fall, no `state.year.stats` either. Winter
+     is the quiet season and a Tally line can arrive later with the story.
+     They count generic `harvest` quest tracks and nothing else. No growth
+     modifier reaches them and they never enter `passiveIncomeRate()`.
+
+     THE TURN NEVER TOUCHES WINTER, including its ripe plants: doc 32's
+     in-flight auto-collect rule is scoped to the main garden, so a ripe
+     Winter plant — kept or not — crosses the Turn intact and pays into the
+     year it is collected in.
+
+     Phase 1 ships this as pure simulation; the board renders in phase 2. */
+
+  const WINTER = () => DATA.winter;
+  const winterPlantById = (id) => WINTER().plants.find((p) => p.id === id) || null;
+  const winterOpen = () => state.year.turnsCompleted >= YEAR().winterTurn;
+  const winterCell = (i) => state.winter.grid[i] || null;
+
+  /** Ripe by the clock, never by the cached `ready` flag — `load()` rebuilds
+      every Winter cell with it false, and Winter's whole promise is that a bed
+      which opened while the app was shut is waiting when you come back. */
+  const winterCellRipe = (c, now) => Boolean(c && c.seed)
+    && (typeof now === 'number' ? now : nowSeconds()) - c.plantedAt >= c.grow;
+
+  /** The instant a cell opens. Winter ripens with nobody watching, so this is
+      computed and never observed. */
+  const winterRipenAt = (c) => (c && c.seed ? c.plantedAt + c.grow : 0);
+
+  /* THE TUCK'S LIFECYCLE, and every line of it is the spec's ruling rather
+     than a builder's invention.
+
+     `tuckedAt` is the stored truth: one timestamp for the whole bed, because
+     the quilt is over the BED and not over a list, so plant-then-tuck and
+     tuck-then-plant both work without any per-cell bookkeeping.
+
+     `kept` is DERIVED and then persisted. It cannot be observed live — no code
+     runs at the moment a plant opens at four in the morning — so the rule is a
+     comparison of timestamps: a plant is kept iff its computed ripen instant
+     falls inside the recorded tuck window. Whenever ripeness is first observed
+     (load, reconcile, tick, collect) the derivation runs and writes the mark.
+
+     Two consequences, both named tests. TUCKING AFTER RIPENESS EARNS NOTHING:
+     `ripenAt >= tuckedAt` is required, so covering a bed that already opened
+     is a tuck for tomorrow and nothing more. And AN EARNED MARK IS NEVER
+     VOIDED: replanting a neighbour, collecting half the bed, ending the night,
+     taking a Turn or coming back a year later all leave it exactly where it
+     is, and it pays at collect-time rates. */
+  function winterDeriveKept(now) {
+    const at = state.winter.tuckedAt;
+    if (!at) return false;
+    const t = typeof now === 'number' ? now : nowSeconds();
+    let marked = false;
+    state.winter.grid.forEach((c) => {
+      if (!c || !c.seed || c.kept) return;
+      const ripenAt = winterRipenAt(c);
+      /* Inside the window at the lower end, and actually open at the upper
+         one: a plant that has not opened yet has earned nothing, however long
+         the quilt has been over it. */
+      if (ripenAt >= at && ripenAt <= t) { c.kept = true; marked = true; }
+    });
+    return marked;
+  }
+
+  /** FIRST LIGHT IS AN EVENT, NOT AN HOUR. The first collect after any covered
+      plant has opened ends the night: the quilts lift, `tuckedAt` clears, and
+      anything that ripens after that is unkept until the next tuck. Collecting
+      something that opened BEFORE the tuck does not end it — nothing covered
+      has happened yet.
+
+      Marks already earned are untouched, which is why this only ever clears
+      the bed-level timestamp. Called from inside the two collect paths, after
+      the derivation and before the cells are cleared. */
+  function winterNightEnds(now) {
+    if (!state.winter.tuckedAt) return false;
+    return state.winter.grid.some((c) => c && c.seed && c.kept && winterCellRipe(c, now));
+  }
+
+  /** One tap, free, repeatable across nights, and deliberately TIME-FREE —
+      tucking at two in the afternoon is fine, because it means "goodnight"
+      whenever the player's day ends rather than whenever a clock says so. A
+      standing tuck is not re-armed by a second tap; the night ends on its own
+      at first light. */
+  function winterTuck() {
+    if (!winterOpen()) return false;
+    if (state.winter.tuckedAt) return false;
+    state.winter.tuckedAt = nowSeconds();
+    save();
+    emit('winterTuck', { at: state.winter.tuckedAt });
+    return true;
+  }
+  const winterTucked = () => state.winter.tuckedAt > 0;
+
+  function winterPlant(idx, plantId) {
+    if (!winterOpen()) return false;
+    const def = winterPlantById(plantId);
+    const cell = winterCell(idx);
+    if (!def || !cell || cell.seed) return false;
+    if (state.credits < def.cost) {
+      emit('deny', { reason: 'credits', need: def.cost });
+      return false;
+    }
+    state.credits -= def.cost;
+    cell.seed = def.id;
+    cell.plantedAt = nowSeconds();
+    cell.grow = def.grow;
+    cell.ready = false;
+    /* A fresh cell starts unmarked even under a standing tuck: it has not
+       opened yet, and the mark is earned at the opening. */
+    cell.kept = false;
+    save();
+    emit('currency');
+    emit('winterPlant', { idx, plant: def });
+    return true;
+  }
+
+  function processWinter(now) {
+    let ripened = false;
+    state.winter.grid.forEach((cell, i) => {
+      if (!cell.seed) { cell.ready = false; return; }
+      const was = cell.ready;
+      cell.ready = now - cell.plantedAt >= cell.grow;
+      if (cell.ready && !was) { ripened = true; emit('winterReady', { idx: i }); }
+    });
+    /* Derive on every tick and not only on a fresh ripening: a bed that opened
+       while the tab was shut ripens all at once at the first tick after load,
+       and the marks have to be persisted the moment they exist. */
+    if (winterDeriveKept(now) || ripened) save();
+  }
+
+  /** What Collect All is about to pay, before it pays it — and it must equal
+      what the tap then pays, which is a named test.
+
+      IT COUNTS EVERY RIPE PLANT AND APPLIES THE SNOWFALL ONLY TO THE KEPT
+      ONES. This is the one place a literal `fallBedValue()` mirror is wrong:
+      Fall's marks and Fall's collection are the same set, and Winter's are
+      not. A mixed bed — kept beside unkept-ripe — is the morning that shows
+      the difference, and the all-kept walk is the one that hides it.
+
+      It derives first, so the number on the button cannot lag the marks by a
+      tick. Deriving is monotonic and writes no save of its own; the next real
+      mutation persists it, and until then `load()` re-derives from `tuckedAt`,
+      which is still standing. */
+  function winterBedValue() {
+    const now = nowSeconds();
+    winterDeriveKept(now);
+    let total = 0;
+    let plots = 0;
+    let kept = 0;
+    state.winter.grid.forEach((c) => {
+      if (!c || !c.seed || !winterCellRipe(c, now)) return;
+      const def = winterPlantById(c.seed);
+      if (!def) return;
+      total += Math.round(def.yield * (c.kept ? 1 + WINTER().snowfall : 1));
+      plots += 1;
+      if (c.kept) kept += 1;
+    });
+    return { total, plots, kept };
+  }
+
+  /** The morning collect: one atomic commit, shaped on `fallHarvestAll()` and
+      `turnYear()` for the same reason — every plot is paid and cleared in one
+      body, the save runs once at the end, and the emits go out after the state
+      is already correct, so nothing can ever see a bed half collected.
+
+      THE SEMANTIC A LITERAL MIRROR WOULD GET WRONG, spelled out: it takes
+      EVERY ripe plant, kept or not, and pays the snowfall only on the kept
+      subset. Fall collects exactly its marked set; Winter's marks are a bonus
+      on a wider collection. */
+  function winterHarvestAll() {
+    const now = nowSeconds();
+    /* A bed that opened while the tab was shut still earns — derive before
+       paying, exactly as Fall arms before paying. */
+    winterDeriveKept(now);
+    const ends = winterNightEnds(now);
+    const taken = [];
+    let payout = 0;
+    let kept = 0;
+    state.winter.grid.forEach((cell, idx) => {
+      if (!cell || !cell.seed || !winterCellRipe(cell, now)) return;
+      const def = winterPlantById(cell.seed);
+      if (!def) return;
+      const wasKept = Boolean(cell.kept);
+      payout += Math.round(def.yield * (wasKept ? 1 + WINTER().snowfall : 1));
+      if (wasKept) kept += 1;
+      taken.push({ idx, plant: def, kept: wasKept });
+      cell.seed = null;
+      cell.plantedAt = 0;
+      cell.grow = 0;
+      cell.ready = false;
+      cell.kept = false;
+    });
+    if (!taken.length) return null;
+    credit(payout);
+    if (ends) state.winter.tuckedAt = 0;
+    taken.forEach((t) => noteQuest('harvest', t.plant.id, 1));
+    saveNow();
+    emit('currency');
+    const result = { payout, plots: taken.length, kept, taken, firstLight: ends };
+    emit('winterHarvestAll', result);
+    return result;
+  }
+
+  function winterHarvest(idx) {
+    const cell = winterCell(idx);
+    if (!cell || !cell.seed) return null;
+    const def = winterPlantById(cell.seed);
+    const now = nowSeconds();
+    if (!def || now - cell.plantedAt < cell.grow) return null;
+    cell.ready = true;
+    winterDeriveKept(now);
+    const ends = winterNightEnds(now);
+    const kept = Boolean(cell.kept);
+    const payout = Math.round(def.yield * (kept ? 1 + WINTER().snowfall : 1));
+    credit(payout);
+    cell.seed = null;
+    cell.plantedAt = 0;
+    cell.grow = 0;
+    cell.ready = false;
+    cell.kept = false;
+    if (ends) state.winter.tuckedAt = 0;
+    save();
+    emit('currency');
+    const payload = { idx, payout, plant: def, kept, firstLight: ends };
+    emit('winterHarvest', payload);
+    /* Generic harvest tracks and nothing else — a keyed quest names a flower,
+       and a Winter plant id can never match one. */
+    noteQuest('harvest', def.id, 1);
+    return payload;
+  }
+
+  /** The bed's state, as one object, for the chip and the button above and
+      below the board. A `ui-*` file does no economy math and this is the whole
+      of what it needs to say a sentence about the night. */
+  function winterBedState() {
+    const now = nowSeconds();
+    winterDeriveKept(now);
+    let planted = 0;
+    let ripe = 0;
+    let kept = 0;
+    let keptRipe = 0;
+    let soonest = null;
+    let latest = null;
+    state.winter.grid.forEach((c) => {
+      if (!c || !c.seed) return;
+      planted += 1;
+      if (c.kept) kept += 1;
+      if (winterCellRipe(c, now)) {
+        ripe += 1;
+        if (c.kept) keptRipe += 1;
+        return;
+      }
+      const left = c.plantedAt + c.grow - now;
+      if (soonest === null || left < soonest) soonest = left;
+      if (latest === null || left > latest) latest = left;
+    });
+    return {
+      plots: state.winter.grid.length,
+      planted, ripe, kept, keptRipe, soonest, latest,
+      tucked: winterTucked(),
+      tuckedAt: state.winter.tuckedAt
+    };
+  }
+
+  /* HOLLY'S INTRODUCTION IS TWO BEATS IN TWO ROOMS, and this is the second.
+     Beat one is the Turn ceremony's Winter gate card — the gate lifts where
+     the player is standing. Beat two is `hollyIntro`, spoken in her own room
+     on the player's first entry to it.
+
+     The flag is exposed as ARM and CONSUME rather than as a single "have I
+     shown this" getter, and the split is the whole point: the meadow's
+     signpost consumed its one-shot at the moment it decided to speak, and the
+     line was written into a node that was not on screen — so the first thing
+     a player ever saw was the flag already spent and nothing said. The caller
+     draws first and calls `consumeHollyIntro()` only once the line is
+     actually in the DOM. */
+  const hollyIntroPending = () => winterOpen() && !state.seen.hollyIntro;
+  function consumeHollyIntro() {
+    if (state.seen.hollyIntro) return false;
+    state.seen.hollyIntro = true;
+    save();
+    return true;
+  }
+
   /* ---------------- the Turn — prestige ----------------
 
      The year's whole earnings mint Saved Seeds, once, at the Turn. Invited
@@ -4226,6 +4568,7 @@ const Game = (() => {
     processCraft(now);
     processStand();
     processFall(now);
+    processWinter(now);
     refreshDaily();
   }
 
@@ -4384,6 +4727,17 @@ const Game = (() => {
         cell.plantedAt = wind(cell.plantedAt);
         clocks += 1;
       });
+      /* Winter winds its plant clocks AND its tuck, together — an owner who
+         warps the world twelve hours forward has to arrive at a morning, and
+         a bed whose plants moved while the quilt stayed put would report a
+         night that never happened. `windLive` because zero means "not tucked"
+         and a tuck that has to stay standing floors at 1. */
+      state.winter.grid.forEach((cell) => {
+        if (!cell.seed) return;
+        cell.plantedAt = wind(cell.plantedAt);
+        clocks += 1;
+      });
+      if (state.winter.tuckedAt) { state.winter.tuckedAt = windLive(state.winter.tuckedAt); clocks += 1; }
       hiveCells().forEach((i) => {
         state.apiary.cells[i].at = wind(state.apiary.cells[i].at);
         clocks += 1;
@@ -4921,6 +5275,10 @@ const Game = (() => {
     fallOpen, fallPlantById, fallCell, fallCenturyGrowing, fallPlant, fallHarvest,
     fallBedValue, fallHarvestAll,
     processFall, checkFallWindfall,
+    winterOpen, winterPlantById, winterCell, winterPlant, winterHarvest,
+    winterBedValue, winterHarvestAll, winterTuck, winterTucked, winterBedState,
+    processWinter, winterDeriveKept,
+    hollyIntroPending, consumeHollyIntro,
     projectedTally, projectedMint, turnReady, turnYear,
     seedById, activeBoost, boostVal, growModifier, rollRarity,
     plotUnlockCost, upgradePrice, upgradeMaxed, decorCount,

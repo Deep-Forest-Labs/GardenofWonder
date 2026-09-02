@@ -524,7 +524,8 @@ record.
 
 **The Year's own numbers live in [33-year-one-economy.md](33-year-one-economy.md)** — seed
 unlock prices (the spread), the mint, the Tally tiers, petal pricing, Fall's plant list and
-the windfall — all under `DATA.year`, `DATA.petals` and `DATA.fall`, remote-config-ready.
+the windfall, and Winter's plant list and the snowfall — all under `DATA.year`, `DATA.petals`,
+`DATA.fall` and `DATA.winter`, remote-config-ready.
 This document stays the reference for everything the Year did not touch.
 
 ## Decor

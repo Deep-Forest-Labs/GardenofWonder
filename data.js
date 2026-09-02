@@ -500,6 +500,36 @@ const DATA = {
     ]
   },
 
+  /* WINTER — the night shift. Opens at Turn 3 (`year.winterTurn`).
+
+     A season is a speed and a rule. Winter's speed is half a day to two days;
+     Winter's rule is that the night pays extra when the garden was kept. Tuck
+     the bed in, and what ripens under the quilt wears the snowfall.
+
+     Every number here is a knob and every one of them is PROVISIONAL — typed
+     from the spec (46-the-night-shift.md) verbatim, measured before it is
+     called final. `yield` is `cost * 1.4`, the same law every seed and every
+     Fall crop lives under.
+
+     THE CLOCK FLOOR IS 12 HOURS, which is doc 33's own band and not a taste:
+     "plant at dinner, ready at breakfast" has to still hold at the bottom
+     rung, and an entry any shorter sits on Fall's apple clock and dominates
+     it. Winter prices BELOW Fall per hour at any clock the two seasons share,
+     because the tuck's convenience is paid for in rate. At these values they
+     share none — Fall's longest ordinary clock is the apple at 8h. */
+  winter: {
+    plots: 8,
+    snowfall: 0.5,
+    plants: [
+      { id: 'snowdrop',   name: 'Snowdrop',       cost: 2500,   grow: 43200,  yield: 3500 },
+      { id: 'jasmine',    name: 'Winter Jasmine', cost: 6000,   grow: 57600,  yield: 8400 },
+      { id: 'cyclamen',   name: 'Cyclamen',       cost: 14000,  grow: 72000,  yield: 19600 },
+      { id: 'paperwhite', name: 'Paperwhite',     cost: 30000,  grow: 86400,  yield: 42000 },
+      { id: 'hazel',      name: 'Witch Hazel',    cost: 70000,  grow: 129600, yield: 98000 },
+      { id: 'camellia',   name: 'Camellia',       cost: 160000, grow: 172800, yield: 224000 }
+    ]
+  },
+
   levelCoinGrant: 20,
   harvestRepEvery: 10,
   harvestRepGrant: 1,

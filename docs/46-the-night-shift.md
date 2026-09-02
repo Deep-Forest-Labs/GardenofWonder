@@ -261,7 +261,38 @@ filter and tooltip guard rather than re-implementing; **the stages pass owns the
    Holly's hot pink is `#ff5d95`, which is `gp-talker`'s own bottom stop rather than a new hue.
 3. **Engine as simulation first** (the phase-1 pattern): `winter.js` under the live game, the
    test bill green, the measurement run with its prerequisites — the live game unchanged (Winter
-   sits behind a Turn-3 gate regardless).
+   sits behind a Turn-3 gate regardless). **SHIPPED, 2026-09-01.** As-built notes:
+
+   - The engine lives in `game.js` beside Fall's, not in a `winter.js` — because **Fall's does
+     too.** `fall.js` is the ART file (scene, floors, crops) and every line of Fall's economy is
+     in `game.js`. Winter mirrors that split exactly: the economy is a `game.js` block and
+     `winter.js` will be the art file when the surface ships. A separate `winter.js` holding
+     economy would have been the first place in the project where a season's rules lived outside
+     `game.js`, and `game.js never touches the DOM` is the rule that makes that block the right
+     home.
+   - `state.winter = { grid, tuckedAt }`, per-cell `{ seed, plantedAt, grow, ready, kept }`.
+     `tuckedAt` is restored from the save (unlike Fall's `bedPaid`, which is derived fresh);
+     `kept` is derived and then persisted, because it records something that happened on a night
+     that may be long over.
+   - The full bill is green at **1,592 assertions**, and **every guard was sabotaged before it was
+     believed** — eighteen sabotages, each one checked for the *exact* assertion going red. Three
+     found real gaps and are now closed: a Tally counter written in `winterHarvestAll` survived
+     because only the single-harvest path was walked; the Turn's auto-collect was never asserted
+     from the NO side; and the mark-containment invariant (every kept cell is a ripe cell, which
+     is what makes a collect-all unable to strand a mark) was assumed rather than pinned. One
+     guard is genuinely **belt-and-braces** and the suite now says so out loud rather than
+     carrying a test that cannot fail — `winterPlant()`'s `cell.kept = false`, the same shape as
+     `fallHarvestAll()`'s `def.century` check.
+   - **The suite pins its own epoch for this group.** Earlier groups leave the suite clock at a
+     few hundred thousand seconds, and `load()`'s pre-epoch heuristic — a timestamp under `1e8` is
+     elapsed-seconds corruption — cannot tell a legitimate small clock from a corrupt one. Right
+     for the game, wrong for a suite running in 1970. Byte-identical across runs, verified three
+     times.
+   - `Dev.warp()` winds Winter's plant clocks **and its tuck together**, or an owner who warps
+     twelve hours forward arrives at a night that never happened. The warp's own rule is stated
+     precisely in the suite now: `lastSeen` is never wound *backwards* (`processWeather()`
+     re-pins it forward), because winding it back would hand out an offline absence the player
+     did not have.
 4. **The surface**, faithful to the approved spikes; capture-screens gains Winter scenes and
    docs 44/45 regenerate.
 5. **The gauntlet** (doc 34) — invariant coverage, partition, pacing, visual fidelity against

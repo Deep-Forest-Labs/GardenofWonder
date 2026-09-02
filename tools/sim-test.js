@@ -104,6 +104,18 @@ const clearGarden = () => S.grid.forEach((c) => {
   c.mutation = null; c.mutateAt = 0; c.packDrop = false;
 });
 
+/* The same job for Winter's bed, and it clears the TUCK as well as the cells —
+   a bed-level timestamp left standing between tests is a night the next test
+   did not ask for, and every mark it derives would be a mystery. New per-cell
+   Winter fields join this at the same moment they join defaultState() and the
+   load() backfill; that trio is where new grid fields have historically leaked. */
+const clearWinter = () => {
+  S.winter.grid.forEach((c) => {
+    c.seed = null; c.plantedAt = 0; c.grow = 0; c.ready = false; c.kept = false;
+  });
+  S.winter.tuckedAt = 0;
+};
+
 /* Mastery multiplies harvest payout and climbs as a run proceeds, so a test
    measuring some *other* harvest multiplier has to start from a clean ladder —
    including the lifetime counts the ladder reads, or the next run starts the
@@ -4459,6 +4471,14 @@ const buildTurnRig = (inFlight) => {
   S.fall.grid[0] = { seed: 'strawberry', plantedAt: clock - 100, grow: 1200, ready: false, windfall: true };
   S.fall.grid[5] = { seed: 'century', plantedAt: clock - 86400, grow: 1209600, ready: false, windfall: false };
   S.fall.bedPaid = true;
+  /* WINTER MID-NIGHT: a bed under a standing tuck, one cell KEPT AND RIPE and
+     one still growing. The kept ripe cell is the case doc 46 names by hand —
+     doc 32's in-flight auto-collect is scoped to the MAIN garden, so a ripe
+     Winter plant crosses the Turn intact, mark and all, and pays into the year
+     it is collected in. `ready: true` so a stray tick cannot perturb the rig. */
+  S.winter.grid[1] = { seed: 'snowdrop', plantedAt: clock - 50000, grow: 43200, ready: true, kept: true };
+  S.winter.grid[6] = { seed: 'cyclamen', plantedAt: clock - 100, grow: 72000, ready: false, kept: false };
+  S.winter.tuckedAt = clock - 60000;
   if (inFlight) {
     /* The in-flight arm, live: a ready bloom to auto-collect, a parked pack to
        bank, and the growing annual above to forfeit. */
@@ -4479,7 +4499,7 @@ const SURVIVES = ['version', 'gems', 'tickets', 'decor', 'boosters', 'weatherCal
   'setsClaimed', 'stats', 'wonder', 'apiary', 'flowers', 'craft', 'goods', 'bench', 'critters',
   'pairsSeen', 'mementos', 'luckyPacks', 'prefs', 'seen', 'quests', 'rep', 'level', 'discovered',
   'bestRarity', 'almanacClaimed', 'mastery', 'rarityCounts', 'seedUnlocks', 'petals', 'blessed',
-  'fall', 'harvestsTowardRep', 'lastSeen', 'lifetimeCoins', 'profile'];
+  'fall', 'winter', 'harvestsTowardRep', 'lastSeen', 'lifetimeCoins', 'profile'];
 /* CHANGED, not "cleared": doc 32's never-touched column means never reset or
    decreased — savedSeeds sits here because the mint WRITES it (upward, by
    exactly the projection, asserted below), and petals/blessed sit in SURVIVES
@@ -4576,6 +4596,25 @@ check('and Fall\'s latch and marks are untouched by an in-flight Turn',
 
 group('bill 2 — the Turn kills no running timer, and nothing in flight is eaten silently');
 check('the Fall crop\'s clock is untouched', same(S.fall.grid[0], yrBefore.fall.grid[0]));
+/* Bill 1, the half that is Winter's own: the Turn crosses a KEPT RIPE cell and
+   leaves the cell, the mark and the wallet exactly where they were. Auto-eating
+   a kept Camellia at the Turn would eat the morning the season exists for. */
+check('a kept ripe Winter cell crosses the Turn untouched — cell and mark',
+  same(S.winter.grid[1], yrBefore.winter.grid[1])
+  && S.winter.grid[1].seed === 'snowdrop' && S.winter.grid[1].kept === true,
+  JSON.stringify(S.winter.grid[1]));
+check('the standing tuck crosses the Turn untouched',
+  S.winter.tuckedAt === yrBefore.winter.tuckedAt && S.winter.tuckedAt > 0);
+check('the Turn paid nothing for the ripe Winter cell — the wallet is the fresh purse alone',
+  S.credits === 100, String(S.credits));
+/* And the fixture really was the case it claims: a ripe Winter cell that the
+   Turn's own auto-collect would have eaten had it been in scope. `collected`
+   counts the MAIN garden's auto-collect, and the ripe Winter snowdrop is not
+   in it — which is doc 32's freshly scoped bullet, asserted. */
+check('the Turn\'s auto-collect counted only main-garden blooms',
+  yrTurn.collected === 0, String(yrTurn.collected));
+check('and the ripe Winter cell really was ripe when it crossed',
+  yrBefore.winter.grid[1].plantedAt + yrBefore.winter.grid[1].grow <= clock);
 check('the Century Bloom\'s clock is untouched', same(S.fall.grid[5], yrBefore.fall.grid[5]));
 G.reset();
 clearGarden();
@@ -7847,6 +7886,496 @@ check('and crossing a front changes nothing in the save but the moment it was cr
   return skyFronts.length === 1 && JSON.stringify(before) === JSON.stringify(after);
 })());
 G.Dev.setWeather(null);
+G.reset();
+
+/* ================================================================
+   SLICE C — WINTER, THE NIGHT SHIFT.
+
+   Doc 46's test bill, items 2 through 10; item 1 lives with the Turn
+   partition above because that is where the partition is asserted.
+
+   Every clock here is derived from the pinned `clock`, never from
+   `Date.now()`, and every Winter span is hours or days — so this group is
+   byte-identical run to run for the same reason the rest of the suite is.
+   ================================================================ */
+
+const WI = DATA.winter;
+const wPlant = (id) => WI.plants.find((p) => p.id === id);
+const SNOWDROP = wPlant('snowdrop');
+const CAMELLIA = wPlant('camellia');
+const CYCLAMEN = wPlant('cyclamen');
+/* A cell written by hand, in the shape defaultState() and load() both produce.
+   Anything that writes a Winter cell without going through this is a fixture
+   that can drift out of the real shape without anything noticing. */
+const wCell = (id, plantedAgo, kept = false) => {
+  const def = wPlant(id);
+  return { seed: id, plantedAt: clock - plantedAgo, grow: def.grow, ready: false, kept };
+};
+const withSnow = (def) => Math.round(def.yield * (1 + WI.snowfall));
+
+/* WINTER RUNS ON A REAL EPOCH, and it has to. Earlier groups leave `clock` at a
+   few hundred thousand seconds (setPhase() winds it to a day-cycle multiple),
+   and load()'s pre-epoch heuristic — a timestamp under 1e8 is elapsed-seconds
+   corruption, not a date — cannot tell a legitimate small clock from a corrupt
+   one. That heuristic is right for the game and wrong for a suite running in
+   1970, so this group pins the suite's own fixed epoch: Clear weather, in
+   daylight, and the same one every run. */
+const wiClockKeep = clock;
+clock = 1767269100;
+
+G.reset();
+S.year.turnsCompleted = DATA.year.winterTurn;
+
+group('bill 9 — Winter opens at its Turn and not before');
+S.year.turnsCompleted = DATA.year.winterTurn - 1;
+check('shut one Turn early', G.winterOpen() === false);
+check('and the season refuses a planting while it is shut',
+  G.winterPlant(0, 'snowdrop') === false && S.winter.grid[0].seed === null);
+S.year.turnsCompleted = DATA.year.winterTurn;
+check('open at winterTurn', G.winterOpen() === true);
+S.year.turnsCompleted = DATA.year.winterTurn + 4;
+check('and it stays open', G.winterOpen() === true);
+S.year.turnsCompleted = DATA.year.winterTurn;
+
+group('bill 9 — Holly\'s one-shot arms once and consumes explicitly');
+S.seen.hollyIntro = false;
+check('pending once Winter is open', G.hollyIntroPending() === true);
+check('still pending after being ASKED — reading it does not spend it',
+  G.hollyIntroPending() === true && S.seen.hollyIntro === false);
+check('consuming it returns true the first time', G.consumeHollyIntro() === true);
+check('and false every time after', G.consumeHollyIntro() === false);
+check('no longer pending', G.hollyIntroPending() === false);
+S.seen.hollyIntro = false;
+S.year.turnsCompleted = 0;
+check('never pending while Winter is shut', G.hollyIntroPending() === false);
+S.year.turnsCompleted = DATA.year.winterTurn;
+
+group('bill 5 — kept is derived from the tuck window, never observed');
+clearWinter();
+S.credits = 1e7;
+/* (a) RIPENS INSIDE THE WINDOW — the ordinary night, and the one that pays. */
+S.winter.tuckedAt = clock - SNOWDROP.grow - 3600;
+S.winter.grid[0] = wCell('snowdrop', SNOWDROP.grow + 60);
+G.winterDeriveKept(clock);
+check('a bloom that opened under a standing quilt is kept', S.winter.grid[0].kept === true);
+/* (b) RIPENED BEFORE THE TUCK — the fishing case, closed by construction. */
+clearWinter();
+S.winter.grid[0] = wCell('snowdrop', SNOWDROP.grow + 7200);
+S.winter.tuckedAt = clock - 60;                       // tucked AFTER it opened
+G.winterDeriveKept(clock);
+check('tucking a bed that has already opened earns nothing', S.winter.grid[0].kept === false);
+/* (c) NOT YET OPEN — a quilt over a bud earns nothing until the bud opens. */
+clearWinter();
+S.winter.tuckedAt = clock - 3600;
+S.winter.grid[0] = wCell('camellia', 100);
+G.winterDeriveKept(clock);
+check('a plant still growing under the quilt has earned nothing yet', S.winter.grid[0].kept === false);
+/* (d) NO TUCK AT ALL. */
+clearWinter();
+S.winter.grid[0] = wCell('snowdrop', SNOWDROP.grow + 60);
+G.winterDeriveKept(clock);
+check('an untucked bed earns no mark however ripe it is', S.winter.grid[0].kept === false);
+check('and an untucked bed grows at full speed — the tuck adds, it never protects',
+  S.winter.grid[0].plantedAt + S.winter.grid[0].grow === clock - 60);
+
+group('bill 5 — an untucked bloom pays base, a kept one pays the snowfall');
+clearWinter();
+S.credits = 0;
+S.winter.grid[0] = wCell('snowdrop', SNOWDROP.grow + 60);
+const wBase = G.winterHarvest(0);
+check('base pays exactly the yield', wBase && wBase.payout === SNOWDROP.yield && wBase.kept === false,
+  JSON.stringify(wBase));
+clearWinter();
+S.credits = 0;
+S.winter.tuckedAt = clock - SNOWDROP.grow - 3600;
+S.winter.grid[0] = wCell('snowdrop', SNOWDROP.grow + 60);
+const wKept = G.winterHarvest(0);
+check('a kept bloom pays the snowfall', wKept && wKept.payout === withSnow(SNOWDROP) && wKept.kept === true,
+  JSON.stringify(wKept));
+check('the snowfall is exactly +50% of base',
+  withSnow(SNOWDROP) === Math.round(SNOWDROP.yield * 1.5) && WI.snowfall === 0.5);
+
+group('bill 8 — the tuck lifecycle round-trips');
+clearWinter();
+check('an empty bed starts untucked', G.winterTucked() === false && S.winter.tuckedAt === 0);
+check('the tap tucks it', G.winterTuck() === true && S.winter.tuckedAt === clock);
+check('a second tap on a standing tuck is a no-op', G.winterTuck() === false);
+/* A plant SOWN UNDER a standing tuck is covered: the quilt is over the bed,
+   not over a list. */
+S.credits = 1e7;
+check('planting under a standing tuck works', G.winterPlant(3, 'snowdrop') === true);
+check('and the fresh plant is not kept yet — it has not opened', S.winter.grid[3].kept === false);
+/* THE NIGHT ACTUALLY PASSES. Winding the plant's clock backwards instead would
+   put its opening BEFORE the tuck and quietly test the fishing case again —
+   which is exactly what the first draft of this fixture did. */
+const tuckNight = clock;
+clock += SNOWDROP.grow + 60;
+G.winterDeriveKept(clock);
+check('once it opens under the standing tuck it IS kept', S.winter.grid[3].kept === true);
+/* FIRST LIGHT: the first collect after a covered plant has opened ends the night. */
+const fl = G.winterHarvest(3);
+check('the collect paid the snowfall', fl && fl.payout === withSnow(SNOWDROP));
+check('and it reported first light', fl.firstLight === true);
+check('first light cleared the tuck', S.winter.tuckedAt === 0 && G.winterTucked() === false);
+/* And anything that opens after first light is unkept until the next tuck. */
+S.winter.grid[5] = wCell('snowdrop', SNOWDROP.grow + 5);
+G.winterDeriveKept(clock);
+check('a bloom opening after first light is not kept', S.winter.grid[5].kept === false);
+check('and it pays base', G.winterHarvest(5).payout === SNOWDROP.yield);
+check('the bed can be tucked again the next night', G.winterTuck() === true && S.winter.tuckedAt === clock);
+clock = tuckNight;
+
+group('bill 8 — collecting something that opened BEFORE the tuck does not end the night');
+clearWinter();
+S.winter.grid[0] = wCell('snowdrop', SNOWDROP.grow + 7200);   // opened two hours before
+S.winter.tuckedAt = clock - 60;                                // then tucked
+S.winter.grid[1] = wCell('camellia', 100);                     // still growing under the quilt
+const notLight = G.winterHarvest(0);
+check('the unkept bloom paid base', notLight && notLight.payout === SNOWDROP.yield && notLight.kept === false);
+check('and the night did NOT end — nothing covered has opened yet',
+  notLight.firstLight === false && S.winter.tuckedAt === clock - 60);
+
+group('bill 7 — the mixed bed: every ripe plant is taken, the snowfall pays the kept subset');
+clearWinter();
+S.credits = 0;
+/* The tuck goes down between the cyclamen's opening and the snowdrops' — which
+   is the only way to build a genuinely mixed bed, and writing `kept: false` on
+   a cell whose clock says otherwise does not build one: the derivation runs
+   inside winterBedValue() and would simply mark it. */
+S.winter.tuckedAt = clock - 20000;
+S.winter.grid[0] = wCell('snowdrop', SNOWDROP.grow + 60);            // opened 60s ago  → kept
+S.winter.grid[1] = wCell('snowdrop', SNOWDROP.grow + 60);            // opened 60s ago  → kept
+S.winter.grid[2] = wCell('cyclamen', CYCLAMEN.grow + 30000);         // opened before the tuck
+S.winter.grid[3] = wCell('camellia', 100);                           // still growing
+const mixedExpected = withSnow(SNOWDROP) * 2 + CYCLAMEN.yield;
+const mixedValue = G.winterBedValue();
+check('the fixture really is mixed — two kept, one ripe-but-unkept',
+  S.winter.grid[0].kept === true && S.winter.grid[1].kept === true && S.winter.grid[2].kept === false,
+  S.winter.grid.map((c) => `${c.seed}:${c.kept}`).join(' '));
+check('winterBedValue counts every ripe plant, kept or not',
+  mixedValue.plots === 3 && mixedValue.kept === 2, JSON.stringify(mixedValue));
+check('and prices the snowfall onto the kept two only',
+  mixedValue.total === mixedExpected, `${mixedValue.total} vs ${mixedExpected}`);
+const mixed = G.winterHarvestAll();
+check('the tap pays exactly what the button said',
+  mixed && mixed.payout === mixedValue.total, `${mixed && mixed.payout} vs ${mixedValue.total}`);
+check('one credit, and it is the whole bed', S.credits === mixedExpected, String(S.credits));
+check('it took all three ripe plants and reported two kept',
+  mixed.plots === 3 && mixed.kept === 2);
+check('the growing camellia is left standing',
+  S.winter.grid[3].seed === 'camellia' && S.winter.grid[3].plantedAt === clock - 100);
+check('and the three collected cells are empty and unmarked',
+  [0, 1, 2].every((i) => S.winter.grid[i].seed === null && S.winter.grid[i].kept === false));
+/* WHY A COLLECT-ALL CANNOT STRAND A MARK, asserted rather than assumed: a mark
+   is only ever written to a cell that has already opened, so every kept cell is
+   a ripe cell, and a collect-all takes every ripe cell. If that containment
+   ever stops holding, a mark could be left on a plant the collect walked past
+   and this is the assertion that says so. */
+clearWinter();
+S.winter.tuckedAt = clock - 200000;
+for (let i = 0; i < 8; i += 1) {
+  const def = WI.plants[i % WI.plants.length];
+  S.winter.grid[i] = { seed: def.id, plantedAt: clock - (i % 2 ? def.grow + 40 : 100),
+    grow: def.grow, ready: false, kept: false };
+}
+G.winterDeriveKept(clock);
+check('every kept cell is a ripe cell — a mark can never be stranded by a collect-all',
+  S.winter.grid.every((c) => !c.kept || (c.seed && clock - c.plantedAt >= c.grow)),
+  S.winter.grid.map((c) => `${c.seed}:${c.kept}`).join(' '));
+
+group('bill 7 — the all-kept walk, which is the one that hides the difference');
+clearWinter();
+S.credits = 0;
+S.winter.tuckedAt = clock - SNOWDROP.grow - 20;
+for (let i = 0; i < 8; i += 1) S.winter.grid[i] = wCell('snowdrop', SNOWDROP.grow + 10);
+const allKept = G.winterBedValue();
+check('eight kept blooms', allKept.plots === 8 && allKept.kept === 8);
+const allTaken = G.winterHarvestAll();
+check('the whole bed pays eight snowfalls',
+  allTaken.payout === withSnow(SNOWDROP) * 8 && S.credits === withSnow(SNOWDROP) * 8,
+  String(allTaken.payout));
+check('and it is ONE commit — the wallet moved once, not eight times',
+  allTaken.plots === 8 && allTaken.kept === 8);
+check('a collect on an empty bed returns null rather than paying nothing loudly',
+  G.winterHarvestAll() === null);
+
+group('bill 6 — an earned mark is never voided');
+clearWinter();
+S.credits = 0;
+S.winter.tuckedAt = clock - SNOWDROP.grow - 20;
+S.winter.grid[0] = wCell('snowdrop', SNOWDROP.grow + 10);
+S.winter.grid[1] = wCell('snowdrop', SNOWDROP.grow + 10);
+G.winterDeriveKept(clock);
+check('both blooms opened under the quilt', S.winter.grid[0].kept === true && S.winter.grid[1].kept === true);
+/* Partial collect: taking one must not touch the other's mark. */
+G.winterHarvest(0);
+check('a partial collect leaves the neighbour\'s mark alone', S.winter.grid[1].kept === true);
+/* Replanting the emptied cell must not touch it either. */
+S.credits = 1e7;
+G.winterPlant(0, 'camellia');
+check('replanting a neighbour leaves the mark alone', S.winter.grid[1].kept === true);
+/* BELT AND BRACES, and said out loud so nobody later mistakes it for load-bearing.
+   `winterPlant()` writes `cell.kept = false`, and deleting that line passes this
+   whole suite — because every path that empties a cell already clears the mark,
+   so a plantable cell is an unmarked cell by the time `winterPlant` sees it. The
+   line stays because a cell must always carry the five fields it is declared
+   with, and this is the same shape as `fallHarvestAll()`'s `def.century` guard,
+   which the handoff records as a check whose test could not fail. */
+check('and the replant is itself unmarked (belt-and-braces — see the note above)',
+  S.winter.grid[0].kept === false);
+/* And a mark survives a save/load round trip and a year of neglect. `saveNow()`
+   rather than `save()`, because `save()` is debounced and reading the store
+   straight after it is reading whatever was there before. */
+G.saveNow();
+S.winter.grid[1].kept = false;                    // corrupt it in memory
+G.load();
+check('the mark round-trips through save and load',
+  S.winter.grid[1].kept === true && S.winter.grid[1].seed === 'snowdrop',
+  JSON.stringify(S.winter.grid[1]));
+/* And the mark survived the night ENDING, which is the sharpest version of
+   "never voided": first light fired on the collect above and cleared the bed's
+   tuck, and grid[1]'s mark is still standing on the other side of a save. */
+check('first light ended the night, and the surviving mark did not care',
+  S.winter.tuckedAt === 0 && S.winter.grid[1].kept === true);
+/* A STANDING tuck round-trips too — it is the stored truth every mark derives
+   from, so losing it on load would silently end every night at every boot. */
+S.winter.tuckedAt = clock - 4242;
+G.saveNow();
+S.winter.tuckedAt = 0;
+G.load();
+check('a standing tuck round-trips through save and load', S.winter.tuckedAt === clock - 4242);
+const lateClock = clock;
+clock += 86400 * 400;                              // come back over a year later
+S.credits = 0;
+const late = G.winterHarvest(1);
+check('a kept bloom collected a year later still pays the snowfall',
+  late && late.payout === withSnow(SNOWDROP) && late.kept === true, JSON.stringify(late));
+clock = lateClock;
+
+group('bill 6 — the bonus applies at COLLECT-time rates, which is accepted and asserted');
+clearWinter();
+S.credits = 0;
+S.winter.tuckedAt = clock - SNOWDROP.grow - 20;
+S.winter.grid[0] = wCell('snowdrop', SNOWDROP.grow + 10);
+G.winterDeriveKept(clock);
+const oldSnow = WI.snowfall;
+WI.snowfall = 0.25;                                // a retune between earning and collecting
+check('it repays at the NEW rate, not the rate it was earned at',
+  G.winterHarvest(0).payout === Math.round(SNOWDROP.yield * 1.25));
+WI.snowfall = oldSnow;
+
+group('bill 2 — no Winter plant touches a flower system');
+G.reset();
+S.year.turnsCompleted = DATA.year.winterTurn;
+clearWinter();
+clearGarden();
+S.credits = 1e7;
+const wiStatsBefore = JSON.parse(JSON.stringify(S.year.stats));
+const wiFlowersBefore = G.flowerTotal();
+const wiGemsBefore = S.gems;
+G.winterPlant(0, 'snowdrop');
+S.winter.grid[0].plantedAt = clock - SNOWDROP.grow - 10;
+S.winter.tuckedAt = clock - SNOWDROP.grow - 20;
+G.winterHarvest(0);
+check('no rarity is written', Object.keys(S.rarityCounts).length === 0 && Object.keys(S.bestRarity).length === 0);
+check('nothing is discovered', Object.keys(S.discovered).length === 0);
+check('no gem is dropped', S.gems === wiGemsBefore);
+check('the pantry is untouched', G.flowerTotal() === wiFlowersBefore);
+check('no mutation is scheduled — Winter cells have no mutateAt at all',
+  S.winter.grid.every((c) => typeof c.mutateAt === 'undefined'));
+check('and state.year.stats is untouched — Winter is the QUIET season, no Tally line at slice C',
+  same(S.year.stats, wiStatsBefore), JSON.stringify(S.year.stats));
+/* BOTH collect paths, because a Tally counter written in only one of them is a
+   Tally counter that survives a sabotage of the other — which is exactly what
+   happened to the first draft of this group. */
+clearWinter();
+S.credits = 1e7;
+S.winter.tuckedAt = clock - SNOWDROP.grow - 20;
+for (let i = 0; i < 3; i += 1) S.winter.grid[i] = wCell('snowdrop', SNOWDROP.grow + 10);
+G.winterHarvestAll();
+check('and the collect-all path writes no Tally counter either',
+  same(S.year.stats, wiStatsBefore), JSON.stringify(S.year.stats));
+check('nor a windfall — Fall\'s counter is Fall\'s',
+  S.year.stats.windfalls === wiStatsBefore.windfalls);
+check('a Winter cell carries exactly the five fields it is declared with',
+  S.winter.grid.every((c) => same(Object.keys(c).sort(), ['grow', 'kept', 'plantedAt', 'ready', 'seed'])),
+  JSON.stringify(Object.keys(S.winter.grid[0])));
+
+group('bill 3 — no growth modifier reaches Winter, asserted from the NO side');
+clearWinter();
+S.credits = 1e7;
+/* Arm everything that shortens a clock in Summer: rain, a Quick Sprout petal,
+   the auto-water badge, and a growth boost. If ANY of them reached Winter, the
+   planted `grow` would come back shorter than the data says. */
+G.Dev.setWeather('rain');
+S.upgrades.autoWater = 10;
+S.petals = { snowdrop: { rich: 0, quick: 9, sig: 0 } };
+S.boosters.bloom = clock + 9999;
+G.winterPlant(0, 'camellia');
+check('the planted clock is DATA.winter\'s clock exactly, with every modifier armed',
+  S.winter.grid[0].grow === CAMELLIA.grow, `${S.winter.grid[0].grow} vs ${CAMELLIA.grow}`);
+check('and the modifiers really were live — growModifier() is off 1 right now',
+  G.growModifier() !== 1, String(G.growModifier()));
+/* And the payout side: no verb, no boost and no petal multiplies a Winter yield. */
+S.credits = 0;
+S.winter.grid[0].plantedAt = clock - CAMELLIA.grow - 10;
+check('the payout is the flat yield with every payout multiplier armed',
+  G.winterHarvest(0).payout === CAMELLIA.yield);
+G.Dev.setWeather(null);
+S.petals = {};
+S.boosters = {};
+S.upgrades.autoWater = 0;
+
+group('bill 4 — passiveIncomeRate ignores Winter entirely');
+G.reset();
+S.year.turnsCompleted = DATA.year.winterTurn;
+clearGarden();
+clearWinter();
+const wiIdleRate = G.passiveIncomeRate();
+S.credits = 1e7;
+for (let i = 0; i < 8; i += 1) G.winterPlant(i, 'camellia');
+check('a full Winter bed adds nothing to the offline rate',
+  G.passiveIncomeRate() === wiIdleRate, `${G.passiveIncomeRate()} vs ${wiIdleRate}`);
+S.winter.grid.forEach((c) => { c.plantedAt = clock - CAMELLIA.grow - 1; });
+S.winter.tuckedAt = clock - CAMELLIA.grow - 2;
+G.winterDeriveKept(clock);
+check('and neither does a full bed of KEPT ripe blooms',
+  G.passiveIncomeRate() === wiIdleRate, `${G.passiveIncomeRate()} vs ${wiIdleRate}`);
+
+group('bill 10 — Winter\'s long clocks live on the pinned epoch');
+clearWinter();
+const twoDayAgo = clock - CAMELLIA.grow;
+S.winter.grid[0] = { seed: 'camellia', plantedAt: twoDayAgo, grow: CAMELLIA.grow, ready: false, kept: false };
+S.winter.tuckedAt = twoDayAgo - 1;
+G.winterDeriveKept(clock);
+check('a forty-eight-hour clock resolves against the fixed epoch, not the wall clock',
+  S.winter.grid[0].kept === true && S.winter.grid[0].plantedAt === twoDayAgo);
+check('and every plant\'s clock is inside doc 33\'s 12-48h band',
+  WI.plants.every((p) => p.grow >= 43200 && p.grow <= 172800),
+  WI.plants.map((p) => p.grow / 3600).join(','));
+check('the yield law holds for every Winter plant — yield is cost x 1.4',
+  WI.plants.every((p) => p.yield === Math.round(p.cost * 1.4)));
+check('Winter prices below Fall per hour at every clock the two seasons share',
+  WI.plants.every((wp) => DATA.fall.plants.every((fp) => fp.grow !== wp.grow
+    || wp.yield / wp.grow < fp.yield / fp.grow)));
+check('Winter plant ids are unique and none collides with a seed or a Fall crop',
+  new Set(WI.plants.map((p) => p.id)).size === WI.plants.length
+  && WI.plants.every((p) => !DATA.seeds.some((sd) => sd.id === p.id)
+    && !DATA.fall.plants.some((f) => f.id === p.id)));
+
+group('bill 6 — a save from before Winter existed loads without a Winter');
+const preWinter = JSON.parse(JSON.stringify(S));
+delete preWinter.winter;
+preWinter.credits = 4242;
+localStorage.setItem('gw-save', JSON.stringify(preWinter));
+G.load();
+check('the bed is rebuilt to length, empty and untucked',
+  S.winter.grid.length === WI.plots && S.winter.grid.every((c) => c.seed === null)
+  && S.winter.tuckedAt === 0);
+check('and the rest of the save came through', S.credits === 4242);
+/* An unknown id drops to an empty cell — the disposal rule that makes Winter's
+   ids APPEND-ONLY once shipped. */
+const badSave = JSON.parse(JSON.stringify(S));
+badSave.winter.grid[0] = { seed: 'frostbloom', plantedAt: clock - 10, grow: 500, ready: true, kept: true };
+badSave.winter.grid[1] = { seed: 'snowdrop', plantedAt: clock - 10, grow: SNOWDROP.grow, ready: true, kept: true };
+localStorage.setItem('gw-save', JSON.stringify(badSave));
+G.load();
+check('an unknown Winter id drops to an empty cell', S.winter.grid[0].seed === null);
+check('and the cell beside it is untouched',
+  S.winter.grid[1].seed === 'snowdrop' && S.winter.grid[1].kept === true);
+/* A grid the wrong length is rebuilt, never merged. */
+const shortSave = JSON.parse(JSON.stringify(S));
+shortSave.winter.grid = [{ seed: 'snowdrop', plantedAt: clock - 10, grow: SNOWDROP.grow, ready: false, kept: false }];
+localStorage.setItem('gw-save', JSON.stringify(shortSave));
+G.load();
+check('a short grid is rebuilt to length rather than merged',
+  S.winter.grid.length === WI.plots && S.winter.grid[0].seed === 'snowdrop'
+  && S.winter.grid[7].seed === null);
+
+group('bill 6 — a corrupt Winter clock is sanitised the way the garden\'s is');
+const badClock = JSON.parse(JSON.stringify(S));
+badClock.winter.grid[0] = { seed: 'camellia', plantedAt: 42, grow: CAMELLIA.grow, ready: false, kept: false };
+badClock.winter.grid[1] = { seed: 'camellia', plantedAt: clock + 1e9, grow: CAMELLIA.grow, ready: false, kept: false };
+badClock.winter.tuckedAt = clock + 1e9;
+localStorage.setItem('gw-save', JSON.stringify(badClock));
+G.load();
+check('a pre-epoch clock reads as corruption and opens now',
+  S.winter.grid[0].plantedAt === clock - CAMELLIA.grow);
+check('a future clock clamps to now', S.winter.grid[1].plantedAt === clock);
+check('and a tuck in the future clamps too — it would swallow every mark while it stood',
+  S.winter.tuckedAt === clock);
+
+group('bill 8 — Dev.warp winds Winter\'s clocks AND its tuck, together');
+G.reset();
+S.year.turnsCompleted = DATA.year.winterTurn;
+clearWinter();
+S.credits = 1e7;
+G.winterPlant(0, 'camellia');
+G.winterTuck();
+const warpSeen = S.lastSeen;
+const warpPlanted = S.winter.grid[0].plantedAt;
+const warpTucked = S.winter.tuckedAt;
+G.Dev.warp(12);
+check('the plant clock moved back twelve hours',
+  S.winter.grid[0].plantedAt === warpPlanted - 43200, String(S.winter.grid[0].plantedAt - warpPlanted));
+check('the tuck moved with it — a bed whose plants moved while the quilt stayed put is a lie',
+  S.winter.tuckedAt === warpTucked - 43200);
+/* The warp's own rule, stated precisely: `lastSeen` is never wound BACKWARDS.
+   The warp re-pins it to now (processWeather does), which is the whole point —
+   winding it back with the other clocks would hand the player a twelve-hour
+   offline absence they did not have, every time they used the cheat. */
+check('lastSeen is never wound back — a warp must not fabricate an absence',
+  S.lastSeen >= warpSeen, `${S.lastSeen} vs ${warpSeen}`);
+G.Dev.warp(48);
+G.winterDeriveKept(clock);
+check('warping past the clock earns the mark the night would have earned',
+  S.winter.grid[0].kept === true);
+
+group('bill 7 — winterBedValue never lies about what the tap will pay');
+clearWinter();
+/* Fifty beds, every combination of tuck timing and plant, value read then
+   collected. The two numbers agreeing once is a coincidence; agreeing across
+   every shape of morning is the assertion. */
+let valueMatches = 0;
+for (let n = 0; n < 50; n += 1) {
+  clearWinter();
+  S.credits = 0;
+  /* Deterministic, not random: the suite is byte-identical run to run. */
+  S.winter.tuckedAt = (n % 3 === 0) ? 0 : clock - 200000 - n * 977;
+  for (let i = 0; i < 8; i += 1) {
+    const def = WI.plants[(n + i) % WI.plants.length];
+    const ripe = ((n + i) % 4) !== 0;
+    if ((n + i) % 5 === 0) continue;                       // leave some cells empty
+    S.winter.grid[i] = {
+      seed: def.id,
+      plantedAt: clock - (ripe ? def.grow + 60 + (i * 13) : Math.floor(def.grow / 3)),
+      grow: def.grow, ready: false, kept: false
+    };
+  }
+  const said = G.winterBedValue();
+  const paid = G.winterHarvestAll();
+  const ok = (said.plots === 0 && paid === null)
+    || (paid && paid.payout === said.total && paid.plots === said.plots && paid.kept === said.kept);
+  if (ok) valueMatches += 1;
+}
+check('across fifty different mornings, the button and the tap agree every time',
+  valueMatches === 50, `${valueMatches}/50`);
+
+group('bill 3 — the guards are real, not decoration');
+/* The sabotage half, kept in the suite rather than done once by hand: each of
+   these asserts the FIXTURE is in the state the test above thinks it is, so a
+   guard cannot pass because the case never arose. */
+clearWinter();
+S.winter.tuckedAt = clock - 100;
+S.winter.grid[0] = wCell('snowdrop', SNOWDROP.grow + 500);   // opened BEFORE the tuck
+check('the fishing fixture really is ripe', G.winterBedState().ripe === 1);
+check('the fishing fixture really is tucked', G.winterTucked() === true);
+check('and the ripen instant really is before the tuck',
+  S.winter.grid[0].plantedAt + S.winter.grid[0].grow < S.winter.tuckedAt);
+G.winterDeriveKept(clock);
+check('so the mark is refused for the reason the test claims', S.winter.grid[0].kept === false);
+
+clock = wiClockKeep;
 G.reset();
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

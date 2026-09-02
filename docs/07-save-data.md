@@ -41,11 +41,20 @@ lost if the player clears site data.
   decor: [ { id: 'gnome' } ],   // one entry per copy owned, cosmetic only since v3
   boosters: { bloom: 1735689600.123 },                          // id → absolute expiry, epoch seconds
   boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },   // held copies, not yet activated
+  fall: {                       // the hour-class bed — positional, rebuilt to length on load
+    grid: [ { seed: 'pumpkin', plantedAt: 1735689600.1, grow: 10800, ready: false, windfall: false } ],
+    bedPaid: false              // DERIVED on load from the marks, never restored
+  },
+  winter: {                     // the night shift — positional, rebuilt to length on load
+    grid: [ { seed: 'snowdrop', plantedAt: 1735689600.1, grow: 43200, ready: false, kept: false } ],
+    tuckedAt: 0                 // one timestamp for the whole bed; 0 means the quilts are off
+  },
   harvestsTowardRep: 0,
   stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
   wonder: { until: 0, last: 0 },
   prefs: { sfx: true, amb: true, music: false, sfxVol: 1, ambVol: 1, musicVol: 1 },
-  seen: { intro: false, plot: false, apiary: false, meadow: false, fallSwipe: false, gardenSwipe: false },
+  seen: { intro: false, plot: false, apiary: false, meadow: false, fallSwipe: false, gardenSwipe: false,
+          winterSwipe: false, hollyIntro: false },
   quests: {
     active: [ { id: 'q_tap_25', progress: 0 } ],
     done: [],
@@ -250,6 +259,47 @@ Legacy and corrupted saves produce impossible timestamps, so every planted cell 
   rewritten as `now − grow`, which marks the plot ready immediately. The `1e8` threshold is a
   sentinel: any real epoch timestamp is far larger, so a small number means the old format.
 - `plantedAt` more than `1e5` seconds in the future (a clock change) → clamped to now.
+
+Winter's cells take the same three rules, and `state.winter.tuckedAt` takes a fourth: a tuck under
+`1e8` or more than `1e5` seconds in the future is rewritten to **now** rather than to `now − grow`.
+Clamping a corrupt tuck forward is the conservative direction — it can only ever refuse marks, never
+fabricate them.
+
+### `state.winter` — the night shift (added 2026-09-01, slice C)
+
+**Positional, like `state.fall` and the meadow's cells.** The grid is rebuilt to
+`DATA.winter.plots` length on every load and **never merged**; a plant id that no longer exists
+drops to an empty cell. That disposal rule is why **Winter plant ids are append-only once
+shipped** — the season advertises two-day holds, so a renamed id would silently delete a bloom the
+player was saving.
+
+**Two fields, and the difference between them is the whole design.**
+
+- **`tuckedAt`** is a single timestamp for the whole bed — the quilt is over the *bed*, not over a
+  list, which is what makes plant-then-tuck and tuck-then-plant both work without any per-cell
+  bookkeeping. Zero means the quilts are off. It is **restored from the save**, because it is the
+  stored truth every mark derives from: losing it on load would silently end every night at every
+  boot.
+- **`kept`** is per-cell, **derived and then persisted**. It is *not* Fall's `bedPaid`, which is
+  derived fresh on every load and deliberately never restored. A mark is a record of something that
+  already happened on a night that may be long over, so it comes back from the save exactly as it
+  went in. Deriving it again would be wrong twice over: the night it was earned on may have ended,
+  and re-deriving would either lose it or hand it out a second time.
+
+**The derivation.** A plant is kept iff `plantedAt + grow` falls inside the standing tuck window —
+at or after `tuckedAt`, and at or before now. It runs wherever ripeness is first observed: `load()`,
+`reconcile()`, `processWinter()` on the tick, and both collect paths.
+
+**`tuckedAt` takes the grid's own clock sanitisation**, plus one rule of its own: a tuck stamped in
+the future clamps to now, because a bed tucked "tomorrow" would swallow every mark for as long as it
+stood.
+
+**Three places a new Winter cell field has to land in the same commit** — `defaultState()`, the
+`load()` rebuild, and `clearWinter()` in `tools/sim-test.js`. That trio is where new grid fields have
+historically leaked, and the suite's own partition test fails if a new save key is not classified.
+
+**No migration.** Winter did not exist, so a save without a `winter` key comes back on the defaults:
+an empty bed, untucked.
 
 ## Reset
 

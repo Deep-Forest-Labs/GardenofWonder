@@ -368,7 +368,63 @@ windfall, one growing at a time. Numbers deliberately absurd and data-tagged. **
 it at cost 2M / yield 2.8M** — the 1.4× curve held on purpose so the wall never comes from a
 worse ratio, the absurdity carried by scale and the fortnight; retune freely in phase 4.
 
-Winter's list (5–6 plants, 12–48 h clocks) follows in slice C; do not author it now.
+Winter's list follows below — authored in slice C, 2026-09-01.
+
+## Winter content
+
+**Six plants, 12–48 hour clocks, `yield = cost × 1.4` throughout**, from real winter bloomers —
+the flowers that actually open in snow, which is also where Holly comes from:
+
+| Plant | Cost | Grow | Yield | Gold/hour | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Snowdrop | 2,500 | 12 h | 3,500 | 292 | Winter's tutorial plant, and the floor |
+| Winter Jasmine | 6,000 | 16 h | 8,400 | 525 | Flowers on bare twigs |
+| Cyclamen | 14,000 | 20 h | 19,600 | 980 | |
+| Paperwhite | 30,000 | 24 h | 42,000 | 1,750 | The one-day anchor |
+| Witch Hazel | 70,000 | 36 h | 98,000 | 2,722 | |
+| Camellia | 160,000 | 48 h | 224,000 | 4,667 | The two-day hold |
+
+**PROVISIONAL, all of it** — typed from [46-the-night-shift.md](46-the-night-shift.md) verbatim and
+measured before it is called final. One knob each in `DATA.winter`, remote-config-ready, exactly as
+`DATA.fall` is.
+
+**The snowfall rule** (`DATA.winter.snowfall = 0.5`): a plant that **opened while the bed was tucked
+in** is *kept*, and pays **+50%** when it is collected. Fall has the windfall; Winter has the
+snowfall, one bonus grammar met twice. The mechanic is in
+[03-systems.md](03-systems.md) and the lifecycle in [46-the-night-shift.md](46-the-night-shift.md);
+what belongs here is the pricing.
+
+**The clock floor is 12 hours**, which is this document's own 12–48h band. "Plant at dinner, ready
+at breakfast" has to still hold at the bottom rung, and an entry any shorter sits on Fall's apple
+clock — the overnight anchor — and dominates it.
+
+**Winter prices below Fall per hour at any clock the two seasons share.** The tuck's convenience is
+paid for in rate: Fall runs 7,000–9,240 gold an hour across its whole list, and Winter runs 292 at
+the bottom to 4,667 at the top. At these values the two share no clock length at all — Fall's
+longest ordinary clock is the apple at 8h — so the constraint holds with room, and a sim-test
+asserts it against every pair rather than against the values that happen to be here today.
+
+**Guardrail one, asserted rather than hoped:** a single full kept night must not clear both Turn
+gates on its own at Turns 3–6. The gates are `minCoins` 100,000 and the `minSeeds` 10 increment, and
+every extra Turn pays the blessing — the one per-Turn faucet nothing prices. Winter's cost ladder is
+tuned under this constraint and `tools/year-sim.js` asserts it by exit code.
+
+**Guardrail two, the Turn vault, named and accepted:** ripe Winter crosses the Turn and pays into
+the new year, so holding a ripe bed through a Turn is good play — a bounded vault of at most eight ×
+top cost × 2.1 into a fresh purse. It is **accepted as cosy planning, not an exploit**, its size is a
+stated tuning input, and if live play shows it distorting the Turn the ready answer is the Preserve's
+grammar ([41-the-preserve.md](41-the-preserve.md)), not a clamp.
+
+**Winter plants are outside every flower system**, Fall's precedent extended one step further: no
+rarity, no mutations, no gem drops, never written to `discovered`, no pantry, no Stand — and,
+unlike Fall's windfall, **no `state.year.stats` counter either**. Winter is the quiet season. They
+count generic `harvest` quest tracks and nothing else, and they never enter `passiveIncomeRate()`.
+`DATA.winter = { plots, snowfall, plants: […] }` is wholly separate from `DATA.seeds` for the same
+reason `DATA.fall` is.
+
+**Winter plant ids are append-only once shipped** — never renamed, never removed. The load path
+drops an unknown id to an empty cell, and a season that advertises two-day holds would otherwise
+silently delete a bloom somebody was saving.
 
 ## Badges
 

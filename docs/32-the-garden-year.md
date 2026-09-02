@@ -258,7 +258,10 @@ Owner-decided 2026-08-29: **the Turn clears the fast annuals in the main garden 
 
 - A **ready, unharvested bloom in the main garden** is auto-collected — paid into the year
   *before* the mint, so
-  turning never costs a harvest.
+  turning never costs a harvest. **This bullet is scoped to the main garden and to nothing else**
+  (stated 2026-09-01, built in slice C): a ripe crop in Fall and a ripe bloom in Winter — kept or
+  not — cross the Turn intact and pay into the year they are collected in. Auto-eating a kept
+  Camellia at the Turn would eat the morning the season exists for.
 - An **unopened card pack on a plot** is banked into `state.packs`. Packs are never touched by
   the Turn, so they cannot be destroyed by it either.
 - A **growing Summer annual** — including a caught mutation on it — is forfeit with the plot,
@@ -419,7 +422,7 @@ Each slice ships and is judged before the next starts, per the house pattern:
 | --- | --- | --- |
 | **A — the Turn** | Year-meter pill, ceremony with **the Tally**, mint, the never-resets partition under sim-test, petals (shared skills only) on Almanac rows, unlock prices on seeds 3+, the seed-picker's unlock rows, the season strip, the map's retirement, the Stand's dock entry, **Fall** at background-swap art with its plant list, the windfall rule and the **Century Bloom** | Does turning the year feel like a gift or a loss — the whole design in one question |
 | **B — the signatures** | The launch six signatures, countdown framing, the blessing tutorial polish | Do petals make individual flowers feel *owned* |
-| **C — Winter** | The night-shift garden, morning-check session shape, welcome-back scene extension | Does the overnight ritual form |
+| **C — Winter** | The night-shift garden, morning-check session shape, welcome-back scene extension | Does the overnight ritual form *(engine shipped 2026-09-01; see [46-the-night-shift.md](46-the-night-shift.md))* |
 | **D — orders return** | The order strip over the garden, order-driven rep past level 17, extended ladder rungs | Does demand pull planting across seasons |
 | **E — Spring** | The nursery surface; ceremony moves home; breeding/heirloom design begins in earnest | The long game |
 

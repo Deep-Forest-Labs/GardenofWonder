@@ -1288,6 +1288,44 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**SLICE C — WINTER, THE NIGHT SHIFT — IS IN BUILD.** The spec is
+[46-the-night-shift.md](46-the-night-shift.md), and it is owner-ruled and pressure-tested; read it
+twice before touching anything here.
+
+**Where it stands.** Gate 1 (the two spikes) is closed and gate 3 (the engine as pure simulation)
+has shipped. The live game is unchanged to the eye: Winter sits behind a Turn-3 gate and has no
+surface yet.
+
+| Gate | State |
+| --- | --- |
+| 1 · Two spikes, then stop for the owner | **Closed.** `tools/holly-spike.html` and `tools/winter-spike.html` are live. The owner spent the gate on play rather than reading — *"go with your recommendation on everything"* — so every open question was ruled by the builder and written into the 2026-09-01 gate-1 decision-log entry |
+| 2 · The owner's annotations build verbatim | **Closed with gate 1** |
+| 3 · Engine as pure simulation | **Shipped.** `DATA.winter`, `state.winter`, the whole economy block in `game.js`, the test bill at 1,592 assertions, every guard sabotaged |
+| 4 · The surface | **Next** |
+| 5 · The gauntlet | Not started |
+
+**The two things about this engine that are not obvious from the diff.**
+
+1. **`kept` is derived from timestamps and then persisted, and that is the season.** Winter ripens
+   with the app shut, so no code runs at the moment a plant opens — the mark is a comparison
+   (`plantedAt + grow` inside the standing tuck window), run wherever ripeness is first observed.
+   Tucking after a plant has opened earns nothing; an earned mark is never voided by anything.
+2. **`winterHarvestAll()` is NOT a `fallHarvestAll()` mirror.** It takes every ripe plant and pays
+   the snowfall on the **kept subset only**. Fall's marks and Fall's collection are the same set;
+   Winter's are not. The mixed bed is a named test because the all-kept morning hides it.
+
+**What is next, in order.** The measurement (which has two already-ruled prerequisites — seed
+`tools/year-sim.js` and extract the shared `tools/play-model.js` — *before* a Winter arm, or Winter
+becomes the fourth diverged copy of the play model), then the surface, then the gauntlet.
+
+**The five collision surfaces with tonight's fix round are still LIVE and still un-landed** as of
+this writing: #15's season-tab retirement, `goSeason()` going ternary, `seasonWaiting()` widening,
+`renderRail()`'s #11/#9 edits, and the stages pass's untouchable `.plot`/`data-stage` block. The
+engine touches none of them. **The surface touches four of the five** — re-verify with `git fetch`
+and `git log` before editing `ui.js`.
+
+---
+
 **THE OVERNIGHT FIX ROUND IS DONE — nine items off the punch list, all nine shipped and pushed.**
 Two of them want the owner's *ear* before anything else, and two carry a decision made in their
 absence that is theirs to overturn. The morning script is below; do it in that order, because the

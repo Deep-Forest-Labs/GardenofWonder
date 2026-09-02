@@ -1337,6 +1337,73 @@ that ripened overnight is announced by the dot and nothing else.)*
 wheat, never a radial bloom. Their rows carry three stat pills where a seed row carries five — no
 verb chip, no rarity, no gem pill — and the shorter row is itself the tell.
 
+### Winter — the night shift (2026-09-01, slice C)
+
+**A season is a speed and a rule.** Winter's speed is **half a day to two days** — the longest clock
+class in the game — and Winter's rule is that **the night pays extra when the garden was kept**.
+Fall has the windfall; Winter has the **snowfall**. It opens at `DATA.year.winterTurn` (Turn 3), all
+eight plots at once, and its keeper is **Holly**, the winter rose.
+
+**The ritual is two taps a day apart.** In the evening, one tap on the button under the board tucks
+the bed in: quilts settle over the plots and the plants sleep. In the morning, whatever *opened
+under the quilt* wears a frost rim and pays **+50%** when it is collected. The tuck is
+**time-free** — tucking at two in the afternoon is fine, because it means *goodnight* whenever the
+player's day ends rather than whenever a clock says so.
+
+**Nothing is ever lost to a night.** No frost damage, no wilting, no decay; an untucked bed grows at
+full speed and pays full base. The tuck **adds and never protects**, and the snowfall is an
+appointment rather than a test — like the windfall, it is meant to be earned by anyone playing the
+season at all, and the yields are priced assuming it.
+
+**`kept` is derived from timestamps, never observed.** Winter ripens with the app shut, so no code
+runs at the moment a plant opens. The rule is a comparison: a plant is kept iff its computed ripen
+instant (`plantedAt + grow`) falls inside the recorded tuck window. The derivation runs wherever
+ripeness is first observed — load, reconcile, tick, collect — and the mark is then persisted per
+cell. Two consequences the design turns on: **tucking after a plant has already opened earns
+nothing**, and **an earned mark is never voided** by replanting, by a partial collect, by the night
+ending, by a Turn, or by a year of neglect.
+
+**First light is an event, not an hour.** The first collect *after any covered plant has opened*
+ends the night: the quilts lift, the bed's tuck clears, and anything that opens afterwards is unkept
+until the next tuck. Collecting something that opened *before* the tuck does not end it — nothing
+covered has happened yet.
+
+**The morning collect takes everything and pays the bonus on the kept subset.** This is the one
+place a literal mirror of Fall would be wrong: Fall's marks and Fall's collection are the same set,
+and Winter's are not. `Game.winterHarvestAll()` takes every ripe plant, kept or not, in one atomic
+commit, and prices the snowfall onto the kept ones only. `Game.winterBedValue()` returns exactly
+what that tap will pay, so the number on the button is the number the tap pays. **A mixed bed** —
+kept beside unkept-ripe — is the morning that shows the difference, and it is a named test because
+the all-kept morning is the one walk that hides it.
+
+**The rule lives on the chip above the board**, in Fall's chip grammar: *"Tucked in — 3 growing"*,
+*"2 kept blooms waiting — +50%"*. Holly's lines are flavour and are never load-bearing.
+
+**Winter plants are outside every flower system**, Fall's precedent extended: no rarity, no
+mutations, no gems, never `discovered`, no pantry, no bench, no Stand, and — unlike Fall — **no
+`state.year.stats` either.** Winter is the quiet season and a Tally line can arrive later with the
+story. They count generic `harvest` quest tracks and nothing else, no growth modifier reaches them,
+and they never enter `passiveIncomeRate()`.
+
+**The Turn never touches Winter, including its ripe plants.** Doc 32's in-flight auto-collect rule
+is scoped to the main garden: a ripe Winter plant — kept or not — crosses the Turn intact and pays
+into the year it is collected in. Holding a ripe bed through a Turn is therefore good play, a
+bounded vault of at most eight × top cost × 2.1 into a fresh purse; it is **accepted as cosy
+planning** rather than clamped, and if live play shows it distorting the Turn the answer is the
+Preserve's grammar (doc 41).
+
+**Winter plant ids are append-only once shipped** — never renamed, never removed. The load path
+drops an unknown id to an empty cell, and the season advertises two-day holds, so a renamed id would
+silently delete a bloom somebody was saving.
+
+**Holly's introduction is two beats in two rooms.** Beat one is the Turn-3 ceremony's Winter gate
+card, on Fall's `fallOpens` pattern — the gate lifts where the player is standing. Beat two is
+`hollyIntro`, spoken on the player's first entry to Winter, and its one-shot is exposed as
+`Game.hollyIntroPending()` / `Game.consumeHollyIntro()` so the caller can **draw the line first and
+spend the flag second**. The meadow's signpost consumed its flag at the moment it decided to speak
+and wrote the line into a node that was not on screen; that is the recorded cost of getting this
+wrong.
+
 ### Locked land
 
 **The garden's gate, restated (2026-08-25).** Cells 0–3 are open from the first visit; the rest sit
