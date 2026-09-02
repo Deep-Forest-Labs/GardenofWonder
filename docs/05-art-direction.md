@@ -545,9 +545,10 @@ Phase 3 added three more, on the same terms:
 Fall's scene palette (`SKIES.sun` / `SKIES.moon` in `fall.js`) is a component palette in the same
 sense as `Meadow.SKIES`, and lives beside the drawing that uses it.
 
-Slice C — Winter, 2026-09-01 — added **three ramps and one literal**, on the same terms. The count
-went to eleven new distinct colours and no more; the first pass was eighteen, and the seven that
-came off it are worth recording because each one was a restatement waiting to be found: Winter's
+Slice C — Winter, 2026-09-01 — added **three ramps and two literals**, on the same terms: **twelve**
+new distinct colours, counted from `tools/style-check.js --strict` before and after and not from
+memory. The first pass was eighteen, and the six that came off it are worth recording because each
+one was a restatement waiting to be found: Winter's
 growth bar took a cream well and a frost-blue fill, and now takes **the garden's own dark track and
 the garden's own green** (a cream well draws a bright line across the plant — Fall's note already
 said so — and green means *growing* in every room, learned once); and a "snow" family and a "frost"
@@ -559,6 +560,7 @@ family that sat two percent apart are **one ramp**, because frost is snow seen c
 | **Winter's cell** | `#7d8798 → #68717f → #565e6b`, lip `#414854` | Frozen earth, the mid body inside the darker board. It has to stay light enough that an ink bloom outline and an ink empty-marker still read on it: the first pass made the cells near-black on the theory that white blooms want dark ground, and both simply disappeared. |
 | **Snow and frost** | `#eaf4fb`, `#bcd6e8` (with `#ffffff`, already here) | One material at three values — the snow on the board's rail, the kept plot's frost rim, the chip that names the snowfall. `--gem` is the gem currency and may not be borrowed for something that is not a gem; every other pale in the palette is cream, and cream snow reads as warm. |
 | **The Winter gate's sky** | `#b9cee0` over `#eaf4fb` and `#ffffff` | A winter sky, which the palette has none of — the same argument Fall's gate made for an autumn one, one season on, and only the top stop is new. |
+| **The Winter gate's pad** | `#b6cbdd` | The pad is the ground and the shadow is the contact — the meadow's rule. Fall's gate pad is `#b08c4c`, warm earth, and Holly standing on it read as a patch of autumn in a snow field. Same geometry, colder, one value. |
 
 **Holly's own colours are in `flora.js`, beside the drawing that uses them**, in the sense
 `Meadow.SKIES` and `Fall.SKIES` are: the plum ramp `#241426 / #3b2140`, the porcelain face
