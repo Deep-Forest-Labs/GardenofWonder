@@ -118,6 +118,9 @@
       </linearGradient>
       <radialGradient id="gface" cx="50%" cy="35%" r="70%">
         <stop offset="55%" stop-color="#ffffff"/><stop offset="100%" stop-color="#ffc978"/>
+      </radialGradient>
+      <radialGradient id="gholly" cx="50%" cy="34%" r="70%">
+        <stop offset="52%" stop-color="#ffffff"/><stop offset="100%" stop-color="#cbb0c0"/>
       </radialGradient></defs><style>.f-stemwrap{transform-origin:50% 120px;transform:scaleY(var(--sg,1))}
 .f-leaves{transform-origin:50px 96px;transform:scale(var(--lg,1));opacity:var(--lo,1)}
 .f-stemwrap,.f-head,.f-leaves,.f-petals{transition:transform .6s cubic-bezier(.34,1.4,.64,1)}

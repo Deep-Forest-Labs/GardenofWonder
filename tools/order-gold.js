@@ -139,20 +139,20 @@ function mulberry32(seed) {
   };
 }
 
-/* ---- the play model's knobs — tools/year-sim.js `casual`, unchanged ---- */
-const MODEL = {
-  sessionsPerDay: 4,
-  sessionHours: [8, 12.5, 18, 21.5],
-  sessionMinutes: 6,
-  tapsPerSecond: 0.8,
-  checkEverySeconds: 8,
-  badgeWalletShare: 0.05,
-  badges: ['tapPower', 'critChance', 'comboMeter', 'autoWater', 'critMult', 'plotExpansion',
-    'autoHarvest', 'offlineRate', 'offlineHours',
-    'plot1Harvester', 'plot2Harvester', 'plot3Harvester', 'plot4Harvester'],
-  wallReachDays: 1.2,
-  minYearHours: 12
-};
+/* ---- the play model ----
+   SHARED, in `tools/play-model.js`. This file used to carry a private copy of
+   year-sim's casual player, stripped of every explanatory comment — including
+   the load-bearing one about wheat sitting off the 1.4x/plot-hour curve, which
+   is the note that stops the model planting wheat in eight plots forever. Two
+   tools measuring the economy against two different people is two tools whose
+   numbers cannot be compared, and docs/46 named a THIRD copy — Winter's arm —
+   as the thing this extraction exists to prevent.
+
+   The three genuine divergences are HOOKS rather than branches: the
+   per-delivery instrument, the per-active-second rate window, and the Turn
+   that clears it. The trailing-income source is a fourth. */
+const PlayModel = require('./play-model');
+const { MODEL } = PlayModel;
 
 /* ---- the measurement's knobs ---- */
 const MEASURE = {
@@ -165,79 +165,6 @@ const MEASURE = {
   ledgerRows: 40,         // per-delivery rows printed without --ledger
   thinSample: 30          // below this many rows a median is indicative, not evidence
 };
-
-/* ---- the play model (year-sim's casual shape) ---- */
-function nextUnlockPrice() {
-  for (const s of DATA.seeds) {
-    if (!G.seedUnlocked(s.id)) return G.seedUnlockPrice(s.id);
-  }
-  return Infinity;
-}
-
-function bestPlantable() {
-  let pick = null;
-  DATA.seeds.forEach((s) => {
-    if (G.seedUnlocked(s.id) && S.credits >= s.cost) pick = s;
-  });
-  return pick;
-}
-
-function bestFallCrop() {
-  let pick = null;
-  let bestRate = -Infinity;
-  DATA.fall.plants.forEach((p) => {
-    if (p.century || S.credits < p.cost) return;
-    const rate = (p.yield - p.cost) / p.grow;
-    if (rate > bestRate) { bestRate = rate; pick = p; }
-  });
-  return pick;
-}
-
-function playFall() {
-  if (!G.fallOpen()) return;
-  S.fall.grid.forEach((cell, i) => {
-    if (cell.seed && cell.ready) G.fallHarvest(i);
-  });
-  S.fall.grid.forEach((cell, i) => {
-    if (cell.seed) return;
-    const pick = bestFallCrop();
-    if (pick) G.fallPlant(i, pick.id);
-  });
-}
-
-function blessTarget() {
-  for (const s of DATA.seeds) {
-    if (G.seedUnlocked(s.id) && G.petalsOf(s.id).rich < DATA.petals.shared.rich.cap) return s.id;
-  }
-  return null;
-}
-
-function buyPetals() {
-  for (;;) {
-    let best = null;
-    DATA.seeds.forEach((s) => {
-      if (!G.seedUnlocked(s.id)) return;
-      ['rich', 'quick'].forEach((skill) => {
-        if (G.petalsOf(s.id)[skill] >= DATA.petals.shared[skill].cap) return;
-        const cost = G.petalCost(s.id, skill);
-        if (!best || cost < best.cost) best = { id: s.id, skill, cost };
-      });
-    });
-    if (!best || S.savedSeeds < best.cost) break;
-    if (!G.buyPetal(best.id, best.skill)) break;
-  }
-}
-
-function claimQuests() {
-  const claimable = S.quests.active.filter((q) => {
-    const def = G.questById(q.id);
-    return def && q.progress >= def.qty;
-  });
-  claimable.forEach((q) => G.claimQuest(q.id));
-  const d = S.quests.daily;
-  const ddef = d && d.id ? G.questById(d.id) : null;
-  if (ddef && !d.claimed && d.progress >= ddef.qty) G.claimQuest(d.id);
-}
 
 /* ---- the rate window ----
    A plain ring of per-active-second earnings with the order gold already taken
@@ -311,56 +238,27 @@ function deliverInstrumented(slot, run) {
   return gold;
 }
 
-function playSessionSecond(run) {
-  const lifeBefore = S.lifetimeCoins;
-  let orderGold = 0;
-  G.tick(1);
-  const whole = Math.floor(MODEL.tapsPerSecond);
-  for (let t = 0; t < whole; t += 1) G.tapFlower(true);
-  if (Math.random() < MODEL.tapsPerSecond - whole) G.tapFlower(true);
-  if (Math.floor(clock) % MODEL.checkEverySeconds === 0) {
-    S.grid.forEach((cell, i) => {
-      if (cell.locked || !cell.seed || !cell.ready) return;
-      G.harvest(i);
-    });
-    S.grid.forEach((cell, i) => {
-      if (cell.locked || cell.seed) return;
-      const pick = bestPlantable();
-      if (pick) G.plant(i, pick);
-    });
-    for (let i = 0; i < STAND.slots; i += 1) orderGold += deliverInstrumented(i, run);
-    claimQuests();
-    playFall();
-    MODEL.badges.forEach((key) => {
-      if (G.upgradeMaxed(key)) return;
-      if (G.upgradePrice(key) < S.credits * MODEL.badgeWalletShare) G.buyUpgrade(key);
-    });
-    S.grid.forEach((cell, i) => {
-      if (cell.locked && G.plotAvailable(i) && S.credits >= G.plotUnlockCost(i) * 4) G.unlockPlot(i);
-    });
-    const price = nextUnlockPrice();
-    if (price !== Infinity && S.credits >= price) {
-      const seed = DATA.seeds.find((s) => !G.seedUnlocked(s.id));
-      G.unlockSeed(seed.id);
+let model = null;
+function bindModel(run) {
+  model = PlayModel.makeModel({
+    G, S, DATA, STAND,
+    now: () => clock,
+    dayNow,
+    hooks: {
+      onDeliver: (slot) => deliverInstrumented(slot, run),
+      onActiveSecond: (delta) => pushEarn(run.rate, delta),
+      /* A Turn takes the garden back to four plots: the seconds before it
+         describe an economy the next order is not being judged against. */
+      onTurn: () => clearRate(run.rate),
+      /* This tool reads the wallet's own lifetime where year-sim sums its turn
+         records — the one place the two players genuinely differ. */
+      lifetimeOf: () => S.lifetimeCoins,
+      /* `state.turns` is a COUNT here and an array of records in year-sim.
+         Both are right for their own report. */
+      recordTurn: (r) => { r.turns += 1; }
     }
-  }
-  pushEarn(run.rate, S.lifetimeCoins - lifeBefore - orderGold);
-}
-
-function maybeTurn(run) {
-  if (!G.turnReady()) return;
-  const yearAgeHours = (clock - run.yearStart) / 3600;
-  if (yearAgeHours < MODEL.minYearHours) return;
-  const wall = nextUnlockPrice();
-  const income = run.trailingIncome || S.lifetimeCoins / Math.max(0.3, dayNow());
-  if (wall !== Infinity && S.credits + income * MODEL.wallReachDays >= wall) return;
-  if (!G.turnYear(blessTarget())) return;
-  buyPetals();
-  run.turns += 1;
-  run.yearStart = clock;
-  // A Turn takes the garden back to four plots: the seconds before it describe
-  // an economy the next order is not being judged against.
-  clearRate(run.rate);
+  });
+  return model;
 }
 
 /* forcedTier: null for organic play, or a STAND.tiers entry to pin from
@@ -370,6 +268,11 @@ function run(seed, days, forcedTier) {
   Math.random = mulberry32(seed);
   clock = EPOCH;
   G.reset();
+  /* WINTER IS OFF IN THIS TOOL. It asks whether a delivered order is worth a
+     minute of the player's own time, and Winter is offline income wearing a
+     different name — it never enters `passiveIncomeRate()` and it is excluded
+     from the rate window for the same reason. Pacing is `year-sim`'s job. */
+  MODEL.winterArm = false;
   const state = {
     seed,
     forcedTier: forcedTier ? forcedTier.tier : null,
@@ -385,6 +288,7 @@ function run(seed, days, forcedTier) {
     trailingIncome: 0,
     repEnd: 0
   };
+  bindModel(state);
 
   let lifeAtDayStart = 0;
   for (let day = 0; day < days; day += 1) {
@@ -403,8 +307,8 @@ function run(seed, days, forcedTier) {
       const seconds = MODEL.sessionMinutes * 60;
       for (let t = 0; t < seconds; t += 1) {
         clock += 1;
-        playSessionSecond(state);
-        maybeTurn(state);
+        model.playSessionSecond('casual', state, {});
+        model.maybeTurn('casual', state);
       }
     }
     state.trailingIncome = Math.max(1, S.lifetimeCoins - lifeAtDayStart);

@@ -6753,14 +6753,18 @@ group('the plant picker padlocks the unlock wall and nothing else');
 /* There is no sim-test for the UI, so this reads the source the way the
    bench-quest guard does. The claim is about meaning rather than layout: a
    padlock is the one-time wall, and a row you will afford in ten seconds is
-   grey and nothing more. Both pickers write the same slot and syncAfford()
-   rewrites it on every coin, so all four writers are counted — a fix that
-   lands in the markup alone puts the padlock back a second after the panel
-   opens. */
+   grey and nothing more. Every picker writes the same slot and syncAfford()
+   rewrites it on every coin, so all writers are counted — a fix that lands in
+   the markup alone puts the padlock back a second after the panel opens.
+
+   THE COUNT IS THE SCOPE GUARD, and it moves when a picker is added: three
+   since 2026-09-01, when Winter's picker joined Summer's and Fall's. If you
+   are reading this because the number went wrong, the question to answer is
+   "does the new picker draw a padlock", not "what number makes it green". */
 const sheetSrc = fs.readFileSync(path.join(ROOT, 'ui-sheet.js'), 'utf8');
 const goSlots = [...sheetSrc.matchAll(/class="seed-go">([\s\S]*?)<\/span>/g)].map((m) => m[1])
   .concat([...sheetSrc.matchAll(/\.seed-go'[\s\S]{0,200}?innerHTML\s*=\s*([^;]+)/g)].map((m) => m[1]));
-check('the two pickers are the only writers of the go slot', goSlots.length === 2, `found ${goSlots.length}`);
+check('the three pickers are the only writers of the go slot', goSlots.length === 3, `found ${goSlots.length}`);
 check('no go slot can render a padlock', !goSlots.some((slot) => /lock/.test(slot)), goSlots.join(' | '));
 check('the retired sprout-or-lock ternary is gone from the file', !/'sprout'\s*:\s*'lock'/.test(sheetSrc));
 check('syncAfford leaves the go slot alone entirely', !/\.seed-go'[\s\S]{0,200}?innerHTML/.test(sheetSrc));

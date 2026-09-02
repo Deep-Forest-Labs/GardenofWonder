@@ -294,7 +294,23 @@ filter and tooltip guard rather than re-implementing; **the stages pass owns the
      re-pins it forward), because winding it back would hand out an offline absence the player
      did not have.
 4. **The surface**, faithful to the approved spikes; capture-screens gains Winter scenes and
-   docs 44/45 regenerate.
+   docs 44/45 regenerate. **SHIPPED, 2026-09-01.** As-built:
+
+   - `winter.js` (art) + `ui-winter.js` (board), mirroring `fall.js` / `ui-fall.js`. Board classes
+     are `wi-*` throughout and nothing here touches `.plot` or `data-stage`.
+   - **One button below the board whose verb is the bed's state** — Tuck the bed in → Tucked in →
+     Collect all — because Fall's Collect All already owns that strip at 132px and the band's two
+     buttons are not hidden in Winter either.
+   - **The speech bubble has a per-season home**, and it turned out to be two bugs: the node, and
+     `sayText()`'s coach test, which refused every line in a season room because the coach is
+     `display:none`'d there while `hidden` stays false. Fall's `windfall` line has drawn on screen
+     for the first time since Fall shipped.
+   - **The rail's room filter landed here** rather than waiting for the fix round — the #11 ruling
+     names Winter in its own words, and Winter is the season that makes the rule visible.
+   - `goSeason()` is a table of rooms with a leave-then-enter walk, so Spring is one row.
+   - Holly is in `flora.js` at the Talking Flower's construction, and in the avatar picker
+     **fitted**, gated on `seen.hollyIntro`.
+   - Eleven new colours: three declared ramps and one gate literal, all in docs/05 with reasons.
 5. **The gauntlet** (doc 34) — invariant coverage, partition, pacing, visual fidelity against
    the spikes then doc 05, the grammar critic (Winter reads as the same game at a different
    speed; Holly reads as this game's character and no one else's — silhouette test re-run), the

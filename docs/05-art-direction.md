@@ -545,6 +545,34 @@ Phase 3 added three more, on the same terms:
 Fall's scene palette (`SKIES.sun` / `SKIES.moon` in `fall.js`) is a component palette in the same
 sense as `Meadow.SKIES`, and lives beside the drawing that uses it.
 
+Slice C — Winter, 2026-09-01 — added **three ramps and one literal**, on the same terms. The count
+went to eleven new distinct colours and no more; the first pass was eighteen, and the seven that
+came off it are worth recording because each one was a restatement waiting to be found: Winter's
+growth bar took a cream well and a frost-blue fill, and now takes **the garden's own dark track and
+the garden's own green** (a cream well draws a bright line across the plant — Fall's note already
+said so — and green means *growing* in every room, learned once); and a "snow" family and a "frost"
+family that sat two percent apart are **one ramp**, because frost is snow seen closer up.
+
+| Ramp | Values | Why it could not reuse one |
+| --- | --- | --- |
+| **Winter's frame** | `#3f4959 → #313947 → #262c37`, lip `#191e26` | The board is the **dark body** against a near-white world — the same job Summer's planter does against the lawn, and the opposite polarity to Fall's pale trug on olive ground. Neither of those bodies is cold, and a warm brown board in a snow field is Summer with the lights off. |
+| **Winter's cell** | `#7d8798 → #68717f → #565e6b`, lip `#414854` | Frozen earth, the mid body inside the darker board. It has to stay light enough that an ink bloom outline and an ink empty-marker still read on it: the first pass made the cells near-black on the theory that white blooms want dark ground, and both simply disappeared. |
+| **Snow and frost** | `#eaf4fb`, `#bcd6e8` (with `#ffffff`, already here) | One material at three values — the snow on the board's rail, the kept plot's frost rim, the chip that names the snowfall. `--gem` is the gem currency and may not be borrowed for something that is not a gem; every other pale in the palette is cream, and cream snow reads as warm. |
+| **The Winter gate's sky** | `#b9cee0` over `#eaf4fb` and `#ffffff` | A winter sky, which the palette has none of — the same argument Fall's gate made for an autumn one, one season on, and only the top stop is new. |
+
+**Holly's own colours are in `flora.js`, beside the drawing that uses them**, in the sense
+`Meadow.SKIES` and `Fall.SKIES` are: the plum ramp `#241426 / #3b2140`, the porcelain face
+`#f7eef2` with `#cbb0c0` shading, and the frost `#eaf4fb / #93b6d0`. Two things about that palette
+are deliberate and were checked rather than assumed. **Her hot pink is `#ff5d95` and it is not
+new** — that is `gp-talker`'s own bottom stop, the Summer flower's petal gradient, so the palette
+gains a *use* rather than a hue and the rivalry says itself: the dark one is lined with the bright
+one's colour on the inside of her petals. And **her mouth restates `#a83250`**, the Talking
+Flower's own. The plum is near-black on purpose: a mid-purple would read as the Epic family, and a
+rarity colour may never be borrowed for something that is not a rarity.
+
+**Winter's scene palette** (`SKIES.sun` / `SKIES.moon` in `winter.js`) is a component palette like
+Fall's and the meadow's, and lives beside the drawing that uses it.
+
 Phase 3.8 added no ramp, but it did add four alphas, declared here under check 5:
 
 | Where | Values | Why |

@@ -100,6 +100,7 @@
       quests: 'Quests', orders: 'Orders & Quests', year: 'The Year',
       dev: 'Developer tools', welcome: 'While you were away', feed: 'Feed',
       critter: '', stand: '', order: '', turn: '', crops: 'Choose a crop',
+      winterPlants: 'Choose a winter plant',
       keepers: 'Keepers', shelf: 'The Honey Shelf', build: 'What goes here?',
       album: 'Cards', cardset: 'Set', pack: 'Opening a pack'
     };
@@ -136,7 +137,7 @@
       upgrades: renderUpgrades, craft: renderCraft, shop: renderShop,
       seeds: renderSeeds, bonuses: renderBonuses, settings: renderSettings, quests: renderQuests,
       orders: renderOrders, year: renderYear,
-      turn: renderTurn, crops: renderCrops,
+      turn: renderTurn, crops: renderCrops, winterPlants: renderWinterPlants,
       dev: renderDev, welcome: renderWelcome, feed: renderFeed, critter: renderCritter,
       stand: renderStand, order: renderOrder,
       keepers: renderKeepers, shelf: renderShelf, build: renderBuild,
@@ -843,12 +844,23 @@
        once the strip exists to honour it, and until then the card says the
        thing that is true. */
     const strip = Boolean(UI.enterSeason);
+    /* BEAT ONE OF HOLLY'S INTRODUCTION: the gate lifts where the player is
+       standing. Winter's card is Fall's card one season on — same object, a
+       different sky and a different face — and the face is Holly's rather than
+       a bloom's, because this card is the first time anybody meets her. Beat
+       two is `hollyIntro`, spoken in her own room on first entry. */
     const gate = r.fallOpens ? `<div class="gate-card">
       <div class="gate-scene${strip ? '' : ' shut'}">
         <span class="hedge l">${UI.hedge(false)}</span><span class="hedge r">${UI.hedge(true)}</span>
         <span class="gate-bloom">${Flora.head(Game.seedById('marigold') || DATA.seeds[0], 62)}</span></div>
       <div class="gate-foot"><span>${strip ? 'Fall is open' : 'Fall opens next'}</span>
         ${strip ? `<span class="chip">${Icons.get('leaf')}the tab on the right</span>` : ''}</div>
+    </div>` : r.winterOpens ? `<div class="gate-card">
+      <div class="gate-scene winter${strip ? '' : ' shut'}">
+        <span class="hedge l">${UI.hedge(false)}</span><span class="hedge r">${UI.hedge(true)}</span>
+        <span class="gate-bloom">${Flora.hollyFace(70)}</span></div>
+      <div class="gate-foot"><span>${strip ? 'Winter is open' : 'Winter opens next'}</span>
+        ${strip ? `<span class="chip">${Icons.get('snow')}past Fall, on the right</span>` : ''}</div>
     </div>` : '';
     const blessed = r.blessed ? `<div class="cost-line good">${Icons.get('star')}<span>
       <b>${Game.seedById(r.blessed).name}</b> carries your blessing — a free Rich Bloom petal.</span></div>` : '';
@@ -856,7 +868,9 @@
       <div class="cere-flower">${Flora.talkingFlower()}</div>
       <div class="speech-block">${r.fallOpens
         ? 'A whole new year — and somewhere new to put it.'
-        : 'A whole new year. I can already smell it.'}</div>
+        : r.winterOpens
+          ? 'A whole new year — and somewhere cold to put it. Be nice to her.'
+          : 'A whole new year. I can already smell it.'}</div>
       ${gate}
       ${blessed}
       <div class="keep-row">${chips}</div>
@@ -971,6 +985,33 @@
        A single cell is a plot, here as in Summer. */
     return `<p class="sheet-note">Planting into plot ${idx + 1}. Every plot ripe at once pays
       <b>+${pct}%</b> on the whole bed.</p>${crops}${century}`;
+  }
+
+  /* Winter's picker. Three stat pills like Fall's, plus one that says the
+     season's rule at the point of purchase — the chip above the board carries
+     it too, and a rule met twice on the way in is a rule learned once. */
+  function renderWinterPlants() {
+    const idx = sheetArg ?? 0;
+    const pct = Math.round(DATA.winter.snowfall * 100);
+    const rows = DATA.winter.plants.map((p) => {
+      const can = S.credits >= p.cost;
+      const tint = (Winter.PLANTS[p.id] || {}).c1 || '#dbe8f2';
+      return `<button class="seed-row" data-winter-plant="${p.id}" ${can ? '' : 'disabled'}>
+        <span class="seed-art" style="--art:${tint}">${Winter.bloom(p.id, 3)}</span>
+        <span>
+          <span class="seed-name">${p.name}</span>
+          <span class="seed-stats">
+            <span class="stat">${Icons.get('coin')}${fmt(p.cost)}</span>
+            <span class="stat">${Icons.get('clock')}${fmtSpan(p.grow)}</span>
+            <span class="stat good">${Icons.get('coin')}${fmt(p.yield)}</span>
+          </span>
+        </span>
+        <span class="seed-go">${Icons.get('sprout')}</span>
+      </button>`;
+    }).join('');
+    return `<p class="sheet-note">Planting into plot ${idx + 1}. Winter plants keep their own
+      hours — tuck the bed in, and whatever opens under the quilt pays
+      <b>+${pct}%</b> in the morning.</p>${rows}`;
   }
 
   function renderSeeds() {
@@ -2155,6 +2196,17 @@
     if (r.jars) {
       lines.push(`<li>${Icons.get('hive')}<span>The bees left <b>${r.jars}</b> ${r.jars === 1 ? 'jar' : 'jars'}.</span></li>`);
     }
+    /* WINTER, IN ONE LINE. The snowfall is named because it is the reason the
+       number is bigger than the player expects, and Holly is credited when the
+       bed was tucked — that is the whole of her job, said once. Reporting, and
+       never a new faucet: nothing here pays anything. */
+    if (r.winterRipe) {
+      const pct = Math.round(DATA.winter.snowfall * 100);
+      const blooms = `<b>${r.winterRipe}</b> ${r.winterRipe === 1 ? 'bloom' : 'blooms'}`;
+      lines.push(`<li class="away-winter">${Icons.get('snow')}<span>${r.winterKept
+        ? `Winter opened ${blooms} overnight${r.winterKept === r.winterRipe ? '' : `, <b>${r.winterKept}</b> of them`} under the quilt — the snowfall pays <b>+${pct}%</b> on ${r.winterKept === 1 ? 'it' : 'those'}. Holly kept watch.`
+        : `Winter opened ${blooms} while you were gone.`}</span></li>`);
+    }
 
     return `
       <p class="away-lede">You were gone <b>${awayWords(r.away)}</b>. The garden kept going.</p>
@@ -2339,6 +2391,11 @@
         <button class="dev-btn" data-dev="fallFill" data-arg="1">Fill the bed</button>
         <button class="dev-btn" data-dev="fallRipen" data-arg="1">Ripen the bed</button>
         <button class="dev-btn" data-dev="fallHarvestAll" data-arg="1">Harvest the bed</button>`)}
+      ${devRow(`Winter — ${Game.winterOpen() ? (Game.winterTucked() ? 'open, tucked in' : 'open') : `opens at Turn ${DATA.year.winterTurn}`}`, `
+        <button class="dev-btn" data-dev="winterFill" data-arg="1">Plant the bed</button>
+        <button class="dev-btn" data-dev="winterTuck" data-arg="1">Tuck it in</button>
+        <button class="dev-btn" data-dev="winterNight" data-arg="1">Sleep a whole night</button>
+        <button class="dev-btn" data-dev="winterHarvestAll" data-arg="1">Collect the morning</button>`)}
       ${devRow(`What's New — ${newsReport()}`, `
         <button class="dev-btn" data-dev="newsShow" data-arg="1">Preview announcement</button>
         <button class="dev-btn warn" data-dev="newsClear" data-arg="1">Clear announcement flags</button>
@@ -2529,6 +2586,34 @@
         ok = Game.buyPetal('daisy', arg);
         deny = 'Not enough Saved Seeds, or the skill is at its cap.';
         break;
+      case 'winterFill':
+        ok = D.fillWinter() > 0;
+        deny = Game.winterOpen() ? 'The bed is already full.' : `Winter opens at Turn ${DATA.year.winterTurn}.`;
+        break;
+      case 'winterTuck':
+        ok = Game.winterTuck();
+        deny = Game.winterOpen() ? 'The bed is already tucked in.' : `Winter opens at Turn ${DATA.year.winterTurn}.`;
+        if (ok && UI.winterOpen && UI.winterOpen()) UI.renderWinter();
+        break;
+      case 'winterNight':
+        ok = D.nightWinter() > 0;
+        deny = Game.winterTucked() ? 'Nothing is growing in Winter.' : 'Tuck the bed in first — a night nobody kept pays nothing.';
+        if (ok && UI.winterOpen && UI.winterOpen()) UI.renderWinter();
+        break;
+      case 'winterHarvestAll': {
+        const r = Game.winterHarvestAll();
+        ok = Boolean(r);
+        deny = 'Nothing in Winter is ready.';
+        if (ok) {
+          UI.toast({
+            title: `Winter &middot; +${fmt(r.payout)}`,
+            body: `${r.plots} collected${r.kept ? `, ${r.kept} kept overnight` : ''}`,
+            art: Icons.get('snow')
+          });
+          if (UI.winterOpen && UI.winterOpen()) UI.renderWinter();
+        }
+        break;
+      }
       case 'fallFill':
         ok = D.fillFall() > 0;
         deny = Game.fallOpen() ? 'The bed is already full.' : 'Fall opens at the first Turn.';
@@ -2858,6 +2943,21 @@
       return;
     }
 
+    const wplant = e.target.closest('[data-winter-plant]');
+    if (wplant) {
+      const idx = sheetArg ?? 0;
+      if (Game.winterPlant(idx, wplant.dataset.winterPlant)) {
+        Sound.play('buy');
+        FX.haptic(8);
+        closeSheet();
+        UI.renderWinter();
+      } else {
+        Sound.play('deny');
+        FX.shake(3);
+      }
+      return;
+    }
+
     const plant = e.target.closest('[data-plant]');
     if (plant) {
       const seed = Game.seedById(plant.dataset.plant);
@@ -3126,6 +3226,11 @@
     });
     $$('[data-crop]', el.sheetBody).forEach((node) => {
       const p = DATA.fall.plants.find((x) => x.id === node.dataset.crop);
+      const can = Boolean(p) && S.credits >= p.cost;
+      node.disabled = !can;
+    });
+    $$('[data-winter-plant]', el.sheetBody).forEach((node) => {
+      const p = DATA.winter.plants.find((x) => x.id === node.dataset.winterPlant);
       const can = Boolean(p) && S.credits >= p.cost;
       node.disabled = !can;
     });

@@ -174,6 +174,19 @@ const Icons = (() => {
 
   /* Apiary + Apothecary */
   Object.assign(LIB, {
+    /* Winter's two, added 2026-09-01 with the night shift. Not monochrome: a
+       snowflake is frost-blue and a quilt is patchwork, because colour is how
+       you tell an icon apart at a glance on a phone. */
+    snow: S(`
+      <path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" stroke="#7fb6dd" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <path d="M12 6.6 9.8 4.4M12 6.6l2.2-2.2M12 17.4l-2.2 2.2M12 17.4l2.2 2.2" stroke="#7fb6dd" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <circle cx="12" cy="12" r="2.2" fill="#eaf4fb"/>`),
+    quilt: S(`
+      <path d="M3.4 8.6c2.2-2.8 5.2-4.2 8.6-4.2s6.4 1.4 8.6 4.2v9.8a2 2 0 0 1-2 2H5.4a2 2 0 0 1-2-2Z" fill="#fff8e7"/>
+      <path d="M9 6.2v14M15 6.2v14M3.4 13.4h17.2" stroke-width="1.5"/>
+      <path d="M9 6.9a10 10 0 0 1 6 0v6.5H9Z" fill="#dbe8f2" stroke="none"/>
+      <path d="M15 13.4h5.6v5H15Z" fill="#ffe0ad" stroke="none"/>
+      <path d="M3.4 8.6c2.2-2.8 5.2-4.2 8.6-4.2s6.4 1.4 8.6 4.2v9.8a2 2 0 0 1-2 2H5.4a2 2 0 0 1-2-2Z" fill="none"/>`),
     hive: S(`
       <path d="M6.6 5.4h10.8a1.6 1.6 0 0 1 0 3.2H6.6a1.6 1.6 0 0 1 0-3.2Z" fill="#ffc93c"/>
       <path d="M5.4 8.6h13.2a1.6 1.6 0 0 1 0 3.2H5.4a1.6 1.6 0 0 1 0-3.2Z" fill="#ffd85e"/>

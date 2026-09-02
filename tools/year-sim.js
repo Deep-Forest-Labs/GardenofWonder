@@ -1,6 +1,10 @@
 /* The Garden Year — headless pacing model.
    Run with:  node tools/year-sim.js [days] [strategy]
-              strategy: casual (default) | rush | smart | all
+              strategy: casual | rush | smart | winter | all (default)
+
+   SEEDED since 2026-09-01, and the play model is shared with
+   `tools/order-gold.js` in `tools/play-model.js`. Five runs of identical code
+   used to return OK, OK, OK, FAIL, FAIL; the verdict is a verdict now.
 
    Drives the REAL game.js through simulated days of play and measures the
    year against the docs/33-year-one-economy.md targets:
@@ -77,204 +81,52 @@ const G = globalThis.Game;
 const S = G.state;
 
 /* ---- the clock ---- */
-let clock = Date.now() / 1000;
+/* A FIXED EPOCH, for the same reason tools/sim-test.js has one: weather is a
+   pure function of the clock and the sky changes how fast things grow, so a
+   run seeded from the wall clock measures a different world every time. */
+let clock = 1767269100;
+const DEFAULT_SEED = 20260901;
 const dayZero = clock;
 Date.now = () => clock * 1000;
 const dayNow = () => (clock - dayZero) / 86400;
 
-/* ---- the play model's knobs ----
-   The casual player the doc-33 model describes rides each year to its WALL:
-   the meter's gate opens at minCoins, but they keep playing until the next
-   seed unlock is genuinely out of reach and only then accept the flower's
-   invitation. `smart` plays identically but turns the moment the gate opens;
-   `rush` is the handicapped daisy-only probe kept for the historical shape. */
-const MODEL = {
-  sessionsPerDay: 4,               // wake, lunch, evening, night
-  sessionHours: [8, 12.5, 18, 21.5],
-  sessionMinutes: 6,               // active minutes per session
-  tapsPerSecond: 0.8,              // bursty casual tapping, not a held grind
-  checkEverySeconds: 8,            // how often the player looks at the plots at all
-  badgeWalletShare: 0.05,          // buy a badge when it costs under this share of the wallet
-  /* The automation badges are in the list on purpose: without the drone,
-     passiveIncomeRate() short-circuits to zero and the model measures an idle
-     game with its idle half switched off — every offline gap in the run pays
-     nothing, and bill item 10 (petals reach passiveIncomeRate) has no pacing
-     evidence behind it. The harvesters are what the drone collects from. */
-  badges: ['tapPower', 'critChance', 'comboMeter', 'autoWater', 'critMult', 'plotExpansion',
-    'autoHarvest', 'offlineRate', 'offlineHours',
-    'plot1Harvester', 'plot2Harvester', 'plot3Harvester', 'plot4Harvester'],
-  wallReachDays: 1.2,              // the wall is "in reach" within this many days of trailing income
-  minYearHours: 12                 // never turn a year younger than this (casual only)
-};
+/* ---- the play model ----
+   SHARED, in `tools/play-model.js`. This file and `tools/order-gold.js` each
+   carried a private copy of the same casual player, and docs/11 has carried
+   "seed the referee, then use it" as a standing item ever since. The copies had
+   already drifted — order-gold's was stripped of every explanatory comment,
+   including the wheat note that stops the model planting wheat in eight plots
+   forever — and docs/46 named a THIRD copy, Winter's arm, as the thing this
+   extraction exists to prevent. Calibrate the MODEL knobs to represent a
+   person; never calibrate the economy there. */
+const PlayModel = require('./play-model');
+const { MODEL, mulberry32 } = PlayModel;
 
-function nextUnlockPrice() {
-  for (const s of DATA.seeds) {
-    if (!G.seedUnlocked(s.id)) return G.seedUnlockPrice(s.id);
-  }
-  return Infinity;
-}
-
-function bestPlantable() {
-  let pick = null;
-  DATA.seeds.forEach((s) => {
-    if (G.seedUnlocked(s.id) && S.credits >= s.cost) pick = s;
-  });
-  return pick;
-}
-
-/* Best by coins per plot-hour, not last-affordable-in-array-order. Wheat is
-   listed after apple in data.js and is deliberately off the 1.4x-per-hour
-   curve (2,000/plot-hour against apple's 2,400), so an array-order pick made
-   the model plant wheat in all eight plots forever the moment the wallet
-   passed 20,000 — never planting the crop doc 33 calls the overnight anchor,
-   and understating Fall's ceiling for both the casual player and the
-   turn-spam adversary that parks its doomed wallet there. */
-function bestFallCrop() {
-  let pick = null;
-  let bestRate = -Infinity;
-  DATA.fall.plants.forEach((p) => {
-    if (p.century || S.credits < p.cost) return;
-    const rate = (p.yield - p.cost) / p.grow;
-    if (rate > bestRate) { bestRate = rate; pick = p; }
-  });
-  return pick;
-}
-
-function playFall() {
-  if (!G.fallOpen()) return;
-  S.fall.grid.forEach((cell, i) => {
-    if (cell.seed && cell.ready) G.fallHarvest(i);
-  });
-  S.fall.grid.forEach((cell, i) => {
-    if (cell.seed) return;
-    const pick = bestFallCrop();
-    if (pick) G.fallPlant(i, pick.id);
-  });
-}
-
-/* The blessing goes to the cheapest flower whose Rich Bloom still has room —
-   always blessing Daisy wastes every blessing once it caps. */
-function blessTarget() {
-  for (const s of DATA.seeds) {
-    if (G.seedUnlocked(s.id) && G.petalsOf(s.id).rich < DATA.petals.shared.rich.cap) return s.id;
-  }
-  return null;
-}
-
-/* Spend the pouch the way a person does after a Turn: cheapest useful petal
-   first, across every unlocked flower, both shared skills. */
-function buyPetals() {
-  let bought = 0;
-  for (;;) {
-    let best = null;
-    DATA.seeds.forEach((s) => {
-      if (!G.seedUnlocked(s.id)) return;
-      ['rich', 'quick'].forEach((skill) => {
-        if (G.petalsOf(s.id)[skill] >= DATA.petals.shared[skill].cap) return;
-        const cost = G.petalCost(s.id, skill);
-        if (!best || cost < best.cost) best = { id: s.id, skill, cost };
-      });
-    });
-    if (!best || S.savedSeeds < best.cost) break;
-    if (!G.buyPetal(best.id, best.skill)) break;
-    bought += 1;
-  }
-  return bought;
-}
-
-function claimQuests() {
-  const claimable = S.quests.active.filter((q) => {
-    const def = G.questById(q.id);
-    return def && q.progress >= def.qty;
-  });
-  claimable.forEach((q) => G.claimQuest(q.id));
-  const d = S.quests.daily;
-  const ddef = d && d.id ? G.questById(d.id) : null;
-  if (ddef && !d.claimed && d.progress >= ddef.qty) G.claimQuest(d.id);
-}
-
-function playSessionSecond(strategy, results) {
-  G.tick(1);
-  // taps: floor(x) certain taps plus one roll at the true fractional remainder
-  const whole = Math.floor(MODEL.tapsPerSecond);
-  for (let t = 0; t < whole; t += 1) G.tapFlower(true);
-  if (Math.random() < MODEL.tapsPerSecond - whole) G.tapFlower(true);
-  // A person checks the beds every so often, not every second.
-  if (Math.floor(clock) % MODEL.checkEverySeconds !== 0) return;
-  // harvest everything ready, replant
-  S.grid.forEach((cell, i) => {
-    if (cell.locked || !cell.seed || !cell.ready) return;
-    G.harvest(i);
-  });
-  S.grid.forEach((cell, i) => {
-    if (cell.locked || cell.seed) return;
-    const pick = strategy === 'rush' ? (S.credits >= DATA.seeds[0].cost ? DATA.seeds[0] : null) : bestPlantable();
-    if (pick) G.plant(i, pick);
-  });
-  // deliver what the stand will take
-  for (let i = 0; i < STAND.slots; i += 1) {
-    const o = G.standOrderAt(i);
-    if (o && G.standCanDeliver(o)) G.standDeliver(i);
-  }
-  claimQuests();
-  if (strategy !== 'rush') {
-    playFall();
-    // badges, when cheap against the wallet
-    MODEL.badges.forEach((key) => {
-      if (G.upgradeMaxed(key)) return;
-      if (G.upgradePrice(key) < S.credits * MODEL.badgeWalletShare) G.buyUpgrade(key);
-    });
-    // plots 5–8, once a Turn has opened them
-    S.grid.forEach((cell, i) => {
-      if (cell.locked && G.plotAvailable(i) && S.credits >= G.plotUnlockCost(i) * 4) G.unlockPlot(i);
-    });
-    // the next unlock, the moment the wallet reaches it
-    const price = nextUnlockPrice();
-    if (price !== Infinity && S.credits >= price) {
-      const seed = DATA.seeds.find((s) => !G.seedUnlocked(s.id));
-      if (G.unlockSeed(seed.id)) results.diary.push(`day ${dayNow().toFixed(2)}: unlocked ${seed.name} for ${price.toLocaleString()}`);
+let model = null;
+function bindModel(results) {
+  model = PlayModel.makeModel({
+    G, S, DATA, STAND,
+    now: () => clock,
+    dayNow,
+    hooks: {
+      diary: (line) => results.diary.push(line)
     }
-  }
-}
-
-function maybeTurn(strategy, results) {
-  if (!G.turnReady()) return;
-  const yearAgeHours = (clock - results.yearStart) / 3600;
-  if (strategy === 'casual') {
-    const wall = nextUnlockPrice();
-    if (yearAgeHours < MODEL.minYearHours) return;
-    /* Ride the year until the next wall sits more than a day's income away.
-       Before a full day exists, extrapolate from what today has earned. */
-    const lifetime = results.turns.reduce((a, t) => a + t.earned, 0) + S.year.coinsEarned;
-    const income = results.trailingIncome || lifetime / Math.max(0.3, dayNow());
-    if (wall !== Infinity && S.credits + income * MODEL.wallReachDays >= wall) return;
-  }
-  if (strategy === 'smart') {
-    /* The rational pre-Turn move: gold is about to zero, Fall beds survive
-       the Turn — convert the doomed wallet into growing crops. */
-    playFall();
-  }
-  const turnNo = S.year.turnsCompleted + 1;
-  const r = G.turnYear(blessTarget());
-  if (!r) return;
-  const petals = buyPetals();
-  results.turns.push({
-    turn: turnNo,
-    day: dayNow(),
-    earned: Math.round(r.earned),
-    pouch: r.pouch,
-    tallyMult: r.tally.mult,
-    petals,
-    blessed: r.blessed ? 1 : 0,
-    seedsLeft: S.savedSeeds
   });
-  results.yearStart = clock;
+  return model;
 }
 
-function run(strategy, days) {
+function run(strategy, days, opts = {}) {
+  /* SEEDED, and this is the whole reason docs/11 kept the item open: five runs
+     of identical code returned OK, OK, OK, FAIL, FAIL, so the verdict was a
+     coin flip rather than a verdict. Every arm gets the same stream, so a
+     paired comparison — Winter on against Winter off — differs by the arm and
+     by nothing else. */
+  Math.random = mulberry32(opts.seed === undefined ? DEFAULT_SEED : opts.seed);
+  MODEL.winterArm = opts.winter !== false;
   G.reset();
   clock = dayZero;
   const results = { strategy, turns: [], yearStart: clock, cumEarned: 0, snapshots: [], diary: [] };
+  bindModel(results);
   const cumEarnedNow = () => results.turns.reduce((a, t) => a + t.earned, 0) + S.year.coinsEarned;
 
   let lifetimeAtDayStart = 0;
@@ -285,8 +137,8 @@ function run(strategy, days) {
       const seconds = MODEL.sessionMinutes * 60;
       for (let t = 0; t < seconds; t += 1) {
         clock += 1;
-        playSessionSecond(strategy, results);
-        maybeTurn(strategy, results);
+        model.playSessionSecond(strategy, results, { nightSession: s === MODEL.winterTuckSession });
+        model.maybeTurn(strategy, results);
       }
     }
     results.trailingIncome = Math.max(1, cumEarnedNow() - lifetimeAtDayStart);
@@ -347,10 +199,164 @@ const report = (r) => {
   return r;
 };
 
-if (strategy === 'all') {
-  const casual = report(run('casual', days));
-  const rush = report(run('rush', days));
-  const smart = report(run('smart', days));
+/* ================================================================
+   WINTER — the pacing measurement, and guardrail one.
+
+   PAIRED AND SEEDED. Two runs of the same person on the same random stream,
+   differing only in whether they play the night shift, so the delta is the
+   season and nothing else. The metric doc 46 asks for is a kept night's payout
+   as a share of the casual player's trailing daily income — and Winter's
+   payouts are excluded from any per-active-minute rate for the reason
+   order-gold's preamble gives about offline income.
+
+   GUARDRAIL ONE IS AN EXIT CODE, not a hope: a single full kept night must not
+   clear both Turn gates on its own at Turns 3–6. The gates are
+   `DATA.year.minCoins` and the `minSeeds` increment, and every extra Turn pays
+   the blessing — the one per-Turn faucet nothing prices. This is the assertion
+   that keeps the cost ladder honest when somebody retunes it.
+   ================================================================ */
+function winterMeasurement() {
+  const withWinter = run('casual', days, { winter: true });
+  const without = run('casual', days, { winter: false });
+
+  const lastOf = (r) => r.snapshots[r.snapshots.length - 1];
+  const a = lastOf(withWinter);
+  const b = lastOf(without);
+
+  console.log(`\n=== Winter — the night shift, measured (${days} days, seeded, paired) ===`);
+  console.log(`  with Winter:    lifetime ${a.cumEarned.toLocaleString().padStart(13)} · ${String(a.turns).padStart(2)} turns · ${String(a.savedSeedsMinted).padStart(5)} seeds minted`);
+  console.log(`  without Winter: lifetime ${b.cumEarned.toLocaleString().padStart(13)} · ${String(b.turns).padStart(2)} turns · ${String(b.savedSeedsMinted).padStart(5)} seeds minted`);
+  const lift = b.cumEarned > 0 ? (a.cumEarned / b.cumEarned - 1) * 100 : 0;
+  console.log(`  Winter's lift on lifetime coins: ${lift >= 0 ? '+' : ''}${lift.toFixed(1)}%`);
+
+  /* A FULL KEPT NIGHT, priced from the data rather than from a run: eight
+     plots of one plant, every one of them kept. Every rung is checked, because
+     the guardrail is about the LADDER and not about the rung a run happened to
+     reach. */
+  console.log('\n  a full kept night, per rung — net of what the bed cost to sow:');
+  const gate = DATA.year;
+  const rungs = DATA.winter.plants.map((p) => {
+    const gross = Math.round(p.yield * (1 + DATA.winter.snowfall)) * DATA.winter.plots;
+    const cost = p.cost * DATA.winter.plots;
+    return { p, gross, net: gross - cost };
+  });
+  rungs.forEach(({ p, gross, net }) => {
+    console.log(`    ${p.name.padEnd(15)} ${String(Math.round(p.grow / 3600)).padStart(2)}h  gross ${gross.toLocaleString().padStart(10)} · net ${net.toLocaleString().padStart(10)}`);
+  });
+
+  /* THE ASSERTION, and getting it right took a correction worth keeping. Both
+     gates, from one night, WITH NOTHING ELSE PLAYED — measured against the
+     ledgers as they actually stand at Turns 3-6 rather than against a zero
+     baseline. The mint is CUMULATIVE (`mintK*sqrt(lifetime) - mintedBase`), so
+     pricing a night's net as `mintK*sqrt(net)` treats every night as the
+     player's first and overstates the seed side by an order of magnitude. The
+     honest question is the INCREMENT: at the lifetime this player has actually
+     reached, what does one more night's net mint? */
+  const gateTurns = withWinter.turns.filter((t) => t.turn >= 3 && t.turn <= 6);
+  console.log(`\n  gates: minCoins ${gate.minCoins.toLocaleString()} · minSeeds ${gate.minSeeds}`);
+  if (!gateTurns.length) {
+    console.log('  GUARDRAIL ONE: NOT MEASURED — this run reached no Turn between 3 and 6.');
+    console.log('  Run more days. A guardrail nothing exercised is not a guardrail.');
+    process.exitCode = 1;
+  } else {
+    const breaches = [];
+    gateTurns.forEach((t) => {
+      rungs.forEach(({ p, net }) => {
+        if (net < gate.minCoins) return;                       // the coin gate alone
+        const minted = gate.mintK * Math.sqrt(t.lifetime + net) - t.mintedBase;
+        const already = gate.mintK * Math.sqrt(t.lifetime) - t.mintedBase;
+        const increment = minted - already;
+        if (increment >= gate.minSeeds) breaches.push({ turn: t.turn, p, net, increment });
+      });
+    });
+    const worst = {};
+    gateTurns.forEach((t) => {
+      rungs.forEach(({ p, net }) => {
+        const inc = gate.mintK * Math.sqrt(t.lifetime + net) - gate.mintK * Math.sqrt(t.lifetime);
+        const k = `${t.turn}|${p.id}`;
+        worst[k] = { turn: t.turn, name: p.name, net, inc, clearsCoins: net >= gate.minCoins };
+      });
+    });
+    console.log(`  measured at this run's Turns ${gateTurns.map((t) => t.turn).join(', ')} — lifetime ${
+      gateTurns.map((t) => Math.round(t.lifetime / 1000) + 'K').join(', ')}`);
+    const topRung = rungs[rungs.length - 1];
+    gateTurns.forEach((t) => {
+      const inc = gate.mintK * Math.sqrt(t.lifetime + topRung.net) - gate.mintK * Math.sqrt(t.lifetime);
+      console.log(`    Turn ${t.turn}: the richest night (8 ${topRung.p.name}, net ${
+        topRung.net.toLocaleString()}) clears the coin gate ${
+        topRung.net >= gate.minCoins ? 'YES' : 'no'} · mints ${inc.toFixed(2)} seeds against a gate of ${gate.minSeeds}`);
+    });
+    if (breaches.length) {
+      console.log(`\n  GUARDRAIL ONE: FAIL — a single full kept night clears BOTH Turn gates:`);
+      breaches.slice(0, 6).forEach(({ turn, p, net, increment }) => {
+        console.log(`    Turn ${turn}, 8 ${p.name}: net ${net.toLocaleString()} mints ${increment.toFixed(2)} seeds (gate ${gate.minSeeds})`);
+      });
+      console.log('  One night should not be a whole Turn. Every extra Turn also pays the blessing,');
+      console.log('  which nothing prices — so this compounds. The dial is DATA.winter\'s cost ladder');
+      console.log('  (raise the costs, which lowers the net) or DATA.year.minCoins / minSeeds, and');
+      console.log('  the second of those is outside this slice. See docs/33 and docs/46.');
+      process.exitCode = 1;
+    } else {
+      console.log('\n  GUARDRAIL ONE: OK — at every Turn between 3 and 6 this run reached, no rung\'s');
+      console.log('  single full kept night clears both gates. The coin gate falls to the top rungs');
+      console.log('  on its own, which is expected and is why the SEED gate is the binding one:');
+      console.log('  the mint is cumulative, so a night is worth less the further in the player is.');
+    }
+  }
+
+  /* THE NUMBER THAT ACTUALLY MATTERS, and it is a threshold rather than a
+     verdict. A pass above depends entirely on how rich this model's player is
+     by Turn 3 — the mint is cumulative, so the same night is worth fewer seeds
+     the further in they are. Solving `mintK*(sqrt(L+net) - sqrt(L)) = minSeeds`
+     for L gives the lifetime BELOW WHICH the richest kept night clears both
+     gates on its own. A player poorer than that at Turn 3 breaks the guardrail
+     however green the assertion above is, so this line is reported every run
+     whether it passes or not. */
+  {
+    const top = rungs[rungs.length - 1];
+    const k = gate.minSeeds / gate.mintK;                    // sqrt(L+net) - sqrt(L)
+    const threshold = k * k >= top.net ? 0 : Math.pow((top.net - k * k) / (2 * k), 2);
+    const reached = withWinter.turns.filter((t) => t.turn >= 3 && t.turn <= 6).map((t) => t.lifetime);
+    const lowest = reached.length ? Math.min(...reached) : null;
+    console.log(`\n  THE THRESHOLD, reported every run: below a lifetime of ${
+      Math.round(threshold).toLocaleString()} gold, the richest kept night`);
+    console.log(`  (8 ${top.p.name}, net ${top.net.toLocaleString()}) clears BOTH gates on its own.`);
+    if (lowest !== null) {
+      const margin = ((lowest / threshold - 1) * 100);
+      console.log(`  This model's poorest Turn-3-to-6 player sits at ${Math.round(lowest).toLocaleString()} — ${
+        margin >= 0 ? '+' : ''}${margin.toFixed(1)}% ${margin >= 0 ? 'above' : 'BELOW'} it.`);
+      if (margin >= 0 && margin < 25) {
+        console.log('  THAT IS A THIN MARGIN. The guardrail passes on this model and would not pass');
+        console.log('  on a player who reached Turn 3 poorer — and this model runs hot against');
+        console.log('  doc 33\'s own year-one target. Treat the pass as measured, not as safe:');
+        console.log('  raising the top rung\'s cost lowers its net and widens the margin, and every');
+        console.log('  number in DATA.winter is provisional until the owner rules on them.');
+      }
+    }
+  }
+
+  /* GUARDRAIL TWO IS REPORTED, NOT FAILED ON: the owner has already accepted
+     the Turn vault as cosy planning. Reporting its size is what keeps the
+     acceptance honest. */
+  const top = DATA.winter.plants.reduce((x, y) => (x.cost > y.cost ? x : y));
+  const vault = Math.round(top.yield * (1 + DATA.winter.snowfall)) * DATA.winter.plots;
+  console.log(`\n  GUARDRAIL TWO (accepted, reported): a ripe bed held through a Turn carries at most`);
+  console.log(`  ${vault.toLocaleString()} gold into a fresh purse — eight ${top.name} kept, at ${
+    (vault / gate.minCoins).toFixed(1)}x the coin gate. Ruled cosy planning, not an exploit.`);
+  return { withWinter, without };
+}
+
+/* `--no-winter` runs every arm with the night shift switched off, which is how
+   a verdict is attributed: if bill 17 fails both ways, it is not Winter's. */
+const winterOff = process.argv.includes('--no-winter');
+const armOpts = { winter: !winterOff };
+
+if (strategy === 'winter') {
+  winterMeasurement();
+} else if (strategy === 'all') {
+  const casual = report(run('casual', days, armOpts));
+  const rush = report(run('rush', days, armOpts));
+  const smart = report(run('smart', days, armOpts));
   console.log('\n=== bill item 17\'s economic half: do cheap-Turn shapes lose to normal play? ===');
   const day = Math.min(days, 10);
   const rows = [casual, rush, smart].map((r) => ({ r, s: r.snapshots[day - 1] }));
@@ -394,6 +400,7 @@ if (strategy === 'all') {
   console.log('  The blessing pays one Rich Bloom petal PER TURN regardless of earnings, so it is');
   console.log('  the term a cadence still farms. 95 Turns fill every flower\'s Rich Bloom ladder');
   console.log('  (318,189 Saved Seeds of value) for ~101M lifetime coins. See docs/11-known-issues.md.');
+  winterMeasurement();
 } else {
-  report(run(strategy, days));
+  report(run(strategy, days, armOpts));
 }

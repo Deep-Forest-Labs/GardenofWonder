@@ -318,6 +318,145 @@ const Flora = (() => {
     </svg>`;
   }
 
+  /* ---------------- Holly, the winter rose ----------------
+
+     The game's second character-grade flower, built to talkingFlower()'s own
+     construction so the two read as one cast: the same 120x130 box, the same
+     stem and leaves, the same head at translate(60 56), the same face radius.
+     What differs is everything the 2026-09-01 Holly ruling asks for — a pale
+     porcelain face where Summer's is warm yellow, near-black plum petals with
+     hot-pink undersides, a frost crown, angled lashed eyes and a smug smile.
+
+     Three things this file learned drawing her, all of them worth keeping:
+
+     ONE. Her hot pink is NOT a new colour. `#ff5d95` / `#ffb3d1` is `gp-talker`,
+     the Summer flower's own petal gradient. The rival is lined with her
+     rival's colour on the inside of her petals, and the palette gains a USE
+     rather than a hue.
+
+     TWO. A porcelain face cannot wear the Talking Flower's eyes. A white
+     sclera ringed in ink reads as SPECTACLES on a pale face — two passes
+     failed that way before this one. The house already has the right grammar
+     and it is critters.js, not this file: an eye is a SOLID INK shape with one
+     white shine. The Summer flower can afford a sclera because her face is
+     saturated yellow.
+
+     THREE. The crown is drawn AFTER the petals and reaches past them, with its
+     bases hidden under the face the way a tiara's band is. A crown inside the
+     petal ring does not exist at 46px or in black, which is what the spike's
+     silhouette row was for. */
+  const HOLLY = {
+    plumD: '#241426', plumM: '#3b2140',
+    pink: '#ff5d95',
+    ice: '#eaf4fb', iceS: '#93b6d0',
+    face: '#f7eef2',
+    leaf: '#2f5d43', leafL: '#3f7a57',
+    mouth: '#a83250'
+  };
+
+  function hollyRing(n, scale, rot, fill) {
+    let s = '';
+    for (let i = 0; i < n; i += 1) {
+      s += `<path d="${PETALS.round}" fill="${fill}" transform="rotate(${((360 / n) * i + rot).toFixed(1)}) scale(${scale})"/>`;
+    }
+    return s;
+  }
+
+  /* Five points minimum — the ruling's hard number, and never two. Lengths
+     alternate long/short from the centre out, because a row of equal spikes
+     reads as a comb and frost does not grow that way. */
+  function hollyCrown(n, len, spread, w) {
+    let s = '';
+    for (let i = 0; i < n; i += 1) {
+      const t = n === 1 ? 0 : (i / (n - 1)) * 2 - 1;
+      const a = (t * spread * Math.PI) / 180;
+      const r0 = 23;
+      const alt = Math.round(Math.abs(i - (n - 1) / 2)) % 2 === 0 ? 1 : 0.66;
+      const L = len * (1 - 0.26 * Math.abs(t)) * alt;
+      const sx = Math.sin(a);
+      const cy = -Math.cos(a);
+      const px = Math.cos(a) * w;
+      const py = Math.sin(a) * w;
+      s += `<path d="M${(sx * r0 - px).toFixed(1)},${(cy * r0 - py).toFixed(1)}`
+        + ` L${(sx * (r0 + L)).toFixed(1)},${(cy * (r0 + L)).toFixed(1)}`
+        + ` L${(sx * r0 + px).toFixed(1)},${(cy * r0 + py).toFixed(1)} Z" fill="${HOLLY.ice}"/>`;
+    }
+    return s;
+  }
+
+  function hollyEye(side) {
+    const m = side < 0 ? '' : ' scale(-1 1)';
+    return `<g class="hl-eye" transform="translate(${side * 10.5} -2.5)${m}"><g transform="rotate(-13)">
+      <path class="hl-lid" d="M-6.8,0.1 C-4.4,-3.7 2.4,-5.8 7.4,-3.8 C6.6,1 2.4,4.8 -2.4,4.6 C-5.2,4.5 -6.9,2.4 -6.8,0.1 Z" fill="${INK}"/>
+      <circle cx="-1.9" cy="-0.9" r="1.35" fill="#fff"/>
+      <path d="M7.4,-4.4 l4.1,-3.2 M8.6,-1.4 l4.4,-1.8" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/>
+    </g></g>`;
+  }
+
+  /* Winter botany for the forehead, never a skull — the ruling names the list:
+     snowflake, berry, thorn. Six spokes is a snowflake; a four-point star is a
+     shader glint, which is the one thing this character may not be made of. */
+  function hollyMark() {
+    let arms = '';
+    for (let i = 0; i < 3; i += 1) {
+      const a = (i * 60 * Math.PI) / 180;
+      const dx = Math.cos(a) * 7;
+      const dy = Math.sin(a) * 7;
+      arms += `<path d="M${(-dx).toFixed(1)},${(-dy).toFixed(1)} L${dx.toFixed(1)},${dy.toFixed(1)}"/>`;
+    }
+    return `<g transform="translate(0 -15.5) scale(0.86)" fill="none" stroke="${HOLLY.iceS}"
+      stroke-width="2.2" stroke-linecap="round">${arms}</g>`;
+  }
+
+  /** Holly's head, centred on 0,0. Order is load-bearing: petals, THEN the
+      crown over them, then the face over the crown's bases. */
+  function hollyHead(opts = {}) {
+    return `<g class="hl-head-g">
+      <g stroke="${INK}" stroke-width="3" stroke-linejoin="round">
+        ${hollyRing(8, 1.10, 22, HOLLY.pink)}
+        ${hollyRing(8, 1.0, 0, HOLLY.plumD)}
+        ${hollyRing(6, 0.68, 26, HOLLY.plumM)}
+      </g>
+      <g stroke="${INK}" stroke-width="3" stroke-linejoin="round">${hollyCrown(7, 34, 68, 5)}</g>
+      <circle class="hl-face" cx="0" cy="0" r="26" fill="${HOLLY.face}" stroke="${INK}" stroke-width="3"/>
+      <circle cx="0" cy="0" r="26" fill="url(#gholly)" style="mix-blend-mode:multiply" opacity=".34"/>
+      ${hollyMark()}
+      ${opts.sleeping
+        ? `<g fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round">
+             <path d="M-15,-3 q4.5 5 9 0"/><path d="M6,-3 q4.5 5 9 0"/></g>`
+        : hollyEye(-1) + hollyEye(1)}
+      <path class="hl-mouth" d="M-8,10.4 Q0.5,15.8 8.6,8.2" fill="${HOLLY.mouth}" stroke="${INK}"
+        stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>`;
+  }
+
+  /** The whole character, for Winter's centre cell. */
+  function holly(opts = {}) {
+    return `
+    <svg class="talker holly" viewBox="0 0 120 142" aria-hidden="true">
+      <g class="tf-stemwrap" transform="translate(0 10)">
+        <path d="M60,132 C60,114 59,102 60,92" fill="none" stroke="${HOLLY.leaf}" stroke-width="9" stroke-linecap="round"/>
+        <path class="tf-leaf tf-leaf-l" d="M60,114 C46,116 34,108 30,96 C44,90 56,100 60,114 Z" fill="${HOLLY.leafL}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        <path class="tf-leaf tf-leaf-r" d="M60,106 C74,108 86,100 90,88 C76,82 64,92 60,106 Z" fill="${HOLLY.leafL}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+      </g>
+      <g class="tf-head" transform="translate(60 66)">${hollyHead(opts)}</g>
+    </svg>`;
+  }
+
+  /** Just her face, square, for the avatar picker.
+
+      `fit` is not a nicety. The picker draws a face inside a CIRCULAR mask at
+      46px, and at the Talking Flower's scale every point of Holly's crown is
+      outside that circle — the spike's silhouette row showed four identical
+      dark discs. Fitting the head inside the disc costs 17% of her face and
+      keeps her identity, which is the trade the owner took. */
+  function hollyFace(size = 46) {
+    return `
+    <svg class="bloom holly-face" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
+      <g transform="translate(50 55) scale(0.78)">${hollyHead()}</g>
+    </svg>`;
+  }
+
   /** One hidden <svg> holds every gradient so the blooms stay cheap to draw. */
   function injectDefs() {
     if (document.getElementById('flora-defs')) return;
@@ -344,10 +483,13 @@ const Flora = (() => {
       </linearGradient>
       <radialGradient id="gface" cx="50%" cy="35%" r="70%">
         <stop offset="55%" stop-color="#ffffff"/><stop offset="100%" stop-color="#ffc978"/>
+      </radialGradient>
+      <radialGradient id="gholly" cx="50%" cy="34%" r="70%">
+        <stop offset="52%" stop-color="#ffffff"/><stop offset="100%" stop-color="#cbb0c0"/>
       </radialGradient>`;
     svg.innerHTML = `<defs>${defs}</defs>`;
     document.body.appendChild(svg);
   }
 
-  return { plant, head, talkingFlower, injectDefs, INK };
+  return { plant, head, talkingFlower, holly, hollyFace, hollyHead, injectDefs, INK };
 })();

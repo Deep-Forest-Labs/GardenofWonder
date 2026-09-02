@@ -8,6 +8,8 @@
   let flowerBtn = null;
   let guestFlower = null;   // a flower standing in some other room
   let speechEl = null;
+  /* Summer's flower cell — the bubble's home when no other hero is on screen. */
+  let speechHome = null;
   let comboRing = null;
 
   function buildGarden() {
@@ -25,6 +27,10 @@
         el.garden.appendChild(wrap);
         flowerBtn = $('#flowerBtn', wrap);
         speechEl = $('#speech', wrap);
+        /* Summer's cell is the bubble's HOME, and `bindFlower()` moves it to
+           whichever hero is on screen. Recorded here because `buildGarden()`
+           runs again on every plot expansion and the node is rebuilt with it. */
+        speechHome = wrap;
         comboRing = $('.combo-ring', wrap);
         wireFlower();
         continue;
@@ -311,8 +317,8 @@
        `seen.plot` true and `seen.intro` false. Spending the meadow's ONLY
        signpost on a bubble nobody saw is unrecoverable — `seen.meadow` has no
        backfill, by design. */
-    const canSee = season === 'summer' && !gateOn
-      && !UI.hollowOpen() && !UI.meadowOpen() && !UI.sheetMode();
+    const inRoom = !gateOn && !UI.hollowOpen() && !UI.meadowOpen() && !UI.sheetMode();
+    const canSee = season === 'summer' && inRoom;
     if (!S.seen.meadow && S.seen.plot && canSee) {
       if (sayText('Swipe down for the wild meadow.', true)) {
         S.seen.meadow = true;
@@ -320,10 +326,33 @@
       }
       return;
     }
+    /* WHOSE VOICE THIS IS depends on whose cell the bubble is standing in.
+       Holly's idle is hers; the Summer flower's idle is his; and Fall borrows
+       the Summer flower, so it borrows his lines too. Speaking Summer's idle
+       out of Holly's mouth would be the one thing the character ruling asks
+       this not to do. */
+    if (season === 'winter' && inRoom) { say('hollyIdle'); return; }
+    if (!canSee) return;
     say('idle');
   }
 
+  /* WHOSE LINE IS THIS? Moving the bubble into whichever hero's cell is on
+     screen gave every existing `UI.say()` call site a second mouth to come out
+     of — so a crit, a weather forecast or the boot greeting could be spoken by
+     HOLLY, in the Summer flower's voice, which is the one thing the character
+     ruling asks this not to do. The rule is a single line: a `holly*` bucket
+     belongs to Holly's room and every other bucket belongs to everyone else's.
+
+     Dropped silently rather than redirected. Weather chatter is deliberately
+     the Summer flower's job (docs/46 scopes it that way), and inventing a
+     Holly line for every bucket the game already has would be four buckets
+     turning into twenty. Fall is unaffected: it borrows the Summer flower, so
+     it borrows his lines too, which is exactly what it should do until it has
+     a hero of its own. */
   function say(bucket, force) {
+    const hollyRoom = season === 'winter';
+    const hollyLine = typeof bucket === 'string' && bucket.indexOf('holly') === 0;
+    if (hollyRoom !== hollyLine) return;
     const lines = FLOWER_LINES[bucket] || FLOWER_LINES.idle;
     sayText(lines[(Math.random() * lines.length) | 0], force);
   }
@@ -336,7 +365,16 @@
   function sayText(text, force) {
     const now = Date.now() / 1000;
     if (!text) return false;
-    if (!el.coach.hidden) return false; // don't stack a bubble on top of a coach mark
+    /* Don't stack a bubble on top of a coach mark — but ASK WHETHER THE COACH
+       IS ACTUALLY PAINTED, not merely whether its `hidden` attribute is off.
+       `.in-fall .coach:not(.season)` and `.in-winter .coach:not(.season)` hide
+       it in CSS while `hidden` stays false, so the flat `!el.coach.hidden`
+       test refused every line in both season rooms — which is HALF of the
+       docs/11 item ("Fall's flower cannot speak"): moving the bubble into the
+       room's own cell fixes where the line is written, and this fixes whether
+       it is written at all. `offsetParent` is null for a `display:none`
+       element, which is the cheapest true answer to "is this on screen". */
+    if (!el.coach.hidden && el.coach.offsetParent !== null) return false;
     if (!force && now - lastSpeech < 3.2) return false;
     lastSpeech = now;
     speechEl.textContent = text;
@@ -415,6 +453,20 @@
        everywhere, not a second minigame. `flowerBtn()` is what every tap effect
        centres on, so this is also what makes the coins, the crit ring and the
        face reaction fire in the right place. */
+    /* THE SPEECH BUBBLE MOVES WITH THE HERO, and that is the whole of the
+       docs/11 fix ("Fall's flower cannot speak"). `#speech` is a descendant of
+       `#garden`, and four separate `display:none` rules delete that subtree —
+       Fall's, the Hollow's, the meadow's and a locked gate's — so every line
+       spoken in another room was written into a node that was not on screen
+       and spent silently. `UI.say('windfall')` has fired into nothing since
+       Fall shipped.
+
+       ONE NODE, MOVED, rather than a second bubble per season: the id stays
+       `#speech`, which is what `tools/capture-screens.js` and
+       `tools/stage-parity.js` both address it by, and there is still exactly
+       one `speechEl` for the cooldown to reason about. A per-season copy would
+       have needed a per-season id — the reason ui-fall.js declined to draw one
+       — and would have quietly broken both tools. */
     UI.bindFlower = (node) => {
       stopHold();
       if (node && !node.dataset.wired) {
@@ -422,6 +474,12 @@
         wire(node);
       }
       guestFlower = node || null;
+      if (!speechEl) return;
+      const home = node ? node.parentElement : speechHome;
+      if (home && speechEl.parentElement !== home) {
+        speechEl.classList.remove('show');
+        home.appendChild(speechEl);
+      }
     };
   }
 
@@ -651,10 +709,22 @@
     el.wxTip.dataset.wx = '';
   }
 
+  /* A CHIP THAT DOES NOTHING IN THIS ROOM SHOULD NOT BE IN THIS ROOM — the
+     owner's #11 ruling, which names Winter in its own words. Boosters and the
+     Wonder act on the GARDEN: Fall and Winter are outside every boost by
+     construction, so a countdown showing there is a promise the room cannot
+     keep. The weather chip stays everywhere, because weather is the world's
+     and the sky is overhead in every season.
+
+     A FILTER RATHER THAN A MEDIA QUERY. The half-fix that shipped hid the whole
+     rail in Fall under `max-height:700px`, which took the weather chip with it
+     and did nothing at all on a tall phone. `.rail` keeps `min-height`, so an
+     empty row still holds its box and the board below cannot move. */
+  const inSeasonRoom = () => season === 'fall' || season === 'winter';
   function renderRail() {
     const now = Game.nowSeconds();
     let html = '';
-    DATA.boosters.forEach((b) => {
+    if (!inSeasonRoom()) DATA.boosters.forEach((b) => {
       if (!Game.activeBoost(b.id)) return;
       const remain = Math.max(0, S.boosters[b.id] - now);
       const p = Math.max(0, Math.min(1, remain / b.dur));
@@ -662,7 +732,7 @@
         <span class="ring" style="--p:${p.toFixed(3)}"><i>${Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain)}</i></span>
         <span>${b.name}</span></div>`;
     });
-    if (Game.wonderActive()) {
+    if (Game.wonderActive() && !inSeasonRoom()) {
       const remain = Math.max(0, S.wonder.until - now);
       html = `<div class="chip timed" style="--tint:#ff6bd6">
         <span class="ring" style="--p:${(remain / WONDER.duration).toFixed(3)}"><i>${Math.ceil(remain)}</i></span>
@@ -814,7 +884,7 @@
      Making them wait for `pointerup` instead would fix that and cost the tap
      latency the whole core loop is built on, which is a far worse trade. */
   const NAV_SWIPE = 70;
-  const noSwipe = '.plot,.fl-plot,.flower-btn,.fpill,.fround,.fl-collect,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,.drawer,[data-critter],.coach,.s-edge,.g-back';
+  const noSwipe = '.plot,.fl-plot,.wi-plot,.flower-btn,.fpill,.fround,.fl-collect,.wi-act,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,.drawer,[data-critter],.coach,.s-edge,.g-back';
   let navY0 = null;
   let navX0 = null;
   let navId = null;
@@ -999,7 +1069,7 @@
     { id: 'spring', name: 'SPRING', gate: 'springTurn', built: false },
     { id: 'summer', name: 'SUMMER', gate: null, built: true },
     { id: 'fall', name: 'FALL', gate: 'fallTurn', built: true },
-    { id: 'winter', name: 'WINTER', gate: 'winterTurn', built: false }
+    { id: 'winter', name: 'WINTER', gate: 'winterTurn', built: true }
   ];
   const SEASON_SKY = {
     spring: ['#bfe0f5', '#e6f3d8'], summer: ['#7ec8f2', '#e9f8ff'],
@@ -1019,21 +1089,33 @@
     goSeason(next.id);
   }
 
+  /* TERNARY since 2026-09-01 (slice C). It was a summer/fall binary whose else
+     branch hard-assigned `season = 'summer'`, so any id that was not 'fall'
+     landed the player in Summer — including 'winter'. Written as leave-then-
+     enter over a table rather than as a longer if/else, so a fourth season is
+     one row and not a fourth branch. */
+  const SEASON_ROOMS = {
+    fall: { enter: () => UI.enterFall(), leave: () => UI.leaveFall(), seen: 'fallSwipe' },
+    winter: { enter: () => UI.enterWinter(), leave: () => UI.leaveWinter(), seen: 'winterSwipe' }
+  };
   function goSeason(id) {
     const sdef = SEASONS[seasonIdx(id)];
     if (!sdef) return;
     hideGate();
     if (!seasonReady(sdef)) { showGate(sdef); return; }
-    if (id === 'fall') {
-      if (season !== 'fall') { season = 'fall'; UI.enterFall(); }
+    if (id === season) { renderSeasonEdges(); return; }
+    const from = SEASON_ROOMS[season];
+    if (from) {
+      from.leave();
+      // Leaving for anywhere retires the mark that pointed back to the garden.
+      if (!S.seen.gardenSwipe) { S.seen.gardenSwipe = true; Game.save(); }
+    }
+    const to = SEASON_ROOMS[id];
+    season = to ? id : 'summer';
+    if (to) {
+      to.enter();
       // Arriving retires the mark that pointed here, whichever way you arrived.
-      if (!S.seen.fallSwipe) { S.seen.fallSwipe = true; Game.save(); }
-    } else {
-      if (season === 'fall') {
-        UI.leaveFall();
-        if (!S.seen.gardenSwipe) { S.seen.gardenSwipe = true; Game.save(); }
-      }
-      season = 'summer';
+      if (!S.seen[to.seen]) { S.seen[to.seen] = true; Game.save(); }
     }
     renderSeasonEdges();
   }
@@ -1078,12 +1160,25 @@
      still owed a windfall puts a dot on the edge tab — the same attention-dot
      idea the dock already uses, which is how a player learns a room is worth
      opening without being nagged. */
+  /* The edge tab's attention dot: an appointment needs a bell. Widened past
+     Fall on the day a second season was built, exactly as docs/43 said it
+     would be. Winter's dot means "something opened while you were away", which
+     is the whole reason the season is a place you come back to. */
   function seasonWaiting(id) {
-    if (id !== 'fall' || !Game.fallOpen()) return false;
-    const now = Date.now() / 1000;
-    return ((S.fall && S.fall.grid) || []).some((c) =>
-      c && c.seed && (c.windfall || now >= c.plantedAt + c.grow));
+    if (id === 'fall') {
+      if (!Game.fallOpen()) return false;
+      const now = Game.nowSeconds();
+      return (S.fall.grid || []).some((c) => c && c.seed
+        && (Boolean(c.windfall) || now - c.plantedAt >= c.grow));
+    }
+    if (id === 'winter') {
+      if (!Game.winterOpen()) return false;
+      const b = Game.winterBedState();
+      return b.ripe > 0;
+    }
+    return false;
   }
+
 
   let edgeSig = '';
   function renderSeasonEdges() {
@@ -1521,6 +1616,7 @@
       updateDockDots();
       updateYearMeter();
       if (UI.fallOpen && UI.fallOpen()) UI.renderFall();
+      if (UI.winterOpen && UI.winterOpen()) UI.renderWinter();
       renderSeasonEdges();
       refreshCoach();
       UI.updateSky();
@@ -1582,6 +1678,7 @@
     Game.settleCritters();
     buildGarden();
     UI.initFall();
+    UI.initWinter();
     renderSeasonEdges();
     renderCritters();
     sizeViewport();
@@ -1593,7 +1690,7 @@
       sizeGarden();
     }, t));
     sizeGarden();
-    if (window.ResizeObserver) new ResizeObserver(() => { sizeGarden(); if (UI.sizeFallBoard) UI.sizeFallBoard(); }).observe($('.stage'));
+    if (window.ResizeObserver) new ResizeObserver(() => { sizeGarden(); if (UI.sizeFallBoard) UI.sizeFallBoard(); if (UI.sizeWinterBoard) UI.sizeWinterBoard(); }).observe($('.stage'));
     renderRail();
     renderPowerUp();
     renderQuestStrip();

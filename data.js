@@ -676,7 +676,9 @@ const DATA = {
     {
       date: '2026-09-01',
       lines: [
-        'Flowers grow up properly now — a sprout, then a stem, then a closed bud in the flower’s own colours, opening just before it’s ready to pick.'
+        'Flowers grow up properly now — a sprout, then a stem, then a closed bud in the flower’s own colours, opening just before it’s ready to pick.',
+        'Winter opens at Turn 3: tuck the bed in at night, and what opens under the quilt pays extra at first light.',
+        'Meet Holly, the winter rose. She keeps the garden while you sleep, and she will insist she didn’t do it for you.'
       ]
     },
     {
@@ -1228,6 +1230,46 @@ const FLOWER_LINES = {
   legend: ['A LEGENDARY bloom!', 'I have never seen such petals!', 'Legendary! Frame it!'],
   idle: ['Psst... the plots are lonely.', 'Try planting something new.', 'Tap me if you get bored.', 'Nice weather for growing.'],
   broke: ['Save up a few coins first!', 'Not enough in the pouch.', 'Tap me for pocket change!'],
+
+  /* HOLLY — Winter's hero, and the game's second voice. Deadpan, superior,
+     secretly devoted. FOUR BUCKETS, small on purpose: weather chatter stays
+     the Summer flower's job and the rule of the season lives on the chip, so
+     none of these is ever load-bearing.
+
+     HER SASS AIMS AT THE SUMMER FLOWER AND NEVER AT THE PLAYER — the 2026-09-01
+     character ruling, and it is the whole reason a second voice exists: doc 17's
+     tonal table says flat positivity reads as a system, and a two-character
+     rivalry one swipe apart is the thread that fixes it. "The yellow one" is
+     the rivalry in three words and needs no lore to land. No royalty
+     vocabulary: "ice princess" survives as attitude, not as a title.
+
+     `hollyIntro` is a SCRIPTED RUN, not a random pick — ui-winter.js walks it
+     in order and consumes the one-shot only after the last line has drawn. */
+  hollyIntro: [
+    'Oh. You\u2019re here.',
+    'It\u2019s fine. I was awake anyway.',
+    'Tuck the bed in before you go. What opens under the quilt comes out worth more.',
+    'And don\u2019t tell the yellow one I helped.'
+  ],
+  hollyTuck: [
+    'Goodnight, then.',
+    'I\u2019ll watch them. Obviously.',
+    'Go on. They\u2019re asleep.',
+    'Some of us don\u2019t get a night off.'
+  ],
+  hollyMorning: [
+    'They came up under the quilt. You\u2019re welcome.',
+    'They did the work. I merely supervised.',
+    'Still here. Still cold. Still better at this than the yellow one.',
+    'Morning. Try to look less surprised.'
+  ],
+  hollyIdle: [
+    'It\u2019s not cold. You\u2019re just soft.',
+    'The yellow one gets a whole tutorial. I get a season.',
+    'Nothing is happening. That is the season.',
+    'You could plant something. Or stand there. Either way.',
+    'Snow is just weather with better manners.'
+  ],
   unlock: ['New ground to grow on!', 'More room for flowers!', 'Ooh, fresh soil!'],
   rain: ['Rain! The garden loves this.', 'Mmm, petrichor.', 'Drink up, everyone.'],
   storm: ['Thunder! Hold onto your petals.', 'Ooh, that one was close.', 'What a sky.'],

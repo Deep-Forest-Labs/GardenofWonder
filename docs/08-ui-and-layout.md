@@ -1000,6 +1000,12 @@ Missing, and worth knowing before claiming accessibility:
                 THE HOLLOW
 ```
 
+**Winter joined the strip on 2026-09-01 (slice C)**, and the diagram above is now true of the code
+rather than of the plan: `goSeason()` was a summer/fall binary whose else-branch hard-assigned
+`season = 'summer'`, so any id that was not `'fall'` — including `'winter'` — landed the player back
+in Summer. It is a table of rooms with a leave-then-enter walk over it now, so a fourth season is
+one row rather than a fourth branch.
+
 **A season is not a place layer.** The Hollow, the meadow and the map are rooms you leave the garden
 to visit — they are siblings of `.ui`, they hide its chrome, and each has to re-state the 560px
 column. A season is *the same room in a different month*: `.stage` swaps `.garden-frame` for
@@ -1013,6 +1019,10 @@ never move**. Nothing in Fall re-states the column because nothing in Fall leave
 | `.fl-chip` | absolute inside `.fl-wrap`, `top:-46px` | Fall's one rule, standing over the board it describes — anchored to the board's own box so it tracks it at every viewport |
 | `.fl-collect` | absolute inside `.fl-wrap`, `bottom:-58px`, max 132px wide | the payoff button, in the strip the chip left — narrow so it clears UPGRADE and POWER-UP, which are NOT hidden in Fall |
 | `.gate-layer` | a sibling of `.ui`, `z-index: 3` | a locked season is a screen, and `.in-gate` hides the stage, dock, rail and quest strip exactly as `.in-map` does |
+| `.winter-layer` (the scene) | a sibling of `.ui` inside `#world`, `z-index: 2` | Fall's row, one season on |
+| `.winter-frame` / `.wi-board` | inside `.stage`, beside `.garden-frame` and `.fall-frame` | the third board in the same square, sized by the same `UI.boardSide()` |
+| `.wi-chip` | absolute inside `.wi-wrap`, `top:-46px` | Winter's one rule, in Fall's chip geometry line for line |
+| `.wi-act` | absolute inside `.wi-wrap`, `bottom:-58px`, max 132px wide | **one button whose verb is the bed's state** — Tuck the bed in → Tucked in → Collect all. The same strip and the same 132px clearance Fall's Collect All takes, because UPGRADE and POWER-UP are not hidden in Winter either, and two controls would fight for it |
 | `.season-edges` | **absolutely positioned against `.ui`**, not a grid item | see below |
 
 **The season edges are absolute, and that is load-bearing.** They were a grid item at `grid-row: 4`
@@ -1086,6 +1096,25 @@ Still true after the move: the chip is still centred with a transform, and the p
 **Its four states are unchanged** — filling, all-in-waiting, `.close` (one more, soft yellow),
 `.armed` (gold with the pulse) — and so is the armed bed's gold rim, which is a rule on
 `.fl-board.armed` and has nothing to do with the chip.
+
+### The speech bubble has a per-season home (2026-09-01)
+
+`#speech` is created by `buildGarden()` inside Summer's flower cell, and four separate
+`display:none` rules delete that subtree — Fall's, the Hollow's, the meadow's and a locked gate's.
+**`UI.bindFlower()` now MOVES the one node** into whichever hero's cell is on screen and back to
+Summer's when the room is left.
+
+**One node moved, not a bubble per season.** The id stays `#speech`, which is what
+`tools/capture-screens.js` and `tools/stage-parity.js` both address it by, and there is still one
+`speechEl` for the 3.2-second cooldown to reason about. A per-season copy would have needed a
+per-season id — which is the reason `ui-fall.js` declined to draw one in the first place — and would
+have quietly broken both tools.
+
+**The second half of the same fix is in `sayText()`.** It refused on `!el.coach.hidden`, and
+`.in-fall .coach:not(.season)` hides the coach in CSS while leaving `hidden` false — so every line
+in a season room was refused before it ever reached the node. It asks whether the coach is actually
+painted (`offsetParent !== null`) now. Moving the bubble alone would have fixed nothing a player
+could see.
 
 ## The vertical ladder
 

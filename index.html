@@ -113,6 +113,9 @@
       <div class="fall-layer" id="fallLayer" hidden aria-hidden="true">
         <div class="fall-scene-host" id="fallScene"></div>
       </div>
+      <div class="winter-layer" id="winterLayer" hidden aria-hidden="true">
+        <div class="winter-scene-host" id="winterScene"></div>
+      </div>
       <!-- A locked season, seen from the gate. Above `.ui`'s scenery for the same
            reason, and it hides the garden's own chrome while it is up. -->
       <div class="gate-layer" id="gateLayer" hidden aria-label="A locked season"></div>
@@ -176,6 +179,18 @@
                    is looking at the board. Its strip is reserved whether it is
                    showing or not. -->
               <button class="fl-collect" id="fallCollect" type="button" hidden></button>
+            </div>
+          </div>
+          <div class="winter-frame" id="winterFrame">
+            <div class="wi-wrap">
+              <div class="wi-chip" id="winterChip"></div>
+              <div class="wi-board" id="winterBoard" aria-label="Winter's bed"></div>
+              <!-- ONE button, and its verb is the bed's state: Tuck the bed in →
+                   Tucked in → Collect all. Absolutely positioned against the
+                   wrap for the same reason Fall's is, and it is the same 132px
+                   strip: the band's UPGRADE and POWER-UP are not hidden here
+                   either, so a second control would fight it for the clearance. -->
+              <button class="wi-act" id="winterAct" type="button" hidden></button>
             </div>
           </div>
           <div class="critter-yard" id="critterYard" aria-label="Creatures living in your garden"></div>
@@ -301,6 +316,7 @@
   <script src="hollow.js"></script>
   <script src="meadow.js"></script>
   <script src="fall.js"></script>
+  <script src="winter.js"></script>
   <script src="icons.js"></script>
   <script src="audio.js"></script>
   <script src="fx.js"></script>
@@ -315,6 +331,7 @@
   <script src="ui-hollow.js"></script>
   <script src="ui-meadow.js"></script>
   <script src="ui-fall.js"></script>
+  <script src="ui-winter.js"></script>
   <script src="ui-news.js"></script>
   <script src="ui-menu.js"></script>
   <script src="ui-events.js"></script>

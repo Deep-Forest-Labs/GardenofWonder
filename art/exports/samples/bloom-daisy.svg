@@ -118,6 +118,9 @@
       </linearGradient>
       <radialGradient id="gface" cx="50%" cy="35%" r="70%">
         <stop offset="55%" stop-color="#ffffff"/><stop offset="100%" stop-color="#ffc978"/>
+      </radialGradient>
+      <radialGradient id="gholly" cx="50%" cy="34%" r="70%">
+        <stop offset="52%" stop-color="#ffffff"/><stop offset="100%" stop-color="#cbb0c0"/>
       </radialGradient></defs>
       <g transform="translate(50 50)">
         

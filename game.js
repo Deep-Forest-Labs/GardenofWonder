@@ -717,6 +717,10 @@ const Game = (() => {
       const who = id.slice(8);
       return critterById(who) && state.critters[who] ? id : PROFILE_DEFAULT_AVATAR;
     }
+    /* Holly joins the picker ONCE MET, gated like any other earned face — the
+       flag is the one her introduction spends, so wearing her face means you
+       have actually been to her room. */
+    if (id === 'holly') return state.seen.hollyIntro ? id : PROFILE_DEFAULT_AVATAR;
     return PROFILE_DEFAULT_AVATAR;
   }
 
@@ -751,7 +755,12 @@ const Game = (() => {
     const pets = CREATURES
       .filter((c) => Boolean(state.critters[c.id]))
       .map((c) => ({ id: `critter:${c.id}`, kind: 'critter', critter: c, unlocked: true }));
-    return { flower: { id: PROFILE_DEFAULT_AVATAR, kind: 'flower', unlocked: true }, blooms, pets };
+    /* The heroes: the Summer flower, always, and Holly once she has been met.
+       She is a `hero` rather than a `bloom` because she is a character and not
+       a species — a row of faces beside a row of flowers. */
+    const heroes = [{ id: PROFILE_DEFAULT_AVATAR, kind: 'flower', unlocked: true }];
+    if (state.seen.hollyIntro) heroes.push({ id: 'holly', kind: 'holly', unlocked: true });
+    return { flower: heroes[0], heroes, blooms, pets };
   }
 
   /* ---------------- what's new ----------------
@@ -1340,6 +1349,26 @@ const Game = (() => {
     });
     const jars = jarsWaiting();
 
+    /* WINTER'S NEWS. The season exists to be checked in the morning, so a
+       morning whose ONLY news is kept Winter blooms has to produce a scene —
+       and until now this function read `state.grid` alone. Winter is the first
+       non-Summer garden the scene reports.
+
+       Deriving the marks here is the point rather than a side effect: this is
+       one of the four places ripeness is first observed, and it is the one
+       that runs before the player has looked at anything. */
+    const marked = winterDeriveKept(now);
+    let winterRipe = 0;
+    let winterKept = 0;
+    state.winter.grid.forEach((cell) => {
+      if (!cell.seed || now - cell.plantedAt < cell.grow) return;
+      winterRipe += 1;
+      if (cell.kept) winterKept += 1;
+    });
+
+    /* Offline income stays SUMMER-ONLY. Winter never enters
+       `passiveIncomeRate()` — its plants ripen on their timestamps and pay on
+       collect, which is the opposite of automation. */
     const earned = away >= WELCOME_MIN_AWAY ? offlineEarnings(away) : { coins: 0, capped: false };
     if (earned.coins > 0) {
       credit(earned.coins);
@@ -1347,12 +1376,20 @@ const Game = (() => {
     }
 
     state.lastSeen = now;
-    if (caught.length || earned.coins > 0) save();
+    /* `marked` is the third term, and it is not optional: a mark derived here
+       and not persisted would be lost the moment first light cleared the tuck,
+       because the derivation that would have found it again reads a timestamp
+       that is no longer standing. */
+    if (caught.length || earned.coins > 0 || marked) save();
 
     if (away < WELCOME_MIN_AWAY) return null;
-    if (!ripe.length && !caught.length && !jars && !earned.coins) return null;
+    /* BOTH null-gates include Winter. The second one is the one that matters:
+       without `winterRipe` here, a player who tucked a bed, slept, and came
+       back to six kept blooms would be told nothing happened. */
+    if (!ripe.length && !caught.length && !jars && !earned.coins && !winterRipe) return null;
     return {
       away, caught, ripened: ripe.length, jars, weather: currentWeather(),
+      winterRipe, winterKept, winterTucked: state.winter.tuckedAt > 0,
       earned: earned.coins, capped: earned.capped,
       capHours: offlineHours(), rate: offlineRate()
     };
@@ -4375,7 +4412,8 @@ const Game = (() => {
       bankedPacks,
       year: state.year.number,
       turnsCompleted: state.year.turnsCompleted,
-      fallOpens: state.year.turnsCompleted === YEAR().fallTurn
+      fallOpens: state.year.turnsCompleted === YEAR().fallTurn,
+      winterOpens: state.year.turnsCompleted === YEAR().winterTurn
     };
     emit('turn', payload);
     return payload;
@@ -4694,6 +4732,14 @@ const Game = (() => {
         if (cell.mutateAt) cell.mutateAt -= back;
       });
       hiveCells().forEach((i) => { state.apiary.cells[i].at -= back; });
+      /* Fall and Winter go back too, or "simulate an absence" reports a
+         morning in which the only two seasons that ripen overnight did
+         nothing. Winter's TUCK moves with its plants for the same reason
+         `Dev.warp()` moves it: a bed whose plants aged while the quilt stood
+         still is a night that never happened. */
+      state.fall.grid.forEach((cell) => { if (cell.seed) cell.plantedAt -= back; });
+      state.winter.grid.forEach((cell) => { if (cell.seed) cell.plantedAt -= back; });
+      if (state.winter.tuckedAt) state.winter.tuckedAt -= back;
       state.lastSeen = nowSeconds() - back;
       const report = reconcile();
       emit('panels');
@@ -5060,6 +5106,49 @@ const Game = (() => {
         else state.credits -= cheapest.cost;
       });
       return n;
+    },
+
+    /** Fill Winter's open plots with the cheapest bloom, paid for, so the
+        night can be driven end to end from the panel. */
+    fillWinter() {
+      if (!winterOpen()) return 0;
+      const cheapest = WINTER().plants.reduce((a, b) => (a.cost <= b.cost ? a : b));
+      let n = 0;
+      state.winter.grid.forEach((cell, idx) => {
+        if (cell.seed) return;
+        credit(cheapest.cost, { cheat: true });
+        if (winterPlant(idx, cheapest.id)) n += 1;
+        else state.credits -= cheapest.cost;
+      });
+      return n;
+    },
+
+    /** A whole night, in one tap: wind every planted clock past its grow AND
+        wind the tuck back with it, which is the half a hand-written cheat gets
+        wrong. FORCE THE REAL CODE PATH — the marks come from
+        `winterDeriveKept()` rather than from writing `kept = true`, so a panel
+        that shows a perfect morning cannot be showing one the engine would
+        never produce. */
+    nightWinter() {
+      if (!winterOpen()) return 0;
+      const now = nowSeconds();
+      let longest = 0;
+      state.winter.grid.forEach((cell) => {
+        if (cell.seed) longest = Math.max(longest, cell.grow);
+      });
+      if (!longest) return 0;
+      const back = longest + 60;
+      state.winter.grid.forEach((cell) => { if (cell.seed) cell.plantedAt -= back; });
+      /* The tuck goes back FURTHER than the plants, or every one of them opened
+         before the quilt went on and the whole bed earns nothing — which is the
+         fishing case, correctly, and a cheat that reproduces it is a cheat that
+         looks broken. */
+      if (state.winter.tuckedAt) state.winter.tuckedAt -= back + 60;
+      processWinter(nowSeconds());
+      winterDeriveKept(nowSeconds());
+      save();
+      emit('panels');
+      return state.winter.grid.filter((c) => c.seed && c.kept).length;
     },
 
     clearAll() {

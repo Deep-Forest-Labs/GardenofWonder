@@ -89,13 +89,37 @@ Every crop ripe at once, and the trug takes a gold rim: clear the whole bed in o
 
 Owned by [32-the-garden-year.md](32-the-garden-year.md) · drawn by [ui-fall.js](../ui-fall.js)
 
-### A locked season — the Winter gate
+### A locked season — the Spring gate
 
-[![A locked season — the Winter gate](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/season-gate-winter.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/season-gate-winter.png)
+[![A locked season — the Spring gate](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/season-gate-spring.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/season-gate-spring.png)
 
 A season you have not reached yet is a hedge with a lock on it, naming the Turn that opens it.
 
 Owned by [32-the-garden-year.md](32-the-garden-year.md) · drawn by [ui.js](../ui.js)
+
+### Winter — the bed, before the night
+
+[![Winter — the bed, before the night](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/winter-bed.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/winter-bed.png)
+
+Winter's cold frame on frozen earth, with Holly in the middle and the chip naming the one rule: tuck the bed in, and what opens under the quilt pays extra.
+
+Owned by [46-the-night-shift.md](46-the-night-shift.md) · drawn by [ui-winter.js](../ui-winter.js)
+
+### Winter — tucked in for the night
+
+[![Winter — tucked in for the night](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/winter-tucked.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/winter-tucked.png)
+
+One tap puts quilts over the bed and the plants asleep. Nothing is ever lost to a night: the tuck only adds.
+
+Owned by [46-the-night-shift.md](46-the-night-shift.md) · drawn by [ui-winter.js](../ui-winter.js)
+
+### Winter — the morning, and the snowfall
+
+[![Winter — the morning, and the snowfall](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/winter-morning.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/winter-morning.png)
+
+Every bloom that opened under the quilt wears a frost rim, and Collect All names what the night is worth.
+
+Owned by [46-the-night-shift.md](46-the-night-shift.md) · drawn by [ui-winter.js](../ui-winter.js)
 
 ## The Turn
 
@@ -259,6 +283,6 @@ Owned by [41-weather-staging.md](41-weather-staging.md) · drawn by [ui-weather.
 
 ---
 
-_28 screens. The scene table that produced them — what each one drives, and what it
+_31 screens. The scene table that produced them — what each one drives, and what it
 asserts before capturing — is the top of [`tools/capture-screens.js`](../tools/capture-screens.js).
 Add a screen there and it appears here on the next run._

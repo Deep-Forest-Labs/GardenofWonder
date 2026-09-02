@@ -5,6 +5,118 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-01 (slice C, the referee) — The play model is one file, seeded, and it found two things
+
+**`tools/play-model.js` exists**, and `year-sim.js` and `order-gold.js` both run on it. This is
+docs/11's standing "seed the referee, then use it" item, done because doc 46 made it a prerequisite:
+a Winter arm bolted onto either tool would have been the fourth diverged copy of the same person.
+
+**The extraction was proved before it was believed.** `order-gold.js`'s full report is
+**byte-identical** before and after — that was the acceptance test, run after every step, and it
+caught a divergence nobody had listed: `results.turns` is an ARRAY of turn records in year-sim and a
+COUNTER in order-gold. Five hooks rather than four, and the fifth only surfaced by running it.
+
+**Seeding turned a coin flip into a verdict, and the verdict was already failing.** Five runs of the
+UNSEEDED tool on unmodified code returned FAIL, FAIL, FAIL, OK, FAIL — so bill 17's exit code has
+been reporting noise. It is deterministic now, on a fixed epoch (weather is a function of the clock,
+and the sky changes how fast things grow, so a wall-clock seed measures a different world every run).
+
+**Then the seeded tool failed, and it was MY model rather than the economy.** With Winter on, the
+`smart` cheap-Turn cadence beat casual on lifetime coins; with Winter off it did not. The cause was
+the first draft of `playWinter()`, which refilled every empty Winter plot on every eight-second
+check with the best rung the wallet could afford. That made the CASUAL arm 8% poorer — Winter's
+per-hour rate is far below Summer's *by design*, because the tuck's convenience is paid for in rate,
+so a greedy refill parks the whole wallet in the slowest season in the game. **That is not a finding
+about the economy; it is a model that does not represent a person.** Modelled as the ritual instead
+— collect whenever you look, sow and tuck once on the way out — bill 17 passes both with Winter and
+without, and Winter's lift on the casual arm is a modest **+1.3%**.
+
+**Guardrail one passes, and the honest number is the margin.** No rung's single full kept night
+clears both Turn gates at Turns 3–6. But the first version of that assertion priced the mint as
+`mintK*sqrt(net)` — against a **zero** baseline — which treats every night as the player's first and
+overstated the seed side by an order of magnitude. The mint is cumulative, so the question is the
+INCREMENT at the lifetime the player has actually reached, and the tool measures it at the run's own
+Turns 3–6. **The threshold is now reported every run whether it passes or not**: below a lifetime of
+**48.9M gold**, the richest kept night (eight Camellia, net 1.408M) clears both gates on its own, and
+this model's poorest Turn-3-to-6 player sits at 52.5M — **7.5% above it**. That is a thin margin on a
+model that runs hot against doc 33's own year-one target. **Reported, not fixed:** every number in
+`DATA.winter` is provisional and the ladder is the owner's to rule on, and the spec is explicit that
+the builder types the numbers in rather than changing them.
+
+**Guardrail two is reported and not failed on**, as ruled: a ripe bed held through a Turn carries at
+most 2,688,000 gold into a fresh purse — 26.9× the coin gate. Accepted as cosy planning.
+
+---
+
+## 2026-09-01 (slice C, gates 3 and 4) — Winter is playable, and the speech bubble turned out to be two bugs
+
+**The engine shipped first as pure simulation and the surface followed the same day**, because the
+owner spent the spike gate on play rather than on reading. Winter is on `main`, behind its Turn-3
+gate, and it can be walked end to end: plant a bed, tuck it in, sleep a night, collect the morning.
+
+**"Fall's flower cannot speak" was two bugs and only one of them was written down.** The recorded
+half is the node: `#speech` is created inside Summer's flower cell and four separate `display:none`
+rules delete that subtree, so a line spoken anywhere else was written into a node that was not on
+screen. `UI.bindFlower()` now **moves the one node** into whichever hero's cell is on screen. One
+node rather than a bubble per season, deliberately: the id stays `#speech`, which is what
+`tools/capture-screens.js` and `tools/stage-parity.js` both address it by, and there is still one
+`speechEl` for the cooldown to reason about — a per-season copy would have needed a per-season id,
+which is exactly why `ui-fall.js` declined to draw one.
+
+**And then it still did not speak.** `sayText()` refuses while a coach mark is up, and it tested
+`!el.coach.hidden` — but `.in-fall .coach:not(.season)` hides the coach *in CSS* while leaving
+`hidden` false, so every line in a season room was refused before it reached the node. Moving the
+bubble alone fixed nothing a player could see. It asks `offsetParent !== null` now. **Fall's
+`windfall` line has drawn on screen for the first time since Fall shipped**, which is the fix
+docs/11 had been carrying as an open item.
+
+**The rail's room filter landed here rather than waiting for the fix round.** The #11 ruling names
+Winter in its own words, and Winter is the season that makes the rule visible — a booster countdown
+in a room where boosters do nothing is a promise the room cannot keep. It is a **JS filter** rather
+than the shipped half-fix, which hid the whole rail in Fall under a `max-height:700px` media query:
+that took the weather chip with it and did nothing at all on a tall phone. `.rail` keeps its
+`min-height`, so an empty row still holds its box and the board below cannot move.
+
+**Five things the surface decided, each with what was rejected.**
+
+- **One button below the board, and its verb is the bed's state** — Tuck the bed in → Tucked in →
+  Collect all. *Rejected: a tuck button and a Collect All in the same strip.* They would fight for
+  the same 132px, which is a clearance rather than a taste — UPGRADE sits 34px in from the left and
+  POWER-UP 34px in from the right, and neither is hidden in Winter. One button also says the ritual
+  better than two.
+- **Gold stays on the collect alone.** Gold means *you can have this*, and a tuck pays nothing.
+  Tucked takes the **drained paper family**, which is what this game already uses for asleep —
+  *rejected: a cool blue "tucked" tint*, because a state takes the value out of the surface it is
+  already on before it reaches for a hue.
+- **The kept mark is a static frost rim with the glint on top.** *Rejected: a shimmer alone.* Where
+  a state animates, reduced motion needs a static substitute rather than a shorter duration; the
+  Turn button's ready ring was a breathing halo and nothing else, and a player with the preference
+  on had no ready signal at all for weeks.
+- **The Zs belong to the BED, not to each cell.** Eight cells each drifting their own was eight
+  promoted layers and a board saying one thing eight times — and the quilt is over the bed, not
+  over a list. *Rejected: per-cell Zs*, which is what the first pass drew.
+- **Winter's empty-plot marker is Summer's 30%, not Fall's 46%.** Punch list #12 is open on Fall's
+  being oversized; a third size would have made the sweep worse.
+
+**The palette went in at eleven new colours, and the seven that came off it are the interesting
+part.** The first pass was eighteen. Winter's growth bar took a cream well and a frost-blue fill —
+both wrong, and both already answered in the file: a cream well draws a bright line across the
+plant (Fall's own comment says so) and **green means *growing* in every room**, learned once. And a
+"snow" family and a "frost" family that sat two percent apart are one ramp, because frost is snow
+seen closer up. What is left is three declared ramps and one gate literal, all in docs/05 with
+reasons.
+
+**Holly's own two.** Her hot pink is `#ff5d95` — `gp-talker`'s bottom stop, the Summer flower's own
+petal gradient — so the palette gains a *use* rather than a hue and the rivalry says itself. And
+her eyes are `critters.js`'s grammar rather than `flora.js`'s: a **solid ink shape with one white
+shine**, because a white sclera ringed in ink reads as spectacles on a porcelain face. Two passes
+failed that way before the third worked.
+
+**Holly joins the avatar picker fitted**, gated on `seen.hollyIntro` — the flag her introduction
+spends, so wearing her face means you have actually been to her room.
+
+---
+
 ## 2026-09-01 (slice C, gate 1) — The two spikes are up, and the owner ruled on all of them at once
 
 **`tools/holly-spike.html` and `tools/winter-spike.html` are live**, and the owner's verdict was

@@ -58,6 +58,12 @@ const UI = (() => {
     fallBoard: $('#fallBoard'),
     fallChip: $('#fallChip'),
     fallCollect: $('#fallCollect'),
+    winterLayer: $('#winterLayer'),
+    winterScene: $('#winterScene'),
+    winterFrame: $('#winterFrame'),
+    winterBoard: $('#winterBoard'),
+    winterChip: $('#winterChip'),
+    winterAct: $('#winterAct'),
     gateLayer: $('#gateLayer'),
     seasonEdges: $('#seasonEdges')
   };

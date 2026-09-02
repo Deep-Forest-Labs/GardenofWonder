@@ -803,9 +803,13 @@ const SCENES = [
     expect: '!!document.querySelector(\'.fl-board.armed\')',
   },
   {
-    slug: 'season-gate-winter',
+    /* WAS `season-gate-winter`, retired 2026-09-01: slice C made Winter
+       reachable, so the only locked season left to photograph is Spring — and
+       a gallery that keeps a picture of a gate that no longer locks is a
+       gallery telling the Unity team something untrue. */
+    slug: 'season-gate-spring',
     group: 'The seasons',
-    title: 'A locked season — the Winter gate',
+    title: 'A locked season — the Spring gate',
     line:
       'A season you have not reached yet is a hedge with a lock on it, naming the Turn that opens it.',
     doc: '32-the-garden-year.md',
@@ -813,12 +817,68 @@ const SCENES = [
     steps: [
       'wait:600',
       'eval:Game.state.year.turnsCompleted = 1',
-      'eval:UI.enterSeason(\'fall\')',
-      'wait:900',
-      'eval:document.querySelector(\'.s-edge.r[data-season=winter]\').click()',
+      'eval:UI.enterSeason(\'spring\')',
       'wait:1200',
     ],
-    expect: 'document.getElementById(\'game\').classList.contains(\'in-gate\') && document.querySelector(\'.g-name\').textContent.trim() === \'WINTER\'',
+    expect: 'document.getElementById(\'game\').classList.contains(\'in-gate\') && document.querySelector(\'.g-name\').textContent.trim() === \'SPRING\'',
+  },
+  {
+    slug: 'winter-bed',
+    group: 'The seasons',
+    title: 'Winter — the bed, before the night',
+    line:
+      'Winter\'s cold frame on frozen earth, with Holly in the middle and the chip naming the one rule: tuck the bed in, and what opens under the quilt pays extra.',
+    doc: '46-the-night-shift.md',
+    file: 'ui-winter.js',
+    steps: [
+      'wait:600',
+      'eval:Game.state.year.turnsCompleted = 3',
+      'eval:Game.Dev.grantGold(500000)',
+      'eval:[0,1,2,4,6].forEach(function(i){Game.winterPlant(i,\'snowdrop\')})',
+      'eval:(function(){var g=Game.state.winter.grid;g[0].plantedAt-=g[0].grow*0.7;g[2].plantedAt-=g[2].grow*0.4;Game.processWinter(Game.nowSeconds())})()',
+      'eval:UI.enterSeason(\'winter\')',
+      'wait:1500',
+    ],
+    expect: 'UI.winterOpen() === true && Game.state.winter.grid.filter((c) => c.seed).length === 5',
+  },
+  {
+    slug: 'winter-tucked',
+    group: 'The seasons',
+    title: 'Winter — tucked in for the night',
+    line:
+      'One tap puts quilts over the bed and the plants asleep. Nothing is ever lost to a night: the tuck only adds.',
+    doc: '46-the-night-shift.md',
+    file: 'ui-winter.js',
+    steps: [
+      'wait:600',
+      'eval:Game.state.year.turnsCompleted = 3',
+      'eval:Game.Dev.grantGold(500000)',
+      'eval:Game.Dev.fillWinter()',
+      'eval:Game.winterTuck()',
+      'eval:UI.enterSeason(\'winter\')',
+      'wait:1500',
+    ],
+    expect: 'Game.winterTucked() === true && Game.state.winter.grid.filter((c) => c.seed).length === 8',
+  },
+  {
+    slug: 'winter-morning',
+    group: 'The seasons',
+    title: 'Winter — the morning, and the snowfall',
+    line:
+      'Every bloom that opened under the quilt wears a frost rim, and Collect All names what the night is worth.',
+    doc: '46-the-night-shift.md',
+    file: 'ui-winter.js',
+    steps: [
+      'wait:600',
+      'eval:Game.state.year.turnsCompleted = 3',
+      'eval:Game.Dev.grantGold(500000)',
+      'eval:Game.Dev.fillWinter()',
+      'eval:Game.winterTuck()',
+      'eval:Game.Dev.nightWinter()',
+      'eval:UI.enterSeason(\'winter\')',
+      'wait:1500',
+    ],
+    expect: 'Game.winterBedValue().kept === 8',
   },
   {
     slug: 'turn-ask',

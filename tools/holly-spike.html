@@ -526,13 +526,20 @@ function quilt(w, h, y, scallop){
     hem += ' q' + (sw / 2) + ' ' + (scallop) + ' ' + sw + ' 0';
   }
   hem += ' V' + (y + h) + ' Z';
-  return '<g stroke="' + INK + '" stroke-width="3" stroke-linejoin="round">'
+  /* CENTRED ON THE CELL, and this is a correction rather than a tidy: the
+     patches are laid out around x=0 while the plants stand at x=70 in the
+     140-wide study box, so every quilt was drawn half off the left edge and
+     covered no plant at all. Three of the four studies showed a caption for a
+     picture that was not on the page — including S2, the one that was ruled. */
+  return '<g transform="translate(70 0)">'
+    + '<g stroke="' + INK + '" stroke-width="3" stroke-linejoin="round">'
     + '<g>' + s + '</g>'
     + '<path d="' + hem + '" fill="#fff8e7"/>'
     + '<rect x="' + (-w / 2) + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="none"/>'
     + '</g>'
     /* the lit top fold — the house material's own lit edge, opaque, never rgba */
-    + '<rect x="' + (-w / 2 + 2) + '" y="' + (y + 2) + '" width="' + (w - 4) + '" height="4" fill="#fffdf7"/>';
+    + '<rect x="' + (-w / 2 + 2) + '" y="' + (y + 2) + '" width="' + (w - 4) + '" height="4" fill="#fffdf7"/>'
+    + '</g>';
 }
 
 /* A generic winter bloom to put to bed — a Snowdrop, three hanging bells. */

@@ -1288,41 +1288,52 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
-**SLICE C — WINTER, THE NIGHT SHIFT — IS IN BUILD.** The spec is
-[46-the-night-shift.md](46-the-night-shift.md), and it is owner-ruled and pressure-tested; read it
-twice before touching anything here.
+**SLICE C — WINTER, THE NIGHT SHIFT — IS PLAYABLE ON `main`.** The spec is
+[46-the-night-shift.md](46-the-night-shift.md); read it twice before touching anything here.
 
-**Where it stands.** Gate 1 (the two spikes) is closed and gate 3 (the engine as pure simulation)
-has shipped. The live game is unchanged to the eye: Winter sits behind a Turn-3 gate and has no
-surface yet.
+**The five-minute check is at the top of this file's morning script.** The short version: Developer
+tools → *Jump ahead* → **+3 Turns**, swipe past Fall, meet Holly, plant a bed, tuck it in, then
+Developer tools → **Winter → Sleep a whole night** → collect.
 
 | Gate | State |
 | --- | --- |
-| 1 · Two spikes, then stop for the owner | **Closed.** `tools/holly-spike.html` and `tools/winter-spike.html` are live. The owner spent the gate on play rather than reading — *"go with your recommendation on everything"* — so every open question was ruled by the builder and written into the 2026-09-01 gate-1 decision-log entry |
-| 2 · The owner's annotations build verbatim | **Closed with gate 1** |
-| 3 · Engine as pure simulation | **Shipped.** `DATA.winter`, `state.winter`, the whole economy block in `game.js`, the test bill at 1,592 assertions, every guard sabotaged |
-| 4 · The surface | **Next** |
-| 5 · The gauntlet | Not started |
+| 1 · Two spikes, then stop | **Closed.** Both live. The owner spent the gate on play rather than reading — *"go with your recommendation on everything"* — so every question was ruled by the builder and argued in the 2026-09-01 gate-1 decision-log entry |
+| 2 · Annotations build verbatim | **Closed with gate 1** |
+| 3 · Engine as pure simulation | **Shipped.** 1,592 assertions, every guard sabotaged |
+| 4 · The surface | **Shipped.** Board, chip, the one button, Holly, the picker, the gate card, the welcome-back line, the avatar picker |
+| 5 · The gauntlet | **In progress.** An adversarial critique of the spikes ran and its findings are folded in; the visual and grammar passes are done by eye and by `tools/probe.js` |
 
-**The two things about this engine that are not obvious from the diff.**
+**Four things about this slice that are not obvious from the diff.**
 
 1. **`kept` is derived from timestamps and then persisted, and that is the season.** Winter ripens
-   with the app shut, so no code runs at the moment a plant opens — the mark is a comparison
-   (`plantedAt + grow` inside the standing tuck window), run wherever ripeness is first observed.
-   Tucking after a plant has opened earns nothing; an earned mark is never voided by anything.
+   with the app shut, so no code runs when a plant opens; the mark is a comparison of the computed
+   ripen instant against the recorded tuck window. Tucking after a plant has opened earns nothing,
+   and an earned mark is never voided by anything.
 2. **`winterHarvestAll()` is NOT a `fallHarvestAll()` mirror.** It takes every ripe plant and pays
-   the snowfall on the **kept subset only**. Fall's marks and Fall's collection are the same set;
+   the snowfall on the **kept subset only** — Fall's marks and Fall's collection are the same set,
    Winter's are not. The mixed bed is a named test because the all-kept morning hides it.
+3. **"Fall's flower cannot speak" was two bugs.** The node (moved, per season) and `sayText()`'s
+   coach test, which refused every line in a season room because the coach is `display:none`'d there
+   while `hidden` stays false. Fall's `windfall` line has now drawn for the first time since Fall
+   shipped. `say()` also gained a room gate, or the Summer flower's lines come out of Holly's mouth.
+4. **The play model is one file now** — `tools/play-model.js`, shared by `year-sim` and
+   `order-gold`, seeded, on a fixed epoch. See below; it found two real things on its first run.
 
-**What is next, in order.** The measurement (which has two already-ruled prerequisites — seed
-`tools/year-sim.js` and extract the shared `tools/play-model.js` — *before* a Winter arm, or Winter
-becomes the fourth diverged copy of the play model), then the surface, then the gauntlet.
+**THE ONE ECONOMY NUMBER THE OWNER SHOULD SEE.** `node tools/year-sim.js 14 winter` passes guardrail
+one — no rung's single full kept night clears both Turn gates at Turns 3–6 — **by 7.5%**. Below a
+lifetime of **48.9M gold** the richest kept night (eight Camellia, net 1.408M) does clear both, and
+this model's poorest Turn-3-to-6 player sits at 52.5M. That is a thin margin on a model that runs
+hot against doc 33's own year-one target. Every number in `DATA.winter` is provisional and the ladder
+is the owner's to rule on; raising the top rung's cost lowers its net and widens the margin.
 
-**The five collision surfaces with tonight's fix round are still LIVE and still un-landed** as of
-this writing: #15's season-tab retirement, `goSeason()` going ternary, `seasonWaiting()` widening,
-`renderRail()`'s #11/#9 edits, and the stages pass's untouchable `.plot`/`data-stage` block. The
-engine touches none of them. **The surface touches four of the five** — re-verify with `git fetch`
-and `git log` before editing `ui.js`.
+**What is still open, honestly:** the gauntlet's last pass (docs 34) has not had a clean second
+round, and the fix round's five collision surfaces have STILL not landed as of this writing — slice C
+touched four of them (`goSeason` is ternary, `seasonWaiting` is widened, `renderRail` has the #11
+room filter, and Winter's controls joined `noSwipe`). **#15's season-tab retirement is the one that
+will conflict**: `renderSeasonEdges()` is unchanged and Winter now has a tab. Re-verify with
+`git fetch` before touching `ui.js`.
+
+---
 
 ---
 

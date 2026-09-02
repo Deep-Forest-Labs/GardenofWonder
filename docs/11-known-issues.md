@@ -25,12 +25,23 @@ without one; everything needed is in place if the ruling changes. Note the trap 
 `weatherSlotRemaining()` measures the **slot**, and a called or held sky outlasts its slot, so a
 chip that trusted it would count to zero and then keep going.
 
-**Fall's flower cannot speak.** `UI.say()` writes into `#speech`, which lives inside the garden's
-flower cell and is hidden by `.in-fall .garden-frame{display:none}` — so the `windfall` beat's
-`UI.say('windfall', true)` in `ui-events.js` has always gone into a hidden node when it fires in
-Fall, which is the only place it can fire. Collect All does not call `say()` and uses a toast
-instead. The fix is either a speech node of Fall's own (it cannot reuse the id) or moving the
-bubble out of the flower cell; neither belongs in a fix round.
+**Fixed 2026-09-01 (slice C) — "Fall's flower cannot speak" was two bugs, not one.** The recorded
+half was the node: `#speech` lives inside the garden's flower cell and four `display:none` rules
+delete that subtree. `UI.bindFlower()` now MOVES the one `#speech` node into whichever hero's cell
+is on screen, which keeps the id — `tools/capture-screens.js` and `tools/stage-parity.js` both
+address it by name — and keeps one `speechEl` for the cooldown to reason about. The half nobody had
+written down: `sayText()` refused on `!el.coach.hidden`, and `.in-fall .coach:not(.season)` hides
+the coach in CSS while leaving `hidden` false, so every line in a season room was refused before it
+reached the node. It asks `offsetParent !== null` now. Fall's `windfall` line has drawn on screen
+for the first time since Fall shipped.
+
+**Fall's bed chip double-spaces around its bold words.** `.fl-chip` is
+`display:flex; gap:7px`, and a flex gap applies between EVERY child — so
+`<b>5 / 8</b> planted` renders as "5 / 8  planted", with seven pixels leaking into
+the sentence wherever the copy bolds a number. Found 2026-09-01 while building Winter's chip, which
+had inherited the same shape; `.wi-chip` takes `gap:0` with the margin on the icon instead. Fall's
+is one line of CSS away and was deliberately not changed in slice C, because Fall is not that
+slice — it is a two-minute fix for the next round.
 
 **The gem skip chip still overflows its plot in landscape.** Narrower than it was now the wait is
 gone, still a 34px chip on a 31px tile. Landscape is not a supported orientation. See the entry
@@ -299,11 +310,22 @@ flips the result back.
 **Ruled 2026-08-30: seed it and run it paired**, rather than moderating the multipliers. Moderating
 would also have flipped the verdict and would have undone the ruling that raised them. Seeding is the
 load-bearing half — the same player can then be run on the same dice against two economies, so the
-difference is the change rather than the weather. It is the job *before* the Preserve, because the
-Preserve is the first change worth a real before-and-after. Note also that
-`tools/order-gold.js` copied `tools/year-sim.js`'s play model verbatim and the pantry probe made a
-third copy: **three copies of the casual player exist**, and pulling one `tools/play-model.js` out of
-them is part of the same job.
+difference is the change rather than the weather.
+
+**DONE 2026-09-01 (slice C).** `tools/play-model.js` exists and both tools run on it; `year-sim.js`
+is seeded on a fixed epoch and its output is byte-identical run to run. There were **two** copies of
+the casual player rather than three — the pantry probe was a throwaway and is gone. The extraction's
+acceptance test was `order-gold.js`'s full report coming back **byte-identical**, and it caught a
+divergence nobody had listed: `results.turns` is an array of records in one tool and a counter in the
+other, so there are five hooks and not four.
+
+**And seeding immediately paid for itself twice.** Five runs of the UNSEEDED tool on unmodified code
+returned FAIL, FAIL, FAIL, OK, FAIL, so bill 17's exit code had been reporting noise. And the first
+seeded Winter arm failed bill 17 — which turned out to be the MODEL rather than the economy: a
+`playWinter()` that refilled every plot on every eight-second check parked the casual player's whole
+wallet in the slowest season in the game, for an 8% loss. Modelled as the ritual (collect when you
+look, sow and tuck once on the way out) it passes both ways. **A model that does not represent a
+person measures nobody**, and that is the general form of it.
 
 **The spread INSIDE a tier is far wider than the spread between tiers, and no multiplier can close
 it.** At the ruled values a tier-4 board pays anywhere from 4 seconds to six hours of the player's

@@ -118,6 +118,13 @@
       const def = Game.critterById(id.slice(8));
       if (def) return Critters.draw(def);
     }
+    /* FITTED, and it is a finding rather than a preference: the picker draws a
+       face inside a circular mask, and at the Talking Flower's scale every
+       point of Holly's crown falls outside it — so unfitted she is a dark disc
+       beside the Summer flower and the row has not identified her. Fitting the
+       whole head in costs 17% of her face; the spike carried the row both ways
+       and the owner took the trade. */
+    if (id === 'holly') return Flora.hollyFace(size);
     return Flora.talkingFlower();
   }
 
@@ -133,6 +140,9 @@
       const def = Game.critterById(id.slice(8));
       if (def) return (def.art && def.art.accent) || '#8fe08a';
     }
+    /* Her own hot pink under the disc's white veil — the Summer flower's pink,
+       which is the joke and also zero new colours. */
+    if (id === 'holly') return '#ff5d95';
     return '#ffd6ea';
   }
 
@@ -243,13 +253,13 @@
 
   function renderPicker() {
     const c = Game.avatarChoices();
-    const blooms = [{
-      id: 'flower', unlocked: true, tint: '#ffd6ea',
-      label: 'The talking flower', art: Flora.talkingFlower()
-    }].concat(c.blooms.map((b) => ({
+    const heroRow = (c.heroes || []).map((h) => (h.kind === 'holly'
+      ? { id: 'holly', unlocked: true, tint: '#ff5d95', label: 'Holly', art: Flora.hollyFace(34) }
+      : { id: 'flower', unlocked: true, tint: '#ffd6ea', label: 'The talking flower', art: Flora.talkingFlower() }));
+    const blooms = c.blooms.map((b) => ({
       id: b.id, unlocked: b.unlocked, tint: b.seed.art.c1,
       label: b.seed.name, art: Flora.head(b.seed, 34)
-    })));
+    }));
     const pets = c.pets.map((p) => ({
       id: p.id, unlocked: true, tint: (p.critter.art && p.critter.art.accent) || '#8fe08a',
       label: p.critter.name, art: Critters.draw(p.critter)
@@ -257,8 +267,10 @@
 
     body.innerHTML = `
       <div class="dr-rows">
+        ${heroRow.length > 1 ? `<p class="pick-group">Who talks to you</p>
+          <div class="pick-grid">${heroRow.map(pickCell).join('')}</div>` : ''}
         <p class="pick-group">Your blooms</p>
-        <div class="pick-grid">${blooms.map(pickCell).join('')}</div>
+        <div class="pick-grid">${(heroRow.length > 1 ? blooms : heroRow.concat(blooms)).map(pickCell).join('')}</div>
         ${pets.length ? `<p class="pick-group">Creatures you have met</p>
           <div class="pick-grid pets">${pets.map(pickCell).join('')}</div>` : ''}
         <p class="dr-foot">Your garden is your face. Grow a flower or meet a creature and it turns up here.</p>

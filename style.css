@@ -4732,6 +4732,311 @@ button:focus-visible{
   animation:affordPulse 1.4s ease-in-out infinite;
 }
 
+/* =========================================================
+   WINTER — the night shift
+
+   Winter is NOT a place layer either. Same room, different board, and nothing
+   here re-states the 560px column.
+
+   THE MATERIAL, and why it is not Fall's (docs/05 check 5). The world here is
+   SNOW, so both of the board's tiers have to be darker than the world — the
+   opposite polarity to Fall's pale trug on olive ground, and the SAME polarity
+   as Summer's dark planter on a bright lawn. The frame is the dark body and
+   the cells are the mid body inside it, which is docs/05's tier table
+   unchanged. A first pass inverted it (a mid frame, near-black cells) on the
+   theory that white blooms want dark ground, and it cost the ink bloom outline
+   and the ink empty-marker, both of which simply disappeared.
+
+   Two ramps, declared in 05-art-direction.md with their reasons:
+     frame  #3f4959 / #313947 / #262c37, lip #191e26   — cold timber
+     cell   #7d8798 / #68717f / #565e6b, lip #414854   — frozen earth
+   ========================================================= */
+
+.winter-layer{position:absolute;inset:0;z-index:2;pointer-events:none}
+.winter-layer[hidden]{display:none}
+.winter-scene-host{position:absolute;inset:0;overflow:hidden}
+.winter-scene{width:100%;height:100%;display:block}
+
+.winter-frame{display:none;width:100%;height:100%;place-items:center;min-height:0;min-width:0}
+.in-winter .winter-frame{display:grid}
+.in-winter .garden-frame{display:none}
+/* The creatures live in Summer. Their yard's reserved height goes back to the
+   board, exactly as it does in Fall. */
+.in-winter .critter-yard{display:none}
+/* Every room that can be up has to be named here, or `refreshCoach()` measures
+   a hidden node, gets a 0x0 rect and parks the bubble over the wallets. The
+   one that teaches the way back OUT stays, because it points at a season tab,
+   which is a real visible node in this room. */
+.in-winter .coach:not(.season){display:none}
+/* And the weather tooltip is a `.coach`, so it is covered by the line above —
+   but it is worth naming, because it is the one that would paint over the snow
+   a whole second after a swipe. */
+.in-winter #wxTip{display:none}
+
+.wi-wrap{position:relative;display:grid;place-items:center}
+
+.wi-board{
+  --gap:clamp(6px, 2.2vw, 13px);
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:var(--gap);
+  padding:calc(var(--gap) * .85);
+  border:4px solid var(--ink);
+  border-radius:26px;
+  /* Planed timber, one grain direction. Two crossed grains read as graph
+     paper, which the spike caught before this shipped. */
+  background:
+    repeating-linear-gradient(94deg, rgba(255,255,255,.09) 0 3px, transparent 3px 15px),
+    linear-gradient(180deg,#3f4959 0%, #313947 44%, #262c37 100%);
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.22),
+    inset 0 -9px 0 rgba(0,0,0,.24),
+    0 9px 0 #191e26,
+    0 18px 26px rgba(44,26,16,.32);
+}
+/* Snow lying along the frame's top rail — the season ON the object rather than
+   only behind it. It sits on the board, so it is not a lip and it is opaque. */
+.wi-board::before{
+  content:'';position:absolute;left:-2px;right:-2px;top:-9px;height:15px;
+  border-radius:12px 12px 40% 40% / 12px 12px 9px 9px;
+  background:linear-gradient(180deg,#ffffff,#eaf4fb);
+  border:3px solid var(--ink);border-bottom:0;pointer-events:none;
+}
+/* Armed restates the WHOLE stack. A state modifier that adds a rim and forgets
+   the lip deletes the lip in the one state everybody is looking at. */
+.wi-board.armed{
+  box-shadow:
+    inset 0 5px 0 rgba(255,255,255,.22),
+    inset 0 -9px 0 rgba(0,0,0,.24),
+    0 9px 0 #191e26,
+    0 18px 26px rgba(44,26,16,.32),
+    0 0 0 4px var(--coin),
+    0 0 30px 10px rgba(255,201,60,.42);
+}
+
+.wi-plot{
+  position:relative;
+  border-radius:var(--r-md);
+  border:3px solid var(--ink);
+  background:linear-gradient(180deg,#7d8798 0%, #68717f 72%, #565e6b 100%);
+  box-shadow:0 4px 0 #414854, 0 8px 14px rgba(44,26,16,.24);
+  display:block;overflow:visible;isolation:isolate;padding:0;
+  transition:transform .1s ease, box-shadow .1s ease;
+}
+.wi-plot:active{transform:translateY(3px);box-shadow:0 1px 0 #414854, 0 4px 8px rgba(44,26,16,.22)}
+/* The lit top edge and the shaded bottom ride an OVERLAY: an inset box-shadow
+   paints under an element's content, and the cell has an opaque floor. */
+.wi-plot::after{
+  content:'';position:absolute;inset:0;border-radius:15px;pointer-events:none;z-index:6;
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.13), inset 0 -7px 0 rgba(0,0,0,.2);
+}
+.wi-floor{position:absolute;inset:0;border-radius:15px;overflow:hidden;line-height:0}
+.wi-floor svg{width:100%;height:100%;display:block}
+.wi-slot{position:absolute;inset:0;display:grid;place-items:center;z-index:2;line-height:0}
+.wi-slot svg{width:88%;height:88%;overflow:visible}
+/* SUMMER'S marker size, not Fall's. Punch list #12 is open on Fall's being 1.5x
+   Summer's, and this season is not going to add a third size to the set. */
+.wi-empty{position:absolute;inset:0;display:none;place-items:center;z-index:2;opacity:.62}
+.wi-empty svg{width:30%;height:30%;max-width:44px}
+.wi-plot[data-state="empty"] .wi-empty{display:grid}
+.wi-plot[data-state="empty"]{filter:saturate(.85)}
+
+/* Ready. The same "!" the garden and Fall use, so the state is learned once. */
+.wi-ready{
+  position:absolute;top:-9px;right:-6px;z-index:8;display:none;place-items:center;
+  width:24px;height:24px;border-radius:50%;border:3px solid var(--ink);
+  background:linear-gradient(180deg,#ffe98a,var(--coin));
+  box-shadow:0 2px 0 var(--ink-2);font-size:13px;font-weight:800;line-height:1;
+  animation:readyBob 1.6s ease-in-out infinite;
+}
+.wi-plot[data-state="ready"] .wi-ready{display:grid}
+.wi-plot[data-state="ready"]{box-shadow:0 4px 0 #414854, 0 8px 14px rgba(44,26,16,.24), 0 0 0 3px var(--coin)}
+
+.wi-wait{
+  position:absolute;left:50%;bottom:15px;transform:translateX(-50%);z-index:7;
+  padding:2px 7px;border:2px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 2px 0 var(--ink-2);
+  font-size:10.5px;font-weight:800;line-height:1;white-space:nowrap;
+}
+.wi-wait[hidden]{display:none}
+.wi-bar{
+  position:absolute;left:12%;right:12%;bottom:5px;height:7px;border-radius:999px;z-index:7;
+  /* The garden's dark track and the garden's green fill, both restated. At 0%
+     a cream well draws a bright line across the plant (Fall's own note), and
+     green means GROWING in every room — a frost-blue bar would be a second
+     meaning for an object the player has already learned. */
+  border:2px solid var(--ink);background:rgba(35,20,10,.5);overflow:hidden;display:none;
+}
+.wi-plot[data-state="grow"] .wi-bar{display:block}
+.wi-bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#8ce99a,#51cf66)}
+
+.wi-flower-cell{display:grid;place-items:center;position:relative;overflow:visible}
+
+/* ---------- THE KEPT MARK ----------
+   A frost rim, and it is a BASE STYLE rather than an animation. Where a state
+   animates, reduced motion needs a STATIC SUBSTITUTE and not a shorter
+   duration — the Turn button's ready ring was a breathing gold halo and
+   nothing else, and a player with the preference on had no ready signal at all
+   for weeks. The rim IS the state; the travelling glint is a flourish on it. */
+.wi-plot.kept{
+  box-shadow:0 4px 0 #414854, 0 8px 14px rgba(44,26,16,.24),
+             0 0 0 3px #eaf4fb, 0 0 14px 3px rgba(147,182,208,.55);
+}
+/* AND IT KEEPS THE READY GOLD. `box-shadow` is one property, so the rule above
+   replaced `[data-state="ready"]`'s gold rim outright — which made the plants
+   worth +50% the QUIETEST cells on a mixed board, the exact inversion of what
+   the state is for. A kept ripe cell is two facts and wears both: the gold rim
+   that means "pick me" everywhere in this game, and a frost halo outside it
+   that means "this one paid extra". */
+.wi-plot.kept[data-state="ready"]{
+  box-shadow:0 4px 0 #414854, 0 8px 14px rgba(44,26,16,.24),
+             0 0 0 3px var(--coin), 0 0 0 6px #eaf4fb, 0 0 18px 4px rgba(147,182,208,.6);
+}
+/* The badge stays gold too — it is the same "!" the garden and Fall use, and a
+   state is not a place to re-teach a glyph. */
+.wi-plot.kept .wi-ready{background:linear-gradient(180deg,#ffffff,#bcd6e8);box-shadow:0 2px 0 var(--ink-2), 0 0 0 2px var(--coin)}
+.wi-shimmer{
+  position:absolute;inset:0;border-radius:15px;overflow:hidden;z-index:5;
+  pointer-events:none;display:none;
+}
+.wi-plot.kept .wi-shimmer{display:block}
+.wi-shimmer::before{
+  content:'';position:absolute;top:-40%;bottom:-40%;width:42%;left:-50%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.72),transparent);
+  transform:rotate(8deg);
+  animation:wiSweep 3.4s ease-in-out infinite;
+}
+@keyframes wiSweep{0%{left:-50%}55%,100%{left:118%}}
+
+/* ---------- the quilt, and the sleeping plant under it ----------
+   Tucked to the SHOULDERS, not over the whole cell: the bloom stays legible
+   while it is covered, so a tucked bed is still a bed you can read and the
+   chip's count has something on the board to point at. */
+.wi-quilt{
+  /* 38%, not 44%: at 44 the quilt swallowed a stage-1 shoot entirely and the
+     board went blank the moment it was tucked. Tucked to the SHOULDERS means
+     something has to be above the covers at every stage. */
+  position:absolute;left:-3px;right:-3px;bottom:-3px;height:38%;
+  z-index:4;pointer-events:none;display:none;
+}
+.wi-plot.tucked .wi-quilt{display:block}
+.wi-quilt svg{width:100%;height:100%;display:block;overflow:visible}
+.wi-plot.tucked .wi-bar,.wi-plot.tucked .wi-wait{display:none}
+/* Only the breath keeps moving under the quilt, exactly as a sleeping creature
+   does — `cr-breathe` at the same 3.6s and the same origin. */
+.wi-plot.tucked .wi-slot svg{animation:wiBreathe 3.6s ease-in-out infinite;transform-origin:50% 96%}
+@keyframes wiBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.028)}}
+
+/* CLEAR OF THE SNOW RAIL. White Zs over the board's white cap is white on
+   white; they hang over the dark frame's right shoulder instead, which is the
+   one part of this board that is reliably dark in both skies. */
+.wi-sleep{position:absolute;right:6px;top:12px;z-index:9;display:none;pointer-events:none}
+.wi-board.sleeping .wi-sleep{display:block}
+.wi-zzz{width:54px;height:44px;overflow:visible;display:block}
+/* Visible at rest, drifting as a flourish on top — the same rule the pack badge
+   and the creature Zs are both on. A Z that only exists once a keyframe has run
+   is invisible anywhere the animation clock is not advancing. */
+.wi-z{
+  opacity:.72;transform-origin:50% 50%;
+  animation:wiZfloat 4.8s ease-in-out infinite;
+  animation-delay:calc(var(--i) * -1.6s);
+}
+@keyframes wiZfloat{
+  0%{opacity:0;transform:translate(0,3px)}
+  14%{opacity:.75}
+  32%{transform:translate(-3.5px,-6px)}
+  56%{transform:translate(3.5px,-13px)}
+  80%{opacity:.5;transform:translate(-2.5px,-20px)}
+  100%{opacity:0;transform:translate(1px,-27px)}
+}
+
+/* ---------- the chip above the board ----------
+   Fall's chip geometry line for line — it is the same object in a different
+   season, and restating the recipe is the rule rather than inventing a
+   second one. */
+.wi-chip{
+  position:absolute;left:50%;transform:translateX(-50%);
+  top:-46px;z-index:6;pointer-events:none;
+  display:flex;align-items:center;gap:7px;
+  max-width:96%;padding:6px 13px;white-space:nowrap;
+  border:3px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.2);
+  font-size:12.5px;font-weight:800;line-height:1;
+}
+/* TWO FLEX CHILDREN — the icon, and the SENTENCE in one span. `gap:7px` on a
+   flex row applies between every child, so a chip whose content is loose text
+   and `<b>` elements makes each of them a flex item: `<b>2 kept</b>, 2 ripe`
+   rendered as "2 kept , 2 ripe" with the gap leaking into the punctuation, and
+   setting `gap:0` then deleted the real spaces instead (flex drops the
+   whitespace BETWEEN items). Wrapping the sentence is the fix that does both.
+   (`.fl-chip` has the same shape and the same leak; recorded in
+   11-known-issues.md rather than changed here, because Fall is not this slice.) */
+.wi-chip svg{width:18px;height:18px;flex:none}
+/* TUCKED IS DRAINED, not a new hue: the interface's own paper with the warmth
+   taken out, exactly as `.cp-head.asleep` does. Asleep is a state, and a state
+   takes the value out of the surface it is already on before it reaches for a
+   colour. */
+.wi-chip.tucked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2))}
+.wi-chip.frost{background:linear-gradient(180deg,#ffffff,#bcd6e8)}
+
+/* ---------- the one button below the board ----------
+   Same box as `.fl-collect`, including the 132px clearance the band's two
+   buttons force — UPGRADE 34px in from the left, POWER-UP 34px in from the
+   right, and neither is hidden in Winter. The VERB changes; the geometry
+   never does. */
+.wi-act{
+  position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);
+  z-index:6;pointer-events:auto;
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  max-width:132px;padding:6px 14px;white-space:nowrap;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.22);
+  font-weight:800;line-height:1.15;color:var(--ink);
+}
+.wi-act[hidden]{display:none}
+.wi-act:active{transform:translate(-50%,3px);box-shadow:0 1px 0 var(--ink-2), 0 4px 8px rgba(44,26,16,.2)}
+.wi-act .a-do{display:flex;align-items:center;gap:5px;font-size:11.5px}
+.wi-act .a-do svg{width:15px;height:15px;flex:none}
+.wi-act .a-val{font-size:15px}
+/* GOLD MEANS "YOU CAN HAVE THIS", so only the collect wears it — the armed
+   chip's exact gold, restated rather than warmed. A tuck pays nothing. */
+.wi-act.pay{background:linear-gradient(180deg,#ffe98a,var(--coin))}
+/* And a tucked bed takes the drained family, because it is asleep. It keeps a
+   lip, at the drained edge — a state that drops its lip stops being an object. */
+.wi-act.rest{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 3px 0 var(--paper-dim-edge), 0 6px 10px rgba(44,26,16,.16);
+}
+.wi-act.rest:active{transform:translate(-50%,2px);box-shadow:0 1px 0 var(--paper-dim-edge)}
+
+/* The gate card's scene, in Winter. Fall's is an autumn sky over autumn ground
+   because the palette holds neither; this is the same argument one season on. */
+.gate-scene.winter{background:linear-gradient(180deg,#b9cee0 0%,#eaf4fb 58%,#ffffff 100%)}
+.gate-scene.winter .ground{background:linear-gradient(180deg,#ffffff,#eaf4fb 60%,#bcd6e8)}
+
+/* REDUCED MOTION. Every state must still READ with all motion off — the check
+   is not "does it calm down". The frost rim, the quilt and the Zs are all base
+   style, so all that is cancelled here is the flourish on top of them. This
+   block sits AFTER every rule it cancels, because a media query adds no
+   specificity and one written above its target does nothing at all. */
+@media (prefers-reduced-motion:reduce){
+  .wi-z{animation:none;opacity:.8}
+  /* The GLINT GOES AWAY ENTIRELY rather than freezing. docs/05 names the
+     failure by hand — "a diagonal band frozen mid-travel reads as a rendering
+     artefact" — and the Turn button's own reduced-motion state takes a wash
+     rather than a paused band for the same reason. Here the static substitute
+     already exists and is the better one: the frost rim IS the state, so
+     removing the flourish leaves the state fully readable. */
+  .wi-shimmer{display:none}
+  .wi-plot.tucked .wi-slot svg{animation:none}
+  .wi-ready{animation:none}
+}
+
 /* ---------- the season edges ----------
    How a player finds out sideways exists. The horizontal answer to the burrow
    door: a labelled thing you can tap, beside a gesture that does the same. They

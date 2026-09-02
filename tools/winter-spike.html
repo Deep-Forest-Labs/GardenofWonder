@@ -89,7 +89,7 @@ figcaption i{display:block;font-style:normal;font-weight:600;font-size:11.5px;co
 body[data-notes="0"] .note{display:none}
 
 /* ---------- the phone ---------- */
-.phone{position:relative;width:390px;height:844px;overflow:hidden;
+.phone{position:relative;width:390px;height:844px;overflow:hidden;font-family:var(--font);
   border:5px solid var(--ink);border-radius:36px;box-shadow:0 8px 0 rgba(44,26,16,.3);
   background:#dfeaf3;--sat:59px;--sab:34px;user-select:none;
   --bottom-gap:max(10px, calc(var(--sab) - 12px))}
@@ -294,7 +294,11 @@ body[data-notes="0"] .note{display:none}
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
   box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.2);
   font-size:12.5px;font-weight:800;line-height:1}
+/* TWO FLEX CHILDREN — the icon, and the sentence in one span. A `gap` applies
+   between EVERY flex child, so loose text and `<b>` elements each become one
+   and the gap leaks into the punctuation. See the shipped rule in style.css. */
 .wi-chip svg{width:18px;height:18px;flex:none}
+.wi-chip > span{display:block}
 /* Tucked is a DRAINED state, not a new hue: the interface's own paper with the
    warmth taken out, exactly as .cp-head.asleep does. Asleep is not a tier. */
 .wi-chip.tucked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2))}
@@ -316,6 +320,7 @@ body[data-notes="0"] .note{display:none}
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
   box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.22)}
 .wi-act .a-do{display:flex;align-items:center;gap:5px;font-size:11.5px}
+.wi-act .a-do svg{width:15px;height:15px;flex:none}
 .wi-act .a-val{font-size:15px}
 /* Gold means "you can have this" — so ONLY the collect wears it. */
 .wi-act.pay{background:linear-gradient(180deg,#ffe98a,var(--coin))}
@@ -831,8 +836,8 @@ function fig(tag, title, sub, inner, note){
 const SD = PLANTS[0], CY = PLANTS[2], CA = PLANTS[5];
 const ACT_TUCK = '<button class="wi-act"><span class="a-do">' + ico('quilt') + 'Tuck the bed in</span><span class="a-val">for the night</span></button>';
 const ACT_REST = '<button class="wi-act rest"><span class="a-do">' + ico('quilt') + 'Tucked in</span><span class="a-val">goodnight</span></button>';
-const ACT_PAY  = '<button class="wi-act pay"><span class="a-do">' + ico('snow') + 'Collect all &middot; +50%</span><span class="a-val">+12,600</span></button>';
-const ACT_PAY_MIX = '<button class="wi-act pay"><span class="a-do">' + ico('snow') + 'Collect all &middot; 2 kept</span><span class="a-val">+9,800</span></button>';
+const ACT_PAY  = '<button class="wi-act pay"><span class="a-do">' + ico('snow') + 'Collect all &middot; +50%</span><span class="a-val">+21,000</span></button>';
+const ACT_PAY_MIX = '<button class="wi-act pay"><span class="a-do">' + ico('snow') + 'Collect all &middot; 2 kept</span><span class="a-val">+49,700</span></button>';
 
 document.getElementById('ritual').innerHTML =
   fig('W1', 'Evening — a planted bed, not yet tucked',
@@ -842,7 +847,7 @@ document.getElementById('ritual').innerHTML =
       {state:'grow', plant:CY, wait:'17h left', pct:14}, {state:'grow', plant:SD, wait:'9h left', pct:26},
       {state:'grow', plant:CY, wait:'17h left', pct:14}, {state:'empty'},
       {state:'grow', plant:SD, wait:'9h left', pct:26}, {state:'empty'}
-    ], { chip: ico('leaf') + '<b>5 growing</b> &middot; tuck in for <b>+50%</b> overnight', act: ACT_TUCK })),
+    ], { chip: ico('leaf') + '<span><b>6 growing</b> &middot; tuck in for <b>+50%</b> overnight</span>', act: ACT_TUCK })),
     'One button below the board, and its verb is the bed’s state. Fall’s Collect All owns this strip and is capped at 132px by the band’s two buttons; a second control here would have to fight it for the same clearance.')
   + fig('W2', 'The tuck — quilts settle and the plants sleep',
     'Shut eyes on the bloom, Zs drifting, the quilt breathing.',
@@ -851,7 +856,7 @@ document.getElementById('ritual').innerHTML =
       {state:'grow', plant:CY, tucked:true}, {state:'grow', plant:SD, tucked:true, z:true},
       {state:'grow', plant:CY, tucked:true}, {state:'empty'},
       {state:'grow', plant:SD, tucked:true}, {state:'empty'}
-    ], { chip: ico('quilt') + '<b>Tucked in</b> &mdash; 5 growing', chipCls:'tucked', act: ACT_REST })),
+    ], { chip: ico('quilt') + '<span><b>Tucked in</b> &mdash; 6 growing</span>', chipCls:'tucked', act: ACT_REST })),
     'The tuck is TIME-FREE: 2pm is fine, it means goodnight whenever you leave. Nothing is ever lost to a night — no frost, no wilt, no decay — so the quilts have to read as cosy and never as a warning.')
   + fig('W3', 'Morning — the kept blooms shimmer',
     'A frost rim is the STATE; the travelling glint is the flourish.',
@@ -860,7 +865,7 @@ document.getElementById('ritual').innerHTML =
       {state:'grow', plant:CY, tucked:true, wait:'8h left', pct:58}, {state:'ready', plant:SD, kept:true},
       {state:'grow', plant:CY, tucked:true}, {state:'empty'},
       {state:'ready', plant:SD, kept:true}, {state:'empty'}
-    ], { chip: ico('snow') + '<b>4 kept blooms</b> waiting &mdash; <b>+50%</b>', chipCls:'frost', armed:true, act: ACT_PAY })),
+    ], { chip: ico('snow') + '<span><b>4 kept blooms</b> waiting &mdash; <b>+50%</b></span>', chipCls:'frost', armed:true, act: ACT_PAY })),
     'Turn Motion off and the rim stays. A shimmer that only exists once a keyframe has run is a state that a player with reduced motion on cannot see — the Turn button’s ready ring shipped that way for weeks.')
   + fig('W4', 'The mixed bed — kept beside unkept-ripe',
     'The one morning a literal Fall mirror would get wrong.',
@@ -869,33 +874,38 @@ document.getElementById('ritual').innerHTML =
       {state:'ready', plant:CY}, {state:'grow', plant:SD, wait:'4h left', pct:64},
       {state:'ready', plant:CY}, {state:'empty'},
       {state:'grow', plant:SD, wait:'4h left', pct:64}, {state:'empty'}
-    ], { chip: ico('snow') + '<b>2 kept</b>, 2 ripe &mdash; <b>+50%</b> on the kept two', chipCls:'frost', armed:true, act: ACT_PAY_MIX })),
+    ], { chip: ico('snow') + '<span><b>2 kept</b>, 2 ripe &mdash; <b>+50%</b> on the kept two</span>', chipCls:'frost', armed:true, act: ACT_PAY_MIX })),
     'The collect takes EVERYTHING ripe and pays the snowfall on the kept subset only. The all-kept morning is the one walk that hides this, which is why the mixed bed is a named test.')
   + fig('W5', 'Empty, and the season teaching itself',
     'A first entry, before anything is planted.',
     phone(board([{},{},{},{},{},{},{},{}],
-      { chip: ico('leaf') + 'Plant a bed, then <b>tuck it in</b> for <b>+50%</b>' })),
+      { chip: ico('leaf') + '<span>Plant a bed, then <b>tuck it in</b> for <b>+50%</b></span>' })),
     '?No button at all until there is a bed to tuck, or a disabled Tuck that explains itself? The empty state is the only frame here with nothing below the board, and Fall solves it by simply hiding Collect All.');
 
 /* ---------- 2 · the chip states ---------- */
 const CHIPS = [
-  ['', ico('leaf') + 'Plant a bed, then <b>tuck it in</b> for <b>+50%</b>', 'Empty bed'],
-  ['', ico('leaf') + '<b>5 growing</b> &middot; tuck in for <b>+50%</b> overnight', 'Planted, awake'],
-  ['tucked', ico('quilt') + '<b>Tucked in</b> &mdash; 5 growing', 'Tucked, nothing ripe yet'],
-  ['tucked', ico('clock') + '<b>Tucked in</b> &mdash; first up in 3h', 'Tucked, with an appointment'],
-  ['frost', ico('snow') + '<b>4 kept blooms</b> waiting &mdash; <b>+50%</b>', 'The morning'],
-  ['frost', ico('snow') + '<b>2 kept</b>, 2 ripe &mdash; <b>+50%</b> on the kept two', 'The mixed bed'],
-  ['', ico('star') + '<b>3 ripe</b> &middot; ready to pick', 'Ripe, never tucked'],
-  ['armed', ico('star') + 'The whole bed, kept &mdash; <b>+50%</b>', 'Eight for eight']
+  ['', ico('leaf') + '<span>Plant a bed, then <b>tuck it in</b> for <b>+50%</b></span>', 'Empty bed'],
+  ['', ico('leaf') + '<span><b>6 growing</b> &middot; tuck in for <b>+50%</b> overnight</span>', 'Planted, awake'],
+  ['tucked', ico('quilt') + '<span><b>Tucked in</b> &mdash; 6 growing</span>', 'Tucked, nothing ripe yet'],
+  ['tucked', ico('clock') + '<span><b>Tucked in</b> &mdash; first up in 3h</span>', 'Tucked, with an appointment'],
+  ['frost', ico('snow') + '<span><b>4 kept blooms</b> waiting &mdash; <b>+50%</b></span>', 'The morning'],
+  ['frost', ico('snow') + '<span><b>2 kept</b>, 2 ripe &mdash; <b>+50%</b> on the kept two</span>', 'The mixed bed'],
+  ['', ico('star') + '<span><b>3 ripe</b> &middot; ready to pick</span>', 'Ripe, never tucked'],
+  ['armed', ico('star') + '<span>The whole bed, kept &mdash; <b>+50%</b></span>', 'Eight for eight']
 ];
 document.getElementById('chips').innerHTML =
   '<div style="display:flex;flex-direction:column;gap:14px;background:#dfeaf3;border:4px solid var(--ink);'
   + 'border-radius:var(--r-lg);padding:26px 18px;box-shadow:0 6px 0 rgba(44,26,16,.3)">'
   + CHIPS.map(function(c){
-      return '<div style="position:relative;height:34px">'
-        + '<div class="wi-chip ' + c[0] + '" style="top:0">' + c[1] + '</div>'
-        + '<i style="position:absolute;left:calc(50% + 150px);top:8px;font-style:normal;font-size:11px;'
-        + 'font-weight:700;color:#4a3524;white-space:nowrap">' + c[2] + '</i></div>';
+      /* STATIC, not absolute. The gallery's rows were `position:absolute`
+         inside 34px boxes, so every chip stacked into one unreadable sliver —
+         the section that teaches the season's rule, illegible. On the board
+         the chip IS absolute (it hangs over the board's top edge); in a
+         gallery it is just a pill in a list. */
+      return '<div style="display:flex;align-items:center;gap:14px">'
+        + '<div class="wi-chip ' + c[0] + '" style="position:static;transform:none;flex:none">' + c[1] + '</div>'
+        + '<i style="font-style:normal;font-size:11px;font-weight:700;color:#4a3524;white-space:nowrap">'
+        + c[2] + '</i></div>';
     }).join('') + '</div>'
   + '<p class="note" style="max-width:40ch">Every one of these is a sentence about the bed, never about Holly. '
   + 'Her four buckets are flavour on top and are free to say nothing at all.</p>';
@@ -970,10 +980,10 @@ document.getElementById('intro').innerHTML =
     return fig('H' + (i+1), 'hollyIntro, line ' + (i+1),
       i === 0 ? 'The one-shot is consumed only after this has drawn.' : '&nbsp;',
       phone(board([{},{},{},{},{},{},{},{}],
-        { chip: ico('leaf') + 'Plant a bed, then <b>tuck it in</b> for <b>+50%</b>', speech: l })),
+        { chip: ico('leaf') + '<span>Plant a bed, then <b>tuck it in</b> for <b>+50%</b></span>', speech: l })),
       i === 3 ? 'Her sass aims at the Summer flower, never at the player. “The yellow one” is the whole rivalry in three words, and it needs no lore to land.' : '');
   }).join('')
-  + '<p class="note" style="width:390px">?The bubble is <code>#speech</code> given a per-season home &mdash; it lives inside whichever hero’s cell is on screen. That is the docs/11 fix (“Fall’s flower cannot speak”), and Fall inherits it free the same day.</p>';
+  + '<p class="note q" style="width:390px">The bubble is <code>#speech</code> given a per-season home &mdash; it lives inside whichever hero’s cell is on screen. That is the docs/11 fix (“Fall’s flower cannot speak”), and Fall inherits it free the same day.</p>';
 
 /* ---------- 6 · the picker ---------- */
 const fmt = (n) => n >= 1000 ? (n/1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'K' : String(n);
@@ -1002,7 +1012,7 @@ document.getElementById('specBox').innerHTML =
   + '<li><b>Tucked is DRAINED, not a new colour.</b> The chip and the resting button take <code>--paper-dim</code>, exactly as a sleeping creature’s panel does. Asleep is a state, not a tier.</li>'
   + '<li><b>The kept mark is a static frost rim, with the glint on top.</b> Turn Motion off above: the rim stays. Where a state animates, reduced motion needs a static substitute rather than a shorter duration.</li>'
   + '<li><b>Winter’s empty-plot marker is Summer’s 30%, not Fall’s 46%.</b> Punch list #12 is open and this season is not going to add a third size to the set.</li>'
-  + '<li><b>Two ramps, declared for docs/05 check 5:</b> the frame <code>#8494a8 / #6b7c92 / #56677d</code> lip <code>#41516a</code>, and the cell <code>#3d4553 / #2f3743 / #242a34</code> lip <code>#1b202a</code>. Plus snow and frost. Every pill, price, chip and button below is an existing recipe restated, and the snowfall’s gold is the armed chip’s exact gold.</li></ul>'
+  + '<li><b>Two ramps, declared for docs/05 check 5 — and these are M1’s, the ones every frame above is drawn in:</b> the frame <code>#3f4959 / #313947 / #262c37</code> lip <code>#191e26</code>, and the cell <code>#7d8798 / #68717f / #565e6b</code> lip <code>#414854</code>. Plus snow and frost, <code>#eaf4fb</code> and <code>#bcd6e8</code> over white, and one gate-sky literal <code>#b9cee0</code>. Every pill, price, chip and button is an existing recipe restated, and the snowfall’s gold is the armed chip’s exact gold. <i>(This paragraph named M2’s hexes until 2026-09-01 — the rejected board’s — which is a wrong declaration rather than a missing one, and worse: it is the paragraph that gets copied into style.css.)</i></li></ul>'
   + '<b>RULED 2026-09-01 — the owner spent this gate on play rather than on reading '
   + '(<i>"go with your recommendation on everything; I need to go in there and play with it"</i>), '
   + 'so these closed on the builder’s picks. The reasoning is in the gate-1 entry of the decision log.</b><ul>'
