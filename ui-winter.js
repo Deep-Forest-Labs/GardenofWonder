@@ -43,6 +43,14 @@
     zs.className = 'wi-sleep';
     zs.innerHTML = Winter.zzz();
     board.appendChild(zs);
+    /* ONE glint for the whole bed, for the same reason there is one set of Zs:
+       eight infinite animations is eight layouts a frame on `left`, or sixteen
+       composited layers on `transform`, and the recorded crash here is layer
+       memory. The bed is what was kept, so the bed is what catches the light. */
+    const glint = document.createElement('span');
+    glint.className = 'wi-glint';
+    glint.innerHTML = '<i></i>';
+    board.appendChild(glint);
     for (let cell = 0; cell < 9; cell++) {
       if (cell === 4) {
         const mid = document.createElement('div');
@@ -65,7 +73,6 @@
         <span class="wi-floor">${Winter.cellFloor(idx)}</span>
         <span class="wi-slot"></span>
         <span class="wi-empty">${Icons.get('plantSpot')}</span>
-        <span class="wi-shimmer"></span>
         <span class="wi-quilt">${Winter.quilt()}</span>
         <span class="wi-ready">!</span>
         <span class="wi-wait" hidden></span>

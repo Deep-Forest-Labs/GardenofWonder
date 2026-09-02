@@ -4898,18 +4898,32 @@ button:focus-visible{
 /* The badge stays gold too — it is the same "!" the garden and Fall use, and a
    state is not a place to re-teach a glyph. */
 .wi-plot.kept .wi-ready{background:linear-gradient(180deg,#ffffff,#bcd6e8);box-shadow:0 2px 0 var(--ink-2), 0 0 0 2px var(--coin)}
-.wi-shimmer{
-  position:absolute;inset:0;border-radius:15px;overflow:hidden;z-index:5;
-  pointer-events:none;display:none;
+/* ONE GLINT FOR THE WHOLE BED, not one per cell — the same call the Zs took,
+   and for a measured reason. Per-cell it was eight infinite animations: on
+   `left` (a layout property, which docs/05 rules out) that is eight per-frame
+   layouts, and moved onto `transform` to obey that rule it became SIXTEEN more
+   composited layers and 5MB at DPR 3. The recorded crash in this project is
+   layer memory, and the handoff names this exact shape — "a fix that helps
+   frame time can be a liability in memory". A flourish does not get to cost
+   either: the bed is what was kept, so the bed is what catches the light. */
+.wi-glint{
+  position:absolute;inset:0;border-radius:22px;overflow:hidden;
+  z-index:7;pointer-events:none;display:none;
 }
-.wi-plot.kept .wi-shimmer{display:block}
-.wi-shimmer::before{
-  content:'';position:absolute;top:-40%;bottom:-40%;width:42%;left:-50%;
-  background:linear-gradient(100deg,transparent,rgba(255,255,255,.72),transparent);
-  transform:rotate(8deg);
+.wi-board.armed .wi-glint{display:block}
+.wi-glint i{
+  position:absolute;top:-40%;bottom:-40%;left:0;width:22%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);
+  transform:translateX(-140%) rotate(8deg);
   animation:wiSweep 3.4s ease-in-out infinite;
 }
-@keyframes wiSweep{0%{left:-50%}55%,100%{left:118%}}
+/* The rotate is composed INTO each keyframe: a transform in a keyframe replaces
+   the element's own outright, which is a recorded trap and would have
+   flattened the band. */
+@keyframes wiSweep{
+  0%{transform:translateX(-140%) rotate(8deg)}
+  55%,100%{transform:translateX(560%) rotate(8deg)}
+}
 
 /* ---------- the quilt, and the sleeping plant under it ----------
    Tucked to the SHOULDERS, not over the whole cell: the bloom stays legible
@@ -5053,7 +5067,7 @@ button:focus-visible{
      rather than a paused band for the same reason. Here the static substitute
      already exists and is the better one: the frost rim IS the state, so
      removing the flourish leaves the state fully readable. */
-  .wi-shimmer{display:none}
+  .wi-glint{display:none}
   .wi-plot.tucked .wi-slot svg{animation:none}
   .wi-ready{animation:none}
 }

@@ -1291,9 +1291,43 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 **SLICE C — WINTER, THE NIGHT SHIFT — IS PLAYABLE ON `main`.** The spec is
 [46-the-night-shift.md](46-the-night-shift.md); read it twice before touching anything here.
 
-**The five-minute check is at the top of this file's morning script.** The short version: Developer
-tools → *Jump ahead* → **+3 Turns**, swipe past Fall, meet Holly, plant a bed, tuck it in, then
-Developer tools → **Winter → Sleep a whole night** → collect.
+### The five-minute check — Winter, on the phone
+
+Every step below was walked in a headless browser before it was written down, and two of them are
+not what you would guess.
+
+1. **Developer tools → Jump ahead → +1 Turn, twice.** Two, not three — and this is the step that
+   surprises. *Jump ahead* calls `turnYear()` directly, so it skips the ceremony, and **the Winter
+   gate card lives in the ceremony's fifth beat.** Jumping straight to Turn 3 opens the season and
+   you never see Holly introduced.
+2. **Take the third Turn yourself**, from the dock. Walk all four beats: turn the year, bless a
+   flower, watch the Tally count, and on the last beat the Summer flower says *"A whole new year —
+   and somewhere cold to put it. Be nice to her"* over a card carrying **Holly's face** and *"Winter
+   is open · past Fall, on the right"*. **That is beat one of her introduction.**
+3. **Swipe left twice** — past Fall, into Winter. Holly is in the middle cell and she says four
+   lines, about three seconds apart. **Watch that they all arrive**: the one-shot is spent only
+   after the last one has drawn, which is the meadow-signpost lesson applied. Leave halfway and come
+   back and she starts over; let her finish and she never says them again.
+4. **Tap an empty plot, plant Snowdrops.** Note there is no button under the board while the bed is
+   empty — the chip carries the rule instead.
+5. **Tuck the bed in.** Quilts settle, the plants sleep, the chip goes drained and reads *"Tucked in
+   — first up in 12h"*, and the button becomes *"Tucked in / goodnight"*. Nothing is at stake: no
+   frost, no wilt, nothing lost to a night, ever.
+6. **Developer tools → Winter → Sleep a whole night.** This winds the plant clocks past their grow
+   AND the tuck back further, then lets the real derivation write the marks — a cheat that set
+   `kept` by hand would show you a morning the engine would never produce.
+7. **Back in Winter:** every kept bloom wears a gold ring *and* a frost halo, the chip counts them,
+   and the one button is gold and says what the night is worth. Collect it and Holly takes the
+   credit.
+8. **Once more with Reduced Motion on.** Every state must still read — the frost rim, the quilts and
+   the Zs are all base style, and only the glint and the drift go away.
+9. **Developer tools → Simulate an absence → 24h**, with a tucked bed and an empty Summer garden.
+   The welcome-back scene must appear on Winter's news alone: *"Winter opened 8 blooms overnight
+   under the quilt — the snowfall pays +50% on those. Holly kept watch."*
+10. **Swipe back to Summer and to Fall** and confirm nothing else moved — and that Fall's flower now
+    speaks, which it has not done since Fall shipped.
+
+
 
 | Gate | State |
 | --- | --- |
