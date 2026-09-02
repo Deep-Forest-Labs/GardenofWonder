@@ -216,6 +216,7 @@ const DESC = {
   '42-overnight-housekeeping.md': 'What the overnight round of 2026-08-30 did, and the four things it filed rather than decided.',
   '43-punch-list.md': "The working queue of bugs and polish from the owner's own play, each one investigated with a sketch of the fix. Short-lived by design — 11-known-issues.md is the permanent record.",
   '46-the-night-shift.md': "Winter's spec — the tuck-in, the snowfall bonus, six real winter bloomers, and Holly the winter rose who keeps the garden overnight. Owner-ruled and pressure-tested 2026-09-01; slice C builds from it.",
+  '47-the-curtain-and-the-drip.md': "The reveal pass — the seed picker's ??? curtain, the upgrade shop's four-card opening drip, and the moments dialog that celebrates every unlock. Owner-ruled and pressure-tested 2026-09-02.",
   'README.md': 'The docs folder’s own index, mirrored exactly as written. This Home page is a reordering of it for the Unity team.',
 };
 
@@ -284,6 +285,7 @@ const SHORT = {
   '42-overnight-housekeeping.md': '42 · Housekeeping',
   '43-punch-list.md': '43 · Punch list',
   '46-the-night-shift.md': '46 · The night shift',
+  '47-the-curtain-and-the-drip.md': '47 · The curtain and the drip',
   'README.md': 'The docs index',
 };
 

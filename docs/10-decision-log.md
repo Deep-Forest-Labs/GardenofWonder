@@ -26,7 +26,13 @@ rest reveal progressively; their cost rebalance belongs to phase 4 and no cost m
   threshold: a seed reveals at 85% of its unlock price** (`f = 0.85`, in data, remote-tunable),
   keyed to the lifetime ledger so it is monotone across Turns. The law it must prove by sim-test
   exit code: **no moment may exist where a seed is affordable and still hidden.** The Turn's
-  ceremony stages the *celebration* of reveals; the ledger owns the *fact*.
+  ceremony stages the *celebration* of reveals; the ledger owns the *fact*. *(Two refinements at
+  spec time, 2026-09-02, both in [47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md):
+  the lowest-priced locked seed is ALWAYS revealed — the spec's own pressure test proved the 0.85
+  clause alone hides the next wall in a recurring window, so the advert arm is by-construction;
+  and Land Deed alone adds `turnsCompleted ≥ plotTurnGate` to its reveal — visibility matching a
+  card that is structurally unbuyable pre-Turn, not information paced to Turn count. The owner
+  may veto either at the spike gate.)*
 - **The reveal is a moment**: a popup with custom owner-provided art and the seed's full stats in
   advert form (the Numbers rule applies to reveals too), and the seed is still purchased from the
   picker as ever.

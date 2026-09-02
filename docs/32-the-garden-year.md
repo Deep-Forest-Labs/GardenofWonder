@@ -39,6 +39,7 @@ Agents talking to the owner lead with the feel and keep the math in the docs.
 | **The blessing** | The one flower you pick each Turn; it gets a free petal |
 | **Petals** | Permanent upgrades on each flower: worth more, grows faster, plus one special skill each. Bought with Saved Seeds |
 | **Unlock price** | The one-time gold price to open a new seed. Paid once, yours forever |
+| **The ??? rows** | Seeds the garden hasn't shown you yet. The next one to save for always shows its price; the rest reveal themselves as you grow, each with a little celebration |
 | **The seasons** | Gardens at different speeds. Summer is seconds, Fall is hours, Winter is days, Spring is the long game |
 | **Sprout, stem, bud, bloom** | The four looks a growing flower wears, like Animal Crossing. The bud holds until almost ready, in the flower's own colours, and opens just before the pick |
 | **The windfall** | Fall's bonus for harvesting the whole bed at once — the dinner appointment |
