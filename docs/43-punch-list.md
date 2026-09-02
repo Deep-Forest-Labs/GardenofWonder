@@ -24,24 +24,29 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 2. **#12 · The plant-here marker is a different size in all three rooms** — Summer 30% capped at
    44px, Fall 46% uncapped, and the meadow hand-draws its own copy at 34% (see `#16`). **One glyph,
    one size rule**, all three at once.
-3. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
+3. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
+   design change: Clover in gold, Petal Cake in gems, Honeypot behind a rewarded ad. **Read the item
+   before pricing anything**: four pets can tend at once, which makes this twelve gem purchases and
+   six ads a day, and the ad half collides head-on with `37-monetization.md`'s whole daily budget.
+   Two numbers are the owner's to pick.
+4. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
    the house register is already written in `data.js`. Also closes a hard-coded number that can
    drift from its knob. **Read the item**: the length exists to keep a promise honest, so keep that.
-4. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+5. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-5. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
+6. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
    it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
    **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
    a working ready-notification.
-6. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+7. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-7. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+8. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
    open question may answer itself.
-8. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
+9. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
    round**: the marker folds into `#12` tonight, the board is a bounded next step, and the background
    is its own session that should start with a `meadow-spike.html` for the owner to judge.
 
@@ -646,6 +651,135 @@ than the one being replaced.
 tooltip says "mutation". Pick one word, put it in the glossary at the top of
 `32-the-garden-year.md` — which has no entry for it — and this copy, the Almanac's, and every future
 one write themselves.
+
+---
+
+### #18 · POLISH · Pet food is too cheap, and the ladder should span three currencies · annoying · reported 2026-09-02
+
+**What the owner asked for.** "I want to greatly increase the cost of food for the pets. I also want
+the first tier, which is the clover nibble, to cost gold, and the other two options should cost gems.
+Actually, let's make honeypot an ad-only food, so the player has to watch an ad. Since we don't have
+ads now, just make it a button that says 'Watch an ad' and then have it automatically give them the
+food."
+
+**So the ladder becomes: Clover = gold, Petal Cake = gems, Honeypot = one rewarded ad.**
+
+**Where it stands today** (`CREATURE_FOOD`, `data.js:1039`). All three are gold, and there is no
+`currency` field at all:
+
+| Food | Hours | Cost | Gold per hour |
+| --- | --- | --- | --- |
+| Clover Nibble | 4 | 1,500 | 375 |
+| Petal Cake | 8 | 5,000 | 625 |
+| Honeypot | 16 | 12,000 | 750 |
+
+Note the shape before changing it: **the ladder already charges a premium for convenience** — the
+bigger the meal, the more it costs per hour. Whatever replaces it should decide deliberately whether
+that stays true across three different currencies, where "per hour" no longer compares.
+
+**The comment sitting directly above the table is about to become false.** `data.js:1035` says: *"If
+this ever reads as a chore rather than a habit, THIS is the dial — raise `hours`, never the
+prices."* That was written to govern *relieving* pressure, and the owner is adding it, so it is not
+being contradicted so much as outgrown — but after this change the prices **are** a pressure dial and
+that sentence has to say so. Rewrite it in the same commit.
+
+**This is aligned with a standing owner preference, not a swerve.** The owner has asked before for
+upkeep to have teeth, and the reason it can: *"A pet that is asleep is not a pet that was taken away
+— it is obviously reversible, it says what to do about it, and it is charming rather than
+punishing"* (`data.js:1000`). **The sleeping face is what makes an expensive meal survivable.** Any
+pricing pass should be read against that comment, because it is the thing keeping this cosy.
+
+---
+
+**THE ARITHMETIC THAT DECIDES WHETHER THIS IS TENSION OR A WALL.** Two numbers make this bigger than
+it looks.
+
+**Four creatures can tend at once.** `HABITAT_SLOT_LEVELS = [1, 5, 10, 16]` (`data.js:899`), so a
+level-16 player is feeding **four** pets, not one.
+
+**Gems are slow.** `04-economy.md:275` — *"Eight plots earn ~14 gems/hour, so a Thunderstorm call is
+close to two hours of income — a real decision rather than pocket change. **Price sinks against that
+rate.**"*
+
+Put together, with Petal Cake at 8 hours and the clock capped at 24:
+
+| | per creature per day | four creatures |
+| --- | --- | --- |
+| Petal Cakes needed | 3 | **12** |
+| At 3 gems each | 9 gems | 36 gems ≈ **2.5 hours** of gem income |
+| At 10 gems each | 30 gems | 120 gems ≈ **8.5 hours** of gem income |
+
+**Every existing gem sink is either a one-off cosmetic or a discretionary moment** — call a sky, skip
+a timer, buy a gnome. This would make gems fund a *recurring daily upkeep*, which is a different job
+for a currency, and the price that separates "a real decision" from "the pets are now a second job"
+is somewhere in the single digits. **That number is the owner's to pick**, and `tools/sim-test.js`
+plus a `year-sim` run should be the thing that checks it rather than an agent's judgement.
+
+**THE AD BUDGET COLLIDES, and this is the finding worth reading twice.** Honeypot is 16 hours, so
+four tended creatures need **six ads a day** just to stay awake. `37-monetization.md:16` sets the
+whole plan at **"3–6 rewarded impressions per player per day"**, and the standing rule is *"two to
+three offers per session"*. **Feeding alone would consume the entire daily ad budget**, leaving
+nothing for the three placements doc 37 says ship first — the welcome-back gold doubler, the Fall
+windfall doubler and the second card pack. Whatever the answer is, it has to be decided rather than
+discovered: fewer creatures on Honeypot, a cap on ad-fed meals per day, or a smaller ad plan
+elsewhere.
+
+**What the ad half does NOT break, checked.** `37-monetization.md`'s two promises both hold: food is
+not permanent (promise 1 protects Saved Seeds, petals, unlocks, gates and the blessing — food is
+none of these), and a food button is not inside a sacred moment (promise 2 protects the ceremony, the
+Wonder and the Century Bloom). It is rewarded video, which is the only format allowed. **The one
+standing rule it must actively obey is "no ads in a player's first session"** — the button has to be
+absent, not merely disabled, on session one.
+
+**And it is deliberately ahead of the doc.** `37-monetization.md:3` states plainly: *"Nothing here is
+built, and nothing ships before the Unity shell — the web build has no ad system and never will."*
+The owner knows and has chosen the stub. **Doc 37 must be amended in the same commit**, or it will
+contradict a live button.
+
+---
+
+**The code that has to change.**
+
+- **`feedCritter()` (`game.js:3075`) is gold-only.** It reads `state.credits`, deducts from it, and
+  emits `deny` with `reason: 'credits'`. It needs a currency branch, a gems deny reason, and a third
+  path that takes no currency at all.
+- **`foodButtons()` (`ui-sheet.js:1459`) hard-codes `S.credits >= f.cost` and
+  `priceTag(f.cost, 'credits', can)`.** `priceTag()` already accepts `'gems'` and swaps the icon
+  (`ui-sheet.js:173`), so the gems tier is nearly free; the ad tier needs a genuinely new control.
+- **`Game.Dev.feedCritters()` (`game.js:4868`) buys the top food and refunds its gold cost with
+  `credit(food.cost, { cheat: true })`.** With Honeypot ad-gated and Petal Cake in gems, that cheat
+  silently stops working. Per the dev-cheat playbook it must still force the real path.
+- **`emit('purchase', { kind: 'food', cost })`** is consumed somewhere and now carries a cost in one
+  of three currencies — grep before changing its shape.
+
+**The trap in the ad tier: the cap can eat what the ad bought.** `FOOD_CAP_HOURS = 24`
+(`data.js:1021`) and `foodEffect()` already reports `capped`, which the button renders
+(`ui-sheet.js:1468`). A creature with 12 hours banked that takes a 16-hour Honeypot gets 12. **That is
+tolerable when the cost is gold and intolerable when the cost is thirty seconds of the player's
+attention** — sell an ad for a partial grant once and the ad stops being trusted. The ad button must
+refuse, or say plainly what it will actually give, before it plays.
+
+**Fix sketch.** Add `currency: 'credits' | 'gems' | 'ad'` to each `CREATURE_FOOD` row and let the
+three consumers branch on it — nothing here needs a new data shape beyond that field. Price Clover
+against gold income and Petal Cake against the ~14 gems/hour rate, with a sim-test asserting the
+daily cost of four fed creatures against both faucets. Build the ad tier as a plain button reading
+*"Watch an ad"* that grants the food immediately and logs an impression counter in state, so the
+day the real SDK arrives there is already a place to count and cap. **What it might break:** the
+food buttons share one row and a gems tag plus an ad button will not be the same width as three
+price pills — check the layout at 390px and on the ~640px short viewport, where the panel is already
+tight (`ui-sheet.js:1561` notes a creature "should never need a scroll to reach the food that wakes
+it"). `04-economy.md` owns the gem sink table and `22-creatures.md` owns the food ladder; both quote
+these prices. Run `node tools/sim-test.js`.
+
+**Two open questions for the owner, and both are numbers only they can pick.**
+
+1. **What does Petal Cake cost in gems?** At four tended creatures it is twelve cakes a day. Three
+   gems is real pressure (~2.5 hours of gem income); ten is a wall (~8.5 hours). The gem faucet was
+   deliberately flattened so gems track *time played* — this is the first sink that would scale with
+   how many pets you own.
+2. **How does the ad-fed Honeypot fit in a 3–6 ads/day plan?** Four pets on Honeypot is six ads
+   before any other offer exists. Cap it, keep Honeypot rare, or accept that feeding is where the ad
+   budget goes and re-plan the three placements in `37-monetization.md`.
 
 ---
 
