@@ -23,6 +23,17 @@ const Icons = (() => {
       <path d="M12 2.8l1.6 2.2 2.6-.6.5 2.7 2.5 1-1.2 2.4 1.7 2.1-2.2 1.6.3 2.7-2.7.2-1.3 2.4-2.4-1.2-2.3 1.4-1.3-2.4-2.7-.4.1-2.7-2.3-1.4 1.5-2.2-1.1-2.5 2.6-.8.7-2.6 2.6.8Z" fill="#cfd8e3"/>
       <circle cx="12" cy="12" r="3.4" fill="#8b9bb0"/>`),
     close: S(`<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" stroke-width="2.6"/>`),
+    /* The curtain's ??? rows and Almanac slots, docs/47 — one generic
+       silhouette for every masked seed, never a shape that hints at family or
+       rarity. Same five-petal build every real bloom uses, filled flat in the
+       palette's own soft inks rather than a new hex, so it reads as "this
+       game's own secret" rather than a different visual system. */
+    mysteryBloom: S(`
+      <g fill="#7a6047">
+        <circle cx="12" cy="6.6" r="4.3"/><circle cx="17.1" cy="10.3" r="4.3"/><circle cx="15.2" cy="16.4" r="4.3"/>
+        <circle cx="8.8" cy="16.4" r="4.3"/><circle cx="6.9" cy="10.3" r="4.3"/>
+      </g>
+      <circle cx="12" cy="12" r="3" fill="#5a3a1f"/>`),
     /* Three bars at 3.4 rather than the set's 2, and rounded caps. Beside the
        gear's solid grey body a 2-unit bar reads as a hairline at 24px, and this
        is the button the whole menu is found through. */

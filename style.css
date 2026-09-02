@@ -1707,6 +1707,33 @@ button:focus-visible{
   box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24), 0 0 0 4px rgba(255,201,60,.5);
 }
 
+/* THE CURTAIN — docs/47. A masked row is a MORE hidden cousin of "not now":
+   it takes the same --paper-dim family the locked row above it wears, never
+   a new hue, and restates its own lip for the same reason every drained
+   state here does. */
+.seed-row.masked{
+  background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+  box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.14);
+}
+.seed-art.cv-mask{
+  background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.5), transparent 62%), var(--paper-dim-2);
+  border-color:var(--paper-dim-edge);
+}
+/* One generic silhouette wears every masked row — the colour is the reveal,
+   so the shape stays a secret twice over. */
+.cv-qmark{font-size:15px;font-weight:800;letter-spacing:.06em;color:var(--ink-soft)}
+.cv-hint{display:block;margin-top:3px;font-size:11px;font-weight:700;font-style:italic;color:var(--ink-soft)}
+
+/* A card whose reveal has not been celebrated yet — the quiet tier beside
+   the moments dialog's loud one. Never `.fresh`: that flag is a seed id set
+   at the moment of a PURCHASE, the wrong shape for a reveal that can sit
+   queued behind the session cap for a while. Static, on purpose — reduced
+   motion asks for no animated state, and this one never needed any. */
+.card.reveal-fresh, .seed-row.reveal-fresh{
+  background:linear-gradient(180deg,#fff6c2,#ffe066);
+  box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24), 0 0 0 4px rgba(255,201,60,.5);
+}
+
 /* The unlock question. One-time, permanent, unrefundable, and the game has no
    undo — so it asks, as a whole panel rather than a card floating over a
    scrolling list that a `panels` event can rebuild underneath it. */
@@ -1852,11 +1879,17 @@ button:focus-visible{
 .stat-line .kk{flex:1}
 .stat-line.dim{opacity:.45}
 .almanac-bloom{display:inline-flex;vertical-align:middle;margin-right:6px}
+.almanac-bloom svg{width:22px;height:22px}
 
 /* almanac seed rows — three columns, plus the mastery goal underneath */
 .almanac-row{padding:6px 0;border-bottom:2px dashed rgba(44,26,16,.12)}
 .almanac-row:last-child{border-bottom:0}
 .almanac-row.dim{opacity:.45}
+/* THE CURTAIN, docs/47 — masked keyed to the reveal latch, never to
+   discoveredOf. Not opacity-dimmed like `.dim` above: the row is fully
+   opaque, and the silhouette + drained wash already say "not yet" without
+   fading the row a returning-later player might miss entirely. */
+.almanac-row.masked .cv-qmark{font-size:13.5px}
 .almanac-row-top{display:flex;align-items:baseline;gap:8px}
 .almanac-row-top .n{flex:1;min-width:0;font-size:13px;font-weight:800;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -5253,6 +5286,14 @@ button:focus-visible{
   box-shadow:0 3px 0 var(--ink-2);
 }
 .news-art img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 42%}
+/* The moments dialog's tier-3 art chain, docs/47 — no photo at all, the
+   seed's own bloom or the upgrade's own badge, larger, centred where the
+   photo window would be. Never blocks the dialog on an art file existing. */
+.news-fallback{display:grid;place-items:center;padding:16px 0 8px}
+.news-fallback .seed-art{width:96px;height:96px}
+.news-fallback .seed-art svg{width:56px;height:56px}
+.news-fallback .card-badge{width:88px;height:88px}
+.news-fallback .card-badge svg{width:50px;height:50px}
 .news h2{margin:0 0 6px;font-size:21px;font-weight:800;text-align:center;line-height:1.15}
 .news-list{margin:0;padding:0;list-style:none;display:grid;gap:7px}
 .news-list li{

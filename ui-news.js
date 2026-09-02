@@ -19,7 +19,7 @@
    docs/02-architecture.md. */
 
 (() => {
-  const { $ } = UI;
+  const { $, fmt, fmtTime } = UI;
 
   const node = $('#news');
   let open = null;      // the announcement on screen, or null
@@ -71,6 +71,7 @@
     open = null;
     preview = false;
     logEntry = false;
+    momentEntry = false;
     node.classList.remove('show');
     node.hidden = true;
     node.setAttribute('aria-hidden', 'true');
@@ -80,6 +81,27 @@
   function dismiss() {
     const a = open;
     if (!a) return;
+    if (momentEntry) {
+      const key = momentEntry.key;
+      const wasPreview = preview;
+      momentEntry = false;
+      close();
+      /* The developer's look, same precedent as the announcement's preview:
+         it marks nothing, because looking at a dialog must never cost the
+         save — a real reveal earned or cheated the normal way still gets a
+         real, once-only celebration. */
+      if (wasPreview) { Sound.play('close'); return; }
+      /* Consumed only now — after the dialog has actually drawn and the
+         player has actually dismissed it, never at enqueue and never on a
+         discipline guard refusing to show it. */
+      Game.consumeMoment(key);
+      Sound.play('buy');
+      if (UI.updateDockDots) UI.updateDockDots();
+      /* One at a time: the next queued moment, if the gap and the cap still
+         allow it, rather than waiting for an unrelated trigger to notice. */
+      setTimeout(tryMoment, 300);
+      return;
+    }
     if (logEntry) {
       Game.markChangelogSeen();
       logEntry = false;
@@ -176,6 +198,142 @@
     Sound.play('open');
     return true;
   }
+
+  /* ---- the moments dialog, docs/47 ----
+     The curtain's celebration: a THIRD mode on this same node, sharing the
+     one `open` flag with the announcement and the changelog, which is what
+     keeps "never two popups" true for free. The registry is never
+     hand-written — an entry is built at read time from DATA.seeds or
+     DATA.upgrades, the Numbers rule applied (full advert-form stats, exactly
+     like the picker's own locked row). `momentEntry` is a private flag the
+     same shape as `logEntry`, so `dismiss()` can tell the three modes apart. */
+  let momentEntry = false;
+  let hasInteracted = false;
+  window.addEventListener('pointerdown', () => { hasInteracted = true; }, { once: true, capture: true });
+
+  function seedMoment(s) {
+    const price = Game.seedUnlockPrice(s.id);
+    const pay = Game.plantPayout(s, 0);
+    const bullets = [
+      `<b>${fmt(s.cost)} gold</b> to plant · <b>${fmtTime(Math.round(s.grow))}</b> to grow`,
+      `Pays <b>${fmt(pay.min)}–${fmt(pay.max)}</b> a harvest`
+    ];
+    const v = s.verb && DATA.verbs[s.verb];
+    if (v) bullets.push(`<b>${v.name}</b> — ${v.desc}`);
+    return {
+      key: `seed:${s.id}`,
+      title: `${s.name} revealed!`,
+      bullets,
+      tagline: price > 0 ? `Yours whenever you’ve saved ${fmt(price)} gold.` : 'Yours from the very first day.',
+      img: s.revealArt ? `art/reveals/${s.revealArt}` : 'art/reveals/placeholder.jpg',
+      fallback: () => `<div class="news-fallback"><span class="seed-art" style="--art:${s.art.c1}">${Flora.head(s, 56)}</span></div>`
+    };
+  }
+  function upgradeMoment(key) {
+    const def = DATA.upgrades[key];
+    const cost = Game.upgradePrice(key);
+    return {
+      key: `upgrade:${key}`,
+      title: `${def.short || def.name} revealed!`,
+      bullets: [`<b>${fmt(cost)} gold</b> to buy`, def.desc],
+      tagline: 'In the shop now.',
+      img: def.revealArt ? `art/reveals/${def.revealArt}` : 'art/reveals/placeholder.jpg',
+      fallback: () => `<div class="news-fallback"><span class="card-badge">${Icons.get(def.icon || 'badge')}</span></div>`
+    };
+  }
+  /* The art chain, docs/47: custom art, the shared placeholder, or the
+     programmatic fallback — the dialog never blocks on art existing. Both
+     failure edges are real `error` events, not a filesystem check (there is
+     no filesystem from the browser), so a missing file degrades exactly the
+     way a 404 degrades: instantly, with nothing broken on screen. */
+  function momentArtHtml(entry) {
+    return `<div class="news-art" id="momentArt"><img src="${entry.img}" alt=""></div>`;
+  }
+  function wireMomentArtFallback(entry) {
+    const img = $('#momentArt img', node);
+    if (!img) return;
+    img.addEventListener('error', () => {
+      const usingCustom = entry.img !== 'art/reveals/placeholder.jpg';
+      const artNode = $('#momentArt', node);
+      if (!artNode) return;
+      if (usingCustom) { img.src = 'art/reveals/placeholder.jpg'; return; }
+      artNode.outerHTML = entry.fallback();
+    }, { once: true });
+  }
+
+  function buildMoment(entry) {
+    return `
+      <div class="news-card" role="dialog" aria-modal="true" aria-labelledby="newsTitle">
+        ${momentArtHtml(entry)}
+        <h2 id="newsTitle">${entry.title}</h2>
+        <ul class="news-list">${bullets(entry.bullets)}</ul>
+        <p class="news-note">${entry.tagline}</p>
+        <button class="big-btn yes" id="newsOk" type="button">Got it!</button>
+      </div>`;
+  }
+
+  function showMoment(m, asPreview) {
+    if (!m || open) return false;
+    const entry = m.kind === 'seed' ? seedMoment(Game.seedById(m.id)) : upgradeMoment(m.id);
+    if (!entry) return false;
+    open = { id: entry.key };
+    momentEntry = entry;
+    preview = Boolean(asPreview);
+    node.innerHTML = buildMoment(entry);
+    node.hidden = false;
+    node.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => node.classList.add('show'));
+    const ok = $('#newsOk', node);
+    if (ok) ok.addEventListener('click', dismiss);
+    wireMomentArtFallback(entry);
+    Sound.play('open');
+    return true;
+  }
+
+  /* The structural guard, stated as a predicate rather than a list of
+     examples so a future sheet or dialog cannot slip past it by not being
+     named: nothing may show while THIS node already has something up, while
+     ANY sheet is open (the picker included — it is a sheet, not a dialog),
+     while the coach is visible, or before the session's first interaction. */
+  function momentsQuiet() {
+    if (open) return false;
+    if (UI.sheetMode && UI.sheetMode()) return false;
+    /* `el` is ui.js's own module-local cache, not part of the shared UI
+       surface — reached here the same way sayText()'s coach check does,
+       through a fresh query rather than a cross-file reference that does
+       not exist. */
+    const coach = $('#coach');
+    if (coach && !coach.hidden && coach.offsetParent !== null) return false;
+    if (!hasInteracted) return false;
+    return true;
+  }
+  /* The one entry point every trigger calls — a sheet closing, the coach
+     clearing, the news chain settling, and a once-a-second poll that is the
+     backstop for every quiet beat none of those name. Idempotent and cheap:
+     calling it when nothing is owed is a few comparisons that return false. */
+  function tryMoment() {
+    /* Latching happens here too, not only on a render path — the picker and
+       the shop keep reveals fresh while they are open, but a threshold can
+       cross while the player is simply standing in the garden with no sheet
+       up at all, and this is the once-a-second beat that would otherwise be
+       the only thing left to notice it. Cheap and idempotent either way. */
+    if (Game.refreshReveals) Game.refreshReveals();
+    if (!momentsQuiet()) return false;
+    if (!Game.momentReady || !Game.momentReady()) return false;
+    return showMoment(Game.nextMoment());
+  }
+  UI.tryMoment = tryMoment;
+  /* The developer's look, same shape as UI.previewAnnouncement below: shows
+     whatever is actually next in the real queue if anything is pending
+     (so cheated or earned progress previews honestly), otherwise a fixed,
+     always-available example so the dialog can be inspected on a save with
+     nothing queued at all. Bypasses the discipline guard on purpose — that
+     predicate governs when a real celebration is allowed to interrupt play,
+     not whether a developer may look at the screen. */
+  UI.previewMoment = () => {
+    const m = (Game.nextMoment && Game.nextMoment()) || { kind: 'seed', id: 'bluebell' };
+    return showMoment(m, true);
+  };
 
   /* Called once from boot(). Returns true when a dialog went up, so the things
      that also want the screen on the first second — the away report, the

@@ -8920,7 +8920,8 @@ group('slice C — the welcome-back scene learns about Winter');
     S.seedRevealed[DATA.seeds[13].id] === true);
   check('a seed the veteran does NOT own also boots revealed — the grandfather is total, not just for owned seeds',
     S.seedRevealed[DATA.seeds[18].id] === true);
-  check('every upgrade boots revealed', Object.keys(DATA.upgrades).every((k) => S.upgradeRevealed[k] === true));
+  check('every drip upgrade boots revealed — the per-plot harvesters are not the drip and are untouched',
+    tabBadges.every((k) => S.upgradeRevealed[k] === true));
   check('the moments queue boots empty — nobody is told what they have already been looking at',
     G.pendingMoments().length === 0);
   const awayReport = G.reconcile();

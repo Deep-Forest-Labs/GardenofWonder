@@ -1465,8 +1465,21 @@
 
   /* ============ dock attention dots ============ */
   function updateDockDots() {
-    const canUpgrade = UI.CORE_UPGRADES.concat(PLOT_AUTOPLANTERS.filter(({ idx }) => !S.grid[idx].locked).map((p) => p.key))
-      .some((k) => !Game.upgradeMaxed(k) && S.credits >= Game.upgradePrice(k));
+    /* The curtain, docs/47: filtered to REVEALED cards only, or the pill nags
+       at a masked row nobody can see yet (Rain Dance is affordable within
+       minutes while hidden until 4K). Owner-ruled 2026-09-02: the dot is now
+       a COUNT, the same .dock-dot.wide convention every other dock badge
+       already carries, of every revealed core card that is either
+       affordable or unseen (revealed but not yet celebrated) — one card
+       counts once even if it is both. Harvesters have no "unseen" concept
+       (they are not the drip) and only ever contribute by affordability. */
+    Game.refreshReveals();
+    const revealedCore = UI.CORE_UPGRADES.filter((k) => Game.upgradeRevealedNow(k));
+    const coreAttention = revealedCore.filter((k) => (!Game.upgradeMaxed(k) && S.credits >= Game.upgradePrice(k))
+      || !S.celebrated[`upgrade:${k}`]).length;
+    const harvesterAttention = PLOT_AUTOPLANTERS.filter(({ idx }) => !S.grid[idx].locked)
+      .filter(({ key }) => !Game.upgradeMaxed(key) && S.credits >= Game.upgradePrice(key)).length;
+    const upgradeAttention = coreAttention + harvesterAttention;
     const canDecor = DATA.decor.some((d) => {
       const pot = d.currency === 'gems' ? S.gems : S.credits;
       return pot >= d.cost;
@@ -1513,7 +1526,13 @@
     /* The band's UPGRADE pill carries the same dot on the same rule — the first
        time the attention-dot idea has reached a control that is not a dock tab. */
     const upDot = $('.dock-dot', el.btnUpgrade);
-    if (upDot) upDot.hidden = !(canUpgrade && UI.sheetMode() !== 'upgrades');
+    if (upDot) {
+      const showUp = upgradeAttention > 0 && UI.sheetMode() !== 'upgrades';
+      upDot.hidden = !showUp;
+      const upTxt = showUp && upgradeAttention > 1 ? String(upgradeAttention) : '';
+      if (upDot.textContent !== upTxt) upDot.textContent = upTxt;
+      upDot.classList.toggle('wide', Boolean(upTxt));
+    }
   }
 
   /* ============ banners ============ */
@@ -1669,6 +1688,11 @@
       Game.decayCombo();
       const now2 = Date.now() / 1000;
       if (now2 - idleSince > 26 && !UI.sheetMode()) { idleNudge(now2); idleSince = now2; }
+      /* The backstop for every quiet beat that is not a sheet closing or the
+         news chain settling — the coach clearing, or simply nothing else
+         having happened for a second. Once a second is plenty; the gap
+         between moments is 20s by default. */
+      if (UI.tryMoment) UI.tryMoment();
     }
     const cp = S.tap.combo / S.tap.comboMax;
     // Byte-identical values written sixty times a second do nothing but invalidate.
@@ -1816,7 +1840,10 @@
         Sound.play('open');
       }
     };
-    UI.afterNews = () => setTimeout(welcome, 400);
+    /* The moments queue drains through this same chain — after whatever news
+       just closed settles (and after welcome() has had its turn, whether or
+       not it actually opened the away sheet), try the next quiet beat. */
+    UI.afterNews = () => setTimeout(() => { welcome(); if (UI.tryMoment) UI.tryMoment(); }, 400);
     if (!announcing) setTimeout(welcome, 900);
 
     setTimeout(() => {

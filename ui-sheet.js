@@ -87,6 +87,11 @@
       if (sheetMode) return;
       el.scrim.hidden = true;
       setPageFill('#4fae54');   // back to the lawn
+      /* The curtain's discipline guard treats any open sheet as a closed
+         door — the picker included, since it is a sheet and not a dialog.
+         A sheet closing is therefore one of the two things (with the coach
+         clearing) that can turn a queued moment into the next quiet beat. */
+      if (UI.tryMoment) UI.tryMoment();
     }, 340);
     Sound.play('close');
   }
@@ -254,6 +259,13 @@
     }
   }
 
+  /* The curtain's quiet tier, docs/47: revealed but not yet celebrated —
+     never re-used from the seed row's `justUnlocked` (a purchase flag, the
+     wrong shape for a reveal that can sit queued for a while behind the
+     session cap) and never the same selector as `.fresh`, so a card mid-flash
+     for a REVEAL can never be confused with one that was just bought. */
+  const isFreshReveal = (momentKey) => Boolean(S.celebrated) && !S.celebrated[momentKey];
+
   function upgradeCard(key) {
     const def = DATA.upgrades[key];
     const lvl = S.upgrades[key];
@@ -261,7 +273,8 @@
     const cost = Game.upgradePrice(key);
     const can = !maxed && S.credits >= cost;
     const [now, next] = upgradeValue(Game.upgradeEffect(key));
-    return `<button class="card ${can ? 'affordable' : ''}" data-buy="upgrade" data-key="${key}" ${maxed ? 'disabled' : ''}>
+    const fresh = isFreshReveal(`upgrade:${key}`);
+    return `<button class="card ${can ? 'affordable' : ''}${fresh ? ' reveal-fresh' : ''}" data-buy="upgrade" data-key="${key}" ${maxed ? 'disabled' : ''}>
       <div class="card-top">
         <span class="card-badge">${Icons.get(def.icon || 'badge')}</span>
         <span>
@@ -278,7 +291,8 @@
   }
 
   function renderUpgrades() {
-    const core = CORE_UPGRADES.map(upgradeCard).join('');
+    Game.refreshReveals();
+    const core = CORE_UPGRADES.filter((k) => Game.upgradeRevealedNow(k)).map(upgradeCard).join('');
     const harvesters = PLOT_AUTOPLANTERS.filter(({ idx }) => !S.grid[idx].locked).map(({ key }) => upgradeCard(key)).join('');
     const lockedCount = PLOT_AUTOPLANTERS.filter(({ idx }) => S.grid[idx].locked).length;
     return `
@@ -595,8 +609,21 @@
       ${goods ? `<p class="sheet-note" style="margin-top:16px">Finished goods</p>${goods}` : ''}`;
   }
 
+  /* The one line every masked ??? row and Almanac slot carries — the same
+     generic non-revealing note every time, the grammar pairRows() already
+     uses for an unformed creature pair, never per-seed flavour text. */
+  const CURTAIN_HINT = 'Keep growing — the garden isn’t done with you.';
+
+  /* The curtain's sort-sink rule, docs/47 (ruled, not a builder's choice): a
+     ??? row never participates in Cheapest/Priciest/Balanced — sorting it
+     would leak the very price the mask exists to hide. Masked seeds are
+     partitioned out first, sorted rows are ordered as before, and the masked
+     tail is appended in ladder (DATA.seeds) order, always last. */
   function sortedSeeds() {
-    const list = [...DATA.seeds];
+    const revealed = [];
+    const masked = [];
+    DATA.seeds.forEach((s) => (Game.seedRevealedNow(s.id) ? revealed : masked).push(s));
+    const list = revealed;
     if (seedSort === 'costAsc') list.sort((a, b) => a.cost - b.cost);
     else if (seedSort === 'costDesc') list.sort((a, b) => b.cost - a.cost);
     else if (seedSort === 'balanced') {
@@ -607,7 +634,7 @@
       const budget = S.credits / unlocked;
       list.sort((a, b) => Math.abs(a.cost - budget) - Math.abs(b.cost - budget));
     }
-    return list;
+    return list.concat(masked);
   }
 
   /* A verb is what the flower *does*. Shown as a tinted chip so it reads as a different kind of
@@ -1035,7 +1062,31 @@
 
   function renderSeeds() {
     const plot = sheetArg ?? 0;
+    /* Freshest truth before the list is built — a threshold crossed since the
+       last render (a tap, an offline reconcile, a Turn's cap resetting) must
+       show up the moment this sheet opens, not on the render after. */
+    Game.refreshReveals();
     const rows = sortedSeeds().map((s) => {
+      /* The curtain, docs/47: everything past this point in the list is
+         masked before it is anything else — a silhouette, a name of ???, one
+         line that never says what it is hiding. No stats, no price, no
+         description; the row stays IN the list rather than vanishing, which
+         is the whole point of the ruling. */
+      if (!Game.seedRevealedNow(s.id)) {
+        /* The padlock lives in `.seed-lock`, never `.seed-go` — that slot is
+           the plant affordance and nothing else (docs/09's own scan enforces
+           it: "no go slot can render a padlock"). A masked row shows no
+           price to be "ok" or "no" about, so it always wears the same
+           drained family the locked row's own `.no` state does. */
+        return `<button class="seed-row masked" data-seed="${s.id}" disabled>
+          <span class="seed-art cv-mask">${Icons.get('mysteryBloom')}</span>
+          <span>
+            <span class="seed-name"><span class="cv-qmark">???</span></span>
+            <span class="cv-hint">${CURTAIN_HINT}</span>
+          </span>
+          <span class="seed-lock no">${Icons.get('lock')}</span>
+        </button>`;
+      }
       const locked = !Game.seedUnlocked(s.id);
       const can = !locked && S.credits >= s.cost;
       /* The real number this plot would get, not the one on the seed's data
@@ -1056,7 +1107,13 @@
            so the eye finds the answer in the same place down the whole list. */
         const price = Game.seedUnlockPrice(s.id);
         const afford = S.credits >= price;
-        return `<button class="seed-row locked" data-unlock="${s.id}">
+        /* The curtain's quiet tier on a locked row: revealed but not yet
+           celebrated. The seed's OWN `.fresh` class stays reserved for the
+           moment you actually buy it — a different flag, a different id
+           shape (justUnlocked vs. this moment key), and conflating them was
+           priced and rejected. */
+        const justRevealed = isFreshReveal(`seed:${s.id}`);
+        return `<button class="seed-row locked${justRevealed ? ' reveal-fresh' : ''}" data-unlock="${s.id}">
           <span class="seed-art" style="--art:${s.art.c1}">${Flora.head(s, 40)}</span>
           <span>
             <span class="seed-name">${s.name}${verbChip(s)}</span>
@@ -1901,6 +1958,7 @@
        inverted the modifier by hand, the procs multiplied the per-level constant
        themselves and the drone's cadence was a second copy of the formula. Four
        ways for the Almanac to disagree with the game it is describing. */
+    Game.refreshReveals();
     const tap = Game.tapStats();
     const growth = Game.growthStats();
     const harvestBonus = Game.boostVal('globalCredits');
@@ -1922,6 +1980,20 @@
     }).filter(Boolean).join('');
 
     const seedRows = DATA.seeds.map((s) => {
+      /* The curtain, docs/47: masked keyed to the SAME latch the picker
+         reads, never to discoveredOf — a seed you have unlocked but never
+         grown keeps today's exact `.dim` row below, real name and art,
+         dimmed. Only a seed the curtain has not lifted on yet goes ???, and
+         the row count and the meter above never change either way. */
+      if (!Game.seedRevealedNow(s.id)) {
+        return `<div class="almanac-row masked">
+          <div class="almanac-row-top">
+            <span class="n"><span class="almanac-bloom">${Icons.get('mysteryBloom')}</span><span class="cv-qmark">???</span></span>
+            <span class="r">—</span><span class="c">—</span>
+          </div>
+          <span class="cv-hint">${CURTAIN_HINT}</span>
+        </div>`;
+      }
       const n = Game.discoveredOf(s.id);
       const best = Game.bestRarityOf(s.id);
       const rdef = best ? DATA.rarity.find((r) => r.key === best) : null;
@@ -2204,6 +2276,13 @@
     if (r.earned) {
       lines.push(`<li class="away-earn">${Icons.get('coin')}<span>The garden kept working and banked <b>${fmt(r.earned)}</b> coins.</span></li>`);
     }
+    /* The curtain, docs/47: one plain line, never the popup itself — the
+       moments dialog waits for the next quiet beat, which this sheet being
+       open is not (it is a sheet). Say what, never which: naming the seed or
+       card here would be the reveal, said in the wrong room. */
+    if (r.newReveals) {
+      lines.push(`<li class="away-reveal">${Icons.get('mysteryBloom')}<span><b>${r.newReveals}</b> new ${r.newReveals === 1 ? 'thing' : 'things'} to see in the garden.</span></li>`);
+    }
     if (r.ripened) {
       lines.push(`<li>${Icons.get('sprout')}<span><b>${r.ripened}</b> ${r.ripened === 1 ? 'bloom is' : 'blooms are'} ready to pick.</span></li>`);
     }
@@ -2394,6 +2473,7 @@
         <button class="dev-btn" data-dev="yearEarn" data-arg="25000">Earn +25K</button>
         <button class="dev-btn" data-dev="yearEarn" data-arg="100000">Earn +100K</button>
         <button class="dev-btn" data-dev="yearEarn" data-arg="400000">Earn +400K</button>
+        <button class="dev-btn" data-dev="yearEarn" data-arg="3000000">Earn +3M — clears the whole drip</button>
         <button class="dev-btn" data-dev="yearStats" data-arg="1">A good year's Tally</button>
         <button class="dev-btn warn" data-dev="yearTurn" data-arg="1">Run the Turn (blesses a flower with room)</button>`)}
       ${devRow(`Jump ahead — each Turn earns its way there and wipes the garden, so you land bare with
@@ -2419,7 +2499,8 @@
         <button class="dev-btn" data-dev="newsShow" data-arg="1">Preview announcement</button>
         <button class="dev-btn warn" data-dev="newsClear" data-arg="1">Clear announcement flags</button>
         <button class="dev-btn" data-dev="logShow" data-arg="1">Open the changelog</button>
-        <button class="dev-btn warn" data-dev="logClear" data-arg="1">Clear changelog flags</button>`)}
+        <button class="dev-btn warn" data-dev="logClear" data-arg="1">Clear changelog flags</button>
+        <button class="dev-btn" data-dev="momentShow" data-arg="1">Preview a moment</button>`)}
       <button class="big-btn" data-dev="clear" data-arg="1">Clear everything armed</button>
       ${devRow('Screen', `<p class="sheet-note">${screenReport()}</p>`)}
       <p class="sheet-note">Day phase ${(Game.dayPhase() * 100).toFixed(0)}% · ${Game.isNight() ? 'night' : 'day'} ·
@@ -2583,6 +2664,15 @@
            reset, because looking at a dialog must never cost the save. */
         ok = Boolean(UI.previewAnnouncement && UI.previewAnnouncement());
         deny = 'There is no announcement in DATA.announcements to show.';
+        redraw = false;
+        if (ok) closeSheet();
+        break;
+      case 'momentShow':
+        /* Same precedent as newsShow: a look must never cost the save, so it
+           neither latches nor celebrates anything — a real reveal earned the
+           normal way plays exactly like every other player's, cheat or not. */
+        ok = Boolean(UI.previewMoment && UI.previewMoment());
+        deny = 'Nothing to preview.';
         redraw = false;
         if (ok) closeSheet();
         break;
@@ -3160,7 +3250,19 @@
      the sun going down. Neither re-renders the sheet, so an open picker held a
      stale payout for the whole length of the Wonder. Both pills are cached on
      the node so the slow tick only writes when the number has actually moved. */
+  /* A reveal latching while the picker is open re-renders the list rather
+     than patching a row in place — the markup changes too much (silhouette
+     to real art, ??? to a name, a hint to real stats) for the usual per-field
+     sync. renderSheet(false) preserves scroll, so the row that just lit up is
+     the only thing that visibly moves. Checked every tick specifically so
+     that no affordable row can stand on screen still reading ??? — the named
+     browser item docs/47's gauntlet drives for. */
+  function seedRevealsChanged() {
+    Game.refreshReveals();
+    return $$('.seed-row.masked[data-seed]', el.sheetBody).some((node) => Game.seedRevealedNow(node.dataset.seed));
+  }
   function syncSeedRows() {
+    if (seedRevealsChanged()) { renderSheet(false); return; }
     const plot = sheetArg ?? 0;
     $$('.seed-row', el.sheetBody).forEach((node) => {
       const s = Game.seedById(node.dataset.plant || node.dataset.unlock);
@@ -3183,9 +3285,19 @@
   }
 
   /* Countdowns tick in place; a full re-render would fight the player's taps. */
+  /* The shop's own version of the same rule — a masked upgrade card does not
+     render at all (unlike a masked seed row), so "changed" means a
+     now-revealed key with no card in the DOM yet, rather than a `.masked`
+     node to spot. */
+  function upgradeRevealsChanged() {
+    Game.refreshReveals();
+    const shown = new Set($$('.card[data-buy="upgrade"]', el.sheetBody).map((n) => n.dataset.key));
+    return CORE_UPGRADES.some((k) => Game.upgradeRevealedNow(k) && !shown.has(k));
+  }
   function tickSheetTimers() {
     if (!sheetMode) return;
     if (sheetMode === 'seeds') syncSeedRows();
+    if (sheetMode === 'upgrades' && upgradeRevealsChanged()) { renderSheet(false); return; }
     $$('[data-countdown]', el.sheetBody).forEach((n) => {
       const left = Number(n.dataset.countdown) - Game.nowSeconds();
       n.textContent = left > 0 ? fmtTime(left) : 'a moment';

@@ -248,7 +248,7 @@ const Game = (() => {
       state.seedRevealed[s.id] = true;
       state.celebrated[`seed:${s.id}`] = true;
     });
-    Object.keys(DATA.upgrades).forEach((k) => {
+    DRIP_UPGRADE_KEYS.forEach((k) => {
       state.upgradeRevealed[k] = true;
       state.celebrated[`upgrade:${k}`] = true;
     });
@@ -586,11 +586,11 @@ const Game = (() => {
         DATA.seeds.forEach((s) => { if (sr[s.id]) state.seedRevealed[s.id] = true; });
         state.upgradeRevealed = {};
         const ur = parsed.upgradeRevealed && typeof parsed.upgradeRevealed === 'object' ? parsed.upgradeRevealed : {};
-        Object.keys(DATA.upgrades).forEach((k) => { if (ur[k]) state.upgradeRevealed[k] = true; });
+        DRIP_UPGRADE_KEYS.forEach((k) => { if (ur[k]) state.upgradeRevealed[k] = true; });
         state.celebrated = {};
         const cel = parsed.celebrated && typeof parsed.celebrated === 'object' ? parsed.celebrated : {};
         DATA.seeds.forEach((s) => { if (cel[`seed:${s.id}`]) state.celebrated[`seed:${s.id}`] = true; });
-        Object.keys(DATA.upgrades).forEach((k) => { if (cel[`upgrade:${k}`]) state.celebrated[`upgrade:${k}`] = true; });
+        DRIP_UPGRADE_KEYS.forEach((k) => { if (cel[`upgrade:${k}`]) state.celebrated[`upgrade:${k}`] = true; });
         state.blessed = (Array.isArray(parsed.blessed) ? parsed.blessed : [])
           .filter((b) => b && DATA.seeds.some((s) => s.id === b.seed))
           .map((b) => ({ seed: b.seed, year: Math.max(1, count(b.year) || 1) }));
@@ -1417,6 +1417,11 @@ const Game = (() => {
     const now = nowSeconds();
     const since = state.lastSeen || 0;
     const away = since ? Math.max(0, now - since) : 0;
+    /* The curtain, docs/47: offline income credited below can legitimately
+       cross a reveal threshold, and the welcome-back telling gets one line
+       for it — never the popup itself, which waits for the next quiet beat.
+       The delta, not the raw count, is what is new BECAUSE of this return. */
+    const pendingBefore = pendingMoments().length;
 
     const caught = rollMutations();
     const ripe = [];
@@ -1471,11 +1476,18 @@ const Game = (() => {
        without `winterRipe` here, a player who tucked a bed, slept, and came
        back to six kept blooms would be told nothing happened. */
     if (!ripe.length && !caught.length && !jars && !earned.coins && !winterRipe) return null;
+    /* Only the offline income above could have moved lifetimeCoins, so this
+       is safe to skip on the null-return paths — nothing there could have
+       crossed a threshold anyway. refreshReveals() also runs on its own
+       render/poll paths; calling it again here is redundant, never wrong. */
+    refreshReveals();
+    const newReveals = Math.max(0, pendingMoments().length - pendingBefore);
     return {
       away, caught, ripened: ripe.length, jars, weather: currentWeather(),
       winterRipe, winterKept, winterTucked: state.winter.tuckedAt > 0,
       earned: earned.coins, capped: earned.capped,
-      capHours: offlineHours(), rate: offlineRate()
+      capHours: offlineHours(), rate: offlineRate(),
+      newReveals
     };
   }
 
@@ -1687,6 +1699,14 @@ const Game = (() => {
     return false;
   }
 
+  /* Per-plot harvesters are DATA.upgrades entries too (PLOT_AUTOPLANTERS
+     appends them), but they are not the drip — "hide-until-plot, unchanged"
+     per the spec — and carry no revealAt. Excluded here so they can never be
+     latched, queued, or flashed by this system at all. */
+  const DRIP_UPGRADE_KEYS = Object.keys(DATA.upgrades).filter(
+    (k) => !PLOT_AUTOPLANTERS.some((p) => p.key === k)
+  );
+
   /* Called by load() (after the year block, before reconcile()), by the
      picker's and shop's render paths, and on every 'currency' emit — cheap
      (the whole ladder plus every core upgrade is ~30 comparisons) and
@@ -1694,7 +1714,7 @@ const Game = (() => {
      never wrong, only redundant. */
   function refreshReveals() {
     DATA.seeds.forEach((s) => seedRevealedNow(s.id));
-    Object.keys(DATA.upgrades).forEach((k) => upgradeRevealedNow(k));
+    DRIP_UPGRADE_KEYS.forEach((k) => upgradeRevealedNow(k));
   }
 
   /* ---------------- the moments dialog — docs/47 ----------------
@@ -1711,7 +1731,7 @@ const Game = (() => {
       const key = `seed:${s.id}`;
       if (state.seedRevealed[s.id] && !state.celebrated[key]) out.push({ kind: 'seed', id: s.id, key });
     });
-    Object.keys(DATA.upgrades).forEach((k) => {
+    DRIP_UPGRADE_KEYS.forEach((k) => {
       const key = `upgrade:${k}`;
       if (state.upgradeRevealed[k] && !state.celebrated[key]) out.push({ kind: 'upgrade', id: k, key });
     });

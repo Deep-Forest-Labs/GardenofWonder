@@ -10,7 +10,7 @@
    still gets to garden, and forgetting to bump VERSION below strands nobody — the
    version only controls when old caches get swept up. */
 
-const VERSION = 8;
+const VERSION = 9;
 const CACHE = `gw-v${VERSION}`;
 const FONTS = 'gw-fonts';
 const NET_TIMEOUT = 4000;   // slow network -> fall back to cache rather than hang
@@ -26,7 +26,12 @@ const CORE = [
   // Announcement art is the only raster the game itself loads, and an installed
   // app that cannot reach it shows a broken square in the middle of the dialog.
   // Every row added to DATA.announcements adds its image here.
-  './art/announcements/garden-year.png'
+  './art/announcements/garden-year.png',
+  // The moments dialog's shared placeholder, docs/47 — the same rule as
+  // announcement art, extended to this folder: every file in art/reveals/
+  // joins here with a VERSION bump when it is added or changed, or an
+  // installed app shows a broken square behind a reveal it cannot fetch.
+  './art/reveals/placeholder.jpg'
 ];
 
 self.addEventListener('install', (e) => {
