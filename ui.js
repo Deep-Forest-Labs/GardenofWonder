@@ -284,10 +284,20 @@
         }
         c.seed = cell.seed;
         c.stage = null;
+        c.artGrowKey = cell.seed ? `${i}:${cell.plantedAt}:${cell.seed}` : null;
+        c.artSyncKey = null;
+      } else if (artPlantOn() && cell.seed && !c.artGrowKey) {
+        c.artGrowKey = `${i}:${cell.plantedAt}:${cell.seed}`;
       }
 
       if (artPlantOn()) {
-        syncArtPlant(v.slot, cell, state);
+        const syncKey = cell.seed ? `${c.artGrowKey}:${state}` : '';
+        if (cell.seed && c.artSyncKey === syncKey && state === 'grow') {
+          tickArtPlantGrow(v.slot, cell);
+        } else if (cell.seed) {
+          syncArtPlant(v.slot, cell, state, c.artGrowKey);
+          c.artSyncKey = syncKey;
+        }
         if (state === 'ready') {
           if (c.stage !== 'bloom') { v.root.dataset.stage = 'bloom'; c.stage = 'bloom'; }
         } else if (c.stage !== 'grow-vid') {
@@ -1226,7 +1236,17 @@
     video.onended = ready ? null : () => { video.pause(); };
   }
 
-  function syncArtPlant(slot, cell, state) {
+  function tickArtPlantGrow(slot, cell) {
+    const wrap = slot && slot.querySelector('.art-plant-grow');
+    if (!wrap) return;
+    const video = $('.art-plant-src', wrap);
+    const canvas = $('.art-plant-layer', wrap);
+    if (!video || !canvas) return;
+    applyArtPlantSync(video, cell, 'grow');
+    if (!fbPaintJobs.has(canvas)) startFbPaint(video, canvas);
+  }
+
+  function syncArtPlant(slot, cell, state, growKey) {
     if (!slot || !cell || !cell.seed) return;
     const wrap = slot.querySelector('.art-plant-grow');
     if (!wrap) return;
@@ -1236,24 +1256,19 @@
     bindArtPlantVideo(video, state);
     const mode = state === 'ready' ? 'ready' : 'grow';
     const url = mode === 'ready' ? ART_VIDEO.plantReady() : ART_VIDEO.plantGrow();
-    /* plantedAt + seed + mode — not cell.grow, which Wonder/rain/keeper rewrite every tick. */
-    const sig = `${cell.plantedAt}:${cell.seed}:${mode}`;
+    const key = growKey || `${cell.plantedAt}:${cell.seed}`;
+    const sig = `${key}:${mode}`;
     const st = artPlantState.get(slot);
     const paint = () => {
       startFbPaint(video, canvas);
       applyArtPlantSync(video, cell, state);
     };
     if (!st || st.sig !== sig) {
-      const freshGrow = mode === 'grow' && (!st || st.mode !== 'grow'
-        || st.plantKey !== `${cell.plantedAt}:${cell.seed}`);
       stopFbPaint(canvas);
-      artPlantState.set(slot, { sig, mode, plantKey: `${cell.plantedAt}:${cell.seed}` });
+      artPlantState.set(slot, { sig, mode, key });
       setArtVideo(video, url, (ok) => {
         if (ok !== false) {
           bindArtPlantVideo(video, state);
-          if (freshGrow) {
-            try { video.currentTime = 0; } catch (_) {}
-          }
           paint();
         }
       }, false, { play: true });
@@ -2401,6 +2416,7 @@
   UI.syncPlanterArt = syncPlanterArt;
   UI.artPlantHtml = artPlantHtml;
   UI.syncArtPlant = syncArtPlant;
+  UI.tickArtPlantGrow = tickArtPlantGrow;
   UI.clearArtPlant = clearArtPlant;
   UI.sayText = sayText;
   UI.sayCheater = sayCheater;

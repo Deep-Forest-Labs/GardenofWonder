@@ -260,7 +260,7 @@
       const artPlant = el.game.classList.contains('art-planters');
       const look = def
         ? (artPlant
-          ? `art:${c.plantedAt}:${c.grow}:${ready ? 'ready' : 'grow'}`
+          ? `art:${c.plantedAt}:${c.seed}:${ready ? 'ready' : 'grow'}`
           : `${def.id}:${ready ? 3 : progress < 0.5 ? 1 : 2}`)
         : 'empty';
       if (v.cache.look !== look) {
@@ -419,7 +419,14 @@
       if (!v || !c || !c.seed) return;
       if (!plantById(c.seed)) return;
       const ready = now >= c.plantedAt + c.grow;
-      UI.syncArtPlant(v.slot, c, ready ? 'ready' : 'grow');
+      const growKey = `${i}:${c.plantedAt}:${c.seed}`;
+      const syncKey = `${growKey}:${ready ? 'ready' : 'grow'}`;
+      if (v.cache.artSyncKey === syncKey && !ready) {
+        UI.tickArtPlantGrow(v.slot, c);
+        return;
+      }
+      UI.syncArtPlant(v.slot, c, ready ? 'ready' : 'grow', growKey);
+      v.cache.artSyncKey = syncKey;
     });
   }
 
