@@ -18,48 +18,52 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 
 ## Tonight's round
 
-1. **#13 · Halve the rain and storm beds** — one number each, and the instrument to prove it already
+1. **#23 · Music piles up against a frozen clock while the device sleeps, then fires it all at
+   once** — reproduced and measured: 30 s asleep queues **81 notes into 2.45 s**, nine of them on the
+   same sample, scaling linearly with how long the device is away. Three schedulers share the fault
+   and the same bug was already fixed once in another guise. **Do this first.**
+2. **#13 · Halve the rain and storm beds** — one number each, and the instrument to prove it already
    exists. **Read the item**: the obvious knob also halves the thunder, and there is a knob that
    does not.
-2. **#12 · The plant-here marker is a different size in all three rooms** — Summer 30% capped at
+3. **#12 · The plant-here marker is a different size in all three rooms** — Summer 30% capped at
    44px, Fall 46% uncapped, and the meadow hand-draws its own copy at 34% (see `#16`). **One glyph,
    one size rule**, all three at once.
-3. **#19 · "Discover 5 species" arrives in minutes and needs ~1.8 years of gold** — a first-session
+4. **#19 · "Discover 5 species" arrives in minutes and needs ~1.8 years of gold** — a first-session
    bug that also jams a third of the quest strip forever. Data plus a three-line gate `fillActive()`
    does not have yet. The same fault sits in `q_discover_8` and `q_discover_12`.
-4. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
+5. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
    design change: Clover in gold, Petal Cake in gems, Honeypot behind a rewarded ad. **Read the item
    before pricing anything**: four pets can tend at once, which makes this twelve gem purchases and
    six ads a day, and the ad half collides head-on with `37-monetization.md`'s whole daily budget.
    Two numbers are the owner's to pick.
-5. **#21 · Move the drone to the Shop, rent it for an ad, and build the ad button once** — pair
+6. **#21 · Move the drone to the Shop, rent it for an ad, and build the ad button once** — pair
    with `#18`: both need the same "Watch an ad" component and neither should build it twice. **There
    is no video icon in `icons.js`**, and `Icons.get()` falls back silently.
-6. **#22 · The Turn's "this year goes" reads as a confiscation list** — copy plus one type
+7. **#22 · The Turn's "this year goes" reads as a confiscation list** — copy plus one type
    treatment, at the game's most important decision. **Read the item**: the bluntness is a fixed bug
    ("an irreversible commit may never understate its own price"), so it must get kinder without
    naming one thing less.
-7. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
+8. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
    the harvest float does not; the payload does not even carry the number. Pairs naturally with
    `#17`, both being "say the true thing in the fewest words".
-8. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
+9. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
    the house register is already written in `data.js`. Also closes a hard-coded number that can
    drift from its knob. **Read the item**: the length exists to keep a promise honest, so keep that.
-9. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+10. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-10. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
+11. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
    it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
    **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
    a working ready-notification.
-11. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+12. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-12. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+13. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
    open question may answer itself.
-13. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
+14. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
    round**: the marker folds into `#12` tonight, the board is a bounded next step, and the background
    is its own session that should start with a `meadow-spike.html` for the owner to judge.
 
@@ -1126,6 +1130,102 @@ labels; grep before and after. Run `node tools/style-check.js` if the type treat
 rather than *renewal*. The renewal idea belongs either as a closing line under both rows, or on the
 ceremony's last beat, which is already called the spring beat. The owner may have a preference; the
 sentence is good and it does not obviously have a home yet.
+
+---
+
+### #23 · BUG · Music piles up against a frozen clock while the device sleeps, then fires it all at once · annoying · reported 2026-09-02
+
+*Ranked first tonight. It is not a blocker by the letter of this file's scale — you can play past it
+— but it is a wall of sound in someone's ear on a phone, at a moment they did not ask for, and
+nothing else on this list can hurt.*
+
+**What the owner heard.** "When I step away from my computer and it goes to sleep, or my phone, if I
+turn my computer back on or reopen the app, it sounds like the music is stacking on top of each other
+and trying to play all the notes at once and make some really loud noises. Is there something going
+on with how the music is made and it's stacking up?"
+
+**Yes. Confirmed, reproduced and measured.**
+
+**The mechanism.** Notes are scheduled on the **AudioContext clock** — `tone()` computes
+`ctx.currentTime + at` (`audio.js`) — while the scheduler runs on the **wall clock**:
+`musicTimer = setInterval(step, 3200)` (`audio.js:366`). When a laptop sleeps or a phone locks, the
+browser **suspends the AudioContext, and `ctx.currentTime` stops advancing.** The `setInterval` does
+not. So every step keeps scheduling notes against a clock that is frozen, and they all land on top of
+one another at the same instant. On resume the context picks up exactly where it froze, and
+**everything scheduled at or before that instant fires immediately.**
+
+**Measured, driven headlessly** (patch a handle onto the context before the first gesture, start the
+music, `ctx.suspend()`, wait, count `OscillatorNode.start` calls and their `when`):
+
+| Wall time suspended | Clock advanced | Notes queued | Fire at the instant of resume | Span they occupy |
+| --- | --- | --- | --- | --- |
+| 20 s | **0.000 s** | 54 | — | 2.45 s |
+| 30 s | **0.000 s** | **81** | **9 simultaneously** | **2.45 s** |
+
+Four seconds of normal, running playback schedules **9** notes. **Thirty seconds asleep schedules
+81** — and they do not spread out, because the span is bounded by the arpeggio's own `at` offsets. So
+81 notes play inside 2.45 seconds where 9 belong: a **12× density**, with nine oscillators opening on
+the same sample.
+
+**It scales linearly with how long the device sleeps, and the span never grows.** ~2.7 notes/second
+queued means five minutes asleep is **~810 notes** in that same 2.45 s, an hour is **~9,700**, and
+overnight is **tens of thousands**. Amplitude sums across voices, which is exactly why the owner
+describes it as "really loud noises" rather than "a fast tune".
+
+**Two more schedulers have the identical fault**, and any fix must cover all three:
+
+| Scheduler | Interval | Notes per fire | Rate |
+| --- | --- | --- | --- |
+| The music | `setInterval(step, 3200)` — `audio.js:366` | pad + 2–8 arps | ~2.7/s |
+| The aurora's chime | `setInterval(…, 1500)` — `audio.js:574` | 3, at 72% | ~1.4/s |
+| Wonderfall's drizzle | `setInterval(…, 420)` — `audio.js:620` | 1 | ~2.4/s |
+
+The two beds are shorter-lived than the music — a sky lasts a slot — but the weather sequence that
+would stop them is driven by the game tick, which also stops when the page is frozen, so a bed can
+absolutely still be live across a sleep.
+
+**This exact failure was already found once, in a different disguise, and the fix is sitting in the
+file.** The comment on `setMusic()` (`audio.js:104`) records it: *"Muting used to take the bus to
+zero and leave the scheduler running, so **a muted game kept building oscillator nodes every 3.2s
+forever**."* That was solved by actually calling `stopMusic()`. Nobody connected the same reasoning
+to the page going away — the mute path stops the scheduler and **the sleep path has nothing at all**.
+
+**Nothing in the game touches audio on visibility.** `ui.js` has two `visibilitychange` listeners
+already — one resizes the viewport (`ui.js:1812`), one saves (`ui.js:1819`) — plus a `pagehide` save.
+Neither goes near `Sound`, and `audio.js` registers no listener of its own.
+
+**Fix sketch — one real fix and one guard, and it is worth having both.**
+
+1. **Stop the schedulers when the page hides, restart when it returns.** Add `Sound.pause()` /
+   `Sound.resume()` (or extend the existing `resume()`) that calls `stopMusic()` and clears the two
+   bed timers **without tearing the beds down** — the noise loop is a `BufferSource` and is unaffected
+   by suspension, so only the interval-driven chime and drizzle need pausing. Hang it off the
+   `visibilitychange` listener that already exists in `ui.js`, which keeps `audio.js` free of page
+   lifecycle and matches where the other two live.
+2. **Guard the schedulers on `ctx.state !== 'running'`.** A two-line early return in `step()` and in
+   both bed intervals makes the whole class impossible regardless of which future timer forgets to
+   register. Cheap, and this is the second time this bug has been found.
+
+**What it might break.** `startMusic()` already has a re-entry guard on `musicTimer`, so a
+restart-on-visible cannot double-start — keep that. Restarting must not reset `bar`, or the chord
+progression jumps on every tab switch. On iOS the context is *interrupted* rather than suspended and
+may need `resume()` from a gesture; `wake()` already handles the resume path, so check the return
+from a locked phone specifically rather than only a desktop tab switch. **Even with the scheduler
+stopped, the single bar scheduled just before the sleep still fires on resume** — that is one chord,
+which is fine, but if it is not, `tone()` can drop any note whose `when` has fallen more than a beat
+into the past. `06-audio-and-fx.md` documents the music scheduler as *"the only recurring timer
+outside the frame loop"* — that is now three timers and the doc should say so.
+
+**Repro, for the fix round to verify against:**
+
+```
+node tools/probe.js wait:700 tap:#newsOk wait:400 '<patch window.AudioContext to stash __ctx>' \
+  tap:.flower-btn wait:400 'eval:Sound.setMusic(true)' wait:800 \
+  'eval:(async()=>{await __ctx.suspend();__starts.length=0;})()' wait:30000 \
+  'eval:__starts.length'   // 81 today, should be 0 after the fix
+```
+
+**No open question.**
 
 ---
 
