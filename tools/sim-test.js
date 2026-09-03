@@ -7633,6 +7633,64 @@ check('the lock glyph itself survives — plot gates and the meadow draw it', Ic
    point of the negative case: a test that only says "no padlocks in the
    picker" is passed by deleting the padlock that is supposed to stay. */
 
+
+/* THE ASK MAY GET KINDER; IT MAY NOT GET SHORTER. The panel once named only
+   the growing plots and told an empty board the Turn cost nothing at all —
+   false on every board, because gold zeroes to the fresh purse, every upgrade
+   wipes, power-ups go and plots 5-8 close. The framing above the chips was
+   rewritten in the 2026-09-03 round; the list underneath is the fixed bug.
+   The closing renewal line is deliberately NOT asserted: it is provisional and
+   its reversal is deleting that one <p>, which no check may turn red. */
+group('the Turn’s ask still names every price it charges');
+const askAt = sheetSrc.indexOf('const goes = [');
+const goesBlock = askAt < 0 ? '' : sheetSrc.slice(askAt, sheetSrc.indexOf('const cost =', askAt));
+/* The scrape guard on everything below it: a rename that breaks the slice
+   returns '' and every every() under it is vacuously true. */
+check('the goes list was actually found and read',
+  askAt > 0 && goesBlock.length > 300 && goesBlock.length < 1500, `${goesBlock.length} chars`);
+const TAKES = ['Gold', 'Upgrades', 'Power-ups', 'big plot', 'growing'];
+check('it still names all five things the Turn takes',
+  TAKES.every((n) => goesBlock.includes(n)), TAKES.filter((n) => !goesBlock.includes(n)).join(', '));
+/* Gold is the unconditional one and the only one whose condition could be
+   softened back into the original bug: a purse that looks empty at the ask
+   still zeroes, and every upgrade bought with it still wipes. */
+check('gold is named on every board, not only on a full purse',
+  /Gold`,\s*true\s*\]/.test(goesBlock), goesBlock.slice(0, 140));
+check('and the other four still carry their own conditions',
+  /S\.upgrades[\s\S]{0,80}some/.test(goesBlock) && /S\.boostInv[\s\S]{0,80}some/.test(goesBlock)
+  && /bigPlots > 0/.test(goesBlock) && /growing > 0/.test(goesBlock));
+/* The framing, which is the half that changed. A narrative "goes" against a
+   shouted "stays" tips the panel the wrong way, so it is both rows or neither. */
+const askCopy = [...sheetSrc.matchAll(/class="cere-say">([^<]*)</g)].map((m) => m[1]);
+check('both chip rows are led by a sentence, not a shouted label',
+  askCopy.length === 2, askCopy.join(' | '));
+/* WIDEN THIS LIST, never delete the check: row two's wording is the owner's to
+   confirm and the PROVISIONAL note in turnAsk() names three legal alternates,
+   all of which are here. What
+   may not come back is a verb-less label, because the chips below are verb-less
+   nouns on purpose and something has to say what happens to them. */
+const ASK_VERBS = /\b(washes|reaches|touches)\b/;
+check('the sentences carry the verb, so the chips stay verb-less nouns',
+  askCopy.length === 2 && askCopy.every((s) => ASK_VERBS.test(s)), askCopy.join(' | '));
+/* And each trails off into its own chip row rather than finishing the thought —
+   a sentence that names the losses itself makes the chips beneath it redundant. */
+check('each one hands off to its chips instead of completing itself',
+  askCopy.length === 2 && askCopy.every((s) => s.trim().endsWith('…')), askCopy.join(' | '));
+/* docs/32-the-garden-year.md:31 — the Turn is never the word "reset". */
+check('and neither of them says reset', !/reset/i.test(askCopy.join(' ')), askCopy.join(' | '));
+check('the shouted label class is retired, not left orphaned in the stylesheet',
+  !/cere-lab/.test(sheetSrc)
+  && !/cere-lab/.test(fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8')));
+/* docs/37-monetization.md promise 2: the sacred moments stay clean. The ask is
+   the beat where a player is deciding to give something up, which is exactly
+   where a rewarded offer would be worth the most and cost the most. */
+const askPanel = sheetSrc.slice(sheetSrc.indexOf('function turnAsk() {'),
+  sheetSrc.indexOf('function turnBlessPanel()'));
+check('the ask panel was actually found and read',
+  askPanel.length > 2000 && askPanel.length < 8000, `${askPanel.length} chars`);
+check('and no ad offer has crept into the ceremony’s first beat',
+  !/data-ad|adTag\(|AD_LABEL/.test(askPanel));
+
 /* The strip is the game's one always-visible goal, and ranking it on every read
    made it trade places as a player alternated tapping and harvesting — which is
    the core loop, not an edge case. It re-ranks when the active SET changes and

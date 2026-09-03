@@ -2649,6 +2649,15 @@ nothing failed a check, and a screenshot of the rail was reassuring. **Grep for 
 (`grep -cE '\.name([{ ,:.]|$)' style.css`) and **measure the box after**, because the rendered
 picture will not tell you.
 
+**And the mirror of it: a class you believe is SHARED may have exactly one caller, and scoping
+around it is work you did not need to do.** `docs/43` predicted `.cere-lab` was used across the
+Turn ceremony's later beats and told the fix to scope its type change to the ask panel rather than
+touch the class. It had **two** users, both inside `turnAsk()`; the beats it named label with
+`.plate-cap`. Believing it cost a wrapper class and a hedge that would have outlived the reason for
+them. **The same one-line grep answers both directions** — run it before you scope as well as
+before you delete, and delete outright when it comes back empty, because a rule left orphaned in a
+250KB stylesheet is an invitation for the next agent to use it.
+
 **A margin on one side of a `place-items:center` child shifts it by HALF of itself, and equal margins
 only cancel while they fit.** `.fl-wrap{margin-bottom:46px}` is where Fall's measured 23px board
 offset came from. The obvious repair — the same margin on both sides — works until the item overflows
@@ -2687,6 +2696,17 @@ Century Bloom never carries a `windfall` mark, so the real exclusion happens a l
 was asserting a ruling that nothing in the code path could violate. Sabotage with the *realistic*
 wrong implementation (here, a loop over everything ripe), not with the removal of the line you just
 wrote, and assert the fixture itself is in the state you think it is.
+
+**`UI.state` does not exist, and `tools/probe.js`'s own usage header tells you to use it.** Line 33
+advertises `'eval:UI.state.coins'`; the accessor is `Game.state`. The cost is not the typo, it is
+that **a probe `eval:` that throws prints one quiet line and the run carries on green** — so a setup
+step that silently did nothing leaves every measurement after it taken on the default board, which
+is a plausible number rather than an obvious failure. Read each eval's printed result; the exit code
+only catches an *uncaught page* error. Two more of the same family in one sitting: `tap:#newsOk`
+reloads with `reset: true`, and **after that reload the announcement comes straight back up** — so
+one tap dismisses nothing that lasts and a second tap resets the board you just built. For a
+photograph, set the board up first and then `document.querySelector('#news').remove()`; removing
+only the `show` class leaves the dialog painted.
 
 **`tools/probe.js`'s documented lawn point no longer starts a season swipe.** `drag:@30,600:...` at
 390×844 is in the usage header as "the lawn", and it does nothing now — verified against `HEAD` as

@@ -198,6 +198,17 @@ Five beats, about a minute, one decision:
    (3–4 meter-state lines in `FLOWER_LINES` ship with slice A).
 2. **The flower asks.** *"The year's turning. Save your seeds?"* Declining is free — the
    ceremony reopens from the meter pill whenever the player likes.
+
+   The ask names the year's whole price before it charges it — gold, upgrades, power-ups, the big
+   plots and whatever is still growing — and then names the forever things it never reaches.
+   **Both rows are led by a sentence, not a label** (2026-09-03): *"A new year washes away
+   your…"* and *"It never reaches the forever things…"*, with the chips beneath staying verb-less
+   nouns because the sentence carries the verb, and a quiet closing line under both — *"And a new
+   year always brings in new life."* The register is the compost line's, not a form heading's.
+   **The list may get kinder; it may never get shorter** — an irreversible commit may not
+   understate its own price, which is the bug the earlier bluntness fixed. Row two's wording and
+   the closing line's placement are provisional and the owner's to settle; the type treatment is
+   in [08-ui-and-layout.md](08-ui-and-layout.md).
 3. **Bless one flower.** The single choice in the ceremony: pick any flower, and its **free
    petal lands on Rich Bloom**, written into `state.petals` like any bought petal. One blessing
    per Turn, any flower, repeatable across years; `state.blessed` keeps the list for provenance

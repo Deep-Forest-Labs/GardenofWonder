@@ -734,7 +734,8 @@ const DATA = {
         'Crops in your fall bed can be finished early with gems now, the same as the flowers in your garden — every crop but the Century Bloom, which keeps its fortnight.',
         'A plot you have just picked remembers what grew there — tap the small sprout in its bottom corner to plant the same flower again without opening the seed list.',
         'Feeding your pets asks a little more of you now: a clover nibble costs gold, a petal cake costs gems, and a honeypot is the one you watch an ad for.',
-        'The shop will lend you a harvest drone for half an hour if you watch a short video — it picks your ready flowers for you while it flies, and it never slows down a drone you already own.'
+        'The shop will lend you a harvest drone for half an hour if you watch a short video — it picks your ready flowers for you while it flies, and it never slows down a drone you already own.',
+        'Turning the year says the same thing in a kinder voice: a new year washes away your gold, upgrades and power-ups, and never reaches the things you keep forever.'
       ]
     },
     {

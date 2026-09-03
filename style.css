@@ -2192,8 +2192,11 @@ button:focus-visible{
    0 18px 26px. Lip and contact shadow scale together or the object looks like
    it is hovering at the wrong height. */
 .keep-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.cere-lab{margin:12px 0 0;font-size:11px;font-weight:800;letter-spacing:.07em;
-  text-transform:uppercase;color:var(--ink-soft)}
+/* The ask's two rows are led by a sentence, not a label. This panel names an
+   irreversible price, and 11px letter-spaced caps cannot name it kindly — one
+   warm line between two shouted ones changed the register twice in six rows.
+   The verb lives in the sentence so the chips below stay verb-less nouns. */
+.cere-say{margin:14px 0 0;font-size:13px;font-weight:700;line-height:1.35}
 /* What the year takes wears the drained paper every "not any more" state in
    this game wears — not red, because a cost stated in advance is not an error.
    It restates its own lip, like every other modifier that touches box-shadow. */

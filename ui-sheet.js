@@ -800,7 +800,7 @@
        irreversible commit may never understate its own price. */
     const bigPlots = S.grid.filter((c, i) => !c.locked && Game.plotUnlockLevel(i) > 1).length;
     /* Icon and noun, the same grammar the "stays" row uses two lines below —
-       the row's own heading carries the verb, so the chips do not have to. */
+       the sentence above the row carries the verb, so the chips do not have to. */
     const goes = [
       [`${Icons.get('coin')}Gold`, true],
       [`${Icons.get('badge')}Upgrades`, Object.values(S.upgrades || {}).some((v) => v > 0)],
@@ -811,6 +811,20 @@
     const cost = growing
       ? `${growing === 1 ? 'The plot' : `All ${growing} plots`} still growing ${growing === 1 ? 'goes' : 'go'} to the compost${ripe ? ' — everything ripe is picked for you first' : ''}.`
       : (ripe ? 'Everything ripe is picked for you first.' : 'The board is empty, so nothing is composted.');
+    /* Both chip rows are led by a sentence rather than a small-caps label,
+       because 11px letter-spaced caps cannot name an irreversible price
+       kindly. Row one is the owner's own wording. TWO THINGS HERE ARE
+       PROVISIONAL and are the owner's to settle:
+         - row two's sentence, which cannot mirror row one's possessive because
+           "your Fall's bed" does not parse. "the forever things" is doc 32's
+           own header for that column. Legal alternates that hold the shape and
+           stay one line at 320px: "It never touches the forever things…",
+           "A new year never reaches these…", "And it never reaches what you
+           keep forever…".
+         - the closing renewal line, which sits here rather than on the spring
+           beat so it reaches the player while the decision is still theirs to
+           make. Reversal is deleting that one paragraph; the panel is 32px
+           shorter and otherwise identical. */
     return `<div class="cere">
       <div class="cere-flower">${Flora.talkingFlower()}</div>
       <div class="speech-block">The year’s turning. Save your seeds?</div>
@@ -819,10 +833,11 @@
         <div class="plate-big outlined">${Icons.get('pouch')}<span>${fmt(Math.floor(mint.base))}</span></div>
       </div>
       <div class="cost-line${growing ? '' : ' good'}">${Icons.get('sprout')}<span>${cost}</span></div>
-      <p class="cere-lab">This year goes</p>
+      <p class="cere-say">A new year washes away your…</p>
       <div class="keep-row">${goes}</div>
-      <p class="cere-lab">These stay, always</p>
+      <p class="cere-say">It never reaches the forever things…</p>
       <div class="keep-row">${keeps}</div>
+      <p class="sheet-note centred">And a new year always brings in new life.</p>
       <div class="btn-row">
         <button class="big-btn yes" data-act="turnBless">${Icons.get('pouch')}Turn the year</button>
         <button class="big-btn" data-act="turnLater">Not yet</button>

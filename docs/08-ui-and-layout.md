@@ -516,6 +516,24 @@ unlocked its grid is seven rows.
 **The flower stands inside the body, not in `#sheetArt`.** A sheet this tall has no room above its
 own top edge, so the breakout art clips off the screen. `.cere-flower` is the ceremony's own.
 
+**The ask's two rows are led by body copy, not by a small-caps label** (2026-09-03). `.cere-lab` —
+11px, uppercase, letter-spaced, `--ink-soft` — is retired outright; `.cere-say` is 13px sentence
+case at the compost line's own ink, and a `.sheet-note.centred` closes under both chip rows. One
+warm sentence between two shouted labels changed the panel's register twice in six rows, and the
+shouted half was the half that read as confiscation. The panel already scrolls in its fullest
+state — at 390×640 the body is 534px against 782px of content before this change and 816px after,
+and "Turn the year" is fully on screen at the end of the scroll in both (its bottom sits at y=549
+of 640). At 390×844 the overflow goes 57px → 91px; both sentences stay one 18px line down to
+320px wide. `.cere-lab` had exactly two users in the repo, both in `turnAsk()`; the later beats
+label with `.plate-cap`, so nothing else could regress and no scoping wrapper was needed.
+**Row two's wording is provisional** — it cannot mirror row one's possessive, because the keeps
+row includes "Fall's bed" and "The Century Bloom" and *"your Fall's bed"* does not parse. Legal
+alternates that hold the shape and stay one line at 320px: *"It never touches the forever
+things…"*, *"A new year never reaches these…"*, *"And it never reaches what you keep forever…"*.
+The retired declaration, kept here so a demoted subtext can be restored without archaeology:
+`.cere-lab{margin:12px 0 0;font-size:11px;font-weight:800;letter-spacing:.07em;
+text-transform:uppercase;color:var(--ink-soft)}`.
+
 **It renders from a step variable, never from what is in the DOM.** Any `panels` emit rebuilds
 `#sheetBody` from scratch, so a ceremony that animated out of its markup would restart its fireworks
 every time an unrelated purchase fired. The pack reveal is the precedent. The corollary: **only the

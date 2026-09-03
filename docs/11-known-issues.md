@@ -175,6 +175,17 @@ the one the punch list called "probably right". The player-visible consequence, 
 about: the morning after a Turn, every plot opens the picker again. One-line reversal, recorded in
 `03-systems.md`.
 
+**One assertion in `tools/sim-test.js` is intermittent, and it is not new.** `a real harvest lands
+inside the range the picker quoted` (the seed-picker payout group) fails roughly **once in every
+25 runs**, on `HEAD` as well as on the working tree — measured both ways, 25 runs each, one failure
+each. The check arms rarity to `common` and then compares a real harvest against
+`plantPayout().min/max`, so something else in the payout still rolls. It matters out of proportion
+to its size: the round's whole "the count may only go up, 0 failed" gate becomes a coin flip nobody
+is expecting, and the natural reading of a single red run is "my change broke it". **If you see it,
+re-run before you debug**, and if you are the one to fix it, the group is the one three above
+`a petal button says what you have and what the next one adds`. Not fixed here — it belongs to
+whoever owns the picker's payout quote, and pinning it means moving an economy assertion.
+
 **The one bar already scheduled in the instant before the page froze still fires on the way back.**
 `#23` stops the three schedulers on a frozen context, but a note booked a moment earlier is already
 on the AudioContext's own queue and plays when the context resumes. It is one chord against the 81
