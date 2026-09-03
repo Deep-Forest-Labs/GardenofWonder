@@ -6550,8 +6550,12 @@ G.reset();
    other half of that ordering: migrateYear() grandfathers a legacy save's seed
    unlocks AFTER ensureProgression(), so on the one migrating load the gate sees
    only the two free seeds and drops any gated quest the grandfather is about to
-   make eligible. That is harmless in play — the next stripQuest() calls
-   fillActive() and deals it back at its record — but do NOT 'fix' it by
+   make eligible. It is NOT dealt straight back — ensureProgression() drops it
+   and calls fillActive() in the same pass, which refills all three slots, and
+   fillActive() returns immediately at active.length >= 3, so the next
+   stripQuest() changes nothing. The rung waits for the ladder walk to reach it
+   again with a slot free, and questFloor() then deals it at its lifetime
+   record, whole: nothing is lost, the reward is deferred. Do NOT 'fix' it by
    reordering those calls, because backfillDiscovered() must stay ahead of
    ensureProgression() and this group is what holds that. */
 group('a legacy save is straightened in one load, not two');

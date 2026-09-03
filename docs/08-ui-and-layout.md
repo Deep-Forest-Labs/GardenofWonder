@@ -636,18 +636,30 @@ Driven by `data-state` on each plot button:
 Plots also carry `data-stage` (`sprout` / `stem` / `bud` / `bloom`, from `DATA.growth`) for growth and `data-aura` (rarity name) tinting the soil after
 a harvest.
 
-### Three chips, never two at once
+### Three chips, and it is the two PRICE chips that exclude each other
 
-The plot carries three chips and can never wear more than one of them. `data-skip` (gem, top right)
-is written only in `grow`; `data-replant` (sprout, bottom right) only in `empty`; `.pack-drop` shows
-only under `.has-pack`, at top centre. The bottom-right corner **looks** occupied and is not: the
-growth bar runs straight through it, but `.plot[data-state="empty"] .bar` is `display:none`, so the
-one state that shows the replant chip is the one state the bar is absent from.
+The plot carries three chips. **The two price chips are the pair that can never be on together**,
+and that is the invariant worth building on: `data-skip` (gem, top right) is written only in `grow`
+and `data-replant` (sprout, bottom right) only in `empty`, so no plot ever wears both.
 
-Both chips are **`pointerdown` with `preventDefault` + `stopPropagation`**, and the propagation guard
-is load-bearing rather than tidy: the plot beneath them is itself a `pointerdown` button. Without it
-one tap on the replant chip both replants and reaches the plot underneath — which steals a hasten
-when the replant succeeds, and opens the seed picker over the plot when it is refused. Do not
+**The pack drop is not part of that exclusion, and a plot can wear it alongside either.**
+`rollCardPack()` (`game.js:2523`) picks uniformly from every cell matching
+`!cell.locked && !cell.packDrop` and never looks at the plot's state at all, so `.has-pack` can land
+on a plot that is already showing a price chip. Measured live: plot 0 at `data-state="empty"`,
+`data-replant="ok"`, `.has-pack` on, with the replant chip and the pack badge both painting at
+40.9px. It costs nothing today, because the pack sits at top centre and the two price chips take
+the right-hand corners — but do not free a corner on the strength of "only one chip at a time".
+That holds for the price pair, not for all three.
+
+The bottom-right corner **looks** occupied and is not: the growth bar runs straight through it, but
+`.plot[data-state="empty"] .bar` is `display:none`, so the one state that shows the replant chip is
+the one state the bar is absent from.
+
+Both price chips are **`pointerdown` with `preventDefault` + `stopPropagation`**, and the
+propagation guard is load-bearing rather than tidy: the plot beneath them is itself a `pointerdown`
+button. Without it one tap on the replant chip both replants and reaches the plot underneath — which
+steals a hasten when the replant succeeds, and opens the seed picker over the plot when it is
+refused. Do not
 "simplify" either chip to `click`; mixing the two is the recorded gesture trap in reverse.
 
 Visibility is `display` under a data attribute, never a class and never an animation — a badge that

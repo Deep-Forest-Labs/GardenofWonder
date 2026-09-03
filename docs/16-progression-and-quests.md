@@ -404,21 +404,39 @@ unlock wall from its own goal instead of three, six or ten: `q_discover_5` gates
 at 7, `q_discover_12` at 11. `q_discover_3` is ungated — its gate would be 2, which `freeSeeds: 2`
 satisfies on every save, and a field that can never be false is noise.
 
-**What makes the gate safe against eating a finished quest:** `plant()` refuses a seed the player
-has not bought, so discovered ≤ owned always, and `needSeeds ≤ qty` therefore guarantees a gated
-instance can never be one that is finished but unclaimed. A sim-test asserts `needSeeds < qty` on
-every gated rung; do not weaken it.
+**What makes the gate safe against eating a finished quest, in ordinary play:** `plant()` refuses a
+seed the player has not bought, so while the game is running discovered ≤ owned, and `needSeeds <
+qty` therefore means a gated instance is not one that is finished but unclaimed. A sim-test asserts
+`needSeeds < qty` on every gated rung; do not weaken it.
+
+**But discovered ≤ owned is FALSE during the one migrating load, which is the only window the gate
+is dropping anything in.** `backfillDiscovered()` rebuilds `discovered` from a legacy save's
+`flowers` **before** `migrateYear()` grandfathers `seedUnlocks`, so a save with six species found
+and nothing bought reads as six discovered against two owned, and a `q_discover_5` sitting at 5/5
+finished-and-unclaimed is dropped by the gate. Reproduced: after that load `claimQuest('q_discover_5')`
+answers `null`. **The rep is deferred, not lost** — the rung comes back at its lifetime record and
+pays in full once the ladder walk reaches it (see the ordering paragraph below). Do not write
+anything new that leans on discovered ≤ owned holding *during* load.
 
 **A gated quest is still counted.** The Quests panel's "N left" and the suite's level-17 assertion
 both filter on `paused` only, and that is correct — gating is a delay, not a bench. The rung will
 be dealt and claimed, so counting it is the honest number, and adding `needSeeds` to those filters
 would under-report the ladder in mirror image.
 
-**One ordering fact, and it is not a bug.** `migrateYear()` grandfathers a legacy save's seed
-unlocks *after* `ensureProgression()` runs, so on the single migrating load the gate sees only the
-two free seeds and drops a gated quest the grandfather is about to make eligible. The next
-`stripQuest()` calls `fillActive()` and deals it straight back at its record, so no player ever
-sees it. **Do not reorder those calls to "fix" it** — `backfillDiscovered()` has to stay ahead of
+**One ordering fact. It is not a bug, but it is not free either, and the old wording here was
+wrong about why.** `migrateYear()` grandfathers a legacy save's seed unlocks *after*
+`ensureProgression()` runs, so on the single migrating load the gate sees only the two free seeds
+and drops a gated quest the grandfather is about to make eligible. **It is not dealt straight
+back.** `ensureProgression()` drops the instance and calls `fillActive()` in the *same* pass, which
+refills all three slots from the top of the ladder, and `fillActive()` returns immediately once
+`active.length >= 3` — so the next `stripQuest()` changes nothing, and `load()`'s own `saveNow()`
+writes the displaced list to disk. The rung comes back when the ladder walk reaches it again with a
+slot free, and `questFloor()` deals it at its lifetime record, whole. Reproduced on a
+pre-Garden-Year save (no `year` key) holding `{ id: 'q_discover_5', progress: 5 }` with six species
+in `flowers`: it loads to `q_tap_25, q_plant_1, q_harvest_1`, is still absent after any number of
+`stripQuest()` calls, and returns at 5 / 5 and pays its 12 rep nine claims later. So nothing a
+player did is thrown away; the reward is deferred by however far down the ladder the rung sits.
+**Do not reorder those calls to "fix" it** — `backfillDiscovered()` has to stay ahead of
 `ensureProgression()` or a migrated save spends a load with the strip and the Almanac disagreeing,
 and a sim-test holds that ordering.
 

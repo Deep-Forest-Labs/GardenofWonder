@@ -3306,8 +3306,14 @@ is deliberate: classify it when you add it.
 
 **`state.fall.grid` is positional, like the meadow's cells and the Stand's slots.** Rebuilt to
 `DATA.fall.plots` length on load, never merged. And Fall crops are NOT flowers: they must never
-touch rarity, mutations, gems, `discovered`, the pantry or the bench — the windfall is their
-whole juice, and several sim-tests assert the separation.
+touch rarity, mutations, `discovered`, the pantry or the bench, and they must never DROP a gem —
+the windfall is their whole juice, and several sim-tests assert the separation (*a whole Fall bed
+drops no gems*, *it writes no discovery and drops no bloom*). **Gems run the other way now, and
+only that way:** `fallSkip()` SPENDS them to hurry a crop — the owner's ruling of 2026-09-02,
+shipped in `bf6f24c` — and it is the season's only gem sink, with the Century Bloom refused at any
+price. A hurried crop still pays flat `yield`, still writes no discovery and still counts only
+generic `harvest` tracks, so the rule above is intact: it is about what a crop EARNS. Do not read
+`.fl-skip` as a violation of it and revert a ruled feature.
 
 **`.seed-row` is the plant picker's button, not a generic row.** Reusing it for the Almanac wrapped
 every row in a card treatment and collapsed the columns onto one overflowing line. The Almanac's

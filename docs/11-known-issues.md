@@ -39,9 +39,12 @@ strip alone; the number to check is what the goal costs, not how long it leads.
 **The flower's greeting bubble covers the top-middle Fall crop's wait pill for the few seconds it is
 up.** Moving `.fl-wait` to the bottom of the tile (`#24`, to free the top-right corner for the gem
 chip) put it under `#speech`, which rises out of the centre cell into the tile above: measured 16px
-of a 20px pill on plot 1 only, and gone when the bubble fades ~4.5 s later. Traded rather than
-solved — the top row is the chip's, and the alternative homes are worse: shortening the growth bar
-to free the bottom-right halves the bar on a 320px screen, and the bar is the growth signal. **Two
+of a 20px pill on plot 1 only, and gone about **2.6 s** later — `ui.js:427` drops `.show` on a
+2400 ms timer and `.speech` fades out on `transition:opacity .22s`. (This entry first said ~4.5 s.
+Nothing in the code has ever produced that; the two numbers to check are the timeout and the fade.)
+Traded rather than solved — the top row is the chip's, and the alternative homes are worse:
+shortening the growth bar to free the bottom-right halves the bar on a 320px screen, and the bar is
+the growth signal. **Two
 comments in `ui-fall.js` are stale in the same breath** (the `buildBoard()` note that the speech
 bubble does not come with the flower, and `collectAll()`'s reason for having no `UI.say()`):
 `ui.js:32-46` moves the one `#speech` node into whichever hero cell is on screen, so Fall does speak
@@ -115,13 +118,24 @@ had inherited the same shape; `.wi-chip` takes `gap:0` with the margin on the ic
 is one line of CSS away and was deliberately not changed in slice C, because Fall is not that
 slice — it is a two-minute fix for the next round.
 
-**The gem skip chips still overflow their plots in landscape — and now the replant chip with
-them.** Narrower than they were now the wait is gone, still a 34px chip on a 31px tile in the garden;
-Fall's `.fl-skip` is the same component under the same clamp and the same `@media (max-height:600px)`
-shrink, and measured 15px on a 31px tile at 844×390. The garden's `.replant-chip` (added 2026-09-03)
-shares every one of those rules by selector list, so it inherits the overhang exactly. Fall's wait
-pill pokes out the top of the tile there too, now that it sits at the bottom. Landscape is not a
-supported orientation. See the entry further down.
+**In landscape the chips are squeezed to illegibility and Fall's wait pill breaks out of its tile.
+The chips themselves do NOT overflow — this entry used to say they did, and that was wrong.**
+Re-measured 2026-09-03 at 844×390: every `.plot` and `.fl-plot` is 31.3px, and
+`max-width:calc(100% - 10px)` resolves against the tile's 25.3px padding box (the plot carries a 3px
+border), so **every chip is held to 15.3px and sits entirely inside its tile** — the garden's
+`.skip-chip`, the garden's `.replant-chip` and Fall's `.fl-skip` alike, on every plot, and the same
+holds at 667×375 and at 932×430 (38.6px tile, 22.6px chip). The clamp is doing its job. What it
+cannot do is make 15.3px enough: inside the chip the 11px gem or sprout glyph is crushed to **zero
+width** and the price overflows the pill's own background onto bare soil — a Pumpkin's chip spans
+370→385.3 while its "360" paints 377→392.2, so the last two digits sit on the earth beside the chip
+and it reads as a truncated price. **What actually leaves the plot is Fall's `.fl-wait`.** The pill
+is 20.3px tall at `bottom:16px` off a padding box that ends 3px inside the tile, so it needs 39.3px
+of tile height and landscape gives it 31.3px at 844×390 and 38.6px at 932×430 — its top edge sits
+**8px above the tile** in the first case and 0.7px above in the second, on every plot. Sideways it
+depends on the label: a Strawberry's "20m" is 36.8px on that 31.3px tile and hangs off both edges,
+where a Pumpkin's "3h" is 28.5px and does not. And the pill **overlaps the gem chip on every plot**
+in both viewports, which is the half of this that #24's own measurement did not cover. Landscape is
+not a supported orientation. See the entry further down.
 
 **The `--yard-h` reservation is now load-bearing for alignment.** `UI.boardSide()` reads `.stage`'s
 bottom padding to find the yard's height, because the yard node measures zero in Fall. Anything that

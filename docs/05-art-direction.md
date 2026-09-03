@@ -245,9 +245,35 @@ Two consumption patterns:
 `plantSpot` replaced `seed` for empty plots because a dashed square with a plus reads as "put
 something here" where a seed shape did not. **One glyph, one size rule, on all four boards**
 (2026-09-03): the garden, Fall, Winter and the meadow each draw it at
-`width:30%; height:30%; max-width:44px` in a container at `opacity:.62`. The ceiling matters more
-than the percentage — an uncapped 30% looks identical on a phone and reaches 69.6px against
-Summer's 44px at 900px wide, which is how three of the four drifted apart without anyone seeing it.
+`width:30%; height:30%; max-width:44px`, in a container at `opacity:.62` — with one exception, the
+meadow's, in the paragraph below.
+
+**The percentage is what closed the gap; the ceiling is the guard that keeps it closed.** Two of
+the four had drifted, not three: Fall at 46% with no cap, its own `opacity:.85` and a drop-shadow,
+and the meadow re-drawing the glyph by hand at 34%. Winter already carried Summer's rule
+declaration for declaration. All four now render **31.22px at 390 wide**, on a 104.09px container
+inside a 110.09px tile, where the 44px ceiling never binds at all — Fall's old 46% on that same
+container is 47.9px and the meadow's old 34% is 35.4px, so the percentage accounts for the whole of
+what the owner could see. The ceiling only starts to earn its keep as the board grows, and less
+than the old wording claimed: **the plot pins at 157.3px at every viewport from 768 up** (measured
+at 768, 900, 1400 and 1920 wide, and at 900×2000 — it is width-bound by its column, not
+height-bound), which puts the container at 151.3px and an uncapped 30% at 45.4px. So the cap is
+worth ~1.4px on the widest board the game can currently produce, and ~2.6px on the meadow's
+slightly larger container (155.3px, inside a 161.3px cell). It is insurance against the next board
+that gets bigger, not a
+correction anyone would see today. **The 69.6px figure that used to sit here is Fall's OLD
+uncapped 46% in that 900-wide tile**, not an uncapped 30% — the two got conflated when this
+paragraph was written.
+
+**The meadow's container does not rest at `.62` whenever a hive is affordable.**
+`.mw-cell.empty.can .mw-empty` runs `animation:mwInvite`, and
+`@keyframes mwInvite{0%,100%{opacity:.5}50%{opacity:1}}` sets `opacity` — which **replaces** the
+base value rather than multiplying it. So from the moment credits reach `Game.nextHiveCost()`
+(2,200 for the first hive, which is most of the game) that container swings 0.5→1.0 while Summer's,
+Fall's and Winter's sit pinned at .62; sampled live at 0.99 / 0.80 / 0.57 / 0.50 / 0.63. Under
+reduced motion the animation is cancelled and it does rest at .62. `tools/sim-test.js` reads the
+four declarations as source text, so its opacity check holds the base value the four agree on and
+not what the meadow renders.
 
 Measured on the four rendered boards, the cream mark against the ground under it: Fall 3.33:1,
 Summer 2.64:1, the meadow 2.49:1 at noon and 3.35:1 at night, Winter 2.30:1. A light mark gains
