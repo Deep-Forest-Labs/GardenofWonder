@@ -243,7 +243,19 @@ Two consumption patterns:
 - Generated markup calls `Icons.get('coin')` inline.
 
 `plantSpot` replaced `seed` for empty plots because a dashed square with a plus reads as "put
-something here" where a seed shape did not.
+something here" where a seed shape did not. **One glyph, one size rule, on all four boards**
+(2026-09-03): the garden, Fall, Winter and the meadow each draw it at
+`width:30%; height:30%; max-width:44px` in a container at `opacity:.62`. The ceiling matters more
+than the percentage — an uncapped 30% looks identical on a phone and reaches 69.6px against
+Summer's 44px at 900px wide, which is how three of the four drifted apart without anyone seeing it.
+
+Measured on the four rendered boards, the cream mark against the ground under it: Fall 3.33:1,
+Summer 2.64:1, the meadow 2.49:1 at noon and 3.35:1 at night, Winter 2.30:1. A light mark gains
+contrast as the ground gets darker, so the darkest soil in the game is where it reads best. What
+costs it is a ground that is light *and* high-frequency: the meadow's cobbles are the only textured
+floor of the four, and a thin dashed ring there competes with stone edges rather than sitting on a
+gradient. Ratio is the wrong instrument for a textured surface on its own — Winter scores lowest of
+the four and reads perfectly, because its frozen earth is smooth.
 
 **Six of them are monochrome, and that is the exception the rule needs.** `close`, `check`,
 `chevron`, `menu` and the two halves of the pencil are punctuation rather than objects — a chevron

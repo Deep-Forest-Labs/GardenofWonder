@@ -265,17 +265,6 @@ const Meadow = (() => {
     </svg>`;
   }
 
-  /** An empty cell: a bare socket in the cobbles, waiting for something. */
-  function emptyCell() {
-    return `<svg viewBox="0 0 100 100" class="mw-cell-art" aria-hidden="true">
-      <rect x="33" y="38" width="34" height="34" rx="11" fill="rgba(16,10,6,.3)"/>
-      <rect class="mw-socket-ring" x="33" y="37" width="34" height="34" rx="11" fill="none"
-        stroke="rgba(255,233,201,.85)" stroke-width="2.8" stroke-dasharray="6 5.4"/>
-      <path d="M50,45 v18 M41,54 h18" stroke="rgba(255,233,201,.9)" stroke-width="3.2"
-        stroke-linecap="round"/>
-    </svg>`;
-  }
-
   /* The ground a keeper stands on. A creature with nothing under it floats, and
      a soft ellipse is not ground — it is a shadow with no floor to fall on. */
   function keeperSpot() {
@@ -459,6 +448,6 @@ const Meadow = (() => {
     </svg>`;
   }
 
-  return { scene, cobbleFloor, emptyCell, keeperSpot, hive, tender, jar, bee, wall,
+  return { scene, cobbleFloor, keeperSpot, hive, tender, jar, bee, wall,
     KEEPERS, KEEPER_SIZE, VIEW, INK };
 })();

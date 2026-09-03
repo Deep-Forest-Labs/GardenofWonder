@@ -17,6 +17,17 @@ one line at `stinger.gain.value` (audio.js)** if the owner reports the thunder a
 change — but the effects now sit relatively closer under a quieter sky. If taps ever read as muffled
 for no visible reason, that is the knob; the bed trim is not.
 
+**The icon registry's paperwork is four facts behind the code, and one run of
+`node tools/export-icons.js` clears all of them at once.** `art/exports/icons/mysteryBloom.svg` was
+never written and its manifest row is missing from
+[45-asset-inventory.md](45-asset-inventory.md); `snow`'s Used-by is missing `ui-sheet.js`; that
+file's footer says 54 icons and [05-art-direction.md](05-art-direction.md) says fifty-two, against
+a registry of 55; and `#12` has just added a fourth room to `plantSpot`'s Used-by, so its row reads
+`ui-fall.js, ui-winter.js, ui.js` until the generator next runs. The manifest is fenced
+`do not edit by hand`, so there is no honest way to correct one row without running the tool.
+Deliberately not run inside a scoped fix round: it writes a Unity-facing asset and three unrelated
+doc rows. Its footprint was measured — those are the whole of it.
+
 **The one bar already scheduled in the instant before the page froze still fires on the way back.**
 `#23` stops the three schedulers on a frozen context, but a note booked a moment earlier is already
 on the AudioContext's own queue and plays when the context resumes. It is one chord against the 81

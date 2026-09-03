@@ -9284,5 +9284,65 @@ check('the ambient house level and the bed ceiling are untouched',
   }
 }
 
+/* ---------------------------------------------------------------------------
+   ONE GLYPH, ONE SIZE RULE — the empty-plot marker across all four boards.
+
+   Read as source text because neither style.css nor a ui-* file can be loaded
+   headless. The fault this catches is not a crash: four boards drew the same
+   "plant here" square at three different sizes and every one of them looked
+   deliberate on its own screen. Only a comparison across the four notices. */
+const cssSrc = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
+const roomSrc = {
+  'ui.js': fs.readFileSync(path.join(ROOT, 'ui.js'), 'utf8'),
+  'ui-fall.js': fs.readFileSync(path.join(ROOT, 'ui-fall.js'), 'utf8'),
+  'ui-winter.js': fs.readFileSync(path.join(ROOT, 'ui-winter.js'), 'utf8'),
+  'ui-meadow.js': fs.readFileSync(path.join(ROOT, 'ui-meadow.js'), 'utf8')
+};
+/* One selector per board, so a renamed rule fails the guard below rather than
+   silently dropping out of the comparison. */
+const MARKER_RULES = {
+  summer: /\.plot \.empty-mark svg\{([^}]*)\}/,
+  fall: /\.fl-empty svg\{([^}]*)\}/,
+  winter: /\.wi-empty svg\{([^}]*)\}/,
+  meadow: /\.mw-cell \.mw-empty svg\{([^}]*)\}/
+};
+const MARKER_FADE = {
+  summer: /\.plot \.empty-mark\{[^}]*opacity:\.62/,
+  fall: /\.fl-empty\{[^}]*opacity:\.62/,
+  winter: /\.wi-empty\{[^}]*opacity:\.62/,
+  meadow: /\.mw-empty\{[^}]*opacity:\.62/
+};
+const markerBodies = Object.fromEntries(Object.entries(MARKER_RULES)
+  .map(([room, re]) => [room, (cssSrc.match(re) || [])[1] || '']));
+const drifted = (map, ok) => Object.entries(map).filter(([, v]) => !ok(v)).map(([k]) => k).join(', ');
+
+group('the plant-here marker is one glyph at one size on all four boards');
+/* THE GUARD ON EVERY CHECK BELOW IT. A regex that matches nothing returns '',
+   and four empty strings are trivially equal — four green assertions comparing
+   nothing to nothing. If a marker rule is ever renamed, this is what says so. */
+check('all four marker rules were actually found in style.css',
+  Object.values(markerBodies).every((b) => b.length > 10),
+  drifted(markerBodies, (b) => b.length > 10));
+check('all four declare the same size, and it is Summer\'s',
+  new Set(Object.values(markerBodies)).size === 1
+    && markerBodies.summer === 'width:30%;height:30%;max-width:44px',
+  JSON.stringify(markerBodies));
+/* Separate from the check above on purpose. The ceiling is the half that only
+   shows on a wide screen: uncapped, Fall held at 30% on a phone and reached
+   69.6px against Summer's 44px at 900px wide. */
+check('every one of them carries the ceiling, not just the percentage',
+  Object.values(markerBodies).every((b) => /max-width:44px/.test(b)),
+  drifted(markerBodies, (b) => /max-width:44px/.test(b)));
+check('and all four containers rest at the same opacity',
+  Object.values(MARKER_FADE).every((re) => re.test(cssSrc)),
+  drifted(MARKER_FADE, (re) => re.test(cssSrc)));
+/* One glyph, from one registry, in all four rooms — the meadow drew its own
+   copy inline, with its own dash pattern and colours, until 2026-09-03. */
+check('all four rooms emit the shared plantSpot icon',
+  Object.values(roomSrc).every((src) => /(Icons\.get|ico)\('plantSpot'\)/.test(src)),
+  drifted(roomSrc, (src) => /(Icons\.get|ico)\('plantSpot'\)/.test(src)));
+check('and no hand-drawn copy of it survives in the art modules',
+  !/mw-socket-ring|emptyCell/.test(fs.readFileSync(path.join(ROOT, 'meadow.js'), 'utf8')));
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

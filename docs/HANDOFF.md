@@ -2953,6 +2953,17 @@ floats anyway. Anything standing on the meadow's cobbles gets a lighter **pad** 
 on top of that — the pad is the ground, the shadow is the contact. The same applies to any future
 dark board.
 
+**Its sibling, and the one that reads backwards: a LIGHT mark reads better on darker ground, not
+worse. What kills it is a BUSY ground.** `#12` predicted that giving Fall Summer's `.62` marker
+would let its darker soil swallow the glyph. Measured on the rendered boards afterwards, Fall is the
+*strongest* of the four at 3.33:1 against Summer's 2.64:1 — the mark is cream, and the soil getting
+darker is the mark getting louder. The two that go marginal are the meadow at 2.49:1 and Winter at
+2.30:1, on the two LIGHTEST floors in the game. And Winter, the numerically worst, reads perfectly:
+its frozen earth is smooth, while the meadow's cobbles are the only high-frequency floor of the four
+and a thin dashed ring there competes with stone edges. **Contrast against the mean is the wrong
+instrument for a textured surface** — take the screenshot and look at it, and when you do trust a
+ratio, compare it against something already shipped rather than against 3:1.
+
 **`[hidden]` loses to any later rule that sets `display`.** `.mw-jar-badge` declares `display:grid`,
 so a badge that was correctly marked hidden still painted — an empty yellow pill on all eight cells.
 Every class that sets `display` needs its own `[hidden]{display:none}` companion.

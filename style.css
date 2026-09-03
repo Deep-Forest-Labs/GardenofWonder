@@ -4294,7 +4294,13 @@ button:focus-visible{
 
 /* A cell is a PLACE, not a status light, so the cobbles read the same in every
    state and what changes is the thing standing on them. */
-.mw-cell.empty.can .mw-socket-ring{animation:mwInvite 2.6s ease-in-out infinite}
+.mw-empty{position:absolute;inset:0;display:none;place-items:center;z-index:1;opacity:.62}
+/* Descendant form on purpose: `.mw-cell svg{width:100%}` above has the same
+   specificity as a bare `.mw-empty svg`, so the bare form wins on source order
+   alone and the marker fills the cell the day this block is reordered. */
+.mw-cell .mw-empty svg{width:30%;height:30%;max-width:44px}
+.mw-cell.empty .mw-empty{display:grid}
+.mw-cell.empty.can .mw-empty{animation:mwInvite 2.6s ease-in-out infinite}
 @keyframes mwInvite{0%,100%{opacity:.5}50%{opacity:1}}
 .mw-cell.ready{
   box-shadow:
@@ -4462,7 +4468,7 @@ button:focus-visible{
    cancels. Sitting above them it lost the cascade, and the clouds, blades and
    fronds kept moving with reduced motion on. */
 @media (prefers-reduced-motion:reduce){
-  .mw-bee,.mw-socket-ring,.mw-cell.ready .mw-cell-obj,.mw-exit i,
+  .mw-bee,.mw-cell.empty.can .mw-empty,.mw-cell.ready .mw-cell-obj,.mw-exit i,
   .mw-cell.locked.can .mw-lock-cost,
   .mw-cloud,.mw-blade,.mw-flower,.mw-frond{animation:none}
 }
@@ -4594,8 +4600,11 @@ button:focus-visible{
 .fl-floor svg{width:100%;height:100%;display:block}
 .fl-slot{position:absolute;inset:0;display:grid;place-items:center;z-index:2;line-height:0}
 .fl-slot svg{width:88%;height:88%;overflow:visible}
-.fl-empty{position:absolute;inset:0;display:none;place-items:center;z-index:2;opacity:.85}
-.fl-empty svg{width:46%;height:46%;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+/* Summer's marker, to the declaration. One glyph and one size rule across all
+   four boards: the cap is half of it, because an uncapped percentage doubles
+   the gap on a wide screen where nothing looks wrong on a phone. */
+.fl-empty{position:absolute;inset:0;display:none;place-items:center;z-index:2;opacity:.62}
+.fl-empty svg{width:30%;height:30%;max-width:44px}
 .fl-plot[data-state="empty"] .fl-empty{display:grid}
 .fl-plot[data-state="empty"]{filter:saturate(.85)}
 
@@ -4876,8 +4885,7 @@ button:focus-visible{
 .wi-floor svg{width:100%;height:100%;display:block}
 .wi-slot{position:absolute;inset:0;display:grid;place-items:center;z-index:2;line-height:0}
 .wi-slot svg{width:88%;height:88%;overflow:visible}
-/* SUMMER'S marker size, not Fall's. Punch list #12 is open on Fall's being 1.5x
-   Summer's, and this season is not going to add a third size to the set. */
+/* The shared marker rule — see `.plot .empty-mark`. */
 .wi-empty{position:absolute;inset:0;display:none;place-items:center;z-index:2;opacity:.62}
 .wi-empty svg{width:30%;height:30%;max-width:44px}
 .wi-plot[data-state="empty"] .wi-empty{display:grid}

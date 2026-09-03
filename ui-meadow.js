@@ -122,6 +122,7 @@
          going down does not redraw the ground it lands on. */
       b.innerHTML = `<span class="mw-cell-floor">${Meadow.cobbleFloor(i)}</span>
         <span class="mw-cell-obj"></span>
+        <span class="mw-empty">${ico('plantSpot')}</span>
         <span class="mw-lock">${ico('lock')}<span class="mw-lock-cost"></span></span>
         <span class="mw-jar-badge" hidden></span>`;
       board.appendChild(b);
@@ -154,8 +155,7 @@
     if (node.dataset.look !== look) {
       node.dataset.look = look;
       const art = $('.mw-cell-obj', node);
-      if (locked) art.innerHTML = '';
-      else if (!c) art.innerHTML = Meadow.emptyCell();
+      if (locked || !c) art.innerHTML = '';
       else if (c.kind === 'hive') art.innerHTML = Meadow.hive();
       else {
         const t = meadowTender(c.type);
