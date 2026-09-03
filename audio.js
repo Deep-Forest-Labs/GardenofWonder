@@ -421,22 +421,28 @@ const Sound = (() => {
      that plays silently. */
   const BED_DEFAULT = { rain: 0.3, storm: 0.34, aurora: 0.26, wonderfall: 0.34 };
   /* Filtered noise and a stack of sines are wildly different loudnesses for the
-     same number, so the knob stays a feel value and the calibration lives here:
-     each trim lands its bed near a peak of 0.10 at the speaker with the default,
-     which is under the 0.22 of the game's loudest one-shot and about half again
-     the ambient pad. The two tonal beds carry a little less, because a held sine
-     is heard as louder than a hiss at the same height.
+     same number, so the knob stays a feel value and the calibration lives here.
+     For the two TONAL beds that is all it is: each lands near a peak of 0.10 at
+     the speaker with the default, under the 0.22 of the game's loudest one-shot
+     and about half again the ambient pad, and they carry a little less than a
+     hiss would because a held sine is heard as louder at the same height. The
+     two NOISE beds carry that calibration times a deliberate halving and land
+     near 0.05 instead — the owner asked for the rain and the wind at 50%, and
+     this is the only place that spends it without spending anything else.
 
-     The storm's trim fell from 1.9 to 1.2 on 2026-08-31: 1.9 was calibrated for
-     a graph with nothing above 620Hz, and the moment the rain went back into it
-     the bed jumped half again. Re-derived by measurement rather than by ear —
-     `node tools/bedbench.js` renders these and prints them. NOTE that the trim
-     is NOT what the thunder rides: `rel()` reads the caller's knob, so this
-     number can be retuned without touching `crack()` or `rumble()`. Moving
-     `DATA.weatherStage.storm.bed` is what would move them. */
-  const BED_TRIM = { rain: 1.35, storm: 1.2, aurora: 1.55, wonderfall: 1.15 };
+     Both numbers were measured, neither guessed. The storm's trim fell 1.9 to
+     1.2 on 2026-08-31, when the rain went back into the graph and the bed
+     jumped half again; rain 1.35 to 0.675 and storm 1.2 to 0.6 on 2026-09-03,
+     the owner's 50%. `node tools/bedbench.js` renders these and prints them.
+     NOTE that the trim is NOT what the thunder rides: `rel()` reads the
+     caller's knob, so these can be retuned without touching `crack()` or
+     `rumble()`. Moving `DATA.weatherStage.<sky>.bed` is what would move them,
+     which is why the halving is here and not there. */
+  const BED_TRIM = { rain: 0.675, storm: 0.6, aurora: 1.55, wonderfall: 1.15 };
   /* The ceiling is not a tuning value, it is the point past which a level
-     dragged to its end stops being something anyone would hold a phone to. */
+     dragged to its end stops being something anyone would hold a phone to.
+     Since the noise beds were halved it can only engage for the two tonal
+     ones; at 0.675 and 0.6 no legal knob reaches it. */
   const BED_CEILING = 0.85;
 
   const levels = {};

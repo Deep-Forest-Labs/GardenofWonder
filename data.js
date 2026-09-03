@@ -695,7 +695,8 @@ const DATA = {
     {
       date: '2026-09-03',
       lines: [
-        'Put the game down and come back, and the music carries on quietly from where it left off instead of arriving all at once.'
+        'Put the game down and come back, and the music carries on quietly from where it left off instead of arriving all at once.',
+        'Rain and thunderstorms are half as loud now — the weather sits behind the garden instead of over it, and the thunder is as loud as it ever was.'
       ]
     },
     {

@@ -9093,6 +9093,29 @@ group('slice C — the welcome-back scene learns about Winter');
   G.reset();
 }
 
+/* The bed trims are private inside the `Sound` IIFE, so this group reads the
+   file as text the way the index.html and sw.js groups do. Comments are
+   stripped first: the block above BED_TRIM names the constant several times in
+   prose, and prose is not a reader. */
+group('the weather beds — the thunder does not ride the bed trim');
+const audioSrc = fs.readFileSync(path.join(ROOT, 'audio.js'), 'utf8');
+const audioCode = audioSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+check('the noise beds keep the caller-side knob that crack() and rumble() ride',
+  DATA.weatherStage.rain.bed === 0.3 && DATA.weatherStage.storm.bed === 0.34,
+  `${DATA.weatherStage.rain.bed} / ${DATA.weatherStage.storm.bed}`);
+check('and so do the two tonal beds, one of which sing() rides',
+  DATA.weatherStage.aurora.bed === 0.26 && DATA.weatherStage.wonderfall.bed === 0.34);
+check('rel() still divides the caller\'s knob by BED_DEFAULT and reads nothing else',
+  /const rel = \(id\) => clamp\(knob\(id\) \/ BED_DEFAULT\[id\], 0\.35, 1\.4\);/.test(audioCode));
+check('BED_TRIM is read in exactly one place — bedGain(), downstream of rel()',
+  (audioCode.match(/BED_TRIM/g) || []).length === 2,
+  `${(audioCode.match(/BED_TRIM/g) || []).length} mentions`);
+check('the owner\'s 50% is still spent on the trims, not on a knob or a channel',
+  /const BED_TRIM = \{ rain: 0\.675, storm: 0\.6, aurora: 1\.55, wonderfall: 1\.15 \};/.test(audioCode));
+check('the ambient house level and the bed ceiling are untouched',
+  /const HOUSE = \{ sfx: 0\.65, amb: 0\.36, music: 0\.16 \};/.test(audioCode)
+  && /const BED_CEILING = 0\.85;/.test(audioCode));
+
 /* ---- the sleeping clock: notes ride the AudioContext, schedulers ride the wall ----
    Two rigs, both installed and torn down inside this block so nothing else in
    the suite ever sees them: a fake WebAudio whose oscillators record the

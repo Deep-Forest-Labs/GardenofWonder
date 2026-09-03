@@ -7,6 +7,16 @@ If you fix one, delete it from this file in the same commit.
 
 ## What the overnight fix round knowingly left (2026-09-03)
 
+**A thunderclap now sits about 6 dB above its own bed's peak** — roughly 0.094 against 0.048 —
+where it used to sit level with it. That is the halving doing exactly what was asked (the hiss
+down, the thunder untouched), and it is recorded as a watch item rather than a defect: a storm
+whose cracks stand further out of the rain may read as *more* dramatic, not less. **Reversible in
+one line at `stinger.gain.value` (audio.js)** if the owner reports the thunder as startling.
+
+**The duck's depth was not re-derived against a bed half as loud.** `DUCK_HZ` stays at 950 — no
+change — but the effects now sit relatively closer under a quieter sky. If taps ever read as muffled
+for no visible reason, that is the knob; the bed trim is not.
+
 **The one bar already scheduled in the instant before the page froze still fires on the way back.**
 `#23` stops the three schedulers on a frozen context, but a note booked a moment earlier is already
 on the AudioContext's own queue and plays when the context resumes. It is one chord against the 81

@@ -142,25 +142,44 @@ fatiguing however quiet it measures.
 
 | Bed | peak | rms | phone rms | swing | phone swing |
 | --- | --- | --- | --- | --- | --- |
-| Rain | 0.106 | 0.0207 | 0.0220 | 3.05 dB | 2.68 dB |
+| **Rain, before 2026-09-03** | 0.106 | 0.0207 | 0.0220 | 3.05 dB | 2.68 dB |
+| Rain | 0.049 | 0.0103 | 0.0110 | 2.95 dB | 2.63 dB |
 | **Storm, before 2026-08-31** | 0.083 | 0.0177 | **0.0156** | 3.03 dB | **0.59 dB** |
-| **Storm, after** | 0.092 | 0.0203 | 0.0218 | 2.38 dB | **2.27 dB** |
+| Storm | 0.049 | 0.0101 | 0.0109 | 2.48 dB | 2.20 dB |
 | Aurora | 0.047 | 0.0120 | 0.0123 | 8.48 dB | 8.78 dB |
 | Wonderfall | 0.036 | 0.0101 | 0.0112 | 6.22 dB | 7.35 dB |
 
 Three runs each, 20-second window. **RMS is the comparator; peak moves run to run**, because the
-shared noise buffer is regenerated per render. The storm now sits with the rain on every column and
-a hair under it on loudness — which is the right answer to "a little overbearing", and note that
-turning it *down* was the one thing that would not have helped: it already measured quieter than the
-rain, because what was missing was the rain.
+shared noise buffer is regenerated per render.
+
+**The two noise beds were halved on 2026-09-03, at the owner's request** — "reduce the background
+rain/wind noise by 50%" — which is exactly −6.02 dB and lands them at half their old rms on the
+nose. So rain and storm are now the **quietest things on the bus** on a phone, below the Wonderfall
+and well below the aurora; the weather sits behind the garden rather than over it. The storm still
+sits a hair under the rain on every column, which is the relationship the 2026-08-31 pass
+established, and halving both preserved it exactly. **The invariant that makes this checkable: a
+linear bed gain scales every sample, so swing — a ratio — cannot move.** The phone-swing column is
+therefore the proof the beds still breathe, and it held at 2.6 and 2.2 dB. Aurora and Wonderfall
+came back byte-identical, which is the regression latch on a change that could have touched all four.
 
 **The level is the caller's.** `ui-weather.js` reads it out of `DATA.weatherStage.<sky>.bed` and
 passes it in, because `audio.js` knows nothing about the game and the knob has to stay where a
 remote config can reach it. What `audio.js` owns is the calibration: filtered noise and a stack of
 held sines are wildly different loudnesses at the same number, so each bed is trimmed to land in
-the same place — under the game's loudest one-shot, a little above the pad. There is a hard ceiling
-too, and it is not a tuning value: it is the point past which a level dragged to its end stops
-being something anyone would hold a phone to.
+the same place — under the game's loudest one-shot, a little above the pad. **For the two tonal beds
+that is all `BED_TRIM` is; for the two noise beds it is that calibration plus the deliberate 6 dB
+cut of 2026-09-03.**
+
+**Which knob to reach for, because there are two and only one of them is honest.** The caller's knob
+is what `crack()`, `rumble()` and `sing()` ride, through `rel()`. `BED_TRIM` sits *downstream* of it
+and `rel()` never reads it — so **loudness is retuned in `BED_TRIM` and the thunder never moves**,
+while halving `DATA.weatherStage.storm.bed` would have taken every thunderclap down with the hiss.
+That is why the owner's 50% was spent on the trim.
+
+There is a hard ceiling too, and it is not a tuning value: it is the point past which a level
+dragged to its end stops being something anyone would hold a phone to. Since the halving it can no
+longer engage for rain or storm at any legal knob — it would need a knob above 1, and `knob()`
+clamps to 1 — so the rail now exists for the two tonal beds alone.
 
 ### Ducking under the rain
 
@@ -173,6 +192,12 @@ It is a real node on the bus rather than a change to each recipe, which is what 
 sound written a year from now sits under the rain without knowing the rain exists. Only Rain and
 the storm duck. The aurora and Wonderfall do not, because those two are meant to be the loudest
 thing that has happened all session.
+
+**The 2026-09-03 halving did not touch the duck, and could not have.** The duck is a filter cutoff,
+not a gain, so no bed value reaches it and its depth is unchanged — but the sky it makes room for is
+now 6 dB quieter, so the effects sit relatively closer under it than they did. If that ever reads as
+a fault — taps sounding muffled for no visible reason — **the knob is `DUCK_HZ` (audio.js), and the
+bed trim is emphatically not it.**
 
 ### Ambient music
 

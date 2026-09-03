@@ -1565,10 +1565,12 @@ below and in the decision log. Nothing about it is unreviewed any more.)*
    in it for a full minute. It should now sound like *rain* — a hiss with drops in it — with weight
    underneath, and it should **breathe** rather than sit on one note. Measured above 300 Hz, which is
    the band a phone can actually reproduce, it used to swing 0.59 dB across twenty seconds and now
-   swings 2.27 dB; rain swings 2.68. It is also a hair quieter than the rain, which is the honest
+   swings 2.20 dB; rain swings 2.63. It is also a hair quieter than the rain, which is the honest
    answer to "overbearing" — note that turning it *down* was the one thing that would not have
    helped, because it already measured quieter than the rain. What was missing was the rain.
-   Re-measure any time with `node tools/bedbench.js`.
+   **Both noise beds are half as loud since 2026-09-03**, at the owner's request, and the thunder is
+   untouched — so the breath is the thing to listen for, and it should sound the same, just further
+   away. Re-measure any time with `node tools/bedbench.js`.
 2. **The three sliders.** Settings, at the top: **Sound effects · Ambience · Music**, each with a
    mute and a level. **They should sound exactly like yesterday until you touch one** — that is
    deliberate, and it is why the ambient house level is written as 0.36 rather than 0.5. Drag
