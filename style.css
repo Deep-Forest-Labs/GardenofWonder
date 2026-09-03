@@ -3725,6 +3725,10 @@ button:focus-visible{
 .food-state.on{color:var(--ink);font-weight:700}
 /* A grid rather than flex-wrap, so three always sit in one row at any width. */
 .food-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px}
+/* Two tiers when the ad offer is absent: a first session, or a spent budget.
+   Without this the row keeps three tracks and leaves a third of itself empty,
+   which reads as a broken panel rather than a deliberate one. */
+.food-row[data-n="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
 /* The only buy buttons on this panel, so they get the whole house recipe rather
    than a border and a fill: body gradient, two blemishes, two inset rims, the
    lip, the contact shadow, the ink. On cream the blemish and rim alphas are the
@@ -3788,6 +3792,21 @@ button:focus-visible{
 }
 .food-after.capped{color:#b2601f}
 .food-btn .price{margin-top:2px;align-self:center;padding:3px 7px;font-size:11px}
+/* THE SHARED "Watch an ad" CONTROL, docs/37-monetization.md. The same .price
+   pill as the money beside it, because in this row an ad IS the price — and
+   deliberately no currency colour: cyan is gems and blue/purple/gold are the
+   rarity vocabulary (docs/05-art-direction.md), so borrowing one would teach the
+   player something untrue. The drained family carries the one state it has: an
+   offer that cannot pay in full, which is never sold. */
+.price.ad.off{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2))}
+/* In a 107px food column the label does not fit a pill sized for a number, so
+   this one takes the column: full width, smaller ink, and allowed to wrap. */
+.food-btn .price.ad{
+  width:100%;box-sizing:border-box;justify-content:center;
+  gap:3px;padding:3px 5px;font-size:10px;
+  white-space:normal;text-align:center;line-height:1.15;
+}
+.food-btn .price.ad svg{width:12px;height:12px;flex:0 0 12px}
 
 /* ---------- creature stars and growth ---------- */
 .critter-stars{display:inline-flex;gap:1px;margin-left:6px;vertical-align:middle}

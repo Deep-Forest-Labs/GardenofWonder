@@ -922,14 +922,15 @@ levels, the daily and the Almanac.
 > Chambers, sideways paging and a second level are agreed but unbuilt. See
 > [22-creatures.md](22-creatures.md).
 >
-> **Feeding shipped, and creatures now sleep, 2026-08-18.** Three foods bought with coins from
-> **Feed** on the Hollow's dock, and each runs **two clocks**:
+> **Feeding shipped, and creatures now sleep, 2026-08-18.** Three foods bought from **Feed** on the
+> Hollow's dock, each running **two clocks** at the time. The clocks merged on 2026-08-20 and the
+> **prices went three-currency on 2026-09-03**; the current ladder is:
 >
-> | Food | Awake | Well fed | Cost |
-> | --- | --- | --- | --- |
-> | Clover Nibble | 4h | 1h | 1,500 |
-> | Petal Cake | 8h | 4h | 5,000 |
-> | Honeypot | 16h | 12h | 12,000 |
+> | Food | Adds | Of which boost | Currency | Cost |
+> | --- | --- | --- | --- | --- |
+> | Clover Nibble | 4h | 1h | gold | 1,500 |
+> | Petal Cake | 8h | 5h | **gems** | 3 *(PROVISIONAL)* |
+> | Honeypot | 16h | 13h | **one rewarded ad** | — |
 >
 > **Awake is upkeep.** A creature whose awake clock runs out is **asleep** — shut eyes, Zs, no
 > trait, no pair — and that is deliberately punishing, because it is the retention mechanic.
@@ -946,7 +947,10 @@ levels, the daily and the Almanac.
 > ×2 doubles the only trait in the `yield` pool (Luna, +9.6% → +19.2% average payout) and doubles
 > the gem faucet (Thistle); a star is ×2.00 at one and ×1.20 at five. **Food never advances the star
 > a creature was raised to** — that stays the bloom's job. Arrivals and pre-sleeping saves get 24h
-> free. **If the upkeep ever reads as a chore, raise `awake` in `data.js`, never the prices.**
+> free. ~~**If the upkeep ever reads as a chore, raise `awake` in `data.js`, never the prices.**~~
+> **THAT ADVICE IS RETIRED, 2026-09-03.** The owner asked for teeth, so the prices are the pressure
+> dial and the hours are the shape; if upkeep ever reads as a chore, drop a price. Read it against
+> the sleeping face, which is what keeps an expensive meal survivable.
 >
 > **Only a *tending* creature can be asleep**, because a resting one cannot be fed — showing a
 > player a problem they cannot act on is the one thing an upkeep mechanic must never do. Found by
@@ -964,10 +968,28 @@ levels, the daily and the Almanac.
 >
 > **The creature panel is ordered by what you came to do, 2026-08-20.** Who it is → what it does →
 > how grown it is → **Feed and every action with it**. A sleeping creature must never need a scroll
-> to reach the food that wakes it: at 375×812 the food buttons end 518px into a 582px body and the
-> rest button at 579px, so **anything added above them pushes the cure off screen**. Two meters —
-> *Awake* and *Well fed*, both to the same 24h cap — so you can see what a Honeypot actually buys
-> before you buy it.
+> to reach the food that wakes it. **Re-measured 2026-09-03** (the old 518/579 figures do not
+> reproduce): at 375×812 the food row ends at **506px in a 582px body** — 76px of headroom, and the
+> three-currency change costs none of it — but the **out-or-rest button ends at 602px, already below
+> the fold**, and on a 390×640 screen the food row itself ends at 507px in a 444px body. Both were
+> true before that change and are measured against `HEAD`;
+> [11-known-issues.md](11-known-issues.md) carries them. **Anything added above the food row makes
+> this worse.** One meter now, not two, since the clocks merged.
+>
+> **THE FOOD LADDER SPANS THREE CURRENCIES, AND THE HONEYPOT IS THE GAME'S FIRST REWARDED
+> PLACEMENT, 2026-09-03.** `CREATURE_FOOD` carries `currency: 'credits' | 'gems' | 'ad'`.
+> **It is a placement, not an ad system — the web build has no network, no SDK, no fetch, and never
+> will** ([37-monetization.md](37-monetization.md), amended in the same commit so it cannot
+> contradict a live button). Four rules the placement obeys and one component that enforces them:
+> **absent, never disabled, in a player's first session**; **no countdown, ever** (a timed offer is
+> PEGI 12); **never sold for a partial grant** — the 24h cap would trim a 16h Honeypot for a creature
+> with 12h banked, which is fine for gold and intolerable for thirty seconds of attention, so
+> `feedCritter()` refuses and the button says *"too full for all of it"* before it is tapped; and
+> **every ad-granted reward is mint-excluded** through `credit(n, { ad: true })`, the third flag
+> beside `cheat` and `refund`. **The component is shared and there must never be a second one** —
+> `Game.adOffered/watchAd/adImpressions/adCountToday/adCap` and `state.ads` in `game.js`,
+> `UI.adTag()` + `UI.AD_LABEL` + the `video` glyph in `ui-sheet.js`, caps in `DATA.ads`. The playbook
+> is in [09-conventions.md](09-conventions.md); read it before adding a placement.
 >
 > **The panel's growth row is bloom → bar → star, 2026-08-20.** No "Growing on X" line: the real
 > bloom is drawn in a token on the left (`Flora.head()`), the count sits *inside* the bar, and the
@@ -2888,6 +2910,24 @@ field missing from the `clearGarden()` fixture is invisible to the first asserti
 and a sabotage that removes it stays green. The fixture line still matters, because dozens of groups
 call `clearGarden()` mid-run with no reset in front of it. Hold it with an assertion that *plants,
 harvests and then clears* inside its own IIFE; that one goes red.
+
+**A shared control priced for a NUMBER does not fit a column when its label is WORDS.** `.price` is
+a pill sized for "1,500" beside a 15px coin; "Watch an ad" beside a video glyph is nearly three times
+that, and a food column is 107px wide at 375. The fix was not a smaller font on its own — it took
+the whole column (`width:100%`), a 10px ink, a 12px glyph and explicit permission to wrap
+(`white-space:normal`), and the numbers are what settled it rather than an argument: **91×22 on one
+line at 375 with the button height unchanged at 140px, and 79×33 on two lines at 360 where every
+button in the row grows to 148 together** — so the row never goes ragged and nothing overflows at
+either size. Measure the pill against the column before assuming a shared component transplants.
+
+**A backfill that runs on first READ hides a missing merge line from the test that was written to
+catch it.** `state.ads` got its `load()` re-merge and an assertion in the same commit, and the
+assertion passed with the re-merge deleted — because it asked a getter, and the getter's own day-roll
+rebuilds the missing fields before answering. The half that cannot self-heal is the one `load()`
+*writes*: `undefined + 1` is `NaN`, `NaN || 0` is `0`, and the player is silently pushed back into a
+first session with `"sessions": null` on disk. **Read the object straight off `load()`, before
+touching any getter**, and remember that the case needing the line is a PARTIAL save object — an
+absent key takes the whole default from the shallow assign and is fine either way.
 
 **`check(name, () => expr)` in `tools/sim-test.js` passes vacuously.** The second argument is a
 condition, not a thunk — a function is truthy, so the assertion reports `ok` without ever running.

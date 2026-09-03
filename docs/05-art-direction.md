@@ -229,7 +229,7 @@ Cheap and smooth, and it means growth needs no per-frame DOM work beyond one att
 
 ## Icons
 
-Fifty-two icons in `icons.js`, drawn as 24×24 SVG with the shared ink stroke and flat colour
+Fifty-six icons in `icons.js`, drawn as 24×24 SVG with the shared ink stroke and flat colour
 fills. The count is not written down anywhere that can go stale: `tools/export-icons.js` asserts
 that the number of `.svg` files it writes equals the number of keys in the registry, and rewrites
 the manifest table in [45-asset-inventory.md](45-asset-inventory.md) from the registry itself.

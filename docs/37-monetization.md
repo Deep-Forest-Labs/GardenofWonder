@@ -5,6 +5,35 @@ nothing ships before the Unity shell** — the web build has no ad system and ne
 the menu the owner picks from; prices are ballparks until phase 4's tuning. Written in the
 glossary's plain words ([32-the-garden-year.md](32-the-garden-year.md)).
 
+**Amended 2026-09-03 — the web build now carries two rewarded PLACEMENTS, and the sentence above
+still governs the SDK.** The rule that nothing ships before the Unity shell is about *ad mediation*:
+a network, an SDK, a fetch, a real video. None of those exists here and none ever will. What the
+owner asked for and what now exists is the **placement** — where an offer sits, who may be offered
+it, how often, what it says, and a counter — with a grant that fires immediately in place of a
+video. The two are the Honeypot creature-food tier ([22-creatures.md](22-creatures.md)) and #21's
+drone rental. They are built this way deliberately: the day a real SDK arrives, `Game.watchAd()` is
+the one function that changes and everything around it — the caps, the counters, the first-session
+rule, the no-countdown rule, the mint exclusion — is already true and already tested.
+
+Three things that ride with the amendment:
+
+- **The caps live in `DATA.ads`**, which is prerequisite 5 below, done. `dailyCap: 6` is the top of
+  the 3–6 band; `perPlacement: { food: 2 }` is what feeding may take of it. Feeding **could** want
+  six a day on its own — four tended creatures on 16-hour Honeypots — so it is held to two on
+  purpose, leaving 1–4 for the three placements below that ship first. Both numbers are PROVISIONAL
+  and phase 4's to retune.
+- **The mint-exclusion flag exists and is sim-tested** — prerequisite 2 below, done. `credit(n, {
+  ad: true })` skips both accumulators exactly as `cheat` and `refund` do, and bill 4 in
+  `tools/sim-test.js` asserts an ad grant moves the wallet and neither ledger. Nothing pays gold for
+  an ad yet; the flag ships with the first placement so the second inherits it rather than
+  rediscovering the promise.
+- **Nothing in the placement holds a clock**, because a time-limited offer attaches a PEGI 12
+  descriptor ([40-financial-model.md](40-financial-model.md)). A sim-test reads the whole `DATA.ads`
+  table for the vocabulary of urgency and fails on it.
+
+The playbook a third placement follows is in [09-conventions.md](09-conventions.md) — read it rather
+than rebuilding the component.
+
 Three agents built this: one mapped every natural money-moment in the real game, one checked
 what the comparable games actually charge and where their ads live (sources in the run), and
 one adversary attacked every idea against the cosy rules. What survived is below.
@@ -129,11 +158,14 @@ forever money.
 ## What has to be true before any of it ships
 
 1. **The Unity shell exists** — ad mediation and IAP live there; the web build stays clean.
-2. **The mint-exclusion flag** covers ad-granted and purchased gold, sim-tested like cheat
-   gold.
+2. ~~**The mint-exclusion flag** covers ad-granted and purchased gold, sim-tested like cheat
+   gold.~~ **DONE 2026-09-03** — `credit(n, { ad: true })` in `game.js`, asserted in bill 4 of
+   `tools/sim-test.js`. Purchased gold gets the same flag the day an IAP exists.
 3. **Dust exists** before the second daily pack.
-4. **Gem sinks grow** before gem packs are worth selling.
-5. **Caps live in data**: offers per session, refills per day, all remote-tunable.
+4. **Gem sinks grow** before gem packs are worth selling. *(One landed 2026-09-03: Petal Cake, the
+   first recurring gem sink — see [04-economy.md](04-economy.md).)*
+5. ~~**Caps live in data**: offers per session, refills per day, all remote-tunable.~~ **DONE
+   2026-09-03** — `DATA.ads` in `data.js`, one key per placement, nothing else anywhere.
 
 The revenue shape, corrected by [40-financial-model.md](40-financial-model.md): **the rewarded
 placements are the dependable floor, and the shelf — the Gem Jar, decor and gem catalogue — is

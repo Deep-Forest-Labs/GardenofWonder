@@ -95,6 +95,12 @@ const Game = (() => {
       setsClaimed: [],
       stats: { totalTaps: 0, totalCrits: 0, totalHarvests: 0, wonders: 0 },
       wonder: { until: 0, last: 0 },
+      /* The rewarded-ad ledger. `impressions` is lifetime — the counter docs/37
+         wants waiting for the day a real SDK arrives; `day`/`today` are the
+         per-day counts against DATA.ads, rolled by the same date key the daily
+         quest uses; `sessions` is how many times this save has been opened,
+         which is as close as a web build gets to "a player's first session". */
+      ads: { impressions: 0, day: '', today: {}, sessions: 0 },
       apiary: { cells: Array(MEADOW.cells).fill(null), locked: MEADOW.cellUnlockLevel.map((lv) => lv > 1),
         honey: {}, wax: 0, shelf: {}, keepers: [] },
       flowers: {},
@@ -137,11 +143,17 @@ const Game = (() => {
      pacing data stays clean, and a refund was never income. Spending stays a
      plain subtraction — the mint reads earnings, never balance. The year's
      accumulator and the lifetime one move together and are excluded together:
-     one faucet, one rule, so the pool and the gate can never disagree. */
+     one faucet, one rule, so the pool and the gate can never disagree.
+
+     `ad` is the third exclusion and it is a PROMISE rather than a convenience:
+     docs/37-monetization.md's first promise says ad-granted and purchased gold
+     never feeds the well, and the only way that cannot be forgotten by the next
+     placement is for the faucet itself to refuse it. Nothing pays gold for an ad
+     today; the flag ships with the first placement so the second inherits it. */
   function credit(amount, opts) {
     const n = Math.max(0, amount || 0);
     state.credits += n;
-    if (!opts || (!opts.cheat && !opts.refund)) {
+    if (!opts || (!opts.cheat && !opts.refund && !opts.ad)) {
       state.year.coinsEarned += n;
       state.lifetimeCoins += n;
     }
@@ -275,6 +287,7 @@ const Game = (() => {
          Pre-celebrated, per the ruling: "no popup for seed 3 at minute one." */
       refreshReveals();
       birthCelebrate();
+      state.ads.sessions = 1;
       return { migrated: false, fresh: true };
     }
     try {
@@ -285,6 +298,12 @@ const Game = (() => {
       state.tap = Object.assign(d.tap, parsed.tap || {});
       state.stats = Object.assign(d.stats, parsed.stats || {});
       state.wonder = Object.assign(d.wonder, parsed.wonder || {});
+      /* Nested, so the shallow assign above replaced it wholesale and a save
+         written before today comes back with it undefined — every ad getter
+         would then throw on the first Feed panel. `today` is re-checked
+         separately because a hand-edited save can carry a string there. */
+      state.ads = Object.assign(d.ads, parsed.ads && typeof parsed.ads === 'object' ? parsed.ads : {});
+      if (!state.ads.today || typeof state.ads.today !== 'object') state.ads.today = {};
       state.prefs = Object.assign(d.prefs, parsed.prefs || {});
       /* The ambient channel is new, and its default cannot be flat. Until it
          existed the beds were governed by the effects switch, so a player who
@@ -723,6 +742,12 @@ const Game = (() => {
          a moment normally rather than being swept into the grandfather. */
       const revealsGrant = migrateReveals(parsed);
       refreshReveals();
+      /* One page load is one session, and the ad rail's first standing rule
+         reads it. Written straight to disk rather than queued: a first session
+         opened and closed in ten seconds must still be counted, or the second
+         one is offered nothing either. */
+      state.ads.sessions += 1;
+      saveNow();
       if (migrated || decorRefund || progressionGrant || ticketGrant
         || almanacGrant.paid.length || masteryBackfill.changed || yearGrant || revealsGrant) saveNow();
       return {
@@ -743,6 +768,7 @@ const Game = (() => {
       Object.assign(state, defaultState());
       ensureProgression();
       giveOpeningBag();
+      state.ads.sessions = 1;
       return { migrated: false, fresh: true };
     }
   }
@@ -2454,7 +2480,7 @@ const Game = (() => {
   /* Development overrides. Every one of these forces an outcome through the *real* code path
      rather than faking an effect, so a cheat exercises the feature it claims to test. Each is
      consumed once and cleared, except `weather`, which is sticky until reset. */
-  const dev = { rarity: null, gem: false, weather: null, procs: {}, boost: {} };
+  const dev = { rarity: null, gem: false, weather: null, procs: {}, boost: {}, ad: false };
   /* Dev-only, deliberately not in data.js: this is a testing affordance, not a tunable, and it
      must never reach remote config. Additive so a boosted proc fires often enough to watch even
      with its badge at level zero. */
@@ -2467,6 +2493,17 @@ const Game = (() => {
   const devProc = (key) => {
     if (!dev.procs[key]) return false;
     dev.procs[key] = false;
+    return true;
+  };
+
+  /* Arms ONE ad grant past the session rule and the day's cap, so the
+     feed-everyone cheat still runs the real purchase. Its own consumer rather
+     than a case inside devTake(), which already special-cases `gem` and would
+     become unreadable with a second exception. One-shot, per the dev-cheat
+     playbook — a sticky one would corrupt every impression reading after it. */
+  const devAd = () => {
+    if (!dev.ad) return false;
+    dev.ad = false;
     return true;
   };
 
@@ -3255,6 +3292,63 @@ const Game = (() => {
   const critterLevel = (id) => (state.critters[id] ? state.critters[id].level || 1 : 0);
   const critterMaxed = (id) => critterLevel(id) >= CREATURE_STARS;
 
+  /* ---- rewarded ads: the PLACEMENT, not an ad system ----
+
+     THE WEB BUILD HAS NO AD SYSTEM AND NEVER WILL (docs/37-monetization.md).
+     What lives here is where an offer may sit, who may be offered it, how often,
+     and what gets counted — with a grant that fires immediately instead of a
+     video. There is no network, no SDK and no fetch. The day the Unity shell
+     brings a real one, `watchAd()` is the single function that changes and
+     everything around it is already true.
+
+     THREE RULES EVERY PLACEMENT OBEYS, enforced here rather than asked of each
+     caller:
+
+     1. ABSENT, NOT DISABLED, in a player's first session. A greyed-out ad
+        button on session one is still an ad on session one.
+     2. NO COUNTDOWN, EVER. A time-limited offer attaches a PEGI 12 descriptor
+        (docs/40-financial-model.md), so nothing here holds a clock.
+     3. NEVER SPENT ON A PARTIAL GRANT. This one cannot live here, because only
+        the caller knows what its reward is worth — so the caller checks BEFORE
+        it calls, and says plainly on the button what it will give. Gold can be
+        part-spent; thirty seconds of somebody's attention cannot.
+
+     `watchAd()` counts and permits. It never grants — the caller grants, so this
+     stays free of any one feature's knowledge. Any gold a placement ever pays
+     goes through `credit(n, { ad: true })`, which is docs/37's first promise.
+     The playbook a second placement follows is in docs/09-conventions.md. */
+
+  const adCap = (placement) => Math.max(0, Number(DATA.ads.perPlacement[placement]) || 0);
+
+  function adRollDay() {
+    const key = todayKey();
+    if (state.ads.day === key) return;
+    state.ads.day = key;
+    state.ads.today = {};
+  }
+
+  const adCountToday = (placement) => { adRollDay(); return Math.max(0, state.ads.today[placement] || 0); };
+  const adCountAllToday = () => { adRollDay(); return Object.keys(state.ads.today).reduce((n, k) => n + (state.ads.today[k] || 0), 0); };
+  const adImpressions = () => Math.max(0, state.ads.impressions || 0);
+
+  /** THE ONE PREDICATE EVERY SURFACE ASKS before it renders anything. False
+      means render nothing at all — not a disabled control. */
+  function adOffered(placement) {
+    if (adCap(placement) <= 0) return false;
+    if ((state.ads.sessions || 0) <= 1) return false;
+    if (adCountToday(placement) >= adCap(placement)) return false;
+    return adCountAllToday() < DATA.ads.dailyCap;
+  }
+
+  /** Spend the impression. True means the caller may grant its reward. */
+  function watchAd(placement) {
+    if (!devAd() && !adOffered(placement)) return false;
+    adRollDay();
+    state.ads.today[placement] = (state.ads.today[placement] || 0) + 1;
+    state.ads.impressions = adImpressions() + 1;
+    return true;
+  }
+
   /* ---- food ----
      A fed creature works one star above itself until the clock runs out, and an
      unfed one works exactly as it always did. Derived from an absolute
@@ -3313,16 +3407,33 @@ const Game = (() => {
     if (!critterTending(id)) return null;
     const gain = foodGain(id, foodId);
     if (gain <= 0) return null;
-    if (state.credits < food.cost) {
-      emit('deny', { reason: 'credits', need: food.cost });
-      return null;
+    if (food.currency === 'ad') {
+      /* The cap can eat what the ad bought, and that is the one purchase in this
+         game that must never happen: a creature with 12 hours banked taking a
+         16-hour Honeypot would get 12, and an ad sold once for a trimmed reward
+         is an ad that is never trusted again. Refused here, and the button says
+         so before it plays. The `- 1` matches foodEffect()'s own `capped` test,
+         so the button and the engine agree to the second. */
+      if (gain < food.hours * 3600 - 1) return null;
+      if (!watchAd('food')) { emit('deny', { reason: 'ad' }); return null; }
+    } else if (food.currency === 'gems') {
+      if (state.gems < food.cost) {
+        emit('deny', { reason: 'gems', need: food.cost });
+        return null;
+      }
+      state.gems -= food.cost;
+    } else {
+      if (state.credits < food.cost) {
+        emit('deny', { reason: 'credits', need: food.cost });
+        return null;
+      }
+      state.credits -= food.cost;
     }
     const woke = critterAsleep(id);
-    state.credits -= food.cost;
     state.critters[id].fedUntil = Math.max(nowSeconds(), critterFedUntil(id)) + gain;
     save();
     emit('currency');
-    emit('purchase', { kind: 'food', key: foodId, cost: food.cost, def: food });
+    emit('purchase', { kind: 'food', key: foodId, cost: food.cost, currency: food.currency, def: food });
     emit('critter', { def, fed: true, woke, food, until: critterFedUntil(id) });
     emit('panels');
     return { def, food, woke, gain, until: critterFedUntil(id) };
@@ -5139,14 +5250,21 @@ const Game = (() => {
 
     /** The way back: buy the best food for everyone tending, through the real
         purchase path rather than by writing the clocks, so the wake-up beat and
-        the spend are the ones a player gets. */
+        the spend are the ones a player gets. Tops up whichever wallet that tier
+        spends and arms one ad if it is the ad tier — a cheat that stops working
+        the day a price changes currency reads as the feature being broken, and
+        the top tier has been all three things this month. */
     feedCritters() {
       const food = CREATURE_FOOD[CREATURE_FOOD.length - 1];
       let n = 0;
       CREATURES.forEach((def) => {
         if (!critterTending(def.id)) return;
-        credit(food.cost, { cheat: true });
-        if (feedCritter(def.id, food.id)) n += 1;
+        if (food.currency === 'gems') state.gems += food.cost;
+        else if (food.currency === 'ad') dev.ad = true;
+        else credit(food.cost, { cheat: true });
+        if (feedCritter(def.id, food.id)) { n += 1; return; }
+        if (food.currency === 'gems') state.gems -= food.cost;
+        else if (food.currency === 'ad') dev.ad = false;
         else state.credits -= food.cost;
       });
       return n;
@@ -5577,6 +5695,12 @@ const Game = (() => {
       gain,
       nominal,
       capped: gain < nominal - 1,
+      currency: food.currency,
+      /* True when this food is bought with attention and the cap would trim it —
+         the state the ad button must refuse rather than sell. Derived here
+         rather than in the panel, because a `ui-*` file may not do economy
+         math and because the engine's refusal reads the same expression. */
+      partial: food.currency === 'ad' && gain < nominal - 1,
       capHours: FOOD_CAP_HOURS,
       fedForAfter: critterFedFor(id) + gain,
       wakes: critterAsleep(id) && gain > 0
@@ -5694,6 +5818,9 @@ const Game = (() => {
     critterLevel, critterMaxed, critterGoal, critterGoalFor, critterTraitAt, critterPayoutMult,
     foodById, critterFed, critterFedFor, critterWorkLevel, foodGain, feedCritter, foodCapSeconds,
     critterAsleep, crittersAsleep, critterWorking, crittersWorking, fedThresholdSeconds,
+    /* The shared rewarded-ad placement, docs/09-conventions.md's playbook. Its
+       own line because it is a component, not more food. */
+    adOffered, watchAd, adImpressions, adCountToday, adCap,
     pairById, pairActive, activePairs, notePairs, nightbloomUpgrade,
     mementoCount, mementoKinds, mementoTotal,
     checkCritters, keepsakesWaiting, settleCritters, collectKeepsakes, petCritter,

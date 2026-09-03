@@ -711,7 +711,8 @@ const DATA = {
         'The dotted square with the plus that marks an empty spot is the same everywhere now — the fall bed and the wild meadow match your garden.',
         'Finding your third flower is a goal now, and the bigger ones wait until you’re close instead of sitting in your list from the first minutes.',
         'Crops in your fall bed can be finished early with gems now, the same as the flowers in your garden — every crop but the Century Bloom, which keeps its fortnight.',
-        'A plot you have just picked remembers what grew there — tap the small sprout in its bottom corner to plant the same flower again without opening the seed list.'
+        'A plot you have just picked remembers what grew there — tap the small sprout in its bottom corner to plant the same flower again without opening the seed list.',
+        'Feeding your pets asks a little more of you now: a clover nibble costs gold, a petal cake costs gems, and a honeypot is the one you watch an ad for.'
       ]
     },
     {
@@ -763,6 +764,23 @@ const DATA = {
      in one session at all. Entries themselves are never authored here — they
      are generated at runtime from DATA.seeds and DATA.upgrades, so this stays
      two numbers and nothing else. */
+  /* The rewarded-ad plan's caps, in data because docs/37-monetization.md's fifth
+     prerequisite says "caps live in data: offers per session, refills per day,
+     all remote-tunable". PROVISIONAL, phase 4's to retune with the first
+     playtest.
+
+     `dailyCap` is the top of doc 37's 3-6 impressions-a-day band, so no set of
+     placements can ever plan past it. `perPlacement` is what one surface may
+     take of that: feeding four pets on Honeypots alone would want six ads a day
+     and eat the whole plan, so it gets two and stays a treat rather than the
+     upkeep backbone. A new placement adds a key here and nothing else.
+
+     NOTHING IN HERE IS A CLOCK, AND NOTHING EVER MAY BE. A time-limited or
+     quantity-limited offer attaches a PEGI 12 descriptor
+     (40-financial-model.md), and this game's rating headroom is worth more than
+     urgency. */
+  ads: { dailyCap: 6, perPlacement: { food: 2 } },
+
   moments: { gap: 20, sessionCap: 3 }
 };
 
@@ -1083,24 +1101,44 @@ const FOOD_CAP_HOURS = 24;
    never open the game to a room of sleepers it never warned them about. */
 const ARRIVAL_AWAKE_HOURS = 24;
 
-/* Prices are placeholders like every other number in the economy, and flat
-   rather than scaling - see docs/04-economy.md.
+/* THREE CURRENCIES, ONE LADDER. Clover is gold, Petal Cake is gems, and a
+   Honeypot is one rewarded ad - see docs/37-monetization.md for the ad half and
+   docs/22-creatures.md for the ladder. `currency` decides which wallet
+   feedCritter() reaches for, and 'ad' reaches for none of them.
+
+   Prices are placeholders like every other number in the economy, and still
+   FLAT rather than scaling with level - see docs/04-economy.md.
 
    `hours` is the tighter of the two ladders the owner chose (4 / 8 / 16 rather
    than 8 / 16 / 24): a daily player has to feed on their first check-in, and a
-   twice-daily player stays comfortably ahead. If this ever reads as a chore
-   rather than a habit, THIS is the dial - raise `hours`, never the prices. */
+   twice-daily player stays comfortably ahead. THE HOURS ARE NOT THE DIAL ANY
+   MORE. Until 2026-09-03 this comment said to relieve pressure by raising
+   `hours` and never the prices; the owner has since asked upkeep for teeth, so
+   the prices are the pressure dial and the hours are the shape. If upkeep ever
+   reads as a chore rather than a habit, drop a price - and read it against the
+   sleeping-face comment above, which is the thing that keeps an expensive meal
+   survivable rather than punishing.
+
+   The cross-tier price ladders that used to hold here cannot: gold per hour and
+   gems per hour do not compare. Each currency's own ladder is what a sim-test
+   can assert now, and the daily bill at four tended creatures is what a balance
+   pass should read. */
 const CREATURE_FOOD = [
   {
-    id: 'clover', name: 'Clover Nibble', hours: 4, cost: 1500, icon: 'clover',
+    id: 'clover', name: 'Clover Nibble', hours: 4, currency: 'credits', cost: 1500, icon: 'clover',
     desc: 'A mouthful of something green. Enough to get anyone up and about.'
   },
   {
-    id: 'petalcake', name: 'Petal Cake', hours: 8, cost: 5000, icon: 'petal',
+    /* PROVISIONAL - the owner's number to pick. Four tended creatures need
+       twelve cakes a day: 3 gems each is ~2.5 hours of the ~14 gems/hour faucet
+       docs/04-economy.md prices sinks against, and 10 would be ~8.5, a wall. */
+    id: 'petalcake', name: 'Petal Cake', hours: 8, currency: 'gems', cost: 3, icon: 'petal',
     desc: 'Pressed from the garden. Sweeter than it looks and stickier than it should be.'
   },
   {
-    id: 'honeypot', name: 'Honeypot', hours: 16, cost: 12000, icon: 'honey',
+    /* No price: an ad is not a currency, and `cost: 0` is what says so to every
+       consumer. A tier that charged both would be two sinks wearing one row. */
+    id: 'honeypot', name: 'Honeypot', hours: 16, currency: 'ad', cost: 0, icon: 'honey',
     desc: 'The whole pot. Nobody is going to be hungry for a good while.'
   }
 ];

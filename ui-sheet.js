@@ -181,6 +181,24 @@
     return `<span class="price ${affordable ? 'ok' : 'no'}">${Icons.get(icon)}${fmt(cost)}</span>`;
   }
 
+  /* THE SHARED "WATCH AN AD" CONTROL, built once because two placements need it
+     and docs/37-monetization.md names three more. One label and one glyph,
+     everywhere. The playbook a new placement follows is in docs/09-conventions.md.
+
+     It is a `.price` pill like the money beside it, because in a row of tiers an
+     ad IS the price — but it takes no currency colour: cyan is gems and
+     blue/purple/gold are the rarity vocabulary (docs/05-art-direction.md), and
+     borrowing one here would teach a player something untrue.
+
+     Callers: ask `Game.adOffered(placement)` FIRST and render nothing at all if
+     it is false — absent, never disabled, in a first session. `ready` is for the
+     second rule: an offer that cannot pay in full is shown drained with the
+     reason beside it, and never taken. */
+  const AD_LABEL = 'Watch an ad';
+  function adTag(ready) {
+    return `<span class="price ad${ready ? '' : ' off'}">${Icons.get('video')}${AD_LABEL}</span>`;
+  }
+
   /* A number the garden has changed is never silently different from the one on
      the seed's data row: the pill carries the multiplier that did it, in either
      direction. A Nurse costs its own plot 10% and a Moonflower picked in
@@ -1508,6 +1526,9 @@
   /* The stamp is a corner badge on a 52px token, so it gets ONE unit — "14h 2m"
      wraps inside the pill and breaks it. The exact span is on the line below. */
   function foodStamp(eff) {
+    /* An ad tier the cap would trim stamps the TIN'S number, not the trimmed
+       one — the trimmed number is precisely what it is refusing to give. */
+    if (eff.partial) return `+${Math.round(eff.nominal / 3600)}h`;
     const s = Math.round(eff.gain);
     if (s <= 0) return 'Full';
     if (s < 60) return `+${s}s`;
@@ -1517,22 +1538,30 @@
 
   function foodAfter(eff) {
     if (eff.gain <= 0) return `full at ${fmtSpan(eff.fedForAfter)}`;
+    /* An ad is spent before the food arrives, so this tier says what it CANNOT
+       do rather than what it would be trimmed to. */
+    if (eff.partial) return 'too full for all of it';
     return eff.capped ? `caps at ${fmtSpan(eff.fedForAfter)}` : `then ${fmtSpan(eff.fedForAfter)}`;
   }
 
   function foodButtons(id) {
-    return CREATURE_FOOD.map((f) => {
+    /* Absent, not disabled: a first session, or a day whose ad budget is spent,
+       simply has two tiers. The row's column count comes with it, so the grid
+       never leaves a third of itself empty. */
+    const foods = CREATURE_FOOD.filter((f) => f.currency !== 'ad' || Game.adOffered('food'));
+    return `<span class="food-row" data-n="${foods.length}">${foods.map((f) => {
       const eff = Game.foodEffect(id, f.id);
-      const room = eff.gain > 0;
-      const can = room && S.credits >= f.cost;
+      const room = eff.gain > 0 && !eff.partial;
+      const pot = f.currency === 'gems' ? S.gems : S.credits;
+      const can = room && (f.currency === 'ad' || pot >= f.cost);
       return `<button class="food-btn${can ? ' affordable' : ''}" data-feed="${f.id}" data-who="${id}"
         ${room ? '' : 'disabled'} title="${f.desc}">
         <span class="food-ico">${Icons.get(f.icon)}<b>${foodStamp(eff)}</b></span>
         <span class="food-name">${f.name}</span>
-        <span class="food-after${eff.capped ? ' capped' : ''}">${foodAfter(eff)}</span>
-        ${priceTag(f.cost, 'credits', can)}
+        <span class="food-after${eff.capped || eff.partial ? ' capped' : ''}">${foodAfter(eff)}</span>
+        ${f.currency === 'ad' ? adTag(room) : priceTag(f.cost, f.currency, can)}
       </button>`;
-    }).join('');
+    }).join('')}</span>`;
   }
 
   /* One creature, and everything you can do to it. Tapping a pet in the Hollow
@@ -1635,7 +1664,7 @@
       <h3>${Icons.get('honey')} Feed</h3>
       ${tending ? meter : ''}
       ${tending
-        ? `<span class="food-row">${foodButtons(id)}</span>`
+        ? foodButtons(id)
         : '<p class="stat-note">Resting at home. It earns nothing and leaves nothing while it is in — send it out and food will do something.</p>'}
 
       <h3>${Icons.get('star')} Out or resting</h3>
@@ -1721,7 +1750,7 @@
             ${status}
           </span>
         </span>
-        ${tending ? `<span class="food-row">${foodButtons(def.id)}</span>` : ''}
+        ${tending ? foodButtons(def.id) : ''}
       </div>`;
     }).join('');
   }
@@ -2448,7 +2477,9 @@
         HABITAT_SLOT_LEVELS.join('/')})`, summonStars('summon'))}
       ${devRow('Summon all six, at the same star', summonStars('summonAll'))}
       ${devRow(`Creature food clocks — ${Game.crittersAsleep().length} of ${
-        Game.crittersTending().length} tending are asleep`, `
+        Game.crittersTending().length} tending are asleep · ads ${Game.adCountToday('food')}/${
+        Game.adCap('food')} today, ${Game.adImpressions()} all time${
+        Game.adOffered('food') ? '' : ' · no offer right now'}`, `
         <button class="dev-btn" data-dev="drain" data-arg="1">Drain 1h</button>
         <button class="dev-btn" data-dev="drain" data-arg="4">Drain 4h</button>
         <button class="dev-btn" data-dev="drain" data-arg="24">Drain 24h</button>
@@ -3339,8 +3370,15 @@
       const f = Game.foodById(node.dataset.feed);
       const eff = Game.foodEffect(node.dataset.who, node.dataset.feed);
       if (!f || !eff) return;
-      const room = eff.gain > 0;
-      const can = room && S.credits >= f.cost;
+      /* The third gold assumption, and the one that looks like a race rather
+         than a missed branch: this re-derives `can` on every coin, so a gems or
+         ad tier fixed only in foodButtons() would render correctly and go wrong
+         a second later. It cannot make an ABSENT ad button appear, and does not
+         need to — `adOffered()` only changes on a day roll or a purchase, and
+         both already emit('panels'), which rebuilds. */
+      const room = eff.gain > 0 && !eff.partial;
+      const pot = f.currency === 'gems' ? S.gems : S.credits;
+      const can = room && (f.currency === 'ad' || pot >= f.cost);
       node.disabled = !room;
       node.classList.toggle('affordable', can);
       /* A hungrier creature has room for more of the tin, so both of these move
@@ -3350,10 +3388,13 @@
       const after = $('.food-after', node);
       if (after) {
         after.textContent = foodAfter(eff);
-        after.classList.toggle('capped', eff.capped);
+        after.classList.toggle('capped', eff.capped || eff.partial);
       }
       const price = $('.price', node);
-      if (price) { price.classList.toggle('ok', can); price.classList.toggle('no', !can); }
+      /* The ad pill carries its own drained class and no currency colour, so the
+         two toggles must not fight over the same element. */
+      if (price && price.classList.contains('ad')) price.classList.toggle('off', !room);
+      else if (price) { price.classList.toggle('ok', can); price.classList.toggle('no', !can); }
     });
     $$('[data-petal]', el.sheetBody).forEach((node) => {
       const cost = Game.petalCost(node.dataset.petal, node.dataset.skill);
@@ -3405,5 +3446,7 @@
   UI.syncAfford = syncAfford;
   UI.tickSheetTimers = tickSheetTimers;
   UI.fmtSpan = fmtSpan;
+  UI.adTag = adTag;
+  UI.AD_LABEL = AD_LABEL;
   UI.CORE_UPGRADES = CORE_UPGRADES;
 })();

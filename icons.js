@@ -44,6 +44,13 @@ const Icons = (() => {
        `close` and `check`, and for the same reason: a chevron is punctuation,
        not an object. */
     chevron: S(`<path d="M9.4 5.6 15.8 12l-6.4 6.4" stroke-width="2.8"/>`),
+    /* The rewarded-ad glyph. A screen with a play triangle rather than a film
+       reel or a gift: the player is being told what will happen, not sold a
+       surprise. Coloured rather than monochrome — a flat glyph here would read
+       as punctuation beside the coin and the gem, and this one is an object. */
+    video: S(`
+      <rect x="2.8" y="5.4" width="18.4" height="13.2" rx="3.4" fill="#a5d8ff"/>
+      <path d="M10.2 9.4 15.8 12l-5.6 2.6Z" fill="#fff8e8"/>`),
     pencil: S(`
       <path d="M16.4 3.9a1.7 1.7 0 0 1 2.4 0l1.3 1.3a1.7 1.7 0 0 1 0 2.4l-9.7 9.7-4 1.3 1.3-4Z" fill="#ffe0ad"/>
       <path d="M14.6 5.7 18.3 9.4" stroke-width="1.8"/>

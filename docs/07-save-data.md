@@ -183,7 +183,7 @@ see [10-decision-log.md](10-decision-log.md).
 
 `Object.assign(state, defaultState(), parsed)` is shallow, so a legacy save missing `stats`
 entirely would leave that key absent and crash on first write. Each nested object is therefore
-re-merged over its defaults individually: `tap`, `stats`, `wonder`, `prefs`, `seen`, `profile`,
+re-merged over its defaults individually: `tap`, `stats`, `wonder`, `ads`, `prefs`, `seen`, `profile`,
 `boostInv`, `discovered`, `bestRarity`, `mastery`, `rarityCounts`. `almanacClaimed` is copied as an array when
 present, else `[]`. `rarityCounts` is nested a second level — a missing seed key reads as
 `{ rare: 0, epic: 0, legend: 0 }` through `rarityCountsOf()`, which is the only thing that should
@@ -191,6 +191,42 @@ read it.
 
 **When you add a nested object to state, add it to that list.** Forgetting is the single most likely
 way to break loading for existing players.
+
+**And the assertion that proves you did it has to read the object STRAIGHT OFF `load()`.** `state.ads`
+was added on 2026-09-03 with its re-merge line and a test — and the first version of that test passed
+with the re-merge line deleted, because the getter it asked repairs the missing half on its first
+call. The sabotage only went red once the assertion read the fields directly, before touching a
+getter. A save with the key *absent* is not the case that needs the line either: the shallow assign
+above hands it the whole default. **The case is a PARTIAL object** — `{ impressions: 7 }` with no
+`today` and no `sessions` — which is what a hand-edited save, or one written by a newer build, looks
+like.
+
+### `state.ads` — the rewarded-ad ledger (added 2026-09-03)
+
+```js
+ads: { impressions: 0, day: '', today: {}, sessions: 0 }
+```
+
+Four fields, none of them progress, and the whole object sits in the `SURVIVES` column of the
+never-resets partition — a Turn that handed a player a fresh ad budget for finishing a year would be
+the one thing a cap must not do.
+
+- **`impressions`** — lifetime, never reset. The counter [37-monetization.md](37-monetization.md)
+  wants waiting for the day a real SDK arrives.
+- **`day` / `today`** — the per-day counts against `DATA.ads`, keyed by placement. Rolled by
+  `adRollDay()` against the same date key the daily quest uses, so a new day clears `today` and
+  never touches `impressions`.
+- **`sessions`** — how many times this save has been opened, which is as close as a web build gets
+  to "a player's first session". **Bumped once per `load()`** — in all three branches, so a fresh
+  garden, a migrated save and the catch branch all agree — and written straight to disk rather than
+  queued, because a first session opened and closed in ten seconds must still be counted or the
+  second one is offered nothing either. `reset()` puts it back to **0** through
+  `defaultState()`, which is correct: a garden started over is a first session again, and the next
+  page load makes it 1. Note that the Settings reset does *not* reload the page, so an ad offer
+  disappears the moment a save is wiped and comes back on the next load.
+
+`Game.adOffered(placement)` is the only predicate any surface should ask, and `Game.watchAd()` the
+only thing that writes here.
 
 ### `state.profile` — who the player is (added 2026-08-31)
 

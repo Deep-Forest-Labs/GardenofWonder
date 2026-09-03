@@ -477,7 +477,7 @@ cheat exercises the feature it claims to test, and the animation seen is the one
 | Trigger now | Wonder Effect, one-shot |
 | Garden | Fill plots, ripen everything, add a hive |
 | Creatures | Summons the next creature nobody has met, or all six, at a chosen star. Header shows how many are home and how many of the band's slots are open |
-| Creature food clocks | Drain 1h / 4h / 24h, send everyone to sleep, feed everyone. Header shows how many tenders are down |
+| Creature food clocks | Drain 1h / 4h / 24h, send everyone to sleep, feed everyone. Header shows how many tenders are down, and — since the food ladder went three-currency — **the rewarded-ad ledger**: impressions taken today against `DATA.ads.perPlacement.food`, the lifetime count, and whether an offer is live right now. That readout is what makes the placement visibly a lab affordance rather than an ad system |
 | Wind the world forward | Warps every production clock 1 / 8 / 24 hours — plants, Fall's bed and the Century Bloom, jars, crafts, orders, food and keepsakes — then catches the world up through one real `tick(0)`. No welcome sheet, no offline income |
 | Simulate an absence | Winds the world back 3 / 6 / 12 / 24 hours and opens the real welcome-back scene |
 | Give | Gold, gems, levels, one of every power-up |

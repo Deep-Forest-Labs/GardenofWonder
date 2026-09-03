@@ -271,10 +271,20 @@ still set `gemChance` to opt out, and none do.
 | Hurry a Fall crop | `ceil(remaining / 30)`, min 1 | Same rate, hour-scale clocks: 40 gems for a Strawberry, 360 for a Pumpkin, 960 for an Apple. The Century Bloom has no price |
 | Gnome of Fortune | 250 gems | Cosmetic |
 | Lantern Tree | 40 gems | Cosmetic |
+| Petal Cake (creature food) | 3 gems — *PROVISIONAL* | The first **recurring** gem sink. 8 hours of fullness against a 24h cap, so 3 a day per creature |
 
 Eight plots earn ~14 gems/hour, so a Thunderstorm call is close to two hours of income — a real
 decision rather than pocket change. **Price sinks against that rate, not against the cosmetics**,
 which are a one-off catalogue and will always be finished.
+
+**Petal Cake is the first gem sink that is neither a one-off nor a discretionary moment, and the
+first that scales with how many pets you own** (added 2026-09-03). Every row above it is a cosmetic
+you buy once or a button you press when you feel like it; this one is daily upkeep, and at four
+tended creatures it is twelve cakes a day. Priced against the ~14 gems/hour rate above rather than
+against the cosmetics: **36 gems a day is ≈2.5 hours of income** — real pressure. Ten gems each
+would be ≈8.5 hours, which is a wall. **The number is the owner's to pick and 3 is provisional**;
+`tools/sim-test.js` holds a band (twelve cakes must stay under four hours of gem income), not the
+price, so 1 through 4 all pass and 20 goes red.
 
 **The Fall row is priced against Summer's clock rather than against that rate, and the prediction is
 written here so the next tuning pass inherits it rather than re-deriving it.** At ~14 gems/hour every
@@ -562,16 +572,30 @@ A coin sink, and one the economy needed. Food runs **one clock**: a creature is 
 3h remaining (works one star up), *awake but hungry* above zero, and *asleep* at zero. Design and
 the reasoning in [22-creatures.md](22-creatures.md).
 
-| Food | Adds | Of which boost | Cost | Per boost hour | Per hour of fullness |
-| --- | --- | --- | --- | --- | --- |
-| Clover Nibble | 4 hours | 1h | 1,500 | 1,500 | 375 |
-| Petal Cake | 8 hours | 5h | 5,000 | 1,000 | 625 |
-| Honeypot | 16 hours | 13h | 12,000 | 923 | 750 |
+**It stopped being only a coin sink on 2026-09-03.** On the owner's instruction the ladder now spans
+three currencies, so this table is a coin sink, a gem sink and a rewarded-ad placement in one row
+each:
 
-**The two per-hour columns run in opposite directions, and both are asserted.** Per hour of *boost*
-the price falls with the tier, so the dear food is the cheaper way to stay buffed. Per hour of plain
-*fullness* it rises, so the cheap food stays the efficient way to simply keep a creature awake —
-which is what stops the upkeep half from being a wall for a poor player.
+| Food | Adds | Of which boost | Currency | Cost | Daily bill at 4 tended creatures |
+| --- | --- | --- | --- | --- | --- |
+| Clover Nibble | 4 hours | 1h | gold | 1,500 | 24 meals · 36,000 gold |
+| Petal Cake | 8 hours | 5h | **gems** | **3** *(PROVISIONAL)* | 12 meals · 36 gems ≈ 2.5h of gem income |
+| Honeypot | 16 hours | 13h | **one rewarded ad** | — | 6 ads — capped at **2** by `DATA.ads.perPlacement.food` |
+
+**The two per-hour columns are gone, and were retired rather than repaired.** They used to assert
+that the price per hour of *boost* falls with the tier while the price per hour of plain *fullness*
+rises. **Gold per hour and gems per hour do not compare**, and with one food per currency there is
+no ladder left inside a currency, so the two sim-tests that held them are gone and the daily bill
+above is what replaced them. The rule they protected survives on its own: **Clover must never wall**,
+because being broke can never be allowed to strand a creature.
+
+**Clover is deliberately UNMOVED at 1,500 and the owner's instruction is only two-thirds delivered.**
+They asked to "greatly increase the cost of food"; for the two upper tiers the currency change *is*
+the increase, but Clover's currency does not change, so its increase would have to be a gold number
+and no investigated one exists. At 1,500 it is six meals a day per creature — 36,000 gold a day for
+four pets, against a measured late income of 30–40M a day
+([33-year-one-economy.md](33-year-one-economy.md)). A tenth of a percent of a day's income is not a
+pressure dial, and that is the owner's number to pick.
 
 The clock caps at **24 hours** ahead (`FOOD_CAP_HOURS`), so no single purchase buys weeks. It was
 two clocks until 2026-08-20; merging them changed no tuning, because the second was only ever

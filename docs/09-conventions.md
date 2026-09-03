@@ -319,6 +319,52 @@ Panel is `renderDev()` in `ui-sheet.js`; the logic is `Game.Dev` in `game.js`. F
    balance reading taken afterwards. Only the weather hold is sticky, and it is visibly marked.
 5. Add a sim-test. At minimum assert the force works *and* that nothing leaks into an unforced run.
 
+## Playbook: add a rewarded-ad placement
+
+**The component is built. Consume it; do not build a second one.** Engine half in `game.js`
+(`adOffered`, `watchAd`, `adImpressions`, `adCountToday`, `adCap`, and `state.ads`), UI half in
+`ui-sheet.js` (`UI.adTag()`, `UI.AD_LABEL`, the `video` glyph), caps in `DATA.ads`. The first
+consumer is the Honeypot food tier; the rules and the reasoning are in
+[37-monetization.md](37-monetization.md) and [22-creatures.md](22-creatures.md).
+
+**None of this is an ad system, and the web build never gets one.** What exists is a placement with
+a simulated grant — no network, no SDK, no fetch. `watchAd()` is the one function a real SDK would
+replace, which is the whole point of the shape.
+
+1. **Ask `Game.adOffered(placement)` FIRST and render NOTHING when it is false.** Absent, never
+   disabled: a greyed-out ad button in a player's first session is still an ad in their first
+   session. If the offer's absence changes a layout — a column count, a row height — that belongs to
+   the same function that decides to render it, so the two can never disagree. `.food-row[data-n]`
+   is the worked example.
+2. **Decide BEFORE rendering whether the reward can land in full, and never offer an ad for a
+   trimmed one.** Gold can be part-spent; thirty seconds of somebody's attention cannot, and an ad
+   sold once for a partial grant is an ad that is never trusted again. This rule cannot live in
+   `watchAd()`, because only the caller knows what its reward is worth — so the caller checks, shows
+   the control drained, and **says on the button what it will not give**. `foodEffect().partial` and
+   *"too full for all of it"* are the worked example.
+3. **Call `Game.watchAd(placement)` in `game.js`, on the same call that grants, and grant only on
+   `true`.** It counts and permits; it never grants. Never call it from a `ui-*` file.
+4. **Any gold an ad ever pays goes through `credit(n, { ad: true })`.** This is
+   [37-monetization.md](37-monetization.md)'s first promise made mechanical: ad-granted gold never
+   feeds the well. The flag is already there and already sim-tested — use it or the promise is
+   silently broken.
+5. **The placement's cap is a key in `DATA.ads.perPlacement` and nowhere else.** A new placement
+   adds one line there and nothing else. `dailyCap` is the whole plan and no placement may plan past
+   it; both are remote-tunable by construction, which is doc 37's fifth prerequisite.
+6. **The button is `UI.adTag(ready)`** — one label (`UI.AD_LABEL`) and one glyph
+   (`Icons.get('video')`), everywhere. It takes no currency colour on purpose: cyan is gems and
+   blue/purple/gold are the rarity vocabulary ([05-art-direction.md](05-art-direction.md)), and
+   borrowing one would teach the player something untrue.
+7. **No countdown, no "expires in", no urgency copy of any kind.** A time-limited or
+   quantity-limited offer attaches a PEGI 12 descriptor
+   ([40-financial-model.md](40-financial-model.md)), and this game's rating headroom is worth more
+   than urgency. A sim-test reads `DATA.ads` for that vocabulary and fails on it; keep it true in
+   the copy as well as the data.
+8. **Rewarded video only** — no interstitials, no banners, no energy, no loot boxes — and nothing
+   inside a sacred moment: not the ceremony, not the Wonder, not the Century Bloom's wait.
+9. Add a sim-test. At minimum: the placement is absent in a first session, its cap refuses one more
+   than it allows, and the reward it grants does not reach the mint.
+
 ## Playbook: change saved state
 
 Covered fully in [07-save-data.md](07-save-data.md). The short version:

@@ -7,6 +7,58 @@ If you fix one, delete it from this file in the same commit.
 
 ## What the overnight fix round knowingly left (2026-09-03)
 
+**Two ad-and-food numbers ship PROVISIONAL and named, both the owner's to pick, both a one-line
+reversal.** (1) **Petal Cake at 3 gems** (`data.js`, the `petalcake` row). Twelve cakes a day at four
+tended creatures is 36 gems, ≈2.5 hours of the ~14 gems/hour faucet — real pressure; 10 gems would be
+≈8.5 hours, a wall. `tools/sim-test.js` holds a *band* (twelve cakes under four hours of gem income),
+so 1 through 4 pass and 20 goes red — the guard, not the ruling. (2) **The food ad cap at 2 a day**
+(`DATA.ads.perPlacement.food`). Four pets on 16-hour Honeypots want six ads a day and
+[37-monetization.md](37-monetization.md) plans 3–6 in total, so feeding alone would eat the whole
+budget; two leaves 1–4 for the three placements that ship first. The sim-test asserts the shape
+(below six, and room for three more), so 1, 2 or 3 all pass and 6 goes red.
+
+**Clover is deliberately UNMOVED at 1,500, and the owner's "greatly increase the cost of food" is
+therefore only two-thirds delivered.** For Petal Cake and Honeypot the currency change *is* the
+increase. For Clover the currency does not change, so the increase would have to be a gold number and
+no investigated one exists — under the round's rails a knob with no investigated number ships at
+no-change-neutral and gets filed. The arithmetic for the answer: six meals a day per creature, so
+four tended pets cost 36,000 gold a day against a measured late income of 30–40M
+([33-year-one-economy.md](33-year-one-economy.md)), which is why it reads as free. **Whatever number
+lands, Clover is the tier that must never wall** — the cheap food staying affordable is what stops
+being broke from stranding a creature.
+
+**The two cross-tier food price invariants are gone, and nothing replaces them one-for-one.**
+"A longer stretch costs less per hour of boost" and "the cheapest is the most efficient way to merely
+stay awake" both compared `cost` across tiers, and gold, gems and an ad do not compare. They were
+deleted rather than repaired, and the daily bill at four tended creatures took their place. **Within
+a currency there is now only one food each**, so the surviving escalation assertion is vacuously true
+for both — it exists to catch a *second* gold or gem tier being added out of order, not to hold
+today's ladder.
+
+**An ad refused because the day's budget ran out between render and tap plays the generic deny, and
+the flower says "broke".** `emit('deny', { reason: 'ad' })` reaches `ui-events.js`'s one shared
+handler, which plays the sound, shakes and speaks the broke line — the right *feedback* with slightly
+wrong *words*, for a race that needs the offer to be spent on another surface in the second between
+the panel rendering and a thumb landing. Deliberately not given its own channel: a second refusal
+path for one rare line is more surface than the line is worth. The fix, when the deny reasons are
+next touched, is to let `UI.say()` take the reason.
+
+**Half of docs/22's "a sleeping creature must never need a scroll to reach the food that wakes it"
+rule is already broken, and it was broken before the three-currency change.** Measured 2026-09-03
+with `tools/probe.js` on the critter panel, and measured again against `HEAD` to be sure: at 375×812
+the food row ends at **506px in a 582px body** — fine, 76px of headroom, and the ad tier costs zero
+of it — but the **out-or-rest button ends at 602px**, below the fold. And on the short viewport the
+conventions checklist names, **390×640, the food row itself ends at 507px in a 444px body** —
+*identically* before and after this commit, so it is a pre-existing gap and not a regression. The
+older numbers in docs/22 (518 and 579) do not reproduce and have been corrected. Fixing it is a panel
+layout job, not a food job.
+
+**`renderFeed()` still says "Either clock can run up to 24 hours ahead", which has been false since
+the two clocks merged on 2026-08-20.** Found while working in that panel for the currency split;
+there is one clock now and it is capped at 24 hours. Not fixed here because it is copy in a panel
+this commit was not scoped to rewrite, and the sentence is one line above a paragraph that would want
+re-reading with it.
+
 **A thunderclap now sits about 6 dB above its own bed's peak** — roughly 0.094 against 0.048 —
 where it used to sit level with it. That is the halving doing exactly what was asked (the hiss
 down, the thunder untouched), and it is recorded as a watch item rather than a defect: a storm
@@ -17,16 +69,12 @@ one line at `stinger.gain.value` (audio.js)** if the owner reports the thunder a
 change — but the effects now sit relatively closer under a quieter sky. If taps ever read as muffled
 for no visible reason, that is the knob; the bed trim is not.
 
-**The icon registry's paperwork is four facts behind the code, and one run of
-`node tools/export-icons.js` clears all of them at once.** `art/exports/icons/mysteryBloom.svg` was
-never written and its manifest row is missing from
-[45-asset-inventory.md](45-asset-inventory.md); `snow`'s Used-by is missing `ui-sheet.js`; that
-file's footer says 54 icons and [05-art-direction.md](05-art-direction.md) says fifty-two, against
-a registry of 55; and `#12` has just added a fourth room to `plantSpot`'s Used-by, so its row reads
-`ui-fall.js, ui-winter.js, ui.js` until the generator next runs. The manifest is fenced
-`do not edit by hand`, so there is no honest way to correct one row without running the tool.
-Deliberately not run inside a scoped fix round: it writes a Unity-facing asset and three unrelated
-doc rows. Its footprint was measured — those are the whole of it.
+*(The icon-registry paperwork entry that stood here is CLEARED. `#18` had to add a `video` glyph and
+therefore had to run `node tools/export-icons.js`, which is all-or-nothing: it wrote
+`mysteryBloom.svg` as well, added both manifest rows, and picked up `snow`'s missing `ui-sheet.js`,
+`plantSpot`'s fourth room and the stale count in one pass. `node tools/export-icons.js --check` exits
+zero for the first time in several commits, and [05-art-direction.md](05-art-direction.md)'s
+"Fifty-two icons" sentence is corrected to fifty-six alongside it.)*
 
 **`q_discover_3` will often lead the goal strip, at 2/3 = 0.667 against neighbours at 0.00 — and
 that is the signpost working, not the jam returning.** `stripLeader()` ranks nearest-to-done, so a

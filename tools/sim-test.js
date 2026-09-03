@@ -3554,7 +3554,12 @@ G.reset();
 S.discovered[PIP.attract.seed] = PIP.attract.count;
 G.checkCritters();
 S.credits = 1e9;
-const BIG = CREATURE_FOOD[CREATURE_FOOD.length - 1];
+S.gems = 1e9;
+/* The longest food that is BOUGHT rather than watched. The ad tier refuses a
+   trimmed grant outright (its own group below), so it can never demonstrate the
+   cap the way a priced tier does — pointed at it, this loop buys once and stops
+   and the assertions below fail while the cap they test works perfectly. */
+const BIG = CREATURE_FOOD.filter((f) => f.currency !== 'ad').pop();
 let bought = 0;
 for (let i = 0; i < 40; i += 1) { if (G.feedCritter(PIP.id, BIG.id)) bought += 1; }
 check('the cap is reached and then holds', G.critterFedFor(PIP.id) <= G.foodCapSeconds() + 1);
@@ -3656,36 +3661,41 @@ check('everyone asleep is someone who can be fed',
 check('sending them to sleep twice is a no-op', G.Dev.sleepCritters() === 0);
 check('feeding everyone wakes them', G.Dev.feedCritters() > 0);
 check('and they are up again', G.crittersTending().every((c) => !G.critterAsleep(c.id)));
-/* One Honeypot is 16h up and 12h fed against a 24h cap, so a second still has
-   room. It is the third that has nothing left to give. */
-check('a second helping still has room', G.Dev.feedCritters() > 0);
-check('and then the cap refuses another', G.Dev.feedCritters() === 0);
+/* One Honeypot is 16h against a 24h cap, so a second would be trimmed to 8 — and
+   since 2026-09-03 the top tier is bought with an ad, which is never sold for a
+   partial grant. So the cheat's SECOND pass is refused, and refused for the
+   right reason: the clock still has 16h on it, not because anything is broken.
+   With a priced top tier this line read "a second helping still has room". */
+const secondPass = G.Dev.feedCritters();
+check('a second helping is refused, because the ad tier will not sell a trimmed meal',
+  secondPass === 0 && G.crittersTending().every((c) => (
+    Math.abs(G.critterFedFor(c.id) - CREATURE_FOOD[CREATURE_FOOD.length - 1].hours * 3600) < 120
+  )), `${secondPass} fed, pip at ${Math.round(G.critterFedFor(PIP.id) / 3600)}h`);
 /* Nothing is armed and nothing is sticky, so an unforced run afterwards behaves. */
 G.Dev.sleepCritters();
 G.Dev.feedCritters();
 check('nothing leaked into the clock', G.critterFedFor(PIP.id) <= G.foodCapSeconds() + 1);
 
 group('food is authored, and stays off the parts that break an economy');
-check('every food has a name, hours and a cost',
-  CREATURE_FOOD.every((f) => f.name && f.hours > 0 && f.cost > 0 && f.desc));
+check('every food has a name, hours and a description',
+  CREATURE_FOOD.every((f) => f.name && f.hours > 0 && f.desc));
+check('a priced food carries a price and an ad-fed one carries none',
+  CREATURE_FOOD.every((f) => (f.currency === 'ad' ? f.cost === 0 : f.cost > 0)));
 check('ids are unique', new Set(CREATURE_FOOD.map((f) => f.id)).size === CREATURE_FOOD.length);
 check('every food icon exists', CREATURE_FOOD.every((f) => Icons.has(f.icon)));
-check('the tiers escalate in both hours and cost', CREATURE_FOOD.every((f, i) => (
-  i === 0 || (f.hours > CREATURE_FOOD[i - 1].hours && f.cost > CREATURE_FOOD[i - 1].cost)
+check('the tiers escalate in hours', CREATURE_FOOD.every((f, i) => (
+  i === 0 || f.hours > CREATURE_FOOD[i - 1].hours
 )));
-/* Measured in BOOST hours, which is what the premium is actually buying — the
-   dear food has to be the cheaper way to stay buffed or the tiers above the
-   first are a worse deal wearing a bigger number.
-
-   Per hour of plain fullness it runs the other way (375 / 625 / 750), and that
-   is correct: the cheap food stays the efficient way to simply keep someone
-   awake, so being broke can never strand a creature. */
-const boostHours = (f) => f.hours - FED_THRESHOLD_HOURS;
-check('a longer stretch costs less per hour of boost', CREATURE_FOOD.every((f, i) => (
-  i === 0 || f.cost / boostHours(f) < CREATURE_FOOD[i - 1].cost / boostHours(CREATURE_FOOD[i - 1])
-)));
-check('and the cheapest is the most efficient way to merely stay awake',
-  CREATURE_FOOD.every((f, i) => i === 0 || f.cost / f.hours > CREATURE_FOOD[i - 1].cost / CREATURE_FOOD[i - 1].hours));
+check('and within one currency they escalate in price too', ['credits', 'gems'].every((cur) => {
+  const tier = CREATURE_FOOD.filter((f) => f.currency === cur);
+  return tier.every((f, i) => i === 0 || f.cost > tier[i - 1].cost);
+}));
+/* The two cross-tier price ladders that used to sit here — cost per hour of
+   BOOST falling as the tiers climb, cost per hour of plain fullness rising —
+   died with the three-currency change on 2026-09-03. Gold per hour and gems per
+   hour do not compare, and with one food per currency there is no ladder inside
+   a currency left to assert. What replaced them is the daily bill at four tended
+   creatures, in its own group below. */
 check('no food outlasts the cap on its own',
   CREATURE_FOOD.every((f) => f.hours <= FOOD_CAP_HOURS));
 /* Under one clock "a food keeps a creature up for longer than it boosts it" is
@@ -3713,6 +3723,194 @@ check('food never advances the star a creature was raised to', (() => {
   G.feedCritter(PIP.id, CREATURE_FOOD[0].id);
   return G.critterLevel(PIP.id) === before;
 })());
+
+group('the food ladder spans three currencies, and each is priced against its own faucet');
+check('every food declares a currency the engine knows',
+  CREATURE_FOOD.every((f) => ['credits', 'gems', 'ad'].includes(f.currency)),
+  CREATURE_FOOD.map((f) => `${f.id}:${f.currency}`).join(' '));
+const AD_FOODS = CREATURE_FOOD.filter((f) => f.currency === 'ad');
+check('exactly one tier is ad-fed, and it is the longest',
+  AD_FOODS.length === 1 && AD_FOODS[0] === CREATURE_FOOD[CREATURE_FOOD.length - 1],
+  `${AD_FOODS.length} ad tiers, last is ${CREATURE_FOOD[CREATURE_FOOD.length - 1].id}`);
+/* `Icons.get()` falls back to `sparkle` silently (docs/11-known-issues.md), so a
+   pill written before its glyph exists renders a plausible wrong shape and
+   passes everything. The ad control names its icon in ui-sheet.js rather than on
+   a data row, so the loop above cannot reach it — it gets its own line. */
+check('the shared ad control has a real glyph rather than the silent fallback', Icons.has('video'));
+/* THE DAILY BILL AT FOUR TENDED CREATURES — what replaced the two retired
+   per-hour ladders. Derived from the slot table and the cap rather than typed,
+   so a change to either moves the arithmetic instead of quietly invalidating it. */
+const FOOD_SLOTS = HABITAT_SLOT_LEVELS.length;
+const perDay = (f) => (FOOD_CAP_HOURS / f.hours) * FOOD_SLOTS;
+const CAKE = CREATURE_FOOD.find((f) => f.currency === 'gems');
+const POT = AD_FOODS[0];
+/* docs/04-economy.md: eight plots earn ~14 gems an hour, and sinks are priced
+   against that rate. A BAND rather than a price — it catches somebody quietly
+   moving 3 to 20 without asserting that 3 is the right answer, which is the
+   owner's to pick. */
+const GEMS_PER_HOUR = 14;
+check('twelve petal cakes a day is the gem bill at four tended creatures',
+  perDay(CAKE) === 12, `${perDay(CAKE)}`);
+check('and that bill stays under four hours of the gem faucet',
+  (perDay(CAKE) * CAKE.cost) / GEMS_PER_HOUR < 4,
+  `${((perDay(CAKE) * CAKE.cost) / GEMS_PER_HOUR).toFixed(2)}h at ${CAKE.cost} gems`);
+check('six honeypots a day is what a fully ad-fed roster would want',
+  perDay(POT) === 6, `${perDay(POT)}`);
+check('so feeding is capped below that, and is not the upkeep backbone',
+  DATA.ads.perPlacement.food < perDay(POT),
+  `${DATA.ads.perPlacement.food} vs ${perDay(POT)}`);
+/* docs/37-monetization.md ships three placements first — the welcome-back
+   doubler, the Fall windfall doubler and the second card pack. Feeding's cap
+   plus those three has to fit inside the plan or the plan is already spent. */
+check('and doc 37\'s three ship-first placements still fit inside the daily plan',
+  DATA.ads.perPlacement.food + 3 <= DATA.ads.dailyCap,
+  `${DATA.ads.perPlacement.food} + 3 vs ${DATA.ads.dailyCap}`);
+/* Held STRUCTURALLY rather than by review: a time-limited or quantity-limited
+   offer attaches a PEGI 12 descriptor (docs/40-financial-model.md), so no knob
+   in the ad table may ever name a clock. */
+check('no offer carries a clock, because a timed offer is a rating cliff',
+  !/expire|until|deadline|ends|seconds|countdown/i.test(JSON.stringify(DATA.ads)),
+  JSON.stringify(DATA.ads));
+
+group('an ad is a placement, not an ad system, and it is absent in a first session');
+/* Driven through load() rather than by writing the counter, because the counter
+   is only worth what the load path does to it. reset() alone leaves it at zero —
+   a garden started over is a first session again, and the page load that follows
+   makes it one, exactly as ui-news.js's reset-and-reload does. */
+G.reset();
+check('a garden started over is back before its first session', S.ads.sessions === 0, `${S.ads.sessions}`);
+G.saveNow();
+G.load();
+check('the first page load is session one', S.ads.sessions === 1, `${S.ads.sessions}`);
+check('and a first session is offered no ad at all', G.adOffered('food') === false);
+G.saveNow();
+G.load();
+check('opening it a second time counts a second session', S.ads.sessions === 2, `${S.ads.sessions}`);
+check('and only then does the offer appear', G.adOffered('food') === true);
+/* The day's cap. Driven through watchAd() rather than read off the data, because
+   the cap that matters is the one the function enforces. */
+const adCapFood = DATA.ads.perPlacement.food;
+let adTook = 0;
+for (let i = 0; i < adCapFood + 3; i += 1) { if (G.watchAd('food')) adTook += 1; }
+check('the day\'s cap refuses one more than it allows',
+  adTook === adCapFood, `took ${adTook} of ${adCapFood}`);
+check('and the counter stops at the cap rather than at the cap plus one',
+  G.adCountToday('food') === adCapFood, `${G.adCountToday('food')}`);
+check('a spent budget stops offering', G.adOffered('food') === false);
+const adLifetime = G.adImpressions();
+check('the impressions were counted', adLifetime === adCapFood, `${adLifetime}`);
+G.saveNow();
+G.load();
+check('and the lifetime counter is lifetime — it survives a save and a load',
+  G.adImpressions() === adLifetime, `${G.adImpressions()}`);
+S.ads.day = 'not-today';
+check('a new day clears the day\'s count', G.adCountToday('food') === 0);
+check('and offers again', G.adOffered('food') === true);
+check('but never rolls back the lifetime counter',
+  G.adImpressions() === adLifetime, `${G.adImpressions()}`);
+G.reset();
+G.saveNow();
+G.load();
+check('starting the garden over puts it back in a first session, offer and all',
+  S.ads.sessions === 1 && G.adOffered('food') === false && G.adImpressions() === 0,
+  `${S.ads.sessions} / ${G.adImpressions()}`);
+/* The whole daily plan, not just one placement's share: a second surface cannot
+   spend past DATA.ads.dailyCap however much of its own budget it has left.
+   `adCountToday` first, to stamp today's key — otherwise the next reader rolls
+   the day and wipes the fixture out from under the assertion. */
+G.saveNow();
+G.load();
+G.adCountToday('food');
+S.ads.today = { other: DATA.ads.dailyCap };
+check('a placement with budget left is still refused once the day\'s plan is spent',
+  G.adOffered('food') === false && G.watchAd('food') === false);
+/* THE NESTED RE-MERGE, which docs/07-save-data.md calls the single most likely
+   way to break loading for existing players. A save with no `ads` at all takes
+   the default from the assign above it and is fine either way — the case that
+   needs the explicit line is a PARTIAL one, where the shallow assign hands back
+   an object with no `today` and every getter throws on the first Feed panel. */
+/* Read the ledger STRAIGHT OFF load(), before touching a getter: adRollDay()
+   rebuilds `day` and `today` on its first call, so an assertion that asks a
+   getter is answered by the repair rather than by the load and passes with the
+   re-merge line deleted. The half that cannot self-heal is `sessions`, which
+   load() increments — undefined + 1 is NaN, `NaN || 0` is 0, and the player is
+   silently pushed back into a first session. */
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0, ads: { impressions: 7 }
+}));
+check('a save carrying half an ad ledger comes back with a whole one', (() => {
+  try {
+    G.load();
+    const a = S.ads;
+    return a.impressions === 7 && a.sessions === 1
+      && typeof a.day === 'string' && Boolean(a.today) && typeof a.today === 'object';
+  } catch (e) { return false; }
+})(), JSON.stringify(S.ads));
+localStorage.setItem('gw-save', JSON.stringify({
+  version: 3, credits: 500, level: 1, rep: 0, ads: { impressions: 7, today: 'nonsense' }
+}));
+check('and a hand-edited one cannot put a string where the day\'s counts go', (() => {
+  try {
+    G.load();
+    return typeof S.ads.today === 'object' && G.adCountToday('food') === 0;
+  } catch (e) { return false; }
+})(), JSON.stringify(S.ads));
+
+group('an ad is never spent on a partial meal, and gold still is');
+G.reset();
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+G.checkCritters();
+G.setTending(PIP.id, true);
+/* Session two by hand rather than through load(): the group above already drives
+   the real counter, and a reload here would throw the fixture away. */
+S.ads.sessions = 2;
+S.ads.day = ''; S.ads.today = {}; S.ads.impressions = 0;
+const POT_HOURS = POT.hours * 3600;
+S.critters[PIP.id].fedUntil = G.nowSeconds() + 12 * 3600;
+check('twelve hours banked against a sixteen-hour pot reads as partial',
+  G.foodEffect(PIP.id, POT.id).partial === true);
+check('and the stamp still advertises the tin, not the trim',
+  G.foodEffect(PIP.id, POT.id).nominal === POT_HOURS
+  && G.foodEffect(PIP.id, POT.id).gain < POT_HOURS,
+  `${G.foodEffect(PIP.id, POT.id).gain} of ${POT_HOURS}`);
+check('the ad is refused when the cap would trim it',
+  G.feedCritter(PIP.id, POT.id) === null);
+check('and no impression was spent on the refusal', G.adImpressions() === 0);
+S.critters[PIP.id].fedUntil = 0;
+check('an empty clock takes the whole pot', Boolean(G.feedCritter(PIP.id, POT.id)));
+check('for exactly one impression', G.adImpressions() === 1);
+check('and the clock really got all sixteen hours',
+  Math.abs(G.critterFedFor(PIP.id) - POT_HOURS) < 120,
+  `${Math.round(G.critterFedFor(PIP.id) / 3600)}h`);
+/* THE CONTRAST THE RULE RESTS ON. Without this the suite would read as "a
+   trimmed meal is always refused", which is false and is the opposite of the
+   design: gold can be part-spent, thirty seconds of attention cannot. */
+const CLOVER = CREATURE_FOOD.find((f) => f.currency === 'credits');
+S.critters[PIP.id].fedUntil = G.nowSeconds() + 22 * 3600;
+S.credits = CLOVER.cost;
+/* `partial` is the ad rule, not the cap rule — a trimmed GOLD meal is a normal
+   purchase and must not wear the flag, or the whole ladder starts refusing. */
+check('a trimmed gold meal is capped but never partial', (() => {
+  const eff = G.foodEffect(PIP.id, CLOVER.id);
+  return eff.capped === true && eff.partial === false && eff.currency === 'credits';
+})(), JSON.stringify(G.foodEffect(PIP.id, CLOVER.id)));
+check('gold, by contrast, still buys a meal the cap will trim',
+  Boolean(G.feedCritter(PIP.id, CLOVER.id)));
+check('and it was charged in full for it', S.credits === 0, `${S.credits}`);
+check('with the clock capped rather than overrun',
+  Math.abs(G.critterFedFor(PIP.id) - G.foodCapSeconds()) < 120,
+  `${Math.round(G.critterFedFor(PIP.id) / 3600)}h`);
+/* The gems tier, which has no cap rule of its own and must behave like gold. */
+S.critters[PIP.id].fedUntil = 0;
+S.gems = CAKE.cost - 1;
+check('a gems tier refuses on an empty gem purse', G.feedCritter(PIP.id, CAKE.id) === null);
+check('and takes nothing from the gold wallet doing it', S.credits === 0);
+S.gems = CAKE.cost;
+check('and buys when the gems are there', Boolean(G.feedCritter(PIP.id, CAKE.id)));
+check('spending gems, not gold', S.gems === 0 && S.credits === 0, `${S.gems} / ${S.credits}`);
+check('and the ad budget is untouched by a gem purchase',
+  G.adImpressions() === 1 && G.adCountToday('food') === 1,
+  `${G.adImpressions()} / ${G.adCountToday('food')}`);
 
 /* ---------------- the Garden Stand ---------------- */
 group('The Garden Stand');
@@ -4676,6 +4874,11 @@ const SURVIVES = ['version', 'gems', 'tickets', 'decor', 'boosters', 'weatherCal
   'pairsSeen', 'mementos', 'luckyPacks', 'prefs', 'seen', 'quests', 'rep', 'level', 'discovered',
   'bestRarity', 'almanacClaimed', 'mastery', 'rarityCounts', 'seedUnlocks', 'petals', 'blessed',
   'fall', 'winter', 'harvestsTowardRep', 'lastSeen', 'lifetimeCoins', 'profile',
+  /* The rewarded-ad ledger sits outside the Garden Year entirely — impressions
+     are lifetime, the day's counts roll on a date and the session count on a
+     page load. A Turn that wiped any of them would hand a player a fresh ad
+     budget for finishing a year, which is the one thing a cap must not do. */
+  'ads',
   'seedRevealed', 'upgradeRevealed', 'celebrated'];
 /* CHANGED, not "cleared": doc 32's never-touched column means never reset or
    decreased — savedSeeds sits here because the mint WRITES it (upward, by
@@ -4992,6 +5195,20 @@ yrMark = earnedNow();
 ltMark = lifetimeNow();
 G.Dev.feedCritters();
 check('the feed-everyone cheat stays off the mint', earnedNow() === yrMark);
+/* docs/37-monetization.md's first promise: ad-granted gold never feeds the well.
+   Nothing pays gold for an ad yet — the flag is tested before its first caller
+   exists, because a promise added after the placement is a promise added too
+   late. Placed here rather than below the driver check: that one reuses the
+   yrMark set before feedCritters(), and an ad grant moves neither accumulator,
+   so re-marking here leaves both values exactly where they were. */
+yrMark = earnedNow();
+ltMark = lifetimeNow();
+const creditsBeforeAd = S.credits;
+G.credit(750000, { ad: true });
+check('an ad grant moves the wallet and neither accumulator',
+  S.credits === creditsBeforeAd + 750000
+  && earnedNow() === yrMark && lifetimeNow() === ltMark,
+  `${earnedNow()} / ${lifetimeNow()}`);
 check('the year driver IS earning, by design', (G.Dev.driveYear(500), earnedNow() === yrMark + 500));
 check('and the driver earns into the pool too, so the meter and the mint agree',
   lifetimeNow() === ltMark + 500, `${lifetimeNow()} vs ${ltMark} + 500`);

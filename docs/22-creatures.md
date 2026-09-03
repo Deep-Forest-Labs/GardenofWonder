@@ -379,9 +379,14 @@ you might have opened this to do.**
 
 **A sleeping creature must never need a scroll to reach the food that wakes it.** That was the
 complaint that prompted the reorder, and it is the thing to re-check whenever anything is added to
-this panel: at 375×812 the food buttons end 518px into a 582px body, and the out-or-rest button at
-579px. Both are above the fold with almost nothing to spare, so a new block above them pushes the
-cure for the problem off screen.
+this panel. **Re-measured 2026-09-03** with `tools/probe.js`, on the critter panel with Pip at ★3:
+at 375×812 the `#sheetBody` is 582px and the food row ends at **506px** — 76px of headroom, and the
+three-currency change costs **zero** of it (the ad pill is full-column width but fits on one line,
+and the button height is unchanged at 140px). The **out-or-rest button ends at 602px and is already
+below the fold**, which the older numbers in this paragraph (518 and 579) did not say; that half of
+the rule was broken before this change and is not fixed by it. **And the whole rule fails on a short
+screen**: at 390×640 the body is 444px and the food row ends at 507px, identically before and after
+this change. Both are in [11-known-issues.md](11-known-issues.md).
 
 **One meter with a pip on it**, since there is one clock. The pip marks where the star lapses:
 above it *Well fed*, below it *Getting hungry*, at nothing *Asleep* — and the header names whichever
@@ -441,11 +446,56 @@ A creature has a **single fullness clock**, capped at 24 hours. Where it stands 
 | above zero | Awake and working, but hungry |
 | zero | **Asleep.** Contributes nothing at all |
 
-| Food | Adds | Of which boost | Costs |
-| --- | --- | --- | --- |
-| Clover Nibble | 4 hours | 1h | 1,500 |
-| Petal Cake | 8 hours | 5h | 5,000 |
-| Honeypot | 16 hours | 13h | 12,000 |
+| Food | Adds | Of which boost | Currency | Costs |
+| --- | --- | --- | --- | --- |
+| Clover Nibble | 4 hours | 1h | gold | 1,500 |
+| Petal Cake | 8 hours | 5h | **gems** | 3 — *PROVISIONAL, the owner's number* |
+| Honeypot | 16 hours | 13h | **one rewarded ad** | — |
+
+**The ladder spans three currencies as of 2026-09-03**, on the owner's instruction to make upkeep
+cost something real. `CREATURE_FOOD` carries a `currency` field (`'credits' | 'gems' | 'ad'`) and
+`feedCritter()` branches on it; an ad-fed tier has `cost: 0`, because an ad is not a currency and a
+tier that charged both would be two sinks wearing one row.
+
+### The ad tier, and the four rules it obeys
+
+The Honeypot is the game's first **rewarded placement**. Four rules shape it, and every one of them
+is in [37-monetization.md](37-monetization.md); the playbook a second placement follows is in
+[09-conventions.md](09-conventions.md).
+
+1. **It is a placement, not an ad system.** The web build has no ad network and never will — what
+   exists is where an offer may sit, who may be offered it, how often, and a counter, with a grant
+   that fires immediately instead of a video. `Game.watchAd('food')` is the one function a real SDK
+   would replace.
+2. **Absent, not disabled, in a player's first session.** `foodButtons()` filters the tier out
+   entirely when `Game.adOffered('food')` is false, and the row drops to two columns
+   (`.food-row[data-n="2"]`). A greyed-out ad button on session one is still an ad on session one.
+3. **No countdown, ever.** A time-limited offer attaches a PEGI 12 descriptor
+   ([40-financial-model.md](40-financial-model.md)), so nothing in `DATA.ads` may ever hold a clock —
+   there is a sim-test that reads the whole table for the word.
+4. **Never sold for a partial grant.** This is the one the cap forces, and it is the reason the tier
+   needed engine work rather than a button. `FOOD_CAP_HOURS` is 24, so a creature with 12 hours
+   banked taking a 16-hour Honeypot would get 12. That is tolerable when the cost is gold and
+   intolerable when the cost is thirty seconds of a player's attention — sell an ad for a trimmed
+   reward once and the ad stops being trusted. `feedCritter()` **refuses** the purchase, and the
+   button says *"too full for all of it"* and goes drained **before** it is tapped. `foodEffect()`
+   reports that state as `partial`, which is `capped` **and** ad-fed — a trimmed gold meal is a
+   normal purchase and must never wear the flag.
+
+**The daily bill at four tended creatures is what makes this bigger than it looks.**
+`HABITAT_SLOT_LEVELS` is `[1, 5, 10, 16]`, so a level-16 player feeds four pets, and the 24-hour cap
+sets how often each tier comes round:
+
+| | per creature per day | four creatures |
+| --- | --- | --- |
+| Petal Cakes | 3 | **12** — 36 gems at 3 each, ≈2.5 hours of the ~14 gems/hour faucet |
+| Honeypots | 1.5 | **6 ads** — which is doc 37's *entire* 3–6 daily plan |
+
+**So feeding is capped at 2 ad-fed meals a day** (`DATA.ads.perPlacement.food`), deliberately below
+the six a fully ad-fed roster would want. Feeding is a treat, not the upkeep backbone, and the three
+placements doc 37 ships first still fit inside the plan. That cap is PROVISIONAL and the owner's to
+retune; the sim-test asserts the *shape* (below six, and leaves room for three more placements), not
+the number.
 
 ### It was two clocks until 2026-08-20, and merging them lost nothing
 
@@ -469,10 +519,15 @@ good accident and it is being kept: the player *sees* the buffed state, watches 
 knows what food buys. The alternative under one clock is a short grant, which reintroduces exactly
 the "opened the game to a sleeping first pet" problem the grant exists to prevent.
 
-**Cost per hour runs two ways, and both are deliberate.** Per hour of *boost* it falls with the tier
-(1,500 → 1,000 → 923), so the dear food is the cheaper way to stay buffed. Per hour of plain
-*fullness* it rises (375 → 625 → 750), so **the cheap food stays the efficient way to simply keep
-someone awake** and being broke can never strand a creature. Both are asserted.
+**The two cost-per-hour ladders died with the currency split on 2026-09-03, and were retired rather
+than repaired.** They used to read: per hour of *boost* the cost fell with the tier (1,500 → 1,000 →
+923) so the dear food was the cheaper way to stay buffed, and per hour of plain *fullness* it rose
+(375 → 625 → 750) so the cheap food stayed the efficient way to keep someone awake. **Gold per hour
+and gems per hour do not compare**, and with one food per currency there is no ladder left inside a
+currency to assert — so both sim-tests are gone, replaced by the daily bill above. What survives of
+their intent is the rule they were protecting: **Clover is the tier that must never wall.** Being
+broke can never strand a creature, so whatever number the owner lands on for gold, that one stays
+reachable on a bad day.
 
 **The save migrates by taking the larger of the pair.** `awakeUntil` was always the longer clock, so
 the surviving `fedUntil` takes `max(fedUntil, awakeUntil)` and the old field is dropped. Absent still
@@ -536,7 +591,12 @@ clocks**, which also shows a live count of how many tenders are down:
 - **Send them to sleep** empties every clock at once. It drains resting creatures too, so swapping
   one in shows it needing food.
 - **Feed everyone** is the way back, and it goes through the real `feedCritter()` purchase path
-  rather than writing the clocks, so the wake-up beat is the one a player gets.
+  rather than writing the clocks, so the wake-up beat is the one a player gets. **It tops up
+  whichever wallet the top tier spends and arms one ad if that tier is ad-fed** — a cheat that
+  quietly stops working the day a price changes currency reads as the feature being broken, which is
+  exactly what would have happened on 2026-09-03. The ad it arms is one-shot and bypasses both the
+  first-session rule and the day's cap, so the row's readout can legitimately show more impressions
+  taken than the cap allows; that is the cheat being visible, not a leak.
 
 A further pair sits in its own row above, under **Creatures**: **summon the next creature** and
 **summon all six**, each at a chosen star. Both write the arrival record through `moveIn()` — the
@@ -924,9 +984,13 @@ creature id, and an impossible gift count.
 - Does the roster become the collection spine in place of the card album? Two collections split the
   pull of both — see the decision log.
 - How many creatures per bloom? One-to-one is legible but caps the roster at 19.
-- **Should food prices scale?** They are flat, so a Honeypot stops mattering late. Scaling with the
-  creature's star is the obvious dial and it is self-balancing, but it also charges more for the
-  creature you invested most in. Decide it with the wider economy retune rather than alone.
+- **Should food prices scale? ANSWERED 2026-09-03: still no, and the currency split is why.** The
+  worry was that flat prices make a Honeypot stop mattering late, and scaling with the creature's
+  star was the obvious dial. **The ladder now scales by what a meal costs you rather than by how
+  much** — gems do not inflate the way gold does, and an ad costs the same thirty seconds on day one
+  and on day four hundred. Both upper tiers are therefore already immune to the problem scaling was
+  proposed to solve, and only Clover is exposed. Prices stay flat; if Clover reads as free late, its
+  gold number is the dial, not a multiplier.
 - **Mementos are still spent on nothing, and the answer is decorating, not feeding.** Agreed
   2026-08-18: mementos buy **decorations and skins for the Hollow**, with a piece costing keepsakes
   from *two different creatures* so decorating requires roster breadth. The art already has a memento

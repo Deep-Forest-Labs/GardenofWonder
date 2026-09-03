@@ -86,7 +86,7 @@ only evidence it is used at all, and the table attributes it to the table that h
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/flask.svg" width="26" height="26" alt="flask"> | `flask` | `0 0 24 24` | **not referenced anywhere** |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/fountain.svg" width="26" height="26" alt="fountain"> | `fountain` | `0 0 24 24` | `DATA.decor` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/gear.svg" width="26" height="26" alt="gear"> | `gear` | `0 0 24 24` | `ui-menu.js ROWS` |
-| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/gem.svg" width="26" height="26" alt="gem"> | `gem` | `0 0 24 24` | `index.html`, `ui-hollow.js`, `ui-sheet.js`, `ui.js`, `CREATURE_PAIRS` ×2, `DATA.gemLuck` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/gem.svg" width="26" height="26" alt="gem"> | `gem` | `0 0 24 24` | `index.html`, `ui-fall.js`, `ui-hollow.js`, `ui-sheet.js`, `ui.js`, `CREATURE_PAIRS` ×2, `DATA.gemLuck` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/gift.svg" width="26" height="26" alt="gift"> | `gift` | `0 0 24 24` | `ui-sheet.js`, `CREATURE_PAIRS`, `DATA.keepsakeSpeed`, `GOODS`, `ui-menu.js ROWS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/gnome.svg" width="26" height="26" alt="gnome"> | `gnome` | `0 0 24 24` | `DATA.decor` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/grid.svg" width="26" height="26" alt="grid"> | `grid` | `0 0 24 24` | `ui-sheet.js`, `DATA.upgrades` |
@@ -100,17 +100,18 @@ only evidence it is used at all, and the table attributes it to the table that h
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/menu.svg" width="26" height="26" alt="menu"> | `menu` | `0 0 24 24` | `index.html` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/moon.svg" width="26" height="26" alt="moon"> | `moon` | `0 0 24 24` | `CREATURE_PAIRS` ×2, `DATA.nightYield` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/music.svg" width="26" height="26" alt="music"> | `music` | `0 0 24 24` | `ui-sheet.js AUDIO_CHANNELS` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/mysteryBloom.svg" width="26" height="26" alt="mysteryBloom"> | `mysteryBloom` | `0 0 24 24` | `ui-sheet.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/orders.svg" width="26" height="26" alt="orders"> | `orders` | `0 0 24 24` | `index.html` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/pencil.svg" width="26" height="26" alt="pencil"> | `pencil` | `0 0 24 24` | `ui-menu.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/people.svg" width="26" height="26" alt="people"> | `people` | `0 0 24 24` | `ui-menu.js ROWS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/perfume.svg" width="26" height="26" alt="perfume"> | `perfume` | `0 0 24 24` | `CRAFT_RECIPES` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/petal.svg" width="26" height="26" alt="petal"> | `petal` | `0 0 24 24` | `ui-sheet.js`, `CARD_MOTIFS`, `CREATURE_FOOD`, `GOODS` ×5 |
-| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/plantSpot.svg" width="26" height="26" alt="plantSpot"> | `plantSpot` | `0 0 24 24` | `ui-fall.js`, `ui-winter.js`, `ui.js` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/plantSpot.svg" width="26" height="26" alt="plantSpot"> | `plantSpot` | `0 0 24 24` | `ui-fall.js`, `ui-meadow.js`, `ui-winter.js`, `ui.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/pouch.svg" width="26" height="26" alt="pouch"> | `pouch` | `0 0 24 24` | `index.html`, `ui-sheet.js`, `ui.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/quilt.svg" width="26" height="26" alt="quilt"> | `quilt` | `0 0 24 24` | `ui-winter.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/salve.svg" width="26" height="26" alt="salve"> | `salve` | `0 0 24 24` | `CRAFT_RECIPES` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/scroll.svg" width="26" height="26" alt="scroll"> | `scroll` | `0 0 24 24` | `ui-sheet.js`, `ui-menu.js ROWS` |
-| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/snow.svg" width="26" height="26" alt="snow"> | `snow` | `0 0 24 24` | `ui-winter.js` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/snow.svg" width="26" height="26" alt="snow"> | `snow` | `0 0 24 24` | `ui-sheet.js`, `ui-winter.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/sound.svg" width="26" height="26" alt="sound"> | `sound` | `0 0 24 24` | `ui-sheet.js AUDIO_CHANNELS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/sparkle.svg" width="26" height="26" alt="sparkle"> | `sparkle` | `0 0 24 24` | `ui-sheet.js`, `ui.js`, `CARD_MOTIFS`, `DATA.mutationLuck`, `DATA.upgrades` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/sprout.svg" width="26" height="26" alt="sprout"> | `sprout` | `0 0 24 24` | `index.html`, `ui-events.js`, `ui-hollow.js`, `ui-meadow.js`, `ui-sheet.js`, `ui.js`, `CARD_MOTIFS`, `DATA.boosters`, `DATA.upgrades`, `ui-hollow.js DOCK`, `ui-meadow.js DOCK` |
@@ -118,9 +119,10 @@ only evidence it is used at all, and the table attributes it to the table that h
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/swipe.svg" width="26" height="26" alt="swipe"> | `swipe` | `0 0 24 24` | `ui.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/teacup.svg" width="26" height="26" alt="teacup"> | `teacup` | `0 0 24 24` | `CARD_MOTIFS`, `CRAFT_RECIPES` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/trash.svg" width="26" height="26" alt="trash"> | `trash` | `0 0 24 24` | `ui-sheet.js` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/video.svg" width="26" height="26" alt="video"> | `video` | `0 0 24 24` | `ui-sheet.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/wax.svg" width="26" height="26" alt="wax"> | `wax` | `0 0 24 24` | `ui-sheet.js` |
 
-_54 icons, all exported to [`art/exports/icons/`](../art/exports/icons). 1 of them (`flask`) is drawn by no code in the game today — either a glyph waiting for its feature, or dead weight not worth porting._
+_56 icons, all exported to [`art/exports/icons/`](../art/exports/icons). 1 of them (`flask`) is drawn by no code in the game today — either a glyph waiting for its feature, or dead weight not worth porting._
 
 <!-- END ICON MANIFEST -->
 
