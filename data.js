@@ -614,9 +614,19 @@ const DATA = {
      q_peony_3 and q_marigold_3 name seeds genuinely unreachable in year one
      while q_lavender_3 and q_rose_3 are marginal — a quest that *sometimes*
      jams is the same bug on a timer. Each has a seeds-1–3 or verb-agnostic
-     stand-in directly under it at the same rep, holding the ladder at 777.
+     stand-in directly under it at the same rep, holding the ladder at 789.
      Their keys stay honest goals from year two on; unbench them only if the
-     unlock walls ever move below them. */
+     unlock walls ever move below them.
+
+     `needSeeds: N` is the third gate and the newest: a quest is not handed out
+     until the player OWNS N seeds. It exists because a discover quest names no
+     seed key, so the benching pass above — which was looking for seed ids —
+     walked straight past q_discover_5 while it asked for three unlock walls
+     four minutes into a save. Each discover rung now gates at qty - 1, so it
+     arrives one wall from its own goal. It may only be hung on a track
+     QUEST_RECORDS keeps (game.js), because a gated instance is DROPPED from a
+     save rather than stranded and the lifetime record is what deals it back
+     whole. */
   quests: [
     { id: 'q_tap_25',      text: 'Tap 25 times',            track: 'tap',     qty: 25,  rep: 5 },
     { id: 'q_plant_1',     text: 'Plant a seed',            track: 'plant',   qty: 1,   rep: 5 },
@@ -628,12 +638,13 @@ const DATA = {
     { id: 'q_grip_1',      text: 'Buy Quick Grip',          track: 'upgrade', key: 'holdSpeed', qty: 1, rep: 12 },
     { id: 'q_hold_20',     text: 'Hold the flower 20 times', track: 'hold',   qty: 20,  rep: 12, after: 'q_grip_1' },
     { id: 'q_plant_8',     text: 'Plant 8 seeds',           track: 'plant',   qty: 8,   rep: 12 },
-    { id: 'q_discover_5',  text: 'Discover 5 species',      track: 'discover', qty: 5,  rep: 12 },
+    { id: 'q_discover_3',  text: 'Discover 3 species',      track: 'discover', qty: 3,  rep: 12 },
+    { id: 'q_discover_5',  text: 'Discover 5 species',      track: 'discover', qty: 5,  rep: 12, needSeeds: 4 },
     { id: 'q_hive_1',      text: 'Build a hive',            track: 'hive',    qty: 1,   rep: 14, reward: { boost: 'seedrush' } },
     { id: 'q_honey_3',     text: 'Fill 3 honey jars',       track: 'honey',   qty: 3,   rep: 16 },
     { id: 'q_harvest_10',  text: 'Harvest 10 blooms',       track: 'harvest', qty: 10,  rep: 16 },
     { id: 'q_tea',         text: 'Merge a Posy',            track: 'merge',   key: 'posy',     qty: 1,  rep: 18, reward: { boost: 'golden' }, paused: true },
-    { id: 'q_discover_8',  text: 'Discover 8 species',      track: 'discover', qty: 8,  rep: 18, reward: { boost: 'golden' } },
+    { id: 'q_discover_8',  text: 'Discover 8 species',      track: 'discover', qty: 8,  rep: 18, needSeeds: 7, reward: { boost: 'golden' } },
     { id: 'q_charm_1',     text: 'Buy Lucky Charm',         track: 'upgrade', key: 'critChance', qty: 1, rep: 20 },
     { id: 'q_crit_1',      text: 'Land a crit',             track: 'crit',    qty: 1,   rep: 20, after: 'q_charm_1' },
     { id: 'q_rose_3',      text: 'Harvest 3 roses',         track: 'harvest', key: 'rose',     qty: 3,  rep: 20, paused: true },
@@ -657,7 +668,7 @@ const DATA = {
     { id: 'q_marigold_3',  text: 'Harvest 3 marigolds',     track: 'harvest', key: 'marigold', qty: 3,  rep: 42, paused: true },
     { id: 'q_harvest_30',  text: 'Harvest 30 blooms',       track: 'harvest', qty: 30,  rep: 42 },
     { id: 'q_harvest_40',  text: 'Harvest 40 blooms',       track: 'harvest', qty: 40,  rep: 46 },
-    { id: 'q_discover_12', text: 'Discover 12 species',     track: 'discover', qty: 12, rep: 50 }
+    { id: 'q_discover_12', text: 'Discover 12 species',     track: 'discover', qty: 12, rep: 50, needSeeds: 11 }
   ],
 
   dailies: [
@@ -697,7 +708,8 @@ const DATA = {
       lines: [
         'Put the game down and come back, and the music carries on quietly from where it left off instead of arriving all at once.',
         'Rain and thunderstorms are half as loud now — the weather sits behind the garden instead of over it, and the thunder is as loud as it ever was.',
-        'The dotted square with the plus that marks an empty spot is the same everywhere now — the fall bed and the wild meadow match your garden.'
+        'The dotted square with the plus that marks an empty spot is the same everywhere now — the fall bed and the wild meadow match your garden.',
+        'Finding your third flower is a goal now, and the bigger ones wait until you’re close instead of sitting in your list from the first minutes.'
       ]
     },
     {

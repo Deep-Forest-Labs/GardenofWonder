@@ -1649,6 +1649,11 @@ const Game = (() => {
     DATA.seeds.forEach((s, i) => { if (seedUnlocked(s.id)) max = i; });
     return max;
   }
+  /* How many seeds the player OWNS. Not highestUnlockedSeedIndex() + 1 —
+     skipping ahead is allowed, so one expensive seed would read as seven. */
+  function unlockedSeedCount() {
+    return DATA.seeds.reduce((n, s) => n + (seedUnlocked(s.id) ? 1 : 0), 0);
+  }
   /* The first (cheapest) seed that is not yet unlocked — ladder order is price
      order by construction, so "lowest-priced locked seed" is just the first
      index seedUnlocked() refuses. -1 once every seed is owned. */
@@ -1918,6 +1923,16 @@ const Game = (() => {
     return !!(def && def.paused);
   }
 
+  /* A quest whose goal is priced past where the player is. `needSeeds` counts
+     seeds OWNED, so a discover rung arrives one unlock wall from its own goal
+     instead of three — the failure `paused` could not catch, because a quest
+     that names no seed key slipped a filter looking for seed ids. It may only
+     be hung on a track QUEST_RECORDS keeps: a gated instance is dropped from a
+     save rather than stranded, and the record is what deals it back whole. */
+  function questGated(def) {
+    return !!(def && def.needSeeds && unlockedSeedCount() < def.needSeeds);
+  }
+
   /* What a quest is already owed the moment it is dealt. Where the game keeps a
      lifetime record of a track, that record is the honest answer — the Almanac
      milestones have always read it that way, and a discover quest dealt at
@@ -1958,6 +1973,7 @@ const Game = (() => {
     DATA.quests.forEach((def) => {
       if (state.quests.active.length >= 3) return;
       if (questPaused(def)) return;
+      if (questGated(def)) return;
       if (done.has(def.id) || have.has(def.id)) return;
       if (def.after && !done.has(def.after)) return;
       state.quests.active.push({ id: def.id, progress: 0 });
@@ -1975,13 +1991,17 @@ const Game = (() => {
       state.quests.daily = { id: null, progress: 0, day: '', claimed: false };
     }
     if (typeof state.rep !== 'number' || !(state.rep >= 0)) state.rep = 0;
-    // Drop instances whose definition no longer exists, and instances of a quest
-    // that has since been paused. Either one can never be claimed, so it holds
-    // one of the three slots forever — and the strip only falls through to the
-    // daily once the active list is empty, so a dead entry keeps the daily off it.
+    // Drop instances whose definition no longer exists, whose quest has since
+    // been paused, or whose gate has not opened yet. All three hold one of the
+    // three slots against a player who cannot clear them — and the strip only
+    // falls through to the daily once the active list is empty, so a dead entry
+    // keeps the daily off it. Dropping a gated one loses nothing: needSeeds may
+    // only sit on a track QUEST_RECORDS keeps, so questFloor() deals it back at
+    // its lifetime record the moment the gate opens. No migration flag, and
+    // re-running this is idempotent.
     state.quests.active = state.quests.active.filter((q) => {
       const def = q && questById(q.id);
-      return !!def && !questPaused(def);
+      return !!def && !questPaused(def) && !questGated(def);
     });
     const daily = state.quests.daily;
     const ddef = daily.id ? questById(daily.id) : null;

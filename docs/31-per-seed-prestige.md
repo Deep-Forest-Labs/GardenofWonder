@@ -187,7 +187,7 @@ ones that must be decided rather than merely respected:
 | Decision needed | The shape of the answer |
 | --- | --- |
 | Quest ladder on run 2+ | `quests.done` never resets and badge quests cannot re-fire, so a season's re-climb has almost no reputation fuel — the ladder needs a repeatable seasonal form, or season level needs a non-quest source |
-| Meadow-dependent quests during the hold | `q_hive_1` + three honey quests are 114 of the ladder's 777 rep; if the meadow is out of the run-1 flow they jam the strip — pause them with same-rep stand-ins, the documented pattern |
+| Meadow-dependent quests during the hold | `q_hive_1` + three honey quests are 114 of the ladder's 789 rep; if the meadow is out of the run-1 flow they jam the strip — pause them with same-rep stand-ins, the documented pattern |
 | First-run content | Daisy and tulip carry no verbs and attract no creature, so run 1 has no adjacency decision and no pet until after the wall — move one verb and one attraction (Pip is the obvious one) into the starter pair, or accept a barer first run deliberately |
 | Bloom Mastery | Absorbed: the trees are the bought ladder, mastery is the played one; running both stacks two per-seed yield ladders on a product of seven terms. Doc 30's ruling stands — mastery is bounded, resets at the turn, converts |
 | Upgrade application | Per-seed multipliers apply at harvest time via the `masteryMult` pattern and in `passiveIncomeRate()` in the same commit — never by editing `seed.yield`, or offline silently diverges from online |

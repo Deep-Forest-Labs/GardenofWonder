@@ -468,7 +468,7 @@ values, and deep tuning is phase 4's.
 - **Levels 10, 12, 15** pay one copy each — the taper.
 - **After 15 the level faucet is done**, and quests, the Almanac and the Stand carry it.
 - **The third and fourth quests a player finishes** now pay too: *Harvest a bloom* → Golden Popups
-  ×2, *Harvest 5 daisies* → Bloom Burst ×2. Rep values are untouched, so the ladder still totals 777.
+  ×2, *Harvest 5 daisies* → Bloom Burst ×2. Rep values are untouched, so the ladder still totals 789.
 
 **Why the short boosters are front-loaded.** A boost already running cannot be refreshed
 (`activateBoost()` refuses), so a bag of half-hour auras is a bag the first session cannot spend.

@@ -1842,7 +1842,7 @@ top of [10-decision-log.md](10-decision-log.md); the five-minute phone check is 
 **THE ONE RULING THAT CHANGED, and why it matters to whoever reads this next.** Ruling 4 gave
 swipe-down to a placeholder gate. **Swipe-down is the Wild Meadow's only door in the game** — the
 gate would have stranded the room, its hives, its keepers and four quests worth 114 of the ladder's
-777 reputation. Three options went to the owner and **the owner chose to fix only the inverted half
+789 reputation. Three options went to the owner and **the owner chose to fix only the inverted half
 and let the gate wait**. Do not re-propose the gate as an easy win: the blocker is that the meadow
 needs a second door first. Recorded in
 [11-known-issues.md](11-known-issues.md#what-phase-38-knowingly-left-2026-08-30).
@@ -2335,9 +2335,9 @@ panel in `ui-sheet.js` (port the drag from `tools/merge-spike.html`, and watch t
 fling-to-dismiss fighting it) and the dock swap. **Its three quests are paused as of 2026-08-19** —
 `q_tea`, `q_perfume` and `q_craft_2` were being handed out for a board that does not exist, so they
 sat in the strip uncompletable. They keep their ids and their tuning, and three live stand-ins
-(`q_discover_8`, `q_hold_60`, `q_honey_15`) carry their 98 of the ladder's 777 reputation. **If the
+(`q_discover_8`, `q_hold_60`, `q_honey_15`) carry their 98 of the ladder's 789 reputation. **If the
 bench ships a screen, drop the `paused` flags and retire the stand-ins together** — one without the
-other moves the ladder off 777 ([21-potting-bench.md](21-potting-bench.md#quests)).
+other moves the ladder off 789 ([21-potting-bench.md](21-potting-bench.md#quests)).
 
 **The card album vs the creature roster is an open decision.** There are now two collection systems,
 and splitting Completion across two unrelated albums halves the pull of both. Creatures are coupled
@@ -3048,6 +3048,18 @@ daily off the strip for the life of the save. `paused: true` on a definition is 
 out, stripped from an existing save by `ensureProgression()`, definition and tuning kept. Anything
 that counts quests — the panel's "N left", the suite's level-17 assertion — **must filter to live
 quests**, or it will report a ladder complete that no player can climb.
+
+**A quest that becomes GATED is a third case, and `ensureProgression()` had never seen it
+(2026-09-03).** It dropped a definition that vanished and one that was paused; `needSeeds: N` —
+"not until the player owns N seeds" — makes a definition that is present, unpaused and still
+unclearable. Adding the gate to `fillActive()` alone therefore fixes nothing for anyone already
+playing: every existing save keeps the quest in its slot, exactly as jammed as before, because
+nothing ever re-examines an instance already dealt. The half-fix is invisible in a suite that only
+tests hand-out. **And the rule that comes with it: a gate that DROPS a live instance may only be
+hung on a track with a lifetime record**, or it destroys progress on load. On the discover track
+`questFloor()` deals the quest back whole the moment the gate opens, which is the only reason the
+drop needs no migration flag. See
+[16-progression-and-quests.md](16-progression-and-quests.md#gating-a-quest).
 
 **A visual state must never depend on a keyframe having run.** Already recorded for the pack badge,
 and it caught the sleeping Zs anyway — they started at `opacity: 0` and faded in, so they were

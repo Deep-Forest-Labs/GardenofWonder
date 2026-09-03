@@ -375,7 +375,7 @@ game's second core screen, not a shed. That is a bigger decision than it current
 
 ### 7. The three paused bench quests and their three stand-ins — resolve. **Low stakes, do it with 5**
 
-They are stable and documented, but they are 98 of the ladder's 777 reputation held in a state that
+They are stable and documented, but they are 98 of the ladder's 789 reputation held in a state that
 needs explaining every time anyone reads the ladder. Whatever happens to the bench decides them.
 
 ---

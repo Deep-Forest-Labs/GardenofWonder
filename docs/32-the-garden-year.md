@@ -114,7 +114,7 @@ order:
 
 1. **The meadow's way in first.** `UI.enterMeadow()` had exactly one caller in the whole repo (the
    map's dive) and the meadow's only exit returned to the map, so retiring the map first would have
-   stranded a built room and 114 of the ladder's 777 reputation with it. The swipe shipped, and the
+   stranded a built room and 114 of the ladder's 789 reputation with it. The swipe shipped, and the
    meadow's exit came home, while the map was still there.
 2. **Then the Big Five**, which is where the World button went.
 3. **Then the deletion.**

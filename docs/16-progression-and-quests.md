@@ -206,6 +206,7 @@ Quests are data. Put them in `DATA.quests` in `data.js`, in ladder order.
 | `rep` | Reputation paid |
 | `reward` | Optional `{ credits, gems, boost }` |
 | `after` | Optional quest id that must be in `done` first |
+| `needSeeds` | Optional count of seeds the player must OWN before it is handed out |
 
 ### The counters
 
@@ -232,7 +233,7 @@ easiest way to get this feature wrong.
 | `merge` | a bench merge completes | `key` = chain id — added 2026-08-16 |
 | `bank` | an item is pulled off the bench into stock | Added 2026-08-16 |
 | `rarity` | harvest at rarity ≥ `key` | Rare / Epic / Legendary |
-| `discover` | first-ever harvest of a seed | Three ladder rungs use it. **Dealt at the lifetime count**, not at zero — see the record table below |
+| `discover` | first-ever harvest of a seed | Four ladder rungs use it. **Dealt at the lifetime count**, not at zero — see the record table below; the three long ones are gated on seeds owned — see Gating a quest |
 
 Counters live on the active quest instance, not globally, so a quest that becomes active later
 starts from zero. This is intentional: a quest should describe something you go *do*.
@@ -267,19 +268,23 @@ These are design constraints, not suggestions. A quest must:
 
 ### The starting ladder
 
-Thirty-six quests authored in `DATA.quests`, of which **thirty-three are live** — the other three
+Forty-one quests authored in `DATA.quests`, of which **thirty-four are live** — the other seven
 are paused (below). Payouts climb from 5 to 50 so the live ladder sums to
-**777**, which still lands on level 17 (Eternal Crown). Generic "buy an upgrade" rows were replaced
+**789**, which still lands on level 17 (Eternal Crown). Generic "buy an upgrade" rows were replaced
 with a buy-then-feel tutorial for each early tap upgrade, including Combo Coil (the follow-up is
 "Reach combo 55", which needs the cap the badge just bought). Two long-tail filler rows were
 dropped to keep the total near the seed gate.
 
 Plot unlocks are not quests. **Discover quests were originally kept off the ladder** — the Almanac
 milestones already pay reputation for distinct species, and stacking a quest on the same beat
-double-pays. Three are on it now (`q_discover_5`, `q_discover_8`, `q_discover_12`), each added as a
-replacement for a quest that had to come off, at that quest's exact reputation — so the double-pay
-happens but the 777 total does not move, which is the number the rule was protecting. Treat the
-double-pay as the price of a replacement rung, not as a licence to add discover quests freely.
+double-pays. Four are on it now. Three (`q_discover_5`, `q_discover_8`, `q_discover_12`) were each
+added as a replacement for a quest that had to come off, at that quest's exact reputation — so the
+double-pay happens but the total does not move, which is the number the rule was protecting. The
+fourth, `q_discover_3`, is **not** a replacement: it was added 2026-09-03 to un-jam the strip, at
+the rung `q_discover_5` used to hold and carrying its 12 reputation, which is what moved the live
+ladder from 777 to 789. Three species is below the first Almanac milestone (five), so it adds no
+new double-pay. Treat the double-pay as the price of a replacement rung, and `q_discover_3` as the
+price of a jam — neither is a licence to add discover quests freely.
 Snapshot goals ("plant 4 plots at once", "own 5 badges", "fill a hive") stay out because counters
 start at zero when a quest becomes active.
 
@@ -295,36 +300,37 @@ start at zero when a quest becomes active.
 | 8 | `q_grip_1` | Buy Quick Grip | upgrade | holdSpeed | 1 | 12 |
 | 9 | `q_hold_20` | Hold the flower 20 times | hold | | 20 | 12 |
 | 10 | `q_plant_8` | Plant 8 seeds | plant | | 8 | 12 |
-| 11 | `q_discover_5` | Discover 5 species | discover | | 5 | 12 |
-| 12 | `q_hive_1` | Build a hive | hive | | 1 | 14 |
-| 13 | `q_honey_3` | Fill 3 honey jars | honey | | 3 | 16 |
-| 14 | `q_harvest_10` | Harvest 10 blooms | harvest | | 10 | 16 |
-| 15 | ~~`q_tea`~~ | ~~Merge a Posy~~ | merge | posy | 1 | 18 | **paused** |
-| 15b | `q_discover_8` | Discover 8 species | discover | | 8 | 18 | stands in for `q_tea` |
-| 16 | `q_charm_1` | Buy Lucky Charm | upgrade | critChance | 1 | 20 |
-| 17 | `q_crit_1` | Land a crit | crit | | 1 | 20 |
-| 18 | ~~`q_rose_3`~~ | ~~Harvest 3 roses~~ | harvest | rose | 3 | 20 | **paused** — behind the 338K unlock wall |
-| 18b | `q_daisy_15` | Harvest 15 daisies | harvest | daisy | 15 | 20 | stands in for `q_rose_3` |
-| 19 | ~~`q_lavender_3`~~ | ~~Harvest 3 lavender~~ | harvest | lavender | 3 | 22 | **paused** — marginal in year one |
-| 19b | `q_tulip_8` | Harvest 8 tulips | harvest | tulip | 8 | 22 | stands in for `q_lavender_3` |
-| 20 | `q_rare` | Harvest a Rare bloom | rarity | rare | 1 | 24 |
-| 21 | `q_star_1` | Buy Star Strike | upgrade | critMult | 1 | 24 |
-| 22 | ~~`q_perfume`~~ | ~~Merge a Bouquet~~ | merge | bouquet | 1 | 32 | **paused** |
-| 22b | `q_hold_60` | Hold the flower 60 times | hold | | 60 | 32 | stands in for `q_perfume` |
-| 23 | `q_honey_8` | Fill 8 honey jars | honey | | 8 | 36 |
-| 24 | `q_epic` | Harvest an Epic bloom | rarity | epic | 1 | 40 |
-| 25 | `q_coil_1` | Buy Combo Coil | upgrade | comboMeter | 1 | 28 |
-| 26 | `q_combo_55` | Reach combo 55 | combo | | 55 | 30 |
-| 27 | `q_harvest_25` | Harvest 25 blooms | harvest | | 25 | 42 |
-| 28 | `q_plant_20` | Plant 20 seeds | plant | | 20 | 44 |
-| 29 | ~~`q_peony_3`~~ | ~~Harvest 3 peonies~~ | harvest | peony | 3 | 46 | **paused** — unreachable in year one |
-| 29b | `q_plant_30` | Plant 30 seeds | plant | | 30 | 46 | stands in for `q_peony_3` |
-| 30 | ~~`q_craft_2`~~ | ~~Bank 5 bench goods~~ | bank | | 5 | 48 | **paused** |
-| 30b | `q_honey_15` | Fill 15 honey jars | honey | | 15 | 48 | stands in for `q_craft_2` |
-| 31 | ~~`q_marigold_3`~~ | ~~Harvest 3 marigolds~~ | harvest | marigold | 3 | 42 | **paused** — unreachable in year one |
-| 31b | `q_harvest_30` | Harvest 30 blooms | harvest | | 30 | 42 | stands in for `q_marigold_3` |
-| 32 | `q_harvest_40` | Harvest 40 blooms | harvest | | 40 | 46 |
-| 33 | `q_discover_12` | Discover 12 species | discover | | 12 | 50 |
+| 11 | `q_discover_3` | Discover 3 species | discover | | 3 | 12 |
+| 12 | `q_discover_5` | Discover 5 species | discover | | 5 | 12 | `needSeeds: 4` |
+| 13 | `q_hive_1` | Build a hive | hive | | 1 | 14 |
+| 14 | `q_honey_3` | Fill 3 honey jars | honey | | 3 | 16 |
+| 15 | `q_harvest_10` | Harvest 10 blooms | harvest | | 10 | 16 |
+| 16 | ~~`q_tea`~~ | ~~Merge a Posy~~ | merge | posy | 1 | 18 | **paused** |
+| 16b | `q_discover_8` | Discover 8 species | discover | | 8 | 18 | stands in for `q_tea`; `needSeeds: 7` |
+| 17 | `q_charm_1` | Buy Lucky Charm | upgrade | critChance | 1 | 20 |
+| 18 | `q_crit_1` | Land a crit | crit | | 1 | 20 |
+| 19 | ~~`q_rose_3`~~ | ~~Harvest 3 roses~~ | harvest | rose | 3 | 20 | **paused** — behind the 338K unlock wall |
+| 19b | `q_daisy_15` | Harvest 15 daisies | harvest | daisy | 15 | 20 | stands in for `q_rose_3` |
+| 20 | ~~`q_lavender_3`~~ | ~~Harvest 3 lavender~~ | harvest | lavender | 3 | 22 | **paused** — marginal in year one |
+| 20b | `q_tulip_8` | Harvest 8 tulips | harvest | tulip | 8 | 22 | stands in for `q_lavender_3` |
+| 21 | `q_rare` | Harvest a Rare bloom | rarity | rare | 1 | 24 |
+| 22 | `q_star_1` | Buy Star Strike | upgrade | critMult | 1 | 24 |
+| 23 | ~~`q_perfume`~~ | ~~Merge a Bouquet~~ | merge | bouquet | 1 | 32 | **paused** |
+| 23b | `q_hold_60` | Hold the flower 60 times | hold | | 60 | 32 | stands in for `q_perfume` |
+| 24 | `q_honey_8` | Fill 8 honey jars | honey | | 8 | 36 |
+| 25 | `q_epic` | Harvest an Epic bloom | rarity | epic | 1 | 40 |
+| 26 | `q_coil_1` | Buy Combo Coil | upgrade | comboMeter | 1 | 28 |
+| 27 | `q_combo_55` | Reach combo 55 | combo | | 55 | 30 |
+| 28 | `q_harvest_25` | Harvest 25 blooms | harvest | | 25 | 42 |
+| 29 | `q_plant_20` | Plant 20 seeds | plant | | 20 | 44 |
+| 30 | ~~`q_peony_3`~~ | ~~Harvest 3 peonies~~ | harvest | peony | 3 | 46 | **paused** — unreachable in year one |
+| 30b | `q_plant_30` | Plant 30 seeds | plant | | 30 | 46 | stands in for `q_peony_3` |
+| 31 | ~~`q_craft_2`~~ | ~~Bank 5 bench goods~~ | bank | | 5 | 48 | **paused** |
+| 31b | `q_honey_15` | Fill 15 honey jars | honey | | 15 | 48 | stands in for `q_craft_2` |
+| 32 | ~~`q_marigold_3`~~ | ~~Harvest 3 marigolds~~ | harvest | marigold | 3 | 42 | **paused** — unreachable in year one |
+| 32b | `q_harvest_30` | Harvest 30 blooms | harvest | | 30 | 42 | stands in for `q_marigold_3` |
+| 33 | `q_harvest_40` | Harvest 40 blooms | harvest | | 40 | 46 |
+| 34 | `q_discover_12` | Discover 12 species | discover | | 12 | 50 | `needSeeds: 11` |
 
 `q_tap_50` has `after: q_power_1`, `q_hold_20` after `q_grip_1`, `q_crit_1` after `q_charm_1`,
 `q_combo_55` after `q_coil_1`. Hold ticks are the repeating interval of a held press, not the
@@ -359,21 +365,67 @@ Their ids are kept on purpose, against the rule above — but the orphan argumen
 time is what `ensureProgression()` now handles directly, so pausing is safe where deleting was not.
 Each has a **live stand-in directly under it at the same rung and the same reputation**
 (`q_discover_8`, `q_hold_60`, `q_honey_15`), because the ladder is what carries a player to level 17
-and benching 98 of its 777 reputation would have stranded them three levels short of Eternal Crown.
+and benching 98 of its 789 reputation would have stranded them three levels short of Eternal Crown.
 A sim-test fails if a live quest appears on the `merge` or `bank` track before `ui-sheet.js` grows a
 bench panel — the same guard shape as the sell track. **Drop the `paused` flags the day the bench
-gets a screen**, and retire the three stand-ins with them if the total needs holding at 777.
+gets a screen**, and retire the three stand-ins with them if the total needs holding at 789.
 
 **The `sell` track carries no quests, deliberately.** `q_sell_5`, `q_sell_10` and `d_sell_3` were
 removed 2026-08-15: `sell()` only credits the track for `kind === 'flower'`, and `stockRow()` is
 only ever called for honey, wax and crafted goods, so no player could sell a flower. Because
 `fillActive()` caps at three and `stripQuest()` then rendered `active[0]`, the quest strip jammed
 permanently at "Sell 5 flowers 0/5" once it reached the front. The ladder's two slots became
-`q_discover_5` and `q_discover_12`, at the same reputation, which keeps the total at 777 — the
+`q_discover_5` and `q_discover_12`, at the same reputation, which keeps the total at 789 — the
 suite asserts the ladder still reaches Eternal. **Do not add a sell quest until the UI can sell a
 flower**; a sim-test now fails if one appears before then. When the Market ships
 ([13-order-system.md](13-order-system.md)), the track is ready and `Game.sell('flower', …)` already
 works.
+
+### Gating a quest
+
+`needSeeds: N` on a definition delays it until the player **owns N seeds**. It is never handed out
+by `fillActive()` while `unlockedSeedCount()` is below N, and `ensureProgression()` drops any
+instance of it out of a save's `quests.active` on load — the third case beside a definition that
+vanished and one that was paused. `questGated(def)` in `game.js` is the single predicate, written
+to read beside `questPaused(def)` in both places; neither is exported, like the pausing predicate
+beside it. `unlockedSeedCount()` counts seeds **owned**, not `highestUnlockedSeedIndex() + 1` —
+skipping ahead is allowed, so one expensive seed would otherwise read as seven.
+
+**It may only be hung on a track `QUEST_RECORDS` keeps.** This is the one hard constraint, and it
+is what makes gating different from pausing: pausing benches a quest nobody could start, while
+gating **drops a live instance** out of a save. That is lossless only because the discover track
+keeps a lifetime record — `questFloor()` deals the quest back at that record the moment the gate
+opens, so nothing a player did is thrown away and no migration flag is needed. Hang `needSeeds` on
+a track with no record and a player silently loses progress on load. A sim-test asserts that every
+`needSeeds` in `DATA.quests` sits on a recorded track.
+
+**The rule the three gated rungs use is `needSeeds = qty − 1`**, so a discover quest arrives one
+unlock wall from its own goal instead of three, six or ten: `q_discover_5` gates at 4, `q_discover_8`
+at 7, `q_discover_12` at 11. `q_discover_3` is ungated — its gate would be 2, which `freeSeeds: 2`
+satisfies on every save, and a field that can never be false is noise.
+
+**What makes the gate safe against eating a finished quest:** `plant()` refuses a seed the player
+has not bought, so discovered ≤ owned always, and `needSeeds ≤ qty` therefore guarantees a gated
+instance can never be one that is finished but unclaimed. A sim-test asserts `needSeeds < qty` on
+every gated rung; do not weaken it.
+
+**A gated quest is still counted.** The Quests panel's "N left" and the suite's level-17 assertion
+both filter on `paused` only, and that is correct — gating is a delay, not a bench. The rung will
+be dealt and claimed, so counting it is the honest number, and adding `needSeeds` to those filters
+would under-report the ladder in mirror image.
+
+**One ordering fact, and it is not a bug.** `migrateYear()` grandfathers a legacy save's seed
+unlocks *after* `ensureProgression()` runs, so on the single migrating load the gate sees only the
+two free seeds and drops a gated quest the grandfather is about to make eligible. The next
+`stripQuest()` calls `fillActive()` and deals it straight back at its record, so no player ever
+sees it. **Do not reorder those calls to "fix" it** — `backfillDiscovered()` has to stay ahead of
+`ensureProgression()` or a migrated save spends a load with the strip and the Almanac disagreeing,
+and a sim-test holds that ordering.
+
+**Why `paused` could not have caught this.** The 2026-08-29 benching pass filtered on quests that
+*name* a seed key, and a discover quest names none — it just needs three of them. `q_discover_5`
+walked straight through and was dealt four minutes into a fresh save asking for 712,500 gold of
+unlocks, against a year that earns ~370–410K.
 
 ### The daily quest
 
@@ -390,6 +442,10 @@ earlier in the day. An unclaimed daily expires at midnight; the ladder never exp
 ### Sim-test coverage
 
 - `repToNext` matches the table; level derives correctly from rep at boundaries.
+- A discover quest is never dealt more than one unlock wall short of its goal, and every
+  `needSeeds` sits on a recorded track and below its own `qty`.
+- A gated quest already sitting in a save's slot is dropped on load, the slot refilled with
+  something clearable, and the quest re-dealt at its lifetime record when the gate opens.
 - A `harvest` event increments only matching quests.
 - Hold ticks increment `hold` and not a manual tap; a crit tap increments `crit`; combo quests
   track peak combo, not tap count.
@@ -439,7 +495,7 @@ Ladder gifts, reshaped 2026-08-30 so the first days are rich and the curve taper
 - **Quests, the seven live ones:** harvest a bloom → Golden Popups ×2, harvest 5 daisies → Bloom
   Burst ×2, hive → Seed Rush, discover 8 → Golden Popups, Rare → Fortune Aura, Epic → Fortune Aura,
   combo 55 → Bloom Burst. (An eighth, Flower Tea → Golden Popups, is authored but `paused`.)
-  **Adding a reward changes no rep, so the ladder still totals 777.**
+  **Adding a reward changes no rep, so the ladder still totals 789.**
 - **Levels 2 / 3 / 4 / 5 / 6 / 7 / 8** grant Bloom Burst ×2, Golden Popups ×2, Seed Rush, Bloom
   Burst ×2, Fortune Aura, Golden Popups ×2, Seed Rush — then **10 / 12 / 15** grant one each of
   Bloom Burst, Fortune Aura, Golden Popups, and the faucet is finished.
@@ -514,9 +570,11 @@ Eternal Crown at level 17, so the last rung is a late-game gift rather than a da
   is fine. Already-reached unclaimed milestones then pay, so a returning garden with five
   species in the pantry is not locked out of the 5-rung forever.
 - Discover quests were originally kept off the ladder. Milestones occupy that payout; a quest on
-  the same beat double-pays. The three that are on it (`q_discover_5`, `q_discover_8`,
+  the same beat double-pays. Four are on it. Three (`q_discover_5`, `q_discover_8`,
   `q_discover_12`) each replaced a quest that had to be removed or paused, at the same reputation,
-  so the 777 total the rule protects is unchanged.
+  so the total the rule protects was unchanged. The fourth, `q_discover_3`, was added to un-jam the
+  strip and did move it, 777 → 789; three species is below the first milestone's five, so it
+  double-pays nothing.
 
 **Sim-test:** discovered count never decreases when flowers are spent; a milestone pays once;
 backfill from remaining flowers grants already-reached milestones on first load only.

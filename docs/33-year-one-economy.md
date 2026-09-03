@@ -298,25 +298,30 @@ ladder re-authors levels 18–40, one grant each, rotating categories per the no
 cell, gem pinches. Sketch lives here until built; the rule that matters: **every level grants
 something, and no two adjacent levels grant the same category.**
 
-Year one's quest ladder keeps its 777 total and its tutorial role, **but four quests collide
+Year one's quest ladder keeps its 789 total and its tutorial role, **but four quests collide
 with the unlock walls and must be re-keyed in slice A**: `q_peony_3` and `q_marigold_3` name
 seeds genuinely unreachable in year one, and `q_lavender_3` and `q_rose_3` are marginal at the
 gated ~370–410K (the sim reaches lavender only on a perfect year) — all four re-key, because a
 quest that *sometimes* jams is the same bug on a timer — left
 alone they are the documented strip-jam (the sell-quest failure, third time around). Re-key each
 to a seeds-1–3 or verb-agnostic goal at the same reputation, the established stand-in pattern,
-and hold the total at 777. **Done in phase 1:** the four are `paused: true` with stand-ins
+and hold the total at 789. **Done in phase 1:** the four are `paused: true` with stand-ins
 directly under each — `q_daisy_15` (20), `q_tulip_8` (22), `q_harvest_30` (42), `q_plant_30`
-(46) — and a sim-test holds the live ladder at 777. The keyed discover quests
+(46) — and a sim-test holds the live ladder at 789. The keyed discover quests
 (`q_discover_5/8/12`) stay live on purpose: `discovered` is lifetime and quests survive the
 Turn, so they resolve across years rather than jamming forever — but `q_discover_5` will sit
 in a slot from mid-year-one until year two's rose unlock, which is worth an eye at the first
-playtest. The four meadow-dependent quests (`q_hive_1`, `q_honey_3/8/15`,
+playtest. **The playtest happened, and the eye was the owner's (2026-09-03).** It was worse than
+this line predicted: `q_discover_5` was dealt about four minutes in, not mid-year, so it held a
+slot for ~1.8 years of a garden's whole income. The answer was a `needSeeds` gate on all three
+rungs — dealt only once the player owns `qty − 1` seeds — plus a new `q_discover_3` rung at the
+Bluebell wall, which is what moved the ladder to 789. See
+[16-progression-and-quests.md](16-progression-and-quests.md#gating-a-quest). The four meadow-dependent quests (`q_hive_1`, `q_honey_3/8/15`,
 114 rep) stay live because the meadow stays reachable ~~from Summer's edge~~ from day one.
 **Corrected 2026-08-29 while building phase 3: the meadow is not on Summer's edge.** Its only door
 is the map's dive — `UI.enterMeadow()` has exactly one caller in the repo, `ui-map.js:257`, the same
 correction doc 32 carries. These four are live today *because the map is*, so retiring the map
-without first giving the meadow a door takes **114 rep out of a 777-rep ladder** as well as
+without first giving the meadow a door takes **114 rep out of a 789-rep ladder** as well as
 stranding the room. The re-check this line asks for is therefore due now, not later — see
 [11-known-issues.md](11-known-issues.md).
 

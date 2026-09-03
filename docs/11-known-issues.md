@@ -28,6 +28,14 @@ a registry of 55; and `#12` has just added a fourth room to `plantSpot`'s Used-b
 Deliberately not run inside a scoped fix round: it writes a Unity-facing asset and three unrelated
 doc rows. Its footprint was measured — those are the whole of it.
 
+**`q_discover_3` will often lead the goal strip, at 2/3 = 0.667 against neighbours at 0.00 — and
+that is the signpost working, not the jam returning.** `stripLeader()` ranks nearest-to-done, so a
+two-thirds-full rung wins the strip, exactly as `q_discover_5` used to. The difference is the whole
+point: the goal now names a wall the player can reach — one Bluebell at 150,000, inside a year at
+~40% of its income — and it clears the moment that Bluebell is first harvested, rather than sitting
+there for three walls of gold. Expect it to be re-reported as a regression by anyone reading the
+strip alone; the number to check is what the goal costs, not how long it leads.
+
 **The one bar already scheduled in the instant before the page froze still fires on the way back.**
 `#23` stops the three schedulers on a frozen context, but a note booked a moment earlier is already
 on the AudioContext's own queue and plays when the context resumes. It is one chord against the 81
@@ -234,7 +242,7 @@ reach no data file.
 **The placeholder gate on swipe-down was not built, and the idea is dropped rather than deferred.**
 Ruling 4 gave swipe-down to a hedge-gate placeholder — and swipe-down is the Wild Meadow's *only*
 door in the game. Building it would have stranded the room, its hives, its keepers and four quests
-worth 114 of the ladder's 777 reputation, on top of the strip-jam trap. **The owner ruled mid-round
+worth 114 of the ladder's 789 reputation, on top of the strip-jam trap. **The owner ruled mid-round
 that the meadow keeps the direction and the gate waits for a round that gives it somewhere else to
 live.** Recorded here so the next agent does not re-propose it as an easy win: the blocker is not the
 gate, it is that the meadow needs a second door first.
@@ -410,16 +418,14 @@ art is the owner's to re-export; flagged rather than re-encoded.
 
 ## What phase 3.6 knowingly left (2026-08-30)
 
-**The discover quest leads the goal strip the moment it is dealt, and cannot be advanced.** This is
-the backfill and the nearest-to-done rule meeting each other: `q_discover_5` arrives at **2/5 =
-0.40** while `q_hive_1` and `q_honey_3` sit at 0.00, so it is genuinely the closest to done — and on
-a fresh save the third species is behind Bluebell's 150,000 wall, so nothing the player does moves
-it. It is **no longer a permanent jam**: any quest that finishes jumps the strip from anywhere, and
-claiming re-opens the ranking. But between claims the strip shows a goal you cannot act on. Both
-halves are the owner's ruling working as specified, so neither was overridden. **The two cheapest
-fixes are already on the menu above**: re-cost the first rung to `discover 3`, reachable at the first
-unlock, which turns the jam into a signpost for the wall itself; or point the track at
-`state.year.stats.speciesSeen`, which makes breadth a seasonal goal instead of a lifetime one.
+**~~The discover quest leads the goal strip the moment it is dealt, and cannot be advanced.~~** —
+FIXED 2026-09-03, by the first of the two fixes this paragraph named. `q_discover_3` is a new rung
+at the Bluebell wall, and `needSeeds` gates `q_discover_5` / `q_discover_8` / `q_discover_12` on
+seeds owned so each arrives one unlock wall from its own goal instead of three, six or ten. The
+evidence it was written from stands: `q_discover_5` did arrive at 2/5 = 0.40 against neighbours at
+0.00, and on a fresh save its third species was behind Bluebell's 150,000 wall. The second fix on
+the menu — pointing the track at `state.year.stats.speciesSeen` — was **not** taken and is still
+live below, as the larger change it always was.
 
 **Pausing the Stand's standing also holds the Stand at a lower tier, which costs real gold.**
 `standTier()` reads `state.rep`, and the tier multiplier runs 30 → 225 — so the pause does not
@@ -463,7 +469,7 @@ DOWN goes out to the meadow** — the finger drags the world rather than pointin
 The Hollow survives that easily — a player who never swipes still sees its creatures standing in the
 garden, and the Feed panel and Loadout are reachable the moment they do. **The meadow has nothing of
 the kind.** There is no button, no tab and no label pointing at it, and it holds the hives, the
-keepers, the Honey Shelf and four quests worth **114 of the ladder's 777 reputation**
+keepers, the Honey Shelf and four quests worth **114 of the ladder's 789 reputation**
 (`q_hive_1` 14, `q_honey_3` 16, `q_honey_8` 36, `q_honey_15` 48).
 
 Its whole discoverability is one line from the flower, fired once on the first idle after the

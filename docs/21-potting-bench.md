@@ -135,7 +135,7 @@ The basket caps at 60.
 
 ## Quests
 
-Retiring the Apothecary took three quests with it, worth **98 of the ladder's 777 reputation** — and
+Retiring the Apothecary took three quests with it, worth **98 of the ladder's 789 reputation** — and
 `tools/sim-test.js` asserts the ladder reaches level 17, where Eternal Crown unlocks. (They are all
 paused now; see below. The 98 reputation is carried by three live stand-ins.) Dropping them
 would also have jammed the quest strip on an uncompletable goal, exactly as the retired sell quests
@@ -163,11 +163,11 @@ the repointing was supposed to avoid — `fillActive()` caps at three and `strip
 
 All three now carry `paused: true`, which keeps the definition and its tuning but takes it out of
 the lineup — see [16-progression-and-quests.md](16-progression-and-quests.md#pausing-a-quest) for
-what the flag does and for the three live stand-ins that hold the ladder at 777. A sim-test fails if
+what the flag does and for the three live stand-ins that hold the ladder at 789. A sim-test fails if
 a live quest reappears on `merge` or `bank` before `ui-sheet.js` has a bench panel.
 
 **When the bench ships a UI, the flags come off** and the stand-ins come out — that is the whole
-migration, and both halves have to happen together or the ladder drifts off 777.
+migration, and both halves have to happen together or the ladder drifts off 789.
 
 ## State
 

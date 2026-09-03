@@ -6139,9 +6139,9 @@ check('a junk Fall plant is dropped on load, not crashed on', (() => {
 })());
 G.reset();
 
-group('the quest ladder holds 777 with the four wall-collider re-keys');
+group('the quest ladder holds 789 with the four wall-collider re-keys and the discover gate');
 const liveLadder = DATA.quests.filter((q) => !q.paused);
-check('the live ladder still totals 777', liveLadder.reduce((a, q) => a + q.rep, 0) === 777,
+check('the live ladder still totals 789', liveLadder.reduce((a, q) => a + q.rep, 0) === 789,
   `${liveLadder.reduce((a, q) => a + q.rep, 0)}`);
 [['q_rose_3', 'q_daisy_15'], ['q_lavender_3', 'q_tulip_8'],
   ['q_marigold_3', 'q_harvest_30'], ['q_peony_3', 'q_plant_30']].forEach(([oldId, standIn]) => {
@@ -6157,9 +6157,12 @@ check('the live ladder still totals 777', liveLadder.reduce((a, q) => a + q.rep,
    group, i.e. after the line
      check('the unknown daily was rerolled', DATA.dailies.some((d) => d.id === S.quests.daily.id));
    Verified in that position (1229 passed, 0 failed) and at the end of the file
-   (also 1229/0). Identifier collisions were checked: dealNow, disc5, disc12,
+   (also 1229/0). Identifier collisions were checked: dealNow, disc3, disc12,
    discFull, hiveQ, healed, stash, rngDaily, qJumped, qFell, legacyQuests and
-   legacyInst are all unused elsewhere in the suite. */
+   legacyInst are all unused elsewhere in the suite — as are discQuests,
+   boughtNotGrown, skipAhead, jammed, ownedSeeds and reDealt, added with the
+   discover gate. The script is one flat scope, so a duplicate `const` is a hard
+   throw rather than a failed check: grep before adding one. */
 
 /* The Almanac milestones have always read the lifetime species count, and the
    quest engine dealt every quest at zero — one word counting two different
@@ -6176,23 +6179,25 @@ const dealNow = (id) => {
 };
 G.reset();
 S.discovered = { daisy: 4, tulip: 2 };
-const disc5 = dealNow('q_discover_5');
+const disc3 = dealNow('q_discover_3');
 check('a discover quest starts at the lifetime species count',
-  disc5 && disc5.progress === 2, disc5 ? `${disc5.progress}` : 'never dealt');
+  disc3 && disc3.progress === 2, disc3 ? `${disc3.progress}` : 'never dealt');
 check('so the strip and the Almanac count the same word',
-  disc5.progress === G.discoveredCount());
+  !!disc3 && disc3.progress === G.discoveredCount());
 G.reset();
 DATA.seeds.slice(0, 8).forEach((s) => { S.discovered[s.id] = 1; });
+DATA.seeds.slice(0, 11).forEach((s) => { if (G.seedUnlockPrice(s.id) > 0) S.seedUnlocks[s.id] = true; });
 const disc12 = dealNow('q_discover_12');
 check('the last rung is dealt at eight species, not at zero',
   disc12 && disc12.progress === 8, disc12 ? `${disc12.progress}` : 'never dealt');
 check('so what it still asks for exists in the game',
-  G.questById('q_discover_12').qty - disc12.progress <= DATA.seeds.length - G.discoveredCount(),
-  `needs ${G.questById('q_discover_12').qty - disc12.progress}, ${DATA.seeds.length - G.discoveredCount()} unfound`);
+  !!disc12 && G.questById('q_discover_12').qty - disc12.progress <= DATA.seeds.length - G.discoveredCount(),
+  disc12 ? `needs ${G.questById('q_discover_12').qty - disc12.progress}, ${DATA.seeds.length - G.discoveredCount()} unfound` : 'never dealt');
 G.reset();
-DATA.seeds.forEach((s) => { S.discovered[s.id] = 1; });
+DATA.seeds.forEach((s) => { S.discovered[s.id] = 1; if (G.seedUnlockPrice(s.id) > 0) S.seedUnlocks[s.id] = true; });
 const discFull = dealNow('q_discover_5');
-check('the backfill never overshoots the goal', discFull.progress === 5, `${discFull.progress}`);
+check('the backfill never overshoots the goal', !!discFull && discFull.progress === 5,
+  discFull ? `${discFull.progress}` : 'never dealt');
 check('and a quest dealt already finished is simply claimable',
   G.claimQuest('q_discover_5') !== null);
 /* The negative half, and the one that keeps this a rule rather than a blanket:
@@ -6209,6 +6214,7 @@ check('a track with no lifetime record is still dealt at zero',
 group('a save stranded at zero on a recorded track is straightened on load');
 G.reset();
 S.discovered = { daisy: 9, tulip: 4, bluebell: 2, lavender: 1 };
+S.seedUnlocks = { bluebell: true, lavender: true };
 S.quests.active = [{ id: 'q_discover_5', progress: 0 }];
 S.quests.done = [];
 G.saveNow();
@@ -6216,7 +6222,80 @@ G.load();
 const healed = S.quests.active.find((q) => q.id === 'q_discover_5');
 check('the stranded instance is raised to the record', healed && healed.progress === 4,
   healed ? `${healed.progress}` : 'gone');
-check('and never past it', healed.progress === G.discoveredCount());
+check('and never past it', !!healed && healed.progress === G.discoveredCount());
+
+/* The general form of the bug this closes: a quest handed out N unlock walls
+   short of its own goal cannot be cleared for N walls of gold and holds one of
+   three slots the whole time. One wall is a signpost; three is a jam. */
+group('a discover quest is never dealt more than one unlock short of its goal');
+const discQuests = DATA.quests.filter((q) => !q.paused && q.track === 'discover');
+check('there are four discover rungs and every one of them is checked here',
+  discQuests.length === 4, discQuests.map((q) => q.id).join(','));
+check('each is gated at qty - 1 or better — freeSeeds is the floor for an ungated one',
+  discQuests.every((q) => (q.needSeeds || DATA.year.freeSeeds) >= q.qty - 1),
+  discQuests.map((q) => `${q.id}:${q.needSeeds || DATA.year.freeSeeds}/${q.qty}`).join(' '));
+check('and every gate still leaves the last flower to find',
+  discQuests.every((q) => !q.needSeeds || q.needSeeds < q.qty));
+check('needSeeds is only ever hung on a track the game keeps a lifetime record for',
+  DATA.quests.every((q) => !q.needSeeds || q.track === 'discover'));
+check('so the most gold q_discover_5 can still be asking for when it arrives is one wall, not three',
+  G.seedUnlockPrice('rose') === 337500
+  && G.seedUnlockPrice('bluebell') + G.seedUnlockPrice('lavender') + G.seedUnlockPrice('rose') === 712500,
+  `${G.seedUnlockPrice('rose')}`);
+
+/* The gate reads seeds OWNED. Two near-synonyms are wrong and both are the
+   tempting one-liner: the lifetime species count (already in QUEST_RECORDS),
+   and highestUnlockedSeedIndex() + 1 (already in the file, three lines up). */
+G.reset();
+['bluebell', 'lavender'].forEach((id) => { S.seedUnlocks[id] = true; });
+S.discovered = { daisy: 2 };
+const boughtNotGrown = dealNow('q_discover_5');
+check('the gate reads flowers OWNED, not flowers grown', !!boughtNotGrown,
+  S.quests.active.map((q) => q.id).join(','));
+check('and it is dealt at the record it does have, which is one',
+  !!boughtNotGrown && boughtNotGrown.progress === 1,
+  boughtNotGrown ? `${boughtNotGrown.progress}` : 'never dealt');
+G.reset();
+S.seedUnlocks = { marigold: true };
+const skipAhead = DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length;
+check('a player who skipped ahead to the seventh seed owns three flowers, not seven',
+  skipAhead === 3, `${skipAhead}`);
+check('so the five-species goal is still one wall away and stays out of the strip',
+  !dealNow('q_discover_5'), S.quests.active.map((q) => q.id).join(','));
+G.reset();
+
+/* ensureProgression() drops a vanished definition and a paused one. A GATED
+   quest is a third case it had never seen, so every save that already had
+   q_discover_5 in a slot stayed jammed with the fix in fillActive() alone. */
+group('a gated quest already sitting in a save’s slot is un-jammed on load');
+G.reset();
+S.discovered = { daisy: 6, tulip: 3 };
+S.quests.done = [];
+S.quests.active = [{ id: 'q_discover_5', progress: 0 }, { id: 'q_tap_25', progress: 3 }];
+G.saveNow();
+G.load();
+const jammed = S.quests.active.map((q) => q.id);
+check('the gated instance is gone from the active list',
+  !jammed.includes('q_discover_5'), jammed.join(','));
+check('the slot it held is refilled, and everything in it is clearable today',
+  S.quests.active.length === 3 && S.quests.active.every((q) => {
+    const def = G.questById(q.id);
+    return !def.needSeeds || DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length >= def.needSeeds;
+  }), jammed.join(','));
+check('and the strip is no longer the quest nothing could move',
+  G.stripQuest().def.id !== 'q_discover_5', G.stripQuest().def.id);
+
+group('and it comes back whole the moment the gate opens');
+['bluebell', 'lavender'].forEach((id) => { S.seedUnlocks[id] = true; });
+S.discovered = { daisy: 6, tulip: 3, bluebell: 1, lavender: 1 };
+const ownedSeeds = DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length;
+check('four flowers owned is the gate', ownedSeeds === 4, `${ownedSeeds}`);
+const reDealt = dealNow('q_discover_5');
+check('the quest is dealt', !!reDealt, S.quests.active.map((q) => q.id).join(','));
+check('at its lifetime record, not back at zero — which is why dropping it lost nothing',
+  !!reDealt && reDealt.progress === 4 && reDealt.progress === G.discoveredCount(),
+  reDealt ? `${reDealt.progress}` : 'never dealt');
+G.reset();
 
 /* The daily is deliberately NOT backfilled: it is a goal for today, and the
    dailies are the only quests paying `reward.credits`, so one dealt finished
@@ -6281,17 +6360,26 @@ G.reset();
 /* backfillDiscovered() rebuilds the lifetime record from a legacy save's
    flowers, so it has to run BEFORE the quest engine reads that record — or a
    migrated save spends one load with the strip and the Almanac disagreeing,
-   and load()'s own saveNow() writes the disagreement down. */
+   and load()'s own saveNow() writes the disagreement down.
+
+   The instance here is q_discover_3 rather than q_discover_5 because of the
+   other half of that ordering: migrateYear() grandfathers a legacy save's seed
+   unlocks AFTER ensureProgression(), so on the one migrating load the gate sees
+   only the two free seeds and drops any gated quest the grandfather is about to
+   make eligible. That is harmless in play — the next stripQuest() calls
+   fillActive() and deals it back at its record — but do NOT 'fix' it by
+   reordering those calls, because backfillDiscovered() must stay ahead of
+   ensureProgression() and this group is what holds that. */
 group('a legacy save is straightened in one load, not two');
 G.reset();
 const legacyQuests = JSON.parse(JSON.stringify(S));
 delete legacyQuests.discovered;
 legacyQuests.flowers = { daisy: 5, tulip: 3, bluebell: 2 };
-legacyQuests.quests = { active: [{ id: 'q_discover_5', progress: 0 }], done: [],
+legacyQuests.quests = { active: [{ id: 'q_discover_3', progress: 0 }], done: [],
   daily: { id: null, progress: 0, day: '', claimed: false } };
 globalThis.localStorage.setItem(SAVE_KEY, JSON.stringify(legacyQuests));
 G.load();
-const legacyInst = S.quests.active.find((q) => q.id === 'q_discover_5');
+const legacyInst = S.quests.active.find((q) => q.id === 'q_discover_3');
 check('the record is rebuilt before the quest engine reads it',
   legacyInst && legacyInst.progress === 3, legacyInst ? `${legacyInst.progress}` : 'gone');
 G.reset();
