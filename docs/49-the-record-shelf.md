@@ -6,8 +6,9 @@ could never have earned and a charm that touched two banned tables — the reaso
 alternatives are in the 2026-09-02 record-shelf entry in [10-decision-log.md](10-decision-log.md),
 filed with this spec). Where this spec is silent, the builder asks the owner. Every number ships
 in `data.js`, remote-config-ready; PROVISIONAL numbers are tuning's to retune. Track files arrive
-from the owner; **[48-music-direction.md](48-music-direction.md) is to be written by the music
-session** — until it exists, the delivery numbers in The Audio Machine below are normative.
+from the owner; **doc 48, the music-direction commissioning bible, is the music session's
+deliverable** (this sentence becomes a link when it lands) — until it exists, the delivery
+numbers in The Audio Machine below are normative.
 
 **The sentence: *find a record, keep the song forever, and wear any charm with any tune.***
 

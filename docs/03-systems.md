@@ -76,7 +76,7 @@ capped at a badge-specific level. None of them can fire before the badge is boug
 them can crowd out the others — they're checked independently in the same call.
 
 The 0.2%/level rate is deliberately tiny — see
-[the decision log](./10-decision-log.md#tap-triggered-garden-procs-rain-dance-bee-swarm-lucky-ladybug)
+[the decision log](./10-decision-log.md#2026-08-06--tap-triggered-garden-procs-rain-dance-bee-swarm-lucky-ladybug-rate-cut-to-02level-dedicated-animations-added)
 for why these were dropped from an earlier `1%/level` pass. Levelling one of these badges barely
 moves the needle; the payoff is meant to come from the rare moment it fires, not from the climb
 toward it.
