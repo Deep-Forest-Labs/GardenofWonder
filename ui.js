@@ -1819,8 +1819,19 @@
     document.addEventListener('visibilitychange', () => { if (document.hidden) Game.saveNow(); });
     window.addEventListener('pagehide', () => Game.saveNow());
     // unlock audio on the very first interaction
-    const unlock = () => { Sound.init(); Sound.setSfx(S.prefs.sfx); Sound.setAmb(S.prefs.amb); Sound.setMusic(S.prefs.music); Sound.resume(); };
+    let audioLive = false;
+    const unlock = () => { audioLive = true; Sound.init(); Sound.setSfx(S.prefs.sfx); Sound.setAmb(S.prefs.amb); Sound.setMusic(S.prefs.music); Sound.resume(); };
     window.addEventListener('pointerdown', unlock, { once: true });
+    /* The page going away freezes the AudioContext clock and not the timers that
+       schedule against it, so a scheduler left running banks a note per tick and
+       fires the lot the instant the context comes back. Its own listener rather
+       than a line inside the save above: an audio fault must never be able to
+       throw before Game.saveNow() has run, and listeners fire in the order they
+       were added. */
+    document.addEventListener('visibilitychange', () => {
+      if (!audioLive) return;
+      if (document.hidden) Sound.pause(); else Sound.resume();
+    });
 
     /* After the coach mark, never over it — a returning player who has not planted yet is being
        onboarded, and the scene would land on top of that. */

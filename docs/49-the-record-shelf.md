@@ -157,10 +157,16 @@ finding them is how players are pulled into every feature.
   error); an internal `trackActive` flag consulted by `setMusic`/`startMusic` so the scheduler
   and a record are mutually exclusive (today `setMusic(true)` unconditionally restarts the
   house tune); **mute PAUSES the element** — a muted media element otherwise plays silently
-  forever, burning battery and seizing the iOS lock screen with silence; and a
-  `visibilitychange` resume hook (none exists for audio today — after iOS backgrounds the tab,
-  the element stays paused while sfx self-heal), owned by audio.js or wired from ui.js's
-  existing handlers. audio.js keeps its knows-nothing-about-the-game contract: callers pass
+  forever, burning battery and seizing the iOS lock screen with silence; and the
+  `visibilitychange` resume hook, **which now exists** — punch-list `#23` built it on 2026-09-03.
+  It is `Sound.pause()` / `Sound.resume()`, wired from a third `visibilitychange` listener in
+  `ui.js`, and the ownership question is answered: page lifecycle is the UI layer's and audio.js
+  stays parameters-in, output-out. **The record element joins that pair rather than adding a
+  listener of its own** — pause the element in `pause()`, play it in `resume()` when `trackActive`
+  and `prefs.music`. Read the lifecycle contract in
+  [06-audio-and-fx.md](06-audio-and-fx.md) before rebasing on it: anything recurring stops with the
+  page *and* checks `ctx.state` itself, and the state test is `!== 'running'` because iOS reports
+  `interrupted`. audio.js keeps its knows-nothing-about-the-game contract: callers pass
   urls and ids.
 - **iOS is the platform of record**: gesture unlock, backgrounding, loop-seam clicks on
   compressed audio — the gauntlet's phone listening item covers looping on the handset, playback

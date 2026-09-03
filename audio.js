@@ -81,8 +81,32 @@ const Sound = (() => {
     return true;
   }
 
+  /* --- the page lifecycle ---
+     Notes are written against the AudioContext clock and the schedulers that
+     write them run on the wall clock. A frozen page stops the first and not the
+     second, so a scheduler left running banks a note every tick against a clock
+     that is not moving and fires the whole pile in one instant when the context
+     comes back. THE CONTRACT for anything recurring in this file: it stops while
+     the page is away, AND it checks `ctx.state` itself, because the first half
+     depends on an event the platform does not always send. `bar`, the live beds
+     and every pref survive a pause — this is a page going quiet, not a channel
+     being switched off, and the tune has to pick up where it left off. */
+  function pause() {
+    if (!ready) return;
+    stopMusic();
+    Object.keys(live).forEach((id) => stopPulses(live[id]));
+  }
+
   function resume() {
-    wake();
+    if (!wake()) return false;
+    /* `ctx.resume()` has not landed yet, so the first tick of each scheduler is
+       refused by its own guard and the second one carries — at most one bar of
+       silence coming back, against a promise chain in a function every tap in
+       the game calls. On iOS the state is `interrupted` rather than `suspended`
+       and only a gesture lifts it; the schedulers simply idle until one does. */
+    Object.keys(live).forEach((id) => startPulses(live[id]));
+    if (prefs.music) startMusic();
+    return true;
   }
 
   function setSfx(on) {
@@ -352,6 +376,7 @@ const Sound = (() => {
   function startMusic() {
     if (musicTimer || !ready) return;
     const step = () => {
+      if (ctx.state !== 'running') return;
       const a = ARRANGE[dress];
       const chord = PROG[Math.floor(bar / a.hold) % PROG.length];
       const bus = chain(dress).filt;
@@ -565,19 +590,23 @@ const Sound = (() => {
     chimeBus.gain.value = 2.4;
     chimeBus.connect(out);
     const chime = () => {
+      if (ctx.state !== 'running') return;
       const s = SCALE[Math.floor(Math.random() * SCALE.length)];
       const f = note(s + 24);
       tone({ freq: f, type: 'sine', dur: 1.8, gain: 0.11, bus: chimeBus });
       tone({ freq: f * 1.004, type: 'sine', dur: 2.2, gain: 0.07, at: 0.03, bus: chimeBus });
       tone({ freq: note(s + 12), type: 'triangle', dur: 1.2, gain: 0.05, at: 0.08, bus: chimeBus });
     };
-    const timer = setInterval(() => {
-      if (Math.random() < 0.72) chime();
-    }, 1500);
-    /* The opening chime is tracked like the interval is: a sky cancelled inside
+    /* The opening chime is tracked like the pulse is: a sky cancelled inside
        its first second must not ring after it has gone. */
     const first = setTimeout(chime, 600);
-    return { nodes, timers: [timer, first], rise: 3.4, fall: 3.4 };
+    return {
+      nodes,
+      timers: [first],
+      pulses: [{ ms: 1500, fn: () => { if (Math.random() < 0.72) chime(); } }],
+      rise: 3.4,
+      fall: 3.4
+    };
   };
 
   BUILD.wonderfall = (out) => {
@@ -616,13 +645,14 @@ const Sound = (() => {
     const drizzle = ctx.createGain();
     drizzle.gain.value = 2;
     drizzle.connect(out);
-    let step = 0;
-    const timer = setInterval(() => {
-      const s = SCALE[(step * 3) % SCALE.length];
+    let drop = 0;
+    const drip = () => {
+      if (ctx.state !== 'running') return;
+      const s = SCALE[(drop * 3) % SCALE.length];
       tone({ freq: note(s + 24), type: 'triangle', dur: 0.5, gain: 0.035, bus: drizzle });
-      step += 1;
-    }, 420);
-    return { nodes, timers: [timer], rise: 1.6, fall: 2 };
+      drop += 1;
+    };
+    return { nodes, timers: [], pulses: [{ ms: 420, fn: drip }], rise: 1.6, fall: 2 };
   };
 
   /* --- the ambience bus --- */
@@ -655,6 +685,22 @@ const Sound = (() => {
     }, (seconds + 0.25) * 1000);
   }
 
+  /* A bed's recurring voices are DECLARED rather than scheduled, so the page
+     lifecycle can stop and restart them without tearing down the drones and the
+     noise loop underneath — those are unaffected by a suspended context, and a
+     sky that vanished and came back would be a worse bug than the one this
+     solves. */
+  function startPulses(rec) {
+    if (!rec || !rec.pulses || rec.pulseIds) return;
+    rec.pulseIds = rec.pulses.map((p) => setInterval(p.fn, p.ms));
+  }
+
+  function stopPulses(rec) {
+    if (!rec || !rec.pulseIds) return;
+    rec.pulseIds.forEach(clearInterval);
+    rec.pulseIds = null;
+  }
+
   function startBed(id) {
     if (!wake()) return false;
     /* Restarting a bed that is already playing follows the level rather than
@@ -672,6 +718,7 @@ const Sound = (() => {
     rec.gain = g;
     live[id] = rec;
     rec.nodes.forEach((n) => n.start(t));
+    startPulses(rec);
     g.gain.setTargetAtTime(bedGain(id), t, (rec.rise || 1.6) / 3);
     rampAmb(0.3);
     return true;
@@ -682,7 +729,8 @@ const Sound = (() => {
     if (!rec) return false;
     const f = typeof fade === 'number' ? fade : (rec.fall || 2);
     const t = ctx.currentTime;
-    rec.timers.forEach(clearInterval);
+    rec.timers.forEach(clearTimeout);
+    stopPulses(rec);
     rec.gain.gain.setTargetAtTime(0.0001, t, f / 4);
     rec.nodes.forEach((n) => n.stop(t + f));
     delete live[id];
@@ -812,7 +860,8 @@ const Sound = (() => {
       const rec = BUILD[id](g);
       rec.nodes.forEach((n) => n.start(0));
       const rendered = await off.startRendering();
-      rec.timers.forEach(clearInterval);
+      rec.timers.forEach(clearTimeout);
+      stopPulses(rec);
       data = rendered.getChannelData(0);
     } finally {
       ctx = live;
@@ -861,7 +910,7 @@ const Sound = (() => {
   }
 
   return {
-    init, resume, play, setSfx, setAmb, setMusic, setLevel, prefs,
+    init, resume, pause, play, setSfx, setAmb, setMusic, setLevel, prefs,
     bed, bedsOff, arrange, duck, crack, rumble, sing, renderBed
   };
 })();

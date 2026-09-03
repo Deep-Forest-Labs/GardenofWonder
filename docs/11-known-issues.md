@@ -5,6 +5,15 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## What the overnight fix round knowingly left (2026-09-03)
+
+**The one bar already scheduled in the instant before the page froze still fires on the way back.**
+`#23` stops the three schedulers on a frozen context, but a note booked a moment earlier is already
+on the AudioContext's own queue and plays when the context resumes. It is one chord against the 81
+notes it replaces, and it is judged fine — the tune returning on its own chord is arguably the
+better sound. **The knob if it is ever not fine:** `tone()` can drop any note whose `when` has
+fallen more than a beat into the past.
+
 ## What the overnight fix round knowingly left (2026-08-31)
 
 **The status rail is invisible in Fall on a screen shorter than 700px.** Both boards are now the

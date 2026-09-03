@@ -693,6 +693,12 @@ const DATA = {
      write what it feels like to play, not what was done. */
   changelog: [
     {
+      date: '2026-09-03',
+      lines: [
+        'Put the game down and come back, and the music carries on quietly from where it left off instead of arriving all at once.'
+      ]
+    },
+    {
       date: '2026-09-02',
       lines: [
         'Seeds and upgrades you haven’t grown into yet now wait behind a silhouette instead of showing everything at once — grow enough and each one reveals itself with a small celebration.'

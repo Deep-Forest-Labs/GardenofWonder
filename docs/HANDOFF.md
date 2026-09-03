@@ -1310,9 +1310,16 @@ about are written down.
   never calls it — `reconcile()` does. Its marking line is an **edge**, so the hook there must
   write a latch and never a grant. And the owed sweep must NOT hang off `refreshReveals()`, which
   runs at 1 Hz from `tryMoment()` and again on `reset()`'s birth path.
-- **Punch-list #23 has not run.** There is no post-#23 music scheduler to rebase on: `audio.js` is
-  nine commits behind the tip and every line #23 cites is still where it says. The audio machine is
-  being built on what is actually there.
+- **Punch-list #23 HAS now run (2026-09-03), and this is the scheduler to rebase on.** `audio.js`
+  gained a page-lifecycle pair, `Sound.pause()` / `Sound.resume()`, wired from a third
+  `visibilitychange` listener in `ui.js` — page lifecycle is the UI layer's, so audio.js keeps its
+  knows-nothing-about-the-game contract. Every recurring scheduler additionally carries its own
+  `if (ctx.state !== 'running') return;` guard, and **the test is never `=== 'suspended'`** because
+  iOS reports `interrupted`. A bed's recurring voices are now declared as a `pulses: [{ms, fn}]`
+  list on its record instead of scheduled inside its builder, so a pause stops them without tearing
+  down the drones and the noise loop; `timers` on that record now means one-shots only. A pause
+  preserves `bar`, the live beds and every pref. The record element joins `pause()`/`resume()`
+  rather than adding a fourth listener — doc 49's API contract says so now.
 - **Name collisions, all handled, none needing a ruling.** `shelf` is the Honey Shelf's namespace
   (`renderShelf`, four `Game.shelf*`, the `shelf` sheet mode, six `.shelf-*` classes) — the panel is
   `records` in code and `.rec-*` in CSS. The rarity id is **`legend`**, never `legendary`. The
@@ -1336,7 +1343,7 @@ about are written down.
 | --- | --- |
 | 1 · The wireframe spike, then stop | **Stopped, waiting on the owner.** Eighteen frames; one blocker, four veto points, one design question |
 | 2 · Engine | Not started. Five save keys, the owed sweep, `charmEffect`'s whitelist, the gramophone's memento decrement — the live game unchanged |
-| 3 · The audio machine | Not started. The `sw.js` exemption, one media element, mute-pauses-the-element, the `visibilitychange` resume — verified on the handset **before** the surface ships |
+| 3 · The audio machine | Not started, but **the `visibilitychange` resume is now built** by punch-list #23 and the element joins `Sound.pause()`/`Sound.resume()`. Still to do: the `sw.js` exemption, one media element, mute-pauses-the-element — verified on the handset **before** the surface ships |
 | 4 · The surface | Not started. `openSheet('records')`, the two doors, the vinyl icon exported, the capture scenes edited and the gallery re-run whole |
 | 5 · The gauntlet | Not started |
 
@@ -2542,6 +2549,26 @@ That inversion was inherited from the frozen economy port; it is fixed. What rem
 the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
+
+**A timer that schedules against the AudioContext clock must check `ctx.state`, because a frozen
+page stops that clock and not the timer.** `tone()` writes `ctx.currentTime + at`; the three
+schedulers that call it run on `setInterval`. Sleep a laptop or lock a phone and the context
+suspends while the intervals keep ticking, so every step banks another note against a clock that is
+not moving — measured at **81 notes fired into 2.45 s** after thirty seconds away, nine of them on
+the same sample, scaling linearly with the absence (an hour is ~9,700). The same bug was already
+fixed once in another disguise: muting used to leave the scheduler running. **Write the guard
+`!== 'running'`, never `=== 'suspended'`** — iOS reports `interrupted`, and `wake()` twelve lines
+above contains the wrong spelling ready to copy; a desktop suite goes fully green with the phone
+still broken. And put the guard **above** the bar counter, not below it: below, the notes stop and
+the progression still walks, so the tune comes back on the wrong chord and doc 06's "the bar clock
+is never restarted" quietly becomes false.
+
+**`tap:#newsOk` RELOADS the page, so anything injected before it is destroyed.**
+`DATA.announcements[0]` carries `reset: true`, which `ui-news.js` handles with
+`Game.reset(); location.reload()`. A probe script that patches the page and *then* dismisses the
+announcement reads back `undefined` and looks like a broken instrument — it cost three runs to find.
+Dismiss first, patch second, gesture third. Same family as the `pagehide` trap below: the page you
+are setting up gets replaced out from under you.
 
 **`opacity:0` HIDES a layer. It does not RELEASE it — and the bill is memory, which no frame timer
 can see.** A `mask-image` or a `mix-blend-mode` puts an element on its own composited layer and

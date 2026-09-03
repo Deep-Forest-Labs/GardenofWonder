@@ -33,7 +33,10 @@ been playing at is now written down as a single house level.
 3.2 s forever. Dragging music to zero must leave that timer running: the player is turning something
 down, not switching it off, and a channel that quietly tore itself down at zero could not be dragged
 back up. `setLevel()` therefore only ever touches a gain; `setSfx()`, `setAmb()` and `setMusic()`
-are the switches.
+are the switches. **The same reasoning now covers the page going away, not just the mute** — see the
+lifecycle contract under Ambient music — with one difference that matters: a mute is a channel
+switched off and changes `prefs`, while a pause is a page going quiet and must not, or a player who
+left with music off comes back with it on.
 
 **Muting Ambience cancels the duck; turning it down does not.** The duck is the sky leaning on the
 effects, so a muted sky has nothing to lean with. A bed turned to zero is still a bed, and the
@@ -177,11 +180,32 @@ Off by default. A four-bar chord progression — `[0,4,7]`, `[-3,2,5]`, `[-5,0,4
 scheduled on a 3.2 s `setInterval`. Each bar lays down a 3.4 s sine pad an octave down, plus a
 six-note triangle arpeggio drawn from the same chord.
 
-It's the only recurring timer outside the frame loop. `setMusic(true)` starts it and
-`setMusic(false)` stops it via `stopMusic()`, which clears the interval and nulls the handle so
-`startMusic()`'s re-entry guard stays honest. Muting used to take the bus gain to zero and leave the
-scheduler running, quietly building oscillator nodes every 3.2 s for as long as the tab stayed open.
-Notes already scheduled are untouched and fade out with the bus, so stopping is silent.
+`setMusic(true)` starts it and `setMusic(false)` stops it via `stopMusic()`, which clears the
+interval and nulls the handle so `startMusic()`'s re-entry guard stays honest. Muting used to take
+the bus gain to zero and leave the scheduler running, quietly building oscillator nodes every 3.2 s
+for as long as the tab stayed open. Notes already scheduled are untouched and fade out with the bus,
+so stopping is silent.
+
+**There are three recurring timers outside the frame loop, not one** — the music's 3.2 s step, the
+aurora's 1.5 s chime and Wonderfall's 0.42 s drizzle — and they have been three since the beds
+shipped. **The lifecycle contract that governs all three:** notes are written against the
+AudioContext clock (`tone()` computes `ctx.currentTime + at`) while the schedulers that write them
+run on the wall clock. A frozen page stops the first and not the second, so a scheduler left running
+banks a note every tick against a clock that is not moving and fires the whole pile on one sample
+when the context comes back — measured at 81 notes inside 2.45 s after thirty seconds asleep,
+scaling linearly with the absence. So a recurring timer in `audio.js` **stops while the page is
+away, AND checks `ctx.state` itself.** Both, because they answer different failures: the stop is
+`Sound.pause()` / `Sound.resume()`, wired from a third `visibilitychange` listener in `ui.js`, and
+it is hygiene; the guard is the fix, because `visibilitychange` is not guaranteed on every sleep
+path and a future timer that forgets to register is still covered. The test is `!== 'running'` and
+never `=== 'suspended'` — **iOS reports `interrupted`**, and only a gesture lifts it.
+
+A pause preserves `bar`, every live bed and every preference. That is the same promise the bar clock
+paragraph below already makes, and a sleep was quietly breaking it: with the guard written below the
+bar counter the notes stop and the progression still walks, so the tune returns on the wrong chord.
+A bed's recurring voices are declared as a `pulses` list on its record rather than scheduled inside
+its builder, so the pause can stop and restart them without tearing down the drones and the noise
+loop underneath — those are `BufferSource`s and a suspended context does not disturb them.
 
 **Every sky rearranges that music rather than replacing it.** The progression, the bar clock and the
 timer are the same ones running in clear weather; what changes is the dress — how open the filter

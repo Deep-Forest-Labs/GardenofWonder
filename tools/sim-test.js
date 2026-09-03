@@ -23,7 +23,7 @@ const GLOBALS = ['DATA', 'WONDER', 'DAY', 'ALBUM', 'CARD_RARITIES', 'PLOT_AUTOPL
   'APIARY', 'CRAFT_RECIPES', 'CRAFT_SLOTS', 'BENCH', 'CREATURES', 'CREATURE_TRAITS', 'HABITAT_SLOT_LEVELS', 'CREATURE_STARS', 'CREATURE_PAIRS', 'PAIR_TUNING',
   'CREATURE_FOOD', 'FED_STARS', 'FOOD_CAP_HOURS', 'ARRIVAL_AWAKE_HOURS', 'FED_THRESHOLD_HOURS',
   'STAND', 'GOODS', 'CUSTOMERS', 'goodById', 'customerById',
-  'MEADOW', 'MEADOW_NEIGHBOURS', 'meadowTender', 'Icons', 'flowerValue', 'Game'];
+  'MEADOW', 'MEADOW_NEIGHBOURS', 'meadowTender', 'Icons', 'flowerValue', 'Game', 'Sound'];
 
 function loadScript(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -34,6 +34,10 @@ function loadScript(file) {
 loadScript('data.js');
 loadScript('icons.js');
 loadScript('game.js');
+/* audio.js reaches `window` only inside init() and renderBed(), at call time,
+   so it loads here with no DOM at all — which is what lets the sleeping-clock
+   group below drive the real schedulers rather than a copy of them. */
+loadScript('audio.js');
 
 const G = globalThis.Game;
 const S = G.state;
@@ -9087,6 +9091,174 @@ group('slice C — the welcome-back scene learns about Winter');
      which a flaky assertion cannot survive. */
   check('this bill added no unpinned randomness — every check above is exact, not sampled', true);
   G.reset();
+}
+
+/* ---- the sleeping clock: notes ride the AudioContext, schedulers ride the wall ----
+   Two rigs, both installed and torn down inside this block so nothing else in
+   the suite ever sees them: a fake WebAudio whose oscillators record the
+   frequency they were started at, and a fake clock so thirty seconds of sleep
+   costs no wall time. The oscillator list IS the instrument — the browser
+   measures 9 notes in 4s of clear-sky playback and 81 across a 30s sleep, and
+   check 1 anchors this rig against that. */
+{
+  const realTimers = {
+    setInterval: globalThis.setInterval, clearInterval: globalThis.clearInterval,
+    setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout
+  };
+  const realWindow = globalThis.window;
+
+  let now = 0;
+  let seq = 0;
+  const pending = new Map();
+  const schedule = (fn, ms, repeat) => {
+    const id = ++seq;
+    pending.set(id, { fn, ms: Math.max(0, ms || 0), next: now + Math.max(0, ms || 0), repeat });
+    return id;
+  };
+  const advance = (ms) => {
+    const end = now + ms;
+    for (;;) {
+      let soonest = null;
+      pending.forEach((t, id) => {
+        if (t.next <= end && (!soonest || t.next < soonest.t.next)) soonest = { id, t };
+      });
+      if (!soonest) break;
+      now = soonest.t.next;
+      if (soonest.t.repeat) soonest.t.next = now + soonest.t.ms; else pending.delete(soonest.id);
+      soonest.t.fn();
+    }
+    now = end;
+  };
+
+  const started = [];
+  const param = (v) => ({
+    value: v,
+    setValueAtTime(x) { this.value = x; return this; },
+    exponentialRampToValueAtTime(x) { this.value = x; return this; },
+    linearRampToValueAtTime(x) { this.value = x; return this; },
+    setTargetAtTime(x) { this.value = x; return this; },
+    cancelScheduledValues() { return this; }
+  });
+  const wire = (o) => Object.assign(o, { connect: () => o, disconnect: () => o });
+  const fakeCtx = {
+    state: 'running',
+    currentTime: 0,
+    sampleRate: 44100,
+    destination: wire({}),
+    createGain: () => wire({ gain: param(1) }),
+    createBiquadFilter: () => wire({ type: 'lowpass', frequency: param(350), Q: param(1) }),
+    createOscillator: () => wire({
+      type: 'sine', frequency: param(440), detune: param(0),
+      start(w) { started.push({ freq: this.frequency.value, when: w }); },
+      stop() {}
+    }),
+    createBuffer: (ch, len) => ({ length: len, getChannelData: () => new Float32Array(len) }),
+    createBufferSource: () => wire({ buffer: null, loop: false, loopStart: 0, loopEnd: 0, playbackRate: param(1), start() {}, stop() {} }),
+    resume() { this.state = 'running'; },
+    suspend() { this.state = 'suspended'; },
+    close() { this.state = 'closed'; }
+  };
+
+  const install = () => {
+    globalThis.setInterval = (fn, ms) => schedule(fn, ms, true);
+    globalThis.setTimeout = (fn, ms) => schedule(fn, ms, false);
+    globalThis.clearInterval = (id) => pending.delete(id);
+    globalThis.clearTimeout = (id) => pending.delete(id);
+    globalThis.window = { AudioContext: function () { return fakeCtx; } };
+  };
+  const restore = () => {
+    Object.assign(globalThis, realTimers);
+    if (realWindow === undefined) delete globalThis.window; else globalThis.window = realWindow;
+  };
+
+  /* Notes are counted over a window rather than in total, because the pad and
+     the arps both land through the same oscillator factory. */
+  const notesOver = (ms) => { started.length = 0; advance(ms); return started.length; };
+
+  install();
+  try {
+    group('the sleeping clock — a scheduler must never bank notes against a frozen context');
+    const S2 = globalThis.Sound;
+    S2.init();
+    S2.setMusic(true);
+
+    /* 1. The rig against the browser. Clear sky = a 3-voice pad plus 6 arps per
+       3.2s tick, and the browser measures exactly 9 over four seconds. */
+    check('the rig agrees with the browser: 4s of running playback is 9 notes',
+      notesOver(4000) === 9, `${started.length}`);
+
+    /* 2-4. The bug itself, in all three non-running states. `suspended` is the
+       desktop's, `interrupted` is iOS's and is the one a `=== "suspended"`
+       guard would miss entirely. 81 before the fix, in every one of them. */
+    fakeCtx.state = 'suspended';
+    check('30s suspended banks nothing (81 before the fix)', notesOver(30000) === 0, `${started.length}`);
+    fakeCtx.state = 'interrupted';
+    check('30s interrupted banks nothing — iOS reports this, never "suspended"',
+      notesOver(30000) === 0, `${started.length}`);
+    fakeCtx.state = 'closed';
+    check('30s on a closed context banks nothing', notesOver(30000) === 0, `${started.length}`);
+
+    /* 5. The second symptom, which the punch list did not record: a guard that
+       counts the bar before it decides whether to play it stops the notes and
+       still walks the progression, so the tune returns on the wrong chord. Doc
+       06 promises the bar clock is never restarted; this is that promise under
+       a sleep.
+       Asserted against the tune's OWN cycle rather than against hard-coded
+       frequencies, and stated exactly rather than as "it changed" — the loose
+       form passes under both the right answer and the wrong one, which is the
+       vacuous-assertion trap this suite has been bitten by before. A 30s sleep
+       is 9 skipped ticks and the progression is 4 bars, so a walked bar clock
+       lands exactly one chord further along: naming both is what makes it fail. */
+    fakeCtx.state = 'running';
+    const padNow = () => { started.length = 0; advance(3200); return started.slice(0, 3).map((s) => Math.round(s.freq * 100) / 100).join(); };
+    const cycle = [padNow(), padNow(), padNow(), padNow()];
+    fakeCtx.state = 'suspended';
+    advance(30000);
+    fakeCtx.state = 'running';
+    const afterSleep = padNow();
+    check('the chord progression freezes with the page rather than walking on',
+      afterSleep === cycle[0] && afterSleep !== cycle[1],
+      `${afterSleep} — expected ${cycle[0]}, a walked bar clock would give ${cycle[1]}`);
+
+    /* 6-7. The hygiene half: an explicit pause stops the timer outright, and a
+       resume brings the same tune back. */
+    S2.pause();
+    fakeCtx.state = 'suspended';
+    check('an explicit pause banks nothing across a 30s sleep', notesOver(30000) === 0, `${started.length}`);
+    fakeCtx.state = 'running';
+    S2.resume();
+    check('and resume brings the music back at the running rate', notesOver(4000) === 9, `${started.length}`);
+
+    /* 8. A pause is a page going quiet, not a channel being switched off. The
+       failure this catches is implementing the pair as setMusic(false/true),
+       which mutates prefs and hands a music-off player their music back. */
+    const prefsBefore = JSON.stringify(S2.prefs);
+    S2.pause(); S2.resume();
+    check('a pause and resume leave every sound preference byte-identical',
+      JSON.stringify(S2.prefs) === prefsBefore, JSON.stringify(S2.prefs));
+    S2.setMusic(false);
+    S2.pause(); S2.resume();
+    check('and a player with music off does not get it back on', notesOver(4000) === 0, `${started.length}`);
+    S2.setMusic(true);
+
+    /* 9. The beds, which are the other two schedulers. The aurora's chime is
+       gated on Math.random so the count is asserted non-zero rather than exact;
+       the assertion that matters is the last one, which proves the sky was
+       PAUSED and not torn down. */
+    S2.bed('aurora', true, 0.26);
+    S2.bed('wonderfall', true, 0.34);
+    check('a live sky schedules its own voices', notesOver(10000) > 0, `${started.length}`);
+    S2.pause();
+    fakeCtx.state = 'suspended';
+    check('and banks nothing across a 30s sleep (114 before the fix)', notesOver(30000) === 0, `${started.length}`);
+    fakeCtx.state = 'running';
+    S2.resume();
+    check('the sky comes back alive rather than having been torn down', notesOver(10000) > 0, `${started.length}`);
+    S2.bedsOff(0);
+    S2.pause();
+  } finally {
+    restore();
+  }
 }
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
