@@ -34,39 +34,42 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 5. **#24 · Move the gem skip out of Summer into Fall** — **RULED**: Century Bloom excluded, no ×2,
    ship at the existing rate and feel it. Buildable as specced. Note the item's prediction — at this
    rate every Fall skip still costs more gem income than the time it buys.
-6. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
+6. **#25 · No way to replant the same seed without opening the picker** — **pair with `#24`**: it
+   removes the gem chip from the plot's top-right corner and this one moves into it, reusing the
+   styling rather than authoring a second pill. One line in `plant()` carries the data.
+7. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
    design change: Clover in gold, Petal Cake in gems, Honeypot behind a rewarded ad. **Read the item
    before pricing anything**: four pets can tend at once, which makes this twelve gem purchases and
    six ads a day, and the ad half collides head-on with `37-monetization.md`'s whole daily budget.
    Two numbers are the owner's to pick.
-7. **#21 · Move the drone to the Shop, rent it for an ad, and build the ad button once** — pair
+8. **#21 · Move the drone to the Shop, rent it for an ad, and build the ad button once** — pair
    with `#18`: both need the same "Watch an ad" component and neither should build it twice. **There
    is no video icon in `icons.js`**, and `Icons.get()` falls back silently.
-8. **#22 · The Turn's "this year goes" reads as a confiscation list** — copy plus one type
+9. **#22 · The Turn's "this year goes" reads as a confiscation list** — copy plus one type
    treatment, at the game's most important decision. **Read the item**: the bluntness is a fixed bug
    ("an irreversible commit may never understate its own price"), so it must get kinder without
    naming one thing less.
-9. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
+10. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
    the harvest float does not; the payload does not even carry the number. Pairs naturally with
    `#17`, both being "say the true thing in the fewest words".
-10. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
+11. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
    the house register is already written in `data.js`. Also closes a hard-coded number that can
    drift from its knob. **Read the item**: the length exists to keep a promise honest, so keep that.
-11. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
+12. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
    owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
    round already wrote this reasoning into a comment but shipped it only under a short-screen media
    query. Applies to all three chip kinds, and one booster's copy is false.
-12. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
+13. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
    it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
    **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
    a working ready-notification.
-13. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
+14. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
    reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
    point making a chip tappable in a room where it is about to stop being shown.
-14. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
+15. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
    **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
    open question may answer itself.
-15. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
+16. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
    round**: the marker folds into `#12` tonight, the board is a bounded next step, and the background
    is its own session that should start with a `meadow-spike.html` for the owner to judge.
 
@@ -1351,6 +1354,85 @@ gems/hour rate the way the sky calls are (`04-economy.md:275`, *"price sinks aga
 Worth a second look after a session with it.
 
 **No open questions remain.**
+
+---
+
+### #25 · POLISH · No way to replant the same seed without opening the picker · annoying · reported 2026-09-02
+
+**What the owner asked for.** "Add a replant ability on each flower in the garden, similar to how we
+have the gems on the top right. Add some type of icon that represents a replanting of the same seed
+without the user having to navigate to the seed menu to choose another seed. It should be small and
+feel like a button or a simple icon like the gem."
+
+**Today.** Harvesting empties the plot, and tapping an empty plot opens the seed sheet —
+`if (!cell.seed) { UI.openSheet('seeds', idx); return; }` (`ui.js:1289`). Every replant is a tap, a
+sheet, a choice and a dismiss, for a decision the player usually already made.
+
+**Do this with `#24`, and the corner is free.** The owner's reference — *"similar to how we have the
+gems on the top right"* — is `.skip-chip`, `position:absolute; top:5px; right:5px`
+(`style.css:577`), **and `#24` removes it from Summer in this same round.** The slot, the 10px pill
+sizing, the ink border and lip, the `.plot[data-skip="no"]` drained-and-dimmed unaffordable state and
+the `:active` press are all already written and about to be orphaned. **Rename that rule rather than
+authoring a second chip**, or the garden ends up with two near-identical corner pills built a week
+apart.
+
+**The one piece of data that does not exist: nothing remembers what was planted.** `harvest()` clears
+the cell and no field survives naming the seed.
+
+**But the plumbing is unusually kind here — three facts worth knowing before designing it:**
+
+1. **`harvest()` writes the cell with a spread** — `state.grid[idx] = { ...cell, seed: null, … }`
+   (`game.js:2762`). So a `lastSeed` written once in `plant()` **survives the harvest for free**,
+   with no work in the harvest path at all.
+2. **The Turn wipes it, and that is probably right.** The ceremony rebuilds every cell from an
+   explicit object literal with no spread (`game.js:4570`), so `lastSeed` dies at the Turn. A fresh
+   year starting with no memory matches *"the rebuild is the ritual"* — but it is a one-line choice
+   and should be a stated one.
+3. **Existing saves need no migration, and this is the unusual part.** `state.grid` arrives wholesale
+   through `Object.assign(state, defaultState(), parsed)` — unlike Fall's and Winter's grids, which
+   are rebuilt cell by cell to length (`game.js:597`, `633`). So a new per-cell field is simply
+   **absent** on every save until that plot is next planted, and `undefined` is a perfectly good value
+   meaning "no memory yet": no chip, picker as before. It degrades rather than breaking. Worth saying
+   plainly, because `07-save-data.md`'s playbook sends people looking for a re-merge list that the
+   garden grid does not have.
+
+**THE TRAP THAT WILL BITE FIRST.** The plot's own `pointerdown` handler (`ui.js:80`) fires
+`onPlotTap()`, and on an empty plot that **opens the seed picker** — the exact thing this feature
+exists to avoid. Both existing chips guard against it with `e.preventDefault(); e.stopPropagation();`
+(`ui.js:70`, `75`). **Without `stopPropagation` the replant chip will replant *and* open the picker
+on the same tap.** Follow the two chips beside it; do not switch this one to `click`, because the
+plot is already a `pointerdown` control and mixing the two is the recorded gesture trap in reverse.
+
+**States the chip needs.** Shown only when the plot is empty, unlocked, and `lastSeed` is set. Priced
+at that seed's `cost`, with the same affordable / not-affordable treatment the skip chip had — a
+replant the player cannot pay for should read as unaffordable rather than do nothing, which is the
+"a cheat that quietly does nothing reads as the feature being broken" rule from the dev playbook
+applied to a real control. No unlock check is needed: seed unlocks are permanent and survive the Turn.
+
+**Related.**
+- **`#24`** — same corner, same round. Sequence them.
+- **The per-plot auto-planters already replant plots 1–4.** `PLOT_AUTOPLANTERS` (`game.js:1379`)
+  plants the **priciest affordable** seed on its plot every tick. On a plot with one assigned, a
+  replant chip is either redundant or a genuine alternative — the drone plants the most expensive,
+  the chip plants *the same one again*, and those are different intentions. Decide whether the chip
+  hides there.
+
+**Fix sketch.** Set `cell.lastSeed = seedDef.id` inside `plant()` (`game.js:2591`) — one line, and the
+harvest spread carries it. Add the chip to the plot markup beside `.skip-chip` and `.pack-drop`, wire
+it `pointerdown` with `preventDefault` + `stopPropagation`, and have it call `Game.plant(idx, seedDef)`
+**through the real path** so cost, growth modifiers, verbs, quests and the `plant` event all fire
+exactly as a picker plant does. Reuse `.skip-chip`'s CSS under a shared class. **What it might
+break:** `renderPlots()` caches the last value written for every property it touches (`09-conventions.md`'s
+first performance rule) — the chip's label and affordability need their own cache entries or it will
+write to the DOM on every frame across eight plots. `icons.js` has no replant glyph; `sprout`,
+`leaf` and `plantSpot` all exist and one of them may serve, but if a new one is authored, remember
+`Icons.get()` falls back silently. `08-ui-and-layout.md` describes the plot's furniture and
+`03-systems.md` the planting flow.
+
+**Open question.** Should the chip appear on plots that already have an auto-planter assigned? It
+would let a player hold a plot on a cheaper seed they actually want, against a drone that always
+reaches for the priciest — which is either a nice piece of control or a confusing pair of buttons
+that disagree.
 
 ---
 
