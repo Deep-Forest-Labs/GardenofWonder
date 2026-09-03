@@ -1324,10 +1324,13 @@ about are written down.
   says *"never bought with money,"* which the owner's pillar ruling overruled the same evening. The
   music session flagged it and left it to this desk. Seven separate statements that this game has no
   audio files also go false when the first track lands; only one of the seven is on doc 49's list.
-- **Coordination.** The music-direction session is committing into **this same checkout** — doc 48,
-  `tools/wiki-sync.js` and a decision-log entry were in the working tree, uncommitted, while the
-  spike was pushed. Nothing here links doc 48 until it is tracked, because the wiki sync hard-fails
-  on a dead link. `git fetch` and re-read the top of the decision log before gate 2.
+- **Coordination.** The music-direction session was committing into **this same checkout** while
+  this was written — doc 48, `tools/wiki-sync.js` and its own decision-log entry sat uncommitted in
+  the working tree as the spike was pushed, and landed as `1eb89f6` immediately after. So
+  [48-music-direction.md](48-music-direction.md) is now tracked and safe to link, and doc 49's audio
+  numbers now defer to it: AAC in an `.m4a`, 60–90 s loops in whole bars, −17 LUFS, a ledger row per
+  track. That changes gate 3, not the spike. `git fetch` and re-read the top of the decision log
+  before gate 2 — this tree takes commits mid-session most days.
 
 | Gate | State |
 | --- | --- |
