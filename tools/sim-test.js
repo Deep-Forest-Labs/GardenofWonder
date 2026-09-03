@@ -2197,6 +2197,32 @@ check('the memory survives the harvest', (() => {
   return Boolean(got) && S.grid[0].seed === null && S.grid[0].lastSeed === 'rose'
     && Boolean(offer) && offer.seed.id === 'rose';
 })());
+/* TWO DIFFERENT SEEDS INTO ONE PLOT — the case every check around this one
+   steps around, because they all start from clearGarden() or replant the same
+   id. `lastSeed: cell.lastSeed || seedDef.id` — the plausible "don't clobber an
+   existing memory" reading — passed the entire suite, and the chip then offers
+   the first flower ever sown here for the rest of the save. */
+check('a second sowing replaces the first, so the chip offers what grew here LAST', (() => {
+  clearGarden();
+  S.credits = 1e12;
+  G.plant(0, G.seedById('tulip'));
+  advance(S.grid[0].grow + 5);
+  G.harvest(0);
+  const first = G.replantSeed(0);
+  G.plant(0, G.seedById('rose'));
+  const overwritten = S.grid[0].lastSeed === 'rose';
+  advance(S.grid[0].grow + 5);
+  G.harvest(0);
+  const second = G.replantSeed(0);
+  return Boolean(first) && first.seed.id === 'tulip' && overwritten
+    && Boolean(second) && second.seed.id === 'rose';
+})(), `${S.grid[0].lastSeed}`);
+/* Put the fixture back exactly as this check found it — an empty plot
+   remembering a rose, wallet full — so a failure here reddens one line
+   instead of cascading into the checks below. */
+clearGarden();
+S.grid[0].lastSeed = 'rose';
+S.credits = 1e12;
 check("the price is the seed's own, and affordability is read off the wallet", (() => {
   const rich = G.replantSeed(0);
   S.credits = 0;
@@ -2205,6 +2231,26 @@ check("the price is the seed's own, and affordability is read off the wallet", (
   return rich.cost === G.seedById('rose').cost && rich.afford === true
     && Boolean(poor) && poor.afford === false;
 })());
+/* THE BOUNDARY, which 1e12-and-0 cannot see: `>=` quietly changed to `>` passed
+   the whole suite. At exactly the price the chip would render drained while a
+   tap on it still planted — plant() reads `credits < cost` — so the treatment
+   and the behaviour would be telling the player two different things. Both
+   halves are asserted here, which is what pins them together. */
+check('at exactly the price the chip is live, and the tap it invites goes through', (() => {
+  const price = G.seedById('rose').cost;
+  S.credits = price;
+  const exact = G.replantSeed(0) || {};
+  S.credits = price - 1;
+  const penny = G.replantSeed(0);
+  S.credits = price;
+  const planted = G.plant(0, exact.seed);
+  const spent = S.credits;
+  return exact.afford === true && Boolean(penny) && penny.afford === false
+    && planted === true && spent === 0;
+})(), `${S.credits}`);
+clearGarden();
+S.grid[0].lastSeed = 'rose';
+S.credits = 1e12;
 check("a replant costs the seed's full price and goes through the real path", (() => {
   S.quests.active = [{ id: 'q_plant_30', progress: 0 }];
   const offer = G.replantSeed(0);
@@ -2215,6 +2261,26 @@ check("a replant costs the seed's full price and goes through the real path", ((
     && S.credits === before - offer.cost
     && Boolean(quest) && quest.progress === 1;
 })());
+/* EVERY caller writes it, the free ones included — the rule the comment above
+   `lastSeed` in plant() states, and the one nothing held. `payCost === false`
+   is the Spreader's free neighbour and the drone's refill, and a Starlit Iris
+   sows one in real play, so `lastSeed: payCost ? seedDef.id : cell.lastSeed`
+   is a live bug and it passed the whole suite. "What grew here" is one rule;
+   "what the player paid for" would be a second one. */
+check('a free sowing writes the memory too, and the chip offers it back', (() => {
+  clearGarden();
+  S.credits = 0;
+  const free = G.plant(0, G.seedById('daisy'), false);
+  const paidNothing = S.credits === 0;
+  const wrote = S.grid[0].lastSeed === 'daisy';
+  advance(S.grid[0].grow + 5);
+  G.harvest(0);
+  const offer = G.replantSeed(0);
+  return free === true && paidNothing && wrote
+    && Boolean(offer) && offer.seed.id === 'daisy';
+})(), `${S.grid[0].lastSeed}`);
+clearGarden();
+S.credits = 1e12;
 check('a locked plot offers nothing', (() => {
   clearGarden();
   S.grid[5].locked = true;
@@ -5443,6 +5509,28 @@ check('the price falls as the crop grows',
   && G.fallSkipCost(1) === 840, `${G.fallSkipCost(1)}`);
 S.fall.grid[1].plantedAt = clock - 99999;
 check('a ripe crop costs nothing', G.fallSkipCost(1) === 0, `${G.fallSkipCost(1)}`);
+/* THE ROUNDING AND THE FLOOR. Every fixture above this line is blind to both:
+   1200, 28800 and 28800-3600 are all exact multiples of 30, so ceil, floor and
+   round agree on every one of them and `Math.floor` passed the whole suite.
+   The last half-minute is where they part company. 31 seconds is the
+   discriminator — ceil says 2, floor and round both say 1. */
+S.fall.grid[0].plantedAt = clock - (S.fall.grid[0].grow - 31);
+check('a part-used half-minute rounds up — not down, and not to nearest',
+  G.fallSkipCost(0) === 2, `${G.fallSkipCost(0)}`);
+/* And the `min 1` docs/04 states as the contract. Under floor or round a crop
+   with seconds still to run prices at 0, `fallSkip()` reads that as nothing to
+   sell and refuses, and the chip disappears off a plot that should be asking
+   for one last gem. The purchase is asserted too: a price of 1 that could not
+   be paid would be the same bug wearing a different number. */
+S.fall.grid[0].plantedAt = clock - (S.fall.grid[0].grow - 5);
+check('a crop in its last five seconds still costs one gem, never nothing',
+  G.fallSkipCost(0) === 1, `${G.fallSkipCost(0)}`);
+const gemsBeforeLast = S.gems;
+const boughtLast = G.fallSkip(0);
+check('and that one gem really buys it',
+  boughtLast !== null && boughtLast.cost === 1
+  && S.gems === gemsBeforeLast - 1 && S.fall.grid[0].ready === true,
+  `${JSON.stringify(boughtLast)} gems ${S.gems}`);
 /* The fixture before the ruling that reads it. A Century Bloom that was not
    actually planted, or was already ripe, would make the two checks below pass
    for reasons that have nothing to do with the exclusion. */
@@ -6345,8 +6433,11 @@ check('the live ladder still totals 789', liveLadder.reduce((a, q) => a + q.rep,
    discFull, hiveQ, healed, stash, rngDaily, qJumped, qFell, legacyQuests and
    legacyInst are all unused elsewhere in the suite — as are discQuests,
    boughtNotGrown, skipAhead, jammed, ownedSeeds and reDealt, added with the
-   discover gate. The script is one flat scope, so a duplicate `const` is a hard
-   throw rather than a failed check: grep before adding one. */
+   discover gate, and ownSeeds, owned6, owned7, owned10, owned11, disc8Gated,
+   disc8Dealt, disc12Gated and disc12Dealt, added with the two-rung group that
+   drives q_discover_8 and q_discover_12. The script is one flat scope, so a
+   duplicate `const` is a hard throw rather than a failed check: grep before
+   adding one. */
 
 /* The Almanac milestones have always read the lifetime species count, and the
    quest engine dealt every quest at zero — one word counting two different
@@ -6479,6 +6570,53 @@ check('the quest is dealt', !!reDealt, S.quests.active.map((q) => q.id).join(','
 check('at its lifetime record, not back at zero — which is why dropping it lost nothing',
   !!reDealt && reDealt.progress === 4 && reDealt.progress === G.discoveredCount(),
   reDealt ? `${reDealt.progress}` : 'never dealt');
+G.reset();
+
+/* THE OTHER TWO RUNGS, DRIVEN. Every behavioural assertion above this line is
+   q_discover_5; all the coverage rungs 8 and 12 had was data inspection that
+   the `needSeeds` field exists and equals qty - 1. Two wrong gates passed the
+   whole suite on that: one narrowed to `def.id === 'q_discover_5'`, and one
+   short-circuiting on `!def.reward` — which lets q_discover_8 through
+   undefended, because it is the only gated rung carrying a reward. #19 names
+   all three rungs, so all three are now driven, both ways: held out below the
+   threshold, dealt at it. */
+group('the gate holds every discover rung, not just the first');
+/* Seed unlocks are price-ordered and the first `freeSeeds` are owned outright,
+   so unlocking the priced ones among the first N leaves exactly N owned. The
+   fixture is asserted before anything reads it — a count that came out wrong
+   would make the two "stays out of the strip" checks below pass for a reason
+   that has nothing to do with the gate. */
+const ownSeeds = (n) => {
+  G.reset();
+  DATA.seeds.slice(0, n).forEach((s) => { if (G.seedUnlockPrice(s.id) > 0) S.seedUnlocks[s.id] = true; });
+  return DATA.seeds.filter((s) => G.seedUnlocked(s.id)).length;
+};
+const owned6 = ownSeeds(6);
+const owned7 = ownSeeds(7);
+const owned10 = ownSeeds(10);
+const owned11 = ownSeeds(11);
+check('the fixture: unlocking the first N seeds really does leave N owned',
+  owned6 === 6 && owned7 === 7 && owned10 === 10 && owned11 === 11,
+  `${owned6}/${owned7}/${owned10}/${owned11}`);
+/* q_discover_8 wants seven owned, and it is the rung carrying the reward. */
+ownSeeds(6);
+const disc8Gated = dealNow('q_discover_8');
+check('q_discover_8 stays out of the strip at six flowers owned',
+  !disc8Gated, S.quests.active.map((q) => q.id).join(','));
+ownSeeds(7);
+const disc8Dealt = dealNow('q_discover_8');
+check('and is dealt the moment the seventh is bought', !!disc8Dealt,
+  S.quests.active.map((q) => q.id).join(','));
+/* q_discover_12 wants eleven, and it is the rung that started the item: dealt
+   around species eight it asked for twelve more in a nineteen-seed game. */
+ownSeeds(10);
+const disc12Gated = dealNow('q_discover_12');
+check('q_discover_12 stays out of the strip at ten flowers owned',
+  !disc12Gated, S.quests.active.map((q) => q.id).join(','));
+ownSeeds(11);
+const disc12Dealt = dealNow('q_discover_12');
+check('and is dealt the moment the eleventh is bought', !!disc12Dealt,
+  S.quests.active.map((q) => q.id).join(','));
 G.reset();
 
 /* The daily is deliberately NOT backfilled: it is a goal for today, and the
@@ -9612,6 +9750,50 @@ check('every one of them carries the ceiling, not just the percentage',
 check('and all four containers rest at the same opacity',
   Object.values(MARKER_FADE).every((re) => re.test(cssSrc)),
   drifted(MARKER_FADE, (re) => re.test(cssSrc)));
+/* THE MARKER HAS TO BE ON SCREEN. Every check above reads the text of a size
+   or fade declaration and none of them notices if the rule that reveals the
+   marker has simply gone. Deleting one line — `.mw-cell.empty .mw-empty{display
+   :grid}` — leaves the meadow with NO plant-here marker at all, and the whole
+   suite stayed green on it. Punch-list #16 B reworks that exact block, so this
+   is the regression the group exists to catch. Summer's shape is the odd one:
+   its marker is shown by default and hidden by state, the other three are
+   hidden by default and shown by state. */
+const MARKER_SHOW = {
+  summer: /\.plot \.empty-mark\{[^}]*display:grid/,
+  fall: /\.fl-plot\[data-state="empty"\] \.fl-empty\{display:grid\}/,
+  winter: /\.wi-plot\[data-state="empty"\] \.wi-empty\{display:grid\}/,
+  meadow: /\.mw-cell\.empty \.mw-empty\{display:grid\}/
+};
+check('and every board still has the rule that puts the marker on screen',
+  Object.values(MARKER_SHOW).every((re) => re.test(cssSrc)),
+  drifted(MARKER_SHOW, (re) => re.test(cssSrc)));
+/* WHAT THIS GROUP HOLDS AND WHAT IT DOES NOT — read this before trusting it.
+   It reads style.css as TEXT. It cannot render, so it can neither measure a
+   marker nor see one hidden by a rule it does not name. Every check above
+   takes the FIRST match, which made a later override invisible: appending
+     @media (min-width:520px){.fl-empty svg{width:46%;height:46%;max-width:none}}
+   restores the exact bug #12 fixed and leaves all of them green. The counts
+   below shut that door for these eight rules — each may be written once and
+   only once, so a second declaration anywhere in the file, inside a media
+   query or not, has to come through this assertion and be argued for.
+   STILL NOT HELD: an override written with a DIFFERENT, higher-ranking
+   selector (`.fl-plot .fl-empty svg{...}`, or a `display:none` on
+   `.fl-plot .fl-empty`), the marker's real size on a real screen, and anything
+   at all about how it looks. Those need the browser — `tools/probe.js`. */
+const MARKER_ONCE = {
+  'summer size': MARKER_RULES.summer,
+  'fall size': MARKER_RULES.fall,
+  'winter size': MARKER_RULES.winter,
+  'meadow size': MARKER_RULES.meadow,
+  'summer show': /\.plot \.empty-mark\{/,
+  'fall show': /\.fl-plot\[data-state="empty"\] \.fl-empty\{/,
+  'winter show': /\.wi-plot\[data-state="empty"\] \.wi-empty\{/,
+  'meadow show': /\.mw-cell\.empty \.mw-empty\{/
+};
+const markerOnce = Object.fromEntries(Object.entries(MARKER_ONCE)
+  .map(([k, re]) => [k, (cssSrc.match(new RegExp(re.source, 'g')) || []).length]));
+check('and each of those eight rules is written once and only once, so no later block re-opens one',
+  Object.values(markerOnce).every((n) => n === 1), JSON.stringify(markerOnce));
 /* One glyph, from one registry, in all four rooms — the meadow drew its own
    copy inline, with its own dash pattern and colours, until 2026-09-03. */
 check('all four rooms emit the shared plantSpot icon',
