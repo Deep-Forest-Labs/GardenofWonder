@@ -111,9 +111,19 @@ whose kind whitelist refuses unknown or banned axes by construction.
 
 **A record with a charm is never sold for money, ever** — a permanent charm is the forever-money
 back door doc 37's first promise forbids; the golden seed's earn-or-buy shape does not transfer
-(its payout is year-scoped; a charm never resets). Cosmetic-only records (song, no charm) may
-join the decor-pack lane someday, as its own ruling. No record ever appears in a paid `???`
-slot or a paid random pack, and no acquisition is missable or RNG-only.
+(its payout is year-scoped; a charm never resets). **The store's door, ruled 2026-09-02 (the
+"later" entry in the decision log): the store may sell SIDE A — songs, with expressive-only
+dressing at most — and never Side B; every charm unlocks through play, forever, and a store
+record's card says so plainly.** No record ever appears in a paid `???` slot or a paid random
+pack, and no acquisition is missable or RNG-only.
+
+**The shelf is built to multiply.** Post-v1 source waves (same laws — deterministic, never
+missable, condition-latched, celebrated once; each is a data row plus a condition on the owed
+sweep): every creature at full stars; the re-authored level ladder's rungs past 17; album set
+completions (song-only records — doc 19's constitution keeps power out of the album); Stand
+tiers with slice D; Fall's, Winter's and Spring's seasonal beats; quest and daily-streak
+moments; the meadow's hive milestones; the story's beats. Records are the connective tissue:
+finding them is how players are pulled into every feature.
 
 ## The audio machine
 

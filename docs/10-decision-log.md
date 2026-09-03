@@ -5,6 +5,45 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-02 (ruling, later) — Records multiply across every feature, and the store may sell Side A
+
+**The owner ruled the record shelf's growth direction the same day the spec filed**: records are
+to be found across MANY features — the point is that finding them pulls players into every corner
+of the game — and records are eventually purchasable from the store as well. Two halves, handled
+differently:
+
+**Sources multiply — ruled, and the architecture is already built for it.** The owed-records
+sweep and the moments machinery make each new source roughly a data row plus a condition. The
+post-v1 waves, sketched so builders and content sessions know the runway: every creature at full
+stars (the roster's records grow with the cast — six today, more with the owner's creature-count
+decision); **the re-authored level ladder's rungs past 17** (the audit's "no vertebrae" gap gets
+vertebrae that sing); album SET COMPLETIONS — which may grant **song-only records**, because doc
+19's constitution keeps power out of the album and a song is cosmetic while a charm is not;
+Stand tiers as slice D lands; seasonal beats (Fall's windfall milestone, Winter's kept nights,
+Spring in its time); quest-ladder and daily-streak moments; the meadow's hive milestones; and
+the story's beats as that thread grows. Every source obeys the standing laws: deterministic,
+never missable, condition-latched, celebrated once.
+
+**The store — the desk's recommendation, enabled by the owner's own decouple: the store may
+sell SIDE A, never Side B.** A song is looks-and-sounds — squarely inside "gems buy chances,
+choices and looks", and the genre's beloved precedent literally sells songs (K.K. Slider's
+catalog is bought with Bells). A CHARM is permanent power, and doc 37's first promise says
+nothing permanent is bought with money "directly or through a back door" — a gem-priced charm
+becomes that back door the day gems are sold for money. So the shape logged here: **store
+records are songs (with expressive-only dressing at most); every charm unlocks only through
+play, forever** — the store card says so plainly ("its charm is found in the garden"), which
+turns the restriction into an advert for playing. **If the owner means charmed records to be
+purchasable too, that is a move of pillar promise #1** — theirs to make, but it re-prices the
+positioning (the "nothing permanent for sale" sentence and the 1-in-233 finding are marketing
+assets), and it is deliberately NOT made by this entry; it waits on the owner's explicit word.
+
+**Rejected:** selling charmed records under the golden-seed earn-or-buy shape (a charm never
+resets, so the shape does not transfer — recorded once already with the shelf ruling and
+restated here because the question will keep arriving); and any record in a paid random
+container, ever.
+
+---
+
 ## 2026-09-02 (ruling) — The record shelf: songs on Side A, charms on Side B
 
 **The owner ruled the collectible-records feature into the game**: records found through play,
