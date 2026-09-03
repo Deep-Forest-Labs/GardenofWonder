@@ -4188,6 +4188,41 @@ const Game = (() => {
     return payload;
   }
 
+  /* Summer's rate on Fall's clocks — `skipSecondsPerGem`, unmultiplied — so a
+     crop costs what its remaining seconds cost anywhere else in the game.
+
+     THE CENTURY BLOOM HAS NO PRICE. The wait is the monument, so it refuses
+     here rather than pricing high, and this is the only place that refusal
+     lives: the chip reads this number and has no second opinion about what is
+     standing in the plot. */
+  const fallSkipCost = (idx) => {
+    const cell = fallCell(idx);
+    const def = cell && cell.seed ? fallPlantById(cell.seed) : null;
+    if (!def || def.century) return 0;
+    const remain = Math.max(0, cell.grow - (nowSeconds() - cell.plantedAt));
+    if (remain <= 0) return 0;
+    return Math.max(1, Math.ceil(remain / DATA.skipSecondsPerGem));
+  };
+
+  function fallSkip(idx) {
+    const cell = fallCell(idx);
+    const cost = fallSkipCost(idx);
+    if (!cost || state.gems < cost) return null;
+    state.gems -= cost;
+    /* Backdate the planting rather than shrinking the grow time, for the same
+       reason `skipGrow()` does: a crop hurried the instant it went in has zero
+       elapsed seconds, and any positive grow leaves it permanently one tick
+       short of ripe. It also keeps the growth bar reading full. */
+    cell.plantedAt = nowSeconds() - cell.grow;
+    /* Ripen through the real path, never by writing `ready` here. A bought crop
+       has to arm and mark the bed exactly the way a waited-for one does — the
+       windfall is what Fall is. */
+    processFall(nowSeconds());
+    save();
+    emit('currency');
+    return { idx, cost };
+  }
+
   /* ---------------- Winter — the night shift ----------------
 
      Opens at Turn 3. The garden's own grammar again — eight plots, the hero
@@ -5611,7 +5646,7 @@ const Game = (() => {
     petalsOf, petalCost, buyPetal, petalMult, petalGrowMult, petalEffect,
     plantGrowth, plantPayout,
     fallOpen, fallPlantById, fallCell, fallCenturyGrowing, fallPlant, fallHarvest,
-    fallBedValue, fallHarvestAll,
+    fallBedValue, fallHarvestAll, fallSkipCost, fallSkip,
     processFall, checkFallWindfall,
     winterOpen, winterPlantById, winterCell, winterPlant, winterHarvest,
     winterBedValue, winterHarvestAll, winterTuck, winterTucked, winterBedState,

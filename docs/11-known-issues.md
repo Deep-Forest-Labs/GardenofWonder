@@ -36,6 +36,17 @@ point: the goal now names a wall the player can reach — one Bluebell at 150,00
 there for three walls of gold. Expect it to be re-reported as a regression by anyone reading the
 strip alone; the number to check is what the goal costs, not how long it leads.
 
+**The flower's greeting bubble covers the top-middle Fall crop's wait pill for the few seconds it is
+up.** Moving `.fl-wait` to the bottom of the tile (`#24`, to free the top-right corner for the gem
+chip) put it under `#speech`, which rises out of the centre cell into the tile above: measured 16px
+of a 20px pill on plot 1 only, and gone when the bubble fades ~4.5 s later. Traded rather than
+solved — the top row is the chip's, and the alternative homes are worse: shortening the growth bar
+to free the bottom-right halves the bar on a 320px screen, and the bar is the growth signal. **Two
+comments in `ui-fall.js` are stale in the same breath** (the `buildBoard()` note that the speech
+bubble does not come with the flower, and `collectAll()`'s reason for having no `UI.say()`):
+`ui.js:32-46` moves the one `#speech` node into whichever hero cell is on screen, so Fall does speak
+now. The comments were left alone as out of scope; the behaviour they describe is what changed.
+
 **The one bar already scheduled in the instant before the page froze still fires on the way back.**
 `#23` stops the three schedulers on a frozen context, but a note booked a moment earlier is already
 on the AudioContext's own queue and plays when the context resumes. It is one chord against the 81
@@ -81,9 +92,11 @@ had inherited the same shape; `.wi-chip` takes `gap:0` with the margin on the ic
 is one line of CSS away and was deliberately not changed in slice C, because Fall is not that
 slice — it is a two-minute fix for the next round.
 
-**The gem skip chip still overflows its plot in landscape.** Narrower than it was now the wait is
-gone, still a 34px chip on a 31px tile. Landscape is not a supported orientation. See the entry
-further down.
+**The gem skip chips still overflow their plots in landscape — both of them.** Narrower than they
+were now the wait is gone, still a 34px chip on a 31px tile in the garden; Fall's `.fl-skip` is the
+same component under the same clamp and the same `@media (max-height:600px)` shrink, and measured
+15px on a 31px tile at 844×390. Fall's wait pill pokes out the top of the tile there too, now that it
+sits at the bottom. Landscape is not a supported orientation. See the entry further down.
 
 **The `--yard-h` reservation is now load-bearing for alignment.** `UI.boardSide()` reads `.stage`'s
 bottom padding to find the yard's height, because the yard node measures zero in Fall. Anything that

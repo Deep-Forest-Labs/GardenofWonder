@@ -68,19 +68,22 @@
         <span class="fl-empty">${Icons.get('plantSpot')}</span>
         <span class="fl-ready">!</span>
         <span class="fl-wait" hidden></span>
-        <span class="fl-bar"><i></i></span>`;
+        <span class="fl-bar"><i></i></span>
+        <button class="fl-skip" type="button" aria-label="Finish this crop with gems">${Icons.get('gem')}<span></span></button>`;
       board.appendChild(b);
       cellEls.set(idx, {
         root: b,
         slot: $('.fl-slot', b),
         wait: $('.fl-wait', b),
         bar: $('.fl-bar i', b),
+        skip: $('.fl-skip', b),
+        skipNum: $('.fl-skip span', b),
         /* Seeded with values no state can produce. A cache initialised to ''
            never fires its first write for a state whose key is also '' — an
            empty plot's wait text — so the wait pill painted as an empty capsule
            on every ripe plot. Exactly the trap the docs record for
            `dataset.look`. */
-        cache: { look: '?', wait: '?', state: '?', marked: null }
+        cache: { look: '?', wait: '?', state: '?', marked: null, skipGems: -1, skipOk: '?' }
       });
     }
   }
@@ -282,6 +285,34 @@
       if (def && !ready) {
         v.bar.style.width = `${Math.round(Math.min(1, (now - c.plantedAt) / c.grow) * 100)}%`;
       }
+      /* The price sits on the crop, always visible — the farm-game convention
+         the garden already uses, so the option teaches itself. No countdown on
+         it: the wait pill below is Fall's one clock, and #8 took the second one
+         off the garden's chip for exactly that reason. The wait goes in the
+         `aria-label`, where it is spoken on demand.
+
+         `Game.fallSkipCost()` is the only authority on whether a plot can be
+         hurried. It answers 0 for empty, ripe and the Century Bloom, and this
+         file deliberately does not restate any of those tests — a second copy
+         of a ruling is a guard whose test cannot fail.
+
+         The afford state is in the key as well as the price, the same bug the
+         garden's chip records: a chip greyed out at 40 gems has to un-grey the
+         moment a gem drops, not when the price next ticks. */
+      const skipGems = Game.fallSkipCost(i);
+      const skipOk = skipGems && S.gems >= skipGems ? 'ok' : 'no';
+      if (v.cache.skipGems !== skipGems || v.cache.skipOk !== skipOk) {
+        v.cache.skipGems = skipGems;
+        v.cache.skipOk = skipOk;
+        if (skipGems) {
+          v.skipNum.textContent = fmt(skipGems);
+          v.skip.setAttribute('aria-label',
+            `Finish now for ${fmt(skipGems)} gem${skipGems === 1 ? '' : 's'}, saving ${span(Math.max(1, Math.round(c.plantedAt + c.grow - now)))}`);
+          v.root.dataset.skip = skipOk;
+        } else {
+          delete v.root.dataset.skip;
+        }
+      }
     });
     renderBedChip();
   }
@@ -301,12 +332,12 @@
     const now = nowSec();
     if (now < c.plantedAt + c.grow) {
       const p = FX.centerOf(cellEls.get(idx).root);
-      /* Fall has no hasten — its clocks are the mechanic — but the same tap
-         hastens in Summer, so the refusal has to say something rather than
-         nothing. */
+      /* The body of a growing crop is not the hurry button — the gem chip in
+         its corner is. The Century Bloom has no chip at any price, so it is the
+         one plot where this tap really is a refusal and says so. */
       FX.float(p.x, p.y, def.century
         ? 'Growing all fortnight'
-        : `Ripe in ${span(c.plantedAt + c.grow - now)}`, '');
+        : 'Gems finish it', '');
       FX.haptic(4);
       return;
     }
@@ -317,6 +348,31 @@
     FX.float(p.x, p.y - 8, `+${fmt(res.payout)}`, res.windfall ? 'crit' : '');
     Sound.play(res.windfall ? 'crit' : 'coin');
     if (res.windfall) FX.haptic([10, 40, 10]);
+    render();
+  }
+
+  /* The gem chip. Its own handler because the plot's tap is a harvest and a
+     hurry is a purchase — the one place in Fall where a tap spends. The refusal
+     floats on the plot rather than speaking: the answer belongs on the thing
+     that was tapped, next to the price that was refused. */
+  function onSkipTap(idx) {
+    const cost = Game.fallSkipCost(idx);
+    if (!cost) return;
+    const p = FX.centerOf(cellEls.get(idx).root);
+    if (S.gems < cost) {
+      Sound.play('deny');
+      FX.shake(4);
+      UI.popWallet('gems');
+      FX.float(p.x, p.y, 'Not enough gems', '');
+      FX.haptic(4);
+      return;
+    }
+    const r = Game.fallSkip(idx);
+    if (!r) return;
+    FX.sparks(p.x, p.y, 12, '#8ce0ff');
+    FX.float(p.x, p.y - 8, `-${fmt(r.cost)}`, 'rare');
+    Sound.play('buy');
+    FX.haptic(12);
     render();
   }
 
@@ -385,6 +441,14 @@
   function init() {
     if (!el.fallBoard) return;
     el.fallBoard.addEventListener('click', (e) => {
+      /* The chip is a child of the plot, so one tap resolves to both. The chip
+         wins and returns; without that, a single tap would hurry the crop and
+         then harvest the thing it just paid to ripen. And it stays a CLICK —
+         Summer's chip fires on `pointerdown` only because its plot handler does
+         too, and a pointerdown chip here would charge on the press and let this
+         listener fire again on the release. */
+      const s = e.target.closest('.fl-skip');
+      if (s) { onSkipTap(Number(s.closest('[data-fall]').dataset.fall)); return; }
       const b = e.target.closest('[data-fall]');
       if (!b) return;
       onCellTap(Number(b.dataset.fall));

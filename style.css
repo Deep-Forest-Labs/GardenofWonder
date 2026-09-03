@@ -653,8 +653,9 @@ button:focus-visible{
 .plot-inner{position:absolute;inset:0;border-radius:15px;overflow:hidden}
 
 /* Farm-game convention: the cost of hurrying a plant sits on the plant, always visible, so the
-   option teaches itself rather than hiding behind a long-press nobody finds. */
-.skip-chip{
+   option teaches itself rather than hiding behind a long-press nobody finds. Fall's crops carry
+   the same chip in the same corner (`.fl-skip`) — one object, one place, so it is learned once. */
+.skip-chip,.fl-skip{
   position:absolute;top:5px;right:5px;z-index:4;
   display:none;align-items:center;gap:2px;
   padding:2px 6px 2px 4px;border-radius:999px;
@@ -664,17 +665,17 @@ button:focus-visible{
   box-shadow:0 2px 0 var(--ink-2);
   touch-action:manipulation;
 }
-.plot[data-skip] .skip-chip{display:inline-flex}
-.plot[data-skip="no"] .skip-chip{background:#e6e0d8;opacity:.65}
-.skip-chip svg{width:11px;height:11px}
+.plot[data-skip] .skip-chip,.fl-plot[data-skip] .fl-skip{display:inline-flex}
+.plot[data-skip="no"] .skip-chip,.fl-plot[data-skip="no"] .fl-skip{background:#e6e0d8;opacity:.65}
+.skip-chip svg,.fl-skip svg{width:11px;height:11px}
 /* The clamp outlives the wait it was written for. Landscape is not a supported
    orientation and collapses the board to ~100px, where a 34px chip is wider than
    the 31px tile it labels — so the chip is held to its plot and kept on one
    line, which is the difference between a chip that overhangs and one that
    reflows the tile under it. */
-.skip-chip{white-space:nowrap;max-width:calc(100% - 10px)}
-.skip-chip:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
-@media (max-height:600px){ .skip-chip{padding:1px 5px 1px 3px;font-size:9px} }
+.skip-chip,.fl-skip{white-space:nowrap;max-width:calc(100% - 10px)}
+.skip-chip:active,.fl-skip:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
+@media (max-height:600px){ .skip-chip,.fl-skip{padding:1px 5px 1px 3px;font-size:9px} }
 
 /* The welcome-back scene. Reads as a short account of what happened, not a receipt. */
 .away-lede{font-size:14px;font-weight:800;line-height:1.4;margin:2px 0 12px}
@@ -4622,8 +4623,15 @@ button:focus-visible{
 .fl-plot[data-state="ready"]{box-shadow:0 4px 0 #392a1c, 0 8px 14px rgba(44,26,16,.24), 0 0 0 3px var(--coin)}
 @keyframes readyBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 
+/* The wait sits at the bottom, over the bar, because the gem chip takes the
+   top-right corner it takes in the garden. The two cannot share the top row: at
+   390x844 the tile is 110px, the chip is 44px at three digits and the widest
+   ordinary wait ("7h 59m") is 48px, and the overlap only grows as the tile
+   shrinks. Winter's pill already sits here; 16px rather than Winter's 15
+   because Fall's bar is `bottom:6px` where Winter's is 5, so the gap above the
+   bar is the same 3px in both rooms. */
 .fl-wait{
-  position:absolute;left:50%;top:6px;transform:translateX(-50%);z-index:5;
+  position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:5;
   padding:2px 7px;border-radius:999px;
   border:2px solid var(--ink);
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));

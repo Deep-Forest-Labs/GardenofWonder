@@ -709,7 +709,8 @@ const DATA = {
         'Put the game down and come back, and the music carries on quietly from where it left off instead of arriving all at once.',
         'Rain and thunderstorms are half as loud now — the weather sits behind the garden instead of over it, and the thunder is as loud as it ever was.',
         'The dotted square with the plus that marks an empty spot is the same everywhere now — the fall bed and the wild meadow match your garden.',
-        'Finding your third flower is a goal now, and the bigger ones wait until you’re close instead of sitting in your list from the first minutes.'
+        'Finding your third flower is a goal now, and the bigger ones wait until you’re close instead of sitting in your list from the first minutes.',
+        'Crops in your fall bed can be finished early with gems now, the same as the flowers in your garden — every crop but the Century Bloom, which keeps its fortnight.'
       ]
     },
     {

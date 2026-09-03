@@ -285,6 +285,22 @@ Implementation note: the skip **backdates `plantedAt`** rather than shrinking `g
 the instant it went in has zero elapsed seconds, and any positive grow left it permanently one tick
 short of ripe.
 
+**Fall gained its own skip on 2026-09-03**, on the owner's ruling, and Summer kept its own — the
+item was rescoped to purely additive. `fallSkipCost(idx)` / `fallSkip(idx)` in `game.js` are the two
+verbs, and they run the *same* `ceil(remaining / 30)` rate on Fall's hour-scale clocks: 40 gems for a
+Strawberry from full, 360 for a Pumpkin, 960 for an Apple. No new number entered `data.js` — both
+seasons read `DATA.skipSecondsPerGem`. Fall's chip is `.fl-skip`, in the same corner of the crop as
+the garden's.
+
+**The Century Bloom refuses at any price.** [37-monetization.md](37-monetization.md)'s never-sell
+table forbids selling its exit — *"the wait is the monument"* — so `fallSkipCost()` answers 0 for it
+and `fallSkip()` returns `null`. That refusal lives in exactly one function, and `ui-fall.js`
+deliberately does not restate it: a second copy of a ruling is a guard whose test cannot fail.
+
+**A bought crop ripens through `processFall()`, never by writing `ready` itself.** It has to arm and
+mark the bed identically to a waited-for one, because the windfall is what Fall is and a bought one
+is accepted (the owner's ruling: gems spent are the point). Winter has no skip.
+
 ## Weather and mutations
 
 **Built 2026-08-15.** Full design and reasoning in
@@ -1048,9 +1064,11 @@ that field by field and fails if a future save field dodges classification.
 
 **Fall, as simulation:** `state.fall.grid` is eight cells (`DATA.fall.plots`) of
 `{ seed, plantedAt, grow, ready, windfall }` — the main grid's shape minus the mutation
-and pack fields. `fallPlant` / `processFall` / `fallHarvest` run the board; crops pay
-`yield` flat — no rarity, no mutations, no gems, no `discovered`, no pantry, no bench —
-and count only generic `harvest` quest tracks. **The windfall** arms the moment every
+and pack fields. `fallPlant` / `processFall` / `fallHarvest` / `fallSkip` run the board;
+crops pay `yield` flat — no rarity, no mutations, no gem *drops*, no `discovered`, no
+pantry, no bench — and count only generic `harvest` quest tracks. Gems reach Fall in one
+direction only, and only since 2026-09-03: **`fallSkip` spends them to hurry a crop**, the
+single gem sink in the season. **The windfall** arms the moment every
 non-Century plot stands planted and ripe — ripeness read from `plantedAt`/`grow`, never
 from the cached `ready` flag, because `load()` rebuilds every Fall cell with `ready`
 false and a bed that completed while the tab was shut still has to pay. Each cell is
@@ -1351,6 +1369,17 @@ count: a count is a status, a wait is an appointment.
 collects it — so it gets a body colour of its own (violet earth) and its own block in the crop
 picker. Two million gold in a list of two-thousand-gold strawberries is either scrolled past or
 tapped by accident.
+
+**Every growing crop wears a gem chip in its top-right corner** (`.fl-skip`, 2026-09-03) — the
+garden's chip, in the garden's corner, with the garden's treatment, so the option is learned once
+and works the same in both rooms. Price only, no countdown: #8 took the countdown off the garden's
+chip on the owner's ruling, and Fall's shipped without one from the start. The wait it buys is in the
+`aria-label`. **The Century Bloom shows no chip at any price**, and its body tap still says *Growing
+all fortnight*; every other growing crop's body tap now points at the chip instead of restating the
+clock the pill below it already carries. **The wait pill moved to the bottom of the tile** to make
+room — Winter's position. The two cannot share the top row: at 390×844 a plot is 110px, the widest
+chip is 44px and the widest ordinary wait ("7h 59m") is 48px, and the gap only closes as the tile
+shrinks.
 
 **Fall's edge tab carries the dock's attention dot** when anything in Fall is ripe or still owed a
 windfall — an appointment needs a bell, and the dot is the pattern the dock already uses to teach

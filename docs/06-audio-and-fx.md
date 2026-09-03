@@ -412,6 +412,7 @@ than a Rare one.
 | Level-up | — | 34 confetti + ring | 9 | `levelup` | yes | — |
 | Fall's bed arms | — | ring + 12 sparks | — | `crit` | — | attempted |
 | Fall's Collect All | 20 | 22 confetti + ring | 7 | `levelup` | yes | — |
+| Hurry with gems (garden or Fall) | — | 12 blue sparks + the price as a `rare` float | — (4 when refused) | `buy` (`deny` when refused) | — | Summer says `broke` when refused; Fall floats *Not enough gems* on the plot |
 | Wonder Effect | — | rainbow burst + 5 confetti waves | 10 | `wonder` | banner | forced |
 | Rain (3 channels) | — | 74 drops + splashes on plants | — | `rain` bed, rain dress, effects ducked | — | forecast line, then arrival |
 | Thunderstorm (5) | — | 70 faster, wind-blown drops + the flash | — | `storm` bed and dress, a `crack` per flash, one `rumble` leaving | — | forecast line, then arrival |

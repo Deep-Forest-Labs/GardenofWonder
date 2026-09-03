@@ -5317,6 +5317,89 @@ check('the Century Bloom pays its own enormous plain price, never the windfall',
 check('and the Century payout earns into the year',
   S.year.coinsEarned === yrBeforeCentury + centuryPay.payout);
 
+group("Fall's gem skip buys time, and the Century Bloom is not for sale");
+/* Self-contained, like the two `bill 12b` groups above it: it opens on a fresh
+   reset and asserts nothing that depends on where it sits in the file. */
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+S.gems = 1e6;
+check('an empty Fall plot costs nothing to hurry', G.fallSkipCost(0) === 0);
+G.fallPlant(0, 'strawberry');
+G.fallPlant(1, 'apple');
+check('a longer crop costs more than a shorter one',
+  G.fallSkipCost(1) > G.fallSkipCost(0), `${G.fallSkipCost(1)} vs ${G.fallSkipCost(0)}`);
+/* THE RULED RATE, pinned to an exact number as well as to the formula: the
+   owner ruled no multiplier, so an x2 landing later has to fail a named
+   assertion rather than ship quietly. */
+check("the price is the garden's rate on Fall's clock \u2014 no multiplier",
+  G.fallSkipCost(1) === Math.ceil(G.fallPlantById('apple').grow / DATA.skipSecondsPerGem)
+  && G.fallSkipCost(1) === 960, `${G.fallSkipCost(1)}`);
+check('a strawberry from full is 40 gems', G.fallSkipCost(0) === 40, `${G.fallSkipCost(0)}`);
+S.fall.grid[1].plantedAt = clock - 3600;
+check('the price falls as the crop grows',
+  G.fallSkipCost(1) === Math.ceil((G.fallPlantById('apple').grow - 3600) / DATA.skipSecondsPerGem)
+  && G.fallSkipCost(1) === 840, `${G.fallSkipCost(1)}`);
+S.fall.grid[1].plantedAt = clock - 99999;
+check('a ripe crop costs nothing', G.fallSkipCost(1) === 0, `${G.fallSkipCost(1)}`);
+/* The fixture before the ruling that reads it. A Century Bloom that was not
+   actually planted, or was already ripe, would make the two checks below pass
+   for reasons that have nothing to do with the exclusion. */
+check('the fixture: a Century Bloom is planted and still growing',
+  G.fallPlant(2, 'century') && S.fall.grid[2].seed === 'century'
+  && clock - S.fall.grid[2].plantedAt < S.fall.grid[2].grow,
+  JSON.stringify(S.fall.grid[2]));
+check('the Century Bloom has no price', G.fallSkipCost(2) === 0, `${G.fallSkipCost(2)}`);
+const gemsBeforeCentury = S.gems;
+check('and it refuses the skip with the gems untouched',
+  G.fallSkip(2) === null && S.gems === gemsBeforeCentury
+  && S.fall.grid[2].seed === 'century' && S.fall.grid[2].ready === false,
+  `${S.gems} vs ${gemsBeforeCentury}`);
+S.gems = 0;
+G.fallPlant(3, 'apple');
+check('skipping is refused without the gems',
+  G.fallSkip(3) === null && S.fall.grid[3].ready === false);
+S.gems = 1e6;
+const applePrice = G.fallSkipCost(3);
+const gemsBeforeBuy = S.gems;
+const boughtApple = G.fallSkip(3);
+check('skipping takes exactly its price and ripens the crop',
+  boughtApple !== null && boughtApple.cost === applePrice && applePrice === 960
+  && S.gems === gemsBeforeBuy - applePrice && S.fall.grid[3].ready === true,
+  `${JSON.stringify(boughtApple)} gems ${S.gems}`);
+const boughtPay = G.fallHarvest(3);
+check('and the bought crop pays its plain yield like any other',
+  boughtPay !== null && boughtPay.payout === G.fallPlantById('apple').yield,
+  `${boughtPay && boughtPay.payout}`);
+
+/* The windfall is what Fall is, and the owner accepted a bought one \u2014 so a
+   hurried plot has to arm and mark the bed exactly the way a waited-for one
+   does. This is the assertion that fails if `fallSkip` ever sets `ready`
+   itself instead of ripening through `processFall()`. */
+G.reset();
+S.year.turnsCompleted = 1;
+S.credits = 1e9;
+S.gems = 1e6;
+for (let i = 0; i < DATA.fall.plots; i += 1) G.fallPlant(i, 'strawberry');
+for (let i = 0; i < DATA.fall.plots - 1; i += 1) S.fall.grid[i].plantedAt = clock - 9999;
+G.processFall(clock);
+const lastPlot = DATA.fall.plots - 1;
+check('the fixture: seven ripe, the eighth still growing, and no windfall yet',
+  S.year.stats.windfalls === 0 && S.fall.grid.every((c) => c.windfall === false)
+  && G.fallSkipCost(lastPlot) === 40,
+  `${S.year.stats.windfalls} / ${G.fallSkipCost(lastPlot)}`);
+check('a bought crop marks for the windfall like a waited-for one',
+  G.fallSkip(lastPlot) !== null && S.year.stats.windfalls === 1
+  && S.fall.grid.every((c) => c.windfall === true)
+  && G.fallBedValue().plots === DATA.fall.plots,
+  `${S.year.stats.windfalls} marked ${S.fall.grid.filter((c) => c.windfall).length}`);
+const boughtBed = G.fallHarvestAll();
+check('and the whole bed pays the bonus, the bought plot included',
+  boughtBed !== null && boughtBed.plots === DATA.fall.plots
+  && boughtBed.payout === DATA.fall.plots
+    * Math.round(G.fallPlantById('strawberry').yield * (1 + DATA.fall.windfall)),
+  `${boughtBed && boughtBed.payout}`);
+
 group('Fall crops are not flowers');
 G.reset();
 S.year.turnsCompleted = 1;

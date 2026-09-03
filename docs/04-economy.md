@@ -268,12 +268,23 @@ still set `gemChance` to opt out, and none do.
 | Call Rain | 8 gems | 4 minutes, pulls unspent rolls into the window |
 | Call Thunderstorm | 25 gems | as above |
 | Skip a timer | `ceil(remaining / 30)`, min 1 | Falls as the plant grows |
+| Hurry a Fall crop | `ceil(remaining / 30)`, min 1 | Same rate, hour-scale clocks: 40 gems for a Strawberry, 360 for a Pumpkin, 960 for an Apple. The Century Bloom has no price |
 | Gnome of Fortune | 250 gems | Cosmetic |
 | Lantern Tree | 40 gems | Cosmetic |
 
 Eight plots earn ~14 gems/hour, so a Thunderstorm call is close to two hours of income — a real
 decision rather than pocket change. **Price sinks against that rate, not against the cosmetics**,
 which are a one-off catalogue and will always be finished.
+
+**The Fall row is priced against Summer's clock rather than against that rate, and the prediction is
+written here so the next tuning pass inherits it rather than re-deriving it.** At ~14 gems/hour every
+Fall skip costs more gem income than the wall-clock time it buys: 3 hours of income to save 20
+minutes on a Strawberry, 26 to save 3 hours on a Pumpkin, 69 to save 8 on an Apple. **So the likely
+finding is that the button sits unpressed** — which is a cheap thing to learn from a build rather
+than from a table, and is exactly what the owner asked for (*"just get it in there and see how it
+feels at first"*, no ×2). If the owner later wants a skip they would actually buy, **the dial to move
+is the shape, not the multiplier**: a flat price per crop tier, or a price on the hours rather than
+the seconds, or a cap. Doubling the rate makes an unbought button twice as unbought.
 
 **Aurora and Wonderfall have no price and must not get one.** See
 [03-systems.md](03-systems.md#gems-where-they-come-from-and-what-they-buy).

@@ -2634,6 +2634,17 @@ its track, at which point a grid falls back to start-alignment and the child mov
 instead of half of one. On a 640-tall screen that turned a 23px error into a 52px one. **If two
 things must line up, give them no margin and let whatever hangs off them be positioned absolutely.**
 
+**Two pieces of tile furniture that can be on screen at the same time cannot both be centred on the
+same edge, and the arithmetic settles it, not the screenshot at the reference size.** Fall's wait
+pill was centred at `top:6px` and `#24` needed the top-right corner for a gem chip. At 390×844 a plot
+is 110.1px, the widest three-digit chip is 43.5px and the widest ordinary wait ("7h 59m") is 48.3px —
+so they overlap, and they overlap by *more* on every smaller viewport, because the pill's width is
+set by its text and the tile's is set by the screen (98.4px at 390×640, 100.9 at 360×780, 88.7 at
+320×568). A reference-size screenshot of two chips that happen to clear each other proves nothing;
+measure both rects at the smallest supported tile. The pill moved to `bottom:16px`, which is where
+Winter's `.wi-wait` already sat — **the cheapest answer to "where else can this live" is usually the
+room next door that already solved it.**
+
 **Hiding a grid row in ONE state gives its height back to the container in that state only.**
 `.in-fall .rail{display:none}` was added to give the bed chip its band on a short screen and
 immediately broke the board alignment it was there to protect, because `.stage` grew in Fall and not
