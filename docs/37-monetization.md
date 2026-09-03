@@ -16,7 +16,7 @@ SDK arrives, `Game.watchAd()` is
 the one function that changes and everything around it — the caps, the counters, the first-session
 rule, the no-countdown rule, the mint exclusion — is already true and already tested.
 
-Four things that ride with the amendment:
+Five things that ride with the amendment:
 
 - **The caps live in `DATA.ads`**, which is prerequisite 5 below, done. `dailyCap: 6` is the top of
   the 3–6 band; `perPlacement: { food: 2, drone: 2 }` is what each surface may take of it. Feeding
@@ -32,14 +32,28 @@ Four things that ride with the amendment:
   loan, because an ad sold once for a grant worth nothing is an ad that is never trusted again. And
   it is excluded from `passiveIncomeRate()`, which is the same refusal this document makes of the
   Turn doubler in different clothes: that function is a rate multiplied over a whole absence, so a
-  thirty-second ad composed into it would pay out a full night. It grants **no gold at all** — it
-  lends a machine — so there is nothing for promise 1's mint exclusion to catch, and
-  `tools/sim-test.js` asserts that in bill 4's own idiom anyway, at exactly zero on both ledgers.
+  thirty-second ad composed into it would pay out a full night.
+- **The rental's gold does not feed the well, and this is where the promise nearly went.** The
+  offer hands over no coin — it lends a machine — but the machine spends the next half hour
+  *picking plots*, and every pick paid through `credit()` like any other. Measured before the fix:
+  **81k–591k gold from one video** into both `lifetimeCoins` and `year.coinsEarned`, +34 to +58
+  Saved Seeds, and `turnReady()` flipping false → true on its own — `DATA.year.minCoins` is one of
+  its two gates. Promise 1 is absolute about the Turn's currencies and names this exact back door,
+  so it is closed rather than argued: `processAutoHarvest()` passes `{ ad: true }` to `harvest()`
+  whenever the **borrowed** drone wins `droneLevel()`'s `max`, and `harvest()` forwards that one
+  flag to `credit()`. The condition is the composition rule read backwards — when the bought badge
+  equals or beats the loan, the identical pick happens at the identical cadence without it, so that
+  gold is the **purchase** earning and still counts in full. A hand harvest during a rental is the
+  player's own play and counts too. Three sim-tests hold all three states by running the rental
+  window rather than sampling the instant `rentDrone()` returns, which is zero by construction.
+  **The lesson for the next placement: ask what the reward *does* over its lifetime, not what the
+  granting function hands over.**
 - **The mint-exclusion flag exists and is sim-tested** — prerequisite 2 below, done. `credit(n, {
   ad: true })` skips both accumulators exactly as `cheat` and `refund` do, and bill 4 in
-  `tools/sim-test.js` asserts an ad grant moves the wallet and neither ledger. Nothing pays gold for
-  an ad yet; the flag ships with the first placement so the second inherits it rather than
-  rediscovering the promise.
+  `tools/sim-test.js` asserts an ad grant moves the wallet and neither ledger. It shipped with the
+  first placement so the second would inherit it rather than rediscover the promise — and the
+  second promptly needed it, through a route nobody had drawn: the drone rental pays gold
+  *indirectly*, over half an hour, out of the machine it lends.
 - **Nothing in the placement holds a clock**, because a time-limited offer attaches a PEGI 12
   descriptor ([40-financial-model.md](40-financial-model.md)). A sim-test reads the whole `DATA.ads`
   table for the vocabulary of urgency and fails on it, and another reads `DATA.droneRental` the same

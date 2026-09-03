@@ -2113,6 +2113,113 @@ check('renting grants no gold and never reaches the mint', (() => {
   return took === true && S.credits === wallet
     && S.year.coinsEarned === yr && S.lifetimeCoins === lt;
 })(), `${S.credits} / ${S.year.coinsEarned} / ${S.lifetimeCoins}`);
+/* THE HALF HOUR, which is where the promise actually breaks and where the
+   assertion above cannot reach. rentDrone() writes one timestamp and nothing
+   else, so sampling the three ledgers the instant it returns reads zero BY
+   CONSTRUCTION — it can only ever catch a direct credit() inside that function.
+   The ad's gold arrives afterwards, out of the MACHINE it lent:
+   processAutoHarvest() -> harvest() -> credit(), 473-596 picks over the thirty
+   minutes. Measured before the flag: 81k-591k gold into BOTH accumulators from
+   one video, on its own enough to clear DATA.year.minCoins, which is one of
+   turnReady()'s two gates. So this one RUNS THE WINDOW: rent, put ready plots
+   under the drone, drive the live loop, and read the ledgers after real picks.
+
+   The setup is what makes the zero mean something. Auto-planters off, so
+   nothing replants and no seed cost muddies the wallet delta; the rep counter
+   zeroed and only four picks taken, so no level-up grant — gold the picks did
+   not pay — can land inside the window and be mistaken for a leak. */
+const rentalWindow = (() => {
+  G.reset(); clearGarden(); unlockTo(12);
+  S.ads.sessions = 5; S.ads.day = 'rental-window'; S.ads.today = {};
+  S.credits = 1e6;
+  S.upgrades.autoHarvest = 0;
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 0; });
+  S.harvestsTowardRep = 0;
+  const took = G.rentDrone();
+  for (let i = 0; i < 4; i += 1) {
+    S.grid[i].seed = 'daisy'; S.grid[i].plantedAt = clock - 100; S.grid[i].grow = 10; S.grid[i].ready = true;
+  }
+  const wallet = S.credits; const yr = S.year.coinsEarned; const lt = S.lifetimeCoins;
+  advance(20);
+  return {
+    took,
+    lifted: S.grid.slice(0, 4).filter((c) => c.seed === null).length,
+    paid: S.credits - wallet,
+    year: S.year.coinsEarned - yr,
+    lifetime: S.lifetimeCoins - lt
+  };
+})();
+check('and the half hour it lends mints nothing either — the RENTED drone\'s picks pay the wallet only',
+  rentalWindow.took === true && rentalWindow.lifted === 4 && rentalWindow.paid > 0
+  && rentalWindow.year === 0 && rentalWindow.lifetime === 0,
+  `${rentalWindow.lifted} picks paid ${rentalWindow.paid} -> year +${rentalWindow.year}, lifetime +${rentalWindow.lifetime}`);
+/* THE OTHER HALF, and it is not optional: the exclusion above must be aimed at
+   the LOAN and never at the drone. A flag hung on activeBoost('drone'), or on
+   the auto path as a whole, silently nerfs a PAID upgrade — the badge is the
+   most expensive thing in the Upgrades tab and its gold has always fed the
+   well. Same four plots, same loop, badge instead of loan: every coin lands in
+   both ledgers, and the pair is what proves the condition discriminates. */
+const badgeWindow = (() => {
+  G.reset(); clearGarden(); unlockTo(12);
+  S.credits = 1e6;
+  S.upgrades.autoHarvest = 1;
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 0; });
+  S.harvestsTowardRep = 0;
+  for (let i = 0; i < 4; i += 1) {
+    S.grid[i].seed = 'daisy'; S.grid[i].plantedAt = clock - 100; S.grid[i].grow = 10; S.grid[i].ready = true;
+  }
+  const wallet = S.credits; const yr = S.year.coinsEarned; const lt = S.lifetimeCoins;
+  advance(20);
+  return {
+    rented: G.activeBoost('drone'),
+    lifted: S.grid.slice(0, 4).filter((c) => c.seed === null).length,
+    paid: S.credits - wallet,
+    year: S.year.coinsEarned - yr,
+    lifetime: S.lifetimeCoins - lt
+  };
+})();
+check('while a BOUGHT badge\'s picks go on feeding both ledgers in full',
+  badgeWindow.rented === false && badgeWindow.lifted === 4 && badgeWindow.paid > 0
+  && badgeWindow.year === badgeWindow.paid && badgeWindow.lifetime === badgeWindow.paid,
+  `${badgeWindow.lifted} picks paid ${badgeWindow.paid} -> year +${badgeWindow.year}, lifetime +${badgeWindow.lifetime}`);
+/* THE BOUNDARY THE CONDITION ACTUALLY TURNS ON. droneLevel() is
+   max(badge, loan), so the loan is the reason for a pick only while it WINS
+   that max. A player who rents at badge 0 and then buys the badge is flying a
+   loan that contributes nothing — the identical pick at the identical cadence —
+   and that gold is the purchase earning, not the ad. It must count. This is the
+   one state a coarse `is a rental flying?` test gets wrong, and it is reachable
+   in the live game by buying the upgrade mid-loan. */
+const bothWindow = (() => {
+  G.reset(); clearGarden(); unlockTo(12);
+  S.ads.sessions = 5; S.ads.day = 'both-window'; S.ads.today = {};
+  S.credits = 1e6;
+  S.upgrades.autoHarvest = 0;
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 0; });
+  S.harvestsTowardRep = 0;
+  const took = G.rentDrone();
+  S.upgrades.autoHarvest = 3;          // bought mid-loan; the badge now outruns it
+  for (let i = 0; i < 4; i += 1) {
+    S.grid[i].seed = 'daisy'; S.grid[i].plantedAt = clock - 100; S.grid[i].grow = 10; S.grid[i].ready = true;
+  }
+  const wallet = S.credits; const yr = S.year.coinsEarned; const lt = S.lifetimeCoins;
+  advance(20);
+  return {
+    took, rented: G.activeBoost('drone'), level: G.droneLevel(),
+    lifted: S.grid.slice(0, 4).filter((c) => c.seed === null).length,
+    paid: S.credits - wallet,
+    year: S.year.coinsEarned - yr,
+    lifetime: S.lifetimeCoins - lt
+  };
+})();
+check('and a loan the badge already outruns excludes nothing, because it bought nothing',
+  bothWindow.took === true && bothWindow.rented === true && bothWindow.level === 3
+  && bothWindow.lifted === 4 && bothWindow.paid > 0
+  && bothWindow.year === bothWindow.paid && bothWindow.lifetime === bothWindow.paid,
+  `level ${bothWindow.level}, ${bothWindow.lifted} picks paid ${bothWindow.paid} -> year +${bothWindow.year}`);
+G.reset(); clearGarden(); unlockTo(20);
+S.credits = 1e15;
+S.ads.sessions = 5; S.ads.day = 'not-today'; S.ads.today = {};
+S.upgrades.autoHarvest = 0;
 check('every rental spends exactly one impression', (() => {
   delete S.boosters.drone;
   S.ads.today = {};

@@ -2776,7 +2776,13 @@ const Game = (() => {
     return shaved;
   }
 
-  function harvest(idx) {
+  /* `opts.ad` is the ONE thing a caller may say about a pick, and it says only
+     this: the gold from it must not reach the Turn's well. It exists for
+     processAutoHarvest(), where a RENTED drone can be the reason a plot is
+     lifted at all — see the comment there. Every other caller (the tap in
+     ui.js, the Turn's own auto-collect, the suite) passes nothing and counts,
+     because a plot picked by a hand or by a BOUGHT badge is play. */
+  function harvest(idx, opts) {
     const cell = state.grid[idx];
     if (!cell || !cell.seed) return null;
     const sdef = seedById(cell.seed);
@@ -2807,7 +2813,10 @@ const Game = (() => {
       * critterPayoutMult()
     );
 
-    credit(payout);
+    /* Only `ad` travels from opts, never the whole object: `cheat` and `refund`
+       are the dev buttons' and the migrations' to give, and a harvest is
+       neither. Anything falsy here credits normally. */
+    credit(payout, opts && opts.ad ? { ad: true } : null);
     if (r.key === 'legend') state.year.stats.legendaries += 1;
     noteYearSpecies(sdef.id);
     // The bloom itself is kept as a crafting ingredient, on top of the credits.
@@ -4943,11 +4952,14 @@ const Game = (() => {
      Both are decided BEFORE watchAd() is called, so no impression is ever spent
      on a refusal — docs/09-conventions.md's ad playbook, step 2.
 
-     Nothing in the wallet moves and that is the point: the grant is thirty
-     minutes of a machine, never gold, so there is no ad-granted coin for the
-     mint exclusion to catch. Asserted anyway, in bill 4's own idiom, because
-     the promise is about what an ad may hand a player and not about which
-     function happened to hand it over. */
+     NOTHING MOVES IN THE WALLET HERE, AND THAT IS NOT THE WHOLE PROMISE. The
+     grant is thirty minutes of a machine rather than a lump of gold, so this
+     function has no coin for the mint exclusion to catch — but the machine it
+     lends spends those thirty minutes picking plots, and every one of those
+     picks pays. The exclusion therefore lives where the picking happens, on
+     `autoPickIsRented()` above processAutoHarvest(); read that comment before
+     changing anything here. Asserted at both ends: zero at the moment of the
+     grant, in bill 4's own idiom, and zero across the whole rental window. */
   const droneBoost = () => DATA.boosters.find((b) => b.id === DATA.droneRental.boost);
   const droneRentalRevealed = () => {
     const at = DATA.droneRental.revealAt || 0;
@@ -5002,6 +5014,42 @@ const Game = (() => {
       exception; the comment there says why. */
   const droneLevel = () => Math.max(state.upgrades.autoHarvest, boostVal('autoHarvest'));
 
+  /** IS THIS PICK THE AD'S DOING? — docs/37-monetization.md's first promise,
+      made mechanical on the one path that can break it.
+
+      The rental is a rewarded video, and the machine it lends picks ready plots
+      for thirty minutes. Those picks run through harvest() -> credit(), so
+      without this the gold from a thirty-second video lands in BOTH
+      `lifetimeCoins` and `year.coinsEarned` — the well's only two inputs
+      (`mintK * sqrt(lifetimeCoins)`, gated on `year.coinsEarned`). Measured
+      before the flag: 81k-591k gold and +34 to +58 Saved Seeds from a single
+      rental, and `turnReady()` flipping false -> true on its own. Promise 1 is
+      absolute about the Turn's currencies and names this exact back door.
+
+      THE HONEST CONDITION is the composition rule read backwards.
+      droneLevel() is `max(owned badge, borrowed boost)`, so the loan is the
+      reason for this pick exactly when the borrowed half WINS that max. When
+      the badge equals or beats it, the loan contributes nothing — the identical
+      pick happens at the identical cadence with no rental flying — so that gold
+      is the PAID upgrade earning, and excluding it would silently nerf a
+      purchase. A player who owns level 1 and rents is never in this branch at
+      all: droneRentalBlocked() refuses that rental outright.
+
+      Two edges, both deliberate. A rental that outruns a badge the player also
+      owns excludes the whole pick rather than the sliver of it the loan bought —
+      unreachable today (the loan is level 1 and the refusal is `>=`), and
+      over-excluding is the safe direction: it can cost a paying player a little
+      of the well, never mint them any. And if an EARNED booster ever grants
+      `autoHarvest`, this would exclude its picks too; tighten it then to ask
+      which booster is flying. Today the drone boost has exactly one source and
+      it is the ad (docs/07-save-data.md: `boostInv.drone` is always 0).
+
+      NOT here: a HAND harvest during a rental (the player's own tap, ui.js), and
+      not the offline path — passiveIncomeRate() reads `state.upgrades.autoHarvest`
+      alone and never sees a rental at all, which is the separate exclusion the
+      comment above that function explains. */
+  const autoPickIsRented = () => boostVal('autoHarvest') > state.upgrades.autoHarvest;
+
   function processAutoHarvest(now) {
     const level = droneLevel();
     if (!level) return;
@@ -5010,7 +5058,7 @@ const Game = (() => {
     const target = state.grid.findIndex((cell) => !cell.locked && cell.seed && cell.ready);
     if (target === -1) return;
     lastAutoHarvest = now;
-    harvest(target);
+    harvest(target, { ad: autoPickIsRented() });
   }
 
   function processAutoPlant() {

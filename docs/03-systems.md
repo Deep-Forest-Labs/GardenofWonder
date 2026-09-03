@@ -684,6 +684,22 @@ Automation note under "What counts as passive income" above. It also draws no ra
 Winter, where the drone cannot reach the board you are looking at, though it keeps flying over the
 summer garden the whole time.
 
+**And a RENTED drone's picks pay the wallet only — never the Turn's well.** The offer hands over no
+gold, but the machine it lends picks plots for half an hour and every pick pays, so without this the
+gold from a thirty-second video would land in `lifetimeCoins` and `year.coinsEarned` — the well's
+only two inputs. `processAutoHarvest()` therefore passes `{ ad: true }` to `harvest()`, which
+forwards that one flag to `credit()`, exactly when the **borrowed** half wins `droneLevel()`'s `max`:
+
+```
+autoPickIsRented() = boostVal('autoHarvest') > state.upgrades.autoHarvest
+```
+
+The condition is the composition rule read backwards. When the bought badge equals or beats the
+loan, the loan is buying nothing — the identical pick at the identical cadence — so that gold is the
+**purchase** earning and counts in full; excluding it would quietly nerf the most expensive badge in
+the Upgrades tab. A hand harvest during a rental counts too: that is the player's own tap.
+[37-monetization.md](37-monetization.md)'s first promise is the ruling behind it.
+
 ### Per-plot harvesters
 
 Eight separate badges, one per plot, that keep their plot planted. Cost for plot *n*:

@@ -365,10 +365,14 @@ replace, which is the whole point of the shape.
    *"too full for all of it"* are the worked example.
 3. **Call `Game.watchAd(placement)` in `game.js`, on the same call that grants, and grant only on
    `true`.** It counts and permits; it never grants. Never call it from a `ui-*` file.
-4. **Any gold an ad ever pays goes through `credit(n, { ad: true })`.** This is
-   [37-monetization.md](37-monetization.md)'s first promise made mechanical: ad-granted gold never
-   feeds the well. The flag is already there and already sim-tested — use it or the promise is
-   silently broken.
+4. **Any gold an ad ever pays goes through `credit(n, { ad: true })` — including gold it pays
+   LATER, through something it lends.** This is [37-monetization.md](37-monetization.md)'s first
+   promise made mechanical: ad-granted gold never feeds the well. Ask what the reward *does* over
+   its lifetime, not what the granting function hands over: the drone rental grants no coin at all
+   and still paid 81k–591k gold into both accumulators, because the machine it lends spends half an
+   hour harvesting. The flag is already there and already sim-tested — use it, and test it by
+   **running the reward's whole window**, or the promise is silently broken while the guards stay
+   green.
 5. **The placement's cap is a key in `DATA.ads.perPlacement` and nowhere else.** A new placement
    adds one line there and nothing else. `dailyCap` is the whole plan and no placement may plan past
    it; both are remote-tunable by construction, which is doc 37's fifth prerequisite.
