@@ -339,8 +339,29 @@ const DATA = {
     { id: 'bloom',    name: 'Bloom Burst',   dur: 30,   icon: 'bolt',    tint: '#ff6b9d', effects: { tapPower: 0.5, critChance: 0.02 }, desc: '+50% tap power and +2% crit chance for 30s.' },
     { id: 'seedrush', name: 'Seed Rush',     dur: 600,  icon: 'sprout',  tint: '#51cf66', effects: { growSpeed: 0.3 },                  desc: '+30% growth speed for ten minutes.' },
     { id: 'fortune',  name: 'Fortune Aura',  dur: 1800, icon: 'clover',  tint: '#9775fa', effects: { rarityWeight: 0.5 },               desc: '+50% rarity odds for harvests during the aura.' },
-    { id: 'golden',   name: 'Golden Popups', dur: 30,   icon: 'coin',    tint: '#ffc93c', effects: { globalCredits: 0.25 },             desc: '+25% credits from all sources for 30s.' }
+    { id: 'golden',   name: 'Golden Popups', dur: 30,   icon: 'coin',    tint: '#ffc93c', effects: { globalCredits: 0.25 },             desc: '+25% credits from all sources for 30s.' },
+    /* THE RENTED DRONE. A borrowed machine, not a temporary badge: `state.boosters`
+       already means "this effect, for this long", so the rental inherits the rail
+       chip, the countdown, the expiry sweep and the Turn's leave-it-running rule
+       for free. `effects.autoHarvest` is an effective LEVEL rather than a
+       percentage — `Game.droneLevel()` takes the max of this and the bought badge,
+       so a level-3 owner is never slowed to the loan's speed. `dur: 1800` is the
+       owner's ruling ("unlock it for 30 minutes"); the level is PROVISIONAL and
+       filed with its reversal in docs/11-known-issues.md. The desc carries no cadence
+       number on purpose — the card reads that live off autoHarvestCadence(), so it
+       can never drift from its knob. NO PRICE FIELD, EVER: what it costs lives in
+       `droneRental` below, because boosts are earned rather than bought and
+       tools/sim-test.js enforces that on every row of this table. */
+    { id: 'drone',    name: 'Harvest Drone', dur: 1800, icon: 'drone',   tint: '#b197fc', effects: { autoHarvest: 1 },                  desc: 'The drone picks a ready plot for you, for half an hour.' }
   ],
+
+  /* What the SHOP needs to know about offering the drone — the effect itself is
+     the booster row above. `revealAt` is lifetime gold, the same units and the
+     same convention as DATA.upgrades: zero means always visible. It is
+     deliberately NOT the badge's 2,500,000, because a half-hour taste hidden
+     until 2.5M is invisible to exactly the players it is a taste for.
+     PROVISIONAL, with the reversal recipe in docs/11-known-issues.md. */
+  droneRental: { boost: 'drone', revealAt: 0 },
 
   /* THE OPENING BAG — what a brand-new garden starts with in the power-up seat.
      A player learns the seat exists by having something in it; an empty one on
@@ -712,7 +733,8 @@ const DATA = {
         'Finding your third flower is a goal now, and the bigger ones wait until you’re close instead of sitting in your list from the first minutes.',
         'Crops in your fall bed can be finished early with gems now, the same as the flowers in your garden — every crop but the Century Bloom, which keeps its fortnight.',
         'A plot you have just picked remembers what grew there — tap the small sprout in its bottom corner to plant the same flower again without opening the seed list.',
-        'Feeding your pets asks a little more of you now: a clover nibble costs gold, a petal cake costs gems, and a honeypot is the one you watch an ad for.'
+        'Feeding your pets asks a little more of you now: a clover nibble costs gold, a petal cake costs gems, and a honeypot is the one you watch an ad for.',
+        'The shop will lend you a harvest drone for half an hour if you watch a short video — it picks your ready flowers for you while it flies, and it never slows down a drone you already own.'
       ]
     },
     {
@@ -775,11 +797,17 @@ const DATA = {
      and eat the whole plan, so it gets two and stays a treat rather than the
      upkeep backbone. A new placement adds a key here and nothing else.
 
+     `drone` is the second placement, 2026-09-03: two half-hour rentals a day, an
+     hour of borrowed machine, leaving two of the six for the placements doc 37
+     says ship first. Held to two for the same reason feeding is — a rental is
+     thirty minutes long, so an uncapped surface would happily take all six on
+     its own and turn a taste into the way the garden is played. PROVISIONAL.
+
      NOTHING IN HERE IS A CLOCK, AND NOTHING EVER MAY BE. A time-limited or
      quantity-limited offer attaches a PEGI 12 descriptor
      (40-financial-model.md), and this game's rating headroom is worth more than
      urgency. */
-  ads: { dailyCap: 6, perPlacement: { food: 2 } },
+  ads: { dailyCap: 6, perPlacement: { food: 2, drone: 2 } },
 
   moments: { gap: 20, sessionCap: 3 }
 };

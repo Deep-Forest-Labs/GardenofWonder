@@ -365,8 +365,41 @@
     return `<p class="dev-label">The sky</p>
       ${active ? `<p class="away-cap">${Icons.get('sparkle')}<span>A ${DATA.weather.types.find((t) => t.id === active.id).name.toLowerCase()} is already running.</span></p>` : ''}
       ${rows}
-      <p class="sheet-note">Aurora and Wonderfall are not for sale &mdash; the rarest skies have to find you.</p>
-      <p class="dev-label">Decor</p>`;
+      <p class="sheet-note">Aurora and Wonderfall are not for sale &mdash; the rarest skies have to find you.</p>`;
+  }
+
+  /* THE SHOP'S SECOND TIMED EFFECT — half an hour of the drone for one rewarded
+     video (docs/37-monetization.md, and the ad playbook in docs/09).
+
+     ABSENT rather than drained when the offer does not exist — a first session,
+     a spent day's budget, or below the reveal — because a greyed-out ad button
+     on session one is still an ad on session one. DISABLED WITH A REASON when
+     the offer exists but cannot be taken, so a player who just spent an ad can
+     still see what they bought rather than watching the card vanish.
+
+     THE CARD IS THE AD CONTROL. A <button> nested inside a <button> is invalid
+     markup and will not fire, so the pill sits where priceTag() sits and the
+     whole card carries the hook — the same shape a food button uses. */
+  function droneCard() {
+    if (!Game.droneRentalOffered()) return '';
+    const b = DATA.boosters.find((x) => x.id === DATA.droneRental.boost);
+    if (!b) return '';
+    const why = Game.droneRentalBlocked();
+    const note = why === 'running' ? 'The drone is already flying &mdash; the strip above the garden is counting it down.'
+      : why === 'owned' ? 'Your own drone is already quicker than the loan.' : '';
+    return `<p class="dev-label">The drone</p>
+      ${note ? `<p class="away-cap">${Icons.get(b.icon)}<span>${note}</span></p>` : ''}
+      <button class="card ${why ? '' : 'affordable'}" data-ad="${b.id}" ${why ? 'disabled' : ''}>
+        <div class="card-top">
+          <span class="card-badge" style="background:${b.tint}">${Icons.get(b.icon)}</span>
+          <span>
+            <span class="card-title">Borrow the drone</span>
+            <span class="card-sub">${Math.round(b.dur / 60)} min &middot; picks a ready plot every ${Game.autoHarvestCadence(b.effects.autoHarvest).toFixed(1)}s</span>
+          </span>
+        </div>
+        <span class="card-desc">${b.desc}</span>
+        ${adTag(!why)}
+      </button>`;
   }
 
   function renderShop() {
@@ -386,7 +419,12 @@
         ${priceTag(d.cost, d.currency, can)}
       </button>`;
     }).join('');
+    /* The Decor label moved out of skyCards() and back up here when the drone
+       block landed between them — a function named for the sky should not be
+       emitting the heading for the grid two blocks below it. */
     return `${skyCards()}
+      ${droneCard()}
+      <p class="dev-label">Decor</p>
       <p class="sheet-note">Purely decorative — dress up your garden however you like. Buy the same piece again for another copy.</p>
       <div class="card-grid">${cards}</div>`;
   }
@@ -1991,7 +2029,10 @@
     const tap = Game.tapStats();
     const growth = Game.growthStats();
     const harvestBonus = Game.boostVal('globalCredits');
-    const ah = S.upgrades.autoHarvest;
+    /* The COMPOSED level, not the badge's — a paid rental is visibly flying and
+       this panel saying "Locked" while it does would be a lie the panel's own
+       rule (every reading comes from the engine) exists to prevent. */
+    const ah = Game.droneLevel();
     const found = Game.discoveredCount();
     const total = DATA.seeds.length;
     const fill = total ? found / total : 0;
@@ -3007,6 +3048,22 @@
         FX.float(c.x, c.y - 6, `+${fmt(total)}`, 'big');
         Sound.play('coin');
       } else { Sound.play('deny'); }
+      return;
+    }
+    /* The rewarded-ad arm. Its own attribute rather than data-buy, because
+       syncAfford()'s final else treats an unrecognised [data-buy] as a booster
+       and throws — the same reason [data-tend] and [data-order] have their own.
+       ONE arm, and every future ad placement that is a whole control rather
+       than a tier inside one joins it here rather than adding a listener. The
+       engine decides whether the ad may be spent; this only reports. */
+    const adBtn = e.target.closest('[data-ad]');
+    if (adBtn) {
+      const took = adBtn.dataset.ad === DATA.droneRental.boost ? Game.rentDrone() : false;
+      if (took) {
+        const c = FX.centerOf(adBtn);
+        FX.sparks(c.x, c.y, 12, '#b197fc');
+        FX.ring(c.x, c.y, '#ffffff', 0.45, 70);
+      } else { Sound.play('deny'); FX.shake(4); }
       return;
     }
     const buy = e.target.closest('[data-buy]');

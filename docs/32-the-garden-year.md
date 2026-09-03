@@ -31,7 +31,7 @@ Agents talking to the owner lead with the feel and keep the math in the docs.
 | **The Turn** | The prestige moment: end the year, cash it in, start fresh with permanent bonuses. Never the word "reset" |
 | **Gold** | The year's money. Spend it freely — it goes away at the Turn |
 | **Upgrades** | The in-year shop: harder taps, faster growth, automation. Bought with gold, wiped at the Turn and rebought — the rebuild is the ritual. Once called badges, and players never see that word |
-| **Power-ups** | The short surges — Bloom Burst, Seed Rush, Fortune Aura, Golden Popups. Earned, never bought, and never re-earnable by Turning |
+| **Power-ups** | The short surges — Bloom Burst, Seed Rush, Fortune Aura, Golden Popups, and the borrowed Harvest Drone. Never bought with money or gems, and never re-earnable by Turning. Four are earned by playing; the drone is *lent* for half an hour in exchange for a rewarded video, which is the owner's frame of paying-accelerates-never-gates and is still earning it, not buying it |
 | **Saved Seeds** | The forever money. You only get them at the Turn; they buy petals; you never lose them |
 | **The well** | Everything you've *ever* earned feeds one deep well of Saved Seeds. Each Turn scoops out what's new. Turn often = small scoops, wait = one big scoop — same total either way, so there's no wrong rhythm |
 | **The meter** | Fills as your year grows; pulses when a Turn is ready. Lives in the dock's Turn button |

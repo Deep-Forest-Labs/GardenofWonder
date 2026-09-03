@@ -419,6 +419,12 @@ its own:
 - **The drone's cadence caps the total**, because it can only lift one plot at a time. A drone faster
   than the plots adds nothing; plots faster than the drone are throttled by it. Both directions are
   asserted.
+- **The BOUGHT drone only. A rented one is excluded on purpose.** This is a *rate*, read once at the
+  moment of return and multiplied across the whole absence — so a thirty-second ad watched just
+  before closing the app would pay out a full night, which is the shape
+  [37-monetization.md](37-monetization.md) refuses for the Turn doubler. The rental composes in
+  `processAutoHarvest()` and nowhere else; `tools/sim-test.js` asserts an unbought drone over a fully
+  planted garden earns exactly zero with a rental flying.
 
 `EXPECTED_RARITY_MULT` is derived from `DATA.rarity` rather than hardcoded, so retuning rarity
 carries through automatically.
@@ -656,6 +662,27 @@ cadence = max(0.7, 3 − level × 0.5)   seconds
 
 Level 1 collects every 2.5 s, level 5 every 0.7 s (the floor). It takes the lowest-indexed ready
 plot, so with several ripe at once it works left to right.
+
+**The drone can also be RENTED, and the two compose by `max`.** The Shop lends it for thirty minutes
+in exchange for a rewarded video ([37-monetization.md](37-monetization.md)) — a `DATA.boosters` row
+(`drone`, `dur: 1800`, `effects: { autoHarvest: 1 }`), not a temporary badge, so it inherits the rail
+chip, the countdown, the expiry sweep and the Turn's leave-a-running-boost-alone rule for free. The
+level the loop flies at is
+
+```
+Game.droneLevel() = max(state.upgrades.autoHarvest, boostVal('autoHarvest'))
+```
+
+**`max`, never a sum and never the most recent**: a player who owns the drone at level 3 must never
+be handed a rental that slows them to level 1. For the same reason the rental is refused outright
+when the badge already matches or beats it — spending an ad on nothing is the one thing a rewarded
+offer may never do. `Game.droneLevel()` is the single source of the live speed: the loop, the
+Almanac's Automation row and the suite all read it.
+
+**A rental does NOT reach `passiveIncomeRate()`, and that exclusion is deliberate** — see the
+Automation note under "What counts as passive income" above. It also draws no rail chip in Fall or
+Winter, where the drone cannot reach the board you are looking at, though it keeps flying over the
+summer garden the whole time.
 
 ### Per-plot harvesters
 

@@ -86,7 +86,7 @@ const Game = (() => {
       upgrades,
       decor: [],
       boosters: {},
-      boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },
+      boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0, drone: 0 },
       harvestsTowardRep: 0,
       lastSeen: 0,
       weatherCall: null,
@@ -1393,11 +1393,22 @@ const Game = (() => {
   /* What the garden actually produces on its own, in coins per second.
      A plot counts only if it has an auto-planter, and only if the drone exists to pick it —
      an unautomated garden earns nothing while away, which is honest and makes automation matter.
-     The drone's cadence caps the total, because it can only lift one plot at a time. */
+     The drone's cadence caps the total, because it can only lift one plot at a time.
+
+     THE BOUGHT DRONE ONLY. A RENTED one is deliberately not counted here, and
+     this is the single most load-bearing line in the drone rental. This rate is
+     read ONCE, at the moment of return, and multiplied across the whole absence
+     — so a thirty-second ad watched just before closing the app would pay out a
+     whole night, which is the exact shape docs/37-monetization.md refuses for
+     the Turn doubler. The rental composes in processAutoHarvest() and nowhere
+     else. `owned`, not `droneLevel`, on purpose: droneLevel() is the composed
+     getter, and a local of that name here is one careless keystroke away from
+     becoming it. Asserted by "the rental does not touch offline income" in
+     tools/sim-test.js. */
   function passiveIncomeRate() {
-    const droneLevel = state.upgrades.autoHarvest;
-    if (!droneLevel) return 0;
-    const droneCapacity = 1 / Math.max(0.7, 3 - droneLevel * 0.5);
+    const owned = state.upgrades.autoHarvest;
+    if (!owned) return 0;
+    const droneCapacity = 1 / Math.max(0.7, 3 - owned * 0.5);
 
     const yieldBonus = (1 + boostVal('globalCredits')) * (1 + pollination());
     let cycles = 0;
@@ -2117,7 +2128,7 @@ const Game = (() => {
     if (!id || count < 1) return;
     if (!DATA.boosters.some((b) => b.id === id)) return;
     if (!state.boostInv || typeof state.boostInv !== 'object') {
-      state.boostInv = { bloom: 0, seedrush: 0, fortune: 0, golden: 0 };
+      state.boostInv = { bloom: 0, seedrush: 0, fortune: 0, golden: 0, drone: 0 };
     }
     state.boostInv[id] = (state.boostInv[id] || 0) + count;
   }
@@ -4922,6 +4933,58 @@ const Game = (() => {
     return true;
   }
 
+  /* ---- the drone rental: the Shop's second timed effect, and the first thing
+     in this game bought with attention instead of money (docs/37-monetization.md).
+
+     TWO REFUSALS RATHER THAN A DRAINED BUTTON, because spending an ad on
+     nothing is the one thing a rewarded offer may never do: a rental already
+     flying cannot be refreshed (the rule activateBoost keeps for every boost),
+     and a badge that already matches the loan would gain the player nothing.
+     Both are decided BEFORE watchAd() is called, so no impression is ever spent
+     on a refusal — docs/09-conventions.md's ad playbook, step 2.
+
+     Nothing in the wallet moves and that is the point: the grant is thirty
+     minutes of a machine, never gold, so there is no ad-granted coin for the
+     mint exclusion to catch. Asserted anyway, in bill 4's own idiom, because
+     the promise is about what an ad may hand a player and not about which
+     function happened to hand it over. */
+  const droneBoost = () => DATA.boosters.find((b) => b.id === DATA.droneRental.boost);
+  const droneRentalRevealed = () => {
+    const at = DATA.droneRental.revealAt || 0;
+    return !at || state.lifetimeCoins >= at;
+  };
+  /** The ONE predicate the Shop asks. False means render nothing at all — not a
+      disabled card — so a first session and a spent budget simply have no offer. */
+  const droneRentalOffered = () => droneRentalRevealed() && adOffered(DATA.droneRental.boost);
+  /** Why the offer cannot be taken right now: '' means it can. */
+  function droneRentalBlocked() {
+    const b = droneBoost();
+    if (!b) return 'missing';
+    if (activeBoost(b.id)) return 'running';
+    if (state.upgrades.autoHarvest >= (b.effects.autoHarvest || 0)) return 'owned';
+    return '';
+  }
+  /** True means the ad was spent and the drone is flying. EVERY refusal returns
+      false and emits nothing, because they are all the same refusal to the one
+      caller: the [data-ad] arm denies on false and does not need to know which
+      guard stopped it. The watchAd() line is unreachable while
+      droneRentalOffered() is asked first — it is the playbook's "grant only on
+      true" kept in place, so a future reordering cannot grant without counting. */
+  function rentDrone() {
+    const b = droneBoost();
+    if (!b || !droneRentalOffered() || droneRentalBlocked()) return false;
+    if (!watchAd(DATA.droneRental.boost)) return false;
+    state.boosters[b.id] = nowSeconds() + b.dur;
+    save();
+    /* Already consumed in ui-events.js: the boost sound and the "Harvest Drone
+       active!" toast come free, and `panels` flips the card to its refusing
+       state the instant the ad is spent. removeExpiredBoosters() emits the same
+       event on expiry, so it flips back on its own. */
+    emit('purchase', { kind: 'booster', key: b.id, def: b });
+    emit('panels');
+    return true;
+  }
+
   const decorCount = (id) => state.decor.filter((d) => d.id === id).length;
 
   /* ---------------- automation + tick ---------------- */
@@ -4929,8 +4992,18 @@ const Game = (() => {
       card as well, so the number on the button is the number in the loop. */
   const autoHarvestCadence = (level) => Math.max(0.7, 3 - (level || 0) * 0.5);
 
+  /** THE COMPOSITION RULE, and the whole of what keeps the rental from being a
+      downgrade. A borrowed drone and a bought one are the same machine, so the
+      FASTER of the two flies — never the most recent. A player who owns it at
+      level 3 must never be handed a rental that slows them to level 1, and
+      Math.max is the entirety of what prevents that. Every reader of the drone's
+      live speed goes through here — the loop, the Almanac and the suite — so
+      they can never disagree about it. passiveIncomeRate() is the one deliberate
+      exception; the comment there says why. */
+  const droneLevel = () => Math.max(state.upgrades.autoHarvest, boostVal('autoHarvest'));
+
   function processAutoHarvest(now) {
-    const level = state.upgrades.autoHarvest;
+    const level = droneLevel();
     if (!level) return;
     const cadence = autoHarvestCadence(level);
     if (now - lastAutoHarvest < cadence) return;
@@ -5832,7 +5905,9 @@ const Game = (() => {
     standPrice, standOrderRep, standUnitValue, standFloorUnit, standGenerate, standDeliver, standSkip, standRefillIn, processStand,
     tick, progressOf, remainingOf,
     wonderActive, wonderMult, startWonder, comboMult,
-    UPGRADE_EFFECTS, upgradeEffect, autoHarvestCadence, procChance, tapStats, growthStats,
+    UPGRADE_EFFECTS, upgradeEffect, autoHarvestCadence, droneLevel,
+    rentDrone, droneRentalBlocked, droneRentalOffered, droneRentalRevealed,
+    procChance, tapStats, growthStats,
     foodEffect, hiveProjection, tenderEffect, keeperLift, skipSaving, replantSeed, weatherCallEffect, sellValue,
     repToNext, cumulativeRep, levelFromRep, repIntoLevel,
     seedUnlocked, seedUnlockLevel, plotAvailable,

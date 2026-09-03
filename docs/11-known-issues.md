@@ -7,6 +7,25 @@ If you fix one, delete it from this file in the same commit.
 
 ## What the overnight fix round knowingly left (2026-09-03)
 
+**Three drone-rental knobs ship PROVISIONAL and named, all three the owner's to pick, each a
+one-line reversal.** (1) **The rental grants drone level 1** (`data.js`, the `drone` row of
+`DATA.boosters`, `effects: { autoHarvest: 1 }`). Level 1 is one pickup every 2.5 s — the entry rung
+of a five-rung ladder the permanent badge sells for 4,500 gold rising at ×2.4. It is the rental's
+whole power: too weak and it is not worth thirty seconds of somebody's attention; at level 5 (0.7 s,
+the floor) it would out-perform a badge chain costing ~600K gold. The sim-test reads the number off
+the row rather than hard-coding it, so changing the single `1` moves nothing else. (2) **The reveal
+curtain at 0 — always visible** (`DATA.droneRental.revealAt`). Zero is the no-change-neutral setting
+of the existing convention (`upgradeRevealedNow`: absent or zero means always visible) and the only
+setting under which a thirty-minute *taste* reaches the newer players it is a taste for; the badge's
+own curtain is 2,500,000 lifetime gold. The stated cost: a newer player now meets the drone in the
+Shop **before** the Upgrades badge reveals, so the rental introduces the thing rather than following
+it. `DATA.droneRental.revealAt: 2500000` puts it back behind the badge with no other change, and a
+sim-test drives exactly that reversal so the recipe cannot rot. (3) **The rental's ad cap at 2 a
+day** (`DATA.ads.perPlacement.drone`) — an hour of borrowed machine, holding it to a treat, and
+leaving two of `dailyCap`'s six for the placements [37-monetization.md](37-monetization.md) says
+ship first. The sim-test drives the cap through `rentDrone()` rather than reading the number, so 1,
+2 or 3 all pass.
+
 **Two ad-and-food numbers ship PROVISIONAL and named, both the owner's to pick, both a one-line
 reversal.** (1) **Petal Cake at 3 gems** (`data.js`, the `petalcake` row). Twelve cakes a day at four
 tended creatures is 36 gems, ≈2.5 hours of the ~14 gems/hour faucet — real pressure; 10 gems would be
@@ -34,6 +53,41 @@ deleted rather than repaired, and the daily bill at four tended creatures took t
 a currency there is now only one food each**, so the surviving escalation assertion is vacuously true
 for both — it exists to catch a *second* gold or gem tier being added out of order, not to hold
 today's ladder.
+
+**The owner said "in the actual shop and not the upgrades", and the drone shipped in BOTH places,
+split by kind.** The Shop sells the timed rental; the permanent Harvest Drone badge stays in
+`CORE_UPGRADES` untouched. The literal move is not survivable: `buyUpgrade('autoHarvest')` is only
+reachable through `CORE_UPGRADES`, so removing it deletes the only path to
+`state.upgrades.autoHarvest` and silently switches **all offline earnings off for every existing
+save** (`passiveIncomeRate()` returns 0 without it), strands levels 2–5 with nowhere to be bought,
+and leaves `DRIP_UPGRADE_KEYS` still queueing an `upgrade:autoHarvest` reveal celebration at 2.5M
+for a card that no longer draws. The split is also the two tabs' existing grammar rather than a
+compromise: the Shop sells timed effects (the sky calls), Upgrades sells permanent ones. **The
+reversal recipe, if the owner insists on a literal move:** lift `'autoHarvest'` out of
+`CORE_UPGRADES` (`ui-sheet.js`) **and** out of `UI_BADGE_KEYS` (`tools/sim-test.js`) — they must move
+together — render the permanent card inside `renderShop()` through the existing
+`upgradeCard('autoHarvest')`, and re-spec `upgradeRevealsChanged()` and the reveal-moment path
+*first*. Do not half-do it: filtering the key out of the Upgrades render while leaving it in
+`CORE_UPGRADES` makes `tickSheetTimers()` re-render that tab every 0.25 s forever, which reads as a
+tab fighting every tap rather than as a missing card.
+
+**`Dev.grantBoosts()` now seats a drone charge on the power-up button, so a developer can start a
+rental with no ad.** Accepted rather than fixed: the cheat iterates `DATA.boosters`, and forcing the
+real `activateBoost()` path is exactly what the dev-cheat playbook asks for. `boostInv.drone` is
+unreachable by every player path — no quest reward, no level grant, not in `DATA.startingBoosts` —
+so the power-up button's empty-state copy ("They turn up for quests, for levelling, and for filling
+the Almanac", `ui.js`) never lies to a player by omitting the ad. Worth knowing before somebody
+"fixes" `boostInv.drone` into the opening bag.
+
+**A rail chip whose countdown is longer than 99 seconds overlaps its own name, and this is
+PRE-EXISTING rather than the drone rental's doing.** `renderRail()` prints `fmtTime(remain)` inside
+the 19px `.ring` once the remainder passes 99 s, and "29m 54s" is far wider than the ring. Measured
+side by side at 390 px: Fortune Aura (`dur: 1800`, an ordinary earned power-up that has shipped for
+weeks) renders exactly the same overlap as the Harvest Drone rental, chip width 115 px against a
+19 px ring in both. The rental makes it *more visible* — it is a half-hour chip a player chose to
+start — but it does not cause it. Left because `.chip.timed` is shared by the weather chip, the
+Wonder chip and every booster, and it is being edited by other work in the same round; the fix is a
+sizing decision for whoever next owns the rail, not a change to smuggle into a feature commit.
 
 **An ad refused because the day's budget ran out between render and tap plays the generic deny, and
 the flower says "broke".** `emit('deny', { reason: 'ad' })` reaches `ui-events.js`'s one shared

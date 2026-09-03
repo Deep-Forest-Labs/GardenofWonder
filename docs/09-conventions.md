@@ -220,17 +220,29 @@ Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at
 
 ## Playbook: add a booster
 
-1. Append to `DATA.boosters` with `dur`, `icon`, `tint`, `effects`, `desc`. Do not add a price —
-   boosts are earned, not bought.
+1. Append to `DATA.boosters` with `dur`, `icon`, `tint`, `effects`, `desc`. **Do not add a price —
+   boosts are earned, not bought, and this is now enforced by name.** `PRICE_FIELDS` in
+   `tools/sim-test.js` bans `cost`, `price`, `gems`, `credits`, `tickets` and `currency` on every
+   row of the table. A boost that is *offered* for something needs its offer terms in a block of
+   their own — `DATA.droneRental` is the worked example.
 2. Use an **existing effect key** if you can — see the key table in
    [04-economy.md](04-economy.md). For a new key, add the place that reads it — `boostVal(key)`
-   sums active sources, but something has to consume the sum.
+   sums active sources, but something has to consume the sum. **Check whether
+   `passiveIncomeRate()` should see it, and default to no.** That function returns a *rate*, read
+   once at the moment of return and multiplied over the whole absence, so any temporary effect
+   composed into it is worth a full away window rather than its own duration.
 3. A boost that is already running cannot be refreshed — the rail hides the hold-chip until it
    expires, so a second copy is not spent by accident. Needs a `tint` for the rail chip.
-4. There is no shop panel for boosters. They surface as a chip in the status rail (`renderRail()`
-   in `ui.js`) — a countdown while active, a tappable consume-one chip while `boostInv` holds at
-   least one and the boost is idle, invisible otherwise. Grant copies through quest `reward.boost`
-   or `DATA.levelGrants`. See [16-progression-and-quests.md](16-progression-and-quests.md).
+4. **Boosters normally have no shop panel, and exactly one is an exception.** They surface as a
+   chip in the status rail (`renderRail()` in `ui.js`) — a countdown while active, a tappable
+   consume-one chip while `boostInv` holds at least one and the boost is idle, invisible
+   otherwise. Grant copies through quest `reward.boost` or `DATA.levelGrants`. See
+   [16-progression-and-quests.md](16-progression-and-quests.md). The exception is the Harvest
+   Drone: it is offered as a Shop card for one rewarded video, granted by `Game.rentDrone()`
+   rather than by `boostInv` and the power-up button, and it is not in the bag, on any rung or on
+   any quest. Follow the ad playbook below rather than this step if you are adding a second.
+5. If the effect cannot reach a season room, add its key to `SEASON_DEAD_EFFECTS` (`ui.js`) — that
+   one array gates both the rail chip and the tap that would spend a copy.
 
 ## Playbook: add a game event with feedback
 
@@ -323,9 +335,18 @@ Panel is `renderDev()` in `ui-sheet.js`; the logic is `Game.Dev` in `game.js`. F
 
 **The component is built. Consume it; do not build a second one.** Engine half in `game.js`
 (`adOffered`, `watchAd`, `adImpressions`, `adCountToday`, `adCap`, and `state.ads`), UI half in
-`ui-sheet.js` (`UI.adTag()`, `UI.AD_LABEL`, the `video` glyph), caps in `DATA.ads`. The first
-consumer is the Honeypot food tier; the rules and the reasoning are in
-[37-monetization.md](37-monetization.md) and [22-creatures.md](22-creatures.md).
+`ui-sheet.js` (`UI.adTag()`, `UI.AD_LABEL`, the `video` glyph), caps in `DATA.ads`. Two consumers so
+far: the Honeypot food tier ([22-creatures.md](22-creatures.md)) and the drone rental
+([03-systems.md](03-systems.md#harvest-drone)); the rules and the reasoning are in
+[37-monetization.md](37-monetization.md).
+
+**Two shapes, and the second one is the general case.** A tier *inside* a control (the Honeypot)
+swaps its price tag for `UI.adTag()` and branches on `currency` in the engine call it already had.
+A whole control that IS the offer (the drone card) carries `data-ad="<placement>"` and is handled
+by the single `[data-ad]` arm of `ui-sheet.js`'s delegated `sheetBody` click listener — one arm,
+never a second listener, and never `data-buy` (`syncAfford()`'s final else treats an unrecognised
+`[data-buy]` as a booster and throws). A `<button>` nested inside a `<button>` is invalid markup and
+will not fire, so the pill goes where `priceTag()` goes and the host control carries the hook.
 
 **None of this is an ad system, and the web build never gets one.** What exists is a placement with
 a simulated grant — no network, no SDK, no fetch. `watchAd()` is the one function a real SDK would
@@ -363,7 +384,10 @@ replace, which is the whole point of the shape.
 8. **Rewarded video only** — no interstitials, no banners, no energy, no loot boxes — and nothing
    inside a sacred moment: not the ceremony, not the Wonder, not the Century Bloom's wait.
 9. Add a sim-test. At minimum: the placement is absent in a first session, its cap refuses one more
-   than it allows, and the reward it grants does not reach the mint.
+   than it allows, the reward it grants does not reach the mint, and **no impression is spent on a
+   refusal** — take the impression mark *before* the refusing call, in its own `check`. An earlier
+   assertion that performs the refusal itself absorbs the stray impression and the guard then
+   passes with `watchAd()` in the wrong place. That hole was found by sabotage, not by review.
 
 ## Playbook: change saved state
 

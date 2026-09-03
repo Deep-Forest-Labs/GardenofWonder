@@ -40,7 +40,13 @@ lost if the player clears site data.
   goods: {},                  // finished craft goods, id -> count
   decor: [ { id: 'gnome' } ],   // one entry per copy owned, cosmetic only since v3
   boosters: { bloom: 1735689600.123 },                          // id → absolute expiry, epoch seconds
-  boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0 },   // held copies, not yet activated
+                                // `drone` is a legal key here with a different provenance from the
+                                // rest: it arrives from the Shop's rewarded-video rental, never the bag
+  boostInv: { bloom: 0, seedrush: 0, fortune: 0, golden: 0, drone: 0 },   // held copies, not yet activated
+                                // `drone` is ALWAYS 0 for a player. It is in the shape so the four
+                                // places that iterate DATA.boosters agree with the default object;
+                                // no quest, level rung or opening bag ever raises it, and the only
+                                // thing that can is Dev.grantBoosts(). Do not "fix" it into the bag.
   fall: {                       // the hour-class bed — positional, rebuilt to length on load
     grid: [ { seed: 'pumpkin', plantedAt: 1735689600.1, grow: 10800, ready: false, windfall: false } ],
     bedPaid: false              // DERIVED on load from the marks, never restored

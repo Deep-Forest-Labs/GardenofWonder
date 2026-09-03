@@ -1995,6 +1995,187 @@ check('reconcile banks the coins and reports the cap', (() => {
     && r.capHours === DATA.offline.baseHours;
 })());
 
+group('the drone rental composes with the badge instead of fighting it');
+/* Placed beside the offline group deliberately: the invariant this one guards
+   hardest is that a thirty-second ad NEVER reaches passiveIncomeRate(), which is
+   read once at the moment of return and multiplied over the whole absence. */
+G.reset();
+check('the video glyph the ad pill draws actually exists', Icons.has('video'));
+/* Guards the silent-sparkle fallback, which only warns on localhost — a missing
+   glyph on GitHub Pages says nothing at all (docs/11-known-issues.md). */
+check('the rental\'s terms live outside the booster row',
+  DATA.droneRental.boost === 'drone'
+  && typeof DATA.droneRental.revealAt === 'number'
+  && DATA.boosters.some((b) => b.id === DATA.droneRental.boost),
+  JSON.stringify(DATA.droneRental));
+/* A price field on the booster row itself is caught by "no booster carries a
+   price of any kind" further down; this asserts the knob landed where the
+   playbook sends it instead. And the offer holds no clock, for the same PEGI 12
+   reason DATA.ads holds none — the RENTAL's own countdown is the rail chip,
+   which is a different thing entirely. */
+check('and the offer holds no countdown of its own',
+  !/expire|until|deadline|ends|seconds|countdown/i.test(JSON.stringify(DATA.droneRental)),
+  JSON.stringify(DATA.droneRental));
+check('a first session is offered no rental at all',
+  S.ads.sessions === 0 && G.droneRentalOffered() === false, `${S.ads.sessions}`);
+G.saveNow(); G.load();
+check('and neither is the first page load', G.droneRentalOffered() === false);
+G.saveNow(); G.load();
+check('only a returning player is offered it', G.droneRentalOffered() === true);
+clearGarden();
+unlockTo(20);
+S.credits = 1e15;
+S.upgrades.autoHarvest = 0;
+check('a rental flies the drone when nothing was bought', (() => {
+  const took = G.rentDrone();
+  return took === true && G.droneLevel() === 1 && G.boostVal('autoHarvest') === 1;
+})(), `${G.droneLevel()}`);
+/* THE LOOP, not the getter. A rental wired into droneLevel() and the Almanac but
+   NOT into processAutoHarvest() is a cosmetic rental, and every assertion above
+   stays green under it. So: a ready plot, no badge at all, and the clock run
+   forward until the drone either lifts it or does not. */
+check('and the LIVE LOOP actually picks with it', (() => {
+  clearGarden();
+  S.grid[0].seed = 'daisy'; S.grid[0].plantedAt = clock - 100; S.grid[0].grow = 10; S.grid[0].ready = true;
+  advance(6);
+  return S.grid[0].seed === null && S.upgrades.autoHarvest === 0;
+})(), `seed=${S.grid[0].seed} badge=${S.upgrades.autoHarvest}`);
+/* NEVER SPENT ON A PARTIAL GRANT, held structurally rather than by review: both
+   refusals must happen BEFORE watchAd(), or a player pays an impression for
+   nothing. The mark is taken BEFORE the refusing call — an earlier assertion
+   that performs the refusal itself would absorb the stray impression and this
+   would pass with the guard in the wrong place. Found by sabotage; the first
+   version of these two checks did exactly that. */
+const impBeforeRunning = G.adImpressions();
+check('renting refuses while one is already flying',
+  G.rentDrone() === false && G.droneRentalBlocked() === 'running', G.droneRentalBlocked());
+check('and spends no impression on that refusal',
+  G.adImpressions() === impBeforeRunning, `${G.adImpressions()} vs ${impBeforeRunning}`);
+check('a rental never slows a faster badge', (() => {
+  delete S.boosters.drone;
+  S.upgrades.autoHarvest = 3;
+  S.boosters.drone = G.nowSeconds() + 1800;
+  return G.droneLevel() === 3
+    && G.autoHarvestCadence(G.droneLevel()) === G.autoHarvestCadence(3)
+    && G.autoHarvestCadence(G.droneLevel()) < G.autoHarvestCadence(1);
+})(), `level ${G.droneLevel()} at ${G.autoHarvestCadence(G.droneLevel())}s`);
+delete S.boosters.drone;
+/* A fresh day, so the counter below can actually MOVE if the guard is in the
+   wrong place. Without it the day's budget is already spent, everything refuses
+   at the cap, and the assertion could only ever pass. */
+S.ads.day = 'not-today';
+const impBeforeOwned = G.adImpressions();
+check('and it is never offered in the first place',
+  G.droneRentalBlocked() === 'owned' && G.rentDrone() === false, G.droneRentalBlocked());
+check('and that refusal spends no impression either',
+  G.adImpressions() === impBeforeOwned, `${G.adImpressions()} vs ${impBeforeOwned}`);
+/* THE BOUNDARY, which is where a partial grant would actually hide. A badge at
+   exactly the loan's own level gains the player nothing at all, so it refuses
+   too — `>=`, not `>`. One rung below, the loan is a real speed-up and is
+   offered. Both sides stated, because only the pair proves the comparison. */
+check('a badge already AT the loan\'s level refuses; one rung below is offered', (() => {
+  const b = DATA.boosters.find((x) => x.id === DATA.droneRental.boost);
+  S.upgrades.autoHarvest = b.effects.autoHarvest;
+  const equal = G.droneRentalBlocked() === 'owned' && G.rentDrone() === false;
+  S.upgrades.autoHarvest = b.effects.autoHarvest - 1;
+  const below = G.droneRentalBlocked() === '';
+  S.upgrades.autoHarvest = 3;
+  return b.effects.autoHarvest === 1 && equal && below;
+})(), G.droneRentalBlocked());
+/* The most dangerous assertion in the item. passiveIncomeRate() is a RATE read
+   once and multiplied over the whole absence, so a rental composing there turns
+   thirty seconds of attention into a full night's gold. The half that catches it
+   is the FIRST one: an unbought drone over a fully planted garden earns exactly
+   zero, and must go on earning exactly zero with a rental flying. */
+check('the rental does not touch offline income', (() => {
+  clearGarden();
+  S.upgrades.autoHarvest = 0;
+  delete S.boosters.drone;
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 3; });
+  const bare = G.passiveIncomeRate();
+  S.boosters.drone = G.nowSeconds() + 1800;
+  const rented = G.passiveIncomeRate();
+  const away = G.offlineEarnings(7200).coins;
+  S.upgrades.autoHarvest = 3;
+  const bought = G.passiveIncomeRate();
+  delete S.boosters.drone;
+  const boughtAlone = G.passiveIncomeRate();
+  return bare === 0 && rented === 0 && away === 0 && bought > 0 && bought === boughtAlone;
+})(), 'a rental must never be worth an away window');
+check('renting grants no gold and never reaches the mint', (() => {
+  S.upgrades.autoHarvest = 0;
+  delete S.boosters.drone;
+  S.ads.today = {};
+  const wallet = S.credits;
+  const yr = S.year.coinsEarned;
+  const lt = S.lifetimeCoins;
+  const took = G.rentDrone();
+  return took === true && S.credits === wallet
+    && S.year.coinsEarned === yr && S.lifetimeCoins === lt;
+})(), `${S.credits} / ${S.year.coinsEarned} / ${S.lifetimeCoins}`);
+check('every rental spends exactly one impression', (() => {
+  delete S.boosters.drone;
+  S.ads.today = {};
+  const before = G.adImpressions();
+  const first = G.rentDrone();
+  const spent = G.adImpressions() - before;
+  return first === true && spent === 1 && G.adCountToday('drone') === 1;
+})(), `${G.adImpressions()} lifetime, ${G.adCountToday('drone')} today`);
+check('and the day\'s cap refuses one more than it allows', (() => {
+  const cap = DATA.ads.perPlacement.drone;
+  S.ads.today = {};
+  let took = 0;
+  for (let i = 0; i < cap + 3; i += 1) {
+    delete S.boosters.drone;          // clear the 'running' refusal so the CAP is what refuses
+    if (G.rentDrone()) took += 1;
+  }
+  return cap > 0 && took === cap && G.adCountToday('drone') === cap
+    && G.droneRentalOffered() === false;
+})(), `took ${G.adCountToday('drone')} of ${DATA.ads.perPlacement.drone}`);
+/* The owner's reveal knob, asserted as a REVERSAL rather than as a number: the
+   provisional 0 is always-visible, and the one-line change back to the badge's
+   curtain has to actually hide the offer or the reversal recipe is a fiction. */
+check('the reveal curtain is one number, and it works', (() => {
+  S.ads.day = 'not-today';
+  const at = DATA.droneRental.revealAt;
+  const lifetime = S.lifetimeCoins;
+  DATA.droneRental.revealAt = 2500000;
+  S.lifetimeCoins = 0;
+  const hidden = G.droneRentalOffered() === false && G.droneRentalRevealed() === false;
+  S.lifetimeCoins = 2500000;
+  const shown = G.droneRentalRevealed() === true;
+  DATA.droneRental.revealAt = at;
+  S.lifetimeCoins = lifetime;
+  return at === 0 && hidden && shown && G.droneRentalRevealed() === true;
+})());
+check('the Turn wipes the badge and leaves a paid rental flying', (() => {
+  delete S.boosters.drone;
+  S.upgrades.autoHarvest = 3;
+  S.boosters.drone = G.nowSeconds() + 1800;
+  G.credit(400000);
+  G.turnYear();
+  return S.upgrades.autoHarvest === 0 && G.activeBoost('drone') === true
+    && G.droneLevel() === 1;
+})(), `badge ${S.upgrades.autoHarvest}, level ${G.droneLevel()}`);
+/* FOUR UI FACTS WITH NO HEADLESS PANEL TO ASSERT THEM, read out of the source the
+   way the plant-picker guard does. Each is a thing an implementer can get right
+   in the engine and wrong on screen, and every one of them would look fine in a
+   screenshot taken in the wrong state. */
+const droneSheetSrc = fs.readFileSync(path.join(ROOT, 'ui-sheet.js'), 'utf8');
+const droneCardSrc = (droneSheetSrc.match(/function droneCard\(\)[\s\S]*?\n {2}\}/) || [''])[0];
+check('the Shop asks whether the offer exists before drawing anything at all',
+  /^function droneCard\(\)\s*\{\s*if \(!Game\.droneRentalOffered\(\)\) return '';/.test(droneCardSrc),
+  `${droneCardSrc.slice(0, 80)}`);
+check('and sells it with the shared ad pill, never with a price tag',
+  droneCardSrc.length > 0 && /adTag\(/.test(droneCardSrc) && !/priceTag\(/.test(droneCardSrc),
+  `${droneCardSrc.length} chars`);
+check('the Almanac reads the composed level, so it never says Locked over a flying rental',
+  /const ah = Game\.droneLevel\(\);/.test(droneSheetSrc)
+  && !/const ah = S\.upgrades\.autoHarvest/.test(droneSheetSrc));
+check('and the rail hides a rental in the rooms the drone cannot reach',
+  /SEASON_DEAD_EFFECTS = \[[^\]]*'autoHarvest'/.test(uiSrc));
+G.reset();
+
 group('simulating an absence winds the world back');
 G.reset();
 clearGarden();
@@ -5209,6 +5390,24 @@ check('an ad grant moves the wallet and neither accumulator',
   S.credits === creditsBeforeAd + 750000
   && earnedNow() === yrMark && lifetimeNow() === ltMark,
   `${earnedNow()} / ${lifetimeNow()}`);
+/* The first REAL ad-bought reward in the game, held to the same promise through
+   its own front door rather than through credit(). The drone rental hands over
+   thirty minutes of a machine and no gold at all, so the amount both ledgers may
+   move by is exactly zero — stated as a number, because "it did not change much"
+   would pass under an implementation that quietly minted the loan's harvests. */
+S.ads.sessions = 2;
+S.ads.day = 'not-today';
+delete S.boosters.drone;
+S.upgrades.autoHarvest = 0;
+yrMark = earnedNow();
+ltMark = lifetimeNow();
+const creditsBeforeRental = S.credits;
+const rented = G.rentDrone();
+check('and the drone rental — a real ad-bought reward — moves all three by zero',
+  rented === true && S.credits === creditsBeforeRental
+  && earnedNow() === yrMark && lifetimeNow() === ltMark,
+  `${S.credits - creditsBeforeRental} / ${earnedNow() - yrMark} / ${lifetimeNow() - ltMark}`);
+delete S.boosters.drone;
 check('the year driver IS earning, by design', (G.Dev.driveYear(500), earnedNow() === yrMark + 500));
 check('and the driver earns into the pool too, so the meter and the mint agree',
   lifetimeNow() === ltMark + 500, `${lifetimeNow()} vs ${ltMark} + 500`);

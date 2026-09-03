@@ -770,17 +770,22 @@
      the flower button (docs/46: "paying exactly what taps pay everywhere"), and
      `tapFlower()` reads `boostVal('tapPower')`, `critChance` and
      `globalCredits`. So Bloom Burst and Golden Popups genuinely work on the
-     taps a player is making on Holly. Only Seed Rush (`growSpeed`) and Fortune
-     Aura (`rarityWeight`) cannot reach: no Winter or Fall plant takes a growth
-     modifier or rolls a rarity, by construction.
+     taps a player is making on Holly. Seed Rush (`growSpeed`), Fortune Aura
+     (`rarityWeight`) and the rented drone (`autoHarvest`) cannot: no Winter or
+     Fall plant takes a growth modifier or rolls a rarity, by construction, and
+     the drone lifts plots out of `state.grid`, which is the summer board —
+     Fall's bed is collected by hand and Winter pays on collect. That is the
+     same boundary that makes `passiveIncomeRate()` summer-only.
 
      The owner's #11 ruling is "hide the power-up that's in effect on that
-     garden" where you CANNOT use power-ups. Two of the four you can, so this
+     garden" where you CANNOT use power-ups. Two of the five you can, so this
      predicate is the ruling applied to what the engine actually does rather
-     than to a premise that is only three-quarters true. It gates both halves —
+     than to a premise that is only partly true. It gates both halves —
      the chip in the rail and the tap that spends one — so they can never
-     disagree about the same boost. */
-  const SEASON_DEAD_EFFECTS = ['growSpeed', 'rarityWeight'];
+     disagree about the same boost. A rented drone is still flying over the
+     summer garden while this hides its chip; what the rail reports is what is
+     in effect on the board you are LOOKING at. */
+  const SEASON_DEAD_EFFECTS = ['growSpeed', 'rarityWeight', 'autoHarvest'];
   const reachesHere = (def) => !inSeasonRoom()
     || Object.keys(def.effects || {}).some((k) => SEASON_DEAD_EFFECTS.indexOf(k) === -1);
   function renderRail() {
@@ -1082,7 +1087,7 @@
       FX.shake(3);
       toast({
         title: `${seated.name} does nothing here`,
-        body: 'Nothing in this garden grows faster or rolls rarer. Swipe back to the summer garden and it will still be waiting.',
+        body: 'Nothing in this garden grows faster, rolls rarer, or gets picked for you. Swipe back to the summer garden and it will still be waiting.',
         art: Icons.get(seated.icon)
       });
       return;

@@ -503,6 +503,17 @@ a long booster.
 | Seed Rush | 600 s | `growSpeed` | +30% |
 | Fortune Aura | 1,800 s | `rarityWeight` | +50% |
 | Golden Popups | 30 s | `globalCredits` | +25% |
+| Harvest Drone | 1,800 s | `autoHarvest` | level 1 |
+
+**The fifth row is the exception to everything above it, and it is worth saying out loud.** The
+Harvest Drone is the one booster that is never in the bag, never on a level rung and never on a
+quest: `boostInv.drone` is unreachable by any player path. It is *offered*, in the Shop, for one
+rewarded video (`DATA.droneRental`, and [37-monetization.md](37-monetization.md)) — which is why its
+terms live in their own block and not on the row: `tools/sim-test.js` bans `cost`, `price`, `gems`,
+`credits`, `tickets` and `currency` on every `DATA.boosters` row, because boosts are earned rather
+than bought and watching an ad is earning it. Its `effects.autoHarvest` is an effective drone
+*level*, not a percentage, and it composes with the bought badge by `max` — see
+[03-systems.md](03-systems.md#harvest-drone).
 
 Scarcity is the point. If playtesting shows they are too rare, the fallback is gem pricing at
 1 gem = 5 old tickets — see [16-progression-and-quests.md](16-progression-and-quests.md).
@@ -627,6 +638,7 @@ to the simulation:
 | `critMult` | Taps | Multiplies crit multiplier |
 | `growSpeed` | Planting and hastening | Reduces grow time |
 | `rarityWeight` | Harvests | Scales non-common weights |
+| `autoHarvest` | The drone's live loop | Raises the effective drone level — `max` with the bought badge, never a sum, and deliberately NOT read by `passiveIncomeRate()` |
 
 `boostVal(key)` sums every active source of a key. Adding a new key means also adding the place
 that reads it — nothing happens automatically. Decor no longer contributes to any of these keys.

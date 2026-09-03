@@ -3260,7 +3260,11 @@ technically work, but do not reintroduce the collision.
 **`syncAfford()` in `ui-sheet.js` assumes every `[data-buy]` is one of three kinds.** Its final `else`
 branch treats anything unrecognised as a booster and will throw. New purchase buttons must use
 their own data attribute — the Apiary and Craft panels use `data-apiary`, `data-craft` and
-`data-sell` for exactly this reason.
+`data-sell` for exactly this reason, and a rewarded-ad control uses `data-ad`.
+
+**A `<button>` nested inside a `<button>` is invalid markup and will not fire**, so a card that IS
+an offer carries the hook itself and puts the ad pill where `priceTag()` goes. `UI.adTag()` returns
+a `<span>` for exactly this reason; do not "improve" it into a button.
 
 **The sheet overlays the dock when open.** Browser automation cannot click a dock button while a
 sheet is up; click the in-sheet tab pills at `#sheetTabs .tab[data-tab="..."]` instead.
@@ -3381,6 +3385,28 @@ point is that any past or future slot is computable on demand.
 each auto-planted plot at what its planter would grow and caps the total by the drone's cadence. It
 is O(1) in the length of the absence, deliberately — do not "improve" it by stepping the simulation
 forward across a 24-hour gap.
+
+**And because it is a rate read ONCE and multiplied over the whole absence, no temporary effect may
+ever be composed into it.** A thirty-minute boost reaching that function is worth a full away
+window, not thirty minutes — a thirty-second ad watched just before closing the app would pay out a
+night. The rented Harvest Drone is the live case: it composes in `processAutoHarvest()` and is
+deliberately excluded here, and the local is named `owned` rather than `droneLevel` precisely
+because `Game.droneLevel()` is the composed getter and a tidy-minded refactor of that line is one
+keystroke from swapping it in. The function also still duplicates the cadence formula inline instead
+of calling `autoHarvestCadence()`, which is what makes the line inviting to tidy. `tools/sim-test.js`
+has "the rental does not touch offline income"; sabotaging that one line reddens it and nothing else.
+
+**`PRICE_FIELDS` in `tools/sim-test.js` bans `cost`, `price`, `gems`, `credits`, `tickets` and
+`currency` on every `DATA.boosters` row**, because boosts are earned rather than bought. So a timed
+effect that is *offered* for something needs its offer terms outside that table — `DATA.droneRental`
+is the pattern. The reflex to write `currency: 'ad'` on the row is strong, because `CREATURE_FOOD`
+carries exactly that field; the suite goes red immediately, which is the point.
+
+**A rewarded-ad refusal must be decided before `watchAd()`, and the test for it is easy to write
+so that it cannot fail.** Take the impression mark *before* the refusing call, in a `check` of its
+own. A group whose earlier assertion performs the refusal itself absorbs the stray impression, the
+day's cap is then already spent, and every later "no impression on a refusal" assertion passes
+against an implementation that spends one every time. Found by sabotage, not by review.
 
 **Verb effects must be read before the plot is cleared.** `harvest()` captures the neighbourhood —
 Beacon weight, Lantern gem multiplier, the payout multiplier — at the top, because clearing the plot

@@ -10,18 +10,31 @@ still governs the SDK.** The rule that nothing ships before the Unity shell is a
 a network, an SDK, a fetch, a real video. None of those exists here and none ever will. What the
 owner asked for and what now exists is the **placement** — where an offer sits, who may be offered
 it, how often, what it says, and a counter — with a grant that fires immediately in place of a
-video. The two are the Honeypot creature-food tier ([22-creatures.md](22-creatures.md)) and #21's
-drone rental. They are built this way deliberately: the day a real SDK arrives, `Game.watchAd()` is
+video. The two are the Honeypot creature-food tier ([22-creatures.md](22-creatures.md)) and the
+drone rental — **both live as of 2026-09-03**. They are built this way deliberately: the day a real
+SDK arrives, `Game.watchAd()` is
 the one function that changes and everything around it — the caps, the counters, the first-session
 rule, the no-countdown rule, the mint exclusion — is already true and already tested.
 
-Three things that ride with the amendment:
+Four things that ride with the amendment:
 
 - **The caps live in `DATA.ads`**, which is prerequisite 5 below, done. `dailyCap: 6` is the top of
-  the 3–6 band; `perPlacement: { food: 2 }` is what feeding may take of it. Feeding **could** want
-  six a day on its own — four tended creatures on 16-hour Honeypots — so it is held to two on
-  purpose, leaving 1–4 for the three placements below that ship first. Both numbers are PROVISIONAL
+  the 3–6 band; `perPlacement: { food: 2, drone: 2 }` is what each surface may take of it. Feeding
+  **could** want six a day on its own — four tended creatures on 16-hour Honeypots — so it is held
+  to two on purpose; the drone rental is held to two for the same reason, since a half-hour loan
+  would happily eat the whole plan and turn a taste into how the garden is played. Four of six
+  spoken for, two left for the placements below that ship first. Every number here is PROVISIONAL
   and phase 4's to retune.
+- **The drone rental's own guardrails**, because they are the ones a future placement should copy.
+  It composes with the bought upgrade by `max` and never by replacement, so a player who owns the
+  drone at level 3 is never handed a loan that slows them to level 1. It refuses outright — before
+  any impression is spent — when a rental is already flying or when the badge already matches the
+  loan, because an ad sold once for a grant worth nothing is an ad that is never trusted again. And
+  it is excluded from `passiveIncomeRate()`, which is the same refusal this document makes of the
+  Turn doubler in different clothes: that function is a rate multiplied over a whole absence, so a
+  thirty-second ad composed into it would pay out a full night. It grants **no gold at all** — it
+  lends a machine — so there is nothing for promise 1's mint exclusion to catch, and
+  `tools/sim-test.js` asserts that in bill 4's own idiom anyway, at exactly zero on both ledgers.
 - **The mint-exclusion flag exists and is sim-tested** — prerequisite 2 below, done. `credit(n, {
   ad: true })` skips both accumulators exactly as `cheat` and `refund` do, and bill 4 in
   `tools/sim-test.js` asserts an ad grant moves the wallet and neither ledger. Nothing pays gold for
@@ -29,7 +42,9 @@ Three things that ride with the amendment:
   rediscovering the promise.
 - **Nothing in the placement holds a clock**, because a time-limited offer attaches a PEGI 12
   descriptor ([40-financial-model.md](40-financial-model.md)). A sim-test reads the whole `DATA.ads`
-  table for the vocabulary of urgency and fails on it.
+  table for the vocabulary of urgency and fails on it, and another reads `DATA.droneRental` the same
+  way. The rental's own half-hour countdown is a different thing entirely — it is the rail chip
+  telling a player what they already have, never the offer telling them to hurry.
 
 The playbook a third placement follows is in [09-conventions.md](09-conventions.md) — read it rather
 than rebuilding the component.
