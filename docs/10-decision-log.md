@@ -6741,7 +6741,8 @@ as **"23h 60m"**. Round to whole minutes first, then split.
 > being able to read.
 
 **Built:** three foods, `fedUntil` on each creature, a Feed panel on the Hollow's dock, and 42 new
-assertions. Design in [22-creatures.md](22-creatures.md#food-2026-08-18).
+assertions. Design in [22-creatures.md](22-creatures.md#food-and-the-one-clock-it-runs--2026-08-20)
+*(anchor updated 2026-09-02 — the section was retitled when the two food clocks merged)*.
 
 **The owner's shape was an upkeep timer** — a pet goes *inactive* without food, and food tiers buy
 hours of being active, as a retention and monetization surface. The goals were right and are all

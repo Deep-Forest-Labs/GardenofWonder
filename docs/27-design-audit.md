@@ -118,8 +118,9 @@ holds while the docs agree. They no longer entirely do. The specific drift is li
 adds a new section rather than retracting an old one.
 
 This is the same failure the visual standard just had, and it has the same fix:
-**nothing enforces it.** [11-known-issues.md](11-known-issues.md#nothing-enforces-any-of-this)
-already says so about CSS. It is equally true of design.
+**nothing enforces it.** [11-known-issues.md](11-known-issues.md#nothing-enforces-any-of-this--built-2026-08-30)
+already said so about CSS *(that entry has since been closed — `style-check` and the design-rule
+assertions are the teeth now, which proves this paragraph's point)*. It is equally true of design.
 
 ---
 
