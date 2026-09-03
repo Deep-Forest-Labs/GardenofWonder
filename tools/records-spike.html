@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Record Shelf — Wireframe Spike</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  Static. No game dependencies — data.js, game.js and style.css are not loaded.
+  Everything below is drawn from scratch (tokens and component recipes copied
+  by hand from the live style.css) so this spike can never break because the
+  game moved. Real class names are reused wherever a frame shows chrome that
+  already exists (.dr-row, .card, .quest-strip, .news-*); new, parallel classes
+  are invented for the genuinely new states this pass adds (.rec-*).
+
+  Note the shelf's classes are .rec-*, NOT .shelf-* — `shelf` is already the
+  Honey Shelf's namespace in style.css and in ui-sheet.js. See section 9.
+
+  --sat/--sab are hardcoded to a real iPhone 16 Pro's insets rather than env(),
+  which is 0 on a desktop — docs/HANDOFF.md's own recorded trap. .phone is
+  content-box so its interior really measures 390x844, the way menu-spike.html
+  and dock-spike.html do it.
+
+  See docs/49-the-record-shelf.md — this spike is Gate 1 of that spec.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+    --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad;
+    --paper-dim:#ebe5d9; --paper-dim-2:#d8d0c0; --paper-dim-edge:#bcb0a0;
+    --grass:#5cc45c; --grass-d:#3f9d45; --grass-l:#8fe08a;
+    --soil:#a9713f; --soil-d:#7d4f2a; --soil-dd:#5f3a1e;
+    --seed:#7bd88f; --seed-d:#3f9d45;
+    --coin:#ffc93c; --coin-d:#f08c00;
+    --gem:#8ce0ff; --dot:#ff6b6b; --ticket:#ff8fab;
+    --rare:#4dabf7; --epic:#b197fc; --legend:#ffd43b;
+    --r-lg:26px; --r-md:18px; --r-sm:12px;
+    --sat:59px; --sab:34px;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:#e9e2d3;color:var(--ink);
+    font-family:'Baloo 2',system-ui,sans-serif;
+    padding:0 0 90px;
+  }
+  h1,h2,h3{font-weight:800;margin:0}
+  p{margin:0}
+
+  /* ---------- page chrome (spike-only, not game chrome) ---------- */
+  .intro{max-width:960px;margin:0 auto;padding:28px 20px 10px}
+  .intro .kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .intro h1{font-size:27px;margin-top:4px}
+  .intro p.lede{font-size:14px;font-weight:600;color:var(--ink-soft);max-width:72ch;margin-top:10px;line-height:1.55}
+  .intro p.lede b{color:var(--ink)}
+  .toolbar{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+  .toolbar button{
+    font:inherit;font-size:12px;font-weight:800;cursor:pointer;
+    padding:8px 14px;border-radius:999px;border:2.5px solid var(--ink);
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+    box-shadow:0 3px 0 var(--ink-2);
+  }
+  .toolbar button.off{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));box-shadow:0 3px 0 var(--paper-dim-edge);opacity:.7}
+
+  .toc{max-width:960px;margin:14px auto 0;padding:0 20px}
+  .toc ol{margin:0;padding-left:20px;columns:2;column-gap:32px}
+  .toc li{font-size:13px;font-weight:700;line-height:1.7;break-inside:avoid}
+  .toc a{color:var(--ink)}
+
+  section.grp{max-width:1500px;margin:0 auto;padding:38px 20px 6px}
+  section.grp h2{font-size:20px;display:flex;align-items:center;gap:10px}
+  section.grp h2 .n{
+    display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;
+    background:var(--ink);color:var(--paper);font-size:14px;flex:none;
+  }
+  section.grp p.lede{font-size:13.5px;font-weight:700;color:var(--ink-soft);margin:8px 0 20px;max-width:84ch;line-height:1.5}
+  section.grp p.lede b{color:var(--ink)}
+
+  .row-wrap{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+
+  figure{margin:0;display:flex;flex-direction:column;gap:0}
+  figcaption{max-width:406px;margin-bottom:8px}
+  figcaption .tag{
+    display:inline-block;background:var(--ink);color:var(--paper);
+    font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:6px;
+    vertical-align:2px;margin-right:7px;
+  }
+  figcaption b{font-size:14px}
+  figcaption i{display:block;font-style:italic;font-weight:600;color:var(--ink-soft);font-size:12px;margin-top:2px;line-height:1.4}
+
+  .phone{
+    box-sizing:content-box;
+    width:390px;height:844px;overflow:hidden;position:relative;
+    border-radius:36px;border:8px solid #1a120b;
+    background:linear-gradient(180deg,#cfe8ff,#fdf3d8 60%,#eadfc2);
+    box-shadow:0 14px 26px rgba(20,12,6,.35);
+    font-size:15px;
+  }
+  .phone .scroll{position:absolute;inset:0;overflow:hidden}
+  .phone .notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:120px;height:28px;background:#1a120b;border-radius:0 0 16px 16px;z-index:80;
+  }
+
+  .note{max-width:406px;margin-top:9px;padding:8px 11px;border-radius:10px;font-size:12px;font-weight:700;line-height:1.5}
+  .note.d{background:#eaf6ea;border:2px solid #7bc47f;color:#245c27}
+  .note.d::before{content:'DECIDED — ';font-weight:900}
+  .note.q{background:#fff3e0;border:2px solid #f0a83f;color:#7a4a05}
+  .note.q::before{content:'QUESTION — ';font-weight:900}
+  .note.v{background:#fde3e3;border:3px solid #d9463f;color:#7a1410;font-size:12.5px}
+  .note.v::before{content:'\26A0 OWNER VETO POINT — ';font-weight:900}
+  .note.b{background:#efe6ff;border:3px solid #7c4dff;color:#3b1f78;font-size:12.5px}
+  .note.b::before{content:'BLOCKER, NEEDS YOUR WORD — ';font-weight:900}
+  body[data-notes="0"] .note{display:none}
+
+  .strip{background:linear-gradient(180deg,#fffdf7,var(--paper-3));border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 4px 0 var(--ink-2);padding:12px 14px;max-width:406px;margin-top:6px}
+
+  /* ---------- closing summary ---------- */
+  .spec{max-width:1040px;margin:26px auto 0;padding:0 20px}
+  .spec .box{background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);box-shadow:0 4px 0 var(--ink-2);padding:16px 18px;margin-bottom:14px}
+  .spec .box h3{font-size:14.5px;margin-bottom:9px}
+  .spec .box ul{margin:0;padding-left:18px}
+  .spec .box li{font-size:13px;font-weight:600;line-height:1.6;margin-bottom:7px}
+  .spec .box li b{font-weight:800}
+  .spec .box.veto{border-color:#d9463f;background:#fff6f5}
+  .spec .box.block{border-color:#7c4dff;background:#f7f3ff}
+
+  /* =========================================================
+     REAL GAME CHROME — recipes copied from style.css
+     ========================================================= */
+  .hud-row{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--sat) + 10px) 14px 8px;position:relative;z-index:20}
+  .wallet{display:inline-flex;align-items:center;gap:5px;padding:6px 12px 6px 8px;border:3px solid var(--ink);border-radius:999px;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));box-shadow:0 3px 0 var(--ink-2);font-weight:800;font-size:14px}
+  .wallet svg{width:20px;height:20px}
+  .hud-btn{width:40px;height:40px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));box-shadow:0 3px 0 var(--ink-2);position:relative}
+  .hud-btn svg{width:21px;height:21px}
+
+  /* the bottom sheet */
+  .sheet-shell{position:absolute;left:0;right:0;bottom:0;top:64px;background:linear-gradient(180deg,#fffdf7 0%, var(--paper) 40%);
+    border-radius:26px 26px 0 0;border:4px solid var(--ink);border-bottom:none;box-shadow:0 -6px 0 var(--ink-2);
+    display:flex;flex-direction:column;overflow:hidden;z-index:40}
+  .sheet-grip{width:44px;height:5px;border-radius:3px;background:var(--paper-dim-edge);margin:9px auto 4px;flex:none}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;padding:2px 16px 8px;flex:none}
+  .sheet-head h3{font-size:21px}
+  .sheet-x{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--ink);display:grid;place-items:center;background:#fffdf7;box-shadow:0 2px 0 var(--ink-2);flex:none}
+  .sheet-x svg{width:16px;height:16px}
+  .sheet-tabs{display:flex;gap:7px;padding:0 16px 10px;flex:none;flex-wrap:wrap}
+  .tab{font:inherit;font-size:12.5px;font-weight:800;padding:7px 13px;border-radius:999px;border:2.5px solid var(--ink);background:#fff;box-shadow:0 2px 0 var(--ink-2);cursor:pointer}
+  .tab.on{background:linear-gradient(180deg,#ffe98a,var(--coin))}
+  .sheet-note{font-size:12.5px;font-weight:700;color:var(--ink-soft);padding:0 16px 10px;line-height:1.4}
+  .sheet-body{flex:1;overflow-y:auto;padding:0 14px 20px}
+  .sheet-body::-webkit-scrollbar{width:0}
+
+  /* shop cards — verbatim recipe from style.css */
+  .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .card{
+    position:relative;text-align:left;display:flex;flex-direction:column;gap:5px;
+    padding:10px 10px 9px;background:linear-gradient(180deg,#fff,#fff5e2);
+    border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.14);overflow:hidden;
+  }
+  .card-top{display:flex;align-items:center;gap:8px}
+  .card-badge{--badge-c:#ffe9a8;width:46px;height:46px;flex:none;border-radius:50%;display:grid;place-items:center;
+    background:radial-gradient(circle at 34% 28%, #fff, var(--badge-c));border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2)}
+  .card-badge svg{width:26px;height:26px}
+  .card-top > span:last-child{min-width:0}
+  .card-title{display:block;font-size:14px;font-weight:800;line-height:1.1}
+  .card-sub{display:block;font-size:11px;font-weight:700;opacity:.62;line-height:1.15;margin-top:1px}
+  .card-desc{font-size:11.5px;font-weight:600;line-height:1.3;color:var(--ink-soft)}
+  .card-vals{display:flex;flex-wrap:wrap;gap:4px}
+  .card-vals .stat{font-size:10px;padding:2px 6px}
+  .stat{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border:2px solid var(--ink);border-radius:999px;
+    background:linear-gradient(180deg,#fff,var(--paper-2));font-size:11px;font-weight:800;box-shadow:0 2px 0 var(--ink-2)}
+  .price{display:inline-flex;align-items:center;gap:4px;align-self:flex-start;margin-top:auto;padding:4px 9px;
+    border:2.5px solid var(--ink);border-radius:999px;background:linear-gradient(180deg,#fff,var(--paper-3));
+    font-size:12.5px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;box-shadow:0 2px 0 var(--ink-2)}
+  .price svg{width:15px;height:15px}
+  .price.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+  .price.no{background:linear-gradient(180deg,#ffe3e3,#ffc9c9)}
+
+  /* quest strip — verbatim recipe */
+  .quest-strip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;text-align:left;
+    padding:5px 8px 5px 5px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+    border:3px solid var(--ink);border-radius:18px;box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.16)}
+  .q-pip-wrap{width:36px;height:36px;flex:none;display:grid;place-items:center}
+  .q-pip-ring{grid-area:1/1;width:36px;height:36px;border-radius:50%;background:conic-gradient(from -90deg,#69db7c calc(var(--p,0) * 360deg), rgba(44,26,16,.16) 0)}
+  .q-pip{grid-area:1/1;position:relative;z-index:1;width:26px;height:26px;display:grid;place-items:center;
+    background:linear-gradient(180deg,#ffe066,#ffc93c);border:2.5px solid var(--ink);border-radius:50%;
+    font-weight:900;font-size:13px;line-height:1;box-shadow:0 1px 0 var(--ink-2)}
+  .q-bar{position:relative;display:block;height:24px;min-width:0;border-radius:999px;overflow:hidden;
+    background:rgba(44,26,16,.1);border:2.5px solid var(--ink)}
+  .q-bar i{position:absolute;inset:0;width:100%;background:linear-gradient(90deg,#8ce99a,#ffe066);clip-path:inset(0 calc(100% - var(--fill,0%)) 0 0)}
+  .q-bar-label{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;height:100%;padding:0 10px;color:var(--ink)}
+  .q-text{font-weight:800;font-size:13px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .q-count{flex:none;font-weight:900;font-size:12px;font-variant-numeric:tabular-nums}
+  .q-reward{flex:none;display:flex;align-items:center;gap:3px;padding:4px 8px 4px 6px;background:linear-gradient(180deg,#fff,#fff5e2);
+    border:2.5px solid var(--ink);border-radius:999px;font-weight:900;font-size:12px;line-height:1;box-shadow:0 2px 0 var(--ink-2)}
+  .q-reward svg{width:14px;height:14px;display:block}
+
+  /* the drawer — verbatim recipes */
+  .drawer{position:absolute;top:0;bottom:0;right:0;z-index:50;width:min(86%, 332px);
+    display:flex;flex-direction:column;
+    background:linear-gradient(180deg,var(--paper) 0%, var(--paper-2) 62%, var(--paper-3) 100%);
+    border-left:4px solid var(--ink);box-shadow:-14px 0 26px rgba(20,12,6,.22)}
+  .dr-head{padding:calc(var(--sat) + 12px) 14px 10px;display:flex;align-items:center;gap:10px;flex:none}
+  .dr-face{width:46px;height:46px;flex:none;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+    background:radial-gradient(circle at 34% 28%, #fff, var(--paper-3));box-shadow:0 3px 0 var(--ink-2);font-size:22px}
+  .dr-who b{display:block;font-size:17px;font-weight:800;line-height:1.15}
+  .dr-who i{display:block;font-style:normal;font-size:11px;font-weight:600;color:var(--ink-soft)}
+  .dr-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:0 12px 12px}
+  .dr-rows{flex:1;min-height:0;overflow-y:auto;display:grid;gap:8px;align-content:start;padding:2px 2px 4px}
+  .dr-rows::-webkit-scrollbar{width:0}
+  .dr-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:11px;
+    padding:11px 12px;text-align:left;width:100%;border:3px solid var(--ink);border-radius:var(--r-md);
+    background:linear-gradient(180deg,#fff,#fff5e2);box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24)}
+  .dr-ico{--rt:var(--paper-3);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:2.5px solid var(--ink);
+    background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.78), rgba(255,255,255,.26)), var(--rt);box-shadow:0 2px 0 var(--ink-2)}
+  .dr-ico svg{width:22px;height:22px;display:block}
+  .dr-lab{min-width:0}
+  .dr-lab b{display:block;font-size:15.5px;font-weight:800;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dr-lab i{display:block;font-style:normal;font-size:11px;font-weight:600;color:var(--ink-soft);line-height:1.25;margin-top:1px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dr-end{display:flex;align-items:center;gap:6px;flex:none}
+  .chev{width:16px;height:16px;display:grid;place-items:center;opacity:.4}
+  .chev svg{width:100%;height:100%;display:block}
+  .dr-row.soon{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+    box-shadow:0 4px 0 var(--paper-dim-edge), 0 7px 11px rgba(44,26,16,.14)}
+  .dr-row.soon .dr-ico{filter:saturate(.28);border-color:rgba(44,26,16,.55);box-shadow:0 2px 0 var(--paper-dim-edge)}
+  .soon-chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;border:2.5px solid rgba(44,26,16,.55);
+    background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));box-shadow:0 2px 0 var(--paper-dim-edge);
+    font-size:10.5px;font-weight:800;color:var(--ink-soft)}
+  .dr-sep{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);
+    padding:10px 2px 2px;border-top:2.5px dashed rgba(44,26,16,.2);margin-top:4px}
+  .dr-foot{font-size:10.5px;font-weight:700;color:var(--ink-soft);text-align:center;padding:8px 0 0;flex:none}
+  .row-dot{width:13px;height:13px;border-radius:50%;background:var(--dot);border:2.5px solid var(--ink);box-shadow:0 2px 0 var(--ink-2)}
+
+  /* the moments dialog — the third mode on #news */
+  .news-frame{position:absolute;inset:0;z-index:90;display:grid;place-items:center;background:rgba(30,18,10,.5)}
+  .news-card{width:min(340px, calc(100% - 40px));max-height:calc(100% - 48px);overflow:auto;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));border:4px solid var(--ink);border-radius:var(--r-lg);
+    box-shadow:0 8px 0 var(--ink-2), 0 18px 30px rgba(20,12,6,.4);padding:16px}
+  .news-art{margin:-2px -2px 10px;aspect-ratio:4/3;overflow:hidden;border:3px solid var(--ink);border-radius:var(--r-md);
+    display:grid;place-items:center;box-shadow:0 3px 0 var(--ink-2)}
+  .news-art.placeholder{background:linear-gradient(155deg,#cdeaff 0%,#e9f8ff 60%,#fff3d6 100%)}
+  .news-fallback{display:grid;place-items:center;padding:14px 0 6px}
+  .news-h2{margin:0 0 8px;font-size:20px;font-weight:800;text-align:center;line-height:1.15}
+  .news-list{margin:0 0 8px;padding:0;list-style:none;display:grid;gap:6px}
+  .news-list li{position:relative;padding-left:20px;font-size:12.5px;font-weight:700;line-height:1.4}
+  .news-list li::before{content:'';position:absolute;left:4px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--coin);border:2px solid var(--ink)}
+  .news-note{margin:8px 0 12px;text-align:center;font-size:11.5px;font-weight:800;font-style:italic;color:var(--ink-soft)}
+  .art-caption{text-align:center;font-size:10.5px;font-weight:700;color:var(--ink-soft);margin:-4px 0 8px}
+  .big-btn{display:block;width:100%;padding:13px;border-radius:999px;border:3px solid var(--ink);text-align:center;
+    background:linear-gradient(180deg,#ffe98a,var(--coin));box-shadow:0 4px 0 var(--ink-2);font:inherit;font-size:16px;font-weight:800}
+
+  /* toast */
+  .toasts{position:absolute;left:0;right:0;top:calc(var(--sat) + 62px);z-index:70;display:grid;gap:8px;padding:0 14px;pointer-events:none}
+  .toast{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;
+    padding:9px 13px 9px 9px;border:3px solid var(--ink);border-radius:var(--r-md);
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 4px 0 var(--ink-2), 0 9px 16px rgba(44,26,16,.24)}
+  .toast .t-art{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--ink);display:grid;place-items:center;
+    background:radial-gradient(circle at 34% 28%, #fff, var(--paper-3));box-shadow:0 2px 0 var(--ink-2)}
+  .toast .t-art svg{width:22px;height:22px}
+  .toast b{display:block;font-size:14px;font-weight:800;line-height:1.15}
+  .toast i{display:block;font-style:normal;font-size:11.5px;font-weight:600;color:var(--ink-soft);line-height:1.3;margin-top:1px}
+
+  /* =========================================================
+     NEW — the record shelf's own classes. `.rec-*`, never `.shelf-*`.
+     ========================================================= */
+
+  /* THE EQUIPPED HEADER. The one place a record is shown at size, and the only
+     thing on the panel that moves. Both sides are NAMED here even when one is
+     empty — the decouple is the design's spine, so the header has to say it
+     out loud rather than leaving the player to infer two slots from two rows. */
+  .rec-head{
+    display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;
+    padding:12px;margin-bottom:12px;
+    background:linear-gradient(180deg,#fff,#fff5e2);
+    border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
+  }
+  .rec-head.empty{
+    background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+    box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.14);
+  }
+  .rec-sides{display:grid;gap:5px;min-width:0}
+  .rec-side{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline}
+  .rec-side .sd{
+    font-size:9.5px;font-weight:800;letter-spacing:.07em;
+    padding:2px 6px;border-radius:5px;background:var(--ink);color:var(--paper);
+    align-self:center;
+  }
+  /* Side A is a title and Side B is a sentence, so neither may be clipped —
+     the header is the one place the two slots are said in full. */
+  .rec-side b{font-size:14px;font-weight:800;line-height:1.2;display:block}
+  .rec-side i{font-style:italic;font-weight:700;color:var(--ink-soft);font-size:12px}
+
+  /* THE DISC. A record is round, so the object is a disc and not a square card
+     with a picture on it. Rarity is the label colour under the same white veil
+     the drawer's icon disc and the seed art use — so `--rc` must be SATURATED,
+     for the reason docs/05 names under `.set-ring`. Common has no rarity token
+     in this game, and it correctly gets the paper family instead of an
+     invented fifth hue. */
+  .disc{
+    --rc:var(--paper-3);
+    width:78px;height:78px;flex:none;border-radius:50%;
+    display:grid;place-items:center;position:relative;
+    background:
+      radial-gradient(circle at 32% 26%, rgba(255,255,255,.30), rgba(255,255,255,0) 58%),
+      radial-gradient(circle at 50% 50%, var(--rc) 0 26%, transparent 27%),
+      repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,.10) 0 1px, rgba(0,0,0,0) 1px 4px),
+      linear-gradient(180deg,#3a2a1e,#241812);
+    border:3px solid var(--ink);
+    box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.26);
+  }
+  .disc::after{
+    content:'';position:absolute;width:9px;height:9px;border-radius:50%;
+    background:var(--paper);border:2px solid var(--ink);
+  }
+  .disc.sm{width:54px;height:54px;box-shadow:0 3px 0 var(--ink-2)}
+  .disc.sm::after{width:7px;height:7px;border-width:1.6px}
+  .disc.spin{animation:discSpin 3.6s linear infinite}
+  @keyframes discSpin{to{transform:rotate(360deg)}}
+
+  /* THE ROW. `.seed-row`'s material — the house's wide list card at the same
+     4px lip and contact shadow — NOT the class itself, which is the plant
+     picker's button. A wide row takes the plain two-stop gradient and none of
+     the plot's percentage-radius blemishes. */
+  .rec-row{
+    display:grid;grid-template-columns:auto minmax(0,1fr);gap:11px;align-items:center;
+    width:100%;text-align:left;padding:10px 11px;margin-bottom:9px;
+    background:linear-gradient(180deg,#fff,#fff5e2);
+    border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
+  }
+  .rec-lab{min-width:0;display:grid;gap:2px}
+  .rec-name{font-size:15px;font-weight:800;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .rec-song{font-size:12px;font-weight:700;color:var(--ink-soft);line-height:1.25}
+  .rec-song .lbl,.rec-charm .lbl{font-weight:800;color:var(--ink);opacity:.55}
+  .rec-charm{font-size:12px;font-weight:700;color:var(--ink-soft);line-height:1.3}
+  .rec-pills{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+  .rec-pill{
+    display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
+    border:2.5px solid var(--ink);border-radius:999px;
+    background:linear-gradient(180deg,#fff,var(--paper-3));
+    font:inherit;font-size:11.5px;font-weight:800;line-height:1;box-shadow:0 2px 0 var(--ink-2);
+  }
+  .rec-pill.on{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+  .rec-pill .sd{font-size:9px;font-weight:900;letter-spacing:.06em;opacity:.6}
+  .rarity-chip{
+    display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;
+    border:2px solid var(--ink);font-size:9.5px;font-weight:800;letter-spacing:.04em;
+    box-shadow:0 2px 0 var(--ink-2);background:var(--paper-3);
+  }
+  .rarity-chip.rare{background:#bfe1ff}
+  .rarity-chip.epic{background:#e3d7ff}
+  .rarity-chip.legend{background:var(--legend)}
+
+  /* THE MASKED SLOT. The curtain's grammar reapplied — the SAME --paper-dim
+     family every "not yet" state in this game already wears, restating its own
+     lip because a modifier that writes box-shadow and forgets deletes it.
+     The silhouette is mysteryBloom's RECIPE — one flat soft-ink shape with a
+     darker core, inside the house outline — and never its five-petal art,
+     which would be a lie on a record. */
+  .rec-row.masked{
+    background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+    box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.14);
+  }
+  .disc.mask{
+    background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.5), transparent 62%), var(--paper-dim-2);
+    border-color:var(--paper-dim-edge);
+    box-shadow:0 3px 0 var(--paper-dim-edge);
+  }
+  .disc.mask::after{content:none}
+  .disc.mask svg{width:34px;height:34px}
+  .rec-qmark{font-size:15px;font-weight:800;letter-spacing:.06em;color:var(--ink-soft)}
+  .rec-hint{display:block;margin-top:3px;font-size:11px;font-weight:700;font-style:italic;color:var(--ink-soft);line-height:1.35}
+
+  /* THE GRAMOPHONE ADVERT, in the shelf's header before it is bought. The
+     locked seed row's job — an advert for the thing you are saving up for —
+     in the drained-paper family, restating its own lip. */
+  .rec-advert{
+    display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:11px;align-items:center;
+    padding:10px 11px;margin-bottom:12px;
+    background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+    border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.14);
+  }
+  .rec-advert .gr-ico{width:46px;height:46px;flex:none;border-radius:50%;display:grid;place-items:center;
+    border:2.5px solid rgba(44,26,16,.55);background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));
+    box-shadow:0 2px 0 var(--paper-dim-edge)}
+  .rec-advert .gr-ico svg{width:28px;height:28px}
+  .rec-advert b{display:block;font-size:14px;font-weight:800;line-height:1.15}
+  .rec-advert i{display:block;font-style:normal;font-size:11.5px;font-weight:600;color:var(--ink-soft);line-height:1.3;margin-top:1px}
+
+  /* keepsake price pill — two different creatures, said as two faces */
+  .keep-price{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;
+    border:2.5px solid var(--ink);border-radius:999px;background:linear-gradient(180deg,#fff,var(--paper-3));
+    font-size:12px;font-weight:800;line-height:1;box-shadow:0 2px 0 var(--ink-2)}
+  .keep-price svg{width:16px;height:16px}
+  .keep-price.no{background:linear-gradient(180deg,#ffe3e3,#ffc9c9)}
+  .keep-price.ok{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+
+  /* THE ASK — the unlockAsk pattern: it REPLACES the panel body rather than
+     floating, because a floating card gets rebuilt out from under the player
+     by the next `panels` emit. */
+  .ask{display:grid;gap:12px;place-items:center;text-align:center;padding:14px 6px}
+  .ask h4{font-size:19px;font-weight:800;margin:0}
+  .ask p{font-size:13px;font-weight:700;color:var(--ink-soft);line-height:1.45;max-width:30ch}
+  .ask .keeps{display:flex;gap:9px}
+  .ask .keepface{width:56px;height:56px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+    background:radial-gradient(circle at 34% 28%, #fff, var(--paper-3));box-shadow:0 3px 0 var(--ink-2);font-size:26px;position:relative}
+  .ask .keepface span{position:absolute;bottom:-5px;right:-5px;background:var(--ink);color:var(--paper);
+    font-size:10px;font-weight:800;padding:2px 5px;border-radius:6px}
+  .ask .btns{display:flex;gap:9px;width:100%;padding:0 8px}
+  .ask .btns button{flex:1;font:inherit;font-size:15px;font-weight:800;padding:12px;border-radius:999px;border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink-2)}
+  .ask .btns .yes{background:linear-gradient(180deg,#d3f9d8,#8ce99a)}
+  .ask .btns .no{background:linear-gradient(180deg,#fffdf7,var(--paper-3))}
+
+  /* the Hollow room */
+  .hollow{position:absolute;inset:0;background:linear-gradient(180deg,#2b1f3d 0%,#3d2c52 42%,#5a4030 72%,#6b4a34 100%);overflow:hidden}
+  .hollow .roof{position:absolute;left:0;right:0;top:0;height:180px;
+    background:linear-gradient(180deg,#1d1430,#2b1f3d);border-bottom:3px solid #16101f}
+  .hollow .floor{position:absolute;left:0;right:0;bottom:0;height:224px;
+    background:linear-gradient(180deg,#7d5334,#5f3a1e);border-top:4px solid #4a2c17}
+  .hollow .burrow{position:absolute;width:74px;height:56px;border-radius:50% 50% 12px 12px / 70% 70% 12px 12px;
+    background:#2a1a12;border:3px solid #1b110b}
+  .hollow-count{position:absolute;left:0;right:0;top:calc(var(--sat) + 58px);text-align:center;
+    font-size:12.5px;font-weight:800;color:#f4e6c8;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+  .pet{position:absolute;width:54px;height:54px;border-radius:50%;border:3px solid var(--ink);
+    display:grid;place-items:center;font-size:26px;background:radial-gradient(circle at 34% 28%, #fff, var(--paper-3));
+    box-shadow:0 3px 0 var(--ink-2)}
+  .hdock{position:absolute;left:10px;right:10px;bottom:calc(var(--sab) - 12px + 10px);z-index:30;
+    display:grid;grid-auto-flow:column;gap:7px;padding:7px;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));border:3.5px solid var(--ink);
+    border-radius:22px;box-shadow:0 5px 0 var(--ink-2), 0 12px 18px rgba(20,12,6,.3)}
+  .hdock button{font:inherit;display:grid;place-items:center;gap:2px;padding:7px 2px 5px;border-radius:15px;
+    border:2.5px solid var(--ink);background:linear-gradient(180deg,#fff,var(--paper-2));box-shadow:0 3px 0 var(--ink-2);
+    font-size:10.5px;font-weight:800}
+  .hdock button svg{width:22px;height:22px}
+  .hdock button.on{background:linear-gradient(180deg,#ffe98a,var(--coin))}
+  /* A dark contact shadow on a dark floor is not a contact shadow. The pad is
+     the ground, the shadow rides on top of it — the meadow's recorded lesson. */
+  .gramo{position:absolute;width:96px;height:110px;display:grid;place-items:end center}
+  .gramo .pad{position:absolute;bottom:2px;width:80px;height:16px;border-radius:50%;background:rgba(255,228,186,.22)}
+  .gramo .sh{position:absolute;bottom:5px;width:58px;height:11px;border-radius:50%;background:rgba(20,12,6,.42)}
+
+  /* charm-copy comparison table */
+  .copy-tbl{width:100%;border-collapse:separate;border-spacing:0 8px;font-size:13px}
+  .copy-tbl th{text-align:left;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);padding:0 10px 2px}
+  .copy-tbl td{background:linear-gradient(180deg,#fff,#fff5e2);padding:10px 12px;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);vertical-align:top;line-height:1.4}
+  .copy-tbl td:first-child{border-left:3px solid var(--ink);border-radius:var(--r-md) 0 0 var(--r-md)}
+  .copy-tbl td:last-child{border-right:3px solid var(--ink);border-radius:0 var(--r-md) var(--r-md) 0}
+  .copy-tbl td b{font-weight:800}
+  .copy-tbl td i{font-style:italic;color:var(--ink-soft);font-weight:700}
+  .copy-tbl code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;background:rgba(44,26,16,.07);padding:1px 5px;border-radius:5px}
+
+  .two-up{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;max-width:1000px}
+  .ab{background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);box-shadow:0 4px 0 var(--ink-2);padding:14px 16px}
+  .ab h4{font-size:13.5px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+  .ab h4 .k{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:12px;flex:none}
+  .ab p{font-size:12.5px;font-weight:600;line-height:1.5;color:var(--ink-soft)}
+  .ab p + p{margin-top:7px}
+  .ab p b{color:var(--ink)}
+
+  @media (prefers-reduced-motion: reduce){
+    .disc.spin{animation:none}
+  }
+</style>
+</head>
+<body data-notes="1">
+
+<div class="intro">
+  <p class="kicker">Garden Wonder &middot; Gate 1 wireframe spike &middot; docs/49-the-record-shelf.md</p>
+  <h1>The Record Shelf</h1>
+  <p class="lede">
+    <b>Find a record, keep the song forever, and wear any charm with any tune.</b>
+    Nine sections. Every frame is a real 390&times;844 phone screen with a real iPhone's
+    notch and safe areas. Nothing here is wired to the game — it is drawn from scratch so it
+    cannot break when the game moves.
+  </p>
+  <p class="lede">
+    Sections 1&ndash;7 are the screens. <b>Section 8 is the four rulings you said you might veto.</b>
+    <b>Section 9 is five things the build found that the spec did not know</b> — one of them
+    stops Holly's Record working at all, and I need your word on it before I write the engine.
+  </p>
+  <div class="toolbar">
+    <button id="notesBtn" onclick="toggleNotes()">Notes: ON</button>
+    <button onclick="document.getElementById('sec-9').scrollIntoView()">Jump to the blockers &darr;</button>
+  </div>
+</div>
+
+<div class="toc">
+  <ol>
+    <li><a href="#sec-1">The shelf — three card states</a></li>
+    <li><a href="#sec-2">The ??? slot: one hint, or five?</a></li>
+    <li><a href="#sec-3">The equip flow — Side A and Side B</a></li>
+    <li><a href="#sec-4">The gramophone in the Hollow</a></li>
+    <li><a href="#sec-5">The drawer — Records, and Garden Journal</a></li>
+    <li><a href="#sec-6">The find, through the moments dialog</a></li>
+    <li><a href="#sec-7">Every charm's line, beside Lucky Charm</a></li>
+    <li><a href="#sec-8">The four veto points</a></li>
+    <li><a href="#sec-9">What the build found that the spec did not</a></li>
+  </ol>
+</div>
+
+<section class="grp" id="sec-1"><h2><span class="n">1</span> The shelf — three card states</h2>
+  <p class="lede">The panel opens from either door. The equipped record sits at the top with
+  <b>both sides named even when one is empty</b>, because two independent slots is the whole
+  design and the header has to say so rather than leave you to infer it. Below, found records are
+  wide rows; unfound ones are masked slots. A record is round, so the object is a <b>disc</b> —
+  not a square card with a picture of a record on it.</p>
+  <div class="row-wrap" id="f-1"></div>
+</section>
+
+<section class="grp" id="sec-2"><h2><span class="n">2</span> The ??? slot: one hint, or five?</h2>
+  <p class="lede">The spec says each unfound record carries "one directional hint". The shipped
+  curtain does the opposite — <b>every masked row in the game today shares one line</b>, and the
+  comment above it forbids per-row flavour on purpose. Both readings are drawn. This is a real
+  choice and it is yours.</p>
+  <div class="row-wrap" id="f-2"></div>
+  <div class="two-up" style="margin-top:18px">
+    <div class="ab">
+      <h4><span class="k">A</span> One shared line (what the game does today)</h4>
+      <p><b>For it:</b> it is the law already on screen in the seed picker and the Almanac. A mask
+      that hints is a mask with a leak — "reach Stand tier 3" tells you the Stand has a tier 3, which
+      is the thing the mask is hiding.</p>
+      <p><b>Against it:</b> five identical rows saying the same sentence reads as a wall, not as five
+      secrets. The seed picker gets away with it because its rows differ in nothing but order.</p>
+    </div>
+    <div class="ab">
+      <h4><span class="k">B</span> A line each</h4>
+      <p><b>For it:</b> records come from five completely different corners of the game — the Hollow,
+      the Almanac, the Stand, Winter. A player who cannot tell them apart cannot be pulled toward any
+      of them, and being pulled into every feature is what the shelf is <i>for</i>.</p>
+      <p><b>Against it:</b> it is the first per-entry hint in the game, and it half-opens a curtain
+      the rest of the game keeps shut. If you want it, the wording has to point at a direction
+      without naming the thing — "someone in the Hollow has this one", not "get a creature to five stars".</p>
+    </div>
+  </div>
+</section>
+
+<section class="grp" id="sec-3"><h2><span class="n">3</span> The equip flow — Side A and Side B</h2>
+  <p class="lede">Drawn in <b>the Hollow's Loadout grammar</b>: you arm a side, the header line says
+  what a tap now means, and tapping a record swaps it into that side. The alternative — twin pills on
+  every row, no mode at all — is drawn beside it.</p>
+  <div class="row-wrap" id="f-3"></div>
+</section>
+
+<section class="grp" id="sec-4"><h2><span class="n">4</span> The gramophone in the Hollow</h2>
+  <p class="lede">The Decorate button stops apologising and does something. The gramophone is the
+  room's first furniture and <b>the first thing in this game that has ever spent a keepsake</b> —
+  priced as one keepsake each from two <i>different</i> creatures, so furnishing the Hollow rewards
+  knowing more than one of them.</p>
+  <div class="row-wrap" id="f-4"></div>
+</section>
+
+<section class="grp" id="sec-5"><h2><span class="n">5</span> The drawer — Records, and Garden Journal</h2>
+  <p class="lede">A fifth live row, a new <b>vinyl</b> glyph, and the reserved "Garden Record" row
+  relabelled so two things in one menu are not both called records. The row and the rename are shown
+  together, which is the only way to judge the rename.</p>
+  <div class="row-wrap" id="f-5"></div>
+</section>
+
+<section class="grp" id="sec-6"><h2><span class="n">6</span> The find, through the moments dialog</h2>
+  <p class="lede">No new popup. A record find is a third kind of moment on the dialog the curtain
+  pass already built — same card, same button, same queue, same one-at-a-time rule.</p>
+  <div class="row-wrap" id="f-6"></div>
+</section>
+
+<section class="grp" id="sec-7"><h2><span class="n">7</span> Every charm's line, beside Lucky Charm</h2>
+  <p class="lede">All five charms in the words a player reads. Then the collision, in situ: the shop's
+  <b>Lucky Charm</b> card and the quest strip's <b>"Buy Lucky Charm"</b>, on screen next to a record's
+  charm — so you can judge whether one word doing two jobs is a problem or not.</p>
+  <div id="f-7a"></div>
+  <div class="row-wrap" id="f-7b" style="margin-top:20px"></div>
+</section>
+
+<section class="grp" id="sec-8"><h2><span class="n">8</span> The four veto points</h2>
+  <p class="lede">Ruled at spec time, flagged for you. Each is one line to reverse now and a rebuild
+  to reverse later.</p>
+  <div class="spec" style="margin-left:0;padding-left:0"><div id="f-8"></div></div>
+</section>
+
+<section class="grp" id="sec-9"><h2><span class="n">9</span> What the build found that the spec did not</h2>
+  <p class="lede">Nine subsystems were read end to end before a line was written. Five things came back
+  that change the spec. <b>The first one is a blocker</b> — it needs your word before the engine can
+  be built. The rest I can decide myself if you would rather not spend the attention; my
+  recommendation is on each.</p>
+  <div class="spec" style="margin-left:0;padding-left:0"><div id="f-9"></div></div>
+</section>
+
+<script>
+/* ============================================================
+   Helpers, in the spirit of ui-shared.js
+   ============================================================ */
+function fig(tag, title, sub, inner, notes){
+  const notesHtml = (notes||[]).map(n => '<p class="note ' + n[0] + '">' + n[1] + '</p>').join('');
+  return '<figure><figcaption><span class="tag">' + tag + '</span><b>' + title + '</b><i>' + sub + '</i></figcaption>' +
+    inner + notesHtml + '</figure>';
+}
+function phone(inner, opts){
+  opts = opts || {};
+  return '<div class="phone">' + (opts.noNotch ? '' : '<div class="notch"></div>') +
+    '<div class="scroll">' + inner + '</div></div>';
+}
+
+/* ---------- icons — wireframe fidelity only ---------- */
+const ICO = {
+  coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="var(--coin)" stroke="var(--ink)" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="var(--coin-d)" stroke-width="1.6"/></svg>',
+  x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/></svg>',
+  chevron: '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  menu: '<svg viewBox="0 0 24 24"><path d="M4.6 7h14.8M4.6 12h14.8M4.6 17h14.8" fill="none" stroke="var(--ink)" stroke-width="3.4" stroke-linecap="round"/></svg>',
+  /* THE NEW GLYPH — `vinyl`, not `record`: the drawer's reserved row already
+     owns the id `record` and the grep collision is not worth it. House style:
+     one thick ink outline, flat fill, 24-unit box, block 1 of icons.js. */
+  vinyl: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#3a2a1e" stroke="var(--ink)" stroke-width="2"/><circle cx="12" cy="12" r="5.6" fill="none" stroke="#7a6047" stroke-width="1.3"/><circle cx="12" cy="12" r="3" fill="#ffd9a8" stroke="var(--ink)" stroke-width="1.6"/><circle cx="12" cy="12" r=".9" fill="var(--ink)"/></svg>',
+  /* the flat-ink DISC silhouette — mysteryBloom's recipe (one flat --ink-soft
+     shape, a --ink-2 core, inside the house outline), never its five petals */
+  mysteryDisc: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#7a6047" stroke="var(--ink)" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="#5a3a1f"/></svg>',
+  gramophone: '<svg viewBox="0 0 24 24"><path d="M12 19.5c0-4 1.5-7 1.5-7" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/><path d="M13.5 12.5c3.5-2 6-1 6.5.6.5 1.7-1.5 3.4-4.5 3.4-2 0-3.4-1.6-2-4z" fill="#ffd9a8" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><rect x="4" y="16.5" width="12" height="4.5" rx="1.4" fill="#a9713f" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+  clover: '<svg viewBox="0 0 24 24"><g fill="#8ce99a" stroke="var(--ink)" stroke-width="1.7"><circle cx="9" cy="9" r="3.6"/><circle cx="15" cy="9" r="3.6"/><circle cx="9" cy="14.4" r="3.6"/><circle cx="15" cy="14.4" r="3.6"/></g><path d="M12 14v7" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  star: '<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.9 6.4.6-4.9 4.2 1.5 6.3L12 16.9 6.4 20l1.5-6.3L3 9.5l6.4-.6z" fill="var(--legend)" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  decor: '<svg viewBox="0 0 24 24"><path d="M5 20V10l7-5 7 5v10z" fill="#ffd9a8" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/><rect x="10" y="14" width="4" height="6" fill="#a9713f" stroke="var(--ink)" stroke-width="1.6"/></svg>',
+  honey: '<svg viewBox="0 0 24 24"><path d="M12 3l7 4v8l-7 4-7-4V7z" fill="#ffd43b" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/></svg>',
+  sprout: '<svg viewBox="0 0 24 24"><path d="M12 21V11" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M12 13c0-4 4-6 8-6 0 4-2 8-8 8" fill="#eaffe0" stroke="var(--ink)" stroke-width="1.8"/><path d="M12 15c0-3-3-5-7-5 0 3 1.5 6 7 6" fill="#eaffe0" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+  keepsake: '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.2A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.8C19 15.6 12 20 12 20z" fill="#ff8fab" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/></svg>',
+  book: '<svg viewBox="0 0 24 24"><path d="M4 5c3-1.5 6-1.5 8 0 2-1.5 5-1.5 8 0v14c-3-1.5-6-1.5-8 0-2-1.5-5-1.5-8 0z" fill="#fff" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  bell: '<svg viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15z" fill="#ffe98a" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" fill="none" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+  gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="#fff" stroke="var(--ink)" stroke-width="2"/><path d="M12 3.4v2.4M12 18.2v2.4M3.4 12h2.4M18.2 12h2.4M6 6l1.7 1.7M16.3 16.3L18 18M18 6l-1.7 1.7M7.7 16.3L6 18" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" fill="none"/></svg>',
+  people: '<svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.4" fill="#fff" stroke="var(--ink)" stroke-width="1.8"/><circle cx="16" cy="10" r="2.8" fill="#fff" stroke="var(--ink)" stroke-width="1.8"/><path d="M3.6 19c.6-3.2 2.8-4.8 5.4-4.8s4.8 1.6 5.4 4.8M15.2 14.6c2.2.2 3.8 1.7 4.3 4.4" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  gift: '<svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1.6" fill="#ffc2d6" stroke="var(--ink)" stroke-width="1.8"/><rect x="3" y="6.6" width="18" height="4" rx="1.4" fill="#ff8fab" stroke="var(--ink)" stroke-width="1.8"/><path d="M12 6.6V20" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+  scroll: '<svg viewBox="0 0 24 24"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6z" fill="#fff" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8.5h7M9 12h7M9 15.5h4" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="#ffe066" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  note: '<svg viewBox="0 0 24 24"><path d="M10 18V6l8-2v12" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.6" cy="18" r="2.6" fill="#ffd9a8" stroke="var(--ink)" stroke-width="1.8"/><circle cx="15.6" cy="16" r="2.6" fill="#ffd9a8" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+};
+function ico(n){ return ICO[n] || ICO.note; }
+
+/* ============================================================
+   THE FIVE RECORDS — every string here is a DRAFT for the owner.
+   ============================================================ */
+const RECS = [
+  { id:'first',   name:'The First Record',   rarity:'common', rc:'var(--paper-3)',
+    song:"The Garden's Lullaby",
+    charm:'Fireflies come out in your garden at night.',
+    cat:'garden-ambience',
+    from:'The first time you open the shelf',
+    hint:'Open this shelf and it is already yours.' },
+  { id:'pip',     name:"Pip's Record",       rarity:'common', rc:'var(--paper-3)',
+    song:"Pip's Little Tune",
+    charm:'Your power-ups last a little longer.',
+    cat:'boost-duration',
+    from:'Any creature reaching full stars',
+    hint:'Someone in the Hollow is keeping this one.' },
+  { id:'almanac', name:'The Almanac Record', rarity:'common', rc:'var(--paper-3)',
+    song:'The Long Afternoon',
+    charm:'The sun stays out longer after rain.',
+    cat:'sky-ambience',
+    from:'The ten-species Almanac milestone',
+    hint:'Pressed between the pages of a book you are still filling.' },
+  { id:'counter', name:'The Counter Record', rarity:'rare',   rc:'var(--rare)',
+    song:'Market Day',
+    charm:'A new face turns up at the Stand a little sooner.',
+    cat:'stand-cadence',
+    from:'The Stand reaching tier 3',
+    hint:'Somebody left this one on the counter.' },
+  { id:'holly',   name:"Holly's Record",     rarity:'legend', rc:'var(--legend)',
+    song:'The Kept Night',
+    charm:'One free power-up, once a day.',
+    cat:'daily-faucet',
+    from:'The first night you keep in Winter',
+    hint:'It only turns up when it is cold.' },
+];
+const SHARED_HINT = "Keep growing — the garden isn’t done with you.";
+const RARITY_LABEL = { common:'Common', rare:'Rare', epic:'Epic', legend:'Legendary' };
+
+function disc(rc, cls){
+  return '<span class="disc ' + (cls||'') + '" style="--rc:' + (rc||'var(--paper-3)') + '"></span>';
+}
+function maskDisc(cls){
+  return '<span class="disc mask ' + (cls||'') + '">' + ico('mysteryDisc') + '</span>';
+}
+function rarityChip(r){
+  return '<span class="rarity-chip ' + r + '">' + RARITY_LABEL[r] + '</span>';
+}
+
+/* a found record's row */
+function recRow(r, opts){
+  opts = opts || {};
+  const pills = opts.pills === false ? '' :
+    '<span class="rec-pills">' +
+      '<span class="rec-pill' + (opts.a ? ' on' : '') + '"><span class="sd">SIDE A</span>' + (opts.a ? 'Playing' : 'Play') + '</span>' +
+      '<span class="rec-pill' + (opts.b ? ' on' : '') + '"><span class="sd">SIDE B</span>' + (opts.b ? 'Worn' : 'Wear') + '</span>' +
+    '</span>';
+  return '<div class="rec-row">' + disc(r.rc, 'sm') +
+    '<span class="rec-lab">' +
+      '<span class="rec-name">' + r.name + rarityChip(r.rarity) + '</span>' +
+      '<span class="rec-song"><span class="lbl">A</span> ' + (opts.pressing ? '<i>Still being pressed</i>' : r.song) + '</span>' +
+      '<span class="rec-charm"><span class="lbl">B</span> ' + r.charm + '</span>' +
+      pills +
+    '</span></div>';
+}
+/* an unfound record's masked slot */
+function maskRow(hint){
+  return '<div class="rec-row masked">' + maskDisc('sm') +
+    '<span class="rec-lab">' +
+      '<span class="rec-name"><span class="rec-qmark">???</span></span>' +
+      '<span class="rec-hint">' + hint + '</span>' +
+    '</span></div>';
+}
+/* the equipped header */
+function recHead(a, b){
+  const empty = !a && !b;
+  return '<div class="rec-head' + (empty ? ' empty' : '') + '">' +
+    (a ? disc(a.rc, 'spin') : maskDisc('')) +
+    '<span class="rec-sides">' +
+      '<span class="rec-side"><span class="sd">SIDE A</span><span>' +
+        (a ? '<b>' + a.song + '</b><i>from ' + a.name + '</i>' : '<b>No song on</b><i>The garden’s own tune is playing</i>') +
+      '</span></span>' +
+      '<span class="rec-side"><span class="sd">SIDE B</span><span>' +
+        (b ? '<b>' + b.charm + '</b><i>from ' + b.name + '</i>' : '<b>No charm on</b><i>Wear one from any record you have found</i>') +
+      '</span></span>' +
+    '</span></div>';
+}
+function sheet(title, note, body, opts){
+  opts = opts || {};
+  return '<div class="hud-row"><span class="wallet">' + ico('coin') + '18,420</span>' +
+    '<span class="hud-btn">' + ico('menu') + '</span></div>' +
+    '<div class="sheet-shell">' +
+      '<div class="sheet-grip"></div>' +
+      '<div class="sheet-head"><h3>' + title + '</h3><span class="sheet-x">' + ico('x') + '</span></div>' +
+      (opts.tabs || '') +
+      (note ? '<p class="sheet-note">' + note + '</p>' : '') +
+      '<div class="sheet-body">' + body + '</div>' +
+    '</div>';
+}
+
+/* ================= SECTION 1 ================= */
+const gramoAdvert =
+  '<div class="rec-advert">' +
+    '<span class="gr-ico">' + ico('gramophone') + '</span>' +
+    '<span><b>A gramophone for the Hollow</b><i>Put your records on down there too</i></span>' +
+    '<span class="keep-price no">' + ico('keepsake') + '2 &times; 2 kinds</span>' +
+  '</div>';
+
+document.getElementById('f-1').innerHTML =
+  fig('1A', 'One record found', 'The screen the five-minute script opens on — one record, four secrets.',
+    phone(sheet('Records', 'Side A is the song. Side B is the charm. They never have to come from the same record.',
+      recHead(RECS[0], RECS[0]) +
+      recRow(RECS[0], {a:true, b:true}) +
+      maskRow(SHARED_HINT) + maskRow(SHARED_HINT) + maskRow(SHARED_HINT) + maskRow(SHARED_HINT)
+    )),
+    [['d','The header names <b>both</b> sides even though both are filled by the same record here. Naming only the filled one would hide the decouple on the exact screen that has to teach it.'],
+     ['d','The disc is the object. Rarity is the label colour at the centre, under the same white veil the drawer’s icon discs use — so a rarity tint has to be saturated, and <b>Common correctly gets the paper family rather than an invented fifth colour</b>.'],
+     ['d','<b>Reduced motion:</b> the header disc turns, and that is the only motion on the panel. With the preference on it simply stops — and nothing is lost, because "what is playing" is already said in words two centimetres to its right. A state that only a spin can tell you is the recorded bug this game has shipped twice; this one has a static carrier by construction.']]
+  ) +
+  fig('1B', 'Side A and Side B from different records', 'The decouple, doing the thing it exists for.',
+    phone(sheet('Records', 'Side A is the song. Side B is the charm. They never have to come from the same record.',
+      recHead(RECS[0], RECS[1]) +
+      recRow(RECS[0], {a:true, b:false}) +
+      recRow(RECS[1], {a:false, b:true}) +
+      recRow(RECS[3], {a:false, b:false}) +
+      maskRow(SHARED_HINT) + maskRow(SHARED_HINT)
+    )),
+    [['d','Pip’s charm under the Lullaby’s song. Both pills lit on different rows is the whole feature in one picture, and it is the last beat of the five-minute phone script.'],
+     ['q','Three found records is already a tall list on a 390 phone. At five it scrolls. Does the found list want a sort (rarity? found order?) at v1, or is five short enough to leave alone until there are twelve?']]
+  ) +
+  fig('1C', 'Before the gramophone is bought', 'The menu row still opens the shelf. The header advertises what to want next.',
+    phone(sheet('Records', 'Side A is the song. Side B is the charm. They never have to come from the same record.',
+      gramoAdvert + recHead(RECS[0], RECS[0]) + recRow(RECS[0], {a:true, b:true}) +
+      maskRow(SHARED_HINT) + maskRow(SHARED_HINT) + maskRow(SHARED_HINT) + maskRow(SHARED_HINT)
+    )),
+    [['d','The advert wears the drained paper the locked seed row wears — the family every "not yet" in this game already uses, restating its own lip. Not a new colour, not a new idea.'],
+     ['q','The price pill reads <code>2 &times; 2 kinds</code>, which is compact but a bit cryptic. Alternatives: "a keepsake from two friends", or two little creature faces with a &times;1 on each (drawn in 4B). Which reads fastest to you?']]
+  ) +
+  fig('1D', 'A record still being pressed', 'The build never waits on music. A card whose track has not landed says so and plays the house tune.',
+    phone(sheet('Records', 'Side A is the song. Side B is the charm. They never have to come from the same record.',
+      recHead(RECS[0], RECS[4]) +
+      recRow(RECS[0], {a:true, b:false}) +
+      recRow(RECS[4], {a:false, b:true, pressing:true}) +
+      maskRow(SHARED_HINT) + maskRow(SHARED_HINT) + maskRow(SHARED_HINT)
+    )),
+    [['d','<b>Holly’s charm works the moment it is found, whether or not its song exists yet</b> — and it works with the sound muted, always. Power never asks you to turn audio on.'],
+     ['d','So the shelf ships before a single music file does, and each song simply appears when you drop the file in. Nothing about the release waits on the recordings.']]
+  );
+
+/* ================= SECTION 2 ================= */
+function shelfWithHints(perRecord){
+  return sheet('Records', 'Side A is the song. Side B is the charm. They never have to come from the same record.',
+    recHead(RECS[0], RECS[0]) + recRow(RECS[0], {a:true, b:true}) +
+    RECS.slice(1).map(r => maskRow(perRecord ? r.hint : SHARED_HINT)).join('')
+  );
+}
+document.getElementById('f-2').innerHTML =
+  fig('2A', 'A — one shared line', 'Exactly the sentence the seed picker and the Almanac already print, character for character.',
+    phone(shelfWithHints(false)),
+    [['d','This is the shipped law: <code>ui-sheet.js</code> holds one hint constant and a comment beside it that says "the same generic non-revealing note every time — never per-seed flavour text."']]
+  ) +
+  fig('2B', 'B — a line each', 'Directional, never naming: which corner of the garden, never what to do.',
+    phone(shelfWithHints(true)),
+    [['q','<b>This is the decision.</b> Read the four lines and see whether they make you want to go and find them, or whether they feel like the answer key. My own read: B is worth the exception, because unlike nineteen seeds in one list these five live in five different rooms — but it is the first per-entry hint in the game and it is your call, not mine.'],
+     ['d','Either way the shelf writes its own masked CSS rather than borrowing the picker’s, per the spec — but the two hint classes it would reuse are global, unscoped selectors today, so "its own" is worth one deliberate look at the gauntlet rather than an assumption.']]
+  );
+
+/* ================= SECTION 3 ================= */
+const loadoutTabs =
+  '<div class="sheet-tabs"><span class="tab on"><b>Side A</b> · the song</span><span class="tab">Side B · the charm</span></div>';
+document.getElementById('f-3').innerHTML =
+  fig('3A', 'Loadout grammar — Side A armed', 'The Hollow’s own pattern: arm a side, and the line says what a tap means now.',
+    phone(sheet('Records', 'Choosing a song · tap a record to put it on', 
+      recHead(RECS[0], RECS[1]) +
+      recRow(RECS[0], {a:true, b:false, pills:false}) +
+      recRow(RECS[1], {a:false, b:true, pills:false}) +
+      recRow(RECS[3], {pills:false}) +
+      maskRow(SHARED_HINT) + maskRow(SHARED_HINT),
+      {tabs: loadoutTabs})),
+    [['d','Copied from the Hollow, where the count line changes to "… &middot; tap to swap" the moment Loadout is armed. Same idea: the room you are in tells you what a tap costs.'],
+     ['q','It means one extra tap to change a charm (arm Side B, then tap), and a row gives no per-row affordance. Cleaner header, slower hands.']]
+  ) +
+  fig('3B', 'Twin pills — no mode at all', 'Every row carries its own two buttons. One tap to do anything.',
+    phone(sheet('Records', 'Side A is the song. Side B is the charm. They never have to come from the same record.',
+      recHead(RECS[0], RECS[1]) +
+      recRow(RECS[0], {a:true, b:false}) +
+      recRow(RECS[1], {a:false, b:true}) +
+      recRow(RECS[3], {}) +
+      maskRow(SHARED_HINT) + maskRow(SHARED_HINT)
+    )),
+    [['q','<b>Pick one.</b> My recommendation is <b>3B</b>: the Hollow’s mode exists because a creature has one thing you can do to it in each mode and the room is full of creatures, not a list. Here every row shows both its slots already, and a hidden mode is a state a player can be in without noticing. 3B costs about 26px of row height.'],
+     ['d','Whichever wins, tapping a lit pill takes it off again — "no song on" and "no charm on" are real, reachable states, and the header says so in words rather than by going blank.']]
+  ) +
+  fig('3C', 'What equipping a song does', 'Music turns on, with a toast that says so. The disc starts turning.',
+    phone(
+      '<div class="hud-row"><span class="wallet">' + ico('coin') + '18,420</span><span class="hud-btn">' + ico('menu') + '</span></div>' +
+      '<div class="toasts"><div class="toast"><span class="t-art">' + ico('note') + '</span>' +
+      '<span><b>Music is on</b><i>The Garden’s Lullaby is playing. Turn it off any time in Settings.</i></span></div></div>' +
+      '<div class="sheet-shell"><div class="sheet-grip"></div>' +
+      '<div class="sheet-head"><h3>Records</h3><span class="sheet-x">' + ico('x') + '</span></div>' +
+      '<p class="sheet-note">Side A is the song. Side B is the charm. They never have to come from the same record.</p>' +
+      '<div class="sheet-body">' + recHead(RECS[0], RECS[0]) + recRow(RECS[0], {a:true, b:true}) +
+      maskRow(SHARED_HINT) + maskRow(SHARED_HINT) + maskRow(SHARED_HINT) + maskRow(SHARED_HINT) + '</div></div>'
+    ),
+    [['v','<b>Veto point 1 of 4 — equipping a song turns the music channel on.</b> Music is off by default in this game. The argument for: putting a record on is a deliberate act and it means "I want to hear this"; the argument against: it is the game changing a setting you chose. The toast names it and Settings still owns it forever after. Say the word and it becomes "put the record on, and turn music on in Settings to hear it" — which is honest and, I think, slightly sad.']]
+  );
+
+/* ================= SECTION 4 ================= */
+function hollowRoom(opts){
+  opts = opts || {};
+  const pets = [[16,600,'🐿️'],[82,610,'🦔'],[148,600,'🐦'],[214,612,'🐸']]
+    .map(p => '<span class="pet" style="left:' + p[0] + 'px;top:' + p[1] + 'px">' + p[2] + '</span>').join('');
+  const burrows = [[12,660],[78,672],[144,660],[210,672]]
+    .map(b => '<span class="burrow" style="left:' + b[0] + 'px;top:' + b[1] + 'px"></span>').join('');
+  /* Drawn at the size the room really measures rather than sliced out of an
+     icon box — a 24-unit glyph scaled up leaves the object small in a lot of
+     empty space. Its own tight viewBox, standing on a lit pad. */
+  const gramo = opts.gramophone
+    ? '<span class="gramo" style="left:280px;top:566px"><span class="pad"></span><span class="sh"></span>' +
+      '<svg viewBox="0 0 40 46" width="96" height="110" style="position:relative">' +
+      '<path d="M15 34V22c0-5 3-8 3-8" fill="none" stroke="#2c1a10" stroke-width="2.4" stroke-linecap="round"/>' +
+      '<path d="M18 14c4-6 11-7.5 14.5-4.5S35 20 29 24c-5 3.4-9.5 2.6-11.4-.6C15.7 20 15.6 16.6 18 14z" fill="#ffe0ad" stroke="#2c1a10" stroke-width="2.2" stroke-linejoin="round"/>' +
+      '<path d="M21.5 17.5c2.6-3.4 6.6-4.6 8.6-3" fill="none" stroke="#c9924f" stroke-width="1.6" stroke-linecap="round"/>' +
+      '<rect x="4" y="32" width="26" height="10" rx="2.4" fill="#c9924f" stroke="#2c1a10" stroke-width="2.2"/>' +
+      '<circle cx="14" cy="37" r="4.4" fill="#3a2a1e" stroke="#2c1a10" stroke-width="1.8"/>' +
+      '<circle cx="14" cy="37" r="1.2" fill="#ffe0ad"/>' +
+      '</svg></span>'
+    : '';
+  return '<div class="hollow"><div class="roof"></div><div class="floor"></div>' + burrows + gramo + pets +
+    '<div class="hud-row"><span class="wallet">' + ico('coin') + '18,420</span><span class="hud-btn">' + ico('menu') + '</span></div>' +
+    '<p class="hollow-count">4 of 4 tending</p>' +
+    (opts.toast ? '<div class="toasts"><div class="toast"><span class="t-art">' + ico('gramophone') + '</span>' +
+      '<span><b>' + opts.toast[0] + '</b><i>' + opts.toast[1] + '</i></span></div></div>' : '') +
+    '<div class="hdock">' +
+      '<button>' + ico('honey') + 'Feed</button>' +
+      '<button>' + ico('sprout') + 'Pet</button>' +
+      '<button>' + ico('star') + 'Loadout</button>' +
+      '<button class="' + (opts.decorateOn ? 'on' : '') + '">' + ico('decor') + 'Decorate</button>' +
+    '</div></div>';
+}
+document.getElementById('f-4').innerHTML =
+  fig('4A', 'The Hollow, gramophone not bought', 'Decorate stops saying "not built yet".',
+    phone(hollowRoom({})),
+    [['d','Today that fourth button raises a toast reading "Decorating is not built yet — the button is here so the shape of the screen is right." That sentence retires with this build.']]
+  ) +
+  fig('4B', 'The ask', 'The once-ever, confirmed purchase — the same pattern the seed unlock uses. It replaces the panel body rather than floating over it.',
+    phone(sheet('Decorate', '', 
+      '<div class="ask">' +
+        '<span class="gr-ico" style="width:96px;height:96px;border-radius:50%;display:grid;place-items:center;border:3px solid var(--ink);background:radial-gradient(circle at 34% 28%, #fff, var(--paper-3));box-shadow:0 4px 0 var(--ink-2)"><svg viewBox="0 0 24 24" width="58" height="58">' +
+          '<path d="M12 19.5c0-4 1.5-7 1.5-7" fill="none" stroke="#2c1a10" stroke-width="1.8" stroke-linecap="round"/>' +
+          '<path d="M13.5 12.5c3.5-2 6-1 6.5.6.5 1.7-1.5 3.4-4.5 3.4-2 0-3.4-1.6-2-4z" fill="#ffd9a8" stroke="#2c1a10" stroke-width="1.7" stroke-linejoin="round"/>' +
+          '<rect x="4.5" y="16.5" width="11" height="4.4" rx="1.3" fill="#a9713f" stroke="#2c1a10" stroke-width="1.7"/></svg></span>' +
+        '<h4>The Gramophone</h4>' +
+        '<p>So your records play down here too. It stays in the Hollow for good.</p>' +
+        '<div class="keeps">' +
+          '<span class="keepface">🐿️<span>&times;1</span></span>' +
+          '<span class="keepface">🦔<span>&times;1</span></span>' +
+        '</div>' +
+        '<p style="font-size:12px"><b>One keepsake each, from two different friends.</b><br>You have 3 from Pip and 1 from Bramble.</p>' +
+        '<div class="btns"><button class="no">Not yet</button><button class="yes">Give them</button></div>' +
+      '</div>')),
+    [['d','<b>This is the first thing in the game that has ever spent a keepsake.</b> Every sentence in the docs and one comment in the engine currently say nothing spends them; all of them get rewritten in the same commit as the code.'],
+     ['q','Two faces with a &times;1 each is the clearest form I found for "two different creatures". It also means the ask has to name <i>which</i> two you are giving — shown here as the two you have most of. Should the player choose which two instead? That is a real panel rather than a confirm, and I would rather not build it at v1 unless you want it.'],
+     ['d','Refund-free and once-ever, confirmed — exactly the seed unlock’s shape. "Not yet" is the left button because the destructive one should never be under the thumb’s resting place.']]
+  ) +
+  fig('4C', 'Bought', 'It appears the instant it is paid for — the room’s cache is invalidated on the purchase.',
+    phone(hollowRoom({gramophone:true, toast:['The gramophone is yours','It will play whatever record you have on.']})),
+    [['d','It stands on the floor with a light pad under it and its shadow on top of that — a dark shadow on a dark floor is not a contact shadow, which is the meadow’s recorded lesson.'],
+     ['q','Placement: drawn here at the right of the burrow row so it does not cover a creature. Anywhere you would rather it sat?']]
+  );
+
+/* ================= SECTION 5 ================= */
+const DRAWER_ROWS = [
+  ['shop','decor','#ff922b','Shop','Gems, decor and the odd bundle',false],
+  ['bonuses','book','#5c7cfa','Almanac','Every flower, every creature',false],
+  ['records','vinyl','#ffd43b','Records','Songs to play, charms to wear',false],
+  ['news','bell','#ffe066',"What's New",'What changed, and when',false],
+  ['settings','gear','#8b9bb0','Settings','Sound, music, and your save',false],
+  ['friends','people','#74c0fc','Friends','Visit a garden, send a seed',true],
+  ['daily','gift','#f783ac','Daily Gift','Something small, every day',true],
+  ['record','scroll','#69db7c','Garden Journal','What your garden has done',true],
+];
+function drawerRow(r){
+  if (r[5]) return '<div class="dr-row soon" style="--rt:' + r[2] + '">' +
+    '<span class="dr-ico">' + ico(r[1]) + '</span>' +
+    '<span class="dr-lab"><b>' + r[3] + '</b><i>' + r[4] + '</i></span>' +
+    '<span class="dr-end"><span class="soon-chip">Soon</span></span></div>';
+  return '<div class="dr-row" style="--rt:' + r[2] + '">' +
+    '<span class="dr-ico">' + ico(r[1]) + '</span>' +
+    '<span class="dr-lab"><b>' + r[3] + '</b><i>' + r[4] + '</i></span>' +
+    '<span class="dr-end"><span class="chev">' + ico('chevron') + '</span></span></div>';
+}
+function drawer(){
+  const live = DRAWER_ROWS.filter(r => !r[5]).map(drawerRow).join('');
+  const soon = DRAWER_ROWS.filter(r => r[5]).map(drawerRow).join('');
+  return '<div class="hollow" style="background:linear-gradient(180deg,#7ec8f2,#bfe9ff 40%,#5cc45c 62%,#3f9d45)"></div>' +
+    '<div style="position:absolute;inset:0;background:rgba(30,18,10,.34)"></div>' +
+    '<div class="drawer"><div class="dr-head"><span class="dr-face">🌻</span>' +
+    '<span class="dr-who"><b>Josh</b><i>Level 14 · tap to rename</i></span></div>' +
+    '<div class="dr-body"><div class="dr-rows">' + live +
+    '<div class="dr-sep">Coming soon</div>' + soon + '</div>' +
+    '<p class="dr-foot">Garden Wonder &middot; your garden saves to this browser</p></div></div>';
+}
+document.getElementById('f-5').innerHTML =
+  fig('5A', 'Eight rows — five live, three reserved', 'The new Records row third, and Garden Journal at the bottom.',
+    phone(drawer()),
+    [['v','<b>Veto point 2 of 4 — the rename.</b> "Garden Record" becomes "<b>Garden Journal</b>". Two things in one menu cannot both be called records, and the collectible has the better claim on the word. The row’s id stays <code>record</code> so nothing breaks. It is a reserved row nobody has ever tapped, so the cost of the rename is zero — but it is your name for a feature you have not built yet, so you get the veto.'],
+     ['d','Position: third, right under Almanac. Both are "the things you have collected", and Shop stays first because it is the one that earns. It could equally go first — say the word.'],
+     ['q','Tint: I have used the Legendary gold, because a gold disc reads instantly as a record and the palette already owns that colour. It is <i>not</i> a seed colour, which the ROWS comment claims all the tints are — that claim is already false for six of the seven live rows, so I am not introducing the drift, only not fixing it. Happy to use a seed green instead if the gold feels like it is promising rarity.'],
+     ['q','Eight rows exactly fill the drawer on this phone — measured here at 680px of rows in 680px of room, with nothing to spare. It still fits, and the list has always been built to scroll, but <b>this is the last row that arrives for free</b>: a ninth, or a shorter handset, starts it scrolling and the reserved three go under the fold. Worth knowing now rather than the day Friends becomes real.']]
+  ) +
+  fig('5B', 'The vinyl glyph', 'At row size, at dialog size, and beside the drawer’s existing seven.',
+    '<div class="strip" style="max-width:406px;padding:20px">' +
+      '<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">' +
+        '<span class="dr-ico" style="--rt:#ffd43b;width:38px;height:38px">' + ico('vinyl') + '</span>' +
+        '<span class="dr-ico" style="--rt:#ffd43b;width:56px;height:56px"><span style="width:34px;height:34px;display:block">' + ico('vinyl') + '</span></span>' +
+        '<span style="width:76px;height:76px;display:block">' + ico('vinyl') + '</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:9px;margin-top:18px;flex-wrap:wrap">' +
+        ['decor','book','vinyl','bell','gear','people','gift','scroll'].map(n =>
+          '<span class="dr-ico" style="--rt:var(--paper-3)">' + ico(n) + '</span>').join('') +
+      '</div>' +
+    '</div>',
+    [['d','Named <code>vinyl</code>, not <code>record</code> — the reserved row already owns that id and the grep collision is not worth having. One thick ink outline, flat fills, the house build.'],
+     ['d','A groove ring at 24px is close to a hairline, so there is exactly one, and the label is a real disc rather than a dot. At row size the read is "record"; at 76px it is still a record and not a target.']]
+  );
+
+/* ================= SECTION 6 ================= */
+function momentCard(title, lines, tagline, artInner){
+  return '<div class="news-frame"><div class="news-card">' +
+    '<div class="news-fallback">' + artInner + '</div>' +
+    '<h2 class="news-h2">' + title + '</h2>' +
+    '<ul class="news-list">' + lines.map(l => '<li>' + l + '</li>').join('') + '</ul>' +
+    '<p class="news-note">' + tagline + '</p>' +
+    '<button class="big-btn">Got it!</button></div></div>';
+}
+document.getElementById('f-6').innerHTML =
+  fig('6A', "Pip's Record found!", 'The programmatic tier — the disc itself, large. No art file needed, ever.',
+    phone(momentCard("Pip’s Record found!",
+      ['<b>Side A</b> — Pip’s Little Tune',
+       '<b>Side B</b> — Your power-ups last a little longer',
+       'Wear it with any song, or play it with any charm'],
+      'On the shelf now, under Records.',
+      '<span class="disc" style="--rc:var(--paper-3);width:112px;height:112px"></span>'), {noNotch:true}),
+    [['d','Same card, same button, same queue as a seed or an upgrade reveal — one popup system, not a second one. The disc is the art chain’s last resort and it is already a finished-looking screen, so a record never waits on a picture existing.'],
+     ['d','Both sides are named in the celebration for the same reason the header names both: this is where a player learns the two halves come apart.']]
+  ) +
+  fig('6B', "Holly's Record found!", 'A Legendary find, with the rarity carried by the label and the ribbon line.',
+    phone(momentCard("Holly’s Record found!",
+      ['<b>Side A</b> — The Kept Night',
+       '<b>Side B</b> — One free power-up, once a day',
+       'Legendary — the rarest thing on the shelf'],
+      'For the first night you kept.',
+      '<span class="disc" style="--rc:var(--legend);width:112px;height:112px"></span>'), {noNotch:true}),
+    [['d','Rarity governs the ceremony and the song’s elaborateness, <b>never the charm’s size</b>. A Legendary with the biggest charm would become the only Side B anyone wears and would delete the choice the whole design is built on.'],
+     ['q','See 9.1 — <b>on your current save this find can never fire</b>, because nothing in the game remembers that a Winter night was kept. That needs a decision.']]
+  );
+
+/* ================= SECTION 7 ================= */
+document.getElementById('f-7a').innerHTML =
+  '<table class="copy-tbl"><thead><tr><th style="width:210px">Record</th><th style="width:190px">Side A — the song</th><th>Side B — the charm, in the words a player reads</th></tr></thead><tbody>' +
+  RECS.map(r =>
+    '<tr><td><b>' + r.name + '</b> ' + rarityChip(r.rarity) + '<br><i>' + r.from + '</i></td>' +
+    '<td><b>' + r.song + '</b></td>' +
+    '<td><b>' + r.charm + '</b><br><i>' + r.cat + '</i></td></tr>').join('') +
+  '</tbody></table>' +
+  '<p class="note q" style="max-width:none">Every song title and every charm line above is a <b>draft</b>. The charm lines are the ones I most want your pen on — they are the only place the feature explains itself, and they have to say what it feels like without a single number and without the word "buff". The category ids in italics are engine-only and never shown; note they are the first hyphenated ids in the codebase, where every other table uses one plain word.</p>';
+
+document.getElementById('f-7b').innerHTML =
+  fig('7A', 'The collision, in situ', 'The shop’s Lucky Charm card and a record’s charm, on one screen.',
+    phone(sheet('Shop', '', 
+      '<div class="card-grid">' +
+        '<div class="card"><div class="card-top"><span class="card-badge" style="--badge-c:#c9f5cf">' + ico('clover') + '</span>' +
+        '<span><span class="card-title">Lucky Charm</span><span class="card-sub">Lv 4</span></span></div>' +
+        '<span class="card-vals"><span class="stat">+4%</span><span class="stat">&rarr; +5%</span></span>' +
+        '<span class="card-desc">Raise tap critical hit chance by +1%.</span>' +
+        '<span class="price ok">' + ico('coin') + '2,531</span></div>' +
+        '<div class="card"><div class="card-top"><span class="card-badge" style="--badge-c:#ffe9a8">' + ico('bolt') + '</span>' +
+        '<span><span class="card-title">Power Punch</span><span class="card-sub">Lv 7</span></span></div>' +
+        '<span class="card-vals"><span class="stat">+70%</span><span class="stat">&rarr; +80%</span></span>' +
+        '<span class="card-desc">Raise tap power by +10%.</span>' +
+        '<span class="price ok">' + ico('coin') + '8,543</span></div>' +
+      '</div>' +
+      '<p class="sheet-note" style="padding:16px 2px 8px">And on the shelf, two taps away:</p>' +
+      recRow(RECS[1], {a:false, b:true})
+    )),
+    [['q','<b>Is this a collision worth fixing?</b> "Lucky Charm" is a shop card’s <i>name</i>; "charm" is what a record’s Side B <i>is</i>. My read: they live two panels apart, one is capitalised as a proper noun and one never is, and no sentence in the game ever puts them side by side except this spike. I would leave both alone.'],
+     ['q','If you disagree, the cheap fixes are: rename the shop card (it is a display string, <code>short</code>, and its id stays <code>critChance</code>) — or call Side B something else. "Charm" is the better word for the thing, which is why the spec took it.']]
+  ) +
+  fig('7B', 'The quest strip says it out loud', 'The one place the game does print the phrase.',
+    phone(
+      '<div class="hollow" style="background:linear-gradient(180deg,#7ec8f2,#bfe9ff 42%,#5cc45c 62%,#3f9d45)"></div>' +
+      '<div class="hud-row"><span class="wallet">' + ico('coin') + '18,420</span><span class="hud-btn">' + ico('menu') + '</span></div>' +
+      '<div style="position:absolute;left:12px;right:12px;top:calc(var(--sat) + 62px)">' +
+        '<div class="quest-strip"><span class="q-pip-wrap"><span class="q-pip-ring" style="--p:0"></span><span class="q-pip">!</span></span>' +
+        '<span class="q-bar"><i style="--fill:0%"></i><span class="q-bar-label"><span class="q-text">Buy Lucky Charm</span><span class="q-count">0/1</span></span></span>' +
+        '<span class="q-reward">' + ico('star') + '20</span></div>' +
+      '</div>' +
+      '<div style="position:absolute;left:12px;right:12px;top:calc(var(--sat) + 124px)">' +
+        '<div class="strip" style="max-width:none;margin:0"><p style="font-size:12.5px;font-weight:700;line-height:1.45">And in the same session, on the shelf:<br><b style="font-size:13px">' + RECS[1].charm + '</b><br><i style="color:var(--ink-soft);font-size:11.5px">— Side B of Pip’s Record</i></p></div>' +
+      '</div>'
+    ),
+    [['d','This is the strongest form of the collision — the quest names the shop card by its display string, in a strip that is always on screen. Even here they do not read as the same thing to me, because the quest says "Buy" and a record’s charm is never bought with coins.'],
+     ['q','Note the second half of that sentence is <b>no longer strictly true</b> since your pillar ruling — a record and its charm can now be bought with money. Not a wording problem today (the store card is not in this build), but worth knowing that the tidiest argument for leaving the collision alone got a little weaker.']]
+  );
+
+/* ================= SECTION 8 ================= */
+document.getElementById('f-8').innerHTML =
+  '<div class="box veto"><h3>1 · Equipping a song turns the music channel on</h3><ul>' +
+  '<li>Music is <b>off</b> by default in this game. Putting a record on flips <code>prefs.music</code> true and says so in a toast; mute and the sliders own it forever after. <b>Drawn in 3C.</b></li>' +
+  '<li><b>For:</b> choosing a song is as deliberate an act as a player ever makes; a record that plays nothing is a broken feature. <b>Against:</b> the game changed a setting you set.</li>' +
+  '<li><b>My recommendation: keep it.</b> The toast is what makes it honest rather than sneaky.</li>' +
+  '</ul></div>' +
+  '<div class="box veto"><h3>2 · "Garden Record" becomes "Garden Journal"</h3><ul>' +
+  '<li>A reserved menu row nobody has ever tapped. Its id stays <code>record</code>, so nothing in the code moves. <b>Drawn in 5A.</b></li>' +
+  '<li>Two rows in one drawer cannot both be about records. The collectible has the stronger claim; "Journal" says "what your garden has done" at least as well.</li>' +
+  '<li><b>My recommendation: rename it.</b> It costs nothing now and gets expensive once the row is real.</li>' +
+  '</ul></div>' +
+  '<div class="box veto"><h3>3 · A record wears the sky’s dress</h3><ul>' +
+  '<li>Rain and the storm muffle the house tune today. Ruled: they muffle a record too, through one filter on the track.</li>' +
+  '<li><b>The thing the spec did not know:</b> only <b>two of the six skies</b> actually close that filter — rain and the storm. Clear, aurora, sunbreak and Wonderfall all sit wide open, so on four skies out of six this feature is inaudible <i>by design</i>, and if you audition it under a clear sky you will hear nothing and conclude it is broken.</li>' +
+  '<li>Second thing the spec did not know: the house tune does not actually <i>drive</i> a filter — it cross-fades between six pre-built chains. So this is genuinely new behaviour, not a copy of an existing one. It is still cheap (one filter, one value).</li>' +
+  '<li><b>My recommendation: keep it, and audition it in rain.</b> A song that ignores the weather when everything else in the garden answers it is the odd one out.</li>' +
+  '</ul></div>' +
+  '<div class="box veto"><h3>4 · No badge dot on the Records row at v1</h3><ul>' +
+  '<li>The reasoning was "the find was already celebrated by the moments dialog, so a dot is a second telling."</li>' +
+  '<li><b>The thing the spec did not know:</b> a find is often <i>not</i> celebrated near the find. The moments dialog refuses to draw while any sheet is open — and The First Record’s own trigger is <i>opening the shelf</i>, so its celebration cannot appear until you close it. And the session cap is three, so a veteran save that sweeps up all five shows three tonight and two tomorrow.</li>' +
+  '<li><b>My recommendation: change this one.</b> Add the dot, on the same law the What’s New row already uses — "there is something behind this row you have not seen." Without it, the two records that queue past the cap are found silently.</li>' +
+  '</ul></div>';
+
+/* ================= SECTION 9 ================= */
+document.getElementById('f-9').innerHTML =
+  '<div class="box block"><h3>9.1 · Holly’s Record cannot be granted on your save. This is the blocker.</h3><ul>' +
+  '<li><b>Nothing in the game remembers that a Winter night was ever kept.</b> The mark lives on a bed cell, and both ways of collecting it wipe the cell clean. There is no counter, no lifetime stat, no flag.</li>' +
+  '<li>So the spec’s rule — "grants whenever the condition first holds, including on a save that crossed it before records existed" — is <b>unsatisfiable</b> for Holly. Every other record is fine: full stars, the Almanac rung and the Stand tier are all still readable off an old save.</li>' +
+  '<li><b>Option A — add a durable latch now, and grandfather nobody.</b> The hook writes a permanent "a night was kept" flag from this build forward. Your existing save has kept nights and would get the record on <i>the next</i> one. Honest, one line, and the only cost is that a player who kept a night last week keeps one more.</li>' +
+  '<li><b>Option B — grandfather anyone who has ever played Winter.</b> Grant it at load to any save carrying Winter state at all. Nobody is asked to do it twice, but somebody who tucked a bed in and never came back gets a Legendary for nothing.</li>' +
+  '<li><b>Option C — change Holly’s condition</b> to something already durable (say, harvesting the first winter crop, which does leave a trace).</li>' +
+  '<li><b>My recommendation: A.</b> It keeps the record meaning what it says, it costs one flag in the save, and the "one more night" price on veterans is a single evening. But it is a real cost to a real player — you — so it is your call, and this is the one thing I cannot start the engine without.</li>' +
+  '</ul></div>' +
+  '<div class="box"><h3>9.2 · "The shelf" is already a name in this game</h3><ul>' +
+  '<li>The <b>Honey Shelf</b> owns <code>renderShelf</code>, four <code>Game.shelf*</code> functions, the <code>shelf</code> sheet mode, and six <code>.shelf-*</code> CSS classes. The spec worried about a small glyph-name collision and walked straight past this large one.</li>' +
+  '<li>No player-facing consequence: the panel is called <b>Records</b> on screen and the sheet mode is <code>records</code>, both of which are free. Everything in this spike is <code>.rec-*</code>.</li>' +
+  '<li><b>Handled. No decision needed</b> — recorded here only because "the record shelf" stays the right name in the docs and the wrong name in the code, and the next person deserves to know why.</li>' +
+  '</ul></div>' +
+  '<div class="box"><h3>9.3 · The Almanac already has a block headed "Records"</h3><ul>' +
+  '<li>Taps, crits, harvests, Wonder Effects — a stats block, two panels away from the new one, reachable from the same drawer.</li>' +
+  '<li><b>My recommendation:</b> rename that block to <b>"Your totals"</b> in the same commit. It is a heading, nothing reads it, and the alternative is two panels called Records.</li>' +
+  '</ul></div>' +
+  '<div class="box"><h3>9.4 · One line in the glossary is now false</h3><ul>' +
+  '<li>Doc 32’s glossary — the plain-words list every conversation between us is supposed to be written in — gained a Records row when the spec was filed. It reads: "<i>Found by doing, never bought with money.</i>"</li>' +
+  '<li>Your pillar ruling the same evening made that false. The row was written before the ruling and never revisited.</li>' +
+  '<li><b>My recommendation:</b> rewrite it to your own frame — "<i>Found by playing. Some can also be bought, which gets you there sooner and never further.</i>" Same commit. <b>This is the highest-priority doc fix in the build</b>, because a wrong line in the glossary propagates into every future conversation.</li>' +
+  '</ul></div>' +
+  '<div class="box"><h3>9.5 · Seven written statements say this game has no audio files</h3><ul>' +
+  '<li>Five docs, one comment at the top of the sound engine, and one line in the wiki publisher that ships to the wiki. All go false the moment the first track lands.</li>' +
+  '<li>The spec’s docs list names one of the seven. <b>Handled — all seven get fixed in the same commit</b>, no decision needed.</li>' +
+  '<li>Related and also handled: the fifth binary exception is the first one that must be kept <b>out</b> of the offline cache rather than added to it — an inversion of the rule the other four share, which the conventions doc has to state plainly or the next person will "fix" it.</li>' +
+  '</ul></div>' +
+  '<div class="box"><h3>Also true, and worth thirty seconds</h3><ul>' +
+  '<li><b>Tonight’s fix round has not run.</b> The spec told me to rebase the audio work on the rewritten music schedulers from punch-list #23. Those schedulers have not been touched — audio.js is nine commits behind the tip. I am building on what is actually there. If #23 lands mid-build I will rebase; it is a small overlap, not a conflict.</li>' +
+  '<li><b>The icon exporter is already one icon stale</b> before I touch it — the curtain pass added a glyph and never re-ran it. My run will produce two new files and a 54&rarr;56 manifest, which is correct and will look like more churn than it is.</li>' +
+  '<li><b>The screenshot gallery has to be re-run whole</b>, not just the menu scene — a partial run re-shoots the picture but leaves the caption in the published doc saying "four rows built". Thirty-one scenes, a few minutes, no decision needed.</li>' +
+  '</ul></div>' +
+  '<div class="box"><h3>What happens when you reply</h3><ul>' +
+  '<li>Your annotations build verbatim. I need, at minimum: <b>9.1</b> (A, B or C), and the four veto points in section 8 — a "keep all four" is a complete answer, and I have flagged that I think #4 should change.</li>' +
+  '<li>Everything else — the hint question in section 2, the equip flow in section 3, the charm wording in section 7, the drawer tint — has a recommendation beside it and I will take my own advice on anything you do not want to spend attention on.</li>' +
+  '<li>Then: engine and the test bill (the live game does not change), the audio machine verified on your handset <i>before</i> any of it is visible, then the surface, then the gauntlet, then a five-minute script for you to run on the phone.</li>' +
+  '</ul></div>';
+
+function toggleNotes(){
+  const on = document.body.dataset.notes === '1';
+  document.body.dataset.notes = on ? '0' : '1';
+  document.getElementById('notesBtn').textContent = 'Notes: ' + (on ? 'OFF' : 'ON');
+  document.getElementById('notesBtn').classList.toggle('off', on);
+}
+</script>
+</body>
+</html>
