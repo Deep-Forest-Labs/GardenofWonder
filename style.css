@@ -655,7 +655,7 @@ button:focus-visible{
 /* Farm-game convention: the cost of hurrying a plant sits on the plant, always visible, so the
    option teaches itself rather than hiding behind a long-press nobody finds. Fall's crops carry
    the same chip in the same corner (`.fl-skip`) — one object, one place, so it is learned once. */
-.skip-chip,.fl-skip{
+.skip-chip,.fl-skip,.replant-chip{
   position:absolute;top:5px;right:5px;z-index:4;
   display:none;align-items:center;gap:2px;
   padding:2px 6px 2px 4px;border-radius:999px;
@@ -665,17 +665,25 @@ button:focus-visible{
   box-shadow:0 2px 0 var(--ink-2);
   touch-action:manipulation;
 }
-.plot[data-skip] .skip-chip,.fl-plot[data-skip] .fl-skip{display:inline-flex}
-.plot[data-skip="no"] .skip-chip,.fl-plot[data-skip="no"] .fl-skip{background:#e6e0d8;opacity:.65}
-.skip-chip svg,.fl-skip svg{width:11px;height:11px}
-/* The clamp outlives the wait it was written for. Landscape is not a supported
-   orientation and collapses the board to ~100px, where a 34px chip is wider than
-   the 31px tile it labels — so the chip is held to its plot and kept on one
-   line, which is the difference between a chip that overhangs and one that
-   reflows the tile under it. */
-.skip-chip,.fl-skip{white-space:nowrap;max-width:calc(100% - 10px)}
-.skip-chip:active,.fl-skip:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
-@media (max-height:600px){ .skip-chip,.fl-skip{padding:1px 5px 1px 3px;font-size:9px} }
+/* THE OTHER CORNER, AND THE SAME PILL. The gem chip and the replant chip are the
+   same object on the same tile and can never be on it together — `data-skip` is
+   written only while a plant is growing, `data-replant` only while the plot is
+   empty — so they share every dimension, the ink border, the lip and the press,
+   and differ in the two things that actually differ: which corner, and which
+   currency. The growth bar owns this corner in every state but the one this chip
+   appears in, where it is display:none. */
+.replant-chip{top:auto;bottom:5px;background:var(--paper)}
+.plot[data-skip] .skip-chip,.fl-plot[data-skip] .fl-skip,.plot[data-replant] .replant-chip{display:inline-flex}
+.plot[data-skip="no"] .skip-chip,.fl-plot[data-skip="no"] .fl-skip,.plot[data-replant="no"] .replant-chip{background:#e6e0d8;opacity:.65}
+.skip-chip svg,.fl-skip svg,.replant-chip svg{width:11px;height:11px}
+/* The clamp outlives the wait it was written for, and now holds both chips.
+   Landscape is not a supported orientation and collapses the board to ~100px,
+   where a 34px chip is wider than the 31px tile it labels — so the chip is held
+   to its plot and kept on one line, which is the difference between a chip that
+   overhangs and one that reflows the tile under it. */
+.skip-chip,.fl-skip,.replant-chip{white-space:nowrap;max-width:calc(100% - 10px)}
+.skip-chip:active,.fl-skip:active,.replant-chip:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
+@media (max-height:600px){ .skip-chip,.fl-skip,.replant-chip{padding:1px 5px 1px 3px;font-size:9px} }
 
 /* The welcome-back scene. Reads as a short account of what happened, not a receipt. */
 .away-lede{font-size:14px;font-weight:800;line-height:1.4;margin:2px 0 12px}

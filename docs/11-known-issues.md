@@ -47,6 +47,29 @@ bubble does not come with the flower, and `collectAll()`'s reason for having no 
 `ui.js:32-46` moves the one `#speech` node into whichever hero cell is on screen, so Fall does speak
 now. The comments were left alone as out of scope; the behaviour they describe is what changed.
 
+**The gem skip chip and the pack-drop chip can still act silently on the first gesture of a
+session.** `Sound.play()` bails while the AudioContext is not `ready`, and only `Sound.resume()`
+wakes it. `onPlotTap()` calls `resume()` first; `onSkipTap()` and `onPackTap()` never have. So a
+returning player whose very first touch is a gem skip or a pack collect gets the animation with no
+sound. `#25`'s new `onReplantTap()` calls `Sound.resume()` and so does not have the bug, which is
+what made the gap visible in the two chips beside it. Deliberately not swept into a scoped fix round
+— it is two one-line additions in `ui.js` and it belongs to whoever owns those chips next.
+
+**The replant chip is hidden on a plot with a harvester assigned, and that is a ruling waiting to be
+confirmed, not a settled design.** Shipped hidden because `processAutoPlant()` runs unthrottled
+inside the every-frame tick, so such a plot refills within one frame of going empty and the chip is
+literally unhittable — and in the one case where it would linger (the drone can afford nothing) the
+player cannot afford the chip either, so it would sit permanently drained. If the owner wants the
+chip there as a deliberate counterweight to a drone that always reaches for the priciest seed, that
+is a real design and it needs more than the two-line reversal in `replantSeed()`: it needs the drone
+to stop refilling a plot the player has just chosen for, which is a separate item.
+
+**A plot's memory of its last seed dies at the Turn.** Shipped that way because the Turn's cell
+rebuild names its fields explicitly and `lastSeed` is not among them — the no-change position, and
+the one the punch list called "probably right". The player-visible consequence, which nobody asked
+about: the morning after a Turn, every plot opens the picker again. One-line reversal, recorded in
+`03-systems.md`.
+
 **The one bar already scheduled in the instant before the page froze still fires on the way back.**
 `#23` stops the three schedulers on a frozen context, but a note booked a moment earlier is already
 on the AudioContext's own queue and plays when the context resumes. It is one chord against the 81
@@ -92,11 +115,13 @@ had inherited the same shape; `.wi-chip` takes `gap:0` with the margin on the ic
 is one line of CSS away and was deliberately not changed in slice C, because Fall is not that
 slice — it is a two-minute fix for the next round.
 
-**The gem skip chips still overflow their plots in landscape — both of them.** Narrower than they
-were now the wait is gone, still a 34px chip on a 31px tile in the garden; Fall's `.fl-skip` is the
-same component under the same clamp and the same `@media (max-height:600px)` shrink, and measured
-15px on a 31px tile at 844×390. Fall's wait pill pokes out the top of the tile there too, now that it
-sits at the bottom. Landscape is not a supported orientation. See the entry further down.
+**The gem skip chips still overflow their plots in landscape — and now the replant chip with
+them.** Narrower than they were now the wait is gone, still a 34px chip on a 31px tile in the garden;
+Fall's `.fl-skip` is the same component under the same clamp and the same `@media (max-height:600px)`
+shrink, and measured 15px on a 31px tile at 844×390. The garden's `.replant-chip` (added 2026-09-03)
+shares every one of those rules by selector list, so it inherits the overhang exactly. Fall's wait
+pill pokes out the top of the tile there too, now that it sits at the bottom. Landscape is not a
+supported orientation. See the entry further down.
 
 **The `--yard-h` reservation is now load-bearing for alignment.** `UI.boardSide()` reads `.stage`'s
 bottom padding to find the yard's height, because the yard node measures zero in Fall. Anything that
@@ -418,11 +443,15 @@ on the clock alone with the panel open and nothing redrawing. Accepted: both pan
 you open to make a decision, and the drift is downward — you are never shown more than you have.
 The fix, if the owner wants it, is a `data-*` hook on those rows so `syncAfford()` can reach them.
 
-**In landscape the gem skip chip hangs off its plot.** A 34px chip on a 31px tile. *Amended
-2026-08-31:* the wait that was making it worse is gone — the chip now shows the price alone — so
-what is left is the original overflow, narrower than it was but still there. Landscape is not a
-supported orientation for this game; the chip stays clamped to `white-space: nowrap` and `max-width`
-so it holds one line rather than wrapping into the neighbouring plot.
+**In landscape the plot chips hang off their plots — all three of them.** A 34px chip on a 31px
+tile. *Amended 2026-08-31:* the wait that was making it worse is gone — the gem chip now shows the
+price alone — so what is left is the original overflow, narrower than it was but still there.
+*Amended 2026-09-03:* the replant chip added in the plot's bottom right inherits the same shared
+rules, and therefore the same overhang; it is 41px in portrait at 390×844 against a 110px tile, and
+45px at its widest label (Eternal Crown, `100K`) against an 89px tile at 320×568 — comfortable in
+every supported size, and over the tile only in landscape, where every chip already is. Landscape is
+not a supported orientation for this game; all three stay clamped to `white-space: nowrap` and
+`max-width` so they hold one line rather than wrapping into the neighbouring plot.
 
 **The announcement art is a JPEG carrying a `.png` extension**, 692 KB at 1152×1728. Browsers sniff
 the content and render it, and the service worker stores whatever the server sends, so it works —

@@ -105,7 +105,7 @@ const advance = (seconds, step = 1) => {
 
 const clearGarden = () => S.grid.forEach((c) => {
   c.locked = false; c.seed = null; c.plantedAt = 0; c.grow = 0; c.ready = false;
-  c.mutation = null; c.mutateAt = 0; c.packDrop = false;
+  c.mutation = null; c.mutateAt = 0; c.packDrop = false; c.lastSeed = null;
 });
 
 /* The same job for Winter's bed, and it clears the TUCK as well as the cells —
@@ -2156,6 +2156,107 @@ check('skipping cannot manufacture a rare mutation', (() => {
   }
   clock = keep;
   return skyNow === 'wonderfall' && wonders === 0;
+})());
+G.reset();
+
+/* The plot's memory, and the four ways it is allowed to be worth nothing. The
+   chip that reads it lives in `ui.js` and cannot be reached from here, so what
+   is held below is the whole of the rule the chip obeys: what gets written,
+   what survives a harvest, what the Turn takes away, and every case where the
+   getter must answer "no offer" rather than hand a button a plant that
+   `plant()` would then refuse. Every binding is inside its own IIFE — this
+   file is one flat script and a second top-level `const` of a name already
+   used further down is a syntax error that kills the whole suite. */
+group('a plot remembers what was sown into it');
+G.reset();
+clearGarden();
+unlockTo(20);
+S.credits = 1e12;
+check('an untouched plot has no memory', G.replantSeed(0) === null);
+/* `G.reset()` above rebuilds the grid from defaultState() and so hides this on
+   its own — but dozens of groups call clearGarden() mid-run, with no reset in
+   front of it, and a memory left standing there is a fixture the next group did
+   not ask for. This is the assertion that holds that line. */
+check('the fixture reset wipes the memory too, so no group inherits one', (() => {
+  G.plant(0, G.seedById('rose'));
+  advance(S.grid[0].grow + 5);
+  G.harvest(0);
+  const held = S.grid[0].lastSeed === 'rose';
+  clearGarden();
+  return held && !S.grid[0].lastSeed && G.replantSeed(0) === null;
+})());
+check('planting writes the memory', (() => {
+  G.plant(0, G.seedById('rose'));
+  return S.grid[0].lastSeed === 'rose';
+})());
+check('a growing plot offers nothing', G.replantSeed(0) === null);
+check('the memory survives the harvest', (() => {
+  advance(S.grid[0].grow + 5);
+  const got = G.harvest(0);
+  const offer = G.replantSeed(0);
+  return Boolean(got) && S.grid[0].seed === null && S.grid[0].lastSeed === 'rose'
+    && Boolean(offer) && offer.seed.id === 'rose';
+})());
+check("the price is the seed's own, and affordability is read off the wallet", (() => {
+  const rich = G.replantSeed(0);
+  S.credits = 0;
+  const poor = G.replantSeed(0);
+  S.credits = 1e12;
+  return rich.cost === G.seedById('rose').cost && rich.afford === true
+    && Boolean(poor) && poor.afford === false;
+})());
+check("a replant costs the seed's full price and goes through the real path", (() => {
+  S.quests.active = [{ id: 'q_plant_30', progress: 0 }];
+  const offer = G.replantSeed(0);
+  const before = S.credits;
+  const planted = G.plant(0, offer.seed);
+  const quest = S.quests.active.find((q) => q.id === 'q_plant_30');
+  return planted && S.grid[0].seed === 'rose'
+    && S.credits === before - offer.cost
+    && Boolean(quest) && quest.progress === 1;
+})());
+check('a locked plot offers nothing', (() => {
+  clearGarden();
+  S.grid[5].locked = true;
+  S.grid[5].lastSeed = 'daisy';
+  return G.replantSeed(5) === null;
+})());
+check('a seed this save never unlocked is no memory at all', (() => {
+  clearGarden();
+  S.grid[0].lastSeed = 'eternal';
+  S.seedUnlocks.eternal = false;
+  const offer = G.replantSeed(0);
+  S.seedUnlocks.eternal = true;
+  return offer === null;
+})());
+check('a memory naming a seed that no longer exists is no memory at all', (() => {
+  clearGarden();
+  S.grid[0].lastSeed = 'never_a_seed';
+  return G.replantSeed(0) === null;
+})());
+check('a plot with a harvester assigned offers nothing', (() => {
+  clearGarden();
+  S.credits = 1e12;
+  G.plant(0, G.seedById('daisy'));
+  advance(S.grid[0].grow + 5);
+  G.harvest(0);
+  const bare = G.replantSeed(0);
+  S.upgrades[PLOT_AUTOPLANTERS[0].key] = 1;
+  const droned = G.replantSeed(0);
+  S.upgrades[PLOT_AUTOPLANTERS[0].key] = 0;
+  return Boolean(bare) && bare.seed.id === 'daisy' && droned === null;
+})());
+check('the Turn takes the memory with the year', (() => {
+  clearGarden();
+  S.credits = 1e12;
+  G.plant(0, G.seedById('rose'));
+  advance(S.grid[0].grow + 5);
+  G.harvest(0);
+  const held = S.grid[0].lastSeed === 'rose';
+  S.year.coinsEarned = 200000;
+  S.lifetimeCoins = 200000;
+  const turned = G.turnYear(null);
+  return held && Boolean(turned) && S.grid.every((c) => !c.lastSeed);
 })());
 G.reset();
 

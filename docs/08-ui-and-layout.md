@@ -629,12 +629,31 @@ Driven by `data-state` on each plot button:
 | State | Appearance |
 | --- | --- |
 | `locked` | Padlock and coin price; pulses when affordable (`data-afford="1"`). When a gate refuses the purchase the chip names **which** gate — `Turn 1` while the Garden Year holds plots 5–8, `Lv n` when the level is the binding one. `Game.plotGate(idx)` answers that, so the UI never has to re-derive the rule, and the deny float says the sentence (*After your first Turn*) that the chip only marks |
-| `empty` | Dashed plant-spot marker; bobs only during first-plant onboarding |
-| `grow` | Plant at its growth stage, progress bar beneath |
+| `empty` | Dashed plant-spot marker; bobs only during first-plant onboarding. If the plot remembers a seed, the **replant chip** sits in its bottom right — a sprout and that seed's gold price |
+| `grow` | Plant at its growth stage, progress bar beneath, gem skip chip top right |
 | `ready` | Full bloom, bouncing `!` badge, sweep shine |
 
 Plots also carry `data-stage` (`sprout` / `stem` / `bud` / `bloom`, from `DATA.growth`) for growth and `data-aura` (rarity name) tinting the soil after
 a harvest.
+
+### Three chips, never two at once
+
+The plot carries three chips and can never wear more than one of them. `data-skip` (gem, top right)
+is written only in `grow`; `data-replant` (sprout, bottom right) only in `empty`; `.pack-drop` shows
+only under `.has-pack`, at top centre. The bottom-right corner **looks** occupied and is not: the
+growth bar runs straight through it, but `.plot[data-state="empty"] .bar` is `display:none`, so the
+one state that shows the replant chip is the one state the bar is absent from.
+
+Both chips are **`pointerdown` with `preventDefault` + `stopPropagation`**, and the propagation guard
+is load-bearing rather than tidy: the plot beneath them is itself a `pointerdown` button. Without it
+one tap on the replant chip both replants and reaches the plot underneath — which steals a hasten
+when the replant succeeds, and opens the seed picker over the plot when it is refused. Do not
+"simplify" either chip to `click`; mixing the two is the recorded gesture trap in reverse.
+
+Visibility is `display` under a data attribute, never a class and never an animation — a badge that
+only exists once a keyframe has run is invisible with reduced motion on. Both chips share one CSS
+block by selector list (`.skip-chip,.fl-skip,.replant-chip`) and differ in exactly two declarations:
+which corner, and which currency's fill.
 
 ### The developer hit area
 

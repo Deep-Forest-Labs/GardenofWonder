@@ -66,7 +66,8 @@
         <div class="auto-tag">Auto</div>
         <div class="lucky-badge">${Icons.get('ladybug')}</div>
         <button class="skip-chip" type="button" aria-label="Finish this plant with gems">${Icons.get('gem')}<span></span></button>
-        <button class="pack-drop" type="button" aria-label="Collect a card pack">${Icons.get('cards')}</button>`;
+        <button class="pack-drop" type="button" aria-label="Collect a card pack">${Icons.get('cards')}</button>
+        <button class="replant-chip" type="button" aria-label="Plant the same seed again">${Icons.get('sprout')}<span></span></button>`;
       $('.pack-drop', b).addEventListener('pointerdown', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -76,6 +77,15 @@
         e.preventDefault();
         e.stopPropagation();
         onSkipTap(idx);
+      }, { passive: false });
+      /* `stopPropagation` is the whole reason this reads as its own control:
+         the plot beneath it is itself a pointerdown button, and on an empty
+         plot that button opens the seed picker — the one thing this chip
+         exists so the player never has to do. */
+      $('.replant-chip', b).addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onReplantTap(idx);
       }, { passive: false });
       b.addEventListener('pointerdown', (e) => { e.preventDefault(); onPlotTap(idx, b); }, { passive: false });
       el.garden.appendChild(b);
@@ -90,6 +100,8 @@
         skip: $('.skip-chip', b),
         pack: $('.pack-drop', b),
         skipNum: $('.skip-chip span', b),
+        replant: $('.replant-chip', b),
+        replantNum: $('.replant-chip span', b),
         lucky: $('.lucky-badge', b),
         cache: {}
       };
@@ -223,6 +235,24 @@
           v.root.dataset.skip = skipOk;
         } else {
           delete v.root.dataset.skip;
+        }
+      }
+      /* Same key shape as the chip above it: the seed decides the label, the
+         wallet decides the treatment, and neither is written unless it moved.
+         The getter is called only on an empty plot, so a full board pays
+         nothing for it, and `fmt()` runs only inside the branch. */
+      const rp = state === 'empty' ? Game.replantSeed(i) : null;
+      const rpSeed = rp ? rp.seed.id : '';
+      const rpOk = rp && rp.afford ? 'ok' : 'no';
+      if (c.rpSeed !== rpSeed || c.rpOk !== rpOk) {
+        c.rpSeed = rpSeed;
+        c.rpOk = rpOk;
+        if (rpSeed) {
+          v.replantNum.textContent = fmt(rp.cost);
+          v.replant.setAttribute('aria-label', `Plant another ${rp.seed.name} for ${fmt(rp.cost)} gold`);
+          v.root.dataset.replant = rpOk;
+        } else {
+          delete v.root.dataset.replant;
         }
       }
       const mut = cell.mutation || '';
@@ -876,6 +906,24 @@
     FX.float(c.x, c.y - 8, `-${fmt(cost)}`, 'rare');
     Sound.play('buy');
     FX.haptic(12);
+  }
+
+  /* Straight through Game.plant(), never a shortcut around it — cost, growth
+     modifiers, verbs, quests and the plant event all have to fire exactly as
+     they do from the picker, or the chip becomes a second planting rule. The
+     success beat is already carried by that event: it throws the sparks, plays
+     the sound and buzzes. Only the refusal needs saying here. `Sound.resume()`
+     is not decoration — `Sound.play()` bails until the context is awake, and a
+     replant can be the first gesture of a session. */
+  function onReplantTap(idx) {
+    Sound.resume();
+    const r = Game.replantSeed(idx);
+    if (!r) return;
+    if (Game.plant(idx, r.seed)) return;
+    Sound.play('deny');
+    FX.shake(4);
+    popWallet('credits');
+    say('broke');
   }
 
   function onPackTap(idx) {

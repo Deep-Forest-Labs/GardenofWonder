@@ -25,7 +25,7 @@ lost if the player clears site data.
   gems: 0,
   tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50, holdInterval: 900 },
   grid: [ /* 8 cells */
-    { locked: false, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '' }
+    { locked: false, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', lastSeed: null }
   ],
   upgrades: {
     tapPower: 0, holdSpeed: 0, critChance: 0, critMult: 0, comboMeter: 0,
@@ -400,11 +400,18 @@ Two new **per-cell grid fields** and one top-level field:
 | `mutation` | `state.grid[i]` | Mutation id or `null`. Cleared on harvest with the rest of the plot. |
 | `mutateAt` | `state.grid[i]` | Epoch seconds of this plant's single mutation roll; `0` once spent. |
 | `packDrop` | `state.grid[i]` | A card pack waiting on this plot. Added 2026-08-15; needs its own backfill. |
+| `lastSeed` | `state.grid[i]` | Seed id last sown into this plot, or `null`. Written by `plant()`, carried through `harvest()`'s spread, dropped by the Turn's rebuild. Added 2026-09-03. |
 | `lastSeen` | top level | Epoch seconds, written every tick. For offline reconciliation, not yet used. |
 
 **Both grid fields need their own backfill loop over `state.grid` in `load()`** — the same trap
 `luckyBug` hit, and they sit beside it. A save from before this feature has neither key, and
 `undefined` is not `null`.
+
+**`lastSeed` is the named exception to the sentence above, and it is deliberate.** It gets **no**
+backfill loop. Its only reader is `replantSeed()`, which tests the key for truthiness, so `undefined`
+and `null` are the same answer and a backfill entry would be dead code that has to be maintained
+anyway. A save written before the feature simply has no memory on any plot until that plot is next
+planted: no chip, picker as before. It degrades rather than breaking. Do not "fix" the omission.
 
 **The weather clock itself stores nothing.** It is a pure function of epoch time, so there is no
 migration for it and never will be.

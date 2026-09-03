@@ -2871,6 +2871,24 @@ straight over it — z-index cannot help, because the two are in different stack
 is a direct child of `.game`, after `.world`, for exactly this reason. Anything future that must be
 the topmost thing on screen goes there too.
 
+**A sheet that opens and closes inside one gesture reads, afterwards, as never having opened.**
+The `.replant-chip` trap test asked "did the seed picker come up?" with `UI.sheetMode()` half a
+second after the tap, and got `null` — from a build with `stopPropagation` deliberately removed, in
+which `UI.openSheet('seeds', 0)` had demonstrably run. The rest of the same pointer sequence closes
+it again. **Instrument the call, not the resulting state**: wrap `UI.openSheet` and push its
+arguments onto an array. The same tap in the *affordable* case does not open the picker at all — the
+chip plants first, so the plot the bubbled event reaches is no longer empty and `onPlotTap()` falls
+through to `Game.hasten()` instead, silently stealing a growth tap. So the propagation guard has two
+distinct failure faces and neither is the one the punch list predicted; the detectors that catch
+them are the `openSheet` call log and the plant's `grow` against the seed's base `grow`.
+
+**A group that opens with `G.reset()` cannot see a gap in `clearGarden()`.** `reset()` does
+`Object.assign(state, defaultState())`, which rebuilds `state.grid` wholesale — so a new per-cell
+field missing from the `clearGarden()` fixture is invisible to the first assertion after the reset,
+and a sabotage that removes it stays green. The fixture line still matters, because dozens of groups
+call `clearGarden()` mid-run with no reset in front of it. Hold it with an assertion that *plants,
+harvests and then clears* inside its own IIFE; that one goes red.
+
 **`check(name, () => expr)` in `tools/sim-test.js` passes vacuously.** The second argument is a
 condition, not a thunk — a function is truthy, so the assertion reports `ok` without ever running.
 Two written that way in this pass both "passed" and were testing nothing. Grep a new group for

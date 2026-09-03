@@ -82,7 +82,7 @@ const Game = (() => {
       tickets: 0,
       gems: 0,
       tap: { power: 1, critChance: 0.05, critMult: 10, combo: 0, comboMax: 50, holdInterval: 900 },
-      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0, packDrop: false })),
+      grid: Array(8).fill(0).map((_, i) => ({ locked: i > 3, seed: null, plantedAt: 0, grow: 0, ready: false, aura: '', luckyBug: false, mutation: null, mutateAt: 0, packDrop: false, lastSeed: null })),
       upgrades,
       decor: [],
       boosters: {},
@@ -2618,6 +2618,11 @@ const Game = (() => {
     state.grid[idx] = {
       ...cell,
       seed: seedDef.id,
+      /* The plot's memory, written beside the thing it remembers so the two can
+         never drift. Every sowing writes it — a Spreader's free neighbour and a
+         harvester's pick as much as a picker plant — because "what grew here" is
+         one rule and "what the player paid for" would be a second one. */
+      lastSeed: seedDef.id,
       plantedAt: nowSeconds(),
       grow: plantGrowth(seedDef, idx),
       aura: '',
@@ -4621,7 +4626,9 @@ const Game = (() => {
 
     /* The clears — the fast annuals in the main garden only. Fall, Winter
        and every running long timer anywhere are never touched. Plots 5–8
-       close for the gold rebuy; a still-locked plot just stays locked. */
+       close for the gold rebuy; a still-locked plot just stays locked. A
+       plot's memory of its last seed goes with them — the rebuild is the
+       ritual, and a fresh year opens with a fresh picker. */
     state.grid.forEach((cell, idx) => {
       state.grid[idx] = {
         locked: cell.locked || plotUnlockLevel(idx) > 1,
@@ -5618,6 +5625,22 @@ const Game = (() => {
     return { gems: skipCost(idx), seconds };
   }
 
+  /** What a plot would sow again, and whether the wallet can pay for it. The
+      chip is the picker's shortcut, so it may only offer what the picker would:
+      an id that has left DATA, or a seed this save never unlocked, is no memory
+      at all. A plot with a harvester assigned is left out — that plot refills
+      itself inside a frame, and on the only board where it does not, nothing is
+      affordable there either. */
+  function replantSeed(idx) {
+    const cell = state.grid[idx];
+    if (!cell || cell.locked || cell.seed || !cell.lastSeed) return null;
+    const sdef = seedById(cell.lastSeed);
+    if (!sdef || !seedUnlocked(sdef.id)) return null;
+    const auto = PLOT_AUTOPLANTERS.find((p) => p.idx === idx);
+    if (auto && state.upgrades[auto.key]) return null;
+    return { seed: sdef, cost: sdef.cost, afford: state.credits >= sdef.cost };
+  }
+
   /** What a bought sky is buying: the window, and the plants standing in the
       ground to receive a roll. On an empty board that count is zero, and the
       card said "everything growing" either way. */
@@ -5683,7 +5706,7 @@ const Game = (() => {
     tick, progressOf, remainingOf,
     wonderActive, wonderMult, startWonder, comboMult,
     UPGRADE_EFFECTS, upgradeEffect, autoHarvestCadence, procChance, tapStats, growthStats,
-    foodEffect, hiveProjection, tenderEffect, keeperLift, skipSaving, weatherCallEffect, sellValue,
+    foodEffect, hiveProjection, tenderEffect, keeperLift, skipSaving, replantSeed, weatherCallEffect, sellValue,
     repToNext, cumulativeRep, levelFromRep, repIntoLevel,
     seedUnlocked, seedUnlockLevel, plotAvailable,
     plotGate, plotUnlockLevel,

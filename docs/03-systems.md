@@ -171,6 +171,36 @@ Comparisons are inclusive (`p >= threshold`) because `progressOf()` clamps to
 exactly 1 at ripeness. Stage is derived from progress alone, never saved — a
 mid-grow garden simply re-reads under the thresholds on next paint.
 
+### Replanting the same seed
+
+An empty plot remembers what was last sown into it. `plant()` writes `lastSeed` into the same cell
+literal that writes `seed`, so **every** sowing records it — a Spreader's free neighbour and a
+harvester's pick as much as a picker plant — and `harvest()` rewrites the cell with a spread, so the
+memory survives the harvest with no work in the harvest path at all.
+
+`Game.replantSeed(idx)` reads it back: `{ seed, cost, afford }` for a plot that has a memory worth
+offering, `null` otherwise. The chip it feeds sits in the plot's **bottom right** (owner's ruling,
+2026-09-02) and charges that seed's own `cost` through the ordinary `Game.plant()` path, so growth
+modifiers, verbs, quests, the plant sound and the `plant` event all fire exactly as they do from the
+picker. It is the picker's shortcut, never a second planting rule.
+
+Four things make the answer `null`: the plot is locked or not empty; there is no memory; the
+remembered id has left `DATA.seeds`, or names a seed this save never unlocked (either can happen to a
+legacy or hand-edited save, and the chip must not offer a plant `plant()` would then refuse); or the
+plot has a **harvester assigned**. The last is deliberate and measured — `processAutoPlant()` runs
+unthrottled inside `tick()`, which the frame loop calls every animation frame, so such a plot refills
+within one frame of going empty and the chip is unhittable; in the only case where it would linger
+(the drone can afford nothing) the player cannot afford the chip's price either, so it would sit
+permanently drained.
+
+**The memory dies at the Turn**, deliberately. The ceremony rebuilds every cell from an explicit
+literal with no spread and `lastSeed` is simply not among its fields, so a fresh year opens with a
+fresh picker — the rebuild is the ritual. It is a one-line reversal if the owner wants it carried.
+
+The gem skip chip above it is the sibling control — see [Skipping a timer](#skipping-a-timer). No
+plot ever wears both: `data-skip` is written only while a plant is growing, `data-replant` only while
+the plot is empty.
+
 ## Harvesting
 
 A plot is ready when elapsed time reaches its grow time. Tapping a ready plot harvests it.
