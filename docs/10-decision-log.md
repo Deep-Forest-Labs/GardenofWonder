@@ -5,6 +5,37 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-02 (pillar, the owner's word) — Charms sell with their records, and promise #1 is rescoped
+
+**The owner overruled the desk's Side-A-only store rule, explicitly and with the reasoning
+stated**: *"records in general should carry a charm or buff that they can move around. If a
+player does buy a record from the store, they get that charm or buff as well... this is a
+free-to-play mobile game. We need to know that players will be purchasing items that increase
+the speed at which they can play this game."* This is a deliberate move of doc 37's first
+promise — the desk delivered the positioning cost twice and the owner ruled with it in hand,
+which is exactly how a pillar is allowed to move.
+
+**What is rescoped:** promise #1 narrows from "nothing permanent is ever sold" to **"the Turn's
+currencies are never sold"** — Saved Seeds, petals, blessings, seed unlocks and season gates
+keep the absolute rule, because they are what makes the Turn mean anything. Records and their
+charms become the first paid permanent items, under the frame that governs every future one:
+**paying accelerates, never gates.** Every store record is also findable through play (the
+owner's own words — found throughout the game, purchasable "as well"), contents are listed,
+fixed and untimed, nothing is random-for-pay, and charms stay lateral in power whatever the
+price tag. The store sentence adjusts to **"everything can be earned by playing — paying gets
+you there sooner"** — the idle genre's honest standard.
+
+**What this spends, recorded once and not relitigated:** the absolutist "nothing permanent for
+sale" marketing claim (the 1-in-233 positioning finding) softens to the accelerates-never-gates
+version. What it buys: a real revenue line on the shelf — doc 40's model said the gap between
+missing and beating the revenue goal lives in the store, and the owner has chosen to stock it.
+
+**Superseded by this entry:** the Side-A-only paragraph in the "ruling, later" entry below, and
+the "never sold, ever" language in the record-shelf entry and doc 49 (both rewritten in this
+commit). Docs 37 and 49 carry the amended text.
+
+---
+
 ## 2026-09-02 (ruling, later) — Records multiply across every feature, and the store may sell Side A
 
 **The owner ruled the record shelf's growth direction the same day the spec filed**: records are

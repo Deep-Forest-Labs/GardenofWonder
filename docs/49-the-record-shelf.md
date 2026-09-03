@@ -109,13 +109,17 @@ whose kind whitelist refuses unknown or banned axes by construction.
 
 ## Never sold, never rolled
 
-**A record with a charm is never sold for money, ever** — a permanent charm is the forever-money
-back door doc 37's first promise forbids; the golden seed's earn-or-buy shape does not transfer
-(its payout is year-scoped; a charm never resets). **The store's door, ruled 2026-09-02 (the
-"later" entry in the decision log): the store may sell SIDE A — songs, with expressive-only
-dressing at most — and never Side B; every charm unlocks through play, forever, and a store
-record's card says so plainly.** No record ever appears in a paid `???` slot or a paid random
-pack, and no acquisition is missable or RNG-only.
+**Records sell with their charms — the owner's ruling, 2026-09-02, overruling the desk's
+never-sell counsel and rescoping doc 37's first promise** (the pillar entry in the decision log
+carries the reasoning). The frame that keeps it honest: **earn-or-buy** — every record in the
+store is also findable through play, so paying accelerates the shelf and never gates it; the
+store sentence becomes "everything can be earned by playing — paying gets you there sooner."
+The guardrails that survive untouched: store records are **listed, fixed and untimed** (a
+time-limited pack is PEGI 12; paid-random is PEGI 16 — both stay out); **no record ever appears
+in a paid `???` slot or a paid random pack**; no acquisition is missable or RNG-only; charms
+stay **lateral in power** whatever the price tag (the banned-axis tables bind the store exactly
+as they bind the garden); and the Turn's currencies — Saved Seeds, petals, blessings, unlocks,
+gates — remain never-sold, which is the promise the Turn's meaning rests on.
 
 **The shelf is built to multiply.** Post-v1 source waves (same laws — deterministic, never
 missable, condition-latched, celebrated once; each is a data row plus a condition on the owed

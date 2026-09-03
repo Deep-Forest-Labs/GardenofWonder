@@ -19,11 +19,20 @@ impressions per player per day, measured in the first playtest.
 
 ## The two promises — what we never sell, ever
 
-1. **The forever money is never for sale.** Saved Seeds, petals, seed unlocks, season gates,
-   the blessing — nothing permanent can be bought with money or ads, directly or through a
+1. **The Turn's currencies are never for sale.** Saved Seeds, petals, seed unlocks, season
+   gates, the blessing — none of these can be bought with money or ads, directly or through a
    back door. This is the promise that makes the Turn mean something, and one back door is
    named below because it is easy to build by accident: **ad-granted and purchased gold never
    feeds the well** (it gets the same flag cheat gold already has).
+   *(Rescoped 2026-09-02 by the owner — this promise used to read "nothing permanent can be
+   bought." The owner's ruling: this is a free-to-play mobile game, and items that increase the
+   speed of play WILL be sold — the records and their charms
+   ([49-the-record-shelf.md](49-the-record-shelf.md)) are the first. The frame that governs
+   every such sale: **paying accelerates, never gates** — everything purchasable is also
+   earnable through play, contents are listed and fixed, nothing is random-for-pay, nothing is
+   time-pressured. The store sentence adjusts to "everything can be earned by playing — paying
+   gets you there sooner." Reasoning and what this spends: the 2026-09-02 pillar entry in
+   [10-decision-log.md](10-decision-log.md).)*
 2. **The sacred moments stay clean.** No ad offer inside the ceremony's beats, no ad on the
    Wonder, no selling the Century Bloom's fourteen days — the wait *is* the product. Offers
    live on summary screens, after the fireworks, never gating them.
