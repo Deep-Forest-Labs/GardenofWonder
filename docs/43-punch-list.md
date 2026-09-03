@@ -31,12 +31,13 @@ Severity is `blocker` (cannot play past it), `annoying` (the player notices and 
 4. **#19 · "Discover 5 species" arrives in minutes and needs ~1.8 years of gold** — a first-session
    bug that also jams a third of the quest strip forever. Data plus a three-line gate `fillActive()`
    does not have yet. The same fault sits in `q_discover_8` and `q_discover_12`.
-5. **#24 · Move the gem skip out of Summer into Fall** — **RULED**: Century Bloom excluded, no ×2,
-   ship at the existing rate and feel it. Buildable as specced. Note the item's prediction — at this
-   rate every Fall skip still costs more gem income than the time it buys.
-6. **#25 · No way to replant the same seed without opening the picker** — **pair with `#24`**: it
-   removes the gem chip from the plot's top-right corner and this one moves into it, reusing the
-   styling rather than authoring a second pill. One line in `plant()` carries the data.
+5. **#24 · Add the gem skip to Fall; Summer keeps its own** — **RULED and rescoped to additive**:
+   nothing leaves Summer, so this is a Fall-side `fallSkip` plus a chip. Century Bloom excluded, no
+   ×2. Note the item's prediction — at this rate every Fall skip still costs more gem income than the
+   time it buys.
+6. **#25 · No way to replant the same seed without opening the picker** — a chip in the plot's
+   **bottom right**, ruled by the owner. One line in `plant()` carries the data, and the growth bar
+   that shares that corner is hidden in exactly the state the chip appears in.
 7. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
    design change: Clover in gold, Petal Cake in gems, Honeypot behind a rewarded ad. **Read the item
    before pricing anything**: four pets can tend at once, which makes this twelve gem purchases and
@@ -1235,7 +1236,7 @@ node tools/probe.js wait:700 tap:#newsOk wait:400 '<patch window.AudioContext to
 
 ---
 
-### #24 · POLISH · Move the gem skip out of Summer into Fall · annoying · reported 2026-09-02 · RULED 2026-09-02
+### #24 · POLISH · Add the gem skip to Fall; Summer keeps its own for now · annoying · reported 2026-09-02 · RULED and RESCOPED 2026-09-02
 
 **What the owner said.** "I think we should move the Gem Spin for speeding up flowers to fall and
 remove it from Summer. The Summer plants are just so fast that it's kind of meant for that Twitch
@@ -1313,16 +1314,22 @@ lists *"Skip a timer — `ceil(remaining / 30)`, min 1"* and must move with the 
 sim-test coverage that no Fall skip can touch a Century Bloom and that a skipped plot still marks
 for the windfall the same way a naturally ripe one does.
 
-**THE OWNER'S RULINGS, 2026-09-02.** *"So if we exclude the Century Bloom, then it would be fine
-because in order to get a windfall, they would have to purchase every single one of the plots anyway,
-right? If they're spending gems, it shouldn't matter because that's how we monetize. That we might not
-want to times two every cost on gems. Maybe we can just get it in there and see how it feels at
-first."*
+**THE OWNER'S RULINGS, 2026-09-02**, in two passes. First: *"If we exclude the Century Bloom… If
+they're spending gems, it shouldn't matter because that's how we monetize. That we might not want to
+times two every cost on gems. Maybe we can just get it in there and see how it feels at first."* Then,
+revising the scope: **"I actually want to keep gems in the garden now and just add them to the fall
+garden as well. I might remove them later."**
 
-1. **The Century Bloom is excluded.** Settled.
-2. **No ×2 — ship at the existing rate** (`skipSecondsPerGem: 30`, unchanged) and feel it before
-   touching the number.
-3. **A bought windfall is accepted**, on the reasoning that gems spent are the point.
+1. **Summer keeps its skip.** The removal is **deferred, not cancelled** — the measurement above is
+   why it is still on the table.
+2. **Fall gains one.** The Century Bloom is excluded.
+3. **No ×2** — ship at the existing rate (`skipSecondsPerGem: 30`) and feel it.
+4. **A bought windfall is accepted**, on the reasoning that gems spent are the point.
+
+**The rescope makes this much smaller: it is now purely additive.** Nothing comes out of Summer, so
+`skipCost()`, `skipGrow()`, `onSkipTap()`, `.skip-chip` and the gem-sink table in `04-economy.md` all
+stay exactly as they are. What is left is a Fall-side `fallSkipCost` / `fallSkip` and a chip on Fall's
+board.
 
 **On the windfall reasoning — the conclusion holds, the premise does not, and the difference is worth
 knowing.** A player would **not** have to skip every plot: crops ripen at different times, so the
@@ -1368,13 +1375,20 @@ feel like a button or a simple icon like the gem."
 `if (!cell.seed) { UI.openSheet('seeds', idx); return; }` (`ui.js:1289`). Every replant is a tap, a
 sheet, a choice and a dismiss, for a decision the player usually already made.
 
-**Do this with `#24`, and the corner is free.** The owner's reference — *"similar to how we have the
-gems on the top right"* — is `.skip-chip`, `position:absolute; top:5px; right:5px`
-(`style.css:577`), **and `#24` removes it from Summer in this same round.** The slot, the 10px pill
-sizing, the ink border and lip, the `.plot[data-skip="no"]` drained-and-dimmed unaffordable state and
-the `:active` press are all already written and about to be orphaned. **Rename that rule rather than
-authoring a second chip**, or the garden ends up with two near-identical corner pills built a week
-apart.
+**Position, ruled 2026-09-02: the BOTTOM right.** *"I think the 'replant' can go in the bottom right
+of the plots."* The gem chip stays where it is — `#24` was rescoped and Summer keeps it
+(`.skip-chip`, `top:5px; right:5px`, `style.css:577`).
+
+**The bottom right looks occupied and is not, which is the happy part.** `.plot .bar` — the growth
+bar — runs `left:8%; right:8%; bottom:6px` (`style.css:944`), straight through that corner. But
+**`.plot[data-state="empty"] .bar { display:none }`** (`style.css:958`), and the replant chip only
+ever shows on an empty plot. **The two can never be on screen together.** The same is true of the gem
+chip above it: `data-skip` is written only in the `grow` state (`ui.js:213`), so growing shows gem +
+bar and empty shows replant, and no plot ever wears all three.
+
+**Still copy `.skip-chip`'s treatment rather than inventing one** — the 10px pill, the ink border and
+lip, the drained `[data-skip="no"]` unaffordable state and the `:active` press are all written and
+tuned for a chip of exactly this size on exactly this tile.
 
 **The one piece of data that does not exist: nothing remembers what was planted.** `harvest()` clears
 the cell and no field survives naming the seed.
@@ -1410,7 +1424,8 @@ replant the player cannot pay for should read as unaffordable rather than do not
 applied to a real control. No unlock check is needed: seed unlocks are permanent and survive the Turn.
 
 **Related.**
-- **`#24`** — same corner, same round. Sequence them.
+- **`#24`** — no longer the same corner (Summer keeps its gem chip), but the same plot furniture
+  and the same pill styling. Worth doing in one sitting.
 - **The per-plot auto-planters already replant plots 1–4.** `PLOT_AUTOPLANTERS` (`game.js:1379`)
   plants the **priciest affordable** seed on its plot every tick. On a plot with one assigned, a
   replant chip is either redundant or a genuine alternative — the drone plants the most expensive,
