@@ -5,6 +5,126 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-02 (records, gate 1) — The record shelf's wireframe spike, and five things the code said back
+
+**The spike is [tools/records-spike.html](https://deep-forest-labs.github.io/GardenofWonder/tools/records-spike.html),
+eighteen frames at a true 390×844, and the build stops here for the owner.** The spec is
+[49-the-record-shelf.md](49-the-record-shelf.md). Nothing in the game changed: the spike loads no
+game file and copies every reused component's CSS by hand, so it cannot drift when the game moves.
+Before a line of it was drawn, nine subsystems were read end to end against the spec — audio, the
+save and moments machinery in `game.js`, the sheet, the menu and icons, `ui-news.js`, Winter and the
+Hollow, `data.js` and the suite, the shell and the existing spikes, and the three same-day rulings.
+That reading is most of this entry's value: **the spec is a good spec and it is wrong about nine
+things, one of them fatally.**
+
+**The blocker, which the spike puts in front of the owner rather than deciding: Holly's Record
+cannot be granted by the owed sweep as specified.** The spec's rule is that every grant fires
+"whenever its condition first holds — including on a save that crossed the condition before records
+existed," and it is satisfiable for four of the five. It is not satisfiable for Holly, because
+**nothing in the save remembers that a Winter night was ever kept.** `winterDeriveKept()` writes
+`cell.kept = true` (`game.js:4238`) and both collect paths destroy it — `winterHarvestAll()` at
+`game.js:4368` and `winterHarvest()` at `game.js:4399` — while `state.winter.tuckedAt` is zeroed at
+first light. There is no counter, no `year.stats` field and no `seen` flag; doc 46 rules Winter
+deliberately writes none. A veteran save that kept a dozen nights carries no trace of any of them.
+Three options are drawn in the spike; the desk recommends **adding a durable latch now and
+grandfathering nobody**, which costs one flag and one more kept night from the players who already
+have some. The owner rules.
+
+**Two more of the spec's own words are wrong about the code, and both change the build:**
+
+- **`winterDeriveKept`'s marking line is an EDGE, not a condition.** The spec nominates it as the
+  hook while forbidding edge-fired grants everywhere else. `game.js:4233` short-circuits on any
+  cell already `kept` and the function's return is true only on the call that writes a *new* mark —
+  so a grant placed there fires exactly once, forever, which is the thing the spec's biggest catch
+  exists to prevent. The reconciliation: **the hook writes a durable latch and never the grant; the
+  owed sweep reads the latch.** Also worth knowing before writing it: `winterDeriveKept` is in
+  `game.js`, not in `winter.js` (a pure art module), and `load()` never calls it — `reconcile()`
+  does, from `ui.js:1827`, so a headless fixture asserting "granted at load" must call the
+  derivation itself.
+- **The owed sweep must not live in `refreshReveals()`**, which is where it naturally wants to go.
+  `tryMoment()` calls that function unconditionally on the once-a-second tick (`ui-news.js:329`),
+  and the capture tool's `window.__noMoments` suppresses only the dialog, never the refresh — so
+  grants would fire at 1 Hz inside the screenshot run. It also runs on `reset()`'s birth path
+  (`game.js:962-963`) immediately before `birthCelebrate()`, which is precisely the swallow the
+  spec's source assertions are written to prevent.
+
+**Four collisions the spec did not see, all handled, none needing a ruling.** `shelf` is already
+the Honey Shelf's namespace — `renderShelf()`, four `Game.shelf*` exports, the `shelf` sheet mode
+and six `.shelf-*` classes — so the panel is `records` in code and `.rec-*` in CSS while staying
+"the record shelf" in the docs. The rarity id is **`legend`**, not `legendary`; a row authored from
+the spec's own table would find no colour token and no label. The Almanac already prints a stat
+block headed **"Records"**, which the grammar critic would hit at gate 5 — it becomes "Your totals"
+in the same commit. And `art/exports/icons/` is already one icon stale before this build touches it
+(`mysteryBloom` was added by the curtain pass and the exporter never re-run), so the `vinyl` run
+will produce two files and a 54→56 manifest.
+
+**One doc line is actively false and it is the worst kind.** Doc 32's glossary — the plain-words
+list every conversation with the owner is written in — gained a Records row when the spec was filed
+that reads *"Found by doing, never bought with money."* The owner's pillar ruling the same evening
+made that false, and the amending commit touched docs 10, 37 and 49 only. The music session's entry
+above flagged the same line and left it to this desk, correctly. It is rewritten in the build
+commit, and it is the highest-priority doc fix in the pass, because a wrong line in the glossary
+propagates into every future conversation. The same family, also unlisted by the spec: doc 49's own
+section heading still reads **"Never sold, never rolled"** over a body that now says records sell.
+
+**Seven written statements say this game has no audio files**, of which the spec's docs list names
+one: `docs/09:14`, `docs/05:5-6`, `docs/06:5`, `AGENTS.md:21`, `README.md:6-10`, `audio.js:1`, and —
+the one that is executable and ships — the doc-06 DESC row in `tools/wiki-sync.js:177`. All seven
+are rewritten when the first track lands. Related: the fifth binary exception is the first that must
+be kept **out** of `CORE` rather than added to it, inverting the defining term of exceptions two and
+four, and doc 09 has to say so plainly or the next agent will "fix" it. And the `sw.js` exemption
+must test `url.pathname.includes('/art/music/')`, never `startsWith` — the site is served from
+`/GardenofWonder/`, so the prefix test passes every local check and fails silently in production, on
+iOS, which the spec names as the platform of record.
+
+**Punch-list #23 has not run, so there is no post-#23 scheduler to rebase on.** The spec's
+coordination note is written against a future that has not happened: `audio.js`'s newest commit is
+`3f4de68` (Aug 31), nine commits behind the tip, and all three interval lines #23 cites are still
+literally where it says. #21's `video` glyph is not in `icons.js` either. The audio work is built on
+what is actually there; if #23 lands mid-build the overlap is three interval bodies, not a conflict.
+
+**Four rulings drawn live for the owner's veto, and the desk's own advice on each.** Keep
+equip-flips-music-on (the toast is what makes it honest rather than sneaky). Keep the Garden Journal
+rename (a reserved row nobody has tapped; free now, expensive later). Keep the record wearing the
+sky's dress — but **audition it in rain**, because only two of `ARRANGE`'s six dresses close the
+filter at all (rain at 900 Hz, storm at 620; the other four sit wide open at 16 kHz), so a clear-sky
+audition hears nothing and vetoes a working feature. And **change the fourth**: the spec's "no badge
+dot at v1" rests on "the find was already celebrated," which the shipped moments machinery does not
+guarantee — `momentsQuiet()` refuses while any sheet is open, and The First Record's own trigger is
+opening the shelf, so its celebration cannot draw until the player closes it; with `sessionCap` at 3
+a veteran sweep shows three tonight and two tomorrow, silently.
+
+**The one genuine design question the spike puts to the owner, drawn both ways.** The spec says each
+`???` slot carries "one directional hint." The shipped curtain does the opposite: one shared
+constant for every masked row in the game, under a comment at `ui-sheet.js:612-614` that forbids
+per-entry flavour by name. Doc 47's own "one directional hint" turned out to mean one shared line.
+Five per-record hints would be the first per-entry hints in the game and each one leaks a little of
+what the mask hides. **Rejected as a builder's call** precisely because it is not one: the shelf's
+five records come from five different rooms, unlike nineteen seeds in one list, so the case for the
+exception is real and the cost is real. Frames 2A and 2B draw both; the desk leans B with wording
+that points at a room and never at a task.
+
+**Rejected along the way.** Importing `mysteryBloom` itself for the masked slot — a five-petal
+flower on a record is a lie about what is behind the mask, so the *recipe* travels (one flat
+`--ink-soft` shape, a `--ink-2` core, inside the house outline) and the art does not. Reusing
+`.seed-row` for a record card — the recorded trap; only the recipe travels, never the class.
+Drawing the record as a card with a picture of a record on it — a record is round, so the object is
+a disc. Naming the glyph `record` — the drawer's reserved row already owns that id. Naming both
+sides only when filled — the header names Side A and Side B even when empty, because two
+independent slots is the whole design and the panel has to say it rather than let the player infer
+it. And the Hollow's Loadout *mode* as the equip grammar, drawn faithfully at 3A and recommended
+against at 3B: the room's mode exists because it is full of creatures with two verbs each, while
+every row here already shows both its slots, and a hidden mode is a state a player can be in without
+noticing.
+
+**Not done, on purpose.** No engine, no data, no CSS, no icon — gate 1 is a picture and a question
+list. The store card stays out of this build per the owner's scope note; the spike only avoids
+foreclosing it. Doc 48 is on disk but untracked as this is written, so nothing here links it — the
+wiki sync hard-fails on a dead link, and the music session owns that commit. `DATA.changelog` is
+untouched: a spike is not a change a player can see.
+
+---
+
 ## 2026-09-02 (pillar, the owner's word) — Charms sell with their records, and promise #1 is rescoped
 
 **The owner overruled the desk's Side-A-only store rule, explicitly and with the reasoning

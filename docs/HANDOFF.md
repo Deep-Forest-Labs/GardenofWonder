@@ -1288,6 +1288,57 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**THE RECORD SHELF IS AT GATE 1 AND STOPPED FOR THE OWNER.** The spec is
+[49-the-record-shelf.md](49-the-record-shelf.md); the spike is live at
+**https://deep-forest-labs.github.io/GardenofWonder/tools/records-spike.html** and the reasoning
+for every call in it is the 2026-09-02 (records, gate 1) entry at the top of
+[10-decision-log.md](10-decision-log.md). **Nothing in the game changed** — the spike loads no game
+file. Read that entry before touching any of this; it is where the nine things the spec is wrong
+about are written down.
+
+- **The owner is asked for two things and offered the rest.** Required: a ruling on the blocker
+  (section 9.1) and a verdict on the four veto points (section 8) — "keep all four" is a complete
+  answer, and the desk recommends changing the fourth. Everything else in the spike carries a
+  recommendation the build takes on its own if the owner would rather not spend the attention.
+- **THE BLOCKER: Holly's Record cannot be granted by the owed sweep as the spec writes it.**
+  Nothing in the save remembers that a Winter night was ever kept — `cell.kept` is destroyed by
+  both collect paths (`game.js:4368`, `game.js:4399`) and `tuckedAt` is zeroed at first light.
+  Four of the five records sweep fine; Holly's has nothing to read. Three options are drawn; the
+  desk recommends a durable latch from this build forward, grandfathering nobody.
+- **Three things the spec says about the code that are not true, and each changes the build.**
+  `winterDeriveKept` lives in `game.js:4227`, not `winter.js` (a pure art module), and `load()`
+  never calls it — `reconcile()` does. Its marking line is an **edge**, so the hook there must
+  write a latch and never a grant. And the owed sweep must NOT hang off `refreshReveals()`, which
+  runs at 1 Hz from `tryMoment()` and again on `reset()`'s birth path.
+- **Punch-list #23 has not run.** There is no post-#23 music scheduler to rebase on: `audio.js` is
+  nine commits behind the tip and every line #23 cites is still where it says. The audio machine is
+  being built on what is actually there.
+- **Name collisions, all handled, none needing a ruling.** `shelf` is the Honey Shelf's namespace
+  (`renderShelf`, four `Game.shelf*`, the `shelf` sheet mode, six `.shelf-*` classes) — the panel is
+  `records` in code and `.rec-*` in CSS. The rarity id is **`legend`**, never `legendary`. The
+  Almanac already has a block headed "Records"; it becomes "Your totals" in the build commit.
+- **`art/exports/icons/` is already one icon stale** before this build — `mysteryBloom` was added by
+  the curtain pass and `node tools/export-icons.js` was never re-run. The `vinyl` run will write two
+  files and take the manifest 54 → 56. That is correct, not churn.
+- **Doc 32's glossary row for records is false** and is the highest-priority doc fix in the pass: it
+  says *"never bought with money,"* which the owner's pillar ruling overruled the same evening. The
+  music session flagged it and left it to this desk. Seven separate statements that this game has no
+  audio files also go false when the first track lands; only one of the seven is on doc 49's list.
+- **Coordination.** The music-direction session is committing into **this same checkout** — doc 48,
+  `tools/wiki-sync.js` and a decision-log entry were in the working tree, uncommitted, while the
+  spike was pushed. Nothing here links doc 48 until it is tracked, because the wiki sync hard-fails
+  on a dead link. `git fetch` and re-read the top of the decision log before gate 2.
+
+| Gate | State |
+| --- | --- |
+| 1 · The wireframe spike, then stop | **Stopped, waiting on the owner.** Eighteen frames; one blocker, four veto points, one design question |
+| 2 · Engine | Not started. Five save keys, the owed sweep, `charmEffect`'s whitelist, the gramophone's memento decrement — the live game unchanged |
+| 3 · The audio machine | Not started. The `sw.js` exemption, one media element, mute-pauses-the-element, the `visibilitychange` resume — verified on the handset **before** the surface ships |
+| 4 · The surface | Not started. `openSheet('records')`, the two doors, the vinyl icon exported, the capture scenes edited and the gallery re-run whole |
+| 5 · The gauntlet | Not started |
+
+---
+
 **THE CURTAIN AND THE DRIP IS BUILT, PUSHED, AND LIVE — all four gates are closed.** The spec is
 [47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md). The reasoning for every call made
 along the way is three same-day decision-log entries, newest first: (gauntlet) — the gate-4 findings
