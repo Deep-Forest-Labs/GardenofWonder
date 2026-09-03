@@ -217,6 +217,8 @@ const DESC = {
   '43-punch-list.md': "The working queue of bugs and polish from the owner's own play, each one investigated with a sketch of the fix. Short-lived by design — 11-known-issues.md is the permanent record.",
   '46-the-night-shift.md': "Winter's spec — the tuck-in, the snowfall bonus, six real winter bloomers, and Holly the winter rose who keeps the garden overnight. Owner-ruled and pressure-tested 2026-09-01; slice C builds from it.",
   '47-the-curtain-and-the-drip.md': "The reveal pass — the seed picker's ??? curtain, the upgrade shop's four-card opening drip, and the moments dialog that celebrates every unlock. Owner-ruled and pressure-tested 2026-09-02.",
+  '49-the-record-shelf.md': "Collectible music records — songs on Side A, charms on Side B, equipped independently; the gramophone in the Hollow, and the menu's Records row. Owner-ruled and pressure-tested 2026-09-02; the music itself is a separate content stream.",
+  '48-music-direction.md': "The music bible for the collectible records — the sonic identity every track must sit inside so the game's chimes and weather layer over it, the five v1 track briefs, and the delivery spec for any track that reaches the shelf. A commissioning document, 2026-09-02; the records feature is still in design, so the list is provisional and no code has changed.",
   'README.md': 'The docs folder’s own index, mirrored exactly as written. This Home page is a reordering of it for the Unity team.',
 };
 
@@ -286,6 +288,8 @@ const SHORT = {
   '43-punch-list.md': '43 · Punch list',
   '46-the-night-shift.md': '46 · The night shift',
   '47-the-curtain-and-the-drip.md': '47 · The curtain and the drip',
+  '49-the-record-shelf.md': '49 · The record shelf',
+  '48-music-direction.md': '48 · Music direction',
   'README.md': 'The docs index',
 };
 

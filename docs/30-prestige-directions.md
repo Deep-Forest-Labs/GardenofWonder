@@ -82,7 +82,9 @@ this season," which is also what makes level-ups grantable again — the audit's
 ### What never resets, proposed as a standing rule
 
 Creatures, the Hollow and everything in it · lifetime Almanac records (discovered, best rarity) ·
-cards and packs · gems · mementos and decorations · lifetime reputation. **Resets:** coins, planted
+cards and packs · gems · mementos and decorations · lifetime reputation · **music records, their
+songs and their charms, and the gramophone ([49-the-record-shelf.md](49-the-record-shelf.md),
+added 2026-09-02)**. **Resets:** coins, planted
 plots, badges (they are the pacing), plot unlocks above the starting four, boost inventory, season
 level. **Bloom Mastery resets** and is the strongest argument yet for the audit's cap: a bounded
 ladder can convert to a permanent bonus at season's end; an endless one can only be confiscated.

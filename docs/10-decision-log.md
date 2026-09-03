@@ -5,6 +5,46 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-02 (ruling) — The record shelf: songs on Side A, charms on Side B
+
+**The owner ruled the collectible-records feature into the game**: records found through play,
+each carrying a song and a charm, **equipped independently once found** — the owner's own
+decouple, which is the transmog pattern and the design's spine. The full spec is
+**[49-the-record-shelf.md](49-the-record-shelf.md)**, pressure-tested before filing (two critics,
+five blockers folded in). The owner's two placement rulings: **the gramophone in the Hollow**,
+bought with keepsakes in the already-ruled two-creatures shape — the game's first memento sink —
+and **a live "Records" row in the hamburger menu** with a new vinyl icon. The reserved "Garden
+Record" row is relabelled **"Garden Journal"** (two "records" cannot share a menu — design-desk
+call, owner may veto at the spike).
+
+**The design laws, from the research (K.K. Slider, transmog, and this repo's own tables):**
+sources are named deterministic gifts, never loot rolls, and grants are **condition-latched
+sweeps, never edge-fired** — the pressure test proved edge triggers would permanently lock out
+the veteran playtest saves (a maxed creature never levels again; a claimed milestone never
+re-fires). **Rarity maps to the song and the ceremony, never to charm size.** Charms are small,
+categorical, one slot at v1, flowing through one auditable modifier function, and **every charm
+works with music muted** — power never coerces audio-on in a game that ships music off. **A
+record with a charm is never sold for money, ever** — a permanent charm is the forever-money
+back door doc 37 forbids; cosmetic-only records may join the decor lane someday as their own
+ruling.
+
+**Rejected:** records as a card-album set (the album's constitution keeps power out — doc 19's
+own words); mementos as the currency that buys records themselves (finding must never feel like
+shopping; mementos buy the FURNITURE, per the 2026-08-18 ruling); a combo-building charm (combo
+feeds tap yield and the Tally's bestCombo arm — two banned tables at once); edge-fired grants
+(above); rarity-scaled charm power (deletes the choice the decouple bought); and a badge dot on
+the Records row at v1 (the find is already celebrated by the moments dialog — the dot is the
+ready answer if playtesters miss new records).
+
+**The music itself is a separate content stream** — the owner supplies track files; doc 48 (the
+commissioning bible) is the music session's deliverable, and until it lands the delivery specs
+in doc 49's audio section are normative. Playback rulings made here, owner-vetoable at the
+spike: equipping a song flips the music channel on (a chosen act is consent to hear it); the
+record wears the standing sky's dress in its cheapest form (one lowpass driven by the ARRANGE
+values); mute PAUSES the track rather than silencing it.
+
+---
+
 ## 2026-09-02 (gauntlet) — Five independent critics, one live playtest, and what survived contact with both
 
 **The gauntlet closed 3 of 5 clean.** Economy scope and reduced motion came back with zero
