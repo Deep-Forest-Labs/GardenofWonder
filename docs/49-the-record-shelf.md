@@ -6,9 +6,9 @@ could never have earned and a charm that touched two banned tables — the reaso
 alternatives are in the 2026-09-02 record-shelf entry in [10-decision-log.md](10-decision-log.md),
 filed with this spec). Where this spec is silent, the builder asks the owner. Every number ships
 in `data.js`, remote-config-ready; PROVISIONAL numbers are tuning's to retune. Track files arrive
-from the owner; **doc 48, the music-direction commissioning bible, is the music session's
-deliverable** (this sentence becomes a link when it lands) — until it exists, the delivery
-numbers in The Audio Machine below are normative.
+from the owner; **[48-music-direction.md](48-music-direction.md) is the music-direction
+commissioning bible** — its delivery specification is normative, and the numbers in The Audio
+Machine below defer to it.
 
 **The sentence: *find a record, keep the song forever, and wear any charm with any tune.***
 
@@ -132,17 +132,19 @@ finding them is how players are pulled into every feature.
 ## The audio machine
 
 - **Files**: `art/music/`, one per record — **the fifth deliberate binary exception in doc 09's
-  own numbering** — opus or m4a at ~96–128 kbps, **hard cap 2MB per file**, delivered by the
-  owner (provenance is not a repo topic). Recorded in 09-conventions same commit. Normative
-  until doc 48 exists: seamless loops of 60–120s, consistent loudness around −16 to −18 LUFS,
-  and a **per-track gain trim in `DATA.records[].gain`** so a mastered file sits at the house
-  tune's level through `HOUSE.music` — a full-scale file would otherwise be several times
-  louder than the synth it replaces.
+  own numbering** — AAC in an .m4a, **hard cap 2MB per file**, delivered per doc 48's delivery
+  specification. Recorded in 09-conventions same commit. **Doc 48's delivery
+  specification is normative** — seamless loops of 60–90 s in whole bars, −17 LUFS integrated, a
+  ledger row per track — and the **per-track gain trim in `DATA.records[].gain`** stays: a
+  mastered file sits at the house tune's level through `HOUSE.music` — a full-scale file would
+  otherwise be several times louder than the synth it replaces — and with every track delivered
+  at one loudness the trim is one number, set once against the house tune's measured level.
 - **The service worker must not touch music.** `sw.js` intercepts every same-origin GET and
   copies `res.ok` responses into the versioned cache — iOS media Range requests (206) would hit
-  its unhandled paths, and 10MB of tracks would sweep through the app cache on every VERSION
-  bump. The fetch handler gains an explicit exemption (`/art/music/` → return, the browser
-  handles media natively); that exemption is WHY the lazy-load claim holds. **Never in CORE.**
+  its unhandled paths, and seven to nine megabytes of tracks would sweep through the app cache
+  on every VERSION bump. The fetch handler gains an explicit exemption (`/art/music/` → return,
+  the browser handles media natively); that exemption is WHY the lazy-load claim holds. **Never in
+  CORE.**
 - **Playback**: one persistent media element created lazily inside audio.js's IIFE (a second
   `createMediaElementSource` on the same element throws — src swaps only), routed
   **element → trackFilter (lowpass) → trackGain → musicBus** so sliders and mute reach it —

@@ -5,6 +5,143 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-02 (music) — The music direction for the records, and the five briefs
+
+**Doc 48 is the music half of the shelf: what a record must sound like and how a track arrives.**
+[48-music-direction.md](48-music-direction.md) is the brief any musician would need to write a
+record for [49-the-record-shelf.md](49-the-record-shelf.md)'s slate — the sonic identity every track
+must sit inside, one brief per record, and the delivery specification — pressure-tested through
+three drafts and two rounds of critics before filing. Doc 49's reserved sentence became the link it
+was waiting to be and its interim delivery numbers now defer to doc 48; doc 06 points at it from the
+end of its music section; the wiki index's rows for it and for doc 06 were reworded now that the
+shelf is ruled. Nothing a player can see changed, so `DATA.changelog` did not. The calls below are
+the music director's; the owner overrules any of them in a line.
+
+**The rule above every other rule: everything on the white keys.** The taps, harvests and
+fanfares sit on the white keys, nearly all of them on the five notes of C pentatonic, and they
+land on top of whatever is playing — so a record is written in C major or in a mode on the same
+seven notes (A minor, G Mixolydian), never with a key change and never with accidentals as
+harmony. **Rejected:** giving Holly's record a real modulation, or a colder key with sharps and
+flats, for its winter palette. The cold comes from A minor (the same notes, heard from the sadder
+end), from register and from air; a black key under a C-pentatonic tap streak is a clash the
+player would hear every few seconds and never be able to name. **Also rejected, on a critic's
+argument:** F Lydian as the Almanac's home key. Its whole character is a held B natural, which
+sits a semitone under the taps' C — the exact trap the rule exists to avoid, handed to the
+musician as an option. The Almanac is in C, with the Lydian colour allowed in passing and never
+held. Two facts the critics corrected on the way: the game's runs are not all pentatonic (the
+plot-unlock fanfare touches F, the big-find run is a G-major arpeggio with a B in it — white keys
+still), and the storm's audible roll, 160–620 Hz, sits across middle C in the melody's own lower
+band rather than under it, so under a storm it is the melody that shares the room.
+
+**The tempo band is 60–90, and the house tune sits in the middle of it.** Doc 06 records the
+tune's bar as 3.2 s; four beats to that bar is 75 to the minute, which no document had said in
+musical terms until now, and it is the number a musician needs. The First Record sits beside it
+(about 75), Holly below (60–66), the Counter Record at the top (84–90). **Rejected:** anything
+brisker for the counter's "warm bustle" — past ninety a lilt becomes a parade, and a parade is not
+something you half-watch.
+
+**The First Record is the tune the garden has always hummed, played by hands.** Its bones are the
+house tune's own four chords (I – ii – I – V, the bass walking C, A, G, B as the code voices them,
+the second chord's held F below middle C, its passing F above gone in half a second) and its melody
+keeps circling the flower's three seven-note hummed phrases without ever stating one whole.
+**Rejected:** a new theme for the shelf's first record. It is found by everyone on the shelf's first
+opening; its ceremony is recognition — *that is the tune* — and a stranger's theme has none to
+offer. A critic noted that music ships off, so most players have never heard the house tune; the
+answer is that the hummed phrase has been heard by everyone at Wonderfall, on the Ambience channel,
+which is why the melody leans on the hum rather than on the chords.
+
+**The creature record is Pip's, because doc 49 says so — and the joke is the head-rattle.** The
+music director's first pick was Thistle, whose *snores like a much larger animal* is the strongest
+musical joke in the roster: a tiny digging tune with one absurdly low note in it now and then. The
+shelf spec, ruled the same day, names Pip's Record as the first creature record (any creature at
+full stars, Pip's first), so the brief is written for Pip — a swaying little figure that stops to
+think, holds its chord under one dry rattle, and carries on having decided nothing, three times a
+loop and never evenly spaced, because even spacing is a clock — with Thistle kept as the one-line
+alternate if the owner ever swaps the slot. Silent disagreement between two docs filed on the same
+day is the one thing not allowed. **Rejected:** Bumble, who never once sits down — a busy-bee tune
+is exactly the attention-demanding thing the identity forbids — and any version of Pip's rattle
+that becomes a rhythm.
+
+**Holly's record is the Legendary, and it is the one place the shelf is allowed to be cold.** A
+nocturne in A minor, music box or celesta and felt piano over bowed glass or one low held string,
+single notes left to ring, the top of the register left to the aurora's chimes, which fall there.
+Deadpan elegance, secretly tender, never a swell. **Rejected:** a hummed or sung line for her,
+however deadpan. The flower's `sing` is the one voice in the game and it belongs to the garden; a
+second voice would make Holly's record compete with Wonderfall's signature moment rather than sit
+beneath it. Also rejected: a sentimental peak. The tenderness is in the restraint; a swell would
+tell the player what to feel, and Holly never does. **Not taken, and recorded:** two critics argued
+Holly's tempo makes a 90 s cap only twenty-odd bars, and proposed 120 s for the Legendary alone,
+or two alternating loop files. The cap is the owner's (below) and it stands; if Holly's loop
+proves too short in the ear, that is a one-line ruling for the owner, not a default.
+
+**Rarity is the song's beauty and the find's ceremony — never anything else, and a record is
+never heard under a fanfare.** Three Commons, a Rare and a Legendary, exactly as doc 49 rules;
+every find runs through the moments dialog, and if the dialog's arrival wants sound and particles
+the proposal — PROVISIONAL — is the feedback ladder's own rungs: the quest-claim rung for The
+First Record and Pip's (the Almanac's find rides its milestone, which already plays that rung),
+the Epic-harvest rung for the Rare, the Legendary rung for Holly's, with a line of Holly's for the
+dialog if doc 46 gives her one. The rule above the weights came from the second round of critics,
+who caught the first draft starting a found record the moment its dialog closed — which would flip
+Music on without the consent act doc 49 makes of equipping. So: the celebration finishes on its
+own, and the song plays only when the player puts the record on. **Rejected:** a reveal sting that
+plays over the record's first bars — the find would be celebrating itself instead of the music.
+
+**Delivery is stated for any musician, and its tightest number is the owner's.** Every track is a
+seamless loop of a whole number of bars with no intro, outro, cadence or fade. **The loop cap is
+the owner's, ruled today in their own words: under a minute and a half.** Doc 49 had carried the
+brief's 60–120 s; the wider window is retired, and the cap also puts every file comfortably under
+the 2 MB ceiling (a 90 s loop is about 1.4 MB at 128 kbps). Loudness −16 to −18 LUFS integrated,
+aim −17, true peak −2 dBTP on the master so the decoded shipped file sits at or under −1 — the
+encoder eats the decibel — so five records sit at one level under a music channel whose house
+level is the quietest in the game. **Rejected:** streaming-service loudness (around −14). The file
+is not where the level lives — the Music channel is — and a hot master under the rain bed leaves
+nothing for the sky to sit on. **Taken from the critics:** delivering every track at one loudness
+is what lets doc 49's per-track gain trim be one number, set once against the house tune's own
+level measured through the game's graph under a clear sky, rather than five guesses; 160 kbps is
+allowed where the ear asks for it, because 128 is the rate that smears exactly this palette (music
+box, celesta, air) and a 90 s loop at 160 is about 1.8 MB, still under the ceiling; and a mono
+check has to fold the half-level sum to both channels, or it fails every mix by three decibels.
+**Rejected:** the better codec at the same size as the default. The game is played on one family
+of handsets, and an AAC `.m4a` plays on every one of them without a question; the better codec
+ships only if the playback build proves it on them. Files are `art/music/<record-id>.m4a` — doc
+49's folder, because the service worker's media exemption is keyed on it — with a ledger row per
+track (key, tempo, beats per bar, bars, seconds, the run-in, measured loudness); **the row is the
+loop**, the build derives its length in samples from bars and tempo, and the seconds column is
+arithmetic written out for reading. The musician delivers the lossless master and the row; the
+shipped file is cut on the game's side, and its cutter owns the seam check on it, because the
+encoder adds a run-in of a few hundredths of a second at the head and padding at the tail that the
+file records and the build loops around — a seam that only exists once the file is cut.
+
+**Lazy, never core, never load-bearing.** A track is fetched the first time its record is put on,
+never joins `CORE` in `sw.js`, never passes through the worker's cache once doc 49's exemption is
+written, and a missing or failed file falls back to the house tune the way missing reveal art
+falls back to the seed's own bloom. **Rejected:** precaching the five records — about three times
+the whole precache (about 2.4 MB today against roughly 6.5–7 MB of tracks at 128 kbps), for a
+feature most players, with music off by default, will never switch on. The audio files are the
+**fifth binary exception** to doc 09's rule and the first for audio; doc 48 describes them and
+grants nothing — the build that adds the first file logs the exception, with its terms, in doc 09.
+
+**The coat is ruled, and one question about it is raised for the veto.** Doc 49 rules that a
+record wears the standing sky's coat as one lowpass at the house tune's own values (about 900 Hz
+under rain, 620 under the storm), owner-vetoable at the spike; a critic pointed out those values
+were tuned for a chord of pure tones, and a recorded felt piano lowpassed there on a phone that
+already drops everything under a few hundred hertz may simply vanish under rain. Doc 48 states the
+ruling as ruled and raises the thinning as a question for the owner at the veto — not as a value
+the build changes on its own, which an earlier draft had wrongly marked as the build's to set.
+The acceptance test is the owner's ear, exactly as the motion gate is for animation: a track is
+accepted when the owner has played the garden with it on for five minutes, on the phone speaker
+and on headphones, through a tap streak and a rain, and did not notice it end.
+
+**Not done, on purpose.** No rulings on the shelf — they are doc 49's, and doc 48 is written to
+survive the owner's four vetoes at the spike. `HANDOFF.md` is untouched, on the precedent of docs
+46, 47 and 49: a docs-only brief for an unbuilt feature does not move where the project stands.
+`docs/README.md`'s table still stops at 45; noted here rather than widened in a music pass. Doc
+32's glossary row for records still says *never bought with money*, which the pillar entry below
+has since overruled — flagged, not fixed, because the monetization words are the design desk's.
+The wiki sync was not run from this pass.
+
+---
+
 ## 2026-09-02 (records, gate 1) — The record shelf's wireframe spike, and five things the code said back
 
 **The spike is [tools/records-spike.html](https://deep-forest-labs.github.io/GardenofWonder/tools/records-spike.html),

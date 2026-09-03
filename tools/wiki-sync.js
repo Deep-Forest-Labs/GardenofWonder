@@ -174,7 +174,7 @@ const DESC = {
   '04-economy.md': 'Every number the game runs on, and where each one is earned or spent.',
   '07-save-data.md': 'The shape of saved state — what persists, what migrates, and what the Turn does and does not wipe.',
   '33-year-one-economy.md': "The Year's numbers: unlock prices, the Saved Seeds mint, petal costs and effects, Fall's plants and migration.",
-  '06-audio-and-fx.md': 'Sound, particles and game feel. All audio is synthesized at runtime — there are no audio files to port.',
+  '06-audio-and-fx.md': 'Sound, particles and game feel. The house tune and every effect are synthesized at runtime; the record tracks, when they land, are the one audio-file exception, briefed in doc 48.',
   '05-art-direction.md': 'How everything is drawn, styled and animated. All art is inline SVG and CSS — see 45-asset-inventory for the exported icon set and the full list of what has to be recreated.',
   '44-screens.md': 'Every key screen as a picture, at true phone size — what the game actually looks like, in each state that matters. Regenerated from the live build by one command, so it cannot drift.',
   '45-asset-inventory.md': 'Every visual asset the Unity build needs: the whole icon set exported as SVG files you can lift directly, and a table of every other art class with where its drawing code lives and how many variants it has.',
@@ -218,7 +218,7 @@ const DESC = {
   '46-the-night-shift.md': "Winter's spec — the tuck-in, the snowfall bonus, six real winter bloomers, and Holly the winter rose who keeps the garden overnight. Owner-ruled and pressure-tested 2026-09-01; slice C builds from it.",
   '47-the-curtain-and-the-drip.md': "The reveal pass — the seed picker's ??? curtain, the upgrade shop's four-card opening drip, and the moments dialog that celebrates every unlock. Owner-ruled and pressure-tested 2026-09-02.",
   '49-the-record-shelf.md': "Collectible music records — songs on Side A, charms on Side B, equipped independently; the gramophone in the Hollow, and the menu's Records row. Owner-ruled and pressure-tested 2026-09-02; the music itself is a separate content stream.",
-  '48-music-direction.md': "The music bible for the collectible records — the sonic identity every track must sit inside so the game's chimes and weather layer over it, the five v1 track briefs, and the delivery spec for any track that reaches the shelf. A commissioning document, 2026-09-02; the records feature is still in design, so the list is provisional and no code has changed.",
+  '48-music-direction.md': "The music bible for the collectible records — the sonic identity every track must sit inside so the game's chimes and weather layer over it, the five v1 track briefs, and the delivery spec for any track that reaches the shelf. A commissioning document, 2026-09-02 — the music half of the record shelf in doc 49; no code has changed.",
   'README.md': 'The docs folder’s own index, mirrored exactly as written. This Home page is a reordering of it for the Unity team.',
 };
 

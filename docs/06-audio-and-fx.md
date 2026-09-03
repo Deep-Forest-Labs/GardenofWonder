@@ -199,6 +199,18 @@ it is the reason weather never feels like a different game has started. A new dr
 the chord already playing straight away, or the handover falls into the gap before the next
 downbeat and the sky arrives to silence.
 
+**The record tracks are files, not recipes, and their brief is
+[48-music-direction.md](48-music-direction.md)** (2026-09-02). The collectible-records feature —
+a shelf of songs found through play, each one a record the player can put on — is specified in
+[49-the-record-shelf.md](49-the-record-shelf.md), and nothing in this file changes until it is
+built: the tune above stays the default for every player with no record on, music stays off by
+default, and a record's track is a lazily loaded file under `art/music/` that the service worker
+leaves alone and that never joins `CORE` — the fifth binary exception, to be logged in
+[09-conventions.md](09-conventions.md) by the build that adds the first file. Doc 48 is the
+commissioning bible: the sonic identity a track must sit inside so that the chimes and beds above
+layer over it, the five briefs, and the delivery specification. Its first rule is the one the tune
+above was built on — everything on the white keys, so the pentatonic taps never clash.
+
 ## Visual effects
 
 `fx.js` owns one full-screen `<canvas>` plus a DOM layer for floating text. The canvas sits behind
