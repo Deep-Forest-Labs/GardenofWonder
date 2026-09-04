@@ -757,11 +757,12 @@
   }
 
   /* A CHIP THAT DOES NOTHING IN THIS ROOM SHOULD NOT BE IN THIS ROOM — the
-     owner's #11 ruling, which names Winter in its own words. Boosters and the
-     Wonder act on the GARDEN: Fall and Winter are outside every boost by
-     construction, so a countdown showing there is a promise the room cannot
-     keep. The weather chip stays everywhere, because weather is the world's
-     and the sky is overhead in every season.
+     owner's #11 ruling, which names Winter in its own words. A countdown for an
+     effect the room cannot honour is a promise the room cannot keep. The
+     weather chip stays everywhere, because weather is the world's and the sky
+     is overhead in every season: `.wx` paints over Fall and Winter at full
+     opacity, so hiding its label would leave a storm on screen that nothing
+     names.
 
      A FILTER RATHER THAN A MEDIA QUERY. The half-fix that shipped hid the whole
      rail in Fall under `max-height:700px`, which took the weather chip with it
@@ -1232,6 +1233,12 @@
       // Arriving retires the mark that pointed here, whichever way you arrived.
       if (!S.seen[to.seen]) { S.seen[to.seen] = true; Game.save(); }
     }
+    /* The rail's contents depend on the ROOM — `reachesHere()` reads `season`,
+       which the line above just reassigned — and the only other caller is the
+       0.25s tier, so without this a chip the new room filters out stays painted
+       for a quarter of a second into it. The signature cache makes the extra
+       call free when nothing changed. */
+    renderRail();
     renderSeasonEdges();
   }
 

@@ -339,7 +339,7 @@ const DATA = {
     { id: 'bloom',    name: 'Bloom Burst',   dur: 30,   icon: 'bolt',    tint: '#ff6b9d', effects: { tapPower: 0.5, critChance: 0.02 }, desc: '+50% tap power and +2% crit chance for 30s.' },
     { id: 'seedrush', name: 'Seed Rush',     dur: 600,  icon: 'sprout',  tint: '#51cf66', effects: { growSpeed: 0.3 },                  desc: '+30% growth speed for ten minutes.' },
     { id: 'fortune',  name: 'Fortune Aura',  dur: 1800, icon: 'clover',  tint: '#9775fa', effects: { rarityWeight: 0.5 },               desc: '+50% rarity odds for harvests during the aura.' },
-    { id: 'golden',   name: 'Golden Popups', dur: 30,   icon: 'coin',    tint: '#ffc93c', effects: { globalCredits: 0.25 },             desc: '+25% credits from all sources for 30s.' },
+    { id: 'golden',   name: 'Golden Popups', dur: 30,   icon: 'coin',    tint: '#ffc93c', effects: { globalCredits: 0.25 },             desc: '+25% credits from taps and garden harvests for 30s.' },
     /* THE RENTED DRONE. A borrowed machine, not a temporary badge: `state.boosters`
        already means "this effect, for this long", so the rental inherits the rail
        chip, the countdown, the expiry sweep and the Turn's leave-it-running rule
@@ -740,7 +740,8 @@ const DATA = {
         'Nothing in the garden asks you to watch a video on your first day with it — reloading the page no longer counts as coming back.',
         'Pick a flower while a power-up or a Wonder is running and the number that floats up now says how much bigger it was made — and the seed list says it loudly enough to notice.',
         'If your phone is set to reduce motion, the numbers that fly up when you pick a flower now hold still where you can read them.',
-        'Tap the weather above your garden and it answers in a sentence now instead of a paragraph — what this sky can leave on a plant, and how likely it is.'
+        'Tap the weather above your garden and it answers in a sentence now instead of a paragraph — what this sky can leave on a plant, and how likely it is.',
+        'Golden Popups now says what it really lifts — what your taps pay and what your garden harvests pay — instead of promising every coin in the game.'
       ]
     },
     {

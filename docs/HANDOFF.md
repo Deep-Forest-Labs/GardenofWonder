@@ -1526,7 +1526,9 @@ from NET, and no Turn gate reads net — the mint reads earnings, never balance.
    is the kind of thing an assertion sees.**
 2. **The fix round's five collision surfaces have STILL not landed.** Slice C touched four of them:
    `goSeason()` is ternary, `seasonWaiting()` is widened, `renderRail()` carries the #11 room filter
-   (which is RULED and names Winter in its own words), and Winter's controls joined `noSwipe`.
+   (which is RULED and names Winter in its own words — it drops `growSpeed`, `rarityWeight` and
+   `autoHarvest` only, and `goSeason()` calls `renderRail()` so the drop is same-tick), and Winter's
+   controls joined `noSwipe`.
    **#15's season-tab retirement is the one that will conflict** — `renderSeasonEdges()` is
    unchanged, Winter now has a tab, and `tools/capture-screens.js` drives three scenes through those
    tabs. `git fetch` before touching `ui.js`.
@@ -3069,6 +3071,26 @@ It cost a season change per double-tap the moment a horizontal axis existed. Rec
 was gated on `season !== 'summer'`, but a locked-season gate is held in a *different* variable and
 leaves `season` untouched — so the ladder still fired from the gate screen and left two place-states
 on `#game` at once. Anything that guards on "where am I" has to name every variable that can answer.
+
+**A render that filters on room state is only as fresh as the last caller that ran after the room
+changed.** `renderRail()`'s `reachesHere()` reads the module-level `season`, and `goSeason()`
+reassigned it without re-rendering — so a chip the new room filters out stayed painted for up to
+250ms of the swipe, the whole length of a room transition, and a chip the garden brings back took
+the same quarter second to arrive. The signature cache made it invisible to every source read: the
+markup was correct, it was simply the *previous* room's. A predicate over module state needs its
+render called on the line that writes that state, not left to the clock tier; the extra call costs
+nothing when nothing changed, because the signature short-circuits it. Verified by driving
+`UI.enterSeason()` and reading `.rail`'s children **in the same eval** — a probe that waits before
+reading measures the tick, not the transition, and reports the bug as fixed.
+
+**A comment that asserts a premise the code below it disproves will be quoted back at you as a
+requirement.** One `renderRail()` comment said "Fall and Winter are outside every boost by
+construction". It was false the day the hero flower moved into a season's middle cell, and by the
+time anyone checked, a punch-list item, two `docs/08` paragraphs, a `docs/11` entry and a `style.css`
+comment had all inherited it — including an instruction to delete a load-bearing media query and to
+hide three chips that genuinely pay. Nothing went red, because a premise is not an assertion. When
+you disprove a comment, grep the phrase across `docs/` and the stylesheet in the same commit; a
+false explanation propagates faster than a false number, because nobody re-derives it.
 
 
 

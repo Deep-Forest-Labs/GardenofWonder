@@ -206,16 +206,30 @@ creature-copy pass next runs — and the sentence already contains the replaceme
 
 ## What the overnight fix round knowingly left (2026-08-31)
 
-**The status rail is invisible in Fall on a screen shorter than 700px.** Both boards are now the
-same square in the same place, so on a 667-tall phone the bed chip's row and the rail's row are the
-same 48px of band. `visibility:hidden` in Fall only, deliberately — `display:none` would give the
-row's height back to `.stage` in Fall and re-create the misalignment the round exists to remove.
-Traded rather than solved: a booster and the Wonder Effect act on the *garden*, so there is nothing
-in Fall for them to do and nothing there to tap, and one swipe brings them back. **The sky's chip
-joined the rail later the same night and is covered by the same trade** — Fall crops take no
-mutations and Fall's grow times are fixed, so a sky changes nothing a Fall player can act on either.
-Above 700px both rows are shown and neither moves. If Fall ever gains something a rail chip must
-announce, this needs a different answer.
+**The status rail is invisible in Fall and Winter on a screen shorter than 700px.** Both boards are
+the same square in the same place, so on a 667-tall phone the bed chip's row and the rail's row are
+the same band — measured 2026-09-03 at 390×667, the rail is y 116–149 and `.fl-chip` is y 111–147, a
+31px overlap. `visibility:hidden` in those two rooms only, deliberately — `display:none` would give
+the row's height back to `.stage` in a season only and re-create the misalignment `UI.boardSide()`
+exists to remove. **The reason first recorded here — "a booster and the Wonder Effect act on the
+garden, so there is nothing in Fall for them to do" — was wrong, and the code has since disproved
+it**: the hero flower stands in both rooms, so a tap there is paid by Bloom Burst, Golden Popups and
+the Wonder exactly as a tap in the garden is. The `renderRail()` room filter drops only the boosts
+no plant there can take (`growSpeed`, `rarityWeight`, `autoHarvest`), at every height. So a short
+screen loses three chips that are true, plus the sky's, and gains a bed chip that is legible.
+**Do not close this by deleting the `@media (max-height:700px)` block** — that ships the overlap
+above. The different answer it wants is a home for the bed chip outside the rail's band, which is
+`#6` and `#10`'s territory rather than the rail's.
+
+**A sky chip in a season room still offers a garden's promise.** The sky is right to be shown there —
+`.wx` paints over Fall and Winter at full opacity, and a storm nothing names is worse than a tooltip
+that over-promises — but Fall's and Winter's cells carry no mutation field at all (`fallPlant()`
+writes seed, plantedAt, grow, ready and windfall and nothing else) and rain's growth nudge does not
+reach either bed. So the chip is honest and the tooltip is not: `weatherTip()` promises "a plant
+caught out in it gets one N% chance of coming back Gilded", and rain adds "everything in the garden
+grows N% faster" — both true of the garden and of nothing standing in Fall or Winter. Left for
+whoever next opens that function; the fix is a room branch in the copy, not a filter on the chip,
+because hiding the label leaves the storm on screen with nothing naming it.
 
 **The sky's chip carries no countdown, and that is a decision waiting on the owner.** A timer would
 turn a status light into a small clock to plant against, and paired with the flower's spoken

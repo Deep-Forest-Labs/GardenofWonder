@@ -929,8 +929,38 @@ Rebuilt every 0.25 s, but the generated HTML is compared against a stored signat
 written when it differs — otherwise a countdown that only changes once a second would thrash the
 DOM four times as often as needed.
 
-Hidden entirely below 600 px height and in short landscape, and `visibility:hidden` in **Fall** below
-700 px, where its row and the bed chip's row are the same band — see the season section above.
+Hidden entirely below 600 px height and in short landscape, and `visibility:hidden` in **Fall and
+Winter** below 700 px, where its row and the bed chip's row are the same band — a **space** rule, not
+a meaning one; see the season section below.
+
+**The meaning rule is a JS filter, and it holds at every height.** `renderRail()` drops a booster's
+chip in a season room when every effect that booster carries is one no plant there can take —
+`SEASON_DEAD_EFFECTS`, which today is `growSpeed`, `rarityWeight` and `autoHarvest`, so Seed Rush,
+Fortune Aura and the rented drone. Bloom Burst, Golden Popups and the Wonder stay, because the hero
+flower stands in Fall's and Winter's middle cell and `tapFlower()` pays `tapPower`, `globalCredits`,
+crit and the Wonder there exactly as it does in the garden. The weather chip stays too: `.wx` is
+drawn in full over both rooms, so hiding its label would leave a storm nothing names. Measured
+2026-09-03 at 390×844 with all five boosters, the Wonder and a storm running — Summer lists seven
+chips, Fall and Winter list four. The same array gates the tap that would **spend** a boost, so the
+chip and the button can never disagree about the same one.
+
+**`goSeason()` calls `renderRail()` itself**, on the line above `renderSeasonEdges()` and after the
+room is reassigned. `reachesHere()` reads `season`, which `goSeason()` reassigns; the only other
+caller is the 0.25 s tier, so without the direct call a chip the new room filters out stayed painted
+for a quarter of a second into it — and a chip the garden brings back took the same quarter second to
+arrive. Both directions are same-tick now, and the way to check that is to change the room and read
+the row **in the same `eval:`** — a probe that waits first measures the tick, not the transition:
+
+```
+node tools/probe.js size:390x844 paint:on wait:900 'tap:#newsOk' wait:500 \
+ 'eval:Game.state.year.turnsCompleted = 9; Game.state.boosters.seedrush=Game.nowSeconds()+400; "armed"' wait:600 \
+ 'eval:UI.enterSeason("fall"); JSON.stringify([...document.querySelector(".rail").children].map(n=>n.textContent.trim()))' \
+ 'eval:UI.enterSeason("summer"); JSON.stringify([...document.querySelector(".rail").children].map(n=>n.textContent.trim()))'
+```
+
+Measured 2026-09-03: `[]` in Fall and `["6m 40s Seed Rush"]` back in the garden, both in the tick
+that changed the room. Identical under `media:reduce` — a chip that leaves is removed from the DOM,
+never faded, so nothing here waits on a keyframe.
 
 ### The sky's chip (2026-08-31)
 
@@ -1162,9 +1192,11 @@ hangs outside it.
 same size, on a 667-tall phone the chip's row and the status rail's row are the same 48px of band
 and there is no arrangement in which both fit. `visibility:hidden`, never `display:none` — hiding
 the row would give its height back to `.stage` in Fall only, and a taller stage in one season is
-exactly the misalignment this round removes. The rail loses the tie-break because a booster and the
-Wonder Effect act on the **garden**: there is nothing in Fall for them to do and nothing there to
-tap. Swipe back and they are there.
+exactly the misalignment this round removes. The rail loses the tie-break on **space alone** —
+measured 2026-09-03 at 390×667, the rail is y 116–149 and `.fl-chip` is y 111–147, a 31px overlap,
+and at 390×844 the two clear each other by 30px. It is not that the chips are useless here: the room
+filter in `renderRail()` has already dropped the ones that are, and a tap on Fall's flower is paid by
+what is left. What a short screen loses is the reading, and one swipe brings it back.
 
 **Collect All is narrow because the band is not hidden in Fall.** `.fpill` (UPGRADE) and `.fround`
 (POWER-UP) are hidden in the Hollow, the meadow and at a gate, but not in Fall, and they sit 34px in

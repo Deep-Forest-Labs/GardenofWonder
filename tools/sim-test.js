@@ -9075,6 +9075,221 @@ check('no booster carries a price of any kind',
   DATA.boosters.every((b) => PRICE_FIELDS.every((f) => !(f in b))),
   DATA.boosters.filter((b) => PRICE_FIELDS.some((f) => f in b)).map((b) => b.id).join(', '));
 
+group('Golden Popups reaches what it says, and says only what it reaches');
+/* The copy read "+25% credits from all sources" and two of the game's four beds
+   are sources it does not reach. Asserting the STRING on its own is a tautology,
+   so this pins the sentence to the engine in BOTH directions: the two faucets it
+   names are RUN and their payouts asserted to the coin, and the two beds it no
+   longer claims are run with the boost armed and asserted to pay their raw data
+   value. A future agent reading the punch list's original framing — "Fall is a
+   source Golden Popups fails to reach" — reaches for the other fix, which is to
+   make it reach; that is what the two bed assertions are here to redden.
+
+   WHAT THIS CANNOT SEE. Two surfaces render this string — the activation toast
+   (`ui-events.js`, `def.desc` on the `purchase` event) and the POWER-UP button's
+   aria-label (`ui.js`) — and neither file can be loaded headless, so nothing
+   below proves what a player reads or hears. The last check holds the one
+   failure reachable from here, a view keeping a second copy of the sentence to
+   drift from; the two rendered strings are verified in a browser instead. */
+{
+  const golden = DATA.boosters.find((b) => b.id === 'golden');
+  check('the copy no longer claims every source',
+    !/all sources/i.test(golden.desc), golden.desc);
+  check('and it names the two faucets it does reach',
+    /taps/i.test(golden.desc) && /harvest/i.test(golden.desc), golden.desc);
+
+  /* The faucets themselves, not the pills that project them. `tapStats()` and
+     `plantPayout()` rebuild the stack for display, so a simplify pass that drops
+     `boostVal('globalCredits')` from tapFlower() or harvest() leaves both of
+     them reporting x1.25 over a payout paid at x1. Both are driven here, with a
+     bare board and a pinned roll, and the expected coin is stated. */
+  const prevRandom = Math.random;
+  const bareTap = (armed) => {
+    G.reset();
+    clearMastery();
+    S.wonder = { until: 0, last: 0 };
+    S.boosters = {};
+    S.tap.power = 100;                 // base power is 1, and Math.round eats a 25% lift on it
+    if (armed) S.boosters.golden = G.nowSeconds() + 60;
+    Math.random = () => 0.99;          // no crit, no gem, no spark, no ladybug
+    const p = G.tapFlower();
+    Math.random = prevRandom;
+    return p;
+  };
+  const tapOff = bareTap(false);
+  const tapOn = bareTap(true);
+  check('the fixture taps clean — no crit, no Wonder, the first of a combo',
+    tapOff.crit === false && tapOff.sparkedWonder === false && tapOff.combo === 1
+    && tapOn.crit === false && tapOn.sparkedWonder === false && tapOn.combo === 1);
+  check('a tap of 100 pays 125 with Golden Popups running',
+    tapOff.gain === 100 && tapOn.gain === 125, `${tapOff.gain} -> ${tapOn.gain}`);
+
+  const bareHarvest = (armed) => {
+    G.reset();
+    clearMastery();
+    S.wonder = { until: 0, last: 0 };
+    S.boosters = {};
+    S.apiary.cells = Array(MEADOW.cells).fill(null);   // no pollination in the way
+    if (armed) S.boosters.golden = G.nowSeconds() + 60;
+    Math.random = () => 0.5;
+    S.grid[0] = { locked: false, seed: 'daisy', plantedAt: 0, grow: 0, ready: true, aura: '' };
+    const p = G.harvest(0);
+    Math.random = prevRandom;
+    return p;
+  };
+  const harvOff = bareHarvest(false);
+  const harvOn = bareHarvest(true);
+  const daisyYield = G.seedById('daisy').yield;
+  check('the fixture harvests clean — a common daisy at its plain yield',
+    harvOff.rarity.key === 'common' && harvOn.rarity.key === 'common'
+    && harvOff.payout === daisyYield && daisyYield === 70, `${harvOff.payout} / ${daisyYield}`);
+  check('a garden harvest of 70 pays 88 with Golden Popups running',
+    harvOn.payout === 88, `${harvOff.payout} -> ${harvOn.payout}`);
+
+  /* And the two pills, which must agree with the faucets above to the decimal —
+     they are separate arithmetic in separate functions and have drifted before. */
+  G.reset();
+  S.boosters = {};
+  S.wonder = { until: 0, last: 0 };
+  check('the tap pill and the seed pill both read x1 with nothing running',
+    G.tapStats().mult === 1 && G.plantPayout(DATA.seeds[0], 0).mult === 1,
+    `${G.tapStats().mult} / ${G.plantPayout(DATA.seeds[0], 0).mult}`);
+  S.boosters.golden = G.nowSeconds() + 60;
+  check('and both read exactly x1.25 with Golden Popups running',
+    Math.abs(G.tapStats().mult - 1.25) < 1e-9
+    && Math.abs(G.plantPayout(DATA.seeds[0], 0).mult - 1.25) < 1e-9,
+    `${G.tapStats().mult} / ${G.plantPayout(DATA.seeds[0], 0).mult}`);
+
+  /* The negative half, which is the whole reason the sentence was false. Both
+     season beds are collected by their own function and neither reads boostVal;
+     the payout is asserted to the coin against the row in data.js. */
+  G.reset();
+  S.year.turnsCompleted = 9;
+  S.credits = 1e9;
+  S.boosters.golden = G.nowSeconds() + 60;
+  const crop = G.fallPlantById('strawberry');
+  G.fallPlant(0, crop.id);
+  S.fall.grid[0].plantedAt = G.nowSeconds() - crop.grow - 10;
+  const fallPay = G.fallHarvest(0);
+  check('the Fall fixture is ripe, outside the windfall, with the boost genuinely armed',
+    fallPay !== null && fallPay.windfall === false && G.activeBoost('golden') === true);
+  check('Golden Popups never reaches Fall’s bed — a 2,800 strawberry pays 2,800',
+    fallPay.payout === crop.yield && crop.yield === 2800, `${fallPay.payout} vs ${crop.yield}`);
+
+  G.reset();
+  S.year.turnsCompleted = 9;
+  S.credits = 1e9;
+  S.boosters.golden = G.nowSeconds() + 60;
+  const wplant = DATA.winter.plants[0];
+  G.winterPlant(0, wplant.id);
+  S.winter.grid[0].plantedAt = G.nowSeconds() - wplant.grow - 10;
+  S.winter.tuckedAt = 0;
+  const winterPay = G.winterHarvest(0);
+  check('the Winter fixture is ripe, untucked, with the boost genuinely armed',
+    winterPay !== null && winterPay.kept === false && G.activeBoost('golden') === true);
+  check('nor Winter’s — a 3,500 snowdrop pays 3,500',
+    winterPay.payout === wplant.yield && wplant.yield === 3500,
+    `${winterPay.payout} vs ${wplant.yield}`);
+
+  /* One sentence, one home. Two views render `desc`; a third that pastes the
+     words instead would drift the day this table is retuned. */
+  const descCopies = ['ui.js', 'ui-events.js', 'ui-news.js', 'ui-sheet.js', 'ui-shared.js',
+    'ui-fall.js', 'ui-winter.js', 'ui-menu.js', 'index.html']
+    .filter((f) => fs.readFileSync(path.join(ROOT, f), 'utf8').includes(golden.desc));
+  check('no view keeps a second copy of the sentence to drift from',
+    descCopies.length === 0, descCopies.join(', '));
+  G.reset();
+}
+
+group('a room change re-renders the rail, in both directions');
+/* `renderRail()` filters chips on `season` and `goSeason()` reassigns `season`,
+   so the render has to be called HERE rather than left to the 0.25 s tier — the
+   only other caller. Without it a chip the new room drops stays painted for a
+   quarter of a second into the swipe, and a chip the garden brings back takes
+   the same quarter second to arrive. The call sits directly above
+   `renderSeasonEdges()`, which #15 rewrites, so a merge swallowing the line is
+   the realistic way this is lost.
+
+   goSeason() touches the DOM, so it is lifted out by name and RUN: everything it
+   reaches resolves to a recording stub, `SEASON_ROOMS` and `season` are bound
+   for real, and `calls` is the list of functions it actually invoked. Binding
+   `SEASON_ROOMS` without a `summer` key is the load-bearing half — the walk
+   home leaves `to` undefined, so a `renderRail()` moved inside `if (to)` still
+   passes the walk OUT and goes red on the walk BACK, which is the owner's own
+   clause ("if they move back to the garden … it should show").
+
+   WHAT THIS CANNOT SEE: it proves the call happens, never that the row is
+   right. Nothing here renders a chip, measures the 250 ms, or knows the DOM
+   exists. Both directions are driven in a browser and the result is written
+   into docs/08 — `UI.enterSeason()` and `.rail`'s children read in the SAME
+   eval, because a probe that waits before reading measures the tick instead of
+   the transition and reports the bug as fixed. */
+{
+  const goSeasonSrc = (uiSrc.match(/\n {2}function goSeason\(id\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+  check('goSeason() is still where this guard can read it',
+    /renderSeasonEdges\(\)/.test(goSeasonSrc) && /SEASON_ROOMS/.test(goSeasonSrc),
+    goSeasonSrc.slice(0, 60));
+  const runGoSeason = (ids) => {
+    const calls = [];
+    const stub = (id) => {
+      const hit = () => { calls.push(id); return `<!--ui:${id}-->`; };
+      return new Proxy(function () { return hit(); }, {
+        apply: hit,
+        get: (t, k) => {
+          if (k === Symbol.toPrimitive || k === 'toString' || k === 'valueOf') return () => `<!--ui:${id}-->`;
+          if (typeof k === 'symbol') return undefined;
+          return stub(`${id}.${String(k)}`);
+        }
+      });
+    };
+    /* No `summer` key, on purpose — see above. */
+    const rooms = {
+      fall: { enter: () => calls.push('fall.enter'), leave: () => calls.push('fall.leave'), seen: 'fallSwipe' },
+      winter: { enter: () => calls.push('winter.enter'), leave: () => calls.push('winter.leave'), seen: 'winterSwipe' }
+    };
+    /* `season` is a recording accessor rather than a plain field, so the ORDER
+       matters and not merely the call: rendering the rail before the room is
+       reassigned paints the room the player just left. */
+    let seasonVal = 'summer';
+    const bound = { Game: G, S, SEASON_ROOMS: rooms };
+    Object.defineProperty(bound, 'season', {
+      enumerable: true,
+      get: () => seasonVal,
+      set: (v) => { seasonVal = v; calls.push(`season:=${v}`); }
+    });
+    const scope = new Proxy(bound, {
+      has: () => true,
+      get: (t, k) => {
+        if (typeof k === 'symbol') return undefined;
+        if (Object.prototype.hasOwnProperty.call(t, k)) return t[k];
+        if (k in globalThis) return globalThis[k];
+        return stub(String(k));
+      }
+    });
+    try {
+      const fn = new Function('SCOPE', `with (SCOPE) { ${goSeasonSrc}\n return goSeason; }`)(scope);
+      ids.forEach((id) => fn(id));
+    } catch (e) { calls.push(`EXTRACTION FAILED ${(e && e.message) || e}`); }
+    return { calls, seasonAfter: bound.season };
+  };
+  const outward = runGoSeason(['fall']);
+  check('walking out to Fall lands in Fall and renders the rail',
+    outward.seasonAfter === 'fall' && outward.calls.includes('fall.enter')
+    && outward.calls.includes('renderRail'), outward.calls.join(' '));
+  check('and renders it AFTER the room is reassigned, not before — the filter reads `season`',
+    outward.calls.indexOf('season:=fall') >= 0
+    && outward.calls.indexOf('season:=fall') < outward.calls.indexOf('renderRail'),
+    outward.calls.join(' '));
+  const homeward = runGoSeason(['fall', 'summer']);
+  check('walking back to the garden lands in summer with no room object at all',
+    homeward.seasonAfter === 'summer' && homeward.calls.includes('fall.leave'),
+    homeward.calls.join(' '));
+  check('and renders the rail on that walk too — twice out of two changes',
+    homeward.calls.filter((c) => c === 'renderRail').length === 2,
+    homeward.calls.join(' '));
+  G.reset();
+}
+
 group('the level ladder keeps rotating what it hands out');
 /* docs/33-year-one-economy.md:298-299. The signature below is a HYBRID, and it
    has to be: a boost row is read at the grain of WHICH boost, because ten of the

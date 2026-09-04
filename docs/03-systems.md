@@ -745,7 +745,7 @@ is in [04-economy.md](04-economy.md#every-faucet-audited-2026-08-30). See
 | Bloom Burst | 30 s | +50% tap power, +2% crit chance |
 | Seed Rush | 10 min | +30% growth speed |
 | Fortune Aura | 30 min | +50% rarity weights |
-| Golden Popups | 30 s | +25% credits from all sources |
+| Golden Popups | 30 s | +25% credits from taps and garden harvests |
 
 Expiry is checked each tick and removal emits `panels` so open shop cards update themselves.
 

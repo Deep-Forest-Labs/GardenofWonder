@@ -4767,9 +4767,11 @@ button:focus-visible{
 
    The owner's #11 ruling — a power-up doing nothing in this room should not be
    shown in this room — is a JS filter in `renderRail()` since 2026-09-01. It
-   removes the booster and Wonder chips in Fall and Winter and leaves the
-   weather chip, because weather is the world's and the sky is overhead in
-   every season.
+   removes Seed Rush, Fortune Aura and the rented drone in Fall and Winter — the
+   only boosts no plant there can take — and keeps Bloom Burst, Golden Popups,
+   the Wonder and the weather chip. The hero flower stands in both rooms, so a
+   tap there is paid by `tapPower`, `globalCredits` and the Wonder exactly as it
+   is in the garden, and the sky is drawn over both at full opacity.
 
    The rule below is about SPACE, not meaning, and it was very nearly deleted
    as a leftover of the first: on a 667-tall phone the bed chip's row and the
