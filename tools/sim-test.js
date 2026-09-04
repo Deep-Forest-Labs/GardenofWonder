@@ -461,6 +461,16 @@ S.boosters = {};
 S.tap = { power: 10, critChance: 0, critMult: 10, combo: 0, comboMax: 50 };
 S.decor = [];
 S.credits = 1e6;
+/* PINNED, and the house treatment is the right one here: this wants a single
+   known roll, not a spread. `tapFlower()` rolls `tryWonder(WONDER.tapChance)`
+   AFTER it has paid, so the FIRST of these two taps can start a Wonder that the
+   SECOND is then paid ×3 on — 10 vs 30, in a group that is not about the Wonder
+   at all. Measured against a clean HEAD checkout: 310 failures in 200,000 runs
+   of this pair, which is `WONDER.tapChance` 0.0015 to three places. 0.5 sits
+   above every proc chance in the game, so nothing fires and nothing else in the
+   two taps changes. */
+const rngDecor = Math.random;
+Math.random = () => 0.5;
 let before = S.credits;
 G.tapFlower();
 const gainBare = S.credits - before;
@@ -469,6 +479,7 @@ S.credits = 1e6;
 before = S.credits;
 G.tapFlower();
 const gainWithDecor = S.credits - before;
+Math.random = rngDecor;
 check('tap payout ignores owned decor', gainBare === gainWithDecor && gainBare === 10, `${gainBare} vs ${gainWithDecor}`);
 
 clearGarden();

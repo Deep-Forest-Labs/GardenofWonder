@@ -1716,10 +1716,12 @@ things can hold it instead, and both have a precedent in `tools/`:
 `ui-hollow.js` (10), `ui-news.js` (6), `ui-scenery.js` (2). The sink to leave alone is
 `ui-sheet.js:151`; the problem was never the sink.
 
-### Five flakes have been found in this suite, and the class of bug keeps recurring
+### The same class of flake keeps being found in this suite
 
 All fixed. The first two on 2026-08-14 (**4 of 50 runs failed** beforehand), the next two on
-2026-08-15, the fifth on 2026-08-30.
+2026-08-15, the fifth on 2026-08-30, the sixth on 2026-09-03. The heading used to carry a running
+count and the count kept going stale, which is its own small lesson: the number of times a trap has
+been hit is never the useful half.
 
 **Re-measured 2026-08-30 at 1,408 assertions: 45 consecutive runs, 0 divergent.** Ten was the ask;
 ten is not enough to believe, because the flakes recorded below were 4-in-50 and roughly 1-in-25, and
@@ -1736,6 +1738,14 @@ tables and roll no dice, so they cannot introduce this class of bug.
 
 - **The combo block** asserted exact credit deltas from `tapFlower()`, and a tap can spark a Wonder
   (0.15%) that triples the payout. Two of its assertions failed about one run in twenty-five.
+- **`tap payout ignores owned decor`** was the SAME roll again, a year of commits later, and it is
+  the reason the general rule below is written as a rule. `tapFlower()` calls
+  `tryWonder(WONDER.tapChance)` **after** it has paid, so the first of the group's two taps could
+  start a Wonder that the second was then paid ×3 on — `10 vs 30`, in a group that is not about the
+  Wonder at all. Measured against a clean HEAD checkout by replaying just that pair: **310 failures
+  in 200,000 runs (0.155%)**, which is `WONDER.tapChance` 0.0015 to three places. `Math.random` is
+  pinned across the two taps and restored after; the check still reddens if a Wonder is genuinely
+  running, so the pin removed the coin flip and not the teeth.
 - **`a lantern roughly doubles gem drops next door`** sampled a Daisy, whose base gem chance fell
   from 5% to 0.6% when the faucet was fixed. The effect was still real; the instrument had silently
   become eight times too small. It now measures an Eternal Crown at 39%.
