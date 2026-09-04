@@ -729,9 +729,27 @@
     const m = w.mutation ? DATA.mutations[w.mutation] : null;
     /* Only a rain waters — `rainGrowthActive()` names one sky and no other — so
        only rain's line mentions growing. A sky says what it does; a sentence
-       about what it does NOT do belongs to none of them. */
+       about what it does NOT do belongs to none of them.
+
+       "ANYTHING SOWN", NOT "EVERYTHING IN THE GARDEN", and the difference is a
+       promise the engine cannot always keep. Rain waters by two paths:
+       `plantGrowth()` applies `rainGrowMult()` to anything sown while the rain
+       stands, ALWAYS — and `quickenForRain()` shaves what was already in the
+       ground, but only on the dry-to-wet TRANSITION. `rainWatch` starts at
+       `null` rather than `false` (game.js), so the first `processWeather()` of a
+       session never quickens: a rain you OPEN THE GAME INTO leaves every plant
+       sown before you closed it on its original clock, deliberately, because
+       paying on arrival would pay again on every reload. Measured headlessly on
+       one Daisy — a rain that starts while you watch takes 12.00s to 10.80s; a
+       rain already standing at boot leaves it at 12.00s. Rain is 20% of the
+       weather weights and "close the app, come back later" is this game's
+       session shape, so "everything in the garden" was false for the common
+       case. This sentence is true in every case and under-promises rather than
+       over-promises, which is this bubble's own house rule. The engine fix —
+       stamping the quickening rain's slot on the cell so boot can quicken
+       idempotently — is filed in docs/11 and is somebody's separate item. */
     const extra = {
-      rain: ` Everything in the garden grows <b>${pct(DATA.weatherStage.rainGrowth)}</b> faster while it lasts.`,
+      rain: ` Anything sown while it lasts grows <b>${pct(DATA.weatherStage.rainGrowth)}</b> faster.`,
       aurora: ' Night falls under it, whatever the hour, so the night-lovers wake.',
       wonderfall: ' The rarest sky there is.'
     }[id] || '';

@@ -638,7 +638,7 @@ to the simulation:
 | --- | --- | --- |
 | `tapYield` | Taps (full), harvests (×0.3) | Multiplies payout |
 | `tapPower` | Taps | Multiplies payout |
-| `globalCredits` | Taps and harvests | Multiplies payout |
+| `globalCredits` | Taps, garden harvests **and offline income** | Multiplies payout. Three faucets, not two — see below |
 | `critChance` | Taps | Added to crit chance |
 | `critMult` | Taps | Multiplies crit multiplier |
 | `growSpeed` | Planting and hastening | Reduces grow time |
@@ -647,6 +647,27 @@ to the simulation:
 
 `boostVal(key)` sums every active source of a key. Adding a new key means also adding the place
 that reads it — nothing happens automatically. Decor no longer contributes to any of these keys.
+
+**`globalCredits` has THREE faucets, and the audit on 2026-09-03 counted two.** That day's commit
+narrowed Golden Popups' copy from "all sources" to "taps and garden harvests" — the right change —
+on the stated ground that it is *"read by `tapFlower()` and by `harvest()` and by no other faucet"*.
+There are **six** read sites in the shipped source — five in `game.js`, one in `ui-sheet.js`. Three
+only *project* the stack for display: `plantPayout()` (1918), `tapStats()` (5859) and `ui-sheet.js`
+(2048). Three *pay*: `tapFlower()` (2618), `harvest()` (2810) and **`passiveIncomeRate()`** (1415,
+its `yieldBonus`), whose rate `offlineEarnings()` turns into coins that `reconcile()` credits on
+return. Corrected 2026-09-04.
+
+**Why no player has felt it, and why that is fragile.** The rate is read **once**, at the moment of
+return, and the only live source of the key is Golden Popups at **30 s**, while `reconcile()` pays
+nothing below `WELCOME_MIN_AWAY` — **120 s**. The two constants miss each other, so a real boost
+armed the instant before the app closes has always expired before the rate is asked for. Driven
+2026-09-04 on the bill-10 rig (`autoHarvest` 1, `plot2Harvester` 2), 121 s away: nothing armed pays
+**224**, a real 30 s boost armed at the door pays **224** as well, and the same absence with the
+boost still live at return pays **326**. Note that lift is **×1.46, not ×1.25** — the multiplier
+lands on `gross` and `perCycle = gross − seed.cost` takes the cost off afterwards, so the credited
+*rate* moves further than the headline. Give the key a source that outlasts two minutes, or lower
+the welcome floor, and this faucet opens with no copy anywhere naming it. `tools/sim-test.js` now
+drives all three faucets and asserts the miss, so whichever of the two constants moves goes red.
 
 ## Progression sketch
 

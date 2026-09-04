@@ -3075,10 +3075,41 @@ the copy is not read for this, it is RUN: `weatherTip()` is private to `ui.js` a
 so `tools/sim-test.js` lifts it out by name and executes it against the live table, which is the
 `sheetRender()` habit applied to one function instead of a panel.
 
+**Deriving the number does not make the sentence true, and a copy group measures the string at the
+instant it is built — when the claim is true by construction.** The sequel to the trap above, found
+the night after it was written. Rain's line became `pct(DATA.weatherStage.rainGrowth)` and read
+*"Everything in the garden grows 10% faster while it lasts"* — thirty assertions, every figure
+derived, every one green, and the sentence **false for the commonest session this game has**. Rain
+waters by two paths and only one is unconditional: `plantGrowth()` pays anything SOWN into the rain,
+always, while `quickenForRain()` pays what is already in the ground only on the dry-to-wet
+*transition* — and `rainWatch` starts at `null`, so the first `processWeather()` of a session never
+quickens. Open the game *into* a rain and nothing already planted moves: 12.00 s → 12.00 s, against
+12.00 s → 10.80 s when the same rain starts while you watch. Every guard asked "does the string
+follow the knob"; none asked "is this true of the garden it is shown over". **Flipping a knob and
+watching the sentence follow proves the number is READ. It says nothing about whether the promise is
+KEPT — for that, drive the mechanic and assert the copy against what it actually did**, and where
+the two paths differ, write the copy for the one that always pays. Under-promising is free; the
+player who was owed the other tenth never knew, and the one who was promised it did.
+
+**The same night, the same shape, in an audit instead of a tooltip: "read by X and by Y and by no
+other faucet" is a claim about every line in the repo, and this one was made without the grep that
+would have settled it.** The commit that
+correctly narrowed Golden Popups from "all sources" to "taps and garden harvests" justified the
+wording with that sentence; `boostVal('globalCredits')` has **six** read sites, and the missed one,
+`passiveIncomeRate()`, is a faucet — `offlineEarnings()` turns its rate into coins `reconcile()`
+credits. Nothing was red, and nothing could be: the test group written beside it drove the two
+faucets the *sentence* named. The player's purse never moved only because two unrelated constants
+miss each other — the key's one source runs 30 s, `WELCOME_MIN_AWAY` is 120 s — which is luck, not a
+boundary, and it is asserted now so that whichever moves goes red. **A completeness claim needs the
+grep in the commit, and the grep pasted into the doc that will be quoted back at you.** Distinguish
+faucets from projections while you are there: three of those six sites only *display* the stack, and
+a "same number in two places" test that pairs two projections proves nothing about what is paid.
+
 **The sky tooltip is a fixed 280px, not a shrink-to-fit bubble.** `.weather-tip .tip` carries
 `width:min(280px, calc(100vw - 28px))`, so rewriting its copy moves the **height** and never the
-width, and the `--ax` arrow clamp in `showWeatherTip()` cannot be disturbed by a wording change. A
-punch-list item asserted the opposite and sent the fix looking for a clamp regression that cannot
+width, and the `--ax` arrow clamp in `placeTip()` (`showWeatherTip()` until 2026-09-03) cannot be
+disturbed by a wording change. A punch-list item asserted the opposite and sent the fix looking for
+a clamp regression that cannot
 exist; measured at 390px, all four skies render at exactly 280px wide before and after a rewrite
 that took them from 142/142/160/125px tall to 107/71/107/89. **Read the rule before you budget time
 against the layout of a copy change.**

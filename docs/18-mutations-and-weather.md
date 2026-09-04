@@ -180,6 +180,16 @@ which means the next rain is a fresh gift and a rain that simply carries on is n
 the same rain and waters identically. It multiplies into the same growth stack as sprinklers and
 Keepers, under the same 0.3 floor, so no combination of gifts can collapse a grow time to nothing.
 
+**The retro path fires on a transition you are present for, and on no other (2026-09-04).**
+`rainWatch` starts at `null` rather than `false`, so the first `processWeather()` of a session never
+quickens: a rain **already standing when you open the game** leaves everything sown before you
+closed it on its original clock. That is deliberate — paying on arrival would pay again on every
+reload — but it is a real hole in "everything already growing when the sky turns", and the sky
+chip's copy was rewritten to under-promise around it rather than to keep claiming it. Measured on
+one Daisy: 12.00 s → 10.80 s when the rain starts while you watch, 12.00 s → 12.00 s when it is
+already standing at boot. The idempotent fix — stamping the quickening rain's slot on the cell — is
+filed in [11-known-issues.md](11-known-issues.md) and is not closed.
+
 **And rain is deliberately kept out of the offline rate.** What the garden earns while you are away
 is computed with the sky ignored on purpose. A sixty-second shower has no business setting the rate
 for a day's absence, and if it did, closing the app during rain would be worth real money — an

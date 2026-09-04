@@ -1016,6 +1016,23 @@ Two things the old copy did that the register rules out. **Percentages, never "1
 does not**: the storm's sentence denying a growth effect simply went, and only a rain mentions
 growing at all, because `rainGrowthActive()` is one sky and nothing else.
 
+**Rain's growth line says "anything sown", not "everything in the garden" (2026-09-04), and the
+difference is a promise the engine cannot always keep.** Rain waters by two paths. `plantGrowth()`
+applies `rainGrowMult()` to anything sown while the rain stands, always. `quickenForRain()` shaves
+what is already in the ground — but only on the dry-to-wet **transition**, and `rainWatch` starts at
+`null` rather than `false`, so the first `processWeather()` of a session never quickens. A rain you
+**open the game into** therefore leaves every plant sown before you closed it on its original clock.
+That is deliberate in the engine (paying on arrival would pay again on every reload) and it made the
+old sentence false for the commonest case there is: rain is 20% of the weather weights and "close
+the app, come back later" is this game's session shape. Measured headlessly on one Daisy — a rain
+that **starts while you watch** takes 12.00 s to 10.80 s; a rain **already standing at boot** leaves
+it at 12.00 s. The new sentence is true in both, and under-promises rather than over-promises, which
+is this bubble's own house rule. It is two words shorter, so the range is still sixteen to
+twenty-seven words and the bubble still measures 280 × 107 px at 390 px; re-measured 2026-09-04, the
+tip spans x 6–286 against a chip at the left edge and x 104–384 with the chip forced right, arrow
+330–352, `scrollWidth` 390 in both. **The engine fix is a separate item** — see
+[11-known-issues.md](11-known-issues.md).
+
 **No timer, deliberately, and it is the owner's to reopen.** A countdown to the end of this sky is
 also a countdown to when the next one starts, and paired with the flower's spoken forecast that
 rebuilds most of the forecast panel ruled out in
@@ -1034,9 +1051,10 @@ stylesheet.
 ### One bubble, three kinds of chip (2026-09-03)
 
 **The sky was the only chip in the row that answered a tap, and the mechanism to fix that was
-already built.** `showWeatherTip()` solved every hard part — viewport placement, the clamp to `.ui`,
-the `--ax` arrow, toggle-on-second-tap, living outside the rail — and all of it was weather-specific
-only in its *names*. It was generalised rather than duplicated.
+already built.** The old `showWeatherTip()` solved every hard part — viewport placement, the clamp to
+`.ui`, the `--ax` arrow, toggle-on-second-tap, living outside the rail — and all of it was
+weather-specific only in its *names*. It was generalised rather than duplicated, and split in two on
+the way: `showTip(btn)` and `placeTip(btn)`, which is where the `--ax` clamp lives now.
 
 | The seam | What it is |
 | --- | --- |

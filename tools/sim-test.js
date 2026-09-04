@@ -9614,12 +9614,19 @@ check('no booster carries a price of any kind',
 group('Golden Popups reaches what it says, and says only what it reaches');
 /* The copy read "+25% credits from all sources" and two of the game's four beds
    are sources it does not reach. Asserting the STRING on its own is a tautology,
-   so this pins the sentence to the engine in BOTH directions: the two faucets it
+   so this pins the sentence to the engine in BOTH directions: the faucets it
    names are RUN and their payouts asserted to the coin, and the two beds it no
    longer claims are run with the boost armed and asserted to pay their raw data
    value. A future agent reading the punch list's original framing — "Fall is a
    source Golden Popups fails to reach" — reaches for the other fix, which is to
    make it reach; that is what the two bed assertions are here to redden.
+
+   THERE ARE THREE FAUCETS, NOT TWO. The commit that wrote this group audited the
+   key as "read by `tapFlower()` and by `harvest()` and by no other faucet" and
+   that was wrong: `passiveIncomeRate()` reads it too, and its rate becomes coins
+   `reconcile()` credits. The third is driven below, with the reason a player has
+   not felt it. The copy still names two because those are the two a player can
+   watch pay; the third cannot pay at all at today's numbers.
 
    WHAT THIS CANNOT SEE. Two surfaces render this string — the activation toast
    (`ui-events.js`, `def.desc` on the `purchase` event) and the POWER-UP button's
@@ -9631,7 +9638,7 @@ group('Golden Popups reaches what it says, and says only what it reaches');
   const golden = DATA.boosters.find((b) => b.id === 'golden');
   check('the copy no longer claims every source',
     !/all sources/i.test(golden.desc), golden.desc);
-  check('and it names the two faucets it does reach',
+  check('and it names the two faucets a player can watch it pay',
     /taps/i.test(golden.desc) && /harvest/i.test(golden.desc), golden.desc);
 
   /* The faucets themselves, not the pills that project them. `tapStats()` and
@@ -9681,6 +9688,79 @@ group('Golden Popups reaches what it says, and says only what it reaches');
     && harvOff.payout === daisyYield && daisyYield === 70, `${harvOff.payout} / ${daisyYield}`);
   check('a garden harvest of 70 pays 88 with Golden Popups running',
     harvOn.payout === 88, `${harvOff.payout} -> ${harvOn.payout}`);
+
+  /* THE THIRD FAUCET, and the reason this block exists at all. The commit that
+     rewrote the sentence audited the key and reported `boostVal('globalCredits')`
+     "read by `tapFlower()` and by `harvest()` and by NO OTHER FAUCET". That is
+     wrong about the code. `boostVal('globalCredits')` has SIX read sites in the
+     shipped source — five in `game.js`, one in `ui-sheet.js`. Three PROJECT the
+     stack for display: `plantPayout()` (1918), `tapStats()` (5859) and
+     `ui-sheet.js` (2048). Three PAY: `tapFlower()` (2618), `harvest()` (2810)
+     and `passiveIncomeRate()` (1415), whose rate `offlineEarnings()` turns into
+     coins that `reconcile()` credits — a faucet by any definition. Nothing in
+     2,164 checks saw the third: dropping the term from `passiveIncomeRate()`
+     cuts offline income by a fifth and leaves the suite green. So the rate is
+     driven here, closed-form on the bill-10 rig, and the expected coin stated.
+
+     WHY THE PLAYER'S PURSE HAS NOT MOVED ANYWAY, which is the other half and is
+     the more fragile fact. `boostVal()` is read ONCE, at the moment of return,
+     and the only live `globalCredits` source is Golden Popups at 30s — while
+     `reconcile()` pays nothing under `WELCOME_MIN_AWAY`, 120s. The two constants
+     miss each other, so a real boost armed the instant before you close the app
+     has always expired by the time the rate is asked for. That is an accident of
+     two unrelated numbers, not a boundary: give the key a source that outlasts
+     two minutes, or lower the welcome floor, and this faucet opens with no copy
+     anywhere naming it. Both halves are asserted, so whichever moves goes red. */
+  {
+    G.reset();
+    clearGarden();
+    S.boosters = {};
+    S.upgrades.autoHarvest = 1;
+    S.upgrades.plot2Harvester = 2;                  // one planter, tulip, closed form
+    const tul = G.seedById('tulip');
+    const rMean = DATA.rarity.reduce((a, r) => a + r.w * r.m, 0)
+      / DATA.rarity.reduce((a, r) => a + r.w, 0);
+    const expectRate = (mult) => (tul.yield * rMean * mult - tul.cost) / tul.grow;
+    const rateOff = G.passiveIncomeRate();
+    check('the offline rig earns, and at the plain rate with nothing running',
+      Math.abs(rateOff - expectRate(1)) < 1e-9, `${rateOff} vs ${expectRate(1)}`);
+    S.boosters.golden = G.nowSeconds() + 60;
+    const rateOn = G.passiveIncomeRate();
+    check('offline income is a THIRD faucet the key reaches — the drone’s rate takes the same x1.25',
+      Math.abs(rateOn - expectRate(1 + golden.effects.globalCredits)) < 1e-9,
+      `${rateOn} vs ${expectRate(1.25)}`);
+    /* The gross moves by 1.25 and the credited rate by MORE, because the seed's
+       cost is subtracted after the multiplier. Stated so nobody reads the line
+       above as "+25% offline income" and writes that into the copy. */
+    check('and the credited rate moves further than 25%, because cost is taken after the multiplier',
+      rateOn / rateOff > 1.25, `x${(rateOn / rateOff).toFixed(4)}`);
+
+    const welcomeFloor = Number((gameSrc.match(/WELCOME_MIN_AWAY = (\d+)/) || [])[1]);
+    check('the welcome floor is still readable from game.js', welcomeFloor > 0, `${welcomeFloor}`);
+    check('and no globalCredits source outlasts it, which is the only reason the purse has not moved',
+      DATA.boosters.filter((b) => b.effects.globalCredits).every((b) => b.dur < welcomeFloor),
+      DATA.boosters.filter((b) => b.effects.globalCredits)
+        .map((b) => `${b.id} ${b.dur}s vs ${welcomeFloor}s`).join(', '));
+    /* Driven rather than argued: a REAL boost, written the way useBoost() writes
+       it, across the shortest absence reconcile() will pay for. */
+    const awayPay = (armed) => {
+      S.credits = 0;
+      S.boosters = {};
+      if (armed) S.boosters.golden = G.nowSeconds() + golden.dur;
+      S.lastSeen = G.nowSeconds();
+      clock += welcomeFloor + 1;
+      const r = G.reconcile();
+      clock -= welcomeFloor + 1;
+      return r ? r.earned : 0;
+    };
+    const paidBare = awayPay(false);
+    const paidArmed = awayPay(true);
+    check('so a real 30s boost armed at the door pays nothing extra over the shortest absence',
+      paidBare > 0 && paidArmed === paidBare, `${paidBare} vs ${paidArmed}`);
+    G.reset();
+    clearGarden();
+    S.boosters = {};
+  }
 
   /* And the two pills, which must agree with the faucets above to the decimal —
      they are separate arithmetic in separate functions and have drifted before. */
@@ -10318,6 +10398,29 @@ check('growth is mentioned by the one sky that has it and by no other',
   WX_SKIES.filter((id) => /\b(grow|grows|growing|faster|slower)\b/i.test(wxSay(id))).join(',')
   === 'rain',
   WX_SKIES.filter((id) => /\b(grow|grows|growing|faster|slower)\b/i.test(wxSay(id))).join(','));
+/* AND IT MAY PROMISE ONLY THE HALF OF THE MECHANIC THAT ALWAYS PAYS. Rain waters
+   by two paths and only one of them is unconditional. `plantGrowth()` applies
+   `rainGrowMult()` to anything SOWN while the rain stands, always. The retro
+   path, `quickenForRain()`, rides the dry-to-wet transition — and `rainWatch`
+   starts at `null` rather than `false`, so the first `processWeather()` of a
+   session never quickens. A rain you OPEN THE GAME INTO therefore leaves every
+   plant sown before you closed the app on its original clock: measured on one
+   Daisy, 12.00s -> 12.00s at boot against 12.00s -> 10.80s for a rain that
+   starts while you watch. Rain is 20% of the weather weights and returning to a
+   standing sky is this game's session shape, so "everything in the garden grows
+   10% faster" was false for the common case rather than a corner.
+
+   Nothing else here can see this. The derived-percentage guard below flips
+   `rainGrowth` and watches the figure follow, which proves the number is read
+   from the table and says nothing about whether the sentence is TRUE of the
+   garden it is shown over — the whole class of fault this group exists for.
+   Reverting the wording reddens here and nowhere else. When the engine fix in
+   docs/11 lands — the quickening rain's slot stamped on the cell so boot can
+   quicken idempotently — this assertion is the one that should be rewritten,
+   deliberately, in the same commit. */
+check('rain promises the sowing it always pays for, never the whole garden',
+  /\bsown\b/.test(wxSay('rain'))
+  && !/\beverything\b|\bthe garden\b|\balready\b/i.test(wxSay('rain')), wxSay('rain'));
 check('the storm no longer spends a sentence on an effect it does not have',
   !/\bdoes not\b|\bdoesn't\b|\bno faster\b/i.test(wxSay('storm')), wxSay('storm'));
 check('nothing states a catch rate as a 1-in-N any more',

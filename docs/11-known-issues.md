@@ -289,10 +289,33 @@ above. The different answer it wants is a home for the bed chip outside the rail
 that over-promises — but Fall's and Winter's cells carry no mutation field at all (`fallPlant()`
 writes seed, plantedAt, grow, ready and windfall and nothing else) and rain's growth nudge does not
 reach either bed. So the chip is honest and the tooltip is not: `weatherTip()` promises "a plant
-caught out in it gets one N% chance of coming back Gilded", and rain adds "everything in the garden
-grows N% faster" — both true of the garden and of nothing standing in Fall or Winter. Left for
-whoever next opens that function; the fix is a room branch in the copy, not a filter on the chip,
-because hiding the label leaves the storm on screen with nothing naming it.
+caught out in it gets one N% chance of coming back Gilded", and rain adds a growth line — both true
+of the garden and of nothing standing in Fall or Winter. Left for whoever next opens that function;
+the fix is a room branch in the copy, not a filter on the chip, because hiding the label leaves the
+storm on screen with nothing naming it. (Rain's line was rewritten on 2026-09-04 for a *different*
+falsehood — see the next entry — and is still a garden's promise in a season room.)
+
+**A rain you open the game into never quickens what is already in the ground, and the copy now
+under-promises to stay honest about it (2026-09-04).** `quickenForRain()` is the retro half of rain
+waters, and it rides the dry-to-wet **transition**: `processWeather()` calls it when `rainWatch`
+goes `false → true`. `rainWatch` initialises to `null`, not `false`, so the first
+`processWeather()` of a session never quickens — deliberately, because paying on arrival would pay
+again on every reload. The consequence is that a rain already standing when you open the game leaves
+every plant sown before you closed it on its original clock, permanently. Proven headlessly on one
+Daisy: a rain that **starts while you watch** takes 12.00 s → 10.80 s; a rain **already standing at
+boot** leaves it at 12.00 s. Rain is 20% of the weather weights and "close the app, come back later"
+is this game's session shape, so this is the common case rather than a corner.
+
+**Closed on the copy, open on the engine.** The bubble said *"Everything in the garden grows 10%
+faster while it lasts"* and now says *"Anything sown while it lasts grows 10% faster"*, which is true
+whether or not the retro pass ran — the cheap honest half, and this feature's own house rule is to
+under-promise. **The engine fix is the open item and is somebody's separate piece of work**: stamp
+the quickening rain's slot on the cell (`cell.quickenedSlot`, alongside `plantedAt`/`grow`) so boot
+can run `quickenForRain()` **idempotently** — every plant that has not yet been paid by *this*
+rain's slot gets its remainder shaved, once, however many times the page reloads. That removes the
+reason `rainWatch` starts at `null`, and the copy can go back to promising the whole garden. Do not
+attempt it by flipping `rainWatch` to `false`: that is the reload double-pay the current comment
+exists to prevent, and nothing in the suite would catch it.
 
 **The sky's chip carries no countdown, and that is a decision waiting on the owner.** A timer would
 turn a status light into a small clock to plant against, and paired with the flower's spoken
