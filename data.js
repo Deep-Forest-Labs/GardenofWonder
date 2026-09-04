@@ -742,7 +742,8 @@ const DATA = {
         'If your phone is set to reduce motion, the numbers that fly up when you pick a flower now hold still where you can read them.',
         'Tap the weather above your garden and it answers in a sentence now instead of a paragraph — what this sky can leave on a plant, and how likely it is.',
         'Golden Popups now says what it really lifts — what your taps pay and what your garden harvests pay — instead of promising every coin in the game.',
-        'Tap anything in the strip above your garden — the sky, a running power-up, a Wonder — and it will tell you what it is doing.'
+        'Tap anything in the strip above your garden — the sky, a running power-up, a Wonder — and it will tell you what it is doing.',
+        'The tabs down the sides of the garden have gone — swipe left or right to move between your gardens, and watch the edge of the screen for a red dot when one of them has something ready. The Upgrades and Power-up buttons have moved out to the edges to give the bottom of the screen some room.'
       ]
     },
     {

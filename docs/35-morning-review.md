@@ -243,6 +243,14 @@ without walking to it. *The alternative* is the gesture alone plus a one-time co
 quieter and much easier to miss — and missing it means missing Fall, which is Turn 1's whole reward.
 *Changing it:* the tabs are one component and one handler.
 
+> **Re-ruled 2026-09-03** (owner, punch list `#15`): the tab is gone and the alternative above was
+> not what replaced it. What ships is the middle option nobody wrote down here — a **10×40px
+> non-interactive peek** at the screen edge, keeping the drained-paper lock state, the attention dot
+> and the node the coach marks point at, and losing the name, the padlock, the Turn and the tap. The
+> reason the whole component could not simply go is the paragraph above: three coach marks anchor to
+> it, and each bails silently when its node is missing. The Turn that opens a season is on the gate
+> plate now, which the same swipe still reaches.
+
 **The tabs sit low, over the lawn, not centred.** Centred vertically they landed **on the board**,
 and the board is the thing this game is. Dropping them to the lawn band also puts them beside the two
 doors, so all four ways out of the garden read as one family.

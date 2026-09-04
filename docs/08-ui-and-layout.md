@@ -51,8 +51,14 @@ sheet the player asked for.
 
 **The band costs the layout nothing.** `.stage` already reserves a yard along its bottom for the
 creatures (`--yard-h`, 108px at 390×844, 91px at 700); the two floating controls move into the two
-ends of that same strip. The board measures 370×370 before and after. Both are inset 34px from the
-column so they clear the 38px season edge tabs, which keep the screen edges they have always had.
+ends of that same strip. The board measures 370×370 before and after. **Both sit on the column's own
+edge** since 2026-09-03 (`.fpill{left:0}` / `.fround{right:0}`), and that is a margin rather than
+flush: they are absolute against `.stage`, which already lives inside `.ui`'s
+`padding:calc(var(--sal) + 10px)`, so zero here is 10px plus the horizontal safe-area inset and no
+second `env()` call is needed. It is the same edge the dock, the rail, the quest strip and the board
+already stand on. They used to be inset 34px to clear a 38px season tab; the tabs retired with the
+same commit and the clear lane between the two buttons measured **177.4px → 245.4px at 390×844**
+(215.4 at 360 wide, 175.4 at 320, 415.4 at 844×390).
 
 **The pedestal rises out of the dock without making the dock taller.** `.dock.five` pins
 `grid-template-rows` to the dock's own height with `align-items:end`, and gives every button that
@@ -1076,14 +1082,19 @@ booster activation, migration. Rare harvests deliberately don't qualify.
 overshoot on entry and scale away.
 
 **Coach marks** are absolutely positioned tooltips above their target — or **beside it when the
-target is a season tab** (`side-l` / `side-r`, arrow pointing sideways into the tab). A side mark
-**looks for a gap** rather than only pushing upward: it tries the tab's midpoint, then just above and
-just below each of the three things that can be in the way (the UPGRADE pill, the POWER-UP button and
-Fall's bed chip), taking the candidate nearest the midpoint that clears them all and still lands on
-the tab. Beside a tall tab there is usually room *below* the chip as well as above it, which is where
-it sits in Fall at 390×844 and 390×812. When no gap exists at all it **flips back to the stacked
-shape** rather than pointing a sideways arrow at nothing; that is what happens in Fall at 390×667. They are suppressed while a sheet, a gate, the Hollow or the meadow is
-up. Repositioned on resize and every 0.6 s. The flower will not speak while one is visible.
+target is a season peek** (`side-l` / `side-r`, arrow pointing sideways into the peek). A side mark
+**looks for a gap** rather than only pushing upward: it tries the peek's midpoint, then just above
+and just below each of the four things that can be in the way (the UPGRADE pill, the POWER-UP button,
+Fall's bed chip and its Collect All), taking the candidate nearest the midpoint that clears them all
+and still lands on the anchor. Since the peek moved up out of the band's row on 2026-09-03 **the
+plain centred candidate usually wins outright**: measured, the Fall-side mark lands at
+`[185, 374.4, 653.5, 692.5]` at 390×844 with the pill's top at 709, and in Fall at both 390×640 and
+390×667 the mark keeps the side shape at `[16, 256.3]` beside the left peek. The search stays because
+the short viewport can still close that gap and because Fall's bed chip and Collect All share the
+peek's row. When no gap exists at all it **flips back to the stacked shape** rather than pointing a
+sideways arrow at nothing; the old worked example (Fall at 390×667) no longer reaches that fallback,
+so the shape is now exercised only on a viewport shorter still. They are suppressed while a sheet, a
+gate, the Hollow or the meadow is up. Repositioned on resize and every 0.6 s. The flower will not speak while one is visible.
 
 ## Dock attention dots
 
@@ -1180,25 +1191,50 @@ never move**. Nothing in Fall re-states the column because nothing in Fall leave
 | `.fall-layer` (the scene) | a sibling of `.ui` inside `#world`, `z-index: 2` | above the CSS scenery, below `.ui`, so the HUD stays up and the dock stays tappable |
 | `.fall-frame` / `.fl-board` | inside `.stage`, beside `.garden-frame` | one board swaps for another in the same square the garden already sizes |
 | `.fl-chip` | absolute inside `.fl-wrap`, `top:-46px` | Fall's one rule, standing over the board it describes — anchored to the board's own box so it tracks it at every viewport |
-| `.fl-collect` | absolute inside `.fl-wrap`, `bottom:-58px`, max 132px wide | the payoff button, in the strip the chip left — narrow so it clears UPGRADE and POWER-UP, which are NOT hidden in Fall |
+| `.fl-collect` | absolute inside `.fl-wrap`, `bottom:-58px`, max 132px wide | the payoff button, in the strip the chip left — narrow so it clears UPGRADE and POWER-UP, which are NOT hidden in Fall. **The clearance changed on 2026-09-03 and the 132px did not**: with the band's buttons on the column edge a centred pill could be 216.8px at 390×844 and still keep 10px of daylight either side, so the cap is now conservative by ~85px. Re-deriving it belongs to `#10`, and the binding viewports are the narrow ones (186.8px at 360 wide, 146.8px at 320) |
 | `.fl-skip` / `.fl-wait` | inside `.fl-plot`: the chip at `top:5px;right:5px` (the garden's own rule, shared selector), the wait pill at `bottom:16px` | the gem chip lives in the same corner in every room, so it is learned once. The two cannot share the top row: on a 110px tile a three-digit chip is 44px against a 48px "7h 59m" pill, and the tile shrinks to 89px at 320×568 — so the pill moved down, where Winter's `.wi-wait` already sits. 16px rather than Winter's 15 because Fall's bar is `bottom:6px` where Winter's is 5 |
 | `.gate-layer` | a sibling of `.ui`, `z-index: 3` | a locked season is a screen, and `.in-gate` hides the stage, dock, rail and quest strip exactly as `.in-map` does |
 | `.winter-layer` (the scene) | a sibling of `.ui` inside `#world`, `z-index: 2` | Fall's row, one season on |
 | `.winter-frame` / `.wi-board` | inside `.stage`, beside `.garden-frame` and `.fall-frame` | the third board in the same square, sized by the same `UI.boardSide()` |
 | `.wi-chip` | absolute inside `.wi-wrap`, `top:-46px` | Winter's one rule, in Fall's chip geometry line for line |
-| `.wi-act` | absolute inside `.wi-wrap`, `bottom:-58px`, max 132px wide | **one button whose verb is the bed's state** — Tuck the bed in → Tucked in → Collect all. The same strip and the same 132px clearance Fall's Collect All takes, because UPGRADE and POWER-UP are not hidden in Winter either, and two controls would fight for it |
+| `.wi-act` | absolute inside `.wi-wrap`, `bottom:-58px`, max 132px wide | **one button whose verb is the bed's state** — Tuck the bed in → Tucked in → Collect all. The same strip and the same 132px cap Fall's Collect All takes, because UPGRADE and POWER-UP are not hidden in Winter either, and two controls would fight for it. Same note as the row above: the clearance widened on 2026-09-03 and this number did not follow it |
 | `.season-edges` | **absolutely positioned against `.ui`**, not a grid item | see below |
 
 **The season edges are absolute, and that is load-bearing.** They were a grid item at `grid-row: 4`
 with an auto column for one build, and an explicitly-placed item with a definite row forces the next
 auto-placed item (`.stage`) into an **implicit second column** — which halved the interface, squashed
-the dock into a corner and stacked both tabs on the left. Absolute against `.ui`, clear of the dock
-by `calc(var(--bottom-gap) + 104px)`, they can never touch the row layout.
+the dock into a corner and stacked both edges on the left. Absolute against `.ui`, clear of the dock
+by `calc(var(--bottom-gap) + 141px)`, they can never touch the row layout.
+
+**They moved up 37px on 2026-09-03**, from `+ 104px`, because the band's two buttons took the ends of
+the strip they used to share. Measured clearance from a peek's bottom to `.fpill`'s top: **16px at
+390×844, 22px at 390×640, 16px at 360×740, 22px at 320×640, 22px at 844×390**, and no peek's x-range
+overlaps the board's at any of them — 10px is chosen precisely so it never does (12px overlaps by 2px
+at 320 wide, 14px by 4px).
+
+**They are 10px slivers of paper, not tabs, since 2026-09-03.** `.s-peek` is a non-interactive
+10×40px span: no label, no padlock, no vertical name, no tap. `.season-edges` is `pointer-events:none`
+and the peek does not opt back in, so `document.elementFromPoint()` over it returns `.ui` and a swipe
+that begins on it is a season swipe. The whole point is that a player can *see* sideways exists, and
+that the three teaching coach marks have a node to point at.
 
 **They sit low, over the lawn, not centred.** Centred vertically they land *on the board*, and the
-board is the thing this game is. Low also puts them in the same band as the burrow door, so all the
-ways out of the garden read as one family. A locked edge wears the drained paper and the turn that
-opens it, so **a gate is a promise you can read from Summer** without walking to it.
+board is the thing this game is. Measured after the 37px lift: at 390×844 the peek is `[653, 693]`
+inside `.hills-near` `[557, 726]`, squarely on green; **in landscape at 844×390 it is `[199, 239]`
+against `.hills-far` `[195, 289]`**, so it reads as standing on the distant hills rather than the
+near lawn. It is still paper on green with a 3px ink border and it reads, but that is the one
+viewport where the sentence above needs the qualifier. Low also puts them in the same band as the burrow door, so all the
+ways out of the garden read as one family. A locked edge wears the drained paper — that is the one
+thing the shape still says on its own. **The words that said WHEN are gone**: `Turn 3` / `Soon` used
+to sit on the tab, and now the full copy lives only on the gate plate a swipe still reaches
+(`stepSeason` → `goSeason` → `showGate`, untouched).
+
+**The attention dot moved with it.** `seasonWaiting(id)` is unchanged and still lights `.s-dot` when
+Fall has a ripe crop or an unspent windfall mark, or Winter has a ripe bed. It is restated per side
+(`.s-peek.l .s-dot{left:0}` / `.s-peek.r .s-dot{right:0}`) rather than once with a negative offset:
+the tab's `right:-4px` hung the dot 4px off the right of a 390px screen, and on a 10px peek it would
+have been most of it. Measured now: `[374, 390]` on the right and `[0, 16]` on the left, both fully
+on screen.
 
 **The vertical ladder hangs off Summer only.** Swipe up and swipe down do nothing in Fall or at a
 gate — the Hollow is under the *garden*, not under the year, which is doc 32's diagram. It also
@@ -1248,10 +1284,17 @@ filter in `renderRail()` has already dropped the ones that are, and a tap on Fal
 what is left. What a short screen loses is the reading, and one swipe brings it back.
 
 **Collect All is narrow because the band is not hidden in Fall.** `.fpill` (UPGRADE) and `.fround`
-(POWER-UP) are hidden in the Hollow, the meadow and at a gate, but not in Fall, and they sit 34px in
-from each edge of the same strip. A full-width pill overlapped both on a 667-tall phone. At 132px,
-centred, it keeps at least 24px of daylight either side at every supported viewport — which is why
-its label is two lines rather than one.
+(POWER-UP) are hidden in the Hollow, the meadow and at a gate, but not in Fall, and they share the
+same strip. A full-width pill overlapped both on a 667-tall phone.
+
+**The old clearance claim was false, and the 2026-09-03 move made it true.** This doc said "at least
+24px of daylight either side at every supported viewport" and `style.css` said "at least 10px"; both
+were measured against buttons inset 34px, and at the 132px cap that gave **18.4/27.0 at 390×844,
+3.4/12.0 at 360×740 and −16.6/−8.0 at 320×640** — an overlap on the narrowest phone, not a margin.
+With the buttons on the column's edge the same cap now measures **52.4/61.0, 37.4/46.0 and
+17.4/26.0**. So the number is honest at last *and* conservative by about 85px: the widest centred
+pill keeping 10px of daylight is 216.8px at 390×844, 186.8px at 360 wide and 146.8px at 320 wide.
+Re-deriving 132px belongs to `#10`; the two-line label stays until it does.
 
 **The bed chip's pulse lives on a pseudo-element.** `affordPulse` animates `transform`, and the chip
 is centred with `translateX(-50%)` — a running animation outranks that declaration and would throw
@@ -1310,9 +1353,16 @@ was wrong until 2026-08-30. Both rooms are now named in `refreshCoach()`'s own g
 is the stronger place for it: a hidden target measures 0×0 and parks the bubble in the top-left
 corner over the wallets, so the mark has to be *not shown*, not merely not painted.
 
-**`.in-fall` narrows rather than blankets.** `.in-fall .coach:not(.season){display:none}` — the two
-season marks point at the season tabs, which are drawn in Fall and have a real rect; every other mark
-points into the garden and would still land in the corner.
+**`.in-fall` narrows rather than blankets, and `.in-winter` carries the twin.**
+`.in-fall .coach:not(.season):not(.weather-tip){display:none}` and the matching
+`.in-winter` rule — **three** season marks point at the season peeks, which are drawn in both rooms
+and have a real rect; every other mark points into the garden and would still land in the corner.
+(The `:not(.weather-tip)` is the chip tooltip, which borrows the coach's bubble shape and is placed
+by its own tap.) The three marks are "Swipe right for the garden" (in Fall, `season: true`), "Swipe
+left for Fall" (in Summer, no room rule applies) and "Swipe left for Winter" (in Fall,
+`season: true`) — and **deleting either room rule is a regression, not a tidy-up**: `refreshCoach()`
+goes on measuring a `display:none` node every 0.6s, gets a 0×0 rect and parks the bubble over the
+coin wallet.
 
 ## The HUD is always up
 

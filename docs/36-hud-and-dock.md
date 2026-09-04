@@ -205,6 +205,14 @@ Given against the spike. **Verbatim intent, folded into the spike before any UI 
 3. **The season tabs stay exactly as they ship** — both edges, locked and persistent, drained paper
    with the Turn that opens them. They are what teaches sideways. **The band's two buttons sit
    *inside* them**: inset 34px from the column, which clears a 38px tab by 6px.
+   (**Re-ruled 2026-09-03:** the owner asked for the tabs off and the two buttons out to the edges —
+   *"it's a little too crowded at the bottom"*. What replaced the tab is a **10×40px non-interactive
+   peek** at the column's edge, `.s-peek`, which keeps the drained-paper lock state, keeps the
+   attention dot and keeps the node all three teaching marks point at; what is retired is the label,
+   the padlock, the vertical name, the tap and the Turn copy, which now lives only on the gate plate.
+   The buttons are at `left:0`/`right:0`, which is `.ui`'s own `calc(var(--sal) + 10px)` gutter and
+   not flush. The clear lane between them went **177.4px → 245.4px** at 390×844. The paragraph above
+   is the 2026-08-30 reasoning it replaced.)
 4. **The order rows are redesigned to a stated hierarchy** — who is asking, what they asked for, and
    then, biggest of all, **the things you owe them**. The count no longer sits on top of the bloom:
    the token is a 52px tile with the art on top and the count in its own band underneath.
@@ -246,7 +254,11 @@ rule has reached a control that is not a dock button) and **POWER-UP** (`#btnPow
 
 - **The band costs the layout nothing.** It lives in the yard `.stage` already reserves for the
   creatures. The board is 370×370 before and after at 390×844. Both buttons are inset 34px from the
-  column, which clears a 38px season tab by 6.
+  column, which clears a 38px season tab by 6. (**Re-ruled 2026-09-03:** `left:0`/`right:0` — the
+  column's own edge, which is a 10px-plus-safe-area margin because `.stage` sits inside `.ui`'s
+  padding, and the same edge the dock, rail, quest strip and board already stand on. The lane between
+  them is 245.4px at 390×844. The tab it used to clear is a 10px peek that has moved up out of the
+  row entirely, 16px above the pill's top.)
 - **The pedestal rises without growing the dock.** `.dock.five` pins `grid-template-rows` to the
   dock's height with `align-items:end` and gives every button that exact height; only
   `.dock-btn.home` is taller. **Use explicit heights, not `min-height`** — `min-height` on
@@ -254,7 +266,11 @@ rule has reached a control that is not a dock button) and **POWER-UP** (`#btnPow
   that bug shipped for an hour: the pedestal did not rise and the short-screen dock did not shrink.
 - **The creatures stay on the lawn.** Lifting them to clear the band was tried and broke doc 05's
   anchoring rule — a creature 64px up reads as floating. The buttons paint over them at z-index 4.
-  `CRITTER_SPOTS` moved to 32/68/44/56, because the old 80% spot sat behind the POWER-UP button.
+  `CRITTER_SPOTS` moved to 35/65/45/55, because the old 80% spot sat behind the POWER-UP button.
+  (**That constraint went on 2026-09-03** when the buttons moved to the column's edge: the clear lane
+  is 245.4px now, the pill clears the 35% creature by 30px and the round clears the 65% one by 38px,
+  and re-widening the spots is an owner call filed with the crowding entry in
+  [11-known-issues.md](11-known-issues.md) rather than taken in a layout commit.)
 - **The power-up's pool is *held AND not running*.** `activateBoost` refuses to re-arm a live boost
   and returns false; a slot seated from held alone will eventually hold a boost whose tap does
   nothing. The seat empties the instant it is spent, so *a running boost cannot be refreshed* stays

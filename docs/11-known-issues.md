@@ -219,6 +219,32 @@ for the rail and `style.css:2916` for the sheet's chips — and the later block 
 padding, gap, background and font. Anything new for a rail chip must be written at `.chip.timed`
 (0,2,0) or it will not apply; #9's `:active` state is written that way for exactly this reason.
 
+**The season strip has no keyboard or screen-reader route at all, and that is new.** Retiring the
+season tabs (`#15`) removed the only non-gesture way into Fall and Winter and the only thing an
+assistive technology could announce about them: the tabs were `<button>`s with an
+`aria-label` (*"Go to FALL"* / *"Look at WINTER"*) and a click listener, and the peek that replaced
+them is a `<span aria-hidden="true">` inside a `pointer-events:none` container. Summer is still
+reachable from the dock's GARDEN button; **Fall and Winter are now swipe-only**. The dot that says a
+room is worth opening is silent too. The honest fix is not to make the peek tappable — 10px is far
+under the touch minimum and a control that small is worse than none — but to give the game an
+`sr-only` helper and an off-screen link per season, and **there is no `sr-only` helper in this
+project**, verified. That is its own small job with its own decision to make about where the links
+live, so it is filed rather than smuggled into a layout commit.
+
+**The screens gallery in [44-screens.md](44-screens.md) is a photograph of a screen `#15` changed**,
+and it is not regenerated here. Every one of the 31 PNGs is a new blob in git history forever
+(docs/09), several other items in the same round also move pixels, and the page is written by the
+tool rather than by hand — so one run at the end of the round is the right shape and thirteen are
+not. `tools/capture-screens.js` itself IS repaired in the same commit (it drove two scenes through
+`document.querySelector(".s-edge.r").click()`, which throws on null now), and a sim-test holds that
+repair. **For the round's keeper: `node tools/capture-screens.js`, once, when the round is closed.**
+
+**Three surfaces still name a 34px inset that no longer exists.** Corrected in `ui.js` (the
+`CRITTER_SPOTS` comment), `style.css` (the band and both 132px caps) and docs 08/36 in the same
+commit; `docs/10-decision-log.md`'s 2026-08-30 band entry and its phase-3.5 creature entry both quote
+it as dated history and want **superseding rather than editing** — that is the closer's call, not a
+line to reach into.
+
 ## What the overnight fix round knowingly left (2026-08-31)
 
 **The status rail is invisible in Fall and Winter on a screen shorter than 700px.** Both boards are
@@ -590,12 +616,12 @@ so an order written before the raise pays the NEW rate and displays the OLD one 
 `STAND.refill` (100s). Nobody is underpaid and it clears itself; it is recorded so a screenshot of
 it is not diagnosed as a bug. The announcement's reset makes it moot for the playtest group.
 
-**Three buttons still cost something and cannot say what you now have, and all three are "no
-room".** The garden's **plot unlock badge** and the meadow's **cell badge** are ~60px and already
-carry either a gate label (`Turn 1`, `Lv 3`) or a price; the **season edge tabs** are 38px and say
-which Turn opens them and nothing about what is behind. The number that is missing under the letter
-of the rule is how many plots or cells you already own, and that is visible on the board itself. The
-**POWER-UP button** is the fourth: it spends one of a rotating inventory of boosters and shows a
+**Two buttons still cost something and cannot say what you now have, and both are "no room".** The
+garden's **plot unlock badge** and the meadow's **cell badge** are ~60px and already carry either a
+gate label (`Turn 1`, `Lv 3`) or a price. The number that is missing under the letter of the rule is
+how many plots or cells you already own, and that is visible on the board itself. *(The season edge
+tabs were a third until 2026-09-03; the 10px peek that replaced them carries no words at all, so it
+is out of this rule's scope rather than failing it.)* The **POWER-UP button** is the third: it spends one of a rotating inventory of boosters and shows a
 glyph and a count, so the same button spends a different thing on different taps. Its name, effect
 and duration are in its accessible label now, but a visible caption needs the round button to give
 up glyph size and every booster name is two words, so it would be a truncation. Owner's call.
@@ -690,19 +716,24 @@ pill names the way back the moment a player is inside.
 **And one dot has nowhere to live.** `updateDockDots()` put a badge on the World button whenever
 jars were waiting in the meadow; the World button is gone and nothing has replaced that signal, so a
 full hive now waits silently. If the meadow reads as forgotten in play, the cheapest fixes in order
-are: give the meadow's swipe an edge tab of its own on the bottom edge (the season tabs' pattern,
-already built), or re-home the jar dot onto something always visible.
+are: give the meadow's swipe an edge **peek** of its own on the bottom edge — `.s-peek` is the
+built pattern now, a 10px non-interactive sliver at the edge that carries the same `.s-dot`, and it
+is cheaper than the tab it replaced — or re-home the jar dot onto something always visible.
 
 ## What the phase-3.5 gauntlet left open (2026-08-30)
 
 Fifty-two findings confirmed; the blocker and every high is fixed. These are the ones knowingly left.
 
-- **Four tending creatures overlap by 30px each, and the outermost tucks 5px behind the UPGRADE
-  pill.** There is no arrangement that avoids it: the band leaves 177px of clear lane between the two
-  floating buttons and four creatures need 268. They are trimmed from 19vw to 17vw and stacked by
+- **Four tending creatures overlap by 30px each.** They are trimmed from 19vw to 17vw and stacked by
   position (`node.style.zIndex = spot`) so the occlusion reads left-behind-right instead of by
   arrival order, which is the readable version of a crowd. **A fifth Habitat slot breaks this
-  first.**
+  first.** *(Updated 2026-09-03: the lane was 177px against the 268 four creatures want; the band's
+  buttons moved to the column's edge and it is **245.4px** now, so the deficit is 23px rather than
+  91 and the outermost creature no longer tucks behind the UPGRADE pill — measured, the pill clears
+  the 35% creature by 30px and the round clears the 65% one by 38. `CRITTER_SPOTS = [35, 65, 45, 55]`
+  and `.critter{width:clamp(60px,17vw,88px)}` were both trimmed inward BECAUSE of the old 34px
+  insets; both are left at no-change-neutral here on purpose. **Re-widening them is the owner's call
+  to see, and it belongs to this entry, not to a layout commit.**)
 - **The reserved rail costs a 700px-tall phone 31px of board**, permanently, so the board no longer
   jumps 9% when a power-up starts. Stability over size, the same call the HUD made.
 - **The sheet's breakout art is clipped in short landscape** — about 45% of the portrait is off the

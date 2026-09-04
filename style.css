@@ -1380,15 +1380,25 @@ button:focus-visible{
    the dock. It costs the layout NOTHING: it lives in the yard `.stage` already
    reserves (`--yard-h`), so the board measures the same before and after.
 
-   Both buttons are inset past the season edge tabs, which keep the screen edges
-   they have always had — 38px of tab, 34px of inset, 6px of daylight. */
+   BOTH BUTTONS SIT ON THE COLUMN'S OWN EDGE (owner, 2026-09-03: the bottom of
+   the screen was too crowded). `left:0`/`right:0` is not flush — `.fpill` and
+   `.fround` are absolute against `.stage`, which already lives inside `.ui`'s
+   `padding:calc(var(--sal) + 10px)`, so zero here IS a margin of 10px plus the
+   horizontal safe-area inset, paid through the one mechanism this stylesheet
+   allows (no second `env()` call: docs/05 and the recorded trap). It is the
+   same edge the dock, the rail, the quest strip and the board already stand on,
+   so the band finally lines up with the rest of the column. They used to be
+   inset 34px to clear a 38px season tab; the tab is retired and the clear lane
+   between them measures 177.4px -> 245.4px at 390x844. */
 .fpill,.fround{
   position:absolute;bottom:4px;z-index:4;
   margin:0;border:3.5px solid var(--ink);cursor:pointer;
   transition:transform .08s ease, box-shadow .08s ease;
 }
 .fpill{
-  left:34px;display:flex;flex-direction:column;align-items:center;gap:1px;
+  /* PROVISIONAL, owner's to re-rule: `6px` gives a 16px margin and a 233.4px
+     lane; a negative offset would overhang the column's safe-area gutter. */
+  left:0;display:flex;flex-direction:column;align-items:center;gap:1px;
   padding:7px 10px 6px;border-radius:16px;
   background:linear-gradient(180deg,#fffdf7,var(--paper-3));
   box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.24);
@@ -1397,7 +1407,8 @@ button:focus-visible{
 .fpill .f-ico{width:24px;height:24px;display:block}
 .fpill .f-ico svg{width:100%;height:100%;display:block}
 .fround{
-  right:34px;width:58px;height:58px;border-radius:50%;
+  /* PROVISIONAL, and the mirror of `.fpill`'s. */
+  right:0;width:58px;height:58px;border-radius:50%;
   display:grid;place-items:center;padding:0;
   background:
     radial-gradient(circle at 34% 26%,rgba(255,255,255,.9),rgba(255,255,255,.5)),
@@ -4579,10 +4590,10 @@ button:focus-visible{
    so the bubble measured a 0x0 rect and parked in the top-left corner over the
    coin wallet. Every other room declares this; Fall was built and never
    registered as one. */
-/* …except the one that teaches the way back OUT of Fall, which points at the
-   season tab — a real, measured, visible node in this room. Narrowed rather
-   than removed: every other coach mark still targets something in the garden
-   and would still park in the corner. */
+/* …except the two that teach the way back OUT of Fall and the way on to
+   Winter, which point at a season peek — a real, measured, visible node in this
+   room. Narrowed rather than removed: every other coach mark still targets
+   something in the garden and would still park in the corner. */
 /* …and the chip tooltip, which wears `.coach` for its bubble shape and nothing
    else. It is not placed by `refreshCoach()` and never measures a hidden target
    — it is placed by the tap that opens it, in this room, at a chip that is
@@ -4819,11 +4830,15 @@ button:focus-visible{
   z-index:6;pointer-events:auto;
   display:flex;flex-direction:column;align-items:center;gap:1px;
   /* NARROW ON PURPOSE, and this number is a clearance rather than a taste. The
-     band's two buttons live in the same strip — UPGRADE 34px in from the left,
-     POWER-UP 34px in from the right — and they are NOT hidden in Fall. A
-     full-width pill overlapped both on a 667-tall phone. 132px centred leaves at
-     least 10px of daylight either side at every viewport this game supports,
-     which is why the label is two lines instead of one. */
+     band's two buttons live in the same strip and are NOT hidden in Fall, and a
+     full-width pill overlapped both on a 667-tall phone. The old note here said
+     "132px centred leaves at least 10px of daylight either side at every
+     viewport this game supports"; measured against the 34px insets it was FALSE
+     — 3.4px at 360 wide and a 16.6px OVERLAP at 320. The buttons moved to the
+     column's edge on 2026-09-03 and it is true now, comfortably: at the 132px
+     cap the daylight is 52.4/61.0 at 390x844, 37.4/46.0 at 360x740 and
+     17.4/26.0 at 320x640. THE CAP IS NOW CONSERVATIVE BY ~85px and re-deriving
+     it is #10's job, not this rule's — the two-line label stays until then. */
   max-width:132px;padding:6px 14px;white-space:nowrap;
   border:3px solid var(--ink);border-radius:var(--r-md);
   background:linear-gradient(180deg,#ffe98a,var(--coin));
@@ -4877,7 +4892,7 @@ button:focus-visible{
 .in-winter .critter-yard{display:none}
 /* Every room that can be up has to be named here, or `refreshCoach()` measures
    a hidden node, gets a 0x0 rect and parks the bubble over the wallets. The
-   one that teaches the way back OUT stays, because it points at a season tab,
+   one that teaches the way back OUT stays, because it points at a season peek,
    which is a real visible node in this room. */
 .in-winter .coach:not(.season):not(.weather-tip){display:none}
 /* The tooltip is exempted above rather than named here. The case this ID rule
@@ -5127,10 +5142,10 @@ button:focus-visible{
 .wi-chip.frost{background:linear-gradient(180deg,#ffffff,#bcd6e8)}
 
 /* ---------- the one button below the board ----------
-   Same box as `.fl-collect`, including the 132px clearance the band's two
-   buttons force — UPGRADE 34px in from the left, POWER-UP 34px in from the
-   right, and neither is hidden in Winter. The VERB changes; the geometry
-   never does. */
+   Same box as `.fl-collect`, including the 132px cap the band's two buttons
+   forced — neither is hidden in Winter either. The VERB changes; the geometry
+   never does, and that includes the note on `.fl-collect` about the clearance
+   this number no longer needs to be this small for. */
 .wi-act{
   position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);
   z-index:6;pointer-events:auto;
@@ -5207,48 +5222,54 @@ button:focus-visible{
 
 /* ---------- the season edges ----------
    How a player finds out sideways exists. The horizontal answer to the burrow
-   door: a labelled thing you can tap, beside a gesture that does the same. They
-   sit low, over the lawn — centred vertically they land ON the board, and the
-   board is the thing this game is. */
+   door: a sliver of the next garden showing past the screen edge, beside the
+   gesture that reaches it. It was a labelled tab you could tap until
+   2026-09-03; 10px of paper is not a control, and it does not have to be — it
+   only has to be SEEN, and to give the three teaching marks a node to point at.
+   They sit low, over the lawn — centred vertically they land ON the board, and
+   the board is the thing this game is. They sit HIGHER than they did, because
+   the band's two buttons took the ends of the strip they used to share. */
 /* NOT a grid item. `.ui` has one explicit column, and an item with a definite
    row but an auto column forces the next auto-placed item into an IMPLICIT
    second column — which narrowed the whole interface to half the screen and
    squashed the dock into a corner. Absolute against `.ui` instead, clear of the
    dock, so it can never touch the row layout. */
 .season-edges{position:absolute;left:0;right:0;top:0;
-  bottom:calc(var(--bottom-gap) + 104px);pointer-events:none;z-index:5}
+  bottom:calc(var(--bottom-gap) + 141px);pointer-events:none;z-index:5}
 .in-hollow .season-edges,
 .in-meadow .season-edges{display:none}
-.s-edge{
-  position:absolute;bottom:0;pointer-events:auto;
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  width:38px;padding:9px 4px;
+/* NO `pointer-events:auto`, and the omission is the whole point: the container
+   above is `pointer-events:none`, the peek does not opt back in, and so it can
+   never be a tap target or a `noSwipe` neighbour. A swipe that starts on it is
+   a swipe. */
+.s-peek{
+  position:absolute;bottom:0;
+  width:10px;height:40px;
   border:3px solid var(--ink);
   background:linear-gradient(180deg,#fffdf7,var(--paper-2));
   box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24);
-  font-size:9.5px;font-weight:800;line-height:1.05;text-align:center;
 }
-.s-edge svg{width:19px;height:19px}
-.s-edge .w{writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.06em}
-.s-edge.r{right:0;border-right:0;border-radius:16px 0 0 16px}
-.s-edge.l{left:0;border-left:0;border-radius:0 16px 16px 0}
-.s-edge:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink-2)}
-/* A locked edge is a promise you can read from here — drained paper and the
-   turn that opens it, so nobody has to walk to a gate to find out. */
-.s-edge.locked{
+.s-peek.r{right:0;border-right:0;border-radius:var(--r-sm) 0 0 var(--r-sm)}
+.s-peek.l{left:0;border-left:0;border-radius:0 var(--r-sm) var(--r-sm) 0}
+/* A locked edge is still a promise you can read from here: drained paper says
+   "a place, and not open yet" without a word on it. WHEN it opens is on the
+   gate plate the same swipe reaches — the peek is too small to carry a Turn. */
+.s-peek.locked{
   background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
   box-shadow:0 4px 0 var(--paper-dim-edge), 0 8px 14px rgba(44,26,16,.24);
 }
-.s-edge .turn{font-size:8.5px;opacity:.75;letter-spacing:0}
 /* The dock's attention dot, on a season. Same object, same meaning: there is
-   something in there worth opening. */
-.s-edge .s-dot{
-  position:absolute;top:-6px;right:-4px;
+   something in there worth opening. Placed per side rather than once with a
+   negative offset — the tab's `right:-4px` hung 4px off the right of the screen
+   and on a 10px peek it would be most of the dot. */
+.s-peek .s-dot{
+  position:absolute;top:-8px;
   width:16px;height:16px;border-radius:50%;
   background:#ff6b6b;border:3px solid var(--ink);
   box-shadow:0 2px 0 var(--ink-2);
 }
-.s-edge{position:absolute;bottom:0;pointer-events:auto}
+.s-peek.l .s-dot{left:0}
+.s-peek.r .s-dot{right:0}
 
 /* ---------- a locked season, seen from its gate ----------
    A gate is a promise, not a wall: a real backdrop, a hedge across it, a

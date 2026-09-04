@@ -1043,7 +1043,7 @@
      Making them wait for `pointerup` instead would fix that and cost the tap
      latency the whole core loop is built on, which is a far worse trade. */
   const NAV_SWIPE = 70;
-  const noSwipe = '.plot,.fl-plot,.wi-plot,.flower-btn,.fpill,.fround,.fl-collect,.wi-act,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,.drawer,[data-critter],.coach,.s-edge,.g-back';
+  const noSwipe = '.plot,.fl-plot,.wi-plot,.flower-btn,.fpill,.fround,.fl-collect,.wi-act,.dock,.rail,.quest-strip,.hud,.sheet,.scrim,.drawer,[data-critter],.coach,.g-back';
   let navY0 = null;
   let navX0 = null;
   let navId = null;
@@ -1217,10 +1217,11 @@
   });
 
   $('#btnDev').addEventListener('click', () => UI.openSheet('dev'));
-  el.seasonEdges.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-season]');
-    if (b) goSeason(b.dataset.season);
-  });
+  /* `#seasonEdges` had a click listener until 2026-09-03. Nothing inside it is
+     interactive now — the container is `pointer-events:none` and the peek does
+     not opt back in — so the listener could never fire. `goSeason()` keeps every
+     other caller: the swipe through `stepSeason()`, the dock's GARDEN button,
+     and the exported `UI.enterSeason`. */
   el.gateLayer.addEventListener('click', (e) => {
     if (e.target.closest('[data-gateback]')) { hideGate(); Sound.play('close'); }
   });
@@ -1340,18 +1341,22 @@
   }
 
   /* ---------- the edges ----------
-     A labelled thing you can tap beside a gesture that does the same, which is
-     exactly how the burrow door teaches the vertical swipe. A locked edge wears
-     the drained paper and the turn that opens it, so a gate is a promise you
-     can read from here without walking to it. */
-  /* Fall is an appointment, and an appointment needs a bell. Anything ripe or
-     still owed a windfall puts a dot on the edge tab — the same attention-dot
-     idea the dock already uses, which is how a player learns a room is worth
-     opening without being nagged. */
-  /* The edge tab's attention dot: an appointment needs a bell. Widened past
-     Fall on the day a second season was built, exactly as docs/43 said it
-     would be. Winter's dot means "something opened while you were away", which
-     is the whole reason the season is a place you come back to. */
+     A sliver of the next garden showing past the screen edge, beside the
+     gesture that reaches it — the horizontal answer to the burrow door, which
+     is exactly how that door teaches the vertical swipe. It was a labelled tab
+     you could tap until 2026-09-03; the owner asked for the bottom of the
+     screen back, and 10px of paper is not a control, so the peek only has to be
+     SEEN. A locked edge keeps the drained paper, because "there is a place over
+     there and it is not open yet" is the one thing the shape still has to say
+     on its own. The words that said WHEN — `Turn 3`, `Soon` — live on the gate
+     plate a swipe still reaches. */
+  /* The edge's attention dot: an appointment needs a bell. Anything ripe or
+     still owed a windfall lights it — the same attention-dot idea the dock
+     already uses, which is how a player learns a room is worth opening without
+     being nagged. Widened past Fall on the day a second season was built,
+     exactly as docs/43 said it would be. Winter's dot means "something opened
+     while you were away", which is the whole reason the season is a place you
+     come back to. */
   function seasonWaiting(id) {
     if (id === 'fall') {
       if (!Game.fallOpen()) return false;
@@ -1375,19 +1380,12 @@
     const html = sides.map(([side, sdef]) => {
       if (!sdef) return '';
       const ready = seasonReady(sdef);
-      /* The tab says which of the two gates is holding it, exactly as the gate
-         screen does. Without the second case a season whose Turn has passed but
-         whose garden is unbuilt rendered as a bare padlock with no label at
-         all — a lock the player can never act on and cannot tell apart from one
-         they can. Winter's turn passes around day 2.3 of play, so that state is
-         reached quickly rather than theoretically. */
-      const why = !seasonTurned(sdef) ? `Turn ${DATA.year[sdef.gate]}`
-        : (!sdef.built ? 'Soon' : '');
-      const turn = why ? `<span class="turn">${why}</span>` : '';
       const dot = seasonWaiting(sdef.id) ? '<span class="s-dot"></span>' : '';
-      return `<button class="s-edge ${side}${ready ? '' : ' locked'}" data-season="${sdef.id}"
-        aria-label="${ready ? 'Go to' : 'Look at'} ${sdef.name}">
-        ${ready ? '' : Icons.get('lock')}<span class="w">${sdef.name}</span>${turn}${dot}</button>`;
+      /* `data-season` and the `l`/`r` side class are not decoration: all three
+         coach marks that teach the swipe find their anchor with them, and a
+         miss is `hideCoach()` — silence, no error, and a lesson that simply
+         stops appearing. Rename either half and rename both. */
+      return `<span class="s-peek ${side}${ready ? '' : ' locked'}" data-season="${sdef.id}" aria-hidden="true">${dot}</span>`;
     }).join('');
     /* Compared against a signature first, like the rail: this runs on the slow
        tick and rewriting identical HTML four times a second thrashes the DOM. */
@@ -1428,15 +1426,15 @@
   /* `swipe` draws the finger and its wake beside the words; `season` is what
      lets the mark survive `.in-fall .coach{display:none}`, which exists because
      a garden-targeted bubble measured a 0x0 rect in Fall and parked over the
-     coin wallet. The season tabs are drawn in Fall, so this one has a real rect
-     — but the blanket hide had to be narrowed rather than removed. */
+     coin wallet. The season peeks are drawn in Fall, so this one has a real
+     rect — but the blanket hide had to be narrowed rather than removed. */
   let coachSide = '';
   function showCoach(target, text, opts = {}) {
     coachTarget = target;
-    /* A SEASON TAB IS POINTED AT FROM THE SIDE. It is a 38px column pinned to
-       the screen edge and standing on the lawn, and a bubble above it lands
+    /* A SEASON PEEK IS POINTED AT FROM THE SIDE. It is a 10px sliver pinned to
+       the screen edge and standing over the lawn, and a bubble above it lands
        squarely on Fall's bed chip. Beside it, the mark reads as an arrow into
-       the tab, which is also the direction the swipe goes. */
+       the peek, which is also the direction the swipe goes. */
     coachSide = opts.side || '';
     coachWanted = coachSide;
     coachBase = `coach${opts.season ? ' season' : ''}`;
@@ -1466,14 +1464,17 @@
   function placeCoach() {
     if (!coachTarget || el.coach.hidden) return;
     const r = coachTarget.getBoundingClientRect();
-    /* NOTHING THE PLAYER NEEDS GETS COVERED. A season tab's midpoint is the same
-       height as the UPGRADE pill and the POWER-UP button, so a mark centred on
-       it parked on top of them — over the very button the round's own opening
-       bag exists to teach — and in Fall it crossed the bed chip that was moved
-       out of the board's way an hour earlier. Ask those three where they are
-       rather than guessing a constant, and look for a gap rather than only
-       pushing upward: beside a tall tab there is usually room BELOW the chip as
-       well as above it. */
+    /* NOTHING THE PLAYER NEEDS GETS COVERED. A season tab's midpoint used to be
+       the same height as the UPGRADE pill and the POWER-UP button, so a mark
+       centred on it parked on top of them — over the very button the round's own
+       opening bag exists to teach — and in Fall it crossed the bed chip that was
+       moved out of the board's way an hour earlier. The peek that replaced the
+       tab on 2026-09-03 stands ABOVE the band, so the plain centred candidate
+       usually wins outright now; this search STAYS because the short viewport
+       still closes that gap, and Fall's bed chip and Collect All still share the
+       peek's row. Ask those four where they are rather than guessing a constant,
+       and look for a gap rather than only pushing upward: there is often room
+       BELOW the chip as well as above it. */
     const blockers = [el.btnUpgrade, el.btnPower, el.fallChip, el.fallCollect]
       .map((n) => n && n.getBoundingClientRect())
       .filter((b) => b && b.height > 0);
@@ -1484,12 +1485,12 @@
       const left = coachSide === 'l' ? r.right + 6 : Math.max(8, r.left - 6 - w);
       const hits = blockers.filter((b) => b.right > left && b.left < left + w);
       const clear = (top) => top >= 8 && hits.every((b) => top + h <= b.top - 6 || top >= b.bottom + 6);
-      /* A sideways arrow has to land on its tab, so every candidate must still
-         overlap it vertically. */
-      const onTab = (top) => top + h > r.top + 8 && top < r.bottom - 8;
+      /* A sideways arrow has to land on the thing it points at, so every
+         candidate must still overlap the anchor vertically. */
+      const onAnchor = (top) => top + h > r.top + 8 && top < r.bottom - 8;
       const centred = r.top + r.height / 2 - h / 2;
       const spot = [centred, ...hits.map((b) => b.top - 6 - h), ...hits.map((b) => b.bottom + 6)]
-        .filter((t) => clear(t) && onTab(t))
+        .filter((t) => clear(t) && onAnchor(t))
         .sort((a, b) => Math.abs(a - centred) - Math.abs(b - centred))[0];
       if (spot !== undefined) {
         el.coach.style.top = `${spot}px`;
@@ -1498,7 +1499,7 @@
         if (sideTip) sideTip.style.setProperty('--tip-shift', '0px');
         return;
       }
-      /* No gap beside the tab at all — a sideways arrow would be pointing at
+      /* No gap beside the anchor at all — a sideways arrow would be pointing at
          nothing. Stand above it and point down instead: the house's own shape,
          and the only honest one left on a screen this short. */
       layOutCoach('');
@@ -1507,10 +1508,11 @@
     const cx = r.left + r.width / 2;
     el.coach.style.left = `${cx}px`;
     el.coach.style.top = `${Math.max(8, Math.min(r.top - el.coach.offsetHeight - 6, floor - el.coach.offsetHeight))}px`;
-    /* THE ARROW STAYS ON THE TARGET; THE BUBBLE MOVES. A season tab sits 19px
-       from the screen edge and the tip is `white-space:nowrap`, so a bubble
-       centred on it runs half its width off the screen. Shifting the whole mark
-       would leave the arrow pointing at nothing, so only the tip slides. */
+    /* THE ARROW STAYS ON THE TARGET; THE BUBBLE MOVES. A season peek's midpoint
+       is 5px from the screen edge and the tip is `white-space:nowrap`, so a
+       bubble centred on it runs half its width off the screen. Shifting the
+       whole mark would leave the arrow pointing at nothing, so only the tip
+       slides. */
     const tip = el.coach.querySelector('.tip');
     if (!tip) return;
     const half = tip.offsetWidth / 2;
@@ -1526,7 +1528,7 @@
     // tick takes the `coachTarget !== node` shortcut, skips showCoach(), and
     // reveals the old bubble with stale text at a stale position.
     /* The Hollow, the meadow and a gate all set `display:none` on the season
-       tabs or on the coach itself, and a hidden node measures 0x0 — which parks
+       edges or on the coach itself, and a hidden node measures 0x0 — which parks
        the bubble in the top-left corner over the wallets rather than failing.
        Naming every room that can be up is the same rule the vertical swipe's
        guard follows, and the menu drawer joined the list on 2026-08-31 — it
@@ -1535,7 +1537,7 @@
     if (UI.sheetMode() || gateOn || UI.hollowOpen() || UI.meadowOpen() || UI.menuOpen()) { hideCoach(); return; }
     /* THE SEASON ROOMS, and it has to be NARROW rather than a blanket bail.
        `.in-fall`/`.in-winter` display:none every coach mark EXCEPT `.season` —
-       the ones teaching the way in and out point at a season tab, which is a
+       the ones teaching the way in and out point at a season peek, which is a
        real visible node in those rooms and is the whole reason the CSS rule
        carries a `:not()`. But the two marks below this line point INTO THE
        GARDEN, which those rooms have hidden, so `refreshCoach()` measured a
@@ -1554,8 +1556,8 @@
       if (node && coachTarget !== node) showCoach(node, 'Plant a seed here');
       el.coach.hidden = false;
     /* TEACH THE SEASON SWIPE, ONCE EACH WAY. Turn 1's gift is Fall, and a gift
-       nobody can find is not a gift — the ceremony names the tab and then the
-       player is standing in a garden that looks exactly as it did. Both marks
+       nobody can find is not a gift — the ceremony names the season and then
+       the player is standing in a garden that looks exactly as it did. Both marks
        are retired by the player doing the thing they teach, so neither can sit
        there forever suppressing the flower's own lines (`sayText()` refuses
        while a coach is up).
@@ -1564,24 +1566,24 @@
        opens Fall is `DATA.year.fallTurn`, a knob, and the identity would go
        quietly wrong the day it moves. */
     } else if (season === 'fall' && !S.seen.gardenSwipe) {
-      const node = el.seasonEdges.querySelector('.s-edge.l[data-season="summer"]');
+      const node = el.seasonEdges.querySelector('.s-peek.l[data-season="summer"]');
       if (!node) { hideCoach(); return; }
       if (coachTarget !== node) showCoach(node, 'Swipe right for the garden', { swipe: 'right', season: true, side: 'l' });
       el.coach.hidden = false;
     } else if (season === 'summer' && Game.fallOpen() && !S.seen.fallSwipe) {
-      const node = el.seasonEdges.querySelector('.s-edge.r[data-season="fall"]');
+      const node = el.seasonEdges.querySelector('.s-peek.r[data-season="fall"]');
       if (!node) { hideCoach(); return; }
       if (coachTarget !== node) showCoach(node, 'Swipe left for Fall', { swipe: 'left', side: 'r' });
       el.coach.hidden = false;
     /* AND ONE MORE FOR WINTER, once Fall has been found. Turn 3's gift is a
        whole season, and a gift nobody can find is not a gift — the ceremony
-       names the tab and then the player is standing in a garden that looks
+       names the season and then the player is standing in a garden that looks
        exactly as it did, which is the reason Fall got its pair. It waits for
        `fallSwipe` so the two marks never compete for the same edge, and
        `seen.winterSwipe` — written by `goSeason()` since the day Winter
        shipped, and read by nothing until now — is what retires it. */
     } else if (season === 'fall' && Game.winterOpen() && !S.seen.winterSwipe) {
-      const node = el.seasonEdges.querySelector('.s-edge.r[data-season="winter"]');
+      const node = el.seasonEdges.querySelector('.s-peek.r[data-season="winter"]');
       if (!node) { hideCoach(); return; }
       if (coachTarget !== node) showCoach(node, 'Swipe left for Winter', { swipe: 'left', season: true, side: 'r' });
       el.coach.hidden = false;
@@ -1686,9 +1688,16 @@
 
   /* Fixed spots along the lawn, so a creature keeps its place between renders
      rather than jumping about whenever the yard is rebuilt. */
-  /* Phase 3.5: the crowd comes in off the edges, because the band's two
-     floating buttons now stand at 34px in from each side. The old 80% spot put
-     the second creature squarely behind the POWER-UP button. */
+  /* Phase 3.5 brought the crowd in off the edges, because the band's two
+     floating buttons stood 34px in from each side and the old 80% spot put the
+     second creature squarely behind the POWER-UP button. THAT CONSTRAINT IS
+     GONE since 2026-09-03 — the buttons moved out to the column's own edge, so
+     the clear lane between them went 177.4px to 245.4px at 390x844 and the ends
+     of the yard are free again. Measured after the move, nothing collides: the
+     pill clears the 35% creature by 30px and the round clears the 65% one by
+     38px. Left where it is deliberately: four creatures still want 268px and
+     re-widening the spots is a visual call the owner should see, filed with the
+     crowding entry in docs/11 rather than smuggled into a layout commit. */
   const CRITTER_SPOTS = [35, 65, 45, 55];
   const critterEls = new Map();
 

@@ -1418,11 +1418,11 @@ spike; (ruling) — the original spec decisions. Read all three in
   gaming" is a real direction, not a scoped task this pass took on. It should be its own pass, not
   a rider on this one.
 - **Coordination, unchanged from gate 1.** Winter's gauntlet still has not had a clean round (see
-  below, "What is still open, honestly") and punch-list fix-round #15 (season-tab retirement) is
-  still queued against `ui.js` — this pass's own `ui.js` edits (the UPGRADE pill's dot, the
-  once-a-second moments poll) did not touch `renderSeasonEdges()` or anything #15 owns, but
-  `git fetch` and re-read the top of the decision log before editing that file next. This tree
-  takes commits mid-session most days.
+  below, "What is still open, honestly"). Punch-list fix-round #15 (season-tab retirement) **landed
+  2026-09-03** and that collision surface is closed: `renderSeasonEdges()` emits `.s-peek`, the
+  three coach anchors follow it, and `tools/capture-screens.js` drives its two affected scenes
+  through `UI.enterSeason()`. `git fetch` and re-read the top of the decision log before editing
+  `ui.js` next anyway. This tree takes commits mid-session most days.
 
 | Gate | State |
 | --- | --- |
@@ -1529,9 +1529,11 @@ from NET, and no Turn gate reads net — the mint reads earnings, never balance.
    (which is RULED and names Winter in its own words — it drops `growSpeed`, `rarityWeight` and
    `autoHarvest` only, and `goSeason()` calls `renderRail()` so the drop is same-tick), and Winter's
    controls joined `noSwipe`.
-   **#15's season-tab retirement is the one that will conflict** — `renderSeasonEdges()` is
-   unchanged, Winter now has a tab, and `tools/capture-screens.js` drives three scenes through those
-   tabs. `git fetch` before touching `ui.js`.
+   **#15's season-tab retirement landed 2026-09-03 and that conflict is resolved.**
+   `renderSeasonEdges()` emits a non-interactive `.s-peek`; Winter has a peek like every other
+   neighbour; and it was **two** capture-screens scenes driven through the tabs, not three
+   (`summer-garden` and `big-five-dock`), both now on `UI.enterSeason()`. `git fetch` before touching
+   `ui.js`.
 3. **Guardrail one FAILS and `year-sim` exits 1.** Eight kept Camellia gross 2,688,000 and mint 18.3
    seeds against a gate of 10 at every Turn 3–6 — one night opens a Turn on its own. Only the top
    rung breaches. The dial is its cost coming DOWN to about 86,854 (gross rises with cost, so
@@ -1858,7 +1860,8 @@ top of [10-decision-log.md](10-decision-log.md); the five-minute phone check is 
 4. **The vertical swipe is re-pointed**: finger UP goes down to the Hollow, finger DOWN goes out to
    the Wild Meadow. **The placeholder gate was NOT built** — see below.
 5. **Two one-shot coach marks teach the season swipe** after the Turn that opens Fall, one each way,
-   pointing at the season tab from the side.
+   pointing at the season tab from the side. *(Three since slice C added Winter's, and they point at
+   the `.s-peek` that replaced the tab on 2026-09-03.)*
 6. **Fall's bed chip hangs under the board**, in a strip `sizeBoard()` reserves for it.
 7. **The album, the set view and pack-opening are on the house material** — dark bodies, real lips,
    numbers in cream pills, and rarity in the rarity colours instead of the two currencies.
@@ -2113,7 +2116,8 @@ make, and it is the reason the numbers went up as far as they did rather than fu
 **And a smaller one:** now that the buttons all state their numbers, does the game read as *clearer*
 or as *busier*? Four buttons still say nothing about what you already have — the plot padlocks, the
 meadow's land, the season tabs and the POWER-UP button — because there is no honest room on any of
-them. If any of those four bother you, they are the next easy win.
+them. If any of those four bother you, they are the next easy win. *(Three, since 2026-09-03: the
+season tabs are retired and the peek that replaced them carries no words at all.)*
 
 ### The two-minute check, phase 3.6 — the round before this one
 
@@ -2712,9 +2716,14 @@ only the `show` class leaves the dialog painted.
 
 **`tools/probe.js`'s documented lawn point no longer starts a season swipe.** `drag:@30,600:...` at
 390×844 is in the usage header as "the lawn", and it does nothing now — verified against `HEAD` as
-well, so it is not a regression from any recent change. The season tabs
-(`tap:[data-season="fall"]`) work and are how everything in the fix round was driven. Anything
-relying on that drag point should re-derive it before believing a red result.
+well, so it is not a regression from any recent change. **And `tap:[data-season="fall"]` stopped
+working on 2026-09-03**: the season tabs retired and what replaced them is `pointer-events:none`, so
+there is nothing there to tap. **Drive a season change with `'eval:UI.enterSeason("fall")'`** (and
+`"summer"` to come home) — that is what `tools/capture-screens.js` uses and what writes
+`S.seen.fallSwipe` / `S.seen.gardenSwipe`. The gesture itself is still drivable and still worth
+driving: `'drag:@385,670:-150,0'` at 390×844 starts on the right-hand peek and lands in Fall, and so
+does `'drag:@250,740:-150,0'` from the band's own row. **Keep the endpoint inside the viewport** —
+`drag:@85,740:-150,0` ends at x=−65, delivers no events, and reads exactly like a broken swipe.
 
 **A long dev sheet scrolls, and `tap:` cannot reach what is below the fold.** The probe taps an
 element's measured centre, and an element scrolled out of the viewport gets no event — the Turn-jump
@@ -2873,11 +2882,13 @@ dark body's lip and bruise on a cream body. When two independent facts want the 
 one of them a **custom property** (`--pc-ring`) and compose, instead of restating the other's whole
 stack in every combination.
 
-**A coach mark centred on a screen-edge tab lands exactly on the band.** A season tab's midpoint is
+**A coach mark centred on a screen-edge tab lands exactly on the band.** A season tab's midpoint was
 the same height as the UPGRADE pill and the POWER-UP button, and in Fall on a short screen it is also
-the bed chip's row. `placeCoach()` now asks those three nodes where their tops are rather than
-guessing a constant — and **a side mark the clamp pushes clear off its own tab flips back to the
-stacked shape**, because a sideways arrow pointing at nothing is worse than a down arrow that reaches.
+the bed chip's row. `placeCoach()` asks those nodes where their tops are rather than
+guessing a constant — and **a side mark the clamp pushes clear off its own anchor flips back to the
+stacked shape**, because a sideways arrow pointing at nothing is worse than a down arrow that
+reaches. (The anchor is a 10px peek sitting 16px above the pill since 2026-09-03, so the plain
+centred candidate usually wins; the search stays for the short viewport, where it still does not.)
 
 **A hidden target measures 0×0, so a coach mark has to be NOT SHOWN, not merely not painted.**
 `.in-meadow .coach{display:none}` hides the bubble but leaves `refreshCoach()` happily measuring a
@@ -3586,6 +3597,31 @@ thing to reach for and it is wrong twice over: it replays the note, and it hits 
 toggle-closed path on the very next tick because the key still matches, so the bubble opens and
 slams shut once a second. Measured both ways with `tools/probe.js`; the invariant to assert is
 `tip.left + --ax === chip.left + chip.width / 2`, before and after the reflow.
+
+**An absolutely-positioned child of `.stage` is already inset by `.ui`'s padding, so `left:0` is NOT
+flush and DOES pay the horizontal safe-area inset.** `.ui` carries
+`padding:calc(var(--sal) + 10px)`, so `.stage` at 390×844 is `[10, 380]` inside a `[0, 390]` window,
+and `.fpill{left:0}` puts the pill at x=10 — a real margin, through the one mechanism this stylesheet
+allows. `.season-edges`, one layer up, is absolute against **`.ui` itself** and does reach the true
+edge, which is why the peek sits at `[0, 10]`. **Two boxes, two different edges, 10px apart**, and
+the mistake either way is expensive: reading `left:0` as flush and "fixing" it with `left:-4px`
+overhangs the column's own gutter and puts the button under the home indicator on hardware, and
+reaching for a fresh `env(safe-area-inset-left)` is forbidden outside the four `:root` variables.
+Proved rather than argued: with `:root{--sal:59px;--sar:59px}` injected at 844×390, `.ui` is
+`[142, 702]`, `.stage` and `.fpill` both start at 211 — 69px in, which is the inset plus 10 — and
+`#dock` shares those exact edges.
+
+**A node whose only job is to be SEEN still has to exist for the things that measure it.** Retiring
+the season tabs looked like deleting chrome; the tabs were also the anchor for **three** coach marks,
+each of which finds its node with `querySelector` and bails with `hideCoach()` on a miss — silence,
+no error, no visual difference, and a lesson that simply never appears again — and the home of a live
+attention dot. Before deleting a visible node, grep for **`querySelector`** against its class *and*
+for whatever renders a badge onto it. And when you replace it, the failure mode is the **half-done
+rename**: emit the new class and leave one of the three anchors on the old one and only that lesson
+dies. The peek group in `tools/sim-test.js` runs `renderSeasonEdges()` and resolves each anchor
+against the markup it actually produced, because a regex over the template cannot tell a matching
+selector from a near-miss — nor tell the two sides apart when `here - 1` and `here + 1` are swapped,
+which is this file's own inverted-rows bug wearing a different hat.
 
 ## Checking your work
 

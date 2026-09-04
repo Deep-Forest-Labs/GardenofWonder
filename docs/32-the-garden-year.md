@@ -4,7 +4,8 @@
 first half of phase 3 (the strip and Fall) are BUILT and gauntleted — see
 [34-build-plan.md](34-build-plan.md).** Live now: the year-meter pill and its projection, the Turn
 ceremony's five beats with the arcade Tally, the blessing, petal tracks on the Almanac, unlock
-prices in the plant picker, the season tint, the horizontal season strip with its edge tabs, the
+prices in the plant picker, the season tint, the horizontal season strip with its edge peeks (the
+labelled tabs retired 2026-09-03; the swipe and its coach marks are how sideways is taught now), the
 locked-season gates, and Fall's board with all eight crops, the windfall and the Century Bloom.
 **Still unbuilt in slice A:** the map's retirement and the Stand's dock entry, which are blocked on
 re-homing the Wild Meadow — the map is its only door, contrary to the sentence in *The world: one

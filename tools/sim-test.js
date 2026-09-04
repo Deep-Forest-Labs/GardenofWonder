@@ -907,6 +907,196 @@ check('the flags survive a Turn — a coach shown once is never shown again',
     return S.seen.fallSwipe === true && S.seen.gardenSwipe === true;
   })());
 
+/* THE SEASON PEEKS, and the three lessons that hang off them (2026-09-03).
+   The season TABS retired here: the owner asked for the bottom of the screen
+   back, and what a 38px labelled button was doing is now a 10px sliver of paper
+   pinned to the column's edge. Three things rode on that node and not one of
+   them is visible when it breaks — all three teaching coach marks find their
+   anchor with `querySelector` and a miss is `hideCoach()`: silence, no error,
+   and a lesson that simply stops appearing. The attention dot rode it too.
+
+   WHAT THIS GROUP CANNOT SEE, said plainly so nobody reads more into thirty
+   green lines than they hold. It RUNS `renderSeasonEdges()` and reads the
+   markup that comes out, and it resolves each coach anchor against that markup
+   the way a browser would — but it never runs `refreshCoach()`, never measures
+   a rect and never paints. That the peek has a visible box, that the mark lands
+   beside it rather than on the band, that the dot is on screen rather than
+   clipped past the edge: all measured with tools/probe.js and written into
+   docs/08. What it holds is the half that breaks in silence. */
+group('the season peeks — the node three lessons and one bell hang off');
+const fnFromUi = (name) =>
+  (uiSrc.match(new RegExp(`\\n {2}function ${name}\\([^)]*\\) \\{[\\s\\S]*?\\n {2}\\}\\n`)) || [''])[0];
+const edgeSrc = fnFromUi('renderSeasonEdges');
+const waitSrc = fnFromUi('seasonWaiting');
+const seasonsSrc = (uiSrc.match(/\n {2}const SEASONS = \[[\s\S]*?\n {2}\];/) || [''])[0];
+/* RUN the render, do not read it. A regex over the template sees the two side
+   classes and the two neighbours as text and cannot tell whether they were
+   paired up the right way round — which is the inverted-rows bug this file has
+   shipped once already. So the real function is executed against the real
+   season table with the real `seasonWaiting()` beside it, and what is asserted
+   is the markup a player would get. */
+const renderPeeks = (room) => {
+  const bound = { S, Game: G, season: room, el: { seasonEdges: { innerHTML: '' } } };
+  const scope = new Proxy(bound, {
+    has: () => true,
+    get: (t, k) => {
+      if (typeof k === 'symbol') return undefined;
+      if (Object.prototype.hasOwnProperty.call(t, k)) return t[k];
+      return k in globalThis ? globalThis[k] : undefined;
+    }
+  });
+  const preamble = `${seasonsSrc}
+    const seasonIdx = (id) => SEASONS.findIndex((x) => x.id === id);
+    const seasonTurned = (sdef) => !sdef.gate || S.year.turnsCompleted >= DATA.year[sdef.gate];
+    const seasonReady = (sdef) => sdef.built && seasonTurned(sdef);
+    let edgeSig = '';
+    ${waitSrc}
+    ${edgeSrc}`;
+  try {
+    new Function('SCOPE', `with (SCOPE) { ${preamble}\n return renderSeasonEdges; }`)(scope)();
+  } catch (e) { return `EXTRACTION FAILED ${(e && e.message) || e}`; }
+  return bound.el.seasonEdges.innerHTML;
+};
+/* A real match, not a substring: every class in the selector has to be on the
+   SAME element and every attribute has to be that element's. Tag-agnostic on
+   purpose — a `<div>` wearing an extra class is still the right node, and a
+   guard that fires on correct work gets switched off within a week. */
+const anchorHits = (sel, html) => {
+  const want = [...sel.matchAll(/\.([a-z0-9-]+)/g)].map((m) => m[1]);
+  const attrs = [...sel.matchAll(/\[([a-z-]+)="([^"]+)"\]/g)].map((m) => [m[1], m[2]]);
+  return [...String(html).matchAll(/<([a-z]+)\s+class="([^"]*)"([^>]*)>/g)].some((m) => {
+    const have = m[2].trim().split(/\s+/);
+    return want.every((c) => have.includes(c))
+      && attrs.every(([k, v]) => new RegExp(`\\b${k}="${v}"`).test(m[3]));
+  });
+};
+/* Structural, not textual. The peeks are read as ELEMENTS — class set, data
+   attribute, what is inside them — so a `<div>` with an extra class or the
+   attributes written in another order is still the right node. A guard that
+   fires on correct work gets switched off within a week; a guard that reads
+   `class="s-peek l"` as a string is exactly that guard. */
+const peeksIn = (html) =>
+  [...String(html).matchAll(/<([a-z]+)\s+class="([^"]*)"([^>]*)>([\s\S]*?)<\/\1>/g)]
+    .map((m) => ({ cls: m[2].trim().split(/\s+/), attrs: m[3], inner: m[4] }))
+    .filter((p) => p.cls.includes('s-peek'))
+    .map((p) => ({
+      side: p.cls.includes('l') ? 'l' : (p.cls.includes('r') ? 'r' : '?'),
+      season: (p.attrs.match(/data-season="([a-z]+)"/) || [])[1] || '?',
+      locked: p.cls.includes('locked'),
+      dot: /class="[^"]*\bs-dot\b/.test(p.inner),
+      words: p.inner.replace(/<[^>]*>/g, '').trim()
+    }));
+const peekOn = (html, side) => peeksIn(html).find((p) => p.side === side) || {};
+const seasonAnchors = [...uiSrc.matchAll(/el\.seasonEdges\.querySelector\('([^']+)'\)/g)].map((m) => m[1]);
+G.reset();
+S.year.turnsCompleted = 3;
+const fromSummer = renderPeeks('summer');
+const fromFall = renderPeeks('fall');
+const fromWinter = renderPeeks('winter');
+check('the render, the season table and the waiting rule were all found and run',
+  Boolean(edgeSrc && waitSrc && seasonsSrc) && seasonAnchors.length === 3
+  && peeksIn(fromSummer).length === 2,
+  `${seasonAnchors.length} anchors; summer renders ${fromSummer || '(nothing)'}`);
+
+/* THE HALF-DONE RENAME, which is the way this commit breaks. Emit `.s-tab` and
+   leave one `querySelector('.s-peek…')` behind and that lesson is gone with no
+   error and no visual difference at all. Each anchor is resolved against the
+   markup of the room it actually fires in. */
+const anchorRoom = { summer: fromFall, fall: fromSummer, winter: fromFall };
+seasonAnchors.forEach((sel) => {
+  const id = (sel.match(/data-season="([a-z]+)"/) || [])[1];
+  check(`${sel} matches a node the edges really render`,
+    anchorHits(sel, anchorRoom[id]), `rendered ${anchorRoom[id]}`);
+});
+
+/* THE SIDES, which no source scan can check. Invert `[['l', SEASONS[here - 1]],
+   ['r', SEASONS[here + 1]]]` and the render still emits two peeks with two side
+   classes and two data-seasons — every string assertion above stays green while
+   the mark that says "swipe LEFT for Fall" points at the LEFT edge. */
+check('standing in Summer, the peek on the left is Spring and the one on the right is Fall',
+  peekOn(fromSummer, 'l').season === 'spring' && peekOn(fromSummer, 'r').season === 'fall',
+  JSON.stringify(peeksIn(fromSummer)));
+check('standing in Fall, the left peek is Summer and the right one is Winter',
+  peekOn(fromFall, 'l').season === 'summer' && peekOn(fromFall, 'r').season === 'winter',
+  JSON.stringify(peeksIn(fromFall)));
+check('Winter is the last season built, so it has one peek and it is Fall, on the left',
+  peeksIn(fromWinter).length === 1 && peekOn(fromWinter, 'l').season === 'fall',
+  JSON.stringify(peeksIn(fromWinter)));
+
+/* THE GATE. `locked` is the only thing the shape still says now the words are
+   gone, so which peek is drained has to be read off the rendered class. */
+G.reset();
+const turnZero = peekOn(renderPeeks('summer'), 'r');
+check('before Fall opens, its peek is drained — Turn 0, and the Turn that opens it is 1',
+  turnZero.season === 'fall' && turnZero.locked === true, JSON.stringify(turnZero));
+S.year.turnsCompleted = DATA.year.fallTurn;
+const turnOne = peekOn(renderPeeks('summer'), 'r');
+check('once that Turn has come it is not',
+  turnOne.season === 'fall' && turnOne.locked === false, JSON.stringify(turnOne));
+check('Spring is built by nobody, so its peek is drained on every Turn',
+  peekOn(renderPeeks('summer'), 'l').locked === true, JSON.stringify(peeksIn(renderPeeks('summer'))));
+check('and no peek carries a word — Turn and Soon live on the gate plate now',
+  peeksIn(renderPeeks('summer')).every((p) => p.words === ''),
+  JSON.stringify(peeksIn(renderPeeks('summer'))));
+
+/* THE BELL. "The tab is going, so the dot goes with it" deletes a feature that
+   works. Driven through the real `seasonWaiting()` against a real Fall cell. */
+G.reset();
+S.year.turnsCompleted = 3;
+S.fall.grid[0] = { seed: 'pumpkin', plantedAt: G.nowSeconds() - 9999, grow: 10, ready: true, windfall: false };
+const ripeFall = peeksIn(renderPeeks('summer'));
+check('a ripe crop in Fall lights the dot on Fall’s peek',
+  ripeFall.some((p) => p.season === 'fall' && p.dot === true), JSON.stringify(ripeFall));
+check('and not on Spring’s, which has nothing waiting in it',
+  ripeFall.every((p) => p.season !== 'spring' || p.dot === false), JSON.stringify(ripeFall));
+S.fall.grid[0] = { seed: null, plantedAt: 0, grow: 0, ready: false, windfall: false };
+check('an empty Fall lights nothing at all',
+  peeksIn(renderPeeks('summer')).every((p) => p.dot === false),
+  JSON.stringify(peeksIn(renderPeeks('summer'))));
+S.fall.grid[0] = { seed: 'pumpkin', plantedAt: G.nowSeconds(), grow: 99999, ready: false, windfall: true };
+check('an unspent windfall mark lights it too, ripe or not',
+  peeksIn(renderPeeks('summer')).some((p) => p.season === 'fall' && p.dot === true),
+  JSON.stringify(peeksIn(renderPeeks('summer'))));
+G.reset();
+
+/* The layout half. This suite cannot measure a box, so it holds the two numbers
+   the probe took the measurements at and STATES them — "the value changed"
+   passes under the right answer and the wrong one alike. */
+check('the peeks are lifted clear of the band: `.season-edges` bottom is +141px, not the tabs’ +104px',
+  /bottom:calc\(var\(--bottom-gap\) \+ 141px\)/.test(cssRule('.season-edges')), cssRule('.season-edges'));
+const decls = (sel) => cssRule(sel).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, '').replace(/^;+/, '');
+check('UPGRADE sits on the column’s own edge — `left:0`, not the 34px that cleared a tab',
+  /^left:0;/.test(decls('.fpill')), decls('.fpill').slice(0, 60));
+check('and POWER-UP mirrors it with `right:0`',
+  /^right:0;/.test(decls('.fround')), decls('.fround').slice(0, 60));
+check('the peek has a box of its own — without one it is 0x0 and every mark parks over the wallets',
+  /width:10px/.test(cssRule('.s-peek')) && /height:40px/.test(cssRule('.s-peek')), cssRule('.s-peek'));
+check('and nothing under `.season-edges` opts back into pointer events',
+  /pointer-events:none/.test(cssRule('.season-edges'))
+  && !/\.s-peek[^{]*\{[^}]*pointer-events:auto/.test(CSS_SRC));
+/* Deleting these two is what the punch list advised, and it is the recorded
+   trap: `refreshCoach()` goes on measuring a display:none node every 0.6s, gets
+   a 0x0 rect and parks the bubble over the coin wallet. */
+check('Fall still hides every coach mark EXCEPT the ones pointing at a peek',
+  /\.in-fall \.coach:not\(\.season\)/.test(CSS_SRC));
+check('and Winter does too — it shipped the third lesson',
+  /\.in-winter \.coach:not\(\.season\)/.test(CSS_SRC));
+check('so both season-room marks still ask for `season: true`',
+  (uiSrc.match(/showCoach\(node, 'Swipe [^']+', \{[^}]*season: true/g) || []).length === 2,
+  (uiSrc.match(/showCoach\(node, 'Swipe [^']+', \{[^}]*\}/g) || []).join(' ; '));
+/* The peek can never be `e.target` — the container eats the events — so a
+   selector for it in `noSwipe` would be dead code, and a swipe begun at the
+   screen edge is the very gesture this node exists to advertise. */
+check('and no season edge is in the noSwipe list any more',
+  !/\.s-edge|\.s-peek/.test((uiSrc.match(/const noSwipe = '([^']+)'/) || ['', ''])[1]),
+  (uiSrc.match(/const noSwipe = '([^']+)'/) || ['', ''])[1]);
+/* `document.querySelector(".s-edge.r").click()` throws on null, and it drove
+   two capture-screens scenes. */
+const screensSrc = fs.readFileSync(path.join(ROOT, 'tools/capture-screens.js'), 'utf8');
+check('the screens tool changes season through the exported entry point, not a tab click',
+  !/\.s-edge/.test(screensSrc) && (screensSrc.match(/UI\.enterSeason\("(fall|summer)"\)/g) || []).length === 4,
+  (screensSrc.match(/UI\.enterSeason\("[a-z]+"\)/g) || []).join(' '));
+
 group('bill 13b — grandfather migration keeps seeds you could already use');
 G.reset();
 const saveOf = (extra) => {

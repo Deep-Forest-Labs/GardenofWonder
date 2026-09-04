@@ -225,11 +225,17 @@ an overnight season in an afternoon and the five-minute script needs real nights
 
 Checked 2026-09-01; re-verify at kickoff, because these land tonight: **#15 retires the season
 tabs** slice C might otherwise lean on — assert season state against the engine and the gate
-screen, never the tabs, and expect the swipe coach marks re-anchored; **`goSeason()` is a
+screen, never the tabs, and expect the swipe coach marks re-anchored. *(Landed 2026-09-03. The tabs
+are a 10×40px non-interactive `.s-peek` at the column's edge; the three coach marks are re-anchored
+to it and `tools/capture-screens.js` drives a season change through `UI.enterSeason()` rather than
+clicking an edge. `.s-edge` no longer exists anywhere in the shipped build.)* **`goSeason()` is a
 summer/fall binary** that slice C makes ternary while #15's fix sketch promises to leave it
-untouched — a merge trap, sequence around it; **`seasonWaiting()` is hard-coded to Fall** and doc
-43 already says it widens the day another season is built — Winter's morning-ready dot rides
-that widening; **`renderRail()` is edited by #11 and #9 tonight** — slice C extends their room
+untouched — a merge trap, sequence around it *(both landed; `goSeason()` is ternary and #15 left it
+alone)*; **`seasonWaiting()` is hard-coded to Fall** and doc 43 already says it widens the day
+another season is built — Winter's morning-ready dot rides that widening. *(Already false when this
+was written: slice C widened it, and `seasonWaiting('winter')` returns `Game.winterBedState().ripe >
+0` today. The dot now lights on the peek, restated per side so it is no longer clipped off the right
+of the screen.)* **`renderRail()` is edited by #11 and #9 tonight** — slice C extends their room
 filter and tooltip guard rather than re-implementing; **the stages pass owns the `.plot` /
 `data-stage` style block** and the exporter refuses to run if its anchors move — Winter mirrors
 `fl-*`, stays out.

@@ -197,8 +197,10 @@
           <!-- THE BAND. One row between the garden and the dock, reading left to
                right: UPGRADE, the tending creatures, POWER-UP. It costs the
                layout nothing, because it lives in the yard `.stage` already
-               reserves for the creatures. Both buttons are inset past the season
-               edge tabs, which keep the screen edges they have always had. -->
+               reserves for the creatures. Both buttons sit on the column's own
+               edge (owner, 2026-09-03) — which is a margin, not flush: `.stage`
+               is already inside `.ui`'s padding, so they pay the horizontal
+               safe-area inset without restating it. -->
           <button class="fpill" id="btnUpgrade" type="button" aria-label="Upgrades">
             <span class="f-ico" data-icon="badge"></span>
             <span class="f-lab">UPGRADE</span>

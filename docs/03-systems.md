@@ -1226,10 +1226,12 @@ would open Fall, both plot gates and both season gates while Saved Seeds, `minte
 is capped, and the method returns the count actually completed so a stall reports itself.
 
 **Reaching Turn 6 opens Spring's GATE, not a Spring garden.** `ui.js`'s season table carries
-`built: false` on Spring and Winter and `seasonReady` is `built && turned`, so the jump flips the
-plate's line from "Opens at Turn 6" to **"Still growing in"** and the edge tab's label from a turn
-number to *Soon*. That string had never been reachable in normal play; it is now, and it reads
-correctly. Spring and Winter are slices C and E of the build plan, not a cheat.
+`built: false` on Spring and `seasonReady` is `built && turned`, so the jump flips the gate plate's
+line from "Opens at Turn 6" to **"Still growing in"**. That string had never been reachable in normal
+play; it is now, and it reads correctly. Spring is slice E of the build plan, not a cheat. *(Winter
+carried `built: false` here too until slice C shipped it, and the season edges carried the same
+words — `Turn 6` beside a padlock, or `Soon` — until the tabs retired on 2026-09-03. The gate plate
+is the only place that copy lives now, and a swipe still reaches it.)*
 
 **The ceremony does not fire six times.** `Game.on('turn')` only re-renders the season edges; the
 five-beat ceremony is a sheet the player opens from the dock, so an engine-side loop runs silently
@@ -1242,28 +1244,38 @@ and reports against doc 33's pacing targets; `tools/sim-test.js` carries the 18-
 
 ## Onboarding
 
-Four coach marks, tracked by `state.seen`:
+Five coach marks, tracked by `state.seen`:
 
 1. `intro` — "Tap the flower!" pointing at the flower, until the first tap.
 2. `plot` — "Plant a seed here" pointing at the first empty plot, until the first planting.
-3. `fallSwipe` — "Swipe left for Fall", pointing at the right-hand season tab. Shown once
+3. `fallSwipe` — "Swipe left for Fall", pointing at the right-hand season peek. Shown once
    `Game.fallOpen()` is true, which is Turn 1's gift, and retired the moment the player arrives in
    Fall by any route.
-4. `gardenSwipe` — "Swipe right for the garden", pointing at the left-hand tab from inside Fall, and
+4. `gardenSwipe` — "Swipe right for the garden", pointing at the left-hand peek from inside Fall, and
    retired when they come back.
+5. `winterSwipe` — "Swipe left for Winter", pointing at the right-hand peek from inside Fall once
+   `Game.winterOpen()` is true. It shipped with slice C and waits for `fallSwipe`, so the two
+   right-hand marks never compete for the same edge.
 
-**The two season marks carry a finger and its wake** (`Icons.get('swipe')`, drawn travelling left and
-mirrored in CSS for the way back), because a season change is a *gesture* and an arrow alone does not
-say to drag. Each is retired by the player doing the thing it teaches, which also matters because
+**Their anchor is `.s-peek`, and all three find it with `querySelector`.** A miss is `hideCoach()` —
+no error and no visual difference, just a lesson that stops appearing — so renaming the node without
+renaming all three anchors deletes three lessons in silence. That is what the peek group in
+`tools/sim-test.js` exists to make loud.
+
+**The three season marks carry a finger and its wake** (`Icons.get('swipe')`, drawn travelling left
+and mirrored in CSS for the way back), because a season change is a *gesture* and an arrow alone does
+not say to drag. Each is retired by the player doing the thing it teaches, which also matters because
 `sayText()` refuses to draw a speech bubble while a coach is up — a mark that could sit forever would
 mute the flower.
 
 **They gate on `Game.fallOpen()`, never on `turnsCompleted >= 1`.** Which Turn opens Fall is
 `DATA.year.fallTurn`, a knob, and the identity would go quietly wrong the day it moves.
 
-All four are one-shot and persist as seen. They hide whenever a sheet is open and reposition on
-resize. **`.in-fall .coach:not(.season)` is why the Fall-side mark survives** the blanket that hides
-garden-targeted marks in Fall; the season tabs are drawn in that room and have a real rect.
+All five are one-shot and persist as seen. They hide whenever a sheet is open and reposition on
+resize. **`.in-fall .coach:not(.season)` and its `.in-winter` twin are why the two Fall-side marks
+survive** the blanket that hides garden-targeted marks in those rooms; the season peeks are drawn in
+both and have a real rect. Deleting either rule is the recorded trap, not a tidy-up: `refreshCoach()`
+would go on measuring a hidden node and park the bubble over the coin wallet.
 
 Two rules keep them from outstaying their welcome:
 
@@ -1454,9 +1466,12 @@ room — Winter's position. The two cannot share the top row: at 390×844 a plot
 chip is 44px and the widest ordinary wait ("7h 59m") is 48px, and the gap only closes as the tile
 shrinks.
 
-**Fall's edge tab carries the dock's attention dot** when anything in Fall is ripe or still owed a
+**Fall's edge peek carries the dock's attention dot** when anything in Fall is ripe or still owed a
 windfall — an appointment needs a bell, and the dot is the pattern the dock already uses to teach
-that a room is worth opening. *(Still missing, and named in
+that a room is worth opening. `seasonWaiting()` was widened past Fall when slice C shipped: Winter's
+peek lights when its bed is ripe. The dot moved from the tab to the peek on 2026-09-03 and is
+restated per side, which also un-clipped it — on the right-hand tab it used to hang 4px off a
+390px screen. *(Still missing, and named in
 [11-known-issues.md](11-known-issues.md): Fall does not appear in the welcome-back report, so a bed
 that ripened overnight is announced by the dot and nothing else.)*
 

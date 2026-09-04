@@ -634,9 +634,14 @@ const SCENES = [
       'eval:Game.Dev.driveYear(160000)',
       'eval:Game.Dev.runTurn().turnsCompleted',
       'wait:600',
-      'eval:document.querySelector(".s-edge.r").click()',
+      // Walk into Fall and back, which is what retires both season-swipe coach
+      // marks before the shot. Driven through the exported entry point rather
+      // than a tap: the season tabs retired on 2026-09-03 and what replaced them
+      // is `pointer-events:none`, so a `.click()` on an edge node reaches
+      // nothing and a missing node throws.
+      'eval:UI.enterSeason("fall")',
       'wait:1200',
-      'eval:document.querySelector(".s-edge.l").click()',
+      'eval:UI.enterSeason("summer")',
       'wait:1200',
       'eval:Game.Dev.driveYear(45000)',
       'eval:Game.Dev.grantGold(1220000)',
@@ -666,9 +671,14 @@ const SCENES = [
       'eval:Game.Dev.driveYear(160000)',
       'eval:Game.Dev.runTurn().turnsCompleted',
       'wait:600',
-      'eval:document.querySelector(".s-edge.r").click()',
+      // Walk into Fall and back, which is what retires both season-swipe coach
+      // marks before the shot. Driven through the exported entry point rather
+      // than a tap: the season tabs retired on 2026-09-03 and what replaced them
+      // is `pointer-events:none`, so a `.click()` on an edge node reaches
+      // nothing and a missing node throws.
+      'eval:UI.enterSeason("fall")',
       'wait:1200',
-      'eval:document.querySelector(".s-edge.l").click()',
+      'eval:UI.enterSeason("summer")',
       'wait:1200',
       'eval:Game.Dev.driveYear(45000)',
       'eval:Game.Dev.grantGold(1220000)',
