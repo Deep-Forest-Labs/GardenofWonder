@@ -98,9 +98,10 @@ const Game = (() => {
       /* The rewarded-ad ledger. `impressions` is lifetime — the counter docs/37
          wants waiting for the day a real SDK arrives; `day`/`today` are the
          per-day counts against DATA.ads, rolled by the same date key the daily
-         quest uses; `sessions` is how many times this save has been opened,
-         which is as close as a web build gets to "a player's first session". */
-      ads: { impressions: 0, day: '', today: {}, sessions: 0 },
+         quest uses. `sessions` is how many times this save has been opened and
+         `firstAt` is when it was created; adPastFirstSession() reads BOTH, and
+         the comment over it is the one to read before touching either. */
+      ads: { impressions: 0, day: '', today: {}, sessions: 0, firstAt: 0 },
       apiary: { cells: Array(MEADOW.cells).fill(null), locked: MEADOW.cellUnlockLevel.map((lv) => lv > 1),
         honey: {}, wax: 0, shelf: {}, keepers: [] },
       flowers: {},
@@ -287,7 +288,7 @@ const Game = (() => {
          Pre-celebrated, per the ruling: "no popup for seed 3 at minute one." */
       refreshReveals();
       birthCelebrate();
-      state.ads.sessions = 1;
+      adOpenSession(true);
       return { migrated: false, fresh: true };
     }
     try {
@@ -742,11 +743,12 @@ const Game = (() => {
          a moment normally rather than being swept into the grandfather. */
       const revealsGrant = migrateReveals(parsed);
       refreshReveals();
-      /* One page load is one session, and the ad rail's first standing rule
-         reads it. Written straight to disk rather than queued: a first session
-         opened and closed in ten seconds must still be counted, or the second
-         one is offered nothing either. */
-      state.ads.sessions += 1;
+      /* One page load is one opening, and the ad rail's first standing rule
+         reads it — together with the garden's age, which is the half a refresh
+         cannot fake. Written straight to disk rather than queued: a first
+         session opened and closed in ten seconds must still be counted, or the
+         second one is offered nothing either. */
+      adOpenSession(false);
       saveNow();
       if (migrated || decorRefund || progressionGrant || ticketGrant
         || almanacGrant.paid.length || masteryBackfill.changed || yearGrant || revealsGrant) saveNow();
@@ -768,7 +770,7 @@ const Game = (() => {
       Object.assign(state, defaultState());
       ensureProgression();
       giveOpeningBag();
-      state.ads.sessions = 1;
+      adOpenSession(true);
       return { migrated: false, fresh: true };
     }
   }
@@ -3351,11 +3353,76 @@ const Game = (() => {
   const adCountAllToday = () => { adRollDay(); return Object.keys(state.ads.today).reduce((n, k) => n + (state.ads.today[k] || 0), 0); };
   const adImpressions = () => Math.max(0, state.ads.impressions || 0);
 
+  /* ---- RULE 1'S ACTUAL TEST, and why it is not a page-load count ----
+
+     `sessions` counts LOADS, and a load is not a session. A pull-to-refresh, a
+     tab the phone discarded and restored, installing the PWA and opening it, a
+     service-worker update — every one of them ends a "first session" measured
+     that way, while the player is still on their first sitting at level 1 with
+     nothing earned. That is rule 1 failing OPEN, which is the direction that
+     costs something: it hands an ad to exactly the player it exists to protect.
+
+     TWO TERMS, ANDed, because each one alone fails open in its own direction:
+
+       OPENED AGAIN (`sessions > 1`). Without it, a tab left standing overnight
+       would start offering on hour 25 of a literal, unbroken first sitting.
+
+       AND OLDER THAN A DAY (`firstAt`). Without it, one refresh ends the first
+       session — the defect above. This is the half a reload CANNOT defeat:
+       refreshing does not age a save.
+
+     Two things that look simpler and are wrong, so that nobody re-derives them:
+
+       "Has the player PLAYED?" — any progress signal is preserved across a
+       refresh, so it stops being a guard the moment the player has played at
+       all, which on a first sitting is about ninety seconds in.
+
+       todayKey(), the day roll the budget already uses — it turns over at local
+       midnight, which falls INSIDE real first sittings. A timestamp has no
+       midnight to straddle and no timezone to move under it.
+
+     A DAY is not a number picked here: DATA.ads is a DAILY plan and adRollDay()
+     rolls it, so "older than one of the ledger's own days" is the period the
+     file already keeps. The cost of being wrong in the safe direction is at
+     most one day of offers per player, once, ever.
+
+     EVERY UNKNOWN READS AS BRAND NEW, so every unknown means no ad. */
+  const AD_FIRST_SESSION_AGE = 24 * 3600;
+
+  /** Called by all three load() branches, so a fresh garden, a migrated save and
+      the catch branch cannot drift apart. A save written before `firstAt`
+      existed, or hand-edited to a moment in the future, has no honest age: both
+      repair to NOW, which restarts the first day rather than skipping it —
+      conservative, and it heals itself a day later. */
+  function adOpenSession(fresh) {
+    const now = nowSeconds();
+    if (fresh) {
+      state.ads.sessions = 1;
+      state.ads.firstAt = now;
+      return;
+    }
+    state.ads.sessions = (state.ads.sessions || 0) + 1;
+    const first = Number(state.ads.firstAt) || 0;
+    if (!first || first > now) state.ads.firstAt = now;
+  }
+
+  /** True once the player's first session is genuinely behind them. */
+  function adPastFirstSession() {
+    if ((state.ads.sessions || 0) <= 1) return false;
+    const first = Number(state.ads.firstAt) || 0;
+    /* Not redundant with the subtraction below, and deleting it inverts the
+       rule: `now - 0` is fifty-six years and clears any age you could set. */
+    if (!first) return false;
+    /* Negative when the garden claims to start tomorrow — a hand-edited save or
+       a clock that moved back. Unknowable reads as brand new, so it reads false. */
+    return nowSeconds() - first >= AD_FIRST_SESSION_AGE;
+  }
+
   /** THE ONE PREDICATE EVERY SURFACE ASKS before it renders anything. False
       means render nothing at all — not a disabled control. */
   function adOffered(placement) {
     if (adCap(placement) <= 0) return false;
-    if ((state.ads.sessions || 0) <= 1) return false;
+    if (!adPastFirstSession()) return false;
     if (adCountToday(placement) >= adCap(placement)) return false;
     return adCountAllToday() < DATA.ads.dailyCap;
   }

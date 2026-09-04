@@ -126,6 +126,18 @@ const clearWinter = () => {
    ladder over with thousands of harvests already banked and jumps tiers at once. */
 const clearMastery = () => { S.mastery = {}; S.rarityCounts = {}; S.discovered = {}; };
 
+/* A GENUINELY RETURNING PLAYER, which is TWO facts and not one: the garden has
+   been opened again, AND it is older than a day. Written once here because every
+   ad fixture below needs both, and because a fixture that sets only the counter
+   is asserting the bug this replaced — `sessions` alone was a page-load count,
+   and one refresh ended a first session with it (docs/37's standing rule, failing
+   open). The engine's own reasoning is over adPastFirstSession() in game.js.
+   A day and an hour, so the fixture is never sitting on the boundary. */
+const returningPlayer = (opens = 2) => {
+  S.ads.sessions = opens;
+  S.ads.firstAt = G.nowSeconds() - 25 * 3600;
+};
+
 group('flowers are kept as a crafting byproduct');
 S.credits = 1e6;
 G.plant(0, G.seedById('daisy'));
@@ -2021,6 +2033,12 @@ check('a first session is offered no rental at all',
 G.saveNow(); G.load();
 check('and neither is the first page load', G.droneRentalOffered() === false);
 G.saveNow(); G.load();
+check('nor a refresh of that same first sitting', G.droneRentalOffered() === false,
+  `${S.ads.sessions} opens`);
+/* Aged by the fixture rather than by another reload, because age is exactly the
+   thing a reload cannot manufacture — that is the whole point of the second term. */
+S.ads.firstAt = G.nowSeconds() - 25 * 3600;
+G.saveNow(); G.load();
 check('only a returning player is offered it', G.droneRentalOffered() === true);
 clearGarden();
 unlockTo(20);
@@ -2130,7 +2148,7 @@ check('renting grants no gold and never reaches the mint', (() => {
    not pay — can land inside the window and be mistaken for a leak. */
 const rentalWindow = (() => {
   G.reset(); clearGarden(); unlockTo(12);
-  S.ads.sessions = 5; S.ads.day = 'rental-window'; S.ads.today = {};
+  returningPlayer(5); S.ads.day = 'rental-window'; S.ads.today = {};
   S.credits = 1e6;
   S.upgrades.autoHarvest = 0;
   PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 0; });
@@ -2191,7 +2209,7 @@ check('while a BOUGHT badge\'s picks go on feeding both ledgers in full',
    in the live game by buying the upgrade mid-loan. */
 const bothWindow = (() => {
   G.reset(); clearGarden(); unlockTo(12);
-  S.ads.sessions = 5; S.ads.day = 'both-window'; S.ads.today = {};
+  returningPlayer(5); S.ads.day = 'both-window'; S.ads.today = {};
   S.credits = 1e6;
   S.upgrades.autoHarvest = 0;
   PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 0; });
@@ -2218,7 +2236,7 @@ check('and a loan the badge already outruns excludes nothing, because it bought 
   `level ${bothWindow.level}, ${bothWindow.lifted} picks paid ${bothWindow.paid} -> year +${bothWindow.year}`);
 G.reset(); clearGarden(); unlockTo(20);
 S.credits = 1e15;
-S.ads.sessions = 5; S.ads.day = 'not-today'; S.ads.today = {};
+returningPlayer(5); S.ads.day = 'not-today'; S.ads.today = {};
 S.upgrades.autoHarvest = 0;
 check('every rental spends exactly one impression', (() => {
   delete S.boosters.drone;
@@ -4070,11 +4088,45 @@ check('a garden started over is back before its first session', S.ads.sessions =
 G.saveNow();
 G.load();
 check('the first page load is session one', S.ads.sessions === 1, `${S.ads.sessions}`);
+check('and it stamps the moment the garden began', S.ads.firstAt === G.nowSeconds(),
+  `${S.ads.firstAt} vs ${G.nowSeconds()}`);
 check('and a first session is offered no ad at all', G.adOffered('food') === false);
+/* THE ONE THIS GROUP EXISTS FOR. A page load is not a session: a pull-to-refresh,
+   a tab the phone discarded and restored, installing the PWA, a service-worker
+   update — each one is another load inside the SAME first sitting, and counting
+   loads alone handed a level-1 player with nothing earned an ad offer on their
+   second one. Reproduced in headless Chrome before it was fixed:
+     load 1  {sessions:1, food:false, drone:false, level:1, lifetimeCoins:0}
+     reload  {sessions:2, food:true,  drone:true,  level:1, lifetimeCoins:0}
+   Ten reloads, because the count is exactly what must stop meaning anything. */
+for (let i = 0; i < 10; i += 1) { G.saveNow(); G.load(); }
+check('a refresh does not end a first session, however many times it is pressed',
+  G.adOffered('food') === false && S.ads.sessions === 11,
+  `${S.ads.sessions} opens, offered ${G.adOffered('food')}`);
+check('and reloading cannot make the garden older than it is', S.ads.firstAt === G.nowSeconds(),
+  `${G.nowSeconds() - S.ads.firstAt}s`);
+/* The other half, and the reason age alone is not the test either: a tab left
+   standing overnight is one unbroken sitting however old the garden gets. */
+S.ads.firstAt = G.nowSeconds() - 25 * 3600;
+S.ads.sessions = 1;
+check('a day-old garden that was never opened again is still a first sitting',
+  G.adOffered('food') === false, `${S.ads.sessions} opens`);
+/* Both terms true — and the second one still driven through load(), because an
+   age written by hand proves nothing about what the load path does with it. */
 G.saveNow();
 G.load();
-check('opening it a second time counts a second session', S.ads.sessions === 2, `${S.ads.sessions}`);
+check('opening a day-old garden again is what finally counts as a second session',
+  S.ads.sessions === 2 && G.nowSeconds() - S.ads.firstAt >= 24 * 3600,
+  `${S.ads.sessions} opens, ${Math.round((G.nowSeconds() - S.ads.firstAt) / 3600)}h old`);
 check('and only then does the offer appear', G.adOffered('food') === true);
+/* A garden dated into the future — a hand-edited save, or a device clock that
+   moved back — is unknowable, and every unknown reads as brand new. */
+const adFirstAtMark = S.ads.firstAt;
+S.ads.firstAt = G.nowSeconds() + 3600;
+check('a garden that claims to start tomorrow is offered nothing', G.adOffered('food') === false);
+S.ads.firstAt = 0;
+check('and neither is one that will not say when it began', G.adOffered('food') === false);
+S.ads.firstAt = adFirstAtMark;
 /* The day's cap. Driven through watchAd() rather than read off the data, because
    the cap that matters is the one the function enforces. */
 const adCapFood = DATA.ads.perPlacement.food;
@@ -4108,6 +4160,10 @@ check('starting the garden over puts it back in a first session, offer and all',
    the day and wipes the fixture out from under the assertion. */
 G.saveNow();
 G.load();
+/* Past the first session FIRST, or this whole assertion passes on rule 1 and
+   says nothing at all about the daily plan it is named for. */
+returningPlayer(2);
+check('the fixture is genuinely past its first session', G.adOffered('food') === true);
 G.adCountToday('food');
 S.ads.today = { other: DATA.ads.dailyCap };
 check('a placement with budget left is still refused once the day\'s plan is spent',
@@ -4134,6 +4190,14 @@ check('a save carrying half an ad ledger comes back with a whole one', (() => {
       && typeof a.day === 'string' && Boolean(a.today) && typeof a.today === 'object';
   } catch (e) { return false; }
 })(), JSON.stringify(S.ads));
+/* `firstAt` is the other half that cannot self-heal, and it fails in the
+   OPPOSITE direction to `sessions`: every save written before it existed has
+   none, and a missing age reads as unknown, which reads as brand new, which is
+   no offer — forever, for every player who already has a garden. load() stamps
+   NOW instead, so they wait one day and then the ledger is honest. */
+check('and a garden older than the field itself starts its day rather than losing it',
+  S.ads.firstAt === G.nowSeconds() && G.adOffered('food') === false,
+  `${S.ads.firstAt} vs ${G.nowSeconds()}`);
 localStorage.setItem('gw-save', JSON.stringify({
   version: 3, credits: 500, level: 1, rep: 0, ads: { impressions: 7, today: 'nonsense' }
 }));
@@ -4144,14 +4208,36 @@ check('and a hand-edited one cannot put a string where the day\'s counts go', ((
   } catch (e) { return false; }
 })(), JSON.stringify(S.ads));
 
+/* WHERE "ABSENT, NOT DISABLED" ACTUALLY LIVES — one line of ui-sheet.js, and
+   until now nothing in this file read it. Everything above tests the ENGINE
+   predicate; the RENDER is the half a player sees, and the realistic wrong
+   version of it — draw all three tiers, fold adOffered() into `room` so the ad
+   tier is merely greyed out on session one — passed the entire suite. game.js's
+   own comment forbids exactly that: "a greyed-out ad button on session one is
+   still an ad on session one." Read out of the source in the drone card's idiom
+   (four groups up), because ui-sheet.js cannot be loaded headless. */
+const adSheetSrc = fs.readFileSync(path.join(ROOT, 'ui-sheet.js'), 'utf8');
+const foodRowSrc = (adSheetSrc.match(/function foodButtons\(id\)[\s\S]*?\n {2}\}/) || [''])[0];
+/* The scrape guard on the three below it: a rename that breaks the slice returns
+   '' and every regex under it would fail open on an empty string. */
+check('the food row was actually found and read',
+  foodRowSrc.length > 400 && foodRowSrc.length < 2000, `${foodRowSrc.length} chars`);
+check('a first session is handed a SHORTER ladder, never a greyed-out third tier',
+  /const foods = CREATURE_FOOD\.filter\([^;]*Game\.adOffered\('food'\)\);/.test(foodRowSrc),
+  foodRowSrc.split('\n').find((l) => l.includes('const foods')) || 'no foods line');
+check('and the row is built from that filtered list, not from the whole ladder',
+  /\bfoods\.map\(/.test(foodRowSrc) && !/CREATURE_FOOD\.map\(/.test(foodRowSrc));
+check('and the column count comes with it, so the grid never leaves a third of itself empty',
+  /data-n="\$\{foods\.length\}"/.test(foodRowSrc));
+
 group('an ad is never spent on a partial meal, and gold still is');
 G.reset();
 S.discovered[PIP.attract.seed] = PIP.attract.count;
 G.checkCritters();
 G.setTending(PIP.id, true);
-/* Session two by hand rather than through load(): the group above already drives
-   the real counter, and a reload here would throw the fixture away. */
-S.ads.sessions = 2;
+/* A returning player by hand rather than through load(): the group above already
+   drives the real counters, and a reload here would throw the fixture away. */
+returningPlayer();
 S.ads.day = ''; S.ads.today = {}; S.ads.impressions = 0;
 const POT_HOURS = POT.hours * 3600;
 S.critters[PIP.id].fedUntil = G.nowSeconds() + 12 * 3600;
@@ -5163,9 +5249,11 @@ const SURVIVES = ['version', 'gems', 'tickets', 'decor', 'boosters', 'weatherCal
   'bestRarity', 'almanacClaimed', 'mastery', 'rarityCounts', 'seedUnlocks', 'petals', 'blessed',
   'fall', 'winter', 'harvestsTowardRep', 'lastSeen', 'lifetimeCoins', 'profile',
   /* The rewarded-ad ledger sits outside the Garden Year entirely — impressions
-     are lifetime, the day's counts roll on a date and the session count on a
-     page load. A Turn that wiped any of them would hand a player a fresh ad
-     budget for finishing a year, which is the one thing a cap must not do. */
+     are lifetime, the day's counts roll on a date, the open count rises on a page
+     load and `firstAt` never moves at all. A Turn that wiped any of them would
+     hand a player a fresh ad budget for finishing a year, which is the one thing
+     a cap must not do — and one that wiped `firstAt` would put a player who has
+     just finished a whole year back into a first session. */
   'ads',
   'seedRevealed', 'upgradeRevealed', 'celebrated'];
 /* CHANGED, not "cleared": doc 32's never-touched column means never reset or
@@ -5502,7 +5590,7 @@ check('an ad grant moves the wallet and neither accumulator',
    thirty minutes of a machine and no gold at all, so the amount both ledgers may
    move by is exactly zero — stated as a number, because "it did not change much"
    would pass under an implementation that quietly minted the loan's harvests. */
-S.ads.sessions = 2;
+returningPlayer();
 S.ads.day = 'not-today';
 delete S.boosters.drone;
 S.upgrades.autoHarvest = 0;

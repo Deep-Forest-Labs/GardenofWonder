@@ -736,7 +736,8 @@ const DATA = {
         'Feeding your pets asks a little more of you now: a clover nibble costs gold, a petal cake costs gems, and a honeypot is the one you watch an ad for.',
         'The shop will lend you a harvest drone for half an hour if you watch a short video — it picks your ready flowers for you while it flies, and it never slows down a drone you already own.',
         'Turning the year says the same thing in a kinder voice: a new year washes away your gold, upgrades and power-ups, and never reaches the things you keep forever.',
-        'Gold a borrowed drone picks up is yours to spend, but it no longer counts toward turning the year — a drone you bought yourself still counts for everything, exactly as it always did.'
+        'Gold a borrowed drone picks up is yours to spend, but it no longer counts toward turning the year — a drone you bought yourself still counts for everything, exactly as it always did.',
+        'Nothing in the garden asks you to watch a video on your first day with it — reloading the page no longer counts as coming back.'
       ]
     },
     {

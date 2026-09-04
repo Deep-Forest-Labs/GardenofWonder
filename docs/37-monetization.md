@@ -99,6 +99,15 @@ Standing rules, unchanged from the research days: **rewarded video only** — no
 no banners, no energy, no loot boxes; no ads in a player's first session; two to three offers
 per session, capped in data. "No forced ads" stays our marketing line, so it must stay true.
 
+**What "first session" means in a web build, because the obvious reading was wrong and shipped.**
+A page load is not a session. A pull-to-refresh, a tab the phone discarded and restored, installing
+the PWA and opening it, or a service-worker update are all fresh loads inside one sitting — and the
+first version of this rule counted loads, so a player at level 1 with nothing earned was offered an
+ad the second time the page came up. `Game.adOffered()` now asks for **two** things: the garden has
+been opened again, **and** it is more than a day old. Refreshing bumps the first and cannot touch the
+second. The cost of the conservative reading is at most one day of offers per player, once, ever —
+which is the direction this rule is supposed to fail in.
+
 ## The owner's two ideas, ruled
 
 **"Double the offline gold when you come back, by watching an ad" — YES, and it ships first.**

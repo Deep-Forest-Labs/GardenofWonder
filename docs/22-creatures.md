@@ -470,6 +470,11 @@ is in [37-monetization.md](37-monetization.md); the playbook a second placement 
 2. **Absent, not disabled, in a player's first session.** `foodButtons()` filters the tier out
    entirely when `Game.adOffered('food')` is false, and the row drops to two columns
    (`.food-row[data-n="2"]`). A greyed-out ad button on session one is still an ad on session one.
+   That filter is the *only* place the rule is enforced for food, so `tools/sim-test.js` asserts it
+   out of the source rather than trusting review — a version drawing all three tiers with the ad one
+   merely disabled passed the whole suite. And a first session is not a page load: `adOffered()`
+   wants the garden opened again **and** more than a day old, so a refresh cannot end it — the
+   ledger's two fields are in [07-save-data.md](07-save-data.md).
 3. **No countdown, ever.** A time-limited offer attaches a PEGI 12 descriptor
    ([40-financial-model.md](40-financial-model.md)), so nothing in `DATA.ads` may ever hold a clock —
    there is a sim-test that reads the whole table for the word.

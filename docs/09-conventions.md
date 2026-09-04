@@ -356,7 +356,13 @@ replace, which is the whole point of the shape.
    disabled: a greyed-out ad button in a player's first session is still an ad in their first
    session. If the offer's absence changes a layout — a column count, a row height — that belongs to
    the same function that decides to render it, so the two can never disagree. `.food-row[data-n]`
-   is the worked example.
+   is the worked example, and the *only* place that rule is enforced for the food ladder, so it is
+   asserted out of the source in `tools/sim-test.js` — the render is as much of the rule as the
+   predicate is. **A first session is not a page-load count**: `adPastFirstSession()` wants the
+   garden opened again *and* more than a day old, because a refresh, a restored tab or a
+   service-worker update all bump `state.ads.sessions` inside one sitting. A fixture that writes
+   `S.ads.sessions = 2` and nothing else is testing the bug this replaced —
+   `returningPlayer()` in the suite sets both.
 2. **Decide BEFORE rendering whether the reward can land in full, and never offer an ad for a
    trimmed one.** Gold can be part-spent; thirty seconds of somebody's attention cannot, and an ad
    sold once for a partial grant is an ad that is never trusted again. This rule cannot live in

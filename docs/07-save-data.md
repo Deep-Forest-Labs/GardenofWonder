@@ -210,10 +210,10 @@ like.
 ### `state.ads` — the rewarded-ad ledger (added 2026-09-03)
 
 ```js
-ads: { impressions: 0, day: '', today: {}, sessions: 0 }
+ads: { impressions: 0, day: '', today: {}, sessions: 0, firstAt: 0 }
 ```
 
-Four fields, none of them progress, and the whole object sits in the `SURVIVES` column of the
+Five fields, none of them progress, and the whole object sits in the `SURVIVES` column of the
 never-resets partition — a Turn that handed a player a fresh ad budget for finishing a year would be
 the one thing a cap must not do.
 
@@ -222,14 +222,27 @@ the one thing a cap must not do.
 - **`day` / `today`** — the per-day counts against `DATA.ads`, keyed by placement. Rolled by
   `adRollDay()` against the same date key the daily quest uses, so a new day clears `today` and
   never touches `impressions`.
-- **`sessions`** — how many times this save has been opened, which is as close as a web build gets
-  to "a player's first session". **Bumped once per `load()`** — in all three branches, so a fresh
-  garden, a migrated save and the catch branch all agree — and written straight to disk rather than
+- **`sessions`** — how many times this save has been **opened**. Not how many sessions the player
+  has had, and the difference is the whole point of the field beside it. **Bumped once per
+  `load()`** — through `adOpenSession()`, called from all three branches so a fresh garden, a
+  migrated save and the catch branch cannot drift apart — and written straight to disk rather than
   queued, because a first session opened and closed in ten seconds must still be counted or the
-  second one is offered nothing either. `reset()` puts it back to **0** through
-  `defaultState()`, which is correct: a garden started over is a first session again, and the next
-  page load makes it 1. Note that the Settings reset does *not* reload the page, so an ad offer
-  disappears the moment a save is wiped and comes back on the next load.
+  second one is offered nothing either. `reset()` puts it back to **0** through `defaultState()`: a
+  garden started over is a first session again, and the next page load makes it 1.
+- **`firstAt`** — the epoch second the garden was created, and the half of the first-session test a
+  reload cannot fake. Stamped by the same `adOpenSession()`; a save written before the field existed
+  (or hand-edited to a moment in the future) is repaired to **now** on load, which restarts the first
+  day rather than skipping it. Never rewritten afterwards, so refreshing cannot age a garden.
+
+**Neither field is the first-session test on its own, and `sessions` alone was a live bug.** A page
+load is not a session: a pull-to-refresh, a tab the phone discarded and restored, installing the PWA
+and opening it, or a service-worker update each add one, so a level-1 player with nothing earned was
+handed an ad offer on their second load. `Game.adOffered()` now asks `adPastFirstSession()`, which
+requires **both** that the garden has been opened again *and* that it is more than a day old —
+each term alone fails open in its own direction, and the reasoning is written out over the function
+in `game.js`. Every unknown reads as brand new, and brand new means no ad. Note that the Settings
+reset does *not* reload the page, so an ad offer disappears the moment a save is wiped and stays gone
+for a day after the next load.
 
 `Game.adOffered(placement)` is the only predicate any surface should ask, and `Game.watchAd()` the
 only thing that writes here.

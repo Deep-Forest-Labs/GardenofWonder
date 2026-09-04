@@ -2940,6 +2940,29 @@ line at 375 with the button height unchanged at 140px, and 79×33 on two lines a
 button in the row grows to 148 together** — so the row never goes ragged and nothing overflows at
 either size. Measure the pill against the column before assuming a shared component transplants.
 
+**A page-load count is not a session count, and "no ads in a first session" fails OPEN when you
+confuse them.** `state.ads.sessions` was bumped once per `load()` and read as the whole
+first-session test. Headless Chrome on a brand-new save: load 1 gave
+`{sessions:1, food:false, drone:false, level:1, lifetimeCoins:0}` and a single reload gave
+`{sessions:2, food:true, drone:true, level:1, lifetimeCoins:0}` — a level-1 player with nothing
+earned, holding two ad offers, on their genuine first sitting. A refresh, a tab the phone discarded,
+installing the PWA, or a service-worker update all do it. **The signal a reload cannot defeat is
+elapsed time**, not progress (a refresh preserves progress, so any progress test stops guarding
+about ninety seconds in) and not the day key (it rolls at local midnight, which falls inside real
+sittings). `adPastFirstSession()` now wants the garden opened again **and** older than a day; each
+term alone still fails open, in opposite directions — drop the age and one refresh ends the session,
+drop the opening and a tab left standing overnight offers on hour 25. Both halves have their own
+red line in the suite. The general shape: **when a guard's failure has a safe side and an unsafe
+side, ask which side a reload lands on.**
+
+**A rule enforced in exactly one render is only as good as the test that reads that render.**
+"Absent, not disabled" for the food ladder lives in one `filter` in `foodButtons()`, and nothing
+read `ui-sheet.js` for it — a version drawing all three tiers with the ad tier merely *disabled* on
+session one passed the whole suite, twice, a commit apart. The engine predicate was thoroughly
+tested; the half a player sees was not tested at all. `ui-sheet.js` cannot be loaded headless, so
+assert it out of the source the way the drone card and the seed-picker padlocks already do — and put
+a scrape guard on the slice, or a rename makes every regex under it vacuously true.
+
 **A backfill that runs on first READ hides a missing merge line from the test that was written to
 catch it.** `state.ads` got its `load()` re-merge and an assertion in the same commit, and the
 assertion passed with the re-merge deleted — because it asked a getter, and the getter's own day-roll
