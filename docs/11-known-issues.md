@@ -196,6 +196,14 @@ notes it replaces, and it is judged fine — the tune returning on its own chord
 better sound. **The knob if it is ever not fine:** `tone()` can drop any note whose `when` has
 fallen more than a beat into the past.
 
+**The word "mutation" still ships in one player-facing string.** `data.js`, the Nightbloom
+`CREATURE_PAIRS` description — *"A mutation caught after dark has a 50% chance to come in one tier
+higher."* The sky chip stopped saying it on 2026-09-03 and the glossary in
+[32-the-garden-year.md](32-the-garden-year.md) now rules it out, but that line is a creature-pair
+description and was outside the tooltip item's blast radius. Note the punch list said the tooltip was
+the *only* place the player met the word; it was the second. One string, one commit, whenever a
+creature-copy pass next runs — and the sentence already contains the replacement, in *caught*.
+
 ## What the overnight fix round knowingly left (2026-08-31)
 
 **The status rail is invisible in Fall on a screen shorter than 700px.** Both boards are now the

@@ -210,6 +210,13 @@ Add a per-mutation tint and let the existing machinery carry it.
 moment in the game. **Confetti stays reserved for the top of the ladder**, or it stops meaning
 anything.
 
+**And to the player it is called a catch, never a mutation** (2026-09-03). The plant *comes back*
+Dewkissed; the sky *catches* it. "Mutation" is this document's word and the code's — the game says
+it in exactly one player-facing string now, the Nightbloom pair's description, which is filed in
+[11-known-issues.md](11-known-issues.md). The player-facing word has a glossary row at the top of
+[32-the-garden-year.md](32-the-garden-year.md), so the sky chip's copy, the Almanac's and every
+future one write themselves. No number in this document changes.
+
 **When weather turns.** A sky is a sequence, not a state. It announces itself, transforms in layers,
 holds for as long as it stands, and then ends — and **rarity buys layers**: Rain moves three
 channels of the world at once, the storm five, the aurora six, and Wonderfall moves all of them. A
@@ -346,8 +353,8 @@ exact.
   by nothing at all, so the lookahead is silent for most of the day.
 - ~~Can the player see what the sky STANDING NOW is worth?~~ **Answered 2026-08-31: yes, and it does
   not reopen the forecast ruling above.** A tinted chip in the status rail names the sky, and a tap
-  gives one paragraph about what it is doing. That is a status light for the sky that is here, not a
-  timetable for the one that is coming — the distinction the ruling above turns on. **It carries no
+  gives two short sentences about what it is doing. That is a status light for the sky that is here,
+  not a timetable for the one that is coming — the distinction the ruling above turns on. **It carries no
   countdown**, and that is where the two touch: a countdown to the end of this sky is also a
   countdown to when the next one starts, and paired with the flower's spoken forecast it would
   rebuild most of the panel that was ruled out. **The timer is on the table for the owner**, with

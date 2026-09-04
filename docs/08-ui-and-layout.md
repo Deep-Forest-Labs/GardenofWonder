@@ -946,15 +946,31 @@ Clear.
 | **Clamped to `.ui`'s measured box**, not to the window | The tooltip lives outside `.ui` and inherits none of its 560px column; clamped to the window it would sail into the grey on a desktop while its chip stayed in the middle |
 | **No countdown, v1** | See below |
 | **Three ways out**: tap it, tap the chip again, tap anything else | The third is a capture-phase `pointerdown` on the document, so a tap that lands on a control still closes this on its way through |
+| **The bubble is 280px wide, always** (`.weather-tip .tip{width:min(280px, calc(100vw - 28px))}`) | It is a paragraph, not a label, so it is sized by rule rather than by its content. Copy length moves its HEIGHT and never its width, which is why rewriting the words cannot disturb the `--ax` arrow clamp. A punch-list note said the opposite and it cost a measurement to disprove |
 
 **The copy is about a CHANCE, never a payout, and that is the hard part of the whole feature.** A
-plant rolls for a mutation **exactly once**, at a moment chosen randomly inside its grow window when
-it is sown, resolved against whatever sky stands at that moment. So a storm standing now only pays
-the plants whose booked moment happens to land inside it. A chip reading "Gilded ×10" promises a
-per-harvest multiplier the game does not give, and a player who harvests through a whole storm with
-nothing to show reads it as broken. Every tooltip therefore states the rule first and the sky's odds
-second, and both the odds and the multiplier are read from `DATA` rather than written out — a
-tooltip that drifts from the table it describes is worse than no tooltip.
+plant rolls **exactly once**, at a moment chosen randomly inside its grow window when it is sown,
+resolved against whatever sky stands at that moment. So a storm standing now only pays the plants
+whose booked moment happens to land inside it. A chip reading "Gilded ×10" promises a per-harvest
+multiplier the game does not give, and a player who harvests through a whole storm with nothing to
+show reads it as broken.
+
+**Two sentences, in `data.js`'s register** (2026-09-03): *"A plant caught out in it gets one 15%
+chance of coming back Gilded, worth ×10."* The chance framing survives the cut in two phrases —
+*caught out in it* is the booked moment landing under this sky, *gets one … chance* is the whole of
+the once-per-plant rule — so shortening did not become "Gilded ×10". The odds, the multiplier and
+what a rain takes off the clock are all `pct()` of a `DATA` value rather than written out, because a
+tooltip that drifts from the table it describes is worse than no tooltip. It ran forty-two to
+fifty-four words against the game's five-to-ten house style; it is now sixteen to twenty-seven, and
+the bubble measures **107 / 71 / 107 / 89px** tall at 390px against 142 / 142 / 160 / 125 before,
+at the same 280px width in every case. `tools/sim-test.js` runs the real `weatherTip()` and holds
+both the ceiling and the honesty.
+
+Two things the old copy did that the register rules out. **Percentages, never "1 in N"** — the old
+`Math.round(1 / w.catch)` was off-register *and* wrong, turning the storm's 0.15 into "1 in 7"
+(14.3%) and the aurora's 0.12 into "1 in 8" (12.5%). And **a sky says what it does, never what it
+does not**: the storm's sentence denying a growth effect simply went, and only a rain mentions
+growing at all, because `rainGrowthActive()` is one sky and nothing else.
 
 **No timer, deliberately, and it is the owner's to reopen.** A countdown to the end of this sky is
 also a countdown to when the next one starts, and paired with the flower's spoken forecast that

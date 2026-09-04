@@ -1626,8 +1626,8 @@ below and in the decision log. Nothing about it is unreviewed any more.)*
    never been reachable before. **It opens the gate, not a garden** — Spring and Winter are not
    built, and this cheat cannot conjure them.
 8. **The weather chip.** Hold any sky that is not Clear. A tinted chip appears at the left of the row
-   under the quest bar with the sky's name. **Tap it** for one paragraph about what that sky is
-   doing. Read the wording carefully: it promises a **chance**, never a payout, and that is
+   under the quest bar with the sky's name. **Tap it** for two short sentences about what that sky
+   is doing. Read the wording carefully: it promises a **chance**, never a payout, and that is
    deliberate — see the table below.
 9. **What's New.** Menu → *What's New*. It now opens the **changelog** — a dated list of what changed
    — with the Garden Year announcement as a tappable row at the top. It also puts itself up on its
@@ -3009,6 +3009,26 @@ name** — "the shouted label class is retired" is passed by pasting the shouted
 onto the new name, verified in a browser. Say in the group's own comment what the harness cannot
 see (CSS, anything after paint, the screen around the panel) rather than leaving the next reader
 believing a green line holds more than it does.
+
+**A player-facing sentence with a number written into it drifts, and nothing anywhere goes red.**
+The sky tooltip's rain line said *"grows a tenth faster"* in hand-written English while
+`DATA.weatherStage.rainGrowth` sat two files away, under a comment forbidding exactly that — retune
+the knob and the tooltip keeps the old figure with every check still green. The same table also said
+*"about a 1 in 4 chance"* from `Math.round(1 / w.catch)`, which is not just off-register but wrong:
+0.15 renders as "1 in 7" (14.3%) and 0.12 as "1 in 8" (12.5%). **Interpolate the value —
+`pct(DATA…)` — and hold it with a test that flips the knob, reads the sentence back, and expects a
+STATED new number.** "The copy changed" passes under the right answer and the wrong one alike. And
+the copy is not read for this, it is RUN: `weatherTip()` is private to `ui.js` and touches no DOM,
+so `tools/sim-test.js` lifts it out by name and executes it against the live table, which is the
+`sheetRender()` habit applied to one function instead of a panel.
+
+**The sky tooltip is a fixed 280px, not a shrink-to-fit bubble.** `.weather-tip .tip` carries
+`width:min(280px, calc(100vw - 28px))`, so rewriting its copy moves the **height** and never the
+width, and the `--ax` arrow clamp in `showWeatherTip()` cannot be disturbed by a wording change. A
+punch-list item asserted the opposite and sent the fix looking for a clamp regression that cannot
+exist; measured at 390px, all four skies render at exactly 280px wide before and after a rewrite
+that took them from 142/142/160/125px tall to 107/71/107/89. **Read the rule before you budget time
+against the layout of a copy change.**
 
 **A backfill that runs on first READ hides a missing merge line from the test that was written to
 catch it.** `state.ads` got its `load()` re-merge and an assertion in the same commit, and the

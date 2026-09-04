@@ -739,7 +739,8 @@ const DATA = {
         'Gold a borrowed drone picks up is yours to spend, but it no longer counts toward turning the year — a drone you bought yourself still counts for everything, exactly as it always did.',
         'Nothing in the garden asks you to watch a video on your first day with it — reloading the page no longer counts as coming back.',
         'Pick a flower while a power-up or a Wonder is running and the number that floats up now says how much bigger it was made — and the seed list says it loudly enough to notice.',
-        'If your phone is set to reduce motion, the numbers that fly up when you pick a flower now hold still where you can read them.'
+        'If your phone is set to reduce motion, the numbers that fly up when you pick a flower now hold still where you can read them.',
+        'Tap the weather above your garden and it answers in a sentence now instead of a paragraph — what this sky can leave on a plant, and how likely it is.'
       ]
     },
     {

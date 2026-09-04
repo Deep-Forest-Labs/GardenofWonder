@@ -44,6 +44,7 @@ Agents talking to the owner lead with the feel and keep the math in the docs.
 | **Songs** | Side A of a record: put on any song you've found. The garden's own tune plays when no record is on |
 | **Charms** | Side B of a record: a small permanent perk. Wear any charm you've found with any song — and every charm works with the music off |
 | **The seasons** | Gardens at different speeds. Summer is seconds, Fall is hours, Winter is days, Spring is the long game |
+| **A catch** | What a passing sky can leave on a plant while it grows — Dewkissed, Gilded, Prismatic, Wonderstruck. Each plant gets one chance at one, and only the sky standing at that moment can give it. Never the word "mutation" |
 | **Sprout, stem, bud, bloom** | The four looks a growing flower wears, like Animal Crossing. The bud holds until almost ready, in the flower's own colours, and opens just before the pick |
 | **The windfall** | Fall's bonus for harvesting the whole bed at once — the dinner appointment |
 | **The tuck-in** | Winter's bedtime ritual: one free tap puts the bed under quilts for the night. It only ever adds — nothing is lost to a night, ever |

@@ -702,26 +702,29 @@
      promises a per-harvest multiplier the game does not give, and a player who
      harvests through a whole storm with nothing to show reads it as broken.
 
-     So every tooltip states the rule first and the sky's odds second. The odds
-     and the multiplier are read from the data rather than written out, because a
+     So the copy carries that rule in its own words rather than in a preamble
+     ahead of it: "caught out in it" is the booked moment landing under this sky,
+     and "gets one … chance" is the whole of the once-per-plant rule at no cost
+     in length. Every number — the odds, the multiplier, and what a rain takes
+     off the clock — is read from the data rather than written out, because a
      tooltip that drifts from the table it describes is worse than no tooltip. */
   function weatherTip(id) {
     const w = (DATA.weather.types || []).find((t) => t.id === id);
     if (!w) return '';
     const m = w.mutation ? DATA.mutations[w.mutation] : null;
-    const odds = w.catch ? Math.round(1 / w.catch) : 0;
+    /* Only a rain waters — `rainGrowthActive()` names one sky and no other — so
+       only rain's line mentions growing. A sky says what it does; a sentence
+       about what it does NOT do belongs to none of them. */
     const extra = {
-      rain: ' Everything in the garden also grows a tenth faster while it lasts.',
-      storm: ' It does not change how fast anything grows.',
-      aurora: ' The garden counts as night while it hangs there too, whatever the hour, so the night-lovers wake.',
+      rain: ` Everything in the garden grows <b>${pct(DATA.weatherStage.rainGrowth)}</b> faster while it lasts.`,
+      aurora: ' Night falls under it, whatever the hour, so the night-lovers wake.',
       wonderfall: ' The rarest sky there is.'
     }[id] || '';
     const roll = m
-      ? ` If that moment lands under ${w.name}, it has about a <b>1 in ${odds}</b> chance of coming up
-         <b>${m.name}</b> — worth <b>&times;${m.mult}</b>.`
+      ? `A plant caught out in it gets one <b>${pct(w.catch)}</b> chance of coming back
+         <b>${m.name}</b>, worth <b>&times;${m.mult}</b>.`
       : '';
-    return `<b>${w.name}</b><br>Every plant rolls for a mutation once, at a moment of its own while
-      it grows.${roll}${extra}`;
+    return `<b>${w.name}</b><br>${roll}${extra}`;
   }
 
   function showWeatherTip(btn) {

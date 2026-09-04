@@ -9497,6 +9497,114 @@ check('and crossing a front changes nothing in the save but the moment it was cr
 G.Dev.setWeather(null);
 G.reset();
 
+/* THE SKY CHIP'S BUBBLE IS THE ONE PLACE THE MUTATION TABLE IS SAID OUT LOUD,
+   and a sentence drifts off the numbers it describes without anything going red
+   — rain's growth figure was hand-written English for a fortnight while the
+   comment above it forbade exactly that. So the copy is not read, it is RUN:
+   `weatherTip()` is private to ui.js and touches no DOM, so it is lifted out by
+   name and executed against the live DATA with the shipped `pct()` from
+   ui-shared.js, and every expected value below is DERIVED from the table. A
+   retune moves both sides together; a hand-written number moves neither.
+
+   WHAT THIS CANNOT SEE, said plainly rather than implied. It builds a STRING.
+   The bubble around it is 280px by CSS rule (`.weather-tip .tip`), so nothing
+   here knows how tall the copy comes out, whether it wraps badly, or whether
+   the arrow still lands on its chip — those are measured with tools/probe.js
+   and written into docs/08. Nor does it know the bubble is reachable: one
+   source read below answers only "is this still the function the chip renders". */
+group('the sky chip says what the table says, in the fewest words');
+const sharedSrc = fs.readFileSync(path.join(ROOT, 'ui-shared.js'), 'utf8');
+const wxPctSrc = (sharedSrc.match(/\n  const pct = [^\n]*\n/) || [''])[0];
+const wxTipSrc = (uiSrc.match(/\n  function weatherTip\(id\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+check('the shared pct() is still where this guard can read it', /toFixed/.test(wxPctSrc), wxPctSrc);
+check('weatherTip() is still where this guard can read it', /return `/.test(wxTipSrc),
+  wxTipSrc.slice(0, 60));
+/* Concatenated, never templated: the extracted body carries its own backticks
+   and `${}`, and a template literal would interpolate them here and hand back a
+   nonsense function that still passed the two extraction checks above. */
+const wxTip = (() => {
+  try { return new Function('DATA', `${wxPctSrc}${wxTipSrc}\nreturn weatherTip;`)(DATA); }
+  catch (e) { return () => `EXTRACTION FAILED ${e.message}`; }
+})();
+const wxPct = (() => {
+  try { return new Function(`${wxPctSrc}\nreturn pct;`)(); }
+  catch (e) { return () => 'EXTRACTION FAILED'; }
+})();
+const wxPlain = (s) => String(s)
+  .replace(/<[^>]+>/g, '').replace(/&times;/g, '×').replace(/\s+/g, ' ').trim();
+const wxName = (id) => wxPlain(String(wxTip(id)).split('<br>')[0]);
+const wxSay = (id) => wxPlain(String(wxTip(id)).split('<br>').slice(1).join(' '));
+const WX_SKIES = ['rain', 'storm', 'aurora', 'wonderfall'];
+WX_SKIES.forEach((id) => {
+  const w = DATA.weather.types.find((t) => t.id === id);
+  const m = DATA.mutations[w.mutation];
+  const said = wxSay(id);
+  const words = said ? said.split(' ').length : 0;
+  /* `<b>name</b><br>body` is the shape the boost tooltip is specced to mirror,
+     so the heading is load-bearing beyond this bubble. */
+  check(`${id}'s bubble still opens with the sky's own name`, wxName(id) === w.name, wxName(id));
+  /* data.js's effect descriptions are the house register — five to ten words a
+     sentence. Thirty is two of those and refuses a third. */
+  check(`${id} reads in thirty words or fewer`, words > 0 && words <= 30, `${words} words: ${said}`);
+  /* THE HONESTY, and the only reason this copy was ever long. A plant rolls
+     ONCE, at a moment booked when it was sown. Drop the word "one" and the
+     sentence quietly promises the rate on every harvest instead — which reads
+     better, passes a word count, and is the lie the whole feature was built to
+     avoid. The rate itself is pct() of the row, so "1 in 7" for 0.15 reddens
+     here too. */
+  check(`${id} promises ONE chance, at exactly the rate its row names`,
+    said.includes(`one ${wxPct(w.catch)} chance`), said);
+  check(`${id} names its mutation and that mutation's own multiplier`,
+    said.includes(`${m.name}, worth ×${m.mult}.`), said);
+  check(`${id} says nothing about rolls, mutations or moments`,
+    !/\b(rolls?|rolled|mutations?|moments?)\b/i.test(said), said);
+});
+/* Only a rain waters — `rainGrowthActive()` is `id === 'rain'` and nothing
+   else. So exactly one sky may mention growing, which holds both halves of
+   what went wrong here: the storm's sentence about the effect it has NOT got,
+   and the copy-paste that would hand a real one to a sky that never had it. */
+check('growth is mentioned by the one sky that has it and by no other',
+  WX_SKIES.filter((id) => /\b(grow|grows|growing|faster|slower)\b/i.test(wxSay(id))).join(',')
+  === 'rain',
+  WX_SKIES.filter((id) => /\b(grow|grows|growing|faster|slower)\b/i.test(wxSay(id))).join(','));
+check('the storm no longer spends a sentence on an effect it does not have',
+  !/\bdoes not\b|\bdoesn't\b|\bno faster\b/i.test(wxSay('storm')), wxSay('storm'));
+check('nothing states a catch rate as a 1-in-N any more',
+  !/\b1 in \d/.test(WX_SKIES.map(wxSay).join(' ')), WX_SKIES.map(wxSay).join(' '));
+/* A source read, and it can be nothing else from here — the chip and its bubble
+   are DOM. It answers one question only: is the function every check above just
+   ran still the one the chip renders, so that a rewired tooltip fails loudly
+   instead of leaving this group green on a string no player ever sees. */
+const wxShowSrc = (uiSrc.match(/\n  function showWeatherTip\(btn\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+check('and the chip still renders that function into its bubble',
+  /class="tip">\$\{weatherTip\(id\)\}/.test(wxShowSrc), wxShowSrc.slice(0, 80));
+
+/* EVERY NUMBER IN THAT COPY IS READ, NEVER WRITTEN. Flip each knob, watch the
+   sentence follow to a stated value, put it back — then assert the table really
+   is back, because a guard that tampers with DATA and forgets makes every group
+   after it fail as an economy regression somewhere else entirely. */
+const wxKeep = {
+  grow: DATA.weatherStage.rainGrowth,
+  catch: DATA.weather.types.find((t) => t.id === 'storm').catch,
+  mult: DATA.mutations.gilded.mult
+};
+DATA.weatherStage.rainGrowth = 0.25;
+check('retuning how hard a rain waters moves the sentence with it',
+  wxSay('rain').includes('grows 25% faster'), wxSay('rain'));
+DATA.weatherStage.rainGrowth = wxKeep.grow;
+DATA.weather.types.find((t) => t.id === 'storm').catch = 0.4;
+check('retuning a catch rate moves the odds with it',
+  wxSay('storm').includes('one 40% chance'), wxSay('storm'));
+DATA.weather.types.find((t) => t.id === 'storm').catch = wxKeep.catch;
+DATA.mutations.gilded.mult = 3;
+check('retuning a multiplier moves the payout with it',
+  wxSay('storm').includes('worth ×3.'), wxSay('storm'));
+DATA.mutations.gilded.mult = wxKeep.mult;
+check('and the guard put the whole table back',
+  DATA.weatherStage.rainGrowth === wxKeep.grow
+  && DATA.weather.types.find((t) => t.id === 'storm').catch === wxKeep.catch
+  && DATA.mutations.gilded.mult === wxKeep.mult);
+
 /* ================================================================
    SLICE C — WINTER, THE NIGHT SHIFT.
 
