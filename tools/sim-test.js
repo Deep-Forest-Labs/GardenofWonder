@@ -78,6 +78,28 @@ const UI_BADGE_KEYS = [
    test pass. */
 const CASUAL_RATE_PER_MIN = 2000;
 
+/* A SEEDED stand-in for Math.random, for the two assertions that need variety
+   rather than a pinned constant.
+
+   The house pattern everywhere else is save / replace with a constant /
+   restore, and it is the right one when a test wants a single known roll. It is
+   the wrong one when the assertion's whole meaning is a SPREAD — sixty stand
+   orders whose median is the claim, say — because sixty identical rolls make
+   sixty identical orders and the median stops measuring what it says. Both of
+   those read the real RNG and both were flaky at about 1% and 1-in-25, proven
+   pre-existing against a clean HEAD checkout. This gives them varied rolls that
+   are the same varied rolls every run. mulberry32, chosen because it is nine
+   lines and needs no dependency. */
+const seededRandom = (seed) => {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
 let pass = 0;
 let fail = 0;
 const group = (name) => console.log(`\n${name}`);
@@ -8702,23 +8724,33 @@ check('and Nightbell is quoted at its floor, whatever the sky is doing now', (()
 
 /* The label is a prediction, so the only proof that matters is a real harvest
    landing on the number it promised. Rarity is pinned to common, which is the
-   bottom of the quoted range. */
+   bottom of the quoted range — but rarity is not the only roll in a harvest,
+   and a mutation booked at plant time multiplies past the quoted ceiling. That
+   is what made this fail about one run in twenty-five (pre-existing; proven
+   against a clean HEAD checkout). The RNG is seeded rather than frozen so the
+   plant still books its roll the way a real one does. */
 check('a real harvest lands inside the range the picker quoted', (() => {
-  G.reset();
-  S.petals = {};
-  S.credits = 1e9;
-  unlockTo(20);
-  S.savedSeeds = 1e9;
-  G.buyPetal('tulip', 'rich');
-  G.buyPetal('tulip', 'rich');
-  const quoted = G.plantPayout(tulipDef, 0);
-  G.Dev.armRarity('common');
-  G.plant(0, tulipDef);
-  advance(S.grid[0].grow + 2);
-  const before = S.credits;
-  G.harvest(0);
-  const paid = S.credits - before;
-  return paid >= quoted.min && paid <= quoted.max;
+  const rngQuoted = Math.random;
+  Math.random = seededRandom(20260903);
+  try {
+    G.reset();
+    S.petals = {};
+    S.credits = 1e9;
+    unlockTo(20);
+    S.savedSeeds = 1e9;
+    G.buyPetal('tulip', 'rich');
+    G.buyPetal('tulip', 'rich');
+    const quoted = G.plantPayout(tulipDef, 0);
+    G.Dev.armRarity('common');
+    G.plant(0, tulipDef);
+    advance(S.grid[0].grow + 2);
+    const before = S.credits;
+    G.harvest(0);
+    const paid = S.credits - before;
+    return paid >= quoted.min && paid <= quoted.max;
+  } finally {
+    Math.random = rngQuoted;
+  }
 })());
 
 group('a petal button says what you have and what the next one adds');
@@ -8994,6 +9026,13 @@ check('tiers climb in pay as well as in standing',
    board price into a payout. A single order proves nothing; the middle of sixty
    of them is what a player feels. */
 check('a delivered order is worth a minute of play, not a second of it', (() => {
+  /* Seeded, not frozen: the claim IS the spread, so sixty identical rolls would
+     make sixty identical orders and the median would stop measuring anything.
+     Flaky at about 1% on the real RNG, pre-existing and proven against a clean
+     HEAD checkout — the same sixty varied orders every run instead. */
+  const rngOrder = Math.random;
+  Math.random = seededRandom(90320261);
+  try {
   const paid = [];
   for (let n = 0; n < 60; n += 1) {
     standReset(1);
@@ -9017,6 +9056,9 @@ check('a delivered order is worth a minute of play, not a second of it', (() => 
   }
   paid.sort((a, b) => a - b);
   return paid[Math.floor(paid.length / 2)] >= CASUAL_RATE_PER_MIN;
+  } finally {
+    Math.random = rngOrder;
+  }
 })());
 
 /* The guard that outlives the measurement. Whatever the exact values, the
