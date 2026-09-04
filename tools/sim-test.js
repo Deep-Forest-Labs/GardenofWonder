@@ -12144,6 +12144,19 @@ check('both running is ONE float carrying the PRODUCT — 1.25 × 3 is ×3.75, n
   both20.length === 1 && both20[0][2] === '×3.75', JSON.stringify(both20));
 check('and the louder of the two causes takes the tint',
   both20.length === 1 && both20[0][4] === WONDER.tint, JSON.stringify(both20));
+/* THE ORDER TRAP AGAIN, one file over — and the only fixture in this group whose
+   STATE and PAYLOAD disagree, which is why every other one here is blind to it.
+   tryWonder() runs between the payout and the payload, so on a harvest that
+   SPARKS while a power-up is up, `Game.wonderActive()` is already true and the
+   payload still says the Wonder paid nothing. Ask the live predicate for the
+   colour and the ×1.25 the power-up earned goes out in the Wonder's pink,
+   naming a Wonder that paid nothing — on the one surface built to stop the
+   game lying about what made a number big. */
+const sparkFloat20 = floatFor20(1.25, 1, { boost: true, wonder: true });
+check('a harvest that SPARKS a Wonder tints its multiplier by what the payload says was PAID, not by the Wonder that has just this instant started',
+  sparkFloat20.length === 1 && sparkFloat20[0][2] === '×1.25'
+  && sparkFloat20[0][4] === DATA.boosters.find((b) => b.id === 'golden').tint,
+  JSON.stringify(sparkFloat20));
 check('a payload from before this change floats nothing, rather than ×NaN',
   floatCalls20({ payout: 70 }).length === 0, JSON.stringify(floatCalls20({ payout: 70 })));
 /* The behavioural checks above pass just as happily against a view that worked
@@ -12178,11 +12191,30 @@ check('and it takes the tint it was handed, with a palette token behind it rathe
   /color:var\(--float-tint,\s*var\(--[a-z-]+\)\)/.test(cssRule('.float.mult')), cssRule('.float.mult'));
 const reduce20 = (CSS_SRC.match(/@media \(prefers-reduced-motion:reduce\)\{\n {2}\*,\*::before[\s\S]*?\n\}/) || [''])[0];
 const floatUp20 = (CSS_SRC.match(/@keyframes floatUp\{[\s\S]*?\n\}/) || [''])[0];
+/* Read as a SET of selectors rather than as one literal `.float{`, because the
+   selector list is the whole point: `animation-name` is switched off BY NAME
+   and a kind left off the list keeps its own keyframe. */
+const killRules20 = [...reduce20.matchAll(/^ {2}([^{\n]+)\{([^}]*animation-name:none[^}]*)\}/gm)]
+  .map((m) => ({ sels: m[1].split(',').map((s) => s.trim()), body: m[2] }));
+const killed20 = killRules20.flatMap((r) => r.sels);
 check('reduced motion switches the float’s keyframe OFF — the load-bearing half, because floatUp ENDS at opacity 0 and `forwards` holds it',
-  /\.float\{[^}]*animation-name:none/.test(reduce20) && /100%\{opacity:0/.test(floatUp20),
-  `${reduce20.replace(/\s+/g, ' ').slice(0, 120)} | ${floatUp20.slice(-40)}`);
+  killed20.includes('.float') && /100%\{opacity:0/.test(floatUp20),
+  `${killed20.join(' ')} | ${floatUp20.slice(-40)}`);
 check('and it puts the ink back in the same rule, so the substitute never rests on what .float happens to default to',
-  /\.float\{[^}]*opacity:1/.test(reduce20), reduce20.replace(/\s+/g, ' ').slice(0, 160));
+  killRules20.length > 0 && killRules20.every((r) => /opacity:1/.test(r.body)),
+  killRules20.map((r) => `${r.sels.join(',')}{${r.body}}`).join(' | '));
+/* THE HALF THAT WAS MISSED, and it is missed by counting nothing: a kind that
+   names its OWN keyframe is more specific than a bare `.float` and keeps it, so
+   `.float.crit` sat alone at floatCrit's 100% — opacity 0, the biggest number in
+   the tap loop, invisible next to the ordinary ones. Derived out of style.css
+   rather than listed here, so the NEXT kind to swap a keyframe is caught by this
+   line and not by a player with the preference on. */
+const ownKeyframe20 = [...CSS_SRC.replace(reduce20, '')
+  .matchAll(/^(\.float(?:\.[a-z-]+)+)\{[^}]*animation(?:-name)?:(?!none)/gm)].map((m) => m[1]);
+const endsDark20 = (name) => /100%\{opacity:0/.test((CSS_SRC.match(new RegExp(`@keyframes ${name}\\{[\\s\\S]*?\\n\\}`)) || [''])[0]);
+check('every float kind that swaps in its OWN keyframe is switched off BY NAME too — the more specific rule outranks the bare .float, and these keyframes end at opacity 0 exactly like floatUp',
+  ownKeyframe20.length > 0 && ownKeyframe20.every((k) => killed20.includes(k)) && endsDark20('floatCrit'),
+  `own keyframe: ${ownKeyframe20.join(' ') || 'NONE FOUND'} | switched off: ${killed20.join(' ')}`);
 
 /* One colour, one home. The rail chip and the harvest float are the two
    surfaces that name the Wonder, and a hex in either would drift from the other

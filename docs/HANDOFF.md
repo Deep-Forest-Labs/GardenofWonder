@@ -2928,16 +2928,43 @@ suite: force the spark, and assert the reported multiplier against the payout ra
 the multiplier that is running now. Same family as "verbs are read before the plot is cleared" — a
 harvest is a sequence of mutations and a payload is a photograph of one moment in it.
 
+**And then the VIEW asked the live predicate anyway, in the same commit, for the same field.**
+`game.js` was fixed to report `wonderMult: wonderPaid`, and `ui-events.js` threw it away one line
+later: `FX.float(…, 'mult', Game.wonderActive() ? WONDER.tint : boostTint)`. The number was honest
+and its **colour** was the lie — a `×1.25` the power-up earned, painted in the Wonder's pink. Half a
+fix is the shape to watch for: **a payload field is only worth reporting if every reader uses it**,
+and a reader that re-derives from live state is the same bug wearing the fix's own commit message.
+The fixture that catches it is the only one whose STATE and PAYLOAD **disagree** — `{boostMult:1.25,
+wonderMult:1}` with both a boost and a Wonder live, which is exactly what a spark produces and
+exactly what a helper that sets the state *from* the payload can never build.
+
 **The global reduced-motion clamp had silently deleted every floating number in the game.** `floatUp`
 ends at `opacity: 0` and `.float` carries `animation-fill-mode: forwards`, so the clamp's
 `.001ms` run finishes instantly and *holds the last keyframe* — every payout, gem, reputation and
 discovery float appeared for a microsecond and then sat there invisible, for as long as the layer has
 existed. It reviewed as correct because nothing about a float looks stateful. This is the recorded
 "a collapsed animation must never be the only carrier of a STATE" trap in its widest form yet: **the
-state was simply the number existing.** Two lines fixed all of them
-(`.float{animation-name:none;opacity:1}` in the reduce block), and the way to check any future one is
-an A/B inside a single probe session — clone the node, force `animationName` back on the clone, and
-read both computed opacities.
+state was simply the number existing.** `.float{animation-name:none;opacity:1}` in the reduce block
+is the fix — but read the next one before believing it fixed them all.
+
+**A blanket `animation-name:none` is not blanket: the one kind with its own keyframe outranks it.**
+`.float.crit{animation-name:floatCrit}` is specificity 0-2-0 and beats a bare `.float` at 0-1-0, so
+that rule switched off every float kind except the crit, which kept floatCrit — and floatCrit ends at
+`opacity: 0` exactly like floatUp. Half a fix here is **worse than none**: every tap number used to
+be invisible together, and now the ordinary ones show while the biggest one in the loop does not,
+which reads to a reduce-motion player as *crits pay nothing* — on the core tap loop, on Fall's
+windfall and Collect All, and on a Winter crop that kept. The fix is to name it —
+`.float,.float.crit{…}` — and note that
+`animation:none` would **not** have worked either, because the shorthand still lands at 0-1-0 and
+loses the same cascade. **The method that missed it is the method that was written down here:** an
+A/B on one cloned node cannot see a specificity problem, because the node it clones is the kind it
+was already looking at. Replace it — under `media:reduce`, float **every** kind into the live layer
+in one probe session and read each one's computed `opacity` and `animation-name` as a table, then
+check with the preference OFF as well, so a fix for the clamp cannot quietly delete a real animation.
+And where a selector list is the fix, **derive it in the suite out of the stylesheet rather than
+restating it**: `tools/sim-test.js` now finds every `.float.<kind>` that sets its own
+`animation-name` and requires each to be named in the kill list, so the next kind that swaps a
+keyframe reddens a check instead of reaching a player.
 
 **A new test group is worth sabotaging before it is worth believing.** `bill 1c` shipped with three
 assertions that could not fail: one asserted a getter after a Turn had already emptied the bag, one

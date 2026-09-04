@@ -304,7 +304,14 @@
     const multLine = multText(deliberate);
     if (multLine) {
       const boostTint = (DATA.boosters.find((b) => b.effects.globalCredits && Game.activeBoost(b.id)) || {}).tint;
-      FX.float(c.x, c.y + 14, multLine, 'mult', Game.wonderActive() ? WONDER.tint : boostTint);
+      /* WHICH cause is louder comes off the PAYLOAD, never off `wonderActive()`.
+         tryWonder() runs between the payout and the payload, so on the ~2% of
+         harvests that spark one the Wonder is already running by the time this
+         handler is called — and the live predicate then paints a ×1.25 the
+         power-up earned in the Wonder's pink, naming a Wonder that paid nothing.
+         game.js took the trouble to report `wonderMult: wonderPaid`; throwing
+         that away for a live read here tells the same lie one file over. */
+      FX.float(c.x, c.y + 14, multLine, 'mult', p.wonderMult > 1 ? WONDER.tint : boostTint);
     }
     UI.popWallet('credits');
     UI.noteActivity();

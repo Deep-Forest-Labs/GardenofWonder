@@ -2952,8 +2952,14 @@ button:focus-visible{
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.08s !important}
   /* A collapsed animation reverts what it was animating, and floatUp ends at
      opacity 0 — so with the preference on, every number the garden pays was
-     landing invisibly. It holds still and its own timer takes it away instead. */
-  .float{animation-name:none;opacity:1}
+     landing invisibly. It holds still and its own timer takes it away instead.
+     `.float.crit` has to be NAMED here as well: it swaps in its own keyframe at
+     0-2-0 and outranks a bare `.float` at 0-1-0, so it alone kept floatCrit,
+     and floatCrit's 100% is opacity 0 too — the biggest number in the tap loop,
+     invisible beside the ordinary ones this rule had just made visible. Any
+     future kind that sets its own `animation-name` belongs on this line too;
+     the check is the whole `.float.*` family, never one node. */
+  .float,.float.crit{animation-name:none;opacity:1}
   .cloud{display:none}
 }
 

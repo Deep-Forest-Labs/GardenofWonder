@@ -367,7 +367,11 @@ noticed.
 The two numbers arrive on the `harvest` payload as `boostMult` and `wonderMult` — `game.js` never
 touches the DOM and `ui-events.js` does no economy math, so the payload is how the number crosses.
 The view multiplies them and floats **one** smaller line carrying the product (`×3.75`), tinted by
-the louder cause: `WONDER.tint` when a Wonder is running, otherwise the power-up's own `tint`. One
+the louder cause: `WONDER.tint` when **the payload says the Wonder paid** (`p.wonderMult > 1`),
+otherwise the power-up's own `tint`. Not `Game.wonderActive()` — `tryWonder()` runs between the
+payout and the payload, so on the ~2% of harvests that spark one the live predicate is already true
+by the time the handler runs, and asking it paints the power-up's `×1.25` in the Wonder's pink,
+naming a Wonder that paid nothing on the one surface built to stop exactly that. One
 float rather than two, because two would put four floats on the busiest moment in the game and set
 the power-up's `×1.25` in competition with the Wonder's `×3` for the same fourteen pixels; the rail
 carries the itemisation one glance away. The threshold for "this is a change rather than rounding"
@@ -376,10 +380,24 @@ is `UI.multText()`, shared with the seed picker's pill so the two surfaces can n
 **Floats hold still under reduced motion, and this was broken for every float in the game.** The
 global clamp runs an animation once for `.001ms`, and `floatUp` **ends at `opacity: 0`** with
 `animation-fill-mode: forwards` holding that last keyframe — so with the preference on, every number
-the garden has ever paid appeared for a microsecond and then sat there invisible. Measured live: the
-same node reads `opacity: 1` with `.float{animation-name:none;opacity:1}` in the reduced-motion block
-and `opacity: 0` with `animation-name` forced back to `floatUp`. It now holds still at full ink in
-the base `translate(-50%,-50%)` position and its own `setTimeout` takes it away on schedule.
+the garden has ever paid appeared for a microsecond and then sat there invisible. The reduce block
+switches the keyframe off and puts the ink back in the same rule —
+`.float,.float.crit{animation-name:none;opacity:1}` — and each float then holds still at full ink in
+the base `translate(-50%,-50%)` position while its own `setTimeout` takes it away on schedule.
+
+**`.float.crit` has to be on that selector list by name, and the reason generalises.** A kind that
+swaps in its own keyframe — `.float.crit{animation-name:floatCrit}`, specificity 0-2-0 — outranks a
+bare `.float` at 0-1-0, so switching only `.float` off leaves the crit running floatCrit, whose
+`100%` is `opacity: 0` exactly like floatUp's. Shipping the fix without it was **worse than not
+fixing it**: ordinary taps showed and the crit alone vanished, which reads as *crits pay nothing* —
+on the core tap loop, on Fall's windfall and Collect All, and on a Winter crop that kept. Measured
+under `media:reduce` with `tools/probe.js`, floating every kind into the live layer in one session
+and reading each one's computed `opacity` and `animation-name`: before, every other kind read
+`opacity: 1 / none` and `crit` alone read `opacity: 0 / floatCrit`; after, all of them read
+`opacity: 1 / none`, and with the preference off the crit still runs `floatCrit 0.85s forwards`
+untouched. Anything that swaps `animation-name`
+on a float belongs on that list too, and `tools/sim-test.js` **derives the list out of `style.css`
+instead of repeating it**, so the next one is caught by a check rather than by a player.
 
 ### Screen shake
 
