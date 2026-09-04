@@ -34,3 +34,14 @@ node_modules/
 # Scratch / personal — never commit
 _to_delete/
 docs/feedback.md
+
+# Loose raster dropped in the ROOT of art/ — the owner's own reference material,
+# which is private and must never reach a public repo. Every sanctioned image in
+# this game lives in a FOLDER (art/announcements/, art/reveals/, docs/screens/ —
+# see the binary-asset exceptions in docs/09-conventions.md), so the root itself
+# is always scratch. This is here because one `git add -A` was the only thing
+# standing between a private file and a public deploy.
+art/*.png
+art/*.jpg
+art/*.jpeg
+art/*.webp
