@@ -1119,6 +1119,196 @@ check('the screens tool changes season through the exported entry point, not a t
   !/\.s-edge/.test(screensSrc) && (screensSrc.match(/UI\.enterSeason\("(fall|summer)"\)/g) || []).length === 4,
   (screensSrc.match(/UI\.enterSeason\("[a-z]+"\)/g) || []).join(' '));
 
+/* WHERE THE LESSON ACTUALLY LANDS — the half the group above says plainly it
+   cannot see, and the half that broke.
+
+   THE FAILURE THIS GROUP EXISTS FOR (2026-09-03). In Fall at 390x844, whenever
+   Collect All was up — the ordinary windfall a first-time player reaches on
+   their first bed — BOTH marks that teach the way out of Fall lost their side
+   shape and were clamped 480px up into the HUD row, one of them half off the
+   left edge, arrows over empty sky. Nothing threw. Every one of the 2125 lines
+   in this file stayed green. `placeCoach()`'s side search had exactly ONE
+   surviving candidate at that size, `.fl-collect` grew 11px taller, and two
+   lessons stopped appearing in silence — which is the exact thing the peeks
+   group above was written to catch and could not see.
+
+   A SOURCE SCAN CANNOT SEE A RENDER, BUT THIS IS NOT A RENDER. placeCoach() is
+   arithmetic on five rectangles. So the real function is lifted out of ui.js
+   and RUN — against the rects tools/probe.js measured in that exact state, with
+   a stub standing in for the box the browser would have laid out. What is
+   asserted is where the mark lands.
+
+   WHAT IT STILL CANNOT SEE, said plainly. The rects below are a RECORDED
+   MEASUREMENT: grow a button in style.css and they do not move on their own.
+   The sweep at the end of the group is what covers that — it asks the same
+   question at every Collect All height from the shipped one to 80px taller and
+   demands a readable lesson at all of them, so the next agent to grow that
+   button gets a worse-placed mark rather than no mark. The instrument for the
+   numbers themselves is the probe:
+     node tools/probe.js size:390x844 'eval:…getBoundingClientRect()…'
+   and docs/08-ui-and-layout.md publishes what it returns. */
+group('the two Fall lessons land somewhere a player can read them');
+const placeSrc = fnFromUi('placeCoach');
+const layOutSrc = fnFromUi('layOutCoach');
+const gapSrc = fnFromUi('clearTop');
+/* Measured with tools/probe.js at 390x844, in Fall, on a fully ripe marked bed
+   — the state the whole defect lives in. `[left, top, right, bottom]`. */
+const FALL844 = {
+  peekL: [0, 653, 10, 693],
+  peekR: [380, 653, 390, 693],
+  fallCollect: [107, 602.5, 283, 664.5],
+  fallChip: [100.1, 179.5, 289.9, 215.5],
+  btnUpgrade: [10, 709, 76.6, 768],
+  btnPower: [322, 710, 380, 768]
+};
+/* The mark's own box, which the browser measures and this file has to state.
+   The tip is one line of `white-space:nowrap` text at 39px tall; beside the
+   anchor the arrow and its 5px gap add 27px of width, above it they add 24px of
+   height and the tip keeps the top. Both derivations reproduce the probe's
+   numbers exactly: side-l 240.3x39, stacked 213.2x63 for the garden lesson. */
+const ARROW = 22;
+const TIP_H = 39;
+const runPlace = (o) => {
+  const rect = (b) => ({ left: b[0], top: b[1], right: b[2], bottom: b[3], width: b[2] - b[0], height: b[3] - b[1] });
+  const node = (b) => ({ getBoundingClientRect: () => rect(b) });
+  const tip = { offsetWidth: o.tipW, style: { setProperty(k, v) { tip[k] = v; } } };
+  const side = () => /side-/.test(coach.className);
+  const coach = {
+    hidden: false, className: '', innerHTML: '', style: {},
+    querySelector: () => tip,
+    get offsetWidth() { return side() ? o.tipW + ARROW + 5 : o.tipW; },
+    get offsetHeight() { return side() ? TIP_H : TIP_H + ARROW + 2; }
+  };
+  const bound = {
+    window: { innerWidth: o.vw },
+    coachTarget: node(o.anchor),
+    el: {
+      coach,
+      btnUpgrade: node(o.rects.btnUpgrade),
+      btnPower: node(o.rects.btnPower),
+      fallChip: node(o.rects.fallChip),
+      fallCollect: node(o.rects.fallCollect)
+    }
+  };
+  const scope = new Proxy(bound, {
+    has: () => true,
+    get: (t, k) => {
+      if (typeof k === 'symbol') return undefined;
+      if (Object.prototype.hasOwnProperty.call(t, k)) return t[k];
+      return k in globalThis ? globalThis[k] : undefined;
+    }
+  });
+  const preamble = `
+    let coachSide = ${JSON.stringify(o.side)};
+    let coachWanted = ${JSON.stringify(o.side)};
+    let coachBase = 'coach season';
+    let coachTip = '<div class="tip">lesson</div>';
+    ${gapSrc}
+    ${layOutSrc}
+    ${placeSrc}`;
+  try {
+    new Function('SCOPE', `with (SCOPE) { ${preamble}\n return placeCoach; }`)(scope)();
+  } catch (e) { return { shape: `EXTRACTION FAILED ${(e && e.message) || e}` }; }
+  const left = parseFloat(coach.style.left);
+  const top = parseFloat(coach.style.top);
+  const shift = parseFloat(tip['--tip-shift'] || '0');
+  const w = coach.offsetWidth;
+  const h = coach.offsetHeight;
+  /* The mark is two boxes: the words, and the arrow that points. They come
+     apart — `--tip-shift` slides the tip alone so the arrow can stay on a
+     target 5px from the screen edge — so the assertions below have to know
+     where each of them ended up rather than where the flex box did. */
+  const stacked = !/side-/.test(coach.className);
+  const tipBox = stacked
+    ? [left + shift - o.tipW / 2, top, left + shift + o.tipW / 2, top + TIP_H]
+    : (/side-l/.test(coach.className)
+      ? [left + ARROW + 5, top, left + ARROW + 5 + o.tipW, top + TIP_H]
+      : [left, top, left + o.tipW, top + TIP_H]);
+  const arrow = stacked
+    ? { x: left, y: top + TIP_H + 2 + ARROW / 2 }
+    : { x: /side-l/.test(coach.className) ? left + ARROW / 2 : left + w - ARROW / 2, y: top + h / 2 };
+  return { shape: coach.className, left, top, w, h, tipBox, arrow };
+};
+const overlaps = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+/* The two lessons, exactly as `refreshCoach()` asks for them. */
+const LESSONS = [
+  { name: 'Swipe right for the garden', side: 'l', anchor: 'peekL', tipW: 213.3 },
+  { name: 'Swipe left for Winter', side: 'r', anchor: 'peekR', tipW: 181.3 }
+];
+const fall844 = (lesson, rects) => runPlace({
+  vw: 390, side: lesson.side, tipW: lesson.tipW,
+  anchor: (rects || FALL844)[lesson.anchor], rects: rects || FALL844
+});
+
+check('the placement, the shape switch and the gap search were all found and run',
+  Boolean(placeSrc && layOutSrc && gapSrc) && fall844(LESSONS[0]).shape.indexOf('FAIL') < 0,
+  `${placeSrc.length}/${layOutSrc.length}/${gapSrc.length} chars; ${fall844(LESSONS[0]).shape}`);
+
+LESSONS.forEach((lesson) => {
+  const p = fall844(lesson);
+  /* THE SHAPE. Losing `side-*` is what happened: the mark stops being an arrow
+     into the peek and becomes a bubble standing over a 10px sliver at the
+     screen edge, which is the shape it was moved off on 2026-09-03. */
+  check(`"${lesson.name}" keeps its side shape with Fall's Collect All up at 390x844`,
+    p.shape === `coach season side-${lesson.side}`, JSON.stringify(p));
+  /* THE ARROW IS ON THE THING IT NAMES. This is the assertion that goes red on
+     the shipped defect: the arrow was at y=142 against a peek at 653-693. */
+  const peek = FALL844[lesson.anchor];
+  check(`and its arrow lands on the peek it points at, not 480px above it`,
+    p.arrow.y > peek[1] && p.arrow.y < peek[3],
+    `arrow y ${p.arrow.y} against peek ${peek[1]}-${peek[3]}`);
+  /* THE WORDS ARE ON THE SCREEN. The other half of the shipped defect: one
+     bubble was half off the left edge, the other 86px past the right. */
+  check(`and every word of it is on the screen`,
+    p.tipBox[0] >= 0 && p.tipBox[2] <= 390 && p.tipBox[1] >= 0 && p.tipBox[3] <= 844,
+    JSON.stringify(p.tipBox));
+  /* AND NOTHING THE PLAYER NEEDS IS UNDER IT — the rule the whole search
+     exists to keep, checked against the mark's real footprint rather than
+     trusted. */
+  const covered = ['btnUpgrade', 'btnPower', 'fallChip', 'fallCollect']
+    .filter((k) => overlaps([p.left, p.top, p.left + p.w, p.top + p.h], FALL844[k]));
+  check(`and it covers none of the four things the band and the bed put on screen`,
+    covered.length === 0, `covers ${covered.join(', ')} — ${JSON.stringify(p)}`);
+});
+
+/* THE BUDGET, WHICH IS THE ACTUAL LESSON OF THIS BUG. The lane the marks live
+   in is the clear air between Collect All's bottom and the band's top, and on
+   2026-09-03 it was being asked to hold a 39px mark AND 6px of daylight either
+   side — 51px of demand against 44.5px of lane, so the fit rested on a
+   different candidate surviving somewhere else. Six pixels of air is a
+   preference; not covering the button is the rule. State the lane so a commit
+   that closes it has to come through here. */
+const lane = FALL844.btnUpgrade[1] - FALL844.fallCollect[3];
+check('the lane between Collect All and the band is 44.5px, and the mark is 39px of it',
+  Math.abs(lane - 44.5) < 0.05 && TIP_H === 39, `lane ${lane}px`);
+
+/* AND THE PART THAT CANNOT GO STALE. The rects above are a recorded
+   measurement, so on their own they would say nothing about a future commit
+   that grows a button — which is precisely the commit that broke this. So ask
+   the same question at every Collect All height from the shipped 62px to 80px
+   taller: the mark may be pushed to a worse place, it may lose the side shape,
+   but at no height may it stop pointing at the peek or walk off the screen.
+   A lesson that degrades is a bug; a lesson that vanishes is the one nobody
+   sees. */
+const sweep = [];
+for (let grew = 0; grew <= 80; grew += 1) {
+  const rects = Object.assign({}, FALL844, {
+    fallCollect: [107, 602.5, 283, 664.5 + grew]
+  });
+  LESSONS.forEach((lesson) => {
+    const p = fall844(lesson, rects);
+    const peek = rects[lesson.anchor];
+    const aims = /side-/.test(p.shape)
+      ? p.arrow.y > peek[1] && p.arrow.y < peek[3]
+      : p.arrow.x > peek[0] - ARROW / 2 && p.arrow.x < peek[2] + ARROW / 2
+        && p.top + p.h <= peek[1] && peek[1] - (p.top + p.h) <= p.h * 1.5;
+    const onScreen = p.tipBox[0] >= 0 && p.tipBox[2] <= 390 && p.tipBox[1] >= 0 && p.tipBox[3] <= 844;
+    if (!aims || !onScreen) sweep.push(`+${grew}px: ${lesson.side} ${p.shape} ${JSON.stringify(p.tipBox)} arrow ${JSON.stringify(p.arrow)}`);
+  });
+}
+check('and no height Collect All can grow to takes either lesson off the screen or off its peek',
+  sweep.length === 0, `${sweep.length} bad heights, first: ${sweep[0] || '-'}`);
+
 group('bill 13b — grandfather migration keeps seeds you could already use');
 G.reset();
 const saveOf = (extra) => {

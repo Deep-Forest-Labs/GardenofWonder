@@ -1461,6 +1461,37 @@
     const arrow = '<div class="arrow"></div>';
     el.coach.innerHTML = side === 'l' ? arrow + coachTip : coachTip + arrow;
   }
+  /* WHERE IS THERE ROOM FOR A BOX THIS TALL — asked once, and both shapes ask
+     it. Subtract every blocker from the window, read off the gaps that are
+     left, and return the clear top nearest `want` (undefined if there is none).
+
+     THE POINT OF SWEEPING RATHER THAN GUESSING. The side search used to try the
+     anchor's midpoint and the two edges of each blocker and take the first that
+     fitted — a budget only as deep as its luckiest candidate. On 2026-09-03 one
+     of those three was surviving by 4.5px at 390x844, Collect All grew 11px
+     taller, the last candidate died and BOTH of Fall's lessons stopped
+     appearing: no error, no test, a bubble parked in the HUD row pointing at
+     empty sky. A sweep shrinks with the geometry instead of vanishing when one
+     offset stops working: the room it reports is the room there is. */
+  function clearTop(hits, lo, hi, h, gap, want) {
+    let free = hi >= lo ? [[lo, hi]] : [];
+    hits.forEach((b) => {
+      const from = b.top - gap - h;
+      const to = b.bottom + gap;
+      const next = [];
+      free.forEach((span) => {
+        if (span[0] < from) next.push([span[0], Math.min(span[1], from)]);
+        if (span[1] > to) next.push([Math.max(span[0], to), span[1]]);
+      });
+      free = next;
+    });
+    let best;
+    free.forEach((span) => {
+      const t = Math.max(span[0], Math.min(span[1], want));
+      if (best === undefined || Math.abs(t - want) < Math.abs(best - want)) best = t;
+    });
+    return best;
+  }
   function placeCoach() {
     if (!coachTarget || el.coach.hidden) return;
     const r = coachTarget.getBoundingClientRect();
@@ -1484,14 +1515,30 @@
       const w = el.coach.offsetWidth;
       const left = coachSide === 'l' ? r.right + 6 : Math.max(8, r.left - 6 - w);
       const hits = blockers.filter((b) => b.right > left && b.left < left + w);
-      const clear = (top) => top >= 8 && hits.every((b) => top + h <= b.top - 6 || top >= b.bottom + 6);
-      /* A sideways arrow has to land on the thing it points at, so every
-         candidate must still overlap the anchor vertically. */
-      const onAnchor = (top) => top + h > r.top + 8 && top < r.bottom - 8;
+      /* A sideways arrow has to land on the thing it points at, so the whole
+         search happens inside the window where the mark still overlaps the
+         anchor vertically. */
+      const lo = Math.max(8, r.top + 8 - h);
+      const hi = r.bottom - 8;
       const centred = r.top + r.height / 2 - h / 2;
-      const spot = [centred, ...hits.map((b) => b.top - 6 - h), ...hits.map((b) => b.bottom + 6)]
-        .filter((t) => clear(t) && onAnchor(t))
-        .sort((a, b) => Math.abs(a - centred) - Math.abs(b - centred))[0];
+      /* THE CLAMP CAN PUSH A SIDE MARK ONTO ITS OWN ANCHOR: 8px from the edge a
+         wide bubble reaches back across the very peek it points at and buries
+         its own arrow. Recorded on 2026-08-30 as the reason the stacked shape
+         is kept as a fallback, and never actually written down until now. */
+      const beside = coachSide === 'l' ? left >= r.right : left + w <= r.left;
+      /* SIX PIXELS OF AIR IS A PREFERENCE. NOT COVERING THE BUTTON IS THE RULE.
+         Demanding both at once is what left this lesson's entire budget 4.5px
+         deep. Ask for the air, and where the lane is too narrow for it take the
+         lane: at 390x844 there is 44.5px of clear room between Collect All's
+         bottom and the band's top and the mark is 39px, so the fit now survives
+         that button growing by anything short of the whole lane — and the two
+         tiers between them fail LOUDLY, into a fallback that still points at
+         the peek, rather than by deleting the lesson. */
+      let spot;
+      if (beside) {
+        spot = clearTop(hits, lo, hi, h, 6, centred);
+        if (spot === undefined) spot = clearTop(hits, lo, hi, h, 0, centred);
+      }
       if (spot !== undefined) {
         el.coach.style.top = `${spot}px`;
         el.coach.style.left = `${left}px`;
@@ -1504,19 +1551,37 @@
          and the only honest one left on a screen this short. */
       layOutCoach('');
     }
-    const floor = blockers.length ? Math.min(...blockers.map((b) => b.top)) - 6 : Infinity;
-    const cx = r.left + r.width / 2;
-    el.coach.style.left = `${cx}px`;
-    el.coach.style.top = `${Math.max(8, Math.min(r.top - el.coach.offsetHeight - 6, floor - el.coach.offsetHeight))}px`;
     /* THE ARROW STAYS ON THE TARGET; THE BUBBLE MOVES. A season peek's midpoint
        is 5px from the screen edge and the tip is `white-space:nowrap`, so a
        bubble centred on it runs half its width off the screen. Shifting the
        whole mark would leave the arrow pointing at nothing, so only the tip
-       slides. */
+       slides — and BOTH halves are known before a top is chosen, which is what
+       lets the search below ask about the footprint the mark really has rather
+       than the box it was laid out in. */
+    const h = el.coach.offsetHeight;
+    const cx = r.left + r.width / 2;
     const tip = el.coach.querySelector('.tip');
-    if (!tip) return;
-    const half = tip.offsetWidth / 2;
+    const half = (tip ? tip.offsetWidth : el.coach.offsetWidth) / 2;
     const want = Math.max(8 + half, Math.min(window.innerWidth - 8 - half, cx));
+    const span = [Math.min(cx - 11, want - half), Math.max(cx + 11, want + half)];
+    /* IT STANDS ABOVE ITS TARGET, AND IT STAYS NEAR IT. This used to push above
+       the topmost blocker ANYWHERE ON SCREEN, which is fine while the target is
+       a plot in the middle of the garden and catastrophic the moment it is a
+       season peek sitting BELOW one: Fall's bed chip lives in the HUD row, so a
+       mark pointing at a peek 480px lower was clamped up beside the wallets
+       with its arrow over empty sky. Ask the same gap question the side shape
+       asks, in this mark's own column, and settle for standing directly above
+       the target when there is no clear gap at all — which is the recorded
+       ruling for the short viewport: the mark yields to the things the player
+       needs and takes what is left, but it never leaves its own anchor. */
+    const near = blockers.filter((b) => b.right > span[0] && b.left < span[1]);
+    const rest = Math.max(8, r.top - h - 6);
+    let top = clearTop(near, 8, rest, h, 6, rest);
+    if (top === undefined) top = clearTop(near, 8, rest, h, 0, rest);
+    if (top === undefined) top = rest;
+    el.coach.style.left = `${cx}px`;
+    el.coach.style.top = `${top}px`;
+    if (!tip) return;
     tip.style.setProperty('--tip-shift', `${Math.round(want - cx)}px`);
   }
   function hideCoach() {

@@ -1260,7 +1260,11 @@ Five coach marks, tracked by `state.seen`:
 **Their anchor is `.s-peek`, and all three find it with `querySelector`.** A miss is `hideCoach()` —
 no error and no visual difference, just a lesson that stops appearing — so renaming the node without
 renaming all three anchors deletes three lessons in silence. That is what the peek group in
-`tools/sim-test.js` exists to make loud.
+`tools/sim-test.js` exists to make loud. **Finding the anchor is only half of it, and the other half
+broke the same way**: the group beside it lifts the real `placeCoach()` out of `ui.js` and runs it
+against the rects the probe measured at 390×844 with Fall's Collect All up, then asks the same
+question at every height that button could grow to — because on 2026-09-03 both Fall lessons went
+off-screen with a green suite when it grew by 11px. See docs/08-ui-and-layout.md.
 
 **The three season marks carry a finger and its wake** (`Icons.get('swipe')`, drawn travelling left
 and mirrored in CSS for the way back), because a season change is a *gesture* and an arrow alone does

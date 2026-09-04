@@ -1084,19 +1084,34 @@ booster activation, migration. Rare harvests deliberately don't qualify.
 overshoot on entry and scale away.
 
 **Coach marks** are absolutely positioned tooltips above their target — or **beside it when the
-target is a season peek** (`side-l` / `side-r`, arrow pointing sideways into the peek). A side mark
-**looks for a gap** rather than only pushing upward: it tries the peek's midpoint, then just above
-and just below each of the four things that can be in the way (the UPGRADE pill, the POWER-UP button,
-Fall's bed chip and its Collect All), taking the candidate nearest the midpoint that clears them all
-and still lands on the anchor. Since the peek moved up out of the band's row on 2026-09-03 **the
-plain centred candidate usually wins outright**: measured, the Fall-side mark lands at
-`[185, 374.4, 653.5, 692.5]` at 390×844 with the pill's top at 709, and in Fall at both 390×640 and
-390×667 the mark keeps the side shape at `[16, 256.3]` beside the left peek. The search stays because
-the short viewport can still close that gap and because Fall's bed chip and Collect All share the
-peek's row. When no gap exists at all it **flips back to the stacked shape** rather than pointing a
-sideways arrow at nothing; the old worked example (Fall at 390×667) no longer reaches that fallback,
-so the shape is now exercised only on a viewport shorter still. They are suppressed while a sheet, a
-gate, the Hollow or the meadow is up. Repositioned on resize and every 0.6 s. The flower will not speak while one is visible.
+target is a season peek** (`side-l` / `side-r`, arrow pointing sideways into the peek). Both shapes
+ask one question, `clearTop()` in `ui.js`: subtract the four things that can be in the way (the
+UPGRADE pill, the POWER-UP button, Fall's bed chip and its Collect All) from the window the mark is
+allowed to live in, and take the clear top nearest the one it wants. A side mark's window is where it
+still overlaps its anchor, because a sideways arrow has to land on the thing it points at.
+
+**Six pixels of air is a preference; not covering the button is the rule** — the search asks for the
+air first and settles for the seam. That distinction *is* the budget. Demanding both at once left the
+fit resting on a single surviving candidate 4.5px deep at 390×844 on 2026-09-03; Collect All then
+grew 11px taller and **both** Fall lessons silently stopped appearing. Measured at 390×844 with the
+bed unmarked the two marks sit at `[16, 653.5, 256.3, 692.5]` and `[166, 653.5, 374.3, 692.5]`; with
+Collect All up they drop into the 44.5px lane between its bottom (664.5) and the pill's top (709), to
+`[16, 664.5, 256.3, 703.5]` and `[166, 664.5, 374.3, 703.5]`, covering nothing. At 390×667, 320×568
+and 430×932 the side shape holds in both states, unchanged by that repair.
+
+**When no gap exists beside the anchor at all it flips back to the stacked shape** rather than
+pointing a sideways arrow at nothing — and the stacked shape stands above its own target and *stays
+near it*. It used to clamp above the topmost blocker **anywhere on screen**, which is inert while the
+target is a plot in the middle of the garden and catastrophic when it is a peek sitting below one:
+Fall's bed chip lives in the HUD row, so a mark aimed at a peek 480px lower was parked up beside the
+wallets with its arrow over empty sky. It asks the same gap question in its own column now, over its
+real footprint — the tip slides on `--tip-shift` so the arrow can stay on a target 5px from the
+screen edge, and both halves are known before a top is chosen — and where there is no gap at all it
+yields and stands directly above the target, which is the recorded ruling for the short viewport: the
+mark gives way to the things with content the player needs, and the board is what is left.
+
+They are suppressed while a sheet, a gate, the Hollow or the meadow is up. Repositioned on resize and
+every 0.6 s. The flower will not speak while one is visible.
 
 ## Dock attention dots
 
