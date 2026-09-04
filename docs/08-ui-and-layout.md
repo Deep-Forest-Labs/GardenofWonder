@@ -848,7 +848,9 @@ it has to say *look now*. It is the ready plot's own `sweep` — same 100° band
 as a moment rather than as the constant travel a plot can afford at 1.9s. Gold rather than the plot's
 white, because gold is already the only thing on this button that means *the Turn is ready*. The
 interval is `DATA.year.turnShineEvery` (9s), written to `--turn-shine` once at boot — a longer
-interval is also a statelier sweep, since the travel is a fraction of the cycle.
+interval is also a statelier sweep, since the travel is a fraction of the cycle. **Since 2026-09-03
+that knob feeds two buttons**: Fall's Collect All wears the same glint, and `ui-fall.js` writes the
+same property from the same row so the two cadences cannot drift apart.
 
 **The clip belongs to `.turn-fill`, never to the button** — `overflow:hidden` on `.dock-btn.turn`
 eats the pouch chip hanging 9px above it.
@@ -1191,13 +1193,13 @@ never move**. Nothing in Fall re-states the column because nothing in Fall leave
 | `.fall-layer` (the scene) | a sibling of `.ui` inside `#world`, `z-index: 2` | above the CSS scenery, below `.ui`, so the HUD stays up and the dock stays tappable |
 | `.fall-frame` / `.fl-board` | inside `.stage`, beside `.garden-frame` | one board swaps for another in the same square the garden already sizes |
 | `.fl-chip` | absolute inside `.fl-wrap`, `top:-46px` | Fall's one rule, standing over the board it describes — anchored to the board's own box so it tracks it at every viewport |
-| `.fl-collect` | absolute inside `.fl-wrap`, `bottom:-58px`, max 132px wide | the payoff button, in the strip the chip left — narrow so it clears UPGRADE and POWER-UP, which are NOT hidden in Fall. **The clearance changed on 2026-09-03 and the 132px did not**: with the band's buttons on the column edge a centred pill could be 216.8px at 390×844 and still keep 10px of daylight either side, so the cap is now conservative by ~85px. Re-deriving it belongs to `#10`, and the binding viewports are the narrow ones (186.8px at 360 wide, 146.8px at 320) |
+| `.fl-collect` | absolute inside `.fl-wrap`, `bottom:-69px`, `min-width:min(176px, calc(100vw - 174px))` under a 184px cap | the payoff button, in the strip the chip left. **A floor, not a ceiling** — the cap had never once bound, because this button's content measures 105px at every gold value `fmt()` can print, so it shrank to its own text. Measured 176×62 at 390/375/360 and 146×62 at 320, where the room itself is the floor. `bottom` is derived from the height: |bottom| − 62 = 7px of air under the board |
 | `.fl-skip` / `.fl-wait` | inside `.fl-plot`: the chip at `top:5px;right:5px` (the garden's own rule, shared selector), the wait pill at `bottom:16px` | the gem chip lives in the same corner in every room, so it is learned once. The two cannot share the top row: on a 110px tile a three-digit chip is 44px against a 48px "7h 59m" pill, and the tile shrinks to 89px at 320×568 — so the pill moved down, where Winter's `.wi-wait` already sits. 16px rather than Winter's 15 because Fall's bar is `bottom:6px` where Winter's is 5 |
 | `.gate-layer` | a sibling of `.ui`, `z-index: 3` | a locked season is a screen, and `.in-gate` hides the stage, dock, rail and quest strip exactly as `.in-map` does |
 | `.winter-layer` (the scene) | a sibling of `.ui` inside `#world`, `z-index: 2` | Fall's row, one season on |
 | `.winter-frame` / `.wi-board` | inside `.stage`, beside `.garden-frame` and `.fall-frame` | the third board in the same square, sized by the same `UI.boardSide()` |
 | `.wi-chip` | absolute inside `.wi-wrap`, `top:-46px` | Winter's one rule, in Fall's chip geometry line for line |
-| `.wi-act` | absolute inside `.wi-wrap`, `bottom:-58px`, max 132px wide | **one button whose verb is the bed's state** — Tuck the bed in → Tucked in → Collect all. The same strip and the same 132px cap Fall's Collect All takes, because UPGRADE and POWER-UP are not hidden in Winter either, and two controls would fight for it. Same note as the row above: the clearance widened on 2026-09-03 and this number did not follow it |
+| `.wi-act` | absolute inside `.wi-wrap`, `bottom:-58px`, max 132px wide | **one button whose verb is the bed's state** — Tuck the bed in → Tucked in → Collect all. It was Fall's box line for line until 2026-09-03; **it keeps the narrow one on purpose**, because two of its three states are not payoffs and should not be enlarged or gilded. Giving it Fall's geometry is a design call, not a copy-paste — filed in [11-known-issues.md](11-known-issues.md) |
 | `.season-edges` | **absolutely positioned against `.ui`**, not a grid item | see below |
 
 **The season edges are absolute, and that is load-bearing.** They were a grid item at `grid-row: 4`
@@ -1283,18 +1285,56 @@ and at 390×844 the two clear each other by 30px. It is not that the chips are u
 filter in `renderRail()` has already dropped the ones that are, and a tap on Fall's flower is paid by
 what is left. What a short screen loses is the reading, and one swipe brings it back.
 
-**Collect All is narrow because the band is not hidden in Fall.** `.fpill` (UPGRADE) and `.fround`
-(POWER-UP) are hidden in the Hollow, the meadow and at a gate, but not in Fall, and they share the
-same strip. A full-width pill overlapped both on a 667-tall phone.
+**Collect All is bounded by the band, which is not hidden in Fall.** `.fpill` (UPGRADE) and
+`.fround` (POWER-UP) are hidden in the Hollow, the meadow and at a gate, but not in Fall, and they
+share the same strip. A full-width pill overlapped both on a 667-tall phone.
 
 **The old clearance claim was false, and the 2026-09-03 move made it true.** This doc said "at least
 24px of daylight either side at every supported viewport" and `style.css` said "at least 10px"; both
 were measured against buttons inset 34px, and at the 132px cap that gave **18.4/27.0 at 390×844,
 3.4/12.0 at 360×740 and −16.6/−8.0 at 320×640** — an overlap on the narrowest phone, not a margin.
-With the buttons on the column's edge the same cap now measures **52.4/61.0, 37.4/46.0 and
-17.4/26.0**. So the number is honest at last *and* conservative by about 85px: the widest centred
-pill keeping 10px of daylight is 216.8px at 390×844, 186.8px at 360 wide and 146.8px at 320 wide.
-Re-deriving 132px belongs to `#10`; the two-line label stays until it does.
+Moving the band onto the column's edge is what made the number honest.
+
+**But the cap was never what made the button small, and that is the fault the 2026-09-03 widening
+actually fixed.** `.fl-collect` is a two-row column flex whose wider row is always the verb — the
+star, 5px of gap and *Collect all* — while `fmt()` tops out at eight characters. Its rendered width
+was therefore **105.3px at every gold value the game can print**, forced against +1,000, +33,600,
++999,999, +9.9M, +123.4M and +1.23B without the box moving a pixel. The 132px ceiling had never once
+been reached, so raising it alone would have changed nothing on screen. The season's one payoff had
+shrunk to the size of its own text.
+
+**The floor is the ROOM, and the room is measured about the CENTRE.** A centred pill cannot use the
+gap between the two band buttons; it can only use twice the *smaller* half. With the band on the
+column's edge, UPGRADE takes 66.6px of that half and the house's rule is 10px of daylight, so the
+widest centred pill is **`100vw − 173.2px`**: 216.8px at 390, 201.8 at 375, 186.8 at 360 and
+**146.8px at 320, the narrowest phone this game is measured on**. Hence `min-width:min(176px,
+calc(100vw - 174px))` — 176px wherever there is room and the room itself below ~350px — with the
+184px cap left above it as a real guard for a longer label. `100vw` is the honest term because the
+only widths where the second half binds are portrait, where both safe-area insets are zero.
+
+| viewport | box | daylight L / R | air under the board | clear of the dock |
+| --- | --- | --- | --- | --- |
+| 390×844 | 176 × 62 | 30.4 / 39.0 | 7.0 | 113.5 |
+| 375×667 | 176 × 62 | 22.9 / 31.5 | 7.0 | 24.9 |
+| 360×640 | 176 × 62 | 15.4 / 24.0 | 7.0 | 19.0 |
+| 320×640 | **146** × 62 | **10.4** / 19.0 | 7.0 | 37.1 |
+| 844×390 | 176 × 46.5 | — | 6.5 | **3.0** |
+
+**Landscape needed a guard of its own, and it fixed a bug that was already there.** The strip under
+a landscape board is 56px against a 51.3px button, so Collect All stood *on* the dock's raised
+Garden pedestal by 2px before this pass and would have stood 13px into it at 62px tall. The guard is
+a shorter box at the same width, and it lives immediately below the base rules rather than in the
+RESPONSIVE section — a media query adds no specificity, and that block sits two thousand lines above
+the rules it would have to beat.
+
+**The glint is the Turn button's, on the Turn button's knob.** Same `@keyframes turnShine`, same
+`--turn-shine` read from `DATA.year.turnShineEvery`, so the game has two shines and not three and
+one number moves both. **Its clip is `.fc-shine`, a real element, never `overflow:hidden` on the
+button** — the halo hangs at `inset:-6px` and a clip on the button eats it silently, which
+`document.elementFromPoint()` three pixels outside the border box answers in one line. And it has a
+reduced-motion substitute, because the collapsed clamp reverts `turnShine` to its base pose and
+parks a still white band with a hard edge over the left third of the pill: with motion off the band
+becomes a flat gloss and the gold, the halo and 176px of presence carry the state.
 
 **The bed chip's pulse lives on a pseudo-element.** `affordPulse` animates `transform`, and the chip
 is centred with `translateX(-50%)` — a running animation outranks that declaration and would throw

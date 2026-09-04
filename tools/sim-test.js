@@ -9226,6 +9226,109 @@ check('every announcement image path is all lowercase',
   newsImages.every((img) => img === img.toLowerCase()),
   newsImages.filter((img) => img !== img.toLowerCase()).join(', '));
 
+group('Fall\'s Collect All keeps its centring, its halo and its daylight');
+/* WHAT THIS CANNOT SEE, said plainly so no reader believes it holds more. The
+   button is CSS and one template line: nothing here renders, measures a rect or
+   paints, so "the box is 176x62", "the glint travels" and "the halo is still
+   drawn outside the border box" are probe measurements written into docs/08,
+   not assertions. What CAN rot silently is read as source instead — the centring
+   that lives inside `transform`, a clip that would delete the halo, the
+   reduced-motion substitute without which the glint parks as a still white band,
+   and the width arithmetic, which is the one thing here the suite can genuinely
+   compute rather than pattern-match.
+   The width model's blind spot is its own constants: it knows UPGRADE's box as
+   a measured 66.6px, so widening `.fpill` leaves every line below green while
+   the daylight goes. Re-measure both if that rule moves. */
+const fcCss = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, ' ');
+const fcFall = fs.readFileSync(path.join(ROOT, 'ui-fall.js'), 'utf8');
+const fcRules = [...fcCss.matchAll(/([^{}@]*\.fl-collect[^{}]*)\{([^{}]*)\}/g)]
+  .map((m) => ({ sel: m[1].trim().replace(/\s+/g, ' '), body: m[2], at: m.index }));
+check('the button\'s rules were actually found and read',
+  fcRules.length >= 10, `${fcRules.length} rules`);
+
+/* THE CENTRING. `left:50%` plus `translateX(-50%)` is how this button is
+   centred, so any rule that writes a bare `transform` — the obvious way to add
+   a press state — moves it half its own width to the left. */
+fcRules.forEach((r) => {
+  const t = r.body.match(/(?:^|[;\s])transform\s*:\s*([^;}]+)/);
+  if (!t || /\bnone\b/.test(t[1])) return;
+  check(`${r.sel} keeps its centring inside the transform`,
+    /translateX\(\s*-50%\s*\)|translate\(\s*-50%/.test(t[1]), t[1].trim());
+});
+
+const fcOwn = fcRules.filter((r) => r.sel.split(',')
+  .some((s) => /(?:^|\s)\.fl-collect(?::[a-z-]+|\[[^\]]*\])*$/.test(s.trim())));
+const fcBase = fcOwn.find((r) => /(?:^|[;{\s])min-width\s*:/.test(r.body));
+check('the button is still absolute, never a row in the wrap',
+  fcOwn.some((r) => /position\s*:\s*absolute/.test(r.body)),
+  `${fcOwn.length} rules on the button itself`);
+check('the button itself is never given a clip',
+  fcOwn.every((r) => !/(?:^|[;\s])overflow\s*:\s*hidden/.test(r.body)),
+  fcOwn.filter((r) => /overflow\s*:\s*hidden/.test(r.body)).map((r) => r.sel).join(', '));
+
+/* THE WIDTH, computed rather than matched. The symmetric room a CENTRED pill
+   has is the viewport less `.ui`'s two 10px gutters and the two band buttons;
+   UPGRADE is the wider at a measured 66.6px, so the room is `vw - 153.2` and
+   the house rule is 10px of daylight either side. Only the two shapes the floor
+   has ever taken are modelled: a flat number, and the room capped at a number.
+   A third shape returns NaN and reddens the lines below rather than passing. */
+const fcRoom = (vw) => vw - 153.2;
+const fcDecl = (prop) => {
+  const m = fcBase && fcBase.body.match(new RegExp(`(?:^|[;{\\s])${prop}\\s*:\\s*([^;}]+)`));
+  return m ? m[1].trim() : '';
+};
+const fcCap = parseFloat(fcDecl('max-width'));
+const fcFloor = (() => {
+  const v = fcDecl('min-width');
+  const flat = v.match(/^([\d.]+)px$/);
+  if (flat) return () => parseFloat(flat[1]);
+  const room = v.match(/^min\(\s*([\d.]+)px\s*,\s*calc\(\s*100vw\s*-\s*([\d.]+)px\s*\)\s*\)$/);
+  if (room) return (vw) => Math.min(parseFloat(room[1]), vw - parseFloat(room[2]));
+  return () => NaN;
+})();
+const fcWide = (vw) => Math.min(fcFloor(vw), fcCap);
+check('the button has a floor at all — its own text is 105px at every gold value',
+  fcWide(390) >= 140, `${fcWide(390)}px at 390`);
+check('the cap sits above the floor, so it is still a guard and not a fight',
+  fcFloor(9999) < fcCap, `floor tops out at ${fcFloor(9999)}, cap ${fcCap}`);
+[320, 360, 375, 390].forEach((vw) => {
+  const w = fcWide(vw);
+  const day = (fcRoom(vw) - w) / 2;
+  check(`the button keeps 10px of daylight beside UPGRADE at ${vw}px wide`,
+    day >= 10,
+    Number.isNaN(w) ? 'min-width is a shape this model does not know'
+      : `${w.toFixed(1)}px wide leaves ${day.toFixed(1)}px`);
+});
+
+/* THE GLINT, its clip box and its calm state. */
+check('the glint reuses turnShine rather than inventing a third shine',
+  /\.fc-shine::after\s*\{[^}]*animation\s*:\s*turnShine/.test(fcCss));
+check('the glint\'s clip box is an element ui-fall.js actually writes',
+  /class="fc-shine"/.test(fcFall));
+check('the glint reads the Turn\'s own knob rather than a literal interval',
+  /--turn-shine[\s\S]{0,80}DATA\.year\.turnShineEvery/.test(fcFall));
+const fcShineAt = fcCss.search(/\.fc-shine::after\s*\{/);
+const fcCalmAt = fcCss.indexOf('.fc-shine::after', fcShineAt + 1);
+const fcReduceAt = [...fcCss.matchAll(/@media\s*\(prefers-reduced-motion\s*:\s*reduce\)/g)]
+  .map((m) => m.index);
+check('the glint has a reduced-motion substitute, below the rule it cancels',
+  fcShineAt > 0 && fcCalmAt > fcShineAt
+    && fcReduceAt.some((i) => i > fcShineAt && i < fcCalmAt),
+  `rule ${fcShineAt}, substitute ${fcCalmAt}`);
+
+/* THE LANDSCAPE GUARD. A media query adds no specificity, so a guard filed in
+   the RESPONSIVE section two thousand lines above the base rules loses without
+   a word and the button stands on the dock. */
+const fcLandAt = [...fcCss.matchAll(/@media[^{]*orientation\s*:\s*landscape[^{]*\{/g)]
+  .map((m) => m.index)
+  .filter((i) => fcCss.slice(i, i + 300).includes('.fl-collect'));
+check('the landscape guard sits below the rules it has to beat',
+  fcLandAt.length >= 1 && !!fcBase && fcLandAt.every((i) => i > fcBase.at),
+  `${fcLandAt.length} guard(s) at ${fcLandAt.join(', ')}, base at ${fcBase && fcBase.at}`);
+check('the button is still in the swipe blacklist',
+  /noSwipe[^\n]*\.fl-collect/.test(uiSrc));
+
 group('the last two tables that name icons name real ones');
 /* The group above at "every icon a data table names actually exists" covers the
    creature, bench, upgrade and decor tables. GOODS and DATA.boosters were the

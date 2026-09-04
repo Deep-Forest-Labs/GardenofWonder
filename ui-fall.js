@@ -236,7 +236,12 @@
     const sig = String(v.total) + ':' + v.plots;
     if (el.fallCollect.dataset.sig === sig) return;
     el.fallCollect.dataset.sig = sig;
-    el.fallCollect.innerHTML = `<span class="fc-do">${Icons.get('star')}Collect all</span>
+    /* The empty first span is the glint's clip box. It cannot go on the button
+       itself: an `overflow:hidden` there clips the halo, which hangs outside the
+       border box. It is `pointer-events:none`, so it needs no `aria-hidden` and
+       cannot come between a thumb and the button. */
+    el.fallCollect.innerHTML = `<span class="fc-shine"></span>
+      <span class="fc-do">${Icons.get('star')}Collect all</span>
       <span class="fc-val">+${fmt(v.total)}</span>`;
     el.fallCollect.setAttribute('aria-label',
       `Collect all ${v.plots} ripe ${v.plots === 1 ? 'crop' : 'crops'} for ${fmt(v.total)} gold, bonus applied`);
@@ -453,7 +458,14 @@
       if (!b) return;
       onCellTap(Number(b.dataset.fall));
     });
-    if (el.fallCollect) el.fallCollect.addEventListener('click', collectAll);
+    if (el.fallCollect) {
+      el.fallCollect.addEventListener('click', collectAll);
+      /* The glint's interval is the Turn's own knob, written once — Fall's payoff
+         wears the Turn's glint, so it wears the Turn's cadence, one number rather
+         than two that can drift apart. Without this line the CSS falls back to a
+         literal and quietly stops reading `DATA.year.turnShineEvery` at all. */
+      el.fallCollect.style.setProperty('--turn-shine', `${DATA.year.turnShineEvery}s`);
+    }
     addEventListener('resize', () => { if (open) { sizeBoard(); syncScene(); } });
   }
 

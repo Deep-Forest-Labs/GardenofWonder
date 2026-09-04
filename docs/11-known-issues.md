@@ -231,7 +231,8 @@ under the touch minimum and a control that small is worse than none — but to g
 project**, verified. That is its own small job with its own decision to make about where the links
 live, so it is filed rather than smuggled into a layout commit.
 
-**The screens gallery in [44-screens.md](44-screens.md) is a photograph of a screen `#15` changed**,
+**The screens gallery in [44-screens.md](44-screens.md) is a photograph of a screen `#15` changed**
+— and `#10` changed it again, since Fall's Collect All is a different size and carries a glint now —
 and it is not regenerated here. Every one of the 31 PNGs is a new blob in git history forever
 (docs/09), several other items in the same round also move pixels, and the page is written by the
 tool rather than by hand — so one run at the end of the round is the right shape and thirteen are
@@ -240,7 +241,8 @@ not. `tools/capture-screens.js` itself IS repaired in the same commit (it drove 
 repair. **For the round's keeper: `node tools/capture-screens.js`, once, when the round is closed.**
 
 **Three surfaces still name a 34px inset that no longer exists.** Corrected in `ui.js` (the
-`CRITTER_SPOTS` comment), `style.css` (the band and both 132px caps) and docs 08/36 in the same
+`CRITTER_SPOTS` comment), `style.css` (the band and both 132px caps — Fall's is a 176px floor under
+a 184px cap since `#10`, Winter's is still 132px) and docs 08/36 in the same
 commit; `docs/10-decision-log.md`'s 2026-08-30 band entry and its phase-3.5 creature entry both quote
 it as dated history and want **superseding rather than editing** — that is the closer's call, not a
 line to reach into.
@@ -315,6 +317,24 @@ depends on the label: a Strawberry's "20m" is 36.8px on that 31.3px tile and han
 where a Pumpkin's "3h" is 28.5px and does not. And the pill **overlaps the gem chip on every plot**
 in both viewports, which is the half of this that #24's own measurement did not cover. Landscape is
 not a supported orientation. See the entry further down.
+
+**The strip under a season board is 56px in landscape, and only Fall's button knows it.** Fall's
+Collect All stood *on* the dock's raised Garden pedestal by 2px at 844×390 before 2026-09-03 — it is
+51.3px tall plus the air under the board — and at the widened 62px it would have stood 13px into it.
+Fall now carries an `@media (orientation:landscape) and (max-height:560px)` guard immediately below
+its base rules that shortens the box and puts it 3px clear. **Winter's `.wi-act` has no such guard
+and still sits at `bottom:-58px` in that 56px strip**, so it overlaps the dock in landscape exactly
+as Fall used to. The fix is four lines copied across, but it wants doing with Winter's own box in
+front of you rather than blind.
+
+**Winter's `.wi-act` did not get the payoff treatment and now differs from the button it was written
+to match.** It was Fall's Collect All line for line — same geometry, same two-line label — and Fall's
+was widened to 176px, gilded with the Turn's glint and given a reduced-motion substitute on
+2026-09-03. Winter was left alone deliberately: **two of its three states, Tuck the bed in and Tucked
+in, are not payoffs**, so enlarging and gilding the box would say "you earned this" over a chore.
+Giving Winter Fall's geometry (not its gold, not its glint) and putting the glint on the collect
+state alone is a design call for the owner, not a copy-paste. Until then the two comments that
+claimed a shared box — `style.css`'s `.wi-act` header and `index.html`'s — say so plainly.
 
 **The `--yard-h` reservation is now load-bearing for alignment.** `UI.boardSide()` reads `.stage`'s
 bottom padding to find the yard's height, because the yard node measures zero in Fall. Anything that

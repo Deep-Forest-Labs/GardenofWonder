@@ -1615,8 +1615,9 @@ below and in the decision log. Nothing about it is unreviewed any more.)*
    now, at 390×844, 375×667 and 390×640, measured to the pixel. Fall's flower is Summer's flower and
    has its glow back.
 5. **Fall's Collect All moment.** Fill and ripen the bed (Developer tools has both buttons). The pill
-   above the board says *The whole bed — +50%*; below it, a gold **Collect all · +33,600**. Tap it
-   once: confetti, coins, one sound, and a toast that says the bonus was applied. **The ripe Century
+   above the board says *The whole bed — +50%*; below it, a gold **Collect all · +33,600** — 176×62
+   since 2026-09-03, with the Turn button's own glint crossing it every nine seconds. Tap it once:
+   confetti, coins, one sound, and a toast that says the bonus was applied. **The ripe Century
    Bloom is left standing** — that is the decision, and it is in the table below.
 6. **The calmer plots.** Plant a few things and watch the top-right of each. Just a gem and a price.
    No second number counting down on eight plots at once.
@@ -2866,6 +2867,18 @@ set, so `bottom` is dropped), shrinks the clip from the top, and leaves the wate
 dock's year meter had never once painted** and nobody noticed for two days, because a meter that is
 empty looks exactly like a meter at zero. Two commits a day apart each did half of one design; the
 lesson is to check that the thing you are styling is the thing that draws.
+
+**A clip added for a shine DELETES a halo that hangs outside the button, and nothing anywhere goes
+red.** `overflow:hidden` clips pseudo-element descendants — including `z-index:-1` ones — so the
+Turn button's recorded "the clip belongs to the fill, not the button" lesson is not really about the
+pouch chip: it is about **anything drawn outside the border box**, and every one of these buttons
+wears its affordance halo on a `::before` at `inset:-6px`. Fall's Collect All is the second one to
+meet it, and the punch list's own fix sketch asked for exactly the wrong thing — "`::after` with
+`overflow:hidden` on the button". The instrument is one line:
+`document.elementFromPoint(r.left - 3, r.top + r.height / 2).className` just outside the border box
+returns the button while the halo is alive and the *parent frame* the moment a clip lands on it.
+The fix is the one `.turn-fill` already writes down — the clip is a real element, inset to the
+button's inner curve (outer radius less the border width), and the band rides *its* `::after`.
 
 **A collapsed animation must never be the only carrier of a STATE.** The global reduced-motion clamp
 runs any animation once for `.001ms` with no fill-mode, so the value it was animating simply reverts.

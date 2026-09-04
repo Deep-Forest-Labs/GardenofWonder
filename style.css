@@ -4826,29 +4826,47 @@ button:focus-visible{
    one has to be pressable — it is also in `noSwipe`, or a tap that drifts a few
    pixels leaves the season instead of collecting the bed. */
 .fl-collect{
-  position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);
+  /* `bottom` is measured against the HEIGHT: |bottom| minus the rendered box is
+     the air between the board and the button, 69 - 62 = 7px at every portrait
+     viewport. Re-derive it if the box ever changes; it is not a taste. */
+  position:absolute;left:50%;bottom:-69px;transform:translateX(-50%);
   z-index:6;pointer-events:auto;
-  display:flex;flex-direction:column;align-items:center;gap:1px;
-  /* NARROW ON PURPOSE, and this number is a clearance rather than a taste. The
-     band's two buttons live in the same strip and are NOT hidden in Fall, and a
-     full-width pill overlapped both on a 667-tall phone. The old note here said
-     "132px centred leaves at least 10px of daylight either side at every
-     viewport this game supports"; measured against the 34px insets it was FALSE
-     — 3.4px at 360 wide and a 16.6px OVERLAP at 320. The buttons moved to the
-     column's edge on 2026-09-03 and it is true now, comfortably: at the 132px
-     cap the daylight is 52.4/61.0 at 390x844, 37.4/46.0 at 360x740 and
-     17.4/26.0 at 320x640. THE CAP IS NOW CONSERVATIVE BY ~85px and re-deriving
-     it is #10's job, not this rule's — the two-line label stays until then. */
-  max-width:132px;padding:6px 14px;white-space:nowrap;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  /* TWO NUMBERS, AND THE CAP WAS NEVER ONE OF THEM. It was written as a
+     clearance and has never once bound: this button's content measures 105px at
+     EVERY gold value `fmt()` can print, because the verb's row is always wider
+     than the number's — so the box shrank to its own text and the season's one
+     payoff read like a receipt. A floor is the half of the fix a ceiling never
+     was, and raising the ceiling alone changes nothing on screen.
+
+     THE ROOM IS MEASURED ABOUT THE CENTRE, never across the gap between the
+     band's two buttons: a centred pill can only use twice the SMALLER half. The
+     band moved onto the column's own edge on 2026-09-03 — `left:0` inside
+     `.stage`, which is 10px plus the safe area off the glass because `.ui`
+     already pays `padding:calc(var(--sal) + 10px)` — and UPGRADE takes 66.6px
+     of that half, so the widest centred pill keeping the house's 10px of
+     daylight is `100vw - 173.2px`: 216.8px at 390, 186.8 at 360 and 146.8 at
+     320, the narrowest phone this game is measured on. The floor is therefore
+     the ROOM rather than a number, rounded 0.8px inward: 176px wherever there
+     is room for it (30.4px of daylight at 390, 22.9 at 375, 15.4 at 360) and
+     the room itself below ~350px (10.4 at 320). `100vw` is the right term
+     because the only widths where it binds are portrait, where both safe-area
+     insets are zero. The cap stays above the floor and stays a real guard, for
+     a label longer than this one. */
+  min-width:min(176px, calc(100vw - 174px));max-width:184px;
+  padding:7px 16px;white-space:nowrap;
   border:3px solid var(--ink);border-radius:var(--r-md);
   background:linear-gradient(180deg,#ffe98a,var(--coin));
   box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.22);
   font-weight:800;line-height:1.15;color:var(--ink);
 }
 .fl-collect[hidden]{display:none}
-.fl-collect .fc-do{display:flex;align-items:center;gap:5px;font-size:11.5px}
-.fl-collect .fc-val{font-size:15px}
-.fl-collect svg{width:15px;height:15px;flex:none}
+/* The VALUE takes the whole of the type rise, because the value is what is
+   being celebrated; the verb takes one point and the star two, which is what
+   holds the box at 62px. */
+.fl-collect .fc-do{display:flex;align-items:center;gap:5px;font-size:12.5px}
+.fl-collect .fc-val{font-size:20px}
+.fl-collect svg{width:17px;height:17px;flex:none}
 .fl-collect:active{transform:translateX(-50%) translateY(2px);box-shadow:0 1px 0 var(--ink-2), 0 4px 8px rgba(44,26,16,.2)}
 /* The halo rides a pseudo-element, never the button: `affordPulse` writes
    `transform`, which would throw away the centring the same way a state
@@ -4857,6 +4875,49 @@ button:focus-visible{
   content:'';position:absolute;inset:-6px;border-radius:999px;
   background:rgba(255,201,60,.35);z-index:-1;
   animation:affordPulse 1.4s ease-in-out infinite;
+}
+/* AND THE GLINT, which is the Turn button's rather than a third one. This is
+   the season's "you earned this" moment and the Turn is the game's other, so it
+   wears the same band on the same knob instead of a new keyframe that would
+   drift away from it.
+
+   THE CLIP BELONGS TO THE BAND, NOT THE BUTTON — the Turn's own recorded lesson,
+   and here it is the difference between a halo and no halo rather than a note
+   about tidiness. The wider form of it: a clip on a button eats ANYTHING drawn
+   outside its border box, and every affordance in this game hangs its halo
+   there. `overflow:hidden` on
+   `.fl-collect` clips its own `::before`, which hangs at `inset:-6px`, and the
+   halo dies with nothing raised anywhere — `document.elementFromPoint()` three
+   pixels outside the border box is the one-line instrument, and it answers
+   `.fall-frame` instead of `.fl-collect` the moment a clip lands here. So the
+   clip is a real element the way `.turn-fill` is, and the band is its `::after`.
+   15px is the inner curve: the 18px outer radius less the 3px border, the same
+   arithmetic `.turn-fill` writes down.
+
+   No `isolation:isolate` — the Turn needs it because `.dock-btn.turn` carries no
+   z-index of its own, while this button is `position:absolute;z-index:6` and is
+   already a stacking context, so `z-index:-1` lands above the gold and below the
+   text unaided. */
+.fl-collect .fc-shine{
+  position:absolute;inset:0;z-index:-1;pointer-events:none;
+  overflow:hidden;border-radius:15px;
+}
+.fl-collect .fc-shine::after{
+  content:'';position:absolute;top:-30%;bottom:-30%;left:0;width:38%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.9) 38%,rgba(255,201,60,.7) 64%,transparent);
+  animation:turnShine var(--turn-shine,9s) linear infinite;
+}
+/* LANDSCAPE, which is not a supported orientation (docs/11) but is one twist of
+   the wrist away. The strip under a landscape board is 56px, and this button
+   already stood ON the dock's raised Garden pedestal by 2px at the old size; at
+   62px tall it would have stood 13px into it. A shorter box at the same width
+   puts it 3px clear. It has to live HERE, below the rules it beats, rather than
+   in the RESPONSIVE section two thousand lines above: a media query adds no
+   specificity, so file order is the whole of the win. */
+@media (orientation:landscape) and (max-height:560px){
+  .fl-collect{bottom:-53px;padding:4px 16px}
+  .fl-collect .fc-val{font-size:14px}
+  .fl-collect svg{width:14px;height:14px}
 }
 
 /* =========================================================
@@ -5142,10 +5203,12 @@ button:focus-visible{
 .wi-chip.frost{background:linear-gradient(180deg,#ffffff,#bcd6e8)}
 
 /* ---------- the one button below the board ----------
-   Same box as `.fl-collect`, including the 132px cap the band's two buttons
-   forced — neither is hidden in Winter either. The VERB changes; the geometry
-   never does, and that includes the note on `.fl-collect` about the clearance
-   this number no longer needs to be this small for. */
+   This was Fall's box line for line until Fall's Collect All was widened for the
+   payoff it carries; it is the same strip and the same absolute anchoring, at
+   the narrow width Fall has left behind. Winter keeps that width on purpose:
+   two of its three states — Tuck the bed in, Tucked in — are not payoffs, and a
+   larger gilded box would enlarge those too, which is a design question rather
+   than a copy-paste. The VERB changes; the geometry never does. */
 .wi-act{
   position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);
   z-index:6;pointer-events:auto;
@@ -5334,6 +5397,19 @@ button:focus-visible{
   .g-leaf{animation:none}
   .fl-chip.armed::before{animation:none}
   .fl-collect::before{animation:none}
+  /* A SUBSTITUTE, NOT A CANCEL, and this one is photographed. The global clamp
+     runs an animation once for .001ms with no fill-mode, so `turnShine` reverts
+     to its base pose and parks a still white band with a hard vertical edge over
+     the left third of the pill — the artefact docs/05 names by hand, worse than
+     no glint at all. The Turn button answers the same problem the same way. What
+     carries "you earned this" with motion off is the gold, the halo and the
+     presence; the band only has to stop being a rendering fault. It sits below
+     the rule it replaces because a media query adds no specificity. */
+  .fl-collect .fc-shine::after{
+    animation:none;
+    top:0;bottom:0;left:0;right:0;width:auto;transform:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0) 62%);
+  }
   .fl-ready{animation:none}
 }
 

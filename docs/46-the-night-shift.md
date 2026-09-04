@@ -307,6 +307,8 @@ filter and tooltip guard rather than re-implementing; **the stages pass owns the
    - **One button below the board whose verb is the bed's state** — Tuck the bed in → Tucked in →
      Collect all — because Fall's Collect All already owns that strip at 132px and the band's two
      buttons are not hidden in Winter either.
+     *(Amended 2026-09-03: Fall's button is 176px now; Winter's kept the narrow box, because two of
+     its three states are not a payoff.)*
    - **The speech bubble has a per-season home**, and it turned out to be two bugs: the node, and
      `sayText()`'s coach test, which refused every line in a season room because the coach is
      `display:none`'d there while `hidden` stays false. Fall's `windfall` line has drawn on screen
