@@ -136,7 +136,7 @@ in `boot()`.
 | `tap` | Flower tapped | `{ gain, crit, combo, gemDrop, sparkedWonder, rainDance, beeSwarm, ladybug, held }` |
 | `plant` | Seed planted (manually or by a harvester) | `{ idx, seed, auto }` |
 | `ready` | A plot finishes growing | `{ idx }` |
-| `harvest` | Plot collected | `{ idx, payout, rarity, seed, gemDrop, repBonus, sparkedWonder, luckyHarvest }` |
+| `harvest` | Plot collected | `{ idx, payout, rarity, seed, gemDrop, repBonus, sparkedWonder, luckyHarvest, firstDiscover, discovered, bestRarity, milestones, mastery, verbMult, beacons, lanterns, sown, mutation, mutMult, boostMult, wonderMult, benchTier }` |
 | `unlock` | Plot purchased | `{ idx, cost }` |
 | `purchase` | Upgrade, decor, or booster bought | `{ kind, key, cost?, def? }` |
 | `deny` | A purchase failed | `{ reason, need, idx? }` — `reason` is `credits` / `gems` / `level` |
@@ -151,6 +151,14 @@ in `boot()`.
 `grid` and `panels` are invalidation signals rather than descriptions of things that happened.
 `grid` triggers `buildGarden()`, which throws away and recreates all plot DOM — only emit it when
 the number of plots changes.
+
+**`harvest`'s `boostMult` and `wonderMult` are the two multipliers the player deliberately switched
+on, and both are read into locals at the payout line rather than at the payload.** `tryWonder()`
+runs *between* the two, so a `wonderMult()` called inside the payload literal would name ×3 on a
+payout paid at ×1 for the 2% of harvests that spark a Wonder — a lie on the exact surface built to
+stop the game lying. `boostMult` is `1 + boostVal('globalCredits')` and nothing else; it is
+deliberately **not** `payout / yieldBase`, which would fold in petals, pollination, verbs, mutations
+and creatures. Both are read-only reporting fields: they move no economy number.
 
 ## The frame loop
 

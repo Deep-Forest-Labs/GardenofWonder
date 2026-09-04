@@ -10971,5 +10971,214 @@ check('all four rooms emit the shared plantSpot icon',
 check('and no hand-drawn copy of it survives in the art modules',
   !/mw-socket-ring|emptyCell/.test(fs.readFileSync(path.join(ROOT, 'meadow.js'), 'utf8')));
 
+
+/* ---------------------------------------------------------------------------
+   #20 — THE HARVEST NAMES WHAT THE PLAYER SWITCHED ON
+
+   WHAT THIS GROUP HOLDS AND WHAT IT CANNOT, said plainly rather than implied.
+   It RUNS four shipped things: harvest() itself, ui-shared.js's multText(),
+   ui-sheet.js's mx() through the panel harness, and the block of ui-events.js
+   that decides whether a multiplier float happens at all — sliced out by anchor
+   and evaluated against a real payload and real game state, because the handler
+   around it wants a document. So "one float, carrying the product, on the
+   louder cause's tint" is a measurement here, not a regex.
+
+   WHAT IT STILL CANNOT SEE: the float on screen. Nothing here paints. That it
+   appears, where it lands relative to the number above it, that it reads at a
+   glance, and that it survives the reduced-motion clamp were measured with
+   tools/probe.js and written into docs/06-audio-and-fx.md; the two CSS checks
+   below read style.css by PROPERTY, which holds the rule's existence and its
+   arithmetic and nothing about what a pixel did.
+   --------------------------------------------------------------------------- */
+group('#20 — a harvest names the multipliers the player switched on, and only those');
+G.reset(); clearGarden(); clearMastery();
+S.credits = 1e9; S.savedSeeds = 1e6;
+const rng20 = Math.random;
+Math.random = () => 0.5;                       // Common, no gem, no Wonder spark, no pack
+const ripe20 = (idx = 0, id = 'daisy') => {
+  S.grid[idx] = { ...freshCell(), seed: id, plantedAt: clock - 100, grow: 10, ready: true };
+};
+
+/* The three expressions this group lifts and runs. A slice that comes back
+   empty makes every assertion under it vacuously green, so it is checked first
+   and by SIZE — a rename returns '' and '' satisfies every regex written as
+   "the wrong thing is not in here". */
+const SHARED_SRC20 = fs.readFileSync(path.join(ROOT, 'ui-shared.js'), 'utf8');
+const EVENTS_SRC20 = fs.readFileSync(path.join(ROOT, 'ui-events.js'), 'utf8');
+const multTextSrc20 = (SHARED_SRC20.match(/^ {2}const multText = .*$/m) || [''])[0];
+const multFloatSrc20 = (EVENTS_SRC20.match(/ {4}const deliberate = [\s\S]*?\n {4}\}/) || [''])[0];
+const mxSrc20 = sheetSlice('mx');
+check('the three shipped expressions this group RUNS were really found, so nothing below is green on an empty string',
+  multTextSrc20.length > 60 && multFloatSrc20.length > 180 && mxSrc20.length > 80,
+  `${multTextSrc20.length} / ${multFloatSrc20.length} / ${mxSrc20.length}`);
+
+/* A missing slice must redden the checks under it, not throw and take the rest
+   of the suite's report down with it. */
+const multText20 = multTextSrc20 ? new Function(`${multTextSrc20}\nreturn multText;`)() : () => 'gone';
+const mx20 = (m) => sheetRender('mx', [m], { bind: { UI: { multText: multText20 } } }).html;
+/* The float block, run against a payload and whatever state is set — Game and
+   DATA are the real ones, so "which tint" is answered by the real predicates. */
+const floatCalls20 = (p) => {
+  const calls = [];
+  new Function('p', 'c', 'multText', 'FX', 'Game', 'DATA', 'WONDER', multFloatSrc20)(
+    p, { x: 0, y: 0 }, multText20, { float: (...a) => { calls.push(a); } }, G, DATA, WONDER
+  );
+  return calls;
+};
+const floatFor20 = (boostMult, wonderMult, run = {}) => {
+  S.boosters = {};
+  S.wonder = { until: 0, last: 0 };
+  if (run.boost) S.boosters.golden = G.nowSeconds() + 30;
+  if (run.wonder) S.wonder = { until: G.nowSeconds() + WONDER.duration, last: G.nowSeconds() };
+  return floatCalls20({ boostMult, wonderMult });
+};
+
+/* ---- what the engine reports ---- */
+ripe20();
+const bare20 = G.harvest(0);
+check('with nothing switched on, both named multipliers are exactly 1',
+  bare20.boostMult === 1 && bare20.wonderMult === 1, `${bare20.boostMult} / ${bare20.wonderMult}`);
+
+/* THE DESIGN LINE. Two Rich Bloom petals move the payout without the player
+   switching anything on for THIS harvest, and neither named field may notice —
+   the check that reddens if either becomes payout/yieldBase, which is the shape
+   plantPayout().mult already has and therefore the easy wrong answer. */
+G.buyPetal('daisy', 'rich'); G.buyPetal('daisy', 'rich');
+clearMastery(); ripe20();
+const petal20 = G.harvest(0);
+check('a Rich Bloom petal moves the payout and neither named multiplier',
+  petal20.payout === Math.round(G.seedById('daisy').yield * 1.6)
+  && petal20.boostMult === 1 && petal20.wonderMult === 1,
+  `${petal20.payout} / ${petal20.boostMult} / ${petal20.wonderMult}`);
+
+G.Dev.grantBoosts();
+check('the boost armed through the real activation path', G.activateBoost('golden') === true);
+clearMastery(); ripe20();
+const boost20 = G.harvest(0);
+check('a running power-up is named at exactly its own multiplier',
+  boost20.boostMult === 1 + DATA.boosters.find((b) => b.id === 'golden').effects.globalCredits
+  && boost20.wonderMult === 1, `${boost20.boostMult} / ${boost20.wonderMult}`);
+check('and the number it names is genuinely a factor of what was paid',
+  boost20.payout === Math.round(petal20.payout * boost20.boostMult),
+  `${boost20.payout} vs ${Math.round(petal20.payout * boost20.boostMult)}`);
+
+G.startWonder(); clearMastery(); ripe20();
+const wonder20 = G.harvest(0);
+check('a running Wonder is named at WONDER.payoutMult, and both stack into what was paid',
+  wonder20.wonderMult === WONDER.payoutMult
+  && wonder20.payout === Math.round(petal20.payout * wonder20.boostMult * wonder20.wonderMult),
+  `${wonder20.wonderMult} · ${wonder20.payout} vs ${Math.round(petal20.payout * wonder20.boostMult * wonder20.wonderMult)}`);
+
+/* THE ORDER TRAP. tryWonder() runs between the payout and the payload, so a
+   wonderMult() read at the literal names ×3 on a payout paid at ×1. */
+S.wonder = { until: 0, last: 0 }; S.boosters = {};
+clearMastery(); ripe20();
+Math.random = () => 0;                         // Common, and tryWonder fires
+const spark20 = G.harvest(0);
+Math.random = () => 0.5;
+check('the spark really happened, so this fixture is in the state it claims',
+  spark20.sparkedWonder === true && G.wonderActive());
+check('a harvest that SPARKS a Wonder reports the multiplier it was PAID at, not the one that just started',
+  spark20.wonderMult === 1 && spark20.payout === petal20.payout,
+  `${spark20.wonderMult} / ${spark20.payout} vs ${petal20.payout}`);
+
+/* The third legal case: a permanent background multiplier the player is not
+   watching a clock on moves the payout, and stays unnamed. */
+S.wonder = { until: 0, last: 0 }; S.boosters = {};
+clearGarden(); clearMastery();
+ripe20(0, 'daisy');
+S.grid[1] = { ...freshCell(), seed: 'lavender', plantedAt: clock, grow: 1e6, ready: false };
+const nurse20 = G.harvest(0);
+check('a Nurse next door moves the payout and neither named multiplier',
+  nurse20.verbMult !== 1 && nurse20.payout === Math.round(petal20.payout * nurse20.verbMult)
+  && nurse20.boostMult === 1 && nurse20.wonderMult === 1,
+  `${nurse20.verbMult} / ${nurse20.payout} / ${nurse20.boostMult} / ${nurse20.wonderMult}`);
+Math.random = rng20;
+
+/* ---- what the two surfaces write ---- */
+check('rounding either side of one is not a change, and says nothing',
+  multText20(1) === '' && multText20(1.004) === '' && multText20(0.996) === '',
+  JSON.stringify([multText20(1), multText20(1.004), multText20(0.996)]));
+check('a real change says its own number in BOTH directions — a quietly smaller one is the same lie as a larger',
+  multText20(1.25) === '×1.25' && multText20(3.75) === '×3.75' && multText20(0.9) === '×0.9',
+  JSON.stringify([multText20(1.25), multText20(3.75), multText20(0.9)]));
+check('the picker pill writes the same text the float does, out of the same helper',
+  mx20(1.25) === ' <i class="mx">×1.25</i>', mx20(1.25));
+check('a multiplier BELOW one is marked low, so a penalty can never wear a bonus’s ink',
+  mx20(0.9) === ' <i class="mx low">×0.9</i>', mx20(0.9));
+check('and a multiplier of one renders no pill at all', mx20(1) === '', mx20(1));
+
+/* ---- what the harvest moment actually floats ---- */
+const none20 = floatFor20(1, 1);
+check('with nothing switched on, the harvest floats no multiplier at all',
+  none20.length === 0, JSON.stringify(none20));
+const justBoost20 = floatFor20(1.25, 1, { boost: true });
+check('a power-up alone floats its own multiplier once, on the power-up’s own tint',
+  justBoost20.length === 1 && justBoost20[0][2] === '×1.25' && justBoost20[0][3] === 'mult'
+  && justBoost20[0][4] === DATA.boosters.find((b) => b.id === 'golden').tint,
+  JSON.stringify(justBoost20));
+check('and it rides UNDER the payout it explains, which floats above the plot centre',
+  justBoost20.length === 1 && justBoost20[0][1] > 0, JSON.stringify(justBoost20));
+const justWonder20 = floatFor20(1, WONDER.payoutMult, { wonder: true });
+check('a Wonder alone floats ×3 on the WONDER’s own colour, not the gold a Legendary wears',
+  justWonder20.length === 1 && justWonder20[0][2] === `×${WONDER.payoutMult}`
+  && justWonder20[0][4] === WONDER.tint, JSON.stringify(justWonder20));
+const both20 = floatFor20(1.25, WONDER.payoutMult, { boost: true, wonder: true });
+check('both running is ONE float carrying the PRODUCT — 1.25 × 3 is ×3.75, never the sum and never two floats',
+  both20.length === 1 && both20[0][2] === '×3.75', JSON.stringify(both20));
+check('and the louder of the two causes takes the tint',
+  both20.length === 1 && both20[0][4] === WONDER.tint, JSON.stringify(both20));
+check('a payload from before this change floats nothing, rather than ×NaN',
+  floatCalls20({ payout: 70 }).length === 0, JSON.stringify(floatCalls20({ payout: 70 })));
+/* The behavioural checks above pass just as happily against a view that worked
+   the multiplier out for itself, because the fixture sets the state to match.
+   Only the source says which side of the layering line the arithmetic is on. */
+check('the view composes the two numbers the payload handed it and does no economy math of its own',
+  !/boostVal\(/.test(multFloatSrc20) && /p\.boostMult/.test(multFloatSrc20)
+  && /p\.wonderMult/.test(multFloatSrc20), multFloatSrc20.replace(/\s+/g, ' '));
+
+/* The loud tiers bury the float, so the toast body carries the same fact —
+   run rather than matched, because the interpolation is the whole question. */
+const toastSrc20 = (/body: (`Worth .*`),/.exec(EVENTS_SRC20) || [])[1] || '""';
+const toastBody20 = (payout, line) =>
+  new Function('fmt', 'p', 'multLine', `return ${toastSrc20};`)(String, { payout }, line);
+check('an Epic or Legendary toast carries the multiplier where the float is buried, and says nothing extra without one',
+  toastBody20(4620, '×3.75') === 'Worth 4620 coins · ×3.75'
+  && toastBody20(4620, '') === 'Worth 4620 coins',
+  `${toastBody20(4620, '×3.75')} | ${toastBody20(4620, '')}`);
+const lady20 = /c\.y \+ \(multLine \? (\d+) : (\d+)\), 'Ladybug luck!'/.exec(EVENTS_SRC20);
+check('the Ladybug line steps further down when a multiplier is under the payout, so the two never smudge together',
+  Boolean(lady20) && Number(lady20[1]) > Number(lady20[2]),
+  lady20 ? `${lady20[1]} vs ${lady20[2]}` : 'not found');
+
+/* ---- style.css, by property. This holds the arithmetic of the rules and
+   nothing about what they painted; the pictures are in docs/06 and docs/08. ---- */
+const floatPx20 = (sel) => Number((/font-size:([\d.]+)px/.exec(cssRule(sel)) || [0, 0])[1]);
+check('the multiplier float is SMALLER than every payout float it can ride under — it is the reason, not the amount',
+  floatPx20('.float.mult') > 0
+  && ['.float', '.float.big', '.float.legend'].every((s) => floatPx20('.float.mult') < floatPx20(s)),
+  `${floatPx20('.float.mult')} vs ${['.float', '.float.big', '.float.legend'].map(floatPx20).join('/')}`);
+check('and it takes the tint it was handed, with a palette token behind it rather than a raw hex',
+  /color:var\(--float-tint,\s*var\(--[a-z-]+\)\)/.test(cssRule('.float.mult')), cssRule('.float.mult'));
+const reduce20 = (CSS_SRC.match(/@media \(prefers-reduced-motion:reduce\)\{\n {2}\*,\*::before[\s\S]*?\n\}/) || [''])[0];
+const floatUp20 = (CSS_SRC.match(/@keyframes floatUp\{[\s\S]*?\n\}/) || [''])[0];
+check('reduced motion switches the float’s keyframe OFF — the load-bearing half, because floatUp ENDS at opacity 0 and `forwards` holds it',
+  /\.float\{[^}]*animation-name:none/.test(reduce20) && /100%\{opacity:0/.test(floatUp20),
+  `${reduce20.replace(/\s+/g, ' ').slice(0, 120)} | ${floatUp20.slice(-40)}`);
+check('and it puts the ink back in the same rule, so the substitute never rests on what .float happens to default to',
+  /\.float\{[^}]*opacity:1/.test(reduce20), reduce20.replace(/\s+/g, ' ').slice(0, 160));
+
+/* One colour, one home. The rail chip and the harvest float are the two
+   surfaces that name the Wonder, and a hex in either would drift from the other
+   the first time one is touched. */
+const wonderCopies20 = ['ui.js', 'ui-events.js', 'ui-sheet.js', 'ui-fall.js', 'ui-winter.js',
+  'ui-meadow.js', 'ui-menu.js', 'ui-shared.js', 'fx.js', 'style.css']
+  .filter((f) => fs.readFileSync(path.join(ROOT, f), 'utf8').includes(WONDER.tint));
+check('the Wonder’s colour is data, and no view keeps a second copy of it to drift from',
+  Boolean(WONDER.tint) && wonderCopies20.length === 0, wonderCopies20.join(', '));
+check('and the rail chip paints itself from that one field',
+  /--tint:\$\{WONDER\.tint\}/.test(uiSrc));
+G.reset();
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

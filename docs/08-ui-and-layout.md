@@ -465,6 +465,25 @@ A row is roughly a third shorter for it, which is the point: the garden screen i
 shows nine objects and one number, and the picker should read as a shelf of nine objects rather than
 a table of fifty-six facts.
 
+**The payout pill's multiplier is now legible (2026-09-03).** `.stat .mx` is the superscript that
+says a number the garden has changed is not the one on the seed's data row — `193–1,540 ×1.25` with
+a power-up up, red `×0.9` on a Nurse's own plot, `×0.5` on a Moonflower in daylight. It shipped at
+**9.5px / .72 opacity / 1px left margin**, which was technically honest and practically invisible:
+the owner read that exact boosted range off this row and still could not tell the power-up was
+working, and the punch list's finding was that the invisibility *was* the answer. It is now
+**11px / full opacity / 2px** — just above the pill's own 10.5px, at weight 900 against the pill's
+800, so the fact that *changed* the number outranks the number rather than trailing off it.
+Measured A/B inside one probe session: the glyph box **20.7 × 12.3 → 24.0 × 14.3 px**, the tallest
+of nineteen rows **141.9 → 142.5 px**, and no new wrap on any row. The size is **provisional** — the
+punch list asked for a raise and named no number. `.mx.low` (the red) is a separate rule and takes
+the new size with it.
+
+`mx()` reads its "is this a change or is it rounding?" threshold from `UI.multText()` in
+`ui-shared.js`, shared with the harvest float so the picker and the harvest moment can never
+disagree about half a percent. It has three call sites — the locked row, the unlocked row and
+`syncSeedRows()`, which repaints the pills live on the 0.25 s tick when a power-up starts while the
+picker is open.
+
 The row carries the full card material — 3px ink, `0 4px 0 var(--ink-2)`, and since 2026-08-26 the
 `0 8px 14px rgba(44,26,16,.24)` contact shadow the plot has, so rows sit *above* the paper rather
 than on it. The press collapses the lip and tightens the shadow together.

@@ -203,11 +203,13 @@
      the seed's data row: the pill carries the multiplier that did it, in either
      direction. A Nurse costs its own plot 10% and a Moonflower picked in
      daylight pays half, and a quietly smaller number is the same lie as a
-     quietly larger one. Half a percent either way is rounding, not a change. */
+     quietly larger one. Half a percent either way is rounding, not a change —
+     and that threshold lives in `UI.multText()`, shared with the harvest
+     float, so this pill and that number can never disagree about it. */
   function mx(mult) {
-    if (mult > 1.005) return ` <i class="mx">×${Number(mult.toFixed(2))}</i>`;
-    if (mult < 0.995) return ` <i class="mx low">×${Number(mult.toFixed(2))}</i>`;
-    return '';
+    const t = UI.multText(mult);
+    if (!t) return '';
+    return ` <i class="mx${mult < 1 ? ' low' : ''}">${t}</i>`;
   }
 
   function pips(level, max = 8) {

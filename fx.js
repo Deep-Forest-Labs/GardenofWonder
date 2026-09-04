@@ -376,7 +376,9 @@ const FX = (() => {
   }
 
   /* ---------- floating text ---------- */
-  function float(x, y, text, kind = '') {
+  /* A colour in, a colour out — the shape `sparks()` and `ring()` already have,
+     so this file still knows nothing about what the number means. */
+  function float(x, y, text, kind = '', tint = '') {
     if (!textLayer) return;
     const el = document.createElement('div');
     el.className = `float ${kind}`;
@@ -384,6 +386,7 @@ const FX = (() => {
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
     el.style.setProperty('--dx', `${rnd(-16, 16).toFixed(0)}px`);
+    if (tint) el.style.setProperty('--float-tint', tint);
     textLayer.appendChild(el);
     setTimeout(() => el.remove(), kind === 'big' ? 1100 : 850);
   }

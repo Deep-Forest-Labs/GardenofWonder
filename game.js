@@ -2808,10 +2808,14 @@ const Game = (() => {
       );
     const yieldBase = sdef.yield * r.m;
     const yieldBonus = 1 + boostVal('globalCredits');
+    /* Read once, here: tryWonder() below can START a Wonder on this very
+       harvest, so a number read again at the payload would name a multiplier
+       this payout was never paid at. */
+    const wonderPaid = wonderMult();
     /* Petals multiply here and in passiveIncomeRate(), never seed.yield —
        the masteryMult pattern, inherited when the old ladder retired. */
     const payout = Math.round(
-      yieldBase * yieldBonus * (1 + pollination()) * wonderMult() * petalMult(sdef.id) * verbMult * mutMult
+      yieldBase * yieldBonus * (1 + pollination()) * wonderPaid * petalMult(sdef.id) * verbMult * mutMult
       * critterPayoutMult()
     );
 
@@ -2854,6 +2858,11 @@ const Game = (() => {
       firstDiscover: almanac.first, discovered: almanac.count, bestRarity: almanac.best,
       milestones: almanac.milestones, mastery: almanac.mastery,
       verbMult, beacons, lanterns, sown, mutation, mutMult,
+      /* The two multipliers a player deliberately switched on, reported so the
+         harvest surface can name them. `boostMult` is the power-up's own factor
+         and nothing else — never payout/yieldBase, which folds in petals,
+         pollination, verbs, mutations and creatures. */
+      boostMult: yieldBonus, wonderMult: wonderPaid,
       benchTier: benchGot ? benchTier : -1
     };
     emit('harvest', payload);

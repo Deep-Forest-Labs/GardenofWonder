@@ -805,7 +805,7 @@
        most confusing possible thing to do with it. */
     if (Game.wonderActive()) {
       const remain = Math.max(0, S.wonder.until - now);
-      html = `<div class="chip timed" style="--tint:#ff6bd6">
+      html = `<div class="chip timed" style="--tint:${WONDER.tint}">
         <span class="ring" style="--p:${(remain / WONDER.duration).toFixed(3)}"><i>${Math.ceil(remain)}</i></span>
         <span>WONDER x${WONDER.payoutMult}</span></div>` + html;
     }

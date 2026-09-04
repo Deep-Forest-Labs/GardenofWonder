@@ -2891,6 +2891,28 @@ because the garden's swipe only starts on the background and the centre of anyth
 name is covered by the board; `@30,600` is the lawn at 390×844. Keep the endpoint inside the
 viewport — events dispatched outside the window are not delivered.
 
+**A payload field read AFTER a side effect that can change it is a lie, and no test sees it.**
+`harvest()` computes its payout, then `const sparked = tryWonder(WONDER.harvestChance)` — which can
+START a Wonder — and only *then* builds the payload literal. Writing `wonderMult: wonderMult()`
+inside that literal, which is the obvious thing to type, reports **×3 on a payout that was paid at
+×1** for the 2% of harvests that spark one: a lie on the exact surface built to stop the game lying,
+green in every check, and visible to a player about once every fifty picks. Read the value into a
+local **at the line that used it** (`const wonderPaid = wonderMult()`), and put the fixture in the
+suite: force the spark, and assert the reported multiplier against the payout rather than against
+the multiplier that is running now. Same family as "verbs are read before the plot is cleared" — a
+harvest is a sequence of mutations and a payload is a photograph of one moment in it.
+
+**The global reduced-motion clamp had silently deleted every floating number in the game.** `floatUp`
+ends at `opacity: 0` and `.float` carries `animation-fill-mode: forwards`, so the clamp's
+`.001ms` run finishes instantly and *holds the last keyframe* — every payout, gem, reputation and
+discovery float appeared for a microsecond and then sat there invisible, for as long as the layer has
+existed. It reviewed as correct because nothing about a float looks stateful. This is the recorded
+"a collapsed animation must never be the only carrier of a STATE" trap in its widest form yet: **the
+state was simply the number existing.** Two lines fixed all of them
+(`.float{animation-name:none;opacity:1}` in the reduce block), and the way to check any future one is
+an A/B inside a single probe session — clone the node, force `animationName` back on the clone, and
+read both computed opacities.
+
 **A new test group is worth sabotaging before it is worth believing.** `bill 1c` shipped with three
 assertions that could not fail: one asserted a getter after a Turn had already emptied the bag, one
 table (`DATA.dailies`) was not in the audit at all, and a typo'd booster id on any rung but the one

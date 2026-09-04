@@ -6,7 +6,7 @@
    UI through the `UI` global — see docs/02-architecture.md. */
 
 (() => {
-  const { S, el, fmt, signed, rnd } = UI;
+  const { S, el, fmt, signed, rnd, multText } = UI;
 
   /* Where a celebration about creatures should land. The garden is hidden while
      the Hollow is up, and a hidden element measures as a zero rect — so anything
@@ -293,6 +293,19 @@
     const rk = p.rarity.key;
     FX.coins(c.x, c.y, rk === 'legend' ? 22 : rk === 'epic' ? 14 : rk === 'rare' ? 9 : 6);
     FX.float(c.x, c.y - 6, `+${fmt(p.payout)}`, rk === 'common' ? 'big' : rk);
+    /* Eight multipliers reach that number and naming all of them would ruin it.
+       Only the two the player deliberately switched on get said: a power-up and
+       the Wonder. Rarity has a whole language of its own already, and petals,
+       verbs, hives and creatures are permanent background nobody is watching a
+       clock on. The engine hands both numbers over on the payload; this only
+       composes them — working out the boost here would be economy math in a
+       ui-* file. One float carrying the product, tinted by the louder cause. */
+    const deliberate = (p.boostMult || 1) * (p.wonderMult || 1);
+    const multLine = multText(deliberate);
+    if (multLine) {
+      const boostTint = (DATA.boosters.find((b) => b.effects.globalCredits && Game.activeBoost(b.id)) || {}).tint;
+      FX.float(c.x, c.y + 14, multLine, 'mult', Game.wonderActive() ? WONDER.tint : boostTint);
+    }
     UI.popWallet('credits');
     UI.noteActivity();
 
@@ -318,7 +331,9 @@
       if (rk !== 'rare') {
         UI.toast({
           title: `${p.rarity.label} ${p.seed.name}!`,
-          body: `Worth ${fmt(p.payout)} coins`,
+          /* The loud tiers bury the float under stars, a ring and confetti, so
+             the same fact rides the one surface that still reads there. */
+          body: `Worth ${fmt(p.payout)} coins${multLine ? ` · ${multLine}` : ''}`,
           art: Flora.head(p.seed, 26),
           kind: rk
         });
@@ -331,7 +346,9 @@
     }
     if (p.luckyHarvest) {
       FX.sparks(c.x, c.y, 8, '#fa5252');
-      FX.float(c.x, c.y + 18, 'Ladybug luck!', 'lucky');
+      /* The multiplier takes +14 when it is showing, and 19px centred text at
+         +18 would smudge into it while both scale up. */
+      FX.float(c.x, c.y + (multLine ? 36 : 18), 'Ladybug luck!', 'lucky');
     }
     if (p.firstDiscover && !(p.milestones && p.milestones.length)) {
       FX.float(c.x - 20, c.y - 28, `${p.seed.name} discovered!`, 'big');

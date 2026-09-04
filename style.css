@@ -1820,8 +1820,11 @@ button:focus-visible{
 .stat.bad{background:linear-gradient(180deg,#ffe3e3,#ffc9c9)}
 /* The multiplier the garden is adding, riding inside the pill it changed. A
    second pill would wrap the row on a phone, and the fact belongs to the
-   number rather than beside it. */
-.stat .mx{font-style:normal;font-size:9.5px;font-weight:900;opacity:.72;margin-left:1px}
+   number rather than beside it. It sits ABOVE the pill's own 10.5px at full
+   ink: at 9.5px and .72 it was technically honest and practically invisible,
+   and the owner read a boosted range off this row without seeing the boost.
+   PROVISIONAL — the punch list asked for a raise and named no number. */
+.stat .mx{font-style:normal;font-size:11px;font-weight:900;opacity:1;margin-left:2px}
 /* A multiplier BELOW one, in the same red the prices use for "no". Colour only,
    so the pill keeps its own body and lip. */
 .stat .mx.low{color:#c92a2a;opacity:.9}
@@ -2623,6 +2626,10 @@ button:focus-visible{
 .float.water{color:#74c0fc}
 .float.bee{color:#ffc93c}
 .float.lucky{color:#fa5252}
+/* A multiplier the player deliberately switched on, riding under the payout it
+   changed: smaller than the number it explains, and on its cause's own colour
+   because it is the reason rather than the amount. */
+.float.mult{font-size:14px;color:var(--float-tint,var(--legend))}
 
 /* toasts */
 .toasts{
@@ -2926,6 +2933,10 @@ button:focus-visible{
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.08s !important}
+  /* A collapsed animation reverts what it was animating, and floatUp ends at
+     opacity 0 — so with the preference on, every number the garden pays was
+     landing invisibly. It holds still and its own timer takes it away instead. */
+  .float{animation-name:none;opacity:1}
   .cloud{display:none}
 }
 

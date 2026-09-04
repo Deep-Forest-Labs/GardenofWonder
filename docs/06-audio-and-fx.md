@@ -336,9 +336,41 @@ never on bare soil, because the squash it sets off is the plant's.
 
 ### Floating text
 
-DOM, not canvas, because it needs the game font and outlined text style. `float(x, y, text, kind)`
-appends an absolutely positioned element with a random horizontal drift, then removes it after
-850 ms (1,100 ms for `big`). Kinds: `crit`, `big`, `gem`, and the rarity names.
+DOM, not canvas, because it needs the game font and outlined text style.
+`float(x, y, text, kind, tint)` appends an absolutely positioned element with a random horizontal
+drift, then removes it after 850 ms (1,100 ms for `big`). Kinds: `crit`, `big`, `gem`, `ticket`,
+`water`, `bee`, `lucky`, `good`, `mult`, and the four rarity names. The optional `tint` is a colour
+in and a colour out — it writes `--float-tint` on the element and nothing in `fx.js` knows what the
+colour means, the same shape `sparks(x, y, n, tint)` and `ring(x, y, tint, …)` already have.
+
+A float is **plain text**: the helper writes `textContent`, so it cannot carry a pill, an icon or
+any markup, and it never should. Two floats is how a second fact is said.
+
+**Naming the multipliers at the harvest.** Eight multipliers reach a harvest payout — rarity, a
+power-up, pollination, the Wonder, petals, a verb, a mutation and a creature — and a floating number
+that named all of them would be worse than one that names none. **Only the two the player
+deliberately switched on are said: a power-up and the Wonder.** Rarity has a whole language of its
+own already (colour, stars, a sound, a toast), and petals, verbs, hives and creatures are permanent
+background nobody is watching a clock on. A power-up and a Wonder are the two things a player spent
+and is watching a countdown for, which is exactly why the silence about them was the one that got
+noticed.
+
+The two numbers arrive on the `harvest` payload as `boostMult` and `wonderMult` — `game.js` never
+touches the DOM and `ui-events.js` does no economy math, so the payload is how the number crosses.
+The view multiplies them and floats **one** smaller line carrying the product (`×3.75`), tinted by
+the louder cause: `WONDER.tint` when a Wonder is running, otherwise the power-up's own `tint`. One
+float rather than two, because two would put four floats on the busiest moment in the game and set
+the power-up's `×1.25` in competition with the Wonder's `×3` for the same fourteen pixels; the rail
+carries the itemisation one glance away. The threshold for "this is a change rather than rounding"
+is `UI.multText()`, shared with the seed picker's pill so the two surfaces can never disagree.
+
+**Floats hold still under reduced motion, and this was broken for every float in the game.** The
+global clamp runs an animation once for `.001ms`, and `floatUp` **ends at `opacity: 0`** with
+`animation-fill-mode: forwards` holding that last keyframe — so with the preference on, every number
+the garden has ever paid appeared for a microsecond and then sat there invisible. Measured live: the
+same node reads `opacity: 1` with `.float{animation-name:none;opacity:1}` in the reduced-motion block
+and `opacity: 0` with `animation-name` forced back to `floatUp`. It now holds still at full ink in
+the base `translate(-50%,-50%)` position and its own `setTimeout` takes it away on schedule.
 
 ### Screen shake
 
@@ -419,6 +451,16 @@ than a Rare one.
 | Aurora (6) | — | none — every channel is CSS | — | `aurora` bed and dress | — | forced |
 | Wonderfall (all) | — | 26 gold coins, no magnet | — | `wonderfall` bed and dress, `sing` three times | banner | forced |
 | Sunbreak | — | none — light wedges, never particles | — | sunbreak dress | — | yes |
+
+**The multiplier float is a MODIFIER on the four harvest rows, not a rung of its own.** It adds no
+sound, no shake, no haptic, no particle and no toast — one extra text node, at 14px against the
+payout's 19–26px, whenever a power-up or a Wonder is running. It is deliberately a *passenger* at
+Epic and Legendary: a forced Legendary with both multipliers up buries the payout float itself under
+22 coins, 16 stars, a ring, 34 confetti and a discovery float, and the multiplier disappears into
+noise that already exists rather than adding to it. The fact rides the **toast body** at those tiers
+instead — `Worth 4,620 coins · ×3.75` — which is the one surface still legible there. It earns its
+keep at Common, which is 60%+ of harvests and the quiet one. Escalating it to survive the loud tiers
+(bigger, longer, its own sound) is the change to refuse.
 
 **Fall's two beats are one rung apart on purpose.** The bed *arming* is a promise — the board goes
 gold and says so from across the room — and it gets a crit's worth of noise. Collect All is the

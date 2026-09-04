@@ -116,5 +116,11 @@ const UI = (() => {
     return `${Number(m[3])} ${month}${year}`;
   }
 
-  return { $, $$, S, el, fmt, fmtTime, pct, signed, rnd, pickLine, logDate, MASTERY_TRACK };
+  /* Half a percent either way is rounding, not a change. The picker's pill and
+     the harvest float have to agree about that, so they read it from one place.
+     It returns PLAIN TEXT, not markup — a float is written with `textContent`
+     and cannot carry a pill. */
+  const multText = (mult) => (Math.abs(mult - 1) > 0.005 ? `×${Number(mult.toFixed(2))}` : '');
+
+  return { $, $$, S, el, fmt, fmtTime, pct, signed, rnd, pickLine, logDate, multText, MASTERY_TRACK };
 })();
