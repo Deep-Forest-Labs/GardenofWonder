@@ -741,7 +741,8 @@ const DATA = {
         'Pick a flower while a power-up or a Wonder is running and the number that floats up now says how much bigger it was made — and the seed list says it loudly enough to notice.',
         'If your phone is set to reduce motion, the numbers that fly up when you pick a flower now hold still where you can read them.',
         'Tap the weather above your garden and it answers in a sentence now instead of a paragraph — what this sky can leave on a plant, and how likely it is.',
-        'Golden Popups now says what it really lifts — what your taps pay and what your garden harvests pay — instead of promising every coin in the game.'
+        'Golden Popups now says what it really lifts — what your taps pay and what your garden harvests pay — instead of promising every coin in the game.',
+        'Tap anything in the strip above your garden — the sky, a running power-up, a Wonder — and it will tell you what it is doing.'
       ]
     },
     {

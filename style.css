@@ -563,12 +563,13 @@ button:focus-visible{
 }
 .chip .chip-price svg{width:12px;height:12px}
 
-/* THE SKY'S CHIP. A real button, because it is the first thing in this row that
-   has ever been tappable — the rail's other chips are `<div>`s, and a click on a
-   div carries no role, no keyboard and no focus ring. Its body is the sky's own
-   `tint` under the white veil the palette uses everywhere a saturated token has
-   to sit behind ink; the dot beside the name is the tint at full strength, so
-   the sky is named twice, in a word and in a colour.
+/* THE SKY'S CHIP. A real button, and since #9 so is every other chip in this
+   row — a click on a div carries no role, no keyboard and no focus ring, and
+   three chips that all open a tooltip may not be three different kinds of
+   element. Its body is the sky's own `tint` under the white veil the palette
+   uses everywhere a saturated token has to sit behind ink; the dot beside the
+   name is the tint at full strength, so the sky is named twice, in a word and
+   in a colour.
 
    NOT `.wx`, AND NOT `.sky`. Both are taken and both are
    `position:absolute;inset:0` — `.wx` is the Sky Pass's weather layer and `.sky`
@@ -583,7 +584,12 @@ button:focus-visible{
   background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.62)),var(--tint,var(--sky1));
   cursor:pointer;
 }
-.chip.weather:active{transform:translateY(1px);box-shadow:0 1px 0 var(--ink-2)}
+/* The press state is SHARED with the chips that became controls in #9, added as
+   a selector rather than a second block: a duplicated block would move a
+   style-check count for no reason. `.chip.timed` at (0,2,0) is required — bare
+   `.chip` is declared twice at (0,1,0), once here for the rail and once at
+   `.chip` in the sheet, and the later one wins. */
+.chip.weather:active,.chip.timed:active{transform:translateY(1px);box-shadow:0 1px 0 var(--ink-2)}
 .weather-dot{
   width:11px;height:11px;flex:none;border-radius:50%;
   background:var(--tint,var(--sky1));border:2px solid var(--ink);
@@ -4577,7 +4583,13 @@ button:focus-visible{
    season tab — a real, measured, visible node in this room. Narrowed rather
    than removed: every other coach mark still targets something in the garden
    and would still park in the corner. */
-.in-fall .coach:not(.season){display:none}
+/* …and the chip tooltip, which wears `.coach` for its bubble shape and nothing
+   else. It is not placed by `refreshCoach()` and never measures a hidden target
+   — it is placed by the tap that opens it, in this room, at a chip that is
+   visibly in this room. It was `display:none` here, so a tap played the open
+   sound and painted a 0x0 box. Chained `:not()`s rather than a selector list:
+   no `:not(a,b)` exists anywhere in this stylesheet yet. */
+.in-fall .coach:not(.season):not(.weather-tip){display:none}
 :root{--fl-noop:0}
 
 .fl-board{
@@ -4867,11 +4879,13 @@ button:focus-visible{
    a hidden node, gets a 0x0 rect and parks the bubble over the wallets. The
    one that teaches the way back OUT stays, because it points at a season tab,
    which is a real visible node in this room. */
-.in-winter .coach:not(.season){display:none}
-/* And the weather tooltip is a `.coach`, so it is covered by the line above —
-   but it is worth naming, because it is the one that would paint over the snow
-   a whole second after a swipe. */
-.in-winter #wxTip{display:none}
+.in-winter .coach:not(.season):not(.weather-tip){display:none}
+/* The tooltip is exempted above rather than named here. The case this ID rule
+   was written for — a bubble painting over the snow a second after a swipe —
+   is answered in JS: `goSeason()` closes it on the way into every room. What
+   the rule also did was stop a tooltip the player deliberately opened IN
+   Winter from ever appearing at all, and an ID at (1,0,0) beats the class-level
+   exemption, so it had to go rather than be narrowed. */
 
 .wi-wrap{position:relative;display:grid;place-items:center}
 

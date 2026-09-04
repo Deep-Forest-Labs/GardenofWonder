@@ -9789,10 +9789,15 @@ check('nothing states a catch rate as a 1-in-N any more',
 /* A source read, and it can be nothing else from here — the chip and its bubble
    are DOM. It answers one question only: is the function every check above just
    ran still the one the chip renders, so that a rewired tooltip fails loudly
-   instead of leaving this group green on a string no player ever sees. */
-const wxShowSrc = (uiSrc.match(/\n  function showWeatherTip\(btn\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
-check('and the chip still renders that function into its bubble',
-  /class="tip">\$\{weatherTip\(id\)\}/.test(wxShowSrc), wxShowSrc.slice(0, 80));
+   instead of leaving this group green on a string no player ever sees. Since #9
+   the chip renders `tipFor(key)` and the sky is one of the three kinds it
+   answers, so the chain is two links and both are held here. */
+const wxShowSrc = (uiSrc.match(/\n  function showTip\(btn\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+const wxForSrc = (uiSrc.match(/\n  function tipFor\(key\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+check('and the chip still renders the dispatcher into its bubble',
+  /class="tip">\$\{tipFor\(key\)\}/.test(wxShowSrc), wxShowSrc.slice(0, 80));
+check('and the dispatcher still hands a garden sky to the function above',
+  /return weatherTip\(id\);/.test(wxForSrc), wxForSrc.slice(0, 80));
 
 /* EVERY NUMBER IN THAT COPY IS READ, NEVER WRITTEN. Flip each knob, watch the
    sentence follow to a stated value, put it back — then assert the table really
@@ -9819,6 +9824,169 @@ check('and the guard put the whole table back',
   DATA.weatherStage.rainGrowth === wxKeep.grow
   && DATA.weather.types.find((t) => t.id === 'storm').catch === wxKeep.catch
   && DATA.mutations.gilded.mult === wxKeep.mult);
+
+/* THREE KINDS OF CHIP, ONE BUBBLE — #9. The sky was the only chip in the rail
+   that answered a tap; a running booster and the Wonder are buttons now too,
+   all three carrying one `data-tip="kind:id"` that `tipFor()` dispatches on.
+
+   THE BODIES ARE RUN, NOT READ. `boostTip`, `wonderTip` and `tipFor` are
+   private to ui.js and touch no DOM, so they are lifted out by name and
+   executed against the live tables with the real `weatherTip` from the group
+   above bound in — the same habit, and for the same reason: three groups in
+   this round were beaten by wrong implementations that read perfectly as
+   source, one of them a panel with its two rows inverted. A dispatcher that
+   hands a boost key the Wonder's sentence reads fine and fails here.
+
+   WHAT THIS CANNOT SEE, plainly. It builds STRINGS. That the chips are
+   `<button>`s carrying the hook, that one delegated listener reaches all three,
+   that an open bubble follows its chip when the row reflows, that the bubble
+   paints at all in Fall and Winter — those are DOM and CSS. The source and
+   property reads at the foot of this group hold the SHAPE of each; the
+   rendered result is measured with tools/probe.js and written into docs/08. A
+   green line here means the copy is right, not that a player can reach it. */
+group('every chip in the rail can say what it is');
+const rail9 = uiSrc.slice(uiSrc.indexOf('function weatherChip('),
+  uiSrc.indexOf('/* ============ the power-up button'));
+/* A scrape guard, or a moved anchor makes every regex under it vacuously true. */
+check('the rail slice is still the row these read', rail9.length > 400 && /renderRail/.test(rail9),
+  `${rail9.length} chars`);
+const boostSrc9 = (uiSrc.match(/\n  function boostTip\(id\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+const wonderSrc9 = (uiSrc.match(/\n  function wonderTip\(\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+check('all three tooltip builders are still where this guard can read them',
+  boostSrc9.includes('return') && wonderSrc9.includes('return') && wxForSrc.includes('return'),
+  `${boostSrc9.length}/${wonderSrc9.length}/${wxForSrc.length}`);
+/* Concatenated, never templated — the extracted bodies carry their own
+   backticks. `inSeasonRoom` and `weatherTip` are injected rather than
+   re-implemented, so the sky branch below runs the very function the group
+   above just held to the mutation table. */
+const tipMaker9 = (() => {
+  try {
+    return new Function('DATA', 'WONDER', 'inSeasonRoom', 'weatherTip',
+      `${boostSrc9}${wonderSrc9}${wxForSrc}\nreturn tipFor;`);
+  } catch (e) { return () => () => `EXTRACTION FAILED ${e.message}`; }
+})();
+const gardenTip9 = tipMaker9(DATA, WONDER, () => false, wxTip);
+const roomTip9 = tipMaker9(DATA, WONDER, () => true, wxTip);
+const head9 = (s) => wxPlain(String(s).split('<br>')[0]);
+const body9 = (s) => wxPlain(String(s).split('<br>').slice(1).join(' '));
+
+/* The copy is the booster's OWN row, verbatim — the same sentence the toast and
+   the power-up button's label already read. A tooltip that paraphrases it is a
+   second copy to drift from. */
+DATA.boosters.forEach((b) => {
+  const t = gardenTip9(`boost:${b.id}`);
+  check(`${b.id}'s bubble opens with the booster's own name`, head9(t) === b.name, head9(t));
+  check(`${b.id}'s bubble is that row's own desc and nothing else`,
+    body9(t) === wxPlain(b.desc), body9(t));
+  /* The KIND picks the body, never the room. An implementer who hangs the
+     season test at the top of tipFor() instead of inside the sky branch hands
+     Bloom Burst the sky's hedge in Fall. */
+  check(`${b.id} says the same thing in a season room as in the garden`,
+    roomTip9(`boost:${b.id}`) === t, roomTip9(`boost:${b.id}`));
+});
+const boostBodies9 = DATA.boosters.map((b) => gardenTip9(`boost:${b.id}`));
+check('no two boosters share a bubble', new Set(boostBodies9).size === DATA.boosters.length);
+
+const wonder9 = gardenTip9('wonder');
+check('the Wonder has a bubble of its own', head9(wonder9) === 'Wonder Effect', head9(wonder9));
+check('and it is not some booster’s', boostBodies9.indexOf(wonder9) === -1);
+/* HEDGED TO THE GARDEN on purpose: the chip shows in Fall, and `fallHarvest()`
+   credits its own total without asking any multiplier. "Everything" would be
+   the falsehood #11 found in Golden Popups, moved into a bubble. */
+check('the Wonder’s bubble promises the garden, never everything',
+  /\bgarden\b/.test(body9(wonder9)) && !/^Everything/.test(body9(wonder9)), body9(wonder9));
+check('it states the payout multiplier its table holds',
+  body9(wonder9).includes(`×${WONDER.payoutMult}`), body9(wonder9));
+check('and the grow multiplier', body9(wonder9).includes(`${WONDER.growMult} times faster`),
+  body9(wonder9));
+/* A STATED new number, not "the copy changed" — that passes under the right
+   answer and the wrong one alike, which is the recorded trap. "×3" written by
+   hand survives a retune; it does not survive this. */
+const wonderKeep9 = { pay: WONDER.payoutMult, grow: WONDER.growMult };
+WONDER.payoutMult = 7;
+WONDER.growMult = 4;
+const wonderFlipped9 = body9(gardenTip9('wonder'));
+check('retuning the Wonder moves both numbers in its bubble to the values it was retuned to',
+  wonderFlipped9.includes('×7') && wonderFlipped9.includes('4 times faster')
+  && !/×3|3 times/.test(wonderFlipped9), wonderFlipped9);
+WONDER.payoutMult = wonderKeep9.pay;
+WONDER.growMult = wonderKeep9.grow;
+check('and the guard put the Wonder back',
+  WONDER.payoutMult === wonderKeep9.pay && WONDER.growMult === wonderKeep9.grow);
+
+/* The sky passes straight through to the function the group above ran, so the
+   mutation copy has exactly one home. */
+check('a garden sky still gets the sentence every check above was taken on',
+  gardenTip9('wx:storm') === wxTip('storm'), head9(gardenTip9('wx:storm')));
+/* AND IN A SEASON ROOM IT MUST NOT. Fall's cells carry no mutation and take no
+   growth modifier, so the garden's sentence became a promise the room cannot
+   keep the moment this bubble could paint there — which is what the CSS half of
+   #9 changed. The hedge is the guard against shipping a visible lie. */
+const roomSky9 = body9(roomTip9('wx:rain'));
+check('a season room’s sky names itself and says whose garden it is working on',
+  head9(roomTip9('wx:rain')) === 'Rain' && /summer garden/.test(roomSky9), roomSky9);
+check('and makes none of the garden’s promises — no odds, no mutation, no growth',
+  !/%|×|mutat|grow|faster|chance/i.test(roomSky9), roomSky9);
+check('so the two rooms are genuinely told different things',
+  roomTip9('wx:rain') !== gardenTip9('wx:rain'));
+check('an unknown key is an empty bubble rather than a thrown error',
+  gardenTip9('wx:nosuchsky') === '' && gardenTip9('boost:nosuchboost') === ''
+  && roomTip9('wx:nosuchsky') === '');
+
+/* SOURCE AND PROPERTY READS FROM HERE, and they can be nothing else — every one
+   of these is markup or a stylesheet rule. Each answers a shape, not a render. */
+check('no chip in the rail is still a div', !/<div class="chip/.test(rail9));
+check('all three chip kinds are buttons',
+  (rail9.match(/<button class="chip/g) || []).length === 3);
+check('each is an explicit type="button"', (rail9.match(/type="button"/g) || []).length === 3);
+/* As an ATTRIBUTE — whitespace before it — because the close-when-gone guard's
+   `[data-tip="…"]` selector lives in this same slice and would count as a
+   fourth chip. */
+check('each carries the tooltip hook', (rail9.match(/\sdata-tip="/g) || []).length === 3,
+  String((rail9.match(/\sdata-tip="/g) || []).length));
+check('and each names itself, because all three are controls now',
+  (rail9.match(/aria-label="/g) || []).length === 3);
+check('the three hooks are the three kinds the dispatcher answers',
+  /data-tip="wx:\$\{/.test(rail9) && /data-tip="boost:\$\{/.test(rail9)
+  && /data-tip="wonder"/.test(rail9));
+/* THE TRAP THE ITEM NAMES. The close-when-gone guard is buried in the sig
+   branch three functions from the listener, so the chips and the listener move
+   to the new hook and the guard is left querying the old one — and a boost
+   tooltip is then never cleaned up when its own clock runs out underneath it.
+   Written to allow `data-wx-phase` and `data-wx-night`, which are other files'. */
+check('the weather-only hook is gone from the whole file',
+  !/data-wx(?![-A-Za-z])/.test(uiSrc) && !/dataset\.wx(?![A-Za-z])/.test(uiSrc));
+check('the listener, the outside-click dismiss and that guard read one attribute',
+  (uiSrc.match(/\[data-tip\]/g) || []).length === 2
+  && /\[data-tip="\$\{el\.wxTip\.dataset\.tip\}"\]/.test(uiSrc));
+/* A SIG CHANGE FIRES ABOUT ONCE A SECOND, so closing the bubble there would
+   mean no bubble ever survived a second — and calling showTip() from here,
+   which is the tidy-looking thing to reach for, hits its toggle-closed path on
+   the very next tick because the key matches. The branch re-anchors and only
+   closes when the chip has actually gone. */
+const railFn9 = (uiSrc.match(/\n  function renderRail\(\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+check('the row rebuild re-anchors an open bubble and closes it only when its chip has gone',
+  /placeTip\(chip\)/.test(railFn9) && /hideTip\(\)/.test(railFn9) && !/showTip\(/.test(railFn9),
+  railFn9.slice(-240));
+const placeSrc9 = (uiSrc.match(/\n  function placeTip\(btn\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+check('and the re-anchor is silent — that is what placeTip was split out of showTip for',
+  placeSrc9.includes('--ax') && !/Sound\./.test(placeSrc9), placeSrc9.slice(0, 60));
+check('while opening one still plays its one note', /Sound\.play\('open'\)/.test(wxShowSrc));
+check('the chips that became controls took the press state the sky chip had',
+  /transform:translateY\(1px\)/.test(cssRule('.chip.weather:active,.chip.timed:active')),
+  cssRule('.chip.weather:active,.chip.timed:active'));
+/* A ROOM BLANKET THAT HIDES `.coach` HIDES EVERYTHING WEARING IT. `#wxTip`
+   borrows the coach's bubble shape, so it was display:none in Fall and Winter
+   and a tap there played the open note and painted a 0x0 box — invisibly, for
+   as long as the chip has existed. The ID rule is the sharp half: at (1,0,0) it
+   beat the class-level exemption, so Fall came back and Winter stayed dead. */
+const flat9 = CSS_SRC.replace(/\s/g, '');
+check('the tooltip is not hidden by the two rooms whose chips are tappable',
+  !/#wxTip\{display:none\}/.test(flat9)
+  && /\.in-fall\.coach:not\(\.season\):not\(\.weather-tip\)\{display:none\}/.test(flat9)
+  && /\.in-winter\.coach:not\(\.season\):not\(\.weather-tip\)\{display:none\}/.test(flat9));
+check('and the bubble still wears the class those two exemptions name',
+  /<div class="coach weather-tip" id="wxTip"/.test(indexSrc));
 
 /* ================================================================
    SLICE C — WINTER, THE NIGHT SHIFT.

@@ -917,10 +917,14 @@ stats that used to be the whole page.
 POWER-UP button now; what renders here is the countdown of whatever is already **running**, plus the
 Wonder, which is prepended so it always leads. The `.chip.buyable` state is retired.
 
-It is `:empty{display:none}`, so most of the time it costs nothing — but note that its two 6px
-gutters are billed whether or not track 3 has height, because the `.ui` grid has five explicit
-tracks. Deleting the track outright would buy the stage back 6px, not 12; keeping the rail as the
-clock is worth more than 6px.
+**It holds its box whether or not anything is in it** — `.rail{min-height:33px}` (`style.css:532`),
+which replaced the `:empty{display:none}` this section claimed for a fortnight after the rule itself
+was gone. The reason is in the stylesheet's own comment: collapsing was free while a boost was spent
+from a chip inside the row, but spending moved to the band's POWER-UP button in phase 3.5, and a
+board that shrinks 9% on a short phone the moment you tap a button is the layout changing shape
+under the player. Its two 6px gutters are billed whether or not track 3 has height, because the
+`.ui` grid has five explicit tracks. Deleting the track outright would buy the stage back 6px, not
+12; keeping the rail as the clock is worth more than 6px.
 
 Decor no longer appears here — it's cosmetic now, with no gameplay state worth surfacing in a
 glanceable HUD row.
@@ -970,8 +974,8 @@ Clear.
 
 | Rule | Why |
 | --- | --- |
-| **It is FIRST in the row** | The rail overflows horizontally with two boosters and a Wonder running — measured 437px of chips in a 370px row. This is the only chip that can be tapped, and a control you have to scroll to find is a control nobody finds |
-| **A real `<button>` with an `aria-label`**, and the rail's first listener ever | Its neighbours are `<div>`s. A click on a div carries no role, no keyboard and no focus ring. The listener is delegated off `.rail`, because the row is rewritten wholesale about once a second |
+| **It is FIRST in the row** | **Reading order, since 2026-09-03.** The old reason — "the only chip that can be tapped never needs scrolling to" — expired when every chip became one, and re-measuring shows it was already only half true: five chips are **531px in a 370px track** at 390×844 (not the 437px this table used to claim), with Golden Popups off-screen at x=415. What survives is that the sky is the **world's** and everything after it is a clock the **player** started, and that leading with the one chip that is not the player's doing gives the row the same left edge in Summer, Fall and Winter, where `reachesHere()` has thinned what follows |
+| **A real `<button>` with an `aria-label`**, and the rail's only listener | Since #9 so is every other chip in the row. A click on a div carries no role, no keyboard and no focus ring, and three chips that all open a tooltip may not be three different kinds of element. The listener is delegated off `.rail`, because the row is rewritten wholesale about once a second |
 | **The tooltip lives OUTSIDE the rail** (`#wxTip`, a sibling of `.coach` in `.world`) | `renderRail()`'s signature carries every countdown, so it rewrites the row roughly once a second. Anything anchored to a node inside it is destroyed on the next tick |
 | **Clamped to `.ui`'s measured box**, not to the window | The tooltip lives outside `.ui` and inherits none of its 560px column; clamped to the window it would sail into the grey on a desktop while its chip stayed in the middle |
 | **No countdown, v1** | See below |
@@ -1016,6 +1020,51 @@ sky. A chip wearing either silently became a full-screen absolutely-positioned b
 every tap on the garden, while still looking correct in the rail. Walked into twice in a row; the
 recorded "check for an existing class before naming a new one" rule is not optional in a 250KB
 stylesheet.
+
+### One bubble, three kinds of chip (2026-09-03)
+
+**The sky was the only chip in the row that answered a tap, and the mechanism to fix that was
+already built.** `showWeatherTip()` solved every hard part — viewport placement, the clamp to `.ui`,
+the `--ax` arrow, toggle-on-second-tap, living outside the rail — and all of it was weather-specific
+only in its *names*. It was generalised rather than duplicated.
+
+| The seam | What it is |
+| --- | --- |
+| **One attribute, `data-tip="kind:id"`** | `wx:rain`, `boost:bloom`, `wonder`. The close-when-gone guard has exactly **one** selector, so one shared hook or one of the three kinds is never cleaned up. `el.wxTip.dataset.tip` holds the open bubble's key |
+| **`tipFor(key)` dispatches on the KIND** | `boostTip(id)` is `<b>name</b><br>` + the booster's own `DATA.boosters[].desc`; `wonderTip()` interpolates `WONDER.payoutMult` and `WONDER.growMult`; the sky falls through to `weatherTip(id)`. The kind picks the body, never the room — hang the season test at the top of the dispatch and Bloom Burst gets the sky's hedge in Fall |
+| **`placeTip(btn)` is split out of `showTip(btn)`** | So an open bubble can be **re-anchored silently**. `showTip` plays `open`; `placeTip` plays nothing, and calling `showTip` from the rebuild instead hits its own toggle-closed path on the next tick |
+| **The rebuild re-anchors, and closes only when the chip has gone** | One `querySelector` on the shared hook answers both. A sig change fires about once a second, so closing there would mean no bubble ever survived a second |
+| **A boost expires on its own clock** | Which the sky never did: a player can be reading a tooltip at the instant its chip disappears underneath it. `goSeason()` covers the room change; this guard covers the clock |
+
+**A bubble anchored by one measurement drifts when its row reflows.** The sky chip is first and never
+moves, so a single placement held for the life of the tooltip. A boost chip is not: measured at
+390×844, when the Wonder beside it expires, Bloom Burst slides **114.4px left** in a 370px track and
+an arrow placed once goes on pointing at whatever took its place. The invariant, verified to 0.1px
+before and after the reflow, is `tip.left + --ax === chip.left + chip.width / 2`. It fixes the
+rail-scrolled-with-a-tip-open case for free — scroll the row 120px with a bubble open and the arrow
+still lands on 127.3 — though only while something is counting down, which is exactly when a boost
+chip's tooltip can be open. A weather-only row is 370px in a 370px track and cannot be scrolled at
+all.
+
+**The tooltip could not paint in Fall or Winter at all until this change.** `#wxTip` is
+`<div class="coach weather-tip">`, and `.in-fall .coach:not(.season)` plus the same rule for Winter
+plus a `.in-winter #wxTip{display:none}` swallowed it — so a tap on the sky chip in a season room
+flipped `hidden` to false, played `open`, and painted a **0×0** box, invisibly, for as long as the
+chip has existed. Both blankets now chain a second `:not(.weather-tip)`, and the ID rule was
+**deleted** rather than narrowed, because at (1,0,0) it beats a class-level exemption. Measured
+after: 280×77.5 for a boost bubble in Fall, 280×95.25 for the sky's in Winter. On a screen 700px or
+shorter the question does not arise — `style.css:4785` hides the whole rail in both rooms, so
+nothing in it is tappable there.
+
+**And the sky says something different in a season room**, because the garden's sentence is about
+mutation and growth and Fall's cells carry neither: *"The same sky hangs over every season. What it
+does, it does to the summer garden."* Shipping the CSS exemption without that branch would have made
+a previously invisible falsehood visible, which is why they are one commit.
+
+**The sig-cache still short-circuits.** `data-tip` is a constant per chip, so it adds nothing that
+varies per tick: measured 0 DOM mutations over 4s on a steady weather-only row, and 8 with one
+countdown running (one rebuild a second, two records per `innerHTML` write) — both unchanged from
+before the change.
 
 ## Toasts, banners, coach marks
 

@@ -87,7 +87,7 @@ sounds never clash.
 | `buy` | Two-note confirmation | Upgrade or decor bought |
 | `deny` | Falling sawtooth buzz | Insufficient funds |
 | `boost` | Long rising sawtooth sweep with noise | Booster activated |
-| `open` / `close` | Short rising / falling sine | Sheet opened / closed |
+| `open` / `close` | Short rising / falling sine | Sheet opened / closed; a rail chip's tooltip opened |
 | `rare` | Three soft sine notes | Rare harvest |
 | `legend` | Seven-note triangle run plus long noise tail | **Epic and** Legendary harvests |
 | `wonder` | Ten-note square run plus low sawtooth drone | Wonder Effect |
@@ -97,6 +97,15 @@ streak plays a climbing melodic run. Combo also multiplies tap payout; the pitch
 audible half of that same meter.
 
 Epic harvests deliberately reuse `legend`. There is no separate epic sound.
+
+**Closing a chip tooltip is deliberately silent, and the rail is now the one place `open` can fire
+three times in a row.** Since #9 all three kinds of chip in the status rail open a tooltip, and each
+open plays `open` — but `showTip()` returns on its toggle-closed path *before* it reaches
+`Sound.play('open')`, so tapping the same chip twice is one note, not two. Instrumented: one `open`
+on the tap that opens, none on the tap that closes, and none on the once-a-second row rebuild that
+re-anchors the bubble (which is the whole reason `placeTip()` is split out of `showTip()`). A thumb
+run along a full row will still play it per chip; worth listening to on the handset, and if it
+grates the answer is to note it rather than to make the tooltip silent.
 
 ### The weather beds
 

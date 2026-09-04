@@ -204,6 +204,21 @@ description and was outside the tooltip item's blast radius. Note the punch list
 the *only* place the player met the word; it was the second. One string, one commit, whenever a
 creature-copy pass next runs — and the sentence already contains the replacement, in *caught*.
 
+**Three rough edges around the rail's chips, all pre-existing, all left alone by #9 — and all three
+now sit inside a control the player is invited to tap.** (1) **A countdown over 99 s overflows into
+its own chip's name.** The ring's `<i>` is a fixed 13×13 box (`style.css`, `.chip .ring i`), and
+anything longer than two digits goes through `fmtTime` and renders on top of the label — visible in
+every screenshot of a ten-minute Seed Rush as `4m 5̶7̶s̶Bloom Burst`. It has always been there; it
+draws more attention now the chip is a button. The fix is a wider ring or a countdown that lives
+beside the name rather than inside the ring, and it is a layout change to the whole chip, not a
+one-liner. (2) **The keyboard focus ring is cropped**, on all three chip kinds instead of one:
+`button:focus-visible` carries `outline-offset:3px` and `.rail` is `overflow-y:hidden` with a 31px
+chip in a 33px row. Not fixed here because changing `.rail`'s overflow is load-bearing for the
+horizontal scroll. (3) **Bare `.chip` is declared twice at identical specificity** — `style.css:534`
+for the rail and `style.css:2916` for the sheet's chips — and the later block silently wins on
+padding, gap, background and font. Anything new for a rail chip must be written at `.chip.timed`
+(0,2,0) or it will not apply; #9's `:active` state is written that way for exactly this reason.
+
 ## What the overnight fix round knowingly left (2026-08-31)
 
 **The status rail is invisible in Fall and Winter on a screen shorter than 700px.** Both boards are

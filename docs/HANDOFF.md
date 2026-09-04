@@ -3564,6 +3564,29 @@ same call, so any assertion on a payout or a currency delta is flaky until the R
 call `clearMastery()`, because the ladder climbs as the loop runs and you end up measuring two things
 at once. See [11-known-issues.md](11-known-issues.md).
 
+**A room blanket that hides `.coach` hides everything WEARING `.coach`, including surfaces that are
+not coach marks.** `#wxTip` borrows the coach's bubble shape and nothing else, and it inherited the
+room rules with it: `.in-fall .coach:not(.season)` and its Winter twin swallowed it, so tapping the
+sky chip in a season room flipped `hidden` to false, played the `open` note and painted a **0×0
+box** — invisibly, for as long as the chip has existed. The blanket exists for a real reason
+(`refreshCoach()` measures a hidden target and parks the bubble at 0,0 over the wallets), but a
+surface placed by its own tap, at a node that is visibly in this room, is not in that class and has
+to be exempted by name. **And when you exempt it, check specificity:** a stray
+`.in-winter #wxTip{display:none}` at (1,0,0) beat the class-level exemption, so Fall came back and
+Winter stayed broken — the ID rule had to be deleted, not narrowed. The same shape as the recorded
+`.chip.wx` collision: the rendered picture was reassuring and the box was zero.
+
+**A bubble anchored by ONE measurement drifts when its anchor's row reflows.** The sky chip is first
+in the rail and never moves, so a single placement held for the life of the tooltip and this never
+bit. The moment a boost chip could open the same bubble it did: an expiring Wonder beside it slid
+Bloom Burst **114.4px left** in a 370px track and the arrow went on pointing at whatever took its
+place. Re-anchor from wherever the row is rebuilt, and **split the placement out of the show** so
+the re-anchor does not replay the open sound — calling the show function again is the tidy-looking
+thing to reach for and it is wrong twice over: it replays the note, and it hits its own
+toggle-closed path on the very next tick because the key still matches, so the bubble opens and
+slams shut once a second. Measured both ways with `tools/probe.js`; the invariant to assert is
+`tip.left + --ax === chip.left + chip.width / 2`, before and after the reflow.
+
 ## Checking your work
 
 ```bash

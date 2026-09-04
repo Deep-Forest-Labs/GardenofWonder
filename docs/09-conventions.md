@@ -234,9 +234,12 @@ Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at
 3. A boost that is already running cannot be refreshed — the rail hides the hold-chip until it
    expires, so a second copy is not spent by accident. Needs a `tint` for the rail chip.
 4. **Boosters normally have no shop panel, and exactly one is an exception.** They surface as a
-   chip in the status rail (`renderRail()` in `ui.js`) — a countdown while active, a tappable
-   consume-one chip while `boostInv` holds at least one and the boost is idle, invisible
-   otherwise. Grant copies through quest `reward.boost` or `DATA.levelGrants`. See
+   **countdown chip in the status rail while the boost is running** (`renderRail()` in `ui.js`) and
+   not otherwise — the consume-one chip retired with the rail's shop in phase 3.5. The chip is a
+   `<button>` carrying `data-tip="boost:<id>"`, and tapping it opens a bubble built from the row's
+   own `desc`, so **a new booster needs a `desc` that is true**: it is read in a tooltip the player
+   opened on purpose now, not only in a toast that flies past. Grant copies through quest
+   `reward.boost` or `DATA.levelGrants`. See
    [16-progression-and-quests.md](16-progression-and-quests.md). The exception is the Harvest
    Drone: it is offered as a Shop card for one rewarded video, granted by `Game.rentDrone()`
    rather than by `boostInv` and the power-up button, and it is not in the bag, on any rung or on

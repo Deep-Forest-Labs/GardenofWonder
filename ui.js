@@ -675,8 +675,9 @@
   /* ============ rail chips ============ */
   /* THE RAIL LOST ITS SHOP AND KEPT ITS CLOCK (phase 3.5). Spending a boost is
      the band's POWER-UP button now; what is left here is the countdown of
-     whatever is already running, plus the Wonder. It is `:empty{display:none}`,
-     so most of the time it costs nothing at all. */
+     whatever is already running, plus the Wonder. The row holds its 33px box
+     whether or not anything is in it (`.rail{min-height}`), so a chip arriving
+     never moves the board under the player. */
   /* THE SKY'S OWN CHIP. A standing sky is worth real money and until now the
      player's only clue was that the screen got darker.
 
@@ -689,7 +690,7 @@
   function weatherChip() {
     const w = Game.currentWeather();
     if (!w || w.id === 'clear') return '';
-    return `<button class="chip weather" type="button" data-wx="${w.id}" style="--tint:${w.tint}"
+    return `<button class="chip weather" type="button" data-tip="wx:${w.id}" style="--tint:${w.tint}"
       aria-label="${w.name} — what this sky is doing">
       <span class="weather-dot"></span><span>${w.name}</span></button>`;
   }
@@ -727,17 +728,65 @@
     return `<b>${w.name}</b><br>${roll}${extra}`;
   }
 
-  function showWeatherTip(btn) {
-    const id = btn.dataset.wx;
-    if (el.wxTip.dataset.wx === id && !el.wxTip.hidden) { hideWeatherTip(); return; }
-    el.wxTip.dataset.wx = id;
-    el.wxTip.innerHTML = `<div class="arrow"></div><div class="tip">${weatherTip(id)}</div>`;
+  /* ONE ATTRIBUTE FOR THREE KINDS OF CHIP. The close-when-gone guard below has
+     to find the chip a bubble belongs to, and a boost runs out on its own clock
+     — so a player can be reading a tooltip at the instant its chip disappears
+     underneath it. One selector finds all three or one of the three is never
+     cleaned up. The key is `kind:id`, and the kind is what picks the body. */
+  function boostTip(id) {
+    const b = DATA.boosters.find((x) => x.id === id);
+    return b ? `<b>${b.name}</b><br>${b.desc}` : '';
+  }
+
+  /* HEDGED TO THE GARDEN, deliberately. Fall's bed is outside every multiplier —
+     `fallHarvest()` credits its own total and never asks — and this chip is
+     still shown there, because a tap on the season's hero flower does take the
+     Wonder. "The garden" is true in both rooms; "everything" would not be. Both
+     numbers are read from the table, never typed: a sentence with a figure
+     written into it drifts off its knob with nothing anywhere going red. */
+  function wonderTip() {
+    return `<b>Wonder Effect</b><br>The garden pays <b>&times;${WONDER.payoutMult}</b> while it lasts,
+      and everything in it grows ${WONDER.growMult} times faster.`;
+  }
+
+  /* THE SKY IS THE SAME SKY IN EVERY ROOM, and what it does is not. Rain waters
+     and mutates `state.grid`; Fall's cells carry no mutation at all and take no
+     growth modifier, so the summer copy became a promise the season cannot keep
+     the moment this bubble could paint there. */
+  function tipFor(key) {
+    const [kind, id] = key.split(':');
+    if (kind === 'boost') return boostTip(id);
+    if (kind === 'wonder') return wonderTip();
+    if (inSeasonRoom()) {
+      const w = (DATA.weather.types || []).find((t) => t.id === id);
+      return w ? `<b>${w.name}</b><br>The same sky hangs over every season. What it does, it does to
+        the summer garden.` : '';
+    }
+    return weatherTip(id);
+  }
+
+  function showTip(btn) {
+    const key = btn.dataset.tip;
+    if (el.wxTip.dataset.tip === key && !el.wxTip.hidden) { hideTip(); return; }
+    el.wxTip.dataset.tip = key;
+    el.wxTip.innerHTML = `<div class="arrow"></div><div class="tip">${tipFor(key)}</div>`;
     el.wxTip.hidden = false;
-    /* Placed in viewport coordinates, like the coach it sits beside — but
-       CLAMPED to `.ui`'s measured box rather than to the window. This element
-       lives outside `.ui` and inherits none of its 560px column, so a bubble
-       clamped to the window would sail off into the grey on a desktop while the
-       chip it belongs to stayed in the middle. */
+    placeTip(btn);
+    Sound.play('open');
+  }
+
+  /* SPLIT FROM showTip SO AN OPEN BUBBLE CAN BE RE-ANCHORED, silently. The sky
+     chip is first in the row and never moves, so one measurement held for the
+     life of the tooltip. A boost chip is not: when the Wonder beside it expires
+     the row reflows and it slides 114.4px left in a 370px track, and an arrow
+     placed once goes on pointing at whatever took its place.
+
+     Placed in viewport coordinates, like the coach it sits beside — but
+     CLAMPED to `.ui`'s measured box rather than to the window. This element
+     lives outside `.ui` and inherits none of its 560px column, so a bubble
+     clamped to the window would sail off into the grey on a desktop while the
+     chip it belongs to stayed in the middle. */
+  function placeTip(btn) {
     const host = el.ui.getBoundingClientRect();
     const r = btn.getBoundingClientRect();
     const w = el.wxTip.offsetWidth;
@@ -747,13 +796,12 @@
     el.wxTip.style.top = `${r.bottom + 8}px`;
     /* The bubble slides to stay in the column; the arrow stays on the chip. */
     el.wxTip.style.setProperty('--ax', `${centre - left}px`);
-    Sound.play('open');
   }
 
-  function hideWeatherTip() {
+  function hideTip() {
     if (el.wxTip.hidden) return;
     el.wxTip.hidden = true;
-    el.wxTip.dataset.wx = '';
+    el.wxTip.dataset.tip = '';
   }
 
   /* A CHIP THAT DOES NOTHING IN THIS ROOM SHOULD NOT BE IN THIS ROOM — the
@@ -800,23 +848,33 @@
       if (!reachesHere(b)) return;
       const remain = Math.max(0, S.boosters[b.id] - now);
       const p = Math.max(0, Math.min(1, remain / b.dur));
-      html += `<div class="chip timed" style="--tint:${b.tint}">
-        <span class="ring" style="--p:${p.toFixed(3)}"><i>${Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain)}</i></span>
-        <span>${b.name}</span></div>`;
+      /* Hoisted into a local so the ring and the label cannot disagree about
+         the same countdown — they are the same string, read once. */
+      const left = Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain);
+      html += `<button class="chip timed" type="button" data-tip="boost:${b.id}" style="--tint:${b.tint}"
+        aria-label="${b.name}, ${left} left — what this power-up is doing">
+        <span class="ring" style="--p:${p.toFixed(3)}"><i>${left}</i></span>
+        <span>${b.name}</span></button>`;
     });
     /* The Wonder multiplies every payout including a tap, so it reaches here
        too — and it is the loudest thing in the game, which makes hiding it the
        most confusing possible thing to do with it. */
     if (Game.wonderActive()) {
       const remain = Math.max(0, S.wonder.until - now);
-      html = `<div class="chip timed" style="--tint:${WONDER.tint}">
-        <span class="ring" style="--p:${(remain / WONDER.duration).toFixed(3)}"><i>${Math.ceil(remain)}</i></span>
-        <span>WONDER x${WONDER.payoutMult}</span></div>` + html;
+      const left = Math.ceil(remain);
+      html = `<button class="chip timed" type="button" data-tip="wonder" style="--tint:${WONDER.tint}"
+        aria-label="Wonder Effect, ${left} seconds left — what this is doing">
+        <span class="ring" style="--p:${(remain / WONDER.duration).toFixed(3)}"><i>${left}</i></span>
+        <span>WONDER x${WONDER.payoutMult}</span></button>` + html;
     }
-    /* FIRST in the row, so the one chip in here that can be TAPPED is the one
-       that never needs scrolling to. The rail overflows horizontally with two
-       boosters and a Wonder running, and a control you have to scroll to find is
-       a control nobody finds. */
+    /* FIRST in the row, and the reason changed the day every chip became
+       tappable. It was "the one control here never needs scrolling to", and it
+       is not: five chips measure 531px in a 370px track, so four of them can
+       need scrolling to whatever leads. What survives is READING ORDER — the
+       sky is the world's and it is overhead in every room, while everything
+       after it is a clock the player started. Leading with the one chip that is
+       not the player's doing also gives the row the same left edge in Summer,
+       Fall and Winter, where `reachesHere()` has thinned what follows. */
     html = weatherChip() + html;
     if (el.rail.dataset.sig !== html) {
       el.rail.innerHTML = html;
@@ -825,8 +883,16 @@
          carries every countdown, so this branch fires about once a second and
          takes the whole row's markup with it. Anything anchored to a node in
          here is destroyed on the next tick. What is left is to close the tooltip
-         when the chip it belongs to has gone. */
-      if (!el.wxTip.hidden && !el.rail.querySelector(`[data-wx="${el.wxTip.dataset.wx}"]`)) hideWeatherTip();
+         when the chip it belongs to has gone, and to follow it when the row
+         reflows around it. One query answers both — a boost expires on its own
+         clock, so a bubble can be open at the instant its chip disappears, and
+         the Wonder expiring beside a boost chip slides it 114.4px left. Keys are
+         `[a-z:]` only, so no selector escaping is needed. */
+      if (!el.wxTip.hidden) {
+        const chip = el.rail.querySelector(`[data-tip="${el.wxTip.dataset.tip}"]`);
+        if (chip) placeTip(chip);
+        else hideTip();
+      }
     }
   }
 
@@ -1045,17 +1111,17 @@
      confirmation package with it for free — the purchase event plays the boost
      sound, buzzes 14ms and toasts the booster's own name and icon. Nothing else
      needs writing; the local sparks are the only addition. */
-  /* THE RAIL'S FIRST LISTENER. It has never had one — its chips were `<div>`s
-     and nothing in any UI file touched it. Delegated, because the row is
-     rewritten wholesale about once a second and a listener bound to a chip would
-     go with it. `click`, not `pointerdown`: the rail is already in `noSwipe`, so
-     there is no gesture to beat, and a tap that drifts should do nothing rather
-     than fire on the way past. */
+  /* THE RAIL'S ONE LISTENER, and it now serves every chip in the row rather
+     than the sky's alone. Delegated, because the row is rewritten wholesale
+     about once a second and a listener bound to a chip would go with it.
+     `click`, not `pointerdown`: the rail is already in `noSwipe`, so there is
+     no gesture to beat, and a tap that drifts should do nothing rather than
+     fire on the way past. */
   el.rail.addEventListener('click', (e) => {
-    const chip = e.target.closest('[data-wx]');
+    const chip = e.target.closest('[data-tip]');
     if (!chip) return;
     Sound.resume();
-    showWeatherTip(chip);
+    showTip(chip);
   });
 
   /* Tap it, tap anywhere, or open anything: three ways out, and the third is
@@ -1063,10 +1129,10 @@
      tap that lands on a control still closes this on its way through. */
   document.addEventListener('pointerdown', (e) => {
     if (el.wxTip.hidden) return;
-    if (e.target.closest('#wxTip') || e.target.closest('[data-wx]')) return;
-    hideWeatherTip();
+    if (e.target.closest('#wxTip') || e.target.closest('[data-tip]')) return;
+    hideTip();
   }, true);
-  el.wxTip.addEventListener('click', hideWeatherTip);
+  el.wxTip.addEventListener('click', hideTip);
 
   el.btnUpgrade.addEventListener('click', () => {
     Sound.resume();
@@ -1213,11 +1279,11 @@
     const sdef = SEASONS[seasonIdx(id)];
     if (!sdef) return;
     hideGate();
-    /* The weather tooltip is anchored to a chip in the rail, and the rail's
-       chips change with the room — so a tip left open on the way out reopens
-       over the next room pointing at nothing. #9's close-on-room-change guard,
-       extended to every season rather than only to the one it was written for. */
-    hideWeatherTip();
+    /* A chip tooltip is anchored to a chip in the rail, and the rail's chips
+       change with the room — so a tip left open on the way out reopens over the
+       next room pointing at nothing. #9's close-on-room-change guard, extended
+       to every season rather than only to the one it was written for. */
+    hideTip();
     if (!seasonReady(sdef)) { showGate(sdef); return; }
     if (id === season) { renderSeasonEdges(); return; }
     const from = SEASON_ROOMS[season];
