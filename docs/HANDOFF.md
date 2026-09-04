@@ -3335,6 +3335,26 @@ keepers from `innerHTML` every slow tick and `place()` sized them a frame later,
 per tick at its natural size — on a phone, pets flashing in and out. Build once, update in place,
 like `renderPlots()` and the Hollow's `petEls`.
 
+**The same rule again, and it now has two more reasons: FOCUS and a LIVE REGION.** The status rail
+wrote `el.rail.innerHTML` whenever its signature changed, and the signature carries every countdown
+— 15 childList mutations and 30 nodes replaced in four seconds, for as long as any clock ran. So a
+chip could not hold keyboard focus for more than a second (`document.activeElement` was `BODY`
+1.6 s after focusing one), which quietly undid the whole point of making the chips `<button>`s; and
+because `.rail` is `aria-live="polite"`, replacing its contents re-announced the *entire row* once a
+second. **A node you rebuild is a node nobody can focus, and inside a live region it is a node
+everybody is read.** Fixed 2026-09-03 the same way as the meadow — a `Map` keyed by `data-tip`,
+removals before reordering, three guarded writes — in
+[08-ui-and-layout.md](08-ui-and-layout.md#the-row-is-built-once-and-updated-in-place-2026-09-03).
+Two habits came out of it worth reusing: **write a number to the text node's `nodeValue`**, since
+`textContent` replaces the node; and **do the removals before the ordering pass**, because
+`insertBefore` on a node already in the tree is a removal and a re-insert and drops focus.
+
+**A countdown does not belong in a live region, and hiding it is cheaper than arguing with it.** The
+rail's ring is `aria-hidden="true"` — the label beside it carries the same time in words, so nothing
+is lost and the one thing that moves every second leaves the accessibility tree. The label itself
+rounds to a whole unit and spells it (`spellTime()`), which is both how a person says it and what
+keeps a half-hour aura from rewriting its own name 1800 times.
+
 **A test that passes for the wrong reason is worse than no test.** The sim-suite was writing its
 injected saves to `'gardenwonder.save'`; the real key is **`gw-save`**. `load()` therefore reported a
 *fresh game* every time, and three save/migration tests passed **vacuously** against default state

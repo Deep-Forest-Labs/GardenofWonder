@@ -214,10 +214,30 @@ beside the name rather than inside the ring, and it is a layout change to the wh
 one-liner. (2) **The keyboard focus ring is cropped**, on all three chip kinds instead of one:
 `button:focus-visible` carries `outline-offset:3px` and `.rail` is `overflow-y:hidden` with a 31px
 chip in a 33px row. Not fixed here because changing `.rail`'s overflow is load-bearing for the
-horizontal scroll. (3) **Bare `.chip` is declared twice at identical specificity** — `style.css:534`
+horizontal scroll. **This entry assumed a chip could hold focus at all, and until 2026-09-03 it
+could not** — the row was rebuilt from `innerHTML` about once a second, so focus was on `BODY`
+1.6 s later. That half is fixed (see below and
+[08-ui-and-layout.md](08-ui-and-layout.md#the-row-is-built-once-and-updated-in-place-2026-09-03));
+the crop is what is left, and it is now the only thing between a rail chip and a keyboard.
+(3) **Bare `.chip` is declared twice at identical specificity** — `style.css:534`
 for the rail and `style.css:2916` for the sheet's chips — and the later block silently wins on
 padding, gap, background and font. Anything new for a rail chip must be written at `.chip.timed`
 (0,2,0) or it will not apply; #9's `:active` state is written that way for exactly this reason.
+
+**A short boost's chip may still re-announce itself once a second, and there is no way to have both.**
+The rail is `aria-live="polite"` because a chip *arriving* is worth announcing — a change of sky is
+announced nowhere else in the game, and the Wonder's own banner is `aria-hidden`. Since 2026-09-03
+nothing in the row changes as *content* on a tick: the row is updated in place and the ring that
+counts is `aria-hidden`. What is left is the `aria-label`, which carries the time and therefore
+changes when the spoken time does — an attribute change, which some assistive technologies treat as
+an accessible-name change worth re-announcing. Rounding to a whole unit keeps that to **once a
+minute** for Seed Rush, Fortune Aura and the Harvest Drone; Bloom Burst and Golden Popups run 30 s
+and would tick once a second, five words at a time, for those thirty seconds. Not fixed because both
+ways out are worse: dropping the time from the label loses it to a screen reader entirely (the ring
+is the only other place it lives, and it is a 13×13 dial), and `aria-live="off"` on the timed chips
+would silence the Wonder's arrival, which nothing else announces. If it proves a real annoyance the
+next owner should reach for `aria-description` rather than deleting the time — no draft ARIA
+attribute is used anywhere in this codebase today, which is why it was not reached for here.
 
 **The season strip has no keyboard or screen-reader route at all, and that is new.** Retiring the
 season tabs (`#15`) removed the only non-gesture way into Fall and Winter and the only thing an

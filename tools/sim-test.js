@@ -10524,6 +10524,285 @@ check('the tooltip is not hidden by the two rooms whose chips are tappable',
 check('and the bubble still wears the class those two exemptions name',
   /<div class="coach weather-tip" id="wxTip"/.test(indexSrc));
 
+/* THE ROW IS BUILT ONCE AND UPDATED IN PLACE — the two defects that shipped with
+   the conversion above, both of them properties of the ROW rather than of a
+   string, and neither of them visible to a single check in the group above.
+
+   `renderRail()` used to write `el.rail.innerHTML` whenever its signature
+   changed, and the signature carries every countdown, so the whole row was
+   destroyed and rebuilt for as long as any clock ran in it. Measured at the
+   commit before this one, one sky and two boosts over four seconds: 15
+   childList mutations on `.rail`, 30 nodes added and 30 removed. Two player-
+   facing consequences came out of that:
+
+     - A CHIP COULD NOT HOLD FOCUS. Driven: focus `[data-tip="boost:bloom"]`,
+       wait 1.6 s, `document.activeElement` is `BODY`. Every chip is a
+       `<button>` since #9 and a button destroyed a second after you reach it
+       can be neither tabbed to nor fired from a keyboard — so the conversion
+       delivered the role and the label and not the thing it was for.
+     - `.rail` IS `aria-live="polite"` (docs/08), so replacing its contents is a
+       change to every node in it: a screen reader re-read the whole row once a
+       second, and each label carried the TOOLTIP'S copy — 155 characters across
+       three boosts, for the thirty minutes a Fortune Aura runs.
+
+   What this group holds is the arithmetic in the label and the reconcile
+   itself, RUN rather than read — `renderRail()` is lifted out by name into a
+   scope where every collaborator is a stand-in, `chipNode()` included, so the
+   row it builds is a list of plain objects whose identity can be compared
+   across ticks. That is the one question the old row failed and no string can
+   answer: is the chip you were holding the SAME object a second later?
+
+   WHAT THIS CANNOT SEE: a browser. That focus actually survives, and that the
+   row's nodes are identical objects after four real seconds, are driven with
+   tools/probe.js and written into docs/08. */
+group('the rail is built once and updated in place');
+{
+  const spellSrc9 = (uiSrc.match(/\n {2}function spellTime\(sec\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+  const wxChipSrc9 = (uiSrc.match(/\n {2}function weatherChip\(\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+  const fmtSrc9 = (sharedSrc.match(/\n {2}function fmtTime\(sec\) \{[\s\S]*?\n {2}\}\n/) || [''])[0];
+  check('the three functions the row is made of are still where this guard can read them',
+    /return `/.test(spellSrc9) && /data-tip="wx:/.test(wxChipSrc9) && /'m'/.test(fmtSrc9),
+    `${spellSrc9.length}/${wxChipSrc9.length}/${fmtSrc9.length}`);
+  /* Concatenated, never templated — the extracted bodies carry their own
+     backticks, and a template literal here would interpolate them. */
+  const spellTime9 = (() => {
+    try { return new Function(`${spellSrc9}\nreturn spellTime;`)(); }
+    catch (e) { return () => `EXTRACTION FAILED ${e.message}`; }
+  })();
+
+  /* THE LABEL SPEAKS THE TIME AND THE RING DRAWS IT, in different words. `29`
+     and `9m 59s` are glyphs for a 13px dial; read aloud they are "twenty-nine"
+     and "nine em fifty-nine ess". */
+  check('a label under a minute counts seconds, with the unit spoken',
+    spellTime9(29) === '29 seconds' && spellTime9(59) === '59 seconds', spellTime9(29));
+  check('and it says "1 second", never "1 seconds"', spellTime9(1) === '1 second', spellTime9(1));
+  check('a minute and over counts whole minutes, which is how a person says it',
+    spellTime9(60) === '1 minute' && spellTime9(600) === '10 minutes'
+    && spellTime9(1800) === '30 minutes', `${spellTime9(60)} / ${spellTime9(600)}`);
+  /* THE ROUNDING IS UP, and that is the load-bearing half. A label that rounded
+     down would say "9 minutes left" with 9m 59s to run — a promise of LESS time
+     than there is, which is the one direction a countdown may never err in. */
+  const spellSecs9 = (s) => {
+    const m = /^(\d+) (second|minute)s?$/.exec(spellTime9(s));
+    return m ? Number(m[1]) * (m[2] === 'minute' ? 60 : 1) : NaN;
+  };
+  let spellShort9 = null;
+  let spellBare9 = null;
+  let spellPlural9 = null;
+  for (let s = 0; s <= 1800; s += 1) {
+    const said = spellTime9(s);
+    const n = Number(String(said).split(' ')[0]);
+    if (!(spellSecs9(s) >= s) && !spellShort9) spellShort9 = `${s}s -> ${said}`;
+    if (!/^\d+ (second|minute)s?$/.test(said) && !spellBare9) spellBare9 = `${s}s -> ${said}`;
+    if ((n === 1) === /s$/.test(said) && !spellPlural9) spellPlural9 = `${s}s -> ${said}`;
+  }
+  check('it rounds UP, at every second of the longest boost in the table and not just the round ones',
+    spellShort9 === null, spellShort9 || '0..1800 all round up');
+  /* THE ROW USED TO SAY "29 left" ON A BOOST AND "20 seconds left" ON THE
+     WONDER — the same fact in two shapes, one of them a bare number. */
+  check('and every countdown a chip can speak carries its unit',
+    spellBare9 === null, spellBare9 || '0..1800 all carry a unit');
+  check('and pluralises it', spellPlural9 === null, spellPlural9 || '0..1800 agree');
+
+  /* THE RECONCILE, RUN. Six methods of a stand-in row is all `renderRail()`
+     reaches for, and `insertBefore` counts itself: a node moved is a node
+     REMOVED and re-inserted, which is exactly what drops the focus a player is
+     holding, so "was it moved" is as load-bearing here as "was it rebuilt". */
+  const run9 = () => {
+    const tally = { inserts: 0, labels: 0, nums: 0, styles: 0, born: 0, sigs: 0 };
+    const kids = [];
+    /* The signature is a WRITE, and counting it is the only way to see the
+       short-circuit at all: a weather-only row reconciles to itself, so a
+       renderRail() that had lost its early return would move nothing and write
+       nothing and look identical from the row's side. */
+    const dataset = { _v: undefined };
+    Object.defineProperty(dataset, 'sig', {
+      get: () => dataset._v,
+      set: (v) => { tally.sigs += 1; dataset._v = v; }
+    });
+    const rail = {
+      dataset,
+      kids,
+      get firstChild() { return kids[0] || null; },
+      insertBefore(node, ref) {
+        tally.inserts += 1;
+        const at = kids.indexOf(node);
+        if (at !== -1) kids.splice(at, 1);
+        const i = ref ? kids.indexOf(ref) : -1;
+        if (i === -1) kids.push(node); else kids.splice(i, 0, node);
+        node.moves += 1;
+      },
+      querySelector: () => null
+    };
+    const chipNode = (html) => {
+      tally.born += 1;
+      const attrs = { 'aria-label': (/aria-label="([^"]*)"/.exec(html) || [])[1] };
+      const num = { nodeValue: (/<i>([^<]*)<\/i>/.exec(html) || [, ''])[1] };
+      const props = { '--p': (/--p:([^";]*)/.exec(html) || [, ''])[1] };
+      const node = {
+        key: (/data-tip="([^"]*)"/.exec(html) || [])[1],
+        born: tally.born,
+        moves: 0,
+        num,
+        firstElementChild: {
+          style: {
+            getPropertyValue: (k) => (props[k] === undefined ? '' : props[k]),
+            setProperty: (k, v) => { tally.styles += 1; props[k] = v; }
+          },
+          firstElementChild: { firstChild: num }
+        },
+        getAttribute: (k) => (attrs[k] === undefined ? null : attrs[k]),
+        setAttribute: (k, v) => { tally.labels += 1; attrs[k] = v; },
+        remove() {
+          const i = kids.indexOf(node);
+          if (i !== -1) kids.splice(i, 1);
+        },
+        get nextSibling() {
+          const i = kids.indexOf(node);
+          return i === -1 ? null : (kids[i + 1] || null);
+        }
+      };
+      /* The text node is written through `nodeValue`, so counting it needs the
+         property to be one — this is the write the row must make without
+         replacing a node. */
+      Object.defineProperty(num, 'nodeValue', {
+        get: () => num._v,
+        set: (v) => { tally.nums += 1; num._v = v; }
+      });
+      num._v = (/<i>([^<]*)<\/i>/.exec(html) || [, ''])[1];
+      return node;
+    };
+    const world = { now: 1000, wx: null };
+    const state = { boosters: {}, wonder: { until: 0 } };
+    const scope = {
+      Game: {
+        nowSeconds: () => world.now,
+        wonderActive: () => state.wonder.until > world.now,
+        activeBoost: (id) => (state.boosters[id] || 0) > world.now,
+        currentWeather: () => world.wx
+      },
+      S: state,
+      DATA,
+      WONDER,
+      el: { rail, wxTip: { hidden: true, dataset: {} } },
+      reachesHere: () => true,
+      chipEls: new Map(),
+      chipNode,
+      placeTip: () => {},
+      hideTip: () => {}
+    };
+    const px = new Proxy(scope, {
+      has: () => true,
+      get: (t, k) => {
+        if (typeof k === 'symbol') return undefined;
+        if (Object.prototype.hasOwnProperty.call(t, k)) return t[k];
+        return k in globalThis ? globalThis[k] : undefined;
+      }
+    });
+    let render;
+    try {
+      render = new Function('SCOPE',
+        'with (SCOPE) {' + fmtSrc9 + wxChipSrc9 + spellSrc9 + railFn9 + '\n return renderRail; }')(px);
+    } catch (e) { render = () => { throw e; }; }
+    return { rail, state, world, tally, render, keys: () => kids.map((n) => n.key).join(' ') };
+  };
+
+  const R = run9();
+  R.world.wx = { id: 'rain', name: 'Rain', tint: '#4dabf7' };
+  R.state.boosters.bloom = R.world.now + 30;
+  R.state.boosters.fortune = R.world.now + 1800;
+  R.render();
+  const row9 = R.rail.kids.slice();
+  check('the row leads with the sky, then the clocks the player started, in table order',
+    R.keys() === 'wx:rain boost:bloom boost:fortune', R.keys());
+  /* EIGHT QUARTER-SECOND TICKS — the row's real cadence, from `railAcc`. */
+  for (let i = 0; i < 8; i += 1) { R.world.now += 0.25; R.render(); }
+  check('two seconds on, every chip is the SAME object it was — which is all focus asks for',
+    R.rail.kids.length === row9.length && R.rail.kids.every((n, i) => n === row9[i]),
+    R.rail.kids.map((n) => `${n.key}#${n.born}`).join(' '));
+  check('and nothing in the row was built a second time', R.tally.born === 3, String(R.tally.born));
+  check('the countdown moved even though the nodes did not',
+    R.rail.kids[1].num.nodeValue === '28', String(R.rail.kids[1].num.nodeValue));
+  check('and so did the label that speaks it',
+    R.rail.kids[1].getAttribute('aria-label') === 'Bloom Burst, 28 seconds left',
+    R.rail.kids[1].getAttribute('aria-label'));
+  /* THE LONG BOOSTS ARE THE POINT OF THE ROUNDING. Fortune Aura runs thirty
+     minutes; a label counting seconds rewrites itself 1800 times inside a live
+     region. Rounded to the minute it changes thirty times, and not once here. */
+  check('a half-hour aura does not rewrite its own name every second it is running',
+    R.rail.kids[2].getAttribute('aria-label') === 'Fortune Aura, 30 minutes left',
+    R.rail.kids[2].getAttribute('aria-label'));
+  /* A CHIP THAT ENDS LEAVES, AND TAKES NOTHING WITH IT. Bloom Burst expiring
+     beside a running aura is the case the removals-first pass exists for. */
+  const aura9 = R.rail.kids[2];
+  R.world.now += 40;
+  R.render();
+  check('an expired boost leaves the row', R.keys() === 'wx:rain boost:fortune', R.keys());
+  check('and the chip beside it is neither rebuilt nor MOVED to close the gap',
+    R.rail.kids[1] === aura9 && aura9.moves === 1, `born ${aura9.born}, moves ${aura9.moves}`);
+  R.state.wonder.until = R.world.now + WONDER.duration;
+  R.render();
+  check('a Wonder arriving takes its place in the middle of the row',
+    R.keys() === 'wx:rain wonder boost:fortune', R.keys());
+  check('and the chip it pushed along was inserted once, at the start, and never again',
+    aura9.moves === 1, String(aura9.moves));
+  R.world.wx = { id: 'storm', name: 'Storm', tint: '#748ffc' };
+  R.render();
+  check('a change of sky swaps the sky chip and leaves both clocks standing',
+    R.keys() === 'wx:storm wonder boost:fortune' && aura9.moves === 1, R.keys());
+
+  /* THE SIGNATURE KEEPS ITS OWN JOB, which is the reason it exists: a row where
+     nothing moved touches nothing at all. */
+  const R2 = run9();
+  R2.world.wx = { id: 'rain', name: 'Rain', tint: '#4dabf7' };
+  R2.render();
+  const t2 = Object.assign({}, R2.tally);
+  for (let i = 0; i < 16; i += 1) { R2.world.now += 0.25; R2.render(); }
+  check('a rail with only a sky in it is not touched once across four seconds of ticks',
+    R2.tally.inserts === t2.inserts && R2.tally.labels === t2.labels
+    && R2.tally.nums === t2.nums && R2.tally.styles === t2.styles,
+    JSON.stringify(R2.tally));
+  /* AND IT DOES NOT EVEN WRITE ITS OWN SIGNATURE, which is the half the row
+     cannot show: a steady row reconciles to itself, so a renderRail() that had
+     lost its early return would move nothing, write nothing, and look exactly
+     like this one from the outside. Sixteen ticks, one signature. */
+  check('and the short-circuit is what stops it — one signature written, not seventeen',
+    R2.tally.sigs === 1, `${R2.tally.sigs} signature writes`);
+  /* AND WHEN A CLOCK IS RUNNING, only what moved is written. The aura's ring
+     reads `30m`, then `29m 59s`, then `29m 58s` — two writes in two seconds —
+     while its label says "30 minutes left" throughout and is never rewritten. */
+  const R3 = run9();
+  R3.state.boosters.fortune = R3.world.now + 1800;
+  R3.render();
+  const t3 = Object.assign({}, R3.tally);
+  for (let i = 0; i < 8; i += 1) { R3.world.now += 0.25; R3.render(); }
+  check('a tick writes the number that changed and not the label that did not',
+    R3.tally.nums - t3.nums === 2 && R3.tally.labels - t3.labels === 0
+    && R3.tally.inserts - t3.inserts === 0, JSON.stringify(R3.tally));
+
+  /* SOURCE READS FROM HERE — the markup half, which no stand-in row can see. */
+  const labels9 = rail9.match(/aria-label="[^"]*"/g) || [];
+  /* Read off the ATTRIBUTES, never the slice: the comment that records what
+     these labels used to say is inside the slice and would match forever. */
+  check('no chip label carries the tooltip’s own copy any more',
+    labels9.length === 3 && !labels9.some((l) => /what this/.test(l)), labels9.join(' | '));
+  check('and both chips with a clock speak one shape, with the unit in it',
+    (rail9.match(/spellTime\(remain\)\} left`/g) || []).length === 2
+    && (rail9.match(/aria-label="\$\{label\}"/g) || []).length === 2,
+    labels9.join(' | '));
+  /* THE RING IS A DIAL, and the label beside it already says the same time in
+     words — so it is out of the accessibility tree, and the one thing that moves
+     every second never reaches the live region as a change to its text. */
+  check('the countdown ring is hidden from the row that reads itself aloud',
+    (rail9.match(/<span class="ring" aria-hidden="true"/g) || []).length === 2,
+    String((rail9.match(/<span class="ring" aria-hidden="true"/g) || []).length));
+  check('and the region it sits in is still the one that announces a change of sky',
+    /<div class="rail" id="rail" aria-live="polite">/.test(indexSrc));
+  check('the row is no longer rewritten wholesale — that is what destroyed the focus',
+    !/innerHTML/.test(railFn9) && /chipEls\.get\(/.test(railFn9)
+    && /chipEls\.set\(/.test(railFn9), railFn9.slice(0, 80));
+}
+
 /* ================================================================
    SLICE C — WINTER, THE NIGHT SHIFT.
 

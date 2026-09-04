@@ -687,12 +687,26 @@
      `18-mutations-and-weather.md`. A tinted chip says "the sky is doing
      something" without becoming a small clock to plant against. It is the
      owner's call to reopen. */
+  /* THE LABEL IS WHAT A LIVE REGION SAYS OUT LOUD, so it carries the chip's name
+     and nothing else. `.rail` is `aria-live="polite"` (docs/08), and the tail
+     these labels used to carry — "— what this sky is doing", "— what this
+     power-up is doing" — was the TOOLTIP'S copy, repeated in the one place that
+     is read aloud on its own. Three boosts made it a 27-word paragraph, and the
+     row re-announced it every second for as long as the longest clock ran. What
+     the tooltip says belongs in the tooltip, which is one tap away and is not a
+     live region. */
   function weatherChip() {
     const w = Game.currentWeather();
-    if (!w || w.id === 'clear') return '';
-    return `<button class="chip weather" type="button" data-tip="wx:${w.id}" style="--tint:${w.tint}"
-      aria-label="${w.name} — what this sky is doing">
-      <span class="weather-dot"></span><span>${w.name}</span></button>`;
+    if (!w || w.id === 'clear') return null;
+    /* A descriptor rather than a bare string, in the shape renderRail's Map
+       keys on: this is the one chip with no clock, so it has no `count` and no
+       tick ever writes to it once it is built. */
+    return {
+      key: `wx:${w.id}`,
+      html: `<button class="chip weather" type="button" data-tip="wx:${w.id}" style="--tint:${w.tint}"
+      aria-label="${w.name}">
+      <span class="weather-dot"></span><span>${w.name}</span></button>`
+    };
   }
 
   /* THE COPY IS ABOUT A CHANCE, NEVER A PAYOUT, and this is the hard part of the
@@ -840,33 +854,54 @@
   const SEASON_DEAD_EFFECTS = ['growSpeed', 'rarityWeight', 'autoHarvest'];
   const reachesHere = (def) => !inSeasonRoom()
     || Object.keys(def.effects || {}).some((k) => SEASON_DEAD_EFFECTS.indexOf(k) === -1);
+  /* THE ROW IS BUILT ONCE AND UPDATED IN PLACE, and this is the whole reason it
+     needs saying. The version this replaces wrote `el.rail.innerHTML` whenever
+     the signature changed, and the signature carries every countdown — so the
+     row's markup was thrown away and rebuilt about once a second, for as long as
+     any clock in it was running. Three things came out of that:
+
+       - FOCUS. Every chip is a `<button>` since #9, and a button destroyed a
+             second after you reach it cannot be tabbed to, held, or fired from a
+             keyboard. Measured before this change: focus `[data-tip="boost:bloom"]`,
+             wait 1.6s, `document.activeElement` is `BODY`. Not "sometimes" —
+             by construction, for as long as a countdown exists.
+       - THE LIVE REGION. `.rail` is `aria-live="polite"` (docs/08), so replacing
+             its contents wholesale is a change to every node in it, and a screen
+             reader re-read every chip in the row once a second. Fortune Aura runs
+             thirty minutes.
+       - The house rule the meadow's pets already cost us once: NEVER RECREATE A
+             NODE THAT A POST-LAYOUT PASS POSITIONS (HANDOFF, "Traps"). An open
+             tooltip is positioned against a chip.
+
+     So chips are keyed by their `data-tip` value and held in a Map, exactly like
+     the Hollow's `petEls`: a chip whose key survives the tick is the same node it
+     was, and only the values that actually moved are written. The signature keeps
+     its own job unchanged — a row where nothing moved still does nothing at all. */
+  const chipEls = new Map();      // data-tip key -> the chip's node, built once and kept
+  function chipNode(html) {
+    const t = document.createElement('template');
+    t.innerHTML = html.trim();
+    return t.content.firstElementChild;
+  }
+  /* THE RING DRAWS THE TIME AND THE LABEL SPEAKS IT, in different words on
+     purpose. `29` and `9m 59s` are glyphs for a 13px dial; read aloud they are
+     "twenty-nine" and "nine em fifty-nine ess". So the label spells its unit and
+     rounds to it — one shape for all four chips that carry a clock, where the
+     row used to say "29 left" on a boost and "20 seconds left" on the Wonder.
+     Rounding UP also means the label never promises less time than is left, and
+     it is what keeps a half-hour aura from rewriting its own name 1800 times. */
+  function spellTime(sec) {
+    const s = Math.max(0, Math.ceil(sec));
+    if (s < 60) return `${s} second${s === 1 ? '' : 's'}`;
+    const m = Math.ceil(s / 60);
+    return `${m} minute${m === 1 ? '' : 's'}`;
+  }
   function renderRail() {
     const now = Game.nowSeconds();
-    let html = '';
-    DATA.boosters.forEach((b) => {
-      if (!Game.activeBoost(b.id)) return;
-      if (!reachesHere(b)) return;
-      const remain = Math.max(0, S.boosters[b.id] - now);
-      const p = Math.max(0, Math.min(1, remain / b.dur));
-      /* Hoisted into a local so the ring and the label cannot disagree about
-         the same countdown — they are the same string, read once. */
-      const left = Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain);
-      html += `<button class="chip timed" type="button" data-tip="boost:${b.id}" style="--tint:${b.tint}"
-        aria-label="${b.name}, ${left} left — what this power-up is doing">
-        <span class="ring" style="--p:${p.toFixed(3)}"><i>${left}</i></span>
-        <span>${b.name}</span></button>`;
-    });
-    /* The Wonder multiplies every payout including a tap, so it reaches here
-       too — and it is the loudest thing in the game, which makes hiding it the
-       most confusing possible thing to do with it. */
-    if (Game.wonderActive()) {
-      const remain = Math.max(0, S.wonder.until - now);
-      const left = Math.ceil(remain);
-      html = `<button class="chip timed" type="button" data-tip="wonder" style="--tint:${WONDER.tint}"
-        aria-label="Wonder Effect, ${left} seconds left — what this is doing">
-        <span class="ring" style="--p:${(remain / WONDER.duration).toFixed(3)}"><i>${left}</i></span>
-        <span>WONDER x${WONDER.payoutMult}</span></button>` + html;
-    }
+    /* One descriptor per chip, in reading order. `key` is both the tooltip hook
+       and the node's identity; `count`, `p` and `label` are the only three things
+       a tick can move, and `html` is how the node is born. */
+    const chips = [];
     /* FIRST in the row, and the reason changed the day every chip became
        tappable. It was "the one control here never needs scrolling to", and it
        is not: five chips measure 531px in a 370px track, so four of them can
@@ -875,24 +910,102 @@
        after it is a clock the player started. Leading with the one chip that is
        not the player's doing also gives the row the same left edge in Summer,
        Fall and Winter, where `reachesHere()` has thinned what follows. */
-    html = weatherChip() + html;
-    if (el.rail.dataset.sig !== html) {
-      el.rail.innerHTML = html;
-      el.rail.dataset.sig = html;
-      /* THE TOOLTIP LIVES OUTSIDE THE RAIL, and this is why: the signature
-         carries every countdown, so this branch fires about once a second and
-         takes the whole row's markup with it. Anything anchored to a node in
-         here is destroyed on the next tick. What is left is to close the tooltip
-         when the chip it belongs to has gone, and to follow it when the row
-         reflows around it. One query answers both — a boost expires on its own
-         clock, so a bubble can be open at the instant its chip disappears, and
-         the Wonder expiring beside a boost chip slides it 114.4px left. Keys are
-         `[a-z:]` only, so no selector escaping is needed. */
-      if (!el.wxTip.hidden) {
-        const chip = el.rail.querySelector(`[data-tip="${el.wxTip.dataset.tip}"]`);
-        if (chip) placeTip(chip);
-        else hideTip();
+    const wx = weatherChip();
+    if (wx) chips.push(wx);
+    /* The Wonder multiplies every payout including a tap, so it reaches here
+       too — and it is the loudest thing in the game, which makes hiding it the
+       most confusing possible thing to do with it. */
+    if (Game.wonderActive()) {
+      const remain = Math.max(0, S.wonder.until - now);
+      const left = String(Math.ceil(remain));
+      const p = (remain / WONDER.duration).toFixed(3);
+      const label = `Wonder Effect, ${spellTime(remain)} left`;
+      chips.push({
+        key: 'wonder', timed: true, count: left, p, label,
+        html: `<button class="chip timed" type="button" data-tip="wonder" style="--tint:${WONDER.tint}"
+        aria-label="${label}">
+        <span class="ring" aria-hidden="true" style="--p:${p}"><i>${left}</i></span>
+        <span>WONDER x${WONDER.payoutMult}</span></button>`
+      });
+    }
+    DATA.boosters.forEach((b) => {
+      if (!Game.activeBoost(b.id)) return;
+      if (!reachesHere(b)) return;
+      const remain = Math.max(0, S.boosters[b.id] - now);
+      const p = Math.max(0, Math.min(1, remain / b.dur)).toFixed(3);
+      /* Hoisted into a local so the ring and the label cannot disagree about
+         the same countdown — they are the same number, read once. */
+      const left = String(Math.ceil(remain) > 99 ? fmtTime(remain) : Math.ceil(remain));
+      const label = `${b.name}, ${spellTime(remain)} left`;
+      chips.push({
+        key: `boost:${b.id}`, timed: true, count: left, p, label,
+        html: `<button class="chip timed" type="button" data-tip="boost:${b.id}" style="--tint:${b.tint}"
+        aria-label="${label}">
+        <span class="ring" aria-hidden="true" style="--p:${p}"><i>${left}</i></span>
+        <span>${b.name}</span></button>`
+      });
+    });
+
+    /* The signature is still the row's whole markup, which is what makes it a
+       complete one: every value a tick can move is interpolated into it. */
+    const sig = chips.map((c) => c.html).join('');
+    if (el.rail.dataset.sig === sig) return;
+    el.rail.dataset.sig = sig;
+
+    /* CHIPS THAT HAVE GONE LEAVE FIRST, so what is left is only ever slid along.
+       `insertBefore` on a node already in the tree is a removal and a re-insert
+       — it drops focus, and it is a change the live region above has to consider
+       — so the ordinary case, a chip expiring off the end of the row, has to
+       move nothing at all. Doing the removals first is what makes that true. */
+    const keys = new Set(chips.map((c) => c.key));
+    chipEls.forEach((node, key) => {
+      if (keys.has(key)) return;
+      node.remove();
+      chipEls.delete(key);
+    });
+    let prev = null;
+    chips.forEach((c) => {
+      let node = chipEls.get(c.key);
+      if (!node) {
+        node = chipNode(c.html);
+        chipEls.set(c.key, node);
       }
+      /* ONLY WHAT MOVED, AND ONLY IF IT MOVED — three writes, each guarded, and
+         a tick that adds or removes no node anywhere in the row. The number is
+         written to the TEXT NODE rather than through `textContent`, which
+         replaces it: this way the whole row, down to the last text node, is the
+         same DOM after a tick as before it, and "nothing here is recreated" is a
+         property a probe can assert rather than a claim in a comment. The `<i>`
+         is born with its digits, so the text node is always there.
+
+         The ring is `aria-hidden` because it is a dial: the label beside it
+         already carries the same time in words, so hiding it costs a screen
+         reader nothing and keeps the one thing that moves every second out of
+         the live region entirely. */
+      if (c.timed) {
+        const ring = node.firstElementChild;
+        const num = ring.firstElementChild.firstChild;
+        if (ring.style.getPropertyValue('--p') !== c.p) ring.style.setProperty('--p', c.p);
+        if (num.nodeValue !== c.count) num.nodeValue = c.count;
+        if (node.getAttribute('aria-label') !== c.label) node.setAttribute('aria-label', c.label);
+      }
+      const want = prev ? prev.nextSibling : el.rail.firstChild;
+      if (node !== want) el.rail.insertBefore(node, want);
+      prev = node;
+    });
+
+    /* THE TOOLTIP STILL LIVES OUTSIDE THE RAIL, and the reason is no longer that
+       the row eats its own children — it doesn't, as of the Map above. It is that
+       a bubble outlives its anchor: a boost expires on its own clock, so a player
+       can be reading a tooltip at the instant its chip is removed underneath it.
+       What is left is to close the bubble when the chip it belongs to has gone,
+       and to follow it when the row reflows around it — the Wonder expiring beside
+       a boost chip slides it 114.4px left. One query answers both. Keys are
+       `[a-z:]` only, so no selector escaping is needed. */
+    if (!el.wxTip.hidden) {
+      const chip = el.rail.querySelector(`[data-tip="${el.wxTip.dataset.tip}"]`);
+      if (chip) placeTip(chip);
+      else hideTip();
     }
   }
 

@@ -746,7 +746,8 @@ const DATA = {
         'The tabs down the sides of the garden have gone — swipe left or right to move between your gardens, and watch the edge of the screen for a red dot when one of them has something ready. The Upgrades and Power-up buttons have moved out to the edges to give the bottom of the screen some room.',
         'The Collect all button under your fall bed is bigger now, with the whole bed’s gold written large across it, and it catches the light while it waits to be tapped.',
         'The hint that teaches you the swipe between gardens now always stands beside the edge it is pointing at, instead of drifting up to the top of the screen when your fall bed has a whole windfall waiting.',
-        'The big numbers — a lucky tap, a whole fall bed collected — hold still where you can read them too now when your phone is set to reduce motion.'
+        'The big numbers — a lucky tap, a whole fall bed collected — hold still where you can read them too now when your phone is set to reduce motion.',
+        'Each chip in the strip above your garden stays put while its clock counts down, so you can reach one with a keyboard and it stays reached — and a screen reader now hears what has just started rather than the whole strip read out again every second.'
       ]
     },
     {

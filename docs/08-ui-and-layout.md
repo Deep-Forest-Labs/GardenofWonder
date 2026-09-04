@@ -983,8 +983,10 @@ Clear.
 | Rule | Why |
 | --- | --- |
 | **It is FIRST in the row** | **Reading order, since 2026-09-03.** The old reason — "the only chip that can be tapped never needs scrolling to" — expired when every chip became one, and re-measuring shows it was already only half true: five chips are **531px in a 370px track** at 390×844 (not the 437px this table used to claim), with Golden Popups off-screen at x=415. What survives is that the sky is the **world's** and everything after it is a clock the **player** started, and that leading with the one chip that is not the player's doing gives the row the same left edge in Summer, Fall and Winter, where `reachesHere()` has thinned what follows |
-| **A real `<button>` with an `aria-label`**, and the rail's only listener | Since #9 so is every other chip in the row. A click on a div carries no role, no keyboard and no focus ring, and three chips that all open a tooltip may not be three different kinds of element. The listener is delegated off `.rail`, because the row is rewritten wholesale about once a second |
-| **The tooltip lives OUTSIDE the rail** (`#wxTip`, a sibling of `.coach` in `.world`) | `renderRail()`'s signature carries every countdown, so it rewrites the row roughly once a second. Anything anchored to a node inside it is destroyed on the next tick |
+| **A real `<button>` with an `aria-label`**, and the rail's only listener | Since #9 so is every other chip in the row. A click on a div carries no role, no keyboard and no focus ring, and three chips that all open a tooltip may not be three different kinds of element. The listener is delegated off `.rail` so a chip arriving or leaving cannot arrive without one |
+| **The tooltip lives OUTSIDE the rail** (`#wxTip`, a sibling of `.coach` in `.world`) | A bubble **outlives its anchor**: a boost runs out on its own clock, so a player can be reading a tooltip at the instant its chip is removed from the row underneath it. (The older reason — the row rewriting its whole markup about once a second — expired on 2026-09-03; see "The row is built once" below) |
+| **The label is the chip's name and its time, and nothing else** (2026-09-03) | `.rail` is `aria-live="polite"`, so a label is *read aloud on its own*. Each one used to end in the tooltip's own copy — "— what this power-up is doing" — which made the row a 155-character paragraph across three boosts, re-read once a second for the thirty minutes a Fortune Aura runs. What the tooltip says belongs in the tooltip, one tap away and not in a live region |
+| **The ring is `aria-hidden="true"`** (2026-09-03) | It is a dial. The label beside it already carries the same time **in words**, so hiding it costs a screen reader nothing and takes the one thing that moves every second out of the live region entirely |
 | **Clamped to `.ui`'s measured box**, not to the window | The tooltip lives outside `.ui` and inherits none of its 560px column; clamped to the window it would sail into the grey on a desktop while its chip stayed in the middle |
 | **No countdown, v1** | See below |
 | **Three ways out**: tap it, tap the chip again, tap anything else | The third is a capture-phase `pointerdown` on the document, so a tap that lands on a control still closes this on its way through |
@@ -1069,10 +1071,45 @@ mutation and growth and Fall's cells carry neither: *"The same sky hangs over ev
 does, it does to the summer garden."* Shipping the CSS exemption without that branch would have made
 a previously invisible falsehood visible, which is why they are one commit.
 
-**The sig-cache still short-circuits.** `data-tip` is a constant per chip, so it adds nothing that
-varies per tick: measured 0 DOM mutations over 4s on a steady weather-only row, and 8 with one
-countdown running (one rebuild a second, two records per `innerHTML` write) — both unchanged from
-before the change.
+### The row is built once and updated in place (2026-09-03)
+
+**A chip could not hold keyboard focus for more than a second, by construction.** `renderRail()`
+wrote `el.rail.innerHTML` whenever its signature changed, and the signature carries every countdown
+— so the whole row was destroyed and rebuilt for as long as any clock ran in it. Measured at 390×844
+with a sky and two boosts over four seconds: **15 childList mutations on `.rail`, 30 nodes added and
+30 removed**. Driven: focus `[data-tip="boost:bloom"]`, wait 1.6s, `document.activeElement` is
+`BODY`. #9 made every chip a `<button>` precisely so it would carry a role, a label, a focus ring
+and a keyboard — and delivered the first three. Pre-existing for the sky chip while a countdown also
+ran; new and unconditional for boost and Wonder.
+
+**The same rebuild is why a screen reader was read a paragraph every second.** `.rail` is
+`aria-live="polite"`, so replacing its contents is a change to *every node in it*: the region
+re-announced the whole row once a second, and each label ended in the tooltip's own copy. Three
+boosts came to **155 characters / 27 words**, repeated for the thirty minutes a Fortune Aura runs.
+
+**The fix is the recorded house pattern** — *never recreate a node that a post-layout pass
+positions* (HANDOFF, "Traps"; the meadow's hives cost us this once already). Chips are keyed by their
+`data-tip` value and held in a `Map`, exactly like the Hollow's `petEls`.
+
+| Rule | Why |
+| --- | --- |
+| **A chip whose key survives the tick is the same node** | Which is all focus asks for. Measured after: **0 childList mutations, 0 nodes added, 0 removed** over four seconds, and every node in `#rail *` an identical object before and after. Focus held through nine ticks (ring 30 → 26) |
+| **Removals run BEFORE the ordering pass** | `insertBefore` on a node already in the tree is a removal and a re-insert — it drops focus, and it is a change the live region has to consider. Taking the gone chips out first means the ordinary case, a boost expiring off the end of the row, moves nothing at all |
+| **Three guarded writes, and no more**: the ring's `--p`, the ring's number, the label | Each compared before it is written. The number goes to the **text node's `nodeValue`**, not through `textContent`, which replaces it — so the row down to its last text node is the same DOM after a tick as before |
+| **The signature keeps its own job** | Unchanged: it is still the row's whole markup, so a row where nothing moved short-circuits before touching anything. Measured: a weather-only row writes its signature **once** across sixteen ticks |
+| **The label rounds to a whole unit and spells it** | `spellTime()`: "29 seconds left", "10 minutes left", "30 minutes left". One shape for all four chips that carry a clock, where the row said "29 left" on a boost and "20 seconds left" on the Wonder. It rounds **up**, so the label never promises less time than is left — and rounding to the minute is also what keeps a half-hour aura from rewriting its own name 1800 times inside a live region |
+| **The ring is `aria-hidden="true"`** | It is a dial, and the label says the same time in words. This is what takes the one thing that moves every second out of the accessibility tree |
+
+Measured after, same three boosts: **87 characters / 15 words**, and a Fortune Aura's label
+unchanged across four seconds. `tools/sim-test.js` runs `spellTime()` against every second of the
+longest boost in the table, and lifts `renderRail()` into a stand-in row to hold node identity,
+ordering, the removals-first pass and the write count — the group *"the rail is built once and
+updated in place"*.
+
+**What is left, and it is small.** A live region announces *content* changes; the label is an
+attribute, and an AT that re-announces on an accessible-name change will still say five words when a
+short boost's second ticks over. Bloom Burst and Golden Popups run 30s; the three long boosts round
+to the minute and are quiet. Filed in [11-known-issues.md](11-known-issues.md).
 
 ## Toasts, banners, coach marks
 
@@ -1154,7 +1191,10 @@ Present:
 
 - Every interactive element is a real `<button>`.
 - `aria-label` on icon-only controls, `aria-hidden` on decorative scenery, canvas and SVG.
-- `aria-live="polite"` on the rail and toast container.
+- `aria-live="polite"` on the rail and toast container. **The rail is a live region for arrivals,
+  not for its clocks** (2026-09-03): a chip appearing is worth announcing — a change of sky is
+  announced nowhere else in the game — and a countdown is not, so the ring that counts it is
+  `aria-hidden` and the row is updated in place rather than rebuilt. See "The row is built once".
 - `role="tab"` with `aria-selected` on sheet tabs; `aria-pressed` on settings toggles.
 - The three audio levels are native `<input type="range">` controls with their own
   `aria-label`, so they are keyboard-operable and announced as sliders.
