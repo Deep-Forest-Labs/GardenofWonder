@@ -598,7 +598,12 @@ that the price per hour of *boost* falls with the tier while the price per hour 
 rises. **Gold per hour and gems per hour do not compare**, and with one food per currency there is
 no ladder left inside a currency, so the two sim-tests that held them are gone and the daily bill
 above is what replaced them. The rule they protected survives on its own: **Clover must never wall**,
-because being broke can never be allowed to strand a creature.
+because being broke can never be allowed to strand a creature — and that rule is now held by a
+sim-test of its own, because retiring the ladders took the gold tier's only price guard with them
+and 100,000, 250,000 and 400,000 gold a nibble all shipped green afterwards. It is a BAND, not a
+price: the whole day's nibbles for four tended creatures stay inside **two hours** of what a day-one
+casual earns while playing (`CASUAL_RATE_PER_MIN`). Today's bill is 18 minutes of play, so the
+owner's raise has room in it; a wall does not.
 
 **Clover is deliberately UNMOVED at 1,500 and the owner's instruction is only two-thirds delivered.**
 They asked to "greatly increase the cost of food"; for the two upper tiers the currency change *is*

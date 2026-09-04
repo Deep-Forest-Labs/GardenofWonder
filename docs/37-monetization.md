@@ -23,8 +23,11 @@ Five things that ride with the amendment:
   **could** want six a day on its own — four tended creatures on 16-hour Honeypots — so it is held
   to two on purpose; the drone rental is held to two for the same reason, since a half-hour loan
   would happily eat the whole plan and turn a taste into how the garden is played. Four of six
-  spoken for, two left for the placements below that ship first. Every number here is PROVISIONAL
-  and phase 4's to retune.
+  spoken for, **two left — and three placements are named below as shipping first**, so the plan is
+  already full: one of the three waits, shares, or `dailyCap` moves inside its 3–6 band. That is
+  phase 4's call, not a thing to discover while wiring the third placement up. The suite sums
+  `perPlacement` against `dailyCap` and refuses a table that plans past the day. Every number here
+  is PROVISIONAL and phase 4's to retune.
 - **The drone rental's own guardrails**, because they are the ones a future placement should copy.
   It composes with the bought upgrade by `max` and never by replacement, so a player who owns the
   drone at level 3 is never handed a loan that slows them to level 1. It refuses outright — before

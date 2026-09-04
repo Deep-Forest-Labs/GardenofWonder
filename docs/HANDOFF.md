@@ -2963,6 +2963,31 @@ tested; the half a player sees was not tested at all. `ui-sheet.js` cannot be lo
 assert it out of the source the way the drone card and the seed-picker padlocks already do — and put
 a scrape guard on the slice, or a rename makes every regex under it vacuously true.
 
+**And a source read cannot see a ROW. Run the panel instead — `sheetRender()` at the top of
+`tools/sim-test.js`.** Reading `ui-sheet.js` as text is better than nothing and worse than it looks:
+three groups written that way in the 2026-09-03 round were beaten by wrong implementations that all
+read fine as source. The worst swapped `${goes}` and `${keeps}` under the Turn ask's two unchanged
+sentences — the panel then told the player a new year washes away their Seeds, Unlocks, Petals,
+Creatures, Cards and Level and never reaches their Gold, Upgrades and Power-ups, **the game's
+central guarantee inverted on its one irreversible screen, at 1904 passed / 0 failed** — because the
+sentences name neither array and every check read an array literal. Alongside it: `.slice(0, 3)` on
+the same row, dropping two of the five prices; the fixed empty-board bug restored verbatim; a
+countdown pasted into the drone card's copy while the PEGI-12 rail was being held against a two-key
+object; and `${droneCard()}` smuggled into the ceremony past a grep for `data-ad|adTag(|AD_LABEL`,
+because a named builder spells none of those.
+
+`ui-sheet.js` still cannot be *loaded* — it destructures `UI` at module scope. But its panels are
+pure string builders over `Game`, `S`, `Icons` and `DATA`, so one is sliced out by name and
+evaluated with those bound; anything else it reaches resolves to a recording stub that returns a
+marker naming itself, which is what catches the smuggled builder. Three habits go with it:
+**bind the sentence to the row it captions** (adjacency in the OUTPUT, never the order two literals
+appear in the source); **assert the conditional row under the conditions that empty it**, because
+the bug is nearly always a row that is not there; and **check the CSS by property, never by class
+name** — "the shouted label class is retired" is passed by pasting the shouted label's declarations
+onto the new name, verified in a browser. Say in the group's own comment what the harness cannot
+see (CSS, anything after paint, the screen around the panel) rather than leaving the next reader
+believing a green line holds more than it does.
+
 **A backfill that runs on first READ hides a missing merge line from the test that was written to
 catch it.** `state.ads` got its `load()` re-merge and an assertion in the same commit, and the
 assertion passed with the re-merge deleted — because it asked a getter, and the getter's own day-roll

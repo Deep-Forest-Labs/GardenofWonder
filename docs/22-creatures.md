@@ -471,13 +471,16 @@ is in [37-monetization.md](37-monetization.md); the playbook a second placement 
    entirely when `Game.adOffered('food')` is false, and the row drops to two columns
    (`.food-row[data-n="2"]`). A greyed-out ad button on session one is still an ad on session one.
    That filter is the *only* place the rule is enforced for food, so `tools/sim-test.js` asserts it
-   out of the source rather than trusting review — a version drawing all three tiers with the ad one
-   merely disabled passed the whole suite. And a first session is not a page load: `adOffered()`
+   rather than trusting review — a version drawing all three tiers with the ad one merely disabled
+   passed the whole suite. It is asserted twice over now: the filter line out of the source, and the
+   **rendered row counted**, because a source pin holds one spelling of the filter and not the tiers
+   it actually draws. And a first session is not a page load: `adOffered()`
    wants the garden opened again **and** more than a day old, so a refresh cannot end it — the
    ledger's two fields are in [07-save-data.md](07-save-data.md).
 3. **No countdown, ever.** A time-limited offer attaches a PEGI 12 descriptor
    ([40-financial-model.md](40-financial-model.md)), so nothing in `DATA.ads` may ever hold a clock —
-   there is a sim-test that reads the whole table for the word.
+   there is a sim-test that reads the whole table for the word, and another that reads the rendered
+   card, because the words a player is hurried by are on the card and not in the table.
 4. **Never sold for a partial grant.** This is the one the cap forces, and it is the reason the tier
    needed engine work rather than a button. `FOOD_CAP_HOURS` is 24, so a creature with 12 hours
    banked taking a 16-hour Honeypot would get 12. That is tolerable when the cost is gold and
@@ -532,13 +535,15 @@ and gems per hour do not compare**, and with one food per currency there is no l
 currency to assert — so both sim-tests are gone, replaced by the daily bill above. What survives of
 their intent is the rule they were protecting: **Clover is the tier that must never wall.** Being
 broke can never strand a creature, so whatever number the owner lands on for gold, that one stays
-reachable on a bad day.
+reachable on a bad day. That rule has a red line of its own now — the day's whole gold bill against
+a band of casual earning, in [04-economy.md](04-economy.md) — because for a while after the ladders
+went nothing held the gold tier's price at all.
 
 **The save migrates by taking the larger of the pair.** `awakeUntil` was always the longer clock, so
 the surviving `fedUntil` takes `max(fedUntil, awakeUntil)` and the old field is dropped. Absent still
 means the full arrival grant.
 
-### How this landed, because the reasoning is the useful part### How this landed, because the reasoning is the useful part
+### How this landed, because the reasoning is the useful part
 
 **The first pass had only the boost and nothing that ever switched off.** The owner asked for the
 upkeep half back the same day, and was right to: *"as much as I think we are a cozy game, we need to

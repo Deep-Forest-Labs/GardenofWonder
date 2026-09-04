@@ -357,8 +357,10 @@ replace, which is the whole point of the shape.
    session. If the offer's absence changes a layout — a column count, a row height — that belongs to
    the same function that decides to render it, so the two can never disagree. `.food-row[data-n]`
    is the worked example, and the *only* place that rule is enforced for the food ladder, so it is
-   asserted out of the source in `tools/sim-test.js` — the render is as much of the rule as the
-   predicate is. **A first session is not a page-load count**: `adPastFirstSession()` wants the
+   asserted in `tools/sim-test.js` — the render is as much of the rule as the predicate is, and it
+   is now asserted out of the **rendered row** rather than only out of the source line, because a
+   source pin holds one spelling of the filter and not the tiers it draws (see the render harness at
+   the top of the suite). **A first session is not a page-load count**: `adPastFirstSession()` wants the
    garden opened again *and* more than a day old, because a refresh, a restored tab or a
    service-worker update all bump `state.ads.sessions` inside one sitting. A fixture that writes
    `S.ads.sessions = 2` and nothing else is testing the bug this replaced —
@@ -382,6 +384,12 @@ replace, which is the whole point of the shape.
 5. **The placement's cap is a key in `DATA.ads.perPlacement` and nowhere else.** A new placement
    adds one line there and nothing else. `dailyCap` is the whole plan and no placement may plan past
    it; both are remote-tunable by construction, which is doc 37's fifth prerequisite.
+   **"No placement may plan past it" is a SUM, so sum it.** The first guard written for this read
+   one key against `dailyCap` and let a table of four placements planning eight impressions ship
+   green — and because every other shape check here is written *relative* to `dailyCap`, raising the
+   cap RELAXED them instead of failing. The suite now sums `perPlacement` against `dailyCap` and
+   holds `dailyCap` inside doc 37's own 3–6 band. A relative check needs an absolute anchor over
+   it or the whole plan floats.
 6. **The button is `UI.adTag(ready)`** — one label (`UI.AD_LABEL`) and one glyph
    (`Icons.get('video')`), everywhere. It takes no currency colour on purpose: cyan is gems and
    blue/purple/gold are the rarity vocabulary ([05-art-direction.md](05-art-direction.md)), and
@@ -389,8 +397,11 @@ replace, which is the whole point of the shape.
 7. **No countdown, no "expires in", no urgency copy of any kind.** A time-limited or
    quantity-limited offer attaches a PEGI 12 descriptor
    ([40-financial-model.md](40-financial-model.md)), and this game's rating headroom is worth more
-   than urgency. A sim-test reads `DATA.ads` for that vocabulary and fails on it; keep it true in
-   the copy as well as the data.
+   than urgency. A sim-test reads `DATA.ads` for that vocabulary and fails on it — **but a data
+   table is not where the words are.** `DATA.droneRental` is two keys, and a countdown pasted
+   straight into the drone card's own copy sailed past the check holding this rail. The rail is now
+   read off the **rendered card**, and a new placement's card must be rendered and read the same
+   way; the data check alone is a rail that is not there.
 8. **Rewarded video only** — no interstitials, no banners, no energy, no loot boxes — and nothing
    inside a sacred moment: not the ceremony, not the Wonder, not the Century Bloom's wait.
 9. Add a sim-test. At minimum: the placement is absent in a first session, its cap refuses one more
@@ -398,6 +409,11 @@ replace, which is the whole point of the shape.
    refusal** — take the impression mark *before* the refusing call, in its own `check`. An earlier
    assertion that performs the refusal itself absorbs the stray impression and the guard then
    passes with `watchAd()` in the wrong place. That hole was found by sabotage, not by review.
+   **And render the control.** Half of these rules are things a player sees — absent not disabled,
+   drained not live, no urgency in the copy — and none of them can be held by reading `game.js` or
+   by grepping `ui-sheet.js` for one spelling of "ad". `sheetRender()` at the top of the suite runs
+   the builder and hands back its markup; every ad surface shipped so far had a wrong version that
+   passed until it was read that way.
 
 ## Playbook: change saved state
 

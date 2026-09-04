@@ -138,6 +138,107 @@ const returningPlayer = (opens = 2) => {
   S.ads.firstAt = G.nowSeconds() - 25 * 3600;
 };
 
+/* ---- RENDERING A PANEL HEADLESSLY, because a source read cannot see a row ----
+
+   ui-sheet.js cannot be LOADED here: it opens with `const { $, $$, S, el, fmt,
+   ... } = UI;` and UI needs a document. So every panel assertion in this file
+   has historically read it as SOURCE TEXT — and source text is not output. The
+   2026-09-03 verifiers proved what that costs by shipping wrong implementations
+   green: a Turn ask with its two chip rows SWAPPED, so the panel promised the
+   player a new year washes away their Seeds, Unlocks, Petals, Creatures, Cards
+   and Level and never reaches their Gold, Upgrades and Power-ups; the same row
+   `.slice(0, 3)`-ed so two of the five prices vanished; and the fixed
+   empty-board bug restored verbatim. All three read fine as source, because the
+   checks read the array literal and the sentences name neither array.
+
+   So: lift ONE function out of ui-sheet.js by name and RUN it. The panels worth
+   holding are pure string builders over Game, S, Icons and DATA, all four of
+   which this suite already has. Everything else the function reaches — Flora,
+   fmt, adTag, another panel's builder — resolves through a proxy to a stub that
+   returns a marker naming itself. The marker is readable in the output and the
+   name is returned in `calls`, which is the half a grep cannot do: a check for
+   one spelling of "ad" is walked past by `${droneCard()}`, and a check on the
+   call list is not.
+
+   WHAT THIS STILL CANNOT SEE, said plainly so nobody reads more into a green
+   line than is in it:
+     - CSS. This renders MARKUP. It holds structure, words, and the conditions
+       each one appears under; it knows nothing about colour, size, weight or
+       overflow. Those are asserted out of style.css by PROPERTY — never by
+       class name, which is what a rename defeats — or measured by hand with
+       tools/probe.js and written into docs/08.
+     - Anything that happens after paint. No handler runs, so a class that
+       syncAfford() toggles on a live node is invisible here.
+     - The screen. This is one function, not a panel in its surroundings: what
+       wraps it, what scrolls, and what it sits beside are not under test.
+   The suite stays a single `node tools/sim-test.js` with no browser, and that
+   boundary is the reason the list above is written down rather than implied. */
+const SHEET_SRC = fs.readFileSync(path.join(ROOT, 'ui-sheet.js'), 'utf8');
+/* One module-level function, brace-matched on ui-sheet.js's own two-space
+   indent — the same slice idiom the food-row and seed-picker checks use. Every
+   caller pairs this with a size band, because a rename returns '' and an empty
+   render would pass a check written as "the ad is not in the output". */
+const sheetSlice = (name) =>
+  (SHEET_SRC.match(new RegExp(`function ${name}\\([^)]*\\)[\\s\\S]*?\\n {2}\\}`)) || [''])[0];
+/* `opts.also` names other ui-sheet functions to lift in alongside this one, so
+   a shared control renders for real instead of as a marker — the drone card's
+   price pill is adTag()'s output, and "is the pill drained?" is a question only
+   the real pill can answer. `opts.bind` supplies a module const the slice
+   cannot bring with it. Everything NOT named either way still resolves to a
+   recording stub, which is what catches a builder nobody expected. */
+const sheetRender = (name, args = [], opts = {}) => {
+  const src = sheetSlice(name);
+  const body = (opts.also || []).map(sheetSlice).concat(src).join('\n');
+  const calls = [];
+  /* A stub is callable at any depth — `Flora.head(seed, 34)` has to work as
+     readily as `fmt(n)` — and stringifies to a marker naming the whole path,
+     so an unexpected helper is visible in the output as well as in `calls`. */
+  const stub = (id) => {
+    const mark = `<!--sheet:${id}-->`;
+    const hit = () => { if (!calls.includes(id)) calls.push(id); return mark; };
+    return new Proxy(function () { return hit(); }, {
+      apply: hit,
+      get: (t, k) => {
+        if (k === Symbol.toPrimitive || k === 'toString' || k === 'valueOf') return () => mark;
+        if (typeof k === 'symbol') return undefined;
+        return stub(`${id}.${String(k)}`);
+      }
+    });
+  };
+  const bound = Object.assign({ Game: G, S }, opts.bind || {});
+  const scope = new Proxy(bound, {
+    has: () => true,
+    get: (t, k) => {
+      if (typeof k === 'symbol') return undefined;
+      if (Object.prototype.hasOwnProperty.call(t, k)) return t[k];
+      if (k in globalThis) return globalThis[k];   // DATA, Icons, CREATURE_FOOD, Math, undefined…
+      return stub(String(k));
+    }
+  });
+  let html = '';
+  let error = '';
+  try {
+    html = new Function('SCOPE', `with (SCOPE) { ${body}\n return ${name}; }`)(scope)(...args);
+  } catch (e) { error = String((e && e.message) || e); }
+  return { html: String(html), src, calls, error };
+};
+/* The chips a rendered row is actually made of, in order, with their classes —
+   `class` is what separates a price from a keepsake, and the text is what the
+   player reads. Tags are stripped, so the glyph inside a chip does not count as
+   a word and a marker left by a stub still shows up as one. */
+const sheetChips = (rowHtml) =>
+  [...String(rowHtml).matchAll(/<span class="(chip[^"]*)">([\s\S]*?)<\/span>/g)]
+    .map((m) => ({ cls: m[1], text: m[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() }));
+/* What a rule in style.css actually declares, by selector. Read by PROPERTY,
+   never by class name: "the shouted label class is retired" is passed by
+   pasting the shouted label's declarations onto the new name, which is exactly
+   what a verifier did. */
+const CSS_SRC = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
+const cssRule = (selector) => {
+  const at = CSS_SRC.indexOf(`\n${selector}{`);
+  return at < 0 ? '' : CSS_SRC.slice(at + selector.length + 2, CSS_SRC.indexOf('}', at));
+};
+
 group('flowers are kept as a crafting byproduct');
 S.credits = 1e6;
 G.plant(0, G.seedById('daisy'));
@@ -2299,6 +2400,161 @@ check('the Almanac reads the composed level, so it never says Locked over a flyi
   && !/const ah = S\.upgrades\.autoHarvest/.test(droneSheetSrc));
 check('and the rail hides a rental in the rooms the drone cannot reach',
   /SEASON_DEAD_EFFECTS = \[[^\]]*'autoHarvest'/.test(uiSrc));
+
+/* ---- AND THE OFFER ITSELF, RENDERED ----
+
+   The four source reads above hold the card's SHAPE. They cannot hold what it
+   SAYS or what state it is drawn in, and four wrong implementations walked past
+   them at 1904/0: a countdown pasted into the card's own copy ("Offer ends in
+   5:00 · 30 min · picks a ready plot…"); the `disabled` attribute dropped, so a
+   dead offer keeps a live-looking pill; `adTag(!why)` written `adTag(true)`, so
+   the pill never drains; and one added sentence, "It keeps earning while you are
+   away." — the exact claim passiveIncomeRate() is excluded to prevent. The
+   no-countdown rail is a PEGI 12 cliff (docs/40-financial-model.md) and the
+   check holding it regexes {"boost":"drone","revealAt":0}: two keys, which can
+   never reach a word on the card.
+
+   So the card is RUN, with the shared ad pill lifted in beside it — whether the
+   pill is drained is a question only adTag()'s real output answers. */
+G.reset(); clearGarden(); unlockTo(20);
+S.credits = 1e15;
+returningPlayer(5); S.ads.day = 'card-day'; S.ads.today = {};
+S.upgrades.autoHarvest = 0;
+delete S.boosters.drone;
+const droneCardOpts = { also: ['adTag'], bind: { AD_LABEL: 'Watch an ad' } };
+const droneOffer = sheetRender('droneCard', [], droneCardOpts);
+const droneWords = droneOffer.html.replace(/<[^>]*>/g, ' ').replace(/&\w+;/g, ' ').replace(/\s+/g, ' ').trim();
+check('the offer card renders, so everything below reads output and not source',
+  droneOffer.error === '' && droneOffer.html.includes('data-ad="drone"'),
+  droneOffer.error || droneWords.slice(0, 90));
+check('and it is drawn LIVE for a player who can take it',
+  !/\bdisabled\b/.test(droneOffer.html) && /class="price ad"/.test(droneOffer.html),
+  (droneOffer.html.match(/class="price ad[^"]*"/) || ['no pill'])[0]);
+/* THE OWNER'S NUMBER, and then the number the player is actually loaned. The
+   card relabels itself off the same field (`Math.round(b.dur / 60)` min), so
+   `nowSeconds() + b.dur * 60` reads as thirty minutes on screen and hands over
+   thirty HOURS — a screenshot looks right and 21 assertions said nothing. */
+const droneDur = DATA.boosters.find((b) => b.id === DATA.droneRental.boost).dur;
+check('the loan is thirty minutes, which is the owner\'s literal instruction',
+  droneDur === 1800, `${droneDur}s`);
+check('and the card says the same thirty', /\b30 min\b/.test(droneWords), droneWords.slice(0, 90));
+check('and the window a rental actually opens is that long, in seconds and not in minutes', (() => {
+  S.ads.today = {};
+  delete S.boosters.drone;
+  const took = G.rentDrone();
+  const left = S.boosters.drone - G.nowSeconds();
+  return took === true && Math.abs(left - droneDur) < 2;
+})(), `${Math.round(S.boosters.drone - G.nowSeconds())}s of ${droneDur}s`);
+/* The rating rail, in the words a player reads rather than in a two-key object.
+   A limited-time or limited-quantity offer attaches a PEGI 12 descriptor, so
+   the card may never hurry anybody. */
+check('and nothing on the card hurries the player into taking it',
+  !/expire|expires|hurry|only|left|last chance|ends|countdown|limited|\d+:\d\d/i.test(droneWords),
+  droneWords);
+/* #21's deliberate exclusion, said on the card as well as enforced in the
+   engine: the rental is worth nothing while the tab is shut, and a card that
+   claims otherwise sells a thing the code refuses to deliver. */
+check('and it never claims to keep earning while the player is away',
+  !/away|offline|asleep|overnight|while you (sleep|are gone)|idle/i.test(droneWords), droneWords);
+/* DRAINED, not merely present. The card stays on screen through a refusal so a
+   player who just spent an ad can see what they bought — which is precisely why
+   the pill has to go dead with it. */
+const droneRunning = sheetRender('droneCard', [], droneCardOpts);
+check('a rental already flying draws the card refusing, with the pill drained',
+  droneRunning.error === '' && G.droneRentalBlocked() === 'running'
+  && /\bdisabled\b/.test(droneRunning.html) && /class="price ad off"/.test(droneRunning.html),
+  (droneRunning.html.match(/class="price ad[^"]*"|disabled/g) || ['neither']).join(' '));
+check('and the card says why, instead of leaving a dead button unexplained',
+  /already flying|already quicker/i.test(droneRunning.html.replace(/&\w+;/g, ' ')),
+  droneRunning.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').slice(0, 120));
+/* ABSENT, not disabled, and asserted on the OUTPUT: an offer that does not
+   exist draws nothing at all, so a first session has no card to grey out. */
+G.reset();
+const droneFirst = sheetRender('droneCard', [], droneCardOpts);
+check('and a first session is drawn no card whatsoever',
+  G.droneRentalOffered() === false && droneFirst.error === '' && droneFirst.html === '',
+  `${droneFirst.html.length} chars`);
+/* Nothing else may be reached from inside the card. `also` lifts the ad pill in
+   for real, so `adTag` is expected here; anything NEW is a builder somebody put
+   on the Shop's one rewarded surface, and it should be looked at before this
+   list is widened. */
+check('and the card reaches for nothing but the ad pill it was built to use',
+  droneOffer.calls.every((c) => ['adTag', 'fmt'].includes(c)), droneOffer.calls.join(', '));
+
+/* ---- THE CADENCE: the number on the button IS the number in the loop ----
+   game.js says exactly that over autoHarvestCadence(), and nothing held the two
+   together. Writing `autoHarvestCadence(state.upgrades.autoHarvest)` where the
+   loop reads `autoHarvestCadence(droneLevel())` leaves a badge-0 renter flying
+   at 3.0s against the 2.5s the card prints — 600 picks instead of 720 across
+   the half hour, 17% less than advertised for the same thirty seconds of
+   attention — and the suite stayed green, because `and the LIVE LOOP actually
+   picks with it` advances a WHOLE SECOND at a time and cannot tell 2.5 from
+   3.0. nowSeconds() is fractional, so this steps a tenth of a second and
+   measures the gaps between real picks. */
+const droneGaps = (seconds) => {
+  const at = [];
+  let lifted = 0;
+  for (let i = 0; i < seconds * 10; i += 1) {
+    advance(0.1, 0.1);
+    const empty = S.grid.filter((c) => !c.locked && c.seed === null).length;
+    if (empty > lifted) { lifted = empty; at.push(clock); }
+  }
+  clock = Math.round(clock);           // the rest of the suite reads whole seconds
+  return at.slice(1).map((t, i) => Number((t - at[i]).toFixed(1)));
+};
+const droneFillBoard = () => {
+  clearGarden(); unlockTo(20);
+  PLOT_AUTOPLANTERS.forEach(({ key }) => { S.upgrades[key] = 0; });   // nothing replants under the drone
+  S.grid.forEach((c) => {
+    c.seed = 'daisy'; c.plantedAt = clock - 100; c.grow = 10; c.ready = true;
+  });
+};
+G.reset(); clearGarden(); unlockTo(20);
+S.credits = 1e15;
+returningPlayer(5); S.ads.day = 'cadence-day'; S.ads.today = {};
+S.upgrades.autoHarvest = 0;
+delete S.boosters.drone;
+const droneRentedTook = G.rentDrone();
+droneFillBoard();
+const droneRentedGaps = droneGaps(30);
+const droneCardCadence = Number((droneWords.match(/every ([\d.]+)s/) || [])[1]);
+check('a borrowed drone picks at the cadence its own card advertises',
+  droneRentedTook === true && droneCardCadence > 0 && droneRentedGaps.length >= 4
+  && droneRentedGaps.every((g) => Math.abs(g - droneCardCadence) < 0.15),
+  `card says ${droneCardCadence}s, loop flew ${droneRentedGaps.join('/')}`);
+/* The control, without which the measurement above could be reading a constant:
+   a bought badge three rungs up flies visibly faster, and the same instrument
+   sees it. */
+delete S.boosters.drone;
+S.upgrades.autoHarvest = 3;
+droneFillBoard();
+const droneBadgeGaps = droneGaps(20);
+check('and a badge three rungs up is measurably quicker on the same instrument',
+  droneBadgeGaps.length >= 4
+  && droneBadgeGaps.every((g) => Math.abs(g - G.autoHarvestCadence(3)) < 0.15)
+  && G.autoHarvestCadence(3) < droneCardCadence,
+  `${G.autoHarvestCadence(3)}s expected, flew ${droneBadgeGaps.join('/')}`);
+/* docs/09's ad playbook, step 2: grant only on TRUE. rentDrone() asks
+   droneRentalOffered() itself, and watchAd() below it only re-asks the ad half —
+   so the REVEAL curtain is enforced in exactly one place, and dropping that one
+   call hands the offer to a player it is meant to be hidden from. The reversal
+   recipe in docs/11 is a filed owner decision, which makes this the one gate
+   most likely to be edited by somebody who is not thinking about renting. */
+check('the granting call refuses behind a raised curtain, and spends nothing doing it', (() => {
+  G.reset(); clearGarden(); unlockTo(20);
+  S.credits = 1e15;
+  returningPlayer(5); S.ads.day = 'curtain-day'; S.ads.today = {};
+  S.upgrades.autoHarvest = 0;
+  delete S.boosters.drone;
+  const at = DATA.droneRental.revealAt;
+  DATA.droneRental.revealAt = 2500000;
+  S.lifetimeCoins = 0;
+  const before = G.adImpressions();
+  const took = G.rentDrone();
+  const spent = G.adImpressions() - before;
+  DATA.droneRental.revealAt = at;
+  return took === false && spent === 0 && G.activeBoost('drone') === false;
+})(), `${G.adImpressions()} impressions`);
 G.reset();
 
 group('simulating an absence winds the world back');
@@ -4071,6 +4327,46 @@ check('so feeding is capped below that, and is not the upkeep backbone',
 check('and doc 37\'s three ship-first placements still fit inside the daily plan',
   DATA.ads.perPlacement.food + 3 <= DATA.ads.dailyCap,
   `${DATA.ads.perPlacement.food} + 3 vs ${DATA.ads.dailyCap}`);
+/* THE PLAN HAS NO UPPER ANCHOR WITHOUT THESE TWO. The line above reads ONE key
+   and never sums the table, and every other shape check here is written
+   RELATIVE to dailyCap, so raising the cap RELAXES them instead of failing.
+   Both wrong versions shipped green: `perPlacement: { food: 2, drone: 2,
+   welcomeBack: 2, cardPack: 2 }` — eight planned against a cap of six — and
+   `dailyCap: 30`, five times the band doc 37 measures against. docs/09's ad
+   playbook rule 5 is "no placement may plan past it"; that is a sum, so sum it.
+   NOTE for whoever adds the next placement: food 2 + drone 2 leaves two of the
+   six, and doc 37 names THREE surfaces shipping first. The plan is full, and
+   which one gives up its share is the round's call, not a test's. */
+const adPlanned = Object.values(DATA.ads.perPlacement).reduce((a, n) => a + n, 0);
+check('the whole plan fits inside the day it is planned against',
+  adPlanned <= DATA.ads.dailyCap,
+  `${JSON.stringify(DATA.ads.perPlacement)} sums to ${adPlanned} against ${DATA.ads.dailyCap}`);
+/* docs/37-monetization.md: "3-6 rewarded impressions per player per day,
+   measured in the first playtest". A band, not a number — the playtest is
+   allowed to move it inside the band without touching this line. */
+check('and the day itself stays inside the band doc 37 plans against',
+  DATA.ads.dailyCap >= 3 && DATA.ads.dailyCap <= 6, `${DATA.ads.dailyCap}`);
+/* THE GOLD TIER HAD NO PRICE GUARD AT ALL. Retiring the two per-hour ladders
+   took the only assertions that constrained Clover with it, and the daily-bill
+   group that replaced them covers the gems tier only: 100,000, 250,000 and
+   400,000 gold a nibble all shipped green. That matters because the owner's
+   literal instruction — "greatly increase the cost of food" — is filed as an
+   open decision, so the very next edit to this table is that number, and
+   docs/04, docs/22 and docs/11 all record the rule it must not break: Clover
+   is the tier that must never wall, because the cheap food staying affordable
+   is what stops being broke from stranding a creature.
+   A BAND against the gold faucet, in the gems tier's idiom, and deliberately a
+   loose one: it does not say 1,500 is the right price, it says the whole day's
+   nibbles for four creatures stay inside two hours of what a day-one casual
+   earns while playing. Today that bill is 18 minutes. Re-measure
+   CASUAL_RATE_PER_MIN in tools/order-gold.js; never nudge either number here. */
+const CLOVER_TIER = CREATURE_FOOD.find((f) => f.currency === 'credits');
+const cloverBill = perDay(CLOVER_TIER) * CLOVER_TIER.cost;
+check('the cheap tier costs something, because a free rung is not a ladder either',
+  CLOVER_TIER.cost > 0, `${CLOVER_TIER.cost}`);
+check('and a day of it never walls: the gold bill stays inside two hours of casual play',
+  cloverBill / CASUAL_RATE_PER_MIN < 120,
+  `${perDay(CLOVER_TIER)} x ${CLOVER_TIER.cost} = ${cloverBill} gold, ${Math.round(cloverBill / CASUAL_RATE_PER_MIN)} min of play`);
 /* Held STRUCTURALLY rather than by review: a time-limited or quantity-limited
    offer attaches a PEGI 12 descriptor (docs/40-financial-model.md), so no knob
    in the ad table may ever name a clock. */
@@ -4229,6 +4525,38 @@ check('and the row is built from that filtered list, not from the whole ladder',
   /\bfoods\.map\(/.test(foodRowSrc) && !/CREATURE_FOOD\.map\(/.test(foodRowSrc));
 check('and the column count comes with it, so the grid never leaves a third of itself empty',
   /data-n="\$\{foods\.length\}"/.test(foodRowSrc));
+/* ---- AND THE SAME RULE READ OFF THE OUTPUT ----
+   The three above pin the SPELLING of one line, which is the right guard for a
+   rewrite — `const foods = adFoodTiers()` reddens them and should be looked at —
+   but not for a differently-worded filter that draws the tier anyway. So the row
+   is RUN, on both sides of the first session, and the tiers are counted. The
+   shared ad pill is lifted in for real; priceTag and fmtSpan stay markers, which
+   is all a column count asks of them. */
+G.reset();
+S.discovered[PIP.attract.seed] = PIP.attract.count;
+G.checkCritters();
+G.setTending(PIP.id, true);
+const foodRowOpts = { also: ['foodStamp', 'foodAfter', 'adTag'], bind: { AD_LABEL: 'Watch an ad' } };
+const foodTiers = (r) => (r.html.match(/<button class="food-btn/g) || []).length;
+const foodRowFirst = sheetRender('foodButtons', [PIP.id], foodRowOpts);
+check('the food row renders, so the two checks below read output and not source',
+  foodRowFirst.error === '' && foodTiers(foodRowFirst) > 0,
+  foodRowFirst.error || `${foodTiers(foodRowFirst)} tiers`);
+check('a first session is drawn the SHORTER ladder, with no ad pill anywhere in it',
+  G.adOffered('food') === false
+  && foodTiers(foodRowFirst) === CREATURE_FOOD.length - 1
+  && /data-n="2"/.test(foodRowFirst.html)
+  && !/price ad/.test(foodRowFirst.html),
+  `${foodTiers(foodRowFirst)} tiers, ${(foodRowFirst.html.match(/price ad/g) || []).length} ad pills`);
+returningPlayer();
+S.ads.day = 'row-day'; S.ads.today = {};
+const foodRowBack = sheetRender('foodButtons', [PIP.id], foodRowOpts);
+check('and a returning player is drawn the third tier, once, with the pill on it',
+  G.adOffered('food') === true
+  && foodTiers(foodRowBack) === CREATURE_FOOD.length
+  && /data-n="3"/.test(foodRowBack.html)
+  && (foodRowBack.html.match(/price ad/g) || []).length === 1,
+  `${foodTiers(foodRowBack)} tiers, ${(foodRowBack.html.match(/price ad/g) || []).length} ad pills`);
 
 group('an ad is never spent on a partial meal, and gold still is');
 G.reset();
@@ -4285,6 +4613,34 @@ check('spending gems, not gold', S.gems === 0 && S.credits === 0, `${S.gems} / $
 check('and the ad budget is untouched by a gem purchase',
   G.adImpressions() === 1 && G.adCountToday('food') === 1,
   `${G.adImpressions()} / ${G.adCountToday('food')}`);
+
+/* ---- THE CAP BOUNDARY, SWEPT, because "the button and the engine agree to the
+   second" is TWO COPIES of one number with nothing holding them together ----
+   feedCritter() refuses at `gain < food.hours * 3600 - 1`; foodEffect() sets
+   `partial` at `gain < nominal - 1`. Widening one of them to `nominal - 60` — a
+   plausible edit while tuning the "caps at" copy — left the suite at 1868/0
+   with the two disagreeing. The cost of that disagreement is worse than a wrong
+   label: the refusing branch returns null with NO emit('deny'), so the Honeypot
+   renders enabled and affordable and the tap does nothing whatsoever — no
+   sound, no shake, no words, which is the failure foodGain()'s own comment says
+   it exists to prevent. The single checks above sit at 12 hours banked, deep
+   inside one side of the line; this walks across it.
+   The day's budget is cleared per sample, or the cap starts refusing on its own
+   and the sweep reads a spent plan as a partial meal. */
+const foodBoundary = (short) => {
+  S.ads.day = 'sweep-day'; S.ads.today = {};
+  S.critters[PIP.id].fedUntil = G.nowSeconds() + (G.foodCapSeconds() - POT_HOURS + short);
+  const eff = G.foodEffect(PIP.id, POT.id);
+  const sold = Boolean(G.feedCritter(PIP.id, POT.id));
+  return { short, partial: eff.partial, sold, gain: Math.round(eff.gain) };
+};
+const foodSweep = [-3600, -60, -2, 0, 2, 60, 3600].map(foodBoundary);
+check('the panel\'s “partial” and the engine\'s refusal are the same answer on both sides of the cap',
+  foodSweep.every((r) => r.partial === !r.sold),
+  foodSweep.map((r) => `${r.short}s ${r.partial ? 'partial' : 'whole'}/${r.sold ? 'sold' : 'refused'}`).join(' '));
+check('and the sweep really crosses the line, or the two agree about nothing at all',
+  foodSweep.some((r) => r.partial) && foodSweep.some((r) => !r.partial),
+  foodSweep.map((r) => `${r.short}:${r.gain}`).join(' '));
 
 /* ---------------- the Garden Stand ---------------- */
 group('The Garden Stand');
@@ -7885,6 +8241,150 @@ check('the ask panel was actually found and read',
   askPanel.length > 2000 && askPanel.length < 8000, `${askPanel.length} chars`);
 check('and no ad offer has crept into the ceremony’s first beat',
   !/data-ad|adTag\(|AD_LABEL/.test(askPanel));
+
+/* ---- AND NOW THE PANEL ITSELF, because none of the above can see a row ----
+
+   Everything above this line reads SOURCE TEXT, and five wrong implementations
+   walked past it at 1904/0. The worst of them swapped `${goes}` and `${keeps}`
+   under the two UNCHANGED sentences: the panel then told the player a new year
+   washes away their Seeds, Unlocks, Petals, Creatures, Cards and Level, and
+   never reaches their Gold, Upgrades and Power-ups. The game's central
+   guarantee, inverted, on its one irreversible screen — and invisible to every
+   check above, because the sentences name neither array and the checks read the
+   array literals. Two more: `.slice(0, 3)` on the goes row, which dropped "4 big
+   plots" and "8 growing" out of the stated price; and the original bug restored
+   verbatim, rendering the goes row only when something was growing, so an empty
+   board was told nothing at all about gold, upgrades and power-ups going.
+
+   These RUN turnAsk() and read what comes out. The harness — and the list of
+   what it still cannot see — is at the top of this file. */
+const askRender = () => {
+  const r = sheetRender('turnAsk');
+  /* THE STRUCTURAL BIND, and the point of the whole block: each sentence is
+     paired with the row that FOLLOWS IT IN THE OUTPUT, not with whichever
+     array literal happens to be declared first. A swap moves the row out from
+     under its caption, which is a thing only the output can show. */
+  r.pairs = [...r.html.matchAll(/<p class="cere-say">([^<]*)<\/p>\s*<div class="keep-row">([\s\S]*?)<\/div>/g)]
+    .map((m) => ({ said: m[1].trim(), chips: sheetChips(m[2]) }));
+  /* WIDEN, never delete: row two's wording is the owner's to settle and
+     turnAsk() names three legal alternates — "It never touches the forever
+     things…", "A new year never reaches these…", "And it never reaches what you
+     keep forever…". All four carry the negation, and it is the negation that
+     tells the two captions apart without pinning either one's prose. */
+    r.kept = r.pairs.find((p) => /\bnever\b/i.test(p.said));
+  r.goes = r.pairs.find((p) => !/\bnever\b/i.test(p.said));
+  return r;
+};
+/* Both readers tolerate a MISSING row rather than throwing on one, because the
+   fixed bug's whole shape is a row that is not there — a crash would take the
+   rest of the suite down with it instead of printing which board lost its price. */
+const askChips = (pair) => (pair ? pair.chips : []);
+const askText = (pair) => (pair ? pair.chips.map((c) => c.text).join(' · ') : 'no row');
+/* THE FULLEST BOARD: every one of the five conditional prices is true at once,
+   which is the only state in which a truncated row can be told from an honest
+   one. Plots 5-8 are the ones that re-lock (DATA.plotUnlockLevel), so the count
+   comes off the table rather than off the render it is checking. */
+const ASK_BIG = DATA.plotUnlockLevel.filter((n) => n > 1).length;
+const ASK_GROWING = 3;
+G.reset(); clearGarden(); unlockTo(20);
+S.credits = 1e6;
+S.upgrades.autoWater = 1;
+S.boostInv = { bloom: 2 };
+for (let i = 0; i < ASK_GROWING; i += 1) {
+  S.grid[i].seed = 'daisy'; S.grid[i].plantedAt = clock; S.grid[i].grow = 3600; S.grid[i].ready = false;
+}
+const askFull = askRender();
+check('the ask renders headlessly, so everything below reads output and not source',
+  askFull.error === '' && askFull.html.includes('class="cere"'),
+  askFull.error || `${askFull.html.length} chars`);
+check('and the fixture really is the fullest board, or a truncated row would look right',
+  ASK_BIG > 0 && ASK_GROWING > 0, `${ASK_BIG} big plots, ${ASK_GROWING} growing`);
+check('it draws exactly two chip rows, each led by its own sentence',
+  askFull.pairs.length === 2, askFull.pairs.map((p) => p.said).join(' | '));
+/* THE INVERSION, which is the one this block exists for. Not "both arrays are
+   present somewhere" — WHICH ROW SITS UNDER WHICH SENTENCE. */
+check('the row under the sentence that says “never” is the one nothing is taken from',
+  askChips(askFull.kept).length > 0
+  && askChips(askFull.kept).every((c) => c.cls === 'chip')
+  && ['Seeds', 'Unlocks', 'Petals', 'Creatures', 'Cards', 'Level']
+    .every((k) => askChips(askFull.kept).some((c) => c.text === k)),
+  askText(askFull.kept));
+check('and the row under the other sentence is the one everything is taken from',
+  askChips(askFull.goes).length > 0
+  && askChips(askFull.goes).every((c) => c.cls === 'chip gone')
+  && askChips(askFull.goes).some((c) => c.text === 'Gold'),
+  askText(askFull.goes));
+/* THE TRUNCATION. Named things, not a count, because a count is passed by any
+   five chips; and the two numbered ones are checked against the numbers the
+   fixture actually set, because "0 growing" would satisfy a shape test. */
+check('all five prices reach the row, not just the ones that fit',
+  askText(askFull.goes) === `Gold · Upgrades · Power-ups · ${ASK_BIG} big plots · ${ASK_GROWING} growing`,
+  askText(askFull.goes));
+check('and nothing is kept back from the other row either',
+  askText(askFull.kept) === 'Seeds · Unlocks · Petals · Creatures · Cards · Level',
+  askText(askFull.kept));
+/* Fall's bed is the seventh, and it appears only when there is one to keep —
+   the Century Bloom's whole promise is that a Turn cannot touch it, and until
+   the 2026-09-03 round the only place that was written was the crop picker. */
+S.fall.grid[0].seed = 'daisy'; S.fall.grid[0].plantedAt = clock; S.fall.grid[0].grow = 3600;
+const askFall = askRender();
+check('and a Fall bed with something in it joins the row that is kept',
+  askChips(askFall.kept).length === 7
+  && /Fall|Century/.test(askChips(askFall.kept)[6].text), askText(askFall.kept));
+/* THE FIXED BUG, which no source check could see either: the goes row used to
+   render only when something was growing, so a player who had just picked
+   everything was told the Turn cost them nothing at all. It is false on every
+   board — gold zeroes, every upgrade wipes, power-ups go, plots 5-8 close. An
+   irreversible commit may never understate its own price. */
+G.reset(); clearGarden(); unlockTo(20);
+S.credits = 1e6;
+S.upgrades.autoWater = 1;
+S.boostInv = { bloom: 2 };
+const askEmpty = askRender();
+check('an EMPTY board is still told what the year takes',
+  askChips(askEmpty.goes).length > 0
+  && ['Gold', 'Upgrades', 'Power-ups'].every((n) => askChips(askEmpty.goes).some((c) => c.text === n)),
+  askText(askEmpty.goes));
+check('and it is told about the plots too, while it is honestly not told about growth',
+  askChips(askEmpty.goes).some((c) => c.text === `${ASK_BIG} big plots`)
+  && !askChips(askEmpty.goes).some((c) => /growing/.test(c.text)), askText(askEmpty.goes));
+check('while the line above the rows says the board is empty rather than that the Turn is free',
+  /The board is empty/.test(askEmpty.html) && !/nothing at all/.test(askEmpty.html));
+/* And the floor of it: a brand-new save, nothing bought, nothing planted. Gold
+   is the unconditional entry and the only one that could be softened back into
+   the bug — a purse that looks empty at the ask still zeroes. */
+G.reset();
+const askFresh = askRender();
+check('and a brand-new garden with nothing in it is told its gold goes',
+  askChips(askFresh.goes).some((c) => c.text === 'Gold'),
+  askText(askFresh.goes));
+/* Sabotage E: the endsWith('…') check above is beaten by one character, because
+   "A new year washes away your gold, upgrades and power-ups…" trails off AND
+   completes itself, which makes the row beneath it redundant. The real rule is
+   that the sentence hands the nouns to the chips. */
+check('and neither sentence names what its own chips name',
+  askFull.pairs.every((p) => !p.chips.some((c) => c.text && new RegExp(`\\b${c.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(p.said))),
+  askFull.pairs.map((p) => p.said).join(' | '));
+/* Sabotage D: `the shouted label class is retired` asserts a NAME is gone, and
+   is passed by pasting the shouted label's declarations onto the new name —
+   uppercase, 11px, 0.77px of letter-spacing, verified in a browser. So this
+   reads the PROPERTIES. 11px letter-spaced caps cannot name an irreversible
+   price kindly, whatever the class is called. */
+const cereSay = cssRule('.cere-say');
+check('and the sentence class is styled as a sentence, not as a shouted label',
+  cereSay.length > 10 && !/text-transform\s*:\s*uppercase/.test(cereSay)
+  && !/letter-spacing/.test(cereSay) && /font-size\s*:\s*1[3-9]px/.test(cereSay), cereSay);
+/* docs/37 promise 2 again, in the output this time. The source check above
+   greps for one spelling of "ad" and is walked past by a NAMED BUILDER: a
+   single `${droneCard()}` line renders a live "Borrow the drone · 30 min ·
+   Watch an ad" card inside the ceremony's first beat and stays green. Every
+   helper the panel reaches is stubbed and recorded, so the guard is on the CALL
+   LIST — widen it only after checking that what you are adding is not an offer. */
+const ASK_HELPERS = ['Flora.talkingFlower', 'fmt'];
+check('the ceremony’s first beat reaches for nothing but the flower and the formatter',
+  askFull.calls.every((c) => ASK_HELPERS.includes(c)), askFull.calls.join(', '));
+check('and nothing an ad is made of survives into the rendered ask',
+  !/data-ad|price ad|Watch an ad|rewarded/i.test(askFull.html));
 
 /* The strip is the game's one always-visible goal, and ranking it on every read
    made it trade places as a player alternated tapping and harvesting — which is

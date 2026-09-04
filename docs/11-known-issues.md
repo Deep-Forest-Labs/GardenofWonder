@@ -182,8 +182,11 @@ each. The check arms rarity to `common` and then compares a real harvest against
 `plantPayout().min/max`, so something else in the payout still rolls. It matters out of proportion
 to its size: the round's whole "the count may only go up, 0 failed" gate becomes a coin flip nobody
 is expecting, and the natural reading of a single red run is "my change broke it". **If you see it,
-re-run before you debug**, and if you are the one to fix it, the group is the one three above
-`a petal button says what you have and what the next one adds`. Not fixed here — it belongs to
+re-run before you debug**, and if you are the one to fix it, the group is
+`the picker quotes what the plot would really give`, which sits **directly above**
+`a petal button says what you have and what the next one adds` with nothing between them. (The
+earlier "three above" was wrong.) The rate is worth re-measuring before anyone budgets time against
+it: it did not appear once in the 2026-09-03 hardening round's runs. Not fixed here — it belongs to
 whoever owns the picker's payout quote, and pinning it means moving an economy assertion.
 
 **The one bar already scheduled in the instant before the page froze still fires on the way back.**
