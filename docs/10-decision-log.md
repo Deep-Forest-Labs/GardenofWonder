@@ -5,6 +5,122 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-03 (overnight fix round) — Fifteen punch-list items, and the five defects the fixes shipped
+
+**All fifteen items in docs/43's "Tonight's round" are landed, in Bugzy's order, across 27 commits.**
+Twelve of those 27 are not items: they are repairs to the other fifteen, found by adversarial
+verification. That ratio is the most useful thing this round learned and the reason this entry
+leads with method rather than with features.
+
+**THE ROUND'S BIGGEST FINDING: a new test group written by the agent that wrote the feature tends to
+guard the line it just typed, not the behaviour that line serves.** Every item here was
+sabotage-tested before it was believed, exactly as the rails require, and every sabotage went red as
+intended — and then independent verifiers, told to *write a wrong implementation that passes*, broke
+nine of the fifteen groups anyway. The pattern was always the same: the sabotage edited the one
+declaration the assertion pointed at, so it proved the assertion could see that declaration and
+nothing more. Concretely, all of these shipped green: a plant-here marker made completely invisible
+by deleting one `display:grid`; `Math.ceil` swapped for `Math.floor` in the Fall skip price, so a
+crop in its last 29 seconds prices at zero; the Turn's ask with its two chip rows **inverted**, so
+the panel promises to wash away your Seeds and Unlocks and to never touch your Gold; and the
+original `#22` bug restored verbatim. **The rule that follows: after you sabotage the line you
+wrote, ask what a future agent would actually write instead, and check the group catches that
+too.** Where a group genuinely cannot reach the rendered result — `ui-sheet.js` cannot be loaded
+headless — it now says so in its own comment rather than leaving a reader believing it holds more
+than it does.
+
+**Five REAL shipped defects came out of that loop, none of which any suite could see.** Named here
+because each is a class, not an incident:
+
+1. **An ad minted Saved Seeds.** `rentDrone()` grants no gold — and lends a machine that runs
+   `harvest()` → `credit()` unflagged for thirty minutes. Measured 81,340–590,940 gold per video into
+   `lifetimeCoins`, which is the well's input; `DATA.year.minCoins` is 100,000, so **one video
+   cleared a Turn gate outright**, and the ad out-earned thirty minutes of real play by 2–9×. Both
+   guards read the wallet the instant `rentDrone()` returned, where every delta is zero *by
+   construction*. **The class: a reward with a WINDOW needs a test that runs the window.**
+   **Rejected:** accepting it under the pillar's "paying accelerates, never gates". The rescope
+   narrowed promise 1 but explicitly *kept* Saved Seeds absolute, and doc 37 names this exact back
+   door in its own words — "directly or through a back door". Closing it honours an existing ruling
+   rather than making a new one. Gold picked by a *rented* drone is now mint-excluded; a hand
+   harvest during the loan, and every pick by the *paid* badge, still count in full.
+2. **"No ads in a first session" failed OPEN after one reload.** The counter counted page loads, so a
+   refresh, a restored tab or a PWA install ended session one for a level-1 player with zero coins.
+   Now gated on elapsed time as well, because a refresh cannot age a save, and it fails safe: an
+   unknown value reads as brand new and brand new means no ad. **Rejected:** gating on *progress*,
+   which survives a refresh and so stops guarding about ninety seconds in.
+3. **Both lessons out of Fall rendered off screen**, at 390×844 — the viewport every measurement in
+   this project is taken at — in the ordinary windfall state a first-time player reaches on their
+   first bed. `#15` spent the vertical budget down to 4.5px and handed `#10` only a *width* ceiling;
+   `#10` grew the button 11px and both marks parked in the HUD row pointing at empty sky. The fix
+   replaces a three-candidate search with a real gap sweep and a second clearance tier — six pixels
+   of air is a preference, not covering the button is the rule — and the guard now asks the same
+   question at *every* button height from today's to 80px taller, so a future growth degrades the
+   placement instead of deleting the lesson. Found on the way: the clamp-pushes-off-anchor fallback
+   this log recorded on 2026-08-30 **had never actually been implemented**. It is now.
+4. **The harvest float painted a Wonder that paid nothing.** `#20` fixed `game.js` to report the
+   multiplier it *paid at*, and then the view threw that away and asked the live predicate for the
+   colour — and `tryWonder()` runs between the payout and the payload. A `×1.25` in Wonder pink, on
+   the one surface built to stop the game lying, and the commit's own new trap forbids precisely it.
+5. **Every floating number in the game was invisible under reduced motion**, and after `#20` fixed
+   the family the *crit* float — the biggest number in the tap loop — was still switched off, because
+   `.float.crit` outranks `.float` and its keyframe ends at `opacity:0` with `forwards`. This is the
+   recorded rule ("a visual state must never depend on a keyframe having run") biting for the third
+   time in this file.
+
+**Two items were built against their own item text, both on measurement and both filed for the
+owner.** `#11` was RULED — hide a chip that does nothing in this room — and the item's table named
+three kinds to hide. Two of the three are *paid on every tap in Fall*, so hiding them would have
+hidden a live effect; the shipped filter is narrower than the table and the difference is the
+owner's to confirm. `#21`'s "move the drone out of Upgrades" is not survivable as written:
+`buyUpgrade('autoHarvest')` is only reachable through `CORE_UPGRADES`, so the literal move deletes
+the only path to the permanent upgrade and silently zeroes offline income for every existing save.
+It ships in both places, split by the tabs' existing grammar — Shop sells timed, Upgrades sells
+permanent — with the full reversal recipe recorded.
+
+**Every number the owner did not rule ships PROVISIONAL, marked in a comment beside itself.**
+Fifty-six such decisions are listed in HANDOFF's round section, each with a one-line reversal. Two
+are worth naming here because they set precedent. **Petal Cake at 3 gems** is the first *recurring*
+gem sink in the game and the first that scales with how many pets you own; every existing sink is a
+one-off or a discretionary moment. **Clover ships UNCHANGED at 1,500** — a deliberate refusal, not an
+oversight: the owner asked to greatly increase food costs, the currency change *is* the increase for
+the other two tiers, and for Clover the increase would have to be a gold number that the item never
+investigated. **Rejected: inventing one.** A knob with no investigated number ships at
+no-change-neutral and gets asked about, or the round is pricing the game in the dark.
+
+**On the audio, three knobs were available and two were traps.** `#13` halves the rain and storm beds
+in `BED_TRIM`. **Rejected:** `DATA.weatherStage.*.bed`, which `rel()` reads, so it would have halved
+every thunderclap along with the hiss; `HOUSE.amb`, which takes the aurora, the Wonderfall, the
+thunder and the flower's song with it; and the `ambVol` slider default, which would additionally make
+the slider's own maximum louder than the owner wants, so a player who nudges it up gets today's level
+back. `#23` ships BOTH a `ctx.state` guard and a `visibilitychange` pause. **Rejected:** either alone
+— the event is not guaranteed on every sleep path, so the guard is the fix and the pause is the
+hygiene; and **rejected:** putting the guard in `tone()`, which would have covered every scheduler in
+one line and silenced real gameplay SFX on iOS whenever the context sits `interrupted` while the page
+is visible.
+
+**Three flaky assertions were pinned rather than tolerated**, all pre-existing and all proved against
+a clean `HEAD` checkout first. Two got a *seeded* generator rather than the house's frozen constant,
+because their claim is a SPREAD — sixty stand orders pinned to one constant are sixty identical
+orders and the median stops measuring what its own comment says. Verified three ways: both hold under
+eight unrelated seeds, so the chosen one hides nothing; both still redden on a realistic regression;
+and 25 consecutive runs are clean where the same tree failed once in 23.
+
+**What this round would change about how it was briefed**, recorded because the next one will be
+briefed the same way otherwise. **The specs cite file:line, and line numbers rot** — several were
+already stale at kickoff, the punch list's own `#23` repro could not work (`tap:#newsOk` dismisses a
+`reset: true` announcement, so it reloads and destroys anything injected before it), and every commit
+shifted the numbers for every later item. Fifteen recon agents spent 49 minutes re-verifying work
+that had already been done once. **Cite an anchor — a function name and a unique string — and that
+whole cost disappears.** Second: the queue is linear and the dependency graph is not. Only four edges
+are real (`#18`→`#21`, `#11`→`#9`, `#15`→`#10`, and `#20`/`#17` loosely); the rest were serialized for
+ordering that was not load-bearing.
+
+**Not done, on purpose.** `#16`'s meadow board and background were out of scope by the brief and are
+untouched — only the marker folded into `#12`. The `.gitignore` now protects loose raster in the root
+of `art/`, because the owner's private reference was untracked *and* unignored, one `git add -A` away
+from a public deploy; the file is not named there, since a `.gitignore` is public too.
+
+---
+
 ## 2026-09-02 (music) — The music direction for the records, and the five briefs
 
 **Doc 48 is the music half of the shelf: what a record must sound like and how a track arrives.**
