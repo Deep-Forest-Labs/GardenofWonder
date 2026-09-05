@@ -5,6 +5,30 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-03 (process, ruled) — The anchor standard: punch-list items stop citing line numbers
+
+**The owner read the 09-03 round's report and ruled the process fix**: the round nearly doubled its
+own work — twelve of twenty-seven commits were repairs, and fifteen recon agents spent 49 minutes
+re-verifying investigation the punch list had already done — and the biggest single cause was
+**`file:line` citations rotting in a tree that takes commits all day**, plus two items whose
+load-bearing claims were read from code rather than driven, and one repro that could not run as
+written. The standard now lives at the top of [43-punch-list.md](43-punch-list.md) — the keeper's
+own contract — six rules: anchors (function name + unique grep string; a line number only in the
+pinned `file:line @ commit` form), repros run-or-labelled-HYPOTHESIS, driven facts marked apart
+from read facts, acceptance as a behaviour sentence, dependencies as explicit edges with
+everything else parallel-safe, and a freshness sweep stamping the queue against one HEAD at
+dispatch.
+
+**The other half is the fix-round brief, and it changes too**: fix-round prompts from the design
+desk now instruct agents to trust anchors and re-derive lines (never chase a cited number), to
+re-check any fact marked *read* before building on it, and to fan out across parallel-safe items
+instead of walking a serialized queue. **Rejected:** keeping line citations but refreshing them
+more often (every landed commit re-stales them — the failure is the form, not the cadence), and
+banning line references outright (a pinned `@ commit` hint costs nothing and helps a human
+reader).
+
+---
+
 ## 2026-09-03 (overnight fix round) — Fifteen punch-list items, and the five defects the fixes shipped
 
 **All fifteen items in docs/43's "Tonight's round" are landed, in Bugzy's order, across 27 commits.**

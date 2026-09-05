@@ -14,6 +14,38 @@ code disagree, this file is stale.**
 Severity is `blocker` (cannot play past it), `annoying` (the player notices and minds), or
 `cosmetic` (the player might notice).
 
+## How an item is written — the anchor standard (owner-ruled 2026-09-03)
+
+The 2026-09-03 round measured what stale pointers cost: **fifteen recon agents, 49 minutes,
+re-doing investigation this file had already done once** — because items cited `file:line` in a
+tree that takes commits all day, so several pointers were stale at kickoff and every landed commit
+staled the next item's. Twelve of the round's twenty-seven commits were repairs. The standard,
+drawn from that round's own findings:
+
+1. **Anchors, not line numbers.** An item points at a FUNCTION NAME plus one unique, grep-able
+   string (`renderRail()` — grep `chip timed`), never a bare `file:line`. A line number may ride
+   along as a hint only in the pinned form `ui.js:648 @ <short hash>` — the commit it was true at
+   — so its staleness is self-declaring. A fix agent re-derives by grep and never trusts a line.
+2. **A repro is run, or it says HYPOTHESIS.** Every repro command was executed against the live
+   build the day it was filed; one that was not carries the word in front of it. (The `#23` repro
+   shipped un-runnable: `tap:#newsOk` dismisses a `reset: true` announcement, which reloads the
+   page and destroys anything injected before it.)
+3. **Driven facts and read facts are marked apart.** Any claim a fix will REST on — "this chip
+   does nothing in this room", "this is only reachable through X" — is verified by driving the
+   build and marked **driven**; a fact taken from reading code is marked **read**, and the fix
+   agent re-checks it before building on it. (The 09-03 round: two of three chips an item called
+   dead in Fall are paid on every tap there; a "move this upgrade" item would have zeroed offline
+   income for every existing save as written.)
+4. **Acceptance is a behaviour sentence.** Each item ends with what is TRUE after the fix —
+   behaviour under conditions, in the glossary's words — never "change line N", so the fix's test
+   guards the behaviour rather than the one declaration the fixer just typed.
+5. **Dependencies are edges, not an ordering.** The queue names an edge only where it is real
+   ("#A before #B — both edit `<surface>`") and marks everything else parallel-safe. The 09-03
+   round serialized fifteen items over four real edges.
+6. **The freshness sweep at dispatch.** When a round is handed over, the keeper re-greps every
+   anchor once and stamps the queue's header — "verified against `<HEAD hash>`, `<time>`" — one
+   as-of point for the whole round.
+
 ---
 
 ## Tonight's round
