@@ -50,61 +50,50 @@ drawn from that round's own findings:
 
 ## Tonight's round
 
-1. **#23 · Music piles up against a frozen clock while the device sleeps, then fires it all at
-   once** — reproduced and measured: 30 s asleep queues **81 notes into 2.45 s**, nine of them on the
-   same sample, scaling linearly with how long the device is away. Three schedulers share the fault
-   and the same bug was already fixed once in another guise. **Do this first.**
-2. **#13 · Halve the rain and storm beds** — one number each, and the instrument to prove it already
-   exists. **Read the item**: the obvious knob also halves the thunder, and there is a knob that
-   does not.
-3. **#12 · The plant-here marker is a different size in all three rooms** — Summer 30% capped at
-   44px, Fall 46% uncapped, and the meadow hand-draws its own copy at 34% (see `#16`). **One glyph,
-   one size rule**, all three at once.
-4. **#19 · "Discover 5 species" arrives in minutes and needs ~1.8 years of gold** — a first-session
-   bug that also jams a third of the quest strip forever. Data plus a three-line gate `fillActive()`
-   does not have yet. The same fault sits in `q_discover_8` and `q_discover_12`.
-5. **#24 · Add the gem skip to Fall; Summer keeps its own** — **RULED and rescoped to additive**:
-   nothing leaves Summer, so this is a Fall-side `fallSkip` plus a chip. Century Bloom excluded, no
-   ×2. Note the item's prediction — at this rate every Fall skip still costs more gem income than the
-   time it buys.
-6. **#25 · No way to replant the same seed without opening the picker** — a chip in the plot's
-   **bottom right**, ruled by the owner. One line in `plant()` carries the data, and the growth bar
-   that shares that corner is hidden in exactly the state the chip appears in.
-7. **#18 · Pet food is too cheap, and the ladder should span three currencies** — the owner's
-   design change: Clover in gold, Petal Cake in gems, Honeypot behind a rewarded ad. **Read the item
-   before pricing anything**: four pets can tend at once, which makes this twelve gem purchases and
-   six ads a day, and the ad half collides head-on with `37-monetization.md`'s whole daily budget.
-   Two numbers are the owner's to pick.
-8. **#21 · Move the drone to the Shop, rent it for an ad, and build the ad button once** — pair
-   with `#18`: both need the same "Watch an ad" component and neither should build it twice. **There
-   is no video icon in `icons.js`**, and `Icons.get()` falls back silently.
-9. **#22 · The Turn's "this year goes" reads as a confiscation list** — copy plus one type
-   treatment, at the game's most important decision. **Read the item**: the bluntness is a fixed bug
-   ("an irreversible commit may never understate its own price"), so it must get kinder without
-   naming one thing less.
-10. **#20 · A running boost is invisible at the moment it pays** — three surfaces already say it and
-   the harvest float does not; the payload does not even carry the number. Pairs naturally with
-   `#17`, both being "say the true thing in the fewest words".
-11. **#17 · The weather tooltips are 4-10x longer than any other effect text** — one function, and
-   the house register is already written in `data.js`. Also closes a hard-coded number that can
-   drift from its knob. **Read the item**: the length exists to keep a promise honest, so keep that.
-12. **#11 · A chip that does nothing in this room should not be in this room** — **RULED by the
-   owner**: no economy change, Fall stays outside boosts, and the chips hide there. Last night's
-   round already wrote this reasoning into a comment but shipped it only under a short-screen media
-   query. Applies to all three chip kinds, and one booster's copy is false.
-13. **#15 · Retire the season tabs and push the band buttons to the edges** — do this before `#10`:
-   it widens the centre gap from 177px to ~253px and probably retires `#10`'s open question outright.
-   **Read the item first**: the tabs are what the swipe-teaching coach marks point at, and they carry
-   a working ready-notification.
-14. **#9 · A running power-up cannot say what it is doing** — the tooltip mechanism is built and
-   reusable, so this is mostly wiring. **Do `#11` first**: both edit `renderRail()`, and there is no
-   point making a chip tappable in a room where it is about to stop being shown.
-15. **#10 · The Collect All button is too small and too quiet** — a follow-up on last night's `#7`.
-   **Do `#15` first and re-measure**: the clearance that caps it at 132px is about to change, and the
-   open question may answer itself.
-16. **#16 · The meadow's art is off-style and its board does not match** — **not one job, and not one
-   round**: the marker folds into `#12` tonight, the board is a bounded next step, and the background
-   is its own session that should start with a `meadow-spike.html` for the owner to judge.
+**Sixteen open. Four hard edges and two soft ones; everything else is parallel-safe.** No stamp yet
+— the freshness sweep runs at dispatch, not at filing.
+
+> **These sixteen predate the anchor standard.** Their pointers are bare `file:line`, written across
+> 2026-09-01 and 09-02 and never repinned. **Re-derive every one by grep from the function name and
+> quoted string beside it; do not trust a line number in any item below.** Items filed from
+> 2026-09-03 forward carry anchors.
+
+### Start here — highest value, no edges
+
+- **#23 · Music stacks while the device sleeps.** 30s asleep queues 81 notes into 2.45s, nine on the
+  same sample; scales linearly with time away. Three schedulers share the fault. Nothing else on the
+  list can hurt a player. **Its repro is the one the standard names as un-runnable** — `tap:#newsOk`
+  dismisses a `reset: true` announcement, which reloads and destroys the injected patch. Re-derive
+  the repro before trusting it.
+- **#19 · "Discover 5 species" is unreachable and jams a quest slot forever.** Lands four minutes in,
+  needs ~1.8 years of gold. Add "Discover 3"; the same fault sits in `q_discover_8` and `q_discover_12`.
+- **#13 · Halve the rain and storm beds.** One number each, and `tools/bedbench.js` measures it.
+- **#22 · The Turn's "this year goes" reads as a confiscation list.** Copy plus one type treatment.
+- **#20 · A running boost is invisible at the moment it pays.** The harvest payload does not carry
+  the multiplier.
+
+### The edges — name the pair, then fan out
+
+- **#11 before #9.** Both edit `renderRail()`. No point making a chip tappable in a room where it is
+  about to stop being shown. **#11's "these chips do nothing in Fall" is a READ fact, not driven** —
+  the 09-03 round found two of three such chips were paid on every tap. **Drive it before building.**
+- **#15 before #10.** #15 moves the band buttons off the edges; that is the clearance capping #10 at
+  132px. Re-measure after, and #10's open question may answer itself.
+- **#18 and #21 share the "Watch an ad" component.** Whichever runs first builds it to the contract
+  in #21; the second consumes it. Neither should author a second button.
+- **#12 absorbs #16's marker half.** The meadow hand-draws its own copy of the same glyph — that IS
+  #16 part C. One sweep, three rooms, or it gets done twice.
+- *(soft)* **#24 and #25 both touch the plot-chip styling.** Different boards, one CSS rule if #25
+  reuses `.skip-chip`'s treatment. One sitting is cheaper than two.
+- *(soft)* **#9 and #17 both write tooltip copy.** If #9 lands first, `boostTip()` should be written
+  in the register #17 is moving toward, not the one it is replacing.
+
+### Parallel-safe
+
+**#24** (Fall gem skip — ruled, additive) · **#25** (replant chip, bottom right) · **#18** (pet food
+repricing — two numbers still the owner's) · **#21** (drone to the Shop) · **#17** (weather tooltip
+length) · **#16** (meadow art — **not one round**: only the marker belongs in a fix round; the board
+is a bounded next step and the background wants a `meadow-spike.html` for the owner to judge).
 
 ---
 
