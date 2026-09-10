@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="critter-svg asleep" viewBox="0 0 100 100" aria-hidden="true"><style>.cr-eyes-shut{display:none}
+.cr-zzz{display:none}
+.asleep .cr-eyes{display:none}
+.asleep .cr-eyes-shut{display:block}
+.asleep .cr-zzz{display:block}</style>
+      <ellipse class="cr-glow" cx="50" cy="62" rx="42" ry="40" fill="#ffd8a8" opacity="0.32"/>
+      
+      <path class="cr-tail" d="M78 84 C94 82 98 66 90 58 C86 70 80 76 74 78 Z"
+      fill="#ffd9b8" stroke="#2c1a10" stroke-width="3.5" stroke-linejoin="round"/>
+      <g class="cr-sprout">
+      <path d="M28 40 L20 8 L46 26 Z" fill="#c96a2e" stroke="#2c1a10" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M72 40 L80 8 L54 26 Z" fill="#c96a2e" stroke="#2c1a10" stroke-width="4" stroke-linejoin="round"/>
+    </g>
+      <g class="cr-body">
+        <path d="M50 34 C73 34 85 48 85 66 C85 84 70 94 50 94 C30 94 15 84 15 66 C15 48 27 34 50 34 Z" fill="#ffb27a" stroke="#2c1a10" stroke-width="4.5" stroke-linejoin="round"/>
+        
+        <path d="M50 34 C73 34 85 48 85 66 C85 84 70 94 50 94 C30 94 15 84 15 66 C15 48 27 34 50 34 Z" fill="none" stroke="#2c1a10" stroke-width="4.5" stroke-linejoin="round"/>
+        <g opacity="0.7" fill="#e08b4e">
+      <circle cx="32" cy="47" r="2.8"/>
+      <circle cx="69" cy="43" r="2.1"/>
+      <circle cx="64" cy="84" r="2.4"/>
+    </g>
+        <g opacity="0.85">
+      <ellipse cx="32" cy="74" rx="6.4" ry="4.2" fill="#ff8fb0"/>
+      <ellipse cx="68" cy="74" rx="6.4" ry="4.2" fill="#ff8fb0"/>
+    </g>
+        <g class="cr-eyes">
+      <ellipse class="cr-eye" cx="37" cy="60" rx="7.5" ry="9.5" fill="#2c1a10"/>
+      <ellipse class="cr-eye" cx="63" cy="60" rx="7.5" ry="9.5" fill="#2c1a10"/>
+      <circle cx="39.5" cy="56.5" r="2.6" fill="#fff"/>
+      <circle cx="65.5" cy="56.5" r="2.6" fill="#fff"/>
+    </g>
+    <g class="cr-eyes-shut" fill="none" stroke="#2c1a10" stroke-width="3.6" stroke-linecap="round">
+      <path d="M30.5 60 q6.5 6 13 0"/>
+      <path d="M56.5 60 q6.5 6 13 0"/>
+    </g>
+        <ellipse class="cr-mouth" cx="50" cy="78" rx="4.2" ry="5" fill="#2c1a10"/>
+      </g>
+      <g class="cr-zzz" fill="#ffffff">
+      <path class="cr-z" style="--i:0" d="M50 -2 H61 V1.7400000000000002 L55.236 5.26 H61 V9 H50 V5.26 L55.764 1.7400000000000002 H50 Z"/>
+      <path class="cr-z" style="--i:1" d="M64 -18 H77 V-13.58 L70.188 -9.42 H77 V-5 H64 V-9.42 L70.812 -13.58 H64 Z"/>
+      <path class="cr-z" style="--i:2" d="M79 -36 H94 V-30.9 L86.14 -26.1 H94 V-21 H79 V-26.1 L86.86 -30.9 H79 Z"/>
+    </g>
+    </svg>
