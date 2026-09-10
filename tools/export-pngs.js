@@ -4,6 +4,7 @@
 //
 //   node tools/export-pngs.js               write art/exports/png/** (gitignored)
 //   node tools/export-pngs.js --out DIR     write there instead
+//   node tools/export-pngs.js --min-edge N  raise the long-edge floor (default 96)
 //   node tools/export-pngs.js --check       every SVG has a PNG beside it; write nothing
 //
 // WHY THIS EXISTS AT ALL. The Unity port cannot use these files as they stand.
@@ -44,17 +45,23 @@ const DEFAULT_OUT = path.join(EXPORTS, 'png');
    because the hedge lives there and nowhere else. */
 const FAMILIES = ['icons', 'stages', 'characters', 'samples'];
 
-/* The floor is a 32px glyph on a 3x phone. Icons are drawn on a 24-unit viewBox,
-   so a flat 3x would land them at 72px — under the size the dock actually draws
-   them at, and upscaling a sprite is the one artefact atlasing cannot hide. So:
-   the smallest whole multiple of at least 3 that clears 96px on the long side.
-   Plants at 100x120 stay at 3x; icons go to 4x. One rule, and it is stated. */
-const MIN_SCALE = 3;
-const MIN_LONG_EDGE = 96;
+/* Everything is drawn at 3x, the density a phone layout is authored against.
+   That is right for a plant on a 100x120 viewBox, and wrong for an icon on a
+   24-unit one: a flat 3x lands a glyph at 72px, under the size a dock actually
+   draws it, and upscaling a sprite is the one artefact atlasing cannot hide.
+   So the rule is 3x, raised to the next whole multiple that clears a floor on
+   the long side.
 
-function scaleFor(w, h) {
+   The floor is the consumer's call, not ours — it depends on their reference
+   resolution and how large they draw things. Ghostgarden's Unity canvas is
+   authored at 1080 wide with icon slots up to 100 units, so it asks for 192 and
+   gets icons at 8x while plants stay at 3x. The default suits a smaller layout. */
+const MIN_SCALE = 3;
+const DEFAULT_MIN_LONG_EDGE = 96;
+
+function scaleFor(w, h, minLongEdge) {
   let k = MIN_SCALE;
-  while (Math.max(w, h) * k < MIN_LONG_EDGE) k += 1;
+  while (Math.max(w, h) * k < minLongEdge) k += 1;
   return k;
 }
 
@@ -176,7 +183,7 @@ function discover() {
   return jobs;
 }
 
-async function rasterise(jobs, outRoot) {
+async function rasterise(jobs, outRoot, minLongEdge) {
   const server = await serve();
   const origin = `http://127.0.0.1:${server.address().port}`;
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'export-pngs-'));
@@ -225,7 +232,7 @@ async function rasterise(jobs, outRoot) {
         problems.push(err.message);
         continue;
       }
-      const scale = scaleFor(box.w, box.h);
+      const scale = scaleFor(box.w, box.h, minLongEdge);
       const width = Math.round(box.w * scale);
       const height = Math.round(box.h * scale);
 
@@ -286,6 +293,16 @@ function show(p) {
   return rel && !rel.startsWith('..') ? rel : p;
 }
 
+/* The long-edge floor a consumer needs depends on its reference resolution, so
+   it is an argument rather than a constant. Ghostgarden passes 192. */
+function argMinEdge(argv) {
+  const i = argv.indexOf('--min-edge');
+  if (i === -1) return DEFAULT_MIN_LONG_EDGE;
+  const n = Number(argv[i + 1]);
+  if (!Number.isInteger(n) || n < 1) throw new Error('--min-edge needs a positive whole number');
+  return n;
+}
+
 function argOut(argv) {
   const i = argv.indexOf('--out');
   if (i === -1) return DEFAULT_OUT;
@@ -298,6 +315,7 @@ async function main() {
   const argv = process.argv.slice(2);
   const check = argv.includes('--check');
   const outRoot = argOut(argv);
+  const minLongEdge = argMinEdge(argv);
 
   const jobs = discover();
   if (!jobs.length) {
@@ -334,7 +352,7 @@ async function main() {
     return 0;
   }
 
-  const { written, problems } = await rasterise(jobs, outRoot);
+  const { written, problems } = await rasterise(jobs, outRoot, minLongEdge);
 
   if (problems.length) {
     console.error(`\nexport-pngs — ${problems.length} problem(s):\n`);
