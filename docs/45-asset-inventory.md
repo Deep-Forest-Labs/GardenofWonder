@@ -79,7 +79,7 @@ only evidence it is used at all, and the table attributes it to the table that h
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/clover.svg" width="26" height="26" alt="clover"> | `clover` | `0 0 24 24` | `ui-hollow.js`, `ui-sheet.js`, `CARD_MOTIFS`, `CREATURE_FOOD`, `DATA.boosters`, `DATA.upgrades`, `GOODS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/coin.svg" width="26" height="26" alt="coin"> | `coin` | `0 0 24 24` | `index.html`, `ui-meadow.js`, `ui-sheet.js`, `ui.js`, `DATA.boosters` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/decor.svg" width="26" height="26" alt="decor"> | `decor` | `0 0 24 24` | `index.html`, `ui-hollow.js`, `ui.js`, `ui-hollow.js DOCK`, `ui-menu.js ROWS` |
-| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/drone.svg" width="26" height="26" alt="drone"> | `drone` | `0 0 24 24` | `ui-sheet.js`, `DATA.upgrades` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/drone.svg" width="26" height="26" alt="drone"> | `drone` | `0 0 24 24` | `ui-sheet.js`, `DATA.boosters`, `DATA.upgrades` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/drop.svg" width="26" height="26" alt="drop"> | `drop` | `0 0 24 24` | `DATA.upgrades`, `ui-sheet.js AUDIO_CHANNELS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/fist.svg" width="26" height="26" alt="fist"> | `fist` | `0 0 24 24` | `ui-sheet.js`, `DATA.upgrades` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/flame.svg" width="26" height="26" alt="flame"> | `flame` | `0 0 24 24` | `DATA.upgrades` |
@@ -241,6 +241,29 @@ vm.runInContext("Meadow.scene({ width: 390, height: 844, dockHeight: 96, sky: 's
 `Meadow.cobbleFloor(i)` for `i` in 0–7 returns the eight cobble floors the same way. None of
 those files touches `document`, `window` or `location` at module scope, which is what makes
 them loadable outside a browser at all — a property worth keeping.
+
+## The cast, in every state
+
+Thirty files in [`art/exports/characters/`](../art/exports/characters/), written by the same
+command: six creatures awake and asleep, six villagers neutral, happy and waiting.
+
+The samples above carry one of each so the house style can be read. These are the set a build
+needs, and the reason there are thirty rather than twelve is the same reason there are 76 stage
+files rather than 19 — `critters.js` and `customers.js` draw **every state at once** and a class
+on an ancestor picks one. A raw export is a creature with its eyes both open and shut, or a
+villager wearing three mouths.
+
+The state rules are **read out of `style.css` on every run**, never copied: the sleeping block
+between `/* ---------- sleeping ----------` and the idle-animation comment, and the customers
+block between its own heading and the Garden Stand's. Unlike the growth-staging block, nothing is
+rewritten on the way through — these rules are already written as descendants (`.asleep
+.cr-eyes`), and the root of an exported file is an ancestor of everything inside it, so the block
+goes in verbatim and the class on the `<svg>` alone selects the state. If either anchor moves the
+run stops rather than writing thirty confidently stateless files, and the file count is asserted
+against `CREATURES × 2 + CUSTOMERS × 3`.
+
+The hedge is not here. [`samples/hedge.svg`](../art/exports/samples/hedge.svg) is already the
+whole thing, and its only variant is a `scaleX(-1)` any consumer can apply for itself.
 
 ## What has no draw function
 

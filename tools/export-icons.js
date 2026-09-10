@@ -406,6 +406,170 @@ function writeStageExports() {
   return files;
 }
 
+// ------------------------------------------------------------- the characters
+
+/*
+ * Every creature and every villager, in every state — the same deliverable the
+ * stages are, for the same reason. The samples above carry ONE of each so the
+ * Unity team can read the house style; a build needs all of them.
+ *
+ * These two files draw every state at once and let CSS choose, exactly like
+ * `Flora.plant()` does with growth. A raw export is therefore a creature with
+ * its eyes open, its sleeping eyes on top and its Zs floating, or a villager
+ * wearing three mouths. The state that shows is a class on an ancestor, so the
+ * fix is the same one the stages use: read the real rules out of style.css and
+ * put the class on the exported <svg> root.
+ *
+ * Nothing is rewritten on the way through, unlike the stage block — these rules
+ * are already written as descendants (`.asleep .cr-eyes`), and the root of the
+ * file is an ancestor of everything in it. So the block goes in verbatim and the
+ * class alone picks the state.
+ *
+ * The hedge is not here: `samples/hedge.svg` is already the whole thing, and its
+ * only variant is a `scaleX(-1)` any consumer can apply itself.
+ */
+const CHARACTERS_OUT = path.join(ROOT, 'art', 'exports', 'characters');
+
+/**
+ * Lift a run of rules straight out of style.css, between two anchors that are
+ * authored comments rather than line numbers. A moved or renamed section stops
+ * the run instead of writing confidently stateless art.
+ */
+function cssBetween(startMark, endMark, needles) {
+  const css = read('style.css');
+  const start = css.indexOf(startMark);
+  const end = css.indexOf(endMark, start + 1);
+  if (start === -1 || end === -1 || end < start) {
+    throw new Error(`style.css anchors moved — cannot find "${startMark}" … "${endMark}"`);
+  }
+  const block = css
+    .slice(start, end)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+  for (const needle of needles) {
+    if (!block.includes(needle)) {
+      throw new Error(`style.css block "${startMark}" no longer carries ${needle}`);
+    }
+  }
+  return block;
+}
+
+/* Suffix is the filename; cls is what selects that state, and the base state is
+   deliberately the empty one — it is what the markup already shows. */
+const CRITTER_STATES = [
+  { suffix: 'awake', cls: '' },
+  { suffix: 'asleep', cls: 'asleep' },
+];
+
+const CUSTOMER_STATES = [
+  { suffix: 'neutral', cls: '' },
+  { suffix: 'happy', cls: 'is-happy' },
+  { suffix: 'waiting', cls: 'is-waiting' },
+];
+
+/** Add a state class to the root <svg>'s existing class attribute. */
+function withState(svg, rootClass, cls) {
+  if (!cls) return svg;
+  const out = svg.replace(`class="${rootClass}`, `class="${rootClass} ${cls}`);
+  if (out === svg) throw new Error(`root class "${rootClass}" not found — the drawing changed shape`);
+  return out;
+}
+
+function writeCharacterExports() {
+  let groups;
+  try {
+    const critterCss = cssBetween(
+      '/* ---------- sleeping ----------',
+      '/* The idle personality stops',
+      ['.asleep .cr-eyes', '.cr-eyes-shut', '.cr-zzz']
+    );
+    const customerCss = cssBetween(
+      '/* ---------------- customers ----------------',
+      '/* ---------------- the Garden Stand ----------------',
+      ['.is-happy .cu-mouth-happy', '.is-waiting .cu-mouth-wait']
+    );
+
+    groups = [
+      {
+        list: 'CREATURES',
+        prefix: 'creature',
+        rootClass: 'critter-svg',
+        draw: (expr) => `Critters.draw(${expr})`,
+        css: critterCss,
+        states: CRITTER_STATES,
+        run: sandbox(['data.js', 'critters.js']),
+      },
+      {
+        list: 'CUSTOMERS',
+        prefix: 'customer',
+        rootClass: 'customer-svg',
+        draw: (expr) => `Customers.draw(${expr})`,
+        css: customerCss,
+        states: CUSTOMER_STATES,
+        run: sandbox(['data.js', 'customers.js']),
+      },
+    ];
+  } catch (err) {
+    console.error(`  ! character exports not written — ${err.message}`);
+    return null;
+  }
+
+  const files = [];
+  const problems = [];
+  let expected = 0;
+
+  for (const g of groups) {
+    const ids = g.run(`${g.list}.map((x) => x.id)`);
+    expected += ids.length * g.states.length;
+    for (let i = 0; i < ids.length; i++) {
+      const markup = g.run(g.draw(`${g.list}[${i}]`));
+      const base = withInternals(markup, `<style>${g.css}</style>`);
+      for (const state of g.states) {
+        const name = `${g.prefix}-${ids[i]}-${state.suffix}`;
+        if (!/^[a-z][a-z0-9-]*$/.test(name)) {
+          problems.push(`${name}: not a plain filename-safe name`);
+          continue;
+        }
+        let svg;
+        try {
+          svg = withState(base, g.rootClass, state.cls);
+        } catch (err) {
+          problems.push(`${name}: ${err.message}`);
+          continue;
+        }
+        if (!/viewBox="/.test(svg)) problems.push(`${name}: no viewBox`);
+        if (state.cls && !svg.includes(state.cls)) problems.push(`${name}: state class not applied`);
+        for (const [re, what] of SELF_CONTAINED_WITH_VARS) {
+          if (re.test(svg)) problems.push(`${name}: not self-contained — ${what}`);
+        }
+        for (const v of unresolvedVars(svg)) {
+          problems.push(`${name}: var(${v}) resolves nowhere in the file`);
+        }
+        files.push({ name, svg });
+      }
+    }
+  }
+
+  if (problems.length) {
+    console.error(`  ! character exports not written:`);
+    for (const p of problems) console.error(`      ${p}`);
+    return null;
+  }
+
+  fs.rmSync(CHARACTERS_OUT, { recursive: true, force: true });
+  fs.mkdirSync(CHARACTERS_OUT, { recursive: true });
+  for (const f of files) fs.writeFileSync(path.join(CHARACTERS_OUT, `${f.name}.svg`), f.svg);
+
+  /* Counted off the directory, like the icons' and the stages'. A creature added
+     to data.js with no file beside it is a pet missing from the Unity build. */
+  const written = fs.readdirSync(CHARACTERS_OUT).filter((f) => f.endsWith('.svg')).length;
+  if (written !== expected) {
+    throw new Error(`character exports: ${expected} expected (cast × states) but ${written} written`);
+  }
+  return files;
+}
+
 // ---------------------------------------------------------------- the manifest
 
 /*
@@ -616,6 +780,7 @@ function main() {
 
   const samples = writeSamples();
   const stages = writeStageExports();
+  const characters = writeCharacterExports();
   const manifest = writeManifest(files);
 
   const bytes = files.reduce((a, f) => a + Buffer.byteLength(f.svg), 0);
@@ -626,6 +791,9 @@ function main() {
   }
   if (stages) {
     console.log(`  ${stages.length} stage exports in ${path.relative(ROOT, STAGES_OUT)}/ — every species at sprout, stem, bud and bloom, stage rules read out of style.css`);
+  }
+  if (characters) {
+    console.log(`  ${characters.length} character exports in ${path.relative(ROOT, CHARACTERS_OUT)}/ — every creature awake and asleep, every villager neutral, happy and waiting, state rules read out of style.css`);
   }
   if (manifest) {
     console.log(
