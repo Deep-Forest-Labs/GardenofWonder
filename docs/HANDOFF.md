@@ -121,10 +121,10 @@ levels, the daily and the Almanac.
 > **Four calls are the owner's and are deliberately not made:** pricing posture (free-with-a-real-shelf
 > recommended; premium at $4.99 is genuinely live), launch timing (PGC London, 18-19 Jan 2027 recommended —
 > confirmed rather than estimated), how loud to be about the two-people story, and whether $3-5K/month is the
-> target or the floor. Plus the fork in doc 39: **stakes, or "nothing dies while you're away" — we cannot market
-> both**, and the store listing, the launch post and the first screenshot are all blocked on it. The
-> recommendation is to keep the stakes and make the consequence legible and reversible, which is also what keeps
-> the game out of **PEGI 12** under the new June 2026 criteria.
+> target or the floor. The fork in doc 39 (stakes, or "nothing dies while you're away") **was closed by the owner
+> on 2026-09-10: the stakes stay, the generosity promise is retired as a rule, and the store listing, the launch
+> post and the first screenshot are no longer blocked on it** — see the 2026-09-10 (ruling) entry in
+> [10-decision-log.md](10-decision-log.md). PEGI 12 stays a fact to check per feature; sleep is on its safe side.
 >
 > **Three dates worth acting on this week:** turn on Firebase Remote Config **before 1 September** (billing
 > starts, and enabling early defers it months); **start the Google Play account now**, because a personal
@@ -1285,6 +1285,13 @@ constraint on the port.
 [15-navigation-and-ia.md](15-navigation-and-ia.md). Regions are locations you travel to, not tabs.
 The Apiary and Craft tabs are a prototype shortcut and are **now scheduled for removal** with the
 adjacency rework — the interim dock is `Garden · Cards · Market · Shop` (phase 1.5 in that doc).
+
+**The game we are going after, in the owner's words (2026-09-10):** a free-to-play mobile game built for
+high retention, engagement and monetization, with social features later, in the lane of Gossip Harbor and
+Cats & Soup — players who pay well and stay for years. Old statements in these docs are records, never
+fences; when one would limit a good idea, it is surfaced while the feature is being worked on, with the
+cost of each way stated. The full ruling, what it spends and what still stands are in the 2026-09-10
+(ruling) entry in [10-decision-log.md](10-decision-log.md).
 
 **Nothing in `docs/` is set in stone.** Stated by the owner 2026-08-14: anything in the game could be
 done better, and a decision recorded here is a decision that was right at the time, not a

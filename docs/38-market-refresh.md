@@ -243,6 +243,10 @@ Two axes, both drawn from what actually separates these games in their reviews.
        everybody earns nothing. The Turn is what is supposed to fix that.
 ```
 
+*Dated 2026-09-10: the owner retired the absolute generosity promise as a rule and kept the stakes, so the
+GENEROUS end of this axis is no longer a claim the store page makes. The craft axis is untouched. See the
+2026-09-10 (ruling) entry in [10-decision-log.md](10-decision-log.md).*
+
 **Who is closest.** Three, in order:
 
 1. **Window Garden.** Same shape, same size of team, ad-free-ish, 4.82 stars, shipping monthly, and its player
@@ -434,7 +438,7 @@ Recorded plainly, because the docs-discipline rule says a refresh that quietly c
 
 | Question | Owner |
 | --- | --- |
-| Does the punishing-upkeep direction survive contact with this audience, and in what shape? | **Owner's call.** Evidence above; recommendation in item 5. |
+| Does the punishing-upkeep direction survive contact with this audience, and in what shape? | **Ruled 2026-09-10: the stakes stay.** Evidence above; recommendation in item 5; the ruling in the decision log. |
 | Is a premium PC/Steam build a revenue line rather than a funnel? | **Owner's call**, and it is a bigger one than it looks — see [39-growth-and-launch.md](39-growth-and-launch.md). |
 | Do Discord Activities have real discovery? | Needs an evening of research nobody has spent. |
 | What is the browser-player → app-installer conversion rate? | **Nobody produced this number and the whole growth plan multiplies by it.** See doc 39. |

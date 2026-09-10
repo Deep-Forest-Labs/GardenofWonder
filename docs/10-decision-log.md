@@ -5,6 +5,94 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-10 (ruling, the owner's word) — The fork is closed, and old statements stop being fences
+
+**The owner made two calls today, and both are his.** First, doc 39's fork is closed: **the stakes
+stay.** Second, the genre's generosity promise — doc 39's *"Crops never die. Miss a week?
+Everything's right where you left it"* — is retired, and so is the habit of holding the game to
+sentences like it. The owner's words, verbatim: *"I think the strategy in terms of punishing
+players and the promise of 'crops never dry' and 'everything's where you left it' is a statement
+that we made. As we design this game, we do realize we're making a free-to-play mobile game that
+relies on mechanics like that. I want to make sure we don't follow hard rules that change the way
+the game is built. A good idea is a good idea, and that type of stuff needs to be surfaced when
+we're working on features."*
+
+**The game we are going after, in his words:** *"I feel like some of the old statements we've
+made in the past have been limiting in terms of how we view certain features. I want to make sure
+that isn't the same way going forward. Going forward, we always need to have a fresh perspective
+on the features we're building and know exactly the type of game we're going after. I don't
+necessarily think there's a lot to change here, but our design philosophy should be to make a
+mobile game that has high retention, engagement, monetization features, and social features that
+we'll eventually get to. Games like Gossip Harbor, Cats and Soup, and other titles in that style
+of category where players monetize highly and have a long lifespan."*
+
+**What that means for these documents.** A statement in the docs is a record of what was right on
+the day it was written, never a fence. This sharpens the owner's 2026-08-14 instruction already in
+HANDOFF ("nothing in `docs/` is set in stone"); it does not replace it. In practice — and this is
+the design desk's working habit, not a rule the owner set — when an older line would limit a good
+idea, the desk says so at the moment the feature is being worked on, with the cost of each way
+stated, so the old line never quietly shapes the build. Social features are named as a direction
+for later; nothing about them is designed or scheduled by this entry.
+
+**What the fork was, in plain words.** It asked whether the store page could lead with the genre's
+favourite promise (doc 39 quotes the year's best-performing cozy dev post; doc 38 counted one
+generosity compliment in 233 five-star reviews) or whether the game keeps real stakes — and it
+was left as the owner's call, undecided, in doc 39, doc 38 and HANDOFF. The desk's recommendation
+was to keep the stakes and make every consequence visible and reversible. The game has moved in
+that direction since the fork was written — creature sleep is a stake that takes nothing (doc 22;
+doc 27's disagreement 4), and Winter's night was ruled to only ever add (doc 46, 2026-09-01) —
+but the call itself was still open until today.
+
+**What this spends, stated once.** The generosity promise is no longer a marketing asset, and the
+positioning square it pointed at (doc 38's map, doc 39's differentiation page) is no longer
+where we say we stand. That is a smaller loss than it looks: doc 39 had already ruled the shared
+sky the better acquisition sentence and the Year the better retention pitch, and the 2026-09-02
+rescope had already softened the "nothing permanent for sale" half of the same claim. The
+narrower line *"nothing is taken while you're away"* is **demoted, not retired**: the owner did
+not name it, and it is true of the game as built — but from today it is a description the store
+page may use only if it is still true on the day the listing is written, never a promise a
+feature has to be checked against. The store listing, the first screenshot and the launch post
+are **unblocked** on this axis and lead with the sky and the Year. PEGI 12 — the European age
+rating that, since June 2026, applies to games whose daily mechanics punish players for not
+returning (doc 40) — is a fact to check when a feature is proposed, with its cost stated; sleep
+sits on the safe side of it today.
+
+**What still stands — listed so the owner can strike any of it, not so it is assumed.** The owner
+said there is not a lot to change, and these are rules he set himself in the last fortnight:
+the Turn's currencies are never sold (his own 2026-09-02 rescope); paying accelerates, never
+gates; sacred moments stay clean; the list of things a Turn never touches (the never-resets
+partition); a season is a speed and a rule, never a re-skin; doc 37's no banners, no energy, no
+loot boxes; and the glossary's plain words in everything he reads. **Every one of these is now
+held the same way as any other statement here**: it stands today, and a good idea that runs into
+it gets weighed against it with the cost stated, in its own entry. Winter's "nothing is ever lost
+to a night" stands as Winter's own built and sim-tested rule, not as a game-wide fence.
+
+**Doc 01's first pillar is kept as written and dated, not rewritten.** It reads "Cosy, not
+demanding. Nothing punishes you for leaving. There are no timers you can fail, no lives, no
+defeat state." The August audit (doc 27) asked that its wording be kept and its *reading* fixed —
+a pillar against punishment had been read as a pillar against stakes. Today's ruling settles the
+reading: the game has stakes, and cosy is about how a consequence is shown, not whether one
+exists. A dated note under the pillar says so and points here. The same old pillar is quoted as
+a rule in docs 17, 18, 25 and 31; those lines are left as written and are dated by this entry —
+a builder who meets one reads it as the record it is.
+
+**On the named lane, one honest line.** Gossip Harbor and Cats & Soup are named for their
+outcome — players who pay well and stay for years — not for their mechanics. The log already
+records that Gossip Harbor is energy-gated merge with a drip story (the 2026-08 merge entries)
+and that Cats & Soup sits on the extractive side of doc 38's map. Energy, timed offers and paid
+random items each run into a rule listed above and into doc 40's rating table. None of that is
+decided either way today: each is weighed when it is proposed, like any other idea, which is the
+fresh perspective the owner asked for.
+
+**Rejected:** keeping the retired promise as an aspiration (a line nobody will defend in a
+feature review is a fence in waiting); rewriting the pillar list or doc 01's wording wholesale
+(the owner said there is not much to change, and doc 27 asked for the reading to be fixed, not
+the words); pre-committing to the named lane's mechanics because the lane was named (the owner
+named the outcome; each mechanic is weighed on its own); and softening the ruling into a
+compromise nobody chose, which this log already records as the failure to avoid.
+
+---
+
 ## 2026-09-03 (process, ruled) — The anchor standard: punch-list items stop citing line numbers
 
 **The owner read the 09-03 round's report and ruled the process fix**: the round nearly doubled its

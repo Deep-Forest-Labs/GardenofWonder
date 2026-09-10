@@ -505,6 +505,11 @@ makes a shareable object.
 
 > ### THE FORK THE OWNER HAS TO RESOLVE
 >
+> **RESOLVED 2026-09-10 — the owner kept the stakes and retired the generosity promise as a rule.** The
+> store listing, the launch post and the first screenshot are unblocked and lead with the sky and the Year.
+> Reasoning, cost and what still stands: the 2026-09-10 (ruling) entry in
+> [10-decision-log.md](10-decision-log.md). The box below is left as it was written.
+>
 > The best-performing cozy dev post of 2026 (587 upvotes) won on this exact register:
 >
 > > *"Crops never die. Miss a week? Everything's right where you left it. No timers, no energy systems, no
@@ -567,4 +572,5 @@ decided deliberately rather than drifted into.** We have not costed it.
    13 September** if $75 is affordable.
 5. **Build the five small things on the film list** — forced flower reaction, mutations recolouring petals,
    Tally sounds, the share card, capture mode. All five together are smaller than one feature.
-6. **Answer the fork.** Stakes or "nothing dies while you're away". Everything else waits on it.
+6. ~~**Answer the fork.**~~ **Answered 2026-09-10** — the stakes stay and the promise is retired as a rule; see
+   the decision log. Nothing waits on it now.

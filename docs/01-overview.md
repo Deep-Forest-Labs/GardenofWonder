@@ -25,6 +25,12 @@ takes over.
 **Cosy, not demanding.** Nothing punishes you for leaving. There are no timers you can fail, no
 lives, no defeat state. The worst outcome of walking away is that a plot sits ripe.
 
+> *Dated 2026-09-10.* The wording above is kept as the record it is; its reading changed. The game has
+> stakes — a hungry creature sleeps, and the owner closed doc 39's fork by keeping them — and "cosy"
+> governs how a consequence is shown, not whether one exists. The absolute in the first sentence is no
+> longer a rule any feature is held to. See the 2026-09-10 (ruling) entry in
+> [10-decision-log.md](10-decision-log.md).
+
 **Every tap answers.** No input is silent. A tap produces a coin arc, a floating number, a face
 reaction, a sound whose pitch climbs with your combo, and a haptic tick. This is the single most
 important feel requirement in the project.
