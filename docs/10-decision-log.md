@@ -93,6 +93,58 @@ compromise nobody chose, which this log already records as the failure to avoid.
 
 ---
 
+## 2026-09-10 (process) — Graft wires the repo into a code graph; the LLM pass stays off
+
+**Graft** ([github.com/trailhq/Graft](https://github.com/trailhq/Graft), `@nanonets/graft`) is now
+wired into this repo — upgraded to **0.18.0** and run as `graft init --agents claude cursor agents
+--no-global`. What it's *for* here: a $0, no-key structural graph over every `*.js` file (40 files,
+1,396 nodes, 3,469 edges at wiring time), so a fresh session — a builder, a fix round, a punch-list
+pickup — starts from `graft ask` / `graft grep` / `graft callers` instead of re-reading the game
+cold. See "Finding your way: graft" in [09-conventions.md](09-conventions.md) for the full shape,
+including the proved JS-only boundary and the reconciliation with docs/43's anchor standard.
+
+**What it is not, each one a real question this round answered:**
+
+1. **Not the LLM pass.** `graft build --deep` (concept nodes, per-symbol prose summaries) needs a
+   provider, a model and a key, and costs real money per build. **Rejected for now** — this
+   codebase's prose already lives in `docs/`, which `--deep` cannot read anyway (see #2), so the
+   marginal value of a second, AI-written prose layer over the same code is unproven. Revisit once
+   the statusline's token-savings numbers exist for a week of real structural-only use; the owner
+   picks the key.
+2. **Not a documentation index.** Indexing `docs/` was considered and **rejected as unsupported,
+   not merely unwanted** — Graft has no markdown parser, so `*.md` is invisible to it regardless of
+   any flag. `style.css`, `index.html` and the `tools/*.html` spikes are the same story for the same
+   reason (no CSS/HTML parser). The house grep instruments (`grep -cE '\.name...' style.css`, a
+   plain `grep -rn` over `docs/`) are still how those get searched.
+3. **Not wired past this repo.** `--no-global` on `graft init` on purpose — there is no Codex CLI
+   config in play for this project and nothing about Garden Wonder belongs in a user-level
+   `~/.codex/` or `~/.claude/` file. Confirmed after the fact: `~/.claude/settings.json` is
+   byte-identical to before, and `~/.codex/` gained no new file.
+4. **Not committing `graft/`.** It's a regenerable local cache — the wiring (`.claude/`, `.mcp.json`,
+   `AGENTS.md`'s fenced block, the `.cursor/` files) is committed, the graph itself is gitignored and
+   rebuilt by whoever runs `graft build`, the same relationship `node_modules/` has to a project that
+   has one.
+5. **Not MCP-only or hooks-only.** Both were considered as a lighter-weight wiring and **rejected**
+   — an MCP server and a hook are there when an agent reaches for them, but the `.claude/skills/`
+   file is what changes an agent's *first move*, before it has any reason to reach for either. The
+   full `graft init` shape (skill + hooks + statusline + MCP) is what actually gets a cold session
+   asking the graph before grepping.
+
+**One trap the wiring itself hit, worth knowing about before ever re-running `graft init`:** the
+generated `.cursor/hooks.json` baked the repo's *absolute path* — home directory and username — into
+three hook commands, where `.claude/settings.json`'s equivalent used a portable
+`${CLAUDE_PROJECT_DIR:-.}`. Rewritten to the same bare relative path the two pre-existing house hooks
+already use. See "Traps in this codebase" in [HANDOFF.md](HANDOFF.md).
+
+**`legacy/main.js` pollutes graph answers**, filed as a known issue rather than fixed — Graft has no
+exclude flag and the file is tracked, not gitignored, so it indexes alongside the live build and, on
+two test queries, outranks it. See
+[11-known-issues.md](11-known-issues.md#graft-indexes-legacymainjs-alongside-the-live-build).
+
+**Nothing a player can see changed, so `DATA.changelog` did not.**
+
+---
+
 ## 2026-09-03 (process, ruled) — The anchor standard: punch-list items stop citing line numbers
 
 **The owner read the 09-03 round's report and ruled the process fix**: the round nearly doubled its

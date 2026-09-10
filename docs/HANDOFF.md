@@ -60,6 +60,17 @@ decided, and what to do next. Update it at the end of any significant session.
 
 ## Where the project stands
 
+> **GRAFT IS WIRED, 2026-09-10 — a $0 code graph over every `*.js` file, no game code touched.**
+> Upgraded to **0.18.0** and run as `graft init --agents claude cursor agents --no-global`: 40
+> files, 1,396 nodes, 3,469 edges. A fresh session should reach for `graft ask` / `graft grep` /
+> `graft callers` before reading source cold — see "Finding your way: graft" in
+> [09-conventions.md](09-conventions.md). The LLM pass (`--deep`) is off; see the 2026-09-10 entry
+> in [10-decision-log.md](10-decision-log.md) for what was rejected and why. `legacy/main.js`
+> pollutes some answers — see [11-known-issues.md](11-known-issues.md#graft-indexes-legacymainjs-alongside-the-live-build).
+> `node tools/sim-test.js` (×3, byte-identical), `node tools/html-check.js` and
+> `node tools/style-check.js` all ran clean after wiring, confirming Graft's hooks don't interfere
+> with the house tools.
+
 The game is **built, working, and live** at <https://deep-forest-labs.github.io/GardenofWonder/>, deployed from
 `main` at the repository root. It is a single-screen idle garden — tap a talking flower, plant
 seeds in eight plots, harvest with rarity multipliers, spend on **upgrades** (the word "badges" is
@@ -3826,6 +3837,18 @@ against the markup it actually produced, because a regex over the template canno
 selector from a near-miss — nor tell the two sides apart when `here - 1` and `here + 1` are swapped,
 which is this file's own inverted-rows bug wearing a different hat.
 
+**A generated Cursor hook can bake the machine's own home directory into a file the repo then
+publishes.** `graft init` wrote `.claude/settings.json`'s hook commands through
+`${CLAUDE_PROJECT_DIR:-.}`, a portable variable — and wrote `.cursor/hooks.json`'s three graft hook
+commands as the literal absolute path to this checkout, home directory and username included, three
+times. Nothing in graft's own shim caused it — the shim's baked fallback is a Homebrew path with no
+personal information in it, and stays as generated. The three `.cursor/hooks.json` commands were
+rewritten to the same bare relative path the two pre-existing house hooks already use
+(`.cursor/hooks/graft-hooks.cjs`, no absolute prefix). **Grep every file about to be committed for
+`/Users/` and the account name before pushing anything a code-generation tool wrote**, the same way
+you'd grep for a stray API key — a tool that resolves its own install path absolutely may resolve
+the repo's path the same way, and it will not warn you.
+
 ## Checking your work
 
 ```bash
@@ -3837,6 +3860,12 @@ node --check <file>.js          # no build step, so this is the only syntax gate
 node tools/capture-screens.js    # redraw the whole screens gallery, and the page that indexes it
 node tools/export-icons.js --check # do the icon exports still match icons.js?
 python3 -m http.server 8899     # then open http://localhost:8899/
+
+graft check                     # is graft/ in sync with the code? (must pass on a clean tree)
+graft map                       # token-budgeted orientation — directories, hubs, hotspots
+graft ask "<question>" --source # the default lookup — ranked nodes with the code inlined
+graft grep "<pattern>"          # exhaustive search over indexed *.js — see 09-conventions.md
+graft callers <symbol>          # who calls this, or --direction out for what it calls
 ```
 
 **`year-sim`'s exit code stopped being a gate on 2026-08-30** and has not been made into one again.
@@ -3892,6 +3921,11 @@ stale line here costs them real time before they have any way to know it is wron
 > `Ghost Garden/Ghost Garden`. (`garden-polish` beside it is a second worktree on the `polish`
 > branch; `ghostgarden` is an empty leftover.) Run `git fetch` and check `git status` before you
 > start — other sessions work in this tree.
+>
+> **You'll be asked to approve an MCP server on first launch** — that's `graft`, wired into `.mcp.json`
+> 2026-09-10. Approve it; the repo is indexed in `graft/` and you should reach for `graft ask` /
+> `graft grep` / `graft callers` before reading source cold. See "Finding your way: graft" in
+> `docs/09-conventions.md`.
 >
 > Read `docs/HANDOFF.md` first, then `docs/README.md` for the index. Before writing any code read
 > `docs/09-conventions.md` and `docs/02-architecture.md`, and the **"Traps in this codebase"**

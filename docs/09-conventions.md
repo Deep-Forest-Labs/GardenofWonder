@@ -453,6 +453,58 @@ Covered fully in [07-save-data.md](07-save-data.md). The short version:
 7. `--strict` ignores the baseline and lists every violation in the file. That is the sweep's
    worklist, not the gate.
 
+## Finding your way: graft
+
+The repo is indexed in `graft/` — a local code graph over every `*.js` file, kept in sync with the
+code through `git`, wired in 2026-09-10. Before grepping or opening source files for something whose
+location you don't already know, ask the graph: `graft ask "<question>" --source` for a concept or
+a location, `graft grep "<pattern>"` when you need every occurrence, `graft skeleton <file>` for a
+file's API surface, `graft callers <symbol>` for exact call edges. `AGENTS.md`'s fenced Graft
+section has the full command list; `.claude/skills/graft/SKILL.md` is the same guidance written for
+an agent mid-task.
+
+**It indexes `*.js` only, and nothing else in this repo.** `style.css` (6,700 lines, where half the
+traps in this codebase live), `index.html`, the `tools/*.html` spikes, and everything in `docs/` are
+invisible to it — Graft has no CSS or markdown parser, so a stylesheet or a doc isn't a file it
+missed, it's a file type it doesn't read. **Proved, not claimed:** `.seed-row` is a CSS class
+declared 15 times in `style.css` and also written into template literals 7 times in `ui-sheet.js`;
+`graft grep "seed-row"` returns exactly those 7 JS hits and nothing from `style.css`. Every house
+grep instrument this codebase already leans on stands unchanged — `grep -cE '\.name([{ ,:.]|$)'
+style.css` before reusing a class name, a plain `grep -rn` over `docs/` — because Graft was never
+meant to replace them there.
+
+**It is a tool on the developer's machine, not a dependency of the game or of `tools/`.** `graft/`
+is a regenerable local cache, gitignored and never committed, the same relationship `node_modules/`
+has to a project that has one. What *is* committed is the wiring — `.claude/`, `.mcp.json`, the
+fenced block in `AGENTS.md`, the `.cursor/` files — so a clone with no Graft on the `PATH` runs,
+tests and deploys exactly as before; nothing in `game.js`, a `ui-*` file, or `tools/*.js` may ever
+require it.
+
+**The LLM pass (`graft build --deep`) is off.** What's built is the $0 structural graph — no API
+key, no model, no ongoing cost. `--deep` would add a concept map and per-symbol prose summaries at
+the price of a key and a bill; see the 2026-09-10 entry in
+[10-decision-log.md](10-decision-log.md) for why that's deferred rather than ruled out.
+
+**`legacy/main.js` is indexed too, on purpose and imperfectly.** Graft has no exclude flag and
+`legacy/` is tracked rather than gitignored, so its old implementations sit in the same graph as the
+live build and sometimes outrank it. See
+[11-known-issues.md](11-known-issues.md#graft-indexes-legacymainjs-alongside-the-live-build) for
+what that costs and the workaround.
+
+**The reconciliation with the anchor standard — read this before filing or picking up a
+[punch-list](43-punch-list.md) item.** A `graft ask`, `graft grep` or `graft callers` result is
+fresh the instant it prints, because Graft re-parses the working tree before it answers — a commit
+landing mid-session cannot make its output stale the way a stored `file:line` can. A line number
+sitting in a doc, a punch-list item, or a prompt is *not* fresh in that sense; it was true when
+someone wrote it down and it rots exactly as docs/43's own standard describes. **`graft grep` and
+`graft callers` therefore count as re-deriving an anchor** — running one *is* what rule 1 asks a fix
+agent to do ("re-derives by grep and never trusts a line"), only faster, and they are how a keeper
+now finds that function name and unique string in the first place when filing a new item. **Nothing
+about the standard's written form changes.** An anchor in a doc is
+still a function name plus a unique grep-able string, never a bare line number — Graft is a faster
+way to produce and check that pointer, not a new pointer format, and its own answers carry exact
+`file:line` precisely because they were just computed, not because line numbers stopped rotting.
+
 ## Testing
 
 `node tools/sim-test.js` plays the whole economy forward in Node and is the cheapest check in the

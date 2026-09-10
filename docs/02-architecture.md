@@ -60,6 +60,10 @@ Stand, the map and the meadow on 2026-08-25 were documented in this file's prose
 here. `ui-weather.js` and `ui-perf.js` were the third and fourth to go the same way, caught on
 2026-09-01. The count in the first sentence is the thing to check when a file is added.)*
 
+`graft map` is the generated, always-current view of this table — run it when you want the load
+graph rather than trust this doc's staleness window. This document stays the authored one: the
+prose above explains *why* the order is what it is, which a generated map cannot.
+
 The UI files touch the DOM on load, and only `ui.js` calls `boot()`. Every other file is inert
 until something calls into it.
 

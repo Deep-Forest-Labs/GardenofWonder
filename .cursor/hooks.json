@@ -13,6 +13,22 @@
         "timeout": 10,
         "loop_limit": 1
       }
+    ],
+    "postToolUse": [
+      {
+        "matcher": "Read|Grep|Glob|Search|Shell",
+        "command": "node .cursor/hooks/graft-hooks.cjs cursor-post-tool"
+      }
+    ],
+    "afterMCPExecution": [
+      {
+        "command": "node .cursor/hooks/graft-hooks.cjs cursor-mcp"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "node .cursor/hooks/graft-hooks.cjs cursor-session-end"
+      }
     ]
   }
 }

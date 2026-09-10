@@ -5,6 +5,27 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## Graft indexes legacy/main.js alongside the live build
+
+**Filed rather than fixed, wiring session 2026-09-10.** [`graft`](09-conventions.md#finding-your-way-graft)
+has no exclude flag and `legacy/` is tracked rather than gitignored, so its old implementations sit
+in the same graph as the live build's and sometimes outrank it — measured, not guessed: `graft ask
+"plant a seed"` ranks `legacy/main.js`'s `plantSeedInPlot()` **first**, above `game.js`'s own
+`plant()`; `graft ask "tap the flower"` ranks `legacy/main.js`'s `handleFlowerTap()` **second**,
+between the live `tapFlower()` and `ui.js`'s `wireFlower()`. Both results otherwise read reasonably
+— the confusion is only that a legacy hit can sit above or beside the live one with nothing in the
+output flagging it as retired.
+
+**The workaround is reading the path label, or scoping past it.** Every result names its file, so a
+hit under `legacy/` is a one-glance skip once you know to look — this entry exists so a new agent
+knows to look. When a query is about the live build specifically, `graft ask "<question>" --in
+game.js` (or whichever file you already suspect owns the answer) narrows the search away from
+`legacy/` entirely, at the cost of needing to already have a guess.
+
+**Do not delete or move `legacy/`.** [`docs/README.md`](README.md) and the wiki link it as the
+playable previous build; it stays tracked, and Graft indexing it is a side effect of that, not a
+reason to reconsider it.
+
 ## What the overnight fix round knowingly left (2026-09-03)
 
 **Three drone-rental knobs ship PROVISIONAL and named, all three the owner's to pick, each a
