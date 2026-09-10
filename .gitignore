@@ -48,3 +48,10 @@ art/*.png
 art/*.jpg
 art/*.jpeg
 art/*.webp
+
+# Sprites rasterised by tools/export-pngs.js for the Unity port. Build output,
+# not an asset this game ships — docs/09-conventions.md allows no binaries beyond
+# its three named folders, and adding a fourth for 168 generated PNGs would buy
+# nothing. Regenerate them on demand, or send them straight to the consumer with
+# --out. art/exports/** stays text, and stays a mirror.
+art/exports/png/
