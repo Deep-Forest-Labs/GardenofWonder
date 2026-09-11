@@ -5,6 +5,69 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-10 (fix round) — Closing what tonight's independent critics found on #26 and #27
+
+**Four critics, four confirmed findings, one wording-only false alarm inside them.** Working from
+the three build stages that shipped earlier tonight (0655f8e, 0b7b17d, 3878761).
+
+**1. `skipGrow()`'s gate was never actually wrong — the shipped line already checks `weatherAt()`,
+which checks a real `state.weatherCall` before it ever looks at the dev override — but the shipped
+test suite had no check that exercised a genuine bought sky, only `Game.Dev.setWeather()`.** A
+critic building an alternate (wrong) gate that special-cased `dev.weather` and skipped
+`state.weatherCall` entirely found the full 2220-check suite passed anyway, because nothing in it
+ever set `S.weatherCall` and then skipped. Confirmed by re-reading `weatherAt()` (game.js) directly:
+the shipped gate was never patched, only the coverage gap was real. **Fixed by adding one check** to
+the `punch list #26` group in `tools/sim-test.js` that sets `S.weatherCall` the way `callWeather()`
+itself does — not the dev override — with the plant's booked moment inside the call window on a
+sky whose *natural* underlying slot would be Clear, and asserts the skip is still refused. No engine
+change; the gate needed no fix, the suite did.
+
+**2. The replant chip's own tap target (`::before`) missed the 44px minimum its acceptance line
+promises — confirmed live, not assumed.** `tools/probe.js` at 390×844 measured the shipped chip's
+box at 31.09px tall; the halo's fixed `inset:-6px` only ever adds a constant 12px, landing the tap
+target at 43.09px — under 44 by less than a pixel, and *further* short at 360×780 (41.5px) and
+320×568 (36.2px), since the box itself shrinks with `min(px, vh)` at those sizes while the halo's
+add-on stays fixed. **Fixed**: the `::before` is now centred on the chip and sized with
+`max(calc(100% + 12px), 44px)` in both dimensions, so it still just adds the old 12px of slack when
+the box is big enough but never resolves under 44×44px at any supported size — confirmed live at all
+four measured viewports (390×844, 360×780, 320×568, 844×390). The visible box is untouched; this
+reaches a little further into the marker-clearance budget `08-ui-and-layout.md` measures (the fixed
+halo already did, by a smaller amount, since 6px already exceeded that budget's 1.7–3.3px) — accepted
+for the same reason the landscape/marker overlap already was: an invisible hit-area extension is not
+the same concern as whether the visible chip or the marker's own art overlaps.
+
+**3. The gem chip's `held` state and the replant chip's flat fill, both raised by the visual critic
+— partially real, partially not.** The `.replant-chip` background was a flat `var(--paper)` while
+its two closest siblings in the numbered-pill family, `.chip` and `.stat`, both use the established
+`linear-gradient(180deg,#fffdf7,var(--paper-2))` — genuinely inconsistent, and **fixed** by giving
+`.replant-chip` the same gradient. **Rejected: the critic's further claim that this family also
+carries a "highlight/dirt-mark radial pair"** — checked directly, and no numbered pill (`.chip`,
+`.stat`, `.price`, `.lock-cost`) carries one; that radial-highlight-plus-smudge treatment belongs to
+`.plot`'s own soil tile, a different visual family entirely, so it was not added here on invented
+grounds. **Rejected: recolouring the `held` gem chip's border back to ink**, the critic's second
+finding — the low-contrast `--paper-dim-2`/`--paper-dim-edge` pairing it flagged is not an isolated
+slip, it is the same pairing `.seed-art.cv-mask` and `.feed-row.napping` already use for an identical
+"not available right now" read, and the critic's own cited precedent for the opposite (that
+`.feed-row.napping` "keeps an ink border") does not hold up — it uses `--paper-dim-edge` too. Left
+as shipped; the held chip is consistent with three other dim states in this file, not an outlier.
+**Rejected: touching `.skip-chip`'s own flat fill** — the critic named it explicitly as pre-existing
+and unchanged tonight, outside this round's diff.
+
+**4. The 2026-09-10 changelog line for `#26` used a different register and a word players never see
+in the game itself.** `ui.js`'s `skipHoldLine()` deliberately keeps `rain`/`storm`/`aurora` as
+lower-case common nouns (its own comment: *"Thunderstorm is a card title, not something you'd say
+mid-sentence"*) while capitalizing only `Wonderfall`. The same-night changelog entry in `data.js`
+instead read "Rain, a Thunderstorm, an Aurora or a Wonderfall" — a different register and a word
+("Thunderstorm") the player never encounters in play. **Fixed**: reworded to "rain, a storm, an
+aurora or a Wonderfall", matching `skipHoldLine()`'s own convention exactly. The replant-chip
+changelog line beneath it was left untouched — it already accurately describes what shipped and
+nothing about what it promises changed tonight.
+
+**Nothing new filed for the morning.** None of tonight's four fixes touch an economy number or leave
+a real question undecided; everything above is a closed bug or an evaluated-and-rejected claim.
+
+---
+
 ## 2026-09-10 (punch list #27) — The replant chip becomes a real button, and the shared pill rule splits
 
 **The complaint.** The owner: *"The replant button on the bottom right is a little small and

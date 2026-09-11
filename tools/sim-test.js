@@ -3322,6 +3322,28 @@ check("Fall's own skip is untouched — it still hurries a crop normally while a
   return r !== null && S.gems === before - r.cost && ready === true;
 })());
 
+/* A genuinely BOUGHT sky (state.weatherCall, set the way callWeather() itself sets it),
+   never Dev.setWeather, closes the gate too. Every check above holds the sky with the dev
+   override, which weatherAt() also short-circuits on — this is the other layer weatherAt()
+   checks first, exercised for real so a gate that quietly special-cased "dev.weather" instead
+   of trusting weatherAt() itself could not slip through unnoticed. */
+check("a real bought sky (state.weatherCall) refuses the skip exactly like the dev override, even though the moment's OWN slot would naturally be Clear", (() => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e12;
+  S.gems = 1e6;
+  G.plant(0, G.seedById('daisy'));
+  const moment = clearSlot * SLOT + SLOT / 2;      // naturally Clear at this moment
+  S.grid[0].mutateAt = moment;
+  S.weatherCall = { id: 'storm', from: moment - 60, until: moment + 60 }; // a bought sky, not a dev override
+  const calledSkyCarries = G.weatherAt(moment).id === 'storm' && Boolean(G.weatherAt(moment).mutation);
+  const gemsBefore = S.gems;
+  const r = G.skipGrow(0);
+  const mutateAtAfter = S.grid[0].mutateAt;
+  S.weatherCall = null;
+  return calledSkyCarries && r === null && S.gems === gemsBefore && mutateAtAfter === moment;
+})());
+
 group('punch list #26 — sabotage: three realistic wrong gates, each proven to miss the farm');
 check('sabotage 1 would fail: gating on the STANDING sky at skip time (not the booked moment) misses a storm-booked plant once the sky has moved on', (() => {
   G.reset();

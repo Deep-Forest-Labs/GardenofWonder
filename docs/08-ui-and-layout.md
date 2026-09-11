@@ -756,14 +756,26 @@ Landscape is not a supported orientation (below), and the gem chip and Fall's ch
 their own tiles there, unchanged — this chip is the one improvement of the three, not a new
 regression.
 
-**The visible box is therefore smaller than 44px everywhere it ships.** A `::before` at
-`inset:-6px` — the same halo mechanism `.fl-collect` rides for its glow (an inset pseudo-element,
-painted behind the button's own opaque background via `z-index`), repurposed here with no visible
-fill — extends the actual tap target back out without moving the corner the chip reads from or
-changing its visible size. Confirmed live: `document.elementFromPoint()` on a point 4px outside the
-visible chip's own corner, still inside the `::before`'s reach, resolves to `.replant-chip`.
+**The visible box is therefore smaller than 44px everywhere it ships.** A `::before` — the same
+halo mechanism `.fl-collect` rides for its glow (a pseudo-element painted behind the button's own
+opaque background via `z-index`), repurposed here with no visible fill — extends the actual tap
+target back out without moving the corner the chip reads from or changing its visible size.
 `overflow` is deliberately never set on `.replant-chip` itself — setting it would clip the extension
 straight back off, the same trap `.fl-collect`'s own comment records.
+
+**Amended 2026-09-10 (independent critic on `#27`):** a fixed `inset:-6px` was shipped first and
+fell short of the 44px minimum the chip's own acceptance line requires — 43.09px at 390×844
+(31.09 + 12), and further short at 360×780 and 320×568, because the halo's own reach is a constant
+add-on to a box that itself shrinks with the viewport (the table above). Fixed by centring the
+`::before` on the chip and sizing it with `max(calc(100% + 12px), 44px)` in both dimensions instead
+of an inset: the halo still just adds its old 12px of slack when the chip is big enough, but never
+resolves smaller than 44×44px no matter how far `min(px, vh)` has shrunk the visible box. Confirmed
+live at all four sizes in the table above — the invisible tap target's smaller dimension is exactly
+44px at each. This does reach a little further into the marker-clearance budget above than the old
+fixed inset did (already non-zero before this fix, since 6px already exceeded the 1.7–3.3px of
+visible-box clearance) — accepted the same way the visible-box/marker overlap in landscape is
+accepted: the invisible halo and the marker's own hit area are not the same concern this section's
+measurement table is about, and nothing here changes what a player sees.
 
 ### The developer hit area
 

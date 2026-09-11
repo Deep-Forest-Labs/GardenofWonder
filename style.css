@@ -730,7 +730,7 @@ button:focus-visible{
   display:none;align-items:center;gap:4px;
   padding:3px 8px 3px 6px;border-radius:var(--r-sm);
   border:2px solid var(--ink);
-  background:var(--paper);
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));
   font-weight:900;color:var(--ink);line-height:1.2;
   font-size:min(11px, 1.5vh);
   box-shadow:0 2px 0 var(--ink-2);
@@ -738,13 +738,28 @@ button:focus-visible{
   white-space:nowrap;max-width:calc(100% - 10px);
 }
 /* The extended hit area, same mechanism `.fl-collect`'s halo rides (a ::before
-   at a negative inset, painted behind the button's own opaque background via
-   z-index so it changes nothing inside the visible box) borrowed for a
-   different job: not a glow, just more finger past the ink border. No
-   `overflow` is set on `.replant-chip` itself — clipping it here is exactly
-   what would clip this back off. */
+   painted behind the button's own opaque background via z-index so it changes
+   nothing inside the visible box) borrowed for a different job: not a glow,
+   just more finger past the ink border. No `overflow` is set on
+   `.replant-chip` itself — clipping it here is exactly what would clip this
+   back off.
+
+   A FIXED `inset:-6px` (12px of slack in each dimension) is not enough on its
+   own: the visible box's height comes from the bloom's own `min(22px, 2.5vh)`,
+   which SHRINKS at a shorter viewport right along with the marker-clearance
+   budget above — 31.09px tall at 390x844 (+12 = 43.09, a hair under 44) but
+   only ~29.5px at 360x780 and ~24.2px at 320x568 (+12 = 41.5 and 36.2, both
+   further short). A halo sized off the button's OWN box can only ever add a
+   constant, never guarantee a floor. So this is centred on the button instead
+   and sized with `max()`: normally as wide as the box plus the old 12px of
+   slack, but never smaller than the 44px minimum in either dimension,
+   whichever viewport shrank the visible chip down to. The visible box itself
+   is untouched, so the marker-clearance budget above is untouched too. */
 .replant-chip::before{
-  content:'';position:absolute;inset:-6px;z-index:-1;
+  content:'';position:absolute;z-index:-1;
+  top:50%;left:50%;transform:translate(-50%, -50%);
+  width:max(calc(100% + 12px), 44px);
+  height:max(calc(100% + 12px), 44px);
 }
 .plot[data-replant] .replant-chip{display:inline-flex}
 .plot[data-replant="no"] .replant-chip{background:#e6e0d8;opacity:.65}
