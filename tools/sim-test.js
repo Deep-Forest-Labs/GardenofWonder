@@ -12954,5 +12954,147 @@ check('and the rail chip paints itself from that one field',
   /--tint:\$\{WONDER\.tint\}/.test(uiSrc));
 G.reset();
 
+/* ---------------------------------------------------------------------------
+   #26 (stage 3) — THE HELD-SKY GEM CHIP EXPLAINS ITSELF INSTEAD OF DISAPPEARING
+
+   Stage 1 (this same night) built Game.skipState() and proved it exhaustively
+   at the engine level — 'open' / 'unaffordable' / 'held', the sky it names,
+   and every sabotage that would let the farm back through. None of that is
+   re-proved here. This group is scrape-only, over ui.js and style.css, because
+   what actually changed is entirely presentation: does the chip read
+   skipState() instead of doing its own gem-math, does the third value reach
+   data-skip, does a tap on it reach skipHoldLine() before it can reach
+   Game.skipGrow(), and does skipHoldLine() itself keep the glossary's rule
+   (never "mutation", always "a catch", no number) for every sky the generic
+   gate can actually name — rain included, the one the punch list's own driven
+   table never sampled. What this group cannot see: the chip on screen, actually
+   dimmed, actually reverting once the sky clears. That was driven live with
+   tools/probe.js against the real page and is reported in this stage's own
+   build notes, not written here as a regex over a screenshot. */
+group('punch list #26 (stage 3) — the held-sky gem chip explains itself instead of disappearing');
+
+const renderSkipBlockSrc = uiSrc.slice(
+  uiSrc.indexOf("const skip = state === 'grow' ? Game.skipSaving(i)"),
+  uiSrc.indexOf("const rp = state === 'empty' ? Game.replantSeed(i)"));
+check('the renderPlots() slice that keys the gem chip was actually found',
+  renderSkipBlockSrc.length > 200 && renderSkipBlockSrc.length < 3000, `${renderSkipBlockSrc.length} chars`);
+
+/* SABOTAGE, confirmed by hand: putting the old `const skipOk = skipGems &&
+   S.gems >= skipGems ? 'ok' : 'no';` line back — ui.js doing its own gem-math
+   again, exactly what docs/09's layering rule and skipState()'s own comment
+   both ask it not to do — leaves this red, because the slice no longer calls
+   Game.skipState at all. */
+check('the chip reads Game.skipState() rather than comparing S.gems itself',
+  /Game\.skipState\(i\)/.test(renderSkipBlockSrc) && !/S\.gems\s*>=\s*skipGems/.test(renderSkipBlockSrc),
+  renderSkipBlockSrc);
+
+/* SABOTAGE, confirmed by hand: renaming the third branch's own result from
+   'held' to anything else (reusing 'no', say) leaves the CSS checks further
+   down red — no `[data-skip="held"]` rule exists to match — while this check
+   alone would stay green. The two together are what actually pins the literal
+   value; either alone would pass a chip that LOOKS three-stated in the source
+   but never reaches a distinct one on screen. */
+check('the three-way mode keeps both old literals ("ok" for open, "no" for unaffordable, unchanged) and adds exactly one new one ("held")',
+  /skState\.state === 'unaffordable' \? 'no' : skState\.state === 'held' \? 'held' : 'ok'/.test(renderSkipBlockSrc),
+  renderSkipBlockSrc);
+check('the cache key redraws on a change to gems, mode OR sky — not just gems, as it did before tonight',
+  /c\.skipGems !== skipGems \|\| c\.skipMode !== skipMode \|\| c\.skipSky !== skipSky/.test(renderSkipBlockSrc),
+  renderSkipBlockSrc);
+check('the mode actually reaches the DOM as data-skip rather than being computed and dropped',
+  /v\.root\.dataset\.skip = skipMode;/.test(renderSkipBlockSrc), renderSkipBlockSrc);
+/* SABOTAGE, confirmed by hand: swapping the ternary's branches (held gets the
+   price sentence, the ordinary case gets skipHoldLine) still matches a looser
+   "does this slice mention both strings" check but fails a real screenshot —
+   this pins WHICH branch gets WHICH text, and pins the ordinary sentence
+   byte-for-byte so nothing about the pre-existing wording moved. */
+check('the aria-label says the sky\'s own line when held, and the untouched price sentence otherwise',
+  /setAttribute\('aria-label',\s*skipMode === 'held'\s*\?\s*skipHoldLine\(skipSky\)\s*:\s*`Finish now for \$\{fmt\(skipGems\)\} gem\$\{skipGems === 1 \? '' : 's'\}, saving \$\{skipWait\(Math\.ceil\(skip\.seconds\), true\)\}`\)/
+    .test(renderSkipBlockSrc),
+  renderSkipBlockSrc);
+
+/* skipHoldLine() itself, lifted out and actually RUN — like multText20 above,
+   a slice that comes back empty would make every check under it vacuously
+   green, so size is checked first. */
+const skipHoldLineSrc = (uiSrc.match(/ {2}function skipHoldLine\(sky\) \{[\s\S]*?\n {2}\}/) || [''])[0];
+check('skipHoldLine() was actually found in ui.js',
+  skipHoldLineSrc.length > 80, `${skipHoldLineSrc.length} chars`);
+const runHoldLine = skipHoldLineSrc
+  ? new Function(`${skipHoldLineSrc}\nreturn skipHoldLine;`)()
+  : () => '';
+const HELD_SKY_IDS = ['rain', 'storm', 'aurora', 'wonderfall'];
+const heldLines = Object.fromEntries(HELD_SKY_IDS.map((id) => [id, runHoldLine(id)]));
+check('every DATA.weather.types entry that actually carries a mutation has an entry in skipHoldLine\'s own table — a fifth catch-carrying sky added later cannot silently fall through to the generic fallback unnoticed',
+  DATA.weather.types.filter((t) => t.mutation).every((t) => HELD_SKY_IDS.includes(t.id)),
+  DATA.weather.types.filter((t) => t.mutation).map((t) => t.id).join(', '));
+check('every one of the four gets a real, distinct line — not one sentence recycled for all of them',
+  HELD_SKY_IDS.every((id) => heldLines[id].length > 10)
+  && new Set(HELD_SKY_IDS.map((id) => heldLines[id])).size === HELD_SKY_IDS.length,
+  JSON.stringify(heldLines));
+check('every line uses the glossary\'s own noun, "a catch", and never once says "mutation"',
+  HELD_SKY_IDS.every((id) => /\ba catch\b/.test(heldLines[id]) && !/mutation/i.test(heldLines[id])),
+  JSON.stringify(heldLines));
+check('and carries no number — the odds and the multiplier stay the sky\'s own tooltip\'s job, not this refusal\'s',
+  HELD_SKY_IDS.every((id) => !/\d/.test(heldLines[id])), JSON.stringify(heldLines));
+check('and each line actually names ITS OWN sky, not a generic "this sky" standing in for all four',
+  heldLines.rain.includes('rain') && heldLines.storm.includes('storm')
+  && heldLines.aurora.includes('aurora') && heldLines.wonderfall.includes('Wonderfall'),
+  JSON.stringify(heldLines));
+check('the storm line matches the brief\'s own example shape verbatim',
+  heldLines.storm === 'Not under a storm — a catch is for waiting out.', heldLines.storm);
+
+/* ---- onSkipTap(): the tap side, same two facts a refusal always needs here —
+   spends nothing, and says why. ---- */
+const onSkipTapSrc = (uiSrc.match(/ {2}function onSkipTap\(idx\) \{[\s\S]*?\n {2}\}/) || [''])[0];
+check('onSkipTap() was actually found in ui.js',
+  onSkipTapSrc.length > 200, `${onSkipTapSrc.length} chars`);
+/* SABOTAGE, confirmed by hand: moving the held check below the
+   `if (S.gems < cost)` block still passes every check above (skipState() is
+   still called, 'held' is still read) but lets a plot that is BOTH broke and
+   held show the wrong reason — "Save up a few coins first!" instead of naming
+   the sky, since the wallet check would return first. This pins the ORDER, not
+   merely the presence, of the two checks — matching skipState()'s own
+   documented precedence ('held' outranks 'unaffordable'). */
+const walletCheckAt = onSkipTapSrc.indexOf('S.gems < cost');
+const heldCheckAt = onSkipTapSrc.indexOf("st.state === 'held'");
+check('the held check runs before the wallet check, so a plot that is both broke and held gives the sky as the reason, matching skipState()\'s own precedence',
+  heldCheckAt > -1 && walletCheckAt > -1 && heldCheckAt < walletCheckAt,
+  `held at ${heldCheckAt}, wallet at ${walletCheckAt}`);
+const heldBranchSrc = (onSkipTapSrc.match(/if \(st\.state === 'held'\) \{[\s\S]*?\n {4}\}/) || [''])[0];
+check('the held branch was actually found, sized like a real branch rather than an empty guard',
+  heldBranchSrc.length > 60 && heldBranchSrc.length < 400, `${heldBranchSrc.length} chars: ${heldBranchSrc}`);
+/* SABOTAGE, confirmed by hand: writing a second, hand-typed copy of the
+   sentence here instead of calling skipHoldLine(st.sky) still LOOKS right on
+   screen today and silently drifts the moment either copy is next edited —
+   this pins that the two call sites share ONE function, not that the text
+   happens to match today. */
+check('the tap floats the exact call skipHoldLine(st.sky) builds — not a second, hand-typed copy of the sentence',
+  /FX\.float\([^,]+,[^,]+,\s*skipHoldLine\(st\.sky\)/.test(heldBranchSrc), heldBranchSrc);
+check('and the held branch returns without ever reaching Game.skipGrow — the engine\'s own refusal is belt, this is suspenders',
+  !/Game\.skipGrow/.test(heldBranchSrc) && /return;/.test(heldBranchSrc), heldBranchSrc);
+
+/* ---- style.css: the chip's own third look ---- */
+const heldChipRuleSrc = cssRule('.plot[data-skip="held"] .skip-chip');
+const noChipRuleSrc = cssRule('.plot[data-skip="no"] .skip-chip,.fl-plot[data-skip="no"] .fl-skip');
+const anyChipRuleSrc = cssRule('.plot[data-skip] .skip-chip,.fl-plot[data-skip] .fl-skip');
+check('the held-sky chip rule was actually found, addressed on its own (not folded into another rule)',
+  heldChipRuleSrc.length > 10, heldChipRuleSrc);
+/* SABOTAGE, confirmed by hand: writing the sibling shared-selector shape —
+   `.plot[data-skip="held"] .skip-chip,.fl-plot[data-skip="held"] .fl-skip` —
+   the way the "no" rule above it is written leaves the SOLO lookup below
+   empty (cssRule() needs an exact selector-then-`{` match), catching the
+   drift even though a human skim of the diff would see a chip working fine
+   on Summer's own board and not notice Fall was quietly invited in too. */
+check('the rule is Summer-only in the selector itself — never shared with .fl-plot/.fl-skip the way the sibling "no" rule is, since Fall\'s own fallSkip/fallSkipCost never calls Game.skipState and can never write this value',
+  cssRule('.plot[data-skip="held"] .skip-chip,.fl-plot[data-skip="held"] .fl-skip') === '' && heldChipRuleSrc !== '',
+  heldChipRuleSrc);
+check('the "no" (unaffordable) rule is untouched — same selector, same two declarations it had before tonight',
+  noChipRuleSrc.replace(/\s+/g, '') === 'background:#e6e0d8;opacity:.65', noChipRuleSrc);
+check('the held rule is a real, distinct colour treatment rather than "no" copy-pasted under a new name, and spends no new raw hex',
+  heldChipRuleSrc.replace(/\s+/g, '') !== noChipRuleSrc.replace(/\s+/g, '')
+  && /paper-dim/.test(heldChipRuleSrc) && !/#[0-9a-fA-F]{3,8}/.test(heldChipRuleSrc),
+  `held: ${heldChipRuleSrc} | no: ${noChipRuleSrc}`);
+check('the chip-visible rule still keys on the attribute\'s mere presence, not an enumerated list of values, so "held" is shown for free with no display rule of its own',
+  anyChipRuleSrc.replace(/\s+/g, '') === 'display:inline-flex', anyChipRuleSrc);
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

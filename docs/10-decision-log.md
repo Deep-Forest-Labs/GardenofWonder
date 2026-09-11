@@ -132,6 +132,28 @@ shape of sabotage 1 in tonight's sim-test group); and doing nothing until the go
 prize-frequency fault was already proven and already had an owner-picked shape — the gold measurement
 sharpens shapes 2 and 3's tradeoff for the morning, it does not gate shipping shape 1 tonight).
 
+**The chip explains itself, added 2026-09-10 (same date, third build of this item, after `#27` landed
+its own rebuild of this exact corner of `renderPlots()`).** `skipState(idx)`'s engine surface went
+unread by any chip when it shipped above; this closes that gap. The gem chip gets a third
+`data-skip="held"` look in `style.css` — its own colour treatment, reusing the `--paper-dim-2` /
+`--paper-dim-edge` tokens the rest of the file already spends on "not available right now" rather
+than inventing a fourth grey — instead of folding the sky-blocked case into the existing
+`data-skip="no"` (unaffordable) look, since the two refusals are different facts a player is owed
+different reasons for. The chip **stays on screen**: `#11` (09-03 round) hid chips with nothing left
+to do, and this one still works the instant the sky clears or the booked moment passes, so hiding it
+would misstate what is actually true. A tap spends nothing and names the specific sky in the
+glossary's own words — *"Not under a storm — a catch is for waiting out."* for the storm, with a
+parallel line for rain, aurora and Wonderfall (rain is in that set on purpose: the same generic gate
+that reaches it above reaches it here) — matching `weatherTip()`'s plain, factual register rather
+than the talking flower's exclamations, so the two surfaces never read as two different voices
+explaining the same sky. Verified live with `tools/probe.js`: sky held by `Game.Dev.setWeather()` and
+the plant's own `mutateAt` pinned by hand so the natural per-tick resolution — a real, separately
+already-tested reversion path in its own right — could not race the check and confound which cause
+produced which result. The chip dimmed and named the sky; a tap moved no gems, produced no catch, and
+changed nothing on screen; and the identical chip returned to its ordinary look, with a tap that
+worked exactly as before, the instant the sky was set back to `clear` — `mutateAt` itself untouched by
+that change, so the reversion is provably the sky's doing and nothing else's.
+
 **The owner made two calls today, and both are his.** First, doc 39's fork is closed: **the stakes
 stay.** Second, the genre's generosity promise — doc 39's *"Crops never die. Miss a week?
 Everything's right where you left it"* — is retired, and so is the habit of holding the game to

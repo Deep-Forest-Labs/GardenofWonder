@@ -184,6 +184,38 @@
     return spoken ? `${m} minute${m === 1 ? '' : 's'}` : `${m}m`;
   }
 
+  /* THE THIRD ANSWER SAYS WHY, punch list #26. A chip that dims and does
+     nothing with no reason reads as broken; this one names the specific sky
+     and says the glossary's own word for what it is holding — never
+     "mutation" — with no odds or multiplier in it, because those belong to
+     the sky's own tooltip (weatherTip() below) and repeating them here would
+     be two sources of truth for one number. Register matches that tooltip's
+     own — plain and factual — rather than the talking flower's exclamations
+     (FLOWER_LINES.storm et al.): this line explains a rule, it is not the
+     flower being delighted by weather.
+
+     The noun each sky gets is the one every OTHER sentence in this file
+     already uses for it, not DATA.weather's own `name`: storm and aurora stay
+     lower-case common nouns ("Thunderstorm" is a card title, not something
+     you'd say mid-sentence), Wonderfall keeps the capital every sentence about
+     it already spends, and rain reads as weather rather than an event. Rain is
+     in the table on purpose — the generic gate Game.skipState() reads also
+     catches Dewkissed, the fourth sky the punch list's own driven table never
+     sampled (see docs/10-decision-log.md, 2026-09-10). `sky` is always one of
+     these four while `state` reads 'held' (skipState() only sets `sky` when a
+     mutation is on the sky it names), so the fallback below is unreachable
+     today and exists only so a fifth sky added later fails soft, in words,
+     rather than printing "undefined". */
+  function skipHoldLine(sky) {
+    const clause = {
+      rain: 'in the rain',
+      storm: 'under a storm',
+      aurora: 'under an aurora',
+      wonderfall: 'under a Wonderfall'
+    }[sky] || 'under this sky';
+    return `Not ${clause} — a catch is for waiting out.`;
+  }
+
   function renderPlots() {
     for (let i = 0; i < 8; i += 1) {
       const cell = S.grid[i];
@@ -225,15 +257,32 @@
          when it changed. */
       const skip = state === 'grow' ? Game.skipSaving(i) : null;
       const skipGems = skip ? skip.gems : 0;
-      const skipOk = skipGems && S.gems >= skipGems ? 'ok' : 'no';
-      if (c.skipGems !== skipGems || c.skipOk !== skipOk) {
+      /* A THIRD ANSWER sits beside afford / can't-afford, punch list #26:
+         Game.skipState() names it 'held' when the plant's own booked moment
+         sits under a sky that carries a catch — refused outright, not merely
+         expensive, so it earns its own dimmed state instead of folding into
+         "no" (which stays exactly what it always meant: a real cost the
+         wallet can't cover). Reading it here rather than comparing S.gems
+         ourselves is also the "no" case's own economy math handed back to
+         game.js, where docs/09's layering rule says it belongs.
+
+         `sky` rides in the cache key too — not just skipGems/skipMode — since
+         a bought weather call can reshuffle a growing plant's mutateAt onto a
+         different sky without moving its price, and a stale aria-label naming
+         the wrong sky is worse than the one extra comparison. */
+      const skState = skipGems ? Game.skipState(i) : null;
+      const skipMode = !skState ? '' : skState.state === 'unaffordable' ? 'no' : skState.state === 'held' ? 'held' : 'ok';
+      const skipSky = skState ? skState.sky || '' : '';
+      if (c.skipGems !== skipGems || c.skipMode !== skipMode || c.skipSky !== skipSky) {
         c.skipGems = skipGems;
-        c.skipOk = skipOk;
+        c.skipMode = skipMode;
+        c.skipSky = skipSky;
         if (skipGems) {
           v.skipNum.textContent = fmt(skipGems);
-          v.skip.setAttribute('aria-label',
-            `Finish now for ${fmt(skipGems)} gem${skipGems === 1 ? '' : 's'}, saving ${skipWait(Math.ceil(skip.seconds), true)}`);
-          v.root.dataset.skip = skipOk;
+          v.skip.setAttribute('aria-label', skipMode === 'held'
+            ? skipHoldLine(skipSky)
+            : `Finish now for ${fmt(skipGems)} gem${skipGems === 1 ? '' : 's'}, saving ${skipWait(Math.ceil(skip.seconds), true)}`);
+          v.root.dataset.skip = skipMode;
         } else {
           delete v.root.dataset.skip;
         }
@@ -1107,6 +1156,21 @@
   function onSkipTap(idx) {
     const cost = Game.skipCost(idx);
     if (!cost) return;
+    /* Checked before the wallet, not after: a held skip is refused for a
+       reason that has nothing to do with what is in the pouch, and the two
+       refusals need two different sentences. Game.skipGrow() itself never
+       gets called on this path, so nothing here relies on trusting its
+       null return to mean "held" — the chip already knows why. */
+    const st = Game.skipState(idx);
+    if (st.state === 'held') {
+      Sound.play('deny');
+      FX.shake(4);
+      const v = plotEls[idx];
+      const c = FX.centerOf(v.root);
+      FX.float(c.x, c.y - 8, skipHoldLine(st.sky), '');
+      FX.haptic(4);
+      return;
+    }
     if (S.gems < cost) {
       Sound.play('deny');
       FX.shake(4);

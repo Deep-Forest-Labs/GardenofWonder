@@ -719,6 +719,13 @@ and letting the bloom overflow it, were both rejected — see `10-decision-log.m
 gem chip's own size is unchanged and is `#26`'s to move (a colour treatment, not a resize), not
 this item's.
 
+**`#26` shipped that colour treatment the same day.** A third `data-skip="held"` value sits beside
+the existing `ok` / `no`, styled in its own rule off the `--paper-dim-2` / `--paper-dim-edge` tokens
+this file's other "not available right now" surfaces already use, rather than a fourth grey or a
+resize of the box measured above. Box, icon and price stay exactly as built here; only the fill and
+the border change, plus the `aria-label` and a floated line on tap. The behaviour and the wording are
+`03-systems.md`'s to own; the reasoning is dated in `10-decision-log.md`.
+
 ### The replant chip's own size — measured against the marker it shares the plot with
 
 The chip is `[cycle-arrows icon][the seed's own bloom][gold price]` in a row, and it grows to fit

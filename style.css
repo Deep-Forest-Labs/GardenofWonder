@@ -673,6 +673,20 @@ button:focus-visible{
 }
 .plot[data-skip] .skip-chip,.fl-plot[data-skip] .fl-skip{display:inline-flex}
 .plot[data-skip="no"] .skip-chip,.fl-plot[data-skip="no"] .fl-skip{background:#e6e0d8;opacity:.65}
+/* A third answer, punch list #26 (2026-09-10): 'held' means a sky carrying a
+   catch is sitting on this plant's own booked moment, not that gems are
+   short — Summer's own colour treatment, not a resize (the box, the icon and
+   the price stay exactly as built above). Never `.fl-plot`/`.fl-skip`: Fall's
+   own two-value gate is unrelated code (fallSkipCost/fallSkip, ui-fall.js)
+   that never reads Game.skipState() and can never write this value, so
+   giving it the selector here would claim a state Fall cannot reach.
+   `--paper-dim-2`/`--paper-dim-edge` already mean "not available right now"
+   everywhere else in this file (the locked seed row, a muted toggle, a
+   napping creature) — reused rather than inventing a fourth grey, and
+   recolouring the border along with the fill is what actually reads as
+   different from the "no" state above at this chip's own tiny size, where
+   `opacity` alone would barely show against `#e6e0d8`. */
+.plot[data-skip="held"] .skip-chip{background:var(--paper-dim-2);border-color:var(--paper-dim-edge);opacity:.65}
 .skip-chip svg,.fl-skip svg{width:11px;height:11px}
 /* The clamp outlives the wait it was written for. Landscape is not a supported
    orientation and collapses the board to ~100px, where a 34px chip is wider

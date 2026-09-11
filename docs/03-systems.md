@@ -330,6 +330,15 @@ for the exposure design this closes the gap in, and the 2026-09-10 entry in
 [10-decision-log.md](10-decision-log.md) for the three shapes considered and why this one shipped
 tonight.
 
+**The chip itself stays on screen for `held`, added 2026-09-10 (same day, second commit).** Hiding a
+chip that does nothing was the 09-03 round's own #11 ruling for a chip with nothing left to do; this
+one still works the instant the sky clears or the booked moment passes, so `renderPlots()` in `ui.js`
+reads `skipState(idx)` and gives it a third `data-skip="held"` look (its own colour treatment in
+`style.css`, not a resize) instead of folding it into the existing `data-skip="no"` (unaffordable)
+look. A tap in that state reaches `skipHoldLine(sky)` — never `Game.skipGrow()` — and spends nothing;
+the sentence it floats is the same one the chip's `aria-label` already carries, naming the specific
+sky in the glossary's own words ("a catch"), never "mutation".
+
 Implementation note: the skip **backdates `plantedAt`** rather than shrinking `grow`. A plant skipped
 the instant it went in has zero elapsed seconds, and any positive grow left it permanently one tick
 short of ripe.
