@@ -256,7 +256,18 @@ const Icons = (() => {
     petal: S(`
       <path d="M12 3.4c2.6 2.4 4 5 4 7.6a4 4 0 0 1-8 0c0-2.6 1.4-5.2 4-7.6Z" fill="#ff8fab"/>
       <path d="M12 11v9.4" stroke-width="2"/>
-      <path d="M12 15.4c-1.8-1.6-3.4-2-5-1.6.4 2 1.8 3.2 5 3.4Z" fill="#57c15b" stroke-width="1.4"/>`)
+      <path d="M12 15.4c-1.8-1.6-3.4-2-5-1.6.4 2 1.8 3.2 5 3.4Z" fill="#57c15b" stroke-width="1.4"/>`),
+    /* The replant chip, punch-list #27 — two arcs chasing each other rather than
+       a single stroked circle, because the set's own recorded trap is real: a
+       thin ring reads as a smudge at 11-13px. The arcs carry a 3.6 stroke (the
+       `menu` bars' own answer to the same trap) and each arrowhead is a small
+       flat FILL, not a line, so the shape holds even where a hairline would
+       vanish. */
+    cycle: S(`
+      <path d="M5.04 9.47A7.4 7.4 0 0 1 18.96 9.47" fill="none" stroke-width="3.6"/>
+      <path d="M18.96 14.53A7.4 7.4 0 0 1 5.04 14.53" fill="none" stroke-width="3.6"/>
+      <path d="M19.9 6.6 21.6 11.1 17.1 9.9Z" fill="#8ce99a" stroke-width="1.6"/>
+      <path d="M4.1 17.4 2.4 12.9 6.9 14.1Z" fill="#a5d8ff" stroke-width="1.6"/>`)
   });
 
   /* Only where a developer is looking. There is no build step to strip a branch,

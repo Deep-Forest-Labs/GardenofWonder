@@ -5,6 +5,80 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-10 (punch list #27) — The replant chip becomes a real button, and the shared pill rule splits
+
+**The complaint.** The owner: *"The replant button on the bottom right is a little small and
+doesn't really feel like a button... it essentially looks like a replant icon with the flower that
+it's replanting (the actual bud of the flower), similar to what you see when you're actually
+selecting a flower from choosing a seed."* Driven measurement backed both halves of that: the chip
+was 41×22 (22px tall — half the 44px touch minimum this game's own HUD comment cites), and its only
+mark was a generic sprout beside a bare price, on a plot with nothing else naming the seed. Full
+write-up in [43-punch-list.md](43-punch-list.md#27)'s own `#27` item; this entry is the ruling.
+
+**Built exactly to the owner's drawing: a rounded rectangle holding two marks side by side — cycle
+arrows, then the seed's own bloom — still showing the price, still bottom-right, still dimming when
+unaffordable.** The bloom is `Flora.head(seed, 26)`, the exact call the seed picker makes, so the
+two art sources can never disagree; `Game.replantSeed(idx)` was confirmed (re-read, not trusted from
+the brief alone) to already hand back the seed definition alongside the cost, so no second lookup
+was needed.
+
+**THE SPLIT.** The gem chip (`.skip-chip`/`.fl-skip`) and the replant chip were one shared CSS rule,
+differing only in corner and currency, since `data-skip` and `data-replant` can never both be true on
+one plot. A 26×26 bloom is taller than the *entire* old chip, so holding it meant growing past what
+the gem chip needs — `.replant-chip` now has its own rule. **Rejected: widening both chips
+together**, which would have grown `#26`'s gem chip for a reason that has nothing to do with it (its
+own queued change is a colour treatment, not a resize) and quietly recoupled two controls the punch
+list itself says should differ in "which corner, and which currency" — and nothing else. **Rejected:
+pinning the replant chip to the gem chip's old 22px height** and letting the bloom overflow the box,
+which is the visual bug this item exists to fix, reintroduced on purpose.
+
+**THE ICON.** `graft grep` (and a plain grep, since a miss there is a sample not a proof) found no
+existing cycle/refresh/repeat/loop/arrows glyph in `icons.js`, so one was drawn: `cycle`, two arcs
+chasing each other with a small flat-filled arrowhead on each, added inside the existing
+`Object.assign(LIB, {…})` block — the documented SAFE half of `icons.js`'s two-part shape (HANDOFF,
+"an icon added... in the second `Object.assign` block" trap; the dangerous half is restructuring the
+declaration shape itself, not this). Built at a heavy 3.6 stroke rather than the set's default 2,
+matching `menu`'s own recorded answer to the same trap ("a stroked hairline vanishes" at the small
+sizes this chip needs) rather than inventing a new mitigation. `node tools/export-icons.js` and
+`--check` both ran clean; the regenerated manifest and the new `art/exports/icons/cycle.svg` ship in
+this commit.
+
+**THE SIZE — measured, and the brief's own assumption did not survive contact with the plot.** The
+punch list expected 44px to be achievable "wherever the plot allows it," falling back to "no lower
+than 36px" only "if a 44px-tall chip meets the marker on the smallest tile." Driven measurement
+found the real budget is smaller than either number, **at every tested size, not only the
+smallest**: the plant-here marker (`#12`, centred in the same empty plot) leaves only ~31px of clear
+plot below it at 390×844 — the *largest* size this game supports — down to essentially nothing
+(~4px) in landscape. A flat 36px floor would still have met the marker at 360×780 (measured overlap:
+0.6px, confirmed live before the coefficient below was tuned down to clear it). Rather than ship the
+brief's assumed number unmeasured, the bloom and the icon are sized with `min(px, vh)` — continuously
+off the viewport's own height, which is what the marker's own budget actually shrinks with — tuned
+down until a real screenshot cleared the marker with 1.7–3.3px to spare at 390×844, 360×780 and
+320×568. The visible chip is therefore smaller than 44px everywhere it ships (24–31px tall
+depending on viewport); a `::before` at `inset:-6px` — `.fl-collect`'s own halo mechanism, reused
+with no visible fill — restores the actual tap target without moving the corner the chip reads from,
+confirmed live (`elementFromPoint()` on a point outside the visible chip still resolves to it).
+
+**Landscape: accepted, not solved, and said so rather than quietly shipped.** At 844×390 the plot is
+~31px and the marker alone already occupies most of it, centred — no legible chip clears it there,
+and `min(px, vh)` asymptotes toward the marker's own footprint rather than past it. What the punch
+list's own "true after the fix" actually names for that orientation — "still fits inside its tile in
+landscape" — **is** met: the chip's own rect sits entirely inside its plot's rect at 844×390
+(measured), which the gem chip and Fall's chip still do not (pre-existing, unchanged, out of scope
+tonight — see `11-known-issues.md`). Rejected: quietly shrinking the marker itself, or moving the
+chip off the corner, to manufacture a landscape "clear" that would then read as a decision nobody
+made about `#12`'s own shared glyph or the drawing's own "bottom right" instruction.
+
+**Style-check.** `tools/style-check.js --strict` diffed the same before and after: 145 distinct
+hex colours, unchanged — the occurrence count rose by exactly one (`#e6e0d8`, the existing
+unaffordable-dim colour, now written on its own line instead of a shared one), which is the
+documented re-baseline case, not new debt. `--update-baseline` re-recorded it.
+
+**Filed nowhere for the morning** — nothing here was left for the owner to decide; the marker
+clearance and the landscape limitation are measured facts, not a fork.
+
+---
+
 ## 2026-09-10 (punch list #26) — The gem skip is refused, not forfeited, under any sky with a catch
 
 **The bug, in one line: `skipGrow()`'s neutrality about *which* mutation a hurried plant catches was

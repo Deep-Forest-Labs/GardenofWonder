@@ -3166,7 +3166,14 @@ const farmSky = (sky, seedId, cycles) => {
   S.credits = 1e12;
   S.gems = 1e6;
   const seed = G.seedById(seedId);
-  if (sky !== 'clear') G.Dev.setWeather(sky);
+  /* Pinned even for 'clear' — found flaky tonight (2026-09-10, `#27`'s own
+     verification pass, not this group's). Leaving 'clear' un-pinned meant
+     "whatever the ambient clock-hashed sky happens to be", which the OTHER
+     four rows never do, and it occasionally rolled a real catch-carrying sky
+     mid-loop — the exact same class of flake this file's own "skipping takes
+     the gems and makes it ripe" check hit for the same reason, a few lines
+     above this group. Same fix: ask for the sky a check wants, explicitly. */
+  G.Dev.setWeather(sky);
   let caught = 0;
   let skips = 0;
   let gemsSpent = 0;
@@ -12625,6 +12632,86 @@ check('all four rooms emit the shared plantSpot icon',
   drifted(roomSrc, (src) => /(Icons\.get|ico)\('plantSpot'\)/.test(src)));
 check('and no hand-drawn copy of it survives in the art modules',
   !/mw-socket-ring|emptyCell/.test(fs.readFileSync(path.join(ROOT, 'meadow.js'), 'utf8')));
+
+/* ---------------------------------------------------------------------------
+   PUNCH LIST #27 — the replant chip names the flower it will plant
+
+   ui.js and style.css cannot be loaded headless (docs/09's own Testing
+   section), so this group reads them as TEXT, the same idiom the marker group
+   just above it uses — a scrape guard first (a moved anchor returns '' and
+   every regex under it would go vacuously green), then the exact facts this
+   punch-list item asked for. What this group CANNOT see — the bloom's real
+   pixel size, whether it clears the plant-here marker, whether the chip
+   overhangs a real landscape tile — needed a browser: driven with
+   tools/probe.js at 390x844, 360x780, 320x568 and 844x390 (landscape), the
+   marker and the chip never share a pixel at any of the three portrait sizes
+   (2.75-3.34px to spare), and the chip's own rect stays inside its plot's
+   rect at all four. Landscape is the one size that cannot clear the marker
+   too — the plot itself is ~31px and the marker alone is already most of
+   that, centred, before this chip's corner even starts — recorded in
+   docs/10's dated entry rather than asserted here as a browser-only fact. */
+group('punch list #27 — the replant chip carries the seed\'s own bloom, not just a price');
+
+const replantButtonSrc = (uiSrc.match(/<button class="replant-chip".*?<\/button>/) || [''])[0];
+check('the replant chip\'s markup was actually found in buildGarden()',
+  replantButtonSrc.length > 40, `${replantButtonSrc.length} chars: ${replantButtonSrc}`);
+/* SABOTAGE, confirmed by hand: reverting `Icons.get('cycle')` to the old
+   `Icons.get('sprout')` here turns this check red, and putting `sprout` back
+   turns the ORPHAN check below (in export-icons' own manifest scan) silent
+   instead — the two would have to be broken together to slip past both. */
+check('it draws the cycle-arrows mark, not the old generic sprout',
+  /Icons\.get\('cycle'\)/.test(replantButtonSrc) && !/Icons\.get\('sprout'\)/.test(replantButtonSrc),
+  replantButtonSrc);
+check('and it carries a bloom slot and a price slot as two separate spans',
+  /class="rp-bloom"/.test(replantButtonSrc) && /class="rp-num"/.test(replantButtonSrc),
+  replantButtonSrc);
+
+const rpBlockSrc = uiSrc.slice(
+  uiSrc.indexOf("const rp = state === 'empty'"),
+  uiSrc.indexOf('const mut = cell.mutation'));
+check('the renderPlots() slice that keys the replant chip was actually found',
+  rpBlockSrc.length > 200 && rpBlockSrc.length < 1200, `${rpBlockSrc.length} chars`);
+/* SABOTAGE, confirmed by hand: changing the call to `Flora.head(rp.seed, 44)`
+   (the picker's OTHER size, `renderPicker`'s own 34, or dropping the call for
+   a hand-built <svg> of the old sprout) turns this red — it pins the exact
+   call, not merely that Flora is mentioned somewhere in the slice. */
+check('the bloom comes from Flora.head(seed, 26) — the exact call the seed picker makes, so the two art sources can never disagree',
+  /Flora\.head\(rp\.seed,\s*26\)/.test(rpBlockSrc), rpBlockSrc);
+/* SABOTAGE, confirmed by hand: reverting the label to the old
+   "Plant another ${rp.seed.name} for..." wording still passes this (the seed
+   name is still there, which is the fact this item's "true after the fix"
+   actually asks for) — but deleting `${rp.seed.name}` entirely, or building
+   the label from `rpSeed` (the bare id) instead of `rp.seed.name`, turns it
+   red, which is the realistic wrong version: a label that still LOOKS
+   populated ("Replant for 110 gold") but never says which flower. */
+check('the aria-label names the seed by its real name, not just its price',
+  /aria-label',\s*`Replant \$\{rp\.seed\.name\} for \$\{fmt\(rp\.cost\)\} gold`\)/.test(rpBlockSrc),
+  rpBlockSrc);
+/* The bloom write sits behind its OWN key (rpSeed alone), nested inside the
+   wider price/afford key — an afford flip on the same remembered seed must
+   not re-parse the <svg>. Driven proof that the live node survives untouched
+   across real ticks is in this stage's own build report; this pins the
+   source shape that makes it true. */
+check('the bloom is written only behind an rpSeed-only check, nested inside the wider price/afford key — not on every pass through it',
+  /if \(c\.rpSeed !== rpSeed\) \{\s*\n\s*v\.replantBloom\.innerHTML/.test(rpBlockSrc), rpBlockSrc);
+
+/* THE SHARED PILL, SPLIT. Two checks: the gem chip's own rule no longer names
+   the replant chip at all (so a future edit to one cannot silently resize the
+   other), and the replant chip still carries the clamp that keeps any of
+   these three chips off the neighbouring tile in landscape. */
+const skipChipRuleSrc = (cssSrc.match(/\.skip-chip,\.fl-skip\{[^}]*\}/) || [''])[0];
+check('the gem chip kept its own rule, no longer combined with the replant chip',
+  skipChipRuleSrc.length > 20 && !/replant/.test(skipChipRuleSrc), skipChipRuleSrc);
+const replantChipRuleSrc = (cssSrc.match(/\.replant-chip\{[^}]*\}/) || [''])[0];
+check('the replant chip was actually found in style.css as its own rule',
+  replantChipRuleSrc.length > 20, replantChipRuleSrc);
+/* SABOTAGE, confirmed by hand: deleting this declaration (or widening it to
+   the landscape board's own ~100px) lets a real landscape screenshot show the
+   chip overhanging its tile — docs/43's own recorded shape for this exact
+   mistake — while every check above it stays green, since none of them
+   render anything. */
+check('and it still carries the clamp that holds every plot chip to its own tile in landscape',
+  /max-width:calc\(100% - 10px\)/.test(replantChipRuleSrc), replantChipRuleSrc);
 
 
 /* ---------------------------------------------------------------------------

@@ -67,7 +67,7 @@
         <div class="lucky-badge">${Icons.get('ladybug')}</div>
         <button class="skip-chip" type="button" aria-label="Finish this plant with gems">${Icons.get('gem')}<span></span></button>
         <button class="pack-drop" type="button" aria-label="Collect a card pack">${Icons.get('cards')}</button>
-        <button class="replant-chip" type="button" aria-label="Plant the same seed again">${Icons.get('sprout')}<span></span></button>`;
+        <button class="replant-chip" type="button" aria-label="Replant the same seed again">${Icons.get('cycle')}<span class="rp-bloom"></span><span class="rp-num"></span></button>`;
       $('.pack-drop', b).addEventListener('pointerdown', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -101,7 +101,8 @@
         pack: $('.pack-drop', b),
         skipNum: $('.skip-chip span', b),
         replant: $('.replant-chip', b),
-        replantNum: $('.replant-chip span', b),
+        replantBloom: $('.replant-chip .rp-bloom', b),
+        replantNum: $('.replant-chip .rp-num', b),
         lucky: $('.lucky-badge', b),
         cache: {}
       };
@@ -245,11 +246,20 @@
       const rpSeed = rp ? rp.seed.id : '';
       const rpOk = rp && rp.afford ? 'ok' : 'no';
       if (c.rpSeed !== rpSeed || c.rpOk !== rpOk) {
+        /* The bloom is the one part of this chip that is expensive to redraw —
+           a small <svg> subtree, not a text node — so it is keyed on rpSeed
+           ALONE, read before the cache field below overwrites it. An afford
+           flip alone (same remembered seed) must not force a fresh parse; the
+           price and the label are cheap enough to just re-set every time this
+           wider key changes, exactly as they always have. */
+        if (c.rpSeed !== rpSeed) {
+          v.replantBloom.innerHTML = rpSeed ? Flora.head(rp.seed, 26) : '';
+        }
         c.rpSeed = rpSeed;
         c.rpOk = rpOk;
         if (rpSeed) {
           v.replantNum.textContent = fmt(rp.cost);
-          v.replant.setAttribute('aria-label', `Plant another ${rp.seed.name} for ${fmt(rp.cost)} gold`);
+          v.replant.setAttribute('aria-label', `Replant ${rp.seed.name} for ${fmt(rp.cost)} gold`);
           v.root.dataset.replant = rpOk;
         } else {
           delete v.root.dataset.replant;

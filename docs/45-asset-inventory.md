@@ -78,6 +78,7 @@ only evidence it is used at all, and the table attributes it to the table that h
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/close.svg" width="26" height="26" alt="close"> | `close` | `0 0 24 24` | `index.html` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/clover.svg" width="26" height="26" alt="clover"> | `clover` | `0 0 24 24` | `ui-hollow.js`, `ui-sheet.js`, `CARD_MOTIFS`, `CREATURE_FOOD`, `DATA.boosters`, `DATA.upgrades`, `GOODS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/coin.svg" width="26" height="26" alt="coin"> | `coin` | `0 0 24 24` | `index.html`, `ui-meadow.js`, `ui-sheet.js`, `ui.js`, `DATA.boosters` |
+| <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/cycle.svg" width="26" height="26" alt="cycle"> | `cycle` | `0 0 24 24` | **not referenced anywhere** |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/decor.svg" width="26" height="26" alt="decor"> | `decor` | `0 0 24 24` | `index.html`, `ui-hollow.js`, `ui.js`, `ui-hollow.js DOCK`, `ui-menu.js ROWS` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/drone.svg" width="26" height="26" alt="drone"> | `drone` | `0 0 24 24` | `ui-sheet.js`, `DATA.boosters`, `DATA.upgrades` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/drop.svg" width="26" height="26" alt="drop"> | `drop` | `0 0 24 24` | `DATA.upgrades`, `ui-sheet.js AUDIO_CHANNELS` |
@@ -122,7 +123,7 @@ only evidence it is used at all, and the table attributes it to the table that h
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/video.svg" width="26" height="26" alt="video"> | `video` | `0 0 24 24` | `ui-sheet.js` |
 | <img src="https://deep-forest-labs.github.io/GardenofWonder/art/exports/icons/wax.svg" width="26" height="26" alt="wax"> | `wax` | `0 0 24 24` | `ui-sheet.js` |
 
-_56 icons, all exported to [`art/exports/icons/`](../art/exports/icons). 1 of them (`flask`) is drawn by no code in the game today — either a glyph waiting for its feature, or dead weight not worth porting._
+_57 icons, all exported to [`art/exports/icons/`](../art/exports/icons). 2 of them (`cycle`, `flask`) are drawn by no code in the game today — either a glyph waiting for its feature, or dead weight not worth porting._
 
 <!-- END ICON MANIFEST -->
 

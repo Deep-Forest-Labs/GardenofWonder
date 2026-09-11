@@ -661,7 +661,7 @@ button:focus-visible{
 /* Farm-game convention: the cost of hurrying a plant sits on the plant, always visible, so the
    option teaches itself rather than hiding behind a long-press nobody finds. Fall's crops carry
    the same chip in the same corner (`.fl-skip`) — one object, one place, so it is learned once. */
-.skip-chip,.fl-skip,.replant-chip{
+.skip-chip,.fl-skip{
   position:absolute;top:5px;right:5px;z-index:4;
   display:none;align-items:center;gap:2px;
   padding:2px 6px 2px 4px;border-radius:999px;
@@ -671,25 +671,76 @@ button:focus-visible{
   box-shadow:0 2px 0 var(--ink-2);
   touch-action:manipulation;
 }
-/* THE OTHER CORNER, AND THE SAME PILL. The gem chip and the replant chip are the
-   same object on the same tile and can never be on it together — `data-skip` is
-   written only while a plant is growing, `data-replant` only while the plot is
-   empty — so they share every dimension, the ink border, the lip and the press,
-   and differ in the two things that actually differ: which corner, and which
-   currency. The growth bar owns this corner in every state but the one this chip
-   appears in, where it is display:none. */
-.replant-chip{top:auto;bottom:5px;background:var(--paper)}
-.plot[data-skip] .skip-chip,.fl-plot[data-skip] .fl-skip,.plot[data-replant] .replant-chip{display:inline-flex}
-.plot[data-skip="no"] .skip-chip,.fl-plot[data-skip="no"] .fl-skip,.plot[data-replant="no"] .replant-chip{background:#e6e0d8;opacity:.65}
-.skip-chip svg,.fl-skip svg,.replant-chip svg{width:11px;height:11px}
-/* The clamp outlives the wait it was written for, and now holds both chips.
-   Landscape is not a supported orientation and collapses the board to ~100px,
-   where a 34px chip is wider than the 31px tile it labels — so the chip is held
-   to its plot and kept on one line, which is the difference between a chip that
-   overhangs and one that reflows the tile under it. */
-.skip-chip,.fl-skip,.replant-chip{white-space:nowrap;max-width:calc(100% - 10px)}
-.skip-chip:active,.fl-skip:active,.replant-chip:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
-@media (max-height:600px){ .skip-chip,.fl-skip,.replant-chip{padding:1px 5px 1px 3px;font-size:9px} }
+.plot[data-skip] .skip-chip,.fl-plot[data-skip] .fl-skip{display:inline-flex}
+.plot[data-skip="no"] .skip-chip,.fl-plot[data-skip="no"] .fl-skip{background:#e6e0d8;opacity:.65}
+.skip-chip svg,.fl-skip svg{width:11px;height:11px}
+/* The clamp outlives the wait it was written for. Landscape is not a supported
+   orientation and collapses the board to ~100px, where a 34px chip is wider
+   than the 31px tile it labels — so the chip is held to its plot and kept on
+   one line, which is the difference between a chip that overhangs and one
+   that reflows the tile under it. `.replant-chip` carries the same clamp on
+   its own rule below, unchanged, rather than sharing this selector list. */
+.skip-chip,.fl-skip{white-space:nowrap;max-width:calc(100% - 10px)}
+.skip-chip:active,.fl-skip:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
+@media (max-height:600px){ .skip-chip,.fl-skip{padding:1px 5px 1px 3px;font-size:9px} }
+
+/* ONCE THE SAME PILL AS THE GEM CHIP ABOVE — split 2026-09-10 (punch list #27).
+   Until tonight `.replant-chip` was that shared rule plus one override line:
+   `data-skip` is written only while a plant is growing and `data-replant` only
+   while the plot is empty, so the two chips could never stand on one tile
+   together and sharing every dimension cost nothing. That held exactly as
+   long as this chip was a price label. The owner's drawing asked it to also
+   carry the seed's own bloom — `Flora.head(seed, 26)`, the exact art the seed
+   picker draws — and a 26x26 bloom is taller than the *entire* old chip, so
+   the shared object had to end here: the gem chip's box above is UNCHANGED
+   (its own next state is a colour treatment, not a resize), and this one
+   grows to hold an icon and a bloom side by side, in its own rule.
+
+   THE SIZE IS MEASURED, NOT THE 44px A CORNER CONTROL WOULD DEFAULT TO. The
+   plant-here marker (`.empty-mark`, #12) sits centred in the same empty plot
+   this chip occupies, and driven measurement (390x844) puts only ~31px of
+   clear plot between the marker's own bottom edge and the plot's own bottom
+   inset — before this chip even starts. A 44px-tall box anchored to the
+   corner would reach back INTO the marker at every tested size, not only the
+   smallest, so the bloom and the icon scale with `min(px, vh)` — continuously,
+   off the viewport's own height, rather than one more breakpoint — and were
+   tuned down until a real screenshot cleared the marker at all four required
+   sizes with a few pixels to spare. Landscape (~3px of the same budget) is
+   the one size that cannot clear it at any legible size; that box still holds
+   the pre-existing `max-width` clamp so it stays inside its own tile, which
+   is the requirement docs/43 actually states for that orientation. The visual
+   box is therefore smaller than 44px everywhere it ships; `::before` below
+   restores the tap target without moving the corner it reads from. */
+.replant-chip{
+  position:absolute;right:2px;bottom:2px;z-index:4;
+  display:none;align-items:center;gap:4px;
+  padding:3px 8px 3px 6px;border-radius:var(--r-sm);
+  border:2px solid var(--ink);
+  background:var(--paper);
+  font-weight:900;color:var(--ink);line-height:1.2;
+  font-size:min(11px, 1.5vh);
+  box-shadow:0 2px 0 var(--ink-2);
+  touch-action:manipulation;
+  white-space:nowrap;max-width:calc(100% - 10px);
+}
+/* The extended hit area, same mechanism `.fl-collect`'s halo rides (a ::before
+   at a negative inset, painted behind the button's own opaque background via
+   z-index so it changes nothing inside the visible box) borrowed for a
+   different job: not a glow, just more finger past the ink border. No
+   `overflow` is set on `.replant-chip` itself — clipping it here is exactly
+   what would clip this back off. */
+.replant-chip::before{
+  content:'';position:absolute;inset:-6px;z-index:-1;
+}
+.plot[data-replant] .replant-chip{display:inline-flex}
+.plot[data-replant="no"] .replant-chip{background:#e6e0d8;opacity:.65}
+/* The cycle-arrows mark, direct child of the button — the bloom below is
+   nested inside `.rp-bloom` instead, which is what keeps these two `svg`
+   rules from ever addressing the same element. */
+.replant-chip>svg{width:min(13px, 1.5vh);height:min(13px, 1.5vh);flex:none}
+.replant-chip .rp-bloom{display:flex;flex:none}
+.replant-chip .rp-bloom svg{width:min(22px, 2.5vh);height:min(22px, 2.5vh);display:block}
+.replant-chip:active{transform:translateY(2px);box-shadow:0 0 0 rgba(44,26,16,.35)}
 
 /* The welcome-back scene. Reads as a short account of what happened, not a receipt. */
 .away-lede{font-size:14px;font-weight:800;line-height:1.4;margin:2px 0 12px}

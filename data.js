@@ -727,7 +727,8 @@ const DATA = {
     {
       date: '2026-09-10',
       lines: [
-        'Finishing a flower early with gems no longer hands it a catch during Rain, a Thunderstorm, an Aurora or a Wonderfall — standing under that sky a while is the only way to earn one now.'
+        'Finishing a flower early with gems no longer hands it a catch during Rain, a Thunderstorm, an Aurora or a Wonderfall — standing under that sky a while is the only way to earn one now.',
+        'The button that replants your last flower is bigger now and shows that flower’s own bud, so you can tell what it will plant before you tap it.'
       ]
     },
     {

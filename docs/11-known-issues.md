@@ -368,8 +368,11 @@ The chips themselves do NOT overflow — this entry used to say they did, and th
 Re-measured 2026-09-03 at 844×390: every `.plot` and `.fl-plot` is 31.3px, and
 `max-width:calc(100% - 10px)` resolves against the tile's 25.3px padding box (the plot carries a 3px
 border), so **every chip is held to 15.3px and sits entirely inside its tile** — the garden's
-`.skip-chip`, the garden's `.replant-chip` and Fall's `.fl-skip` alike, on every plot, and the same
-holds at 667×375 and at 932×430 (38.6px tile, 22.6px chip). The clamp is doing its job. What it
+`.skip-chip` and Fall's `.fl-skip` alike, on every plot, and the same
+holds at 667×375 and at 932×430 (38.6px tile, 22.6px chip). *(The garden's `.replant-chip` was part
+of this same measurement until `#27` (2026-09-10) rebuilt it on its own rule with its own,
+content-driven width — no longer 15.3px at this size, and re-measured on its own terms in
+`08-ui-and-layout.md`'s own table.)* The clamp is doing its job. What it
 cannot do is make 15.3px enough: inside the chip the 11px gem or sprout glyph is crushed to **zero
 width** and the price overflows the pill's own background onto bare soil — a Pumpkin's chip spans
 370→385.3 while its "360" paints 377→392.2, so the last two digits sit on the earth beside the chip
@@ -729,6 +732,13 @@ rules, and therefore the same overhang; it is 41px in portrait at 390×844 again
 every supported size, and over the tile only in landscape, where every chip already is. Landscape is
 not a supported orientation for this game; all three stay clamped to `white-space: nowrap` and
 `max-width` so they hold one line rather than wrapping into the neighbouring plot.
+
+*Amended 2026-09-10 (`#27`):* the replant chip no longer inherits the shared rule at all — it grew
+to hold the seed's own bloom and was split into its own CSS rule, sized with `min(px, vh)` rather
+than a fixed pixel width. Measured live at 844×390, its own rect (18.0×19.8px) now sits **entirely
+inside** its 31.3×31.3px tile — the one of the three chips that no longer overhangs in landscape.
+The gem chip and Fall's chip are unchanged and still overhang exactly as this entry already
+describes; only the replant chip's own line above is superseded by this one.
 
 **The announcement art is a JPEG carrying a `.png` extension**, 692 KB at 1152×1728. Browsers sniff
 the content and render it, and the service worker stores whatever the server sends, so it works —

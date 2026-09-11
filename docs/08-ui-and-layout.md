@@ -672,7 +672,7 @@ Driven by `data-state` on each plot button:
 | State | Appearance |
 | --- | --- |
 | `locked` | Padlock and coin price; pulses when affordable (`data-afford="1"`). When a gate refuses the purchase the chip names **which** gate — `Turn 1` while the Garden Year holds plots 5–8, `Lv n` when the level is the binding one. `Game.plotGate(idx)` answers that, so the UI never has to re-derive the rule, and the deny float says the sentence (*After your first Turn*) that the chip only marks |
-| `empty` | Dashed plant-spot marker; bobs only during first-plant onboarding. If the plot remembers a seed, the **replant chip** sits in its bottom right — a sprout and that seed's gold price |
+| `empty` | Dashed plant-spot marker; bobs only during first-plant onboarding. If the plot remembers a seed, the **replant chip** sits in its bottom right — cycle-arrows, that seed's own bloom, and its gold price |
 | `grow` | Plant at its growth stage, progress bar beneath, gem skip chip top right |
 | `ready` | Full bloom, bouncing `!` badge, sweep shine |
 
@@ -688,11 +688,12 @@ and `data-replant` (sprout, bottom right) only in `empty`, so no plot ever wears
 **The pack drop is not part of that exclusion, and a plot can wear it alongside either.**
 `rollCardPack()` (`game.js:2523`) picks uniformly from every cell matching
 `!cell.locked && !cell.packDrop` and never looks at the plot's state at all, so `.has-pack` can land
-on a plot that is already showing a price chip. Measured live: plot 0 at `data-state="empty"`,
-`data-replant="ok"`, `.has-pack` on, with the replant chip and the pack badge both painting at
-40.9px. It costs nothing today, because the pack sits at top centre and the two price chips take
-the right-hand corners — but do not free a corner on the strength of "only one chip at a time".
-That holds for the price pair, not for all three.
+on a plot that is already showing a price chip. Measured live at 390×844: plot 0 at
+`data-state="empty"`, `data-replant="ok"`, `.has-pack` on, with the pack badge painting at
+41.8×41.8px top-centre and the (now much larger, `#27`) replant chip at 75×31px bottom-right —
+still clear of each other. It costs nothing today, because the pack sits at top centre and the two
+price chips take the right-hand corners — but do not free a corner on the strength of "only one
+chip at a time". That holds for the price pair, not for all three.
 
 The bottom-right corner **looks** occupied and is not: the growth bar runs straight through it, but
 `.plot[data-state="empty"] .bar` is `display:none`, so the one state that shows the replant chip is
@@ -706,9 +707,56 @@ refused. Do not
 "simplify" either chip to `click`; mixing the two is the recorded gesture trap in reverse.
 
 Visibility is `display` under a data attribute, never a class and never an animation — a badge that
-only exists once a keyframe has run is invisible with reduced motion on. Both chips share one CSS
-block by selector list (`.skip-chip,.fl-skip,.replant-chip`) and differ in exactly two declarations:
-which corner, and which currency's fill.
+only exists once a keyframe has run is invisible with reduced motion on.
+
+**The gem chip and Fall's chip still share one CSS rule** (`.skip-chip,.fl-skip`) and differ in
+exactly two declarations: which corner, and which currency's fill. **The replant chip does not
+share it anymore** — split into its own rule 2026-09-10 (`#27`), because the owner's drawing asked
+it to also carry the seed's own bloom (`Flora.head(seed, 26)`, the exact call the seed picker
+makes), and a 26×26 bloom is taller than the entire old chip. Widening both chips together, so the
+gem chip grew with it for no reason, and pinning the replant chip to the gem chip's own 22px height
+and letting the bloom overflow it, were both rejected — see `10-decision-log.md`'s dated entry. The
+gem chip's own size is unchanged and is `#26`'s to move (a colour treatment, not a resize), not
+this item's.
+
+### The replant chip's own size — measured against the marker it shares the plot with
+
+The chip is `[cycle-arrows icon][the seed's own bloom][gold price]` in a row, and it grows to fit
+that content rather than holding one fixed pixel size, because the plant-here marker (`.empty-mark`,
+`#12`) is centred in the same empty plot this chip has to fit beside. Driven measurement at 390×844
+puts only **~31px** of clear plot between the marker's own bottom edge and the plot's own bottom
+inset — before this chip's border and padding even start — well short of the 44px a corner control
+would default to, and the budget only shrinks at narrower or shorter viewports. So the bloom and
+the icon are sized with `min(px, vh)` — continuously, off the viewport's own height, rather than one
+more `max-height` breakpoint — tuned until a real screenshot cleared the marker with a few pixels to
+spare at every supported size:
+
+| Viewport | Plot | Chip | Marker svg | Clear of the marker? |
+| --- | --- | --- | --- | --- |
+| 390×844 | 110.1×110.1 | 75.1×31.1 | 31.2×31.2 | yes, 3.3px to spare |
+| 360×780 | 100.9×100.9 | 72.5×29.5 | 28.5×28.5 | yes, 1.7px to spare |
+| 320×568 | 88.7×88.7 | 60.6×24.2 | 24.8×24.8 | yes, 2.8px to spare |
+| 844×390 (landscape) | 31.3×31.3 | 18.0×19.8 | 7.6×7.6 | **no — overlaps by 7.6px** |
+
+**Landscape cannot clear the marker at any legible size, and that is accepted rather than solved.**
+The plot itself is only ~31px there and the marker alone already occupies most of that, centred —
+the same `min(px, vh)` rule that clears the marker everywhere else asymptotes toward the marker's
+own footprint rather than past it, and nothing legible fits in the ~4px that would be left. What
+landscape does still get, and what `#27`'s own "true after the fix" actually names for that
+orientation, is the pre-existing `max-width:calc(100% - 10px)` clamp: the chip's own rect stays
+**inside its plot's rect** at 844×390 (measured), even though it cannot also dodge the marker.
+Landscape is not a supported orientation (below), and the gem chip and Fall's chip already overhang
+their own tiles there, unchanged — this chip is the one improvement of the three, not a new
+regression.
+
+**The visible box is therefore smaller than 44px everywhere it ships.** A `::before` at
+`inset:-6px` — the same halo mechanism `.fl-collect` rides for its glow (an inset pseudo-element,
+painted behind the button's own opaque background via `z-index`), repurposed here with no visible
+fill — extends the actual tap target back out without moving the corner the chip reads from or
+changing its visible size. Confirmed live: `document.elementFromPoint()` on a point 4px outside the
+visible chip's own corner, still inside the `::before`'s reach, resolves to `.replant-chip`.
+`overflow` is deliberately never set on `.replant-chip` itself — setting it would clip the extension
+straight back off, the same trap `.fl-collect`'s own comment records.
 
 ### The developer hit area
 
