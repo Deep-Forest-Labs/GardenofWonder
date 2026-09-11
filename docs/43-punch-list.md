@@ -177,9 +177,9 @@ they're in that mode."
 
 **Anchors.** `skipGrow()` in `game.js` — grep `Backdate the planting rather than shrinking`.
 `skipCost()` — grep `skipSecondsPerGem`. The design this breaks: `rollMutations()` — grep
-`Every plant gets exactly ONE mutation roll`. *(hint: `game.js:1349 @ d452c4c`)*
+`Every plant gets exactly ONE mutation roll`. *(hint: `game.js:1349` @ `215a5ca`)*
 
-**Repro — RUN 2026-09-10 against `d452c4c`.** Plant, skip, read the mutation, harvest, repeat, on one
+**Repro — RUN 2026-09-10 against `215a5ca`.** Plant, skip, read the mutation, harvest, repeat, on one
 plot, with the sky held by the dev override:
 
 ```
@@ -265,13 +265,13 @@ looks like a replant icon with the flower that it's replanting (the actual bud o
 similar to what you see when you're actually selecting a flower from choosing a seed." The drawing:
 a rounded rectangle holding **two marks side by side — cycle arrows, then the bloom itself.**
 
-**Anchors.** `renderPlots()` in `ui.js` — grep `data-replant`. The chip's markup — grep
-`replant-chip`. The shared pill rule in `style.css` — grep `THE OTHER CORNER, AND THE SAME PILL`.
+**Anchors.** `renderPlots()` in `ui.js` — grep `dataset.replant` (the attribute is written from
+JS; `data-replant` appears only in `style.css`). The chip's markup — grep `replant-chip`. The shared pill rule in `style.css` — grep `THE OTHER CORNER, AND THE SAME PILL`.
 The art the drawing asks for: `Flora.head(seed, size)` in `flora.js` — grep
-`Just the bloom, for shop cards and pickers`. *(hints: `ui.js:70`, `style.css:664`,
-`flora.js:267 @ d452c4c`)*
+`Just the bloom, for shop cards and pickers`. *(hints: `ui.js:70` markup / `ui.js:253` the write,
+`style.css:674`, `flora.js:266` — all @ `215a5ca`)*
 
-**Repro — RUN 2026-09-10 against `d452c4c`.**
+**Repro — RUN 2026-09-10 against `215a5ca`.**
 
 ```
 node tools/probe.js wait:800 tap:#newsOk wait:2500 \
