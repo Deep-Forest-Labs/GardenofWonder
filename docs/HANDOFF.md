@@ -1328,106 +1328,70 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
-**THE OVERNIGHT FIX ROUND OF 2026-09-03 IS DONE AND PUSHED — all fifteen items of docs/43's
-"Tonight's round", in Bugzy's order, across 27 commits.** The suite went 1,744 → 2,171 assertions,
-0 failed, and it is now DETERMINISTIC: three historic flakes were pinned, so any red is real. Read
-the 2026-09-03 entry at the top of [10-decision-log.md](10-decision-log.md) for the reasoning; this
-section is the table, the reversals and the morning script. **docs/43 was not edited — pruning the
-fifteen to its graveyard is the keeper's, and the commit column below is what that needs.**
+**THE OVERNIGHT FIX ROUND OF 2026-09-10 IS DONE AND PUSHED — punch-list items #26 (gem-skip
+mutation farming) and #27 (the replant chip), across four commits, all confirmed on `origin/main`
+by `git log`.** The suite went **2,171 → 2,221 assertions, 0 failed**, run three times after the
+final commit with an identical count each time — deterministic, any red tomorrow is real. Read the
+2026-09-10 entries in [10-decision-log.md](10-decision-log.md) for the reasoning; this section is
+the table, the reversals, what got filed instead of decided, and the morning script. Four
+independent critics were run against tonight's work before it was called done; two real gaps they
+found (a test-coverage hole on a *bought* weather call, and the replant chip's tap target actually
+falling short of 44px at every size) were fixed in the last commit, and two of their claims were
+checked and rejected as not true of this codebase — both are in the table below. **docs/43 was not
+touched — pruning #26 and #27 to its graveyard is the keeper's job, not this round's.**
 
 ### The item → commit table
 
 | Item | What it is now | Commit |
 | --- | --- | --- |
-| **#23** | The music stops scheduling against a frozen clock; a sleep no longer fires 81 notes at once | `3e8ecb2` |
-| **#13** | Rain and storm beds at half, on the knob that leaves the thunder alone | `a1684b3` |
-| **#12** (+#16 C) | One plant-here marker, one size rule, on all four boards | `7571fa4` |
-| **#19** | The discover quests wait for the wall they ask you to climb; old saves un-jam | `7dbe5e5` |
-| **#24** | Fall's crops can be hurried with gems, at the garden's own rate, Century Bloom excluded | `bf6f24c` |
-| **#25** | A picked plot remembers what grew in it and offers to sow it again | `ed764c4` |
-| **#18** | Food spans gold, gems and one rewarded ad; the shared ad button is built once | `c2c69c6` |
-| **#21** | The Shop lends the drone for half an hour; the badge always outruns the loan | `ed3403b` |
-| **#22** | The Turn's ask says the same price in a kinder voice, and names nothing less | `0d5cff2` |
-| **#20** | A running boost now says so at the moment it pays | `420e628` |
-| **#17** | The sky chip says it in twenty words instead of forty-five | `2e70be4` |
-| **#11** | Chips that do nothing in a season room stop being shown there | `d2b80d5` |
-| **#9** | Every chip in the rail answers a tap, not just the sky | `e885085` |
-| **#15** | The season tabs are retired; the band goes to the edges; the lessons kept | `fb17c80` |
-| **#10** | Fall's Collect All is wider, louder and wears the Turn button's shine | `92c9bb5` |
-
-**Twelve further commits are repairs to those fifteen, and they are not optional reading if you are
-pruning:** `36859a1` `33dd9fe` (batch A's doc and test truth), `db4e5e5` (the ad-mint back door),
-`eefbbb9` (the first-session leak), `41da3d5` (render-blind tests), `357fb92` (both Fall lessons off
-screen), `368add7` (the float's colour and the crit under reduced motion), `87e1db2` (rail focus and
-`aria-live`), `cd40f41` (the rain sentence and #11's false claim), `4bfbbf4` `aab822e` (three flakes
-pinned), `2de1657` (the private-reference guard).
+| **#26** (engine) | The gem-skip button refuses outright, spending nothing, when a plant's booked moment sits under a sky carrying a catch — any of the four, not just Wonderfall | `0655f8e` |
+| **#26** (chip) | The gem chip gets a third, dimmed look when held by a catchy sky, and a tap on it floats one line naming the sky instead of quietly doing nothing | `3878761` |
+| **#27** | The replant chip is a real button now — cycle-arrows, the seed's own bloom, its price — sized so the bloom clears the plant-here marker, not the old anonymous pill | `0b7b17d` |
+| **#26 + #27** (fix pass) | Closed what the critics found: a real test gap on a *bought* weather call (not just the dev override), the replant chip's invisible tap target actually hitting 44px at every size, and the changelog's weather names matching the in-game wording | `05a62ce` |
 
 ### The decisions made in your absence, each one line to reverse
 
-**Fifty-six were filed; each commit body itemises its own with the exact knob.** These are the ones
-that change something you can see or would plausibly want back.
-
 | Decision | Reverse by |
 | --- | --- |
-| **The ad-rented drone does NOT feed the well.** Measured 81K–591K gold per video into the pouch, and one video cleared a Turn gate. Closing it honours doc 37 promise 1 | Drop the `{ ad: true }` flag in `processAutoHarvest()` — but that means rewriting promise 1 |
-| **Petal Cake costs 3 gems** — PROVISIONAL, the first recurring gem sink in the game | `cost: 3` on the petalcake row, `data.js` |
-| **Clover stays at 1,500 gold** — a deliberate refusal; the item investigated no number | `cost:` on the clover row, `data.js` |
-| **Feeding is capped at 2 ads a day**, leaving 1–4 of doc 37's plan for the other placements | `perPlacement: { food: 2 }` in `DATA.ads` |
-| **The drone rental grants level 1 and is always visible** (`revealAt: 0`), so the taste reaches the players it is for | `effects.autoHarvest`; `DATA.droneRental.revealAt: 2500000` |
-| **The drone lives in BOTH Shop and Upgrades**, against the literal "move" — the move zeroes offline income for every save | Full recipe in `docs/11`; do not half-do it |
-| **#11's filter is NARROWER than the item's table.** Two of the three chip kinds are paid on every tap in Fall, so hiding them would hide a live effect | `SEASON_DEAD_EFFECTS` in `ui.js` |
-| **The Turn's ask gains a third quiet line** — "And a new year always brings in new life" | Delete the `<p>`; it is unguarded by design |
-| **`q_discover_5` gates at four flowers owned** (the gentler reading of "fourth flower"), and the ladder gains a rung: 777 → 789 rep | `needSeeds: 6` on `q_discover_5` |
-| **The Turn wipes a plot's seed memory** — the no-change-neutral position, now a stated choice | Add `lastSeed: cell.lastSeed \|\| null` to the Turn's cell literal |
-| **The replant chip hides on auto-planted plots** | The `PLOT_AUTOPLANTERS` check in `replantSeed()` |
-| **The season tabs became a 10px non-interactive peek**, not tappable; the gate copy survives on the gate plate a swipe still reaches | `.s-peek` in `style.css` |
-| **A mis-tap on an Apple's skip chip spends 960 gems** with no confirm — Summer's worst case is 26. New exposure, no confirm added because Summer has none | Your ruling; nothing to revert |
+| **The engine gate refuses on ANY sky that carries a catch** (storm, aurora, Wonderfall, and Rain's Dewkissed — a fourth sky the punch-list's own table never sampled), not just Wonderfall | Narrow `skipGrow()`'s condition in `game.js` from `weatherAt(cell.mutateAt).mutation` to a name check for `'wonderfall'` alone, and update the "punch list #26" `sim-test.js` group + docs/03/18 + the decision-log entry to match |
+| **The held gem chip explains itself (dims + floats a line) instead of disappearing** — item #11's own "hide chips that do nothing" precedent was NOT applied here, on purpose | In `ui.js`, return before rendering the chip when `Game.skipState(idx).state === 'held'` (mirroring the `SEASON_DEAD_EFFECTS` hide pattern #11 already uses), and drop `skipHoldLine()` and the held branch in `onSkipTap()` |
+| **The replant chip's pill rule was split out of the shared `.skip-chip`/`.fl-skip` rule** into its own `.replant-chip` rule, so #26's gem chip and #27's replant chip size and colour independently | Merge `.replant-chip`'s declarations back into the shared selector in `style.css` — check the fix pass's gradient and 44px `::before` sizing don't collide with `.skip-chip` first |
+| **The replant chip's visible size**: the brief's assumed 44px (36px floor "on the smallest tile") didn't clear the plant-here marker at ANY tested viewport, so the bloom/icon are sized continuously with `min(px, vh)`, coefficient tuned down until real screenshots cleared the marker with margin (3.3px / 1.7px / 2.8px at the three portrait sizes) | The `min()` coefficient sits in `style.css`'s `.replant-chip` rule — raise it and re-measure with `tools/probe.js` at all three portrait viewports before shipping |
+| **The 44px tap target is a separate, invisible `::before`** (fixed at `inset:-6px` in the original build, which fell 1–8px short at every size; the fix pass resized it to `max(calc(100% + 12px), 44px)` to actually hit 44) — the *visible* box stays smaller than 44px everywhere | The formula is on `.replant-chip::before` in `style.css`; growing the visible box itself instead would need the marker-clearance budget re-derived first |
+| **A new icon, `cycle`, was drawn for the replant chip** — checked first against 8 existing candidate names (repeat/refresh/loop/arrows/rotate/replant/reload) and none existed | Swap the glyph reference in `renderPlots()`'s replant-chip markup for any other `icons.js` entry, or draw a new one in the second, documented-safe `Object.assign(LIB,{...})` block and regenerate `art/exports/icons/` + docs/45's manifest via `tools/export-icons.js --check` |
+| **The held-chip CSS rule is Summer-only** (`.plot[data-skip="held"] .skip-chip`) — it was deliberately NOT extended to Fall's `.fl-plot`/`.fl-skip`, because Fall's own two-value gate never calls `Game.skipState()` and structurally cannot reach this value | Add the mirrored `[data-skip="held"]` rule scoped to `.fl-plot .fl-skip` only once/if Fall's own skip path is taught to call `skipState()` |
+| **Held outranks unaffordable** in `skipState()` — a plot that is both broke and weather-held reports the sky as the reason, not "you're broke" | Swap the precedence check inside `skipState()` in `game.js` |
+| **Two critic findings were checked and rejected, not applied**: the held chip's border colour stays low-contrast (`--paper-dim-2`/`--paper-dim-edge`, matching two other "not available right now" surfaces already in `style.css`), and no radial highlight/dirt-mark was added to either chip (that pattern belongs only to `.plot`'s soil tiles, not numbered pills — `.lock-cost` itself is flat) | If you disagree: the border-colour declaration on `.plot[data-skip="held"] .skip-chip`, and adding a radial-gradient pair to `.replant-chip`/`.skip-chip`, are both in `style.css` |
 
-### The morning script — ears first, then eyes, then thumbs
+### FILED FOR THE MORNING — NOT DECIDED, no economy number moved
 
-**LISTEN. Quiet room, phone, before anything else.**
+**#26 has two more possible shapes than what shipped tonight; both were left for your call, not chosen for you:**
 
-1. **The healed sleep-wake.** Turn Music on in Settings, start a Thunderstorm from Developer tools,
-   then lock the phone for a full minute. Unlock. **You should get silence for at most one bar, then
-   the tune from the chord it was on** — not a wall of notes. Thirty seconds asleep used to queue 81
-   notes into 2.45 seconds, nine of them on the same sample. If it stays silent until you touch the
-   screen, that is the guard idling correctly on iOS and healing on your next tap; say so rather
-   than calling it broken.
-2. **The quieter rain.** Hold the weather on Rain, then on Thunderstorm, and **sit in each for a
-   minute.** Both beds are half as loud; the thunder is untouched, so a crack now stands further out
-   of its own bed than it used to. Listen for the *breath* — it should sound the same, just further
-   away. If the cracks now startle, that is one line (`stinger.gain.value`) and it is in the table.
+- **Shape 2 — let the skip forfeit the roll instead of refusing it** (hurry freely, lose the booked catch silently). Keeps the gem sink open through the commonest weather in the game once Rain is counted, but it contradicts `skipGrow()`'s own neutrality comment and the pre-existing sim-test group guarding that neutrality — both would need to change on purpose if you prefer this over tonight's refuse-and-spend-nothing shape.
+- **Shape 3 — raise the 1-gem floor in `skipCost()`** (the exploit is arguably that the floor never rises to meet exposure, not the skip itself). This is an economy number, explicitly out of scope tonight; it would also change Summer's ordinary skip feel at the cheap end (#24's own still-open question), and both gold figures below would need re-measuring against a new floor.
 
-**LOOK.**
+**Gold-per-minute under the pre-fix farm, measured so you aren't tuning blind if you pick shape 2 or 3** (storm held via `Game.Dev.setWeather`, 60 plant/skip/harvest cycles per one-real-minute sample — a stated ~1 cycle/second assumption, not a measured human rate — clock advanced one real second per cycle so the Wonder Effect expires like it would for a real player, averaged over 300 independent samples with the real unpinned RNG):
 
-3. **One marker.** An empty plot in the garden, then swipe to Fall, then out to the meadow. **The
-   same glyph at the same size in all three** — Fall's used to be half again as big and the meadow
-   drew its own by hand. The meadow loses one thing in the trade: the dark "socket" recess behind
-   its marker is gone, because the shared icon has none.
-4. **The Turn's kinder ask.** Developer tools → jump to a Turn, and read the panel. **Every one of
-   the five things it takes is still named** — that was a fixed bug and it stayed fixed. What changed
-   is that two shouted small-caps labels became two warm sentences, plus a closing line.
-5. **The widened band.** The Spring/Fall tabs are gone; UPGRADE and POWER-UP are at the edges, and a
-   10px paper peek marks each side. **Check the two swipe lessons still appear** — they were anchored
-   to the tabs and had to be re-homed, and they broke once tonight before being fixed.
-6. **The Collect All.** Fill and ripen Fall's bed. It is wider, the value is on its own line, and it
-   wears the Turn button's own shine. **Turn reduced motion on and look again** — size and colour
-   have to carry it with the shine switched off.
-7. **The replant chip.** Harvest a plot and look at its bottom right: a small pill offering the same
-   seed again at its own price. Tap it — it should plant without opening the picker.
+| Seed | Gold / minute |
+| --- | --- |
+| Daisy | ~18,200 |
+| Lavender (the dearest seed whose skip still costs exactly 1 gem — Rose, the next seed up, already costs 2) | ~86,200 |
 
-**TAP.**
+Neither number was acted on. Nothing about the gem-skip floor or the refuse-vs-forfeit shape moved tonight beyond the generic sky gate itself.
 
-8. **A running power-up explains itself.** Spend a power-up, then tap its chip in the rail. All three
-   kinds answer now — sky, power-up and Wonder. And harvest something while it runs: **a small tinted
-   `×1.25` floats under the payout**, which is the thing you said you could not tell was happening.
-9. **Fall's gem skip.** Tap a growing Fall crop. **Mind the price** — an Apple is 960 gems and there
-   is no confirm step. The Century Bloom refuses, as ruled.
-10. **The ad button.** Feed a pet → Honeypot now reads *Watch an ad*. It grants the full sixteen
-    hours or refuses outright — it will not sell you a trimmed meal. Same button rents the drone for
-    thirty minutes in the Shop. **Neither is in a fresh save's first day**, by design.
-11. **An old save's quest strip.** Load a save that had *Discover 5 species* stuck in it. **The strip
-    should be moving again** — that quest held a slot forever and now waits for the flowers it needs.
+### The morning script — eyes then thumbs
+
+1. **Hold a storm.** Developer tools → set the weather to Storm. Plant a Daisy. **Tap the gem chip
+   and read what it says** — it should be dimmed and float a line naming the sky ("Not under a
+   storm — a catch is for waiting out."), and the tap should spend no gem.
+2. **Let it go.** Either wait for the plant's own booked moment to pass, or set the weather back to
+   Clear from Developer tools, then **tap the chip again.** It should be back to its ordinary bright
+   look, and a real tap should spend exactly 1 gem and finish the plant.
+3. **The replant chip.** Harvest a plot and look at its bottom right *from arm's length* — a rounded
+   pill holding cycle-arrows, the seed's own bloom, and its gold price. **Tap it** — it should plant
+   the same seed again without opening the picker. On a phone held sideways it won't clear the
+   plant-here marker (accepted, not solved — the plot itself is too small there), but it should
+   still sit fully inside its own tile.
 
 Then stop. Everything above is on `main` and live.
 
