@@ -149,6 +149,17 @@ to be right all along; only the exposure model was wrong.
 and later improve to Gilded. That resolves an open question in the earlier draft, and it is simpler
 to reason about.
 
+**The gem skip honours this bound now, not just the roll's fairness (2026-09-10, punch-list #26).**
+"One roll per plant, bounded by grow time" assumes standing under a sky costs the wall-clock minutes
+that sky actually lasts. A 1-gem skip that always resolved the roll fairly — see
+[03-systems.md](03-systems.md#skipping-a-timer) — never broke *which* mutation a plant could catch,
+but it broke this section's exposure bound completely: skipCost()'s 1-gem floor let a player turn one
+Wonderfall visit into as many rolls as they could tap a plant into the ground and skip it, which is
+exactly the per-slot exposure this section already rejected, arrived at through a different door.
+`skipGrow()` now refuses the skip rather than resolve it whenever the booked moment sits under a sky
+that carries a mutation, so a plant's one roll is bought with the same standing time a natural harvest
+would need — gems can no longer substitute for it.
+
 ## Stacking the odds
 
 Agency is what separates this from rarity, and the game already has the mechanism: **verbs**.

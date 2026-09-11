@@ -3100,13 +3100,22 @@ check('skipping is refused without the gems', (() => {
   return G.skipGrow(0) === null;
 })());
 check('skipping takes the gems and makes it ripe', (() => {
+  /* Pinned to Clear — added with #26's gate. Eternal's grow window is 780s, wide enough
+     that its randomly-booked moment occasionally lands in a real mutation slot wherever the
+     suite's clock happens to be by the time it reaches this line; since the gate now makes
+     that moment's own sky decide whether the skip succeeds, an unpinned sky turned this
+     check flaky (it failed for real, once, discovering exactly this) rather than testing
+     what its name says it tests: an ORDINARY skip, unblocked, spends and ripens normally. */
+  G.Dev.setWeather('clear');
   clearGarden();
   S.gems = 500;
   G.plant(0, G.seedById('eternal'));
   const cost = G.skipCost(0);
   const before = S.gems;
   const r = G.skipGrow(0);
-  return r && S.gems === before - cost && G.harvest(0) !== null;
+  const ok = r && S.gems === before - cost && G.harvest(0) !== null;
+  G.Dev.setWeather(null);
+  return ok;
 })());
 check('skipping cannot manufacture a rare mutation', (() => {
   /* The roll resolves against the sky at its *scheduled* moment, so standing inside a real
@@ -3131,6 +3140,243 @@ check('skipping cannot manufacture a rare mutation', (() => {
   }
   clock = keep;
   return skyNow === 'wonderfall' && wonders === 0;
+})());
+G.reset();
+
+group('punch list #26 — a gem skip is refused under any sky that carries a catch');
+/* Bugzy's driven finding: a 1-gem skip taken the instant a Daisy is sown is always the
+   floor (skipCost()'s min(1, ...) never rises to meet how often a slot can be revisited),
+   so the owner's own fix — block gems "in Wonderfall" — left the storm and the aurora
+   open at the same one gem, and the storm matters most in play: 15% catch against
+   Wonderfall's 10%, and a slot weight of 7 against Wonderfall's 0.5 (14x as often). The gate
+   therefore reads "does the booked moment's own sky carry a catch", never "is the standing
+   sky Wonderfall" and never "is the standing sky a catch sky" — see skipGrow() and
+   skipState() in game.js. Every check below is self-contained (its own reset, its own
+   fixture) rather than sharing state with its neighbours. */
+
+/* DRIVEN, mirroring docs/43's own repro exactly: plant, skip, read the mutation, harvest,
+   repeat, on one plot, sky held by Game.Dev.setWeather. Before this fix every row below
+   spent 200 gems and caught close to its published rate; now a blocked sky spends and
+   catches nothing at all, because the plant never advances past its own booked moment once
+   the skip that would carry it there is refused — plant() and harvest() simply no-op for
+   the rest of the loop's 200 turns. */
+const farmSky = (sky, seedId, cycles) => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e12;
+  S.gems = 1e6;
+  const seed = G.seedById(seedId);
+  if (sky !== 'clear') G.Dev.setWeather(sky);
+  let caught = 0;
+  let skips = 0;
+  let gemsSpent = 0;
+  for (let n = 0; n < cycles; n += 1) {
+    G.plant(0, seed);
+    const before = S.gems;
+    const r = G.skipGrow(0);
+    if (r) { skips += 1; gemsSpent += (before - S.gems); }
+    if (S.grid[0].mutation) caught += 1;
+    G.harvest(0);
+  }
+  G.Dev.setWeather(null);
+  return { caught, skips, gemsSpent };
+};
+check('storm: 200 plant→skip→harvest cycles catch nothing and spend nothing', (() => {
+  const r = farmSky('storm', 'daisy', 200);
+  return r.caught === 0 && r.skips === 0 && r.gemsSpent === 0;
+})());
+check('aurora: 200 plant→skip→harvest cycles catch nothing and spend nothing', (() => {
+  const r = farmSky('aurora', 'daisy', 200);
+  return r.caught === 0 && r.skips === 0 && r.gemsSpent === 0;
+})());
+check('wonderfall: 200 plant→skip→harvest cycles catch nothing and spend nothing', (() => {
+  const r = farmSky('wonderfall', 'daisy', 200);
+  return r.caught === 0 && r.skips === 0 && r.gemsSpent === 0;
+})());
+/* Rain carries a catch too — Dewkissed, 25% — which docs/43's own driven table never
+   sampled (it only measured storm, aurora and Wonderfall). The gate reads "does this sky
+   carry a mutation", not a list of three names, so rain is closed by the same rule for
+   free; asserted here so that fact is on the record rather than merely implied. */
+check('rain also carries a catch (Dewkissed) and is closed by the same generic rule', (() => {
+  const r = farmSky('rain', 'daisy', 200);
+  return r.caught === 0 && r.skips === 0 && r.gemsSpent === 0;
+})());
+check('clear: 200 cycles still skip 200 times for exactly 200 gems, exactly as before the fix', (() => {
+  const r = farmSky('clear', 'daisy', 200);
+  return r.skips === 200 && r.gemsSpent === 200;
+})());
+
+/* A refused skip is a total no-op, not merely a cheap one: "spends nothing" means gems,
+   the booked moment and the growth clock all read back exactly as they did before the
+   call — the plant is not quietly hastened for free while only the mutation is denied. */
+check('a refused skip touches nothing — gems, mutateAt and plantedAt all read back unchanged', (() => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e12;
+  S.gems = 1e6;
+  G.Dev.setWeather('storm');
+  G.plant(0, G.seedById('daisy'));
+  const before = { mutateAt: S.grid[0].mutateAt, plantedAt: S.grid[0].plantedAt, mutation: S.grid[0].mutation };
+  const gemsBefore = S.gems;
+  const r = G.skipGrow(0);
+  const after = S.grid[0];
+  G.Dev.setWeather(null);
+  return r === null && S.gems === gemsBefore && after.mutateAt === before.mutateAt
+    && after.plantedAt === before.plantedAt && after.mutation === before.mutation;
+})());
+
+/* THE TWO CASES THE GATE MUST NOT OVER-REACH INTO — both real per the brief, neither
+   exercised by the loop above. Both read weatherAt() at the booked moment itself, never at
+   "now" and never at "whichever sky the dev override happens to be showing this instant". */
+check('a plant whose booked moment has already passed under a storm can still be skipped — its roll is already done', (() => {
+  G.reset();
+  clearGarden();
+  unlockTo(20);
+  S.credits = 1e12;
+  S.gems = 1e6;
+  G.Dev.setWeather('storm');
+  G.plant(0, G.seedById('eternal'));           // a long grow window, nowhere near ripe
+  S.grid[0].mutateAt = clock - 5;               // its one roll was due five seconds ago
+  G.rollMutations();                            // the real sweep resolves and zeroes it
+  const resolved = S.grid[0].mutateAt === 0;
+  const before = S.gems;
+  const r = G.skipGrow(0);                      // storm is STILL standing here
+  G.Dev.setWeather(null);
+  return resolved && r !== null && S.gems === before - r.cost;
+})());
+check('a plant sown so its booked moment falls after the storm ends can still be skipped', (() => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e12;
+  S.gems = 1e6;
+  G.Dev.setWeather('storm');                    // "sown under a storm"
+  G.plant(0, G.seedById('daisy'));
+  S.grid[0].mutateAt = clearSlot * SLOT + SLOT / 2; // its own moment sits in a slot proven Clear
+  G.Dev.setWeather(null);                       // the storm passes before the moment is read
+  const before = S.gems;
+  const r = G.skipGrow(0);
+  return r !== null && S.gems === before - r.cost;
+})());
+
+/* skipState() — what ui-*.js reads instead of doing economy math or calling weatherAt()
+   itself. Purely informational: none of these calls should move a single gem. */
+check("skipState reports 'held' and names the sky when the booked moment carries a catch", (() => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e12;
+  S.gems = 1e6;
+  G.Dev.setWeather('storm');
+  G.plant(0, G.seedById('daisy'));
+  const gemsBefore = S.gems;
+  const s = G.skipState(0);
+  G.Dev.setWeather(null);
+  return s.state === 'held' && s.sky === 'storm' && S.gems === gemsBefore;
+})());
+check("skipState reports 'open' for the identical booked moment once its sky carries no catch", (() => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e12;
+  S.gems = 1e6;
+  G.Dev.setWeather('storm');
+  G.plant(0, G.seedById('daisy'));
+  G.Dev.setWeather('clear');
+  const s = G.skipState(0);
+  G.Dev.setWeather(null);
+  return s.state === 'open' && s.sky === null;
+})());
+check("skipState reports 'unaffordable' under a clear sky with no gems, never 'held'", (() => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e12;
+  S.gems = 0;
+  G.Dev.setWeather('clear');
+  G.plant(0, G.seedById('daisy'));
+  const s = G.skipState(0);
+  G.Dev.setWeather(null);
+  return s.state === 'unaffordable' && s.sky === null;
+})());
+check("skipState reports 'open' for an empty plot", (() => {
+  G.reset();
+  clearGarden();
+  return G.skipState(0).state === 'open' && G.skipState(0).sky === null;
+})());
+
+check("Fall's own skip is untouched — it still hurries a crop normally while a storm is held, because a Fall cell carries no mutation field at all", (() => {
+  G.reset();
+  S.year.turnsCompleted = 1;
+  S.credits = 1e9;
+  S.gems = 1e6;
+  G.Dev.setWeather('storm');
+  G.fallPlant(0, 'strawberry');
+  const before = S.gems;
+  const r = G.fallSkip(0);
+  const ready = S.fall.grid[0].ready;
+  G.Dev.setWeather(null);
+  return r !== null && S.gems === before - r.cost && ready === true;
+})());
+
+group('punch list #26 — sabotage: three realistic wrong gates, each proven to miss the farm');
+check('sabotage 1 would fail: gating on the STANDING sky at skip time (not the booked moment) misses a storm-booked plant once the sky has moved on', (() => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e12;
+  S.gems = 1e6;
+  const keep = clock;
+  clock = clearSlot * SLOT + SLOT / 2;          // "now" is genuinely Clear
+  G.plant(0, G.seedById('daisy'));
+  S.grid[0].mutateAt = stormSlot * SLOT + SLOT / 2; // its OWN moment is a genuine storm slot
+  const realGateRefuses = G.skipGrow(0) === null;                     // the shipped fix
+  clearGarden();
+  G.plant(0, G.seedById('daisy'));
+  S.grid[0].mutateAt = stormSlot * SLOT + SLOT / 2;
+  const sabotage1WouldRefuse = Boolean(S.grid[0].mutateAt) && Boolean(G.currentWeather().mutation);
+  clock = keep;
+  G.reset();
+  return realGateRefuses === true && sabotage1WouldRefuse === false;
+})());
+check('sabotage 2 would fail: gating on Wonderfall by name lets the storm farm survive untouched', (() => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e12;
+  S.gems = 1e6;
+  G.Dev.setWeather('storm');
+  G.plant(0, G.seedById('daisy'));
+  const moment = S.grid[0].mutateAt;
+  const realGateRefuses = G.skipGrow(0) === null;
+  const sabotage2WouldRefuse = Boolean(moment) && G.weatherAt(moment).id === 'wonderfall';
+  G.Dev.setWeather(null);
+  return realGateRefuses === true && sabotage2WouldRefuse === false;
+})());
+check('sabotage 3 would fail: voiding the roll but still charging and hastening is not a refusal — the shipped gate leaves the wallet and the clock untouched instead', (() => {
+  G.reset();
+  clearGarden();
+  S.credits = 1e12;
+  S.gems = 1e6;
+  G.Dev.setWeather('storm');
+
+  G.plant(0, G.seedById('daisy'));
+  const gemsBeforeReal = S.gems;
+  const plantedAtBeforeReal = S.grid[0].plantedAt;
+  const realResult = G.skipGrow(0);
+  const realRefusedCleanly = realResult === null && S.gems === gemsBeforeReal
+    && S.grid[0].plantedAt === plantedAtBeforeReal && S.grid[0].mutateAt !== 0;
+
+  /* Sabotage 3, applied by hand to its own fresh cell — never to the shipped skipGrow(),
+     so nothing else in the suite can inherit it: shape 2 (forfeit the roll) wearing shape
+     1's name (claims to "refuse"), which spends the gem and hastens the plant regardless. */
+  clearGarden();
+  G.plant(0, G.seedById('daisy'));
+  const cost = G.skipCost(0);
+  const gemsBeforeSabotage = S.gems;
+  S.grid[0].mutateAt = 0;
+  S.gems -= cost;
+  S.grid[0].plantedAt = G.nowSeconds() - S.grid[0].grow;
+  const sabotageChargedAndHastened = S.gems === gemsBeforeSabotage - cost
+    && S.grid[0].plantedAt === G.nowSeconds() - S.grid[0].grow;
+
+  G.Dev.setWeather(null);
+  clearGarden();
+  return realRefusedCleanly === true && sabotageChargedAndHastened === true;
 })());
 G.reset();
 

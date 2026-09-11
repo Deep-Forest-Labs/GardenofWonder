@@ -5,7 +5,58 @@ not the diff — git already has the diff.
 
 ---
 
-## 2026-09-10 (ruling, the owner's word) — The fork is closed, and old statements stop being fences
+## 2026-09-10 (punch list #26) — The gem skip is refused, not forfeited, under any sky with a catch
+
+**The bug, in one line: `skipGrow()`'s neutrality about *which* mutation a hurried plant catches was
+never a bound on *how often* one could be rolled.** The 1-gem floor in `skipCost()` never rises to
+meet exposure, so a player standing under a real sky could 1-gem-skip a fresh Daisy every instant and
+turn one sky visit into as many mutation rolls as they could tap. Full write-up and the driven numbers
+are in [43-punch-list.md](43-punch-list.md)'s own `#26` item; this entry is the ruling, not the repro.
+
+**Widened past the owner's own report, on Bugzy's driven finding.** The owner saw this in Wonderfall
+and asked to block gems "in that mode." Driven, 200 cycles a sky: Wonderfall farmed Wonderstruck ×100
+sixteen times out of two hundred, but the storm farmed Gilded ×10 **thirty-four** times — its catch is
+higher (15% against Wonderfall's 10%) and it stands **fourteen times as often** (slot weight 7 against
+0.5). A fix scoped to "is Wonderfall on" would have shipped tonight leaving the sky that matters most
+wide open. **The gate reads "does the sky at the plant's own booked moment carry a mutation", never a
+sky's name and never the sky standing right now** — which turns out to close Rain's Dewkissed catch
+too (25%, data.js's highest), a fourth sky the punch-list's own driven table never sampled. Recorded
+here because the widening is itself the finding: a fix aimed at the reported sky is not the same
+question as a fix aimed at the mechanism, and this is the second time this round a narrowly-aimed
+request needed the second question asked of it.
+
+**Three shapes, one chosen tonight.**
+1. **Refuse the skip while the booked moment's sky carries a catch — SHIPPED.** Spends nothing on a
+   refusal; `skipGrow()`'s stated neutrality stays true in the same sentence it always was, with the
+   new rule added beside it. `skipState(idx)`, beside `skipCost()`, gives `ui-*.js` the `open` /
+   `unaffordable` / `held` (+ which sky) reason without it ever calling `weatherAt()` itself — that is
+   engine surface only; no chip reads it yet.
+2. **Let the skip forfeit the roll instead — NOT decided, filed for the morning.** Keeps the gem sink
+   open through the commonest weather in the game (Clear excepted, everything else in the table now
+   carries *some* catch once Rain is counted), at the cost of contradicting `skipGrow()`'s own stated
+   neutrality on purpose — the comment and the pre-existing sim-test group guarding it would both need
+   to change with eyes open, not quietly. That is a deliberate rule change and the owner's to choose,
+   not a bug fix; it is not being decided against, only left unmade tonight.
+3. **Raise the 1-gem floor — NOT decided, filed for the morning.** The exploit is the floor, not the
+   skip itself, per the punch-list's own read. An economy number, explicitly out of scope for a fix
+   round, and `#24`'s graveyard already has Summer's ordinary skip feel as an open question this would
+   reopen.
+
+**Measured, not acted on — the gold this farm actually paid.** The punch-list's own read was that the
+mutation *frequency* was the fault worth fixing and the *gold* might be roughly self-limiting because
+a dearer seed pays a dearer skip, unmeasured. Driven tonight, storm held, 1-gem skips back to back,
+300 one-minute samples: a Daisy farm this way for one real minute (at an assumed 60 cycles/minute — a
+tap every second, one reasonable read of "as fast as you can spam it") averaged **~18,200 gold**; the
+dearest seed that still clears the 1-gem floor, Lavender (grow 28s — Rose's 32s already costs 2 gems),
+averaged **~86,200 gold**. Both numbers and the method are in this round's engine-stage report, not
+repeated here since no economy number moves on the strength of an exploratory measurement.
+
+**Rejected:** leaving the fix scoped to Wonderfall (closes the least of the three farmable skies, per
+the numbers above); gating on the sky standing at skip time rather than at the plant's own booked
+moment (lets a plant booked under a storm through the moment the storm clears, which is the exact
+shape of sabotage 1 in tonight's sim-test group); and doing nothing until the gold was measured (the
+prize-frequency fault was already proven and already had an owner-picked shape — the gold measurement
+sharpens shapes 2 and 3's tradeoff for the morning, it does not gate shipping shape 1 tonight).
 
 **The owner made two calls today, and both are his.** First, doc 39's fork is closed: **the stakes
 stay.** Second, the genre's generosity promise — doc 39's *"Crops never die. Miss a week?

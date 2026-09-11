@@ -308,8 +308,27 @@ and teaches the option without hiding it behind a gesture.
 
 **A skip buys time and nothing else.** The mutation roll still resolves against the weather standing
 at its *originally scheduled* moment — computable because weather is deterministic — so hurrying a
-plant can neither gain nor lose a mutation. That closes the exploit where a player waits for a
-Wonderfall and skip-grows the whole garden into it.
+plant can neither gain nor lose a mutation. **That line used to end "— which closes the exploit where
+a player waits for a Wonderfall and skip-grows the whole garden into it." It didn't, and punch-list
+#26 (2026-09-10) is the record of finding out.** Neutrality about *which* mutation a hurried plant
+gets is not the same thing as a bound on *how often* one can be rolled: `skipCost()`'s 1-gem floor
+never rises to meet how often a slot can be revisited, so standing under a real Wonderfall (or a
+storm, or an aurora) and 1-gem-skipping a fresh Daisy every instant turned a 60-second sky visit into
+as many rolls as a thumb could tap. Driven, 200 cycles a sky: the storm alone farmed 34 Gilded blooms
+this way, and it stands fourteen times as often as Wonderfall does.
+
+**The actual gate, added 2026-09-10:** `skipGrow(idx)` refuses outright — spending nothing — whenever
+the plant has a booked moment (`cell.mutateAt`) AND the sky standing *at that moment*
+(`weatherAt(cell.mutateAt)`) carries a mutation. Not "is the standing sky Wonderfall", not "is the
+standing sky a catch sky right now" — the moment's own weather, always, which is what keeps a plant
+whose roll already resolved (`mutateAt` reads 0) or whose moment falls under a sky with no mutation
+(Clear, or a storm that has since cleared) hurryable exactly as before. `skipState(idx)`, beside
+`skipCost()`, answers `open` / `unaffordable` / `held` (plus which sky) for `ui-*.js` to read, so no
+UI file ever calls `weatherAt()` or touches this rule itself. See
+[18-mutations-and-weather.md](18-mutations-and-weather.md#exposure-one-roll-per-plant--the-specs-original-model-was-wrong)
+for the exposure design this closes the gap in, and the 2026-09-10 entry in
+[10-decision-log.md](10-decision-log.md) for the three shapes considered and why this one shipped
+tonight.
 
 Implementation note: the skip **backdates `plantedAt`** rather than shrinking `grow`. A plant skipped
 the instant it went in has zero elapsed seconds, and any positive grow left it permanently one tick

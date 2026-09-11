@@ -1343,13 +1343,36 @@ const Game = (() => {
     return Math.max(1, Math.ceil(remain / DATA.skipSecondsPerGem));
   };
 
-  /* A skip buys time and nothing else. The roll still resolves against the weather standing at the
-     moment it was originally scheduled for — computable because weather is deterministic — so
-     hurrying a plant can neither gain nor lose you a mutation. */
+  /** Why a plot's skip is or isn't usable right now — 'open' (usable), 'unaffordable' (a real
+      cost the wallet can't cover) or 'held' (refused: the plant's booked moment sits under a sky
+      that carries a catch; `sky` names it). For ui-*.js to read instead of doing economy math or
+      calling weatherAt() itself, per docs/09's layering rule. Purely informational — it never
+      spends anything, and skipGrow() below re-derives the same 'held' condition on its own rather
+      than trusting a read from a frame earlier. */
+  const skipState = (idx) => {
+    const cell = state.grid[idx];
+    const cost = skipCost(idx);
+    if (!cost) return { state: 'open', sky: null };
+    if (cell.mutateAt) {
+      const w = weatherAt(cell.mutateAt);
+      if (w.mutation) return { state: 'held', sky: w.id };
+    }
+    if (state.gems < cost) return { state: 'unaffordable', sky: null };
+    return { state: 'open', sky: null };
+  };
+
+  /* A skip buys time and nothing else: the roll still resolves against the weather standing at
+     the moment it was originally scheduled for — computable because weather is deterministic —
+     so hurrying a plant can neither gain nor lose you a mutation. Added 2026-09-10, punch list
+     #26: when that moment sits under a sky that carries a catch, the skip is refused outright
+     instead — spending nothing — because neutrality about WHICH mutation is not the same as a
+     bound on HOW OFTEN one can be rolled, and skipCost()'s 1-gem floor never rises to meet that.
+     See skipState() for the reason surfaced to the UI. */
   function skipGrow(idx) {
     const cell = state.grid[idx];
     const cost = skipCost(idx);
     if (!cost || state.gems < cost) return null;
+    if (cell.mutateAt && weatherAt(cell.mutateAt).mutation) return null;
     state.gems -= cost;
     if (cell.mutateAt) {
       const moment = cell.mutateAt;
@@ -6048,6 +6071,6 @@ const Game = (() => {
     dayPhase, isNight, reconcile, gemChanceFor,
     cardById, setOfCard, rarityDef, cardCount, hasCard, setOwned, setComplete,
     albumOwned, albumTotal, openPack, grantPacks, collectPackDrop,
-    callWeather, weatherCallPrice, weatherCallable, weatherCallActive, skipCost, skipGrow, offlineRate, offlineHours, passiveIncomeRate, offlineEarnings, Dev
+    callWeather, weatherCallPrice, weatherCallable, weatherCallActive, skipCost, skipState, skipGrow, offlineRate, offlineHours, passiveIncomeRate, offlineEarnings, Dev
   };
 })();
