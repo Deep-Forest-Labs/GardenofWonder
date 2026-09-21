@@ -1297,6 +1297,12 @@ constraint on the port.
 The Apiary and Craft tabs are a prototype shortcut and are **now scheduled for removal** with the
 adjacency rework — the interim dock is `Garden · Cards · Market · Shop` (phase 1.5 in that doc).
 
+**Ruled 2026-09-21, awaiting a fix round:** Clover Nibble goes to **10,000 gold**, and the permanent Harvest
+Drone moves from Upgrades to the Shop by the recipe in [11-known-issues.md](11-known-issues.md) — never the
+half-move. **Held by the owner the same day:** the record shelf's gate-1 rulings, the golden seed, the meadow
+art spike. **Commissioned:** the AI companion as a research-and-options document, `docs/51-the-companion.md`,
+not yet on disk. The 2026-09-21 (rulings) entry in [10-decision-log.md](10-decision-log.md) has each in full.
+
 **The game we are going after, in the owner's words (2026-09-10):** a free-to-play mobile game built for
 high retention, engagement and monetization, with social features later, in the lane of Gossip Harbor and
 Cats & Soup — players who pay well and stay for years. Old statements in these docs are records, never
@@ -1397,7 +1403,8 @@ Then stop. Everything above is on `main` and live.
 
 ## The record shelf, still at gate 1
 
-**THE RECORD SHELF IS AT GATE 1 AND STOPPED FOR THE OWNER.** The spec is
+**THE RECORD SHELF IS AT GATE 1 AND STOPPED FOR THE OWNER — and the owner chose to hold it there on
+2026-09-21; nobody should chase these rulings until he reopens them.** The spec is
 [49-the-record-shelf.md](49-the-record-shelf.md); the spike is live at
 **https://deep-forest-labs.github.io/GardenofWonder/tools/records-spike.html** and the reasoning
 for every call in it is the 2026-09-02 (records, gate 1) entry at the top of

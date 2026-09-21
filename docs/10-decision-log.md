@@ -5,6 +5,52 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-21 (rulings, the owner's word) — Back from a week away: two knobs ruled, four calls held, the companion commissioned
+
+**The owner returned to the parked list and ruled on it in one sitting.** Each line below is his
+word; the build for the two knobs is a fix round, not this commit, so `data.js` still carries
+the old numbers until it lands — this entry is the ruling, the round is the change.
+
+**Ruled — to be built:**
+
+1. **Clover Nibble goes to 10,000 gold** (from 1,500). The 2026-09-03 round left it unmoved on
+   purpose because "greatly increase the cost of food" named no number; the owner has now named
+   one. Source: the owner, 2026-09-21; not derived from the faucet arithmetic in doc 22 — the
+   round that builds it measures gold-per-hour against the four-creature day and reports back,
+   it does not re-tune. `docs/11`'s "Clover is deliberately UNMOVED" entry closes with the build.
+2. **The permanent Harvest Drone leaves the Upgrades tab and lives in the Shop, beside its
+   rental.** The owner's original 2026-09-03 ask, reaffirmed after the desk priced it. The price,
+   stated once: the Shop's grammar was "timed things" and Upgrades' was "permanent things", and
+   this puts one permanent card on the timed shelf — accepted. What is NOT accepted is the
+   half-move `docs/11` warns about: the recipe there is the build (lift the key out of
+   `CORE_UPGRADES` and `UI_BADGE_KEYS` together, render the permanent card through
+   `upgradeCard('autoHarvest')` inside `renderShop()`, re-spec the reveal path first), so no
+   existing save loses its offline income and no reveal celebrates a card that no longer draws.
+
+**Held — the owner's choice, not a deferral by the desk:** the record shelf's gate-1 rulings
+(the blocker and the four veto points stay open; the builder stays parked); the golden seed
+(stays parked in doc 37 with its guardrails); the meadow art spike (not commissioned; `#16`
+waits). Petal Cake at 3 gems stays PROVISIONAL — the owner asked what it is before ruling, and
+the answer is doc 22's food ladder (a gem-priced pet food, 8 hours awake).
+
+**Commissioned — the AI companion, as a research and options document, not a build.** The
+owner's direction, verbatim in the prompt handed over today: a voice for the player to talk to;
+free for roughly the first day, then earned back — a pass or subscription for a few hours a day,
+or a rewarded ad to switch it on; the engineers to measure cost and test what is on the market.
+The desk's earlier companion pricing lived only in a predecessor's conversation and never reached
+this log, so the commissioned agent starts from the repo, not from a memory. Its deliverable is
+`docs/51-the-companion.md`, two-critic tested before filing, and it does not touch code. Under
+the 2026-09-10 ruling every collision it finds (a paid gate on a feature, ad frequency, PEGI's
+in-app-chat descriptors, the talking flower's existing voice) is priced in the doc, not refused.
+
+**Rejected:** re-tuning Clover to a "measured" number instead of the owner's (he named one; the
+round measures and reports, it does not second-guess); the half-move of the drone (filtering it
+out of the Upgrades render while leaving it in `CORE_UPGRADES` — a tab that re-renders four
+times a second); and designing the companion in this entry (the owner asked for options and
+costs first).
+
+---
+
 ## 2026-09-10 (fix round) — Closing what tonight's independent critics found on #26 and #27
 
 **Four critics, four confirmed findings, one wording-only false alarm inside them.** Working from
