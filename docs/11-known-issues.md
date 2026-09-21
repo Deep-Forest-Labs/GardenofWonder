@@ -153,6 +153,13 @@ landed on the scrim and `closeSheet()` ran ~33 ms later. The owner's own play sa
 do this — the probe's touch is zero-length — but a port that opens on press and dismisses on a
 scrim click should guard against it.
 
+### Not measured: the phone itself
+
+Everything in doc 50 marked **driven** was driven in headless Chrome. Two things matter to the port
+and were not measured on a device: **when iOS applies the flower's press** (`:active`; Chrome's
+touch emulation attached it ~50 ms after the finger and held it ~150 ms), and **whether WebKit drops
+the same rules Chrome drops** (CSS Syntax says it will; only Chrome was asked).
+
 ### Small things noticed on the way
 
 - **Stale code comments**, for the next time each file is open: `hasten()` in `game.js` says it
