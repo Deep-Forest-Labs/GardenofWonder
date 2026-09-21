@@ -1297,6 +1297,12 @@ constraint on the port.
 The Apiary and Craft tabs are a prototype shortcut and are **now scheduled for removal** with the
 adjacency rework — the interim dock is `Garden · Cards · Market · Shop` (phase 1.5 in that doc).
 
+**Ruled 2026-09-21, later the same day: loot boxes are expected eventually and an energy system is possible.**
+Doc 37's never-sell table, doc 19's loot-box warning and doc 25's energy line are today's defaults, not rules — left
+as written, dated by the 2026-09-21 (ruling) entry in [10-decision-log.md](10-decision-log.md), which states the
+two costs (rating and storefront; positioning) once so a feature entry can point at it. The Turn's currencies
+stay unsold as the 09-02 rescope left them. Every monetization idea is weighed for engagement and revenue first.
+
 **Ruled 2026-09-21, awaiting a fix round:** Clover Nibble goes to **10,000 gold**, and the permanent Harvest
 Drone moves from Upgrades to the Shop by the recipe in [11-known-issues.md](11-known-issues.md) — never the
 half-move. **Held by the owner the same day:** the record shelf's gate-1 rulings, the golden seed, the meadow

@@ -5,6 +5,52 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-21 (ruling, the owner's word) — Loot boxes and energy are on the table; the never-sell table becomes today's defaults
+
+**The owner's words, verbatim, on reading the one-page brief:** *"we'll definitely eventually have
+loot boxes and maybe even an energy system like Gossip Harbor, so I want to make sure that that
+stuff isn't set in stone. Our playbook and overall concept of the game is still very theoretical,
+and we should keep an open mind when building this. We need to maximize for engagement and
+monetization."*
+
+**What changes in the docs.** Doc 37's never-sell table, doc 19's "paid random packs are loot
+boxes" warning, doc 25's "energy would spend the pillar" line, and the "no banners, no energy, no
+loot boxes" rule that the 2026-09-10 entry listed among "what still stands" are **today's
+defaults, not rules**. They are left as written — each is a record of what was right on the day,
+under the 09-10 ruling — and this entry dates all of them. A future entry that ships a loot box or
+an energy system does not need to overturn a pillar; it needs to price the two costs below and
+say what it bought. The Turn's currencies (Saved Seeds, petals, seed unlocks, season gates) were
+not named today and stay as the 2026-09-02 rescope left them, until the owner says otherwise.
+
+**The price, stated once so the feature entry can point here instead of re-arguing it.**
+
+1. **Storefront and rating, the hard cost.** Doc 40 (June 2026 rules, sourced): paid random items
+   are PEGI 16 by default in Europe; Brazil bans loot boxes in games likely to reach children and
+   Apple auto-rates any app that declares them 18+ on the Brazil storefront; Germany's USK
+   applies the same criteria. Energy is not a rating trigger. A loot box therefore costs a region
+   and an age band on day one; the design that softens it — earnable keys, visible odds, a pity
+   timer, no real-money-only path — softens the *review* cost, not the rating. The card album
+   (doc 19) was built as owned instances with ids precisely so packs, dust and trading stay
+   possible; the architecture is not the obstacle, the questionnaire is.
+2. **Positioning, the soft cost.** Doc 38's counted "generous" square and the "no forced ads, no
+   energy, no fake timers" headline claim were already softened by the 09-02 rescope and the
+   09-10 fork ruling; this spends what is left of them. The store sentence becomes whatever the
+   shipped shelf makes true. Energy in particular sits against the game's own structure: the
+   garden is a timer game, so energy gates the *active* layer (merge, orders, taps), which is the
+   Gossip Harbor shape the log already describes — priced as a session-shape change, not a tax.
+
+**What the desk does with this.** Every monetization or engagement proposal from here is
+weighed for engagement and revenue first, with the two costs above stated in its own entry and
+the owner choosing. Nothing is refused on sight for running into doc 37, doc 19 or doc 25.
+
+**Rejected:** rewriting doc 37's table to say "sell everything" (the table's *reasons* are still
+true and still worth money in a rating questionnaire; only its authority changed); pre-designing a
+loot box or an energy system in this entry (the owner asked for an open mind, not a build); and
+treating "eventually" as "now" — the Unity shell, analytics and remote config come first for any
+of it, per HANDOFF.
+
+---
+
 ## 2026-09-21 (rulings, the owner's word) — Back from a week away: two knobs ruled, four calls held, the companion commissioned
 
 **The owner returned to the parked list and ruled on it in one sitting.** Each line below is his
