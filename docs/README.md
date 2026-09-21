@@ -60,6 +60,7 @@ Read it before anything else if you're picking the project up cold.
 | [43-punch-list.md](43-punch-list.md) | Something looks wrong today and you want to know whether it is already tracked — the working queue of bugs and polish fed by the owner's play, each one investigated with a fix sketch, ordered for the next fix round — **short-lived; [11-known-issues.md](11-known-issues.md) is the permanent record** |
 | [44-screens.md](44-screens.md) | You want to see what the game actually looks like — every key screen at true phone size, each driven into the state that matters before it was photographed — **generated; regenerate with `node tools/capture-screens.js`** |
 | [45-asset-inventory.md](45-asset-inventory.md) | You're recreating the art — the whole icon set exported as SVG files you can lift, and a table of every other art class with where its drawing code lives, what drives it and how many variants it has — **generated in part; regenerate with `node tools/export-icons.js`** |
+| [50-motion-bible.md](50-motion-bible.md) | You're rebuilding or changing how anything moves — the tap frame by frame, the particle system as a spec, the feedback ladder with every event, the reduced-motion rule and its static substitutes, then every keyframe, transition and particle call read out of the source — **generated in part; regenerate with `node tools/export-motion.js`** |
 
 If you only read two, read [09-conventions.md](09-conventions.md) and
 [02-architecture.md](02-architecture.md).

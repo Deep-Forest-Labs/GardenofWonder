@@ -178,6 +178,7 @@ const DESC = {
   '05-art-direction.md': 'How everything is drawn, styled and animated. All art is inline SVG and CSS — see 45-asset-inventory for the exported icon set and the full list of what has to be recreated.',
   '44-screens.md': 'Every key screen as a picture, at true phone size — what the game actually looks like, in each state that matters. Regenerated from the live build by one command, so it cannot drift.',
   '45-asset-inventory.md': 'Every visual asset the Unity build needs: the whole icon set exported as SVG files you can lift directly, and a table of every other art class with where its drawing code lives and how many variants it has.',
+  '50-motion-bible.md': 'How the game feels in motion, for the engineers rebuilding it: the tap frame by frame, the particle system as a spec you can reimplement, the feedback ladder with every event, the reduced-motion rule — then every keyframe, transition and particle call, generated from the source by one command so it cannot drift.',
 
   '34-build-plan.md': 'The phases, the review gates, and the critic gauntlet every phase runs. Phase 1 is built and reviewed.',
   '11-known-issues.md': 'Everything known to be broken or unfinished, including what was knowingly left behind.',
@@ -233,6 +234,7 @@ const GROUP_2 = [
   '05-art-direction.md',
   '44-screens.md',
   '45-asset-inventory.md',
+  '50-motion-bible.md',
 ];
 const GROUP_3 = ['34-build-plan.md', '11-known-issues.md'];
 
@@ -250,6 +252,7 @@ const SHORT = {
   '05-art-direction.md': '05 · Art direction',
   '44-screens.md': '44 · Screens gallery',
   '45-asset-inventory.md': '45 · Asset inventory',
+  '50-motion-bible.md': '50 · Motion bible',
   '34-build-plan.md': '34 · Build plan',
   '11-known-issues.md': '11 · Known issues',
 
@@ -358,6 +361,7 @@ function buildHome(allDocs) {
   out.push(bullet('05-art-direction.md'));
   out.push(bullet('44-screens.md'));
   out.push(bullet('45-asset-inventory.md'));
+  out.push(bullet('50-motion-bible.md'));
   out.push('');
 
   out.push('## 3. The build plan and open work');

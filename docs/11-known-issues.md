@@ -22,9 +22,156 @@ knows to look. When a query is about the live build specifically, `graft ask "<q
 game.js` (or whichever file you already suspect owns the answer) narrows the search away from
 `legacy/` entirely, at the cost of needing to already have a guess.
 
+**`graft_file_api` answers "no wiring graph — run graft build first"** (found 2026-09-21, by every
+agent that tried it during the motion bible's research); `graft_find_all`, `graft_find_code` and
+`graft_repo_map` work. Run `graft build` before relying on file signatures.
+
 **Do not delete or move `legacy/`.** [`docs/README.md`](README.md) and the wiki link it as the
 playable previous build; it stays tracked, and Graft indexing it is a side effect of that, not a
 reason to reconsider it.
+
+## What the motion bible found (2026-09-21)
+
+Found while writing [50-motion-bible.md](50-motion-bible.md): four research agents driving the
+build with `tools/probe.js`, and the generator `tools/export-motion.js` reading the source. **A
+docs-only round — nothing here is fixed.** Each is a fix round's, or the owner's where it says so.
+
+### The flower's rain pose never plays — a stray brace drops its rule
+
+**Driven.** `style.css` — grep `50%{transform:translateY(-2px) rotate(-1deg) scale(1.02)}`: a
+keyframe stop left behind when `@keyframes wxUmbrellaTilt` was deleted (commit 0215097,
+2026-08-31), followed by the `}` that closed it. The CSS parser folds that stray `}` into the next
+rule's selector, so the whole rule — the rain and storm pose that swings the flower's right leaf
+over its head (`animation:wxLeafHold`, `transform:translate(-17px,-80px) rotate(31deg)
+scale(1.35)`) — is dropped without a word. The browser's own list of rules holds only the leaf's
+ordinary wave and the reduced-motion cancel; in rain the leaf keeps waving.
+[41-weather-staging.md](41-weather-staging.md)'s leaf-over-the-head is not in the build. The fix is
+two deleted lines, but it changes what every player sees in every rain, so it is a fix round's.
+`tools/export-motion.js` lists both dropped rules under *What the browser drops* and refuses to run
+on any new one; once this is fixed it stops and asks for its `KNOWN_DROPPED` entries — and this
+entry — to go. **Acceptance:** in rain or a storm, the flower's right leaf swings up over its head
+and holds there, breathing.
+
+### The adjacency flash is invisible under reduced motion
+
+**Driven.** `style.css` — grep `animation:verbLinkCalm 1.6s linear forwards`: the reduced-motion
+substitute's duration is not `!important`, so the global clamp (`animation-duration:.001ms
+!important`) flattens it and `forwards` holds its last frame, `opacity:0`. With the preference on,
+planting a verb flower shows its neighbours nothing; [08-ui-and-layout.md](08-ui-and-layout.md)
+describes the calm fade as working. The fix shape is the storm's: `animation-duration:1.6s
+!important` beside it. **Acceptance:** with reduced motion on, a verb flower's neighbours show a
+ring that fades over 1.6 s.
+
+### Five more reduced-motion gaps
+
+- **A ripe plot wears a still white band** (driven, A/B screenshot). The soil's light sweep —
+  `.plot[data-state="ready"] .plot-inner::before` — is parked off the plot only by `@keyframes
+  sweep`, so the clamp leaves it resting across the plot's right half. It needs the substitute the
+  Turn button and Collect All already have.
+- **The meadow's "a hive is affordable here" disappears** (driven). `.mw-cell.empty.can .mw-empty`
+  differs from an ordinary empty cell only by its `mwInvite` pulse.
+- **The Year panel's ready ring has no substitute** (driven). `.yr-meter.ready{animation:yrFull`
+  reverts to the plain lip; the dock's Turn button holds a solid ring, and the panel's words still
+  say it, so this is low.
+- **Four quiet fades are 80 ms steps** (driven), because their durations lack `!important`: the
+  aurora's exit (1.2 s asked), a front's arrival and parting (5 s, 7 s), the sky's wash (3.6 s,
+  6.5 s — a tint jump of up to 0.68 opacity), and the sunbreak's ending (2.8 s). The quiet block's
+  own header — "The global clamp near line 2288", "Two do" — is stale too.
+- **The sheet's scrim lingers** (read). `closeSheet()` hides the scrim after a fixed 340 ms even
+  when the slide took 80 ms, so it swallows taps for ~260 ms; the drawer already does
+  `calm() ? 0 : 340`.
+
+### Sheet celebrations fire from the top-left corner
+
+**Driven** for an upgrade, a decoration, a called sky and a feed; read for craft, sell, deliver and
+the drone rental. The sheet's click handler (grep `const buy = e.target.closest('[data-buy]')` and
+its neighbours) calls the engine first — whose `panels` event re-renders the sheet and detaches
+the button — and only then measures the button with `FX.centerOf()`, a 0×0 rect, so the sparks and
+ring burst at (0, 0). The petal handler already measures first, and says why. It is the recorded
+trap "A celebration centred on a hidden element fires from the top-left corner", one file over.
+
+### Collecting honey is silent
+
+**Driven** call, **read** recipe: `tapCell()` and `dockTap()` in `ui-meadow.js` call
+`Sound.play('collect')`, and `audio.js`'s `RECIPES` has no `collect`, so both meadow collections
+make no sound at all.
+
+### Overlapping banners cut each other short
+
+**Driven.** `showBanner()` in `ui.js` never clears the previous banner's two timers, so a banner
+shown while another is up is faded out on the older one's schedule — 1.6 s instead of 2.6 s in the
+probe — and its own timers then replay on the hidden layer. Real overlaps: a level-up during the
+Wonder, a creature arriving beside a pair, several *Set complete* banners from one pack.
+
+### The meadow's talking flower sways as a whole
+
+**Driven.** `ui-meadow.js` — grep `f.className = 'flower-btn mw-flower'`: the hero flower shares the
+`.mw-flower` class with the meadow's wild flowers, so on top of its own idle it runs their `mwSway`
+(6.4 s, ±2.5°) about its base. Probably unintended: rename the class, or scope the sway.
+
+### The tap's pitch wraps every ten, so the combo cap sounds like a reset
+
+**Driven — the owner's call.** `audio.js` `RECIPES.tap` plays `SCALE[step % 10]`: the climb is nine
+notes long and falls back to the bottom at combo 10, 20, 30… and every combo cap (50, or 60–100
+with Combo Coil) is a multiple of ten, so a player holding the cap hears the lowest pair on every
+tap — the payoff sounds like a reset. Clamp at the top note, or keep the wrap on purpose; either
+way the port should decide it rather than inherit it.
+
+### Doc 06's feedback ladder disagrees with the code in ten cells
+
+**Driven — the owner's call.** Listed cell by cell in
+[50-motion-bible.md](50-motion-bible.md#where-the-code-disagrees-with-it): speech on a crit and on
+Rare and Epic harvests, the first discovery's float, the retired mastery rung, the level-up's
+ring and banner, Fall's windfall line, a third hurry refusal, the aurora's line, the petal float.
+The ladder is a design contract, so its cells were not rewritten to match the code: **the owner
+rules each** — keep the contract and a fix round changes the code, or accept the code and the
+table changes.
+
+### A Plot Harvester's planting never shows the Auto tag
+
+**Driven — the owner's call.** The *Auto* tag the stylesheet builds for automatic planting
+(`/* auto-plant tag */`) shows only when a seed is sown **free**: `Game.on('plant')` in
+`ui-events.js` reads the payload's `auto`, and `plant()` in `game.js` sets it to `!payCost`. A
+Plot Harvester pays for its seed, so its planting plays `plant` and `vibrate(10)` like a hand
+planting and never wears the tag; only a Spreader's free seed does. Either the flag should mean
+"automatic", or the tag is right as it is and the docs that promise it for harvesters should
+change.
+
+### In a storm, the plants' lean replaces their wet glint
+
+**Driven.** Every plant carries both `.wx-glint` and `.wx-lean` (`ui.js`, the plant markup), and the
+storm's `.wx-lean` rules match the glint rules' specificity and come later, so their `animation`
+wins outright: in a storm no plant breathes the wet rim, only rain's do. The recorded trap
+"`transform`, `filter` and `animation` are one property each", on two classes of one element.
+`tools/export-motion.js` cannot see it — it reads rules, not elements — so doc 50 names it by hand.
+
+### HYPOTHESIS: an empty plot's tap may close the picker it opens
+
+**Driven in headless Chrome only (2 of 2); a hypothesis on a phone.** `onPlotTap()` opens the seed
+picker on `pointerdown` and `openSheet()` unhides the scrim at once, so the same tap's late `click`
+landed on the scrim and `closeSheet()` ran ~33 ms later. The owner's own play says a phone does not
+do this — the probe's touch is zero-length — but a port that opens on press and dismisses on a
+scrim click should guard against it.
+
+### Small things noticed on the way
+
+- **Stale code comments**, for the next time each file is open: `hasten()` in `game.js` says it
+  shaves "2% off the remaining time" and takes 2% of the whole grow; the `.wonder-veil` comment
+  says the Wonder lasts twelve seconds (`WONDER.duration` is 20); and the Sky Pass quiet block's
+  header, above.
+- **`lookAt()` always moves the garden flower's eyes**, so a guest flower in Fall or Winter squashes
+  and talks but never looks at the finger (read).
+- **`faceReact('happy')` is never called**, and the *wow* mouth's path goes out and back along the
+  same curve, so it draws as a thick stroke rather than an open mouth (read).
+- **Two keyframes never play in practice**: `on-pop` (nothing adds `.pop` to `.on-said`) and
+  `jarPop` (nothing renders `.jar.on`) (read).
+- **Doubled cues**: placing a hive or a tender plays `buy` twice with two buzzes; feeding plays
+  `buy` and `quest` together; finishing the Turn plays `close` twice.
+- **Reduced motion is partial in the particles**: stars and rings are never capped, only the
+  weather's haptics check the preference, and `fx.js` reads it once, at boot, so a mid-session
+  toggle reaches the CSS and not the particles until a reload.
+- **The Hollow's wings and tails keep moving under reduced motion** — the cancel names only
+  `.critter .cr-wings, .critter .cr-tail`, so `.hollow-pet` ones fall to the clamp alone (driven).
 
 ## What the overnight fix round knowingly left (2026-09-03)
 

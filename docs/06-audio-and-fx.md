@@ -93,8 +93,10 @@ sounds never clash.
 | `wonder` | Ten-note square run plus low sawtooth drone | Wonder Effect |
 
 `tap` takes the current combo as its argument and indexes the scale with it, so a sustained tap
-streak plays a climbing melodic run. Combo also multiplies tap payout; the pitch climb is the
-audible half of that same meter.
+streak plays a climbing melodic run — nine notes, then back to the bottom at every tenth combo,
+which means a player sitting at the combo cap hears the lowest pair on every tap (filed in
+[11-known-issues.md](11-known-issues.md) for the owner). Combo also multiplies tap payout; the
+pitch climb is the audible half of that same meter.
 
 Epic harvests deliberately reuse `legend`. There is no separate epic sound.
 
@@ -271,8 +273,11 @@ above was built on — everything on the white keys, so the pentatonic taps neve
 
 ## Visual effects
 
-`fx.js` owns one full-screen `<canvas>` plus a DOM layer for floating text. The canvas sits behind
-the interface and ignores pointer events.
+`fx.js` owns one full-screen `<canvas>` plus a DOM layer for floating text. The canvas sits inside
+the shaken world, above the heads-up display and the dock and below an open sheet, and ignores
+pointer events. Every call's full spec — parameters, physics, lifetimes, caps — the tap frame by
+frame, and this document's ladder extended to every event are in
+[50-motion-bible.md](50-motion-bible.md).
 
 The canvas is sized to `devicePixelRatio` capped at 2 — uncapped DPR on a 3× phone triples fill
 cost for no visible benefit.
@@ -403,8 +408,10 @@ instead of repeating it**, so the next one is caught by a check rather than by a
 
 `FX.shake(power, time)` sets shake amount and remaining time, taking the **maximum** of current and
 requested rather than adding, so simultaneous triggers don't compound into nausea. Each frame it
-writes random offsets into `--shake-x/y/r` on `#game`, decaying to zero. Rotation is 9% of
-translation magnitude. Fully disabled under reduced motion.
+writes a random offset as one inline transform on `#world` (see above), decaying linearly to zero.
+Rotation is 9% of translation magnitude. The decay divides by 0.28 s whatever time was asked for,
+so `power` is the peak only at that default — a shorter shake opens weaker and a longer one
+harder. Fully disabled under reduced motion.
 
 ### The flash ceiling
 
@@ -501,10 +508,10 @@ this can be a single beat: eight taps would be eight coin bursts, eight floats, 
 and a coin counter lurching through eight `currency` emits, which is noise where the payoff should
 be.
 
-**Fall speaks in a toast, not in a speech bubble.** `UI.say()` writes into `#speech`, which lives in
-the garden's flower cell — and `.in-fall .garden-frame{display:none}` hides it. A line spoken in
-Fall goes into a hidden node. The `windfall` beat still calls `say()` and has always been silent
-there; Collect All does not, and the toast carries the sentence instead.
+**Fall's flower speaks now; Collect All still says its sentence in a toast.** The one speech
+bubble, `#speech`, moves to whichever flower is on screen (`UI.bindFlower()`), so the windfall's
+forced line is heard in Fall. It used to be written into the garden's flower cell, which Fall
+hides, and was silent there for as long as Fall existed.
 
 Rare harvests deliberately get no toast. At 20% frequency they generated constant notification
 noise; stars and floating text carry the moment instead. Toasts are also capped at two on screen

@@ -173,13 +173,14 @@ Work is tiered by how often it actually needs to happen:
 
 | Cadence | Work |
 | --- | --- |
-| Every frame | `Game.tick`, `renderPlots`, `hudTick` (wallets + quest strip), `FX.step`, combo ring variables |
-| 1 s | Combo decay, idle-chatter check |
-| 0.25 s | Rail chips (booster and Wonder countdowns) |
-| 0.6 s | Dock attention dots, coach mark placement, sky colour, sheet affordability |
+| Every frame | `Game.tick`, `renderPlots`, `hudTick` (the wallet count-up), `FX.step`, combo ring variables |
+| 1 s | Combo decay, idle-chatter check, the next queued moment (`tryMoment`) |
+| 0.25 s | Rail chips (booster and Wonder countdowns), the power-up button, the quest strip, open-sheet timers and reveal checks |
+| 0.6 s | Creatures, the Hollow and the meadow, Fall and Winter, dock attention dots, the year meter, season edges, coach mark placement, sky colour, sheet affordability |
 
 `dt` is clamped to 0.1 s so that returning to a backgrounded tab doesn't produce one enormous
-simulation step.
+simulation step, and `FX.step` clamps it again to 0.05 s. What each tier moves, and everything
+that moves on its own clock instead, is in [50-motion-bible.md](50-motion-bible.md).
 
 ### Rendering cheaply
 

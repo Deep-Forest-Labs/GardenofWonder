@@ -5,6 +5,82 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-21 (docs) — The motion bible: half written for the engineers, half read out of the source
+
+**The Unity engineer asked what happens in the 400 ms after a finger lands on the flower, and no
+document could say.** Doc 05's "Motion" gave a count of keyframe animations that was out by more
+than seventy (the stylesheet has 103; a bare `grep -c` says 104 because one sits in a comment), and
+doc 06's ladder listed twenty-one events against some eighty moments of feel in the code.
+[50-motion-bible.md](50-motion-bible.md) answers in two halves. The authored half is the language
+of feel: the four principles with their numbers, **the tap frame by frame — driven, not read**
+(twelve probe runs recording every `FX` call, sound and vibration, the canvas and the CSS
+animations), the particle system as a spec an engineer can rebuild `coins(x, y, 8)` from, the
+ladder carried over verbatim and extended to every event, the sequences, reduced motion and its
+static substitutes, and where the code is. The generated half is `tools/export-motion.js`: every
+keyframe and every rule that plays it, what switches it on or off, and what reduced motion does to
+it; every transition; the easing vocabulary; the `FX` surface and every call into it; the
+JavaScript choreography; the motion variables the JavaScript writes.
+
+**The generator refuses rather than lie** — docs/45's lesson. It will not write unless its keyframe
+count agrees with a plain scan, every keyframe has a player and every player a keyframe, every `FX`
+call names an export, and every rule the browser would drop is a known, filed one. **Its
+reduced-motion column is worked out, not written down**: the cascade's own question — importance,
+then specificity, then order — per selector and, for transitions, per property.
+
+**Rejected:**
+
+- **One hand-written inventory.** It rots by next week; doc 05's count proved it, and 103 keyframes
+  and 105 transition rules is past the size anyone re-counts. Doc 05's line now points at the
+  generated count instead of restating one.
+- **Folding it into doc 06.** Two-thirds of doc 06 is audio — buses, beds, the duck, the music
+  scheduler — and it would bury the motion for the reader who came for it. Doc 06 keeps sound and
+  the ladder as a design contract, doc 50 carries the ladder and extends it, and each links the other.
+- **Rewriting doc 06's ladder to match the code.** Ten cells disagree with what the code does. The
+  ladder is the owner's contract, so its cells stand; the disagreements are listed in doc 50 and
+  filed in doc 11 for the owner to rule, contract or code. Sentences that simply described the built
+  game wrongly were corrected in place instead: doc 06's canvas "behind the interface" (it sits
+  above the heads-up display), its shake "writing `--shake-*` on `#game`" and doc 05's (one inline
+  transform on `#world`), Fall's flower "always silent" (it speaks now), doc 05's sky "1.6 s
+  transitions" (a gradient cannot transition) and reduced growth "with no transition at all" (80 ms),
+  and doc 02's frame-loop table.
+- **A reduced-motion column by class name**, which would claim `.critter-svg{animation:none}` cancels
+  `.critter.bop .critter-svg`. It does not — the cancel loses — and the column says so.
+- **Trusting the stylesheet's text.** The research enumerated the rules the browser actually holds and
+  found one it drops: a stray `}` folded into the next selector silently killed the flower's rain
+  pose. The generator now drops what a browser drops, and holds a ratcheted list of known drops that
+  refuses a new one and refuses a stale entry.
+- **Inline SVG pictures, or screenshots.** GitHub and the wiki strip `<svg>` from Markdown; the
+  timing picture is a fenced text chart, which renders the same in the repo, on the wiki and in
+  Obsidian. Nothing hand-made.
+- **A Unity implementation guide.** The document describes the web build's feel; translating is the
+  engineers'. The one exception is naming what depends on the frame rate — the coin magnet and the
+  confetti drag are per frame, so at 30 fps coins die 22 px short of the wallet — because copying
+  the numbers literally at another rate changes the feel.
+
+**The gauntlet**, three critics independent of the writer: an engineer who read only doc 50 and
+rebuilt the tap and `coins()` from it, with a judge comparing the rebuild to the source (eighteen
+divergences — floats that start centred, stars born at random angles, a ladybug that drops 13 px not
+42, a sheet and banner that do shake — all fixed in the doc); a truth critic who checked twenty
+random rows by hand and five random ladder rows in the running build (four generator defects: cancels
+written `#game .x` never matched `.x`, `!important` transition longhands ignored, transitions compared
+rule to rule rather than property to property, and off-switches such as the sunbreak rays' `:not()`
+gate invisible, so rows claimed "always on"; and three ladder rows wrong — all fixed); and a drift
+critic who ran the tool twice, edited scratch stylesheets and tried to break it two dozen ways
+(thirteen got through, all now fixed: sorting that changed with the machine's language, a second
+marker that could delete prose, a typo'd flag that ran the writer, unknown pseudo-classes, `FX`
+calls written `FX?.x` or `FX['x']` and readouts called as functions, a line of copy mistaken for an
+animation, a new orphan stop accepted under the known one's provenance, and three legal stylesheets
+refused). **The owner asked for the second, clean round to be
+skipped for cost**, so the fixes were verified by the tool's own break tests and `--check`, not by a
+fresh gauntlet.
+
+**What it found, filed in [11-known-issues.md](11-known-issues.md) and none fixed** (docs only): the
+rain pose never plays; the adjacency flash is invisible under reduced motion; further
+reduced-motion gaps; sheet celebrations fire from the top-left corner; honey collection is silent;
+overlapping banners cut each other short; the meadow's flower sways as a whole; a harvester's
+planting never shows the Auto tag; in a storm the lean replaces the wet glint; and two for the owner
+— the tap's pitch wraps every ten, so the combo cap sounds like a reset, and the ten ladder cells.
+
 ## 2026-09-21 (ruling, the owner's word) — Loot boxes and energy are on the table; the never-sell table becomes today's defaults
 
 **The owner's words, verbatim, on reading the one-page brief:** *"we'll definitely eventually have

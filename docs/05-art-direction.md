@@ -216,7 +216,8 @@ thresholds in `DATA.growth` (ruled on `tools/stage-spike.html`; the values ship 
 The unfurl rides the head: entering `bloom`, `f-head` swells from the bud's footprint
 (`scale(.22)` → 1) while the bud fades on top and the petals, core and ring fade in — softer and
 longer than the `.6s` stage bounce on purpose. Every stage's pose is static declarations in the
-stage rules, so reduced motion shows the correct stage with no transition at all.
+stage rules, so reduced motion shows the correct stage at once (the global clamp leaves an 80 ms
+transition, too short to read as growth).
 
 Three rules the block obeys, learned the hard way: a CSS transform that restates an SVG transform
 keeps `transform-origin: 0 0` (punch list #14 — the old numeric stage 2 double-counted the head's
@@ -311,8 +312,9 @@ the sunbreak, which will not break through after dark.
 
 Seven keyframes define the cycle — midnight, dawn, morning, midday, golden hour, dusk, back to
 midnight. `updateSky()` interpolates between neighbouring keys every 0.6 s and writes the result to
-custom properties. CSS carries 1.6 s transitions on those properties, so the coarse update rate is
-invisible.
+custom properties. The sun or moon's position and the stars' opacity carry 1.6 s transitions, so
+they glide between writes; the sky's gradient cannot transition at all — an unregistered custom
+property does not interpolate — and each 0.6 s step is simply too small to see.
 
 The cycle is **not saved, and no longer keyed to page load**. It derives from epoch time, so every
 player sees the same hour at the same moment and a past instant stays answerable — which is what
@@ -322,7 +324,12 @@ at midday.
 
 ## Motion
 
-Twenty-eight keyframe animations. The recurring principles:
+**How many keyframe animations there are is not written here.** This line once gave a number, and
+it went stale without anything going red. The live count heads the generated inventory in
+[50-motion-bible.md](50-motion-bible.md) — every keyframe, the rules that play it, its timing, what
+switches it on and what reduced motion does to it, rewritten from the source by
+`node tools/export-motion.js` — and that document turns each principle below into numbers. The
+recurring principles:
 
 **Squash and stretch on contact.** Taps trigger a scale-down-then-overshoot rather than a linear
 scale. Re-triggering requires removing the class, forcing reflow with `void el.offsetWidth`, then
@@ -333,8 +340,11 @@ re-adding — a pattern used in several places.
 **Ambient idle motion.** Stems sway, leaves wave, clouds drift, stars twinkle, empty plots bob,
 affordable prices pulse. All slow, all looping, none demanding attention.
 
-**Shake for impact.** `FX.shake()` writes `--shake-x/y/r` on `#game`; the variables inherit to
-`#world` inside it, which is the element carrying the `translate3d` and `rotate`. The transform sits
+**Shake for impact.** `FX.shake()` writes one inline `translate3d` and `rotate` straight onto
+`#world`, the wrapper that carries everything the shake moves, and removes it when the shake ends;
+the `--shake-x/y/r` values in `style.css` are only the resting transform. (It once wrote those
+variables on `#game`, which cost 2.5–3.4 ms a frame — see
+[06-audio-and-fx.md](06-audio-and-fx.md#visual-effects).) The transform sits
 on the wrapper rather than on `#game` itself so `#game` stays an untransformed fixed box — see
 [08-ui-and-layout.md](08-ui-and-layout.md#mobile-specifics). Magnitudes: 3 for a denial, 5 for Epic, 7 for a crit, 9 for
 Legendary, 10 for a Wonder.

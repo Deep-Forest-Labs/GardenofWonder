@@ -252,7 +252,9 @@ Bounds worth knowing: every plot has exactly two neighbours, so any verb caps at
 1. `Game.emit('yourEvent', payload)` from `game.js`.
 2. `Game.on('yourEvent', …)` in `ui-events.js` — **at module level, never inside a function that reruns**.
 3. Place it on the feedback ladder in [06-audio-and-fx.md](06-audio-and-fx.md) deliberately.
-   Don't give a minor event Legendary-tier juice.
+   Don't give a minor event Legendary-tier juice. Add its row to the extended ladder in
+   [50-motion-bible.md](50-motion-bible.md) too, and run `node tools/export-motion.js` — its `FX`
+   call table is generated, so a new call shows up there on its own.
 4. Add a sound recipe to `RECIPES` if it needs one, pitched to the pentatonic scale.
 5. Respect reduced motion — `FX` handles this for you if you go through it.
 6. Toasts only for genuinely notable moments. The cap is two.
@@ -452,6 +454,10 @@ Covered fully in [07-save-data.md](07-save-data.md). The short version:
    writing down why is how a style guide becomes fiction.
 7. `--strict` ignores the baseline and lists every violation in the file. That is the sweep's
    worklist, not the gate.
+8. **If you touched an animation, a transition or a reduced-motion rule, run
+   `node tools/export-motion.js`.** The inventory in [50-motion-bible.md](50-motion-bible.md) is
+   read out of this file; `--check` goes red while it is stale, and the run refuses outright on a
+   rule the browser would drop — a stray `}` or `;` kills the next rule without a word.
 
 ## Finding your way: graft
 
