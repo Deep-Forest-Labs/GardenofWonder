@@ -76,14 +76,26 @@ ring that fades over 1.6 s.
   when the slide took 80 ms, so it swallows taps for ~260 ms; the drawer already does
   `calm() ? 0 : 340`.
 
-### Sheet celebrations fire from the top-left corner
+### ~~Sheet celebrations fire from the top-left corner~~ — FIXED 2026-09-22
 
-**Driven** for an upgrade, a decoration, a called sky and a feed; read for craft, sell, deliver and
-the drone rental. The sheet's click handler (grep `const buy = e.target.closest('[data-buy]')` and
-its neighbours) calls the engine first — whose `panels` event re-renders the sheet and detaches
-the button — and only then measures the button with `FX.centerOf()`, a 0×0 rect, so the sparks and
-ring burst at (0, 0). The petal handler already measures first, and says why. It is the recorded
-trap "A celebration centred on a hidden element fires from the top-left corner", one file over.
+All eight paths (upgrade, decoration, a called sky, feed, craft, sell, deliver, drone rental) now
+measure the button with `FX.centerOf()` BEFORE the engine call, the way the petal handler already
+did — copied shape, copied comment. Driven all eight with a real tap or click (below-the-fold cards
+needed `scrollIntoView` first, the recorded trap) and logged `FX.sparks`/`FX.ring`/`FX.coins`/
+`FX.stars`' first two args before and after:
+
+| Path | Before | After |
+| --- | --- | --- |
+| upgrade | (0, 0) | (104, 445) |
+| decoration | (0, 0) | (104, 422) |
+| called sky | (0, 0) | (130, 400) |
+| drone rental | (0, 0) | (164, 422) |
+| craft | (0, 0) | (64, 422) |
+| sell | (0, 0) | (293, 614) |
+| feed | (0, 0) | (82, 422) |
+| deliver | (0, 0) | (195, 467) |
+
+None burst at (0, 0) after the fix.
 
 ### Collecting honey is silent
 

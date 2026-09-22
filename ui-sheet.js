@@ -2945,11 +2945,14 @@
        and data-craft have theirs — syncAfford() below keys off the kind. */
     const feed = e.target.closest('[data-feed]');
     if (feed) {
+      /* Measure BEFORE the feed: feedCritter() emits `panels`, which rebuilds
+         the sheet body, so by the time it returns this node is detached and
+         its rect is 0x0 — the petal handler already found this trap. */
+      const at = FX.centerOf(feed);
       const got = Game.feedCritter(feed.dataset.who, feed.dataset.feed);
       if (got) {
-        const c = FX.centerOf(feed);
-        FX.sparks(c.x, c.y, 12, got.def.art.glow);
-        FX.stars(c.x, c.y, 5, '#ffe066');
+        FX.sparks(at.x, at.y, 12, got.def.art.glow);
+        FX.stars(at.x, at.y, 5, '#ffe066');
         Sound.play('quest');
         FX.haptic(10);
         UI.toast({
@@ -2977,16 +2980,18 @@
     if (give) {
       const slot = Number(give.dataset.deliver);
       const order = Game.standOrderAt(slot);
+      /* Measure BEFORE standDeliver(): it emits `panels`, which rebuilds the
+         sheet body and detaches this node — the petal handler's trap. */
+      const at = FX.centerOf(give);
       const res = Game.standDeliver(slot);
       if (!res) { Sound.play('deny'); return; }
       const who = customerById(order.customer);
       const good = goodById(order.good);
       /* The payoff beat: they light up, hearts, coins, and their thank-you in
          their own words. An order that just decrements a counter is a form. */
-      const c = FX.centerOf(give);
-      FX.stars(c.x, c.y, 8, '#ffe066');
-      FX.sparks(c.x, c.y, 16, who ? who.art.accent : '#ffd6e8');
-      FX.coins(c.x, c.y, 10);
+      FX.stars(at.x, at.y, 8, '#ffe066');
+      FX.sparks(at.x, at.y, 16, who ? who.art.accent : '#ffd6e8');
+      FX.coins(at.x, at.y, 10);
       Sound.play('quest');
       FX.haptic(14);
       const rep = Game.standOrderRep(order);
@@ -3049,20 +3054,24 @@
     }
     const craft = e.target.closest('[data-craft]');
     if (craft) {
+      /* Measure BEFORE startCraft(): it emits `panels`, which rebuilds the
+         sheet body and detaches this node — the petal handler's trap. */
+      const at = FX.centerOf(craft);
       if (Game.startCraft(craft.dataset.craft)) {
-        const c = FX.centerOf(craft);
-        FX.sparks(c.x, c.y, 10, '#8ce0ff');
+        FX.sparks(at.x, at.y, 10, '#8ce0ff');
         Sound.play('buy');
       } else { Sound.play('deny'); FX.shake(4); }
       return;
     }
     const sellBtn = e.target.closest('[data-sell]');
     if (sellBtn) {
+      /* Measure BEFORE sell(): it emits `panels`, which rebuilds the sheet
+         body and detaches this node — the petal handler's trap. */
+      const at = FX.centerOf(sellBtn);
       const total = Game.sell(sellBtn.dataset.sell, sellBtn.dataset.key, true);
       if (total) {
-        const c = FX.centerOf(sellBtn);
-        FX.coins(c.x, c.y, 8);
-        FX.float(c.x, c.y - 6, `+${fmt(total)}`, 'big');
+        FX.coins(at.x, at.y, 8);
+        FX.float(at.x, at.y - 6, `+${fmt(total)}`, 'big');
         Sound.play('coin');
       } else { Sound.play('deny'); }
       return;
@@ -3075,24 +3084,29 @@
        engine decides whether the ad may be spent; this only reports. */
     const adBtn = e.target.closest('[data-ad]');
     if (adBtn) {
+      /* Measure BEFORE rentDrone(): it emits `panels`, which rebuilds the
+         sheet body and detaches this node — the petal handler's trap. */
+      const at = FX.centerOf(adBtn);
       const took = adBtn.dataset.ad === DATA.droneRental.boost ? Game.rentDrone() : false;
       if (took) {
-        const c = FX.centerOf(adBtn);
-        FX.sparks(c.x, c.y, 12, '#b197fc');
-        FX.ring(c.x, c.y, '#ffffff', 0.45, 70);
+        FX.sparks(at.x, at.y, 12, '#b197fc');
+        FX.ring(at.x, at.y, '#ffffff', 0.45, 70);
       } else { Sound.play('deny'); FX.shake(4); }
       return;
     }
     const buy = e.target.closest('[data-buy]');
     if (buy) {
       const { buy: kind, key } = buy.dataset;
+      /* Measure BEFORE the engine call: buyUpgrade()/callWeather()/buyDecor()
+         all emit `panels`, which rebuilds the sheet body and detaches this
+         node — the petal handler's trap. */
+      const at = FX.centerOf(buy);
       const ok = kind === 'upgrade' ? Game.buyUpgrade(key)
         : kind === 'sky' ? Boolean(Game.callWeather(key))
         : Game.buyDecor(key);
       if (ok) {
-        const c = FX.centerOf(buy);
-        FX.sparks(c.x, c.y, 12, '#ffe066');
-        FX.ring(c.x, c.y, '#ffffff', 0.45, 70);
+        FX.sparks(at.x, at.y, 12, '#ffe066');
+        FX.ring(at.x, at.y, '#ffffff', 0.45, 70);
         if (kind === 'sky') renderSheet(true);
       } else if (kind === 'sky') {
         Sound.play('deny');

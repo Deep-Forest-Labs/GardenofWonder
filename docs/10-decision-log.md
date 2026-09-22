@@ -25,6 +25,26 @@ rule.
 
 ---
 
+## 2026-09-22 (fix round) — Sheet celebrations measure the button before the engine call, not after
+
+All eight purchase-adjacent paths in the sheet's click handler (`ui-sheet.js`) — upgrade,
+decoration, a called sky, feed, craft, sell, deliver, drone rental — called the engine first, whose
+`panels` event synchronously re-renders the sheet and detaches the button, so `FX.centerOf()`
+measured a 0×0 rect and every celebration burst from the top-left corner. Moved the measurement
+above the engine call in all eight, copying the petal handler's shape and comment rather than
+inventing a new pattern for the same trap. Verified with a real tap/click on all eight (not a
+sample) and a before/after table of `FX.sparks`/`FX.ring`/`FX.coins`/`FX.stars`' coordinates, filed
+in docs/11.
+
+**Rejected:**
+
+- **A shared helper that wraps "measure, call, celebrate."** Six of the eight sites differ in which
+  FX calls they make and in what they do on failure (`Sound.play('deny')`, `FX.shake(4)`, some
+  neither) — a wrapper would need as many parameters as the branches already have lines, for a
+  three-line pattern that is already legible copied eight times.
+
+---
+
 ## 2026-09-21 (docs) — The motion bible: half written for the engineers, half read out of the source
 
 **The Unity engineer asked what happens in the 400 ms after a finger lands on the flower, and no
