@@ -5,6 +5,26 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-22 (fix round) — The flower's rain pose reaches the browser again
+
+Deleted the orphaned `@keyframes wxUmbrellaTilt` stop and the stray `}` it left behind
+(docs/11, "The flower's rain pose never plays"), which is all the fix ever was — the two lines had
+been folding the leaf-hold rule into an invalid selector since commit 0215097. Proved it against
+`document.styleSheets` in a live probe rather than trusting the source file, per the recorded trap.
+Removed both entries from `tools/export-motion.js`'s `KNOWN_DROPPED` (the orphaned stop and the
+rule it swallowed are the same defect) and its filed-reference text, since the tool refuses to run
+while a fixed drop is still listed. No change was needed to the reduced-motion cancel for
+`.tf-leaf-r` — it already held the pose correctly and was simply unreachable behind the dropped
+rule.
+
+**Rejected:**
+
+- **Writing a new reduced-motion substitute.** The existing cancel (`animation-name:none` on the
+  same selector) already leaves the static `transform` in place once the base rule exists; adding a
+  second rule would have been solving a problem that was never there.
+
+---
+
 ## 2026-09-21 (docs) — The motion bible: half written for the engineers, half read out of the source
 
 **The Unity engineer asked what happens in the 400 ms after a finger lands on the flower, and no

@@ -5952,10 +5952,6 @@ button:focus-visible{
   100%{transform:scale(1,1)}
 }
 
-
-  50%{transform:translateY(-2px) rotate(-1deg) scale(1.02)}
-}
-
 /* The flower's right leaf swings up and lies across the top of its head. */
 #game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .tf-leaf-r{
   animation:wxLeafHold 2.8s ease-in-out infinite;

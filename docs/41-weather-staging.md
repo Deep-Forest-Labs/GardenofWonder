@@ -37,7 +37,8 @@ starting points; **the motion stage is where they get tuned, by hand, by the own
   with a different draw — tens of drops, not hundreds); the sky wash deepens; **soil and cobbles
   darken wet** (the board is the world too); plants glisten, and an occasional drop lands on one
   with the house squash-and-bounce; **the flower holds a leaf over its head** — the character
-  acknowledges before any UI does.
+  acknowledges before any UI does. (This sentence is true in the build again as of 2026-09-22 —
+  see "The flower's rain pose never plays" in [11-known-issues.md](11-known-issues.md).)
 - **Audio:** a soft rain-hiss bed (looping filtered noise on a new ambience bus that respects
   both mutes); the music's pad re-instruments gently "muffled indoors" — same tune, cosier
   clothes. The Animal Crossing move: rearrangement, never replacement.

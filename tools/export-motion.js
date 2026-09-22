@@ -388,15 +388,7 @@ function parseStylesheet(src) {
 /* Keyed by the dropped rule's whole text, selector and declarations, so another stray `50%`
    stop somewhere else is a new defect and not this one wearing its provenance. */
 const dropKey = (d) => `${d.prelude} {${d.decls.map((x) => `${x.prop}:${x.value}${x.important ? ' !important' : ''}`).join('; ')}}`;
-const KNOWN_DROPPED = new Map([
-  ['50% {transform:translateY(-2px) rotate(-1deg) scale(1.02)}',
-    'a keyframe stop left behind when `@keyframes wxUmbrellaTilt` was deleted (commit 0215097, 2026-08-31)'],
-  ['#game:is([data-weather="rain"],[data-weather="storm"]):is([data-wx-phase="transform"],[data-wx-phase="linger"]) .tf-leaf-r ' +
-    '{animation:wxLeafHold 2.8s ease-in-out infinite; transform:translate(-17px,-80px) rotate(31deg) scale(1.35); ' +
-    'transition:transform .55s cubic-bezier(.34,1.56,.64,1)}',
-    "the `}` that closed the orphaned stop above, so the flower's rain pose goes with it"],
-]);
-const KNOWN_DROPPED_FILED = '[11-known-issues.md](11-known-issues.md) — "The flower\'s rain pose never plays"';
+const KNOWN_DROPPED = new Map([]);
 
 // ---------------------------------------------------------------- selectors
 

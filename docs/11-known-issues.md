@@ -36,21 +36,16 @@ Found while writing [50-motion-bible.md](50-motion-bible.md): four research agen
 build with `tools/probe.js`, and the generator `tools/export-motion.js` reading the source. **A
 docs-only round — nothing here is fixed.** Each is a fix round's, or the owner's where it says so.
 
-### The flower's rain pose never plays — a stray brace drops its rule
+### ~~The flower's rain pose never plays — a stray brace drops its rule~~ — FIXED 2026-09-22
 
-**Driven.** `style.css` — grep `50%{transform:translateY(-2px) rotate(-1deg) scale(1.02)}`: a
-keyframe stop left behind when `@keyframes wxUmbrellaTilt` was deleted (commit 0215097,
-2026-08-31), followed by the `}` that closed it. The CSS parser folds that stray `}` into the next
-rule's selector, so the whole rule — the rain and storm pose that swings the flower's right leaf
-over its head (`animation:wxLeafHold`, `transform:translate(-17px,-80px) rotate(31deg)
-scale(1.35)`) — is dropped without a word. The browser's own list of rules holds only the leaf's
-ordinary wave and the reduced-motion cancel; in rain the leaf keeps waving.
-[41-weather-staging.md](41-weather-staging.md)'s leaf-over-the-head is not in the build. The fix is
-two deleted lines, but it changes what every player sees in every rain, so it is a fix round's.
-`tools/export-motion.js` lists both dropped rules under *What the browser drops* and refuses to run
-on any new one; once this is fixed it stops and asks for its `KNOWN_DROPPED` entries — and this
-entry — to go. **Acceptance:** in rain or a storm, the flower's right leaf swings up over its head
-and holds there, breathing.
+Deleted the orphaned `50%{transform:translateY(-2px) rotate(-1deg) scale(1.02)}` stop and the
+stray `}` after it, so `animation:wxLeafHold` reaches the browser again — proved against
+`document.styleSheets`, not the file. Both `KNOWN_DROPPED` entries (and the filed-reference text)
+came out of `tools/export-motion.js` in the same commit; `--check` is green with 0 rules dropped.
+With reduced motion on, the leaf still holds up (`animation-name:none`, `transform` frozen at the
+pose) rather than reverting to its ordinary wave — the existing reduced-motion cancel was already
+correct and only needed the base rule to reach the page. [41-weather-staging.md](41-weather-staging.md)'s
+leaf-over-the-head sentence is true in the build again.
 
 ### The adjacency flash is invisible under reduced motion
 

@@ -725,6 +725,12 @@ const DATA = {
      write what it feels like to play, not what was done. */
   changelog: [
     {
+      date: '2026-09-22',
+      lines: [
+        'In rain and thunderstorms, the flower now holds a leaf over its head the whole time it is wet, instead of waving it about like nothing is happening.'
+      ]
+    },
+    {
       date: '2026-09-10',
       lines: [
         'Finishing a flower early with gems no longer hands it a catch during rain, a storm, an aurora or a Wonderfall — standing under that sky a while is the only way to earn one now.',
