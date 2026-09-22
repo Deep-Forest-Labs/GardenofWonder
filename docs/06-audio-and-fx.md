@@ -80,6 +80,7 @@ sounds never clash.
 | `crit` | Four-note square arpeggio plus bright noise | Critical tap |
 | `coin` | Two quick high square notes | Ticket bonus, cheat grant |
 | `harvest` | Rising four-note triangle figure | Common harvest |
+| `collect` | Same as `harvest` — an alias, not its own recipe | Collecting honey in the meadow |
 | `plant` | Soft rising sine plus low noise | Planting |
 | `unlock` | Five-note ascending fanfare | Plot unlocked |
 | `quest` | Three soft sine notes | Quest claimed |
@@ -99,6 +100,10 @@ which means a player sitting at the combo cap hears the lowest pair on every tap
 pitch climb is the audible half of that same meter.
 
 Epic harvests deliberately reuse `legend`. There is no separate epic sound.
+
+Collecting honey deliberately reuses `harvest`, for now — it shipped with no recipe at all and made
+the meadow's two collect actions silent (filed and fixed, [11-known-issues.md](11-known-issues.md)).
+A honey sound of its own is open; the owner's ear decides it, not this alias.
 
 **Closing a chip tooltip is deliberately silent, and the rail is now the one place `open` can fire
 three times in a row.** Since #9 all three kinds of chip in the status rail open a tooltip, and each

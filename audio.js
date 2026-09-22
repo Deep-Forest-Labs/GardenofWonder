@@ -263,6 +263,9 @@ const Sound = (() => {
     harvest: () => {
       [0, 7, 12, 16].forEach((s, i) => tone({ freq: note(s + 12), type: 'triangle', dur: 0.2, gain: 0.16, at: i * 0.05 }));
     },
+    /* An alias, not a compose: collecting honey sounds like a harvest until it
+       earns a sound of its own — see 11-known-issues.md. */
+    collect: (...a) => RECIPES.harvest(...a),
     plant: () => {
       tone({ freq: note(4), type: 'sine', dur: 0.18, gain: 0.2, slide: 1.6 });
       noise({ dur: 0.12, gain: 0.08, hp: 500 });

@@ -25,6 +25,23 @@ rule.
 
 ---
 
+## 2026-09-22 (fix round) — Collecting honey aliases the harvest sound rather than staying silent
+
+`ui-meadow.js` calls `Sound.play('collect')` from both meadow collection paths, and `audio.js`'s
+`RECIPES` never had a `collect` entry — a missing recipe fails silently (`play()`'s `if (fn)
+fn(arg)`), which is how it shipped and stayed unnoticed. Added `collect` as a straight alias of
+`harvest` rather than composing a new recipe, because a bespoke honey sound is a design call
+(what it should sound like) that belongs to the owner's ear, not to a fix round closing a missing
+call. Filed the alias as open in docs/11 and docs/06 so it reads as a placeholder, not a decision.
+
+**Rejected:**
+
+- **Writing a real `collect` recipe now.** Nothing in doc 06 specs what collecting honey should
+  sound like, and guessing one now means either the owner keeps a sound nobody asked for or it gets
+  thrown away the moment they do decide — cheaper to alias and leave the question open.
+
+---
+
 ## 2026-09-22 (fix round) — Sheet celebrations measure the button before the engine call, not after
 
 All eight purchase-adjacent paths in the sheet's click handler (`ui-sheet.js`) — upgrade,

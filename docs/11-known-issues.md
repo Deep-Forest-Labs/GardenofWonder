@@ -97,11 +97,14 @@ needed `scrollIntoView` first, the recorded trap) and logged `FX.sparks`/`FX.rin
 
 None burst at (0, 0) after the fix.
 
-### Collecting honey is silent
+### ~~Collecting honey is silent~~ — FIXED 2026-09-22
 
-**Driven** call, **read** recipe: `tapCell()` and `dockTap()` in `ui-meadow.js` call
-`Sound.play('collect')`, and `audio.js`'s `RECIPES` has no `collect`, so both meadow collections
-make no sound at all.
+Added `collect` to `audio.js`'s `RECIPES` as an alias of `harvest` (`collect: (...a) =>
+RECIPES.harvest(...a)`), so `tapCell()` and `dockTap()` in `ui-meadow.js` no longer call a recipe
+that does not exist — confirmed with a probe spying on `AudioContext.prototype.createOscillator`,
+which fires four times on `Sound.play('collect')`, matching `harvest`'s four-note figure. **Open:**
+collecting honey sounds like a harvest today; a sound of its own is the owner's ear, not this
+round's — see [06-audio-and-fx.md](06-audio-and-fx.md).
 
 ### Overlapping banners cut each other short
 

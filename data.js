@@ -728,7 +728,8 @@ const DATA = {
       date: '2026-09-22',
       lines: [
         'In rain and thunderstorms, the flower now holds a leaf over its head the whole time it is wet, instead of waving it about like nothing is happening.',
-        'Buying an upgrade, a decoration or a called sky, feeding a pet, crafting, selling, delivering an order or renting the drone now sparkles from the button you tapped, instead of the corner of the screen.'
+        'Buying an upgrade, a decoration or a called sky, feeding a pet, crafting, selling, delivering an order or renting the drone now sparkles from the button you tapped, instead of the corner of the screen.',
+        'Collecting honey in the wild meadow makes a sound now.'
       ]
     },
     {
