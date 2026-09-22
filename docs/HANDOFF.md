@@ -60,6 +60,27 @@ decided, and what to do next. Update it at the end of any significant session.
 
 ## Where the project stands
 
+> **THE MOTION BIBLE'S FIRST FIX ROUND LANDED 2026-09-22 — the first five items the motion bible
+> filed, all DRIVEN, all with a decided anchor and no economy number moved.** In rain and storms the
+> flower's right leaf now holds up over its head (a stray `}` had been folding its rule into the next
+> selector's, invisible to `document.styleSheets` until it was proved live). All eight of the sheet's
+> purchase-adjacent celebrations — upgrade, decor, a called sky, feed, craft, sell, deliver, drone
+> rental — now burst from the button you tapped instead of the screen's top-left corner. Collecting
+> honey makes a sound (aliased to the harvest recipe; a bespoke one is still open). A second banner
+> shown while the first is still up gets its own full duration. And three reduced-motion gaps closed:
+> the adjacency flash survives the global clamp, a ripe plot's shine hides instead of freezing into a
+> stuck white band, and the meadow's affordable-cell invitation gets a static border colour instead of
+> disappearing. **Two new sim-test.js checks came out of it** (no orphaned `@keyframes` stop, no
+> reduced-motion duration without a matching `!important`), both strengthened once more after the
+> round's own independent verifier found two ways past the first version — see the 2026-09-22
+> entries in [10-decision-log.md](10-decision-log.md) and **"The current task"** below for the table,
+> the probes and the morning script. **What the motion bible filed and this round left alone, all
+> still in [11-known-issues.md](11-known-issues.md)**: three more reduced-motion gaps (the Year
+> panel's ready ring, four quiet TRANSITION fades — a different property family — and the sheet's
+> lingering scrim), plus four items past the first five that were never this round's to touch: the
+> meadow flower's borrowed sway, the tap's pitch wrap, doc 06's ladder disagreeing with the code, and
+> a Plot Harvester's missing Auto tag.
+
 > **THE MOTION BIBLE LANDED 2026-09-21 — docs and one tool, no game code touched.**
 > [50-motion-bible.md](50-motion-bible.md) is what moves in this game, when, how far and for how long,
 > written for the Unity engineers; it sits in **"What the Unity build needs"** on the wiki beside the
@@ -73,7 +94,9 @@ decided, and what to do next. Update it at the end of any significant session.
 > and the run refuses outright on a keyframe with no player, a player with no keyframe, or a rule the
 > browser would silently drop.
 >
-> **It found things, and fixed none of them** (docs only; all in [11-known-issues.md](11-known-issues.md)):
+> **It found things, and fixed none of them at the time** (docs only; all in
+> [11-known-issues.md](11-known-issues.md); the first five below were fixed 2026-09-22, see the
+> callout above):
 > the flower's rain pose has never played (a stray `}` in `style.css` drops its rule); the adjacency
 > flash is invisible under reduced motion; shop celebrations burst from the screen's top-left corner;
 > collecting honey is silent; overlapping banners cut each other short. **Two are the owner's call**:
@@ -1367,19 +1390,92 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**THE MOTION BIBLE'S FIRST FIX ROUND IS DONE AND PUSHED — the first five items doc 11 filed
+2026-09-21, across six commits, all confirmed on `origin/main` by `git log`.** The suite went
+**2,221 → 2,228 assertions, 0 failed**, run three times after the final commit with an identical
+count each time. `node tools/style-check.js`, `node tools/export-motion.js --check` (0 rules
+dropped, 0 ⚠) and `node tools/html-check.js` all green. Read the 2026-09-22 entries in
+[10-decision-log.md](10-decision-log.md) for the reasoning; this section is the table, the two probe
+tables, the one decision made and its reversal, and the morning script. **One independent verifier**
+was told only the five acceptance sentences and tried a wrong implementation of each; it found real
+soft spots in the two sim-test checks this round itself had just written (a duration that carries
+`!important` but disagrees with its own shorthand, a cancel with no `opacity:0` behind it, a
+`border-color` swapped for an inert `outline-color`) and all three were closed the same day, sabotage
+tested by hand. Its other two findings — sabotaging `ui-sheet.js`'s measurement order back, and
+dropping one of `showBanner()`'s two `clearTimeout` calls — are real but not new: both revert code
+this round already fixed and already proved correct with a live probe, and both are the same
+`ui-*`-files-cannot-load-headlessly limitation this round's own task text names for item 4;
+accepted, not fixed, because closing them needs a headless DOM harness for the `ui-*` files that
+does not exist here and is well outside five items. **docs/43 was not touched**, per instruction.
+
+### The item → commit table
+
+| Item | What it is now | Commit |
+| --- | --- | --- |
+| **1 — the rain pose** | Deleted the orphaned `@keyframes` stop and the stray `}` that was folding `wxLeafHold`'s rule into the next selector; removed both now-fixed entries from `tools/export-motion.js`'s `KNOWN_DROPPED` and regenerated doc 50 | `7cb6a4e` |
+| **2 — sheet celebrations** | All eight purchase-adjacent paths in `ui-sheet.js`'s click handler now measure with `FX.centerOf()` before the engine call that detaches the button | `08a5819` |
+| **3 — honey is silent** | Added `collect` to `audio.js`'s `RECIPES` as an alias of `harvest` | `cf9785b` |
+| **4 — overlapping banners** | `showBanner()` in `ui.js` now clears both of the previous banner's timers at the top of every call | `521bef5` |
+| **5 — three reduced-motion gaps** | `!important` on `verbLinkCalm`'s duration; the ripe plot's shine hides (`animation:none;opacity:0`) instead of freezing into a band; the meadow's affordable-cell border recolours to the established afford-green under reduced motion; two new sim-test.js checks | `c79779b` |
+| **5 — hardening** | Closed the three gaps the round's own verifier found in the two new checks (duration-value agreement, opacity:0 alongside animation:none, border-color not outline-color) | `07083cf` |
+
+### The two probe tables
+
+**Burst origins (item 2), before → after, `FX.centerOf()`'s `{x,y}` on a real tap/click:**
+
+| Path | Before | After |
+| --- | --- | --- |
+| upgrade | (0, 0) | (104, 445) |
+| decoration | (0, 0) | (104, 422) |
+| called sky | (0, 0) | (130, 400) |
+| drone rental | (0, 0) | (164, 422) |
+| craft | (0, 0) | (64, 422) |
+| sell | (0, 0) | (293, 614) |
+| feed | (0, 0) | (82, 422) |
+| deliver | (0, 0) | (195, 467) |
+
+**Banner timing (item 4), two banners 400ms apart, `ms:2600` each, `getComputedStyle` opacity sampled
+every 100ms:**
+
+| | Second banner's `out` class appears | Fully hidden |
+| --- | --- | --- |
+| Before | ~2.7s (First's own 0+2.6s schedule) | ~3.1s |
+| After | ~3.0–3.1s (Second's own 0.4+2.6s schedule) | ~3.4–3.5s |
+
+### The one decision made, and its reversal
+
+**Collecting honey aliases the harvest sound rather than getting a recipe of its own** — a bespoke
+honey sound is the owner's ear, not a fix round's call, and `audio.js`'s `RECIPES.collect` was
+missing outright, not merely wrong, so an alias closes the actual bug without inventing a design
+this round has no standing to make. **To reverse:** write a real `collect` recipe in `audio.js` (see
+`harvest`'s shape for the pattern) and drop the one-line alias; doc 06 and doc 11 both flag the alias
+as open on purpose, so nothing else needs to change.
+
+### The morning script — two minutes
+
+1. **Hold Rain.** Developer tools → set the weather to Rain. Look at the flower's right leaf — it
+   should swing up and hold there over its head, still breathing (not static) unless reduced motion
+   is on, in which case it holds without breathing.
+2. **Buy an upgrade.** Open Upgrades and buy anything affordable — the sparks and ring should burst
+   from the card you tapped, never from the top-left corner.
+3. **Collect honey.** In the Wild Meadow, tap a hive or the dock's Collect — it should make a sound.
+4. **Turn reduced motion on**, then: plant a verb flower (Bluebell) next to another plot and watch the
+   neighbour show a fading ring (not nothing); look at a ripe plot (no stuck white band); look at an
+   affordable empty meadow cell (a green-bordered invitation, not identical to an unaffordable one).
+
+Then stop. Everything above is on `main` and live.
+
+### The round before this one — the 2026-09-10 punch list
+
 **THE OVERNIGHT FIX ROUND OF 2026-09-10 IS DONE AND PUSHED — punch-list items #26 (gem-skip
 mutation farming) and #27 (the replant chip), across four commits, all confirmed on `origin/main`
 by `git log`.** The suite went **2,171 → 2,221 assertions, 0 failed**, run three times after the
-final commit with an identical count each time — deterministic, any red tomorrow is real. Read the
-2026-09-10 entries in [10-decision-log.md](10-decision-log.md) for the reasoning; this section is
-the table, the reversals, what got filed instead of decided, and the morning script. Four
-independent critics were run against tonight's work before it was called done; two real gaps they
-found (a test-coverage hole on a *bought* weather call, and the replant chip's tap target actually
-falling short of 44px at every size) were fixed in the last commit, and two of their claims were
-checked and rejected as not true of this codebase — both are in the table below. **docs/43 was not
-touched — pruning #26 and #27 to its graveyard is the keeper's job, not this round's.**
-
-### The item → commit table
+final commit with an identical count each time. Read the 2026-09-10 entries in
+[10-decision-log.md](10-decision-log.md) for the reasoning. Four independent critics were run
+against that round's work before it was called done; two real gaps they found (a test-coverage hole
+on a *bought* weather call, and the replant chip's tap target actually falling short of 44px at
+every size) were fixed in the last commit, and two of their claims were checked and rejected as not
+true of this codebase. **docs/43 was not touched.**
 
 | Item | What it is now | Commit |
 | --- | --- | --- |
@@ -1387,52 +1483,6 @@ touched — pruning #26 and #27 to its graveyard is the keeper's job, not this r
 | **#26** (chip) | The gem chip gets a third, dimmed look when held by a catchy sky, and a tap on it floats one line naming the sky instead of quietly doing nothing | `3878761` |
 | **#27** | The replant chip is a real button now — cycle-arrows, the seed's own bloom, its price — sized so the bloom clears the plant-here marker, not the old anonymous pill | `0b7b17d` |
 | **#26 + #27** (fix pass) | Closed what the critics found: a real test gap on a *bought* weather call (not just the dev override), the replant chip's invisible tap target actually hitting 44px at every size, and the changelog's weather names matching the in-game wording | `05a62ce` |
-
-### The decisions made in your absence, each one line to reverse
-
-| Decision | Reverse by |
-| --- | --- |
-| **The engine gate refuses on ANY sky that carries a catch** (storm, aurora, Wonderfall, and Rain's Dewkissed — a fourth sky the punch-list's own table never sampled), not just Wonderfall | Narrow `skipGrow()`'s condition in `game.js` from `weatherAt(cell.mutateAt).mutation` to a name check for `'wonderfall'` alone, and update the "punch list #26" `sim-test.js` group + docs/03/18 + the decision-log entry to match |
-| **The held gem chip explains itself (dims + floats a line) instead of disappearing** — item #11's own "hide chips that do nothing" precedent was NOT applied here, on purpose | In `ui.js`, return before rendering the chip when `Game.skipState(idx).state === 'held'` (mirroring the `SEASON_DEAD_EFFECTS` hide pattern #11 already uses), and drop `skipHoldLine()` and the held branch in `onSkipTap()` |
-| **The replant chip's pill rule was split out of the shared `.skip-chip`/`.fl-skip` rule** into its own `.replant-chip` rule, so #26's gem chip and #27's replant chip size and colour independently | Merge `.replant-chip`'s declarations back into the shared selector in `style.css` — check the fix pass's gradient and 44px `::before` sizing don't collide with `.skip-chip` first |
-| **The replant chip's visible size**: the brief's assumed 44px (36px floor "on the smallest tile") didn't clear the plant-here marker at ANY tested viewport, so the bloom/icon are sized continuously with `min(px, vh)`, coefficient tuned down until real screenshots cleared the marker with margin (3.3px / 1.7px / 2.8px at the three portrait sizes) | The `min()` coefficient sits in `style.css`'s `.replant-chip` rule — raise it and re-measure with `tools/probe.js` at all three portrait viewports before shipping |
-| **The 44px tap target is a separate, invisible `::before`** (fixed at `inset:-6px` in the original build, which fell 1–8px short at every size; the fix pass resized it to `max(calc(100% + 12px), 44px)` to actually hit 44) — the *visible* box stays smaller than 44px everywhere | The formula is on `.replant-chip::before` in `style.css`; growing the visible box itself instead would need the marker-clearance budget re-derived first |
-| **A new icon, `cycle`, was drawn for the replant chip** — checked first against 8 existing candidate names (repeat/refresh/loop/arrows/rotate/replant/reload) and none existed | Swap the glyph reference in `renderPlots()`'s replant-chip markup for any other `icons.js` entry, or draw a new one in the second, documented-safe `Object.assign(LIB,{...})` block and regenerate `art/exports/icons/` + docs/45's manifest via `tools/export-icons.js --check` |
-| **The held-chip CSS rule is Summer-only** (`.plot[data-skip="held"] .skip-chip`) — it was deliberately NOT extended to Fall's `.fl-plot`/`.fl-skip`, because Fall's own two-value gate never calls `Game.skipState()` and structurally cannot reach this value | Add the mirrored `[data-skip="held"]` rule scoped to `.fl-plot .fl-skip` only once/if Fall's own skip path is taught to call `skipState()` |
-| **Held outranks unaffordable** in `skipState()` — a plot that is both broke and weather-held reports the sky as the reason, not "you're broke" | Swap the precedence check inside `skipState()` in `game.js` |
-| **Two critic findings were checked and rejected, not applied**: the held chip's border colour stays low-contrast (`--paper-dim-2`/`--paper-dim-edge`, matching two other "not available right now" surfaces already in `style.css`), and no radial highlight/dirt-mark was added to either chip (that pattern belongs only to `.plot`'s soil tiles, not numbered pills — `.lock-cost` itself is flat) | If you disagree: the border-colour declaration on `.plot[data-skip="held"] .skip-chip`, and adding a radial-gradient pair to `.replant-chip`/`.skip-chip`, are both in `style.css` |
-
-### FILED FOR THE MORNING — NOT DECIDED, no economy number moved
-
-**#26 has two more possible shapes than what shipped tonight; both were left for your call, not chosen for you:**
-
-- **Shape 2 — let the skip forfeit the roll instead of refusing it** (hurry freely, lose the booked catch silently). Keeps the gem sink open through the commonest weather in the game once Rain is counted, but it contradicts `skipGrow()`'s own neutrality comment and the pre-existing sim-test group guarding that neutrality — both would need to change on purpose if you prefer this over tonight's refuse-and-spend-nothing shape.
-- **Shape 3 — raise the 1-gem floor in `skipCost()`** (the exploit is arguably that the floor never rises to meet exposure, not the skip itself). This is an economy number, explicitly out of scope tonight; it would also change Summer's ordinary skip feel at the cheap end (#24's own still-open question), and both gold figures below would need re-measuring against a new floor.
-
-**Gold-per-minute under the pre-fix farm, measured so you aren't tuning blind if you pick shape 2 or 3** (storm held via `Game.Dev.setWeather`, 60 plant/skip/harvest cycles per one-real-minute sample — a stated ~1 cycle/second assumption, not a measured human rate — clock advanced one real second per cycle so the Wonder Effect expires like it would for a real player, averaged over 300 independent samples with the real unpinned RNG):
-
-| Seed | Gold / minute |
-| --- | --- |
-| Daisy | ~18,200 |
-| Lavender (the dearest seed whose skip still costs exactly 1 gem — Rose, the next seed up, already costs 2) | ~86,200 |
-
-Neither number was acted on. Nothing about the gem-skip floor or the refuse-vs-forfeit shape moved tonight beyond the generic sky gate itself.
-
-### The morning script — eyes then thumbs
-
-1. **Hold a storm.** Developer tools → set the weather to Storm. Plant a Daisy. **Tap the gem chip
-   and read what it says** — it should be dimmed and float a line naming the sky ("Not under a
-   storm — a catch is for waiting out."), and the tap should spend no gem.
-2. **Let it go.** Either wait for the plant's own booked moment to pass, or set the weather back to
-   Clear from Developer tools, then **tap the chip again.** It should be back to its ordinary bright
-   look, and a real tap should spend exactly 1 gem and finish the plant.
-3. **The replant chip.** Harvest a plot and look at its bottom right *from arm's length* — a rounded
-   pill holding cycle-arrows, the seed's own bloom, and its gold price. **Tap it** — it should plant
-   the same seed again without opening the picker. On a phone held sideways it won't clear the
-   plant-here marker (accepted, not solved — the plot itself is too small there), but it should
-   still sit fully inside its own tile.
-
-Then stop. Everything above is on `main` and live.
 
 ## The record shelf, still at gate 1
 
@@ -2716,19 +2766,30 @@ the closing `}` behind, and the rule after them never reached the game. **Read t
 browser holds, not the file**: `node tools/export-motion.js` refuses to run on a new dropped rule,
 and in the page, `document.styleSheets` against the source is the check. (An inline style read back
 from the page also comes back with the browser's own spacing — `translate3d(1px, 2px, 0px)` — so a
-regex over it must allow spaces after commas, or it reports a shake of zero.)
+regex over it must allow spaces after commas, or it reports a shake of zero.) **Fixed 2026-09-22**
+(the two lines deleted, `KNOWN_DROPPED` cleared) — and `sim-test.js` now holds a sibling check that
+no `@keyframes` stop sits outside a `@keyframes` block, so this exact shape cannot regress silently
+again.
 
 **A reduced-motion substitute whose substance is a duration must say `!important`, or it never
 plays.** The global clamp is `!important`, so a quiet version written as a plain `animation:` or
 `transition-duration` is flattened to 0.001 ms or 80 ms like everything else — and one that fills
 forwards to `opacity:0` then holds that invisible frame for as long as its class stays on. The
 adjacency flash's `verbLinkCalm` is exactly this; the Sky Pass's own quiet block knew the rule and
-the older rule did not. `tools/export-motion.js` marks it with the inventory's only ⚠.
+the older rule did not. `tools/export-motion.js` marks it with the inventory's only ⚠. **Fixed
+2026-09-22** (`animation-duration:1.6s !important` added beside the shorthand) — and note the trap's
+own second half, found the same day: `!important` alone isn't the whole claim, because a duration
+that carries it but disagrees with the shorthand's own value is just as flattened in effect. A
+sim-test check now compares the two values, not merely the annotation's presence.
 
 **A celebration measured AFTER the engine call fires from the top-left corner.** In the sheet's click
 handler, an engine call's `panels` event re-renders the sheet and detaches the button before
 `FX.centerOf()` measures it, so upgrade, decoration, sky, feed, craft, sell, deliver and drone
-sparks burst at (0, 0). Measure first, then call the engine — the petal handler does.
+sparks burst at (0, 0). Measure first, then call the engine — the petal handler does. **Fixed
+2026-09-22**, all eight paths, verified with a live probe (before/after burst-coordinate table in
+"The current task" above) — there is still no automated regression test for this shape, because
+`ui-sheet.js` cannot load headlessly; a sabotage that reorders the measurement back would ship
+undetected by any check in this repo today.
 
 **A timer that schedules against the AudioContext clock must check `ctx.state`, because a frozen
 page stops that clock and not the timer.** `tone()` writes `ctx.currentTime + at`; the three
@@ -3878,7 +3939,7 @@ the repo's path the same way, and it will not warn you.
 ## Checking your work
 
 ```bash
-node tools/sim-test.js          # 2,221 assertions over the simulation layer
+node tools/sim-test.js          # 2,228 assertions over the simulation layer
 node tools/html-check.js        # the escaping ruling: no player text inside a template literal
 node tools/year-sim.js 12 all   # the pacing model — see the caveat below before trusting its exit code
 node tools/order-gold.js 25 4   # is a delivered order worth a minute of the player's time, per tier?
@@ -4009,7 +4070,7 @@ stale line here costs them real time before they have any way to know it is wron
 > - **Docs are the source of truth.** `AGENTS.md` defines "done" as the docs being true again in the
 >   same commit. That has kept this project coherent across a very long run; please hold it.
 > - **Run `node tools/sim-test.js` after any simulation change, several times** — the docs record a
->   whole class of flaky tests caused by unpinned `Math.random`. It is at 2,221 assertions,
+>   whole class of flaky tests caused by unpinned `Math.random`. It is at 2,228 assertions,
 >   including the Garden Year's 18-item bill.
 > - **Spike the feel before building the system.** `tools/merge-spike.html`, `tools/hollow-spike.html`,
 >   `tools/map-spike.html` and `tools/customer-spike.html` all saved real time.
