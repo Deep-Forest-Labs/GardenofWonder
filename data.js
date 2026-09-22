@@ -729,7 +729,8 @@ const DATA = {
       lines: [
         'In rain and thunderstorms, the flower now holds a leaf over its head the whole time it is wet, instead of waving it about like nothing is happening.',
         'Buying an upgrade, a decoration or a called sky, feeding a pet, crafting, selling, delivering an order or renting the drone now sparkles from the button you tapped, instead of the corner of the screen.',
-        'Collecting honey in the wild meadow makes a sound now.'
+        'Collecting honey in the wild meadow makes a sound now.',
+        'A banner that pops up while another one is still showing — a level-up during a Wonder, say — now gets to stay on screen for its own full moment, instead of vanishing early on the first one’s schedule.'
       ]
     },
     {

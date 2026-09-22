@@ -1937,13 +1937,22 @@
   }
 
   /* ============ banners ============ */
+  /* A banner shown while another is still up used to fade out on the OLDER
+     one's schedule — its two timers kept running against a title that was no
+     longer its own, cutting the newest banner short by whatever time the
+     first had left (measured: 1.6s shown where 2.6s was owed). The newest
+     banner now owns the full `ms`, always. */
+  let bannerOutTimer = null;
+  let bannerHideTimer = null;
   function showBanner(title, sub, ms = 2200) {
+    clearTimeout(bannerOutTimer);
+    clearTimeout(bannerHideTimer);
     el.banner.innerHTML = `<div class="bg"><h2>${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div>`;
     el.banner.classList.remove('out');
     el.banner.classList.add('show');
-    setTimeout(() => {
+    bannerOutTimer = setTimeout(() => {
       el.banner.classList.add('out');
-      setTimeout(() => el.banner.classList.remove('show', 'out'), 400);
+      bannerHideTimer = setTimeout(() => el.banner.classList.remove('show', 'out'), 400);
     }, ms);
   }
 

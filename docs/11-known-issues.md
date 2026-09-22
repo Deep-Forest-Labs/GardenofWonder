@@ -106,12 +106,22 @@ which fires four times on `Sound.play('collect')`, matching `harvest`'s four-not
 collecting honey sounds like a harvest today; a sound of its own is the owner's ear, not this
 round's — see [06-audio-and-fx.md](06-audio-and-fx.md).
 
-### Overlapping banners cut each other short
+### ~~Overlapping banners cut each other short~~ — FIXED 2026-09-22
 
-**Driven.** `showBanner()` in `ui.js` never clears the previous banner's two timers, so a banner
-shown while another is up is faded out on the older one's schedule — 1.6 s instead of 2.6 s in the
-probe — and its own timers then replay on the hidden layer. Real overlaps: a level-up during the
-Wonder, a creature arriving beside a pair, several *Set complete* banners from one pack.
+`showBanner()` now holds its two timer ids at module scope and clears both at the top of every
+call, so the newest banner always owns its full `ms` rather than fading on whatever was left of the
+one before it. Probed two banners 400 ms apart (`ms: 2600` each) and sampled `getComputedStyle`
+opacity every 100 ms — a headless assertion isn't possible here (`ui.js` cannot load outside a
+page), so the table is the evidence:
+
+| | Second banner's `out` class appears | Fully hidden |
+| --- | --- | --- |
+| Before | ~2.7 s (First's own 0+2.6s schedule) | ~3.1 s |
+| After | ~3.0–3.1 s (Second's own 0.4+2.6s schedule) | ~3.4–3.5 s |
+
+Reduced motion untouched and still fades correctly (checked with `media:reduce`). Real overlaps
+this protects: a level-up during the Wonder, a creature arriving beside a pair, several *Set
+complete* banners from one pack.
 
 ### The meadow's talking flower sways as a whole
 

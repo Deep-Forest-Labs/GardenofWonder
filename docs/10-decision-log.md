@@ -25,6 +25,27 @@ rule.
 
 ---
 
+## 2026-09-22 (fix round) — The newest banner always owns its full duration
+
+`showBanner()` in `ui.js` scheduled its fade and its removal with bare `setTimeout` calls and never
+held onto their ids, so a second banner shown while the first was still up inherited nothing of its
+own — the first banner's leftover timers fired on the second banner's markup, cutting it short by
+whatever time was left on the original schedule (measured: faded ~2.7s in from a fresh `showBanner`
+call that asked for 2.6s of its own). Held both timer ids at module scope and clear both at the top
+of every call, so the newest call is the only clock running. Probed with two banners 400ms apart and
+sampled computed opacity every 100ms rather than trust a single before/after screenshot, since the
+whole bug is about timing, not appearance — table in docs/11.
+
+**Rejected:**
+
+- **A queue that shows banners one after another instead of replacing.** Doc 11's real overlaps
+  (a level-up mid-Wonder, several *Set complete* banners from one pack) are exactly the cases where
+  showing every one in sequence would leave a queue of stale news the player has moved past by the
+  time it is shown. The newest banner replacing the old one is the existing, correct behaviour —
+  only its timing was broken.
+
+---
+
 ## 2026-09-22 (fix round) — Collecting honey aliases the harvest sound rather than staying silent
 
 `ui-meadow.js` calls `Sound.play('collect')` from both meadow collection paths, and `audio.js`'s
