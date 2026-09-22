@@ -44,6 +44,23 @@ sits outside a `@keyframes` block (item 1's exact shape), and every reduced-moti
 its own animation duration also marks it `!important` (item 5(a)'s exact shape). Both sabotaged by
 hand — reintroducing the deleted lines, and dropping the new `!important` line — and both went red.
 
+**The round's independent verifier then found three of its own gaps, all in checks this round wrote,
+and all closed the same day.** Told only the five acceptance sentences, it (1) sabotaged the
+`!important` duration to a WRONG value (`.001ms !important`) rather than dropping it, which the
+first version of the duration check missed because it only asked "is `!important` present," not
+"does it agree with the shorthand" — fixed by comparing the two duration values instead of merely
+detecting the annotation; (2) dropped the ripe plot's `opacity:0` and kept only `animation:none`,
+reproducing the ORIGINAL bug exactly, uncaught because no check existed on that rule at all — fixed
+with a dedicated check for both halves together; (3) swapped the meadow cell's `border-color` for
+`outline-color`, which paints nothing (`.mw-cell` sets no `outline-style`) and passed every existing
+check because none of them looked at that rule either — fixed the same way. Its other two findings
+(a sheet-celebration sabotage that reorders the measurement back after the engine call, a banner
+sabotage that drops one of the two `clearTimeout` calls) are real but not new: both revert code this
+round already fixed and already proved correct with a live probe, and both are the exact
+"`ui.js`/`ui-sheet.js` cannot load headlessly" limitation the round's own task text names for item 4
+— accepted, not fixed, because the fix these gaps ask for is a headless DOM harness for the `ui-*`
+files that does not exist in this project and is well outside this round's five items.
+
 **Rejected:**
 
 - **The same fix for all three gaps.** The ripe plot and the Turn button/Collect All precedent both

@@ -13208,21 +13208,82 @@ function findUnguardedDurations(blockSrc) {
   for (const stmt of stmts) {
     if (/^\s*@keyframes/.test(stmt)) continue;
     const body = stmt.slice(stmt.indexOf('{') + 1, stmt.lastIndexOf('}'));
-    const statesDuration = /\banimation\s*:\s*[a-zA-Z][\w-]*\s+[\d.]+(?:m?s)\b/.test(body);
-    const importantDuration = /\banimation-duration\s*:\s*[^;]*!important/.test(body);
-    if (statesDuration && !importantDuration) bad.push(stmt.trim().replace(/\s+/g, ' ').slice(0, 100));
+    const shorthand = body.match(/\banimation\s*:\s*[a-zA-Z][\w-]*\s+([\d.]+m?s)\b/);
+    const important = body.match(/\banimation-duration\s*:\s*([\d.]+m?s)\s*(?:[^;]*)?!important/);
+    if (shorthand && !important) bad.push(`${stmt.trim().replace(/\s+/g, ' ').slice(0, 100)} — no animation-duration !important at all`);
+    /* Independent verifier's find: !important alone is not the claim — the
+       clamp itself is `.001ms !important`, so a substitute that says
+       `!important` but states a DIFFERENT, wrong duration than its own
+       shorthand (e.g. sabotaged to `.001ms !important`) satisfies "carries
+       !important" while still being flattened in every way that matters. A
+       rule's two duration values disagreeing is checkable without an
+       outside opinion on which duration is "correct" — they simply have to
+       agree with EACH OTHER. */
+    else if (shorthand && important && shorthand[1] !== important[1]) {
+      bad.push(`${stmt.trim().replace(/\s+/g, ' ').slice(0, 100)} — shorthand says ${shorthand[1]}, !important override says ${important[1]}`);
+    }
   }
   return bad;
 }
 const unguardedDurations = reduceMotionBlocks.flatMap(findUnguardedDurations);
-check('every reduced-motion rule that names a real animation duration also marks animation-duration !important',
+check('every reduced-motion rule that names a real animation duration also marks animation-duration !important, at the SAME value it names',
   unguardedDurations.length === 0, unguardedDurations.join(' | '));
-/* SABOTAGE, confirmed by hand: dropping the `animation-duration:1.6s
-   !important` line this round added to `.plot.verb-source::after,
-   .plot.verb-linked::after` turns this red again; a rule that only
-   CANCELS (`animation:none` / `animation-name:none`, which every other
+/* SABOTAGE, confirmed by hand, two shapes: (1) dropping the
+   `animation-duration:1.6s !important` line entirely turns this red; (2)
+   keeping the line but changing its value to `.001ms !important` — technically
+   "carries !important", the shape an independent verifier found this check
+   would have missed before this pass — also turns it red, because `1.6s` in
+   the shorthand no longer agrees with `.001ms` in the override. A rule that
+   only CANCELS (`animation:none` / `animation-name:none`, which every other
    reduced-motion rule in the file uses) states no duration and stays green,
    which is the legal case this must not flag. */
+
+group('style.css: the ripe plot\'s reduced-motion substitute actually hides the shine, not just its animation');
+/* Independent verifier's find: `animation:none` alone reproduces the ORIGINAL
+   bug exactly — the element reverts to its untransformed resting spot, a
+   static band on the plot, docs/11's "still white band". `opacity:0` is the
+   half that actually hides it; a check on `animation:none` alone would have
+   stayed green through that regression. */
+function ruleInBlocks(blocks, selectorFragment) {
+  for (const block of blocks) {
+    const at = block.indexOf(selectorFragment);
+    if (at === -1) continue;
+    const open = block.indexOf('{', at);
+    let depth = 1;
+    let i = open + 1;
+    while (depth > 0 && i < block.length) {
+      if (block[i] === '{') depth += 1;
+      else if (block[i] === '}') depth -= 1;
+      i += 1;
+    }
+    return block.slice(open + 1, i - 1);
+  }
+  return null;
+}
+const ripeReduceBody = ruleInBlocks(reduceMotionBlocks, '.plot[data-state="ready"] .plot-inner::before');
+check('the rule was actually found in a reduced-motion block',
+  ripeReduceBody !== null, String(ripeReduceBody));
+check('it cancels the animation AND sets opacity:0 — cancelling alone leaves the untransformed band visible',
+  Boolean(ripeReduceBody) && /animation\s*:\s*none/.test(ripeReduceBody) && /opacity\s*:\s*0\b/.test(ripeReduceBody),
+  ripeReduceBody);
+/* SABOTAGE, confirmed by hand: dropping `opacity:0` and keeping only
+   `animation:none` turns this red — exactly the shape the verifier found. */
+
+group('style.css: the meadow\'s affordable empty cell keeps a real static difference under reduced motion');
+/* Independent verifier's find: `outline-color` alone paints nothing, because
+   `.mw-cell` never sets `outline-style` — a rule that "changes a colour" and
+   changes nothing on screen is the same silent failure docs/09's style-check
+   playbook warns about for `var()` with no fallback, just spelled with a
+   different property. `border-color` works here because `.mw-cell` already
+   carries a permanent `border:3px solid`. */
+const affordCellBody = ruleInBlocks(reduceMotionBlocks, '.mw-cell.empty.can{');
+check('the rule was actually found in a reduced-motion block',
+  affordCellBody !== null, String(affordCellBody));
+check('it recolours a property the base rule actually paints with (border-color, not outline-color with no outline-style to hang it on)',
+  Boolean(affordCellBody) && /\bborder-color\s*:/.test(affordCellBody),
+  affordCellBody);
+/* SABOTAGE, confirmed by hand: swapping `border-color` for `outline-color`
+   turns this red — exactly the shape the verifier found. */
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);
