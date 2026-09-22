@@ -13118,5 +13118,111 @@ check('the held rule is a real, distinct colour treatment rather than "no" copy-
 check('the chip-visible rule still keys on the attribute\'s mere presence, not an enumerated list of values, so "held" is shown for free with no display rule of its own',
   anyChipRuleSrc.replace(/\s+/g, '') === 'display:inline-flex', anyChipRuleSrc);
 
+/* ---------------------------------------------------------------------------
+   THE MOTION BIBLE'S FIX ROUND (2026-09-22) — two cheap, general checks that
+   would have caught two of its five items, so the next quiet substitute or
+   the next deleted @keyframes cannot ship the same way twice. ---- */
+
+group('style.css: no @keyframes stop sits outside a @keyframes block');
+/* The exact shape of the flower's rain-pose bug (docs/11, "The flower's rain
+   pose never plays"): a stop left behind after its @keyframes was deleted
+   reads as an ordinary rule — `50%{transform:...}` parses fine on its own —
+   so nothing about the text itself says it is homeless, and the stray `}`
+   that closes it folds silently into the NEXT rule's selector. Walked with a
+   context stack rather than a brace counter alone, because a stop and an
+   ordinary rule nest at the SAME depth; what tells them apart is what opened
+   the block one level up. */
+function findOrphanStops(src) {
+  const blanked = src.replace(/\/\*[\s\S]*?\*\//g, (m) => ' '.repeat(m.length));
+  const STOP = /^((\d{1,3}(\.\d+)?%|from|to)\s*,\s*)*(\d{1,3}(\.\d+)?%|from|to)$/;
+  const stack = [];
+  const orphans = [];
+  let prelude = '';
+  for (let i = 0; i < blanked.length; i += 1) {
+    const c = blanked[i];
+    if (c === '{') {
+      const trimmed = prelude.trim();
+      const opensKeyframes = /@(-webkit-)?keyframes\s+[A-Za-z0-9_-]+\s*$/.test(trimmed);
+      const isStop = STOP.test(trimmed);
+      if (isStop && stack[stack.length - 1] !== 'keyframes') orphans.push(trimmed);
+      stack.push(opensKeyframes ? 'keyframes' : 'other');
+      prelude = '';
+    } else if (c === '}') {
+      stack.pop();
+      prelude = '';
+    } else {
+      prelude += c;
+    }
+  }
+  return orphans;
+}
+const orphanStops = findOrphanStops(CSS_SRC);
+check('no @keyframes stop appears outside a @keyframes block',
+  orphanStops.length === 0, orphanStops.join(' | '));
+/* SABOTAGE, confirmed by hand: reintroducing the exact deleted lines
+   (`50%{transform:translateY(-2px) rotate(-1deg) scale(1.02)}` followed by a
+   stray `}`) turns this red; removing them again turns it green. A stop
+   correctly INSIDE a real @keyframes block (every one already in the file)
+   stays green throughout, which is the legal case this must not flag. */
+
+group('style.css: a reduced-motion rule that states its own duration must say !important');
+/* `.plot.verb-linked::after{animation:verbLinkCalm 1.6s linear forwards}`
+   shipped with no `!important` on its duration, so the global clamp
+   (`animation-duration:.001ms !important`, above every reduced-motion block
+   in source order) flattened it to a single invisible frame — docs/11, "The
+   adjacency flash is invisible under reduced motion". Scoped to ANIMATIONS
+   only, not transitions: the four quiet TRANSITION fades doc 11 also lists
+   are a different property family and a different round's fix. */
+function findMediaBlocks(src, header) {
+  const blocks = [];
+  let at = src.indexOf(header);
+  while (at !== -1) {
+    let i = src.indexOf('{', at) + 1;
+    const start = i;
+    let depth = 1;
+    while (depth > 0 && i < src.length) {
+      if (src[i] === '{') depth += 1;
+      else if (src[i] === '}') depth -= 1;
+      i += 1;
+    }
+    blocks.push(src.slice(start, i - 1));
+    at = src.indexOf(header, i);
+  }
+  return blocks;
+}
+const reduceMotionBlocks = findMediaBlocks(CSS_SRC, '@media (prefers-reduced-motion:reduce)');
+check('reduced-motion blocks were actually found to check (a locator drifting silently would check nothing)',
+  reduceMotionBlocks.length >= 10, String(reduceMotionBlocks.length));
+function findUnguardedDurations(blockSrc) {
+  const stmts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < blockSrc.length; i += 1) {
+    if (blockSrc[i] === '{') depth += 1;
+    else if (blockSrc[i] === '}') {
+      depth -= 1;
+      if (depth === 0) { stmts.push(blockSrc.slice(start, i + 1)); start = i + 1; }
+    }
+  }
+  const bad = [];
+  for (const stmt of stmts) {
+    if (/^\s*@keyframes/.test(stmt)) continue;
+    const body = stmt.slice(stmt.indexOf('{') + 1, stmt.lastIndexOf('}'));
+    const statesDuration = /\banimation\s*:\s*[a-zA-Z][\w-]*\s+[\d.]+(?:m?s)\b/.test(body);
+    const importantDuration = /\banimation-duration\s*:\s*[^;]*!important/.test(body);
+    if (statesDuration && !importantDuration) bad.push(stmt.trim().replace(/\s+/g, ' ').slice(0, 100));
+  }
+  return bad;
+}
+const unguardedDurations = reduceMotionBlocks.flatMap(findUnguardedDurations);
+check('every reduced-motion rule that names a real animation duration also marks animation-duration !important',
+  unguardedDurations.length === 0, unguardedDurations.join(' | '));
+/* SABOTAGE, confirmed by hand: dropping the `animation-duration:1.6s
+   !important` line this round added to `.plot.verb-source::after,
+   .plot.verb-linked::after` turns this red again; a rule that only
+   CANCELS (`animation:none` / `animation-name:none`, which every other
+   reduced-motion rule in the file uses) states no duration and stays green,
+   which is the legal case this must not flag. */
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

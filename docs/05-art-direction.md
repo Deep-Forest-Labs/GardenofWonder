@@ -272,9 +272,12 @@ paragraph was written.
 base value rather than multiplying it. So from the moment credits reach `Game.nextHiveCost()`
 (2,200 for the first hive, which is most of the game) that container swings 0.5→1.0 while Summer's,
 Fall's and Winter's sit pinned at .62; sampled live at 0.99 / 0.80 / 0.57 / 0.50 / 0.63. Under
-reduced motion the animation is cancelled and it does rest at .62. `tools/sim-test.js` reads the
-four declarations as source text, so its opacity check holds the base value the four agree on and
-not what the meadow renders.
+reduced motion the animation is cancelled and it does rest at .62 — indistinguishable from an
+ordinary empty cell by opacity alone, which was exactly the affordance loss docs/11 filed and fixed
+2026-09-22: `.mw-cell.empty.can` now takes the established afford-green border colour (`#8ce99a`,
+already `.mw-cell.locked.can`'s answer to the same question) under reduced motion, so the invitation
+reads without relying on the pulse. `tools/sim-test.js` reads the four declarations as source text,
+so its opacity check holds the base value the four agree on and not what the meadow renders.
 
 Measured on the four rendered boards, the cream mark against the ground under it: Fall 3.33:1,
 Summer 2.64:1, the meadow 2.49:1 at noon and 3.35:1 at night, Winter 2.30:1. A light mark gains

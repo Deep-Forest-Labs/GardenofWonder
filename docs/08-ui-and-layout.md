@@ -679,6 +679,14 @@ Driven by `data-state` on each plot button:
 Plots also carry `data-stage` (`sprout` / `stem` / `bud` / `bloom`, from `DATA.growth`) for growth and `data-aura` (rarity name) tinting the soil after
 a harvest.
 
+**The ready plot's sweep shine is hidden under reduced motion**, rather than turned into a still
+wash the way the Turn button's and Collect All's glints are — it is parked off the plot only by its
+own `@keyframes sweep`, so the clamp used to leave it resting as a still white band across the plot
+(fixed 2026-09-22, [11-known-issues.md](11-known-issues.md)). Hiding it loses nothing: the ready
+state is already carried by the gold ring on `.plot[data-state="ready"]` itself (a static
+`box-shadow`, never animated) and the bouncing `!` badge, both of which hold their look with every
+animation flattened.
+
 ### Three chips, and it is the two PRICE chips that exclude each other
 
 The plot carries three chips. **The two price chips are the pair that can never be on together**,
@@ -872,7 +880,9 @@ Two transient classes, added on planting a flower that carries a verb and remove
 
 Both read `--verb`, set inline from `DATA.verbs[id].tint`, and animate through `verbLink` — scale up,
 hold, fade to nothing. Reduced motion swaps to `verbLinkCalm`, which does the same fade with no
-scaling.
+scaling — **true again as of 2026-09-22**: the substitute's duration shipped without `!important`,
+so the global clamp flattened it to a single invisible frame and the flash never showed at all with
+the preference on ([11-known-issues.md](11-known-issues.md)).
 
 **Why it is transient.** Adjacency is invisible until something points at it, so it has to be shown
 at the moment the choice is made. But a permanent link indicator on all eight plots would clutter a

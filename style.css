@@ -968,7 +968,10 @@ button:focus-visible{
 }
 @media (prefers-reduced-motion:reduce){
   .plot.verb-source::after,
-  .plot.verb-linked::after{animation:verbLinkCalm 1.6s linear forwards}
+  .plot.verb-linked::after{
+    animation:verbLinkCalm 1.6s linear forwards;
+    animation-duration:1.6s !important;
+  }
   @keyframes verbLinkCalm{0%{opacity:0}10%{opacity:1}70%{opacity:1}100%{opacity:0}}
 }
 
@@ -6787,4 +6790,38 @@ button:focus-visible{
 @media (prefers-reduced-motion:reduce){
   .drawer{transition:none !important}
   .drawer-scrim{transition:none !important}
+}
+
+/* ---------- REDUCED MOTION: the ripe plot's shine ----------
+   `@keyframes sweep` is what parks `.plot-inner::before` off the plot; with no
+   fill-mode, the clamp's single near-instant run snaps it straight back to its
+   un-transformed resting spot, which sits across the plot's right half — a
+   still white band, not a hidden layer (docs/11). Hidden here rather than
+   turned into a still wash (the Turn button and Collect All's shape): the
+   ready state is already carried without it — the gold ring
+   (`.plot[data-state="ready"]`'s `box-shadow`, not animated) and the
+   `.ready-pop` badge both hold their look with every animation flattened, so
+   the sweep was always decorative on top of an already-sufficient static
+   signal. Left as a rule OF ITS OWN rather than folded into the base rule:
+   parking it off-plot there would mean giving `.plot-inner::before` an
+   explicit `left`, and the sweep travels by `transform`, which composes with
+   whatever `left` resolves to — so that road shifts the ANIMATED sweep's own
+   path too. This one is confined to the media query and touches nothing the
+   normal sweep depends on. */
+@media (prefers-reduced-motion:reduce){
+  .plot[data-state="ready"] .plot-inner::before{animation:none;opacity:0}
+}
+
+/* ---------- REDUCED MOTION: the meadow's affordable empty cell ----------
+   `.mw-cell.empty.can .mw-empty` differs from an ordinary empty cell only by
+   its `mwInvite` opacity pulse, so the clamp leaves the two looking identical
+   and "you can build here" disappears (docs/11). `.mw-cell.locked.can
+   .mw-lock-cost` already answers the same question for gated land with a
+   static background rather than relying on its own `affordPulse` — same
+   afford green, `#8ce99a`, already in the palette (docs/05), so this adds no
+   new colour. `.mw-cell` carries a permanent 3px border already
+   (`border:3px solid var(--ink)`), so recolouring it costs no extra box and
+   no layout shift. */
+@media (prefers-reduced-motion:reduce){
+  .mw-cell.empty.can{border-color:#8ce99a}
 }

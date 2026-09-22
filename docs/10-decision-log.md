@@ -25,6 +25,39 @@ rule.
 
 ---
 
+## 2026-09-22 (fix round) — Three reduced-motion gaps closed, two ways
+
+The adjacency flash's `verbLinkCalm` substitute lacked the `!important` its duration needed to
+survive the global clamp, so it copied the storm's own already-correct pattern
+(`animation-duration:1.6s !important` beside the shorthand). The ripe plot's shine and the meadow's
+affordable-cell pulse each lost their state to the same clamp in different ways, and got different
+fixes on purpose: the ripe plot's `sweep` is hidden outright under reduced motion, because the ready
+state is already carried by a static box-shadow and the `!` badge with nothing else needed; the
+meadow's affordable cell gets an actual static substitute (a border colour, reused from
+`.mw-cell.locked.can`'s own answer to the identical question) because nothing else on an empty cell
+says "you can build here." Left the other two of doc 11's five reduced-motion gaps alone — the
+Year panel's ring (rated low, the dock already carries the signal) and the four quiet TRANSITION
+fades (a different property family, and out of this round's five items).
+
+Added two sim-test.js checks derived from this round rather than pinned to it: no `@keyframes` stop
+sits outside a `@keyframes` block (item 1's exact shape), and every reduced-motion rule that states
+its own animation duration also marks it `!important` (item 5(a)'s exact shape). Both sabotaged by
+hand — reintroducing the deleted lines, and dropping the new `!important` line — and both went red.
+
+**Rejected:**
+
+- **The same fix for all three gaps.** The ripe plot and the Turn button/Collect All precedent both
+  animate a travelling shine, but the plot's ready state has other static carriers and the button's
+  did not (its own fix history already tried and rejected "hide it" for exactly that reason) —
+  copying the button's still-wash pattern onto the plot would be solving a problem the plot does not
+  have.
+- **Parking the ripe plot's shine off-plot in its base (always-applied) rule**, the alternative doc
+  11 raised. The sweep travels by `transform`, which composes with whatever the box's own `left`
+  resolves to — so moving that resolution in the base rule shifts the ANIMATED sweep's path too.
+  Confined to the media query instead, which touches only the state with no animation running.
+
+---
+
 ## 2026-09-22 (fix round) — The newest banner always owns its full duration
 
 `showBanner()` in `ui.js` scheduled its fade and its removal with bare `setTimeout` calls and never

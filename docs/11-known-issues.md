@@ -47,24 +47,23 @@ pose) rather than reverting to its ordinary wave — the existing reduced-motion
 correct and only needed the base rule to reach the page. [41-weather-staging.md](41-weather-staging.md)'s
 leaf-over-the-head sentence is true in the build again.
 
-### The adjacency flash is invisible under reduced motion
+### ~~The adjacency flash is invisible under reduced motion~~ — FIXED 2026-09-22
 
-**Driven.** `style.css` — grep `animation:verbLinkCalm 1.6s linear forwards`: the reduced-motion
-substitute's duration is not `!important`, so the global clamp (`animation-duration:.001ms
-!important`) flattens it and `forwards` holds its last frame, `opacity:0`. With the preference on,
-planting a verb flower shows its neighbours nothing; [08-ui-and-layout.md](08-ui-and-layout.md)
-describes the calm fade as working. The fix shape is the storm's: `animation-duration:1.6s
-!important` beside it. **Acceptance:** with reduced motion on, a verb flower's neighbours show a
-ring that fades over 1.6 s.
+`animation:verbLinkCalm 1.6s linear forwards` now carries a companion `animation-duration:1.6s
+!important` beside it, the storm's own pattern (`wxFlashPulse`) — confirmed live: computed
+`animationDuration` reads `1.6s` (was `1e-06s`) and mid-run opacity reads `1` (was held at `0`).
+[08-ui-and-layout.md](08-ui-and-layout.md) describing the calm fade as working is true again.
 
-### Five more reduced-motion gaps
+### Two of five reduced-motion gaps — FIXED 2026-09-22, three still open
 
-- **A ripe plot wears a still white band** (driven, A/B screenshot). The soil's light sweep —
-  `.plot[data-state="ready"] .plot-inner::before` — is parked off the plot only by `@keyframes
-  sweep`, so the clamp leaves it resting across the plot's right half. It needs the substitute the
-  Turn button and Collect All already have.
-- **The meadow's "a hive is affordable here" disappears** (driven). `.mw-cell.empty.can .mw-empty`
-  differs from an ordinary empty cell only by its `mwInvite` pulse.
+- ~~**A ripe plot wears a still white band**~~ — FIXED. `.plot[data-state="ready"] .plot-inner::before`
+  is hidden under reduced motion (`animation:none;opacity:0`) rather than given a still wash — the
+  ready state is already carried by the plot's own static gold `box-shadow` and the `!` badge, so
+  nothing is lost. See [08-ui-and-layout.md](08-ui-and-layout.md).
+- ~~**The meadow's "a hive is affordable here" disappears**~~ — FIXED. `.mw-cell.empty.can` takes the
+  established afford-green border colour (`#8ce99a`, already `.mw-cell.locked.can`'s answer to the
+  same question) under reduced motion, in place of the cancelled `mwInvite` pulse. See
+  [05-art-direction.md](05-art-direction.md).
 - **The Year panel's ready ring has no substitute** (driven). `.yr-meter.ready{animation:yrFull`
   reverts to the plain lip; the dock's Turn button holds a solid ring, and the panel's words still
   say it, so this is low.
