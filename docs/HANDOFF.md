@@ -1353,9 +1353,16 @@ as written, dated by the 2026-09-21 (ruling) entry in [10-decision-log.md](10-de
 two costs (rating and storefront; positioning) once so a feature entry can point at it. The Turn's currencies
 stay unsold as the 09-02 rescope left them. Every monetization idea is weighed for engagement and revenue first.
 
-**Ruled 2026-09-21, awaiting a fix round:** Clover Nibble goes to **10,000 gold**, and the permanent Harvest
-Drone moves from Upgrades to the Shop by the recipe in [11-known-issues.md](11-known-issues.md) — never the
-half-move. **Held by the owner the same day:** the record shelf's gate-1 rulings, the golden seed, the meadow
+**Ruled 2026-09-22 — the next slice is the story trunk and the skill tree.** A story tied to reputation (slice D's
+reason to exist), a tree that replaces the petal menu and the picker's unlock rows — reputation is the trunk,
+Saved Seeds buy what it reveals, branches but nothing exclusive, the build comes from a few lawn *slots* that
+the old decorations become. **The Harvest Drone goes paid** (real money or an ad rental, no gold path; the tree
+upgrades an owned one) — this supersedes the 09-21 "drone to the Shop" ruling before it was built, and its
+offline-income cost is stated once in the 2026-09-22 entry in [10-decision-log.md](10-decision-log.md). Next:
+a direction doc and `tools/tree-spike.html` for the owner's eye.
+
+**Ruled 2026-09-21, awaiting a fix round:** Clover Nibble goes to **10,000 gold**. (The same day's "drone to the
+Shop" ruling was superseded on 09-22, above.) **Held by the owner the same day:** the record shelf's gate-1 rulings, the golden seed, the meadow
 art spike. **Commissioned:** the AI companion as a research-and-options document, `docs/51-the-companion.md`,
 not yet on disk. The 2026-09-21 (rulings) entry in [10-decision-log.md](10-decision-log.md) has each in full.
 

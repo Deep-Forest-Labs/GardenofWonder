@@ -5,6 +5,80 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-22 (brainstorm and rulings, the owner's word) — The story trunk, the skill tree, perks as a build, and the drone goes paid
+
+**Two directions from the owner, brainstormed in the design session and recorded here so the
+spec that follows starts from a decision.** Nothing in this entry is built; the next step is a
+short direction document and a spike (`tools/tree-spike.html`) for the owner's eye.
+
+**Direction 1 — a story tied to reputation.** The owner: *"a narrative storyline that's tied to
+reputation. So very similar to Gossip Harbor, we'll have a story that gets triggered as the player
+earns more reputation throughout the game. So eventually we'll need to add reputation back to
+orders."* The desk's read: this is the missing rungs doc 27 named (reputation is the spine and it
+stops at level 17), it never rewinds because reputation is in the never-resets partition, it is
+the reason slice D exists (`STAND.repPaused` comes off), and the moments machinery plus the
+records' condition-latched sweeps already give a story beat its rules — deterministic, never
+missable, celebrated once, works on old saves. The desk's one condition, accepted as the shape:
+**every chapter changes something visible** (a villager, a room, a record, a decoration), never
+dialogue alone — the Gossip Harbor lesson is that a beat is a place changing.
+
+**Direction 2 — a skill tree replaces the petal menu.** The owner: *"instead of tying unlocks…
+to a menu item of upgrades for each flower… a linear skill tree… it has branches… the reputation
+bar tied to progress, and then you can use your Saved Seeds on things you have unlocked in the
+skill tree."* And, later the same session: *"getting to the skill system is what makes you feel
+like you're creating a build, which is fun, so it adds unlimited progression and an awesome meta.
+Let's take our mindset a little bit out of the box we've created… Yes, I do know it will change
+the math here."* Ruled shape, priced once:
+
+- **Reputation is the trunk; Saved Seeds buy what the trunk reveals.** Two wallets, two verbs:
+  reputation is how far up you can see, Seeds are what you can afford. The story chapters sit on
+  the trunk. The tree **replaces** the Almanac's petal rows and the picker's unlock rows (doc 27's
+  three-columns-of-one-spreadsheet consolidation, finally with a picture); it does not sit beside
+  them.
+- **Branches, nothing exclusive.** Doc 31's verdict — a checklist, not an allocation exam;
+  everything eventually maxes — is kept, because a regret-generating tree loses the completion
+  player. **The "build" comes from slots, not from forgoing nodes**: you own every perk you have
+  bought, and you *wear* a few at a time. This is the record shelf's own grammar (Side B: one charm
+  slot at v1, lateral power) applied to the garden.
+- **The decorations become the slots.** The owner: the store's decorations (the Gnome of Fortune
+  and its kind) *"don't do anything yet, and we don't have the real estate… we should table
+  those"* — and in the same breath proposed *"a garden gnome that gives a bonus percentage to
+  increase payouts."* The reconciliation: decor as a decorating system is **tabled**; a decoration
+  is a perk you place on one of a few lawn spots, so the build is visible on the garden itself
+  and the real-estate problem becomes two or three spots, not a layout system. Existing decor
+  rows convert to perk nodes when the tree lands.
+- **The year's gold upgrades stay in the shop.** Wiped at the Turn on purpose — the rebuild is the
+  ritual. A tree node grants **permanent access** (the right to buy Power Punch every year); the
+  shop is the yearly rebuy. Both branches of the tree are therefore permanent: flowers and their
+  petals; access, perks and rooms.
+- **The math moves, with eyes open.** The guardrails that stay are the sim-test's invariants
+  (every seed returns above cost; gems per hour flat across seeds — doc 31 surgery 4, keep gems
+  global) and doc 31's countdown shape for chance perks ("every 12th harvest catches → every
+  10th", never "+0.4%"). The tree gets its own bill, in the style of doc 33, before a number ships.
+
+**Ruled — the Harvest Drone goes paid.** The owner: *"I want to make the harvester drone something
+that requires a microtransaction, or you have to rent it by watching an ad… one thing we can add to
+the skill tree is the ability to buff or upgrade your harvester once it's purchased. Maybe move
+speed, collection times, etc."* This **supersedes** the 2026-09-21 "drone moves to the Shop as a
+gold card" ruling before it was built: there is no gold path to the permanent drone; it is bought
+with real money or rented by ad, and the tree upgrades an owned drone (speed, capacity, what it
+picks first). **The price, stated once:** `passiveIncomeRate()` returns zero without the drone,
+so as built a free player who watches no ads earns nothing overnight — doc 31 surgery 5 named
+this as the break that reaches "exactly the players who churn fastest," and its fix was a free
+floor with a fiction already under the lawn (the creatures tend the garden while you are away),
+which the drone then accelerates. The desk recommends the floor; the owner rules it in the tree
+spec. Two more costs for that spec: the web build has no real money (doc 37: IAP lives in the
+Unity shell), so the lab needs a stand-in purchase for testers; and saves that own drone levels
+today need a stated migration (grandfather, or refund into Saved Seeds).
+
+**Rejected:** exclusive branches (doc 31, and the owner's own "unlimited progression" wants
+everything reachable); putting the in-year gold upgrades on the tree as nodes that un-buy
+themselves at the Turn; keeping decoration as a placement system (no real estate, no effect —
+the owner's words); and pulling the tree into the Clover fix round (it is a slice, not an item).
+The perk brainstorm from the session is in the direction document, not here.
+
+---
+
 ## 2026-09-22 (fix round) — The flower's rain pose reaches the browser again
 
 Deleted the orphaned `@keyframes wxUmbrellaTilt` stop and the stray `}` it left behind
