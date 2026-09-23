@@ -5,6 +5,48 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-22 (rulings, later) — Offline income leaves the drone; nodes have levels; creatures join the tree
+
+**Three more rulings from the owner in the same session, each his word.**
+
+**Offline income no longer depends on the drone — the flower earns while you are away.** The
+owner: *"a perk or an ability for the flower to collect income or gold while the player is away.
+Something that could modify that is perks from Power Punch, Quick Grip, Lucky Charm, and Combo
+Coil… Let's just strip the drone away from that idea."* The shape: the away-earnings framework
+built 2026-08-15 stays (two axes, rate × hours, both capped and stated openly — doc 03 "Offline
+earnings"); what changes is **what the rate is made of**. Today it is the drone's harvest cycles
+(`passiveIncomeRate()` returns zero without the drone). It becomes the flower tapping itself: a
+fraction of the player's tap income per minute, so the year's tap upgrades raise it and the
+Turn's rebuild rebuilds it, with a tree node granting the ability and its levels raising the
+rate fraction and the hours cap (Moonlight Tending and Lantern Oil become that node's levels).
+**This resolves the cost stated in the entry above**: a free player's overnight is no longer zero,
+and the paid drone becomes what its name says — a machine that picks plots — with no claim on
+offline income at all. Away gold keeps its current relationship to the well (it is real play's
+income, not an ad's).
+
+**Nodes have levels, Diablo-shaped.** The owner: *"These skills don't just have one level… you
+might unlock one big skill, but then it has a little branch with all the other little things you
+can add to it or modify it. Each one of those has multiple levels."* This is doc 31's spine plus
+signature branch per seed, drawn as a tree: the big node is the flower (or the perk, or the
+creature); its small branch is its petals and modifiers, each with ranks bought in Saved Seeds.
+
+**Creatures live on the tree too.** The owner: *"there could be some creatures that are unlocked
+only from moving down this skill tree… We could have our creatures in here that you currently
+own, and this could be another place to actually level them up or add certain buffs to them… this
+pet stays awake longer."* The reconciliation with doc 22, priced once: **the Hollow keeps the
+relationship** — attraction by planting, feeding, keepsakes, pairs, stars — and **the tree holds
+the reveal and the permanent buffs** (a creature node that puts a new creature in reach at a
+reputation rung; sub-nodes such as "stays awake longer on the same meal"). A creature's stars stay
+in the Hollow; the tree never becomes a second place to level the same thing. Creatures revealed
+only by the tree are the "every node is content" rule from the entry above, applied to the cast.
+
+**Rejected:** keeping any offline-income path on the drone (the owner struck it); a second
+levelling track for creatures on the tree that duplicates stars (one place per number); and
+designing the perk list in this log — it lives in the direction document, which now carries the
+owner's request to keep adding to it.
+
+---
+
 ## 2026-09-22 (brainstorm and rulings, the owner's word) — The story trunk, the skill tree, perks as a build, and the drone goes paid
 
 **Two directions from the owner, brainstormed in the design session and recorded here so the

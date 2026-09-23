@@ -1358,8 +1358,11 @@ reason to exist), a tree that replaces the petal menu and the picker's unlock ro
 Saved Seeds buy what it reveals, branches but nothing exclusive, the build comes from a few lawn *slots* that
 the old decorations become. **The Harvest Drone goes paid** (real money or an ad rental, no gold path; the tree
 upgrades an owned one) — this supersedes the 09-21 "drone to the Shop" ruling before it was built, and its
-offline-income cost is stated once in the 2026-09-22 entry in [10-decision-log.md](10-decision-log.md). Next:
-a direction doc and `tools/tree-spike.html` for the owner's eye.
+offline-income cost is stated once in the 2026-09-22 entry in [10-decision-log.md](10-decision-log.md) — **and
+resolved the same day: offline income leaves the drone and becomes the flower earning while you are away**, a
+fraction of tap income raised by the year's tap upgrades and by a tree node's levels. Nodes have levels;
+creatures are revealed and buffed on the tree while the Hollow keeps their stars. All three in the second
+2026-09-22 entry. Next: the direction doc (`docs/52`, prompt handed 2026-09-22) and `tools/tree-spike.html`.
 
 **Ruled 2026-09-21, awaiting a fix round:** Clover Nibble goes to **10,000 gold**. (The same day's "drone to the
 Shop" ruling was superseded on 09-22, above.) **Held by the owner the same day:** the record shelf's gate-1 rulings, the golden seed, the meadow
