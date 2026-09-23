@@ -5,6 +5,30 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-22 (ruling, reputation) — Orders are the main faucet, plants a bonus, and everything paying today stays
+
+**The owner answered the direction document's open question before it was written:** *"I think it
+comes from what we currently have. I don't think it's just orders. I know we removed it from
+orders, but I think it needs to be added back in. I think orders become our main source of
+reputation, and plants have a bonus chance of adding some to it."* So: option B (every faucet that
+pays today stays — quests, the Almanac's species milestones, the every-tenth-harvest grant) **plus
+orders switched back on as the largest faucet** (`STAND.repPaused` comes off in slice D, and the
+Stand's per-order payment in `standOrderRep()` is sized to be the main climb), **plus a harvest
+bonus** — the owner's word is "chance"; the desk's standing shape for chance is doc 31's countdown
+("a catch pays reputation", or "every Nth harvest", shown as a counter), and the direction document
+picks between them rather than shipping a hidden percentage. The owner is open to further
+faucets; the desk's suggestions and the one refusal are in the session, for the direction
+document to price. **The refusal, stated now so it is never a surprise:** reputation is never
+bought — with gems, money or an ad — because the trunk is the story, and a bought rung is a bought
+chapter. Under the 09-10 ruling that is a priced default, not a fence, but the price is the whole
+point of the trunk.
+
+**Rejected:** orders-only (starves a player who never fills an order, and stalls the trunk until
+slice D ships); and a flat per-harvest trickle (it out-earns orders by volume and makes the Stand
+optional).
+
+---
+
 ## 2026-09-22 (rulings, later) — Offline income leaves the drone; nodes have levels; creatures join the tree
 
 **Three more rulings from the owner in the same session, each his word.**

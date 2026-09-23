@@ -1362,7 +1362,8 @@ offline-income cost is stated once in the 2026-09-22 entry in [10-decision-log.m
 resolved the same day: offline income leaves the drone and becomes the flower earning while you are away**, a
 fraction of tap income raised by the year's tap upgrades and by a tree node's levels. Nodes have levels;
 creatures are revealed and buffed on the tree while the Hollow keeps their stars. All three in the second
-2026-09-22 entry. Next: the direction doc (`docs/52`, prompt handed 2026-09-22) and `tools/tree-spike.html`.
+2026-09-22 entry. **Reputation, ruled the same day:** every faucet that pays today stays, orders come back as the main
+one, harvests add a bonus — the third 2026-09-22 entry. Next: the direction doc (`docs/52`, prompt handed 2026-09-22) and `tools/tree-spike.html`.
 
 **Ruled 2026-09-21, awaiting a fix round:** Clover Nibble goes to **10,000 gold**. (The same day's "drone to the
 Shop" ruling was superseded on 09-22, above.) **Held by the owner the same day:** the record shelf's gate-1 rulings, the golden seed, the meadow
