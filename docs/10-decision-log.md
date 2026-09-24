@@ -5,6 +5,35 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-24 (ruling, reputation, narrowed) — Reputation comes from the core loop only, and the comeback gift is earned, not granted
+
+**The owner read the desk's list of further reputation sources and cut it to the core loop.** His
+words: *"I don't think you should include anything about the meta. I think it needs to be in the
+core loop, and only by that; the meta should stay completely separate because it has nothing to do
+with passive gameplay. If it's in the core loop, it forces people to engage."* Struck: records
+found, creatures arriving, honey delivered, album sets, and the daily streak. What pays reputation
+is therefore **gardening for the village**: orders (the main faucet), harvests (the countdown
+bonus), quests (the core loop's own tutorial), the seasons' feats (a windfall and a kept night are
+harvests), and — the desk's one recommendation kept open for the owner — the Turn's Tally, on the
+argument that the Turn is the core loop's last beat, not the meta, and paying reputation there is
+what makes turning the year advance the story.
+
+**The welcome-back bonus replaces the daily streak as the retention hook on the trunk.** The
+owner: *"I would rather repurpose something around the story of a welcome-back bonus for players
+who have been away for a while and reengage… Monopoly Go does a really good job at welcome-back
+bonuses."* The desk's shape, accepted as the rule to design to: **the comeback gift is
+accelerated earning, never a grant** — a lapsed player is met by the villagers with a board of
+easy orders that pay boosted reputation for that sitting, so the rungs are still climbed in the
+core loop, only faster. A flat reputation grant for being away would make leaving the best way to
+climb; Monopoly Go's comeback is a burst of means (dice), not of rank, and this is the same
+distinction. The existing welcome-back scene (built 2026-08-15) is where it lands.
+
+**Rejected:** meta sources paying reputation (the owner's cut, and the desk agrees: a trunk fed by
+side rooms makes the Stand optional); a daily-streak reputation line (retention is the calendar's
+job, not the story's); and a comeback grant paid for absence.
+
+---
+
 ## 2026-09-22 (ruling, reputation) — Orders are the main faucet, plants a bonus, and everything paying today stays
 
 **The owner answered the direction document's open question before it was written:** *"I think it
