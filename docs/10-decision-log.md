@@ -5,6 +5,118 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-24 (direction filed, and two laws repealed) — The trunk and the tree: reputation reveals, gold buys, Seeds deepen
+
+**[52-the-trunk-and-the-tree.md](52-the-trunk-and-the-tree.md) is filed as DIRECTION** — the
+picture, the rules, the priced option space and the open questions. No game code, and the spec
+waits on the owner's eye at `tools/tree-spike.html` per doc 34's wireframe gate. Eighteen rulings
+from the commissioning session are built on rather than re-opened; three of them change existing
+law and are recorded here because a later reader will otherwise find the contradiction and not the
+reason.
+
+**THE EIGHTEEN RULINGS, NUMBERED — written down because doc 52 cites them by number and nothing in
+`docs/` defined them.** They were ruled in the commissioning session and existed only in its prompt;
+in a repo whose rule is that `docs/` is the source of truth, a citation nobody can resolve is a
+citation that does not exist.
+
+1. Reputation is the trunk; Saved Seeds buy what the trunk reveals. 2. Branches, nothing exclusive;
+everything eventually maxes; the build comes from slots. 3. The year's gold upgrades stay in the shop;
+tree nodes grant permanent access. 4. Node spacing: about one node per level through the opening
+chapters, stretching to one per three or four deep in the game. 5. **No bare level** — a level
+carrying neither beat nor node pays one free rank on a node already owned. 6. One path, five colours:
+a single linear zigzag, the categories are kinds of card, sub-skills hang sideways. 7. Forty rungs;
+the last flower near day 45; rungs above it carry story, perks, creatures and access. 8. Flower order
+and prices untouched; only their timing moves. 9. Reputation reveals; gold buys; Seeds deepen.
+10. Slots start at two and the tree unlocks up to five; the slots are themselves nodes. 11. The
+harvest bonus is a counter — every Nth harvest pays reputation, shown; a sky catch pays none.
+12. **The Turn's Tally pays reputation** (this supersedes the open question in the 2026-09-24
+reputation entry below, which recorded it as the desk's recommendation awaiting the owner).
+13. The welcome-back board triggers at three days away; boosted reputation on easy orders, earned.
+14. The curtain: current chapter clear, next chapter in silhouette, everything above masked.
+15. Story marks on the rail — a beat shows as a tick, visibly not a card, never purchasable.
+16. Drone migration: refund owned gold levels into Saved Seeds; no grandfathered class.
+17. **The reveal gate moves from gold to reputation** (repeal 1 below). 18. **The per-Turn reveal cap
+retires** (repeal 2 below).
+
+Also ruled, and it is the one that supersedes a desk sentence rather than a law: **the story and the
+tree are two riders on one number** — below.
+
+**The story and the tree are two riders on one number — this SUPERSEDES a desk sentence.** The
+2026-09-22 entry below says "the story chapters sit on the trunk." That was the desk's drawing, not
+the owner's word, and it is now wrong. The owner, verbatim: *"The story needs to be somewhat
+disconnected from how the progression in terms of prestige works… at every reputation level, you
+might unlock a story beat, but you might need multiple reputation levels to unlock a flower, a
+creature, or a perk… Look at Gossip Harbor… You basically trigger the story once you hit a
+reputation level, but it doesn't have anything to do with the actual prestige tree."* So: one
+reputation number, two consumers. A beat fires when a level lands; a node has its own threshold and
+nodes sit several levels apart. **A chapter is never a card on the path.** The 09-22 condition
+survives untouched: every chapter changes something visible.
+
+**REPEAL 1 — doc 47's "affordability reveals, never capped" law is repealed for flowers.**
+Reputation replaces gold as what reveals a flower: a card exists when the rail reaches its rung,
+full stop. This takes **three** of `seedRevealedNow()`'s four arms for tree cards — arm 2 (always
+show the next wall), arm 3 (lifetime gold at 85% of the price) and arm 4 (affordability, commented
+"never capped") — leaving arm 1 plus a new reputation arm. The owner's reason: a threshold must be
+a HEIGHT on the rail, and the unveiling must be the player's FIRST sight of a flower — an
+affordability peek spends the ceremony before it happens. **Doc 47's law survives untouched for
+everything that is not a tree card, and `upgradeRevealedNow()` is not touched at all.** Stated
+plainly because it is a regression for a real player: a returning save that could see six flowers
+can see two. Arm 2 is re-homed rather than lost — the visual target's "exactly one UP NEXT wearing
+a ribbon, always showing its price" *is* arm 2, drawn on the rail, and doc 47's test bill item 2
+re-points at it rather than being deleted.
+
+**REPEAL 2 — the per-Turn reveal cap retires, and because it is seed-only it retires from the
+game.** Ruled by the owner 2026-09-24 when the desk put the fork to him: retire it, or repurpose it
+as a cap on how many rungs may unveil in one sitting. He ruled **retire**. Verified before filing:
+`DATA.year.revealCapPerTurn` has exactly one reader — arm 3 — and `upgradeRevealedNow()` carries
+"no affordability law and no cap" by its own comment, so with arm 3 gone the cap gates nothing
+anywhere. The bill is itemised in doc 52 §8: the knob, `revealAt`, the `state.year.revealsThisTurn`
+save field with its birth/migration/increment/Turn-reset, doc 07's row, and the sim-test group that
+asserts the cap works — **including a hand-sabotage check, which is deleted rather than
+re-authored.** Named in the document deliberately: a deleted sabotage check should be read in a
+design doc, never discovered in a diff.
+
+**What the desk decided while writing, all of it doc 52's and all of it the owner's to overturn.**
+The largest is that **the reputation curve has to be re-authored above rung 17.** Measured: with
+orders switched on at the shipped `repPay` values and today's `repToNext = 10 + 5 × (level − 1)`,
+rung 40 costs 4,095 lifetime rep and every persona clears the whole climb in 4–19 days, against
+doc 33's simulated ~day 46 for the nineteenth flower on gold. Reputation is quadratic-cheap while
+the flower ladder is geometric-expensive, and ruling 17 is what makes that collide — it did not
+matter while reputation revealed nothing. The proposal keeps rungs 1–**19** byte-identical (today's step into
+rung 18 is already 95, so the join is seamless) and takes 20–40 geometric — `95 × 1.16^(L−18)`, rung
+40 at **15,804** — the ratio derived by solving for the casual persona's last flower landing on day
+47 against doc 33's ~day 46. **Two critic passes then found the first draft's version of this
+understated its cost, and doc 52 §3 now carries the full engineering bill:** `cumulativeRep()` is an
+independent closed form that must be re-authored with it or the progress bar, `migrateProgression()`
+and `Dev.grantLevels()` silently disagree; `check('level 20 lands on 1045')` breaks by construction;
+the "reached level" latch cannot live on `state.level`, which is a derived cache; and a naive latch
+re-fires `grantLevel()`, which credits **through the mint** and would break the well's own invariant.
+The first draft also missed a faucet — **the daily quest pays 12 rep a day forever** — so live saves
+sit at rung 27–34 today rather than near 17, and a long-lived tester loses three to seven rungs unless
+the latch holds. Also the desk's: the rung layout for all nineteen flowers
+(order unchanged, timing re-spaced, the last at rung 37 with three rungs above it, each of the eight
+chapter rungs carrying **no card at all** so a story beat never queues behind an unveiling in doc 47's
+one-at-a-time moments dialog, and creatures hanging sideways off the flower that attracts them rather
+than taking rungs of their own),
+`flowerShare = 0.25` for offline income (derived from matching today's drone income for a mid-game
+save), `droneConvert = 4` Saved Seeds per refunded drone level, and the recommendation to **cut both
+Turn-touching perks from v1** because `mintK` and `tallyCap` are both unresolved phase-4 knobs and
+selling ranks on an unresolved knob is how a document becomes a lie.
+
+**Doc 16's stale line is corrected in the same commit** (the AGENTS.md rule): "one further seed
+unlocks per level from level 2" was wrong in *both* directions — levels neither unlock nor reveal a
+seed, gold does both, and `unlockLevel` survives only as a migration grandfather and the picker's
+interim label.
+
+**Rejected:** repurposing the reveal cap onto rungs or replacing it with a ceremony queue (the
+owner's ruling, and the rail has no windfall to throttle); steepening the whole reputation curve
+(it takes rank off live saves); grandfathering the owned drone (the owner refused a permanent class
+of players holding a paid item for free — the cost, a tester losing the drone itself, is stated in
+doc 52 §7 rather than smoothed); and writing the full perk catalogue here (direction size is about
+thirty, the catalogue is spec work).
+
+---
+
 ## 2026-09-24 (direction, the owner's visual target) — The tree's surface: a rail, a zigzag path, one ribbon, a curtain, an unveiling
 
 **The owner handed the desk a screen recording as the visual target for the tree's surface**, and

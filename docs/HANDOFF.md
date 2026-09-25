@@ -1365,7 +1365,7 @@ creatures are revealed and buffed on the tree while the Hollow keeps their stars
 2026-09-22 entry. **Reputation, ruled the same day:** every faucet that pays today stays, orders come back as the main
 one, harvests add a bonus — the third 2026-09-22 entry; **narrowed 2026-09-24 to the core loop only** (no records, creatures,
 honey, album or daily streak), with a welcome-back board of boosted orders replacing the streak as the trunk's
-retention hook. Next: the direction doc (`docs/52`, prompt handed 2026-09-22) and `tools/tree-spike.html`.
+retention hook. **The direction doc is FILED: [52-the-trunk-and-the-tree.md](52-the-trunk-and-the-tree.md), 2026-09-24.** Next is `tools/tree-spike.html` — the paste-ready spike brief is doc 52 §11, and no UI code follows until the owner has judged the spike by eye. **Two things in doc 52 need the owner before the spec starts:** the reputation curve above rung 17 has to be re-authored (today's curve puts rung 40 at 4,095 rep, which every persona clears in 4–19 days against doc 33's ~day 46 for the nineteenth flower — the collision ruling 17 creates), and the `seedRevealed` latch already sitting true on live saves has to be grandfathered or re-based. Both are priced in §3 and §12. **Sequencing constraint, stated once: the tree cannot ship before slice D**, because orders are its main reputation faucet and `STAND.repPaused` comes off there.
 
 **Ruled 2026-09-21, awaiting a fix round:** Clover Nibble goes to **10,000 gold**. (The same day's "drone to the
 Shop" ruling was superseded on 09-22, above.) **Held by the owner the same day:** the record shelf's gate-1 rulings, the golden seed, the meadow

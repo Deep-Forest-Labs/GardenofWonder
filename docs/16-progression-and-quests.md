@@ -161,7 +161,13 @@ slice D.
 Every level grants something. The primary lever is **seeds**. Plots are the other.
 
 - Seeds 1–3 (Daisy, Tulip, Bluebell) are unlocked at level 1.
-- One further seed unlocks per level from level 2, so Eternal Crown (seed 19) lands at level 17.
+- ~~One further seed unlocks per level from level 2, so Eternal Crown (seed 19) lands at level
+  17.~~ **Corrected 2026-09-24: this line was stale in both directions.** Levels neither unlock
+  nor reveal a seed — **gold does both**: `unlockSeed()` checks `state.credits` alone, and
+  `seedRevealedNow()`'s four arms are all gold (affordability, and lifetime gold at 85% of the
+  price). `unlockLevel` survives in `DATA.seeds` only as a migration grandfather and the seed
+  picker's interim label. The direction that changes this — reputation reveals, gold buys — is
+  [52-the-trunk-and-the-tree.md](52-the-trunk-and-the-tree.md).
 - Extra plots become **buyable** at levels 3, 6, 9 and 12 (plots 5–8). The gold cost is unchanged
   (`400 + 300 × (index + 1)`). Level opens the slot; coins buy it. This is not a quest.
 - Levels 18–20 grant a hive slot, a Butterfly Shrine, and 5 gems respectively. Recipes stay
