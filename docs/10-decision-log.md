@@ -5,6 +5,30 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-24 (direction, the owner's visual target) — The tree's surface: a rail, a zigzag path, one ribbon, a curtain, an unveiling
+
+**The owner handed the desk a screen recording as the visual target for the tree's surface**, and
+the desk pulled the named targets out of it so a builder copies the pattern and not the picture.
+The reference is the "gallery" from a top-grossing board game; the recording stays on the owner's
+machine and is never in the repo or the wiki. **What is taken, in words:** a full-screen vertical
+scroll; a reputation rail down the right edge with a live marker pill, so a threshold is a height
+on the rail; nodes as framed cards zigzagging down one linear path on the left; three card states
+(locked and dimmed with a padlock and its threshold; exactly one "up next" wearing a ribbon; unlocked
+in a gold frame with its art in full colour); a curtain across the top hiding what is beyond — doc
+47's curtain drawn literally, with the ??? rows as the cards beneath it; and the unveiling when the
+marker reaches a card: doors, a ribbon cut, the card lighting, the marker climbing, about two
+seconds. **The owner's addition:** a flower node's sub-skills branch sideways off it with ranks, so
+the path stays linear and the depth hangs off it. **What is refused from the reference:** currency
+as the point of an unlock (ours unlocks content), the glossy material (ours is doc 05's), and any
+timer, offer or buy-to-skip chrome. The targets are in the direction document's spike brief; the
+spike is judged by the owner's eye before any UI code, per doc 34.
+
+**Rejected:** giving the recording to a builder (a whole video gets the wrong things copied — the
+same reason the winter hero's reference got a silhouette test), and putting the reference in the
+repo (public).
+
+---
+
 ## 2026-09-24 (ruling, reputation, narrowed) — Reputation comes from the core loop only, and the comeback gift is earned, not granted
 
 **The owner read the desk's list of further reputation sources and cut it to the core loop.** His
