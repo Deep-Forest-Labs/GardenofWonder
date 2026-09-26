@@ -5,6 +5,40 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (ruling, reputation from harvests) — Word of Mouth: the every-tenth rule becomes a perk with a five-star countdown
+
+**The owner ruled that reputation from harvests is a perk the player chooses, not a hidden rule.**
+His words: *"since we're building upgrades and perks, etc., it does make sense to add a percent
+chance that a player can earn reputation… let's call it a perk. It should always be passive… you
+obviously need to start very small… It doesn't take up real estate, and the player has agency
+because they decided to upgrade or unlock that perk."* The desk's counter-proposal, accepted: **the
+perk's stars set a countdown, not a chance.** Working name **Word of Mouth** — the villagers hear
+about your harvests.
+
+- **The always-on every-tenth-harvest rule retires** (`harvestRepEvery` / `harvestRepGrant` and
+  `state.harvestsTowardRep`). Before the perk, harvests pay no reputation: orders climb the story,
+  quests tutor it, and that is the whole message.
+- **Word of Mouth is a card on the path**, rare or epic on the ladder because it touches the story
+  number, passive, levelling to five stars with Saved Seeds. Its stars are a countdown — every
+  20th harvest pays, then 15, 12, 10, 8 — the same odds as 5% to 12.5% underneath, but every star
+  is felt because the next payout visibly comes sooner (doc 31: a percentage is "the least legible
+  purchase a game can sell"). The counter lives on the card itself; the garden shows only the
+  payout float, like a catch. It is cappable in data where a percentage compounds.
+- **Guardrails:** never on taps; never on overnight income (reputation is for what you did while
+  you were here); at five stars it pays under a tenth of a normal day's reputation for a player who
+  fills orders — the rebalance sets the exact share.
+- **The messaging rule, logged with it:** reputation has one home, the rail's pill, and every
+  source pays into it with the same float; orders get the loud version (the villager's thanks),
+  everything else a quiet tick; and the glossary gains a row — *Reputation: how well the village
+  knows you. It fills the rail, climbs the story, and is never bought* — added to doc 32 with the
+  spec.
+
+**Rejected:** a raw percent chance (invisible when bought, compounding when stacked); showing a
+counter on the garden (the owner's real-estate point stands — the card carries it); and keeping
+the every-tenth rule alongside the perk (two faucets wearing one name).
+
+---
+
 ## 2026-09-26 (rulings, later) — One linear path, cards of one size, rarity as the ladder, stars as the levels
 
 **The owner answered doc 52's open questions and redrew the tree's shape in the same message.** His

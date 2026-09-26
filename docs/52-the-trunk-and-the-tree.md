@@ -34,6 +34,9 @@ owner's to change).
 >   refund migration, no "returning player" cost); q6 → both Turn-touching perks cut; q8 → the
 >   always-on trickle from rung 1, yes; q9 → lengthen the trunk. Open: q3 (welcome-back size), q5
 >   (chapter spacing).
+> - **Harvest reputation is a perk, Word of Mouth** (the third 2026-09-26 entry): the every-tenth rule
+>   retires; a five-star countdown card, passive, capped as a share of a day's reputation; §3's
+>   "every 10th harvest" row and ruling 11 are superseded.
 > - **§11's spike brief is rewritten below to this shape.**
 
 **The sentence: *one number carries two riders — the village's story, and the height you can
