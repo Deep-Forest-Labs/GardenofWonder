@@ -5,6 +5,41 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (rulings, the owner's word) — Rebalance reputation to the flowers' pace; prototype saves may be reset; orders stay the top faucet
+
+**Three rulings on reading doc 52's summary.**
+
+**1. The reputation curve is rebalanced, not accepted.** The owner: *"I don't want people finishing
+the game in 4 to 19 days, and the flowers are on a different pacing. The idea is to rebalance the
+game… where the story, the tree, and the reputation players earn from all sources balance properly…
+Again, orders should give you the highest amount of reputation."* So doc 52 §3's proposal — keep
+rungs 1–19 as they are, steepen 20–40 geometrically, calibrated so the last flower's rung lands when
+the flower is affordable — is the direction, and the spec tunes the ratio and the per-tier order
+payment together against `tools/year-sim.js` run per persona (doc 52 §12 question 10, now a task).
+The target is stated in the owner's words: the story, the tree and every reputation source pace
+with the flowers, and no player type finishes the climb in days. Orders remain the largest single
+source at every tier.
+
+**2. Until the owner says the game is live, saves are prototype saves.** The owner: *"we should never
+care about them at this moment. I'll tell you when we're actually live on the App Store… Players, we
+don't ever have to worry about grandfathering them in or making any special updates for people who
+have saved progress. They can all be reset each time we do big pushes."* **Standing rule from today:**
+no migration, refund or grandfathering design is spent on existing saves; a big push may reset every
+save. This closes, without design, doc 52's `seedRevealed` question (§12 q4), the drone refund
+migration (§7), the reached-level latch and its four traps (§3's bill items 3–5), and the "returning
+player sees fewer flowers" cost (§2, §8) — all of which were written to protect saves the owner has
+now said not to protect. **What survives:** the never-resets partition and doc 07's save shape are
+still built and tested, because they are the shipping product's rules, not a migration; and a
+one-line backfill in `load()` stays cheap to write where it is cheap. The rule is about design
+spend, not about deleting discipline the port needs.
+
+**3. Reaffirmed:** orders are the top reputation faucet; the tree cannot ship before slice D.
+
+**Rejected:** accepting the shipped `repPay` values by luck (doc 52 §12 q1's option a — the owner
+wants a rebalance, not a coincidence); and continuing to price save migrations in a prototype.
+
+---
+
 ## 2026-09-24 (direction filed, and two laws repealed) — The trunk and the tree: reputation reveals, gold buys, Seeds deepen
 
 **[52-the-trunk-and-the-tree.md](52-the-trunk-and-the-tree.md) is filed as DIRECTION** — the

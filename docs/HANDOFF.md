@@ -1379,6 +1379,11 @@ fences; when one would limit a good idea, it is surfaced while the feature is be
 cost of each way stated. The full ruling, what it spends and what still stands are in the 2026-09-10
 (ruling) entry in [10-decision-log.md](10-decision-log.md).
 
+**Saves are prototype saves until the owner says the game is live (ruled 2026-09-26).** No migration, refund or
+grandfathering design for existing saves; a big push may reset every save. The never-resets partition and doc 07's
+save shape still hold — they are the shipping product's rules, not a migration. The 2026-09-26 entry in
+[10-decision-log.md](10-decision-log.md) says what this closed in doc 52.
+
 **Nothing in `docs/` is set in stone.** Stated by the owner 2026-08-14: anything in the game could be
 done better, and a decision recorded here is a decision that was right at the time, not a
 constraint. The strategy pass overturned several previously locked items. Continue to record
