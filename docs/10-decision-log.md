@@ -5,6 +5,38 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (ruling, before dispatch) — The tree card's rarity frames come from doc 05, not from the album
+
+**Caught at the dispatch gate, before the spike builder started.** §11's spike brief said the tree's
+four tiers used "the rarity language the album and the harvest ladder already own." Checked against
+the working tree, that sentence is false and the two ladders disagree:
+
+| Owner | Tiers |
+| --- | --- |
+| Harvest ladder — `RARITY_RANK`, game.js | common / rare / **epic** / legend |
+| Album cards — `SET_SHAPE`, data.js | common / **uncommon** / rare / legend / **mythic** |
+| Card frames actually drawn — `.pack-reveal.r-*`, style.css | rare / legend / mythic rings only |
+
+Only the harvest ladder owns the four the 2026-09-26 shape ruling named. The album owns five, two of
+which the tree does not use, and **the codebase contains no epic card frame** — so a builder told to
+copy the album's card frames onto tree cards would have had nothing to copy for epic, in the very
+frame (§11 frame 3) built to test whether the frame alone carries importance.
+
+**Ruled:** the four colours come from `docs/05-art-direction.md`'s token table (`--epic` `#b197fc`,
+`--legend` `#ffd43b`). The builder draws the epic card frame from that token; the pack-reveal rings
+are a recipe to learn from, not a set to copy. No uncommon and no mythic tier on the tree.
+
+**Rejected:** (a) reusing the album's three drawn rings and dropping epic — contradicts the shape
+ruling two days old, and puts mythic on the tree as an unruled fifth tier; (b) adopting the full
+five-tier album ladder — reopens a ruling the owner had just made, and across ~120 rungs five tiers
+thin out what each tier means.
+
+Folded into §11 as a RULED block naming the superseded sentence, so the builder cannot reopen it.
+Two other brief defects fixed in the same pass: the expected-`git status` list was stale (an
+untracked `.docx` under `docs/` had appeared, unlisted, which is how a brief gets a stray file
+committed), and the brief pointed only at `records-spike.html` while `tools/curtain-spike.html`
+already implements doc 47's masked-row recipe the spike was being asked to build from scratch.
+
 ## 2026-09-26 (ruling, reputation from harvests) — Word of Mouth: the every-tenth rule becomes a perk with a five-star countdown
 
 **The owner ruled that reputation from harvests is a perk the player chooses, not a hidden rule.**

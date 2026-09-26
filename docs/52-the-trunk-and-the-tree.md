@@ -1014,10 +1014,13 @@ then STOP.
 
 Open the repo at Ghost Garden/Ghost Garden (a subdirectory of the workspace, not the root). Run
 git fetch and git status first. Expect ` M .obsidian/workspace.json`, ` M AGENTS.md` and untracked
-`.agents/`, `.codex/`, `.ignore`, `.claude/launch.json`; leave all alone, never commit them. Add
-files by name. The other spikes in `tools/*-spike.html` are the house form — `records-spike.html`
+`.agents/`, `.codex/`, `.ignore`, `.claude/launch.json` and an untracked `.docx` under `docs/`;
+leave all alone, never commit them. Add files by name — never `git add -A`, never `git add docs/`. The other spikes in `tools/*-spike.html` are the house form — `records-spike.html`
 is the newest and the one to copy for frame structure and the hand-copied CSS rule (a spike copies
-the game's CSS by hand and loads no game file, so it cannot drift when the game moves).
+the game's CSS by hand and loads no game file, so it cannot drift when the game moves). For the
+curtain, read `tools/curtain-spike.html` before writing any of it: doc 47's masked-row recipe is
+already built there (`.masked`, `.cv-silhouette`, the `--paper-dim*` ramp, `???` naming). Reuse that
+vocabulary on cards rather than inventing a second masked look.
 
 Read, in order: docs/52-the-trunk-and-the-tree.md — the REVISED 2026-09-26 block at the top FIRST,
 then §2 (the wallets), §4 and §4b (the perks), §6 (the creatures); docs/32-the-garden-year.md's
@@ -1033,7 +1036,15 @@ THE SHAPE, ruled 2026-09-26 — draw exactly this:
   (the right to buy a shop upgrade each year), every lawn slot, and the offline ability is its own
   card, one after another, going UP.
 - **Cards are one size.** Importance reads by RARITY — common / rare / epic / legendary — in the
-  frame and colour, using the rarity language the album and the harvest ladder already own. A
+  frame and colour. **RULED 2026-09-26, the owner's pick — do not reopen:** the four colours come
+  from `docs/05-art-direction.md`'s token table (`--epic` `#b197fc`, `--legend` `#ffd43b`), NOT from
+  the album. This supersedes this brief's earlier phrase "the rarity language the album and the
+  harvest ladder already own," which was wrong: only the harvest ladder owns these four
+  (`RARITY_RANK`, game.js). The album's card ladder is common/uncommon/rare/legend/mythic
+  (`SET_SHAPE`, data.js) and the only card frames actually drawn in the codebase are
+  `.pack-reveal.r-rare`, `.r-legend` and `.r-mythic` in style.css — **there is no epic card frame
+  to copy**, and there is no uncommon or mythic tier on the tree. Draw the epic frame yourself from
+  doc 05's token; treat the pack-reveal rings as a recipe to learn from, not a set to copy. A
   legendary card is the same box as a common one; its frame does the talking.
 - **Some cards level.** Up to five stars, one star per Saved Seeds purchase, the petal grammar
   flowers have today. A levelling card shows its row of five star pips (empty until bought) even
