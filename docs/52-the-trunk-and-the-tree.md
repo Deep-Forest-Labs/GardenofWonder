@@ -457,9 +457,9 @@ ladders are in words, per doc 31 surgery 4: **chance axes are countdowns, never 
 > anywhere in this repo, and the session that held it is gone. What follows is therefore **authored
 > fresh to cover every category the owner named** (taps, harvests, sky and catches, seasons,
 > creatures and meadow, orders and story, the Turn; the drone's branch is §7) rather than recovered.
-> Eleven cards, not thirty. If the owner still has that list, it supersedes this table on sight and
-> the spec should use it — and the log's two promises should be corrected to say the list was lost,
-> so the next reader does not go looking for it.
+> Eleven cards, not thirty. **Recovered 2026-09-26:** the design desk held the session list and
+> has written it down below as §4b — it was never lost, only never filed. The eleven cards above
+> are the ones sized for direction; §4b is the raw list the spec draws from.
 
 | Perk | Effect, one sentence | Touches | Rank ladder | Guardrail |
 | --- | --- | --- | --- | --- |
@@ -517,6 +517,55 @@ early power is capped at two worn perks.
 
 **The invariant: a spot cannot stack the same perk.** Five spots holding five Deep Roots is a
 multiplier stack wearing one name — the failure the creature-pair rules exist to prevent.
+
+### §4b — the desk's session list, recovered (2026-09-26)
+
+The list the owner asked for on 2026-09-22 and 09-24, as it was brainstormed with him — placed
+objects, one sentence each, grouped by the part of the game they touch. **Unsized and unpriced:**
+the spec gives each a rank ladder and a guardrail per §4's rules (chance axes as countdowns; nothing
+raises `mintK` or `tallyCap`; nothing touches `standOrderRep()`). Names are the desk's and the
+owner's to change.
+
+| Touches | Perk | Effect, one sentence |
+| --- | --- | --- |
+| Taps | Wind Chime | Combos decay slower |
+| Taps | Whetstone | Crits hit harder |
+| Taps | Bell | Every tenth tap rings a double |
+| Taps | Tuning Fork | The combo's pitch keeps climbing past the cap instead of wrapping (the filed audio bug, turned into a perk) |
+| Taps | Tip Jar | Every crit drops the gem-chance countdown by one |
+| Harvests | Gnome of Fortune | Bigger payouts on the flowers standing beside it (the owner's own example; the existing decor row converts to this) |
+| Harvests | Compost Heap | Replanting the same seed is cheaper |
+| Harvests | Trellis | One plot grows two blooms |
+| Harvests | Watering Can | The plot you just harvested regrows a little faster next time |
+| Harvests | Pressed Flower Book | Every twentieth harvest of a flower adds a free rank to its own node |
+| Sky and catches | Weathervane | You see the next sky a minute early — the forecast surface the shared-sky pitch has been waiting for |
+| Sky and catches | Rain Barrel | Rain waters plants already in the ground, not only new ones |
+| Sky and catches | Lucky Horseshoe | The catch counter: "3 more harvests until a catch," never a percentage |
+| Sky and catches | Prism | A catch you would have missed by one roll lands anyway, once a day |
+| Seasons | Sundial | Fall's clock runs a little faster |
+| Seasons | Patchwork Quilt | Winter's snowfall pays more |
+| Seasons | Lantern | One plant keeps growing through the night untucked |
+| Seasons | Harvest Moon | Fall's windfall counts the bed as full at seven of eight |
+| Seasons | Snow Globe | Winter's tuck-in covers two beds |
+| Creatures and meadow | Birdbath | Pets stay awake longer on the same meal |
+| Creatures and meadow | Beehive Hum | Hives fill faster |
+| Creatures and meadow | Cosy Kennel | Sleeping pets still leave keepsakes, at half speed |
+| Creatures and meadow | Bell Collar | A pet's trait reaches one plot further |
+| Orders and story | Signpost | Customers pay more reputation, so you climb the trunk faster — **flag: it is a reputation faucet; price it against §3 or cut it** |
+| Orders and story | Welcome Mat | A chapter's villager arrives a chapter early |
+| Orders and story | Mailbox | A chapter's villager sends one order a day even before they arrive |
+| Orders and story | Ledger | Reputation from repeat customers pays double — **same flag as Signpost** |
+| The Turn ⚠ | Scoreboard | One Tally line counts double — touches `tallyCap`'s family; §4's flag applies |
+| The Turn ⚠ | Wishing Well | The blessing gives two ranks instead of one |
+| The Turn ⚠ | Hourglass | The meter fills a touch faster |
+| The Turn ⚠ | Heirloom Pot | The Century Bloom pays its Tally line twice |
+| Offline | Night Light | The flower earns for two more hours (a Lantern Oil rank by another name — fold or cut) |
+| Offline | Moth Lamp | Away income also rolls one catch per night |
+| The drone, owned | — | Faster flight; picks two plots a pass; picks catches first; flies through Fall's bed; wakes on your first tap with a bonus pass |
+
+Four of these touch the Turn and two touch reputation itself; §4's guardrail paragraph and §3's
+"never bought" rule apply to them before anything else, and the desk's recommendation to cut the
+Turn-touching cards from v1 stands for all four.
 
 ---
 
