@@ -13,6 +13,29 @@ game code is written from this document. The rulings it builds on are the 2026-0
 it is marked **derived** (computed from the repo) or **JUDGMENT** (the desk's proposal, the
 owner's to change).
 
+> ### REVISED 2026-09-26 — read this before the body
+>
+> The owner answered the open questions and redrew the shape (the two 2026-09-26 entries in
+> [10-decision-log.md](10-decision-log.md)). Where the body below disagrees with this block, this
+> block wins and the body is the record of the first draft:
+>
+> - **One linear path, no sideways branches.** Every flower, flower upgrade, perk, creature, access
+>   right, lawn slot and the offline ability is its own card on one vertical path. §1's picture and
+>   rung table, ruling 6, and §6's "hangs off the flower" placement are superseded; creatures are
+>   cards placed after their flower.
+> - **Cards are one size; importance reads as rarity** (common / rare / epic / legendary, the album's
+>   language; code id `legend`).
+> - **Some cards level, up to five stars, one Saved Seeds purchase per star** — the petal grammar.
+>   The card shows its star row before it is owned. The two wallets are unchanged.
+> - **The trunk is much longer than forty rungs** (on the order of 120; the spec derives it from the
+>   card list) and **the reputation curve is rebalanced to the flowers' pace**, orders the top
+>   faucet, nobody finishing in days. §3's proposal is the method; its numbers are re-derived.
+> - **Ruled from §12:** q1 → small Tally grant; q4 → closed, prototype saves may reset (no latch, no
+>   refund migration, no "returning player" cost); q6 → both Turn-touching perks cut; q8 → the
+>   always-on trickle from rung 1, yes; q9 → lengthen the trunk. Open: q3 (welcome-back size), q5
+>   (chapter spacing).
+> - **§11's spike brief is rewritten below to this shape.**
+
 **The sentence: *one number carries two riders — the village's story, and the height you can
 see.***
 
@@ -972,67 +995,90 @@ cost curve · the card count per rung · chapter boundaries.
 
 ---
 
-## 11. The spike brief — paste-ready
+## 11. The spike brief — paste-ready (rewritten 2026-09-26 to the one-path shape)
 
 ```
-MODEL: Sonnet 5 (thinking)
+MODEL: Sonnet 5
 EFFORT: high
 
-You are ONE builder. No ultracode, no workflow, no subagents: this is a layout spike.
+You are ONE builder. No ultracode, no workflow, no subagents: this is a layout spike, and the
+owner judges it by eye before any UI code exists (docs/34, the wireframe gate).
 
-Build tools/tree-spike.html — one static page, no game dependencies, 390x844, wireframe
-fidelity. Layout is the question; polish is the build's job. Obey docs/08-ui-and-layout.md
-(the 560px column, the pinned row grid, the sheet grammar). Read docs/52-the-trunk-and-the-tree.md
-first — the rung table in section 1 is your content. Read docs/05-art-direction.md for material.
-Raise every layout question AS A QUESTION in the handoff; decide nothing the owner should decide.
-Push, then STOP. No UI code follows until the owner approves (docs/34, the wireframe gate).
+Build `tools/tree-spike.html` — one static page, no game dependencies, composed at 390×844 with the
+560px column rule, wireframe fidelity. Layout is the question; polish is the build's job. Raise
+every layout question AS A QUESTION in your handoff; decide nothing the owner should decide. Push,
+then STOP.
 
-THE VISUAL TARGET, described in words. The reference is a screen recording on the owner's
-machine; it never enters the repo or the wiki. Take the pattern, not the picture:
+Open the repo at Ghost Garden/Ghost Garden (a subdirectory of the workspace, not the root). Run
+git fetch and git status first. Expect ` M .obsidian/workspace.json`, ` M AGENTS.md` and untracked
+`.agents/`, `.codex/`, `.ignore`, `.claude/launch.json`; leave all alone, never commit them. Add
+files by name. The other spikes in `tools/*-spike.html` are the house form — `records-spike.html`
+is the newest and the one to copy for frame structure and the hand-copied CSS rule (a spike copies
+the game's CSS by hand and loads no game file, so it cannot drift when the game moves).
 
-  - A full-screen vertical scroll.
-  - A REPUTATION RAIL down the right edge, with a live marker pill carrying the player's own
-    number — so a threshold is a HEIGHT on the rail, not just a number on a card.
-  - Nodes as framed cards ZIGZAGGING left and right down a single linear path on the left.
-  - Three card states: locked (art dimmed, padlock, threshold on a badge); exactly ONE
-    "UP NEXT" wearing a ribbon and always showing its price (our advert-row rule); unlocked
-    (gold frame, art in full colour).
-  - A CURTAIN across the top. It MASKS identity, it does not remove cards: beyond the revealed
-    stretch the cards are still on the path, silhouetted, "???", stats withheld, one directional
-    hint each. Doc 47: "a locked thing you can see is a goal, and a missing one is nothing."
-    Drawing nothing up there would delete the mechanism the curtain is named after.
-  - THE UNVEILING when the marker reaches a card: doors open, a ribbon is cut, the card lights,
-    the marker climbs, about two seconds, and the thing unlocked is shown as itself.
-  - The owner's addition, which the reference lacks: SUB-SKILLS BRANCHING SIDEWAYS off a card,
-    with ranks, so the path stays linear and the depth hangs off it.
+Read, in order: docs/52-the-trunk-and-the-tree.md — the REVISED 2026-09-26 block at the top FIRST,
+then §2 (the wallets), §4 and §4b (the perks), §6 (the creatures); docs/32-the-garden-year.md's
+glossary (every word on a card is a glossary word); docs/08-ui-and-layout.md (the column, the
+pinned row grid, the sheet grammar); docs/05-art-direction.md (material, rarity tokens — the
+rarity id is `legend`, never `legendary`); docs/47-the-curtain-and-the-drip.md (the curtain's
+masked-row recipe, which you reuse for cards under the curtain).
 
-WHAT NOT TO TAKE from the reference — stated so you do not absorb it:
-  - Reward-in-currency as the point of an unlock. Ours unlocks CONTENT — a flower, a perk, a
-    creature — and the currency line is secondary.
-  - The glossy blue-and-gold material. Ours is doc 05's paper, ink and lip.
-  - Any timer, offer, or buy-to-skip chrome.
-Take the rail, the zigzag, the three states, the one ribbon, the curtain, and the ceremony.
+THE SHAPE, ruled 2026-09-26 — draw exactly this:
 
-THE FRAMES THE OWNER MUST JUDGE:
-  1. The whole forty-rung path, zoomed out.
-  2. The first hour — four cards and one silhouette (section 1 draws it).
-  3. The rail with its marker mid-climb, and its story marks.
-  4. One flower card open, with its sideways branch and ranks. NOTE: draw Rich Bloom (5 ranks) and
-     Quick Sprout (5 ranks) only. Signatures are a LATER PHASE — `data.js` has two petals per
-     flower today and doc 32's glossary says signatures "arrive in a later phase" — so draw the
-     slot where a signature will go, unfilled and labelled, never a live ladder.
-  5. The lawn at two slots, and at five, with a perk placed.
-  6. A creature card revealed at a rung.
-  7. A STORY BEAT firing as a moment over the garden — NOT a card on the path. Full screen,
-     on the spot, the existing moments machinery.
-  8. The unveiling, as a frame sequence.
-  9. The offline node with its levels.
- 10. The drone card in the Shop, with its two prices.
- 11. The curtain with the next chapter in silhouette.
+- **One linear path.** No branches, nothing sideways. Every flower, every flower upgrade ("Daisy
+  pays more", "Daisy grows faster", its signature), every perk, every creature, every access right
+  (the right to buy a shop upgrade each year), every lawn slot, and the offline ability is its own
+  card, one after another, going UP.
+- **Cards are one size.** Importance reads by RARITY — common / rare / epic / legendary — in the
+  frame and colour, using the rarity language the album and the harvest ladder already own. A
+  legendary card is the same box as a common one; its frame does the talking.
+- **Some cards level.** Up to five stars, one star per Saved Seeds purchase, the petal grammar
+  flowers have today. A levelling card shows its row of five star pips (empty until bought) even
+  while locked, so a player can see it will level. A card that does not level shows no pips.
+- **The reputation rail down the right edge** with a live marker pill carrying the player's own
+  number, so a threshold is a HEIGHT. Each card sits at its rung; its rung number rides on a
+  badge on the card. The path is on the left.
+- **Three states and one ribbon:** locked (art dimmed, a padlock, the rung on its badge); exactly
+  ONE "up next" card wearing a ribbon that always shows its price (a flower's gold price; a
+  perk's first-star Seeds price); unlocked (gold frame, art in full colour, its stars filling).
+- **The curtain across the top**, hiding everything beyond the revealed stretch. Cards under it are
+  present but masked: silhouette, `???`, stats withheld — doc 47's masked-row recipe.
+- **Story beats are ticks on the rail**, never cards. A chapter tick is visibly not a card.
+- **The trunk is long** — on the order of 120 rungs. Draw enough to prove it scrolls: rungs 1–14 in
+  full, and a representative stretch around rung 60. The exact count is the spec's.
 
-Story marks: a beat shows as a tick or ribbon mark ON THE RAIL, visibly not a card, so the
-player sees a story moment coming two levels out. Marks cannot be bought and must never look
-purchasable. Draw them at three distances so the owner can judge the read.
+THE FRAMES the owner must judge, each at 390×844:
+
+1. **The first hour.** Rungs 1–14 with real content: the overnight trickle card at rung 1 (common,
+   levels — five pips), Daisy (common flower, gold price), Power Punch access (common), "Daisy pays
+   more" (common, levels), a placed perk from §4b (rare), Bluebell (rare flower), Pip the creature
+   after Bluebell (rare), the first lawn slot, the chapter I tick on the rail. The marker at rung 3.
+2. **Mid-climb around rung 60**, marker mid-way, one epic card up next, a legendary visible dimmed
+   above it, the curtain two cards higher.
+3. **The rarity ladder side by side**: four cards, common → legendary, same size, so the owner can
+   judge whether the frame alone carries importance.
+4. **One levelling card open** (a tap on it): its five pips with two filled, the Saved Seeds price
+   of the next star, what it does now and what the next star adds, in the glossary's words.
+5. **The unveiling**, as a four-frame strip: marker reaches the rung → the card's mask lifts → the
+   card lights and its stars appear → the marker settles. About two seconds in the real thing.
+6. **The lawn with two slots, one perk placed; the lawn with five slots.** Same garden board the
+   game has; the slots are spots on the grass, not a menu.
+7. **The drone card in the Shop with its two prices** (buy once with real money; rent half an hour
+   for an ad) — this is the only card not on the path.
+8. **The garden scene showing where "up next" lives on the main screen** — the trunk's next card as
+   a small badge the player sees without leaving the garden (doc 28: demand on top of supply).
+
+QUESTIONS TO RAISE, not decide (put each in the handoff with your recommendation marked as such):
+how many cards fit one screen at 390×844 and whether that makes the path a straight column or the
+reference's zigzag; where the star pips sit on a card; whether a chapter tick needs a label; how
+the rail's number reads at 15,000+; whether flower and flower-upgrade cards need a shared mark so
+"Daisy" and "Daisy pays more" read as kin some rungs apart; whether the tree is a sheet or a full
+screen; where the tree's door is (the Almanac's petal tab, which it replaces, or the dock).
+
+THE HANDOFF: push; list every frame with what it shows; list every layout decision you made and
+every question you raised; note what you copied from which spike; no docs beyond a line in
+docs/11-known-issues.md if you hit something broken. Do not edit docs/52, docs/43 or HANDOFF —
+the desk logs the owner's verdict. Stop.
 ```
 
 ---
