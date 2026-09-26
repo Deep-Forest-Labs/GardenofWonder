@@ -5,6 +5,69 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (rulings, later) — One linear path, cards of one size, rarity as the ladder, stars as the levels
+
+**The owner answered doc 52's open questions and redrew the tree's shape in the same message.** His
+words on the shape: *"what if we just had one linear path?… Instead of having branching paths
+from… unlocking the Daisy, and then the branching path from that is upgrading the speed at which it
+grows and the payouts, what if we just had one longer path? Every single type of upgrade, ability,
+flower, and flower upgrade was on that, so it was really stretched out. I think that also might play
+well for our casual mobile players, instead of having an in-depth skill tree where they have to
+scroll around the screen… I think you should just keep them all the same size. Maybe they just have
+a different reading where certain unlocks feel more like common, rare, epic, or legendary, so
+players feel like they're working towards a bigger goal constantly… By doing that, we also heavily
+increase the length of the progress bar in the Prestige system."* And on levels: *"Some of these
+perks and upgrades should have multiple levels, exactly how we have it for flowers in the game right
+now. We need to signify with these boxes if a certain upgrade, flower, or perk has the ability to
+level."*
+
+**Ruled, and what each supersedes in doc 52:**
+
+1. **One linear path, no sideways branches.** Every flower, every flower upgrade (grows faster, pays
+   more, its signature), every perk, every creature, every access right, every lawn slot and the
+   offline ability is its own card on one vertical path. Supersedes the session's ruling 6
+   ("sub-skills hang sideways"), §1's picture and rung table, and §6's "a creature hangs off the
+   flower that attracts it" — creatures are cards now, placed after their flower. The invariant
+   "a creature is never in reach before its flower" becomes an ordering rule on the path.
+2. **Cards are one size. Importance reads as rarity** — common, rare, epic, legendary — in frame and
+   colour, using the rarity language the album and the harvest ladder already own (the code id is
+   `legend`, never `legendary`).
+3. **Some cards level: up to five stars, one star per Saved Seeds purchase**, exactly the petal
+   grammar flowers have today. A card shows its star row before it is owned, so a player can see it
+   will level. The two wallets are unchanged: reputation reveals the card, gold buys a flower, Saved
+   Seeds buy stars.
+4. **The trunk is much longer than forty rungs.** Supersedes ruling 7 and closes §12 question 9 by
+   the owner's own preference (lengthen, not densify). The spec derives the count from the card
+   list (nineteen flowers, their upgrades, the perks, six creatures, access, slots, the offline
+   card — on the order of a hundred and twenty rungs) and rebalances the reputation curve to the
+   flowers' pace per the earlier 09-26 entry. Ruling 5 (a bare level pays a free rank) survives only
+   if bare levels still exist once every card has a rung.
+5. **The Tally pays a SMALL reputation grant** (§12 q1 → a: ceremonial, under a level's worth).
+6. **The always-on overnight trickle from rung 1: yes** (§12 q8 → a), with the offline card raising
+   it.
+7. **Both Turn-touching perks are cut from v1** (§12 q6 → a). The owner: *"I think we need to
+   rebalance everything."*
+8. **§12 q4 is closed by the prototype-saves rule** (the earlier 09-26 entry).
+
+**Still the owner's, not answered today:** chapter spacing (§12 q5; the desk leans front-loaded)
+and the welcome-back boost's size (§12 q3; the desk leans ×2, capped at one rung).
+
+**The desk's read, recorded once.** One path with same-size cards is the reference gallery drawn
+faithfully, and it is the better shape for a phone: nothing to scroll sideways, nothing to miss, a
+card every few minutes early and every day or two late. What it spends is the tree's "picture of
+a flower" — Daisy and "Daisy pays more" are now separate cards some rungs apart rather than one
+card with a branch — so the spec must keep them adjacent enough to read as kin (a shared colour,
+the flower's bloom on both) and the rarity ladder must do the work the branch did. The rung count
+is what makes the rebalance real: at ~120 rungs a casual player who reaches the last flower on day
+47 sees a new card roughly every eight hours of play, which is the cadence the owner is asking for.
+
+**Rejected:** keeping a branch for flower upgrades as a compromise (the owner said one path, and
+half a branch is the worst of both); different card sizes for different kinds (the owner withdrew
+it in the same message); and re-deriving the rung table in this entry — the spec does that against
+the simulation.
+
+---
+
 ## 2026-09-26 (rulings, the owner's word) — Rebalance reputation to the flowers' pace; prototype saves may be reset; orders stay the top faucet
 
 **Three rulings on reading doc 52's summary.**
