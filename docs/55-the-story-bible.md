@@ -855,6 +855,19 @@ Each question is priced both ways. The desk's recommendation is first.
   comes from the core loop only (2026-09-24). The Open Question cards (question 14) are where collection
   could carry them again.
 
+### Rulings after filing — 2026-09-26, late
+
+- **Four season flowers.** Every season has its own character flower: Summer is Poppy, Winter is
+  Holly, and **Fall and Spring need heroes of their own before the story moves forward** (the owner's
+  word; the late 2026-09-26 story entry in the log). The sister logic in §2 extends: Gran's tin held
+  one seed for each season. The two new characters are designed in their own pass — voice, art, the
+  silhouette test — and the bible gains their rows when they exist. Fall's is the urgent one.
+- **The chapter scene's target** is the owner's Gossip Harbor recording, described in words in the
+  same log entry; §6's description is of that recording. Question 5's build is recommended and
+  awaits the owner's word.
+- **Question 11 is ruled as a standard:** the shipped words must pass as human. How — a human
+  writer's pass over the draft, or the owner's own — is his next call.
+
 ---
 
 ## The gauntlet — what the critics found, and what changed

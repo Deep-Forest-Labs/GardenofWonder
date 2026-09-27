@@ -5,6 +5,51 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (story, rulings, late) — Four season flowers; the chapter scene's target, in words; the words must pass as human
+
+**Three rulings from the owner on reading the story bible's cast.**
+
+**1. Every season gets its own character flower, and two are missing.** The owner: *"each season
+should have its own character flower: spring, fall, winter, and summer. We need to add two more
+flowers before moving forward. I'm glad we caught this now."* Summer is Poppy and Winter is Holly;
+**Fall and Spring need heroes of their own.** The 2026-09-01 Holly ruling already promised that
+*"every season will one day have a face"* and noted that Fall borrows Summer's flower today; the
+owner has now made "one day" now. **Cost, stated once:** two characters — design, a voice in the
+glossary's register, art in the house style, and the same silhouette test Holly got — and the
+story bible's sister logic extends naturally: Gran's tin held one seed for each season. The bible
+folds that (Holly's row in §9, and §2) rather than this entry deciding the two characters. Fall's
+hero is the more urgent, because Fall is built and playable with a borrowed face.
+
+**2. The chapter scene's visual target is the owner's recording of Gossip Harbor's dialogue** (one
+minute, on his machine, never in the repo). The desk mis-named the reference as the Monopoly Go
+recording in one reply; the bible's §6 description was already of this one and it is accurate. In
+words, what it shows: two round portraits with name tags, the lead's on the left with her bubble to
+the right in her own colour, the other speaker mirrored in a second colour; each new line pushes the
+stack up, three or four visible at once, over the room behind, blurred; six to fifteen words a line,
+interruptions with a dash, mood carried by swapping the portrait's expression; a fast-forward button
+top right, always; the scene ends on the lead's cloud-shaped private thought and a Continue button;
+a full-screen "New Day" card with the lead's full-length art between scenes; a visible change
+between the two scenes (a sign placed, a renovation chosen from three swatches); the second scene
+plays over the room with the characters standing in it. Two scenes and a change in about sixty
+seconds. **This is the shape §6 prices as the medium engineering job; the owner's video is the
+target the builder is given in words.** Whether to build it for volume one (doc 55 §9 question 5)
+is confirmed by the owner in the next session; the desk recommends yes.
+
+**3. The shipped words must pass as human.** The owner: *"I'm not a writer… we're going to have to be
+as realistic as possible when it comes to writing. From a human perspective, we need to make sure
+that they can't tell."* **Ruled as the standard**; how it is met is the owner's next call. The
+desk's recommendation: a human writer's pass over the desk's draft, with the owner as editor —
+volume one is about 3,800 words, a small freelance job (**JUDGMENT:** low hundreds to low thousands
+of dollars, depending on the writer), and the cheapest insurance the story can buy against the
+refund behaviour doc 38 measured. The alternative — the owner's own pass with a human-voice
+checklist — costs his weeks instead.
+
+**Rejected:** leaving Fall and Spring on borrowed faces into the story (a chapter set in Fall with
+Summer's flower in the middle contradicts the cast); building the scene by paging the existing reveal
+card (twelve cards read as a tutorial); and shipping the desk's lines as written.
+
+---
+
 ## 2026-09-26 (story, rulings) — The word is *mama*; the flower never suffers for absence
 
 **Two of doc 55's open questions, closed.**
