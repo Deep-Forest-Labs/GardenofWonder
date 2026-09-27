@@ -5,6 +5,32 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (ruling, the season heroes) — Simple like Poppy, a different silhouette each; Holly went a little too far
+
+**The owner, on the Fall and Spring heroes:** *"I think we might have gone a little too overboard
+with the visual complexity of Holly, and I really like our main flower, Poppy. I want to make sure
+the other flowers are somewhat simple, but maybe carry a different silhouette."*
+
+**Ruled as the constraint for the hero pass:** Poppy is the reference for *simplicity* — one face,
+one petal shape, one warm palette, readable at 46px; Holly is the ceiling that the new two stay
+under (her five-point frost crown, two-tone plum-and-pink petals and porcelain face are more kit than
+the next two should carry). Each hero owns a **silhouette that differs from both** — Poppy's round
+rosette and Holly's crowned rose are taken — so the black-silhouette row from doc 46's character
+spike stays the test, run for three shapes side by side rather than one. Gender open, per the
+2026-09-27 entry above. Whether Holly herself is simplified is NOT ruled; the owner said "a little
+too far", not "change her", and she is built, gauntleted and loved in her lines.
+
+**For the record, complexity is not in the drawing code:** `hollyHead()` in `flora.js` is about
+thirty lines against the talking flower's seventy-odd; what reads as heavy is the *kit* — crown,
+two-tone petals, the dark palette against a pale face — so the brief constrains kit and palette,
+not line count.
+
+**Rejected:** re-skinning Poppy with seasonal palettes as the two heroes (a season is a speed and a
+rule, never a re-skin — and a hero is a character, not a tint); and designing the two here (their
+own brief and spike, with the owner's eye, per doc 46's gates).
+
+---
+
 ## 2026-09-27 (story, ruling) — Poppy is a girl; Holly's three lines change; the Fall and Spring heroes may be either
 
 **The owner:** *"Holly should be a girl, not a he. I do think one or two of the other flowers, the new
