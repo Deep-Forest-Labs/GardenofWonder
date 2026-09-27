@@ -5,6 +5,53 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (story) — The story bible, volume one: eight chapters, the question kept on conditions, and the Stand's counter as the visible spine
+
+**Filed as direction, the owner picking: [55-the-story-bible.md](55-the-story-bible.md).** Built from the
+owner's premise (doc 53) and the flow brief (doc 54, which the owner ruled a reference that *"can be
+adjusted"*), researched against the lane's reviews first, and pressure-tested by a market critic and a
+game-fit critic before filing. Nothing in it is ruled; §9 holds sixteen open questions, each priced.
+
+**What it proposes.** Eight chapters for volume one (the premise's Acts 1–3), front-loaded — five in the
+first fifth of the climb — with a line of story bound to almost every level so the back never goes dry.
+Chapter I is the first session: the tin, the question, Poppy teaching the garden, the first Turn as the
+will's Year kept, Gran's note (*"don't sell it — not even to family"*), the Stand reopening, Delphine.
+Every chapter changes something visible, and the visible spine is **the Stand's counter on the order
+strip** — the counter today's ruling already gives that strip — restoring across the volume. Holly becomes
+Poppy's sister from the same tin. About 3,800 words in all. Scenes are sized to the lane's own unit —
+10–12 short lines, two faces, ending on the lead's thought — measured from the owner's screen recording,
+which stays on his machine.
+
+**What the market evidence changed.** Players in this lane punish **droughts** — gaps behind grind,
+mysteries that never pay, writers outrun — far more than anything short, which is why the back three
+chapters are spread and the levels between them carry lines. The ASA banned a game ad showing baby loss as
+a fail state on a single complaint, which is why the bible proposes Poppy never gets a neglect state (§9
+q10 — the owner's call, since the game's stakes are his). The question itself is kept, on conditions: said
+once, answered by Mara's own tap, never near a purchase, never beside a physical imperative a slang reading
+can seize, never framed as her substitute child, and the exact word decided for every market before launch
+(the desk recommends *mama*; British *mummy* is Doctor Who's creepy-child line word for word).
+
+**Rejected, and why:**
+- **The premise's 40–60k words** — a two-person team cannot write, localise and keep that; volume one is
+  under a tenth of it.
+- **Three factional reputation tracks** — ruled out by doc 52; factions are people at the Stand.
+- **The underworld, the cartel and the bought judge** — the lane does soap, not crime, and none of it may
+  need a rating descriptor the game lacks. Mrs. Ashgrove is dropped; Miss Marigold, already a judge's
+  voice, is the judge.
+- **Ageing the flower on Turns** — Turns carry no required story after the first, so a frequent Turner
+  would hear a teenager in Chapter II; it ages on chapters.
+- **A house on Summer's far hill as the visible spine** — the draft's; the game-fit critic showed the board
+  covers the far hills on a phone. Held as §9 q9, pending a screenshot.
+- **Scenes carried by the existing moments card** — it draws seed and upgrade cards only; the chapter
+  scene is a new moment kind in the lane's two-face shape.
+- **Holly as the same plant in Winter** — breaks the rivalry she was built for.
+- **The draft's own name for the flower**, withdrawn when the owner ruled Poppy the same day.
+
+**Surfaced, not fixed, for the owner:** Holly's shipped lines call the Summer flower "he" while the
+premise is a daughter (§9 q3); the Turn's shipped ask, *"Save your seeds?"*, puns on the retired name
+(§9 q17); and the audience's refusal of AI-written text means the shipped words should pass through the
+owner's hand (§9 q11).
+
 ## 2026-09-26 (naming, the owner's word) — The flower is **Poppy**
 
 The premise's working name, **Wonder**, collided twice: with the **Wonder Effect** (the game's own

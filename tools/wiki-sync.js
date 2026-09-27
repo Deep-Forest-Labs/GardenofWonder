@@ -222,6 +222,7 @@ const DESC = {
   '52-the-trunk-and-the-tree.md': "The direction for the trunk and the tree — a story tied to reputation, and a branching skill tree that replaces the petal menu and becomes where flowers, perks, creatures, access and offline income are revealed and bought. Reputation reveals, gold buys, Prisms deepen. Direction only, 2026-09-24; the spec follows the spike.",
   '53-narrative-premise.md': "The owner's story premise as received from an outside writing pass — a mother who could not have a child, and a flower that thinks she is its mother — verbatim, with the design desk's read on what fits the game and what collides. An inbound premise, not a ruling; the story bible comes after.",
   '54-the-story-flow.md': "The brief for the story bible's writer — the when and where: the first session beat by beat (the seed, the flower teaching the garden, the store reopening at the first Turn, customers arriving), the two clocks a beat can ride, the surfaces a beat can land on, and the one correction to doc 53. A brief, not the bible.",
+  '55-the-story-bible.md': "The story bible, volume one — what this lane's players praise and punish in a story, with the evidence; the owner's premise fitted to the Garden Year; the cast; eight chapters at reputation levels, each changing something visible; the rules of the voice; how beats are delivered; the first session's lines; the bill and the owner's open questions. Direction, the owner picking.",
   '48-music-direction.md': "The music bible for the collectible records — the sonic identity every track must sit inside so the game's chimes and weather layer over it, the five v1 track briefs, and the delivery spec for any track that reaches the shelf. A commissioning document, 2026-09-02 — the music half of the record shelf in doc 49; no code has changed.",
   'README.md': 'The docs folder’s own index, mirrored exactly as written. This Home page is a reordering of it for the Unity team.',
 };
@@ -298,6 +299,7 @@ const SHORT = {
   '52-the-trunk-and-the-tree.md': '52 · The trunk and the tree',
   '53-narrative-premise.md': '53 · Narrative premise',
   '54-the-story-flow.md': '54 · The story flow',
+  '55-the-story-bible.md': '55 · The story bible',
   '48-music-direction.md': '48 · Music direction',
   'README.md': 'The docs index',
 };
