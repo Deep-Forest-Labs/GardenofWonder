@@ -39,6 +39,63 @@ owner's to change).
 >   "every 10th harvest" row and ruling 11 are superseded.
 > - **§11's spike brief is rewritten below to this shape.**
 
+> ### REVISED 2026-09-26 (later) — the owner's review of `tools/tree-spike.html`
+>
+> The owner judged the spike by eye and ruled the surface. Where the body OR the block above
+> disagrees with this block, **this block wins**. Logged in
+> [10-decision-log.md](10-decision-log.md).
+>
+> - **"Rung" is not a player word, and the rail carried two number systems.** Card badges counted
+>   ordinals while the marker pill showed raw reputation, so nothing connected "61" to "15,842".
+>   **Reputation is the XP; the level is the rung.** The badge reads a level; reputation fills the
+>   gap between levels. One number system. Every "rung" in the body below is a *level*.
+> - **The tree is always a full screen**, never a sheet. Close is an X at bottom centre. §11's
+>   "sheet or full screen" question is closed.
+> - **Both wallets are always on screen** in the tree — gold and Saved Seeds — because cards are
+>   priced in both.
+> - **A price lives in a buy button on the card**, never as floating text, and is rounded through the
+>   existing `fmt()` ([ui-shared.js](../ui-shared.js)). This supersedes the block above's "a ribbon
+>   that always shows its price."
+> - **Legendary must be said twice.** Gold on cream is the lowest-contrast pair on the page, so
+>   legendary reads weaker than rare or epic. `style.css`'s own mythic recipe is the precedent: a
+>   solid ring, a wider glow, and a breath.
+> - **Card details are inline, not behind a tap** — what it does now, what the next star adds. Desk
+>   scope, the owner's to widen: inline on the up-next card and on owned cards that can still level;
+>   locked and masked cards stay compact, because inline detail on all ~120 costs card height and
+>   drops cards-per-screen from ~7 to 4–5.
+> - **Auto-tap leaves the HUD** for a small button beside the flower, invisible until unlocked,
+>   armed by tap-and-hold. **Parked for its own discussion** — placement only is ruled.
+> - **The quest strip is the FTUE, and then it converts.** It teaches the core loop and runs to the
+>   **first Turn**; afterwards the top of the screen carries orders and arriving customers. The
+>   narrative: the flower teaches you to grow and to reopen the store, and the store reopening is
+>   what brings customers. This makes the HUD match [32-the-garden-year.md](32-the-garden-year.md)'s
+>   existing rule that from the first Turn onward orders are where reputation comes from.
+> - **The first Turn moves early** — a few minutes, not `minCoins: 100000`. The player should meet a
+>   Turn while still learning. **Desk flag for the spec:** that gate is the *standing* gate for every
+>   Turn and its coins floor is what stops many-cheap-Turns-a-day, so this needs a **first-Turn-only**
+>   gate, not a global reduction.
+> - **The quest chain moves to the Almanac** as a stat and achievement book (tap 20 / 50 / 100 / …),
+>   separate from the FTUE. **Achievements pay a very small amount of Saved Seeds, never reputation.**
+> - **Access rights, lawn slots and creature reveals are revealed by reputation and purchased with
+>   Saved Seeds.** This closes the spike's open question; the builder had drawn them free.
+> - **The lawn is not a screen and has no door.** Spots live on the garden board; tapping an empty
+>   spot opens a picker, exactly as tapping an empty plot opens `seeds` today
+>   ([08-ui-and-layout.md](08-ui-and-layout.md)). §4's "record shelf's equip grammar" already said
+>   this; the spike drew it as a destination and that is what made it unclear.
+> - **Legendary's meaning — desk placeholder, the owner's to overrule:** legendary is for cards that
+>   change *what you can do*, not *how much you get* (the fifth lawn spot, the offline ability at its
+>   top, a last signature). Word of Mouth is **not** legendary; the earlier ruling put it at rare or
+>   epic and the spike drew it wrong.
+> - **Tabled:** the §6 creature slot collision (six creatures, four slots).
+>
+> **Two structural consequences the spec must carry, flagged by the desk, not ruled:**
+> 1. **Saved Seeds gain their first faucet outside the Turn.** Today Seeds arrive only at the Turn,
+>    and that scarcity is what makes the Turn the pillar. "Very small" must mean a rounding error
+>    against a Turn's mint, and it should be capped in data.
+> 2. **Seeds demand roughly doubles.** Seeds now buy perk stars *and* access rights *and* lawn slots
+>    *and* creature reveals. The Seeds budget is now the tightest quantity in the economy and the
+>    curve cannot be authored until it is sized.
+
 **The sentence: *one number carries two riders — the village's story, and the height you can
 see.***
 

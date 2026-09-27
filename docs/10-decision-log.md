@@ -5,6 +5,71 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (rulings, the owner's word) — The spike judged: levels not rungs, the quest strip becomes the FTUE, the first Turn moves early
+
+**The owner reviewed `tools/tree-spike.html` frame by frame and ruled the surface.** Folded into
+§52's second REVISED block. The largest three are not surface at all.
+
+**1. Reputation is XP; the level is the rung.** His words: *"Let's not use the word rung. It's kind
+of horrible. Let's say level, or reputation level — something that's easy for the user to
+understand."* Checking the spike showed the problem was worse than the word: the player never saw
+"rung" at all, but the rail carried **two unrelated number systems** — card badges counting ordinals
+(3, 61, 63) against a marker pill showing raw reputation (15,842), with nothing connecting them. The
+rail could not answer "how close am I?", which is its only job. Ruled: one system. The badge is a
+**level**; reputation is the XP that fills the gap between levels.
+
+**2. The quest strip is the FTUE, then it converts.** His words: *"that progress bar really teaches
+people how to start playing… once they finish the quest… that progress bar becomes our reputation
+level bar, or it disappears and we have customers appear up top like Gossip Harbor."* The desk's
+check found this is **not an economy change at all**: doc 32 already rules that *"from the first Turn
+onward, orders are where reputation comes from"*, plots already wait on `year.plotTurnGate`, and the
+pre-Turn year meter is already staged as "the mystery meter" with no story attached. The HUD had
+simply never caught up. The owner's narrative supplies the missing reason: **the flower teaches you
+to grow and to reopen the store; the store reopening is what brings customers.**
+
+**3. The first Turn moves early — minutes, not `minCoins: 100000`.** His words: *"I think we put it
+too far out, so they don't really know what it is… turn the FTUE and that progress bar into an
+experience that lasts a few minutes, and they understand what a turn is."* The tutorial then teaches
+the whole loop — earn gold, take a Turn, spend into the tree, meet the story — inside the first
+session. **Desk flag carried into §52:** `minSeeds: 10` / `minCoins: 100000` (data.js) is the
+*standing* gate for every Turn, and data.js's own comment says the coins floor is what keeps
+many-cheap-Turns-a-day unprofitable. This needs a **first-Turn-only** gate; a global reduction would
+break the Turn economy.
+
+**Also ruled:** the tree is always full screen with the close X at bottom centre (closes the spike's
+sheet-or-screen question); both wallets always on screen; a price lives in a buy button, rounded
+through the existing `fmt()`, never as floating text; legendary must be said twice, because gold on
+cream is the lowest-contrast pair on the page and legendary currently reads weaker than rare or epic
+— `style.css`'s mythic recipe is the precedent; card details inline rather than behind a tap;
+auto-tap leaves the HUD for a small hidden button beside the flower, armed by tap-and-hold (placement
+only — the feature is parked); the quest chain moves to the Almanac as a stat and achievement book;
+**access rights, lawn slots and creature reveals are revealed by reputation and purchased with Saved
+Seeds.**
+
+**Rejected:**
+- **Almanac achievements paying reputation.** A tap-1,000,000 counter would level the player up, and
+  it opens a faucet competing with orders. Ruled: *"No, Almanac achievements do not pay reputation.
+  Right now let's just give a very small amount of Saved Seeds. Again, very small."*
+- **Achievements paying nothing but stats.** Considered and dropped as thin retention for something
+  players are asked to keep returning to.
+- **Lowering `minCoins` globally** to move the first Turn — desk's own proposal, withdrawn on reading
+  data.js's comment about the coins floor.
+
+**Corrected in the spike, not a ruling:** the "Auto-tap" pill the builder drew in frame 8 does not
+exist — no `autoTap` anywhere in the source. It was invented. The lawn frame was drawn as a
+destination screen, which is what made "how do I get there?" unanswerable; the lawn has no door —
+spots are on the garden board and tapping an empty one opens a picker, exactly as tapping an empty
+plot opens `seeds` today.
+
+**Two structural consequences flagged, not ruled.** Saved Seeds gain their **first faucet outside the
+Turn**, and that scarcity is what makes the Turn the pillar — "very small" has to mean a rounding
+error against a Turn's mint, capped in data. And Seeds demand roughly doubles, now covering perk
+stars, access rights, lawn slots and creature reveals at once; the Seeds budget becomes the tightest
+quantity in the economy and no curve can be authored until it is sized.
+
+**Tabled:** the §6 creature slot collision. **Placeholder, the owner's to overrule:** legendary is
+for cards that change *what you can do*, not *how much you get*.
+
 ## 2026-09-26 (ruling, before dispatch) — The tree card's rarity frames come from doc 05, not from the album
 
 **Caught at the dispatch gate, before the spike builder started.** §11's spike brief said the tree's
