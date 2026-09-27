@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Lawn — Wireframe Spike</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  Static. No game dependencies — data.js, game.js and style.css are not loaded.
+  Tokens and component recipes are copied by hand from the live style.css and from
+  tools/tree-spike.html and tools/records-spike.html (house convention). New
+  classes for this spike's own drawing are `.lw-*`.
+
+  Every number, price and creature count below is illustrative, picked to get
+  pixels on screen. Nothing here decides anything the owner should decide —
+  that is the whole point of this file. See section 11 for the questions and
+  section 12 for exactly what was copied from where.
+
+  THE QUESTION THIS SPIKE ANSWERS (docs/52-the-trunk-and-the-tree.md §4):
+  perks are placed objects, equipped into lawn spots (two at the start, five
+  at the top). tools/tree-spike.html frame 6 drew this and the owner could not
+  read it — his words: "I see that the garden board is up there, and then at
+  the bottom you have the garden with deep roots, full basket, an empty slot,
+  etc. Your creatures are down there with all the buttons, so I'm not sure how
+  that would read." His counter-idea: a lawn BUTTON that opens a picker with
+  multiple slots, so the board never has to show all the perks at once.
+
+  Section 1 is what the running game actually showed under inspection before
+  a single frame below was drawn. It is the ground truth every option below is
+  measured against, and it is the reason the "worst case" frames are drawn as
+  crowded as they are: the yard band — the only strip of visible GRASS in the
+  entire layout — already holds up to several creatures AND two fixed buttons
+  before a single perk joins it.
+
+  --sat/--sab are hardcoded to a real iPhone 16 Pro's insets rather than env(),
+  which is 0 on a desktop — docs/HANDOFF.md's own recorded trap.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+    --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad;
+    --paper-dim:#ebe5d9; --paper-dim-2:#d8d0c0; --paper-dim-edge:#bcb0a0;
+    --grass:#5cc45c; --grass-d:#3f9d45; --grass-l:#8fe08a;
+    --soil:#a9713f; --soil-d:#7d4f2a; --soil-dd:#5f3a1e;
+    --seed:#7bd88f; --seed-d:#3f9d45;
+    --coin:#ffc93c; --coin-d:#f08c00;
+    --gem:#8ce0ff; --dot:#ff6b6b; --ticket:#ff8fab;
+    --rare:#4dabf7; --epic:#b197fc; --legend:#ffd43b;
+    --r-lg:26px; --r-md:18px; --r-sm:12px;
+    --sat:59px; --sab:34px;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:#e9e2d3;color:var(--ink);
+    font-family:'Baloo 2',system-ui,sans-serif;
+    padding:0 0 90px;
+  }
+  h1,h2,h3{font-weight:800;margin:0}
+  p{margin:0}
+
+  /* ---------- page chrome (spike-only, not game chrome) — copied from records-spike.html / tree-spike.html ---------- */
+  .intro{max-width:1000px;margin:0 auto;padding:28px 20px 10px}
+  .intro .kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .intro h1{font-size:27px;margin-top:4px}
+  .intro p.lede{font-size:14px;font-weight:600;color:var(--ink-soft);max-width:78ch;margin-top:10px;line-height:1.55}
+  .intro p.lede b{color:var(--ink)}
+  .toolbar{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;align-items:center}
+  .toolbar button{
+    font:inherit;font-size:12px;font-weight:800;cursor:pointer;
+    padding:8px 14px;border-radius:999px;border:2.5px solid var(--ink);
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+    box-shadow:0 3px 0 var(--ink-2);
+  }
+  .toolbar button.off{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));box-shadow:0 3px 0 var(--paper-dim-edge);opacity:.7}
+
+  .toc{max-width:1000px;margin:14px auto 0;padding:0 20px}
+  .toc ol{margin:0;padding-left:20px;columns:2;column-gap:32px}
+  .toc li{font-size:13px;font-weight:700;line-height:1.7;break-inside:avoid}
+  .toc a{color:var(--ink)}
+
+  .keytbl{display:flex;flex-wrap:wrap;gap:18px;max-width:1040px;margin:10px auto 0;padding:0 20px 10px}
+  .keycol{display:flex;flex-direction:column;gap:8px}
+  .keycol h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:2px}
+  .keyrow{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700}
+  .swatch{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink);flex:none;background:#fff}
+
+  section.grp{max-width:1560px;margin:0 auto;padding:38px 20px 6px}
+  section.grp h2{font-size:20px;display:flex;align-items:center;gap:10px}
+  section.grp h2 .n{
+    display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;
+    background:var(--ink);color:var(--paper);font-size:14px;flex:none;
+  }
+  section.grp p.lede{font-size:13.5px;font-weight:700;color:var(--ink-soft);margin:8px 0 20px;max-width:92ch;line-height:1.5}
+  section.grp p.lede b{color:var(--ink)}
+
+  .row-wrap{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+
+  figure{margin:0;display:flex;flex-direction:column;gap:0}
+  figcaption{max-width:406px;margin-bottom:8px}
+  figcaption .tag{
+    display:inline-block;background:var(--ink);color:var(--paper);
+    font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:6px;
+    vertical-align:2px;margin-right:7px;
+  }
+  figcaption b{font-size:14px}
+  figcaption i{display:block;font-style:italic;font-weight:600;color:var(--ink-soft);font-size:12px;margin-top:2px;line-height:1.4}
+
+  .phone{
+    box-sizing:content-box;
+    width:390px;height:844px;overflow:hidden;position:relative;
+    border-radius:36px;border:8px solid #1a120b;
+    background:linear-gradient(180deg,#bfe3ff 0%,#eaf6ff 30%,#eee6c8 55%,#d9c99a 100%);
+    box-shadow:0 14px 26px rgba(20,12,6,.35);
+    font-size:15px;
+  }
+  .phone .scroll{position:absolute;inset:0;overflow:hidden}
+  .phone .notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:120px;height:28px;background:#1a120b;border-radius:0 0 16px 16px;z-index:80;
+  }
+
+  .note{max-width:406px;margin-top:9px;padding:8px 11px;border-radius:10px;font-size:12px;font-weight:700;line-height:1.5}
+  .note.d{background:#eaf6ea;border:2px solid #7bc47f;color:#245c27}
+  .note.d::before{content:'FOUND LIVE / DECIDED — ';font-weight:900}
+  .note.q{background:#fff3e0;border:2px solid #f0a83f;color:#7a4a05}
+  .note.q::before{content:'QUESTION — ';font-weight:900}
+  .note.p{background:#eaf0ff;border:2px solid #5c86e0;color:#1c3a7a}
+  .note.p::before{content:'PLACEHOLDER, NOT A RECOMMENDATION — ';font-weight:900}
+  .note.r{background:#ffe9ea;border:2px solid #e0616b;color:#7a1420}
+  .note.r::before{content:'COLLISION WITH A STANDING RULING — ';font-weight:900}
+  body[data-notes="0"] .note{display:none}
+
+  .strip{background:linear-gradient(180deg,#fffdf7,var(--paper-3));border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 4px 0 var(--ink-2);padding:12px 14px;max-width:406px;margin-top:6px}
+
+  /* ---------- closing summary boxes ---------- */
+  .spec{max-width:1080px;margin:26px auto 0;padding:0 20px}
+  .spec .box{background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);box-shadow:0 4px 0 var(--ink-2);padding:16px 18px;margin-bottom:14px}
+  .spec .box h3{font-size:14.5px;margin-bottom:9px}
+  .spec .box ul{margin:0;padding-left:18px}
+  .spec .box li{font-size:13px;font-weight:600;line-height:1.6;margin-bottom:7px}
+  .spec .box li b{font-weight:800}
+  .spec .box.q{border-color:#f0a83f;background:#fffaf0}
+  .spec .box.p{border-color:#5c86e0;background:#f5f8ff}
+  .spec .box.r{border-color:#e0616b;background:#fff5f5}
+
+  /* =========================================================
+     REAL GAME CHROME — recipes copied by hand from style.css
+     ========================================================= */
+  .hud-row{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--sat) + 10px) 14px 8px;position:relative;z-index:20}
+  .wallets{display:flex;gap:8px}
+  .wallet{display:inline-flex;align-items:center;gap:5px;padding:6px 12px 6px 8px;border:3px solid var(--ink);border-radius:999px;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));box-shadow:0 3px 0 var(--ink-2);font-weight:800;font-size:14px}
+  .wallet svg{width:20px;height:20px}
+  .hud-btns{display:flex;gap:8px}
+  .hud-btn{width:40px;height:40px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));box-shadow:0 3px 0 var(--ink-2);position:relative;flex:none}
+  .hud-btn svg{width:21px;height:21px}
+  .hud-btn.new{background:linear-gradient(180deg,#eafbe2,#bfe9a0)}
+  .hud-btn .dot{position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:var(--dot);border:2px solid var(--ink)}
+
+  /* quest strip, verbatim recipe (records-spike.html / tree-spike.html) */
+  .quest-strip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;text-align:left;
+    padding:5px 8px 5px 5px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+    border:3px solid var(--ink);border-radius:18px;box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.16)}
+  .q-pip-wrap{width:34px;height:34px;flex:none;display:grid;place-items:center}
+  .q-pip-ring{grid-area:1/1;width:34px;height:34px;border-radius:50%;background:conic-gradient(from -90deg,#69db7c calc(var(--p,0) * 360deg), rgba(44,26,16,.16) 0)}
+  .q-pip{grid-area:1/1;position:relative;z-index:1;width:25px;height:25px;display:grid;place-items:center;
+    background:linear-gradient(180deg,#ffe066,#ffc93c);border:2.5px solid var(--ink);border-radius:50%;
+    font-weight:900;font-size:12px;line-height:1;box-shadow:0 1px 0 var(--ink-2)}
+  .q-bar{position:relative;display:block;height:23px;min-width:0;border-radius:999px;overflow:hidden;
+    background:rgba(44,26,16,.1);border:2.5px solid var(--ink)}
+  .q-bar i{position:absolute;inset:0;width:100%;background:linear-gradient(90deg,#8ce99a,#ffe066);clip-path:inset(0 calc(100% - var(--fill,0%)) 0 0)}
+  .q-bar-label{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;height:100%;padding:0 10px;color:var(--ink)}
+  .q-text{font-weight:800;font-size:12.5px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .q-reward{flex:none;display:flex;align-items:center;gap:3px;padding:4px 8px 4px 6px;background:linear-gradient(180deg,#fff,#fff5e2);
+    border:2.5px solid var(--ink);border-radius:999px;font-weight:900;font-size:11.5px;line-height:1;box-shadow:0 2px 0 var(--ink-2)}
+  .q-reward svg{width:13px;height:13px;display:block}
+
+  /* the bottom sheet, verbatim recipe */
+  .sheet-shell{position:absolute;left:0;right:0;bottom:0;top:64px;background:linear-gradient(180deg,#fffdf7 0%, var(--paper) 40%);
+    border-radius:26px 26px 0 0;border:4px solid var(--ink);border-bottom:none;box-shadow:0 -6px 0 var(--ink-2);
+    display:flex;flex-direction:column;overflow:hidden;z-index:40}
+  .sheet-grip{width:44px;height:5px;border-radius:3px;background:var(--paper-dim-edge);margin:9px auto 4px;flex:none}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;padding:2px 16px 8px;flex:none}
+  .sheet-head h3{font-size:20px}
+  .sheet-x{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--ink);display:grid;place-items:center;background:#fffdf7;box-shadow:0 2px 0 var(--ink-2);flex:none}
+  .sheet-x svg{width:16px;height:16px}
+  .sheet-note{font-size:12.5px;font-weight:700;color:var(--ink-soft);padding:0 16px 10px;line-height:1.4}
+  .sheet-body{flex:1;overflow-y:auto;padding:0 14px 20px;display:flex;flex-direction:column;gap:8px}
+  .sheet-body::-webkit-scrollbar{width:0}
+
+  .price{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;
+    border:2.5px solid var(--ink);border-radius:999px;background:linear-gradient(180deg,#fff6c2,#ffe066);
+    font-size:12px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;box-shadow:0 2px 0 var(--ink-2);flex:none}
+  .price svg{width:14px;height:14px}
+  .equipbtn{display:inline-flex;align-items:center;padding:6px 13px;border:2.5px solid var(--ink);border-radius:999px;
+    background:linear-gradient(180deg,#d3f9d8,#8ce99a);box-shadow:0 3px 0 var(--ink-2);font-size:11.5px;font-weight:900;flex:none}
+  .swapbtn{display:inline-flex;align-items:center;padding:6px 12px;border:2.5px solid var(--ink);border-radius:999px;
+    background:linear-gradient(180deg,#fff,var(--paper-3));box-shadow:0 3px 0 var(--ink-2);font-size:11px;font-weight:900;flex:none}
+
+  /* pick-row — the record shelf's "owning and wearing are different things"
+     equip grammar (doc 52 §4), already established in tree-spike.html §6C. */
+  .pk-row{display:flex;align-items:center;gap:10px;padding:9px 10px;
+    background:linear-gradient(180deg,#fff,#fff5e2);border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.16)}
+  .pk-row.worn{background:linear-gradient(180deg,#eafbe2,#d3f9d8)}
+  .pk-row.masked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+    box-shadow:0 4px 0 var(--paper-dim-edge), 0 7px 12px rgba(44,26,16,.10)}
+  .pk-ico{--art:var(--paper-3);width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;
+    border:3px solid var(--ink);background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)), var(--art);
+    box-shadow:0 3px 0 var(--ink-2)}
+  .pk-ico svg{width:25px;height:25px}
+  .pk-mask-ico{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;
+    background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.5), transparent 62%), var(--paper-dim-2);
+    border:3px solid var(--paper-dim-edge)}
+  .pk-mask-ico svg{width:25px;height:25px}
+  .pk-lab{flex:1;min-width:0;display:grid;gap:2px}
+  .pk-title{font-size:14px;font-weight:800;line-height:1.2}
+  .pk-sub{font-size:11px;font-weight:700;color:var(--ink-soft);line-height:1.25}
+  .pk-qmark{font-size:14px;font-weight:800;letter-spacing:.06em;color:var(--ink-soft)}
+  .pk-hint{display:block;margin-top:2px;font-size:10.5px;font-weight:700;font-style:italic;color:var(--ink-soft);line-height:1.3}
+  .pk-slotlab{flex:none;font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);
+    background:var(--paper-2);border:1.6px solid var(--ink-soft);border-radius:6px;padding:2px 6px;margin-right:2px}
+
+  /* dock, five buttons — doc 08's layout, copied verbatim */
+  .dock{position:absolute;left:8px;right:8px;bottom:calc(var(--sab) - 12px + 8px);z-index:30;
+    display:grid;grid-template-columns:1fr 1fr 74px 1fr 1fr;gap:6px;padding:6px;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));border:3.5px solid var(--ink);
+    border-radius:22px;box-shadow:0 5px 0 var(--ink-2), 0 12px 18px rgba(20,12,6,.3)}
+  .dock button{font:inherit;display:grid;place-items:center;gap:2px;padding:8px 2px 6px;border-radius:15px;
+    border:2.5px solid var(--ink);background:linear-gradient(180deg,#fff,var(--paper-2));box-shadow:0 3px 0 var(--ink-2);
+    font-size:9px;font-weight:800;position:relative}
+  .dock button svg{width:18px;height:18px}
+  .dock button.home{background:linear-gradient(180deg,#8ce99a,#51cf66);height:66px;align-self:end;margin-top:-18px}
+  .dock button.home svg{width:26px;height:26px}
+
+  /* =========================================================
+     THE STAGE — the real board, rebuilt faithfully (not the abstract box
+     tools/tree-spike.html's frame 6 used). Measured live at 2026-09-26:
+     a 3x3 plot grid, and a shallow "yard" band reserved along its OWN
+     bottom edge (`--yard-h`, clamp(70px,13vh,108px) in style.css) holding
+     creatures plus two fixed floating buttons. This band is the ONLY
+     visible grass in the whole layout — the plot grid itself is soil, not
+     lawn. See section 1.
+     ========================================================= */
+  .stagewrap{position:absolute;left:20px;right:20px}
+  .plotgrid{position:absolute;left:0;right:0;top:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+    gap:7px;padding:9px;background:linear-gradient(180deg,#c9955f,#a9713f);border:4px solid var(--ink);border-radius:22px;
+    box-shadow:0 5px 0 var(--ink-2), 0 4px 16px 4px rgba(120,90,40,.35)}
+  .plotgrid::before{content:'';position:absolute;left:14px;right:14px;top:-11px;height:11px;
+    background:repeating-linear-gradient(90deg,var(--grass) 0 9px, var(--grass-d) 9px 18px);border-radius:6px 6px 0 0}
+  .plot{border-radius:12px;background:linear-gradient(180deg,#8a5a34,#6d4425);border:2.5px solid var(--ink);
+    position:relative;display:grid;place-items:center}
+  .plot.mid{background:transparent;border:none}
+  .plot .emptymark{width:24px;height:24px;border:2.5px dashed rgba(255,255,255,.5);border-radius:8px}
+  .plot .lockchip{position:absolute;bottom:5px;display:flex;align-items:center;gap:2px;background:#e8e4dc;
+    border:2px solid var(--ink);border-radius:8px;padding:2px 5px;font-size:8.5px;font-weight:900}
+  .plot .lockchip svg{width:9px;height:9px}
+  .plot .lockdot{width:18px;height:18px;border-radius:50%;background:var(--coin);border:2px solid var(--ink);display:grid;place-items:center}
+  .plot .lockdot svg{width:10px;height:10px}
+  .plot .growbar{position:absolute;bottom:4px;left:6px;right:6px;height:5px;border-radius:3px;background:rgba(0,0,0,.28)}
+  .plot .growbar i{position:absolute;inset:0;width:62%;background:var(--seed);border-radius:3px}
+  .plot .bloom{width:70%;height:70%}
+
+  .yardband{position:absolute;left:0;right:0;bottom:0;height:var(--yh,102px);z-index:2}
+  .yardband .turf{position:absolute;inset:0;background:linear-gradient(180deg,#bfe9a0,#8fd66a);
+    border:3px solid var(--ink);border-top:none;border-radius:0 0 18px 18px}
+  .yardband .fence{position:absolute;left:8px;right:8px;top:6px;height:8px;
+    background:repeating-linear-gradient(90deg,#d8b98a 0 4px, transparent 4px 12px);opacity:.7}
+
+  /* the two fixed floating buttons — .fpill / .fround, copied verbatim */
+  .fpill,.fround{position:absolute;bottom:9px;z-index:6;margin:0;border:3.5px solid var(--ink);}
+  .fpill{left:9px;display:flex;flex-direction:column;align-items:center;gap:1px;
+    padding:6px 9px 5px;border-radius:16px;background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+    box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.24);font:inherit;font-size:8.5px;font-weight:800;color:var(--ink)}
+  .fpill svg{width:22px;height:22px;display:block}
+  .fround{right:9px;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;padding:0;
+    background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.9),rgba(255,255,255,.5)), #9775fa;
+    box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.24)}
+  .fround svg{width:26px;height:26px;display:block}
+
+  /* a creature standing on the lawn — placeholder blob, matching the real
+     game's proportions and its "feet stay on the lawn, buttons paint over"
+     rule (style.css: z-index 3 on the creature, 4 on the floating buttons) */
+  .critterbox{position:absolute;bottom:6px;display:flex;flex-direction:column;align-items:center;z-index:3}
+  .critterbody{width:var(--cs,58px);height:var(--cs,58px);border-radius:50%;position:relative;
+    filter:drop-shadow(0 3px 0 rgba(20,12,6,.18))}
+  .critterbody svg{width:100%;height:100%;display:block}
+  .critter-tend{position:absolute;top:-3px;right:-3px;width:17px;height:17px;border-radius:50%;background:#eafbe2;
+    border:2px solid var(--ink);display:grid;place-items:center;z-index:4}
+  .critter-tend svg{width:9px;height:9px}
+  .critter-name{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:800;
+    color:var(--ink-soft);white-space:nowrap}
+
+  /* =========================================================
+     NEW — this spike's own classes, `.lw-*`.
+     ========================================================= */
+
+  /* Approach 1 — a perk as a full PLACED OBJECT on the grass: icon + label,
+     the same weight as doc 52 §4's own ASCII diagram draws it. */
+  .lw-obj{position:absolute;bottom:8px;display:flex;flex-direction:column;align-items:center;gap:3px;z-index:5}
+  .lw-obj .ic{--art:var(--paper-3);width:44px;height:44px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+    background:radial-gradient(circle at 34% 28%,#fff,var(--art));box-shadow:0 3px 0 var(--ink-2)}
+  .lw-obj .ic svg{width:25px;height:25px}
+  .lw-obj .lb{font-size:8.5px;font-weight:800;text-align:center;line-height:1.15;background:#fff;padding:2px 6px;
+    border-radius:8px;border:2px solid var(--ink);max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lw-obj.empty .ic{border-style:dashed;background:rgba(255,255,255,.5);box-shadow:none;color:var(--ink-soft);
+    font-size:20px;font-weight:900;border-color:rgba(44,26,16,.5)}
+  .lw-tapring{position:absolute;inset:-8px;border-radius:50%;border:3px solid var(--coin-d);animation:lwPulse .9s ease-out infinite}
+  @keyframes lwPulse{0%{transform:scale(.65);opacity:1}100%{transform:scale(1.65);opacity:0}}
+  @media (prefers-reduced-motion:reduce){ .lw-tapring{animation:none;opacity:.5} }
+
+  /* Approach 3 (hybrid) — the SAME object, drawn quiet: smaller, no label,
+     a soft flat tint instead of a lit icon-badge. Deliberately harder to
+     read at a glance — that IS the design being tested. */
+  .lw-quiet{position:absolute;bottom:14px;width:26px;height:26px;border-radius:50%;z-index:5;
+    display:grid;place-items:center;border:2px solid rgba(44,26,16,.55);
+    background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.7), var(--art,var(--paper-3)));
+    box-shadow:0 2px 0 rgba(44,26,16,.3);opacity:.92}
+  .lw-quiet svg{width:15px;height:15px;opacity:.85}
+  .lw-quiet.empty{border-style:dashed;background:rgba(255,255,255,.4);box-shadow:none}
+
+  /* Approach 2 — the lawn button drawn as one diegetic object standing on
+     the grass, in place of the many. */
+  .lw-sign{position:absolute;bottom:8px;display:flex;flex-direction:column;align-items:center;gap:3px;z-index:5}
+  .lw-sign .board{width:50px;height:38px;border-radius:8px;background:linear-gradient(180deg,#fff6e0,#ffe0ad);
+    border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2);display:grid;place-items:center;position:relative}
+  .lw-sign .board svg{width:26px;height:26px}
+  .lw-sign .post{width:8px;height:14px;background:#a9713f;border:2px solid var(--ink);border-top:none;margin-top:-3px}
+  .lw-sign .badge{position:absolute;top:-6px;right:-8px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;
+    background:var(--ink);color:var(--paper);font-size:9.5px;font-weight:900;display:grid;place-items:center;border:2px solid var(--paper)}
+  .lw-sign .lb{font-size:8.5px;font-weight:800;text-align:center;background:#fff;padding:2px 6px;border-radius:8px;border:2px solid var(--ink)}
+
+  /* Approach 2 alt — a HUD chrome button instead (drawn small, inline, as a
+     secondary candidate rather than a full frame). */
+  .hud-btn.lawnbtn{background:linear-gradient(180deg,#fff6e0,#ffe0ad)}
+
+  /* Approach 4 — the perk RAIL: doc 08's row 3, "boost countdowns... reserved,
+     hidden if short," reused for perks instead of a new zone on the grass. */
+  .lw-rail{display:flex;align-items:center;gap:7px;width:100%;padding:6px 9px;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));border:3px solid var(--ink);border-radius:16px;
+    box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.16)}
+  .lw-rail .cap{flex:none;font-size:9.5px;font-weight:900;letter-spacing:.03em;color:var(--ink-soft);
+    text-transform:uppercase;padding-right:2px;border-right:2px dashed var(--paper-dim-edge);margin-right:2px}
+  .lw-rail .chip{flex:none;width:34px;height:34px;border-radius:50%;border:2.5px solid var(--ink);display:grid;place-items:center;
+    background:radial-gradient(circle at 34% 28%,#fff,var(--art,var(--paper-3)));box-shadow:0 2px 0 var(--ink-2)}
+  .lw-rail .chip svg{width:19px;height:19px}
+  .lw-rail .chip.empty{border-style:dashed;background:rgba(255,255,255,.5);box-shadow:none;color:var(--ink-soft);
+    font-weight:900;font-size:15px;border-color:rgba(44,26,16,.5)}
+  .lw-rail .more{margin-left:auto;flex:none;font-size:10.5px;font-weight:800;color:var(--ink-soft)}
+
+  /* callout numbering for the "what the board holds today" diagram */
+  .cnum{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);
+    display:grid;place-items:center;font-size:11px;font-weight:900;border:2.5px solid var(--paper);
+    box-shadow:0 2px 4px rgba(0,0,0,.35);z-index:20}
+  .clist{max-width:406px;margin-top:9px;display:grid;gap:6px}
+  .clist .row{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;font-weight:700;line-height:1.4}
+  .clist .row b.cn{flex:none;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--paper);
+    display:grid;place-items:center;font-size:10.5px;margin-top:1px}
+
+  /* reading A/B comparison boxes for section 10 */
+  .two-up{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;max-width:1000px;margin-top:6px}
+  .ab{background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);box-shadow:0 4px 0 var(--ink-2);padding:14px 16px}
+  .ab h4{font-size:13.5px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+  .ab h4 .k{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:12px;flex:none}
+  .ab p{font-size:12.5px;font-weight:600;line-height:1.5;color:var(--ink-soft)}
+  .ab p + p{margin-top:7px}
+  .ab p b{color:var(--ink)}
+  .ab.rec{border-color:#3f9d45;background:#f3fbf3}
+
+  /* comparison table — recipe copied from records-spike.html's .copy-tbl */
+  .cmp-tbl{width:100%;border-collapse:separate;border-spacing:0 8px;font-size:12.5px;max-width:1080px}
+  .cmp-tbl th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);padding:0 10px 2px}
+  .cmp-tbl td{background:linear-gradient(180deg,#fff,#fff5e2);padding:9px 12px;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);vertical-align:top;line-height:1.4}
+  .cmp-tbl td:first-child{border-left:3px solid var(--ink);border-radius:var(--r-md) 0 0 var(--r-md);font-weight:800}
+  .cmp-tbl td:last-child{border-right:3px solid var(--ink);border-radius:0 var(--r-md) var(--r-md) 0}
+  .cmp-tbl .yes{color:#245c27;font-weight:800}
+  .cmp-tbl .no{color:#7a1420;font-weight:800}
+  .cmp-tbl .part{color:#7a4a05;font-weight:800}
+
+  /* filmstrip — the equip sequence, not one still (technique from tree-spike.html §5) */
+  .filmstrip{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+  .filmcell{width:172px;display:flex;flex-direction:column;gap:6px}
+  .filmcell .crop{width:172px;height:250px;border-radius:20px;border:6px solid #1a120b;overflow:hidden;position:relative;
+    background:linear-gradient(180deg,#bfe3ff 0%,#eaf6ff 30%,#eee6c8 55%,#d9c99a 100%);box-shadow:0 8px 16px rgba(20,12,6,.3)}
+  .filmcell .step{font-size:10.5px;font-weight:800;color:var(--ink-soft);text-align:center;line-height:1.3}
+
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important} }
+</style>
+</head>
+<body data-notes="1">
+
+<div class="intro">
+  <p class="kicker">Garden Wonder &middot; Layout spike &middot; docs/52-the-trunk-and-the-tree.md §4 &middot; the wireframe gate (docs/34)</p>
+  <h1>The Lawn</h1>
+  <p class="lede">
+    <b>Perks are placed objects, equipped into lawn spots — two at the start, five at the top.</b>
+    tools/tree-spike.html frame 6 drew this and the owner could not read it: <i>"I see that the garden
+    board is up there, and then at the bottom you have the garden with deep roots, full basket, an
+    empty slot, etc. Your creatures are down there with all the buttons, so I'm not sure how that would
+    read."</i> His own counter-idea — a lawn <b>button</b> that opens a picker instead of showing every
+    perk on the board — is drawn here too, in full, beside a hybrid and a fourth option this drawing
+    itself suggested.
+  </p>
+  <p class="lede">
+    <b>I am not picking one.</b> Section 1 is what the real, running game actually showed under
+    inspection before any of this was drawn — that is the ground truth every option is measured
+    against. Sections 2&ndash;5 are the four approaches, each at two spots, at five spots with creatures
+    also on screen, through the whole equip sequence, and empty. Section 6 draws the creature question
+    directly. <b>Section 10 collects every open question in one place</b>, each with my recommendation
+    marked as a recommendation — judge by eye, not by this text.
+  </p>
+  <div class="toolbar">
+    <button id="notesBtn" onclick="toggleNotes()">Notes: ON</button>
+    <button onclick="document.getElementById('sec-10').scrollIntoView()">Jump to the questions &darr;</button>
+  </div>
+</div>
+
+<div class="keytbl" id="keytbl"></div>
+
+<div class="toc">
+  <ol>
+    <li><a href="#sec-1">1. What the board holds today (live, before any of this)</a></li>
+    <li><a href="#sec-2">2. Everything on the grass</a></li>
+    <li><a href="#sec-3">3. A lawn button</a></li>
+    <li><a href="#sec-4">4. A hybrid — quiet objects, a button to manage</a></li>
+    <li><a href="#sec-5">5. A fourth option — the perk rail</a></li>
+    <li><a href="#sec-6">6. The creature question, directly</a></li>
+    <li><a href="#sec-7">7. Side by side, at five and full creatures</a></li>
+    <li><a href="#sec-10">10. Every question, collected</a></li>
+    <li><a href="#sec-11">11. What was copied from which file</a></li>
+  </ol>
+</div>
+
+<section class="grp" id="sec-1"><h2><span class="n">1</span> What the board holds today</h2>
+  <p class="lede">Before drawing a single option, I loaded the running game (<code>garden</code> on
+  :8899, a fresh tab), unlocked plots and levels through the dev tools, and pulled three creatures into
+  the yard through the console the same dev sheet already exposes (<code>Game.checkCritters()</code> —
+  no game file was edited). <b>This is what I found, and it is the ground truth for the whole spike:
+  the yard band is the ONLY strip of visible grass in the entire layout.</b> The 3&times;3 board itself
+  is soil, not lawn. Doc 52's own diagram draws "the lawn" as if it were a spare surface next to the
+  garden; on the real screen there is no such spare surface — there is only this one band, already
+  spoken for.</p>
+  <div class="row-wrap" id="f-1"></div>
+</section>
+
+<section class="grp" id="sec-2"><h2><span class="n">2</span> Everything on the grass — the current ruling</h2>
+  <p class="lede">Perks stand on the garden itself, on the same band the creatures already stand on —
+  there is nowhere else that reads as "grass." Drawn honestly, including doc 52's own worst case: five
+  perks, up to four tending creatures, the two existing floating buttons, all sharing 350px of width.</p>
+  <div class="row-wrap" id="f-2"></div>
+</section>
+
+<section class="grp" id="sec-3"><h2><span class="n">3</span> A lawn button — the owner's idea</h2>
+  <p class="lede">One object stands in for the whole system. Tapping it opens a picker with multiple
+  slots inside; the board shows little or nothing of what you have equipped.</p>
+  <div class="note r" style="max-width:920px;margin-bottom:16px">This sits in direct tension with the
+  standing 2026-09-26 ruling in doc 52: <i>"The lawn is not a screen and has no door. Spots live on the
+  garden board; tapping an empty spot opens a picker, exactly as tapping an empty plot opens
+  <code>seeds</code> today."</i> That ruling was made <b>after</b> judging tree-spike's frame 6, which
+  drew the lawn as a destination and got told off for it. The owner's newer idea reopens exactly that
+  question from a different angle — not "should the lawn be a screen," but "should the board show the
+  slots at all." I'm drawing it because he asked me to and because that's what this gate is for, but the
+  collision is real and I am not resolving it by drawing it prettily. If approach 3 is chosen, doc 52's
+  "no door" line needs a deliberate rewrite, not a quiet one.</div>
+  <div class="row-wrap" id="f-3"></div>
+</section>
+
+<section class="grp" id="sec-4"><h2><span class="n">4</span> A hybrid — quiet objects, a button to manage</h2>
+  <p class="lede">The build stays visible at a glance, at a much lower visual weight than approach 2 —
+  small, unlabelled tokens rather than full icon-and-name objects. Changing what's equipped goes through
+  one picker rather than per-spot pickers.</p>
+  <div class="row-wrap" id="f-4"></div>
+</section>
+
+<section class="grp" id="sec-5"><h2><span class="n">5</span> A fourth option this drawing suggested — the perk rail</h2>
+  <p class="lede">Suggested by section 1's own finding: doc 08 already reserves a row for exactly this
+  kind of small, glanceable status information — <i>"boost countdowns... row 3, reserved — hidden if
+  short."</i> Perks as a row of small chips at the top of the screen cost the grass nothing at all,
+  because they never touch it.</p>
+  <div class="row-wrap" id="f-5"></div>
+</section>
+
+<section class="grp" id="sec-6"><h2><span class="n">6</span> The creature question, directly</h2>
+  <p class="lede">Nobody has ruled this. Creatures occupy tending slots (<code>HABITAT_SLOT_LEVELS =
+  [1, 5, 10, 16]</code>, doc 52 §6) and are a whole separate system from perks — feeding, sleeping,
+  keepsakes, pairs, stars. Two readings, drawn at the same crowded density as section 2's worst case so
+  the comparison is honest.</p>
+  <div class="row-wrap" id="f-6"></div>
+  <div class="two-up" id="f-6b"></div>
+</section>
+
+<section class="grp" id="sec-7"><h2><span class="n">7</span> All four, side by side, at five spots and full creatures</h2>
+  <p class="lede">The single comparison that matters most, on one row so the eye can move across it
+  without scrolling back up four times.</p>
+  <div class="row-wrap" id="f-7"></div>
+</section>
+
+<section class="grp" id="sec-10"><h2><span class="n">10</span> Every question, collected</h2>
+  <p class="lede">Nothing here is decided. Each carries my recommendation, marked as a recommendation,
+  or is flagged as a placeholder where I had to pick something just to get pixels on screen.</p>
+  <div class="spec" style="margin-left:0;padding-left:0"><div id="f-10"></div></div>
+</section>
+
+<section class="grp" id="sec-11"><h2><span class="n">11</span> What was copied from which file</h2>
+  <div class="spec" style="margin-left:0;padding-left:0"><div id="f-11"></div></div>
+</section>
+
+<script>
+/* ============================================================
+   Helpers — house pattern from records-spike.html / tree-spike.html
+   ============================================================ */
+function fig(tag, title, sub, inner, notes){
+  const notesHtml = (notes||[]).map(n => '<p class="note ' + n[0] + '">' + n[1] + '</p>').join('');
+  return '<figure><figcaption>' + (tag ? '<span class="tag">' + tag + '</span>' : '') +
+    (title ? '<b>' + title + '</b>' : '') + (sub ? '<i>' + sub + '</i>' : '') + '</figcaption>' +
+    inner + notesHtml + '</figure>';
+}
+function phone(inner, opts){
+  opts = opts || {};
+  return '<div class="phone">' + (opts.noNotch ? '' : '<div class="notch"></div>') +
+    '<div class="scroll">' + inner + '</div></div>';
+}
+/* Hand-copied verbatim from ui-shared.js. */
+const trimZeros = (s) => (s.includes('.') ? s.replace(/\.?0+$/, '') : s);
+function fmt(n) {
+  n = Math.round(n);
+  const abs = Math.abs(n);
+  if (abs < 100000) return n.toLocaleString();
+  if (abs < 1e6) return trimZeros((n / 1e3).toFixed(1)) + 'K';
+  if (abs < 1e9) return trimZeros((n / 1e6).toFixed(2)) + 'M';
+  if (abs < 1e12) return trimZeros((n / 1e9).toFixed(2)) + 'B';
+  return trimZeros((n / 1e12).toFixed(2)) + 'T';
+}
+
+/* ---------- icons — wireframe fidelity only ---------- */
+const ICO = {
+  coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="var(--coin)" stroke="var(--ink)" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="var(--coin-d)" stroke-width="1.6"/></svg>',
+  /* Prisms' own glyph, hand-copied from icons.js (grep "Prisms' own glyph") —
+     a hard TRIANGLE, apex up, never gem's kite. */
+  prism: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M12 3 21.4 20.4 2.6 20.4Z" fill="#f5f2ff"/>' +
+    '<path d="M7.7 11h8.6l1 1.9H6.7Z" fill="#ff6b6b" stroke="none"/>' +
+    '<path d="M6.7 12.9h10.6l1.1 1.9H5.6Z" fill="#ff922b" stroke="none"/>' +
+    '<path d="M5.6 14.8h12.8l1 1.8H4.6Z" fill="#ffe066" stroke="none"/>' +
+    '<path d="M4.6 16.6h14.8l1 1.9H3.6Z" fill="#51cf66" stroke="none"/>' +
+    '<path d="M3.6 18.5h16.8l1 1.9H2.6Z" fill="#9775fa" stroke="none"/>' +
+    '<path d="M12 3v17.4" stroke-width="1.3"/><path d="M12 3 21.4 20.4 2.6 20.4Z" fill="none"/></svg>',
+  x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/></svg>',
+  menu: '<svg viewBox="0 0 24 24"><path d="M4.6 7h14.8M4.6 12h14.8M4.6 17h14.8" fill="none" stroke="var(--ink)" stroke-width="3.4" stroke-linecap="round"/></svg>',
+  book: '<svg viewBox="0 0 24 24"><path d="M4 5c3-1.5 6-1.5 8 0 2-1.5 5-1.5 8 0v14c-3-1.5-6-1.5-8 0-2-1.5-5-1.5-8 0z" fill="#fff" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  lock: '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="var(--coin)" stroke="var(--ink)" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="var(--ink)" stroke-width="2"/></svg>',
+  gift: '<svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1.6" fill="#ffc2d6" stroke="var(--ink)" stroke-width="1.8"/><rect x="3" y="6.6" width="18" height="4" rx="1.4" fill="#ff8fab" stroke="var(--ink)" stroke-width="1.8"/><path d="M12 6.6V20" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+  cards: '<svg viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="15" rx="2" fill="#cfe8ff" stroke="var(--ink)" stroke-width="1.8" transform="rotate(-8 9.5 14.5)"/><rect x="7" y="5" width="13" height="15" rx="2" fill="#fff6e0" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+  shop: '<svg viewBox="0 0 24 24"><path d="M4 9l1.4-4.4h13.2L20 9Z" fill="#ffd9a8" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><rect x="5" y="9" width="14" height="11" fill="#fff6e0" stroke="var(--ink)" stroke-width="1.8"/><path d="M9.5 20v-5h5v5" fill="#a9713f" stroke="var(--ink)" stroke-width="1.6"/></svg>',
+  gnome: '<svg viewBox="0 0 24 24"><path d="M12 3 7 11h10Z" fill="#ff8fab" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round"/><rect x="8" y="11" width="8" height="8" rx="4" fill="#ffe0ad" stroke="var(--ink)" stroke-width="1.6"/><circle cx="10.1" cy="15" r=".9" fill="var(--ink)"/><circle cx="13.9" cy="15" r=".9" fill="var(--ink)"/></svg>',
+  basket: '<svg viewBox="0 0 24 24"><path d="M5 10h14l-1.6 8.3a2 2 0 0 1-2 1.7H8.6a2 2 0 0 1-2-1.7Z" fill="#c9915a" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 10a4 4 0 0 1 8 0" fill="none" stroke="var(--ink)" stroke-width="1.8"/><path d="M7 13.5h10M7.6 16h8.8" stroke="#8a5a2b" stroke-width="1.2"/></svg>',
+  bench: '<svg viewBox="0 0 24 24"><rect x="3" y="9.5" width="18" height="3" rx="1" fill="#c9915a" stroke="var(--ink)" stroke-width="1.6"/><rect x="5" y="12.5" width="2.4" height="7.5" fill="#a9713f" stroke="var(--ink)" stroke-width="1.4"/><rect x="16.6" y="12.5" width="2.4" height="7.5" fill="#a9713f" stroke="var(--ink)" stroke-width="1.4"/></svg>',
+  moon: '<svg viewBox="0 0 24 24"><path d="M15 3a9 9 0 1 0 6 15 8 8 0 0 1-6-15z" fill="#d8c9ff" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  snow: '<svg viewBox="0 0 24 24" fill="none" stroke="#4dabf7" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v18M4.8 7.5l14.4 9M19.2 7.5l-14.4 9"/></svg>',
+  sign: '<svg viewBox="0 0 24 24"><rect x="10.4" y="9" width="3.2" height="12" rx="1" fill="#a9713f" stroke="var(--ink)" stroke-width="1.6"/><path d="M5.5 5h12a1.6 1.6 0 0 1 1.2 2.7L17 10l1.7 2.3A1.6 1.6 0 0 1 17.5 15h-12Z" fill="#ffe0ad" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8.4c1-1.6 3-1.6 4 0 1-1.6 3-1.6 4 0" stroke="var(--ink)" stroke-width="1.2" fill="none"/></svg>',
+  grid: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.4" fill="#eafbe2" stroke="var(--ink)" stroke-width="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.4" fill="#eafbe2" stroke="var(--ink)" stroke-width="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.4" fill="#eafbe2" stroke="var(--ink)" stroke-width="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.4" fill="#eafbe2" stroke="var(--ink)" stroke-width="1.6"/></svg>',
+  swap: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13M13 4l4 4-4 4"/><path d="M20 16H7M11 12l-4 4 4 4"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="var(--ink-soft)" stroke-width="2.6" stroke-linecap="round"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="m5 12.6 4.6 4.4L19 6.8" stroke="var(--ink)" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  flower: '<svg viewBox="0 0 24 24"><g fill="#ffd9ec" stroke="var(--ink)" stroke-width="1.2"><circle cx="12" cy="7" r="3.6"/><circle cx="17" cy="11" r="3.6"/><circle cx="15" cy="16.6" r="3.6"/><circle cx="9" cy="16.6" r="3.6"/><circle cx="7" cy="11" r="3.6"/></g><circle cx="12" cy="12" r="2.8" fill="#ffd43b" stroke="var(--ink)" stroke-width="1.2"/></svg>',
+  hollowdoor: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20" rx="9" ry="2.4" fill="rgba(44,26,16,.18)"/><path d="M5 20V11c0-4 3.1-7 7-7s7 3 7 7v9" fill="#2b1f3d" stroke="var(--ink)" stroke-width="1.8"/></svg>',
+};
+function ico(n){ return ICO[n] || ICO.plus; }
+function bloomSvg(petal, center){
+  return '<svg viewBox="0 0 40 40"><g fill="' + petal + '" stroke="var(--ink)" stroke-width="1.2">' +
+    '<circle cx="20" cy="11" r="7"/><circle cx="29" cy="17" r="7"/><circle cx="25" cy="27" r="7"/>' +
+    '<circle cx="15" cy="27" r="7"/><circle cx="11" cy="17" r="7"/></g>' +
+    '<circle cx="20" cy="19" r="5.5" fill="' + center + '" stroke="var(--ink)" stroke-width="1.2"/></svg>';
+}
+/* Generic critter placeholder — a rounded body + a distinguishing top
+   accessory. Wireframe fidelity, not final art; the point is only that it
+   reads as a CHARACTER, distinct from an inert object icon. Names match the
+   real six (docs/52 §6) for authenticity, since these are the exact three I
+   pulled into the running game while inspecting the real board. */
+function critterSvg(body, top){
+  return '<svg viewBox="0 0 24 26">' + (top||'') +
+    '<ellipse cx="12" cy="15.5" rx="9.2" ry="8.3" fill="' + body + '" stroke="var(--ink)" stroke-width="1.6"/>' +
+    '<circle cx="8.6" cy="15" r="1.3" fill="var(--ink)"/><circle cx="15.4" cy="15" r="1.3" fill="var(--ink)"/>' +
+    '<circle cx="7.4" cy="18.2" r="1.35" fill="#ffb3c6" opacity=".85"/><circle cx="16.6" cy="18.2" r="1.35" fill="#ffb3c6" opacity=".85"/>' +
+    '</svg>';
+}
+const CRIT = {
+  pip:     { name:'Pip',      svg: critterSvg('#f4f1ff', '<path d="M7.6 8.4c0-3.2 2-5.6 4.4-5.6s4.4 2.4 4.4 5.6" fill="none" stroke="var(--ink)" stroke-width="1.3"/>') },
+  bramble: { name:'Bramble',  svg: critterSvg('#ffb37a', '<path d="M6.4 9 3.4 4.2l4.2 2Z" fill="#ffb37a" stroke="var(--ink)" stroke-width="1.3" stroke-linejoin="round"/><path d="M17.6 9l3-4.8-4.2 2Z" fill="#ffb37a" stroke="var(--ink)" stroke-width="1.3" stroke-linejoin="round"/>') },
+  thistle: { name:'Thistle',  svg: critterSvg('#f3e6cf', '<path d="M8 8.6 6.2 3.6M11.2 7.6 10.4 2.6M13.8 7.6 14.6 2.6M17 8.6 18.8 3.6" stroke="var(--ink)" stroke-width="1.3" stroke-linecap="round" fill="none"/>') },
+  luna:    { name:'Luna',     svg: critterSvg('#d9d3ff', '<path d="M3.6 13c-2-1.2-2-4.4 0-5.6" fill="none" stroke="var(--ink)" stroke-width="1.3"/><path d="M20.4 13c2-1.2 2-4.4 0-5.6" fill="none" stroke="var(--ink)" stroke-width="1.3"/>') },
+};
+/* Five named perks, per doc 52 §4's own catalogue and the brief. */
+const PERKS = {
+  roots:  { id:'roots',  title:'Deep Roots',  sub:'Each tap pays a little more.',                icon: ico('gnome'),  art:'#ffe0e8', prisms: 60  },
+  basket: { id:'basket', title:'Full Basket', sub:'An order’s coins pay a little more.',      icon: ico('basket'), art:'#eaffe0', prisms: 420 },
+  table:  { id:'table',  title:'Long Table',  sub:'One more order slot on the board.',            icon: ico('bench'),  art:'#eafbe2', prisms: 900 },
+  hollow: { id:'hollow', title:'Warm Hollow', sub:'A tended creature stays awake longer.',         icon: ico('moon'),   art:'#e6d9ff', prisms: 260 },
+  quiet:  { id:'quiet',  title:'Quiet Hours', sub:'Winter’s tuck-in covers one more plot.',    icon: ico('snow'),   art:'#dff3ff', prisms: 140 },
+};
+const SHARED_HINT = "Keep growing — the garden isn't done with you.";
+
+function priceChip(prisms){
+  return '<span class="price">' + ico('prism') + fmt(prisms) + '</span>';
+}
+
+/* ============================================================
+   THE BOARD — a faithful rebuild (plotgrid + yard band), parameterised so
+   every approach draws from the SAME base. `opts.lawn` picks what (if
+   anything) sits in the yard band alongside the creatures and the two
+   fixed buttons: 'full' | 'quiet' | 'sign' | 'none'.
+   ============================================================ */
+const PLOT_PRESET = ['empty','grow','locked','empty','MID','locked','locked','empty','ready'];
+function plotCell(state, tapAt, idx){
+  if (state === 'MID') return '<div class="plot mid">' + bloomSvg('#fff6e0','#ffd43b') + '</div>';
+  if (state === 'locked') return '<div class="plot"><span class="lockdot">' + ico('lock') + '</span>' +
+    '<span class="lockchip">' + ico('coin') + fmt([1900,2200,2500][idx%3]) + '</span></div>';
+  if (state === 'grow') return '<div class="plot"><span class="bloom" style="opacity:.5">' + bloomSvg('#eaffe0','#8ce99a') + '</span><span class="growbar"><i></i></span></div>';
+  if (state === 'ready') return '<div class="plot">' + bloomSvg('#ffd9ec','#ff8fab') + '</div>';
+  const tap = tapAt === idx ? '<span class="lw-tapring"></span>' : '';
+  return '<div class="plot">' + tap + '<span class="emptymark"></span></div>';
+}
+function plotgrid(){
+  return '<div class="plotgrid">' + PLOT_PRESET.map((s,i)=>plotCell(s,-1,i)).join('') + '</div>';
+}
+/* Creature x-positions across the 350px-wide band, matching the real
+   layout's own centring — evenly spread with the two ends clear enough for
+   the fixed buttons, per style.css's own `--x` mechanism. */
+const CRIT_X = { 1:['50%'], 2:['34%','66%'], 3:['24%','50%','76%'], 4:['18%','40%','62%','84%'] };
+function creatureLayer(names, size){
+  size = size || 58;
+  const xs = CRIT_X[names.length] || CRIT_X[4];
+  return names.map((key,i) => {
+    const c = CRIT[key];
+    return '<div class="critterbox" style="left:' + xs[i] + ';--cs:' + size + 'px;transform:translateX(-50%)">' +
+      '<span class="critterbody">' + c.svg + '<span class="critter-tend">' + ico('flower') + '</span></span>' +
+      '<span class="critter-name">' + c.name + '</span></div>';
+  }).join('');
+}
+/* Perk placements share the same x-lane logic so every approach's objects
+   line up in the same physical positions — the comparison in section 7
+   depends on this. */
+const PERK_X2 = ['30%','70%'];
+const PERK_X5 = ['14%','38%','62%','86%','50%'];
+function lawnFull(items, tapAt){
+  const xs = items.length <= 2 ? PERK_X2 : PERK_X5;
+  return items.map((p,i) => {
+    const ring = i === tapAt ? '<span class="lw-tapring"></span>' : '';
+    if (!p) return '<div class="lw-obj empty" style="left:' + xs[i] + ';transform:translateX(-50%)">' +
+      '<span class="ic">' + ring + '+</span><span class="lb">Empty</span></div>';
+    return '<div class="lw-obj" style="left:' + xs[i] + ';transform:translateX(-50%)">' +
+      '<span class="ic" style="--art:' + p.art + '">' + ring + p.icon + '</span><span class="lb">' + p.title + '</span></div>';
+  }).join('');
+}
+function lawnQuiet(items, tapAt){
+  const xs = items.length <= 2 ? PERK_X2 : PERK_X5;
+  return items.map((p,i) => {
+    const ring = i === tapAt ? '<span class="lw-tapring"></span>' : '';
+    if (!p) return '<div class="lw-quiet empty" style="left:' + xs[i] + ';transform:translateX(-50%)">' + ring + '</div>';
+    return '<div class="lw-quiet" style="left:' + xs[i] + ';transform:translateX(-50%);--art:' + p.art + '">' + ring + p.icon + '</div>';
+  }).join('');
+}
+function lawnSign(count, tapped){
+  return '<div class="lw-sign" style="left:16%;transform:translateX(-50%)">' +
+    '<span class="board">' + (tapped ? '<span class="lw-tapring"></span>' : '') + ico('sign') + (count ? '<span class="badge">' + count + '</span>' : '') + '</span>' +
+    '<span class="post"></span><span class="lb">The Lawn</span></div>';
+}
+/* the current occupant of each slot, managed from one consolidated sheet —
+   the shape approaches 2-4 all need, since none of them can reuse "tap the
+   one empty spot you mean" the way approach 1 does. */
+function slotRow(p, label){
+  if (!p) return '<div class="pk-row"><span class="pk-mask-ico" style="background:var(--paper-2)">' + ico('plus') + '</span>' +
+    '<span class="pk-lab"><span class="pk-title">' + label + '</span><span class="pk-sub">Empty — nothing equipped</span></span>' +
+    '<span class="swapbtn">Choose</span></div>';
+  return '<div class="pk-row worn"><span class="pk-ico" style="--art:' + p.art + '">' + p.icon + '</span>' +
+    '<span class="pk-lab"><span class="pk-title">' + p.title + '</span><span class="pk-sub">' + p.sub + '</span></span>' +
+    '<span class="swapbtn">' + ico('swap') + ' Swap</span></div>';
+}
+function fixedButtons(){
+  return '<div class="fpill"><span></span>' + ico('gift') + 'Upgrade</div>'.replace('<span></span>','') +
+    '<div class="fround">' + ico('flower') + '</div>';
+}
+/* opts: {creatures:[keys], lawn:'full'|'quiet'|'sign'|'rail'|'none',
+   items:[perk|null], signCount, railChips, yh (yard height px), csize } */
+function stageBlock(opts){
+  opts = opts || {};
+  const yh = opts.yh || 100;
+  const csize = opts.csize || (opts.creatures && opts.creatures.length >= 4 ? 50 : 58);
+  let overlay = '';
+  let skipCreatureLayer = false;
+  if (opts.lawn === 'full') overlay = lawnFull(opts.items || [], opts.tapAt);
+  else if (opts.lawn === 'quiet') overlay = lawnQuiet(opts.items || [], opts.tapAt);
+  else if (opts.lawn === 'sign') overlay = lawnSign(opts.signCount, opts.tapAt === 0);
+  else if (opts.lawn === 'unified') { overlay = unifiedBand(opts.creatures || [], opts.items || []); skipCreatureLayer = true; }
+  return '<div class="stagewrap" style="top:' + (opts.top||150) + 'px;height:' + ((opts.gridH||330) + yh) + 'px">' +
+    '<div class="plotgrid" style="height:' + (opts.gridH||330) + 'px">' + PLOT_PRESET.map((s,i)=>plotCell(s,-1,i)).join('') + '</div>' +
+    '<div class="yardband" style="top:' + (opts.gridH||330) + 'px;--yh:' + yh + 'px">' +
+      '<div class="turf"></div><div class="fence"></div>' +
+      (opts.creatures && !skipCreatureLayer ? creatureLayer(opts.creatures, csize) : '') +
+      overlay +
+      '<div class="fpill">' + ico('gift') + '<span>Upgrade</span></div>' +
+      '<div class="fround">' + ico('flower') + '</div>' +
+    '</div>' +
+  '</div>';
+}
+function hudRow(gold, prisms, opts){
+  opts = opts || {};
+  return '<div class="hud-row"><div class="wallets"><span class="wallet">' + ico('coin') + fmt(gold) + '</span>' +
+    (prisms != null ? '<span class="wallet">' + ico('prism') + fmt(prisms) + '</span>' : '') + '</div>' +
+    '<div class="hud-btns"><span class="hud-btn">' + ico('book') + '</span>' +
+    (opts.lawnHudBtn ? '<span class="hud-btn lawnbtn">' + ico('sign') + (opts.badge ? '<span class="dot"></span>' : '') + '</span>' : '') +
+    '<span class="hud-btn">' + ico('menu') + '<span class="dot"></span></span></div></div>';
+}
+function questStrip(){
+  return '<div style="position:absolute;left:14px;right:14px;top:calc(var(--sat) + 68px);z-index:10">' +
+    '<div class="quest-strip"><span class="q-pip-wrap"><span class="q-pip-ring" style="--p:.4"></span><span class="q-pip">7</span></span>' +
+    '<span class="q-bar"><i style="--fill:40%"></i><span class="q-bar-label"><span class="q-text">Fill 3 orders</span></span></span>' +
+    '<span class="q-reward">' + ico('coin') + '+80</span></div></div>';
+}
+function railRow(chips, top){
+  const inner = chips.map(p => {
+    if (!p) return '<span class="chip empty">+</span>';
+    return '<span class="chip" style="--art:' + p.art + '">' + p.icon + '</span>';
+  }).join('');
+  return '<div style="position:absolute;left:14px;right:14px;top:' + (top||(59+68)) + 'px;z-index:10">' +
+    '<div class="lw-rail"><span class="cap">Lawn</span>' + inner + '<span class="more">Tap to manage</span></div></div>';
+}
+function dockHtml(){
+  return '<div class="dock">' +
+    '<button>' + ico('gift') + 'Orders</button>' +
+    '<button>' + ico('cards') + 'Cards</button>' +
+    '<button class="home">' + bloomSvg('#fff6e0','#ffd43b') + '</button>' +
+    '<button>' + ico('coin') + 'Turn</button>' +
+    '<button>' + ico('shop') + 'Shop</button>' +
+  '</div>';
+}
+/* A full garden-scene frame — the workhorse this whole spike is built on. */
+function gardenScene(o){
+  o = o || {};
+  return hudRow(o.gold != null ? o.gold : 18420, o.prisms != null ? o.prisms : 640, o) +
+    (o.rail ? railRow(o.rail, o.railTop) : '') +
+    (o.quest ? questStrip() : '') +
+    stageBlock(o) +
+    dockHtml();
+}
+
+/* the bottom sheet — reused for every picker in this spike */
+function sheet(title, note, body, opts){
+  opts = opts || {};
+  return hudRow(opts.gold != null ? opts.gold : 18420, opts.prisms != null ? opts.prisms : 640) +
+    '<div class="sheet-shell">' +
+      '<div class="sheet-grip"></div>' +
+      '<div class="sheet-head"><h3>' + title + '</h3><span class="sheet-x">' + ico('x') + '</span></div>' +
+      (note ? '<p class="sheet-note">' + note + '</p>' : '') +
+      '<div class="sheet-body">' + body + '</div>' +
+    '</div>';
+}
+/* the equip/pick row — the record shelf's grammar (doc 52 §4): owning and
+   wearing are different things. states: 'worn' | 'owned' (equip for free) |
+   'buy' (owned by nobody yet, buy-and-place in one tap) | 'masked' */
+function pkRow(o){
+  if (o.state === 'masked') {
+    return '<div class="pk-row masked"><span class="pk-mask-ico">' + ico('lock') + '</span>' +
+      '<span class="pk-lab"><span class="pk-qmark">???</span><span class="pk-hint">' + SHARED_HINT + '</span></span></div>';
+  }
+  let action;
+  if (o.state === 'worn') action = '<span class="swapbtn">' + ico('swap') + ' Swap</span>';
+  else if (o.state === 'owned') action = '<span class="equipbtn">EQUIP</span>';
+  else action = '<span class="price">' + ico('prism') + fmt(o.p.prisms) + '</span>';
+  return '<div class="pk-row' + (o.state === 'worn' ? ' worn' : '') + '">' +
+    '<span class="pk-ico" style="--art:' + o.p.art + '">' + o.p.icon + '</span>' +
+    '<span class="pk-lab"><span class="pk-title">' + o.p.title + (o.state === 'worn' ? ' <span class="pk-slotlab">WORN</span>' : '') + '</span>' +
+    '<span class="pk-sub">' + o.p.sub + '</span></span>' + action + '</div>';
+}
+function pickerBody(){
+  return pkRow({state:'owned', p:PERKS.table}) + pkRow({state:'buy', p:PERKS.hollow}) + pkRow({state:'masked'});
+}
+/* Reading B — one shared surface. Creatures are rendered through the exact
+   same token shape a perk uses (icon-in-a-badge, a name chip beneath),
+   sharing one evenly-spaced lane, so nothing about the drawing itself tells
+   them apart except the picture inside the badge. */
+function sharedXs(n){
+  const xs = [];
+  for (let i = 0; i < n; i += 1) xs.push(((i + 0.5) / n * 100).toFixed(1) + '%');
+  return xs;
+}
+function unifiedBand(creatureKeys, perkItems){
+  const items = creatureKeys.map((k) => ({ icon: CRIT[k].svg, art:'#f2f0ff', label: CRIT[k].name }))
+    .concat(perkItems.map((p) => ({ icon: p.icon, art: p.art, label: p.title })));
+  const xs = sharedXs(items.length);
+  return items.map((it, i) => '<div class="lw-obj" style="left:' + xs[i] + ';transform:translateX(-50%)">' +
+    '<span class="ic" style="--art:' + it.art + '">' + it.icon + '</span><span class="lb">' + it.label + '</span></div>').join('');
+}
+
+/* ================= key table ================= */
+document.getElementById('keytbl').innerHTML =
+  '<div class="keycol"><h4>The five example perks (doc 52 §4)</h4>' +
+  '<div class="keyrow"><span class="swatch" style="background:#ffe0e8">' + ico('gnome') + '</span> Deep Roots — taps</div>' +
+  '<div class="keyrow"><span class="swatch" style="background:#eaffe0">' + ico('basket') + '</span> Full Basket — orders</div>' +
+  '<div class="keyrow"><span class="swatch" style="background:#eafbe2">' + ico('bench') + '</span> Long Table — orders</div>' +
+  '<div class="keyrow"><span class="swatch" style="background:#e6d9ff">' + ico('moon') + '</span> Warm Hollow — creatures</div>' +
+  '<div class="keyrow"><span class="swatch" style="background:#dff3ff">' + ico('snow') + '</span> Quiet Hours — seasons</div></div>' +
+  '<div class="keycol"><h4>Creatures pulled into the real game while inspecting it</h4>' +
+  '<div class="keyrow"><span class="swatch">' + CRIT.pip.svg + '</span> Pip — Grove Spirit</div>' +
+  '<div class="keyrow"><span class="swatch">' + CRIT.bramble.svg + '</span> Bramble — Hedgefox</div>' +
+  '<div class="keyrow"><span class="swatch">' + CRIT.thistle.svg + '</span> Thistle — Hedgepig</div>' +
+  '<div class="keyrow"><span class="swatch">' + CRIT.luna.svg + '</span> Luna — Moonmoth (drawn, not pulled live)</div></div>' +
+  '<div class="keycol"><h4>Note colours</h4>' +
+  '<div class="keyrow" style="color:#245c27">Found live / decided</div>' +
+  '<div class="keyrow" style="color:#7a4a05">Question — my recommendation marked as such</div>' +
+  '<div class="keyrow" style="color:#1c3a7a">Placeholder — not a recommendation</div>' +
+  '<div class="keyrow" style="color:#7a1420">Collision with a standing ruling</div></div>';
+
+/* ================= SECTION 1 — what the board holds today ================= */
+document.getElementById('f-1').innerHTML =
+  fig('1', 'The real board, inspected live at :8899', 'Level 11, three creatures pulled in through the dev sheet’s own console. No lawn treatment — this is what exists before this spike touches anything.',
+    phone(
+      gardenScene({gold:1000000, prisms:0, quest:true, creatures:['pip','bramble','thistle'], lawn:'none', top:190, gridH:290, yh:100}) +
+      '<span class="cnum" style="left:6px;top:72px">1</span>' +
+      '<span class="cnum" style="left:6px;top:139px">2</span>' +
+      '<span class="cnum" style="right:8px;top:230px">3</span>' +
+      '<span class="cnum" style="left:6px;top:505px">4</span>' +
+      '<span class="cnum" style="left:6px;top:762px">5</span>'
+    ),
+    []
+  ) +
+  fig('', 'What each number is', '',
+    '<div class="clist">' +
+      '<div class="row"><b class="cn">1</b> <span><b>HUD.</b> Two wallets (gold, then Prisms once any exist), the Almanac book, the menu. Fixed — this feature does not move it.</span></div>' +
+      '<div class="row"><b class="cn">2</b> <span><b>The quest strip.</b> Becomes the order strip after the first Turn (doc 52’s REVISED block). Also fixed.</span></div>' +
+      '<div class="row"><b class="cn">3</b> <span><b>The 3&times;3 board.</b> Eight plots and the flower, on a wooden tray. This is <b>soil, not lawn</b> &mdash; "the garden" today means this tray, and it already does one job (plots) at capacity.</span></div>' +
+      '<div class="row"><b class="cn">4</b> <span><b>The yard band &mdash; the only grass in the entire layout.</b> <code>--yard-h</code> clamps 70&ndash;108px. It already holds up to six creatures (the habitat cap, doc 52 &sect;6) <b>and</b> two permanent floating buttons (Upgrade, Power-up) pinned to its own left and right edges. With only three of six creatures pulled in, they were already touching on screen.</span></div>' +
+      '<div class="row"><b class="cn">5</b> <span><b>The dock.</b> Five fixed buttons — Orders &amp; Quests, Cards, Garden, Turn, Shop. No spare slot.</span></div>' +
+    '</div>' +
+    '<div class="note d" style="max-width:920px">Measured directly against the running game (style.css, and <code>getBoundingClientRect()</code> in the console): the yard band is <code>clamp(70px,13vh,108px)</code> tall against a plot board that measures roughly 370&times;370 at 390&times;844 &mdash; the grass strip is about a <b>quarter</b> the board’s height. The two floating buttons sit flush with its own left/right edges (<code>.fpill</code>, <code>.fround</code>, doc 08), leaving a clear lane doc 08 itself measures at <b>245.4px at 390&times;844</b>. Creatures render at <code>clamp(60px,17vw,88px)</code> each &mdash; style.css’s own comment records that this was <b>already trimmed once</b> from 19vw because "four creatures and two floating buttons share 370px" and were overlapping badly at the wider size; the narrower size still overlaps at typical counts, which is exactly what I saw live with only three of six creatures present.</div>' +
+    '<div class="note d" style="max-width:920px"><b>This is the whole tension in one sentence:</b> doc 52 draws "the lawn" as if it were a spare surface beside the garden. On the real screen there is no spare surface. There is exactly one strip of grass, and it is already spoken for.</div>',
+    []
+  );
+
+/* ================= SECTION 2 — approach 1: everything on the grass ================= */
+document.getElementById('f-2').innerHTML =
+  fig('1A', 'Two spots, one filled', 'The start of the climb — Deep Roots placed, one spot still open. One creature already home (a level-1 habitat slot is open from the very start, per doc 52 §6).',
+    phone(gardenScene({gold:180000, prisms:20, quest:true, creatures:['pip'], lawn:'full', items:[PERKS.roots,null], top:170, gridH:300, yh:100})),
+    [['d','Perks stand directly on the yard band — the same strip Pip is already standing on. This is doc 52 §4’s own diagram, redrawn on the real board instead of an abstract box.']]
+  ) +
+  fig('1B', 'Five spots, four creatures, all at once — the worst case', 'Drawn honestly, per the brief: everything doc 52 says the board must hold, together, at the top of the climb.',
+    phone(gardenScene({gold:42000000, prisms:3200, quest:true, creatures:['pip','bramble','thistle','luna'], lawn:'full', items:[PERKS.roots,PERKS.basket,PERKS.table,PERKS.hollow,PERKS.quiet], top:170, gridH:300, yh:104})),
+    [
+     ['d','This is not exaggerated for effect. Four creatures is today’s habitat cap (doc 52 §6); five perk spots is the ruled top of the lawn. Both are real end-states the current design commits to reaching at the same time.'],
+     ['r','<b>Judge this one by eye before anything else in this file.</b> Nine objects plus two fixed buttons share roughly 350px of width. Perks and creatures overlap each other and crowd the two floating buttons. If this reads as too much, that is the finding, not a drawing mistake — see section 6 for whether a slot cap or a shared cap would help.'],
+    ]
+  ) +
+  fig('1C·1', 'Equip, step 1 of 4 — tap the empty spot', 'The existing grammar: tapping an empty plot opens `seeds` today; tapping an empty lawn spot does the same thing.',
+    phone(gardenScene({gold:180000, prisms:20, quest:true, creatures:['pip'], lawn:'full', items:[PERKS.roots,null], tapAt:1, top:170, gridH:300, yh:100})),
+    [['d','No door, no destination screen — the tap lands directly on the object’s own future home, exactly as doc 52’s REVISED block rules.']]
+  ) +
+  fig('1C·2', 'Equip, step 2 of 4 — the picker slides up', '"Place a perk." One perk already owned and free to move (EQUIP), one revealed but not yet bought (a price), one still masked.',
+    phone(sheet('Place a perk', 'Placing into the second spot on your lawn.', pickerBody(), {gold:180000, prisms:20})),
+    [['d','Owning and wearing are different things — the record shelf’s equip grammar (doc 52 §4), already established in tools/tree-spike.html §6C and reused here rather than re-invented.']]
+  ) +
+  fig('1C·3', 'Equip, step 3 of 4 — Long Table chosen', 'The tapped row confirms, then the sheet is on its way down.',
+    phone(sheet('Place a perk', 'Placing into the second spot on your lawn.',
+      pkRow({state:'worn', p:PERKS.table}) + pkRow({state:'buy', p:PERKS.hollow}) + pkRow({state:'masked'}),
+      {gold:180000, prisms:20})),
+    [['p','The confirmation is drawn as the row simply flipping to its WORN look. The actual celebration (a flash, a toast, a sound) is a juice-pass question, not a layout one.']]
+  ) +
+  fig('1C·4', 'Equip, step 4 of 4 — placed', 'Back on the board. Long Table now stands where the empty marker was.',
+    phone(gardenScene({gold:180000, prisms:20, quest:true, creatures:['pip'], lawn:'full', items:[PERKS.roots,PERKS.table], top:170, gridH:300, yh:100})),
+    [['d','Same sequence a plant purchase already uses today — nothing new to teach.']]
+  ) +
+  fig('1D', 'Empty state', 'Two spots revealed, both unfilled — a brand-new lawn.',
+    phone(gardenScene({gold:150000, prisms:0, quest:true, creatures:[], lawn:'full', items:[null,null], top:170, gridH:300, yh:100})),
+    [['p','No creature drawn here either — a player this early may well have zero of both. Whether the very first lawn spot is already revealed at level 1 or arrives a little later than the first habitat slot is a §12/economy question, not a layout one; I placed both here to show the calmest possible reading.']]
+  );
+
+/* ================= SECTION 3 — approach 2: a lawn button ================= */
+document.getElementById('f-3').innerHTML =
+  fig('2A', 'Where the button sits — drawn as an object on the grass', 'One object stands in for the whole system. The board shows a count, never the perks themselves.',
+    phone(gardenScene({gold:180000, prisms:20, quest:true, creatures:['pip'], lawn:'sign', signCount:1, top:170, gridH:300, yh:100})),
+    [
+     ['p','<b>Placement is genuinely open — I drew the diegetic reading first.</b> A small signpost standing on the grass, taking roughly the footprint of one perk object, badged with a count. The alternative is chrome, not scenery: a third HUD button beside the book and the menu. Both are drawn — see the inset below and section 10, question 3.'],
+    ]
+  ) +
+  fig('2A·alt', 'The other candidate: a HUD button instead', 'Same idea, worn as chrome rather than standing in the scene.',
+    phone(hudRow(180000, 20, {lawnHudBtn:true, badge:true}) +
+      '<div style="position:absolute;top:170px;left:20px;right:20px;height:300px"><div class="plotgrid" style="height:300px">' + PLOT_PRESET.map((s,i)=>plotCell(s,-1,i)).join('') + '</div></div>' +
+      '<p style="position:absolute;left:20px;right:20px;top:492px;text-align:center;font-size:11px;font-weight:800;color:var(--ink-soft)">Nothing on the grass at all in this reading — the button never leaves the HUD.</p>' +
+      dockHtml()),
+    [['p','A dock icon was also considered and set aside without drawing it: doc 08’s dock is deliberately five buttons, and adding a sixth is a bigger, separate call this spike should not make silently (the same finding tools/tree-spike.html already flagged for the tree’s own door).']]
+  ) +
+  fig('2B', 'What opens — two slots', 'A sheet, matching the existing panel precedent (Upgrades, Shop, the Almanac are all sheets today).',
+    phone(sheet('The Lawn', '2 of 2 spots in use.', slotRow(PERKS.roots,'Slot 1') + slotRow(null,'Slot 2'), {gold:180000, prisms:20})),
+    [['q','<b>Sheet, or does this deserve the tree’s full-screen treatment</b> (docs 52’s own ruling for the Trunk and the Tree)? My recommendation: sheet, for now — it matches every other management panel in the game, and the catalogue is five perks today, not the tree’s ~120 cards. Revisit if §4b’s full ~30-perk list ships before the lawn does.']]
+  ) +
+  fig('2C', 'Five slots, full creatures on the board', 'The direct payoff this approach is buying: the board is exactly as calm at five perks as it was at zero.',
+    phone(gardenScene({gold:42000000, prisms:3200, quest:true, creatures:['pip','bramble','thistle','luna'], lawn:'sign', signCount:5, top:170, gridH:300, yh:104})),
+    [
+     ['d','Compare directly against frame 1B. Same creatures, same board, same everything except the five perks — which have gone from the loudest thing on screen to a badge reading "5."'],
+     ['r','<b>What is lost, stated plainly, because the brief asks for it:</b> the player can no longer see their own build at a glance. Doc 52 §4 calls the placed-object grammar what makes "the build visible on the garden itself" — that sentence stops being true the moment perks move behind a button. Whether that is an acceptable trade for a calmer screen is the whole question this section exists to put in front of the owner.'],
+    ]
+  ) +
+  fig('2D·1', 'Equip, step 1 of 4 — tap the sign', 'Same tap grammar as any other button in the game.',
+    phone(gardenScene({gold:180000, prisms:20, quest:true, creatures:['pip'], lawn:'sign', signCount:1, tapAt:0, top:170, gridH:300, yh:100})),
+    []
+  ) +
+  fig('2D·2', 'Equip, step 2 of 4 — the slot list', 'What "multiple slots there" (the owner’s words) actually looks like once it has to be drawn.',
+    phone(sheet('The Lawn', '1 of 2 spots in use.', slotRow(PERKS.roots,'Slot 1') + slotRow(null,'Slot 2'), {gold:180000, prisms:20})),
+    [['p','Tapping "Choose" is drawn as opening the same catalogue picker frame 1C·2 already shows (owned/buy/masked rows) — reused, not redrawn, since the choice itself is identical either way.']]
+  ) +
+  fig('2D·3', 'Equip, step 3 of 4 — choosing for Slot 2', 'The same catalogue as approach 1 — only the door to it changed.',
+    phone(sheet('Choose for Slot 2', '', pickerBody(), {gold:180000, prisms:20})),
+    []
+  ) +
+  fig('2D·4', 'Equip, step 4 of 4 — closed', 'Back on the board. The badge now reads 2; nothing else visibly changed.',
+    phone(gardenScene({gold:180000, prisms:20, quest:true, creatures:['pip'], lawn:'sign', signCount:2, top:170, gridH:300, yh:100})),
+    []
+  ) +
+  fig('2E', 'Empty state', 'The sign stands from the moment the first spot is revealed, whether or not anything is equipped yet.',
+    phone(gardenScene({gold:150000, prisms:0, quest:true, creatures:[], lawn:'sign', signCount:0, top:170, gridH:300, yh:100})),
+    [['p','Drawn with no badge at zero, rather than a "0" — a bare sign reads as "empty" on its own, the way an empty plot’s dashed marker does. Worth confirming a zero-badge is actually clearer than a small "0."']]
+  );
+
+/* ================= SECTION 4 — the hybrid ================= */
+document.getElementById('f-4').innerHTML =
+  fig('3A', 'Two spots, quiet', 'The same build as frame 1A — Deep Roots placed, one spot open — drawn much smaller and without a name.',
+    phone(gardenScene({gold:180000, prisms:20, quest:true, creatures:['pip'], lawn:'quiet', items:[PERKS.roots,null], top:170, gridH:300, yh:100})),
+    [['d','Perks stay on the grass — the build is still technically visible — but at this size and with no label, "visible" and "readable" are not the same claim. Compare directly against 1A.']]
+  ) +
+  fig('3B', 'Five spots, quiet, full creatures', 'The same worst case as frame 1B, at the hybrid’s lower visual weight.',
+    phone(gardenScene({gold:42000000, prisms:3200, quest:true, creatures:['pip','bramble','thistle','luna'], lawn:'quiet', items:[PERKS.roots,PERKS.basket,PERKS.table,PERKS.hollow,PERKS.quiet], top:170, gridH:300, yh:104})),
+    [
+     ['d','Objectively less crowded than 1B by pixel area — the five tokens are a third the size of full placed objects and carry no label chip fighting for width.'],
+     ['q','<b>Is "less crowded but unreadable" actually better than "crowded but readable"?</b> At this size none of the five perks can be told apart without tapping one. My recommendation: this is the real cost of the hybrid, and it should be judged against 1B directly, side by side (section 7), rather than read as a clean win because the pixel count is lower.'],
+    ]
+  ) +
+  fig('3C·1', 'Equip, step 1 of 4 — tap any quiet object', 'Tapping one opens the WHOLE lawn’s picker, not just that one spot.',
+    phone(gardenScene({gold:180000, prisms:20, quest:true, creatures:['pip'], lawn:'quiet', items:[PERKS.roots,null], tapAt:1, top:170, gridH:300, yh:100})),
+    [['p','<b>This is a real behaviour change from approach 1, not just a smaller drawing.</b> Because a quiet object carries no label, tapping it cannot mean "fill exactly this," the way a labelled empty spot can — the player cannot necessarily tell which physical spot they even touched. Opening a consolidated manager sidesteps the question rather than answering it.']]
+  ) +
+  fig('3C·2', 'Equip, step 2 of 4 — the slot list', 'The same consolidated manager approach 2 needed, for the same reason.',
+    phone(sheet('Your Lawn', '1 of 2 spots in use.', slotRow(PERKS.roots,'Slot 1') + slotRow(null,'Slot 2'), {gold:180000, prisms:20})),
+    []
+  ) +
+  fig('3C·3', 'Equip, step 3 of 4 — choosing', 'Same catalogue, same rows.',
+    phone(sheet('Choose for Slot 2', '', pickerBody(), {gold:180000, prisms:20})),
+    []
+  ) +
+  fig('3C·4', 'Equip, step 4 of 4 — placed, quietly', 'Back on the board. A small tan token now sits where the "+" was — nameable only by tapping it again.',
+    phone(gardenScene({gold:180000, prisms:20, quest:true, creatures:['pip'], lawn:'quiet', items:[PERKS.roots,PERKS.table], top:170, gridH:300, yh:100})),
+    []
+  ) +
+  fig('3D', 'Empty state', 'Indistinguishable from approach 1’s empty state at this size — two small dashed circles.',
+    phone(gardenScene({gold:150000, prisms:0, quest:true, creatures:[], lawn:'quiet', items:[null,null], top:170, gridH:300, yh:100})),
+    []
+  );
+
+/* ================= SECTION 5 — the perk rail (my own addition) ================= */
+document.getElementById('f-5').innerHTML =
+  fig('4A', 'Two perks in the rail, board fully clear', 'Doc 08 row 3, reused rather than a new zone invented on the grass.',
+    phone(gardenScene({gold:180000, prisms:20, creatures:['pip'], lawn:'none', rail:[PERKS.roots,null], top:220, gridH:290, yh:100})),
+    [['d','The grass shows exactly what it shows today: the flower, the plots, one creature. Perks are legible AND the board never has to make room for them — the one thing every other approach here has to trade against something.']]
+  ) +
+  fig('4B', 'Five perks in the rail, full creatures on a clear board', 'The direct comparison to frame 1B: same worst-case creature count, and the board still has nothing extra on it.',
+    phone(gardenScene({gold:42000000, prisms:3200, creatures:['pip','bramble','thistle','luna'], lawn:'none', rail:[PERKS.roots,PERKS.basket,PERKS.table,PERKS.hollow,PERKS.quiet], top:220, gridH:290, yh:104})),
+    [
+     ['d','Five chips at 34px fit the rail with room to spare — this is the only approach where "five spots, full creatures" is not visibly a stress case.'],
+     ['r','<b>The real cost is named in doc 52 itself, and it is not small:</b> "Every perk is a placed object... so the build is visible on the garden itself." A rail chip is a HUD readout, not an object standing in the world — this abandons the diegetic feel doc 52 explicitly wanted, even though it solves the crowding completely. It also loses the "your creatures are down there, your perks are here" spatial story the owner was reaching for when he first drew the two side by side.'],
+    ]
+  ) +
+  fig('4C·1', 'Equip, step 1 of 4 — tap the rail', 'The whole strip is one tap target, the way the quest strip is today.',
+    phone(gardenScene({gold:180000, prisms:20, creatures:['pip'], lawn:'none', rail:[PERKS.roots,null], top:220, gridH:290, yh:100}).replace('<div class="lw-rail">','<div class="lw-rail" style="box-shadow:0 3px 0 var(--ink-2), 0 0 0 3px var(--coin)">')),
+    []
+  ) +
+  fig('4C·2', 'Equip, step 2 of 4 — the slot list', 'Identical manager to approaches 2 and 3 — only the door changed, again.',
+    phone(sheet('Your Lawn', '1 of 2 spots in use.', slotRow(PERKS.roots,'Slot 1') + slotRow(null,'Slot 2'), {gold:180000, prisms:20})),
+    []
+  ) +
+  fig('4C·3', 'Equip, step 3 of 4 — choosing', 'Same catalogue a third time.',
+    phone(sheet('Choose for Slot 2', '', pickerBody(), {gold:180000, prisms:20})),
+    [['d','All three "one manager for every slot" approaches (2, 3, 4) can share this exact picker screen. Only nine cards’ worth of chrome differ between all four options in this whole file — everything else is the same sheet.']]
+  ) +
+  fig('4C·4', 'Equip, step 4 of 4 — the rail updates', 'Back on the board — the second chip is now filled.',
+    phone(gardenScene({gold:180000, prisms:20, creatures:['pip'], lawn:'none', rail:[PERKS.roots,PERKS.table], top:220, gridH:290, yh:100})),
+    []
+  ) +
+  fig('4D', 'Empty state — and a real question', 'Doc 08’s own rule for this row: "hidden if short."',
+    phone(gardenScene({gold:150000, prisms:0, creatures:[], lawn:'none', top:190, gridH:320, yh:100})),
+    [
+     ['q','<b>Should the rail hide itself entirely at zero perks, per its existing rule, or always show a "no perks yet" hint?</b> My recommendation: show a single dim "+ your first perk" chip once the first spot is revealed, rather than nothing — a row that only ever appears once ceremonially would otherwise be the same discoverability risk doc 08 already flags for the Wild Meadow’s one-line teach.'],
+     ['r','<b>A real collision, not a hypothetical one:</b> this row is <i>already</i> used for boost countdowns today (doc 08: "boost countdowns... row 3, reserved — hidden if short"). Two tenants for one reserved row is a genuine layout conflict this approach introduces and does not solve — see section 10.'],
+    ]
+  );
+
+/* ================= SECTION 6 — the creature question ================= */
+document.getElementById('f-6').innerHTML =
+  fig('A', 'Reading A — visibly different kinds of thing', 'Creatures keep their own shape: a round character with a face, a name, a tending badge. Perks stay small, quiet objects. Nothing about the drawing suggests they belong to one system.',
+    phone(gardenScene({gold:42000000, prisms:3200, quest:true, creatures:['pip','bramble','thistle','luna'], lawn:'quiet', items:[PERKS.roots,PERKS.basket,PERKS.table,PERKS.hollow,PERKS.quiet], top:170, gridH:300, yh:104})),
+    [['d','This is frame 3B, unchanged — the hybrid’s own drawing already happens to be the clearest version of "visibly different," since a character-blob and a 26px tinted disc could not read as the same kind of object even by accident.']]
+  ) +
+  fig('B', 'Reading B — one shared "what’s out on my lawn" surface', 'Every creature and every perk drawn through the exact same token: an icon in a badge, a name beneath. The only thing that tells Pip from Deep Roots is the picture.',
+    phone(gardenScene({gold:42000000, prisms:3200, quest:true, creatures:['pip','bramble','thistle','luna'], lawn:'unified', items:[PERKS.roots,PERKS.basket,PERKS.table,PERKS.hollow,PERKS.quiet], top:170, gridH:300, yh:104})),
+    [
+     ['p','Nine tokens in one evenly-spaced lane, no separate creature layer at all — the yard band becomes a single inventory shelf rather than a stage with a strip of grass in front of it.'],
+     ['d','The two fixed buttons (Upgrade, Power-up) still paint over whatever sits behind them, same as today — this reading does not touch them, only what stands beside them.'],
+    ]
+  ) +
+  fig('', '', '',
+    '<div class="note q" style="max-width:1080px"><b>My recommendation: Reading A, on the board.</b> Creatures are a whole separate system — feeding, sleeping, keepsakes, pairs, stars — and the "Creature food, sleeping and stakes" direction has leaned on precisely this personality to make upkeep feel cosy rather than punishing. A perk is a number wearing an icon; it earns nothing by looking like a small animal. Reading B also throws away work the game has already shipped: the Hollow is its own room, reached by its own swipe, specifically so creatures would not compete with the board for attention — collapsing them back into a lawn inventory undoes that separation from the other direction. Keep the board’s two vocabularies distinct. The nuance worth the owner’s attention is one level up, on the MANAGEMENT surface rather than the board itself — see the comparison below.</div>',
+    []
+  );
+
+/* A second, narrower axis — not the board, the MANAGEMENT surface. Keeping
+   creatures and perks visually apart on the board (the recommendation above)
+   does not by itself answer whether the "manage what's on my lawn" entry
+   point should also be two doors or one. Drawn to scale, not full frames. */
+document.getElementById('f-6b').innerHTML =
+  '<div class="ab rec"><h4><span class="k">A</span> Two doors, one per system <span style="font-size:10.5px;font-weight:800;color:#3f9d45;margin-left:auto">MY LEANING, WEAKLY HELD</span></h4>' +
+  '<p><b>The Hollow keeps its own room</b> (swipe up from the garden — doc 32), with its own feeding, sleeping and keepsake screens. "The Lawn" sheet manages perks only, matching the board’s own separation.</p>' +
+  '<div class="strip" style="margin-top:8px">' + slotRow(PERKS.roots,'Slot 1') + '<div style="height:6px"></div>' + slotRow(null,'Slot 2') + '</div>' +
+  '<p style="margin-top:8px">Tapping a creature on the board still opens its own panel, exactly as today. Nothing about the Hollow changes.</p></div>' +
+  '<div class="ab"><h4><span class="k">B</span> One combined "what’s on my lawn" list</h4>' +
+  '<p><b>A single sheet lists creatures and perks together</b> for a glance-and-manage view, even though the board keeps them visually distinct.</p>' +
+  '<div class="strip" style="margin-top:8px">' +
+    '<div class="pk-row worn"><span class="pk-ico" style="--art:#f2f0ff">' + CRIT.pip.svg + '</span><span class="pk-lab"><span class="pk-title">Pip <span class="pk-slotlab">TENDING</span></span><span class="pk-sub">Grove Spirit — fed 6h ago</span></span><span class="swapbtn">Visit</span></div>' +
+    '<div style="height:6px"></div>' + slotRow(PERKS.roots,'Slot 1') +
+  '</div><p style="margin-top:8px">Cheaper to find things in, at the cost of the Hollow losing its reason to exist as a separate destination — if everything is one tap away in a list, why does the swipe gesture still matter? I lean A for exactly that reason, but weakly: this is a navigation question doc 15 already owns a build order for, not something this spike should settle.</p></div>';
+
+/* ================= SECTION 7 — side by side ================= */
+document.getElementById('f-7').innerHTML =
+  fig('1', 'Everything on the grass', 'The current ruling.',
+    phone(gardenScene({gold:42000000, prisms:3200, quest:true, creatures:['pip','bramble','thistle','luna'], lawn:'full', items:[PERKS.roots,PERKS.basket,PERKS.table,PERKS.hollow,PERKS.quiet], top:170, gridH:300, yh:104})), []) +
+  fig('2', 'A lawn button', 'The owner’s idea.',
+    phone(gardenScene({gold:42000000, prisms:3200, quest:true, creatures:['pip','bramble','thistle','luna'], lawn:'sign', signCount:5, top:170, gridH:300, yh:104})), []) +
+  fig('3', 'The hybrid', 'Quiet objects, a button to manage.',
+    phone(gardenScene({gold:42000000, prisms:3200, quest:true, creatures:['pip','bramble','thistle','luna'], lawn:'quiet', items:[PERKS.roots,PERKS.basket,PERKS.table,PERKS.hollow,PERKS.quiet], top:170, gridH:300, yh:104})), []) +
+  fig('4', 'The perk rail', 'This drawing’s own suggestion.',
+    phone(gardenScene({gold:42000000, prisms:3200, creatures:['pip','bramble','thistle','luna'], lawn:'none', rail:[PERKS.roots,PERKS.basket,PERKS.table,PERKS.hollow,PERKS.quiet], top:220, gridH:290, yh:104})), []);
+
+/* ================= SECTION 10 — every question, collected ================= */
+document.getElementById('f-10').innerHTML =
+  '<div class="box"><h3>What each approach costs and buys, at a glance</h3>' +
+  '<table class="cmp-tbl"><tr><th>Approach</th><th>Build visible at a glance</th><th>Board stays calm at 5 perks + 4 creatures</th><th>New component needed</th><th>Collides with a standing ruling</th></tr>' +
+  '<tr><td>1 · Everything on the grass</td><td class="yes">Yes</td><td class="no">No — frame 1B</td><td class="no">None — reuses <code>seeds</code>’ exact grammar</td><td class="no">None</td></tr>' +
+  '<tr><td>2 · A lawn button</td><td class="no">No — a badge count only</td><td class="yes">Yes — frame 2C</td><td class="part">One consolidated slot-list sheet</td><td class="yes">Yes — doc 52’s "no door" line</td></tr>' +
+  '<tr><td>3 · The hybrid</td><td class="part">Partly — visible, barely readable</td><td class="part">Smaller footprint, still nine objects</td><td class="part">Same consolidated sheet, plus a new "quiet" object style</td><td class="part">Softens, doesn’t resolve, the "no door" question</td></tr>' +
+  '<tr><td>4 · The perk rail</td><td class="yes">Yes, in a strip instead of the world</td><td class="yes">Yes — frame 4B</td><td class="part">Same consolidated sheet, plus a rail row perks now share with boost countdowns</td><td class="yes">New collision — see below</td></tr>' +
+  '</table>' +
+  '<p style="font-size:12px;font-weight:700;color:var(--ink-soft);margin-top:10px">This table is a map of the trade-offs, not a vote. I am not picking a row.</p></div>' +
+
+  '<div class="box r"><h3>Collisions with standing rulings — flagged, not resolved</h3><ul>' +
+  '<li><b>Approach 2/3 reopen doc 52’s 2026-09-26 ruling</b> — "The lawn is not a screen and has no door. Spots live on the garden board; tapping an empty spot opens a picker." Both approaches were drawn at the owner’s own request; if either is chosen, that line in doc 52 needs a deliberate rewrite recording why, not a silent one. Per the "statements, not fences" rule, I have surfaced this rather than softened it.</li>' +
+  '<li><b>Approach 4 shares doc 08’s reserved row 3 with an existing tenant</b> — "boost countdowns... reserved, hidden if short." A player mid-boost with a full lawn would need both in the same 40&ndash;56px strip at once. <b>My recommendation:</b> if the rail is chosen, boost countdowns and perks need one combined row design before this ships, not two rows competing for the one that doc 08 reserved.</li>' +
+  '</ul></div>' +
+
+  '<div class="box q"><h3>Open questions from the brief</h3><ul>' +
+  '<li><b>1. Which approach?</b> Not mine to answer — see the table above and section 7’s side-by-side. <b>My only lean:</b> frame 1B is the honest argument against approach 1 as ruled today; if the owner’s eye agrees it is too crowded, the rail (approach 4) is the option that solves the crowding without inventing a new "no door" collision — but it is also the one that most gives up doc 52’s "visible on the garden itself" promise. That trade is his to make, not mine.</li>' +
+  '<li><b>2. Where does the lawn button sit</b> — an object on the grass (frame 2A), or a HUD icon beside the book and the menu (frame 2A·alt)? <b>My recommendation:</b> the object on the grass — it keeps at least one diegetic anchor for the system even when it is hiding everything else, and it costs one small icon’s worth of space rather than reopening the "is the HUD full yet" question doc 08’s two-round-button layout was deliberately sized to close.</li>' +
+  '<li><b>3. Does the perk-manager sheet need a full screen (the Tree’s own treatment) or is a bottom sheet enough?</b> Drawn as a sheet throughout. <b>My recommendation:</b> sheet, for now — the catalogue is five perks at direction size; revisit only if doc 52 §4b’s full ~30-perk list ships before the lawn does.</li>' +
+  '<li><b>4. Should the rail hide entirely at zero perks</b> (doc 08’s existing rule for this row) <b>or show a "no perks yet" hint?</b> <b>My recommendation:</b> a single dim hint chip once the first spot is revealed — a row that only appears once ceremonially is the exact discoverability risk doc 08 already names for the Wild Meadow.</li>' +
+  '<li><b>5. Creatures and perks on the board — visibly different, or one shared surface?</b> <b>My recommendation: visibly different</b> — see section 6’s full reasoning. Perks are numbers wearing icons; creatures are the game’s one system built to feel alive, and it already has its own room.</li>' +
+  '<li><b>6. Should "what’s on my lawn" be one management sheet for both systems, or two separate doors?</b> <b>My weak lean: two doors</b> — see section 6b. This is a navigation call doc 15 already owns a build order for; I would not spend it on this spike’s say-so alone.</li>' +
+  '</ul></div>' +
+
+  '<div class="box p"><h3>What this drawing surfaced, past the brief’s own list</h3><ul>' +
+  '<li><b>7. Frame 1B is new evidence for a question doc 52 §6 already tabled</b> — "the §6 creature slot collision (six creatures, four slots)." That section worried about Prisms spent on a benched creature; this spike’s finding is a second, purely visual reason the same collision matters: the yard band was already tight with three of six creatures and no perks in it at all. <b>My recommendation:</b> whoever re-opens the slot-collision question should read frame 1B first — the case for capping tending slots (or capping perk slots) is stronger once the crowding is seen rather than argued in the abstract.</li>' +
+  '<li><b>8. The hybrid’s "quiet" objects are drawn as identical blank discs, distinguished only by icon.</b> A small colour-per-category tint (taps/orders/creatures/seasons, doc 52 §4’s own "Touches" column) would let a player sort their build at a glance without reading a single label. <b>Recommendation:</b> worth trying if the hybrid is the direction chosen — I did not draw it because it is a genuine design addition, not a layout default.</li>' +
+  '<li><b>9. Whether the very first lawn spot is revealed at level 1</b> (alongside the first habitat slot) <b>or arrives slightly later</b> is unresolved by doc 52’s own rung table, which starts the slot rungs at 9. I drew frame 1D’s empty state as if both start together — a placeholder, not a claim about the real curve.</li>' +
+  '<li><b>10. No first-time teaching moment is drawn for any approach</b> — no coach mark for "tap here to place a perk," no ceremony for a lawn button’s first appearance. Out of scope for a layout spike, but worth a line in whichever spec follows, since three of the four approaches introduce a control (the sign, the rail, the consolidated sheet) that has no equivalent anywhere in the game today.</li>' +
+  '</ul></div>';
+
+/* ================= SECTION 11 — what was copied from which file ================= */
+document.getElementById('f-11').innerHTML =
+  '<div class="box"><ul>' +
+  '<li><b>The running game itself</b>, at <code>localhost:8899</code> — the whole of section 1. Inspected live: <code>style.css</code>’s <code>--yard-h</code>, <code>.critter-yard</code>, <code>.fpill</code>/<code>.fround</code> rules and their own comments (grep "They live on the lawn under the garden board, not on it"); level, gold and a Turn forced through the dev sheet’s existing buttons; three creatures (Pip, Bramble, Thistle) pulled in through <code>Game.checkCritters()</code> in the console after setting <code>state.discovered</code> — the same dev sheet already exposes this object, and no game file was written to.</li>' +
+  '<li><b>tools/records-spike.html</b> — the page chrome wholesale: the token <code>:root</code> block, <code>.phone</code>/<code>.notch</code>/<code>.scroll</code>, the <code>fig()</code>/<code>phone()</code> helpers, the intro/TOC/section skeleton, the notes system, and the <code>.quest-strip</code> family and <code>.copy-tbl</code> recipe (restated here as <code>.cmp-tbl</code>).</li>' +
+  '<li><b>tools/tree-spike.html</b> — the hand-copied <code>fmt()</code>, the Prisms <code>prism</code> glyph, the <code>.dock</code>/<code>.hud-row</code>/<code>.sheet-shell</code> recipes, and the "owning and wearing are different things" pick-row grammar from its own §6C (<code>perkPickRow</code>, redrawn here as <code>pkRow</code>). Its frame 6 — the abstract "garden board" box with a separate "lawn board" beneath it — was deliberately <b>not</b> reused; that abstraction is close to why the owner could not read it, so section 1 rebuilds the real 3&times;3 grid and the real yard band instead.</li>' +
+  '<li><b>icons.js</b> — the <code>prism</code> glyph, hand-copied (grep "Prisms’ own glyph").</li>' +
+  '<li><b>ui-shared.js</b> — <code>fmt()</code>, hand-copied verbatim.</li>' +
+  '<li><b>docs/52-the-trunk-and-the-tree.md</b> §4 — the five example perks, their one-sentence effects, the "two spots at the start, five at the top" rule, and the ASCII lawn diagram this file redraws on the real board. §6 — the habitat slot levels and the tabled six-creatures-four-slots collision this spike’s finding feeds back into.</li>' +
+  '<li><b>docs/08-ui-and-layout.md</b> — the layout contract’s row order (hud / quest strip / rail / stage / dock), the rail’s own "hidden if short" rule reused for approach 4, and the <code>seeds</code> sheet-mode row ("Choose a seed · Tapping an empty plot") that approach 1’s equip sequence follows exactly.</li>' +
+  '<li><b>docs/32-the-garden-year.md</b>’s glossary — every word used on screen (Prisms, gold, a creature’s own name) is a glossary word; nothing here invents new player-facing vocabulary.</li>' +
+  '<li><b>Nothing here edits docs/52, docs/43, docs/53, docs/HANDOFF.md or any game file.</b> This is a spike: one new tool, judged by eye, per the wireframe gate in docs/34-build-plan.md.</li>' +
+  '</ul></div>';
+
+function toggleNotes(){
+  const on = document.body.dataset.notes === '1';
+  document.body.dataset.notes = on ? '0' : '1';
+  document.getElementById('notesBtn').textContent = 'Notes: ' + (on ? 'OFF' : 'ON');
+  document.getElementById('notesBtn').classList.toggle('off', on);
+}
+</script>
+</body>
+</html>
+
+
