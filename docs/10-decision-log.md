@@ -5,6 +5,51 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (direction, the HUD) — Reputation needs a permanent home once the quest strip converts
+
+**Ruled: no Prisms in tips.** An order's bonus may be a card pack, gold, gems or a power-up — never
+Prisms. This keeps the Turn the only real Prism faucet besides the tiny Almanac trickle, and removes
+the economy decision that was hiding inside a bonus.
+
+**The owner's correction to the desk, and he is right.** The desk argued reputation-only orders would
+not *feel* like a payout. He answered that the feeling problem is one the desk created: *"it's hard
+to tell because you're removing the progress bar."* Stripping digits from the rail (ruled 2026-09-26)
+left reputation with nowhere to land. **Give it a home in the HUD and the objection dissolves** — a
+small level pill with a progress ring, top-left, and the reputation from a delivered order
+**animates into it**. The Monopoly Go reference is a compact pill carrying an icon and a number, not
+a full-width bar.
+
+**His proposal:** rebuild the top HUD as progress bar + gold + gems + Prisms + hamburger, moving the
+Almanac into the hamburger to free its icon.
+
+**Two findings change it, both in his favour:**
+
+1. **The level pill with a reputation ring already exists** — `#qPip` inside `.q-pip-ring`, in the
+   quest strip (`el.qPip.textContent = lv`). It is not a new component; it is an existing one that
+   **loses its home when the quest strip converts to orders at the first Turn.** That is precisely
+   the gap. Promote it into the HUD rather than build it.
+2. **Prisms already have a home and do not need a third wallet.** doc 32: *"afterwards the pill
+   shows the banked Prisms"* — `#pouchChip` on the dock's Turn button. The year meter moved there in
+   phase 3.5 specifically to buy back HUD width.
+
+**Why the third wallet matters so much.** doc 08 records this as a solved crisis: *"three wallets
+(222px) plus three 44px buttons (144px) plus the gap came to 374px of the 370 available"* — round
+buttons had been shaved to 40px, **under the touch minimum**, and the owner's own fix was one fewer
+HUD element. Adding a Prisms wallet re-enters exactly that configuration. Moving the Almanac into
+the menu frees 44px, but a wallet costs about 74px, so the proposal as stated is net worse than
+today.
+
+**The desk's recommendation:** HUD becomes **level pill + gold + gems + hamburger**, Almanac moves
+into the menu, and **Prisms stay on the Turn button where they already live**. That is two wallets,
+one compact pill and one button — lighter than today's two wallets and two buttons, and it never
+re-enters the three-wallet width that failed once. Not ruled; the owner's call.
+
+**Open, and worth deciding with it:** if the Almanac moves into the hamburger, **where is the tree's
+door?** It has been open since spike v1 (the Almanac's petal tab, which the tree replaces, or the
+dock). A tree behind a hamburger is two taps from the garden. The desk's suggestion, unpriced:
+**the level pill is the door** — it shows your level, and tapping it opens the trunk that level is
+climbing.
+
 ## 2026-09-27 (direction, orders) — Reputation is the wage; the tip is the surprise
 
 **The owner resolved the single-currency question with a third answer, better than either option the
