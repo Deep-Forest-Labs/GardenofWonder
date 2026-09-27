@@ -130,9 +130,20 @@ const Game = (() => {
       bestRarity: {},
       almanacClaimed: [],
       mastery: {},
-      rarityCounts: {}
+      rarityCounts: {},
+      /* The story — docs/03 "The story", docs/07. Permanent: the Turn never
+         touches it (SURVIVES in bill 1). `seen` latches chapter, scene and run
+         ids forever; `beat` is where an unfinished chapter resumes; `sliver` is
+         the next memory sliver's index (in order, never skipped); `lines` the
+         story lines already played; `day` the per-kind counts against
+         todayKey(); `arrived` the villagers each chapter brought, in order;
+         `orders` the scripted first orders the Stand still owes. */
+      story: storyDefault()
     };
   };
+  function storyDefault() {
+    return { seen: {}, beat: null, sliver: 0, lines: [], day: { key: '', chapters: 0, slivers: 0, lines: 0 }, arrived: [], orders: [] };
+  }
 
   const state = defaultState();
   let lastAutoHarvest = 0;
@@ -342,6 +353,7 @@ const Game = (() => {
         || (parsed.fall.grid || []).some((c) => c && c.seed)));
       if (!state.seen.fallSwipe && usedFall) state.seen.fallSwipe = true;
       if (!state.seen.gardenSwipe && usedFall) state.seen.gardenSwipe = true;
+      state.story = cleanStory(parsed.story);
       state.apiary = Object.assign(d.apiary, parsed.apiary || {});
       state.quests = Object.assign(d.quests, parsed.quests && typeof parsed.quests === 'object' ? parsed.quests : {});
       if (!Array.isArray(state.quests.active)) state.quests.active = [];
@@ -1534,10 +1546,13 @@ const Game = (() => {
     if (caught.length || earned.coins > 0 || marked) save();
 
     if (away < WELCOME_MIN_AWAY) return null;
+    /* The welcome-back board, docs/55 §6: after a real absence, one line from
+       the villager who arrived most recently, and nothing more. */
+    const welcome = storyWelcome(away);
     /* BOTH null-gates include Winter. The second one is the one that matters:
        without `winterRipe` here, a player who tucked a bed, slept, and came
        back to six kept blooms would be told nothing happened. */
-    if (!ripe.length && !caught.length && !jars && !earned.coins && !winterRipe) return null;
+    if (!ripe.length && !caught.length && !jars && !earned.coins && !winterRipe && !welcome) return null;
     /* Only the offline income above could have moved lifetimeCoins, so this
        is safe to skip on the null-return paths — nothing there could have
        crossed a threshold anyway. refreshReveals() also runs on its own
@@ -1549,7 +1564,7 @@ const Game = (() => {
       winterRipe, winterKept, winterTucked: state.winter.tuckedAt > 0,
       earned: earned.coins, capped: earned.capped,
       capHours: offlineHours(), rate: offlineRate(),
-      newReveals
+      newReveals, welcome
     };
   }
 
@@ -4053,7 +4068,7 @@ const Game = (() => {
     return lo + Math.floor(Math.random() * (hi - lo + 1));
   }
 
-  function standBuildOrder(good, tierDef, avoid) {
+  function standBuildOrder(good, tierDef, avoid, customer) {
     const taken = [];
     const needs = [];
     for (const n of good.needs) {
@@ -4076,7 +4091,7 @@ const Game = (() => {
     return {
       id: 'o' + state.stand.seq,
       good: good.id,
-      customer: standPickCustomer(tierDef.tier),
+      customer: customer || standPickCustomer(tierDef.tier),
       needs,
       coins: pay.coins,
       rep: pay.rep,
@@ -4085,7 +4100,9 @@ const Game = (() => {
   }
 
   function standPickCustomer(tier) {
-    const eligible = CUSTOMERS.filter((c) => c.minTier <= tier);
+    /* A story villager is in the pool only once their chapter has been seen —
+       docs/55 §6, "villagers by chapter". */
+    const eligible = CUSTOMERS.filter((c) => c.minTier <= tier && (!c.chapter || storySeen(c.chapter)));
     const here = standOrders().map((o) => o.customer);
     const free = eligible.filter((c) => !here.includes(c.id));
     const bag = free.length ? free : eligible;
@@ -4101,9 +4118,17 @@ const Game = (() => {
     const here = standOrders().map((o) => o.good);
     const fresh = pool.filter((g) => !here.includes(g.id));
     const bag = fresh.length ? fresh : pool;
-    const good = bag[Math.floor(Math.random() * bag.length)];
+    /* A chapter's scripted first order goes out before any random one. Its good
+       is the script's when the tier allows it and any allowed good when it does
+       not — the never-ask-the-unproducible rule outranks the script. Priced by
+       the same standBuildOrder() as every order, so it pays exactly what any
+       order of that good would: the story moves no number. */
+    const scripted = state.story.orders[0] || null;
+    const good = (scripted && scripted.good && pool.find((g) => g.id === scripted.good))
+      || bag[Math.floor(Math.random() * bag.length)];
     const avoid = standOrders().flatMap((o) => o.needs.map((n) => n.of).filter(Boolean));
-    const order = standBuildOrder(good, tierDef, avoid);
+    const order = standBuildOrder(good, tierDef, avoid, scripted && customerById(scripted.villager) ? scripted.villager : null);
+    if (order && scripted) state.story.orders.shift();
     if (order) {
       order.slot = slot;
       state.stand.slots[slot] = order;
@@ -4748,6 +4773,272 @@ const Game = (() => {
     state.seen.hollyIntro = true;
     save();
     return true;
+  }
+
+  /* ---------------- the story — docs/55, docs/57; the laws in docs/03 "The story" ----------------
+
+     The engine decides WHAT plays and the UI decides only WHEN — a ui-* file
+     never picks a chapter, a line or a sliver. Every getter here is a pure read
+     of state plus DATA.story; nothing is ever queued or stored as "pending",
+     which is what makes a chapter never missable: a save that crossed a level
+     offline, or before the story existed, simply finds its chapter owed the
+     next time anything asks.
+
+     Nothing in this section credits gold, gems, Prisms or reputation, or calls
+     anything that does. The only economic object the story touches is the
+     Stand's queue — a scripted first order, priced like any other. */
+
+  const STORY = () => DATA.story;
+  const SCRIPT = () => DATA.story.script;
+  const storyChapter = (id) => SCRIPT().chapters.find((c) => c.id === id) || null;
+  function storySeen(id) { return Boolean(state.story && state.story.seen[id]); }
+
+  /* Re-validated field by field, because this object is nested and the
+     shallow assign in load() replaced it wholesale — and because a PARTIAL
+     object (a hand-edited save, or one written by a newer build) is the case
+     the default alone does not repair. */
+  function cleanStory(raw) {
+    const d = storyDefault();
+    if (!raw || typeof raw !== 'object') return d;
+    const seen = raw.seen && typeof raw.seen === 'object' && !Array.isArray(raw.seen) ? raw.seen : {};
+    Object.keys(seen).forEach((k) => { if (seen[k] === true) d.seen[k] = true; });
+    const b = raw.beat;
+    if (b && typeof b === 'object' && storyChapter(b.chapter) && !d.seen[b.chapter]
+      && Number.isInteger(b.scene) && b.scene >= 0 && b.scene < storyChapter(b.chapter).scenes.length) {
+      d.beat = { chapter: b.chapter, scene: b.scene, line: Number.isInteger(b.line) && b.line >= 0 ? b.line : 0 };
+    }
+    if (Number.isInteger(raw.sliver) && raw.sliver >= 0) d.sliver = Math.min(raw.sliver, SCRIPT().slivers.length);
+    if (Array.isArray(raw.lines)) d.lines = raw.lines.filter((id) => SCRIPT().lines.some((l) => l.id === id));
+    if (raw.day && typeof raw.day === 'object') {
+      d.day.key = typeof raw.day.key === 'string' ? raw.day.key : '';
+      ['chapters', 'slivers', 'lines'].forEach((k) => { d.day[k] = Number.isInteger(raw.day[k]) && raw.day[k] > 0 ? raw.day[k] : 0; });
+    }
+    if (Array.isArray(raw.arrived)) {
+      d.arrived = raw.arrived.filter((id, i, a) => typeof id === 'string' && customerById(id) && a.indexOf(id) === i);
+    }
+    if (Array.isArray(raw.orders)) {
+      d.orders = raw.orders.filter((o) => o && customerById(o.villager))
+        .map((o) => ({ villager: o.villager, good: goodById(o.good) ? o.good : null }));
+    }
+    return d;
+  }
+
+  /* The day rolls on the same date key the daily quest uses. */
+  function storyDay() {
+    const key = todayKey();
+    if (state.story.day.key !== key) state.story.day = { key, chapters: 0, slivers: 0, lines: 0 };
+    return state.story.day;
+  }
+
+  /* CHAPTER I's opening, in the order doc 57 writes it: the question, the hum,
+     the garden taught one kind of step at a time, the ask about the Stand. Each
+     run waits for the one before it AND for its own step to have begun. The
+     tutorial is being re-cut (2026-09-26), so a step is keyed by KIND — the
+     first tap, planting, a harvest, an upgrade — never by a quest id. */
+  const anyUpgrade = () => Object.values(state.upgrades).some((v) => v > 0);
+  const CH1_CHAIN = [
+    { id: 'ch1.open', lines: (r) => r.open, ready: () => state.stats.totalTaps >= 1 },
+    { id: 'ch1.hum', lines: (r) => r.hum, ready: () => true },
+    { id: 'ch1.teach', lines: (r) => r.teach.intro, ready: () => true },
+    { id: 'ch1.teach.tap', lines: (r) => r.teach.tap, ready: () => state.stats.totalTaps >= 1 },
+    { id: 'ch1.teach.plant', lines: (r) => r.teach.plant, ready: () => Boolean(state.seen.intro) },
+    { id: 'ch1.teach.harvest', lines: (r) => r.teach.harvest, ready: () => state.stats.totalHarvests >= 1 },
+    { id: 'ch1.teach.upgrade', lines: (r) => r.teach.upgrade, ready: () => anyUpgrade() || state.year.turnsCompleted >= 1 },
+    { id: 'ch1.ask', lines: (r) => r.ask, ready: () => true }
+  ];
+
+  /* Strictly in order: only the FIRST unseen chapter is ever a candidate, and
+     nothing but Chapter I is a candidate until Chapter I has been seen. Chapter
+     I's act break is a latch — the first Turn completed, and its opening run
+     finished — so it is owed from the moment the Turn commits and plays the
+     first time the UI finds a quiet screen after the ceremony has shut. No
+     later Turn is ever a trigger: every later chapter keys to the level alone. */
+  function storyNextChapter() {
+    for (const ch of SCRIPT().chapters) {
+      if (storySeen(ch.id)) continue;
+      if (ch.latch === 'turn') return state.year.turnsCompleted >= 1 && storySeen('ch1.ask') ? ch : null;
+      if (!storySeen('ch1')) return null;
+      return state.level >= ch.level ? ch : null;
+    }
+    return null;
+  }
+
+  /** The next scene to play: `{ chapter, scene, line }` (scene and line are
+      indexes into the chapter), or null. A chapter already begun resumes where
+      it stopped, whatever the day's count says; a new one waits for the cap. */
+  function storyPending() {
+    const b = state.story.beat;
+    if (b && !storySeen(b.chapter) && storyChapter(b.chapter)) return { chapter: b.chapter, scene: b.scene, line: b.line };
+    const ch = storyNextChapter();
+    if (!ch) return null;
+    if (storyDay().chapters >= STORY().caps.chapters) return null;
+    return { chapter: ch.id, scene: 0, line: 0 };
+  }
+
+  /** A chapter's words, for the scene player — the one that is owed, or one
+      already seen (replay). Null for anything else, so a replay can never be
+      used to play a chapter ahead of its turn. */
+  function storyChapterFor(id, replay) {
+    const ch = storyChapter(id);
+    if (!ch) return null;
+    if (replay) return storySeen(id) ? ch : null;
+    const p = storyPending();
+    return p && p.chapter === id ? ch : null;
+  }
+
+  /** Where the player is inside a chapter, so a closed app resumes on the line
+      it left. Never latches anything. */
+  function storyAdvance(chapterId, sceneIdx, lineIdx) {
+    const p = storyPending();
+    if (!p || p.chapter !== chapterId) return false;
+    state.story.beat = { chapter: chapterId, scene: sceneIdx, line: Math.max(0, lineIdx | 0) };
+    save();
+    return true;
+  }
+
+  /** A scene has been drawn and dismissed. The last scene of a chapter latches
+      the chapter seen, counts it against the day, and delivers its visible
+      change: the villagers it brings and the order it scripts. */
+  function storyDismiss(chapterId, sceneIdx) {
+    const p = storyPending();
+    const ch = storyChapter(chapterId);
+    if (!p || !ch || p.chapter !== chapterId || p.scene !== sceneIdx) return false;
+    const sc = ch.scenes[sceneIdx];
+    state.story.seen[sc.id] = true;
+    if (sceneIdx < ch.scenes.length - 1) {
+      state.story.beat = { chapter: chapterId, scene: sceneIdx + 1, line: 0 };
+      save();
+      return { chapterDone: false };
+    }
+    state.story.seen[chapterId] = true;
+    state.story.beat = null;
+    storyDay().chapters += 1;
+    Object.keys(SCRIPT().villagers).forEach((id) => {
+      if (SCRIPT().villagers[id].arrives === chapterId && !state.story.arrived.includes(id)) state.story.arrived.push(id);
+    });
+    ch.change.filter((c) => c.kind === 'order').forEach((c) => state.story.orders.push({ villager: c.villager, good: c.good }));
+    storyDealOrders();
+    saveNow();
+    emit('panels');
+    emit('story', { chapter: chapterId });
+    return { chapterDone: true };
+  }
+
+  /* The scripted order reaches the counter now rather than on some later
+     refill: an empty slot first, otherwise the most recently dealt order that
+     cannot be filled this minute — after the first Turn that is one of three
+     orders dealt seconds ago, and mid-game it is the one the player has had
+     least time to work toward. */
+  function storyDealOrders() {
+    while (state.story.orders.length) {
+      let slot = state.stand.slots.findIndex((o) => !o);
+      if (slot < 0) {
+        const open = state.stand.slots.filter((o) => o && !standCanDeliver(o));
+        if (!open.length) return;
+        slot = open.reduce((a, o) => (Number(String(o.id).slice(1)) > Number(String(a.id).slice(1)) ? o : a)).slot;
+      }
+      state.stand.slots[slot] = null;
+      if (!standGenerate(slot)) return;
+    }
+  }
+
+  /** The next line Poppy owes in the garden bubble, or null: Chapter I's
+      opening runs, then a chapter's `.after` coda, then the next memory sliver
+      (in order, never skipped, capped a day), then the newest story line owed
+      (older ones superseded, capped a day). `{ kind, id, lines }`. */
+  function storyLine() {
+    if (!storySeen('ch1')) {
+      const ch1 = storyChapter('ch1');
+      for (const step of CH1_CHAIN) {
+        if (storySeen(step.id)) continue;
+        return step.ready() ? { kind: 'run', id: step.id, lines: step.lines(ch1.runs) } : null;
+      }
+      return null;
+    }
+    for (const ch of SCRIPT().chapters) {
+      if (storySeen(ch.id) && ch.runs && ch.runs.after && !storySeen(`${ch.id}.after`)) {
+        return { kind: 'run', id: `${ch.id}.after`, lines: ch.runs.after };
+      }
+    }
+    const day = storyDay();
+    const sl = SCRIPT().slivers[state.story.sliver];
+    if (sl && storySeen(sl.from) && state.level >= sl.level && day.slivers < STORY().caps.slivers) {
+      return { kind: 'sliver', id: sl.id, lines: [{ who: 'poppy', mode: 'bubble', mood: 'curious', text: sl.text }] };
+    }
+    const line = storyLineOwed();
+    if (line && day.lines < STORY().caps.lines) {
+      return { kind: 'line', id: line.id, lines: [{ who: 'poppy', mode: 'bubble', mood: 'curious', text: line.text }] };
+    }
+    return null;
+  }
+
+  /* Newest wins: the latest line whose level has been reached, after the last
+     one played. Everything older is superseded the moment it plays. A line
+     that names Holly waits until she has been met (Winter is Turn-gated, so
+     she can never be assumed) and a newer line plays past it. */
+  function storyLineOwed() {
+    const all = SCRIPT().lines;
+    const last = state.story.lines.reduce((m, id) => Math.max(m, all.findIndex((l) => l.id === id)), -1);
+    for (let i = all.length - 1; i > last; i -= 1) {
+      const l = all[i];
+      if (!storySeen(l.from) || state.level < l.level) continue;
+      if (l.met === 'holly' && !state.seen.hollyIntro) continue;
+      return l;
+    }
+    return null;
+  }
+
+  /** Consumed only after the UI has drawn the last line — the hollyIntro rule. */
+  function storySaid(id) {
+    const cur = storyLine();
+    if (!cur || cur.id !== id) return false;
+    if (cur.kind === 'run') state.story.seen[id] = true;
+    if (cur.kind === 'sliver') { state.story.sliver += 1; storyDay().slivers += 1; }
+    if (cur.kind === 'line') { state.story.lines.push(id); storyDay().lines += 1; }
+    save();
+    return true;
+  }
+
+  /* Poppy's ordinary tap chatter stays quiet while Chapter I's opening plays. */
+  const storyMutesTap = () => storySeen('ch1.open') && !storySeen('ch1.ask');
+
+  const storyArrived = () => state.story.arrived.slice();
+  const storySeenChapters = () => SCRIPT().chapters.filter((c) => storySeen(c.id)).map((c) => c.id);
+
+  /* After a real absence, the most recently arrived villager says one line —
+     nobody asks where you were, and Poppy never suffers for it. */
+  function storyWelcome(away) {
+    if (!(away >= STORY().welcomeAfter)) return null;
+    const who = state.story.arrived[state.story.arrived.length - 1];
+    const pool = who && SCRIPT().welcome[who];
+    if (!pool || !pool.length) return null;
+    return { who, text: pool[Math.floor(Math.random() * pool.length)] };
+  }
+
+  /* A Turn after the first carries flavour, never story: one line, in the voice
+     of the stage the chapters have reached (docs/55 §5 — ages on chapters). */
+  function storyTurnLine() {
+    if (state.year.turnsCompleted < 2 || !storySeen('ch1')) return null;
+    const t = SCRIPT().turnLines;
+    if (storySeen('ch6')) return t.wry || null;
+    if (storySeen('ch3')) return t.child || null;
+    return t.toddler || null;
+  }
+
+  /** A customer's words for one bucket: the row's own, the script's pool for a
+      story villager, and — once the chapter that earned them has been seen —
+      any chapter-keyed lines, until the chapter that retires them. */
+  function customerLines(id, bucket) {
+    const c = customerById(id);
+    if (!c) return [];
+    const base = (c.lines && c.lines[bucket]) || [];
+    const v = SCRIPT().villagers[id];
+    if (!v) return base;
+    const own = v[bucket] || [];
+    const keyed = bucket === 'delivered' ? [] : Object.keys(v.after)
+      .filter((ch) => storySeen(ch) && !(v.after[ch].until && storySeen(v.after[ch].until)))
+      .reduce((a, ch) => a.concat(v.after[ch].lines), []);
+    return base.concat(own, keyed);
   }
 
   /* ---------------- the Turn — prestige ----------------
@@ -6061,6 +6352,8 @@ const Game = (() => {
     plotGate, plotUnlockLevel,
     seedRevealedNow, upgradeRevealedNow, refreshReveals,
     pendingMoments, nextMoment, momentReady, consumeMoment,
+    storyPending, storyChapterFor, storyAdvance, storyDismiss, storyLine, storySaid, storyArrived,
+    storySeen, storySeenChapters, storyMutesTap, storyTurnLine, storyWelcome, customerLines,
     claimQuest, stripQuest, activeQuests, questById,
     discoveredCount, discoveredOf, bestRarityOf, almanacMilestones,
     masteryOf, masteryMult, masteryGoal, masteryTierGoal, rarityCountsOf,

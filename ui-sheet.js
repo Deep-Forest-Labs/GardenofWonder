@@ -1926,8 +1926,8 @@
     const rep = Game.standOrderRep(order);
     const mood = ready ? 'delivered' : 'waiting';
     const line = ready
-      ? UI.pickLine(c.lines.greet, order.id)
-      : UI.pickLine(c.lines.waiting, order.id);
+      ? UI.pickLine(Game.customerLines(c.id, 'greet'), order.id)
+      : UI.pickLine(Game.customerLines(c.id, 'waiting'), order.id);
 
     return `<div class="on-plate">
         <h2 class="on-name">${c.name}</h2>
@@ -2996,7 +2996,7 @@
       FX.haptic(14);
       const rep = Game.standOrderRep(order);
       UI.toast({
-        title: who ? UI.pickLine(who.lines.delivered, order.id) : 'Delivered',
+        title: who ? UI.pickLine(Game.customerLines(who.id, 'delivered'), order.id) : 'Delivered',
         body: `${good ? good.name : 'Order'} &middot; +${fmt(res.paid)} coins${rep ? `, +${rep} rep` : ''}`,
         art: Icons.get(good ? good.icon : 'gift')
       });

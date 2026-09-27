@@ -5343,9 +5343,13 @@ check('good ids are unique', new Set(GOODS.map((g) => g.id)).size === GOODS.leng
 check('every good asks for something', GOODS.every((g) => g.needs.length >= 1 && g.needs.length <= 4));
 check('every quantity range is sane',
   GOODS.every((g) => g.needs.every((n) => n.qty[0] >= 1 && n.qty[1] >= n.qty[0])));
+/* Read through Game.customerLines(), which is what every panel reads: a story
+   villager's row carries empty pools on purpose and its words come from
+   DATA.story.script, so the row alone is no longer the whole customer. */
 check('every customer has a name, a face and three kinds of line',
-  CUSTOMERS.every((c) => c.name && c.art && c.art.skin && c.lines.greet.length
-    && c.lines.waiting.length && c.lines.delivered.length));
+  CUSTOMERS.every((c) => c.name && c.art && c.art.skin && G.customerLines(c.id, 'greet').length
+    && G.customerLines(c.id, 'waiting').length && G.customerLines(c.id, 'delivered').length),
+  CUSTOMERS.filter((c) => !G.customerLines(c.id, 'greet').length).map((c) => c.id).join(','));
 check('customer ids are unique', new Set(CUSTOMERS.map((c) => c.id)).size === CUSTOMERS.length);
 /* A tier the player can reach with nobody in it would generate an order with no
    face on it. */
@@ -5353,7 +5357,7 @@ check('customer ids are unique', new Set(CUSTOMERS.map((c) => c.id)).size === CU
    slots forces a duplicate, which reads as a bug rather than as a small village
    — and the tier-1 board is the first thing a new player ever sees. */
 check('every tier can fill the whole board with different faces',
-  STAND.tiers.every((t) => CUSTOMERS.filter((c) => c.minTier <= t.tier).length >= STAND.slots));
+  STAND.tiers.every((t) => CUSTOMERS.filter((c) => c.minTier <= t.tier && !c.chapter).length >= STAND.slots));
 /* Same reasoning as the faces, one notch softer: a repeated good with a
    different customer and different blooms still reads, but three slots drawing
    from two goods repeats every single time, and tier 1 is the first board a new
@@ -6299,7 +6303,10 @@ const SURVIVES = ['version', 'gems', 'tickets', 'decor', 'boosters', 'weatherCal
      a cap must not do — and one that wiped `firstAt` would put a player who has
      just finished a whole year back into a first session. */
   'ads',
-  'seedRevealed', 'upgradeRevealed', 'celebrated'];
+  'seedRevealed', 'upgradeRevealed', 'celebrated',
+  /* The story is permanent: a chapter seen is seen forever, a sliver played is
+     never replayed, and a Turn is never a story trigger after the first. */
+  'story'];
 /* CHANGED, not "cleared": doc 32's never-touched column means never reset or
    decreased — prisms sits here because the mint WRITES it (upward, by
    exactly the projection, asserted below), and petals/blessed sit in SURVIVES
@@ -13284,6 +13291,332 @@ check('it recolours a property the base rule actually paints with (border-color,
   affordCellBody);
 /* SABOTAGE, confirmed by hand: swapping `border-color` for `outline-color`
    turns this red — exactly the shape the verifier found. */
+
+/* ================= THE STORY — docs/03 "The story", docs/55 §6, docs/57 =================
+
+   The laws, each asserted against the real engine. Every group here was
+   sabotaged by hand with the REALISTIC wrong implementation named in its
+   comment (doc 10's 2026-09-03 lesson), and each one went red. What this file
+   cannot see is named where it matters: WHEN the UI calls these getters —
+   after the ceremony sheet has shut, never under a coach mark or a scene — is
+   ui-story.js, and is held by the source-read group further down. */
+{
+  const DAY_S = 86400;
+  const SC = DATA.story.script;
+  const chById = (id) => SC.chapters.find((c) => c.id === id);
+  /* Play Chapter I's whole opening the way a player's first minutes would:
+     the first tap, the first planting, a harvest, an upgrade. */
+  const openCh1 = () => {
+    S.stats.totalTaps = Math.max(1, S.stats.totalTaps);
+    S.seen.intro = true;
+    S.stats.totalHarvests = Math.max(1, S.stats.totalHarvests);
+    S.upgrades.tapPower = Math.max(1, S.upgrades.tapPower);
+    let guard = 0;
+    for (let l = G.storyLine(); l && l.kind === 'run' && guard < 20; l = G.storyLine(), guard += 1) G.storySaid(l.id);
+  };
+  const playChapter = (id) => {
+    const ch = chById(id);
+    let r = null;
+    for (let i = 0; i < ch.scenes.length; i += 1) r = G.storyDismiss(id, i);
+    return r;
+  };
+  const seeCh1 = () => { openCh1(); S.year.turnsCompleted = Math.max(1, S.year.turnsCompleted); return playChapter('ch1'); };
+  const reload = () => { G.saveNow(); return G.load(); };
+  /* todayKey() reads the real date, as the daily quest's does; a day is rolled
+     here the way that group rolls one — by making the stored key yesterday's. */
+  const nextDay = () => { S.story.day.key = 'yesterday'; };
+
+  group('the story: doc 57 is the contract — data.js is exactly what the importer writes from it');
+  {
+    const r = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'tools', 'story-import.js'), '--check'], { encoding: 'utf8' });
+    check('`node tools/story-import.js --check` is green — the script in data.js is doc 57, not a hand edit', r.status === 0, (r.stderr || r.stdout).trim());
+    check('eight chapters, ch1..ch8, in order', SC.chapters.map((c) => c.id).join() === 'ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8');
+    check('twenty memory slivers, m01..m20', SC.slivers.length === 20 && SC.slivers.every((x, i) => x.id === `m${String(i + 1).padStart(2, '0')}`));
+    check('every sliver and story line has a level inside its window (PROVISIONAL placement)',
+      SC.slivers.concat(SC.lines).every((x) => Number.isInteger(x.level) && x.level >= chById(x.from).level));
+    check('no hero placeholder is ever a line a player could be shown',
+      JSON.stringify(SC.chapters).indexOf('HERO]') < 0 && SC.slivers.concat(SC.lines).every((x) => x.text.indexOf('HERO]') < 0));
+    check('Poppy is "she" and says "mama", never "mommy", anywhere in the script',
+      !/\bmommy\b/i.test(JSON.stringify(SC)) && /Are you my mama\?/.test(JSON.stringify(chById('ch1').runs.open)));
+    check('the words are flagged as the desk\'s draft', DATA.story.draft === true);
+  }
+
+  group('the story: nothing plays before Chapter I is seen, and Chapter I opens in order');
+  /* Sabotage: a sweep that steps past Chapter I while its latch is unmet (the
+     realistic "check the next one" loop) turned the first and last assertions
+     red. The bubble path is guarded twice — the opening chain returns before
+     slivers are reached, and every sliver and line also needs its window's
+     chapter seen — so removing either guard alone stays green by design. */
+  G.reset();
+  S.level = 60; S.rep = G.cumulativeRep(60);
+  check('a fresh save at level 60 owes no scene at all', G.storyPending() === null);
+  check('and no bubble line before the first tap', G.storyLine() === null);
+  S.stats.totalTaps = 1;
+  const l1 = G.storyLine();
+  check('the first tap owes the opening run — "Are you my mama?" — and nothing else',
+    l1 && l1.id === 'ch1.open' && l1.lines.some((x) => x.text === 'Are you my mama?'), l1 && l1.id);
+  check('the opening carries Mara\'s two reply chips, which lead to the same next line',
+    l1.lines.some((x) => x.mode === 'chip' && x.chips.length === 2));
+  check('a line is consumed only by storySaid(), never by being read', G.storyLine().id === 'ch1.open');
+  G.storySaid('ch1.open');
+  check('then the hum', G.storyLine().id === 'ch1.hum');
+  check('storySaid() for anything but the line owed is refused', G.storySaid('ch1.ask') === false && !G.storySeen('ch1.ask'));
+  G.storySaid('ch1.hum');
+  G.storySaid('ch1.teach');
+  G.storySaid('ch1.teach.tap');
+  check('the plant step waits for the first tap to be taught (seen.intro)', G.storyLine() === null);
+  S.seen.intro = true;
+  check('then speaks', G.storyLine().id === 'ch1.teach.plant');
+  G.storySaid('ch1.teach.plant');
+  check('the harvest step waits for a harvest', G.storyLine() === null);
+  S.stats.totalHarvests = 1;
+  G.storySaid('ch1.teach.harvest');
+  check('the upgrade step waits for an upgrade', G.storyLine() === null);
+  S.upgrades.tapPower = 1;
+  G.storySaid('ch1.teach.upgrade');
+  check('then the ask about the Stand', G.storyLine().id === 'ch1.ask');
+  G.storySaid('ch1.ask');
+  check('with the opening done and no Turn yet, nothing at all is owed — not a sliver, not a line, not Chapter II at level 60',
+    G.storyLine() === null && G.storyPending() === null);
+  check('Poppy\'s tap chatter was muted for exactly the opening', G.storyMutesTap() === false);
+
+  group('the story: Chapter I\'s act break latches on the first Turn — from state, never from inside turnYear()');
+  /* Sabotage: writing `state.story.beat = …` inside turnYear() (the realistic
+     "fire it at the Turn" shortcut) turned the verbatim-story assertion red. */
+  G.Dev.driveYear(DATA.year.minCoins * 4);
+  check('the fixture can Turn', G.turnReady());
+  const storyBefore = JSON.stringify(S.story);
+  const turn1 = G.turnYear(null);
+  check('the Turn committed', Boolean(turn1) && S.year.turnsCompleted === 1);
+  check('turnYear() wrote nothing to the story — the latch is a read of turnsCompleted',
+    JSON.stringify(S.story) === storyBefore && !('story' in turn1));
+  const p1 = G.storyPending();
+  check('the act break is owed the moment the Turn has committed', p1 && p1.chapter === 'ch1' && p1.scene === 0, JSON.stringify(p1));
+  check('and survives a reload before it plays — never missable', (reload(), G.storyPending() && G.storyPending().chapter === 'ch1'));
+  const ch1r = G.storyDismiss('ch1', 0);
+  check('dismissing the scene latches Chapter I seen', ch1r && ch1r.chapterDone && G.storySeen('ch1'));
+  check('it plays once: nothing re-queues it, and a second dismiss is refused',
+    (!G.storyPending() || G.storyPending().chapter !== 'ch1') && G.storyDismiss('ch1', 0) === false);
+  check('and it stays seen across a reload', (reload(), G.storySeen('ch1')));
+  check('Delphine has arrived, and is the one who has', G.storyArrived().join() === 'delphine');
+  const dOrder = G.standOrders().find((o) => o.customer === 'delphine');
+  check('her first order is on the counter: the Garden Handful, a good the tier allows',
+    Boolean(dOrder) && dOrder.good === 'handful' && G.standGoodsAt(G.standTier().tier).some((g) => g.id === 'handful'), JSON.stringify(dOrder && dOrder.good));
+  check('the scripted order is priced like any order — never zero, never special',
+    dOrder && dOrder.coins > 0 && dOrder.id && Array.isArray(dOrder.needs));
+  S.level = 1; S.rep = 0;
+  G.Dev.driveYear(DATA.year.minCoins * 4);
+  const turn2 = G.turnYear(null);
+  check('no later Turn is a story trigger — Turn 2 owes no scene at level 1', Boolean(turn2) && G.storyPending() === null);
+  check('and a Turn after the first says flavour, never story: one line for the stage the chapters reached',
+    G.storyTurnLine() === SC.turnLines.toddler);
+  check('the story survived both Turns verbatim, arrivals and all', G.storySeen('ch1') && G.storyArrived().join() === 'delphine');
+
+  group('the story: chapters play strictly in order, keyed to the level, one a day');
+  /* Sabotage: picking the highest chapter the level allows (instead of the first
+     unseen) turned the order assertion red; resetting `day` in cleanStory()
+     turned the across-a-reload cap red. */
+  G.reset();
+  seeCh1();
+  check('at level 3, Chapter II (level ~4) is not yet owed', (S.level = 3, G.storyPending() === null));
+  S.level = 200; S.rep = G.cumulativeRep(200);
+  check('the chapter-one day cap holds Chapter II to tomorrow even at level 200', G.storyPending() === null);
+  nextDay();
+  const p2 = G.storyPending();
+  check('next day, at level 200, the next chapter owed is II — not VIII', p2 && p2.chapter === 'ch2', JSON.stringify(p2));
+  check('a scene can resume: advancing records the line, and a reload lands on it',
+    G.storyAdvance('ch2', 0, 5) && (reload(), G.storyPending().line === 5 && G.storyPending().scene === 0));
+  check('advance refuses a chapter that is not the one owed', G.storyAdvance('ch5', 0, 1) === false);
+  G.storyDismiss('ch2', 0);
+  check('between scenes the chapter resumes at the next scene', G.storyPending().scene === 1);
+  G.storyDismiss('ch2', 1);
+  check('Chapter II seen; Theo arrived', G.storySeen('ch2') && G.storyArrived().join() === 'delphine,theo');
+  check('Chapter III waits for tomorrow — the cap is one a day', G.storyPending() === null);
+  reload();
+  check('and the cap holds across a reload the same day', G.storyPending() === null && S.story.day.chapters === 1);
+  nextDay();
+  check('tomorrow, Chapter III', G.storyPending() && G.storyPending().chapter === 'ch3');
+  check('a replay is refused for a chapter not yet seen, and served for one that is',
+    G.storyChapterFor('ch5', true) === null && G.storyChapterFor('ch2', true) && G.storyChapterFor('ch2', true).id === 'ch2');
+  const beforeReplay = JSON.stringify(S.story);
+  G.storyChapterFor('ch1', true);
+  check('reading a chapter for replay latches nothing', JSON.stringify(S.story) === beforeReplay);
+
+  group('the story: a save that crossed a level offline finds its chapter waiting');
+  G.reset();
+  seeCh1();
+  nextDay();
+  S.level = 1; S.rep = 0;
+  G.saveNow();
+  const raw = JSON.parse(localStorage.getItem(SAVE_KEY));
+  raw.level = 9; raw.rep = G.cumulativeRep(9);
+  localStorage.setItem(SAVE_KEY, JSON.stringify(raw));
+  G.load();
+  check('loaded at level 9 with Chapter I seen, Chapter II is owed (not III, which level 9 also passes)',
+    G.storyPending() && G.storyPending().chapter === 'ch2', JSON.stringify(G.storyPending()));
+
+  group('the story: a partial story object on disk is repaired field by field, read straight off load()');
+  /* Sabotage: dropping the cleanStory() line from load() left `arrived` undefined
+     here — read before any getter could rebuild it. */
+  G.reset();
+  G.saveNow();
+  const part = JSON.parse(localStorage.getItem(SAVE_KEY));
+  part.story = { seen: { ch1: true, 'ch1.s1': true, bogus: 'yes' }, sliver: 3, arrived: ['delphine', 'nobody', 'delphine'], lines: ['l002', 'l999'] };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(part));
+  G.load();
+  check('seen keeps real latches and drops a non-true value', S.story.seen.ch1 === true && !('bogus' in S.story.seen));
+  check('arrived drops unknown and duplicate villagers', Array.isArray(S.story.arrived) && S.story.arrived.join() === 'delphine');
+  check('lines drop unknown ids', S.story.lines.join() === 'l002');
+  check('the missing day and orders come back as defaults',
+    S.story.day && S.story.day.chapters === 0 && Array.isArray(S.story.orders) && S.story.orders.length === 0 && S.story.beat === null);
+  check('the sliver pointer is kept', S.story.sliver === 3);
+
+  group('the story: memory slivers play in order and are never skipped; story lines — newest wins, the rest superseded');
+  /* Sabotage: choosing the newest sliver owed (the story-line rule) instead of
+     the pointer turned the in-order assertion red; not raising the day count in
+     storySaid() turned both caps red. */
+  G.reset();
+  seeCh1();
+  ['ch2', 'ch3', 'ch4', 'ch5'].forEach((id) => { nextDay(); S.level = 200; playChapter(id); });
+  nextDay();
+  S.level = 30; S.rep = G.cumulativeRep(30);
+  ['ch2', 'ch3', 'ch4', 'ch5'].forEach((id) => { const r = G.storyLine(); if (r && r.kind === 'run') G.storySaid(r.id); });
+  let owed = G.storyLine();
+  while (owed && owed.kind === 'run') { G.storySaid(owed.id); owed = G.storyLine(); }
+  check('at level 30 with many slivers reached, the one owed is m01 — the first, never the newest', owed && owed.id === 'm01', owed && owed.id);
+  G.storySaid('m01');
+  const afterSliver = G.storyLine();
+  check('one sliver a day: the next thing owed today is a story line, not m02', afterSliver && afterSliver.kind === 'line', afterSliver && afterSliver.id);
+  const eligible = SC.lines.filter((l) => l.level <= 30 && G.storySeen(l.from) && !l.met);
+  const newest = eligible[eligible.length - 1];
+  check('the story line owed is the NEWEST one reached', afterSliver.id === newest.id, `${afterSliver.id} vs ${newest.id}`);
+  G.storySaid(afterSliver.id);
+  const second = G.storyLine();
+  check('a second line today would be an older one — and none is owed, because every older line was superseded',
+    second === null, second && second.id);
+  nextDay();
+  check('tomorrow: m02, in order', G.storyLine() && G.storyLine().id === 'm02');
+  G.storySaid('m02');
+  S.level = 31;
+  const nx = G.storyLine();
+  check('and the next line is newer than the one played — a superseded line never comes back',
+    nx === null || SC.lines.findIndex((l) => l.id === nx.id) > SC.lines.findIndex((l) => l.id === newest.id), nx && nx.id);
+  if (nx) G.storySaid(nx.id);
+  S.level = 33;
+  const two = G.storyLine();
+  check('a second line the same day is allowed', two && two.kind === 'line', two && two.id);
+  if (two) G.storySaid(two.id);
+  S.level = 36;
+  const cap2 = G.storyLine();
+  check('a third is not — two story lines a day at most', cap2 === null || cap2.kind !== 'line', cap2 && cap2.id);
+
+  group('the story: a line that names Holly waits until she has been met');
+  G.reset();
+  seeCh1();
+  ['ch2', 'ch3', 'ch4', 'ch5'].forEach((id) => { nextDay(); S.level = 200; playChapter(id); });
+  nextDay();
+  const holly = SC.lines.find((l) => l.met === 'holly');
+  S.level = holly.level; S.rep = G.cumulativeRep(holly.level);
+  S.story.sliver = SC.slivers.length;
+  let ln = G.storyLine();
+  while (ln && ln.kind === 'run') { G.storySaid(ln.id); ln = G.storyLine(); }
+  check('Holly unmet: the line owed is not the Holly line', ln && ln.id !== holly.id, ln && ln.id);
+  S.seen.hollyIntro = true;
+  const ln2 = G.storyLine();
+  check('Holly met: it is', ln2 && ln2.id === holly.id, ln2 && ln2.id);
+
+  group('the story: villagers arrive by chapter, and the welcome-back line is the newest arrival\'s');
+  /* Sabotage: dropping the chapter filter in standPickCustomer() let Theo onto a
+     fresh board and turned the first assertion red. */
+  {
+    G.reset();
+    const keepR = Math.random;
+    Math.random = seededRandom(57);
+    const seenFaces = new Set();
+    for (let i = 0; i < 300; i += 1) { S.stand.slots = S.stand.slots.map(() => null); G.standGenerate(0); seenFaces.add(S.stand.slots[0].customer); }
+    check('on a fresh save no story villager ever takes an order', !['delphine', 'theo', 'julian', 'isolde'].some((id) => seenFaces.has(id)),
+      [...seenFaces].join(','));
+    seeCh1();
+    nextDay(); S.level = 200; playChapter('ch2');
+    const later = new Set();
+    for (let i = 0; i < 300; i += 1) { S.stand.slots = S.stand.slots.map(() => null); G.standGenerate(0); later.add(S.stand.slots[0].customer); }
+    check('once Chapters I and II are seen, Delphine and Theo take orders — Julian and Isolde still do not',
+      later.has('delphine') && later.has('theo') && !later.has('julian') && !later.has('isolde'), [...later].join(','));
+    Math.random = keepR;
+    check('Delphine\'s chapter-keyed line joins her pool only after Chapter II',
+      G.customerLines('delphine', 'greet').some((t) => /four words/.test(t)));
+    nextDay(); playChapter('ch3');
+    nextDay();
+    const beforeCh4 = G.standOrders().length;
+    playChapter('ch4');
+    const mEntry = G.standOrders().find((o) => o.customer === 'marigold');
+    check('Chapter IV deals Miss Marigold\'s show entry, with a good the tier allows',
+      Boolean(mEntry) && G.standGoodsAt(G.standTier().tier).some((g) => g.id === mEntry.good) && G.standOrders().length >= beforeCh4,
+      JSON.stringify(mEntry && mEntry.good));
+    const now = G.nowSeconds();
+    S.lastSeen = now - (DATA.story.welcomeAfter - 3600);
+    const short = G.reconcile();
+    check('two and a bit days away: no welcome-back line', !short || !short.welcome);
+    S.lastSeen = G.nowSeconds() - (DATA.story.welcomeAfter + 3600);
+    const long = G.reconcile();
+    check('three days away: one line, from the villager who arrived most recently (Theo)',
+      long && long.welcome && long.welcome.who === 'theo' && SC.welcome.theo.includes(long.welcome.text), JSON.stringify(long && long.welcome));
+    ['ch5', 'ch6', 'ch7'].forEach((id) => { nextDay(); playChapter(id); });
+    check('Isolde\'s "before the Prize" lines are hers after VI', G.customerLines('isolde', 'greet').some((t) => /patient/.test(t)));
+    nextDay(); playChapter('ch8');
+    check('and retire once the Prize (VIII) has been seen', !G.customerLines('isolde', 'greet').some((t) => /patient/.test(t)));
+    S.lastSeen = G.nowSeconds() - (DATA.story.welcomeAfter + 3600);
+    const late = G.reconcile();
+    check('after VI the welcome-back line is Isolde\'s', late && late.welcome && late.welcome.who === 'isolde');
+  }
+
+  group('the story pays nothing but the change — no chapter, run, sliver or line moves a currency or the well');
+  /* Sabotage: crediting 1 gold in storyDismiss() (a "chapter reward") turned
+     this red at the first chapter. */
+  {
+    G.reset();
+    const WATCH = ['credits', 'gems', 'prisms', 'rep', 'level', 'lifetimeCoins', 'mintedBase', 'packs', 'luckyPacks'];
+    const snap = () => JSON.stringify([WATCH.map((k) => S[k]), S.year.coinsEarned, S.boostInv, S.petals]);
+    S.stats.totalTaps = 1; S.seen.intro = true; S.stats.totalHarvests = 1; S.upgrades.tapPower = 1;
+    S.year.turnsCompleted = 1;
+    S.level = 200; S.rep = G.cumulativeRep(200);
+    const before = snap();
+    let steps = 0;
+    for (let d = 0; d < 40; d += 1) {
+      let l = G.storyLine();
+      while (l && steps < 2000) { G.storySaid(l.id); steps += 1; l = G.storyLine(); }
+      const p = G.storyPending();
+      if (p) for (let i = p.scene; i < chById(p.chapter).scenes.length; i += 1) G.storyDismiss(p.chapter, i);
+      nextDay();
+    }
+    check('the whole of volume one played', G.storySeen('ch8') && S.story.sliver === SC.slivers.length, `${G.storySeenChapters().join()} sliver ${S.story.sliver}`);
+    check('and not one coin, gem, Prism, point of reputation or pack moved — the well\'s inputs included', snap() === before);
+    G.Dev.driveYear(DATA.year.minCoins * 4);
+    const storyKept = JSON.stringify(S.story);
+    G.turnYear(null);
+    check('the whole story state survives a Turn verbatim', JSON.stringify(S.story) === storyKept);
+  }
+
+  group('the story: the scripted order goes to a slot, never over an order that can be delivered this minute');
+  {
+    G.reset();
+    openCh1();
+    S.year.turnsCompleted = 1;
+    for (let i = 0; i < STAND.slots; i += 1) { S.stand.slots[i] = null; G.standGenerate(i); }
+    S.stand.slots.forEach((o) => o.needs.forEach((n) => { if (n.of) S.flowers[n.of] = 999; }));
+    S.stand.slots.forEach((o) => o.needs.forEach((n) => { if (n.any) DATA.seeds.forEach((sd) => { S.flowers[sd.id] = 999; }); }));
+    const ready = S.stand.slots.map((o) => o.id).join();
+    check('fixture: every order on the counter can be delivered now', S.stand.slots.every((o) => G.standCanDeliver(o)));
+    G.storyDismiss('ch1', 0);
+    check('so Delphine waits in the queue rather than taking one', S.stand.slots.map((o) => o.id).join() === ready && S.story.orders.length === 1);
+    G.standDeliver(0);
+    G.processStand();
+    S.stand.nextAt[0] = 0;
+    G.processStand();
+    check('and takes the next free slot when one opens', G.standOrders().some((o) => o.customer === 'delphine') && S.story.orders.length === 0);
+  }
+  G.reset();
+}
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

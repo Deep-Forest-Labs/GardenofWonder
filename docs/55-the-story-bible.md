@@ -647,7 +647,9 @@ holds back without her ever saying it** — restraint made visible.
   thought bubble, lines that page on tap, skip always, Continue at the end. Today `showMoment` builds
   only seed and upgrade cards — a title, bullets and a button — so a scene does not fit in it as it
   stands. Needs Mara's portrait (§3).
-- **ENGINEERING, small — chapters leave the moments session cap.** The first session crosses upgrade and
+- **BUILT 2026-09-27 (gate 2, the engine) — ENGINEERING, small — chapters leave the moments session cap.** A chapter
+  is `Game.storyPending()`, not a moment kind, so `sessionCap` never sees it; it counts against
+  `DATA.story.caps` alone (doc 03, *The story*). The first session crosses upgrade and
   seed reveals before the Turn; three of them exhaust `sessionCap`, and no queue position helps once
   `momentReady()` says no. Chapters count only against the story's own daily cap.
 - **ENGINEERING, small — the first Turn makes room for the act break.** Chapter I closes on a latch
@@ -663,14 +665,16 @@ holds back without her ever saying it** — restraint made visible.
   lines stay silent while the run plays.
 - **ENGINEERING, small — the flower's birth from the tin.** Today the talking flower is on screen from
   frame one; the opening needs its centre cell to start as soil and grow once.
-- **ENGINEERING, small — villagers by chapter.** Today a customer is picked at random by `minTier` and a
+- **BUILT 2026-09-27 (gate 2) — ENGINEERING, small — villagers by chapter.** `CUSTOMERS` rows carry `chapter`;
+  their pools and every chapter-keyed line come from the script through `Game.customerLines()`; a
+  scripted first order (`order:` in `@change`) is dealt the moment its chapter is seen. Today a customer is picked at random by `minTier` and a
   good at random by tier. A villager needs a chapter gate and a scripted first arrival carrying a good
   `standGoodsAt(tier)` allows; chapter-keyed lines on existing villagers need a new data shape, since
   `lines` are fixed arrays.
 - **ENGINEERING, small — the lullaby's cut-off.** The flower's hum (`Sound.sing()`, three phrases on the
   ambience channel, heard by default — unlike the music, which ships off) is Gran's lullaby; doc 48
   already makes it the First Record's melody. Chapter V needs it to stop mid-phrase.
-- **ENGINEERING, small — the daily caps.** A saved counter keyed to `todayKey()`, per kind.
+- **BUILT 2026-09-27 (gate 2) — ENGINEERING, small — the daily caps.** `state.story.day`, rolled on `todayKey()`. A saved counter keyed to `todayKey()`, per kind.
 
 ### The rules every beat obeys — the records' laws (doc 49), applied to story
 

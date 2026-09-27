@@ -845,6 +845,91 @@ greeting, Legendary, unlock, Wonder — always speak. Bubbles clear after 2.4 s.
 If the player does nothing for 26 seconds the flower makes an idle remark, but never while a
 sheet is open.
 
+## The story — the narrative engine (2026-09-27)
+
+Volume one's words are [57-volume-one-script.md](57-volume-one-script.md); the why is
+[55-the-story-bible.md](55-the-story-bible.md). This section is the machine. **The engine decides WHAT
+plays and the UI decides only WHEN** — `game.js` owns every getter below, and no `ui-*` file ever picks
+a chapter, a line or a sliver.
+
+**The data.** `DATA.story` in `data.js` is two halves. The hand-authored half holds the caps, the
+scene's motion values, the bubble timings, the welcome-back absence, the expression-to-face map and
+the two voices who are not villagers (Mara's portrait row, Poppy). `DATA.story.script` is **generated**
+from doc 57 by `node tools/story-import.js`, which refuses — naming the doc's line — on any chunk it
+does not understand; `--check` exits 1 when `data.js` is stale, and the suite runs it. The writer's
+pass is therefore an edit to doc 57 and a re-run, never an edit to `data.js`. `DATA.story.draft: true`
+marks the words as the desk's draft and prints nothing.
+
+**What a chapter is.** Eight chapters, each one to three scenes of two faces trading lines, a title
+card (`@card`) before a scene, and — for Chapter I — a run of Poppy's bubble lines in the garden before
+its one scene. Four kinds of between-chapter beat ride Poppy's bubble instead: Chapter I's opening runs,
+a chapter's `.after` coda, **memory slivers** (m01–m20) and **story lines** (~90).
+
+**How the next scene is chosen — `Game.storyPending()`.** A pure read, never a queue:
+
+1. A chapter already begun resumes at `state.story.beat` (scene and line), whatever the day's count.
+2. Otherwise only the **first unseen chapter** is a candidate — strictly in order.
+3. **Chapter I is a latch:** owed once the first Turn has completed (`year.turnsCompleted ≥ 1`) *and*
+   its opening run has finished. `turnYear()` writes nothing to the story; the UI plays the scene the
+   first time it finds a quiet screen, which is after the ceremony sheet has shut (the `fallOpen()`
+   precedent). **No later Turn is ever a trigger.**
+4. Every other chapter needs Chapter I seen and `state.level ≥` its level. **Nothing but Chapter I
+   plays before Chapter I is seen.**
+5. A new chapter waits for the day's cap (one). Because it is a read of state, a save that crossed a
+   level offline — or before the story existed — finds its chapter owed: **never missable**.
+
+`storyAdvance()` records the line reached; `storyDismiss()` latches a scene, and on a chapter's last
+scene latches the chapter, counts it against the day, adds the villagers it brings to
+`state.story.arrived`, and deals its scripted order (below). A seen chapter never re-queues.
+
+**How the next bubble line is chosen — `Game.storyLine()`.** In this order:
+
+1. **Chapter I's opening chain**, before Chapter I is seen: `ch1.open` (on the first tap — *"Are you my
+   mama?"*), `ch1.hum` (Poppy hums `Sound.sing()` first), the teach intro, then one line per *kind* of
+   tutorial step — the first tap, planting (once `seen.intro`), a harvest, an upgrade — then
+   `ch1.ask`. Each waits for the one before it and for its own step to have begun. The tutorial is
+   being re-cut, so steps key to kinds, never to quest ids. Poppy's ordinary tap chatter is muted from
+   the opening to the ask (`storyMutesTap()`).
+2. A seen chapter's **`.after`** coda, once.
+3. The next **memory sliver** — by pointer (`state.story.sliver`), in order, never skipped — once its
+   window's chapter is seen and its level reached; one a day.
+4. The **newest story line** owed — the latest whose level is reached, after the last one played;
+   every older one is superseded forever. A line that names Holly (`?met:holly`) waits until she has
+   been met and a newer line plays past it. Two a day.
+
+`storySaid(id)` consumes a line only after the UI has drawn its last step — the `hollyIntro` rule.
+
+**Caps and levels — PROVISIONAL.** `DATA.story.caps` is one chapter, one sliver and two story lines
+per local day (`todayKey()`), counted in `state.story.day`. Chapter levels are doc 57's placeholders
+(II ~4, III ~8, IV ~14, V ~22, VI ~50, VII ~80, VIII ~110) until the tree spec places them. Sliver and
+line levels are spread evenly across their window by the importer — also until the spec places them.
+
+**Villagers by chapter.** Delphine (Chapter I), Theo (II), Julian (V) and Isolde (VI) are `CUSTOMERS`
+rows carrying `chapter`; `standPickCustomer()` leaves them out until that chapter is seen. Their pools
+live in the script, and `Game.customerLines(id, bucket)` merges a row's own lines, a story villager's
+pool and any chapter-keyed lines earned (Bram, Miss Marigold and Old Hollis after IV; Isolde's
+*before the Prize* lines retire at VIII). **A scripted first order** — `order:<villager>-<good>` in a
+chapter's `@change` — is queued in `state.story.orders` and dealt at once: an empty slot first,
+otherwise the most recently dealt order that cannot be delivered this minute; never over one that can.
+Its good is the script's when `standGoodsAt(tier)` allows it and any allowed good when not, and it is
+priced by the same `standBuildOrder()` as every order. Chapter I deals Delphine's Garden Handful;
+Chapter IV, Miss Marigold's show entry.
+
+**The welcome-back board.** After `DATA.story.welcomeAfter` away (three days), `reconcile()`'s report
+carries one line from the villager who arrived most recently — nothing more.
+
+**A Turn after the first** carries flavour, never story: `storyTurnLine()` returns one line for the
+stage the chapters have reached (toddler to III, child to VI, wry after).
+
+**The story pays nothing but the change.** No getter or latch here credits gold, gems, Prisms,
+reputation or packs, or touches the well's inputs (`lifetimeCoins`, `mintedBase`,
+`year.coinsEarned`); the suite plays the whole of volume one and asserts every one unchanged.
+
+**What is not built:** the order strip, the Stand's counter art and the rail's chapter ticks (the
+chapters' `strip:`/`counter:` changes ship as data the strip will read); the flower's birth from the
+tin; the record shelf (Chapter VIII's lullaby is a no-op); the Fall and Spring heroes (their beats are
+skipped by the importer and logged as pending); the hum's mid-phrase cut in Chapter V.
+
 ## The Apiary — prototype, slated for rework
 
 > **Decided 2026-08-14: this system is being folded into garden adjacency and will lose its dock

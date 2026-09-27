@@ -72,7 +72,16 @@ lost if the player clears site data.
   bestRarity: {},                 // seedId -> rarity key
   almanacClaimed: [],             // milestone `at` values already paid
   mastery: {},                    // seedId -> mastery tiers completed and paid
-  rarityCounts: {}                // seedId -> { rare, epic, legend } lifetime counts
+  rarityCounts: {},               // seedId -> { rare, epic, legend } lifetime counts
+  story: {                        // the narrative engine — see "state.story" below
+    seen: {},                     // 'ch1' | 'ch1.s1' | 'ch1.open' | 'ch3.after' -> true, latched forever
+    beat: null,                   // { chapter, scene, line } — where an unfinished chapter resumes
+    sliver: 0,                    // index of the next memory sliver (in order, never skipped)
+    lines: [],                    // story line ids already played ('l023')
+    day: { key: '', chapters: 0, slivers: 0, lines: 0 },   // today's counts against the caps
+    arrived: [],                  // villager ids, in the order their chapters brought them
+    orders: []                    // scripted first orders still owed: { villager, good|null }
+  }
 }
 ```
 
@@ -189,7 +198,7 @@ see [10-decision-log.md](10-decision-log.md).
 
 `Object.assign(state, defaultState(), parsed)` is shallow, so a legacy save missing `stats`
 entirely would leave that key absent and crash on first write. Each nested object is therefore
-re-merged over its defaults individually: `tap`, `stats`, `wonder`, `ads`, `prefs`, `seen`, `profile`,
+re-merged over its defaults individually: `tap`, `stats`, `wonder`, `ads`, `prefs`, `seen`, `profile`, `story`,
 `boostInv`, `discovered`, `bestRarity`, `mastery`, `rarityCounts`. `almanacClaimed` is copied as an array when
 present, else `[]`. `rarityCounts` is nested a second level — a missing seed key reads as
 `{ rare: 0, epic: 0, legend: 0 }` through `rarityCountsOf()`, which is the only thing that should
@@ -206,6 +215,26 @@ getter. A save with the key *absent* is not the case that needs the line either:
 above hands it the whole default. **The case is a PARTIAL object** — `{ impressions: 7 }` with no
 `today` and no `sessions` — which is what a hand-edited save, or one written by a newer build, looks
 like.
+
+### `state.story` — the narrative engine (added 2026-09-27)
+
+**Permanent.** A chapter seen is seen forever, a sliver played is never replayed, and after the first
+Turn no Turn is a story trigger — so the whole object is in bill 1's `SURVIVES` column and
+`turnYear()` never touches it (the suite runs a Turn with every field non-default and compares). The
+Settings reset starts it over, as it starts everything over. How each field is read is in
+[03-systems.md](03-systems.md#the-story--the-narrative-engine-2026-09-27).
+
+**Re-validated field by field in `load()` by `cleanStory()`**, because it is nested and the shallow
+assign replaced it wholesale — and because a PARTIAL object is the case the default alone cannot
+repair. `seen` keeps only `true` values; `beat` survives only if it names a real, unseen chapter and a
+scene inside it; `sliver` is clamped to the script's length; `lines` and `arrived` drop unknown ids
+and duplicates; `orders` drops unknown villagers and unknown goods; a missing `day` comes back zeroed.
+The suite writes a partial object to disk and reads the fields straight off `load()`, before any
+getter could repair them (the `state.ads` trap).
+
+**Nothing else is stored.** What is owed — the next scene, the next line — is never a queue; it is
+read fresh from these fields, the level and `year.turnsCompleted` every time, which is what makes a
+chapter never missable. `day` rolls on the same `todayKey()` the daily quest uses.
 
 ### `state.ads` — the rewarded-ad ledger (added 2026-09-03)
 

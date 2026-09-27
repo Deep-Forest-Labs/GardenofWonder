@@ -7,6 +7,10 @@ premise, the cast, the rules, the delivery. This document is the *what*: the wor
 The owner ruled on 2026-09-26 that the shipped words must pass as human; this is the desk's draft for
 that pass, not the pass itself (doc 55 §9 question 11).
 
+**The engine reads it (2026-09-27).** `node tools/story-import.js` parses this file into
+`DATA.story.script` in `data.js`; the words ship to the web lab behind `DATA.story.draft: true` so the
+machine can be judged, and the human pass is an edit here and a re-run — see *How to read this file*.
+
 **Who it is written for.** Women roughly **35–55**, the premise's audience and the lane's core (Gossip
 Harbor's players are 79% female, average age 32 — doc 55 §1). So: adult worries — money, family, an
 ex, starting again, a friend who talks too much — and no slang that dates it. Mara is mid-thirties, dry
@@ -55,6 +59,18 @@ MARA (think) [dry]: A talker, then.               ← (think) = the cloud bubble
   dialogue; their pass writes it.
 - **Placeholder levels.** Every `@level` is the bible's placeholder; the reputation curve is being
   rebalanced, and the spec places them.
+- **`order:<villager>-<good>`** in an `@change` is a scripted order the Stand deals once the chapter has
+  been seen — `order:delphine-handful` names the good by its id in `GOODS`; `order:marigold-entry` means
+  any good `standGoodsAt(tier)` allows. Added 2026-09-27 for the engine (it replaced Chapter I's prose
+  *"first order: Delphine, Garden Handful"*, which no parser could read without a name table).
+- **`#### ch1.turnask`** marks the ceremony's re-voiced ask line as its own chunk, so the importer never
+  has to guess which fence under `ch1.ask` is which. Added 2026-09-27, the same night.
+
+**The engine reads this file through `node tools/story-import.js`**, which parses every chunk above into
+`DATA.story.script` in `data.js` and **refuses** — exits non-zero, naming the line — on any fenced chunk,
+table row or list item it does not understand. The writer's pass is therefore an edit here and a re-run
+there. The words are the desk's draft behind `DATA.story.draft: true` (doc 55 §9 question 11): the flag
+prints nothing to a player, and the pass flips one word when the human words land.
 
 ---
 
@@ -64,7 +80,7 @@ MARA (think) [dry]: A talker, then.               ← (think) = the cloud bubble
 ### ch1 — The Seed Tin
 @level 1 → closes on the first Turn (a latch: Turns completed ≥ 1, scene not yet seen)
 @teaser Gran left you a garden. And a tin.
-@change strip:open · counter:1 (shutters up) · first order: Delphine, Garden Handful
+@change strip:open · counter:1 (shutters up) · order:delphine-handful (her first order, the Garden Handful)
 ```
 
 ### ch1.open — the seed (the flower's bubble, before any scene)
@@ -118,6 +134,7 @@ MARA (chip): Then we'll open it.
 question 17, the owner's call; code and doc 32 change together):
 
 ```
+#### ch1.turnask · the ceremony's ask line
 POPPY (bubble) [curious]: The Year's turning. Shall we keep it?
 ```
 

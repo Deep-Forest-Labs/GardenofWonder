@@ -5,6 +5,58 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (overnight, gate 2 of 4) — The narrative engine: a read, never a queue; doc 57 imported, never hand-copied
+
+**The engine decides what plays; the UI will decide only when.** `game.js` gains `storyPending()` (the
+next scene), `storyLine()` (the next bubble line), `storyAdvance()`, `storyDismiss()`, `storySaid()`,
+`storyArrived()` and `customerLines()`. None of them stores a queue: what is owed is read fresh from
+`state.story`, the level and `year.turnsCompleted`, which is how a chapter is never missable — a save
+that crossed a level offline, or before the story existed, simply finds it owed. The laws are in doc 03,
+*The story*; the state in doc 07.
+
+**Doc 57 is the data, through a tool.** `tools/story-import.js` parses the script into
+`DATA.story.script` and refuses on any chunk it does not understand; the suite runs its `--check`, so
+a hand edit to the generated block goes red. Two tags were added to doc 57 so the parser never guesses:
+`order:<villager>-<good>` (Chapter I's prose *"first order: Delphine, Garden Handful"* could not be read
+without a name table) and `#### ch1.turnask` (two fences under one heading). Both are in its *How to
+read* section.
+
+**Chapter I's act break is a latch, not an event.** It is owed once `turnsCompleted ≥ 1` and the
+opening run has finished; `turnYear()` writes nothing (asserted by comparing the story before and after
+a real Turn), and the UI will play it at the first quiet screen, which is after the ceremony has shut —
+the `fallOpen()` precedent doc 55 §4 names. Every later chapter keys to the level alone, so no later
+Turn can fire one.
+
+**Decisions made in the dark, each PROVISIONAL, each filed for the morning with its reversal:**
+- **The opening chain keys to kinds of step**: the first tap owes *"Are you my mama?"*, planting's line
+  waits for `seen.intro`, harvest's for a harvest, upgrade's for an upgrade (or a Turn), and the act
+  break waits for the ask. *Reversal:* the `ready()` column of `CH1_CHAIN` in `game.js`.
+- **Sliver and line levels are spread evenly across their window by the importer** (m01 at level 1, the
+  rest from each window's opening level + 1). *Reversal:* the spec places them; the importer's
+  `spread()` is one function.
+- **A scripted first order takes an empty slot, else the newest order that cannot be delivered now** —
+  never one that can. After the first Turn all three are seconds old. *Reversal:* queue only, and wait
+  for a slot to free (one line in `storyDealOrders()`).
+- **`.after` codas and Chapter I's runs are not capped**; only slivers (one) and story lines (two) are.
+- **Chapter-keyed villager lines join `greet` and `waiting`, never `delivered`.**
+- **Wren's welcome-back line is authored but unreachable**: the board speaks for the villager who most
+  recently *arrived*, and Wren is an existing customer, never an arrival. Flagged, not invented around.
+
+**Sabotaged, all red** (doc 10's 2026-09-03 lesson): a latch that never writes `seen`; a cap reset by the
+load; a Turn that sets the beat; the highest chapter the level allows instead of the first unseen; a
+sweep that steps past Chapter I while its latch is unmet; a chapter that credits one gold; customers
+with no chapter gate; the newest sliver instead of the pointer; `load()` without the story's merge line.
+One stays green by design and says so in its comment: the bubble path is guarded twice, so removing
+either guard alone leaks nothing.
+
+**Rejected:** storing a pending queue (it is the one shape that can miss a chapter); a separate
+`story.js` file for the generated script (a new file must join `CORE`, `index.html` and the suite's
+loader — a marked block in `data.js` needs none of that); hand-copying doc 57 into `data.js` (the
+writer's pass would then be two edits that can drift); changing `turnYear()` to fill one slot for
+Delphine (doc 55 §6 asks for it, but it is the order strip's FTUE conversion, not this build, and
+`turnYear()` is atomic on purpose — the scripted order reaches the counter from `storyDismiss()`
+instead).
+
 ## 2026-09-27 (overnight, gate 1 of 4) — The chapter scene's spike lands first: layout before code, feel on sliders
 
 **`tools/scene-spike.html` is committed before any engine or UI code**, so the record shows the layout
