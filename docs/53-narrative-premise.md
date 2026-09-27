@@ -11,6 +11,12 @@ our audience."* The original `.docx` stays on the owner's machine; this is its t
 the design desk's read at the end. The story bible that turns this into chapters is a separate,
 critic-tested document.
 
+**Before briefing that bible, read [54-the-story-flow.md](54-the-story-flow.md).** It carries the
+first-session flow as it was ruled on 2026-09-26 — after this document was written — and it
+**corrects one rule below**: §"How story is delivered" says bloom cycles carry no story weight, and
+that is no longer true of the *first* Turn, which is now the tutorial's climax and the moment the
+store reopens.
+
 ---
 
 ## The one-pager, verbatim
