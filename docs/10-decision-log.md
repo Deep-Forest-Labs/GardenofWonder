@@ -5,6 +5,28 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (naming, the owner's word) — The flower is **Poppy**
+
+The premise's working name, **Wonder**, collided twice: with the **Wonder Effect** (the game's own
+jackpot moment) and with the game's title. The desk offered five names inside the register **Holly**
+already established — a real plant wearing a real woman's name, with a personality implied by the
+plant itself. **Wren was rejected by the owner**, and the desk's read of why: Wren is only a person's
+name, with no plant underneath, so it sits outside Holly's register rather than beside it.
+
+Offered: **Poppy**, Briar, Rue, Bryony, Sorrel — all verified free in the codebase (Fern, Willow,
+Hazel and Ivy each collide with existing content). **The owner chose Poppy**, the desk's
+recommendation.
+
+**Why it was recommended:** the poppy is the flower of *remembrance*, and the plant's central mystery
+is that it holds memories that are not its own — Gran's kitchen, a lullaby, a woman's hands. The name
+does narrative work before a line of dialogue is written, which none of the others do for free. It
+also reads bright and childlike for the toddler-curious opening, and sits against Holly like two
+different seasons of the same garden.
+
+**Scope:** doc 53 keeps the owner's one-pager verbatim, with a header note that "Wonder" is read as
+"Poppy"; doc 54's open question is closed. **Still open:** whether Holly is the same plant in winter,
+a sibling from the same seed tin, or a separate character.
+
 ## 2026-09-26 (rulings, spike v2 reviewed) — The trunk goes Prisms-only; the rail loses its numbers; orders take Gossip Harbor's shape
 
 **The owner judged `tools/tree-spike.html` v2 by eye**, against a Monopoly Go screen recording and

@@ -11,6 +11,9 @@ our audience."* The original `.docx` stays on the owner's machine; this is its t
 the design desk's read at the end. The story bible that turns this into chapters is a separate,
 critic-tested document.
 
+**The flower is named POPPY** (ruled 2026-09-26). Everywhere the one-pager below says "Wonder",
+read "Poppy" — the premise text is kept verbatim as received and is not edited to match.
+
 **Before briefing that bible, read [54-the-story-flow.md](54-the-story-flow.md).** It carries the
 first-session flow as it was ruled on 2026-09-26 — after this document was written — and it
 **corrects one rule below**: §"How story is delivered" says bloom cycles carry no story weight, and

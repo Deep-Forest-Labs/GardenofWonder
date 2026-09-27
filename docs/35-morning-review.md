@@ -1,4 +1,85 @@
-# The Morning Review — the Surface run, overnight 2026-08-29
+# The Morning Review — the rolling file
+
+**Newest run at the top.** Each section is one unattended stretch: what was chosen, why, what
+changing it costs, and the questions that could not be answered alone. Notes on any of it are
+**accepted rework**.
+
+---
+
+# 2026-09-27 — the Prism economy, and what the night did NOT decide
+
+**The standing rule this file exists for: never economy numbers in the dark.** The owner went to bed
+having ruled the trunk **Prisms-only** and having said he eventually wants to **sell Prisms** in
+starter packs. Both are large economic moves. Nothing below was decided overnight; it is the
+question set, each option priced, so the morning conversation starts warm.
+
+## What was done while you slept
+
+- **Poppy** logged as the flower's name, doc 53 noted, doc 54's open question closed.
+- **The five v2 critiques** folded into doc 52's third REVISED block and the decision log.
+- **Trunk spike v3** dispatched with those five changes — layout only, no economy numbers.
+- **The lawn wireframe** (`tools/lawn-spike.html`) — three approaches plus the creature question.
+
+## The one thing that blocks everything else
+
+**Prisms now buy flowers, perk stars, access rights, lawn spots and creature reveals — and the only
+faucets are the Turn's mint and a deliberately tiny Almanac trickle.** Doc 33 puts the economy's
+entire spread in the flower unlock ladder, so that spread has just moved into the currency that
+never resets. **No curve — level, trunk, or Turn — can be authored until the faucet is sized.**
+This is the first conversation of the morning, not the fourth.
+
+## §1 — Where do Prisms come from now?
+
+Today the mint is `totalMintable = DATA.year.mintK × sqrt(lifetimeCoins)`, scooped at the Turn.
+
+- **(a) Mint more per Turn** — raise `mintK`. Cheapest, one constant. Cost: it scales everything
+  already priced in Prisms at once, including petals, so every existing price re-derives.
+- **(b) Turn more often** — the first-Turn gate already moves early; let the standing gate fall too.
+  Cost: data.js's comment says the coins floor is what keeps many-cheap-Turns-a-day unprofitable.
+  Lowering it globally reopens exactly that exploit.
+- **(c) A third faucet** — something in the year pays Prisms directly. Cost: Prism scarcity is what
+  makes the Turn the pillar, and this morning's Almanac trickle was already the first crack in it.
+- *Desk leans (a) plus a re-derived ladder, precisely because it keeps the faucet single.*
+
+## §2 — "Flowers might be too cheap"
+
+The owner's own read, and the ladder is `unlockBase × unlockRatio^n` with data.js warning to tune
+the ratio **last** — a x1.6 ratio already failed the full sim once (doc 33). Before re-pricing, the
+question is what "too cheap" is measured in: **sessions to the next flower**, or **Turns to the next
+flower**? Those give different ladders, and the second one only becomes meaningful now that flowers
+are bought in Prisms. *No number proposed — this is the rule against dark economy work.*
+
+## §3 — What is gold for now?
+
+Gold just lost its largest sink. It still buys the shop and the upgrades that wipe at the Turn, but
+that is a much smaller job than it had this morning. The owner floated **other gardens** and
+**higher-costing flowers**. Note that "other gardens" is **new scope**, not a re-balance — it wants
+its own conversation before it is priced into this one.
+
+## §4 — Selling Prisms: the sharpest question in the file
+
+The owner wants starter packs. The standing posture is **"accelerates, never gates."** Two collisions
+worth resolving deliberately rather than by default:
+
+1. **If Prisms are the only way to unlock flowers, Prisms gate content.** A sold currency that
+   accelerates is fine by the posture; a sold currency that is the sole key to content is closer to
+   a paywall. The reconciliation probably exists — flowers stay reachable by play, packs only make it
+   sooner — but it has to be stated, because the Prisms-only ruling removed the gold path that used
+   to make it automatically true.
+2. **Poppy must never wear the purchase prompt.** Doc 53's hard rule is that the flower never appears
+   in a purchase prompt, and doc 37 keeps the store off her face. But the trunk is now both the story
+   spine *and* the place Prisms are spent. Whoever builds the trunk's store surface has to keep Poppy
+   off it, and that is easy to get wrong precisely because she is the tutorial voice.
+
+## §5 — Order of operations, if you want one
+
+1. Pick the faucet shape (§1). 2. Re-derive the unlock ladder in Prisms (§2). 3. Then, and only then,
+the level curve and the trunk's 120 rungs. 4. Gold's new job (§3) and packs (§4) can run in parallel
+with 3, but not before 1.
+
+---
+
+# The Surface run, overnight 2026-08-29
 
 **What this file is.** The owner asked for phases 2 and 3 in one unattended session and accepted the
 trade that names it: the wireframe gate's approval step moved to the morning. So every decision the

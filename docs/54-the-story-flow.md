@@ -132,9 +132,12 @@ Non-negotiable. Doc 53's guardrails all still apply; these are the ones the flow
 
 Do not resolve these in the bible; flag them and write around them.
 
-- **The flower's name.** "Wonder" collides with the Wonder Effect (the game's jackpot moment) and
-  with the title. It needs its own name. Related: **Holly**, Winter's hero flower, already exists
-  with a voice — same plant in winter, a sibling from the same tin, or a separate character?
+- ~~**The flower's name.**~~ **RULED 2026-09-26: the flower is POPPY.** "Wonder" collided with the
+  Wonder Effect (the game's jackpot moment) and with the title. Poppy is the flower of
+  *remembrance*, which is the plant's whole mystery — it holds memories that are not its own — so
+  the name does narrative work before a line is written. Write "Poppy" everywhere the premise says
+  "Wonder". **Still open:** **Holly**, Winter's hero flower, already exists with her own voice —
+  same plant in winter, a sibling from the same tin, or a separate character?
 - **Mara as a named lead.** Today the flower talks to *you*, an unnamed gardener. A named lead suits
   the lane, but it re-reads every existing flower line and needs a dialogue surface that does not
   exist yet.
