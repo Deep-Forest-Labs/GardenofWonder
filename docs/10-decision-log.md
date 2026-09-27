@@ -5,6 +5,35 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (overnight, gate 1 of 4) — The chapter scene's spike lands first: layout before code, feel on sliders
+
+**`tools/scene-spike.html` is committed before any engine or UI code**, so the record shows the layout
+preceded the build (doc 34's wireframe gate; the approval step is deferred to the morning for this run,
+as doc 35's overnight form allows). It plays Chapter I's act break verbatim from doc 57 — Gran's note,
+Delphine, Poppy's one line, Mara's dry answer and her thought — at 390×844, with a frame strip of every
+state (the veil and first lines, four stacked, the reply chip in the garden, the thought and Continue,
+the title card, reduced motion) and **the motion gate**: seven sliders driving a live run. The
+pre-decided values ship as `DATA.story.motion` in gate 3 (slide 180 ms, push 220, overshoot 6%, pop
+160, cloud 260, fast-forward 6 lines a second, tap-to-complete off), and the spike reads them from
+`../data.js` when they exist, so it always opens on what the game is playing.
+
+**Motion is Web Animations, never a keyframe the state depends on.** Every row is written in its final
+state and the animation plays *toward* it; a tap calls `finish()` on everything running and lands the
+next line in the same instant. A frozen animation clock therefore shows a finished scene, and reduced
+motion simply skips the animations (the CSS clamp cannot reach `element.animate()`, so the substitute is
+written in the script, not in a media block).
+
+**Five layout calls, each filed for the morning with its reversal** (the spike's own question list):
+portraits ride every row, chat-style, rather than two fixed faces at the foot; Poppy takes the other
+side for her line in a villager's scene; the reply chips sit under the board, not under Poppy's bubble,
+which would cover her face; tap-to-complete ships off, because on it spends a fast tapper's tap; the
+title card passes on a tap, never on a timer.
+
+**Rejected:** building the scene straight into the game without the spike (feel is the whole ask, and
+the motion gate is how every feel decision here has been tuned); CSS keyframes for the tap-through (a
+keyframe cannot be finished on demand, so a fast tap would either wait or skip a frame); and a timed
+title card (a timer is a wait).
+
 ## 2026-09-27 (story) — Volume one's script drafted: every line, in the engine's chunks, for the writer's pass
 
 **Filed: [57-volume-one-script.md](57-volume-one-script.md) — a draft script for the human writer's pass,

@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The chapter scene — wireframe spike and motion gate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   scene-spike.html — the wireframe gate AND the motion gate for
+   the chapter scene (docs/55 §6, docs/57, the late 2026-09-26
+   story entry in docs/10: the Gossip Harbor shape, in words).
+
+   Static. No game code: no game.js, no ui-*.js, no customers.js.
+   The one file it reads is ../data.js, and only for
+   DATA.story.motion — so once the engine ships, the sliders open
+   on the values the game is actually playing. Without data.js
+   (or before DATA.story exists) it falls back to the pre-decided
+   defaults written below, which are the same numbers.
+
+   The tokens and the material are COPIED from style.css on
+   purpose: a layout judged at the wrong proportions is not
+   judged at all.
+   ========================================================= */
+
+:root{
+  --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+  --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad;
+  --paper-dim:#ebe5d9; --paper-dim-2:#d8d0c0;
+  --grass:#5cc45c; --grass-d:#3f9d45; --grass-l:#8fe08a;
+  --soil:#a9713f; --soil-d:#7d4f2a;
+  --coin:#ffc93c; --coin-d:#f08c00;
+  --sky1:#7ec8f2; --sky2:#bfe9ff; --sky3:#e9f8ff;
+  --r-lg:26px; --r-md:18px; --r-sm:12px;
+  --sat:0px; --sab:0px;
+  --font:'Baloo 2', ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#efe4cf;color:var(--ink);font-family:var(--font)}
+body{padding:18px 14px 60px}
+h1{font-size:24px;margin:0 0 4px;font-weight:800}
+h2{font-size:17px;margin:26px 0 8px;font-weight:800}
+p{margin:0 0 10px;line-height:1.4;font-weight:600;font-size:14px;max-width:760px}
+.lead{color:var(--ink-2)}
+.flag{display:inline-block;background:var(--coin);border:2px solid var(--ink);border-radius:999px;padding:0 9px;font-size:12px;font-weight:800;margin-right:6px}
+
+/* ---------- the phone ---------- */
+.row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+.phone-wrap{display:grid;gap:6px;justify-items:center}
+.phone-cap{font-size:12.5px;font-weight:800;color:var(--ink-2);text-align:center;max-width:390px;line-height:1.3}
+.phone{
+  position:relative;width:390px;height:844px;overflow:hidden;
+  border:4px solid var(--ink);border-radius:34px;background:var(--grass);
+  box-shadow:0 5px 0 var(--ink-2);
+}
+.phone.mini{transform:scale(.5);transform-origin:0 0;margin:0 -195px -422px 0}
+.mini-box{width:195px;height:422px}
+
+/* A stand-in garden, only so the veil has something to blur. */
+.garden{position:absolute;inset:0;background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 28%,var(--grass-l) 29%,var(--grass) 60%,var(--grass-d) 100%)}
+.garden .hud{position:absolute;left:10px;right:10px;top:12px;height:44px;display:flex;gap:8px}
+.garden .hud i{flex:1;border:3px solid var(--ink);border-radius:999px;background:var(--paper)}
+.garden .board{position:absolute;left:24px;right:24px;top:240px;aspect-ratio:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.garden .board i{border:3px solid var(--ink);border-radius:var(--r-md);background:var(--soil)}
+.garden .board i.c{background:var(--coin);border-radius:50%}
+.garden .dock{position:absolute;left:10px;right:10px;bottom:14px;height:64px;border:3px solid var(--ink);border-radius:var(--r-lg);background:var(--paper-2)}
+
+/* =========================================================
+   THE SCENE — this block is the proposal for style.css.
+   ========================================================= */
+.story{
+  position:absolute;inset:0;z-index:92;
+  display:grid;grid-template-rows:auto 1fr auto;
+  /* The news dialog's own dim and blur, reused rather than invented. */
+  background:rgba(30,18,10,.5);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  padding:calc(var(--sat) + 12px) 12px calc(var(--sab) + 16px);
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+.story-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;min-height:48px}
+.story-ff{
+  width:48px;height:48px;border-radius:50%;
+  border:3px solid var(--ink);background:var(--paper);
+  box-shadow:0 4px 0 var(--ink-2);
+  display:grid;place-items:center;cursor:pointer;padding:0;
+}
+.story-ff svg{width:24px;height:24px}
+.story-ff[aria-pressed="true"]{background:var(--coin)}
+
+/* The stack: rows bottom-anchored in a clipped box, the oldest fading off the
+   top edge. Three or four whole rows are visible at 390x844. */
+.story-stack-wrap{
+  position:relative;overflow:hidden;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,rgba(0,0,0,1) 72px);
+  mask-image:linear-gradient(180deg,transparent 0,rgba(0,0,0,1) 72px);
+}
+.story-stack{
+  position:absolute;left:0;right:0;bottom:0;
+  display:flex;flex-direction:column;gap:12px;padding-bottom:6px;
+}
+.st-row{display:flex;align-items:flex-end;gap:8px}
+.st-row.them{flex-direction:row-reverse}
+.st-face{position:relative;flex:0 0 64px;width:64px;height:64px;margin-bottom:10px}
+.st-face .disc{
+  width:64px;height:64px;border-radius:50%;overflow:hidden;
+  border:3.5px solid var(--ink);background:var(--paper-3);
+  box-shadow:0 3px 0 var(--ink-2);
+  display:grid;place-items:center;font-weight:800;font-size:22px;
+}
+.st-row.them .st-face .disc{background:var(--paper)}
+.st-face .tag{
+  position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);
+  background:var(--ink);color:var(--paper);border-radius:999px;
+  font-size:11px;font-weight:800;line-height:1;padding:4px 8px 3px;white-space:nowrap;
+}
+.st-bubble{
+  position:relative;max-width:calc(100% - 84px);
+  padding:9px 13px 10px;border:3px solid var(--ink);border-radius:var(--r-md);
+  font-size:16px;font-weight:700;line-height:1.28;
+  box-shadow:0 4px 0 var(--ink-2);
+}
+/* Mara's own colour, and a second one for whoever she is talking to. */
+.st-row.mara .st-bubble{background:var(--paper-3);border-bottom-left-radius:6px}
+.st-row.them .st-bubble{background:var(--paper);border-bottom-right-radius:6px}
+/* Her thought: the same row, a cloud instead of a bubble — rounder, dashed,
+   with the two little puffs that point back at her portrait. */
+.st-row.think .st-bubble{
+  background:var(--paper);border-style:dashed;border-radius:28px;
+  font-style:italic;font-weight:700;
+}
+.st-row.think .st-bubble::before,.st-row.think .st-bubble::after{
+  content:'';position:absolute;border:3px solid var(--ink);border-radius:50%;background:var(--paper)
+}
+.st-row.think .st-bubble::before{width:14px;height:14px;left:-12px;bottom:4px}
+.st-row.think .st-bubble::after{width:8px;height:8px;left:-22px;bottom:-2px}
+/* Gran's note: no portrait, the handwriting centred on paper. */
+.st-row.note{justify-content:center}
+.st-row.note .st-bubble{
+  max-width:92%;background:var(--paper-2);border-radius:6px;
+  font-style:italic;text-align:center;color:var(--ink-2);
+}
+
+.story-foot{display:grid;justify-items:center;gap:8px;min-height:74px;align-content:end}
+.story-hint{color:var(--paper);font-size:13px;font-weight:800;opacity:.85}
+.story-go{
+  font:inherit;font-size:19px;font-weight:800;
+  padding:10px 34px;border:4px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#8fe08a,var(--grass));color:var(--ink);
+  box-shadow:0 4px 0 var(--ink-2);cursor:pointer;
+}
+.story-go[hidden]{display:none}
+
+/* The title card: the whole screen, the words, and a stand-in for Mara's
+   full-length art until the owner supplies it. */
+.story-card{
+  position:absolute;inset:0;z-index:2;display:grid;place-items:center;align-content:center;gap:16px;
+  background:linear-gradient(180deg,var(--paper) 0%,var(--paper-2) 70%,var(--paper-3) 100%);
+}
+.story-card[hidden]{display:none}
+.story-card h3{margin:0;font-size:30px;font-weight:800;text-align:center;padding:0 24px}
+.story-card .sil{width:120px;height:260px}
+.story-card small{font-size:13px;font-weight:800;color:var(--ink-soft)}
+
+/* Poppy's bubble in the garden, and Mara's reply chips beneath the board. */
+.speech{
+  position:absolute;left:50%;top:282px;transform:translateX(-50%);
+  background:var(--paper);border:3px solid var(--ink);border-radius:16px;
+  padding:6px 11px;font-size:13px;font-weight:800;line-height:1.2;
+  width:max-content;max-width:240px;text-align:center;
+  box-shadow:0 4px 0 var(--ink-2);z-index:3
+}
+.chips{position:absolute;left:12px;right:12px;top:600px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;z-index:3}
+.chip{
+  font:inherit;font-size:15px;font-weight:800;padding:8px 14px;
+  border:3px solid var(--ink);border-radius:999px;background:var(--paper-3);
+  box-shadow:0 4px 0 var(--ink-2);
+}
+.chip::before{content:'Mara: ';color:var(--ink-soft);font-weight:700}
+
+/* ---------- the motion panel ---------- */
+.gate{display:grid;grid-template-columns:390px minmax(280px,480px);gap:22px;align-items:start}
+@media (max-width:900px){.gate{grid-template-columns:1fr}}
+.panel{border:3px solid var(--ink);border-radius:18px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 4px 0 var(--ink-2);padding:12px 14px}
+.knob{display:grid;grid-template-columns:minmax(120px,1fr) minmax(140px,2fr) 64px;align-items:center;gap:10px;padding:5px 0}
+.knob + .knob{border-top:1.5px dashed rgba(44,26,16,.14)}
+.knob label{font-size:13px;font-weight:800;line-height:1.2}
+.knob label small{display:block;font-size:11px;font-weight:600;color:var(--ink-soft)}
+.knob input{width:100%}
+.knob .val{font-size:13px;font-weight:800;text-align:right}
+.knob[data-dirty="1"] .val{color:var(--coin-d)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.btn{font:inherit;font-weight:800;font-size:14px;padding:7px 14px;border:3px solid var(--ink);border-radius:999px;background:var(--paper);box-shadow:0 3px 0 var(--ink-2);cursor:pointer}
+.btn.go{background:var(--grass-l)}
+pre{background:var(--paper);border:2px dashed var(--ink-soft);border-radius:12px;padding:10px;font-size:12.5px;white-space:pre-wrap;margin:8px 0 0}
+.q{border-left:5px solid var(--coin);padding:6px 10px;margin:8px 0;background:var(--paper);border-radius:0 10px 10px 0;font-size:13.5px;font-weight:600;max-width:760px}
+</style>
+</head>
+<body>
+
+<h1>The chapter scene — wireframe spike and motion gate</h1>
+<p class="lead"><span class="flag">PROVISIONAL</span>Chapter I's act break, word for word from docs/57 (§7 of docs/55),
+in the lane's two-face shape. <b>The seven motion values below are the owner's to tune; whatever the sliders say when
+you press "Copy values" is what ships, verbatim, into <code>DATA.story.motion</code> in data.js.</b> The game reads
+them from there and so does this page, so after the build lands the sliders open on the numbers the game is playing.</p>
+<p>Tap anywhere on the live phone to land the next line. Fast-forward is top right. Nothing ever waits on an animation:
+a tap during a slide finishes it and (unless "tap-to-complete" is on) lands the next line in the same instant.</p>
+
+<h2>The motion gate — play the scene</h2>
+<div class="gate">
+  <div class="phone-wrap">
+    <div class="phone" id="live"></div>
+    <div class="phone-cap">Live: the act break, 390×844. Tap to advance.</div>
+  </div>
+  <div>
+    <div class="panel">
+      <div id="knobs"></div>
+      <div class="btns">
+        <button class="btn go" id="play" type="button">Play the scene</button>
+        <button class="btn" id="reset" type="button">Reset to shipped</button>
+        <button class="btn" id="calm" type="button" aria-pressed="false">Reduced motion: off</button>
+        <button class="btn" id="copy" type="button">Copy values</button>
+      </div>
+      <pre id="out"></pre>
+    </div>
+    <div class="q"><b>Where the values come from.</b> <span id="src"></span></div>
+  </div>
+</div>
+
+<h2>The frame strip</h2>
+<div class="row" id="strip"></div>
+
+<h2>The questions this spike puts to the morning</h2>
+<div class="q"><b>1. The portraits sit beside every bubble, chat-style,</b> rather than two fixed portraits at the
+foot of the screen. Each row carries its speaker's face in that line's expression, so a swap reads as the face
+changing mid-conversation. Reversal: fixed portraits at the foot, bubbles only in the stack.</div>
+<div class="q"><b>2. Poppy in a villager's scene takes the other side for her line.</b> Chapter I's scene is Mara and
+Delphine, and Poppy speaks once; her line wears her own face on Delphine's side. Reversal: a third, smaller portrait.</div>
+<div class="q"><b>3. The reply chips sit under the board, not under the bubble.</b> Under the bubble is on top of
+Poppy's face. Reversal: one number in the scene's CSS.</div>
+<div class="q"><b>4. Tap-to-complete ships OFF.</b> On, a fast tapper's second tap is spent finishing a slide; off,
+every tap lands a line. The owner's standard is "never waits on an animation".</div>
+<div class="q"><b>5. The title card is tap-to-pass,</b> not timed: a timed card is a wait.</div>
+
+<script src="../data.js" onerror="void 0"></script>
+<script>
+/* The pre-decided defaults (the brief, 2026-09-27), and the same numbers
+   DATA.story.motion ships. Read from data.js when it has them. */
+const FALLBACK = { slideMs: 180, pushMs: 220, overshoot: 6, popMs: 160, cloudMs: 260, ffLinesPerSec: 6, tapCompletes: 0 };
+const shipped = (typeof DATA !== 'undefined' && DATA.story && DATA.story.motion) ? DATA.story.motion : null;
+const DEFAULTS = Object.assign({}, FALLBACK, shipped || {});
+const M = Object.assign({}, DEFAULTS);
+document.getElementById('src').textContent = shipped
+  ? 'Read from DATA.story.motion in ../data.js — the values the game is playing.'
+  : 'data.js has no DATA.story.motion yet, so these are the pre-decided defaults from the brief.';
+
+const KNOBS = [
+  { k: 'slideMs', label: 'Bubble slide-in', note: 'a new line arriving from its speaker\'s side', min: 0, max: 600, step: 10, unit: 'ms' },
+  { k: 'pushMs', label: 'Stack push', note: 'the older lines moving up to make room', min: 0, max: 600, step: 10, unit: 'ms' },
+  { k: 'overshoot', label: 'Overshoot', note: 'how far the push passes its mark and settles', min: 0, max: 20, step: 1, unit: '%' },
+  { k: 'popMs', label: 'Portrait pop', note: 'the face swapping to this line\'s expression', min: 0, max: 500, step: 10, unit: 'ms' },
+  { k: 'cloudMs', label: 'Thought cloud in', note: 'Mara\'s private thought, the scene\'s last line', min: 0, max: 800, step: 10, unit: 'ms' },
+  { k: 'ffLinesPerSec', label: 'Fast-forward', note: 'lines a second while fast-forward is held on', min: 1, max: 20, step: 1, unit: '/s' },
+  { k: 'tapCompletes', label: 'Tap-to-complete', note: '1 = a tap during a slide only finishes it', min: 0, max: 1, step: 1, unit: '' }
+];
+
+/* ---------- the script: Chapter I's act break, docs/57 verbatim ---------- */
+const CARD = 'The Year is kept';
+const LINES = [
+  { who: 'note', text: 'A garden’s Year isn’t a calendar’s. If it’s still growing, it’s yours.' },
+  { who: 'note', text: 'Ring the bell. And don’t sell it — not even to family. — O.' },
+  { who: 'delphine', mood: 'happy', text: 'You’ve opened! I’m Delphine, next door. Surprise me — I’m not fussy.' },
+  { who: 'delphine', mood: 'sly', text: 'I’m very fussy.' },
+  { who: 'poppy', mood: 'surprised', text: 'A person! Mara, a person!' },
+  { who: 'delphine', mood: 'curious', text: 'Who are you talking to, love?' },
+  { who: 'mara', mood: 'dry', text: '...The garden.' },
+  { who: 'delphine', mood: 'laugh', text: 'Well. It’s humming back.' },
+  { who: 'mara', mood: 'dry', think: true, text: 'Not even family. Noted.' }
+];
+const NAMES = { mara: 'Mara', delphine: 'Delphine', poppy: 'Poppy' };
+const INITIAL = { mara: 'M', delphine: 'D', poppy: '✿' };
+
+const FF_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5v13l8.5-6.5zM12 5.5v13l8.5-6.5z" fill="#2c1a10" stroke="#2c1a10" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+const SIL = '<svg class="sil" viewBox="0 0 120 260" aria-hidden="true"><g fill="#5a3a1f" opacity=".28"><circle cx="60" cy="38" r="26"/><path d="M28 250 L34 120 C36 84 46 70 60 70 C74 70 84 84 86 120 L92 250 Z"/></g></svg>';
+
+function garden() {
+  return `<div class="garden"><div class="hud"><i></i><i></i><i></i></div>
+    <div class="board"><i></i><i></i><i></i><i></i><i class="c"></i><i></i><i></i><i></i><i></i></div>
+    <div class="dock"></div></div>`;
+}
+function rowHtml(l) {
+  if (l.who === 'note') return `<div class="st-row note"><div class="st-bubble">${l.text}</div></div>`;
+  const side = l.who === 'mara' ? 'mara' : 'them';
+  return `<div class="st-row ${side}${l.think ? ' think' : ''}" data-mood="${l.mood || ''}">
+    <div class="st-face"><div class="disc">${INITIAL[l.who]}</div><span class="tag">${NAMES[l.who]}</span></div>
+    <div class="st-bubble">${l.text}</div></div>`;
+}
+function sceneHtml(opts) {
+  return `${garden()}<div class="story">
+    <div class="story-top"><button class="story-ff" type="button" aria-label="Fast-forward" aria-pressed="false">${FF_ICON}</button></div>
+    <div class="story-stack-wrap"><div class="story-stack">${(opts.rows || []).map(rowHtml).join('')}</div></div>
+    <div class="story-foot"><span class="story-hint"${opts.done ? ' hidden' : ''}>Tap to continue</span>
+      <button class="story-go" type="button"${opts.done ? '' : ' hidden'}>Continue</button></div>
+    <div class="story-card"${opts.card ? '' : ' hidden'}>${SIL}<h3>${opts.card || ''}</h3><small>Tap to begin</small></div>
+  </div>`;
+}
+
+/* ---------- the live player ---------- */
+const live = document.getElementById('live');
+let idx = -1;         /* -1 = on the title card */
+let ffTimer = null;
+let calm = false;
+let running = [];
+
+function prefersCalm() { return calm || matchMedia('(prefers-reduced-motion: reduce)').matches; }
+function finishAll() { running.forEach((a) => { try { a.finish(); } catch (e) { /* gone */ } }); running = []; }
+function animate(node, frames, ms, easing) {
+  if (prefersCalm() || !(ms > 0) || !node.animate) return null;
+  const a = node.animate(frames, { duration: ms, easing: easing || 'cubic-bezier(.2,.7,.3,1)' });
+  running.push(a);
+  a.onfinish = () => { running = running.filter((x) => x !== a); };
+  return a;
+}
+
+function play() {
+  finishAll(); stopFf();
+  idx = -1;
+  live.innerHTML = sceneHtml({ card: CARD });
+  wire();
+}
+function wire() {
+  const story = live.querySelector('.story');
+  story.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.story-ff')) { toggleFf(); return; }
+    if (e.target.closest('.story-go')) { play(); return; }
+    advance();
+  });
+}
+function advance() {
+  const story = live.querySelector('.story');
+  const card = story.querySelector('.story-card');
+  if (idx === -1) { card.hidden = true; idx = 0; land(); return; }
+  if (M.tapCompletes && running.length) { finishAll(); return; }
+  finishAll();
+  if (idx >= LINES.length) return;
+  land();
+}
+function land() {
+  const story = live.querySelector('.story');
+  const stack = story.querySelector('.story-stack');
+  const l = LINES[idx];
+  idx += 1;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = rowHtml(l);
+  const row = tmp.firstElementChild;
+  stack.appendChild(row);
+  while (stack.children.length > 6) stack.removeChild(stack.firstElementChild);
+  const h = row.getBoundingClientRect().height + 12;
+  const os = -h * (M.overshoot / 100);
+  animate(stack, [{ transform: `translateY(${h}px)` }, { transform: `translateY(${os}px)`, offset: 0.72 }, { transform: 'translateY(0)' }], M.pushMs);
+  const dx = row.classList.contains('them') ? 26 : row.classList.contains('note') ? 0 : -26;
+  animate(row.querySelector('.st-bubble'), [{ transform: `translateX(${dx}px) scale(.94)`, opacity: 0 }, { transform: 'none', opacity: 1 }], l.think ? M.cloudMs : M.slideMs);
+  const disc = row.querySelector('.disc');
+  if (disc) animate(disc, [{ transform: 'scale(.82)' }, { transform: 'scale(1.07)', offset: 0.6 }, { transform: 'scale(1)' }], M.popMs);
+  if (idx >= LINES.length) {
+    stopFf();
+    story.querySelector('.story-hint').hidden = true;
+    story.querySelector('.story-go').hidden = false;
+  }
+}
+function toggleFf() {
+  if (ffTimer) { stopFf(); return; }
+  const btn = live.querySelector('.story-ff');
+  btn.setAttribute('aria-pressed', 'true');
+  const step = () => { if (idx >= LINES.length) { stopFf(); return; } advance(); };
+  step();
+  ffTimer = setInterval(step, 1000 / M.ffLinesPerSec);
+}
+function stopFf() {
+  clearInterval(ffTimer); ffTimer = null;
+  const btn = live.querySelector('.story-ff');
+  if (btn) btn.setAttribute('aria-pressed', 'false');
+}
+
+/* ---------- the knobs ---------- */
+const knobHost = document.getElementById('knobs');
+knobHost.innerHTML = KNOBS.map((k) => `
+  <div class="knob" data-for="${k.k}">
+    <label for="k-${k.k}">${k.label}<small>${k.note}</small></label>
+    <input type="range" id="k-${k.k}" data-k="${k.k}" min="${k.min}" max="${k.max}" step="${k.step}" value="${M[k.k]}">
+    <span class="val" id="v-${k.k}">${M[k.k]}${k.unit}</span>
+  </div>`).join('');
+knobHost.addEventListener('input', (e) => {
+  const k = e.target.dataset.k; if (!k) return;
+  const knob = KNOBS.find((x) => x.k === k);
+  M[k] = parseFloat(e.target.value);
+  document.getElementById('v-' + k).textContent = M[k] + knob.unit;
+  e.target.closest('.knob').dataset.dirty = M[k] === DEFAULTS[k] ? '0' : '1';
+  writeOut();
+});
+function writeOut() {
+  document.getElementById('out').textContent = 'motion: { ' + KNOBS.map((k) => `${k.k}: ${M[k.k]}`).join(', ') + ' }';
+}
+document.getElementById('play').addEventListener('click', play);
+document.getElementById('reset').addEventListener('click', () => {
+  Object.assign(M, DEFAULTS);
+  KNOBS.forEach((k) => {
+    document.getElementById('k-' + k.k).value = M[k.k];
+    document.getElementById('v-' + k.k).textContent = M[k.k] + k.unit;
+    knobHost.querySelector(`[data-for="${k.k}"]`).dataset.dirty = '0';
+  });
+  writeOut(); play();
+});
+document.getElementById('calm').addEventListener('click', (e) => {
+  calm = !calm;
+  e.target.setAttribute('aria-pressed', String(calm));
+  e.target.textContent = 'Reduced motion: ' + (calm ? 'on' : 'off');
+});
+document.getElementById('copy').addEventListener('click', () => {
+  const t = document.getElementById('out').textContent;
+  if (navigator.clipboard) navigator.clipboard.writeText(t).catch(() => {});
+});
+writeOut();
+play();
+
+/* ---------- the frame strip: every state, frozen ---------- */
+const FRAMES = [
+  { cap: '1 · The veil and the first two lines — the note, no portrait', html: sceneHtml({ rows: LINES.slice(0, 2) }) },
+  { cap: '2 · Four stacked — the oldest fades off the top edge', html: sceneHtml({ rows: LINES.slice(0, 6) }) },
+  { cap: '3 · The reply chip — Poppy’s bubble in the garden (ch1.open), no veil', html: `${garden()}
+      <div class="speech">Are you my mama?</div>
+      <div class="chips"><button class="chip" type="button">...I’m Mara.</button><button class="chip" type="button">No, sweetheart. I’m Mara.</button></div>` },
+  { cap: '4 · The thought cloud and Continue — the scene’s end', html: sceneHtml({ rows: LINES.slice(4), done: true }) },
+  { cap: '5 · The title card (@card) with a stand-in for Mara’s full-length art', html: sceneHtml({ card: CARD }) },
+  { cap: '6 · Reduced motion — every state above is its own static frame: rows land in place, nothing slides, the Continue button is simply there', html: sceneHtml({ rows: LINES.slice(3), done: true }) }
+];
+document.getElementById('strip').innerHTML = FRAMES.map((f) => `
+  <div class="phone-wrap"><div class="mini-box"><div class="phone mini">${f.html}</div></div>
+  <div class="phone-cap" style="max-width:200px">${f.cap}</div></div>`).join('');
+</script>
+</body>
+</html>

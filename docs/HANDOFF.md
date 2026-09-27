@@ -1409,6 +1409,11 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
+**IN FLIGHT, 2026-09-27 overnight — the narrative engine, in four gates.** Gate 1 is pushed: the
+chapter scene's wireframe spike and motion gate, `tools/scene-spike.html` (see the gate-1 entry in
+[10-decision-log.md](10-decision-log.md)). Gates 2 (the engine), 3 (the surface) and 4 (the gauntlet)
+follow; this line is replaced by the morning review when the run ends.
+
 **THE MOTION BIBLE'S FIRST FIX ROUND IS DONE AND PUSHED — the first five items doc 11 filed
 2026-09-21, across six commits, all confirmed on `origin/main` by `git log`.** The suite went
 **2,221 → 2,228 assertions, 0 failed**, run three times after the final commit with an identical
