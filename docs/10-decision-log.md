@@ -5,6 +5,29 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (story, rulings) — The word is *mama*; the flower never suffers for absence
+
+**Two of doc 55's open questions, closed.**
+
+**Question 15 — the word.** The owner delegated it: *"Mommy, or if you have a better recommendation,
+you can choose."* **Ruled: "Are you my mama?"**, in every market, per the bible's own case — it is
+what a hatchling says rather than what a grieving woman hears; it dodges both risks §1 found (the
+2026 slang reading that turns tutorial lines into clips, and UK English's *"Are you my mummy?"*, which
+is a famous horror line word for word); and it survives localisation without a per-market rewrite.
+"Mommy" was the premise's word, kept in doc 53 as received.
+
+**Question 10 — neglect.** The owner: *"no, never absent."* **Ruled: Poppy never suffers for the
+player's absence** — never wilts, starves, sleeps sadly or fails; no scene or ad ever asks anyone to
+"save" it. The game's stakes (2026-09-10) stand everywhere else; the creatures keep their sleeping
+face. This is the one place the stakes stop, and the reason is the bible's §1: a child-coded
+character suffering next to an infertility story is the combination a regulator upheld against on a
+single complaint.
+
+**Rejected:** "mommy" (the premise's word, priced above); localising to "mummy" for the UK
+(reproduces the horror line); and any upkeep on the flower.
+
+---
+
 ## 2026-09-26 (story, the owner's word) — The feeling underneath: raising something that grows up; Mara's loss stays unnamed
 
 **The owner answered doc 55 §9 question 16** — his own phrase, *"the daughter she never had"*, against
