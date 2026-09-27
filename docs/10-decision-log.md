@@ -5,6 +5,27 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (story, the owner's word) — The feeling underneath: raising something that grows up; Mara's loss stays unnamed
+
+**The owner answered doc 55 §9 question 16** — his own phrase, *"the daughter she never had"*, against
+§1's evidence that infertility writers resent a pet or substitute offered as consolation. His first
+reaction was the right instinct: *"I thought that might be something people would sympathize with."*
+The desk's read, which he accepted: the evidence is not against the feeling, only against a story that
+*says* the substitute fixes the loss. So: **keep the feeling, never say it.** The player may feel Poppy
+is the daughter Mara never had; no character, line or ad says so.
+
+**The theme widens.** The heart of the story is **raising something that grows up and needs you a little
+less each Year** — Poppy already ages toddler to wry — which reaches the woman who wanted children, the
+mother whose children have left (JUDGMENT: likely a large share of 35–55, unmeasured), and anyone who
+helped raise someone. Mara's childlessness stays the private wound underneath, deliberately unspecified
+so a player who miscarried, could not conceive or never had the chance can read herself in it.
+
+**Rejected: Mara's own daughter died** (the owner asked whether it was too dark). Not too dark for the
+lane, but wrong for this story: the question turns cruel when asked of a bereaved mother; players would
+read Poppy as the dead girl returned, a ghost story that swallows Gran's mystery; two lost daughters
+compete; Poppy becomes a replacement child; and no ad could show it. Gran's given-away daughter already
+carries the darker weight. Written into doc 55 §2 (*The feeling underneath*) and §9.
+
 ## 2026-09-26 (story) — The story bible, volume one: eight chapters, the question kept on conditions, and the Stand's counter as the visible spine
 
 **Filed as direction, the owner picking: [55-the-story-bible.md](55-the-story-bible.md).** Built from the

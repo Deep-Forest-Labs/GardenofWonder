@@ -169,6 +169,33 @@ the exact word — *mommy*, *mama* — is decided for every market before launch
 and a seed tin — and the flower that grows from it thinks she is its mother, and remembers things
 it cannot possibly know.*
 
+### The feeling underneath — ruled 2026-09-26
+
+**The heart of the story is raising something that grows up and needs you a little less each Year.**
+Poppy ages from toddler-curious to wry across the chapters (§5), and the player watches it happen. That
+feeling reaches three kinds of player at once: the woman who wanted children and didn't have them
+(Mara's story), the mother whose children have grown and gone (**JUDGMENT** — likely a large share of a
+35–55 audience, not measured), and anyone who was the aunt, the godmother or the teacher who helped raise
+someone.
+
+**Mara's childlessness is the private wound underneath it, never the headline.** It is implied — the
+practised answer to Delphine, the lullaby she stops humming, the half-painted nursery nobody mentions —
+and said aloud once, in four lines, in volume two. *"She wanted a child and it didn't happen"* is left
+open on purpose: a woman who miscarried, one who could not conceive and one whose life never allowed it
+can each read her own story in it without the game naming any of them. **The player may feel Poppy is
+the daughter Mara never had; no character, line or ad ever says so** (the owner's answer to §9 question
+16, after §1's substitute-child evidence).
+
+**Considered and rejected the same day: Mara's own daughter died.** Not too dark for the lane — Lily's
+Garden carries an infant loss — but wrong for this story. Asked of a bereaved mother, *"Are you my
+mommy?"* turns from tender to cruel; players would read Poppy as the dead girl's soul returned, which
+tips the story toward a ghost story and swallows Gran's mystery; it gives the story two lost daughters
+competing with each other; it makes Poppy a replacement child, the substitute problem at its sharpest;
+and the backstory could never be shown in an ad (§1's rule 5). The darker weight is already carried
+where the premise put it: Gran is gone, and Gran gave away a daughter she spent thirty years trying to
+hold onto. A bereaved Mara would need a new opening and a new hook, and would be chosen deliberately if
+ever.
+
 Kept whole from the owner's premise: Mara; the flower's question and her deflection; the
 inheritance with its one-year clause; the show circuit; Gran Ophelia present only through memory;
 the five-beat childlessness thread and every restraint rule; the flower that never sells; the
@@ -810,7 +837,7 @@ Each question is priced both ways. The desk's recommendation is first.
 | 13 | **Theo — can the romance fail?** | **No fail state, and nothing past a look in volume one** | A romance with a fail state | None: slow, and nothing to punish. A fail state: a branching save and a second set of scenes |
 | 14 | **The Open Question album set** — nine cards already named for this mystery | **Leave it in the packs** for now | Make it the story's set, one card granted per chapter | Story set: an album and drop-table change. Packs: a lucky player finds *Not Yet* before the story says it |
 | 15 | **"Mommy" — the exact word** | **"Are you my mama?" in every market** | Keep "mommy" (the premise's word) and localise UK English to "mummy" | *Mama*: softer, reads as a hatchling everywhere, and dodges both risks in §1. *Mommy*: the premise's own line, but in 2026 slang it carries an innuendo that turns tutorial lines into clips, and UK English's *"Are you my mummy?"* is Doctor Who's creepy-child line word for word |
-| 16 | **"The daughter she never had"** — the owner's own phrase against §1's substitute-child evidence | **Keep the feeling; never say it.** The player may feel the flower is the daughter she never had; no character, line or ad ever says so, and Mara never takes the title (§5) | Let the story say it — a scene where Mara accepts being its mother | Unsaid: the premise's heart, with the restraint that keeps it safe. Said: the "get a dog" consolation infertility writers list among the things never to say (§1) — the most likely angry screenshot in the volume |
+| 16 | ~~**"The daughter she never had"**~~ | **Ruled 2026-09-26 — keep the feeling, never say it.** The heart is raising something that grows up; Mara's childlessness stays the unnamed wound underneath (§2, *The feeling underneath*). A dead daughter was considered and rejected | — | — |
 | 17 | **The Turn's ask line** — *"The year's turning. Save your seeds?"* is a pun on the retired name | **"The year's turning. Shall we keep it?"** — it sets up the note | Another line | Code (`ui-sheet.js`) and doc 32 change together, with a changelog line — outside this document, which touches neither |
 
 **Where the flow brief pulled against the premise — the premise was kept each time:**
@@ -844,7 +871,7 @@ sharper; lost by tutorial baby talk and a lead with no voice.* What changed:
   physical imperatives near the word (§5), three shipped tap lines join the re-voice pass, and §1 carries
   the evidence.
 - **The substitute-child evidence was missing from §1** — and it collides with the owner's own phrase.
-  Now in §1, ruled in §5 (Mara never takes the title), and put to the owner as §9 question 16.
+  Now in §1, ruled in §5 (Mara never takes the title), and put to the owner as §9 question 16 — which he ruled the same day: keep the feeling, never say it.
 - **British English turns the line into Doctor Who's.** §9 question 15 decides the word for every market
   before launch; the desk recommends *mama*.
 - **Mara only reacted.** She now makes the decision in session one (*"Then we'll open it."*), gets a dry
