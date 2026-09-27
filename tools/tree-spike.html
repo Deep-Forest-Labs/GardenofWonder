@@ -5,20 +5,51 @@
 <title>The Trunk and the Tree — Wireframe Spike</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!--
+  REWRITE, 2026-09-26 — one canonical spike file; git history holds the version
+  the owner already reviewed (`git log --follow tools/tree-spike.html`). That
+  review is this build's spec: the second REVISED block at the top of
+  docs/52-the-trunk-and-the-tree.md ("the owner's review of tools/tree-spike.html")
+  overrides the doc's body and its own section 11 wherever they disagree.
+
   Static. No game dependencies — data.js, game.js and style.css are not loaded.
-  Tokens and component recipes are copied by hand from the live style.css, per house
-  convention (see tools/records-spike.html), so this spike cannot break when the game
-  moves. New classes for the tree itself are `.trk-*`.
+  Tokens and component recipes are copied by hand from the live style.css and from
+  the other tools/*-spike.html files (house convention — see records-spike.html's
+  own header comment). New classes for the tree itself are `.trk-*`.
 
-  This spike draws docs/52-the-trunk-and-the-tree.md section 11's "one-path" shape,
-  ruled 2026-09-26. It is a LAYOUT spike — wireframe fidelity, not polish. Every card's
-  copy, price and rung number below is illustrative: plausible numbers to get pixels on
-  screen, never derived values. The real derivation is the spec's job, written only
-  after the owner has judged this by eye (the wireframe gate, docs/34).
+  Every card's copy, price and level number below is illustrative: plausible
+  numbers to get pixels on screen, never derived values. The real derivation is
+  the spec's job, written only after the owner judges this file by eye.
 
-  Notes are tagged: DECIDED (already ruled, this spike just follows it), QUESTION (open,
-  the owner's call, my recommendation marked as such), and PLACEHOLDER (I had to pick
-  something to get pixels on screen — not a recommendation, just a stand-in).
+  WHAT CHANGED SINCE V1 — all ruled by the owner, none of it reopened here:
+   - "Rung" is dead. The badge reads a LEVEL; reputation is the XP that fills
+     toward it, never a second number competing with the badge.
+   - Always a full screen. Never a sheet. Close is an X at bottom centre.
+   - Both wallets — gold and Prisms — always on screen.
+   - The currency is Prisms (renamed 2026-09-26), icon `prism` — a hard triangle,
+     apex up. Never "Saved Seeds."
+   - A price lives in a BUY BUTTON on the card, rounded through a hand-copied
+     fmt() (ui-shared.js), never floating text, never a raw nine-digit number.
+   - Legendary is said TWICE — a solid ring, a wider glow, a breath — so it never
+     reads weaker than rare or epic again.
+   - Card detail is inline, not behind a tap — scoped to the up-next card and to
+     owned-still-levelling cards; locked and masked cards stay compact.
+   - Access rights, lawn slots and creature reveals are revealed by reputation
+     AND purchased with Prisms — v1 drew them free.
+   - Word of Mouth is epic, not legendary. A real legendary (the fifth lawn spot)
+     is drawn instead, because legendary is for cards that change what you can
+     do, not how much you get.
+   - No "Auto-tap" pill — it never existed in the source. Auto-tap is now a small
+     button beside the flower, invisible until unlocked; only its PLACEMENT is
+     drawn here, nothing about the feature itself.
+   - The lawn is not a screen and has no door. Tapping an empty spot on the grass
+     opens a picker, exactly like tapping an empty plot opens `seeds` today.
+
+  Notes are tagged: DECIDED (already ruled — this spike just follows it), QUESTION
+  (open, the owner's call, my recommendation marked as such), and PLACEHOLDER (I
+  had to pick something to get pixels on screen — not a recommendation).
+
+  --sat/--sab are hardcoded to a real iPhone 16 Pro's insets rather than env(),
+  which is 0 on a desktop — docs/HANDOFF.md's own recorded trap.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -134,7 +165,7 @@
   .swatch{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink);flex:none;background:#fff}
   .swatch.rare{box-shadow:0 0 0 3px var(--rare)}
   .swatch.epic{box-shadow:0 0 0 3px var(--epic)}
-  .swatch.legend{box-shadow:0 0 0 3px var(--legend)}
+  .swatch.legend{box-shadow:0 0 0 4px var(--legend), 0 0 10px 3px rgba(255,212,59,.7)}
 
   /* =========================================================
      REAL GAME CHROME — recipes copied from style.css / records-spike.html
@@ -158,7 +189,7 @@
   .sheet-x{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--ink);display:grid;place-items:center;background:#fffdf7;box-shadow:0 2px 0 var(--ink-2);flex:none}
   .sheet-x svg{width:16px;height:16px}
   .sheet-note{font-size:12.5px;font-weight:700;color:var(--ink-soft);padding:0 16px 10px;line-height:1.4}
-  .sheet-body{flex:1;overflow-y:auto;padding:0 14px 20px}
+  .sheet-body{flex:1;overflow-y:auto;padding:0 14px 20px;display:flex;flex-direction:column;gap:9px}
   .sheet-body::-webkit-scrollbar{width:0}
   .tab{font:inherit;font-size:12.5px;font-weight:800;padding:7px 13px;border-radius:999px;border:2.5px solid var(--ink);background:#fff;box-shadow:0 2px 0 var(--ink-2);cursor:pointer}
   .tab.on{background:linear-gradient(180deg,#ffe98a,var(--coin))}
@@ -184,17 +215,36 @@
   .dock button.home{background:linear-gradient(180deg,#8ce99a,#51cf66);height:66px;align-self:end;margin-top:-18px}
   .dock button.home svg{width:26px;height:26px}
 
-  /* quest strip band */
-  .band{position:absolute;left:12px;right:12px;top:calc(var(--sat) + 58px);display:flex;justify-content:space-between;z-index:15}
+  /* quest / order strip band — copied from records-spike.html's .quest-strip verbatim,
+     then reused (not cloned) for the order strip in frame 9, since the whole point of
+     that frame is that it is the SAME box wearing different content. */
+  .band{position:absolute;left:12px;right:12px;top:calc(var(--sat) + 58px);z-index:15}
   .fpill{display:inline-flex;align-items:center;gap:5px;padding:5px 11px 5px 6px;border:2.5px solid var(--ink);border-radius:999px;
     background:linear-gradient(180deg,#fffdf7,var(--paper-3));box-shadow:0 3px 0 var(--ink-2);font-size:11px;font-weight:800}
+  .quest-strip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;text-align:left;
+    padding:6px 8px;border:3px solid var(--ink);border-radius:20px;background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+    box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.18)}
+  .q-pip-wrap{width:36px;height:36px;flex:none;display:grid;place-items:center}
+  .q-pip-ring{grid-area:1/1;width:36px;height:36px;border-radius:50%;background:conic-gradient(from -90deg,#69db7c calc(var(--p,0) * 360deg), rgba(44,26,16,.16) 0)}
+  .q-pip{grid-area:1/1;position:relative;z-index:1;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;
+    background:#fff;border:2.5px solid var(--ink)}
+  .q-pip svg{width:16px;height:16px}
+  .q-bar{position:relative;display:block;height:24px;min-width:0;border-radius:999px;overflow:hidden;
+    background:rgba(44,26,16,.1);border:2px solid rgba(44,26,16,.25)}
+  .q-bar i{position:absolute;inset:0;width:100%;background:linear-gradient(90deg,#8ce99a,#ffe066);clip-path:inset(0 calc(100% - var(--fill,0%)) 0 0)}
+  .q-bar-label{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;height:100%;padding:0 10px;color:var(--ink)}
+  .q-text{font-weight:800;font-size:13px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .q-count{flex:none;font-weight:900;font-size:12px;font-variant-numeric:tabular-nums}
+  .q-reward{flex:none;display:flex;align-items:center;gap:3px;padding:4px 8px 4px 6px;background:linear-gradient(180deg,#fff,#fff5e2);
+    border:2.5px solid var(--ink);border-radius:999px;font-size:12px;font-weight:900;box-shadow:0 2px 0 var(--ink-2)}
+  .q-reward svg{width:14px;height:14px;display:block}
 
-  /* garden stage, simplified for frame 8 */
+  /* garden stage, simplified for frames 6 &amp; 8 */
   .stage-bg{position:absolute;inset:0;background:linear-gradient(180deg,#bfe3ff 0%,#eaf6ff 30%,#eee6c8 46%,#d9c99a 100%)}
   .yard{position:absolute;left:16px;right:16px;bottom:118px;height:210px;border-radius:26px;
     background:linear-gradient(180deg,#e3c48e,#c9a06a);border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink-2)}
   .plotgrid{position:absolute;inset:14px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:8px}
-  .plot{border-radius:12px;background:linear-gradient(180deg,#8a5a34,#6d4425);border:2.5px solid var(--ink)}
+  .plot{border-radius:12px;background:linear-gradient(180deg,#8a5a34,#6d4425);border:2.5px solid var(--ink);position:relative}
   .plot.mid{display:grid;place-items:center}
 
   @media (prefers-reduced-motion: reduce){ * { animation:none !important; } }
@@ -203,13 +253,32 @@
      NEW — the tree's own classes. `.trk-*`.
      ========================================================= */
 
-  /* Every tree screen — sheet or full screen — uses this scroll column. Left:
-     the path (cards). Right: a fixed 54px rail slot per row, so numbers and
-     ticks fall in a straight line down the right edge by ordinary block flow —
-     no manual pixel math, no grid-alignment fragility. The vertical line is one
-     absolutely-positioned element BEHIND every row; a row's own background
-     paints over it where a full-width chapter/marker/curtain interrupts it,
-     which is the point — the rail visibly yields to those three things. */
+  /* THE FULL SCREEN — never a sheet. Both wallets pinned in a header; the
+     scroll column below it; a floating circular X at bottom centre is the
+     only way out. Replaces v1's sheet-vs-full-screen comparison outright —
+     the owner ruled full screen, so every frame below uses this and only this. */
+  .trk-screen{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;
+    background:linear-gradient(180deg,#fffdf7 0%, var(--paper) 46%, var(--paper-2) 100%)}
+  .trk-hdr{display:flex;gap:8px;padding:calc(var(--sat) + 10px) 14px 0;flex:none}
+  .trk-hdr-note{margin:6px 16px 8px;font-size:11.5px;font-weight:700;color:var(--ink-soft);line-height:1.35;flex:none}
+  .trk-body{flex:1;min-height:0;overflow-y:auto;padding:4px 14px calc(96px + var(--sab))}
+  .trk-body::-webkit-scrollbar{width:0}
+  .trk-close{position:absolute;left:50%;bottom:calc(var(--sab) + 12px);transform:translateX(-50%);
+    width:54px;height:54px;border-radius:50%;border:3px solid var(--ink);z-index:45;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));box-shadow:0 4px 0 var(--ink-2), 0 9px 16px rgba(44,26,16,.3);
+    display:grid;place-items:center}
+  .trk-close svg{width:21px;height:21px}
+
+  /* Every tree screen uses this scroll column. Left: the path (cards). Right: a
+     fixed 54px rail slot per row, so numbers and ticks fall in a straight line
+     down the right edge by ordinary block flow — no manual pixel math. The
+     vertical line is one absolutely-positioned element BEHIND every row; a
+     row's own background paints over it where a full-width chapter/marker/
+     curtain interrupts it, which is the point — the rail visibly yields to
+     those three things. Rows render highest-level-first in the markup, so the
+     climb reads bottom-to-top exactly as doc 52's own picture draws it: level 1
+     sits at the BOTTOM of the scroll, requiring a scroll down to reach it, and
+     the curtain is the first thing you see on opening the tree. */
   .trk-wrap{position:relative;padding:4px 0 10px}
   .trk-vline{position:absolute;top:0;bottom:0;right:22px;width:2px;z-index:0;
     background:repeating-linear-gradient(180deg, var(--paper-dim-edge) 0 6px, transparent 6px 12px)}
@@ -221,7 +290,6 @@
   .trk-num.dim{opacity:.4;font-size:9.5px}
   .trk-dot{width:9px;height:9px;border-radius:50%;background:var(--paper);border:2.5px solid var(--ink-soft);flex:none}
   .trk-dot.dim{width:6px;height:6px;border-width:1.8px;opacity:.55}
-  .trk-dot.on{background:var(--seed);border-color:var(--ink)}
 
   /* full-width interruptions: chapter tick, marker, curtain */
   .trk-full{flex:1;display:flex;align-items:center;justify-content:center}
@@ -229,51 +297,70 @@
     border:2.5px dashed var(--ink-soft);border-radius:999px;padding:6px 16px 6px 12px;
     font-size:11px;font-weight:800;color:var(--ink-soft);letter-spacing:.01em}
   .trk-chapter svg{width:15px;height:15px;flex:none}
-  .trk-marker{display:grid;place-items:center;padding:7px 18px;border-radius:16px;border:3px solid var(--ink);
+
+  /* THE MARKER — the whole fix. One number system: LEVEL is the big headline
+     figure, matching every card badge; reputation is demoted to the thing that
+     FILLS a ring toward the next level, printed small underneath as a range,
+     never as a second competing number. The ring mechanism is the quest
+     strip's own conic-gradient pip-ring (.q-pip-ring above), reused here for
+     "how close am I" instead of a quest's own progress. */
+  .trk-marker{display:grid;justify-items:center;gap:5px;padding:10px 20px 9px;border-radius:20px;border:3px solid var(--ink);
     background:linear-gradient(180deg,#fff,var(--paper-3));box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24)}
-  .trk-marker b{display:block;font-size:16px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
-  .trk-marker i{display:block;font-style:normal;font-size:9px;font-weight:800;letter-spacing:.1em;color:var(--ink-soft);text-align:center}
+  .trk-marker-badge{position:relative;width:62px;height:62px}
+  .trk-marker-ring{position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from -90deg, var(--seed) calc(var(--p,0) * 360deg), rgba(44,26,16,.16) 0)}
+  .trk-marker-hole{position:absolute;inset:7px;border-radius:50%;display:grid;place-items:center;text-align:center;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));border:2.5px solid var(--ink)}
+  .trk-marker-hole b{display:block;font-size:22px;font-weight:900;line-height:1}
+  .trk-marker-hole i{display:block;font-style:normal;font-size:7.5px;font-weight:900;letter-spacing:.08em;color:var(--ink-soft)}
+  .trk-marker-rep{font-size:10.5px;font-weight:800;color:var(--ink-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .trk-marker-rep .arrow{opacity:.6}
+
   .trk-curtain{width:100%;height:44px;border-radius:0 0 20px 20px;
     border-bottom:2.5px solid rgba(44,26,16,.5);
     background:linear-gradient(180deg, rgba(44,26,16,.72), rgba(44,26,16,.3) 75%, transparent)}
 
-  /* the card itself — one size, importance by rarity ring + colour only */
-  .trk-card{position:relative;display:flex;align-items:center;gap:10px;min-height:76px;
+  /* THE CARD — one component, every state. Compact by default; `.detailed`
+     grows it for exactly two cases (the up-next card; an owned card that can
+     still level) per the owner's scoping. Rarity reads as a ring + colour
+     only — the box never changes size for rarity, only for detail. */
+  .trk-card{position:relative;display:flex;flex-direction:column;gap:0;
     padding:10px 12px;background:linear-gradient(180deg,#fff,#fff5e2);
     border:3px solid var(--ink);border-radius:var(--r-md);
     box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.16), var(--trk-ring,0 0 0 0 transparent);
   }
-  /* Rare and Legend restate the album's own pack-reveal ring recipe
-     (style.css .pack-reveal.is-new.r-rare/.r-legend) verbatim. Epic has no
-     precedent anywhere in the codebase — ruled 2026-09-26 to be drawn fresh
-     from doc 05's --epic token — so this ring is new, built the same way. */
+  /* Rare restates the album's own pack-reveal ring recipe verbatim
+     (style.css .pack-reveal.is-new.r-rare). Epic has no precedent anywhere in
+     the codebase, so it is drawn fresh from doc 05's --epic token, same ring
+     mechanism. Legendary is deliberately NOT a scaled-up version of the same
+     two rings — see the note below; it restates style.css's mythic recipe
+     instead (grep "said twice"), because v1's legendary read weaker than rare
+     or epic and that is the one thing this pass cannot repeat. */
   .trk-card.r-rare{--trk-ring:0 0 0 3px var(--rare), 0 0 14px 1px rgba(77,171,247,.6)}
   .trk-card.r-epic{--trk-ring:0 0 0 3px var(--epic), 0 0 14px 1px rgba(177,151,252,.6)}
-  .trk-card.r-legend{--trk-ring:0 0 0 3px var(--legend), 0 0 16px 2px rgba(255,212,59,.65)}
+  .trk-card.r-legend{--trk-ring:0 0 0 4px var(--legend), 0 0 32px 7px rgba(255,212,59,.9);
+    animation:trkLegendBreath 1.7s ease-in-out infinite}
+  @keyframes trkLegendBreath{0%,100%{filter:saturate(1)}50%{filter:saturate(1.5)}}
+  @media (prefers-reduced-motion:reduce){ .trk-card.r-legend{animation:none} }
   .trk-card.locked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
     box-shadow:0 4px 0 var(--paper-dim-edge), 0 7px 12px rgba(44,26,16,.10), var(--trk-ring,0 0 0 0 transparent)}
   .trk-card.locked .trk-ico{filter:saturate(.32)}
-  /* Up next reuses the seed picker's existing .fresh highlight (curtain-spike.html
-     .seed-row.fresh / .card.fresh) rather than inventing a new "look at me" — the
-     ribbon on top is the only new element, and it is arm 2 of the old reveal
-     rule, drawn: "always show the next wall, and its price." */
   .trk-card.upnext{background:linear-gradient(180deg,#fff6c2,#ffe066);
     box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24), 0 0 0 4px rgba(255,201,60,.5), var(--trk-ring,0 0 0 0 transparent);
     padding-top:25px}
   .trk-card.masked{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
-    box-shadow:0 4px 0 var(--paper-dim-edge), 0 7px 12px rgba(44,26,16,.10)}
+    box-shadow:0 4px 0 var(--paper-dim-edge), 0 7px 12px rgba(44,26,16,.10);flex-direction:row;align-items:center;gap:10px}
 
-  .trk-rungb{position:absolute;top:-10px;left:-8px;width:26px;height:26px;border-radius:50%;
+  .trk-levelb{position:absolute;top:-10px;left:-8px;width:26px;height:26px;border-radius:50%;
     background:var(--ink);color:var(--paper);display:grid;place-items:center;
     font-size:11px;font-weight:900;border:2.5px solid var(--paper);box-shadow:0 2px 0 rgba(0,0,0,.3);z-index:2}
   .trk-ribbon{position:absolute;top:0;left:0;right:0;height:23px;border-radius:15px 15px 0 0;
     background:linear-gradient(180deg,#ffe98a,var(--coin));border-bottom:2.5px solid var(--ink);
-    display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 14px;
-    font-size:10px;font-weight:900;letter-spacing:.03em;color:var(--ink)}
-  .trk-ribbon .price{padding:1px 7px;font-size:10px;box-shadow:none;border-width:2px;background:#fffdf7}
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:900;letter-spacing:.05em;color:var(--ink)}
 
-  .trk-row2{display:flex;align-items:center;gap:10px;width:100%;min-width:0}
-  .trk-ico{--art:var(--paper-3);width:44px;height:44px;flex:none;border-radius:50%;position:relative;
+  .trk-row2{display:flex;align-items:flex-start;gap:10px;width:100%;min-width:0}
+  .trk-ico{--art:var(--paper-3);width:44px;height:44px;flex:none;border-radius:50%;position:relative;margin-top:1px;
     display:grid;place-items:center;border:3px solid var(--ink);
     background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)), var(--art);
     box-shadow:0 3px 0 var(--ink-2)}
@@ -281,51 +368,59 @@
   .trk-lockb{position:absolute;bottom:-5px;right:-5px;width:19px;height:19px;border-radius:50%;
     background:var(--coin);border:2.2px solid var(--ink);display:grid;place-items:center;box-shadow:0 2px 0 var(--ink-2)}
   .trk-lockb svg{width:11px;height:11px}
-  .trk-lab{min-width:0;flex:1;display:grid;gap:2px}
-  .trk-title{font-size:13.5px;font-weight:800;line-height:1.15;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .trk-title .starmark{width:13px;height:13px;flex:none}
-  .trk-sub{font-size:10.5px;font-weight:700;color:var(--ink-soft);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .trk-pips{margin-top:3px}
+  .trk-lab{min-width:0;flex:1;display:grid;gap:3px;padding-top:2px}
+  /* FIX: v1 truncated to one line ("Word of Mou…") at 390px. Titles now wrap to
+     two lines instead of clipping — the star icon that used to sit before the
+     title is gone (the pip row already says "this levels"; a second icon was
+     spending width the title needed more). */
+  .trk-title{font-size:13.5px;font-weight:800;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;
+    -webkit-line-clamp:2;overflow:hidden}
+  .trk-sub{font-size:10.5px;font-weight:700;color:var(--ink-soft);line-height:1.25;overflow:hidden;text-overflow:ellipsis;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1}
+  .trk-pips{margin-top:1px}
   .trk-pips .pip{width:9px;height:9px;background:var(--seed);box-shadow:inset 0 2px 0 rgba(255,255,255,.4)}
   .trk-pips .pip.off{background:var(--paper-dim-2);box-shadow:none}
-  .trk-pricewrap{flex:none}
+  .trk-pricewrap{flex:none;margin-top:1px}
   .trk-tag{display:inline-flex;align-items:center;font-size:8.5px;font-weight:900;letter-spacing:.03em;
-    padding:1px 6px;border-radius:6px;border:1.6px solid var(--ink);background:var(--art,var(--paper-3));flex:none}
+    padding:1px 6px;border-radius:6px;border:1.6px solid var(--ink);background:var(--art,var(--paper-3));flex:none;width:fit-content}
+
+  /* A PRICE LIVES IN A BUY BUTTON — never floating text. One consistent
+     button skin regardless of currency (doc 05: Prisms prices deliberately do
+     NOT take a special colour, or a green price would double up with "this is
+     affordable" green) — only the icon says which wallet pays. Every amount
+     goes through the hand-copied fmt() below, so nothing prints a raw
+     nine-digit number the way v1 did. */
+  .trk-buy{display:inline-flex;align-items:center;gap:4px;padding:6px 11px;border:2.5px solid var(--ink);border-radius:999px;
+    background:linear-gradient(180deg,#fff6c2,#ffe066);box-shadow:0 3px 0 var(--ink-2);
+    font-size:12px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1;flex:none}
+  .trk-buy svg{width:15px;height:15px}
+  .trk-equip{display:inline-flex;align-items:center;padding:6px 13px;border:2.5px solid var(--ink);border-radius:999px;
+    background:linear-gradient(180deg,#d3f9d8,#8ce99a);box-shadow:0 3px 0 var(--ink-2);font-size:11.5px;font-weight:900;flex:none}
+
+  /* INLINE DETAIL — no tap, no second screen. Scoped to `.detailed` only. */
+  .trk-card.detailed{padding-bottom:11px}
+  .trk-detail{margin-top:8px;padding-top:8px;border-top:2px dashed var(--paper-dim-edge);display:grid;gap:5px}
+  .trk-detail.single{border-top:2px dashed var(--paper-dim-edge);margin-top:8px;padding-top:8px}
+  .trk-detail .lbl{display:block;font-size:8.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:1px}
+  .trk-detail p{font-size:12px;font-weight:700;line-height:1.35}
+  .trk-detail-row.next{background:linear-gradient(180deg,#eaf6ea,#d3f9d8);border-radius:10px;padding:5px 8px;margin:0 -4px}
+  .trk-detail-buy{display:flex;justify-content:flex-end;margin-top:7px}
 
   .trk-mask-ico{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;
     background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.5), transparent 62%), var(--paper-dim-2);
     border:3px solid var(--paper-dim-edge)}
   .trk-mask-ico svg{width:26px;height:26px}
-  .trk-qmark{font-size:14px;font-weight:800;letter-spacing:.06em;color:var(--ink-soft)}
+  .trk-qmark{font-size:14px;font-weight:800;letter-spacing:.06em;color:var(--ink-soft);display:block}
   .trk-hint{display:block;margin-top:2px;font-size:10.5px;font-weight:700;font-style:italic;color:var(--ink-soft);line-height:1.3}
 
   /* rarity ladder comparison (frame 3) */
   .ladder-row{display:flex;flex-direction:column;gap:12px}
   .ladder-row .trk-wrap{padding:0}
 
-  /* the card detail sheet (frame 4) */
-  .detail{display:flex;flex-direction:column;gap:14px;padding:6px 2px}
-  .detail-head{display:flex;align-items:center;gap:12px}
-  .detail-ico{width:64px;height:64px;flex:none;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
-    background:radial-gradient(circle at 34% 28%,#fff,var(--paper-3));box-shadow:0 4px 0 var(--ink-2)}
-  .detail-ico svg{width:36px;height:36px}
-  .detail-head h4{font-size:17px}
-  .detail-head .rung{font-size:11px;font-weight:800;color:var(--ink-soft)}
-  .detail-pips{display:flex;align-items:center;gap:10px}
-  .detail-pips .pips{gap:6px}
-  .detail-pips .pip{width:16px;height:16px;border-width:2.5px}
-  .detail-price{align-self:flex-start}
-  .detail-price .price{font-size:14px;padding:7px 13px}
-  .detail-block{background:linear-gradient(180deg,#fff,#fff5e2);border:2.5px solid var(--ink);border-radius:var(--r-md);
-    padding:11px 13px;box-shadow:0 3px 0 var(--ink-2)}
-  .detail-block .lbl{font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);display:block;margin-bottom:3px}
-  .detail-block p{font-size:13px;font-weight:700;line-height:1.4}
-  .detail-block.next{background:linear-gradient(180deg,#eaf6ea,#d3f9d8)}
-
   /* unveiling filmstrip (frame 5) */
-  .filmstrip{display:flex;gap:14px;flex-wrap:wrap}
+  .filmstrip{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
   .filmcell{width:186px;display:flex;flex-direction:column;gap:6px}
-  .filmcell .crop{width:186px;height:250px;border-radius:20px;border:6px solid #1a120b;overflow:hidden;position:relative;
+  .filmcell .crop{width:186px;height:260px;border-radius:20px;border:6px solid #1a120b;overflow:hidden;position:relative;
     background:linear-gradient(180deg,#fdf3d8,#eadfc2);box-shadow:0 8px 16px rgba(20,12,6,.3)}
   .filmcell .crop .inner{position:absolute;inset:0;padding:14px 12px}
   .filmcell .step{font-size:11px;font-weight:800;color:var(--ink-soft);text-align:center}
@@ -337,11 +432,16 @@
     padding:20px 14px 16px;display:flex;flex-direction:column;align-items:center;gap:14px}
   .lawn-flower{width:60px;height:60px}
   .lawn-slots{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-  .lawn-slot{width:66px;display:grid;justify-items:center;gap:5px}
+  .lawn-slot{width:66px;display:grid;justify-items:center;gap:5px;position:relative}
   .lawn-slot .ic{width:48px;height:48px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
-    background:radial-gradient(circle at 34% 28%,#fff,var(--paper-3));box-shadow:0 3px 0 var(--ink-2)}
+    background:radial-gradient(circle at 34% 28%,#fff,var(--paper-3));box-shadow:0 3px 0 var(--ink-2);position:relative}
   .lawn-slot.empty .ic{border-style:dashed;background:rgba(255,255,255,.55);box-shadow:none;color:var(--ink-soft);font-size:22px;font-weight:900;border-color:rgba(44,26,16,.5)}
   .lawn-slot .lb{font-size:9px;font-weight:800;text-align:center;line-height:1.2;background:#fff;padding:2px 6px;border-radius:8px;border:2px solid var(--ink);max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tap-ring{position:absolute;inset:-9px;border-radius:50%;border:3px solid var(--coin-d);animation:trkTapPulse .9s ease-out infinite;pointer-events:none}
+  @keyframes trkTapPulse{0%{transform:scale(.65);opacity:1}100%{transform:scale(1.7);opacity:0}}
+  @media (prefers-reduced-motion:reduce){ .tap-ring{animation:none;opacity:.55;transform:scale(1.1)} }
+  .tap-dot{position:absolute;top:50%;left:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;
+    background:rgba(44,26,16,.55);border:2px solid #fff;pointer-events:none;z-index:3}
 
   /* drone shop card (frame 7) */
   .drone-card{background:linear-gradient(180deg,#fff,#fff5e2);border:3px solid var(--ink);border-radius:var(--r-md);
@@ -362,7 +462,7 @@
   .notonpath{align-self:flex-start;display:inline-flex;align-items:center;font-size:10px;font-weight:800;
     padding:3px 9px;border-radius:999px;border:2px solid var(--ink-soft);color:var(--ink-soft);background:var(--paper-2)}
 
-  /* garden badge (frame 8) */
+  /* garden badge + auto-tap placeholder (frame 8) */
   .upnext-chip{position:absolute;display:flex;align-items:center;gap:7px;padding:5px 11px 5px 5px;
     border:2.5px solid var(--ink);border-radius:999px;background:linear-gradient(180deg,#fff6c2,#ffe066);
     box-shadow:0 3px 0 var(--ink-2), 0 6px 12px rgba(44,26,16,.24);z-index:35}
@@ -373,104 +473,109 @@
   .upnext-chip .txt b{font-size:10.5px;font-weight:900}
   .upnext-chip .txt i{font-style:normal;font-size:9px;font-weight:700;color:var(--ink-soft)}
   .upnext-ring{position:absolute;inset:-3px;border-radius:50%;border:2px dashed rgba(44,26,16,.4)}
+  /* Placement only — parked, per the owner's ruling. Drawn as a ghost so
+     nobody mistakes it for a designed control. */
+  .autotap-ph{position:absolute;width:34px;height:34px;border-radius:50%;border:2.5px dashed var(--ink-soft);
+    display:grid;place-items:center;opacity:.5;background:rgba(255,255,255,.4)}
+  .autotap-ph svg{width:18px;height:18px;opacity:.7}
+
+  /* frame 9 — the Turn beat */
+  .turn-beat{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
+    padding:16px 14px;border:3px solid var(--ink);border-radius:var(--r-md);
+    background:linear-gradient(180deg,#fff6c2,#ffe066);box-shadow:0 4px 0 var(--ink-2), 0 9px 16px rgba(44,26,16,.24)}
+  .turn-beat .ic{width:52px;height:52px}
+  .turn-beat b{font-size:17px}
+  .turn-beat span{font-size:11.5px;font-weight:700;color:var(--ink-2)}
 </style>
 </head>
 <body data-notes="1">
 
 <div class="intro">
-  <p class="kicker">Garden Wonder &middot; Wireframe spike &middot; docs/52-the-trunk-and-the-tree.md &sect;11</p>
+  <p class="kicker">Garden Wonder &middot; Wireframe spike, rewritten &middot; docs/52-the-trunk-and-the-tree.md</p>
   <h1>The Trunk and the Tree</h1>
   <p class="lede">
-    <b>One linear path, up the trunk. Reputation reveals; Prisms rank; gold buys.</b>
-    Eight frames, each a real 390&times;844 phone screen (frame 5 crops to a smaller filmstrip).
-    Nothing here is wired to the game — every number, price and rung shown is illustrative,
-    picked to get pixels on screen. Nothing here decides anything the owner should decide.
+    <b>One linear path, up the trunk. The badge reads a LEVEL; reputation fills toward it. Prisms
+    rank; gold buys.</b> Nine frames, each a real 390&times;844 phone screen (frame 5 crops to a
+    smaller filmstrip). Nothing here is wired to the game — every number, price and level shown is
+    illustrative, picked to get pixels on screen. Nothing here decides anything the owner should
+    decide.
   </p>
   <p class="lede">
-    <b>Read the notes under each frame.</b> Green = already ruled, this spike just follows it.
-    Orange = an open question, with my recommendation marked as such. Blue = a placeholder I had
-    to pick to draw anything at all — not a recommendation. <b>Section 10 collects every question
-    in one place</b>, and <b>section 11 says what was copied from which spike.</b>
+    <b>This is a rewrite, not a second file.</b> The owner judged v1 by eye and ruled the surface —
+    every fix below traces to a line in that review. <b>Read the notes under each frame.</b> Green =
+    already ruled, this spike just follows it. Orange = an open question, with my recommendation
+    marked as such. Blue = a placeholder I had to pick to draw anything at all — not a
+    recommendation. <b>Section 11 collects every question in one place</b>, and <b>section 12 says
+    what was copied from which spike.</b>
   </p>
   <div class="toolbar">
     <button id="notesBtn" onclick="toggleNotes()">Notes: ON</button>
-    <button onclick="document.getElementById('sec-10').scrollIntoView()">Jump to the questions &darr;</button>
+    <button onclick="document.getElementById('sec-11').scrollIntoView()">Jump to the questions &darr;</button>
   </div>
 </div>
 
-<div class="keytbl">
-  <div class="keycol">
-    <h4>Rarity (doc 05's tokens)</h4>
-    <div class="keyrow"><span class="swatch"></span> Common — no ring</div>
-    <div class="keyrow"><span class="swatch rare"></span> Rare — <code>--rare</code></div>
-    <div class="keyrow"><span class="swatch epic"></span> Epic — <code>--epic</code> (drawn fresh, no precedent)</div>
-    <div class="keyrow"><span class="swatch legend"></span> Legendary — <code>--legend</code></div>
-  </div>
-  <div class="keycol">
-    <h4>Card states</h4>
-    <div class="keyrow">Locked — dimmed art, padlock, rung badge</div>
-    <div class="keyrow">Up next — exactly one, gold ribbon + price</div>
-    <div class="keyrow">Unlocked — full colour, no ring dimming</div>
-    <div class="keyrow">Masked (???) — beyond the curtain</div>
-  </div>
-</div>
+<div class="keytbl" id="keytbl"></div>
 
 <div class="toc">
   <ol>
-    <li><a href="#sec-1">1. The first hour — rungs 1&ndash;14</a></li>
-    <li><a href="#sec-2">2. Mid-climb, around rung 60</a></li>
+    <li><a href="#sec-1">1. The first hour — levels 1&ndash;14</a></li>
+    <li><a href="#sec-2">2. Mid-climb, around level 60</a></li>
     <li><a href="#sec-3">3. The rarity ladder, side by side</a></li>
-    <li><a href="#sec-4">4. One levelling card, open</a></li>
+    <li><a href="#sec-4">4. Inline detail, on the card itself</a></li>
     <li><a href="#sec-5">5. The unveiling — a four-frame strip</a></li>
-    <li><a href="#sec-6">6. The lawn — two slots, five slots</a></li>
+    <li><a href="#sec-6">6. The lawn — three beats, then two/five slots</a></li>
     <li><a href="#sec-7">7. The drone, in the Shop</a></li>
-    <li><a href="#sec-8">8. Up next, on the garden itself</a></li>
-    <li><a href="#sec-9">9. Every layout decision, in one list</a></li>
-    <li><a href="#sec-10">10. Questions for the owner</a></li>
-    <li><a href="#sec-11">11. What was copied from which spike</a></li>
+    <li><a href="#sec-8">8. The garden scene — up next, and where auto-tap will sit</a></li>
+    <li><a href="#sec-9">9. The quest strip converting</a></li>
+    <li><a href="#sec-10">10. Every layout decision, in one list</a></li>
+    <li><a href="#sec-11">11. Questions for the owner</a></li>
+    <li><a href="#sec-12">12. What was copied from which spike</a></li>
   </ol>
 </div>
 
-<section class="grp" id="sec-1"><h2><span class="n">1</span> The first hour — rungs 1&ndash;14</h2>
-  <p class="lede">Drawn as a <b>sheet</b> — the Almanac's own chrome, since the tree replaces its petal
-  tab. Reputation 3. Chapter I fires at the foot of the rail, rep 0; the marker sits just above it,
-  at rung 3, with three unlocked cards below and the whole rest of the first hour laid out above,
-  unmasked — the curtain is not drawn here on purpose (see the note).</p>
+<section class="grp" id="sec-1"><h2><span class="n">1</span> The first hour — levels 1&ndash;14</h2>
+  <p class="lede">Full screen from the first tap into the tree. Marker at level 3 — Daisy and the
+  overnight trickle already owned, Power Punch access up next. Everything through level 14 is drawn
+  real, per the brief; the curtain appears only right at the top edge, hinting the climb keeps going
+  well past what a first session needs to see.</p>
   <div class="row-wrap" id="f-1"></div>
 </section>
 
-<section class="grp" id="sec-2"><h2><span class="n">2</span> Mid-climb, around rung 60</h2>
-  <p class="lede">Drawn as a <b>full screen</b> instead — the alternative to section 1's sheet, so
-  both are on the page to compare directly. One epic card up next, a legendary card visible above it
-  dimmed (it still shows its five pips, empty), and the curtain two cards higher than that.</p>
+<section class="grp" id="sec-2"><h2><span class="n">2</span> Mid-climb, around level 60</h2>
+  <p class="lede">Same full-screen chrome, now mid-climb. One epic card up next (Word of Mouth — not
+  legendary, see the note), a genuine legendary two cards up (the fifth lawn spot), dimmed under its
+  own lock, and the curtain right above that. Below the marker: an owned card that has hit its cap
+  and gone quiet, and one still mid-level.</p>
   <div class="row-wrap" id="f-2"></div>
 </section>
 
 <section class="grp" id="sec-3"><h2><span class="n">3</span> The rarity ladder, side by side</h2>
-  <p class="lede">Four different cards — a flower, a creature, a flower, a perk — all unlocked, all
-  the same box, same size. The only thing that changes is the ring and the colour. Judge whether
-  that alone is enough to read "this one matters more."</p>
+  <p class="lede">Four different cards — a flower, a creature, a perk, a slot — all unlocked, all the
+  same box. The only thing that changes is the ring and the colour. This is also where Word of
+  Mouth's demotion and the fifth lawn spot's promotion sit next to each other, on purpose.</p>
   <div id="f-3"></div>
 </section>
 
-<section class="grp" id="sec-4"><h2><span class="n">4</span> One levelling card, open</h2>
-  <p class="lede">A tap on "Daisy pays more" (Rich Bloom's first sub-node). Two of five stars
-  bought. What it does now, what the next star adds, and the next star's Prisms price — all in
-  the glossary's plain words, no percentages exposed on the card face itself.</p>
+<section class="grp" id="sec-4"><h2><span class="n">4</span> Inline detail, on the card itself</h2>
+  <p class="lede">"Daisy pays more," two stars in, exactly where it always lives on the path — no
+  tap, no second screen. Shown next to a locked card above it and an owned, capped, non-levelling
+  card below it, so the height difference between "compact" and "detailed" is visible in the same
+  frame, not asserted in a caption.</p>
   <div class="row-wrap" id="f-4"></div>
 </section>
 
 <section class="grp" id="sec-5"><h2><span class="n">5</span> The unveiling — a four-frame strip</h2>
-  <p class="lede">Bluebell's card, at the moment the marker reaches rung 9. About two seconds in the
+  <p class="lede">Bluebell's card, at the moment the marker reaches level 9. About two seconds in the
   real thing: masked &rarr; mask lifting &rarr; lit, stars appearing &rarr; settled. Cropped to the
   card and rail, not full phone chrome, so all four sit side by side.</p>
   <div class="filmstrip" id="f-5"></div>
 </section>
 
-<section class="grp" id="sec-6"><h2><span class="n">6</span> The lawn — two slots, five slots</h2>
-  <p class="lede">Doc 4's own diagram, drawn as a garden bed rather than a menu list. Perks are
-  placed objects on the grass beside the blessed flower — owning and wearing are different things,
-  the record shelf's equip grammar.</p>
+<section class="grp" id="sec-6"><h2><span class="n">6</span> The lawn — three beats, then two/five slots</h2>
+  <p class="lede">The lawn is not a screen and has no door. Spots sit right on the garden scene;
+  tapping an empty one opens a picker — the same grammar as tapping an empty plot opens `seeds`
+  today. Three beats, then the two-slot and five-slot comparison, drawn on the grass itself rather
+  than inside a menu.</p>
   <div class="row-wrap" id="f-6"></div>
 </section>
 
@@ -480,36 +585,47 @@
   <div class="row-wrap" id="f-7"></div>
 </section>
 
-<section class="grp" id="sec-8"><h2><span class="n">8</span> Up next, on the garden itself</h2>
+<section class="grp" id="sec-8"><h2><span class="n">8</span> The garden scene — up next, and where auto-tap will sit</h2>
   <p class="lede">Doc 28's lesson — demand rendered on top of supply. The trunk's next card as a
-  small badge the player sees while playing, without opening the tree at all.</p>
+  small badge the player sees while playing, without opening the tree at all. No "Auto-tap" pill —
+  that never existed in the source — only a ghost button beside the flower marking where the real
+  one will go, once it exists.</p>
   <div class="row-wrap" id="f-8"></div>
 </section>
 
-<section class="grp" id="sec-9"><h2><span class="n">9</span> Every layout decision, in one list</h2>
-  <p class="lede">Everything this spike had to settle just to put pixels on screen, gathered in one
-  place. Green rows were already ruled; blue rows are placeholders and appear again in section 10 as
-  questions.</p>
-  <div class="spec" style="margin-left:0;padding-left:0"><div id="f-9"></div></div>
+<section class="grp" id="sec-9"><h2><span class="n">9</span> The quest strip converting</h2>
+  <p class="lede"><b>The frame the owner most wants to see.</b> One space at the top of the screen,
+  three moments in a new player's first minutes: the tutorial quest bar teaches the loop, the first
+  Turn arrives, and the same box then fills with customers and their orders. The flower teaches you
+  to grow and to reopen the store; the store reopening is what brings the customers.</p>
+  <div class="row-wrap" id="f-9"></div>
 </section>
 
-<section class="grp" id="sec-10"><h2><span class="n">10</span> Questions for the owner</h2>
-  <p class="lede">The eight named in the brief, plus four the drawing surfaced. Nothing here is
-  decided — each carries my recommendation, marked as a recommendation, not a ruling.</p>
+<section class="grp" id="sec-10"><h2><span class="n">10</span> Every layout decision, in one list</h2>
+  <p class="lede">Everything this rewrite had to settle just to put pixels on screen, gathered in one
+  place. Green rows were already ruled by the owner's review; blue rows are placeholders and appear
+  again in section 11 as questions where they are still genuinely open.</p>
   <div class="spec" style="margin-left:0;padding-left:0"><div id="f-10"></div></div>
 </section>
 
-<section class="grp" id="sec-11"><h2><span class="n">11</span> What was copied from which spike</h2>
+<section class="grp" id="sec-11"><h2><span class="n">11</span> Questions for the owner</h2>
+  <p class="lede">The six still open from the brief, plus what this drawing surfaced. Nothing here is
+  decided — each carries my recommendation, marked as a recommendation, not a ruling.</p>
   <div class="spec" style="margin-left:0;padding-left:0"><div id="f-11"></div></div>
+</section>
+
+<section class="grp" id="sec-12"><h2><span class="n">12</span> What was copied from which spike</h2>
+  <div class="spec" style="margin-left:0;padding-left:0"><div id="f-12"></div></div>
 </section>
 
 <script>
 /* ============================================================
-   Helpers, in the spirit of ui-shared.js — copied from records-spike.html
+   Helpers — house pattern from records-spike.html
    ============================================================ */
 function fig(tag, title, sub, inner, notes){
   const notesHtml = (notes||[]).map(n => '<p class="note ' + n[0] + '">' + n[1] + '</p>').join('');
-  return '<figure><figcaption><span class="tag">' + tag + '</span><b>' + title + '</b><i>' + sub + '</i></figcaption>' +
+  return '<figure><figcaption>' + (tag ? '<span class="tag">' + tag + '</span>' : '') +
+    (title ? '<b>' + title + '</b>' : '') + (sub ? '<i>' + sub + '</i>' : '') + '</figcaption>' +
     inner + notesHtml + '</figure>';
 }
 function phone(inner, opts){
@@ -517,14 +633,49 @@ function phone(inner, opts){
   return '<div class="phone">' + (opts.noNotch ? '' : '<div class="notch"></div>') +
     '<div class="scroll' + (opts.scrollY ? ' y' : '') + '">' + inner + '</div></div>';
 }
-function fmt(n){ return typeof n === 'string' ? n : n.toLocaleString('en-US'); }
+/* Hand-copied verbatim from ui-shared.js — this is the fix for v1's worst
+   number bug, which used a bare toLocaleString and printed prices like
+   "19,461,951" on a card face. Reputation progress numbers deliberately do
+   NOT go through this (see the marker note in section 1) — a fill-to-next-
+   level readout wants an exact count, not a rounded one; a PRICE wants the
+   rounding. */
+const trimZeros = (s) => (s.includes('.') ? s.replace(/\.?0+$/, '') : s);
+function fmt(n) {
+  n = Math.round(n);
+  const abs = Math.abs(n);
+  if (abs < 100000) return n.toLocaleString();
+  if (abs < 1e6) return trimZeros((n / 1e3).toFixed(1)) + 'K';
+  if (abs < 1e9) return trimZeros((n / 1e6).toFixed(2)) + 'M';
+  if (abs < 1e12) return trimZeros((n / 1e9).toFixed(2)) + 'B';
+  return trimZeros((n / 1e12).toFixed(2)) + 'T';
+}
 
 /* ---------- icons — wireframe fidelity only ---------- */
 const ICO = {
   coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="var(--coin)" stroke="var(--ink)" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="var(--coin-d)" stroke-width="1.6"/></svg>',
-  /* The seed pouch — cream body, green ties, adapted from dock-spike.html's
-     ICON.pouch (the house's existing Prisms glyph). */
-  pouch: '<svg viewBox="0 0 24 24"><path d="M8.6 8.5h6.8c2.9 2 4.6 5 4.6 7.9 0 2.6-2.8 4.1-8 4.1s-8-1.5-8-4.1c0-2.9 1.7-5.9 4.6-7.9z" fill="var(--seed-l)" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.6 8.5c-.7-1.5-.4-2.9.9-3.4 1-.4 1.8.1 2.5 1 .7-.9 1.5-1.4 2.5-1 1.3.5 1.6 1.9.9 3.4" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  /* Prisms' own glyph, hand-copied from icons.js — a hard TRIANGLE, apex up
+     (the classic optical prism), never gem's kite, so the two can never share
+     a silhouette even with colour stripped out. Pale glass above, a flat-
+     colour spectrum fanning out below, one facet line down the middle. This
+     replaces every use of the seed-pouch icon v1 put on price chips — the
+     pouch is the CONTAINER (never a number, per doc 05); this is the coin. */
+  prism: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M12 3 21.4 20.4 2.6 20.4Z" fill="#f5f2ff"/>' +
+    '<path d="M7.7 11h8.6l1 1.9H6.7Z" fill="#ff6b6b" stroke="none"/>' +
+    '<path d="M6.7 12.9h10.6l1.1 1.9H5.6Z" fill="#ff922b" stroke="none"/>' +
+    '<path d="M5.6 14.8h12.8l1 1.8H4.6Z" fill="#ffe066" stroke="none"/>' +
+    '<path d="M4.6 16.6h14.8l1 1.9H3.6Z" fill="#51cf66" stroke="none"/>' +
+    '<path d="M3.6 18.5h16.8l1 1.9H2.6Z" fill="#9775fa" stroke="none"/>' +
+    '<path d="M12 3v17.4" stroke-width="1.3"/><path d="M12 3 21.4 20.4 2.6 20.4Z" fill="none"/></svg>',
+  /* The pouch — the CONTAINER, cream-bodied with green seeds, hand-copied
+     from icons.js. Used once, in frame 9's Turn beat ("Prisms arrive"), and
+     nowhere near a number, per its own doc 05 rule. */
+  pouch: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M8.4 8.2h7.2c2.4 1.8 3.8 4.3 3.8 6.9 0 3-2.6 5.3-7.4 5.3S4.6 18.1 4.6 15.1c0-2.6 1.4-5.1 3.8-6.9Z" fill="#fff3bf"/>' +
+    '<path d="M8.4 8.2c-.6-1.3-.4-2.6.6-3.4 1.4-1.1 4.6-1.1 6 0 1 .8 1.2 2.1.6 3.4" fill="#ffd8a8"/>' +
+    '<path d="M12 17.4c-2.1 0-3.4-1.4-3.6-3.6 2.4-.3 3.8 1 3.6 3.6Z" fill="#3f9d45" stroke-width="1.5"/>' +
+    '<path d="M12 17.4c.2-2.6 1.6-3.9 4-3.6-.2 2.2-1.5 3.6-3.6 3.6Z" fill="#7bd88f" stroke-width="1.5"/>' +
+    '<path d="M12 17.4v-2.2" stroke-width="1.5"/></svg>',
   lock: '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="var(--coin)" stroke="var(--ink)" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="var(--ink)" stroke-width="2"/></svg>',
   x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/></svg>',
   menu: '<svg viewBox="0 0 24 24"><path d="M4.6 7h14.8M4.6 12h14.8M4.6 17h14.8" fill="none" stroke="var(--ink)" stroke-width="3.4" stroke-linecap="round"/></svg>',
@@ -533,6 +684,7 @@ const ICO = {
   bolt: '<svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="#ffe066" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
   gnome: '<svg viewBox="0 0 24 24"><path d="M12 2 6 12h12z" fill="#ff8fab" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><rect x="7" y="12" width="10" height="9" rx="4" fill="#ffe0ad" stroke="var(--ink)" stroke-width="1.8"/><circle cx="9.6" cy="16.2" r="1.1" fill="var(--ink)"/><circle cx="14.4" cy="16.2" r="1.1" fill="var(--ink)"/></svg>',
   spirit: '<svg viewBox="0 0 24 24"><path d="M12 3c4 0 6.5 3 6.5 7 0 5-3 9-6.5 9s-6.5-4-6.5-9c0-4 2.5-7 6.5-7z" fill="#c9aaff" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><circle cx="9.6" cy="11.5" r="1.15" fill="var(--ink)"/><circle cx="14.4" cy="11.5" r="1.15" fill="var(--ink)"/><path d="M12 6.5v-3" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="2.6" r="1.1" fill="#ffe066" stroke="var(--ink)" stroke-width="1.3"/></svg>',
+  bee: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="6" ry="7" fill="#ffe98a" stroke="var(--ink)" stroke-width="1.8"/><path d="M8 10h8M7.4 13h9.2M8 16h8" stroke="var(--ink)" stroke-width="1.6"/><circle cx="12" cy="6" r="2.2" fill="var(--ink)"/></svg>',
   moon: '<svg viewBox="0 0 24 24"><path d="M15 3a9 9 0 1 0 6 15 8 8 0 0 1-6-15z" fill="#d8c9ff" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
   sprout: '<svg viewBox="0 0 24 24"><path d="M12 21V11" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M12 13c0-4 4-6 8-6 0 4-2 8-8 8" fill="#eaffe0" stroke="var(--ink)" stroke-width="1.8"/><path d="M12 15c0-3-3-5-7-5 0 3 1.5 6 7 6" fill="#eaffe0" stroke="var(--ink)" stroke-width="1.8"/></svg>',
   grass: '<svg viewBox="0 0 24 24"><path d="M6 21c0-6 1-9-1-12M12 21c0-8 0-12-2-15M18 21c0-6-1-9 1-12" fill="none" stroke="var(--grass-d)" stroke-width="2.2" stroke-linecap="round"/></svg>',
@@ -558,63 +710,81 @@ function bloomSvg(petal, center){
 const SHARED_HINT = "Keep growing — the garden isn’t done with you.";
 
 /* ============================================================
-   THE CARD — one function, every state. Cards are one size; only the
-   rarity ring + colour change what "matters more" means.
+   THE CARD — one function, every state. Cards are one SIZE by default;
+   `.detailed` is the one deliberate exception, scoped to exactly two cases.
    ============================================================ */
-function priceChip(p){
-  if (!p) return '';
-  const icon = p.cur === 'seed' ? ico('pouch') : ico('coin');
-  return '<span class="price">' + icon + fmt(p.amt) + '</span>';
+function buyBtn(price){
+  if (!price) return '';
+  const icon = price.cur === 'prism' ? ico('prism') : ico('coin');
+  return '<span class="trk-buy">' + icon + fmt(price.amt) + '</span>';
 }
 function pipRow(of, filled){
   let s = '<span class="pips trk-pips">';
   for (let i = 0; i < of; i++) s += '<span class="pip' + (i < filled ? '' : ' off') + '"></span>';
   return s + '</span>';
 }
+function detailBlock(d){
+  if (!d) return '';
+  if (d.mode === 'single') return '<div class="trk-detail single"><p>' + d.text + '</p></div>';
+  if (d.mode === 'first') return '<div class="trk-detail single"><span class="lbl">First star</span><p>' + d.text + '</p></div>';
+  return '<div class="trk-detail">' +
+    '<div class="trk-detail-row"><span class="lbl">Right now</span><p>' + d.now + '</p></div>' +
+    '<div class="trk-detail-row next"><span class="lbl">The next star adds</span><p>' + d.next + '</p></div>' +
+    '</div>';
+}
 function trkCard(o){
-  const rarity = o.rarity || 'common';
   if (o.state === 'masked') {
     return '<div class="trk-card masked">' +
       '<span class="trk-mask-ico">' + ico('mask') + '</span>' +
       '<span class="trk-lab"><span class="trk-qmark">???</span><span class="trk-hint">' + SHARED_HINT + '</span></span>' +
       '</div>';
   }
+  const rarity = o.rarity || 'common';
   const isUpnext = o.state === 'upnext';
   const isLocked = o.state === 'locked' || isUpnext;
   let cls = 'trk-card' + (rarity !== 'common' ? ' r-' + rarity : '');
-  if (isUpnext) cls += ' upnext'; else if (isLocked) cls += ' locked'; else cls += ' unlocked';
-  const rungBadge = (o.rung != null) ? '<span class="trk-rungb">' + o.rung + '</span>' : '';
-  const ribbon = isUpnext ? '<div class="trk-ribbon"><span>UP NEXT</span>' + priceChip(o.price) + '</div>' : '';
+  cls += isUpnext ? ' upnext' : (isLocked ? ' locked' : ' unlocked');
+  if (o.detail) cls += ' detailed';
+  const levelBadge = (o.level != null) ? '<span class="trk-levelb">' + o.level + '</span>' : '';
+  const ribbon = isUpnext ? '<div class="trk-ribbon"><span>UP NEXT</span></div>' : '';
   const lockBadge = isLocked ? '<span class="trk-lockb">' + ico('lock') + '</span>' : '';
-  const starMark = o.pips ? '<svg class="starmark" viewBox="0 0 24 24">' + ico('star').replace(/<svg[^>]*>|<\/svg>/g, '') + '</svg>' : '';
-  const tag = o.tag ? '<span class="trk-tag" style="--art:' + o.tagColor + '">' + o.tag + '</span>' : '';
-  return '<div class="' + cls + '">' + rungBadge + ribbon +
+  const tag = o.tag ? '<span class="trk-tag" style="--art:' + (o.tagColor || 'var(--paper-3)') + '">' + o.tag + '</span>' : '';
+  return '<div class="' + cls + '">' + levelBadge + ribbon +
     '<div class="trk-row2">' +
       '<span class="trk-ico" style="--art:' + (o.art || 'var(--paper-3)') + '">' + o.icon + lockBadge + '</span>' +
       '<span class="trk-lab">' +
-        '<span class="trk-title">' + starMark + o.title + '</span>' +
+        '<span class="trk-title">' + o.title + '</span>' +
         (o.sub ? '<span class="trk-sub">' + o.sub + '</span>' : '') +
-        (tag ? tag : '') +
+        tag +
         (o.pips ? pipRow(o.pips.of, o.pips.filled) : '') +
       '</span>' +
-      (!isUpnext && o.price ? '<span class="trk-pricewrap">' + priceChip(o.price) + '</span>' : '') +
-    '</div></div>';
+      (!o.detail && o.price ? '<span class="trk-pricewrap">' + buyBtn(o.price) + '</span>' : '') +
+    '</div>' +
+    (o.detail ? detailBlock(o.detail) + (o.price ? '<div class="trk-detail-buy">' + buyBtn(o.price) + '</div>' : '') : '') +
+  '</div>';
 }
 
 /* ---------- rows: card / gap / chapter / marker / curtain ---------- */
 function cardRow(o){
   return '<div class="trk-row"><div class="trk-cardslot">' + trkCard(o) + '</div>' +
-    '<div class="trk-railslot"><span class="trk-num">' + (o.rung != null ? o.rung : '') + '</span><span class="trk-dot"></span></div></div>';
+    '<div class="trk-railslot"><span class="trk-num">' + (o.level != null ? o.level : '') + '</span><span class="trk-dot"></span></div></div>';
 }
-function gapRow(rung){
+function gapRow(level){
   return '<div class="trk-row gap"><div class="trk-cardslot"></div>' +
-    '<div class="trk-railslot"><span class="trk-num dim">' + (rung || '') + '</span><span class="trk-dot dim"></span></div></div>';
+    '<div class="trk-railslot"><span class="trk-num dim">' + (level || '') + '</span><span class="trk-dot dim"></span></div></div>';
 }
 function chapterRow(label){
   return '<div class="trk-row"><div class="trk-full"><span class="trk-chapter">' + ico('flag') + '<span>' + label + '</span></span></div></div>';
 }
-function markerRow(num, rung){
-  return '<div class="trk-row"><div class="trk-full"><span class="trk-marker"><b>' + fmt(num) + '</b><i>YOU &middot; RUNG ' + rung + '</i></span></div></div>';
+/* p is 0..1 fill toward the next level. Reputation prints EXACT (not fmt()'d)
+   — see the note in section 1 on why that is deliberate, and section 11 on
+   what happens at six figures. */
+function markerRow(level, repFrom, repTo, p){
+  return '<div class="trk-row"><div class="trk-full"><div class="trk-marker">' +
+    '<span class="trk-marker-badge"><span class="trk-marker-ring" style="--p:' + p + '"></span>' +
+    '<span class="trk-marker-hole"><b>' + level + '</b><i>LEVEL</i></span></span>' +
+    '<span class="trk-marker-rep">' + repFrom.toLocaleString() + ' <span class="arrow">&rarr;</span> ' + repTo.toLocaleString() + ' rep</span>' +
+    '</div></div></div>';
 }
 function curtainRow(){
   return '<div class="trk-row"><div class="trk-full"><span class="trk-curtain"></span></div></div>';
@@ -623,8 +793,24 @@ function trunk(rows){
   return '<div class="trk-wrap"><div class="trk-vline"></div>' + rows.join('') + '</div>';
 }
 
+/* THE FULL SCREEN — replaces v1's sheet() for every tree frame. */
+function treeScreen(bodyInner, opts){
+  opts = opts || {};
+  const gold = opts.gold != null ? opts.gold : 18420;
+  const prisms = opts.prisms != null ? opts.prisms : 640;
+  return '<div class="trk-screen">' +
+    '<div class="trk-hdr"><span class="wallet">' + ico('coin') + fmt(gold) + '</span>' +
+    '<span class="wallet">' + ico('prism') + fmt(prisms) + '</span></div>' +
+    (opts.note !== false ? '<p class="trk-hdr-note">' + (opts.note || 'Reputation reveals a card. Prisms buy ranks on it. Gold still buys the flower.') + '</p>' : '') +
+    '<div class="trk-body">' + bodyInner + '</div>' +
+    '<button class="trk-close">' + ico('x') + '</button>' +
+  '</div>';
+}
+/* Still used for real sheet-mode panels (Shop, the lawn's perk picker) — the
+   ruling that the TREE is always a full screen says nothing about the panels
+   that are correctly sheets today, per doc 08's own table. */
 function sheet(title, note, body){
-  return '<div class="hud-row"><span class="wallet">' + ico('coin') + '18,420</span>' +
+  return '<div class="hud-row"><span class="wallet">' + ico('coin') + fmt(18420) + '</span>' +
     '<span class="hud-btns"><span class="hud-btn">' + ico('menu') + '</span></span></div>' +
     '<div class="sheet-shell">' +
       '<div class="sheet-grip"></div>' +
@@ -634,114 +820,133 @@ function sheet(title, note, body){
     '</div>';
 }
 
+/* ================= key table ================= */
+document.getElementById('keytbl').innerHTML =
+  '<div class="keycol"><h4>Rarity (doc 05\'s tokens)</h4>' +
+  '<div class="keyrow"><span class="swatch"></span> Common — no ring</div>' +
+  '<div class="keyrow"><span class="swatch rare"></span> Rare — <code>--rare</code></div>' +
+  '<div class="keyrow"><span class="swatch epic"></span> Epic — <code>--epic</code> (drawn fresh, no precedent)</div>' +
+  '<div class="keyrow"><span class="swatch legend"></span> Legendary — <code>--legend</code>, said twice: ring + glow + a breath</div></div>' +
+  '<div class="keycol"><h4>Card states</h4>' +
+  '<div class="keyrow">Locked — dimmed art, padlock, level badge, compact</div>' +
+  '<div class="keyrow">Up next — exactly one, gold ribbon, inline detail</div>' +
+  '<div class="keyrow">Unlocked — full colour; detailed only if it can still level</div>' +
+  '<div class="keyrow">Masked (???) — beyond the curtain, compact</div></div>' +
+  '<div class="keycol"><h4>Two sizes now, not one</h4>' +
+  '<div class="keyrow">Compact — everything else</div>' +
+  '<div class="keyrow">Detailed — up next, or owned + still levelling</div></div>';
+
 /* ================= SECTION 1 — the first hour ================= */
 document.getElementById('f-1').innerHTML =
-  fig('1', 'Rungs 1–14, marker at rung 3', 'Drawn as a sheet — same chrome the Almanac uses today.',
-    phone(sheet('The Trunk', 'Reputation reveals a card. Prisms buy ranks on it. Gold still buys the flower.',
+  fig('1', 'Levels 1–14, marker at level 3', 'Full screen. Both wallets pinned; close is the X at bottom centre.',
+    phone(treeScreen(
       trunk([
-        cardRow({rung:12, rarity:'common', state:'locked', icon:ico('grass'), art:'#eafbe2', title:'A second lawn slot', sub:'Room for one more perk'}),
+        curtainRow(),
+        cardRow({level:15, state:'masked'}),
+        gapRow(13),
+        cardRow({level:12, rarity:'common', state:'locked', icon:ico('grass'), art:'#eafbe2', title:'The first lawn spot', sub:'Room for one perk on the grass', tag:'SLOT', tagColor:'#eafbe2', price:{cur:'prism', amt:60}}),
         gapRow(11),
-        cardRow({rung:10, rarity:'rare', state:'locked', icon:ico('spirit'), art:'#e6d9ff', title:'Pip', sub:'Grove Spirit · placed after Bluebell', tag:'CREATURE', tagColor:'#e6d9ff'}),
-        cardRow({rung:9, rarity:'rare', state:'locked', icon:bloomSvg('#b7b7ff','#6a6adf'), art:'#dcdcff', title:'Bluebell', sub:'A new flower', price:{cur:'gold', amt:150000}, tag:'FLOWER', tagColor:'#dcdcff'}),
+        cardRow({level:10, rarity:'rare', state:'locked', icon:ico('spirit'), art:'#e6d9ff', title:'Pip', sub:'Grove Spirit · placed after Bluebell', tag:'CREATURE', tagColor:'#e6d9ff', pips:{of:5, filled:0}, price:{cur:'prism', amt:50}}),
+        cardRow({level:9, rarity:'rare', state:'locked', icon:bloomSvg('#b7b7ff','#6a6adf'), art:'#dcdcff', title:'Bluebell', sub:'A new flower', tag:'FLOWER', tagColor:'#dcdcff', price:{cur:'gold', amt:150000}}),
         gapRow(8),
-        cardRow({rung:7, rarity:'rare', state:'locked', icon:ico('gnome'), art:'#ffe0e8', title:'Gnome of Fortune', sub:'Bigger payouts on neighbouring flowers', pips:{of:3, filled:0}, price:{cur:'seed', amt:40}, tag:'PERK', tagColor:'#ffe0e8'}),
+        cardRow({level:7, rarity:'rare', state:'locked', icon:ico('gnome'), art:'#ffe0e8', title:'Gnome of Fortune', sub:'Bigger payouts on the flowers beside it', tag:'PERK', tagColor:'#ffe0e8', pips:{of:3, filled:0}, price:{cur:'prism', amt:40}}),
         gapRow(6),
-        gapRow(5),
-        cardRow({rung:4, rarity:'common', state:'upnext', icon:ico('sprout'), art:'#ffe9a8', title:'Daisy pays more', sub:'Rich Bloom, rank 1', pips:{of:5, filled:0}, price:{cur:'seed', amt:15}, tag:'DAISY', tagColor:'#ffe9a8'}),
-        markerRow(3, 3),
-        cardRow({rung:3, rarity:'common', state:'unlocked', icon:ico('bolt'), art:'#ffe98a', title:'Power Punch — access', sub:'The right to buy it every year'}),
-        cardRow({rung:2, rarity:'common', state:'unlocked', icon:bloomSvg('#fff6e0','#ffd43b'), art:'#ffe9a8', title:'Daisy', sub:'Your first flower', tag:'FLOWER', tagColor:'#ffe9a8'}),
-        cardRow({rung:1, rarity:'common', state:'unlocked', icon:ico('moon'), art:'#e6d9ff', title:'The overnight trickle', sub:'A little gold while you sleep', pips:{of:5, filled:2}}),
+        cardRow({level:5, rarity:'common', state:'locked', icon:ico('sprout'), art:'#ffe9a8', title:'Daisy pays more', sub:'A little more from every Daisy harvest', tag:'DAISY', tagColor:'#ffe9a8', pips:{of:5, filled:0}, price:{cur:'prism', amt:15}}),
+        cardRow({level:4, rarity:'common', state:'upnext', icon:ico('bolt'), art:'#ffe98a', title:'Power Punch — access', sub:'The right to buy it in the Shop', tag:'ACCESS', tagColor:'#ffe98a', price:{cur:'prism', amt:25},
+          detail:{mode:'single', text:'Grants the right to buy Power Punch in the Shop, every year from now on — the flower\'s tap grows stronger, forever renewable.'}}),
+        markerRow(3, 32, 45, 0.35),
+        cardRow({level:2, rarity:'common', state:'unlocked', icon:bloomSvg('#fff6e0','#ffd43b'), art:'#ffe9a8', title:'Daisy', sub:'Your first flower', tag:'DAISY', tagColor:'#ffe9a8'}),
+        cardRow({level:1, rarity:'common', state:'unlocked', icon:ico('moon'), art:'#e6d9ff', title:'The overnight trickle', sub:'A little gold arrives while you sleep', pips:{of:5, filled:1}, price:{cur:'prism', amt:20},
+          detail:{now:'A trickle of gold arrives while you\'re away, even before the flower\'s own offline gift unlocks.', next:'The trickle grows a little larger.'}}),
         chapterRow('Chapter I · The Quiet Garden'),
       ])
-    ), {scrollY:true}),
+    , {gold:340, prisms:0})),
     [
-     ['d','<b>Rarity colour is doc 05\'s table, not the album\'s</b> — ruled 2026-09-26, do not reopen. The epic ring on Gnome of Fortune has no precedent anywhere in the codebase; it is drawn fresh from <code>--epic</code> <code>#b197fc</code>, the same way the rare and legend rings restate the pack-reveal\'s own recipe.'],
-     ['d','Creatures are their own card, placed right after their flower — Pip sits above Bluebell, not sideways off it. This is the 2026-09-26 supersession of §6\'s "hangs off the flower" placement.'],
-     ['p','<b>The exact rungs and gaps (5, 6, 8, 11 skipped) are my placeholder sequencing</b>, not a derivation. I spaced the nine named items across 14 rungs the way the old (superseded) rung table itself was sparse — most rungs simply carry nothing. The real spacing is the spec\'s job; doc 52 §11 says so itself ("the exact count is the spec\'s").'],
-     ['p','<b>Daisy is drawn already unlocked, with no price shown.</b> Today Daisy is a free starter flower with no unlock price at all — showing it as a tree card here is a placeholder for "the flower exists in the climb," not a claim that Daisy needs a reputation gate. Worth a direct question — see section 10.'],
-     ['p','<b>The curtain is not drawn in this frame on purpose.</b> If the reveal window were only a few cards deep, most of rungs 7–14 would already be masked here — but the brief asks for this whole stretch "in full," which only makes sense if the first hour is a deliberately generous, pre-revealed onboarding stretch. I have drawn it that way and left the curtain for frame 2, where it is named explicitly. Flagging the assumption, not just the drawing.'],
-     ['q','<b>Access rights, lawn slots and creature reveals are drawn here as free the moment reputation reaches them</b> — no gold, no Prisms. Flowers cost gold; anything that levels costs Prisms per star. Nothing in doc 52 states a currency for these three node types explicitly, so this is my inference from "reputation reveals; gold and Prisms buy." <b>My recommendation: confirm this reading</b> — if any of the three should actually cost something, the ribbon/price grammar already exists to show it.'],
-     ['q','<b>Perks with fewer than five ranks show fewer pips</b> (Gnome of Fortune shows 3, not 5 with 2 disabled). Flower petals (Rich Bloom, Quick Sprout) are the only thing confirmed at five. <b>My recommendation: let the pip count vary by the card\'s own rank ladder</b> — a disabled pip on a 3-rank perk would read as "2 more coming" when nothing is coming. But this is a real inconsistency next to "cards are one size," and it is the owner\'s call.'],
+     ['d','<b>Always a full screen, never a sheet.</b> Both wallets sit in the header; the X that closes the tree is a floating circle at bottom centre, not a corner button. This replaces v1\'s sheet-vs-full-screen comparison outright.'],
+     ['d','<b>The badge reads a LEVEL, and the marker\'s big number is the same level</b> — "3" on the marker, "4" on the very next badge. Reputation (32 &rarr; 45) is demoted to the ring that fills toward the next level and the small line underneath, never a competing headline figure. This is the direct fix for v1\'s worst defect.'],
+     ['p','<b>Reputation prints as an exact count, not through fmt().</b> A price wants rounding; a "how close am I" readout wants precision — 32 vs "0.03K" is not a readable answer to that question. Flagged as a real question at six figures in section 11, because I have not proven this holds at 100,000+.'],
+     ['d','<b>Access rights and lawn slots are purchased with Prisms</b>, revealed by reputation first — Power Punch and the first lawn spot both carry buy buttons now. v1 drew both free.'],
+     ['q','<b>Whether a creature\'s reveal itself costs Prisms, or only its buff ranks do, is genuinely ambiguous in the ruling</b> — "creature reveals... purchased with Prisms" reads naturally as a price on the reveal, but attracting a creature is also already a gameplay action (planting five of its flower). I have drawn Pip with a Prisms price on the card, standing in for "the right to start attracting it," but this is my best reading, not a confident one — worth confirming directly.'],
+     ['p','<b>Titles wrap to two lines instead of clipping.</b> v1 truncated ("Word of Mou…") at this width; the fix drops the redundant star icon that used to sit before the title (the pip row already says "this levels") and lets the title itself wrap.'],
+     ['d','Creatures are their own card, placed right after their flower — Pip sits above Bluebell, not sideways off it, per the 2026-09-26 supersession of §6.'],
+     ['p','<b>The exact levels and gaps (6, 8, 11, 13 skipped) are placeholder sequencing</b>, not a derivation — the real spacing is the spec\'s job.'],
+     ['p','<b>Daisy is drawn already owned, with no price.</b> It is a free starter flower today with no unlock price; the card exists mainly so "Daisy pays more" has something to point at. Worth confirming directly — see section 11.'],
+     ['d','<b>Masked cards stay compact</b> — no badge, no rarity hint, nothing but the silhouette, "???" and the one shared hint line, copied character-for-character from tools/curtain-spike.html. The rail column still prints the level number beside a masked row, because the rail\'s whole job is to make a threshold a height; hiding that number would undercut the one thing the rail is for.'],
     ]
   );
 
 /* ================= SECTION 2 — mid-climb ================= */
 document.getElementById('f-2').innerHTML =
-  fig('2', 'Around rung 60, full screen', 'No sheet chrome at all — the tree fills the screen.',
-    phone(
-      '<div class="hud-row"><span class="wallet">' + ico('coin') + '842K</span><span class="hud-btns"><span class="hud-btn">' + ico('x') + '</span></span></div>' +
-      '<div style="position:absolute;left:0;right:0;top:64px;bottom:0;padding:6px 14px 16px;overflow-y:auto" class="scroll-body">' +
+  fig('2', 'Around level 60', 'Same chrome as frame 1 — there is no second version of this screen anymore.',
+    phone(treeScreen(
       trunk([
         curtainRow(),
-        cardRow({rung:66, rarity:'legend', state:'masked'}),
-        cardRow({rung:64, rarity:'legend', state:'masked'}),
-        cardRow({rung:63, rarity:'legend', state:'locked', icon:ico('flag'), art:'#fff3c2', title:'Word of Mouth', sub:'Harvest reputation, as a countdown', pips:{of:5, filled:0}, price:{cur:'seed', amt:640}, tag:'PERK', tagColor:'#fff3c2'}),
+        cardRow({level:66, state:'masked'}),
+        cardRow({level:64, state:'masked'}),
+        gapRow(),
+        cardRow({level:63, rarity:'legend', state:'locked', icon:ico('grass'), art:'#eafbe2', title:'The fifth lawn spot', sub:'Room for a fifth perk on the grass', tag:'SLOT', tagColor:'#eafbe2', price:{cur:'prism', amt:4200}}),
         gapRow(62),
-        cardRow({rung:61, rarity:'epic', state:'upnext', icon:bloomSvg('#d9b3ff','#7b2fe0'), art:'#ecd9ff', title:'Nebula Orchid', sub:'A new flower', price:{cur:'gold', amt:19461951}, tag:'FLOWER', tagColor:'#ecd9ff'}),
-        markerRow('15,842', 60),
-        cardRow({rung:58, rarity:'rare', state:'unlocked', icon:ico('spirit'), art:'#e6d9ff', title:'Bumble', sub:'Gardenbee · placed after Lavender'}),
-        cardRow({rung:55, rarity:'common', state:'unlocked', icon:ico('gnome'), art:'#ffe0e8', title:'Compost Heap', sub:'Replanting a seed costs less', pips:{of:3, filled:3}}),
-      ]) +
-      '</div>',
-      {noNotch:false}
-    ),
+        cardRow({level:61, rarity:'epic', state:'upnext', icon:ico('flag'), art:'#fff3c2', title:'Word of Mouth', sub:'A slow countdown that pays a little reputation on its own', tag:'PERK', tagColor:'#fff3c2', pips:{of:5, filled:0}, price:{cur:'prism', amt:640},
+          detail:{mode:'first', text:'Starts a slow countdown on your harvests that quietly pays a little reputation — a rare kind of card, since it feeds the very rail it sits on.'}}),
+        markerRow(60, 48230, 55000, 0.62),
+        cardRow({level:58, rarity:'common', state:'unlocked', icon:ico('gnome'), art:'#ffe0e8', title:'Compost Heap', sub:'Replanting a seed costs a little less', tag:'PERK', tagColor:'#ffe0e8', pips:{of:3, filled:2}, price:{cur:'prism', amt:210},
+          detail:{now:'Replanting a seed costs 10% less.', next:'Replanting a seed costs 15% less instead.'}}),
+        cardRow({level:55, rarity:'epic', state:'unlocked', icon:bloomSvg('#d9b3ff','#7b2fe0'), art:'#ecd9ff', title:'Nebula Orchid', sub:'A new flower', tag:'FLOWER', tagColor:'#ecd9ff'}),
+        cardRow({level:52, rarity:'rare', state:'unlocked', icon:ico('bee'), art:'#ffe98a', title:'Bumble', sub:'Gardenbee · placed after Lavender', tag:'CREATURE', tagColor:'#ffe98a', pips:{of:5, filled:5}}),
+      ])
+    , {gold:842000, prisms:1180})),
     [
-     ['d','<b>The curtain hides everything beyond the revealed stretch</b>, drawn as a solid scrim fading down into two masked cards, per the brief. Card content is unknown under it; the rail keeps showing rung numbers, because the rail\'s whole job is to make a threshold a height — hiding the number would undercut the one thing the rail is for.'],
-     ['p','<b>The curtain is a plain scrim, not fabric or drapery.</b> I did not draw a literal curtain illustration — that is art, not layout. This marks the boundary; what it actually looks like is open.'],
-     ['q','<b>The rail\'s number at "15,842" — does it read cleanly at five digits, riding a rail that is otherwise mostly icons and short labels?</b> My recommendation: it holds up fine at this width, but a six-figure late-game number ("284,910") is the one to test next, and I have not drawn that far.'],
-     ['p','<b>This frame is drawn as a full screen — no sheet header, no grip, no close button beyond a plain X.</b> Compare directly against section 1\'s sheet. I lean toward the sheet (it is the door the tree already has, and the Almanac pattern the tree replaces), but a 120-rung trunk is a much taller thing to fit in a sheet\'s partial-height footprint than the Almanac\'s flat rows are today — that tension is real and is the owner\'s to resolve, not mine.'],
-     ['d','Legendary "Word of Mouth" is drawn from the REVISED 2026-09-26 block — a real, current perk (harvest reputation as a five-star countdown), not an invented placeholder. It still shows its five pips (all empty) while locked, per the shape rule: a levelling card shows its row even before it is bought.'],
+     ['d','<b>Word of Mouth is epic, not legendary</b> — the 2026-09-26 demotion. It still shows its five pips (all empty) while locked, per the shape rule: a levelling card shows its row before it is bought.'],
+     ['d','<b>A genuine legendary sits two cards higher, and the curtain is right above it</b> — "the fifth lawn spot." Legendary is for a card that changes what you can do (a build that was capped at four perks can now hold five), never for a number that just gets bigger — Word of Mouth caps at epic however much reputation it eventually pays.'],
+     ['d','<b>Legendary is said twice.</b> Compare its ring directly against frame 3\'s ladder — a solid 4px ring, a glow more than twice the spread of rare or epic\'s, and a slow saturation breath (reduced-motion turns the breath off, keeps the ring).'],
+     ['p','<b>An owned card that has hit its cap goes back to compact</b> — Bumble is 5 of 5 and shows nothing more, same box as an unlocked flower. This is the other half of the detail-scoping rule: "owned and can still level" stops being true once a card is maxed, so the extra height only ever appears while it is earning its keep.'],
+     ['q','<b>The rail\'s number at "48,230 → 55,000" — does exact reputation still read cleanly at five digits, next to a marker that is otherwise mostly icon and short labels?</b> My recommendation: it holds up here; six figures is the real stress case and I test it directly in section 11 rather than guessing.'],
     ]
   );
 
 /* ================= SECTION 3 — rarity ladder ================= */
 document.getElementById('f-3').innerHTML =
-  fig('3', 'Common → Legendary, same box', 'Four different cards, four different jobs, identical size.',
+  fig('3', 'Common → Legendary, same box', 'Four different jobs, identical size. Judge whether the ring alone says "this matters more."',
     '<div class="strip" style="max-width:820px;padding:22px">' +
       '<div class="ladder-row">' +
         trunk([
-          cardRow({rung:2, rarity:'common', state:'unlocked', icon:bloomSvg('#fff6e0','#ffd43b'), art:'#ffe9a8', title:'Daisy', sub:'Common — no ring at all', tag:'FLOWER', tagColor:'#ffe9a8'}),
-          cardRow({rung:10, rarity:'rare', state:'unlocked', icon:ico('spirit'), art:'#e6d9ff', title:'Pip', sub:'Rare — the album\'s own blue', tag:'CREATURE', tagColor:'#e6d9ff'}),
-          cardRow({rung:61, rarity:'epic', state:'unlocked', icon:bloomSvg('#d9b3ff','#7b2fe0'), art:'#ecd9ff', title:'Nebula Orchid', sub:'Epic — drawn fresh, no precedent', tag:'FLOWER', tagColor:'#ecd9ff'}),
-          cardRow({rung:63, rarity:'legend', state:'unlocked', icon:ico('flag'), art:'#fff3c2', title:'Word of Mouth', sub:'Legendary — the album\'s gold', pips:{of:5, filled:5}, tag:'PERK', tagColor:'#fff3c2'}),
+          cardRow({level:2, rarity:'common', state:'unlocked', icon:bloomSvg('#fff6e0','#ffd43b'), art:'#ffe9a8', title:'Daisy', sub:'Common — no ring at all', tag:'FLOWER', tagColor:'#ffe9a8'}),
+          cardRow({level:10, rarity:'rare', state:'unlocked', icon:ico('spirit'), art:'#e6d9ff', title:'Pip', sub:'Rare — the album\'s own blue', tag:'CREATURE', tagColor:'#e6d9ff', pips:{of:5, filled:5}}),
+          cardRow({level:61, rarity:'epic', state:'unlocked', icon:ico('flag'), art:'#fff3c2', title:'Word of Mouth', sub:'Epic — a big number, not a new door. Not legendary.', tag:'PERK', tagColor:'#fff3c2', pips:{of:5, filled:5}}),
+          cardRow({level:63, rarity:'legend', state:'unlocked', icon:ico('grass'), art:'#eafbe2', title:'The fifth lawn spot', sub:'Legendary — a build that was capped at four now holds five', tag:'SLOT', tagColor:'#eafbe2'}),
         ]) +
       '</div>' +
     '</div>',
     [
      ['d','All four unlocked, on purpose — dimming a locked card would be a second variable competing with the rarity ring for attention, and this frame exists to isolate one variable only.'],
-     ['q','<b>Judge this directly:</b> does the ring alone say "this matters more," or does it need the frame itself to widen, thicken, or otherwise change shape at the top of the ladder — the way the album\'s own mythic ring adds a pulse animation on top of its ring rather than relying on colour alone? My recommendation: try colour-only first (it is cheaper and it is what the brief asks for — "a legendary card is the same box as a common one"); add motion only if a real build shows the ring alone is not enough.'],
+     ['d','<b>Word of Mouth sits at epic, The fifth lawn spot at legendary — the exact fix this frame exists to demonstrate.</b> v1 drew Word of Mouth legendary here and it was wrong: a countdown that pays more reputation over time is "how much you get," however large the number eventually is. Capability — a new lawn spot, a new door — is what earns the fourth ring.'],
+     ['q','<b>Judge this directly: does the ring alone say "this matters more," or does legendary\'s breath need to be even louder</b> once it is next to rare and epic\'s static rings rather than alone? My recommendation: try this first — it is cheaper, and "said twice" (a solid ring, a wider glow, a breath) is already meaningfully more than rare or epic get. Add a third signal only if a real build still reads it as close.'],
     ]
   );
 
-/* ================= SECTION 4 — levelling card open ================= */
+/* ================= SECTION 4 — inline detail ================= */
 document.getElementById('f-4').innerHTML =
-  fig('4', '"Daisy pays more", tapped open', 'Two of five stars bought; the third star\'s price and what it changes.',
-    phone(sheet('Rich Bloom I', '',
-      '<div class="detail">' +
-        '<div class="detail-head">' +
-          '<span class="detail-ico">' + ico('sprout') + '</span>' +
-          '<span><h4>Daisy pays more</h4><span class="rung">Rung 4 &middot; Rich Bloom, star 3 of 5</span></span>' +
-        '</div>' +
-        '<div class="detail-pips">' + pipRow(5, 2) + '<span style="font-size:12px;font-weight:800;color:var(--ink-soft)">2 of 5 bought</span></div>' +
-        '<div class="detail-block"><span class="lbl">Right now</span><p>Daisy\'s harvest pays 10% more.</p></div>' +
-        '<div class="detail-block next"><span class="lbl">The next star adds</span><p>Daisy\'s harvest pays 15% more instead.</p></div>' +
-        '<div class="detail-price">' + priceChip({cur:'seed', amt:90}) + '</div>' +
-      '</div>'
-    )),
+  fig('4', '"Daisy pays more," in place', 'Two of five stars bought. No tap — this is just what the card looks like.',
+    phone(treeScreen(
+      trunk([
+        gapRow(6),
+        cardRow({level:7, rarity:'rare', state:'locked', icon:ico('gnome'), art:'#ffe0e8', title:'Gnome of Fortune', sub:'Bigger payouts on the flowers beside it', tag:'PERK', tagColor:'#ffe0e8', pips:{of:3, filled:0}, price:{cur:'prism', amt:40}}),
+        gapRow(6),
+        cardRow({level:5, rarity:'common', state:'unlocked', icon:ico('sprout'), art:'#ffe9a8', title:'Daisy pays more', sub:'Rich Bloom, star 3 of 5', tag:'DAISY', tagColor:'#ffe9a8', pips:{of:5, filled:2}, price:{cur:'prism', amt:90},
+          detail:{now:'Daisy\'s harvest pays 10% more.', next:'Daisy\'s harvest pays 15% more instead.'}}),
+        markerRow(4, 46, 70, 0.4),
+        cardRow({level:4, rarity:'common', state:'unlocked', icon:ico('bolt'), art:'#ffe98a', title:'Power Punch — access', sub:'Bought — renews every year', tag:'ACCESS', tagColor:'#ffe98a'}),
+      ])
+    , {gold:6200, prisms:35})),
     [
-     ['p','<b>Pips sit in their own row under the description, at a bigger size than the rail-card\'s pips.</b> The brief lists "where the star pips sit on a card" as an open question for the small rail-card itself, not this detail view — this placement is just for the expanded sheet, which has room to spare.'],
-     ['d','Copy avoids exposing "Rich Bloom" or a raw percentage as the headline — "Daisy pays more" is the card\'s own name and the glossary\'s own frame ("Petals: worth more, grows faster"). The number appears once, inside the plain sentence, matching how the existing petal-track already prints numbers today.'],
-     ['q','Is a full sheet the right weight for tapping ONE card, or should this be a smaller popover anchored to the card itself (so the rest of the trunk stays visible behind it)? My recommendation: a popover — a full sheet-over-sheet here means two "X" buttons stacked, which is one too many for what is a one-line decision (buy the next star, or don\'t).'],
+     ['d','<b>This replaces v1\'s tap-to-open sheet outright.</b> "Daisy pays more" shows its now/next text and its next-star price sitting right on the path, at the size it always has. There is no second screen to design here because none exists.'],
+     ['d','Copy avoids exposing "Rich Bloom" or a raw percentage as the headline — "Daisy pays more" is the card\'s own name, in the glossary\'s own frame ("Petals: worth more, grows faster"). The internal name still appears once, in small type, for continuity with today\'s petal track — worth cutting if the owner would rather the card never say it at all.'],
+     ['p','<b>The real cost, measured directly against this rendered page, not asserted:</b> a compact card\'s row runs 94–107px tall depending on whether it carries pips and a buy button; "Daisy pays more," detailed, runs 241px — more than double. The scrollable trunk on this exact screen is 689px tall, which is roughly seven compact rows, or three if every one of them were detailed — landing a realistic mixed screen at the four-to-five doc 52 itself names.'],
+     ['q','<b>Is the internal name ("Rich Bloom, star 3 of 5") worth keeping in the sub-line at all,</b> or should the card say nothing but the plain sentence? My recommendation: cut it — nobody reading "Daisy pays more" needs the old system\'s name to understand what they are buying, and the sub-line is prime real estate the two-line title fix already made scarcer.'],
     ]
   );
 
 /* ================= SECTION 5 — the unveiling ================= */
-/* A simplified storyboard, not a literal miniature of the full rail card — at
-   186px wide there is no room for the card's own title+sub+price layout
-   without wrapping badly, so each cell shows just the icon (large) and a
-   short caption underneath. The four bookends are real; the "lifting" middle
-   is a guess at a two-second transition a static page cannot otherwise show. */
 function filmMaskIco(){
   return '<span class="trk-mask-ico" style="width:64px;height:64px">' + ico('mask') + '</span>';
 }
@@ -749,67 +954,120 @@ function filmBloomIco(){
   return '<span class="trk-ico" style="width:64px;height:64px;--art:#dcdcff">' + bloomSvg('#b7b7ff','#6a6adf') + '</span>';
 }
 function filmSplitIco(){
-  /* Two full-size icons stacked via CSS grid (same cell), each clipped to its
-     own half — a top silhouette over a bottom real bloom, split down the
-     middle. Robust because both live in the same grid-area rather than an
-     absolute-position guess. */
   return '<span style="width:64px;height:64px;display:grid;border-radius:50%;overflow:hidden;border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink-2)">' +
     '<span style="grid-area:1/1;display:grid;place-items:center;background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.5), transparent 62%), var(--paper-dim-2);clip-path:inset(0 0 50% 0)">' + ico('mask') + '</span>' +
     '<span style="grid-area:1/1;display:grid;place-items:center;background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)), #dcdcff;clip-path:inset(50% 0 0 0)">' + bloomSvg('#b7b7ff','#6a6adf') + '</span>' +
   '</span>';
 }
-function filmCell(step, caption, iconHtml, titleHtml, sub, lit){
-  return '<div class="filmcell"><div class="crop"><div class="inner" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%;text-align:center;position:relative">' +
+function filmCell(step, caption, iconHtml, titleHtml, sub, lit, pips){
+  return '<div class="filmcell"><div class="crop"><div class="inner" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;height:100%;text-align:center;position:relative">' +
     (lit ? '<span class="glow-burst"></span>' : '') +
     iconHtml +
-    '<div>' + titleHtml + (sub ? '<div style="font-size:10.5px;font-weight:700;color:var(--ink-soft);margin-top:3px;max-width:150px">' + sub + '</div>' : '') + '</div>' +
+    '<div style="position:relative">' + titleHtml + (sub ? '<div style="font-size:10.5px;font-weight:700;color:var(--ink-soft);margin-top:3px;max-width:150px">' + sub + '</div>' : '') +
+    (pips ? '<div style="margin-top:6px;display:flex;justify-content:center">' + pipRow(pips.of, pips.filled) + '</div>' : '') + '</div>' +
   '</div></div><span class="step">' + step + ' — ' + caption + '</span></div>';
 }
 document.getElementById('f-5').innerHTML =
-  filmCell('1', 'Masked, marker below', filmMaskIco(), '<span class="trk-qmark" style="font-size:16px">???</span>', 'Rung 9 · marker at rung 8') +
+  filmCell('1', 'Masked, marker below', filmMaskIco(), '<span class="trk-qmark" style="font-size:16px">???</span>', 'Level 9 · marker at level 8') +
   filmCell('2', 'Marker arrives, mask lifts', filmSplitIco(), '<b style="font-size:15px">Bluebell</b>', 'The mask is lifting…') +
-  filmCell('3', 'Lit, stars appear', filmBloomIco(), '<b style="font-size:15px">Bluebell</b>', 'A new flower!', true) +
-  filmCell('4', 'Settled, up next moves on', filmBloomIco(), '<b style="font-size:15px">Bluebell</b>', 'Unlocked · rung 9') +
+  filmCell('3', 'Lit, stars appear', filmBloomIco(), '<b style="font-size:15px">Bluebell</b>', 'A new flower!', true, {of:5, filled:0}) +
+  filmCell('4', 'Settled, level 9 reached', filmBloomIco(), '<b style="font-size:15px">Bluebell</b>', 'Unlocked · gold 150K', false, {of:5, filled:0}) +
   fig('', '', '',
-    '<div class="note d" style="max-width:none">The lift in step 2 is drawn as a plain clip-path split (silhouette over real art) rather than a real cross-fade — a static page cannot show a two-second animation, only its bookends and a guess at the middle. <b>The actual transition (crossfade? wipe? a card flip?) is an animation-pass question, not a layout one</b>, and is out of scope here.</div>' +
-    '<div class="note p" style="max-width:none">Step 3\'s glow is a generic radial burst, standing in for "some kind of celebration happens here." The real celebration likely wants the moments dialog\'s own pattern (doc 47) rather than a glow on the rail card itself — flagging so nobody mistakes this for the actual proposal.</div>',
+    '<div class="note d" style="max-width:none">The lift in step 2 is drawn as a plain clip-path split (silhouette over real art) rather than a real cross-fade — a static page cannot show a two-second animation, only its bookends and a guess at the middle. The actual transition (crossfade? wipe? a card flip?) is an animation-pass question, not a layout one, and is out of scope here.</div>' +
+    '<div class="note p" style="max-width:none">Steps 3 and 4 now show the empty five-star row appearing with the card, per the brief\'s "the card lights and its stars appear" — v1 never drew this. Step 3\'s glow is a generic radial burst, standing in for "some kind of celebration happens here"; the real celebration likely wants the moments dialog\'s own pattern (doc 47) rather than a glow on the rail card itself.</div>',
     []
   );
 
 /* ================= SECTION 6 — the lawn ================= */
-function lawnBoard(slots){
-  const filled = [
-    {icon: ico('gnome'), art:'#ffe0e8', lb:'Deep Roots'},
-    {icon: ico('sprout'), art:'#eaffe0', lb:'Full Basket'},
-    {icon: ico('grass'), art:'#eafbe2', lb:'Long Table'},
-    {icon: ico('moon'), art:'#e6d9ff', lb:'Warm Hollow'},
-    {icon: ico('flag'), art:'#fff3c2', lb:'Quiet Hours'},
-  ];
+function lawnBoard(slotsArr, opts){
+  opts = opts || {};
   let html = '<div class="lawn-board"><span class="lawn-flower">' + bloomSvg('#fff6e0','#ffd43b') + '</span><div class="lawn-slots">';
-  for (let i = 0; i < slots; i++) {
-    if (i < Math.min(slots, filled.length) && (slots === 2 ? i < 1 : true)) {
-      const f = filled[i];
-      html += '<div class="lawn-slot"><span class="ic" style="--art:' + f.art + ';background:radial-gradient(circle at 34% 28%,#fff,' + f.art + ')">' + f.icon + '</span><span class="lb">' + f.lb + '</span></div>';
+  slotsArr.forEach((s, i) => {
+    if (s) {
+      html += '<div class="lawn-slot"><span class="ic" style="--art:' + s.art + ';background:radial-gradient(circle at 34% 28%,#fff,' + s.art + ')">' + s.icon + '</span><span class="lb">' + s.lb + '</span></div>';
     } else {
-      html += '<div class="lawn-slot empty"><span class="ic">+</span><span class="lb">Empty</span></div>';
+      const tap = (opts.tapAt === i) ? '<span class="tap-ring"></span><span class="tap-dot"></span>' : '';
+      html += '<div class="lawn-slot empty"><span class="ic">' + tap + (opts.tapAt === i ? '' : '+') + '</span><span class="lb">Empty</span></div>';
     }
-  }
+  });
   html += '</div></div>';
   return html;
 }
+const LAWN_ITEMS = {
+  roots: {icon: ico('gnome'), art:'#ffe0e8', lb:'Deep Roots'},
+  basket: {icon: ico('sprout'), art:'#eaffe0', lb:'Full Basket'},
+  table: {icon: ico('grass'), art:'#eafbe2', lb:'Long Table'},
+  hollow: {icon: ico('moon'), art:'#e6d9ff', lb:'Warm Hollow'},
+  quiet: {icon: ico('flag'), art:'#fff3c2', lb:'Quiet Hours'},
+};
+function gardenWithLawn(lawnInner){
+  return '<div class="stage-bg"></div>' +
+    '<div class="hud-row"><span class="wallet">' + ico('coin') + fmt(18420) + '</span>' +
+    '<span class="hud-btns"><span class="hud-btn">' + ico('book') + '</span><span class="hud-btn">' + ico('menu') + '</span></span></div>' +
+    '<div style="position:absolute;left:16px;right:16px;top:calc(var(--sat) + 64px);height:150px;border-radius:22px;' +
+      'background:linear-gradient(180deg,#e3c48e,#c9a06a);border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink-2);display:grid;place-items:center">' +
+      '<span style="width:56px;height:56px;display:block">' + bloomSvg('#fff6e0','#ffd43b') + '</span>' +
+    '</div>' +
+    '<p style="position:absolute;left:16px;right:16px;top:calc(var(--sat) + 220px);text-align:center;font-size:10.5px;font-weight:800;color:var(--ink-soft)">' +
+      'THE GARDEN BOARD — plots for planting, unchanged</p>' +
+    '<div style="position:absolute;left:16px;right:16px;top:calc(var(--sat) + 244px);bottom:98px;display:flex;align-items:center;justify-content:center">' +
+      lawnInner +
+    '</div>' +
+    '<div class="dock">' +
+      '<button>' + ico('gift') + 'Orders</button>' +
+      '<button>' + ico('book') + 'Cards</button>' +
+      '<button class="home">' + bloomSvg('#fff6e0','#ffd43b') + '</button>' +
+      '<button>' + ico('coin') + 'Turn</button>' +
+      '<button>' + ico('decor') + 'Shop</button>' +
+    '</div>';
+}
+function perkPickRow(o){
+  if (o.state === 'masked') {
+    return '<div class="trk-card masked">' +
+      '<span class="trk-mask-ico">' + ico('mask') + '</span>' +
+      '<span class="trk-lab"><span class="trk-qmark">???</span><span class="trk-hint">' + SHARED_HINT + '</span></span></div>';
+  }
+  const action = o.state === 'equip' ? '<span class="trk-equip">EQUIP</span>' : buyBtn(o.price);
+  return '<div class="trk-card unlocked">' +
+    '<div class="trk-row2">' +
+      '<span class="trk-ico" style="--art:' + o.art + '">' + o.icon + '</span>' +
+      '<span class="trk-lab"><span class="trk-title">' + o.title + '</span>' +
+      (o.sub ? '<span class="trk-sub">' + o.sub + '</span>' : '') + '</span>' +
+      '<span class="trk-pricewrap">' + action + '</span>' +
+    '</div></div>';
+}
 document.getElementById('f-6').innerHTML =
-  fig('6A', 'Two slots, one filled', 'The lawn at the start of the climb.',
-    phone(sheet('Your garden', '', '<div style="padding:8px 2px">' + lawnBoard(2) + '</div>')),
-    [['d','Perks sit on the grass beside the blessed flower, as placed objects — not a settings list. Doc 4\'s own diagram, redrawn.']]
+  fig('6A', 'An empty spot, on the grass', 'Three slots, the middle one open. No door, no menu — this is the garden scene.',
+    phone(gardenWithLawn(lawnBoard([LAWN_ITEMS.roots, null, LAWN_ITEMS.basket]))),
+    [['d','<b>The lawn is not a screen and has no door.</b> Spots sit on the garden scene itself, the same board the flower and its plots already stand on — v1 drew this whole thing inside a sheet titled "Your garden," which is precisely the destination-reading the owner ruled against.']]
   ) +
-  fig('6B', 'Five slots, all filled', 'The lawn near the top of the climb — a build the player can see.',
-    phone(sheet('Your garden', '', '<div style="padding:8px 2px">' + lawnBoard(5) + '</div>')),
-    [['q','At five perks plus the flower, the board is getting busy on a 390-wide screen. Worth a real art pass to check the grass patch does not feel cramped — this wireframe uses generous slot spacing that a real garden scene with real plants around it may not have room for.']]
+  fig('6B', 'The tap', 'A ripple on the empty spot — nothing has opened yet.',
+    phone(gardenWithLawn(lawnBoard([LAWN_ITEMS.roots, null, LAWN_ITEMS.basket], {tapAt:1}))),
+    [['p','The ripple and finger-dot are a plain radial pulse, standing in for "a tap just landed here" — real feedback (haptic, a bounce on the slot) is a juice pass, not a layout question.']]
+  ) +
+  fig('6C', 'The picker', 'Slides up exactly like `seeds` does over an empty plot today — same sheet, same grammar.',
+    phone(sheet('Place a perk', 'Placing into the middle spot on your lawn.',
+      perkPickRow({state:'equip', icon:ico('grass'), art:'#eafbe2', title:'Long Table', sub:'Owned — one more order slot. Not currently placed.'}) +
+      perkPickRow({state:'buy', icon:ico('moon'), art:'#e6d9ff', title:'Warm Hollow', sub:'A tended creature stays awake longer', price:{cur:'prism', amt:180}}) +
+      perkPickRow({state:'masked'})
+    )),
+    [
+     ['d','Owning and wearing are different things — the record shelf\'s equip grammar (doc 52 §4). "Long Table" is already owned and simply moves here for free; "Warm Hollow" is revealed but not yet owned, so the same tap buys it and places it in one action.'],
+     ['d','A masked row can appear here too, on the exact vocabulary from tools/curtain-spike.html — not every perk need be revealed yet just because a slot is free.'],
+    ]
+  ) +
+  fig('6D', 'Two slots, one filled', 'The lawn at the start of the climb.',
+    phone(gardenWithLawn(lawnBoard([LAWN_ITEMS.roots, null]))),
+    [['d','Perks sit on the grass beside the flower as placed objects, not a settings list — doc 52 §4\'s own diagram, redrawn on the actual garden rather than inside a sheet.']]
+  ) +
+  fig('6E', 'Five slots, all filled', 'Near the top of the climb — a build the player can see.',
+    phone(gardenWithLawn(lawnBoard([LAWN_ITEMS.roots, LAWN_ITEMS.basket, LAWN_ITEMS.table, LAWN_ITEMS.hollow, LAWN_ITEMS.quiet]))),
+    [['q','At five perks plus the flower and the board above it, the screen is busy. Worth a real art pass to check the lawn does not feel cramped once real scenery sits behind it — this wireframe\'s spacing is generous in a way a finished garden scene may not have room for.']]
   );
 
 /* ================= SECTION 7 — the drone ================= */
 document.getElementById('f-7').innerHTML =
-  fig('7', 'The drone, in the Shop', 'Not a rung on the trunk — the upgrade branch off the offline card is.',
+  fig('7', 'The drone, in the Shop', 'Not a card on the trunk — the only one in this feature that lives off the path entirely.',
     phone(sheet('Shop', '',
       '<span class="notonpath">NOT ON THE PATH</span>' +
       '<div class="drone-card" style="margin-top:10px">' +
@@ -822,89 +1080,165 @@ document.getElementById('f-7').innerHTML =
       '</div>'
     )),
     [
-     ['d','Two prices on one card, per §7 — a one-time real-money purchase and a rewarded-ad rental. This is the only tree-adjacent card that lives entirely off the path, in the Shop.'],
-     ['p','<b>"$4.99" is a placeholder number</b>, not a priced figure — I have no real price to draw from and did not want to leave the tag blank. The upgrade branch that hangs off the offline card (rung 13, per §7) is not drawn here; this frame is the Shop card alone, since that is what the brief names for this frame specifically.'],
+     ['d','Two prices on one card, per §7 — a one-time real-money purchase and a rewarded-ad rental. The Prisms this migration refunds for gold-bought drone levels spend anywhere on the tree, not on this card.'],
+     ['p','<b>"$4.99" is a placeholder number</b>, not a priced figure. The upgrade branch that hangs off the offline card is not drawn here; this frame is the Shop card alone, since that is what the brief names for this frame specifically.'],
     ]
   );
 
 /* ================= SECTION 8 — up next on the garden ================= */
 document.getElementById('f-8').innerHTML =
-  fig('8', 'Up next, without opening the tree', 'Doc 28: demand rendered on top of supply.',
+  fig('8', 'Up next, and where auto-tap will sit', 'Doc 28: demand rendered on top of supply. No "Auto-tap" pill — it never existed in the source.',
     phone(
       '<div class="stage-bg"></div>' +
-      '<div class="hud-row"><span class="wallet">' + ico('coin') + '18,420</span><span class="hud-btns"><span class="hud-btn">' + ico('book') + '</span><span class="hud-btn">' + ico('menu') + '</span></span></div>' +
-      '<div class="band"><span class="fpill">' + ico('gear') + 'Auto-tap OFF</span><span class="fpill">' + ico('bolt') + 'Power +70%</span></div>' +
+      '<div class="hud-row"><span class="wallet">' + ico('coin') + fmt(18420) + '</span>' +
+      '<span class="wallet">' + ico('prism') + fmt(640) + '</span>' +
+      '<span class="hud-btns"><span class="hud-btn">' + ico('book') + '</span><span class="hud-btn">' + ico('menu') + '</span></span></div>' +
+      '<div class="band"><span class="fpill">' + ico('bolt') + 'Power Punch Lv 7' + '</span></div>' +
       '<div class="yard"><div class="plotgrid">' +
-        Array(9).fill(0).map((_,i)=> i===4 ? '<div class="plot mid">' + bloomSvg('#fff6e0','#ffd43b').replace('viewBox="0 0 40 40"','viewBox="0 0 40 40" width="34" height="34"') + '</div>' : '<div class="plot"></div>').join('') +
+        Array(9).fill(0).map((_,i)=> i===4 ? '<div class="plot mid">' + bloomSvg('#fff6e0','#ffd43b') + '<span class="autotap-ph" style="right:-6px;bottom:-6px">' + ico('bolt') + '</span></div>' : '<div class="plot"></div>').join('') +
       '</div></div>' +
-      '<span class="upnext-chip" style="left:16px;bottom:206px"><span class="upnext-ring"></span><span class="ic">' + ico('sprout') + '</span><span class="txt"><b>Up next</b><i>Daisy pays more</i></span></span>' +
+      '<span class="upnext-chip" style="left:16px;bottom:206px"><span class="upnext-ring"></span><span class="ic">' + ico('sprout') + '</span><span class="txt"><b>Up next · Lv 5</b><i>Daisy pays more</i></span></span>' +
       '<div class="dock">' +
         '<button>' + ico('gift') + 'Orders</button>' +
         '<button>' + ico('book') + 'Cards</button>' +
-        '<button class="home">' + bloomSvg('#fff6e0','#ffd43b').replace('viewBox="0 0 40 40"','viewBox="0 0 40 40" width="30" height="30"') + '</button>' +
+        '<button class="home">' + bloomSvg('#fff6e0','#ffd43b') + '</button>' +
         '<button>' + ico('coin') + 'Turn</button>' +
         '<button>' + ico('decor') + 'Shop</button>' +
       '</div>'
     ),
     [
-     ['p','<b>Placement: a chip floating over the top-left of the yard.</b> This is one of several plausible spots — a badge dot on the "Cards" dock button (matching how "What\'s New" already signals unseen content) is the other obvious candidate, and is cheaper to build. I drew the floating chip because it also carries the next card\'s NAME, which a dot cannot, and doc 28\'s whole point is demand rendered where you can see it while you play, not tucked into a menu icon.'],
+     ['d','<b>No "Auto-tap" pill.</b> v1 invented one; nothing in the source builds it. The ghost circle beside the flower marks only where a real button will sit once the feature exists — dashed, half-opacity, drawn to be unmistakably a placeholder rather than a proposal for what it does or how it looks.'],
+     ['p','<b>Placement: a chip floating over the top-left of the yard,</b> now labelled with the level too ("Up next · Lv 5") so it reads off the same number system as the tree itself. A badge dot on the "Cards" dock button is the cheaper alternative and the other obvious candidate.'],
      ['q','<b>Does the chip need to be tappable</b> (jump straight into the tree, scrolled to that card) or is it read-only flavour? My recommendation: tappable — a promise you cannot act on is close to the "affordability peek spends the ceremony" problem doc 52 already worries about elsewhere.'],
-     ['q','This frame answers "is there a door to the tree that is not the Almanac," but not <b>where the tree\'s own primary door lives</b> — replacing the Almanac\'s petal tab, or a new dock icon. I have not drawn the Almanac sheet with a "Tree" tab in it, nor a sixth dock button, because the dock is explicitly five buttons today (doc 08) and a sixth is a bigger call than this spike should make silently.'],
+     ['q','This frame still does not answer <b>where the tree\'s own primary door lives</b> — replacing the Almanac\'s petal tab, or a new dock icon. See section 11.'],
     ]
   );
 
-/* ================= SECTION 9 — every layout decision ================= */
+/* ================= SECTION 9 — the quest strip converting ================= */
+function stripPhoneTop(inner){
+  /* A medium crop — enough of the HUD and the garden's own top edge to show
+     "the same space," not a full 844px phone. Reuses .filmcell/.crop with a
+     bigger inline size instead of a fourth CSS class. */
+  return '<div class="filmcell" style="width:320px"><div class="crop" style="width:320px;height:430px;border-radius:26px">' +
+    '<div style="position:absolute;inset:0;background:linear-gradient(180deg,#bfe3ff 0%,#eaf6ff 34%,#eee6c8 60%,#d9c99a 100%)">' +
+    inner +
+    '</div></div></div>';
+}
 document.getElementById('f-9').innerHTML =
-  '<div class="box"><h3>Ruled, followed as given (green in the frames above)</h3><ul>' +
-  '<li>Rarity colours are doc 05\'s token table (<code>--rare</code>, <code>--epic</code>, <code>--legend</code>), never the album\'s <code>SET_SHAPE</code> ladder. The tree has no uncommon and no mythic tier.</li>' +
-  '<li>The epic frame has no precedent anywhere in the codebase and is drawn fresh from <code>--epic</code> <code>#b197fc</code>, the same ring mechanism as the album\'s rare/legend rings.</li>' +
-  '<li>Creatures are their own card, placed right after their flower — not a sideways branch (2026-09-26 supersedes §6).</li>' +
-  '<li>Masked cards reuse the seed curtain\'s exact vocabulary: silhouette, <code>???</code>, one shared hint line, the <code>paper-dim</code> ramp — copied from tools/curtain-spike.html, not reinvented.</li>' +
-  '<li>The "up next" card reuses the existing <code>.fresh</code> highlight treatment (pale gold glow) rather than a new "look at me" state.</li>' +
-  '<li>Prisms pips are green (<code>--seed</code>), matching doc 05\'s rule that green is reserved for the meter\'s fill and the petal pips; price pills never wear green (that would double up with "affordable").</li>' +
-  '</ul></div>' +
-  '<div class="box p"><h3>Placeholder picks — flagged, and repeated as questions in section 10</h3><ul>' +
-  '<li>The path is drawn as a straight single column, not the reference\'s zigzag.</li>' +
-  '<li>Star pips sit in their own row directly under the card title, on the small rail card.</li>' +
-  '<li>The chapter tick carries a label ("Chapter I · The Quiet Garden") rather than being a wordless mark.</li>' +
-  '<li>A flower and its own upgrades share a small coloured tag under the title (e.g. "DAISY") rather than a shared icon, colour wash, or connecting line on the rail.</li>' +
-  '<li>Rung numbers and the gaps between named cards in section 1 and 2 are invented sequencing, not derived values.</li>' +
-  '<li>Access rights, lawn slots and creature reveals are drawn as free (reputation alone), never costing gold or Prisms.</li>' +
-  '<li>Perk cards with fewer than five ranks show fewer pips, rather than five pips with some permanently disabled.</li>' +
-  '<li>The "up next" garden badge is a floating chip naming the card, not a dot on an existing dock icon.</li>' +
-  '<li>The curtain is a plain scrim marking a boundary, with no fabric or drapery illustration.</li>' +
-  '</ul></div>';
+  fig('9A', 'Minute one', 'The tutorial strip teaches the loop. Gold only — Prisms do not exist yet.',
+    stripPhoneTop(
+      '<div class="hud-row" style="padding-top:20px"><span class="wallet">' + ico('coin') + '120</span></div>' +
+      '<div style="padding:10px 12px 0">' +
+        '<div class="quest-strip"><span class="q-pip-wrap"><span class="q-pip-ring" style="--p:0"></span><span class="q-pip">' + ico('sprout') + '</span></span>' +
+        '<span class="q-bar"><i style="--fill:0%"></i><span class="q-bar-label"><span class="q-text">Plant your first Daisy</span><span class="q-count">0/1</span></span></span>' +
+        '<span class="q-reward">' + ico('star') + '10</span></div>' +
+      '</div>' +
+      '<div style="position:absolute;left:12px;right:12px;bottom:12px;height:70px;border-radius:16px;border:3px solid var(--ink);' +
+        'background:linear-gradient(180deg,#e3c48e,#c9a06a);box-shadow:0 4px 0 var(--ink-2)"></div>'
+    ),
+    [['d','The quest strip is the tutorial — it teaches the core loop and nothing else, exactly as it does today. Reward icon and box are the existing quest-strip grammar, copied verbatim from records-spike.html.']]
+  ) +
+  fig('9B', 'The first Turn', 'A simplified stand-in for the ceremony — the beat, not the screen.',
+    stripPhoneTop(
+      '<div style="position:absolute;inset:0;display:grid;place-items:center;padding:0 20px">' +
+        '<div class="turn-beat" style="position:relative">' +
+          '<span class="glow-burst" style="inset:-30px"></span>' +
+          '<span class="ic" style="position:relative">' + ico('pouch') + '</span>' +
+          '<b style="position:relative">The Turn!</b>' +
+          '<span style="position:relative">Prisms arrive. The stand reopens.</span>' +
+        '</div>' +
+      '</div>'
+    ),
+    [
+     ['p','This is deliberately NOT a design of the Turn ceremony — that screen already exists (the Tally, the blessing, doc 32 §"The Turn"). It is a placeholder bookend so the strip either side of it reads as one continuous story rather than two unrelated frames.'],
+     ['d','<b>The first Turn moves early</b> — a few minutes in, not the standing `minCoins` gate every later Turn uses. Per the owner\'s review, that gate needs a first-Turn-only carve-out, not a global reduction, since the standing floor is what stops many-cheap-Turns-a-day.'],
+    ]
+  ) +
+  fig('9C', 'Minutes later', 'The same box, now customers and orders. Prisms exist now — both wallets show.',
+    stripPhoneTop(
+      '<div class="hud-row" style="padding-top:20px"><span class="wallet">' + ico('coin') + '2,840</span><span class="wallet">' + ico('prism') + '18</span></div>' +
+      '<div style="padding:10px 12px 0">' +
+        '<div class="quest-strip"><span class="q-pip-wrap"><span class="q-pip-ring" style="--p:1"></span><span class="q-pip">' + ico('people') + '</span></span>' +
+        '<span class="q-bar"><i style="--fill:100%"></i><span class="q-bar-label"><span class="q-text">2 customers waiting</span><span class="q-count">3 orders</span></span></span>' +
+        '<span class="q-reward">' + ico('coin') + '64</span></div>' +
+      '</div>' +
+      '<div style="position:absolute;left:12px;right:12px;bottom:12px;height:70px;border-radius:16px;border:3px solid var(--ink);' +
+        'background:linear-gradient(180deg,#e3c48e,#c9a06a);box-shadow:0 4px 0 var(--ink-2)"></div>'
+    ),
+    [
+     ['d','<b>The narrative: the flower teaches you to grow and to reopen the store; the store reopening is what brings customers.</b> The quest strip does not stay AND get joined by orders — it fully converts, freeing the same slot of screen rather than adding a second one above or below it.'],
+     ['d','This is the same box, byte-for-byte — same grid, same border, same height — wearing new content. That sameness is the whole point of the frame, not an incidental reuse.'],
+     ['q','<b>Does the order strip need its own version of the quest strip\'s ring-fill (currently drawn full, "100%")?</b> A quest\'s ring fills toward completing ONE thing; an order queue does not obviously have a single "toward what." My recommendation: drop the ring for orders and let the pip just be a customer icon — I filled it here only to reuse the exact component, not because I believe it means anything in this context.'],
+    ]
+  );
 
-/* ================= SECTION 10 — questions ================= */
+/* ================= SECTION 10 — every layout decision ================= */
 document.getElementById('f-10').innerHTML =
-  '<div class="box q"><h3>The eight named in the brief</h3><ul>' +
-  '<li><b>1. How many cards fit one screen at 390×844?</b> At this card height (~76px card + rail spacing, roughly 96px per populated rung), about seven populated rungs fit in the 844px frame before scrolling, fewer once gap-rungs and a marker or chapter row are mixed in — section 1\'s frame scrolls to show all 14. <b>Recommendation:</b> if the real trunk is closer to one card per rung than the sparse spacing I drew, budget for 6–7 visible cards per screen, not 14.</li>' +
-  '<li><b>2. Straight column or the reference\'s zigzag?</b> Drawn straight. <b>Recommendation:</b> keep it straight — the rail\'s per-rung alignment is already doing real legibility work, and a zigzag would make that alignment harder to read at a glance. But this is the named open question, and I have not drawn the zigzag alternative to compare against.</li>' +
-  '<li><b>3. Where do the star pips sit on a card?</b> Drawn directly under the title, above the price. <b>Recommendation:</b> keep it there — it is where the existing petal-track already puts its own pips, so it costs nothing to learn twice.</li>' +
-  '<li><b>4. Does a chapter tick need a label?</b> Drawn WITH one ("Chapter I · The Quiet Garden"). <b>Recommendation:</b> keep the label — "a chapter tick is visibly not a card" is about shape, not secrecy, and the chapter number is already public knowledge the moment it fires elsewhere in the village.</li>' +
-  '<li><b>5. How does the rail\'s number read at 15,000+?</b> Drawn in frame 2 at "15,842". <b>Recommendation:</b> it reads fine at five digits; the next thing to check is six figures deep into the trunk, which this spike does not reach.</li>' +
-  '<li><b>6. Do a flower and its upgrades need a shared mark?</b> Drawn as a small coloured tag under the title ("DAISY"), tinted to the flower\'s own art colour. <b>Recommendation:</b> try it without the tag first in a real build and see if proximity plus the flower\'s art colour on the upgrade\'s own icon disc is enough — the tag is a second thing to read on an already busy small card, and I added it mainly so this question would have a concrete answer to react to.</li>' +
-  '<li><b>7. Sheet or full screen?</b> Both drawn — section 1 as a sheet, section 2 as a full screen. <b>Recommendation:</b> full screen, once the trunk is genuinely ~120 rungs long. A sheet is the door the Almanac already has, but a partial-height sheet fighting a home-scroll for a trunk this long felt cramped the moment I laid out more than about eight cards in it.</li>' +
-  '<li><b>8. Where is the tree\'s door?</b> Not resolved by this spike. Frame 8 shows a garden-level "up next" preview, which is a different thing from the primary entry point. <b>Recommendation:</b> replace the Almanac\'s petal tab (the brief\'s own framing — "the tree takes the Almanac\'s petal tab and replaces the petal rows") rather than adding a sixth dock button, since doc 08\'s dock is deliberately five buttons and a sixth is a bigger, separate call.</li>' +
+  '<div class="box"><h3>Ruled by the owner\'s review, followed as given (green in the frames above)</h3><ul>' +
+  '<li>"Rung" is retired everywhere. The badge reads a LEVEL; the marker\'s headline number is the same level, and reputation is demoted to a ring-fill plus a small range underneath.</li>' +
+  '<li>The tree is always a full screen. Every tree frame uses one <code>.trk-screen</code> component: both wallets in the header, a scrolling trunk, a floating X at bottom centre. There is no sheet variant anymore.</li>' +
+  '<li>A price is a buy button, never floating text, and every amount is rounded through a hand-copied <code>fmt()</code> — nothing prints a raw nine-digit number.</li>' +
+  '<li>Legendary is said twice: a solid 4px ring, a glow more than double rare/epic\'s spread, and a slow saturation breath that reduced-motion turns off.</li>' +
+  '<li>Card detail is inline and scoped to exactly two cases — the up-next card, and an owned card that can still level. Everything else, including a legendary that is locked, stays compact.</li>' +
+  '<li>Access rights and lawn slots are revealed by reputation and purchased with Prisms. Word of Mouth is epic; a real legendary (the fifth lawn spot) is drawn in its place.</li>' +
+  '<li>No "Auto-tap" pill. A dashed, half-opacity ghost circle beside the flower marks placement only.</li>' +
+  '<li>The lawn is not a screen. Slots sit on the garden scene; tapping an empty one opens a picker with the exact grammar of tapping an empty plot for <code>seeds</code> today.</li>' +
+  '<li>The quest strip fully converts at the first Turn rather than gaining a sibling — the same box, new content, so the player\'s eye never has to learn a new location on screen.</li>' +
+  '<li>Rarity colours stay doc 05\'s token table, never the album\'s <code>SET_SHAPE</code> ladder; the epic ring still has no precedent anywhere in the codebase and is drawn fresh from <code>--epic</code>.</li>' +
+  '<li>Creatures remain their own card, placed right after their flower, per the 2026-09-24 supersession of §6 that v1 already got right.</li>' +
+  '<li>Masked cards reuse the seed curtain\'s exact vocabulary — silhouette, <code>???</code>, one shared hint line, the paper-dim ramp — and stay compact even when the thing under them would otherwise be legendary.</li>' +
   '</ul></div>' +
-  '<div class="box q"><h3>Four more the drawing surfaced</h3><ul>' +
-  '<li><b>9. Does Daisy need a reputation-gated card at all?</b> It is a free starter flower today with no unlock price. Frame 1 draws it as an already-unlocked card with nothing to buy, mostly to give the upgrade cards above it ("Daisy pays more") somewhere to point. <b>Recommendation:</b> if starter flowers keep no gate, their tree card can probably skip the padlock/price grammar entirely and just be "already yours" — worth confirming before the spec commits to a uniform card treatment for all 19 flowers.</li>' +
-  '<li><b>10. What currency, if any, gates access rights, lawn slots and creature reveals?</b> I drew all three as free the instant reputation reaches them. If any should cost Prisms or gold, the price/ribbon grammar already exists to carry it — this is purely a "which" question, not a layout gap.</li>' +
-  '<li><b>11. Do perks with short rank ladders (2–3 ranks) show that many pips, or always five?</b> Drawn as "that many" (Gnome of Fortune shows 3). Showing 5 with some pips permanently unreachable would read as a promise the perk never keeps.</li>' +
-  '<li><b>12. Is the garden\'s "up next" badge (frame 8) tappable?</b> Drawn as a chip; whether it opens the tree directly, scrolled to that card, is unresolved. <b>Recommendation:</b> yes — see the note under frame 8.</li>' +
+  '<div class="box p"><h3>Placeholder and judgment picks — flagged, several repeated as questions in section 11</h3><ul>' +
+  '<li>The path is drawn as a straight single column, not the reference\'s zigzag.</li>' +
+  '<li>Star pips sit in their own row directly under the card title.</li>' +
+  '<li>The chapter tick carries a label rather than being a wordless mark.</li>' +
+  '<li>Reputation on the marker is printed exact (not through <code>fmt()</code>) — untested past five digits.</li>' +
+  '<li>A flower and its own upgrades share nothing but a matching icon-disc tint and a small "DAISY"-style tag — no separate connecting mark. This tries v1\'s own suggested alternative directly rather than repeating v1\'s tag-only answer.</li>' +
+  '<li>Every revealed, not-yet-owned card shows its own buy button, not only the one card that is "up next" — the ribbon and highlight are what is exclusive to up next. This follows from "once revealed, gold buys in any order," extended here to Prisms.</li>' +
+  '<li>A creature\'s reveal is drawn costing Prisms, standing in for "the right to start attracting it" — genuinely my best reading of an ambiguous line, not a confident one.</li>' +
+  '<li>Perk cards with rank ladders shorter than five show that many pips, not five with some permanently disabled.</li>' +
+  '<li>Level, gap and price numbers throughout are invented sequencing, not derived values.</li>' +
+  '<li>The garden\'s "up next" badge is a floating, named chip rather than a dot on an existing dock icon.</li>' +
+  '<li>The curtain is a plain scrim marking a boundary, with no fabric or drapery illustration.</li>' +
+  '<li>Frame 9\'s "first Turn" beat is a generic placeholder card, not a design of the Turn ceremony, which already exists elsewhere.</li>' +
   '</ul></div>';
 
-/* ================= SECTION 11 — copied from ================= */
+/* ================= SECTION 11 — questions ================= */
 document.getElementById('f-11').innerHTML =
+  '<div class="box q"><h3>The six still open from the brief</h3><ul>' +
+  '<li><b>1. Straight column or the reference\'s zigzag?</b> Drawn straight throughout. <b>Recommendation:</b> keep it straight — the rail\'s per-row alignment is doing real legibility work (every level number and tick falls on one vertical line), and a zigzag would make that harder to read at a glance. I have not drawn the zigzag alternative to compare against.</li>' +
+  '<li><b>2. Where do the star pips sit on a card?</b> Directly under the title, above the buy button. <b>Recommendation:</b> keep it there — it is where the flower\'s own petal track already puts its pips today, so a player learns the position once.</li>' +
+  '<li><b>3. Does a chapter tick need a label?</b> Drawn WITH one ("Chapter I · The Quiet Garden"). <b>Recommendation:</b> keep the label — a chapter tick being "visibly not a card" is about shape, not secrecy, and the chapter number is already public the moment it fires elsewhere in the village.</li>' +
+  '<li><b>4. How does the rail read at six figures?</b> Tested directly, not guessed — the same marker component at a stress value:</li></ul>' +
+  '<div style="display:flex;justify-content:center;padding:10px 0">' +
+    '<div class="trk-marker"><span class="trk-marker-badge"><span class="trk-marker-ring" style="--p:0.28"></span>' +
+    '<span class="trk-marker-hole"><b>94</b><i>LEVEL</i></span></span>' +
+    '<span class="trk-marker-rep">184,290 <span class="arrow">&rarr;</span> 205,000 rep</span></div>' +
+  '</div>' +
+  '<ul><li>It still fits on one line at this width, but it is visibly tighter, and a seven-figure late-game save (plausible if the trunk really runs to ~120 levels) has not been tested at all. <b>Recommendation:</b> if it ever wraps or crowds the ring, round the small range through <code>fmt()</code> after all ("184K &rarr; 205K") and keep only the CURRENT level\'s raw progress-within-level as a fallback for players who want the exact count — but I would only spend that complexity if a real build actually needs it.</li>' +
+  '<li><b>5. Do a flower and its upgrades need a shared mark?</b> Drawn WITHOUT one this time — matching icon-disc tint plus a small coloured tag is what carries the kinship, no separate connecting line or shared border. <b>Recommendation:</b> this is close to enough; a shared border colour on the card itself (not just the tag) is the next thing to try if playtesting shows "Daisy" and "Daisy pays more" still read as unrelated several levels apart.</li>' +
+  '<li><b>6. Where is the tree\'s own door?</b> Not resolved by this spike — frame 8 shows a garden-level preview, which is a different thing from the primary entry point. <b>Recommendation:</b> replace the Almanac\'s petal tab, per doc 52\'s own framing, rather than add a sixth dock button — doc 08\'s dock is deliberately five buttons and a sixth is a bigger, separate call this spike should not make silently.</li>' +
+  '</ul></div>' +
+  '<div class="box q"><h3>What this drawing surfaced</h3><ul>' +
+  '<li><b>7. Does Daisy need a reputation-gated card at all?</b> It is a free starter flower today with no unlock price; frame 1 draws it already owned mainly so "Daisy pays more" has something to point at. <b>Recommendation:</b> if starter flowers keep no gate, their card can skip the padlock grammar entirely and simply read "already yours" — worth confirming before the spec commits to one uniform treatment for all nineteen flowers.</li>' +
+  '<li><b>8. What, exactly, does a creature "reveal purchased with Prisms" buy?</b> I drew Pip\'s card with a Prisms price standing in for "the right to start attracting it," since attracting a creature is already a gameplay action (planting five of its flower) separate from anything a tree card could sell. <b>Recommendation:</b> confirm directly — the alternative reading is that only a creature\'s buff ranks cost Prisms and the reveal itself (seeing the card exist) is free like a flower\'s reveal, which would make Pip\'s card closer to Bluebell\'s than to Power Punch\'s.</li>' +
+  '<li><b>9. Should every revealed card show a buy button, or only the one that is "up next"?</b> Drawn as "every revealed card" — Gnome of Fortune and Bluebell both show prices in frame 1 despite neither being up next. <b>Recommendation:</b> keep it — "once revealed, gold buys in any order" is an explicit ruling for flowers, and treating Prisms cards the same way is the simpler rule to hold across the whole tree. If the owner wants purchase order enforced after all, the buy button is the thing to hide, not add.</li>' +
+  '<li><b>10. Is the internal system name ("Rich Bloom," "star 3 of 5") worth keeping anywhere on a levelling card?</b> Drawn present, in small type, for continuity with today\'s petal track. <b>Recommendation:</b> cut it — the two-line title fix already made the card\'s width scarcer, and nobody reading "Daisy pays more" needs the old name to understand the purchase.</li>' +
+  '<li><b>11. Is the garden\'s "up next" chip (frame 8) tappable?</b> Drawn as a chip; whether it opens the tree directly, scrolled to that card, is unresolved. <b>Recommendation:</b> yes — a promise you cannot act on is close to the "affordability peek spends the ceremony" problem doc 52 already worries about elsewhere.</li>' +
+  '<li><b>12. Does the order strip (frame 9C) need its own fill-ring, the way the quest strip\'s pip fills toward one goal?</b> Drawn full ("100%") only because it reuses the exact component. <b>Recommendation:</b> drop the ring for orders — a queue of orders is not obviously "toward" a single thing the way one quest is, and a fill state that means nothing is worse than no fill state.</li>' +
+  '</ul></div>';
+
+/* ================= SECTION 12 — copied from ================= */
+document.getElementById('f-12').innerHTML =
   '<div class="box"><ul>' +
-  '<li><b>tools/records-spike.html</b> — the page chrome wholesale: the token <code>:root</code> block, <code>.phone</code>/<code>.notch</code>/<code>.scroll</code>, the <code>fig()</code>/<code>phone()</code> helpers, the intro/TOC/section skeleton, the notes system (extended here with a third tag, <code>.note.p</code> for placeholders, since this spike needed to distinguish "already ruled" from "I had to guess" in a way records-spike did not).</li>' +
-  '<li><b>tools/records-spike.html</b> and <b>tools/curtain-spike.html</b>, both — the <code>.sheet-shell</code>/<code>.sheet-grip</code>/<code>.sheet-head</code>/<code>.tab</code> bottom-sheet chrome, and the <code>.price</code>/<code>.pips</code>/<code>.pip</code> pill recipes, all copied verbatim from style.css by way of both spikes.</li>' +
-  '<li><b>tools/curtain-spike.html</b> — the masked-card vocabulary: the paper-dim ramp, the <code>???</code> name, the shared hint line ("Keep growing — the garden isn\'t done with you," doc 47\'s own line, character for character), and the flower-silhouette mask icon, reused here for every masked node type rather than inventing a second masked look, per the brief\'s instruction.</li>' +
-  '<li><b>tools/curtain-spike.html</b> — the <code>.fresh</code> highlight (pale gold glow + ring) for the "up next" card, and the <code>seedRow</code> locked/unlocked visual split (dimmed paper-dim vs full colour) for locked vs. unlocked tree cards.</li>' +
-  '<li><b>tools/dock-spike.html</b> — the seed-pouch icon (<code>ICO.pouch</code>), adapted for Prisms price pills.</li>' +
-  '<li><b>style.css</b> directly — the rarity ring recipe (<code>.pack-reveal.is-new.r-rare</code>/<code>.r-legend</code>, the album\'s pack reveal), restated as <code>--trk-ring</code> for the tree\'s own cards, with a new <code>.r-epic</code> ring built the same way since none exists anywhere to copy; and <code>.petal-track .pip</code>\'s green-Prisms-pip recipe, restated as <code>.trk-pips .pip</code>.</li>' +
-  '<li><b>docs/08-ui-and-layout.md</b> — the five-button dock (Orders / Cards / Garden / Turn / Shop) for frame 8\'s garden scene.</li>' +
-  '<li><b>Nothing was copied from the album\'s <code>SET_SHAPE</code> ladder or its <code>.pack-reveal.r-*</code> rings beyond the ring MECHANISM</b> (a rarity-keyed box-shadow) — per the ruling, the album\'s five-tier common/uncommon/rare/legend/mythic ladder is a different thing from the tree\'s four tiers, and none of its specific colours or tier names appear here.</li>' +
+  '<li><b>tools/records-spike.html</b> — the page chrome wholesale: the token <code>:root</code> block, <code>.phone</code>/<code>.notch</code>/<code>.scroll</code>, the <code>fig()</code>/<code>phone()</code> helpers, the intro/TOC/section skeleton, the three-tag notes system (<code>.note.d/.q/.p</code>), and the <code>.quest-strip</code>/<code>.q-pip-ring</code>/<code>.q-bar</code> component used verbatim in frame 9 — the whole point of that frame is reusing the SAME box, so its CSS is reused, not reinvented.</li>' +
+  '<li><b>tools/curtain-spike.html</b> — the masked-card vocabulary: the paper-dim ramp, the <code>???</code> name, the shared hint line ("Keep growing — the garden isn\'t done with you," doc 47\'s own line, character for character), and the flower-silhouette mask icon, reused for every masked node type rather than inventing a second masked look, per the brief\'s instruction.</li>' +
+  '<li><b>style.css</b>, <code>.pack-reveal.is-new.r-rare</code>/<code>.r-legend</code> — the album\'s own rarity-ring recipe, restated as <code>--trk-ring</code>. <b>This pass also reads the comment above those rules directly</b> (grep "said twice") for the legendary fix: "a solid ring, a wider glow, and the saturate breath" — v1 copied the ring mechanism but not the actual "said twice" recipe, which is why its legendary read weak. The epic ring still has no precedent anywhere in the codebase and is drawn fresh from doc 05\'s <code>--epic</code> token, same mechanism as rare.</li>' +
+  '<li><b>ui-shared.js</b>, <code>fmt()</code> — copied by hand, verbatim, this time actually used. v1 defined its own <code>fmt()</code> that was really just <code>toLocaleString</code> and never rounded, which is how a 19,461,951-gold price ended up printed raw on a card. Every price in this build goes through the real function.</li>' +
+  '<li><b>icons.js</b> — the <code>prism</code> glyph (grep "Prisms\' own glyph") and the <code>pouch</code> glyph, both hand-copied. v1 used the pouch icon on Prisms price chips; doc 05 is explicit that the pouch is the container and never a number, so this build uses <code>prism</code> on every price and reserves <code>pouch</code> for frame 9\'s Turn beat alone.</li>' +
+  '<li><b>docs/08-ui-and-layout.md</b>\'s sheet-mode table — the <code>seeds</code> row ("Choose a seed · Tapping an empty plot") is the exact grammar frame 6C\'s perk picker follows, and the five-button dock (Orders / Cards / Garden / Turn / Shop) for frames 6 and 8\'s garden scenes.</li>' +
+  '<li><b>tools/tree-spike.html</b> (v1, in git history) — the rail/rung-row skeleton (<code>trk-wrap</code>/<code>trk-vline</code>/<code>trk-row</code>/<code>trk-railslot</code>), the card\'s locked/upnext/unlocked visual split, the filmstrip storyboard technique in frame 5, and the lawn-board diagram in frame 6 — all kept, because the LAYOUT skeleton was not the thing the owner\'s review found wrong. What changed sits on top of it: the marker, the screen chrome, the buy button, the legendary ring, the inline detail scoping, and the lawn\'s context.</li>' +
+  '<li><b>Nothing was copied from the album\'s <code>SET_SHAPE</code> ladder or its <code>.pack-reveal.r-*</code> rings beyond the ring MECHANISM</b> — the album\'s five-tier common/uncommon/rare/legend/mythic ladder is a different thing from the tree\'s four tiers, and none of its specific colours or tier names appear here.</li>' +
   '</ul></div>';
 
 function toggleNotes(){
