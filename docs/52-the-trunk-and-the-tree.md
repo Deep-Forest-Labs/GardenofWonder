@@ -88,6 +88,33 @@ owner's to change).
 >   epic and the spike drew it wrong.
 > - **Tabled:** the §6 creature slot collision (six creatures, four slots).
 >
+> ### REVISED 2026-09-27 — the owner's review of spike v3
+>
+> - **A card keeps its NAME as the title; the value goes on the line beneath.** "Compost Heap" is the
+>   title, and under it "Reduces cost by 15%". **This corrects yesterday's change 5**, which v3
+>   over-applied by moving the value *into* the title and demoting the name to a tag chip. The line
+>   the owner liked — "Next star: …" — stays exactly as v3 drew it. Three lines, in order: name,
+>   what it does now with its real number, what the next star adds.
+> - **Chapters appear ahead of the player, not only behind.** The Chapter I tick on frame 1 worked;
+>   the tree should let a player see *"Chapter 2 is coming up"* while climbing. A chapter is still a
+>   tick on the rail and never a card — but an upcoming one is legible from below.
+> - **The order strip's height is accepted as a wireframe artifact.** The owner's call: real art will
+>   layer the portrait behind the counter far more tightly than a wireframe can, so the tall box is
+>   not a design problem to solve now. Noted, not fixed.
+>
+> **OPEN — the owner asked for the desk's opinion, nothing is ruled:** should orders pay **only
+> reputation**, with gold removed, and flower output raised to compensate? See the 2026-09-27 entry
+> in [10-decision-log.md](10-decision-log.md) for what the code says about this — it is not a tuning
+> question, it touches an invariant the owner himself ruled from play and that `sim-test` asserts.
+>
+> **PARKED — the lawn becomes a room, not a strip.** The owner's new direction, to be detailed after
+> v4: the Apiary's space becomes **the Lawn**, a place to *place* things — beehives, gnomes, perks,
+> anything collected — by dragging them out to decorate. Reached by scrolling down to where the
+> Apiary is now. It would also let the two floating buttons leave the yard band, which is what is
+> crowding the creatures today. **This supersedes the whole "spots on the grass" framing** if it
+> lands, and it answers the no-spare-surface finding by giving the lawn its own room. Do not build
+> it yet; the owner is still thinking.
+>
 > ### REVISED 2026-09-26 (third) — the owner's review of spike v2
 >
 > Judged by eye against a Monopoly Go reference and two Gossip Harbor screenshots (both stay on the
