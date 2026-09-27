@@ -5,6 +5,46 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (direction, orders) — Reputation is the wage; the tip is the surprise
+
+**The owner resolved the single-currency question with a third answer, better than either option the
+desk priced.** Orders pay **reputation as the base, every time**, and **sometimes also a bonus** — a
+card pack, gold, gems, a power-up. His frame: *"you can tell which customers have almost like a
+'tip'."* So a customer card carries **two reward slots**: the wage, always reputation, and an
+optional second slot that most customers leave empty.
+
+**Why this is better than either pure option.** The desk's worry about reputation-only was feel:
+reputation is a progress bar, not a spendable, and the owner had already discovered by playing that
+an under-paying order *"almost feels pretty pointless."* A fixed wage plus a variable bonus is the
+standard answer to exactly that — the base keeps the loop legible (one activity, one currency) while
+the tip supplies the variable reward that a flat progress bar cannot. It also hands gold back a
+faucet without muddying what an order fundamentally pays, which matters because gold lost its largest
+sink when flower unlocks moved to Prisms on 2026-09-26.
+
+**It also softens the invariant problem.** *"Orders must always beat selling their contents"* is
+asserted per tier in `sim-test` against order gold. With a tip in play the engine is not purely
+reputation, so the rule can be re-expressed rather than simply retired — but it still has to be
+re-expressed **deliberately**, and `repPaused: true` still has to be turned off for any of this to
+pay anything at all.
+
+**No new machinery is needed.** Orders have no `reward` field today (`STAND` holds only slots,
+refill, varietyBonus, wildBonus, repPaused and tiers), but the shape already exists and is used twice:
+quests carry `reward: { boost: 'fortune', credits: 40, n: 2 }` and level grants carry
+`{ rep: 20, gems: 1, boost: 'bloom' }`. The tip should reuse that grammar rather than invent one.
+
+**Two things the desk flags, neither ruled:**
+
+1. **If a tip can be Prisms, that is a third Prism faucet outside the Turn** — after the Turn itself
+   and the Almanac trickle. Prisms already buy flowers, perk stars, access rights, lawn spots and
+   creature reveals, and the budget is unsized. Tips in gold, gems, packs and boosts cost nothing
+   structurally; a tip in Prisms is an economy decision wearing a bonus's clothes.
+2. **Is the tip visible before the order is filled, or only after?** Shown in advance, it becomes a
+   target and players will triage customers by tip — which is a real game, but it makes untipped
+   customers feel like chores. Hidden until delivery, it stays a delight but cannot be planned
+   toward. The desk leans **visible**, because the owner's own phrasing is *"you can tell which
+   customers have a tip,"* and because a reward you cannot see cannot motivate the order you choose.
+   Drawn both ways in the spike for the owner to judge.
+
 ## 2026-09-27 (rulings, spike v3 reviewed) — Name on top and value beneath; chapters read ahead; the lawn may become a room
 
 **Three rulings, one question, one parked idea**, from the owner's eye pass on `tools/tree-spike.html` v3.
