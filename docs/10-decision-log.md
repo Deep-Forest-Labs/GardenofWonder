@@ -5,6 +5,40 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (rulings, the owner's word) — The dialogue system is built to Gossip Harbor parity; every character's eyes must read; three threads run in parallel while the tree waits
+
+**1. The chapter scene is built, and built well.** The owner: *"I definitely want to have parity with
+Gossip Harbor and how they do their cutscenes with dialogue and conversations. This is a part that we
+don't want to skimp out on in terms of how well it looks. It needs to feel really good… I was able to
+tap through each conversation piece very quickly, and it felt very good. We need to have that same
+level of quality."* Doc 55 §9 question 5 is closed: **yes, the two-face scene, for volume one**, to
+the shape described in the late 2026-09-26 story entry. Because the ask is *feel*, it goes through
+both gates: a wireframe spike (`tools/scene-spike.html`) that is also a **motion gate** — the
+tap-through timing on sliders, the owner tunes it, the values ship verbatim — then the build.
+
+**2. Eyes.** The owner: *"the eyes on all of the characters need to read really well. I know she's
+supposed to be a little more mischievous, but she still needs to be cute and have readable eyes."*
+**Ruled as a house rule for every character-grade face**: eyes are the first thing read at 46px and
+they must read as cute and clear before they read as anything else — mischief is a tilt on a
+readable eye, never a squint. **Holly's eyes are revisited** in the hero spike (a row of her current
+eyes beside proposed ones; the rest of her untouched). This sharpens doc 46's "angled, lashed,
+mischievous eyes" rather than replacing it.
+
+**3. The tree waits; three threads run now.** The owner is still working the trunk's levels
+himself, so the tree spec and slice D are on hold by his word. Parallel-safe, because they touch
+different files: **(a) the season heroes** — Fall and Spring, a spike with three silhouettes in a
+row and Holly's eyes, `tools/hero-spike.html` plus `docs/56`; **(b) the dialogue system** — the
+scene spike with its motion gate, `tools/scene-spike.html`, then the build after the owner's
+verdict; **(c) the story** — the remaining lines of volume one drafted to `docs/57` for the
+writer's pass, with the two heroes' lines left as marked placeholders until their pass names them.
+The story cannot ship before the heroes and the scene exist; it can be written now.
+
+**Rejected:** running the scene straight to build without the spike (feel is the whole ask, and the
+motion gate is how the owner has tuned every feel decision in this project); and holding the story
+draft until the heroes exist (their lines are a handful of placeholders).
+
+---
+
 ## 2026-09-27 (ruling, the season heroes) — Simple like Poppy, a different silhouette each; Holly went a little too far
 
 **The owner, on the Fall and Spring heroes:** *"I think we might have gone a little too overboard
