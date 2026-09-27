@@ -19,9 +19,9 @@
        the competent version of the same cadence).
 
    THE VERDICT CAN FAIL. When a cheap-Turn shape beats casual on lifetime
-   coins or on Saved Seeds minted, the tool says so and exits non-zero. It
+   coins or on Prisms minted, the tool says so and exits non-zero. It
    failed for one day at the original spec constants — sqrt(coinsEarned) plus
-   uncapped veterancy made frequent 100K Turns strictly seed-optimal — and it
+   uncapped veterancy made frequent 100K Turns strictly prism-optimal — and it
    PASSES as of 2026-08-29 (phase 1.1), when the owner ruled the mint
    cumulative: the pool is 0.1*sqrt(lifetimeCoins) less what has been drawn,
    so no cadence can out-mint another. Do not "fix" this tool to pass; fix the
@@ -29,7 +29,7 @@
 
    WHAT THE EXIT CODE DOES NOT COVER: the blessing. One free Rich Bloom petal
    per Turn is a per-turn CONSTANT on a now-split-neutral base, and 95 Turns
-   fill every flower's Rich Bloom ladder — 318,189 Saved Seeds of value — for
+   fill every flower's Rich Bloom ladder — 318,189 Prisms of value — for
    ~101M lifetime coins. The report separates blessed petals from bought ones
    and discloses this beneath the verdict; it is not failed on, because the
    blessing is a ceremony beat (docs/32) and the owner's next decision rather
@@ -163,7 +163,7 @@ function run(strategy, days, opts = {}) {
     results.snapshots.push({
       day: day + 1,
       cumEarned: Math.round(cumEarnedNow()),
-      savedSeedsMinted: results.turns.reduce((a, t) => a + t.pouch, 0),
+      prismsMinted: results.turns.reduce((a, t) => a + t.pouch, 0),
       petalsOwned: owned,
       petalsBlessed: blessedSoFar,
       petalsBought: owned - blessedSoFar,
@@ -185,7 +185,7 @@ const report = (r) => {
     console.log(`  Turn ${t.turn}: day ${t.day.toFixed(2)} · year earned ${t.earned.toLocaleString()} · pouch ${t.pouch} (x${t.tallyMult.toFixed(2)}) · ${t.petals} petals bought · ${t.seedsLeft} seeds left`);
   });
   const last = r.snapshots[r.snapshots.length - 1];
-  console.log(`  end of day ${last.day}: lifetime earned ${last.cumEarned.toLocaleString()}, ${last.savedSeedsMinted} seeds minted, ${last.petalsOwned} petals owned (${last.petalsBought} bought + ${last.petalsBlessed} blessed), ${last.turns} turns`);
+  console.log(`  end of day ${last.day}: lifetime earned ${last.cumEarned.toLocaleString()}, ${last.prismsMinted} prisms minted, ${last.petalsOwned} petals owned (${last.petalsBought} bought + ${last.petalsBlessed} blessed), ${last.turns} turns`);
 
   if (r.strategy === 'casual') {
     const t1 = r.turns[0];
@@ -233,8 +233,8 @@ function winterMeasurement() {
   const b = lastOf(without);
 
   console.log(`\n=== Winter — the night shift, measured (${days} days, seeded, paired) ===`);
-  console.log(`  with Winter:    lifetime ${a.cumEarned.toLocaleString().padStart(13)} · ${String(a.turns).padStart(2)} turns · ${String(a.savedSeedsMinted).padStart(5)} seeds minted`);
-  console.log(`  without Winter: lifetime ${b.cumEarned.toLocaleString().padStart(13)} · ${String(b.turns).padStart(2)} turns · ${String(b.savedSeedsMinted).padStart(5)} seeds minted`);
+  console.log(`  with Winter:    lifetime ${a.cumEarned.toLocaleString().padStart(13)} · ${String(a.turns).padStart(2)} turns · ${String(a.prismsMinted).padStart(5)} prisms minted`);
+  console.log(`  without Winter: lifetime ${b.cumEarned.toLocaleString().padStart(13)} · ${String(b.turns).padStart(2)} turns · ${String(b.prismsMinted).padStart(5)} prisms minted`);
   const lift = b.cumEarned > 0 ? (a.cumEarned / b.cumEarned - 1) * 100 : 0;
   console.log(`  Winter's lift on lifetime coins: ${lift >= 0 ? '+' : ''}${lift.toFixed(1)}% over ${days} days`);
   /* A LIFT ON LIFETIME TOTALS IS NOT THE METRIC, and it is printed with its
@@ -443,13 +443,13 @@ if (strategy === 'winter') {
   const day = Math.min(days, 10);
   const rows = [casual, rush, smart].map((r) => ({ r, s: r.snapshots[day - 1] }));
   rows.forEach(({ r, s }) => {
-    console.log(`  day ${day}  ${r.strategy.padEnd(6)}: earned ${s.cumEarned.toLocaleString().padStart(11)} · minted ${String(s.savedSeedsMinted).padStart(6)} seeds · ${String(s.petalsBought).padStart(3)} petals bought + ${String(s.petalsBlessed).padStart(3)} blessed · ${s.turns} turns`);
+    console.log(`  day ${day}  ${r.strategy.padEnd(6)}: earned ${s.cumEarned.toLocaleString().padStart(11)} · minted ${String(s.prismsMinted).padStart(6)} prisms · ${String(s.petalsBought).padStart(3)} petals bought + ${String(s.petalsBlessed).padStart(3)} blessed · ${s.turns} turns`);
   });
   const c = rows[0].s;
   const beats = rows.slice(1).filter(({ r, s }) => {
     const wins = [];
     if (s.cumEarned > c.cumEarned) wins.push('lifetime coins');
-    if (s.savedSeedsMinted > c.savedSeedsMinted) wins.push('Saved Seeds minted');
+    if (s.prismsMinted > c.prismsMinted) wins.push('Prisms minted');
     if (wins.length) console.log(`  ${r.strategy} BEATS casual on: ${wins.join(', ')}`);
     return wins.length;
   });
@@ -461,13 +461,13 @@ if (strategy === 'winter') {
     console.log('  reads lifetimeCoins, and that no per-turn multiplier has come back.');
     const goldToo = rows.slice(1).some(({ s }) => s.cumEarned > c.cumEarned);
     console.log(goldToo
-      ? '  It wins on GOLD as well as seeds — the strongest form of the break.'
-      : '  It is a SEEDS-ONLY break: normal play out-earns it in gold.');
+      ? '  It wins on GOLD as well as prisms — the strongest form of the break.'
+      : '  It is a PRISMS-ONLY break: normal play out-earns it in gold.');
     console.log('  The dials are minCoins / minSeeds / mintK in DATA.year — the owner\'s call.');
     process.exitCode = 1;
   } else {
     console.log('  VERDICT: OK — every cheap-Turn shape loses to normal play on gold and on');
-    console.log('  Saved Seeds minted, which are the two currencies the mint controls.');
+    console.log('  Prisms minted, which are the two currencies the mint controls.');
   }
   /* The blessing is NOT one of them, and this verdict does not cover it. One
      free Rich Bloom petal per Turn is a per-Turn CONSTANT sitting on top of a
@@ -481,7 +481,7 @@ if (strategy === 'winter') {
   console.log(`\n  DISCLOSURE — free petals from the blessing, which no gate prices: ${blessRows}.`);
   console.log('  The blessing pays one Rich Bloom petal PER TURN regardless of earnings, so it is');
   console.log('  the term a cadence still farms. 95 Turns fill every flower\'s Rich Bloom ladder');
-  console.log('  (318,189 Saved Seeds of value) for ~101M lifetime coins. See docs/11-known-issues.md.');
+  console.log('  (318,189 Prisms of value) for ~101M lifetime coins. See docs/11-known-issues.md.');
   winterMeasurement();
 } else {
   report(run(strategy, days, armOpts));

@@ -65,7 +65,7 @@ Three things fall out of that choice, and together they are the reason for it:
 | **Clear** | 70% | none | current sky, unchanged |
 | **Rain** | 20% | Dewkissed | grey wash, drifting droplets |
 | **Thunderstorm** | 7% | Gilded | dark sky, occasional flash |
-| **Aurora** | 2.5% | Prismatic | colour bands across the night sky |
+| **Aurora** | 2.5% | Radiant | colour bands across the night sky |
 | **Wonderfall** | 0.5% | Wonderstruck | the Wonder Effect's palette, garden-wide |
 
 **Weather rarity gates mutation rarity, and that is the point.** A Wonderstruck needs a rare *sky*
@@ -89,7 +89,7 @@ stack on a single bloom.
 | --- | --- | --- | --- |
 | **Dewkissed** | 25% during Rain | ×2 | **~5.0%** |
 | **Gilded** | 15% during Thunderstorm | ×10 | **~1.0%** |
-| **Prismatic** | 12% during Aurora | ×25 | **~0.29%** |
+| **Radiant** | 12% during Aurora | ×25 | **~0.29%** |
 | **Wonderstruck** | 10% during Wonderfall | ×100 | **~0.045%** |
 
 Measured at **~20% of income**, evenly across seeds (Daisy 20.4%, Marigold 20.9%, Eternal Crown

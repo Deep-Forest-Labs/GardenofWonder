@@ -963,7 +963,7 @@ const SCENES = [
     group: 'The Turn',
     title: 'The Turn — the Tally, mid-roll',
     line:
-      'Beat three, caught while it is still counting: the year totted up into the Saved Seeds that survive it.',
+      'Beat three, caught while it is still counting: the year totted up into the Prisms that survive it.',
     doc: '32-the-garden-year.md',
     file: 'ui-sheet.js',
     steps: [
@@ -1115,7 +1115,7 @@ const SCENES = [
     group: 'The panels',
     title: 'The Almanac — petal tracks',
     line:
-      'Every flower ever grown, and the permanent petal ladders that Saved Seeds buy — the part of the game that outlives a year. A seed you own but never planted stays named and dimmed; one the curtain has not lifted on yet goes ???.',
+      'Every flower ever grown, and the permanent petal ladders that Prisms buy — the part of the game that outlives a year. A seed you own but never planted stays named and dimmed; one the curtain has not lifted on yet goes ???.',
     doc: '16-progression-and-quests.md',
     file: 'ui-sheet.js',
     steps: [
@@ -1126,7 +1126,7 @@ const SCENES = [
       'eval:(()=>{Game.Dev.driveYear(500000);[\'bluebell\',\'lavender\'].forEach(id=>Game.unlockSeed(id));return DATA.seeds.filter(s=>Game.seedUnlocked(s.id)).map(s=>s.id).join(\',\')})()',
       'eval:(()=>{let n=0;const U=DATA.seeds.filter(s=>Game.seedUnlocked(s.id));for(let r=0;r<4;r++){for(let p=0;p<4;p++){const s=U[(r*4+p)%U.length];if(Game.state.grid[p].seed)Game.harvest(p);Game.plant(p,s,false);}Game.Dev.ripenAll();for(let p=0;p<4;p++)if(Game.harvest(p))n++;}return n+\' harvests\'})()',
       'wait:6000',
-      'eval:(()=>{Game.Dev.grantSeeds(600);[[\'daisy\',\'rich\',4],[\'daisy\',\'quick\',3],[\'tulip\',\'rich\',3],[\'tulip\',\'quick\',1],[\'bluebell\',\'rich\',2],[\'lavender\',\'rich\',1]].forEach(b=>{for(let i=0;i<b[2];i++)Game.buyPetal(b[0],b[1])});return \'pouch \'+Game.state.savedSeeds})()',
+      'eval:(()=>{Game.Dev.grantSeeds(600);[[\'daisy\',\'rich\',4],[\'daisy\',\'quick\',3],[\'tulip\',\'rich\',3],[\'tulip\',\'quick\',1],[\'bluebell\',\'rich\',2],[\'lavender\',\'rich\',1]].forEach(b=>{for(let i=0;i<b[2];i++)Game.buyPetal(b[0],b[1])});return \'pouch \'+Game.state.prisms})()',
       'wait:800',
       'eval:UI.openSheet(\'bonuses\')',
       'wait:1800',
@@ -1270,7 +1270,7 @@ const SCENES = [
     group: 'The weather',
     title: 'Aurora',
     line:
-      'Rare enough to be an event. It bends the light rules and reads as night at any hour, which is how Prismatic blooms happen at noon.',
+      'Rare enough to be an event. It bends the light rules and reads as night at any hour, which is how Radiant blooms happen at noon.',
     doc: '41-weather-staging.md',
     weather: null,
     file: 'ui-weather.js',

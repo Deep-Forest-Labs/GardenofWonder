@@ -667,8 +667,8 @@ year: {
   }
 },
 lifetimeCoins: 0,               // every coin honestly earned, ever — written ONLY by credit(), NEVER reset; sizes the mintable pool
-mintedBase: 0,                  // seeds already drawn from that pool, un-tallied; NEVER reset, grows only at the Turn
-savedSeeds: 0,                  // the forever money; minted at the Turn, spent on petals, never reset
+mintedBase: 0,                  // prisms already drawn from that pool, un-tallied; NEVER reset, grows only at the Turn
+prisms: 0,                  // the forever money; minted at the Turn, spent on petals, never reset
 petals: {},                     // seedId -> { rich, quick, sig }; clamped to the shared caps on load
 seedUnlocks: {},                // seedId -> true; one-time gold prices, permanent across Turns
 blessed: [],                    // [{ seed, year }] — provenance of every Turn's free petal
@@ -711,7 +711,7 @@ pattern):
    level first and the counts it is judged by are the repaired ones.
 2. **Convert Bloom Mastery.** The recorded counts first earn whatever tiers they had reached
    (the old backfill's advance, run one last time), then the whole ladder converts:
-   `round(DATA.year.masteryConvert × totalTiers)` Saved Seeds, silent. The tiers stay in
+   `round(DATA.year.masteryConvert × totalTiers)` Prisms, silent. The tiers stay in
    `state.mastery` as a frozen record. A second load neither advances nor converts again.
 3. **`coinsEarned` starts at zero** — no lifetime coin figure exists anywhere in the save, so
    there is nothing honest to backfill from. The meter simply starts low. **`lifetimeCoins`

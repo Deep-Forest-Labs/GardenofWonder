@@ -54,7 +54,7 @@ drawn from that round's own findings:
 dispatch, not at filing.
 
 - **#26 · A 1-gem skip farms mutations in every sky that has one.** Driven across five skies. **The
-  owner's ask is scoped too narrowly**: blocking Wonderfall leaves Gilded ×10 and Prismatic ×25 at
+  owner's ask is scoped too narrowly**: blocking Wonderfall leaves Gilded ×10 and Radiant ×25 at
   the same one gem, and the storm stands fourteen times as often. Read the item before choosing a
   shape — there are three, and the owner has picked the first.
 - **#27 · The replant chip reads as a price label, not a button.** 41 × 22 on a 113px plot, with a
@@ -199,7 +199,7 @@ for (let n = 0; n < 200; n++) { Game.plant(0, seed); Game.skipGrow(0);
 | --- | --- | --- | --- | --- |
 | Clear | 200 | **0** | 200 | — (correct) |
 | Storm | 200 | **34** | 199 | Gilded, **×10** |
-| Aurora | 200 | **18** | 200 | Prismatic, **×25** |
+| Aurora | 200 | **18** | 200 | Radiant, **×25** |
 | Wonderfall | 200 | **16** | 198 | Wonderstruck, **×100** |
 
 A second Wonderfall run the same day: 21 of 200. Both sit on the published 10% catch, so the loop is
@@ -207,7 +207,7 @@ reading the real odds — and `clear` catching nothing confirms it is the sky be
 bug in the roll.
 
 **THE OWNER'S FIX IS SCOPED TOO NARROWLY, and this is the finding.** Blocking gems "in that mode"
-closes Wonderfall and leaves **Gilded ×10 and Prismatic ×25 farmable at exactly the same one gem**.
+closes Wonderfall and leaves **Gilded ×10 and Radiant ×25 farmable at exactly the same one gem**.
 Worse, **the storm is the one that matters in practice**: its catch is the highest of the three (15%
 against the aurora's 12% and Wonderfall's 10%) and its slot weight is 7 against Wonderfall's 0.5, so
 it stands **fourteen times as often**. The gate belongs on *"this sky has a mutation"*, not on
@@ -251,7 +251,7 @@ hides or disables the gem chip under a mutation sky, that is the same write path
 
 **True after the fix:** with any sky standing that carries a mutation, hurrying a plant with gems can
 no longer produce that sky's mutation — the roll is either refused or forfeited, by the owner's
-choice — so the number of Gilded, Prismatic and Wonderstruck blooms a player sees in a given sky
+choice — so the number of Gilded, Radiant and Wonderstruck blooms a player sees in a given sky
 depends on how long they stand under it and never on how many gems they spend. Under a clear sky the
 gem skip behaves exactly as it does today.
 
@@ -353,7 +353,7 @@ produced the anchor standard at the top of this file. Do not re-report anything 
   the well) and `eefbbb9` (a first session ends when you come back, not when you reload).
 - **#22 · The Turn's ask read as a confiscation list** — the same price in a kinder voice, naming
   nothing less. `0d5cff2`. *(A sabotage run shipped green with the two chip rows inverted — the panel
-  promised to wash away your Seeds and never touch your Gold.)*
+  promised to wash away your Prisms and never touch your Gold.)*
 - **#20 · A running boost was invisible at the moment it paid** — the harvest now says so. `420e628`,
   with `368add7` repairing a colour that asked the live Wonder while the crit was switched off.
 - **#17 · The sky chip lectured for forty-five words before it reached the odds** — twenty now.

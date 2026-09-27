@@ -57,9 +57,9 @@ new CSS.
 | Soil | `--soil` | `#a9713f` |
 | Soil, shadow | `--soil-d` | `#7d4f2a` |
 | Soil, deepest | `--soil-dd` | `#5f3a1e` |
-| Saved Seeds | `--seed` | `#7bd88f` |
-| Saved Seeds, shadow | `--seed-d` | `#3f9d45` |
-| Saved Seeds, light | `--seed-l` | `#c9f5cf` |
+| Prisms | `--seed` | `#7bd88f` |
+| Prisms, shadow | `--seed-d` | `#3f9d45` |
+| Prisms, light | `--seed-l` | `#c9f5cf` |
 | Coins | `--coin` | `#ffc93c` |
 | Coins, edge | `--coin-d` | `#f08c00` |
 | Tickets | `--ticket` | `#ff8fab` |
@@ -82,11 +82,15 @@ is a bug to fix at the declaration, not to paper over at the use.
 currency needed a colour of its own and could not borrow one: gold is coins, cyan is gems, and
 blue/purple/gold are the rarity vocabulary a player has already learned. It is a green that belongs
 to growing things and is used for exactly two things — **the meter's fill and the petal pips**.
-Prices paid in Saved Seeds deliberately do *not* wear it: they take the ordinary `.price` family,
+Prices paid in Prisms deliberately do *not* wear it: they take the ordinary `.price` family,
 because green there already means *you can afford this* and a second green meaning *this costs
-seeds* would be two facts in one colour. The pouch icon beside the number is what says which
-currency. The pouch icon that goes with it is deliberately **cream-bodied with green
-seeds**, because a green glyph on the green fill disappeared.
+prisms* would be two facts in one colour. The `prism` icon beside the number is what says which
+currency now — a hard triangle with its own rainbow fill, added 2026-09-26 with the rename, so the
+glyph carries that identity and `--seed` goes back to meaning only the meter and the pips.
+`pouch` is reserved for the container from here on: the Turn button, the "Into the pouch" ceremony
+beat, and the readiness gate — never a number. The pouch icon itself is unchanged and still
+deliberately **cream-bodied with green seeds**, because a green glyph on the green fill
+disappeared.
 
 **The season tint.** `DATA.year.seasonTint` / `seasonTintMax` (`#ffb066` at `0.38`) warm Summer's
 palette toward autumn as the year meter fills — one `multiply` overlay on the scenery

@@ -40,7 +40,7 @@ Five things that ride with the amendment:
   offer hands over no coin — it lends a machine — but the machine spends the next half hour
   *picking plots*, and every pick paid through `credit()` like any other. Measured before the fix:
   **81k–591k gold from one video** into both `lifetimeCoins` and `year.coinsEarned`, +34 to +58
-  Saved Seeds, and `turnReady()` flipping false → true on its own — `DATA.year.minCoins` is one of
+  Prisms, and `turnReady()` flipping false → true on its own — `DATA.year.minCoins` is one of
   its two gates. Promise 1 is absolute about the Turn's currencies and names this exact back door,
   so it is closed rather than argued: `processAutoHarvest()` passes `{ ad: true }` to `harvest()`
   whenever the **borrowed** drone wins `droneLevel()`'s `max`, and `harvest()` forwards that one
@@ -80,7 +80,7 @@ impressions per player per day, measured in the first playtest.
 
 ## The two promises — what we never sell, ever
 
-1. **The Turn's currencies are never for sale.** Saved Seeds, petals, seed unlocks, season
+1. **The Turn's currencies are never for sale.** Prisms, petals, seed unlocks, season
    gates, the blessing — none of these can be bought with money or ads, directly or through a
    back door. This is the promise that makes the Turn mean something, and one back door is
    named below because it is easy to build by accident: **ad-granted and purchased gold never
@@ -119,7 +119,7 @@ touches only the year's money. One rule rides along: the doubled gold is fun-mon
 counts toward the well. The offer is the *last* line of the welcome-back story, after the
 telling, never before it.
 
-**"Double the Saved Seeds at the Turn, by watching an ad" — NO, as stated.** Two plain reasons.
+**"Double the Prisms at the Turn, by watching an ad" — NO, as stated.** Two plain reasons.
 A perfect year of play earns about a ×1.66 Tally; a thirty-second ad granting ×2 would beat it
 — the ad would outscore playing well, and the Tally stops teaching anything. And no big idle
 game does this: Egg Inc's famous doubler doubles your *earnings*, never your prestige currency
@@ -168,7 +168,7 @@ forever money.
 - **The Gem Jar (piggy bank), ~$5.99** — fills with gems as you play, never overflows, never
   expires, no countdown, no nag; crack it whenever you like. Egg Inc's best-per-effort
   pattern, and its jar holds the premium currency too. **Gems only** — a gold jar quietly
-  mints Saved Seeds through the well, and a seed jar sells the Turn itself. Both are never.
+  mints Prisms through the well, and a prism jar sells the Turn itself. Both are never.
 - **Gem packs** — fine, with the real-money price shown beside every gem price in the game
   (EU rule, already law), and only worth it once gems have more to buy —
 - **Cosmetic decor packs** — the cleanest sale in the game: pure looks, already what gems and
@@ -187,7 +187,7 @@ forever money.
 
 | Never sell | Because |
 | --- | --- |
-| Saved Seeds, petals, or a seed jar | Money minting the forever currency deletes the Turn |
+| Prisms, petals, or a prism jar | Money minting the forever currency deletes the Turn |
 | Seed unlock skips | The walls are the game's pacing; selling past them sells past the game |
 | Early season gates | The Turn pays in places — selling the places sells the Turn's payout |
 | The Century Bloom's time | The wait is the monument. Sell it a cosmetic pot; never the exit |

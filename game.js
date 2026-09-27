@@ -57,7 +57,7 @@ const Game = (() => {
          have — which is the whole reason the shape is cumulative. */
       lifetimeCoins: 0,
       mintedBase: 0,
-      savedSeeds: 0,
+      prisms: 0,
       petals: {},
       seedUnlocks: {},
       /* The curtain and the drip, docs/47. Three top-level, SURVIVES, never
@@ -222,7 +222,7 @@ const Game = (() => {
       keyed on the missing `year` key, the boostInv pattern. Two rules:
       nobody loses a seed they could already plant (discovered, or passed its
       old level gate, is grandfathered free), and old Bloom Mastery tiers
-      convert to a one-time Saved Seeds grant, silently. `coinsEarned` starts
+      convert to a one-time Prisms grant, silently. `coinsEarned` starts
       at zero on purpose: no lifetime coin figure exists anywhere in the save,
       so there is nothing honest to backfill from. Runs after the backfills so
       the counts it reads are the repaired ones. */
@@ -240,7 +240,7 @@ const Game = (() => {
     DATA.seeds.forEach((s) => advanceMastery(s.id, false));
     const tiers = DATA.seeds.reduce((n, s) => n + masteryOf(s.id), 0);
     const grant = Math.round((YEAR().masteryConvert || 0) * tiers);
-    state.savedSeeds += grant;
+    state.prisms += grant;
     return { grant, tiers, unlocked: Object.keys(state.seedUnlocks).length };
   }
 
@@ -580,7 +580,7 @@ const Game = (() => {
           ? parsed.lifetimeCoins
           : state.year.coinsEarned;
         state.mintedBase = Math.max(0, Number(parsed.mintedBase) || 0);
-        state.savedSeeds = Math.max(0, Number(parsed.savedSeeds) || 0);
+        state.prisms = Math.max(0, Number(parsed.prisms) || 0);
         state.petals = {};
         const pp = parsed.petals && typeof parsed.petals === 'object' ? parsed.petals : {};
         DATA.seeds.forEach((s) => {
@@ -1859,7 +1859,7 @@ const Game = (() => {
 
   /* ---------------- flower mastery — petals ----------------
 
-     Saved Seeds buy petals on a flower's Almanac card. Two shared skills on
+     Prisms buy petals on a flower's Almanac card. Two shared skills on
      every flower (Rich Bloom, Quick Sprout), a signature slot that ships with
      slice B. Effects apply as a multiplier off the yield curve, the
      masteryMult pattern — seed.yield is never edited, and there is no gem
@@ -1894,11 +1894,11 @@ const Game = (() => {
     if (seedIndexOf(id) < 0) return false;
     if (petalsOf(id)[skill] >= PETALS().shared[skill].cap) return false;
     const cost = petalCost(id, skill);
-    if (state.savedSeeds < cost) {
+    if (state.prisms < cost) {
       emit('deny', { reason: 'seeds', need: cost });
       return false;
     }
-    state.savedSeeds -= cost;
+    state.prisms -= cost;
     if (!state.petals[id]) state.petals[id] = { rich: 0, quick: 0, sig: 0 };
     state.petals[id][skill] += 1;
     save();
@@ -2254,7 +2254,7 @@ const Game = (() => {
 
   const masteryOf = (id) => state.mastery[id] || 0;
   /* Old Bloom Mastery retired into petals with the Garden Year. The tiers a
-     save had earned converted once into Saved Seeds (migrateYear) and the
+     save had earned converted once into Prisms (migrateYear) and the
      ladder froze: it no longer climbs, pays no gems, and multiplies nothing.
      The recorded tiers stay as a lifetime record; petalMult() is the live
      per-seed multiplier now. */
@@ -4752,7 +4752,7 @@ const Game = (() => {
 
   /* ---------------- the Turn — prestige ----------------
 
-     The year's whole earnings mint Saved Seeds, once, at the Turn. Invited
+     The year's whole earnings mint Prisms, once, at the Turn. Invited
      never forced: two gates decide when the invitation stands, and nothing
      ever turns the year for you. Design in docs/32-the-garden-year.md,
      numbers in docs/33-year-one-economy.md. */
@@ -4789,7 +4789,7 @@ const Game = (() => {
   /** What the Turn would mint right now. `total` is the whole pool lifetime
       earnings have opened; `base` is the undrawn part of it — the increment,
       and the number the ceremony's count-up rolls to. Reads earnings and the
-      ledger, never the balance, so spending is provably seed-neutral, and
+      ledger, never the balance, so spending is provably prism-neutral, and
       never turn count, so cadence is provably worth nothing. */
   function projectedMint() {
     const tally = projectedTally();
@@ -4837,10 +4837,10 @@ const Game = (() => {
        rolls from and the pacing tools report. */
     const earnedThisYear = state.year.coinsEarned;
     const minted = projectedMint();
-    state.savedSeeds += minted.pouch;
+    state.prisms += minted.pouch;
     /* The ledger moves by the UN-tallied increment, never the pouch. The
        Tally is a gift on the way out; charging it to the pool would make a
-       well-played year cost the garden its own future seeds. */
+       well-played year cost the garden its own future prisms. */
     state.mintedBase += minted.base;
 
     /* The blessing: one free Rich Bloom petal on a chosen flower, written
@@ -5121,7 +5121,7 @@ const Game = (() => {
       without this the gold from a thirty-second video lands in BOTH
       `lifetimeCoins` and `year.coinsEarned` — the well's only two inputs
       (`mintK * sqrt(lifetimeCoins)`, gated on `year.coinsEarned`). Measured
-      before the flag: 81k-591k gold and +34 to +58 Saved Seeds from a single
+      before the flag: 81k-591k gold and +34 to +58 Prisms from a single
       rental, and `turnReady()` flipping false -> true on its own. Promise 1 is
       absolute about the Turn's currencies and names this exact back door.
 
@@ -5659,7 +5659,7 @@ const Game = (() => {
         flagged loop would spin against a pool that never grows.
 
         And it never writes `state.year.turnsCompleted`. That field alone would
-        open Fall, both plot gates and both season gates while Saved Seeds,
+        open Fall, both plot gates and both season gates while Prisms,
         `mintedBase` and `year.number` all disagreed with it: a garden in a state
         no player can reach, which is worse than no cheat. Looping the real
         `turnYear()` is the only sanctioned path.
@@ -5691,13 +5691,13 @@ const Game = (() => {
       return done;
     },
 
-    /** Saved Seeds for petal testing, outside the mint on purpose. */
+    /** Prisms for petal testing, outside the mint on purpose. */
     grantSeeds(n) {
-      state.savedSeeds += Math.max(0, Math.round(Number(n) || 0));
+      state.prisms += Math.max(0, Math.round(Number(n) || 0));
       save();
       emit('currency');
       emit('panels');
-      return state.savedSeeds;
+      return state.prisms;
     },
 
     /** Wind Fall's clocks back so the bed ripens now — the ripenAll shape. */

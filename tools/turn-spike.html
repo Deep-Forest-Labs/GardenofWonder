@@ -34,7 +34,7 @@
   --r-lg:26px; --r-md:18px; --r-sm:12px;
   --font:'Baloo 2', ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
 
-  /* The seed pouch. Saved Seeds are the forever money, so they are not gold and
+  /* The seed pouch. Prisms are the forever money, so they are not gold and
      not gems — a green that belongs to growing things, kept clear of every
      rarity colour. Proposed here, an open question in docs/35. */
   --seed:#7bd88f; --seed-d:#3f9d45; --seed-l:#c9f5cf;
@@ -646,7 +646,7 @@ F.push({
   html: phone({ coins: '212K', meter: { p: 0.52 } }),
   notes: [
     ['d', '<b>The HUD tightens, and it has to.</b> Measured in this frame: the column is 360px wide, three round buttons take 132 of it at 40px, and three wallets plus their gaps take the rest with nothing to spare. The tightening — wallet padding 4/8, 14px numerals, 19px icons, 40px buttons — is exactly the <code>max-height:700px</code> block the game already ships, promoted to apply on narrow screens too. Without it the pills wrap on every phone.'],
-    ['q', '<b>THE ONE LAYOUT QUESTION OF PHASE 2.</b> Doc 32 says the pill shows the banked Saved Seeds after the first Turn. Measured, it cannot — not with three round buttons beside it. This frame is my proposal: the pill stays <b>icon and fill</b>, and the two numbers (banked, and this year’s) live one tap away in the projection. It fits at every wealth, in every room, forever. The next two frames show what it costs and what the alternative costs.']
+    ['q', '<b>THE ONE LAYOUT QUESTION OF PHASE 2.</b> Doc 32 says the pill shows the banked Prisms after the first Turn. Measured, it cannot — not with three round buttons beside it. This frame is my proposal: the pill stays <b>icon and fill</b>, and the two numbers (banked, and this year’s) live one tap away in the projection. It fits at every wealth, in every room, forever. The next two frames show what it costs and what the alternative costs.']
   ]
 });
 
@@ -685,7 +685,7 @@ F.push({
       '<b>1,240 already in the pouch.</b></p>' +
       '<div class="gate-bar">' +
         '<div class="row"><span>Earned</span><span class="track"><i class="short" style="width:62%"></i></span><span>62K / 100K</span></div>' +
-        '<div class="row"><span>Seeds</span><span class="track"><i style="width:100%"></i></span><span>' + ico('check') + '</span></div>' +
+        '<div class="row"><span>Prisms</span><span class="track"><i style="width:100%"></i></span><span>' + ico('check') + '</span></div>' +
       '</div></div>'
   }),
   notes: [
@@ -710,7 +710,7 @@ F.push({
 });
 
 /* ---------- 2. THE CEREMONY ---------- */
-const KEEPS = ['Seeds', 'Unlocks', 'Petals', 'Creatures', 'Cards', 'Level']
+const KEEPS = ['Prisms', 'Unlocks', 'Petals', 'Creatures', 'Cards', 'Level']
   .map(k => '<span class="chip">' + ico('check') + k + '</span>').join('');
 
 F.push({
@@ -971,7 +971,7 @@ F.push({
   }),
   notes: [
     ['d', 'The mastery line’s slot becomes <b>two tracks</b>: name, pips, price. Pips are the game’s existing level vocabulary (<code>.pip</code>, already used for upgrade levels) recoloured to the seed green, so a player reads "3 of 5" without a fraction.'],
-    ['d', 'Prices are the ordinary <code>.price</code> family in three states you already know: green affordable, cream-drained unaffordable, grey <b>MAX</b>. Petals are bought with Saved Seeds and nothing else, so the seed icon is on every chip — a coin here would be a lie.'],
+    ['d', 'Prices are the ordinary <code>.price</code> family in three states you already know: green affordable, cream-drained unaffordable, grey <b>MAX</b>. Petals are bought with Prisms and nothing else, so the seed icon is on every chip — a coin here would be a lie.'],
     ['d', 'A row is four lines now where it was three. The Almanac is the one page a player has come to <i>read</i> rather than to choose, so the height is affordable here in a way it would not be in the plant picker.'],
     ['q', 'The signature (third) skill is slice B and is <b>not stubbed</b> — no greyed third track, no "coming soon". A row that advertises an unbuilt thing is the quest-strip trap wearing a different hat.'],
     ['q', 'Moonflower’s price is a real one from the shipped formula (seed 11’s first petal ≈ 2,914). That wall showing up on the Almanac’s third row is the pacing story doc 33 flags for phase 4 — worth seeing early, and not mine to tune tonight.']

@@ -409,7 +409,7 @@ Recorded plainly, because the docs-discipline rule says a refresh that quietly c
    should be in the first screenshot, not discovered. The owner has ruled on wanting stakes; this is the shape
    that survives contact with the audience, and it is a design note, not a veto.
 6. **Doc 01's "Current scope" is two weeks stale** — it lists none of the Year, the Turn, the Tally, petals,
-   Saved Seeds, Fall, the seasons, creatures, the Hollow, cards or orders, and still says "no monetisation, no
+   Prisms, Fall, the seasons, creatures, the Hollow, cards or orders, and still says "no monetisation, no
    notifications". Anyone reading the overview as an entry point gets a picture of the game from 15 August.
 
 ---

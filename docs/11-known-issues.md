@@ -823,7 +823,7 @@ tight at 70–86M. Before the raise the margin was a stable 1.5× (22.7M against
 exited 0 every time.
 
 **The property the mint actually guarantees is intact in every run.** `smart` never out-mints
-`casual` on Saved Seeds — 1,061 against 1,258 and 1,024 against 1,055 in the two failing runs — so
+`casual` on Prisms — 1,061 against 1,258 and 1,024 against 1,055 in the two failing runs — so
 the cumulative mint is still split-neutral by construction, which is what bill item 17 was written
 to protect. What `smart` wins on is *lifetime gold*.
 
@@ -957,7 +957,7 @@ widening its window backwards makes a bought sky retroactively true.
 runs `processAutoHarvest()`, and a warped plot really is ripe — so the drone takes one plot per warp
 and that harvest earns on both ledgers. This is the same precedent `Dev.simulateAway()` already sets
 (`reconcile()` pays offline income unflagged, and a sim-test asserts it does). It means repeated
-warping is a Saved Seeds faucet for anyone holding the panel open. Testers are friends and the
+warping is a Prisms faucet for anyone holding the panel open. Testers are friends and the
 pacing tool is `year-sim`, so this is accepted for now; revisit with the dev buttons themselves
 before any external audience.
 
@@ -1083,10 +1083,10 @@ shortens levels 2–17's fanfare until the ladder re-authors in slice D.
 behaviour):
 
 1. **Harvest yield drops by 5% × mastery tiers** on every flower, the moment the save loads —
-   the accepted Bloom Mastery regression logged on 2026-08-29. ~~The 2-seeds-per-tier conversion
+   the accepted Bloom Mastery regression logged on 2026-08-29. ~~The 2-prisms-per-tier conversion
    pays into a currency with no spend surface until phase 2~~ — **closed 2026-08-29 (phase 2).**
-   The conversion grants Saved Seeds while `turnsCompleted` is still 0, so the Almanac's petal
-   tracks and its pouch balance now appear on `turnsCompleted >= 1 **or** savedSeeds > 0`. Doc
+   The conversion grants Prisms while `turnsCompleted` is still 0, so the Almanac's petal
+   tracks and its pouch balance now appear on `turnsCompleted >= 1 **or** prisms > 0`. Doc
    32's "year one shows nothing" rule is about a player holding nothing, and it still holds for
    them; a migrated save is holding the compensation for a yield cut it is already paying, and a
    currency you own and cannot spend is not a mystery.
@@ -1100,7 +1100,7 @@ behaviour):
 ### ~~The Almanac still renders the frozen mastery ladder~~ — FIXED 2026-08-29 (phase 2)
 
 The row's third line is now two **petal tracks** — Rich Bloom and Quick Sprout, with pips and a
-price in Saved Seeds. The Almanac no longer calls `masteryGoal()` at all; discovery is read from
+price in Prisms. The Almanac no longer calls `masteryGoal()` at all; discovery is read from
 the lifetime harvest count instead. Tracks appear only after the first Turn and only on a flower
 you have actually grown.
 
@@ -1264,8 +1264,8 @@ turnsCompleted)`. Two mechanisms stacked: `sqrt` of a *per-year* number is super
 splitting (four 100K years minted ~2.6× one 400K year), and the uncapped veterancy term
 compounded with turn count on top. Fall beds, which rightly survive the Turn, let the doomed
 pre-Turn wallet be converted into next-year income. Measured through the real engine over 12
-modelled days: turn-at-every-gate minted **~20× the wall-rider's Saved Seeds** at ~8 Turns/day,
-while losing to them on gold by ~2.7× — a seeds-only break.
+modelled days: turn-at-every-gate minted **~20× the wall-rider's Prisms** at ~8 Turns/day,
+while losing to them on gold by ~2.7× — a prisms-only break.
 
 **What fixed it.** The pool a garden will ever mint is now `mintK × sqrt(state.lifetimeCoins)`;
 a Turn draws the undrawn part of it (`state.mintedBase`), and the Tally multiplies the draw
@@ -1275,14 +1275,14 @@ split-neutral base re-arms the split at 1.3–1.4×, so capping it was never eno
 now gates the un-tallied increment rather than the tallied pouch. Because the pool depends on
 lifetime earnings alone, the sum of every Turn's draw is the same number however the year is
 sliced — no cadence can out-mint another, and `node tools/year-sim.js 12 all` **exits zero**,
-with normal play ahead of turn-spam by a median ~1.9× on seeds (range ~1.5–2.2× over 30 runs; re-measured
+with normal play ahead of turn-spam by a median ~1.9× on prisms (range ~1.5–2.2× over 30 runs; re-measured
 after the same day's Fall fixes gave the adversary a better crop; the margin widened).
 
 **Whose ruling:** the owner's, taking the phase-1 independent review's recommendation (variant
 B of four measured through the real engine — dials alone failed at 3.5–4×, a ratcheting coins
 floor at 1.2–1.5×, and cumulative-with-capped-veterancy at 1.3–1.4×). The reasoning is in the
 2026-08-29 review and phase-1.1 entries of [10-decision-log.md](10-decision-log.md); the
-formula is in [33-year-one-economy.md](33-year-one-economy.md#saved-seeds--the-mint).
+formula is in [33-year-one-economy.md](33-year-one-economy.md#prisms--the-mint).
 
 ### The blessing is the largest per-Turn grant and nothing prices it — ACCEPTED FOR NOW, 2026-08-30
 
@@ -1302,12 +1302,11 @@ review warned about, in a currency the mint does not control.
 Driven through the real engine, turning as often as the gates allow and blessing the cheapest
 uncapped flower each time:
 
-- **95 Turns fill every flower's Rich Bloom ladder** (19 flowers × cap 5) — **318,189 Saved
-  Seeds of value, exactly half the entire shared-skill sink — for free.**
+- **95 Turns fill every flower's Rich Bloom ladder** (19 flowers × cap 5) — **318,189 Prisms of value, exactly half the entire shared-skill sink — for free.**
 - It costs **~101M lifetime coins**, about **2.5 days** of play at the measured ~40M/day late
-  income. The mint pays **997 seeds** over the same 95 Turns.
-- Buying that same 318,189 seeds' worth would need a lifetime of ~1.0 × 10¹³ coins — about
-  **253,000 days**. The blessing is therefore worth ~320× the seeds it is handed out beside.
+  income. The mint pays **997 prisms** over the same 95 Turns.
+- Buying that same 318,189 prisms' worth would need a lifetime of ~1.0 × 10¹³ coins — about
+  **253,000 days**. The blessing is therefore worth ~320× the prisms it is handed out beside.
 
 It is **pre-existing** — the blessing has always been one petal per Turn, and the old mint had
 the same hole — but the old mint was large enough to dwarf it. What the ruling changed is the
@@ -1319,8 +1318,7 @@ repeatable across years").
 
 **The dials, none of them taken:** price the blessing against the year (scale it with the
 Tally or the increment), make it once per *year* rather than per *Turn*, cap total blessings,
-or leave it and accept that the Rich Bloom ladder is a Turn-count reward rather than a Saved
-Seeds sink. **This is a design decision about a ceremony beat, so it is the owner's** — phase
+or leave it and accept that the Rich Bloom ladder is a Turn-count reward rather than a Prisms sink. **This is a design decision about a ceremony beat, so it is the owner's** — phase
 1.1 measured it and changed nothing.
 
 ### The shared-skill sink is now unreachable, and the 2–5-petals-per-Turn claim is false
@@ -1328,13 +1326,13 @@ Seeds sink. **This is a design decision about a ceremony beat, so it is the owne
 Same cause, different consequence, and it is **phase 4's tuning chair rather than an owner
 decision** — the review named it in advance as the cumulative mint's honest cost.
 
-The lifetime seed supply is now hard-bounded at `0.1 × sqrt(lifetime coins)` where veterancy
+The lifetime prism supply is now hard-bounded at `0.1 × sqrt(lifetime coins)` where veterancy
 previously let it grow without limit. So:
 
-- Maxing both shared skills on all nineteen flowers (**636,378 Saved Seeds**) needs
+- Maxing both shared skills on all nineteen flowers (**636,378 Prisms**) needs
   **4.05 × 10¹³ lifetime coins** — ~1,000,000 days at ~40M/day. Doc 33's "months of headroom"
   is now geological; the sink is not deep, it is out of reach.
-- A whole year of play at that income opens a pool of only **~12,000 seeds**.
+- A whole year of play at that income opens a pool of only **~12,000 prisms**.
 - Doc 33's **"every Turn affords a similar 2–5 petals forever" is false at these constants**:
   the shipped tool measures **1 of 5** Turns in band where the old shape measured 4 of 7. The
   two exponents doc 33 says must stay matched — petal cost compounding at 1.25/level against
@@ -2103,7 +2101,7 @@ Found by trying to assert what the docs say and discovering the docs are wrong. 
   entry at levels 9, 11, 13, 14, 16 or 17. The rotation half holds and is now asserted. The sentence
   needs its first half retracted, or the ladder needs filling — that is a design call.
 - ~~**The currency policy is violated by its own terms.**~~ **Fixed 2026-08-31 by the design
-  session:** Saved Seeds joined doc 12's table in the slot retired tickets vacated — the trade the
+  session:** Prisms joined doc 12's table in the slot retired tickets vacated — the trade the
   rule demands existed all along and was simply never written down. Petals are recorded there as
   purchases, not a currency (an upgrade level is not a wallet), and `tickets` stays a dead field
   for old saves.

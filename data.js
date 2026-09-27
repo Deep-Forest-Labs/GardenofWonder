@@ -162,7 +162,7 @@ const DATA = {
       { id: 'clear',      name: 'Clear',        w: 70,  mutation: null,           catch: 0,    tint: '' },
       { id: 'rain',       name: 'Rain',         w: 20,  mutation: 'dew',          catch: 0.25, tint: '#7fa8c9' },
       { id: 'storm',      name: 'Thunderstorm', w: 7,   mutation: 'gilded',       catch: 0.15, tint: '#4d5b78' },
-      { id: 'aurora',     name: 'Aurora',       w: 2.5, mutation: 'prismatic',    catch: 0.12, tint: '#5fe0e8' },
+      { id: 'aurora',     name: 'Aurora',       w: 2.5, mutation: 'radiant',      catch: 0.12, tint: '#5fe0e8' },
       { id: 'wonderfall', name: 'Wonderfall',   w: 0.5, mutation: 'wonderstruck', catch: 0.10, tint: '#ffb3f0' }
     ]
   },
@@ -192,7 +192,7 @@ const DATA = {
   mutations: {
     dew:          { name: 'Dewkissed',    rank: 1, mult: 2,   tint: '#8fd6ff', glow: '#cfeeff' },
     gilded:       { name: 'Gilded',       rank: 2, mult: 10,  tint: '#ffc93c', glow: '#ffe9a8' },
-    prismatic:    { name: 'Prismatic',    rank: 3, mult: 25,  tint: '#c9b6ff', glow: '#e7dcff' },
+    radiant:      { name: 'Radiant',      rank: 3, mult: 25,  tint: '#c9b6ff', glow: '#e7dcff' },
     wonderstruck: { name: 'Wonderstruck', rank: 4, mult: 100, tint: '#ff8fd0', glow: '#ffd4ec' }
   },
 
@@ -434,7 +434,7 @@ const DATA = {
     revealAt: 0.85,
     revealCapPerTurn: 2,
 
-    /* Old Bloom Mastery's one-time conversion: Saved Seeds per ladder tier. */
+    /* Old Bloom Mastery's one-time conversion: Prisms per ladder tier. */
     masteryConvert: 2,
 
     /* The Tally. Each line reads a year-scoped counter in state.year.stats —
@@ -475,7 +475,7 @@ const DATA = {
     ]
   },
 
-  /* Flower mastery — petals, bought with Saved Seeds on the Almanac's rows.
+  /* Flower mastery — petals, bought with Prisms on the Almanac's rows.
      petalCost(seed n, petal p) = base x seedRatio^(n-1) x petalRatio^(p-1),
      signatures x signatureMult. The launch values (base 5, x1.3/seed) failed
      the full sim on both pacing checks.
@@ -725,6 +725,13 @@ const DATA = {
      write what it feels like to play, not what was done. */
   changelog: [
     {
+      date: '2026-09-26',
+      lines: [
+        'Saved Seeds — the forever money you get at the Turn — are called Prisms now. Nothing about earning or spending them changed, only the name.',
+        'The rare catch an aurora sky can leave on a bloom is called Radiant now instead of Prismatic, so it no longer shares a name with your Prisms.'
+      ]
+    },
+    {
       date: '2026-09-22',
       lines: [
         'In rain and thunderstorms, the flower now holds a leaf over its head the whole time it is wet, instead of waving it about like nothing is happening.',
@@ -802,8 +809,8 @@ const DATA = {
       img: 'art/announcements/garden-year.png',
       title: 'The Garden Year',
       bullets: [
-        'Your garden runs a year now, and you finish it with the Turn — the gold goes, and Saved Seeds stay with you for good.',
-        'Saved Seeds buy petals. Every flower can be made worth more, and quicker to grow, forever.',
+        'Your garden runs a year now, and you finish it with the Turn — the gold goes, and Prisms stay with you for good.',
+        'Prisms buy petals. Every flower can be made worth more, and quicker to grow, forever.',
         'Seasons garden at different speeds: summer is seconds, Fall is hours. More open as you Turn.',
         'A new bar along the bottom — Orders & Quests, Cards, your Garden, the Turn and the Shop.'
       ],
@@ -1098,7 +1105,7 @@ const CREATURE_PAIRS = [
    moment should be found rather than engineered. */
 const PAIR_TUNING = {
   nightbloomChance: 0.5,
-  nightbloomCap: 3,        // may not upgrade past Prismatic
+  nightbloomCap: 3,        // may not upgrade past Radiant
   lanternRainMult: 2,
   pollinationCap: 5,
   longWatchHours: 2,

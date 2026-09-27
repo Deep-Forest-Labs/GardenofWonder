@@ -143,7 +143,7 @@ Owned by [32-the-garden-year.md](32-the-garden-year.md) · drawn by [ui-sheet.js
 
 [![The Turn — the Tally, mid-roll](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/turn-tally.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/turn-tally.png)
 
-Beat three, caught while it is still counting: the year totted up into the Saved Seeds that survive it.
+Beat three, caught while it is still counting: the year totted up into the Prisms that survive it.
 
 Owned by [32-the-garden-year.md](32-the-garden-year.md) · drawn by [ui-sheet.js](../ui-sheet.js)
 
@@ -195,7 +195,7 @@ Owned by [47-the-curtain-and-the-drip.md](47-the-curtain-and-the-drip.md) · dra
 
 [![The Almanac — petal tracks](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/almanac.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/almanac.png)
 
-Every flower ever grown, and the permanent petal ladders that Saved Seeds buy — the part of the game that outlives a year. A seed you own but never planted stays named and dimmed; one the curtain has not lifted on yet goes ???.
+Every flower ever grown, and the permanent petal ladders that Prisms buy — the part of the game that outlives a year. A seed you own but never planted stays named and dimmed; one the curtain has not lifted on yet goes ???.
 
 Owned by [16-progression-and-quests.md](16-progression-and-quests.md) · drawn by [ui-sheet.js](../ui-sheet.js)
 
@@ -261,7 +261,7 @@ Owned by [41-weather-staging.md](41-weather-staging.md) · drawn by [ui-weather.
 
 [![Aurora](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/weather-aurora.png)](https://deep-forest-labs.github.io/GardenofWonder/docs/screens/weather-aurora.png)
 
-Rare enough to be an event. It bends the light rules and reads as night at any hour, which is how Prismatic blooms happen at noon.
+Rare enough to be an event. It bends the light rules and reads as night at any hour, which is how Radiant blooms happen at noon.
 
 Owned by [41-weather-staging.md](41-weather-staging.md) · drawn by [ui-weather.js](../ui-weather.js)
 

@@ -606,7 +606,7 @@ backfill from remaining flowers grants already-reached milestones on first load 
 ## Phase 5 — Bloom Mastery
 
 **Retires into petals with the Year build, 2026-08-29.** Lifetime counts stay; tiers convert to a
-one-time Saved Seeds grant. See [32-the-garden-year.md](32-the-garden-year.md) and the migration
+one-time Prisms grant. See [32-the-garden-year.md](32-the-garden-year.md) and the migration
 section of [33-year-one-economy.md](33-year-one-economy.md).
 
 **Built 2026-08-14.** Phase 4 answered "how many kinds have you grown." It does not answer "why
@@ -827,7 +827,7 @@ here so the retired design is legible, not as a description of the suite:
 - `rarityCounts` never decreases when flowers are spent. *(Still asserted — creatures and the
   Almanac read it.)*
 - Backfill never credits a rarity above `bestRarity`, and pays no gems. *(Still asserted, and it
-  now feeds the one-time Saved Seeds conversion.)*
+  now feeds the one-time Prisms conversion.)*
 - `masteryTierGoal(1)` through `masteryTierGoal(10)` match the table above. *(Still asserted as
   a frozen table.)*
 - Backfill is idempotent — a second load advances nothing further. *(Now bill item 13: the

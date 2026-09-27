@@ -11,7 +11,7 @@ locked-season gates, and Fall's board with all eight crops, the windfall and the
 re-homing the Wild Meadow — the map is its only door, contrary to the sentence in *The world: one
 swipe wide* below. Winter and Spring have gates and no gardens; they are slices C and E.
 This is the master document for
-the game's new shape — the seasonal world, the Turn (prestige), Saved Seeds, flower mastery, and
+the game's new shape — the seasonal world, the Turn (prestige), Prisms, flower mastery, and
 how orders, creatures and every existing system sit inside it. Numbers live in
 **[33-year-one-economy.md](33-year-one-economy.md)**; every one of them ships in `data.js`,
 remote-config-ready. The pitch that sold it is the *Garden Year* artifact; the pressure test that
@@ -33,19 +33,19 @@ Agents talking to the owner lead with the feel and keep the math in the docs.
 | **Gold** | The year's money. Spend it freely — it goes away at the Turn |
 | **Upgrades** | The in-year shop: harder taps, faster growth, automation. Bought with gold, wiped at the Turn and rebought — the rebuild is the ritual. Once called badges, and players never see that word |
 | **Power-ups** | The short surges — Bloom Burst, Seed Rush, Fortune Aura, Golden Popups, and the borrowed Harvest Drone. Never bought with money or gems, and never re-earnable by Turning. Four are earned by playing; the drone is *lent* for half an hour in exchange for a rewarded video, which is the owner's frame of paying-accelerates-never-gates and is still earning it, not buying it |
-| **Saved Seeds** | The forever money. You only get them at the Turn; they buy petals; you never lose them |
-| **The well** | Everything you've *ever* earned feeds one deep well of Saved Seeds. Each Turn scoops out what's new. Turn often = small scoops, wait = one big scoop — same total either way, so there's no wrong rhythm |
+| **Prisms** | The forever money. You only get them at the Turn; they buy petals; you never lose them |
+| **The well** | Everything you've *ever* earned feeds one deep well of Prisms. Each Turn scoops out what's new. Turn often = small scoops, wait = one big scoop — same total either way, so there's no wrong rhythm |
 | **The meter** | Fills as your year grows; pulses when a Turn is ready. Lives in the dock's Turn button |
 | **The Tally** | The arcade scoreboard at the Turn — bonus lines for orders filled, windfalls, species grown — multiplies your scoop, up to double |
 | **The blessing** | The one flower you pick each Turn; it gets a free petal |
-| **Petals** | Permanent upgrades on each flower: worth more, grows faster, plus one special skill each. Bought with Saved Seeds |
+| **Petals** | Permanent upgrades on each flower: worth more, grows faster, plus one special skill each. Bought with Prisms |
 | **Unlock price** | The one-time gold price to open a new seed. Paid once, yours forever |
 | **The ??? rows** | Things the garden hasn't shown you yet — seeds today, records too. The next seed to save for always shows its price; the rest reveal themselves as you grow, each with a little celebration |
 | **Records** | Collectibles you find through play — each one a song for the garden and a charm to wear. Found by doing, never bought with money |
 | **Songs** | Side A of a record: put on any song you've found. The garden's own tune plays when no record is on |
 | **Charms** | Side B of a record: a small permanent perk. Wear any charm you've found with any song — and every charm works with the music off |
 | **The seasons** | Gardens at different speeds. Summer is seconds, Fall is hours, Winter is days, Spring is the long game |
-| **A catch** | What a passing sky can leave on a plant while it grows — Dewkissed, Gilded, Prismatic, Wonderstruck. Each plant gets one chance at one, and only the sky standing at that moment can give it. Never the word "mutation" |
+| **A catch** | What a passing sky can leave on a plant while it grows — Dewkissed, Gilded, Radiant, Wonderstruck. Each plant gets one chance at one, and only the sky standing at that moment can give it. Never the word "mutation" |
 | **Sprout, stem, bud, bloom** | The four looks a growing flower wears, like Animal Crossing. The bud holds until almost ready, in the flower's own colours, and opens just before the pick |
 | **The windfall** | Fall's bonus for harvesting the whole bed at once — the dinner appointment |
 | **The tuck-in** | Winter's bedtime ritual: one free tap puts the bed under quilts for the night. It only ever adds — nothing is lost to a night, ever |
@@ -65,9 +65,9 @@ Agents talking to the owner lead with the feel and keep the math in the docs.
               │     THE TURN     │   bless one flower,
               │                  │   the Tally scores your year
               └──────────────────┘
-        gold goes ──────┼────── Saved Seeds arrive
+        gold goes ──────┼────── Prisms arrive
                         ▼
-              SPEND SEEDS ON PETALS
+              SPEND PRISMS ON PETALS
            every flower permanently better
                         │
                         ▼
@@ -139,7 +139,7 @@ every page of research warns about. Each season is a different **clock class** a
 | **Summer** | Seconds–minutes | The garden as built: tapping, combos, verbs, mutations, creatures. The high-touch place | From the first tap |
 | **Fall** | Hours | **The bed pays together** — harvesting a fully ripe bed pays a windfall bonus, so Fall is planted in the morning and popped at dinner. Home of the cottage crops and orchard trees ([26-goods-catalog.md](26-goods-catalog.md)) | **Turn 1** |
 | **Winter** | A day or more | **The night shift** — long clocks that ripen while the app is closed (plants already grow on timestamps; Winter's clocks are simply sized to sleep). Tuck it in at night, collect in the morning. No automation required. **Specified 2026-09-01: [46-the-night-shift.md](46-the-night-shift.md)** — the tuck-in, the snowfall, and Holly | **~Turn 3** |
-| **Spring** | The meta | **The nursery** — where Saved Seeds are spent in ceremony, where heirloom lines and breeding live later, where creatures hatch one day. The garden *about* the other three | **~Turn 6** |
+| **Spring** | The meta | **The nursery** — where Prisms are spent in ceremony, where heirloom lines and breeding live later, where creatures hatch one day. The garden *about* the other three | **~Turn 6** |
 
 Fall and Winter get their own small seed lists on their own clocks
 ([33-year-one-economy.md](33-year-one-economy.md#fall-content)); their plants are not Summer seeds
@@ -174,7 +174,7 @@ confirmed as a default, revisit after one playtest.
 ### The trigger: the year-meter
 
 A meter, visible from the first session, fills as the year is played. **The meter is the pouch:**
-it shows the Saved Seeds the year has grown so far, and it doubles as the season's visual clock —
+it shows the Prisms the year has grown so far, and it doubles as the season's visual clock —
 as it fills, Summer's palette ripens toward autumn (one `--season-tint` overlay on the scenery,
 composed like the weather tint — purely visual, no state). The Turn unlocks behind two small gates —
 projected mint ≥ `DATA.year.minSeeds` **and** the year has earned `DATA.year.minCoins` (the
@@ -184,7 +184,7 @@ meter never stops you from playing on, and the word "reset" appears nowhere in t
 
 **Where the meter lives:** a third HUD pill beside the two wallets — the HUD is up in every room,
 which is what makes the meter visible in every season. Before the first Turn it is the mystery
-meter; afterwards the pill shows the banked Saved Seeds, with the current year's projection
+meter; afterwards the pill shows the banked Prisms, with the current year's projection
 revealed on tap. Tapping the pill when the meter is full is also the **re-invite**: declining the
 flower's offer costs nothing and the ceremony reopens from here whenever the player likes.
 
@@ -264,7 +264,7 @@ Owner-decided 2026-08-29: **the Turn clears the fast annuals in the main garden 
 | Clears (the year's things) | Never touched (the forever things) |
 | --- | --- |
 | Summer's planted plots — see the in-flight rules below | **Any running long timer, anywhere** — Winter sleepers, a mid-grow Century Bloom. A reset that eats a two-week plant is the one unforgivable version of this |
-| Gold — zeroed to `defaultState`'s 100 starting coins, after the mint | Saved Seeds, petals, seed **unlocks** (one-time prices stay paid), and the mint's two ledgers — `lifetimeCoins` (never written except by `credit()`) and `mintedBase` (only ever grows, at the Turn, by the un-tallied increment) |
+| Gold — zeroed to `defaultState`'s 100 starting coins, after the mint | Prisms, petals, seed **unlocks** (one-time prices stay paid), and the mint's two ledgers — `lifetimeCoins` (never written except by `credit()`) and `mintedBase` (only ever grows, at the Turn, by the un-tallied increment) |
 | **Every key in `state.upgrades`** — the tap upgrades, the three procs, Sprinklers, Land Deed, the drone and all eight harvesters. The rebuild is the ritual, and `tap.power` / `comboMax` / crit fields are **re-derived immediately after the wipe** | Creatures, stars, the Hollow and everything in it; food clocks run on real time throughout |
 | Plots 5–8 close (gold rebuy from Turn 1 on — **they cannot be bought at all in year one**, so Turn 1's gift is Fall *and* the right to a bigger garden; migrated saves keep what they owned) | Lifetime reputation and level; the Almanac's lifetime records (`discovered`, `bestRarity`, `rarityCounts`) |
 | Boost inventory; the combo zeroes with the board; an *active* boost or called sky simply expires on its own clock | Cards, packs, gems, mementos, decorations |
@@ -291,9 +291,9 @@ Every row of this table is a sim-test. The Turn is a **new, selective path** —
 ([07-save-data.md](07-save-data.md)).
 
 *Reading the right column precisely: "never touched" means never reset or decreased. The Turn
-necessarily WRITES three of the listed fields upward — the mint adds to Saved Seeds, and the
+necessarily WRITES three of the listed fields upward — the mint adds to Prisms, and the
 blessing adds one petal and one `state.blessed` record — and the sim-test partition accounts for
-that: `savedSeeds` sits with the changed-by-the-Turn fields (asserted to grow by exactly the
+that: `prisms` sits with the changed-by-the-Turn fields (asserted to grow by exactly the
 projection), while petals and blessings are asserted through the blessing's own bill item.*
 
 ### What last year's harvest becomes (ruled 2026-08-30, not built)
@@ -304,19 +304,19 @@ everything still in the pantry at the Turn is **preserved** — pressed flowers 
 craft and sell but which no customer will take. Spec, measurement and test bill in
 [41-the-preserve.md](41-the-preserve.md).
 
-## Saved Seeds — the two-wallet rule
+## Prisms — the two-wallet rule
 
-**Gold is the year's money; Saved Seeds are the forever money.** Neither buys the other's things,
+**Gold is the year's money; Prisms are the forever money.** Neither buys the other's things,
 so no purchase ever competes with the player's future:
 
 - **Gold** — earned all year; buys upgrades, plots, plants and seed unlocks; zeroed at the Turn
   *after* minting.
-- **Saved Seeds** — minted **once, at the Turn, from the whole year's earnings** (never from the
+- **Prisms** — minted **once, at the Turn, from the whole year's earnings** (never from the
   leftover balance — the hoarding failure is quantified in
   [31-per-seed-prestige.md](31-per-seed-prestige.md#surgery-1--the-prestige-currency-lifetime-earned-not-leftover-balance));
   buy petals and nothing else; never reset, never expire.
 
-Spending gold is provably seed-neutral: the mint reads a lifetime-this-year counter that no
+Spending gold is provably prism-neutral: the mint reads a lifetime-this-year counter that no
 purchase can decrease. **Gems stay entirely out of the loop** — gems never buy petals, seeds, or
 anything permanent-power, per the standing gems-buy-chances-choices-looks rule. Cheated gold (the
 live cheat buttons) is **excluded from the mint** — friend-testers keep their buttons without
@@ -326,7 +326,7 @@ contaminating the pacing data.
 
 Every flower gets a **card in the Almanac** — which is also the audit's five-collections-into-one
 consolidation finally landing with a purpose: the Almanac row becomes the one place a flower's
-whole story lives (species, best rarity, lifetime count, honey, creature, petals). Saved Seeds buy
+whole story lives (species, best rarity, lifetime count, honey, creature, petals). Prisms buy
 **petals** on the card.
 
 ### The shape of a card
@@ -366,7 +366,7 @@ The endless +5%-per-tier ladder is **superseded by petals** — two permanent pe
 ladders on one flower is the exact stacking failure the trait-pool discipline exists to prevent,
 and the audit already ruled mastery should be bounded. Its lifetime harvest and rarity counts
 **stay** (creatures, Almanac and quests read them). Migration: existing mastery tiers convert to
-a one-time Saved Seeds grant (doc 33), toastless, the backfill pattern.
+a one-time Prisms grant (doc 33), toastless, the backfill pattern.
 
 ## Orders — the Stand in the Year
 

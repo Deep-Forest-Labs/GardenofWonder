@@ -239,7 +239,7 @@ levels, the daily and the Almanac.
 >
 > **The one thing that got worse:** `year-sim`'s cheap-Turn verdict no longer decides the same way
 > twice — five runs came back OK, OK, OK, FAIL, FAIL where it used to exit 0 every time. It fails on
-> lifetime GOLD only; `smart` never out-mints `casual` on Saved Seeds, so the property the cumulative
+> lifetime GOLD only; `smart` never out-mints `casual` on Prisms, so the property the cumulative
 > mint guarantees is intact in every run.
 >
 > **Chased down after the phase shipped, and it was the pantry.** The Turn never emptied it, so a
@@ -284,7 +284,7 @@ levels, the daily and the Almanac.
 > next unmet creature or all six at a chosen ★, through the same `moveIn()` record and the same
 > arrival beat a real threshold writes — it leaves `state.discovered` alone, so a creature summoned
 > at ★3 honestly shows an empty bar toward ★4. **Summoning grants no levels**, so the band fills only
-> as far as habitat slots allow; the row header says so. Plus one of every power-up, +50 Saved Seeds,
+> as far as habitat slots allow; the row header says so. Plus one of every power-up, +50 Prisms,
 > and the pack buttons that were already there.
 >
 > **The one place the kit touches the mint, stated plainly:** `Dev.warp()` calls `credit()` nowhere,
@@ -412,8 +412,7 @@ levels, the daily and the Almanac.
 > flagged out of the mint), one-time seed unlock prices with the level-gates retired and a
 > grandfather migration, petals (Rich Bloom / Quick Sprout) live in harvest and offline income,
 > the atomic `Game.turnYear()` over the full never-resets partition, Fall's board with the
-> windfall and the Century Bloom as simulation, Bloom Mastery retired into a one-time Saved
-> Seeds conversion, the four quest re-keys at a held 777, and Developer-tools drivers to feel a
+> windfall and the Century Bloom as simulation, Bloom Mastery retired into a one-time Prisms conversion, the four quest re-keys at a held 777, and Developer-tools drivers to feel a
 > whole year in five minutes. The doc-33 sim-test bill (items 1–6, 8–18) is genuinely asserted —
 > the suite grew to **1,096 assertions**, clean across repeated runs and hardened by the
 > gauntlet's own mutation tests — and `tools/year-sim.js` drives casual-play pacing through the
@@ -463,7 +462,7 @@ levels, the daily and the Almanac.
 > so the promise that a bed ripening while the tab was shut still pays is now true rather
 > than merely commented). **My own bill-12 test missed it by harvesting the whole bed before
 > replanting — the one flow that did clear the flag.** Round 3 also found that both gardens'
-> ripeness gates, three of Fall's four purchase gates, the Saved Seeds sink and
+> ripeness gates, three of Fall's four purchase gates, the Prisms sink and
 > `passiveIncomeRate()`'s unlock guard had **no negative test at all**: deleting any of them
 > left the suite green while the game became an unbounded gold printer. All now asserted from
 > the NO side; thirteen mutations, thirteen caught; suite **1,149**. See the 2026-08-29
@@ -488,7 +487,7 @@ levels, the daily and the Almanac.
 > bounded, so the 636,378 shared-skill sink needs 4.05 × 10¹³ lifetime coins and doc 33's
 > "2–5 petals per Turn forever" is false (phase 4's `mintK` chair); and **the blessing
 > inherited the exploit** — one free Rich Bloom petal per Turn is now the largest per-Turn
-> grant in the game, and 95 Turns hand over the whole Rich Bloom ladder (318,189 Saved Seeds
+> grant in the game, and 95 Turns hand over the whole Rich Bloom ladder (318,189 Prisms
 > of value) for ~101M lifetime coins, about 2.5 days of play. That is **the one open owner
 > decision now**, with four dials named and none taken; `year-sim` splits bought from blessed
 > petals and discloses it beneath the verdict rather than failing on it. See the
@@ -512,7 +511,7 @@ levels, the daily and the Almanac.
 > go. **[32-the-garden-year.md](32-the-garden-year.md)** is the master design — four seasonal
 > gardens on one horizontal swipe strip replacing the world map (Summer home · Fall at Turn 1 ·
 > Winter ~3 · Spring ~6), the Turn as prestige (invited never forced, clears fast annuals in the
-> main garden only, never kills a running long timer), Saved Seeds minted once per Turn from the
+> main garden only, never kills a running long timer), Prisms minted once per Turn from the
 > year's earnings, and flower mastery as **petals** on the Almanac's own rows (Rich Bloom + Quick
 > Sprout everywhere, one signature each, six authored at launch, chance skills as countdowns).
 > **[33-year-one-economy.md](33-year-one-economy.md)** is the retune riding inside slice A: unlock
@@ -1223,7 +1222,7 @@ levels, the daily and the Almanac.
 
 > **Weather and mutations shipped 2026-08-15.** The sky runs on wall-clock epoch time — the same
 > weather for everyone at the same moment, and any past slot computable. Every plant rolls once for a
-> mutation mid-growth: Dewkissed ×2, Gilded ×10, Prismatic ×25, Wonderstruck ×100, visible from the
+> mutation mid-growth: Dewkissed ×2, Gilded ×10, Radiant ×25, Wonderstruck ×100, visible from the
 > moment it lands until harvest. An adjacent Beacon raises the catch chance. Measured at **~20% of
 > income, evenly across every seed** — the spec's original per-slot exposure model produced a 65×
 > spread and was cut after the sim-test caught it. Mechanic in
@@ -1355,7 +1354,7 @@ stay unsold as the 09-02 rescope left them. Every monetization idea is weighed f
 
 **Ruled 2026-09-22 — the next slice is the story trunk and the skill tree.** A story tied to reputation (slice D's
 reason to exist), a tree that replaces the petal menu and the picker's unlock rows — reputation is the trunk,
-Saved Seeds buy what it reveals, branches but nothing exclusive, the build comes from a few lawn *slots* that
+Prisms buy what it reveals, branches but nothing exclusive, the build comes from a few lawn *slots* that
 the old decorations become. **The Harvest Drone goes paid** (real money or an ad rental, no gold path; the tree
 upgrades an owned one) — this supersedes the 09-21 "drone to the Shop" ruling before it was built, and its
 offline-income cost is stated once in the 2026-09-22 entry in [10-decision-log.md](10-decision-log.md) — **and
@@ -1695,7 +1694,7 @@ not what you would guess.
 
 **THE ONE ECONOMY DECISION WAITING ON THE OWNER.** `node tools/year-sim.js 14 winter` **exits 1**.
 Guardrail one FAILS: a single full kept night of eight Camellia grosses **2,688,000**, which clears
-`minCoins` twenty-six times over and mints **18.3 Saved Seeds against a gate of 10**, at every Turn
+`minCoins` twenty-six times over and mints **18.3 Prisms against a gate of 10**, at every Turn
 from 3 to 6. Verified by driving the real engine — `Game.turnReady()` goes false → true on that one
 collect with nothing else played. **Only Camellia breaches**; Witch Hazel and below are clear.
 
@@ -1821,7 +1820,7 @@ below and in the decision log. Nothing about it is unreviewed any more.)*
 
 7. **The Turn jump.** Developer tools → *Jump ahead* → **+3 Turns (Winter's gate)**. It earns its way
    there through the real faucet and runs the real Turn three times, so expect a **bare garden with
-   Saved Seeds banked** — that is a prestige, three times, not a bug. Then look at Winter's tab: it
+   Prisms banked** — that is a prestige, three times, not a bug. Then look at Winter's tab: it
    says *Soon* rather than *Turn 3*, and tapping it reads **"Still growing in"**. That plate has
    never been reachable before. **It opens the gate, not a garden** — Spring and Winter are not
    built, and this cheat cannot conjure them.
@@ -2271,7 +2270,7 @@ rarity rungs where the garden has four.
 
 Two minutes, in order, on a phone. Every step was walked in the live build before it was written
 down. **Steps 4 and 5 need one tap in Developer tools** — the unlabelled patch of empty space just
-right of the gem wallet — because a fresh garden has no Saved Seeds yet and petals do not exist
+right of the gem wallet — because a fresh garden has no Prisms yet and petals do not exist
 until your first Turn. That is the year-one mystery working as designed, not something to fix.
 
 **1 · Open the game. A card comes up, once.** Flashy art, four plain lines about the Garden Year,
@@ -2286,10 +2285,10 @@ playtest starts the same build on the same morning.
 
 **3 · Tap an empty plot and read the Tulip row.** `110 gold · 18s · 154–1,232`. Remember the
 **18s** — that number used to be a lie. The picker was applying your sprinklers and boosts to it and
-forgetting your petals, so a flower you had spent Saved Seeds on read the same as one you had not.
+forgetting your petals, so a flower you had spent Prisms on read the same as one you had not.
 
 **4 · Buy a Quick Sprout petal on the Tulip, and watch that number move.** Developer tools →
-**Petals → +50 Saved Seeds**. Now the Turn button in the dock has a card per flower. Find **Tulip →
+**Petals → +50 Prisms**. Now the Turn button in the dock has a card per flower. Find **Tulip →
 Quick Sprout**: the row reads its own value out loud, *next −6%*, where before it was five dots and
 a price. Buy one and it becomes *−6% time · next −6%*.
 
@@ -2447,7 +2446,7 @@ out of the Hollow or the meadow, and back to Summer from Fall.
 - Developer tools → **Earn +100K**. It fills and **breathes gold**. Tap it: the lock is off and the
   ceremony's button is there — *See what it's for*.
 - Take the Turn. Come back to the button afterwards: **the pouch now rides above it** with your
-  Saved Seeds on it, and the panel has both gates drawn, the lower one marked as the one holding
+  Prisms on it, and the panel has both gates drawn, the lower one marked as the one holding
   you, and a card for every flower to spend seeds on.
 
 **5 · The two squeezes, if you have a second phone.** At 360px wide the dock buttons are 64px each
@@ -2493,7 +2492,7 @@ header line is the meter until phase 2 draws it.
    you have already drawn what the first 500K opened. **Turning often now buys nothing.** That
    is the whole change; if a Turn ever pays as much as the one before it on the same money,
    something has regressed.
-4. **Spend the pouch.** *Petals* now shows Saved Seeds and Daisy's next two prices. Buy **Rich
+4. **Spend the pouch.** *Petals* now shows Prisms and Daisy's next two prices. Buy **Rich
    Bloom** and **Quick Sprout** a few times and watch the price ladder climb — 2–5 petals per
    Turn is the intended feel.
 5. **Check the never-resets list held.** Your gems, cards, packs, creatures, the Hollow,
@@ -2507,7 +2506,7 @@ header line is the meter until phase 2 draws it.
 **The question that was waiting on you is answered** — you ruled the mint cumulative, phase 1.1
 built it, and turning often now buys nothing (`node tools/year-sim.js 12 all` exits zero).
 **The new one, in its place:** the blessing is now the largest per-Turn grant in the game and
-nothing prices it — **95 Turns hand over every flower's Rich Bloom ladder, 318,189 Saved Seeds
+nothing prices it — **95 Turns hand over every flower's Rich Bloom ladder, 318,189 Prisms
 of value, for about 2.5 days of play**, while the mint pays 997 seeds over the same span. It is
 a ceremony beat, so the call is yours; four dials are named and none taken. See the open
 decision in [11-known-issues.md](11-known-issues.md).
@@ -2750,7 +2749,7 @@ Full list in [11-known-issues.md](11-known-issues.md). The four that affect desi
 
 - **`year-sim` does not decide the same way twice any more** (2026-08-30). Raising order gold moved
   the two shapes it compares inside its own noise: five runs, three OK and two FAIL. It is a GOLD
-  result, never a Saved Seeds one, so the mint is still split-neutral. **Do not read a single run of
+  result, never a Prisms one, so the mint is still split-neutral. **Do not read a single run of
   it as a verdict until it is seeded and multi-run** — and do not "fix" it to pass. The arithmetic
   and the two ways out are in [11-known-issues.md](11-known-issues.md); the choice is the owner's.
 
@@ -3270,7 +3269,7 @@ a scrape guard on the slice, or a rename makes every regex under it vacuously tr
 `tools/sim-test.js`.** Reading `ui-sheet.js` as text is better than nothing and worse than it looks:
 three groups written that way in the 2026-09-03 round were beaten by wrong implementations that all
 read fine as source. The worst swapped `${goes}` and `${keeps}` under the Turn ask's two unchanged
-sentences — the panel then told the player a new year washes away their Seeds, Unlocks, Petals,
+sentences — the panel then told the player a new year washes away their Prisms, Unlocks, Petals,
 Creatures, Cards and Level and never reaches their Gold, Upgrades and Power-ups, **the game's
 central guarantee inverted on its one irreversible screen, at 1904 passed / 0 failed** — because the
 sentences name neither array and every check read an array literal. Alongside it: `.slice(0, 3)` on
@@ -3800,7 +3799,7 @@ that writes state by hand does not.
 **`state.credits += x` is banned in favour of `Game.credit(x, {cheat, refund})`.** The Year's
 mint reads `state.year.coinsEarned`, which only `credit()` writes — a raw wallet grant either
 silently misses the meter (an earnings faucet that mints nothing) or, flagged wrongly, mints
-Saved Seeds from a cheat. Spending stays plain subtraction. Sim-test bill item 4 exists to catch
+Prisms from a cheat. Spending stays plain subtraction. Sim-test bill item 4 exists to catch
 exactly this; the dev gold buttons route through `Dev.grantGold`.
 
 **`turnYear()` is the only legal prestige path, and it is atomic on purpose.** It collects,
@@ -3977,7 +3976,7 @@ graft callers <symbol>          # who calls this, or --direction out for what it
 **`year-sim`'s exit code stopped being a gate on 2026-08-30** and has not been made into one again.
 It runs ONE unseeded run per strategy, and at the raised order gold the two shapes it compares sit
 inside its own noise — five runs, three OK and two FAIL. Read the day-10 table rather than the exit
-code, and check *which currency* a shape wins on: a `smart` win on Saved Seeds minted would be a
+code, and check *which currency* a shape wins on: a `smart` win on Prisms minted would be a
 real mint break, a win on lifetime coins alone is the Fall-dump conversion and is what is currently
 flipping the verdict. See [11-known-issues.md](11-known-issues.md).
 

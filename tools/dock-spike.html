@@ -35,7 +35,7 @@
   --r-lg:26px; --r-md:18px; --r-sm:12px;
   --font:'Baloo 2', ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
 
-  /* The seed pouch. Saved Seeds are the forever money, so they are not gold and
+  /* The seed pouch. Prisms are the forever money, so they are not gold and
      not gems — a green that belongs to growing things, kept clear of every
      rarity colour. Proposed here, an open question in docs/35. */
   --seed:#7bd88f; --seed-d:#3f9d45; --seed-l:#c9f5cf;
@@ -487,7 +487,7 @@ body[data-notes="0"] .slot{display:none}
   0%,100%{box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22), 0 0 0 0 rgba(255,201,60,.55)}
   50%    {box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22), 0 0 0 5px rgba(255,201,60,.5)}
 }
-/* The pouch count. Saved Seeds have never had a readout — the pill that carried
+/* The pouch count. Prisms have never had a readout — the pill that carried
    the meter carried no number, on purpose. Year one keeps it that way. */
 .d5 .seedchip{position:absolute;top:-8px;left:50%;transform:translateX(-50%);
   display:flex;align-items:center;gap:2px;padding:1px 6px 1px 3px;
@@ -1312,7 +1312,7 @@ F.push({
     ['d', '<b>The fill rises from the bottom, it does not wipe across.</b> The pill it replaces wipes left to right across just <b>39px</b> — it is the narrowest thing in the HUD, because it is the one pill carrying no number. So the button is not too narrow for a wipe; rising simply has more room to travel, 56px of button height against the pill’s 39px of width. And it is the better picture anyway: the pouch fills.'],
     ['d', '<b>It reads the binding gate — the lower of the two ratios — so “why can’t I turn yet” is one glance.</b> That number already exists: <code>yearProgress()</code> in <code>ui.js</code> computes <code>min(seeds, coins)</code> today and hands it to the pill. The Turn button reads exactly the same value; nothing in the engine changes.'],
     ['d', '<b>The ready state is the year pill’s own 1.4-second gold breath, moved onto the button.</b> Worth being exact: that ring is worn today by exactly one thing in the whole game — the full pill — and it has only ever meant <i>the Turn is ready</i>. So this is borrowed vocabulary rather than a new idea, and the meaning travels with it intact.'],
-    ['d', '<b>YEAR ONE IS THE SECOND CHIP, MISSING.</b> Doc 32’s rule is no numbers before the first Turn, so the year-one button is fill and label only. From year two the pouch — Saved Seeds — rides above the button as a cream chip. <b>The number exists today, but never in sight</b> — the pill’s own tap-pop says it, the Almanac heads its seed rows with it, and the ceremony counts it out. It has just never been on an always-visible surface, because the pill that stood for the forever money carried no number. The chip is a promotion, not a new readout.'],
+    ['d', '<b>YEAR ONE IS THE SECOND CHIP, MISSING.</b> Doc 32’s rule is no numbers before the first Turn, so the year-one button is fill and label only. From year two the pouch — Prisms — rides above the button as a cream chip. <b>The number exists today, but never in sight</b> — the pill’s own tap-pop says it, the Almanac heads its seed rows with it, and the ceremony counts it out. It has just never been on an always-visible surface, because the pill that stood for the forever money carried no number. The chip is a promotion, not a new readout.'],
     ['q', '<b>ANSWERING GATE QUESTION 2 — is the fill legible at dock size?</b> Yes at 70&times;56 — and at 64&times;56 on a 360 phone — and this frame is the evidence: at 6% you can see a lip of green, at 62% the level is unmistakable, and full-plus-breathing reads across the room. What it cannot do is show a <i>small</i> change — a percentage point is half a pixel. That is fine and probably right: this is a meter you glance at, and the panel behind it is where you go for the detail.'],
     ['q', 'The two year-one states differ only by fill level, and that is deliberate: nothing about the button announces that year one is special. If the owner would rather year one be visibly a mystery — a “?” where the pouch chip goes, say — it is one conditional.']
   ]
@@ -1378,11 +1378,11 @@ const petalCard = (name, c1, core, rich, quick, cost, can) =>
 const TURN_BODY_READY =
   '<div class="bigmeter" style="--p:100%"><i></i><div class="lb"><b>The year is ready to turn</b></div></div>' +
   '<div class="gates">' +
-  '<div class="gate"><span style="width:74px">Seeds</span><span class="tr"><i style="width:100%"></i></span><span class="tag2">met</span></div>' +
+  '<div class="gate"><span style="width:74px">Prisms</span><span class="tr"><i style="width:100%"></i></span><span class="tag2">met</span></div>' +
   '<div class="gate"><span style="width:74px">Gold earned</span><span class="tr"><i style="width:100%"></i></span><span class="tag2">met</span></div>' +
   '</div>' +
   '<div class="big yes">' + ico('pouch') + 'Turn the year</div>' +
-  '<p class="psec">Spend your seeds &middot; <span class="pill seed">' + ico('pouch') + '312</span></p>' +
+  '<p class="psec">Spend your prisms &middot; <span class="pill seed">' + ico('pouch') + '312</span></p>' +
   '<div class="pcards">' +
   petalCard('Daisy', '#ffe066', '#ffc93c', 3, 2, '68', true) +
   petalCard('Rose', '#ff8fab', '#e8453c', 1, 0, '99', true) +
@@ -1393,11 +1393,11 @@ const TURN_BODY_READY =
 const TURN_BODY_FILLING =
   '<div class="bigmeter" style="--p:41%"><i></i><div class="lb"><b>The year is still growing</b></div></div>' +
   '<div class="gates">' +
-  '<div class="gate bind"><span style="width:74px">Seeds</span><span class="tr"><i style="width:41%"></i></span><span class="tag2">this one</span></div>' +
+  '<div class="gate bind"><span style="width:74px">Prisms</span><span class="tr"><i style="width:41%"></i></span><span class="tag2">this one</span></div>' +
   '<div class="gate"><span style="width:74px">Gold earned</span><span class="tr"><i style="width:88%"></i></span><span class="tag2">nearly</span></div>' +
   '</div>' +
   '<p class="note2"><b>The lower track is the one holding the Turn.</b> That is the number the dock button draws.</p>' +
-  '<p class="psec">Spend your seeds &middot; <span class="pill seed">' + ico('pouch') + '186</span></p>' +
+  '<p class="psec">Spend your prisms &middot; <span class="pill seed">' + ico('pouch') + '186</span></p>' +
   '<div class="pcards">' +
   petalCard('Daisy', '#ffe066', '#ffc93c', 5, 2, '—', true) +
   petalCard('Rose', '#ff8fab', '#e8453c', 1, 0, '99', true) +
@@ -1476,7 +1476,7 @@ F.push({
     sheet: panel({ title: 'The Year', body: TURN_BODY_READY }) }),
   notes: [
     ['d', '<b>The ceremony is one tap further away than it is today, and that is the trade.</b> The pill opened the ceremony directly when full; the Turn button opens this panel and the ceremony’s own button is inside it. The gain is that the same button is useful for the other fifty weeks of the year, instead of being a pill that does nothing until it is full.'],
-    ['d', '<b>Petals move here, as a card per flower</b> — doc 36’s words. The Almanac keeps the <i>record</i> rows: what you have found, its best rarity, how many you have grown. This panel is the <i>shop</i>: two tracks, five pips each, a buy chip in Saved Seeds. Splitting them that way is why the Almanac book stays in the HUD rather than following the star out.'],
+    ['d', '<b>Petals move here, as a card per flower</b> — doc 36’s words. The Almanac keeps the <i>record</i> rows: what you have found, its best rarity, how many you have grown. This panel is the <i>shop</i>: two tracks, five pips each, a buy chip in Prisms. Splitting them that way is why the Almanac book stays in the HUD rather than following the star out.'],
     ['d', 'Both Turn gates are drawn as tracks with the binding one marked, which is the projection card’s job moving into a surface big enough for it.'],
     ['q', '<b>The petal cards are two-up here and the Almanac’s tracks are full-width rows.</b> Two-up fits four flowers on a screen instead of two, which matters at nineteen. If the owner would rather they stayed the shape they already are, it is the same markup at one column.']
   ]

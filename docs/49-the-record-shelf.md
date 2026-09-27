@@ -118,7 +118,7 @@ The guardrails that survive untouched: store records are **listed, fixed and unt
 time-limited pack is PEGI 12; paid-random is PEGI 16 — both stay out); **no record ever appears
 in a paid `???` slot or a paid random pack**; no acquisition is missable or RNG-only; charms
 stay **lateral in power** whatever the price tag (the banned-axis tables bind the store exactly
-as they bind the garden); and the Turn's currencies — Saved Seeds, petals, blessings, unlocks,
+as they bind the garden); and the Turn's currencies — Prisms, petals, blessings, unlocks,
 gates — remain never-sold, which is the promise the Turn's meaning rests on.
 
 **The shelf is built to multiply.** Post-v1 source waves (same laws — deterministic, never

@@ -1,7 +1,7 @@
 # Overview
 
 **The "Current scope" list below is from 15 August and is badly stale** — it predates the Garden
-Year entirely (the Turn, Saved Seeds, petals, seasons, Fall, the Big Five dock, creatures' latest
+Year entirely (the Turn, Prisms, petals, seasons, Fall, the Big Five dock, creatures' latest
 state, orders). [HANDOFF.md](HANDOFF.md) and [32-the-garden-year.md](32-the-garden-year.md) are
 the truth; the pillars and aesthetic reference here still hold.
 

@@ -227,7 +227,7 @@ function makeModel(env) {
           if (!best || cost < best.cost) best = { id: s.id, skill, cost };
         });
       });
-      if (!best || S.savedSeeds < best.cost) break;
+      if (!best || S.prisms < best.cost) break;
       if (!G.buyPetal(best.id, best.skill)) break;
       bought += 1;
     }
@@ -327,7 +327,7 @@ function makeModel(env) {
       tallyMult: r.tally.mult,
       petals,
       blessed: r.blessed ? 1 : 0,
-      seedsLeft: S.savedSeeds,
+      seedsLeft: S.prisms,
       /* The mint's two ledgers AT the moment of the Turn. Winter's guardrail is
          about what one night is worth against the gates as they actually stand
          at Turns 3-6, and the mint is CUMULATIVE — pricing a night against a

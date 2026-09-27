@@ -703,11 +703,11 @@
     /* The pouch, promoted to an always-visible surface for the first time — and
        never in year one, where doc 32's rule is that the meter fills with no
        numbers on it at all. */
-    const showPouch = (S.year.turnsCompleted >= 1 || S.savedSeeds > 0) ? Math.floor(S.savedSeeds) : -1;
+    const showPouch = (S.year.turnsCompleted >= 1 || S.prisms > 0) ? Math.floor(S.prisms) : -1;
     if (showPouch !== pouchShown) {
       pouchShown = showPouch;
       el.pouchChip.hidden = showPouch < 0;
-      if (showPouch >= 0) el.pouchChip.innerHTML = `${Icons.get('pouch')}${fmt(showPouch)}`;
+      if (showPouch >= 0) el.pouchChip.innerHTML = `${Icons.get('prism')}${fmt(showPouch)}`;
     }
     /* The garden golds as the year fills. Derived, never stored — doc 32 is
        explicit that the season aging is visual only. */

@@ -782,7 +782,7 @@
        screen whose whole job is telling them apart. The icon id stays `badge`:
        it is the fallback glyph for every upgrade card and renaming it blanks
        them with no error. */
-    const keeps = [['pouch', 'Seeds'], ['lock', 'Unlocks'], ['clover', 'Petals'],
+    const keeps = [['prism', 'Prisms'], ['lock', 'Unlocks'], ['clover', 'Petals'],
       ['butterfly', 'Creatures'], ['cards', 'Cards'], ['star', 'Level']]
       .map(([ico, k]) => `<span class="chip">${Icons.get(ico)}${k}</span>`).join('')
       /* Fall belongs in the "stays" column and was in neither. The Century
@@ -832,7 +832,7 @@
       <div class="speech-block">The year’s turning. Save your seeds?</div>
       <div class="plate">
         <p class="plate-cap">Ready to save</p>
-        <div class="plate-big outlined">${Icons.get('pouch')}<span>${fmt(Math.floor(mint.base))}</span></div>
+        <div class="plate-big outlined">${Icons.get('prism')}<span>${fmt(Math.floor(mint.base))}</span></div>
       </div>
       <div class="cost-line${growing ? '' : ' good'}">${Icons.get('sprout')}<span>${cost}</span></div>
       <p class="cere-say">A new year washes away your…</p>
@@ -925,7 +925,7 @@
     return `<div class="cere">
       <div class="plate${done ? ' won' : ''}">
         <p class="plate-cap">${done ? 'Into the pouch' : 'The year’s pouch'}</p>
-        <div class="plate-big outlined">${Icons.get('pouch')}<span id="turnNum">${
+        <div class="plate-big outlined">${Icons.get('prism')}<span id="turnNum">${
           fmt(done ? turnResult.pouch : turnCount)}</span></div>
         ${rows}
         ${foot}
@@ -942,7 +942,7 @@
     const unlocks = Object.keys(S.seedUnlocks || {}).length;
     const petals = Object.values(S.petals || {}).reduce((a, p) => a + p.rich + p.quick + p.sig, 0);
     const chips = [
-      `<span class="chip">${Icons.get('pouch')}${fmt(S.savedSeeds)} banked</span>`,
+      `<span class="chip">${Icons.get('prism')}${fmt(S.prisms)} banked</span>`,
       unlocks ? `<span class="chip">${Icons.get('lock')}${unlocks} unlock${unlocks === 1 ? '' : 's'} kept</span>` : '',
       petals ? `<span class="chip">${Icons.get('star')}${petals} petal${petals === 1 ? '' : 's'} kept</span>` : ''
     ].join('');
@@ -1319,11 +1319,11 @@
      no direction reads as broken. So year one gets a locked meter, ONE track
      (the gold, because gold is the half a player can push on directly), no
      numbers on it, and the flower saying what to do. The pouch, the petals and
-     the seed gate all still wait for the first Turn. */
+     the pouch gate all still wait for the first Turn. */
   function renderYear() {
     const { mint, seeds, coins, p } = UI.yearProgress();
     const y = DATA.year;
-    const first = S.year.turnsCompleted < 1 && !(S.savedSeeds > 0);
+    const first = S.year.turnsCompleted < 1 && !(S.prisms > 0);
     const pct = Math.round(Math.max(0, Math.min(1, p)) * 100);
 
     const ready = Game.turnReady();
@@ -1372,10 +1372,10 @@
         ${yrGate('coin', 'Gold earned', coins, coins <= seeds)}
         ${yrGate('pouch', 'Pouch ready', seeds, seeds < coins)}
       </div>
-      <p class="sheet-note">Ready to save: <b>${fmt(Math.floor(mint.base))}</b> Saved Seeds. How the year <b>scored</b> is added when you Turn.</p>
+      <p class="sheet-note">Ready to save: <b>${fmt(Math.floor(mint.base))}</b> Prisms. How the year <b>scored</b> is added when you Turn.</p>
       ${cta}
       <p class="sheet-note yr-spend">Spend your pouch
-        <span class="chip">${Icons.get('pouch')}${fmt(S.savedSeeds)}</span></p>
+        <span class="chip">${Icons.get('prism')}${fmt(S.prisms)}</span></p>
       ${petalCards()}`;
   }
 
@@ -1993,11 +1993,11 @@
     const pips = Array.from({ length: def.cap }, (_, i) =>
       `<i class="pip${i < owned ? '' : ' off'}"></i>`).join('');
     const cost = maxed ? 0 : Game.petalCost(seed.id, skill);
-    const can = !maxed && S.savedSeeds >= cost;
+    const can = !maxed && S.prisms >= cost;
     const chip = maxed
       ? '<span class="price maxed">MAX</span>'
       : `<button class="price petal-buy ${can ? 'ok' : 'no'}" data-petal="${seed.id}" data-skill="${skill}"
-           ${can ? '' : 'disabled'} aria-label="Buy a ${label} petal for ${seed.name}, ${fmt(cost)} Saved Seeds, taking it from ${Math.round(eff.now * 100)} to ${Math.round((eff.now + eff.next) * 100)} percent">${Icons.get('pouch')}${fmt(cost)}</button>`;
+           ${can ? '' : 'disabled'} aria-label="Buy a ${label} petal for ${seed.name}, ${fmt(cost)} Prisms, taking it from ${Math.round(eff.now * 100)} to ${Math.round((eff.now + eff.next) * 100)} percent">${Icons.get('prism')}${fmt(cost)}</button>`;
     /* THE SKILL SAYS WHAT IT IS BEFORE IT SAYS WHAT IT IS WORTH. At zero pips
        the value line collapses to a bare "next +30%", which teaches a player who
        has never bought one absolutely nothing — the name is four small words in
@@ -2023,11 +2023,11 @@
   function petalTracks(seed) {
     /* Year one shows no petal UI — doc 32's "the mystery is the tutorial".
        But a MIGRATED save is not in year one with nothing: migrateYear()
-       converts retired Bloom Mastery tiers into Saved Seeds while
+       converts retired Bloom Mastery tiers into Prisms while
        turnsCompleted is still 0, and those seeds are the compensation for a
        yield regression the player is already paying. A currency you hold and
        cannot spend is not a mystery, it is a bug. */
-    if (S.year.turnsCompleted < 1 && !(S.savedSeeds > 0)) return '';
+    if (S.year.turnsCompleted < 1 && !(S.prisms > 0)) return '';
     /* UNLOCKED, not discovered — the same rule the blessing picker uses and the
        same one turnYear() enforces. A blessing landing on a flower you own but
        have not grown yet must have somewhere to show itself. */
@@ -2127,8 +2127,8 @@
       </div>
       <div class="stat-block">
         <h3>${Icons.get('sprout')} Seed Almanac</h3>
-        ${(S.year.turnsCompleted >= 1 || S.savedSeeds > 0)
-          ? `<p class="sheet-note pouch-note"><span class="chip">${Icons.get('pouch')}${fmt(S.savedSeeds)}</span> to spend on petals.</p>`
+        ${(S.year.turnsCompleted >= 1 || S.prisms > 0)
+          ? `<p class="sheet-note pouch-note"><span class="chip">${Icons.get('prism')}${fmt(S.prisms)}</span> to spend on petals.</p>`
           : ''}
         ${seedRows}
       </div>
@@ -2468,7 +2468,7 @@
 
   function petalReport() {
     const d = Game.petalsOf('daisy');
-    return `${fmt(S.savedSeeds)} Saved Seeds · Daisy R${d.rich}/Q${d.quick}
+    return `${fmt(S.prisms)} Prisms · Daisy R${d.rich}/Q${d.quick}
       · next ${fmt(Game.petalCost('daisy', 'rich'))} / ${fmt(Game.petalCost('daisy', 'quick'))}`;
   }
 
@@ -2566,12 +2566,12 @@
         <button class="dev-btn" data-dev="yearStats" data-arg="1">A good year's Tally</button>
         <button class="dev-btn warn" data-dev="yearTurn" data-arg="1">Run the Turn (blesses a flower with room)</button>`)}
       ${devRow(`Jump ahead — each Turn earns its way there and wipes the garden, so you land bare with
-        Saved Seeds banked. Spring and Winter open their GATE, not a garden: neither is built yet`, `
+        Prisms banked. Spring and Winter open their GATE, not a garden: neither is built yet`, `
         <button class="dev-btn warn" data-dev="yearJump" data-arg="1">+1 Turn</button>
         <button class="dev-btn warn" data-dev="yearJump" data-arg="${DATA.year.winterTurn}">+${DATA.year.winterTurn} Turns (Winter's gate)</button>
         <button class="dev-btn warn" data-dev="yearJump" data-arg="${DATA.year.springTurn}">+${DATA.year.springTurn} Turns (Spring's gate)</button>`)}
       ${devRow(`Petals — ${petalReport()}`, `
-        <button class="dev-btn" data-dev="yearSeeds" data-arg="50">+50 Saved Seeds</button>
+        <button class="dev-btn" data-dev="yearSeeds" data-arg="50">+50 Prisms</button>
         <button class="dev-btn" data-dev="petalBuy" data-arg="rich">Daisy: Rich Bloom</button>
         <button class="dev-btn" data-dev="petalBuy" data-arg="quick">Daisy: Quick Sprout</button>
         <button class="dev-btn" data-dev="unlockSeed" data-arg="1">Unlock the next seed (pays gold)</button>`)}
@@ -2722,7 +2722,7 @@
             ? ` · blessed: ${(Game.seedById(turn.blessed) || {}).name || turn.blessed}`
             : ' · no blessing landed — every unlocked flower is at its Rich Bloom cap';
           UI.toast({
-            title: `The year turned — ${fmt(turn.pouch)} Saved Seeds`,
+            title: `The year turned — ${fmt(turn.pouch)} Prisms`,
             body: `drew ${turn.base.toFixed(1)} of a ${turn.total.toFixed(1)} pool · Tally ×${turn.tally.mult.toFixed(2)}${lines.length ? ' · ' + lines.join(' · ') : ''}${blessNote}`,
             art: Icons.get('sprout')
           });
@@ -2741,7 +2741,7 @@
             .filter(([, gate]) => at >= gate).map(([name]) => name);
           UI.toast({
             title: `${done} of ${want} Turn${want === 1 ? '' : 's'} — now at Turn ${at}`,
-            body: `${opened.length ? `${opened.join(', ')} unlocked. ` : ''}The garden is bare and your Saved Seeds are banked.`,
+            body: `${opened.length ? `${opened.join(', ')} unlocked. ` : ''}The garden is bare and your Prisms are banked.`,
             art: Icons.get('sprout')
           });
           UI.buildGarden();
@@ -2782,7 +2782,7 @@
       case 'yearSeeds': D.grantSeeds(Number(arg) || 50); break;
       case 'petalBuy':
         ok = Game.buyPetal('daisy', arg);
-        deny = 'Not enough Saved Seeds, or the skill is at its cap.';
+        deny = 'Not enough Prisms, or the skill is at its cap.';
         break;
       case 'winterFill':
         ok = D.fillWinter() > 0;
@@ -3486,7 +3486,7 @@
     });
     $$('[data-petal]', el.sheetBody).forEach((node) => {
       const cost = Game.petalCost(node.dataset.petal, node.dataset.skill);
-      const can = S.savedSeeds >= cost;
+      const can = S.prisms >= cost;
       node.disabled = !can;
       node.classList.toggle('ok', can);
       node.classList.toggle('no', !can);

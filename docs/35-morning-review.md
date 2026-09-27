@@ -84,7 +84,7 @@ World button were each asserted in that run.
 
 ## §1 — THE ONE LAYOUT QUESTION OF PHASE 2: the meter pill's number
 
-**Doc 32 says the pill shows the banked Saved Seeds after the first Turn. Measured on the real
+**Doc 32 says the pill shows the banked Prisms after the first Turn. Measured on the real
 metrics, it cannot — not while three round buttons sit beside it.**
 
 The HUD column is 360px wide inside `.ui`'s padding. Three round buttons take 132px of it at 40px
@@ -121,7 +121,7 @@ on the meter. *Changing it:* it is one media query.
 spends a HUD row. The fill is the year; the pill is the pouch. *Changing it:* the fill is one
 absolutely-positioned child.
 
-**Saved Seeds get one new colour token, `--seed` `#7bd88f`.** Deliberately not gold (coins), not cyan
+**Prisms get one new colour token, `--seed` `#7bd88f`.** Deliberately not gold (coins), not cyan
 (gems), and clear of all three rarity colours — a player has learned blue/purple/gold means rarity,
 and doc 05 forbids borrowing those. It is the only new token phase 2 adds. *Changing it:* one
 variable.

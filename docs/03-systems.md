@@ -383,7 +383,7 @@ then zeroes `mutateAt` so it can never fire twice. Only unlocked, growing, unhar
 | --- | --- | --- | --- |
 | Dewkissed | Rain, 25% | ×2 | ~5% |
 | Gilded | Thunderstorm, 15% | ×10 | ~1% |
-| Prismatic | Aurora, 12% | ×25 | ~0.3% |
+| Radiant | Aurora, 12% | ×25 | ~0.3% |
 | Wonderstruck | Wonderfall, 10% | ×100 | ~0.045% |
 
 **Weather rarity gates mutation rarity** — the top tier needs a rare sky *and* a roll inside it, two
@@ -515,7 +515,7 @@ cheat exercises the feature it claims to test, and the animation seen is the one
 | Wind the world forward | Warps every production clock 1 / 8 / 24 hours — plants, Fall's bed and the Century Bloom, jars, crafts, orders, food and keepsakes — then catches the world up through one real `tick(0)`. No welcome sheet, no offline income |
 | Simulate an absence | Winds the world back 3 / 6 / 12 / 24 hours and opens the real welcome-back scene |
 | Give | Gold, gems, levels, one of every power-up |
-| Jump ahead | +1 / +3 / +6 Turns (`Dev.jumpTurns`). Each Turn earns its way there through the real faucet and runs the real `turnYear()`; the garden is wiped once per Turn and the player lands bare with Saved Seeds banked |
+| Jump ahead | +1 / +3 / +6 Turns (`Dev.jumpTurns`). Each Turn earns its way there through the real faucet and runs the real `turnYear()`; the garden is wiped once per Turn and the player lands bare with Prisms banked |
 | Play the whole sky | Runs a sky's entire sequence — front, arrive, linger, end — through `UI.weatherSequence()`, which is the real code path. Holding a sky can only ever park on the transform; this is the only way to see a front or an end on demand. The Sunbreak button is **daytime only** (it early-returns at night), and the panel's last line prints the day phase so you know whether to wait |
 | Frame rate | Shows and hides the frame-rate readout (`UI.perf`), and starts a fresh measuring window. See below |
 | Find the cost | Switches one layer off so the readout can say what it was costing. **These change how the game looks on purpose** — they are a measuring tool, not settings, and there is no desktop substitute for them because no desktop reproduces what iOS charges for a full-screen blend |
@@ -1078,7 +1078,7 @@ for old saves (clamped by `bestRarity`, never exceeding recorded harvests, no ge
 the one-time mastery conversion needs honest counts to read.
 
 **The conversion:** a save from before the Year converts its tiers once, on first load —
-`round(DATA.year.masteryConvert × totalTiers)` Saved Seeds, silent, keyed on the missing
+`round(DATA.year.masteryConvert × totalTiers)` Prisms, silent, keyed on the missing
 `year` key. See [07-save-data.md](07-save-data.md#the-garden-year-added-2026-08-29).
 
 The retired design is preserved in
@@ -1121,7 +1121,7 @@ saves keep whatever they owned. **`plotGate(idx)` says which of the two gates is
 holding. It is read-only and re-reads the same two conditions `plotAvailable()` does; the sim
 asserts the two never disagree.
 
-**Petals:** `state.petals[seedId] = { rich, quick, sig }`, bought with Saved Seeds via
+**Petals:** `state.petals[seedId] = { rich, quick, sig }`, bought with Prisms via
 `buyPetal(id, skill)` at `DATA.petals` prices. Rich Bloom multiplies harvests through
 `petalMult()` — applied in `harvest()` **and** `passiveIncomeRate()`, the masteryMult
 pattern, never touching `seed.yield`. Quick Sprout shortens growth through
@@ -1232,7 +1232,7 @@ plants, so a kept bloom crosses a Turn intact and pays into the year it is colle
 the live projection — year, earnings against the floor, base × tally → pouch, gate status
 — with Earn +25K/+100K/+400K (`Dev.driveYear`, real earnings), a canned mid-game Tally
 (`Dev.setYearStats`), Run the Turn (`Dev.runTurn`, blessing the cheapest flower with room),
-**Jump ahead +1/+3/+6 Turns** (`Dev.jumpTurns`), Saved Seeds and petal
+**Jump ahead +1/+3/+6 Turns** (`Dev.jumpTurns`), Prisms and petal
 purchases through the real `buyPetal`, **Unlock the next seed** (`Game.unlockSeed` through the
 real charge path, so the gold wall can be paid and felt), Fill/Ripen/Harvest the Fall bed, and Winter's own row — Plant the bed, Tuck it in, **Sleep a whole night** (`Dev.nightWinter`, which winds the plant clocks past their grow AND the tuck back further, then lets `winterDeriveKept()` write the marks through the real path rather than setting `kept` by hand) and Collect the morning.
 `Dev.grantGold`
@@ -1249,7 +1249,7 @@ costs about 719K lifetime coins to reach Turn 6, and about 160K in the sixth yea
 deliberately **omits** the cheat flag, exactly as `driveYear` does — `credit()` skips both
 `year.coinsEarned` and `lifetimeCoins` when flagged, and those are the two numbers the gates read, so
 a flagged loop spins against a pool that never grows. Writing `state.year.turnsCompleted` directly
-would open Fall, both plot gates and both season gates while Saved Seeds, `mintedBase` and
+would open Fall, both plot gates and both season gates while Prisms, `mintedBase` and
 `year.number` all disagreed with it — a garden in a state no player can reach. The inner credit loop
 is capped, and the method returns the count actually completed so a stall reports itself.
 

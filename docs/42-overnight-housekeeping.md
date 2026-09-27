@@ -274,7 +274,7 @@ with the sixteen sites a naming feature would actually touch named individually.
 
 The most load-bearing: **[33-year-one-economy.md](33-year-one-economy.md)'s "every level grants
 something" is false** — six levels have no entry — and **the currency policy in doc 12 is violated by
-its own terms**, since `savedSeeds`, `petals` and `tickets` are all tracked and none of them is in
+its own terms**, since `prisms`, `petals` and `tickets` are all tracked and none of them is in
 that document's currency table. The Garden Year added two currencies without the trade the rule asks
 for. All five are listed in [11-known-issues.md](11-known-issues.md).
 

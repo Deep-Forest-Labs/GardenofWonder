@@ -30,7 +30,7 @@ The frozen-port seed table survives on purpose. What changes is everything aroun
    **`state.lifetimeCoins` never resets and is what sizes the mintable pool.** Every grant —
    taps, harvests, orders, jar sales, quest gold, the offline grant in `reconcile()` — routes
    through the one helper, so both count by construction and no future faucet can silently
-   miss either. Spending is seed-neutral, and a sim-test asserts it (buy everything one tick
+   miss either. Spending is prism-neutral, and a sim-test asserts it (buy everything one tick
    before the Turn; the pouch must not change).
 3. **Cheated grants are excluded from the mint.** The dev/cheat paths call `credit()` with
    `cheat: true` (and migrations with `refund: true`), skipping **both** accumulators — the
@@ -83,7 +83,7 @@ reaches it eight days *later* than climbing), so the sequence needs no enforceme
 *unlock price once, afford the plant price always*. Plots, habitat slots and meadow cells keep
 their lifetime-level gates. The level ladder's freed rewards are re-authored below.
 
-## Saved Seeds — the mint
+## Prisms — the mint
 
 **The mint is CUMULATIVE — the owner's ruling, 2026-08-29.** The whole pool a garden will
 ever mint is sized by **lifetime** earnings; a Turn draws whatever part of that pool has not
@@ -120,14 +120,14 @@ The shape before this ruling was `mintK × sqrt(coinsEarnedThisYear) × (1 + vet
 turnsCompleted)`, and it was **strictly profitable to split the year**: four 100K years minted
 ~2.6× one 400K year, veterancy compounded on top, and Fall beds laundered the doomed pre-Turn
 wallet. Measured through the real engine, a player who played normally but turned at every
-100K gate minted **~20× the Saved Seeds** of one who rode the year to its wall.
+100K gate minted **~20× the Prisms** of one who rode the year to its wall.
 
 Cumulative kills that **by construction** rather than by tuning: the pool depends on lifetime
 earnings alone, so the sum of every Turn's draw is the same number however the year is sliced.
 Measured over 12 modelled days after the change (`node tools/year-sim.js 12 all`, which now
 **exits zero**):
 
-| Day 10 | lifetime coins | Saved Seeds minted | Turns |
+| Day 10 | lifetime coins | Prisms minted | Turns |
 | --- | --- | --- | --- |
 | casual (rides to the wall) | ~29–35M | ~880–960 | 4–6 |
 | smart (turns at every gate) | ~14–24M | ~436–553 (median ~508) | 25–28 |
@@ -155,10 +155,10 @@ still exits zero. Earlier in the day, against the weaker adversary, the same tab
 > them a reason to keep the old mint.** The review named the first in advance; the second was
 > found while landing this patch.
 >
-> 1. **The lifetime seed supply is now hard-bounded at `0.1 × sqrt(lifetime coins)`**, where
+> 1. **The lifetime prism supply is now hard-bounded at `0.1 × sqrt(lifetime coins)`**, where
 >    before it grew without limit through veterancy. The shared-skill sink below — 636,378
->    Saved Seeds — needs **4.05 × 10¹³ lifetime coins**, about a million days at the measured
->    late income of ~40M/day. A year of play at that income opens a pool of ~12,000 seeds.
+>    Prisms — needs **4.05 × 10¹³ lifetime coins**, about a million days at the measured
+>    late income of ~40M/day. A year of play at that income opens a pool of ~12,000 prisms.
 >    The sink is therefore not "months of headroom" any more; it is unreachable, and
 >    **"every Turn affords a similar 2–5 petals forever" is false at these constants** — the
 >    shipped tool measures 1 of 5 Turns in band against 4 of 7 before. The pair of exponents
@@ -170,8 +170,8 @@ still exits zero. Earlier in the day, against the weaker adversary, the same tab
 >    One free Rich Bloom petal per Turn is a per-turn *constant* sitting on a split-neutral
 >    base — the same family the review warned about, in a currency the mint does not control.
 >    Driven through the real engine: **95 Turns fill every flower's Rich Bloom ladder — all
->    318,189 Saved Seeds of it, exactly half this sink — for ~101M lifetime coins, about 2.5
->    days of play**, while the mint pays 997 seeds over the same span. It is pre-existing and
+>    318,189 Prisms of it, exactly half this sink — for ~101M lifetime coins, about 2.5
+>    days of play**, while the mint pays 997 prisms over the same span. It is pre-existing and
 >    the old mint had it too; what changed is that the mint no longer dwarfs it. Logged as
 >    the open decision in [11-known-issues.md](11-known-issues.md); `year-sim` discloses the
 >    blessed column beside the bought one rather than failing on it, because the exit code
@@ -234,7 +234,7 @@ phase 4's, and `mintK` is the knob.**
 
 Sink runway, **recomputed from the shipped constants (2026-08-29, phase 1) rather than from the
 design session's estimate**: maxing both shared skills on all nineteen flowers costs
-**636,378 Saved Seeds** — that is the entire sink reachable in phase 1, since `buyPetal()`
+**636,378 Prisms** — that is the entire sink reachable in phase 1, since `buyPetal()`
 refuses signatures until slice B. (A full total including signatures cannot be computed from
 `data.js` at all — it carries `signatureMult` but no signature petal counts, so any total
 depends on an assumption about how many petals each signature gets; doc 33's own launch-six
@@ -244,11 +244,11 @@ design session's ~525K and ~679K were estimates from before the values landed; a
 pins the 636K figure so the docs and the data cannot drift apart again — doc 33's own preamble
 asks for exactly that.) ~~Against ~1.8K/day at the endgame faucet that is months of headroom
 before any deep petal.~~ **Recomputed under the cumulative mint: the sink is unreachable, not
-merely deep.** The pool is `0.1 × sqrt(lifetime)` forever, so 636,378 seeds needs
+merely deep.** The pool is `0.1 × sqrt(lifetime)` forever, so 636,378 prisms needs
 **4.05 × 10¹³ lifetime coins** — about a million days at the measured ~40M/day late income,
-where a whole year of play at that income opens ~12,000 seeds. Half of the sink (the 318,189
+where a whole year of play at that income opens ~12,000 prisms. Half of the sink (the 318,189
 of Rich Bloom) is meanwhile given away free by the blessing in 95 Turns; see the boxed note in
-[the mint](#saved-seeds--the-mint) and the open decision in
+[the mint](#prisms--the-mint) and the open decision in
 [11-known-issues.md](11-known-issues.md). Both are `mintK`-and-petal-price questions for phase
 4, not reasons to restore a splittable mint.
 
@@ -259,12 +259,12 @@ petalCost(seed n, petal p) = round( 15 × 1.45^(n−1) × 1.25^(p−1) )     // 
 signature petals cost ×0.6 of the same formula
 ```
 
-Daisy's first petal: 15 seeds. Seed 10's first: ~425. Seed 19's first: ~12K. Purchases still
+Daisy's first petal: 15 prisms. Seed 10's first: ~425. Seed 19's first: ~12K. Purchases still
 migrate up the ladder — early petals on new flowers stay the best value — but the whole catalog
 is priced to outlast the faucet. **The launch values (base 5, ×1.3/seed) failed the full-model
 sim on both pacing checks:** turns paid 7–10 petals instead of 2–5, and the entire sink was
 consumed by **day ~56, at which point Turns stop paying for anything and the prestige loop
-dies.** At base 15 / ×1.45 the sim centres the 2–5 band and the sink (**636,378 seeds**, the whole shared-skill
+dies.** At base 15 / ×1.45 the sim centres the 2–5 band and the sink (**636,378 prisms**, the whole shared-skill
 ladder as shipped — see the recomputation above) is still uncleared at day 180 — the Turn button stays alive for months, which is the whole point.
 
 | Skill | Petals | Effect per petal | Guardrail |
@@ -450,13 +450,13 @@ Re-price only on playtest evidence, and log it.
 ## Migration
 
 - **Old Bloom Mastery retires.** `state.mastery` tiers convert once:
-  `grant = round(2 × totalTiersAcrossAllSeeds)` Saved Seeds, silent, on first load of the Year
+  `grant = round(2 × totalTiersAcrossAllSeeds)` Prisms, silent, on first load of the Year
   build. `rarityCounts`, `discovered`, `bestRarity` all stay — creatures and the Almanac read
   them.
 - **New state** (all in `defaultState()` **and** the nested re-merge list in `load()`, and every
   new `data.js` global in the sim-test GLOBALS whitelist — the two documented save traps):
   `year { number, coinsEarned, turnsCompleted }`, **`lifetimeCoins`**, **`mintedBase`**,
-  `savedSeeds`, `petals { seedId: { rich, quick, sig } }`, `seedUnlocks { seedId: true }`,
+  `prisms`, `petals { seedId: { rich, quick, sig } }`, `seedUnlocks { seedId: true }`,
   `fall { grid, … }`, `blessed`.
 - **Existing saves enter the Year mid-flight:** the current garden becomes year one in
   progress, and `coinsEarned` **starts at zero** — no lifetime coin figure exists anywhere in

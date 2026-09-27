@@ -25,7 +25,7 @@ owner's to change).
 >   cards placed after their flower.
 > - **Cards are one size; importance reads as rarity** (common / rare / epic / legendary, the album's
 >   language; code id `legend`).
-> - **Some cards level, up to five stars, one Saved Seeds purchase per star** — the petal grammar.
+> - **Some cards level, up to five stars, one Prisms purchase per star** — the petal grammar.
 >   The card shows its star row before it is owned. The two wallets are unchanged.
 > - **The trunk is much longer than forty rungs** (on the order of 120; the spec derives it from the
 >   card list) and **the reputation curve is rebalanced to the flowers' pace**, orders the top
@@ -51,7 +51,7 @@ owner's to change).
 >   gap between levels. One number system. Every "rung" in the body below is a *level*.
 > - **The tree is always a full screen**, never a sheet. Close is an X at bottom centre. §11's
 >   "sheet or full screen" question is closed.
-> - **Both wallets are always on screen** in the tree — gold and Saved Seeds — because cards are
+> - **Both wallets are always on screen** in the tree — gold and Prisms — because cards are
 >   priced in both.
 > - **A price lives in a buy button on the card**, never as floating text, and is rounded through the
 >   existing `fmt()` ([ui-shared.js](../ui-shared.js)). This supersedes the block above's "a ribbon
@@ -75,9 +75,9 @@ owner's to change).
 >   Turn and its coins floor is what stops many-cheap-Turns-a-day, so this needs a **first-Turn-only**
 >   gate, not a global reduction.
 > - **The quest chain moves to the Almanac** as a stat and achievement book (tap 20 / 50 / 100 / …),
->   separate from the FTUE. **Achievements pay a very small amount of Saved Seeds, never reputation.**
+>   separate from the FTUE. **Achievements pay a very small amount of Prisms, never reputation.**
 > - **Access rights, lawn slots and creature reveals are revealed by reputation and purchased with
->   Saved Seeds.** This closes the spike's open question; the builder had drawn them free.
+>   Prisms.** This closes the spike's open question; the builder had drawn them free.
 > - **The lawn is not a screen and has no door.** Spots live on the garden board; tapping an empty
 >   spot opens a picker, exactly as tapping an empty plot opens `seeds` today
 >   ([08-ui-and-layout.md](08-ui-and-layout.md)). §4's "record shelf's equip grammar" already said
@@ -89,7 +89,7 @@ owner's to change).
 > - **Tabled:** the §6 creature slot collision (six creatures, four slots).
 >
 > **Two structural consequences the spec must carry, flagged by the desk, not ruled:**
-> 1. **Saved Seeds gain their first faucet outside the Turn.** Today Seeds arrive only at the Turn,
+> 1. **Prisms gain their first faucet outside the Turn.** Today Seeds arrive only at the Turn,
 >    and that scarcity is what makes the Turn the pillar. "Very small" must mean a rounding error
 >    against a Turn's mint, and it should be capped in data.
 > 2. **Seeds demand roughly doubles.** Seeds now buy perk stars *and* access rights *and* lawn slots
@@ -105,7 +105,7 @@ Reputation stops being a number that runs out at level 17 and becomes a forty-ru
 independent consumers hanging off it. A **story beat** fires when a level lands. A **tree node** —
 a flower, a perk, a creature, an access right, the offline ability — has its own reputation
 threshold, and nodes sit several levels apart. The tree takes the Almanac's petal tab and
-**replaces** the petal rows and the picker's unlock rows; nothing sits beside them. Saved Seeds
+**replaces** the petal rows and the picker's unlock rows; nothing sits beside them. Prisms
 buy ranks on what the climb has revealed. Gold still buys the flower.
 
 The two riders are never one-to-one. That is the owner's ruling, verbatim: *"Reputation is tied to
@@ -161,7 +161,7 @@ a rail. Read it bottom to top: the climb goes up.
         ┃ ★  PERK         ┃                                 │  YOU   │   carries the player's
         ┃  Late Light     ┃──┬── rank 1  ●                  ╰───┬────╯   own number
         ┃  gold frame,    ┃  ├── rank 2  ○                      ┊  rung 32
-        ┃  art in colour  ┃  └── rank 3  ○   ← Saved Seeds      ┊
+        ┃  art in colour  ┃  └── rank 3  ○   ← Prisms      ┊
         ┗━━━━━━━━━━━━━━━━━┛                     buy these       ┊
                                                                 ┊
                         ...thirty-one rungs below...            ┊
@@ -335,7 +335,7 @@ it to reputation, and §8 carries the bill.
 
 ### The rule, after the tree
 
-| | Reputation (the trunk) | Saved Seeds | Gold |
+| | Reputation (the trunk) | Prisms | Gold |
 | --- | --- | --- | --- |
 | **What it does** | **Reveals a card. Visibility only** | Buys **ranks** on a revealed card | Buys the flower's one-time unlock, and the shop's yearly rebuy |
 | **How you get it** | The core loop only (§3) | Minted at the Turn, and only there | Earned all year, zeroed at the Turn after minting |
@@ -350,7 +350,7 @@ it to reputation, and §8 carries the bill.
 > is revealed, gold buys it on today's curve, in any order, exactly as now.** Reputation decides what
 > you can see, and nothing else.
 
-**Saved Seeds still arrive only at the Turn, and ruling 5 is why that survives.** A bare level pays
+**Prisms still arrive only at the Turn, and ruling 5 is why that survives.** A bare level pays
 one free *rank* — power placed directly on a node the player already owns — not currency. It opens
 no faucet, so the well's "same total either way" promise (doc 32's glossary row for **the well**)
 is untouched, and it reuses the blessing's own grammar. The blessing itself becomes **one free rank
@@ -560,12 +560,12 @@ ladders are in words, per doc 31 surgery 4: **chance axes are countdowns, never 
 
 > **⚠ The two flagged perks touch the Turn's currencies, and they are the ones the store must
 > never sell.** Promise 1 in [37-monetization.md](37-monetization.md#the-two-promises--what-we-never-sell-ever)
-> is absolute: Saved Seeds, petals, seed unlocks, season gates and the blessing cannot be bought
+> is absolute: Prisms, petals, seed unlocks, season gates and the blessing cannot be bought
 > with money or ads, directly or through a back door. A perk that raises `tallyCap` or `mintK` is a
-> Saved Seeds faucet wearing a perk's name.
+> Prisms faucet wearing a perk's name.
 >
 > **But the money rule is not the binding one here, and the first draft pointed this guardrail at the
-> wrong risk.** Neither perk is priced in money — both are bought with **Saved Seeds**, and
+> wrong risk.** Neither perk is priced in money — both are bought with **Prisms**, and
 > `The Long Year` raises `mintK`, the constant the Seeds pool is minted from
 > (`totalMintable = DATA.year.mintK × sqrt(lifetimeCoins)`, doc 33). That is **Seeds buying more
 > Seeds: a compounding loop in the one currency that never resets.** An assertion reading "never
@@ -759,7 +759,7 @@ rungs.
 
 ### The buff sub-nodes
 
-Per creature, hanging sideways off its card, bought in Saved Seeds. Categorical, never "+X%" — the
+Per creature, hanging sideways off its card, bought in Prisms. Categorical, never "+X%" — the
 creature-pair discipline:
 
 - **"Stays awake longer"** — one more hour on the same meal, per rank.
@@ -776,7 +776,7 @@ per data.js's own comment. Doc 33 sketches a fifth slot at ~level 24.
 
 **The collision:** if the tree reveals five of six creatures and also sells buffs for them, a
 player can own six buffed creatures and bench two. The buffs on a benched creature do nothing, so
-Saved Seeds spent there are dead — the regret the checklist model exists to avoid.
+Prisms spent there are dead — the regret the checklist model exists to avoid.
 
 **Two options, priced:**
 
@@ -815,7 +815,7 @@ is not, and it is billed in §9.
 
 **The upgrade branch hangs sideways off the offline node at rung 13, not on a rung of its own.** That
 placement is deliberate: a rung only a payer could climb into would be a reputation threshold and a
-Saved Seeds sink gated behind money, against doc 37's governing frame — *"paying accelerates, never
+Prisms sink gated behind money, against doc 37's governing frame — *"paying accelerates, never
 gates"* — and against doc 31 surgery 4's *"everything eventually maxes; no order is wrong."* As a
 sideways branch on a card every player owns, a non-payer loses the branch and never a rung.
 
@@ -825,7 +825,7 @@ that changes when a real SDK arrives, with every cap, counter and mint exclusion
 already tested around it.
 
 **The refund migration, worked.** Saves that own gold-bought drone levels get those levels
-converted to Saved Seeds, spendable anywhere on the tree. The precedent is the mastery conversion
+converted to Prisms, spendable anywhere on the tree. The precedent is the mastery conversion
 inside `migrateYear()` — grep `masteryConvert` — including **its silence**: no toast, the backfill
 pattern.
 
@@ -834,13 +834,13 @@ pattern.
    refund            =  round( droneConvert × levels )        // new knob, mastery's shape
 ```
 
-**`droneConvert = 4` Saved Seeds per drone level** — JUDGMENT. `masteryConvert` is 2 per mastery
+**`droneConvert = 4` Prisms per drone level** — JUDGMENT. `masteryConvert` is 2 per mastery
 tier; a drone level costs far more gold than a mastery tier and there are far fewer of them, so
-double it. A tester at drone level 3 receives 12 Saved Seeds.
+double it. A tester at drone level 3 receives 12 Prisms.
 
 > **Say plainly what a tester loses here, because they do lose something.** They lose **the drone
 > itself.** A player who bought it with gold keeps no drone after this migration — they keep a
-> handful of Saved Seeds and a Shop card asking for real money. That is the sharpest "nobody loses
+> handful of Prisms and a Shop card asking for real money. That is the sharpest "nobody loses
 > a thing they paid for" strain in this feature after ruling 17, and the owner should decide it
 > knowing that the friend-testers are the people it happens to. The alternative — grandfather the
 > owned drone forever — creates a permanent class of players with a paid item for free, which the
@@ -863,7 +863,7 @@ double it. A tester at drone level 3 receives 12 Saved Seeds.
 | **The per-Turn reveal cap, in full** | See the itemised bill below |
 | **Moonlight Tending and Lantern Oil** | Their levels become the offline node's levels, rank for rank. No level is lost |
 | **The store's decorations** | Each becomes a perk node. Existing decor rows convert when the tree lands |
-| **The drone's gold levels** | Refunded into Saved Seeds per §7. The drone itself is lost |
+| **The drone's gold levels** | Refunded into Prisms per §7. The drone itself is lost |
 
 ### Ruling 17 is where this table is strained, and it is where to be most honest
 
@@ -1103,7 +1103,7 @@ THE SHAPE, ruled 2026-09-26 — draw exactly this:
   to copy**, and there is no uncommon or mythic tier on the tree. Draw the epic frame yourself from
   doc 05's token; treat the pack-reveal rings as a recipe to learn from, not a set to copy. A
   legendary card is the same box as a common one; its frame does the talking.
-- **Some cards level.** Up to five stars, one star per Saved Seeds purchase, the petal grammar
+- **Some cards level.** Up to five stars, one star per Prisms purchase, the petal grammar
   flowers have today. A levelling card shows its row of five star pips (empty until bought) even
   while locked, so a player can see it will level. A card that does not level shows no pips.
 - **The reputation rail down the right edge** with a live marker pill carrying the player's own
@@ -1128,7 +1128,7 @@ THE FRAMES the owner must judge, each at 390×844:
    above it, the curtain two cards higher.
 3. **The rarity ladder side by side**: four cards, common → legendary, same size, so the owner can
    judge whether the frame alone carries importance.
-4. **One levelling card open** (a tap on it): its five pips with two filled, the Saved Seeds price
+4. **One levelling card open** (a tap on it): its five pips with two filled, the Prisms price
    of the next star, what it does now and what the next star adds, in the glossary's words.
 5. **The unveiling**, as a four-frame strip: marker reaches the rung → the card's mask lifts → the
    card lights and its stars appear → the marker settles. About two seconds in the real thing.

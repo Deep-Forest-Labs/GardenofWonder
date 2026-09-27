@@ -800,7 +800,7 @@ Out of the tab order so a keyboard user never lands on something with no visible
 
 **Mutated plots** carry `data-mutation` plus `--mut` / `--mut-glow` set inline from
 `DATA.mutations`. The treatment escalates with rank: every tier gets a tinted border, an outer glow
-and a slow pulse; **Prismatic and Wonderstruck also get a moving shimmer** the lower two don't. The
+and a slow pulse; **Radiant and Wonderstruck also get a moving shimmer** the lower two don't. The
 mutation stays visible from the moment it lands until harvest — that permanence *is* the mechanic,
 and it is what separates a mutation from a rarity roll revealed at the end.
 
@@ -943,7 +943,7 @@ pinned `inset:0`; the water is `.turn-fill::before` rising from the bottom. `ui.
 onto the clip box for a day and a half, which shrank the box from the top and left the waterline at
 `0%` — **the dock's meter had never once painted.** Fixed 2026-08-30.
 
-**`.seedchip` is the pouch, promoted.** Saved Seeds have always had a number — in the projection, in
+**`.seedchip` is the pouch, promoted.** Prisms have always had a number — in the projection, in
 the Almanac's seed-row header, in the ceremony — but never on an always-visible surface. The chip
 rides above the button from the first Turn onward, and **never in year one**, where doc 32's rule is
 that the meter fills with no numbers on it at all.
@@ -956,7 +956,7 @@ than the pill was, and it buys a button that is useful for the other fifty weeks
 **Year one is a locked panel, and it is never directionless.** The owner's rule (2026-08-30):
 *something mysterious with no direction feels broken.* So before the first Turn the panel shows a
 padlocked meter, **one** track — the gold, because gold is the half a player can push on directly —
-with no numbers on it, and the flower saying what to do about it. No pouch, no seed gate, no petals.
+with no numbers on it, and the flower saying what to do about it. No pouch, no pouch gate, no petals.
 **And the moment the Turn is ready the lock comes off and the ceremony's button appears**, which is
 the door out of the mystery; the ceremony's ask is where the explaining has always happened. Shipping
 without that door was a real bug in this build: full meter, breathing dock button, and a panel still

@@ -353,7 +353,7 @@ filter and tooltip guard rather than re-implementing; **the stages pass owns the
 
 - **Guardrail one FAILS, and the number to rule on is the top rung's cost.** A single full kept night
   of **eight Camellia grosses 2,688,000**, which clears `minCoins` 100,000 twenty-six times over and
-  mints **18.3 Saved Seeds against a gate of 10** — at every Turn from 3 to 6. Driven through the real
+  mints **18.3 Prisms against a gate of 10** — at every Turn from 3 to 6. Driven through the real
   engine rather than derived: `Game.turnReady()` goes false → true on that one collect with nothing
   else played. **Only Camellia breaches**; Witch Hazel and below are clear.
   

@@ -39,7 +39,7 @@
   --soil-dd:#5f3a1e;
 
   /* currency */
-  /* Saved Seeds — the forever money, and the one new token the Garden Year's
+  /* Prisms — the forever money, and the one new token the Garden Year's
      surface adds. Deliberately not gold (that is coins), not cyan (gems), and
      clear of all three rarity colours: a player has learned blue/purple/gold
      means a tier, and doc 05 forbids borrowing that vocabulary for anything
@@ -889,7 +889,7 @@ button:focus-visible{
   animation:mutPulse 2.6s ease-in-out infinite;
 }
 /* Rank climbs with the treatment: the top two tiers get a moving sheen the lower two don't. */
-.plot[data-mutation="prismatic"] .plant,
+.plot[data-mutation="radiant"] .plant,
 .plot[data-mutation="wonderstruck"] .plant{animation:mutShimmer 2.2s ease-in-out infinite}
 @keyframes mutPulse{0%,100%{opacity:.20}50%{opacity:.40}}
 @keyframes mutShimmer{
@@ -898,7 +898,7 @@ button:focus-visible{
 }
 @media (prefers-reduced-motion:reduce){
   .plot[data-mutation]::before{animation:none;opacity:.3}
-  .plot[data-mutation="prismatic"] .plant,
+  .plot[data-mutation="radiant"] .plant,
   .plot[data-mutation="wonderstruck"] .plant{animation:none}
 }
 

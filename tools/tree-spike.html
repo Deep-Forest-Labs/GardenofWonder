@@ -381,7 +381,7 @@
   <p class="kicker">Garden Wonder &middot; Wireframe spike &middot; docs/52-the-trunk-and-the-tree.md &sect;11</p>
   <h1>The Trunk and the Tree</h1>
   <p class="lede">
-    <b>One linear path, up the trunk. Reputation reveals; Saved Seeds rank; gold buys.</b>
+    <b>One linear path, up the trunk. Reputation reveals; Prisms rank; gold buys.</b>
     Eight frames, each a real 390&times;844 phone screen (frame 5 crops to a smaller filmstrip).
     Nothing here is wired to the game — every number, price and rung shown is illustrative,
     picked to get pixels on screen. Nothing here decides anything the owner should decide.
@@ -455,7 +455,7 @@
 
 <section class="grp" id="sec-4"><h2><span class="n">4</span> One levelling card, open</h2>
   <p class="lede">A tap on "Daisy pays more" (Rich Bloom's first sub-node). Two of five stars
-  bought. What it does now, what the next star adds, and the next star's Saved Seeds price — all in
+  bought. What it does now, what the next star adds, and the next star's Prisms price — all in
   the glossary's plain words, no percentages exposed on the card face itself.</p>
   <div class="row-wrap" id="f-4"></div>
 </section>
@@ -523,7 +523,7 @@ function fmt(n){ return typeof n === 'string' ? n : n.toLocaleString('en-US'); }
 const ICO = {
   coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="var(--coin)" stroke="var(--ink)" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="var(--coin-d)" stroke-width="1.6"/></svg>',
   /* The seed pouch — cream body, green ties, adapted from dock-spike.html's
-     ICON.pouch (the house's existing Saved-Seeds glyph). */
+     ICON.pouch (the house's existing Prisms glyph). */
   pouch: '<svg viewBox="0 0 24 24"><path d="M8.6 8.5h6.8c2.9 2 4.6 5 4.6 7.9 0 2.6-2.8 4.1-8 4.1s-8-1.5-8-4.1c0-2.9 1.7-5.9 4.6-7.9z" fill="var(--seed-l)" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.6 8.5c-.7-1.5-.4-2.9.9-3.4 1-.4 1.8.1 2.5 1 .7-.9 1.5-1.4 2.5-1 1.3.5 1.6 1.9.9 3.4" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/></svg>',
   lock: '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="var(--coin)" stroke="var(--ink)" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="var(--ink)" stroke-width="2"/></svg>',
   x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/></svg>',
@@ -637,7 +637,7 @@ function sheet(title, note, body){
 /* ================= SECTION 1 — the first hour ================= */
 document.getElementById('f-1').innerHTML =
   fig('1', 'Rungs 1–14, marker at rung 3', 'Drawn as a sheet — same chrome the Almanac uses today.',
-    phone(sheet('The Trunk', 'Reputation reveals a card. Saved Seeds buy ranks on it. Gold still buys the flower.',
+    phone(sheet('The Trunk', 'Reputation reveals a card. Prisms buy ranks on it. Gold still buys the flower.',
       trunk([
         cardRow({rung:12, rarity:'common', state:'locked', icon:ico('grass'), art:'#eafbe2', title:'A second lawn slot', sub:'Room for one more perk'}),
         gapRow(11),
@@ -861,7 +861,7 @@ document.getElementById('f-9').innerHTML =
   '<li>Creatures are their own card, placed right after their flower — not a sideways branch (2026-09-26 supersedes §6).</li>' +
   '<li>Masked cards reuse the seed curtain\'s exact vocabulary: silhouette, <code>???</code>, one shared hint line, the <code>paper-dim</code> ramp — copied from tools/curtain-spike.html, not reinvented.</li>' +
   '<li>The "up next" card reuses the existing <code>.fresh</code> highlight treatment (pale gold glow) rather than a new "look at me" state.</li>' +
-  '<li>Saved-Seeds pips are green (<code>--seed</code>), matching doc 05\'s rule that green is reserved for the meter\'s fill and the petal pips; price pills never wear green (that would double up with "affordable").</li>' +
+  '<li>Prisms pips are green (<code>--seed</code>), matching doc 05\'s rule that green is reserved for the meter\'s fill and the petal pips; price pills never wear green (that would double up with "affordable").</li>' +
   '</ul></div>' +
   '<div class="box p"><h3>Placeholder picks — flagged, and repeated as questions in section 10</h3><ul>' +
   '<li>The path is drawn as a straight single column, not the reference\'s zigzag.</li>' +
@@ -901,7 +901,7 @@ document.getElementById('f-11').innerHTML =
   '<li><b>tools/records-spike.html</b> and <b>tools/curtain-spike.html</b>, both — the <code>.sheet-shell</code>/<code>.sheet-grip</code>/<code>.sheet-head</code>/<code>.tab</code> bottom-sheet chrome, and the <code>.price</code>/<code>.pips</code>/<code>.pip</code> pill recipes, all copied verbatim from style.css by way of both spikes.</li>' +
   '<li><b>tools/curtain-spike.html</b> — the masked-card vocabulary: the paper-dim ramp, the <code>???</code> name, the shared hint line ("Keep growing — the garden isn\'t done with you," doc 47\'s own line, character for character), and the flower-silhouette mask icon, reused here for every masked node type rather than inventing a second masked look, per the brief\'s instruction.</li>' +
   '<li><b>tools/curtain-spike.html</b> — the <code>.fresh</code> highlight (pale gold glow + ring) for the "up next" card, and the <code>seedRow</code> locked/unlocked visual split (dimmed paper-dim vs full colour) for locked vs. unlocked tree cards.</li>' +
-  '<li><b>tools/dock-spike.html</b> — the seed-pouch icon (<code>ICO.pouch</code>), adapted for Saved-Seeds price pills.</li>' +
+  '<li><b>tools/dock-spike.html</b> — the seed-pouch icon (<code>ICO.pouch</code>), adapted for Prisms price pills.</li>' +
   '<li><b>style.css</b> directly — the rarity ring recipe (<code>.pack-reveal.is-new.r-rare</code>/<code>.r-legend</code>, the album\'s pack reveal), restated as <code>--trk-ring</code> for the tree\'s own cards, with a new <code>.r-epic</code> ring built the same way since none exists anywhere to copy; and <code>.petal-track .pip</code>\'s green-Seeds-pip recipe, restated as <code>.trk-pips .pip</code>.</li>' +
   '<li><b>docs/08-ui-and-layout.md</b> — the five-button dock (Orders / Cards / Garden / Turn / Shop) for frame 8\'s garden scene.</li>' +
   '<li><b>Nothing was copied from the album\'s <code>SET_SHAPE</code> ladder or its <code>.pack-reveal.r-*</code> rings beyond the ring MECHANISM</b> (a rarity-keyed box-shadow) — per the ruling, the album\'s five-tier common/uncommon/rare/legend/mythic ladder is a different thing from the tree\'s four tiers, and none of its specific colours or tier names appear here.</li>' +

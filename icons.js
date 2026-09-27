@@ -136,15 +136,33 @@ const Icons = (() => {
       <path d="M12 20.4v-7.2" stroke-width="2.4"/>
       <path d="M12 13.6C9.6 13.6 6 12.4 5.2 8.6c3.6-.8 6.4 1.6 6.8 5Z" fill="#69db7c"/>
       <path d="M12 12.6c1.4-2.8 4.2-4.6 6.8-4-.4 3.6-3.4 5.4-6.8 5.2Z" fill="#8ce99a"/>`),
-    /* Saved Seeds — the forever money. A cinched pouch with a seed on it, in a
-       green that is not the sprout button's and not any rarity's, so the second
-       currency is never mistaken for the go button or for a tier. */
+    /* The pouch — where this year's Prisms sit before the Turn banks them. A
+       cinched pouch with a seed on it, in a green that is not the sprout
+       button's and not any rarity's, so it is never mistaken for the go button
+       or for a tier. The currency's own glyph is `prism`, below; this one now
+       stands for the container, not the coin. */
     pouch: S(`
       <path d="M8.4 8.2h7.2c2.4 1.8 3.8 4.3 3.8 6.9 0 3-2.6 5.3-7.4 5.3S4.6 18.1 4.6 15.1c0-2.6 1.4-5.1 3.8-6.9Z" fill="#fff3bf"/>
       <path d="M8.4 8.2c-.6-1.3-.4-2.6.6-3.4 1.4-1.1 4.6-1.1 6 0 1 .8 1.2 2.1.6 3.4" fill="#ffd8a8"/>
       <path d="M12 17.4c-2.1 0-3.4-1.4-3.6-3.6 2.4-.3 3.8 1 3.6 3.6Z" fill="#3f9d45" stroke-width="1.5"/>
       <path d="M12 17.4c.2-2.6 1.6-3.9 4-3.6-.2 2.2-1.5 3.6-3.6 3.6Z" fill="#7bd88f" stroke-width="1.5"/>
       <path d="M12 17.4v-2.2" stroke-width="1.5"/>`),
+    /* Prisms' own glyph. A hard TRIANGLE, apex up — the classic optical prism —
+       never gem's kite: gem is widest at the top and points down, this is
+       widest at the bottom and points up, so the two cannot share a silhouette
+       even with the colour stripped out, which is what a player reads at 16px.
+       Pale glass above (nothing has split yet), a flat-colour spectrum below
+       (no gradients, matching this whole set) where the light fans out toward
+       the base, and one facet line down the middle for the hard edge. */
+    prism: S(`
+      <path d="M12 3 21.4 20.4 2.6 20.4Z" fill="#f5f2ff"/>
+      <path d="M7.7 11h8.6l1 1.9H6.7Z" fill="#ff6b6b" stroke="none"/>
+      <path d="M6.7 12.9h10.6l1.1 1.9H5.6Z" fill="#ff922b" stroke="none"/>
+      <path d="M5.6 14.8h12.8l1 1.8H4.6Z" fill="#ffe066" stroke="none"/>
+      <path d="M4.6 16.6h14.8l1 1.9H3.6Z" fill="#51cf66" stroke="none"/>
+      <path d="M3.6 18.5h16.8l1 1.9H2.6Z" fill="#9775fa" stroke="none"/>
+      <path d="M12 3v17.4" stroke-width="1.3"/>
+      <path d="M12 3 21.4 20.4 2.6 20.4Z" fill="none"/>`),
     leaf: S(`
       <path d="M5 19.4C5 10.6 11.2 5 19.6 4.6c.4 8.4-5.2 14.6-14 14.8Z" fill="#8fe08a"/>
       <path d="M5.4 19c3.6-3.8 7-6 11.4-8" stroke-width="1.8"/>`),

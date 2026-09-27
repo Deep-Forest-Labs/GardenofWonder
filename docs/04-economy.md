@@ -101,7 +101,7 @@ still holds for every seed. Design in
 | Clear | 70% | — | — |
 | Rain | 20% | Dewkissed | 25% |
 | Thunderstorm | 7% | Gilded | 15% |
-| Aurora | 2.5% | Prismatic | 12% |
+| Aurora | 2.5% | Radiant | 12% |
 | Wonderfall | 0.5% | Wonderstruck | 10% |
 
 `DATA.mutations` — payout multipliers.
@@ -110,7 +110,7 @@ still holds for every seed. Design in
 | --- | --- | --- | --- |
 | Dewkissed | 1 | ×2 | ~5% |
 | Gilded | 2 | ×10 | ~1% |
-| Prismatic | 3 | ×25 | ~0.29% |
+| Radiant | 3 | ×25 | ~0.29% |
 | Wonderstruck | 4 | ×100 | ~0.045% |
 
 `verbTuning.beaconCatchBonus: 0.5` — each adjacent Beacon raises the catch chance by 50%. It raises
@@ -533,8 +533,7 @@ Paid once when distinct species harvested crosses the rung. Numbers live in
 ## Bloom Mastery — retired 2026-08-29, petals in its place
 
 The endless ladder froze with the Garden Year's phase 1: `masteryMult()` returns 1, tiers no
-longer advance, and the every-fifth-tier gem is gone. Earned tiers converted once into Saved
-Seeds (`DATA.year.masteryConvert = 2` per tier, silent, on first load). `masteryYieldPerTier`,
+longer advance, and the every-fifth-tier gem is gone. Earned tiers converted once into Prisms (`DATA.year.masteryConvert = 2` per tier, silent, on first load). `masteryYieldPerTier`,
 `masteryGemEvery` and `masteryGemGrant` remain in `data.js` as dead knobs until phase 2 removes
 the Almanac's frozen ladder row; nothing reads them in anger. The per-seed multiplier is now
 **Rich Bloom** — see [33-year-one-economy.md](33-year-one-economy.md#petals--prices-and-effects)

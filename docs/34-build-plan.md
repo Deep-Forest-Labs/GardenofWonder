@@ -93,7 +93,7 @@ early.
 
 **In scope:** `DATA.year` / `DATA.fall` / `DATA.petals` (+ the GLOBALS whitelist);
 `state.year { number, coinsEarned, stats, turnsCompleted }`, `lifetimeCoins`,
-`mintedBase`, `savedSeeds`, `petals`,
+`mintedBase`, `prisms`, `petals`,
 `seedUnlocks`, `blessed`, `state.fall` — all in `defaultState()` **and** the re-merge list;
 `Game.credit(amount, {cheat, refund})` wired through every faucet; the mint with the Tally
 (counters, tiers, cap, zero-line rule); atomic `Game.turnYear(blessedId)` over the full
@@ -135,7 +135,7 @@ and the UI is built against the engine exactly as it behaves.
 **Begins at the wireframe gate: `tools/turn-spike.html`, owner-approved before any UI code.**
 The spike must show every screen and state:
 
-1. The HUD with the third pill — mystery-meter state (pre-Turn-1) and banked-seeds state, with
+1. The HUD with the third pill — mystery-meter state (pre-Turn-1) and banked-prisms state, with
    the tap-for-projection affordance.
 2. The Turn sheet, all four beats as separate frames: the ask, the blessing picker, **the Tally
    sequence** (base count-up, lines landing, the total), and the spring return.

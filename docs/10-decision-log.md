@@ -43,13 +43,12 @@ cream is the lowest-contrast pair on the page and legendary currently reads weak
 — `style.css`'s mythic recipe is the precedent; card details inline rather than behind a tap;
 auto-tap leaves the HUD for a small hidden button beside the flower, armed by tap-and-hold (placement
 only — the feature is parked); the quest chain moves to the Almanac as a stat and achievement book;
-**access rights, lawn slots and creature reveals are revealed by reputation and purchased with Saved
-Seeds.**
+**access rights, lawn slots and creature reveals are revealed by reputation and purchased with Prisms.**
 
 **Rejected:**
 - **Almanac achievements paying reputation.** A tap-1,000,000 counter would level the player up, and
   it opens a faucet competing with orders. Ruled: *"No, Almanac achievements do not pay reputation.
-  Right now let's just give a very small amount of Saved Seeds. Again, very small."*
+  Right now let's just give a very small amount of Prisms. Again, very small."*
 - **Achievements paying nothing but stats.** Considered and dropped as thin retention for something
   players are asked to keep returning to.
 - **Lowering `minCoins` globally** to move the first Turn — desk's own proposal, withdrawn on reading
@@ -61,7 +60,7 @@ destination screen, which is what made "how do I get there?" unanswerable; the l
 spots are on the garden board and tapping an empty one opens a picker, exactly as tapping an empty
 plot opens `seeds` today.
 
-**Two structural consequences flagged, not ruled.** Saved Seeds gain their **first faucet outside the
+**Two structural consequences flagged, not ruled.** Prisms gain their **first faucet outside the
 Turn**, and that scarcity is what makes the Turn the pillar — "very small" has to mean a rounding
 error against a Turn's mint, capped in data. And Seeds demand roughly doubles, now covering perk
 stars, access rights, lawn slots and creature reveals at once; the Seeds budget becomes the tightest
@@ -116,7 +115,7 @@ about your harvests.
   `state.harvestsTowardRep`). Before the perk, harvests pay no reputation: orders climb the story,
   quests tutor it, and that is the whole message.
 - **Word of Mouth is a card on the path**, rare or epic on the ladder because it touches the story
-  number, passive, levelling to five stars with Saved Seeds. Its stars are a countdown — every
+  number, passive, levelling to five stars with Prisms. Its stars are a countdown — every
   20th harvest pays, then 15, 12, 10, 8 — the same odds as 5% to 12.5% underneath, but every star
   is felt because the next payout visibly comes sooner (doc 31: a percentage is "the least legible
   purchase a game can sell"). The counter lives on the card itself; the garden shows only the
@@ -163,10 +162,10 @@ level."*
 2. **Cards are one size. Importance reads as rarity** — common, rare, epic, legendary — in frame and
    colour, using the rarity language the album and the harvest ladder already own (the code id is
    `legend`, never `legendary`).
-3. **Some cards level: up to five stars, one star per Saved Seeds purchase**, exactly the petal
+3. **Some cards level: up to five stars, one star per Prisms purchase**, exactly the petal
    grammar flowers have today. A card shows its star row before it is owned, so a player can see it
-   will level. The two wallets are unchanged: reputation reveals the card, gold buys a flower, Saved
-   Seeds buy stars.
+   will level. The two wallets are unchanged: reputation reveals the card, gold buys a flower, Prisms
+   buy stars.
 4. **The trunk is much longer than forty rungs.** Supersedes ruling 7 and closes §12 question 9 by
    the owner's own preference (lengthen, not densify). The spec derives the count from the card
    list (nineteen flowers, their upgrades, the perks, six creatures, access, slots, the offline
@@ -248,7 +247,7 @@ reason.
 in a repo whose rule is that `docs/` is the source of truth, a citation nobody can resolve is a
 citation that does not exist.
 
-1. Reputation is the trunk; Saved Seeds buy what the trunk reveals. 2. Branches, nothing exclusive;
+1. Reputation is the trunk; Prisms buy what the trunk reveals. 2. Branches, nothing exclusive;
 everything eventually maxes; the build comes from slots. 3. The year's gold upgrades stay in the shop;
 tree nodes grant permanent access. 4. Node spacing: about one node per level through the opening
 chapters, stretching to one per three or four deep in the game. 5. **No bare level** — a level
@@ -263,7 +262,7 @@ reputation entry below, which recorded it as the desk's recommendation awaiting 
 13. The welcome-back board triggers at three days away; boosted reputation on easy orders, earned.
 14. The curtain: current chapter clear, next chapter in silhouette, everything above masked.
 15. Story marks on the rail — a beat shows as a tick, visibly not a card, never purchasable.
-16. Drone migration: refund owned gold levels into Saved Seeds; no grandfathered class.
+16. Drone migration: refund owned gold levels into Prisms; no grandfathered class.
 17. **The reveal gate moves from gold to reputation** (repeal 1 below). 18. **The per-Turn reveal cap
 retires** (repeal 2 below).
 
@@ -328,7 +327,7 @@ chapter rungs carrying **no card at all** so a story beat never queues behind an
 one-at-a-time moments dialog, and creatures hanging sideways off the flower that attracts them rather
 than taking rungs of their own),
 `flowerShare = 0.25` for offline income (derived from matching today's drone income for a mid-game
-save), `droneConvert = 4` Saved Seeds per refunded drone level, and the recommendation to **cut both
+save), `droneConvert = 4` Prisms per refunded drone level, and the recommendation to **cut both
 Turn-touching perks from v1** because `mintK` and `tallyCap` are both unresolved phase-4 knobs and
 selling ranks on an unresolved knob is how a document becomes a lie.
 
@@ -446,7 +445,7 @@ income, not an ad's).
 might unlock one big skill, but then it has a little branch with all the other little things you
 can add to it or modify it. Each one of those has multiple levels."* This is doc 31's spine plus
 signature branch per seed, drawn as a tree: the big node is the flower (or the perk, or the
-creature); its small branch is its petals and modifiers, each with ranks bought in Saved Seeds.
+creature); its small branch is its petals and modifiers, each with ranks bought in Prisms.
 
 **Creatures live on the tree too.** The owner: *"there could be some creatures that are unlocked
 only from moving down this skill tree… We could have our creatures in here that you currently
@@ -484,13 +483,13 @@ dialogue alone — the Gossip Harbor lesson is that a beat is a place changing.
 
 **Direction 2 — a skill tree replaces the petal menu.** The owner: *"instead of tying unlocks…
 to a menu item of upgrades for each flower… a linear skill tree… it has branches… the reputation
-bar tied to progress, and then you can use your Saved Seeds on things you have unlocked in the
+bar tied to progress, and then you can use your Prisms on things you have unlocked in the
 skill tree."* And, later the same session: *"getting to the skill system is what makes you feel
 like you're creating a build, which is fun, so it adds unlimited progression and an awesome meta.
 Let's take our mindset a little bit out of the box we've created… Yes, I do know it will change
 the math here."* Ruled shape, priced once:
 
-- **Reputation is the trunk; Saved Seeds buy what the trunk reveals.** Two wallets, two verbs:
+- **Reputation is the trunk; Prisms buy what the trunk reveals.** Two wallets, two verbs:
   reputation is how far up you can see, Seeds are what you can afford. The story chapters sit on
   the trunk. The tree **replaces** the Almanac's petal rows and the picker's unlock rows (doc 27's
   three-columns-of-one-spreadsheet consolidation, finally with a picture); it does not sit beside
@@ -529,7 +528,7 @@ floor with a fiction already under the lawn (the creatures tend the garden while
 which the drone then accelerates. The desk recommends the floor; the owner rules it in the tree
 spec. Two more costs for that spec: the web build has no real money (doc 37: IAP lives in the
 Unity shell), so the lab needs a stand-in purchase for testers; and saves that own drone levels
-today need a stated migration (grandfather, or refund into Saved Seeds).
+today need a stated migration (grandfather, or refund into Prisms).
 
 **Rejected:** exclusive branches (doc 31, and the owner's own "unlimited progression" wants
 everything reachable); putting the in-year gold upgrades on the tree as nodes that un-buy
@@ -757,7 +756,7 @@ loot boxes" rule that the 2026-09-10 entry listed among "what still stands" are 
 defaults, not rules**. They are left as written — each is a record of what was right on the day,
 under the 09-10 ruling — and this entry dates all of them. A future entry that ships a loot box or
 an energy system does not need to overturn a pillar; it needs to price the two costs below and
-say what it bought. The Turn's currencies (Saved Seeds, petals, seed unlocks, season gates) were
+say what it bought. The Turn's currencies (Prisms, petals, seed unlocks, season gates) were
 not named today and stay as the 2026-09-02 rescope left them, until the owner says otherwise.
 
 **The price, stated once so the feature entry can point here instead of re-arguing it.**
@@ -1235,14 +1234,14 @@ than it does.
 **Five REAL shipped defects came out of that loop, none of which any suite could see.** Named here
 because each is a class, not an incident:
 
-1. **An ad minted Saved Seeds.** `rentDrone()` grants no gold — and lends a machine that runs
+1. **An ad minted Prisms.** `rentDrone()` grants no gold — and lends a machine that runs
    `harvest()` → `credit()` unflagged for thirty minutes. Measured 81,340–590,940 gold per video into
    `lifetimeCoins`, which is the well's input; `DATA.year.minCoins` is 100,000, so **one video
    cleared a Turn gate outright**, and the ad out-earned thirty minutes of real play by 2–9×. Both
    guards read the wallet the instant `rentDrone()` returned, where every delta is zero *by
    construction*. **The class: a reward with a WINDOW needs a test that runs the window.**
    **Rejected:** accepting it under the pillar's "paying accelerates, never gates". The rescope
-   narrowed promise 1 but explicitly *kept* Saved Seeds absolute, and doc 37 names this exact back
+   narrowed promise 1 but explicitly *kept* Prisms absolute, and doc 37 names this exact back
    door in its own words — "directly or through a back door". Closing it honours an existing ruling
    rather than making a new one. Gold picked by a *rented* drone is now mint-excluded; a hand
    harvest during the loan, and every pick by the *paid* badge, still count in full.
@@ -1593,7 +1592,7 @@ promise — the desk delivered the positioning cost twice and the owner ruled wi
 which is exactly how a pillar is allowed to move.
 
 **What is rescoped:** promise #1 narrows from "nothing permanent is ever sold" to **"the Turn's
-currencies are never sold"** — Saved Seeds, petals, blessings, seed unlocks and season gates
+currencies are never sold"** — Prisms, petals, blessings, seed unlocks and season gates
 keep the absolute rule, because they are what makes the Turn mean anything. Records and their
 charms become the first paid permanent items, under the frame that governs every future one:
 **paying accelerates, never gates.** Every store record is also findable through play (the
@@ -2088,7 +2087,7 @@ tool's job is that the number exists and moves when the ladder does.
 
 **Guardrail one FAILS, and the number to rule on is the top rung's cost.** A single full kept night
 of **eight Camellia grosses 2,688,000**, which clears `minCoins` 100,000 twenty-six times over and
-mints **18.3 Saved Seeds against a gate of 10** — at every Turn from 3 to 6. Driven through the real
+mints **18.3 Prisms against a gate of 10** — at every Turn from 3 to 6. Driven through the real
 engine rather than derived: `Game.turnReady()` goes false → true on that one collect with nothing
 else played. **Only Camellia breaches**; Witch Hazel and below are clear.
 
@@ -2984,7 +2983,7 @@ copying `grantGold`'s `{ cheat: true }` would spin the loop against a pool that 
 
 **It never writes `state.year.turnsCompleted`.** The conventions playbook says a cheat forces the
 real code path, and this one is a good illustration of why: that field alone opens Fall, both plot
-gates and both season gates while Saved Seeds, `mintedBase` and `year.number` all disagree with it —
+gates and both season gates while Prisms, `mintedBase` and `year.number` all disagree with it —
 a garden in a state no player can ever reach, which is worse than no cheat at all.
 
 **The blessing is re-picked every Turn, not once.** Six Turns cap a flower's Rich Bloom ladder
@@ -3004,7 +3003,7 @@ behind the gate is the gate — the plate's line changes from "Opens at Turn 6" 
 in"**, a string that had never been reachable in normal play. It is now, and it reads correctly. If
 what is actually wanted is Spring and Winter to *exist*, that is slices C and E of the build plan.
 
-**Verified end to end:** through the real dev button, a +6 jump lands at Turn 6 with 95 Saved Seeds
+**Verified end to end:** through the real dev button, a +6 jump lands at Turn 6 with 95 Prisms
 banked, 900K lifetime coins earned through the unflagged faucet, six blessings recorded (one per
 Turn, so the re-pick works) and the wallet back to a fresh purse. Ten sim-test assertions, sabotaged
 three ways — flagging the grant, flattening the credit, and writing `turnsCompleted` directly — and
@@ -4278,7 +4277,7 @@ scope for a data-only ruling: `standFloorUnit()` is pinned to Daisy for ever, an
 
 **Making `year-sim`'s verdict pass.** It no longer decides the same way twice — five runs came back
 OK, OK, OK, FAIL, FAIL — and the tool's own header says not to fix the tool. What it fails on is
-`smart` out-earning `casual` on lifetime GOLD, never on Saved Seeds minted, so the property the
+`smart` out-earning `casual` on lifetime GOLD, never on Prisms minted, so the property the
 cumulative mint guarantees is intact in every run; the mechanism is `smart` laundering a
 now-much-larger wallet through Fall beds before each of its fifty-five Turns. Seeding and
 multi-running the verdict would settle it honestly, and a session should not go changing a verdict
@@ -5151,7 +5150,7 @@ can now see the year filling, ask what it means, turn it, watch the Tally, and s
 smaller slice would have shipped a currency with no sink or a sink with no currency.
 
 **The meter pill carries no number, and that is measured rather than preferred.** Doc 32 asks for the
-banked Saved Seeds on the pill. On the real metrics they do not fit: 360px of HUD, 132px of round
+banked Prisms on the pill. On the real metrics they do not fit: 360px of HUD, 132px of round
 buttons at 40px, and three numbered wallets needing ~245px of the 220px left. `.wallets` is
 `flex-wrap: wrap`, so the overflow is not an error — it is a HUD that **changes shape as you earn**,
 appearing and disappearing as "84.2K" becomes "212K". Icon-and-fill fits at every wealth on every
@@ -5364,7 +5363,7 @@ ripeness gates and three of Fall's four purchase gates had no negative test at a
 ripens with `plantedAt = clock - 9999` and plants with a full wallet into an empty cell, so the
 *refusal* half was never exercised. Deleting a gate turned the game into an unbounded gold
 printer with the suite green: plant-and-harvest in the same instant, one Fall plot filling the
-mint's entire coins floor in zero elapsed time. Same for the Saved Seeds sink — `buyPetal` could
+mint's entire coins floor in zero elapsed time. Same for the Prisms sink — `buyPetal` could
 be made free, or buyable at zero seeds, or have its per-petal ratio deleted (sink 636K → 388K)
 — and for `passiveIncomeRate()`'s unlock guard, whose removal paid a fresh save ~21× its
 legitimate offline rate, and which has no second line of defence the way the online twin does.
@@ -5420,7 +5419,7 @@ number would let a good year's fireworks buy entry to a Turn the pool cannot pay
 
 **The exploit is dead, and dead by construction rather than by tuning.** `node
 tools/year-sim.js 12 all` exited non-zero for a day and now **exits zero**: normal play beats
-turn-at-every-gate on Saved Seeds by a stable ~1.5–1.6× across runs (832–967 against 563–610
+turn-at-every-gate on Prisms by a stable ~1.5–1.6× across runs (832–967 against 563–610
 at day 10) and on gold as well. *(Re-measured later the same day, after the Fall session
 corrected `bestFallCrop` — it had planted wheat forever, off the 1.4×/hour curve. Giving the
 adversary the better crop made it stronger and the margin **widened** to ~1.9–2.2×, 883–956
@@ -5440,8 +5439,7 @@ year *is* the lifetime — so doc 33's ~60–65 seeds on a ~370–410K year surv
    these two exponents tune together or not at all, and re-pricing wants playtest data.
 2. **The blessing inherited the exploit.** With the base split-neutral, the one free Rich Bloom
    petal per Turn is now the largest per-Turn grant in the game and nothing prices it. Driven
-   through the real engine: **95 Turns fill every flower's Rich Bloom ladder — 318,189 Saved
-   Seeds of value, exactly half the shared sink — for ~101M lifetime coins, about 2.5 days of
+   through the real engine: **95 Turns fill every flower's Rich Bloom ladder — 318,189 Prisms of value, exactly half the shared sink — for ~101M lifetime coins, about 2.5 days of
    play**, while the mint pays 997 seeds over the same span. It is pre-existing; what changed
    is that the mint no longer dwarfs it. `year-sim` now splits **bought** petals from
    **blessed** ones and discloses this beneath the verdict rather than failing on it, because
@@ -5490,7 +5488,7 @@ anywhere in the save to reconstruct.
 re-pricing it against the petal ladder is a different decision, wants playtest data, and is
 explicitly phase 4's — the review said so when it recommended the shape. Doing it in the same
 patch would also make it impossible to tell which change moved the pacing. **Failing
-`year-sim` on the blessing.** The brief asked for the tool to go green on Saved Seeds and it
+`year-sim` on the blessing.** The brief asked for the tool to go green on Prisms and it
 does; the blessing is a ceremony beat, so silently widening the exit-code criterion would be
 this session overruling the owner on a design question. Disclosed in the report instead —
 which is the same fix the gauntlet applied when it caught the tool declaring "unprofitable:
@@ -5537,7 +5535,7 @@ windfall's "all eight *planted*" half was only covered by another group's rig by
 `passiveIncomeRate()` short-circuits to zero without a drone — so the model measured an idle
 game with its idle half switched off, and bill item 10 had no pacing evidence behind it at all.
 With automation in: **casual now out-earns the turn-spam cadence on gold by ~2.7×** (42.3M vs
-15.5M by day 10) while still losing to it on Saved Seeds by ~20×. **The exploit is a seeds-only
+15.5M by day 10) while still losing to it on Prisms by ~20×. **The exploit is a seeds-only
 break** — the gold half of the earlier disclosure is withdrawn, which narrows the owner's dials
 to the mint's shape rather than the coins floor, and independently corroborates the strategy
 session's recommendation of the cumulative mint. The same fix moved year one to 370K / 409K /
@@ -5545,7 +5543,7 @@ session's recommendation of the cumulative mint. The same fix moved year one to 
 first time**; the first Turn still lands at day ~1.75–1.9 against a documented 2.7–3.3, which
 is turn-policy sensitivity and stays phase 4's.
 
-**Numbers recomputed rather than quoted.** The petal sink is **636,378** Saved Seeds for the
+**Numbers recomputed rather than quoted.** The petal sink is **636,378** Prisms for the
 shared skills (the whole sink reachable in phase 1) and **725,067** with signatures — not the
 design session's ~525K/~679K estimates, which predate the constants landing. A sim-test now
 pins it, which is what doc 33's own preamble asked for.
@@ -5788,7 +5786,7 @@ plan now in [37-monetization.md](37-monetization.md).** The headline rulings, re
 **The welcome-back gold doubler ships first** — the genre's most proven placement, offered as
 the *last* line of the away story, never in a first session, with one rule that closes a back
 door nobody had noticed: **ad-granted gold never feeds the well** (the cheat-gold flag,
-reused). Without that flag, ads would quietly mint Saved Seeds through the lifetime pool.
+reused). Without that flag, ads would quietly mint Prisms through the lifetime pool.
 
 **The Turn-pouch doubler is ruled out as stated, by two facts rather than taste:** a perfect
 year's Tally is ~×1.66, so a thirty-second ad granting ×2 would out-score playing well and the
@@ -5797,13 +5795,13 @@ Egg Inc — actually doubles *earnings*, never the prestige currency, letting su
 math absorb the boost. The same "I got more" feeling ships as gold doublers instead.
 
 **The never-sell table is now written down with reasons attached**, because every entry will be
-proposed again someday by someone reasonable: no Saved Seeds or petals for money ever, no seed
+proposed again someday by someone reasonable: no Prisms or petals for money ever, no seed
 unlock skips, no early season gates, no Century Bloom time (sell it a cosmetic pot, never the
 exit), no second blessing, no offline-cap lever, no Wonder extensions, no paid random packs.
 The two promises above the table: the forever money is never for sale, and the sacred moments
 stay clean — offers live on summary screens, after the fireworks.
 
-**The store shelf settles the piggy-bank currency question the hard way:** a Saved Seeds jar
+**The store shelf settles the piggy-bank currency question the hard way:** a Prisms jar
 sells the Turn itself (never), a gold jar mints seeds through the well (never), so **the Gem
 Jar holds gems** — which is also exactly what Egg Inc's holds. Cosy build: never overflows,
 never expires, never nags. Cosmetic decor packs are named the cleanest sale in the game and
@@ -5860,7 +5858,7 @@ in an afternoon: simulate time passing, summon creatures to see them in the new 
 whatever else helps. Scoped into the cleanup round: a **time-warp** (wind every clock — plants,
 Fall beds, the Century Bloom, food, keepsakes, jars — forward 1h / 8h / 24h without the away
 framing), **summon a creature / summon all six** (at a chosen star, tending, so the band fills),
-**grant Saved Seeds**, **grant boosts** (the Power-up button needs inventory to demonstrate
+**grant Prisms**, **grant boosts** (the Power-up button needs inventory to demonstrate
 itself), and **grant card packs**. All cheat-flagged so none of it touches the mint.
 
 **The cleanup round is phase 3.6:** the three ruled fixes plus the review kit, no wireframe
@@ -5996,7 +5994,7 @@ hits (+138% summed and clamped, against +69% for highest-tier-only). The builder
 ambiguous table correctly; the flag in doc 33 is resolved.
 
 **The exploit ruling, prepared for the owner with the variants measured rather than argued.**
-Baseline verified at ~25–32× casual's Saved Seeds by day 10–12. **A (dials: minCoins 500K,
+Baseline verified at ~25–32× casual's Prisms by day 10–12. **A (dials: minCoins 500K,
 veterancy capped) fails at 3.5–4×** — sqrt-of-this-year is superadditive under splitting and
 dials only re-price the split. **D (minCoins ratcheting ×1.6 per Turn) fails at 1.2–1.5×** and
 adds the worst cosy violation on the table: a player who turned often early owes a
@@ -6052,7 +6050,7 @@ caught; the suite stands at 1,051.
 
 **The pacing tool had a model bug and a dishonest verdict.** The tap loop played 1.8 taps/sec
 where its knob said 0.8 (`for (t < 0.8)` runs once, plus the fractional roll — fixed to
-floor+fraction), and the daisy-rush verdict compared only coins and petals, ignoring Saved Seeds
+floor+fraction), and the daisy-rush verdict compared only coins and petals, ignoring Prisms
 minted — the actual prestige currency, which rush was winning in the tool's own printout while
 it declared "unprofitable: YES". year-sim now plays Fall, buys post-Turn plots, blesses the
 cheapest uncapped flower, prints its unlock diary, plays an honest `smart` strategy (normal play,
@@ -6137,7 +6135,7 @@ the doc's flat model did not. Recorded as a phase-4 calibration question, not tu
 
 > **Two of those four "verdicts" did not survive, and the correction is owned here rather than
 > left standing** (2026-08-29, rounds 1–2 and phase 1.1). **The daisy-rush claim was wrong**:
-> the tool's rush strategy was handicapped and its verdict ignored Saved Seeds minted, which is
+> the tool's rush strategy was handicapped and its verdict ignored Prisms minted, which is
 > the currency the shape actually wins — the real finding is the escalated seeds-only exploit in
 > [11-known-issues.md](11-known-issues.md). **The 12/12 petal band was a frozen-calibration
 > artifact**: with the tap-rate bug fixed and automation in the model, the band now holds on
@@ -6340,7 +6338,7 @@ worse than a low meter.
 
 ## 2026-08-29 (design) — The Garden Year is the design, documented for build
 
-**The owner said go**, after four brainstorm rounds: the seasonal world, the Turn, Saved Seeds and
+**The owner said go**, after four brainstorm rounds: the seasonal world, the Turn, Prisms and
 flower mastery become the game's shape, orders stay in, and the economy retune rides inside the
 first slice. The design is **[32-the-garden-year.md](32-the-garden-year.md)**, the numbers are
 **[33-year-one-economy.md](33-year-one-economy.md)**; this entry records what was decided in the
@@ -6366,7 +6364,7 @@ every comparable. This also closes the audit's "no vertebrae past 17" without re
 
 **Old Bloom Mastery retires into petals.** Two permanent per-seed yield ladders on one flower is
 the stacking failure the pool discipline exists to prevent. Lifetime counts stay (creatures and
-the Almanac read them); existing tiers convert to a one-time Saved Seeds grant.
+the Almanac read them); existing tiers convert to a one-time Prisms grant.
 
 **Orders become load-bearing, not just kept.** They are the repeatable reputation engine every
 re-authored level past 17 hangs off — the role doc 13 assigned them on the day it was written,
@@ -9349,7 +9347,7 @@ the reward. The same ×10 lands on a far bigger yield — ×10 on an Eternal Cro
 ladder — Daisy 20.4%, Marigold 20.9%, Eternal Crown 19.2% — which is the property that keeps
 mutations present at every stage of the game rather than dominant late and invisible early. **The
 original catch rates were right all along**; only the exposure model was wrong, and the numbers in the
-spec table now match measurement almost exactly (Dewkissed ~5%, Gilded ~1%, Prismatic ~0.3%,
+spec table now match measurement almost exactly (Dewkissed ~5%, Gilded ~1%, Radiant ~0.3%,
 Wonderstruck ~0.045%).
 
 *Consequence, and it resolves an open question:* one roll means **no upgrades**. A plant cannot catch
