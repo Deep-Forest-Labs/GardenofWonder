@@ -5,6 +5,22 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (story, ruling) — Poppy is a girl; Holly's three lines change; the Fall and Spring heroes may be either
+
+**The owner:** *"Holly should be a girl, not a he. I do think one or two of the other flowers, the new
+ones for spring and fall, could be male or female. I'm pretty open to it."* Holly was already written
+as she (doc 46, the winter rose); the pronoun in question was Poppy's — Holly's shipped lines call the
+Summer flower "he" three times (`data.js`, grep `He is just soft`, `He gets a tutorial`, `He would not
+last`). **Ruled: both sisters are girls.** Poppy is *she* everywhere, and Holly's three lines change to
+match — a three-string edit and a changelog line, handed to the next fix round, because players read
+Holly's lines. **The Fall and Spring heroes are open:** one or both may be male; decided in their own
+design pass with their voices.
+
+**Rejected:** leaving "he" for Holly's sass alone (doc 55 §9 question 3 priced it: the echo between
+Gran's given-away daughter and Mara's never-daughter loses half its weight).
+
+---
+
 ## 2026-09-26 (story, rulings, late) — Four season flowers; the chapter scene's target, in words; the words must pass as human
 
 **Three rulings from the owner on reading the story bible's cast.**
