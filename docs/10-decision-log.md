@@ -5,6 +5,53 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (naming, the owner's word) — Saved Seeds becomes **Prisms**; the Prismatic catch becomes **Radiant**
+
+**The owner rejected "Saved Seeds."** His objection was the word, not the mechanic: it is two words,
+and it collides with the plantable **seeds** you unlock with gold, so the game had two unrelated
+things called seeds. Ten candidates were put to him over two rounds, scored on three tests — does it
+collide with "seeds", does it draw as an icon at HUD size beside the gold coin, does it fit doc 32's
+glossary.
+
+**Round one (plant words):** Acorns, Heirlooms, Bulbs, Crowns, Amber. **Round two (the owner widened
+it — "doesn't have to be tied to plants; light, rain, rays of sun, something gamey"):** Fireflies,
+Comets, Pearls, Glimmers, Feathers. The desk's pick across both rounds was Fireflies, then Acorns.
+
+**The owner chose Prisms**, for the icon: *"a really cool five-sided icon or a hexagon with the
+translucent shimmer or nice rainbow-colored effect… A prism plays in the light."*
+
+**The collision this created, and how it was resolved.** `Prismatic` was already a **catch** — the
+x25 bloom an Aurora sky leaves on a plant (data.js, `rank: 3, mult: 25`), with `nightbloomCap`
+commented "may not upgrade past Prismatic." Not background flavour: one of the game's peak
+celebration moments. A player landing a **Prismatic** bloom would reasonably expect it to pay
+**Prisms**, and it does not — the same class of confusion that got "Saved Seeds" rejected.
+
+Three options were priced. **Ruled: rename the catch to Radiant.** The principle: when two things
+collide, the one seen *less often* moves — the currency sits in the HUD permanently, the catch is a
+rare event. **Rejected:** (a) keeping both words, as it reproduces the confusion being fixed;
+(b) making Prismatic blooms actually pay Prisms — elegant, and it turns the collision into a
+mechanic, but it opens a *second* faucet outside the Turn on top of the Almanac one ruled earlier
+today, and the Prism budget has not been sized. Worth revisiting once it has.
+
+**The icon is a hard-edged TRIANGLE, not a hexagon** — the desk pushed back on the owner's first
+instinct and he took it. Reasoning: the game already has a `gem` currency in the HUD, a hexagon
+shares a gem's silhouette, and at 16px the silhouette is all a player reads — the rainbow shimmer is
+mush at that size and cannot carry recognition. A triangle shares its outline with nothing else in
+the game. The refraction then does what it is good at, making the icon feel alive, rather than being
+asked to do the identifying. Shipped as `prism` in icons.js: apex up, so it is the opposite
+orientation to `gem`'s point-down kite even before colour.
+
+**Scope, done in one commit** (`4a4baa7`, verified by the desk): 45 files, 29 docs and 16 code/tool
+files. No back-compat shim on the save read — prototype saves may reset, per the standing ruling.
+`sim-test` at 2228 passed / 0 failed. Everything about plantable seeds — `DATA.seeds`,
+`seedUnlocks`, `unlockSeed()`, the seed picker, Seed Rush — deliberately untouched, and the
+"Keeping" album card **The Saved Seed** keeps its name because it is about literal seed-saving.
+A player-facing changelog line explains both renames.
+
+**Open, not ruled:** doc 32's glossary says everything you have ever earned feeds **"one deep
+well"** that each Turn scoops from. A well of Prisms is an odd image — light does not pool. Left
+exactly as it was for the owner to rule.
+
 ## 2026-09-26 (rulings, the owner's word) — The spike judged: levels not rungs, the quest strip becomes the FTUE, the first Turn moves early
 
 **The owner reviewed `tools/tree-spike.html` frame by frame and ruled the surface.** Folded into
@@ -62,8 +109,8 @@ plot opens `seeds` today.
 
 **Two structural consequences flagged, not ruled.** Prisms gain their **first faucet outside the
 Turn**, and that scarcity is what makes the Turn the pillar — "very small" has to mean a rounding
-error against a Turn's mint, capped in data. And Seeds demand roughly doubles, now covering perk
-stars, access rights, lawn slots and creature reveals at once; the Seeds budget becomes the tightest
+error against a Turn's mint, capped in data. And Prisms demand roughly doubles, now covering perk
+stars, access rights, lawn slots and creature reveals at once; the Prisms budget becomes the tightest
 quantity in the economy and no curve can be authored until it is sized.
 
 **Tabled:** the §6 creature slot collision. **Placeholder, the owner's to overrule:** legendary is
@@ -233,7 +280,7 @@ wants a rebalance, not a coincidence); and continuing to price save migrations i
 
 ---
 
-## 2026-09-24 (direction filed, and two laws repealed) — The trunk and the tree: reputation reveals, gold buys, Seeds deepen
+## 2026-09-24 (direction filed, and two laws repealed) — The trunk and the tree: reputation reveals, gold buys, Prisms deepen
 
 **[52-the-trunk-and-the-tree.md](52-the-trunk-and-the-tree.md) is filed as DIRECTION** — the
 picture, the rules, the priced option space and the open questions. No game code, and the spec
@@ -254,7 +301,7 @@ chapters, stretching to one per three or four deep in the game. 5. **No bare lev
 carrying neither beat nor node pays one free rank on a node already owned. 6. One path, five colours:
 a single linear zigzag, the categories are kinds of card, sub-skills hang sideways. 7. Forty rungs;
 the last flower near day 45; rungs above it carry story, perks, creatures and access. 8. Flower order
-and prices untouched; only their timing moves. 9. Reputation reveals; gold buys; Seeds deepen.
+and prices untouched; only their timing moves. 9. Reputation reveals; gold buys; Prisms deepen.
 10. Slots start at two and the tree unlocks up to five; the slots are themselves nodes. 11. The
 harvest bonus is a counter — every Nth harvest pays reputation, shown; a sky catch pays none.
 12. **The Turn's Tally pays reputation** (this supersedes the open question in the 2026-09-24
@@ -490,7 +537,7 @@ Let's take our mindset a little bit out of the box we've created… Yes, I do kn
 the math here."* Ruled shape, priced once:
 
 - **Reputation is the trunk; Prisms buy what the trunk reveals.** Two wallets, two verbs:
-  reputation is how far up you can see, Seeds are what you can afford. The story chapters sit on
+  reputation is how far up you can see, Prisms are what you can afford. The story chapters sit on
   the trunk. The tree **replaces** the Almanac's petal rows and the picker's unlock rows (doc 27's
   three-columns-of-one-spreadsheet consolidation, finally with a picture); it does not sit beside
   them.
@@ -1224,7 +1271,7 @@ declaration the assertion pointed at, so it proved the assertion could see that 
 nothing more. Concretely, all of these shipped green: a plant-here marker made completely invisible
 by deleting one `display:grid`; `Math.ceil` swapped for `Math.floor` in the Fall skip price, so a
 crop in its last 29 seconds prices at zero; the Turn's ask with its two chip rows **inverted**, so
-the panel promises to wash away your Seeds and Unlocks and to never touch your Gold; and the
+the panel promises to wash away your Prisms and Unlocks and to never touch your Gold; and the
 original `#22` bug restored verbatim. **The rule that follows: after you sabotage the line you
 wrote, ask what a future agent would actually write instead, and check the group catches that
 too.** Where a group genuinely cannot reach the rendered result — `ui-sheet.js` cannot be loaded

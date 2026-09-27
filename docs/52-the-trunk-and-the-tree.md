@@ -89,11 +89,11 @@ owner's to change).
 > - **Tabled:** the §6 creature slot collision (six creatures, four slots).
 >
 > **Two structural consequences the spec must carry, flagged by the desk, not ruled:**
-> 1. **Prisms gain their first faucet outside the Turn.** Today Seeds arrive only at the Turn,
+> 1. **Prisms gain their first faucet outside the Turn.** Today Prisms arrive only at the Turn,
 >    and that scarcity is what makes the Turn the pillar. "Very small" must mean a rounding error
 >    against a Turn's mint, and it should be capped in data.
-> 2. **Seeds demand roughly doubles.** Seeds now buy perk stars *and* access rights *and* lawn slots
->    *and* creature reveals. The Seeds budget is now the tightest quantity in the economy and the
+> 2. **Prisms demand roughly doubles.** Prisms now buy perk stars *and* access rights *and* lawn slots
+>    *and* creature reveals. The Prisms budget is now the tightest quantity in the economy and the
 >    curve cannot be authored until it is sized.
 
 **The sentence: *one number carries two riders — the village's story, and the height you can
@@ -566,9 +566,9 @@ ladders are in words, per doc 31 surgery 4: **chance axes are countdowns, never 
 >
 > **But the money rule is not the binding one here, and the first draft pointed this guardrail at the
 > wrong risk.** Neither perk is priced in money — both are bought with **Prisms**, and
-> `The Long Year` raises `mintK`, the constant the Seeds pool is minted from
-> (`totalMintable = DATA.year.mintK × sqrt(lifetimeCoins)`, doc 33). That is **Seeds buying more
-> Seeds: a compounding loop in the one currency that never resets.** An assertion reading "never
+> `The Long Year` raises `mintK`, the constant the Prisms pool is minted from
+> (`totalMintable = DATA.year.mintK × sqrt(lifetimeCoins)`, doc 33). That is **Prisms buying more
+> Prisms: a compounding loop in the one currency that never resets.** An assertion reading "never
 > purchasable with money" would pass green while exactly that shipped. The invariant must be written
 > against the recursion, not the wallet: **no node may raise `mintK` or `tallyCap`.**
 >
@@ -783,7 +783,7 @@ Prisms spent there are dead — the regret the checklist model exists to avoid.
 - **(a) The fifth slot becomes a tree node** at rung 27, replacing doc 33's level-24 sketch. Cost:
   one rung. Buys: five of six tending, so only one is ever benched. **Recommended — but it does not
   fully close the regret**, and the first draft of this section overstated it: with six creatures and
-  five slots one is still benched, and `"Trait one star higher"` is one rank and hard-capped, so Seeds
+  five slots one is still benched, and `"Trait one star higher"` is one rank and hard-capped, so Prisms
   spent on the wrong creature stay dead in the currency that only arrives at the Turn. Doc 31 surgery
   4 is unambiguous — *"everything eventually maxes; no order is wrong."* **So (a) needs a companion
   rule: a creature's branch is re-spec-able, or its ranks apply whether the creature is tending or
@@ -926,7 +926,7 @@ removed mid-flight.
 - **A node's rank cost curve** compounds, and must be pinned against the pouch's `sqrt(lifetime)`
   growth in the same test that pins the petal ladder — doc 33 already flags those two exponents as
   mismatched, and the tree adds a third consumer of the same currency.
-- **A free rank from a bare level can never exceed what the same rank costs in Seeds.** Ruling 5's
+- **A free rank from a bare level can never exceed what the same rank costs in Prisms.** Ruling 5's
   guardrail, and the number most likely to break something.
 - **No flower is revealed by gold once the tree ships**, and **the slowest player's visible
   catalogue is never empty** — asserted at day 3 for the casual persona, where the model puts
@@ -1111,7 +1111,7 @@ THE SHAPE, ruled 2026-09-26 — draw exactly this:
   badge on the card. The path is on the left.
 - **Three states and one ribbon:** locked (art dimmed, a padlock, the rung on its badge); exactly
   ONE "up next" card wearing a ribbon that always shows its price (a flower's gold price; a
-  perk's first-star Seeds price); unlocked (gold frame, art in full colour, its stars filling).
+  perk's first-star Prisms price); unlocked (gold frame, art in full colour, its stars filling).
 - **The curtain across the top**, hiding everything beyond the revealed stretch. Cards under it are
   present but masked: silhouette, `???`, stats withheld — doc 47's masked-row recipe.
 - **Story beats are ticks on the rail**, never cards. A chapter tick is visibly not a card.
@@ -1211,7 +1211,7 @@ drone migration's shape, the curtain's depth, the bare-level reward and the reve
 
 7. **The fifth habitat slot, and whether a creature's ranks survive being benched.** §6's (a) plus
    its companion rule. *Desk leans (a) with ranks that apply benched — one line, and it removes the
-   only dead-Seeds case in the feature.*
+   only dead-Prisms case in the feature.*
 
 8. **The always-on away trickle.** §5 shows the offline node at rung 13 leaves the first three or four
    nights at zero, which is the window doc 31 surgery 5 called the churn window. **(a) Add a small
