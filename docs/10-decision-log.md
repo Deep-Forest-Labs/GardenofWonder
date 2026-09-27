@@ -5,6 +5,51 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-26 (rulings, spike v2 reviewed) — The trunk goes Prisms-only; the rail loses its numbers; orders take Gossip Harbor's shape
+
+**The owner judged `tools/tree-spike.html` v2 by eye**, against a Monopoly Go screen recording and
+two Gossip Harbor screenshots. Per standing reference hygiene, none of those files enter the repo or
+the wiki — the targets are described in words here and in §52's third REVISED block.
+
+**1. The trunk is Prisms-only — the biggest of the five.** *"I still think you use Prisms to unlock
+flowers. Right now we're using gold. Let's just have Prisms be the only thing that can be used in
+this screen or the prestige system."* **This supersedes the 2026-09-24 formulation "reputation
+reveals, gold buys, Prisms deepen."** It is now: reputation reveals, **Prisms buy**, and gold never
+appears on a trunk card. Gold remains the in-year money for the shop and the upgrades that wipe at
+the Turn.
+
+**Desk flag, not a ruling, and it is the largest open consequence in the feature.** Prisms already
+bought perk stars, access rights, lawn slots and creature reveals; they now buy flowers too, while
+the only faucets are the Turn and the deliberately tiny Almanac trickle ruled this morning. Doc 33
+puts the economy's entire spread in the flower unlock ladder, so this moves the spread into the one
+currency that never resets. Two things follow and neither is answered: the **Prism budget is now the
+tightest quantity in the game** and no curve can be authored before it is sized; and **gold loses its
+largest sink**, so what gold is for past the shop needs a deliberate answer rather than a default.
+
+**2. The wallets float above the content.** The scrolling trunk must not cut off underneath them —
+match the game's existing HUD behaviour.
+
+**3. The rail is a progress bar with a position marker, and shows no numbers.** v2's level-fill ring
+and reputation count are dropped. *"The whole point of that little bar on the right side is to have
+that as a progress bar and show a little arrow of where you're at… I don't think you need to show
+the user's current reputation and try to get all the numbers fitting in there."* The level model is
+untouched; only its display simplifies. This also closes the spike's standing question about how the
+rail reads at six figures — it never renders one.
+
+**4. Buying a card needs real ceremony.** The reference's unlock reveal *"feels like it's being
+unlocked"*; v2 drew the four beats of the unveiling but not the feel. Called out as a motion
+requirement, to be tuned on sliders under the motion gate rather than specified in prose here.
+
+**5. A card's title carries its real value, and the flavour line is cut.** A maxed Compost Heap reads
+"Replanting a seed costs 15% less" — not a vague line above a separate stat. One line: what it does,
+with the number in it. The line beneath is what the next star adds. Removes a redundant row, and
+buys back some of the card height that inline detail spent.
+
+**6. The order strip takes Gossip Harbor's shape.** Each customer is a portrait sitting *behind* the
+items they want; the items sit on a counter in front of them; the reward rides on the customer; and
+the strip **scrolls horizontally**, because a customer needs more room than a chip. This is what the
+tutorial quest strip converts into at the first Turn, so it is also the payoff frame of the FTUE.
+
 ## 2026-09-26 (naming, the owner's word) — Saved Seeds becomes **Prisms**; the Prismatic catch becomes **Radiant**
 
 **The owner rejected "Saved Seeds."** His objection was the word, not the mechanic: it is two words,

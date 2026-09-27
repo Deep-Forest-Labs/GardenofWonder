@@ -88,6 +88,42 @@ owner's to change).
 >   epic and the spike drew it wrong.
 > - **Tabled:** the §6 creature slot collision (six creatures, four slots).
 >
+> ### REVISED 2026-09-26 (third) — the owner's review of spike v2
+>
+> Judged by eye against a Monopoly Go reference and two Gossip Harbor screenshots (both stay on the
+> owner's machine — described in words here and never added to the repo or the wiki).
+>
+> - **The trunk is Prisms-only. Flowers unlock with Prisms, not gold.** *"Let's just have Prisms be
+>   the only thing that can be used in this screen or the prestige system."* **This supersedes
+>   "reputation reveals, gold buys, Prisms deepen"** (the 2026-09-24 entry title and §2's wallet
+>   split): reputation reveals, **Prisms buy everything on the trunk**, and gold never appears on a
+>   card. Gold stays the in-year money for the shop and the upgrades that wipe at the Turn.
+> - **The wallets float above the content**, as they do in the game today; the scrolling trunk must
+>   not cut off under them.
+> - **The rail is a progress bar with a position marker — no numbers.** Drop v2's level-fill ring and
+>   the reputation count. The rail shows how full the climb is and an arrow for where the player is
+>   standing; it does not try to fit "15,842" anywhere. The level model is unchanged — only its
+>   display is.
+> - **The unveiling needs real ceremony.** Buying a card should land like the reference's unlock: a
+>   pop that feels like something opening, not a state change. v2's four-cell strip is the beats;
+>   the feel is missing.
+> - **A card's title carries its actual value, and the flavour line goes.** A maxed Compost Heap
+>   reads "Replanting a seed costs 15% less," not "Replanting a seed costs a little less" over a
+>   separate stat. One line: what it does, with the real number. The line beneath is what the next
+>   star adds. This removes a redundant row and is part of the card-height budget.
+> - **The order strip follows Gossip Harbor's shape:** each customer is a portrait sitting *behind*
+>   the items they want, the items are laid out on a counter in front of them, the reward rides on
+>   the customer, and the strip **scrolls horizontally** between customers because each one needs
+>   more room than a chip. This is the surface the quest strip converts into at the first Turn.
+>
+> **Flagged by the desk, not ruled — and it is large.** Prisms now buy flowers *and* perk stars *and*
+> access rights *and* lawn slots *and* creature reveals, while the only faucets are the Turn and a
+> deliberately tiny Almanac trickle. Doc 33 puts the economy's whole spread in the flower unlock
+> prices; moving that ladder into Prisms moves the spread into the one currency that never resets.
+> **The Prism budget is now the single tightest quantity in the game and nothing else can be sized
+> until it is.** It also removes gold's largest sink, so what gold is *for* after the shop needs an
+> answer.
+>
 > **The well — asked and closed, 2026-09-26.** doc 32's glossary calls the lifetime pool "one deep
 > well" that each Turn scoops from. The desk asked whether a well of Prisms still reads. The owner
 > ruled it stays: it is a glossary metaphor only, and the game never draws a well or shows one
