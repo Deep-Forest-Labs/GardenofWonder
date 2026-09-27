@@ -1611,6 +1611,16 @@ completes every plot and expires every booster. No anti-cheat exists.
 
 Fine for a single-player local game. It would matter if leaderboards were ever added.
 
+### The level pip overflows its own disc at three digits
+
+`.q-pip` (`style.css`) is a fixed 26×26px circle at 13px/weight-900; `levelFromRep()` (`game.js`)
+runs the level curve to 999 and is uncapped in practice. Confirmed live at 390×844: "9" and "99" sit
+centred in the ring, but "100" already overflows the disc on both sides and "999" badly — found
+while reusing this exact mechanism for `tools/hud-spike.html`. Unreached by any playtester yet, but
+no longer theoretical now that every order pays reputation (2026-09-27): the level curve is
+`10 + 5*(level-1)` rep per level, so level 100 is roughly 25,000 lifetime reputation, not an endgame
+number. Needs a fix wherever this pip is next touched — smaller type past two digits, most likely.
+
 ## Accessibility
 
 - **No keyboard support.** Every button now takes a visible `:focus-visible` ring — 3px of ink, 3px

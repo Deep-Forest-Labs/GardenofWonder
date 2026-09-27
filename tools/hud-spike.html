@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The HUD's Top Row — Wireframe Spike</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  Garden Wonder — layout spike. Built 2026-09-27, one builder, no subagents.
+
+  THE PROBLEM (docs/10-decision-log.md, two 2026-09-27 entries — "Reputation needs a permanent
+  home once the quest strip converts" and "Reputation is the wage; the tip is the surprise"):
+  the quest strip is the tutorial and converts into the order strip at the first Turn. Today's
+  quest strip carries the level pill and its reputation ring (#qPip inside .q-pip-ring); when the
+  strip converts, that pill loses its home. Separately, the trunk's rail was ruled to show NO
+  digits at all (2026-09-26), so reputation has no number anywhere in the game once both changes
+  land. The owner's fix: a small level pill, top-left of the HUD, with an order's reputation
+  animating into it on delivery — his reference is Monopoly Go's compact top-left pill.
+
+  Static. No game dependencies — data.js, game.js, ui.js and style.css are never loaded. Every
+  token and component recipe below is hand-copied from the live style.css / index.html / icons.js
+  / ui-menu.js, and from tools/records-spike.html (page chrome) and tools/tree-spike.html (the
+  order-strip/customer-card recipe, credited at each use and in section 13) — per house
+  convention. Real class names are reused wherever a frame shows chrome that already exists
+  (.wallet, .round-btn, .q-pip-ring, .dr-row…); new parallel classes are prefixed .hs- for the
+  genuinely new things this pass draws (the width-arithmetic diagrams, the flight animation).
+
+  MEASURED LIVE, not computed by hand. Every pixel number in this file was read with
+  getBoundingClientRect() against the running game (`preview_start {name:"garden"}`, port 8899,
+  a fresh tab — tools/tree-spike.html was open and live in another tab throughout and was never
+  touched). Section 13 has the full methodology. The two width-arithmetic arrangements (sections
+  2 and 3) were not just measured but literally BUILT inside the live DOM — the real .q-pip-wrap
+  and .wallet nodes cloned into the real .hud row — so the sums are the browser's own layout, not
+  arithmetic that could disagree with it. That is how the 360px break in section 3 was found.
+
+  Every economy number drawn here (gold, gems, Prisms, reputation, levels) is an illustrative
+  placeholder to get pixels on screen. The Prism budget is explicitly unsized (doc 10, "the
+  single tightest quantity in the game") and nothing here prices it. Every open question is
+  marked as a question, on the page and in the handoff; every recommendation is marked as the
+  desk's, not asserted as decided. Section 10 raises the one question the brief asked for and
+  picks nothing.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+    --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad;
+    --paper-dim:#ebe5d9; --paper-dim-2:#d8d0c0; --paper-dim-edge:#bcb0a0;
+    --grass:#5cc45c; --grass-d:#3f9d45; --grass-l:#8fe08a;
+    --seed:#7bd88f; --seed-d:#3f9d45; --seed-l:#c9f5cf;
+    --coin:#ffc93c; --coin-d:#f08c00;
+    --gem:#8ce0ff; --dot:#ff6b6b;
+    --sat:59px; --sab:34px;
+    --r-lg:26px; --r-md:18px; --r-sm:12px;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:#e9e2d3;color:var(--ink);
+    font-family:'Baloo 2',system-ui,sans-serif;
+    padding:0 0 90px;
+  }
+  h1,h2,h3{font-weight:800;margin:0}
+  p{margin:0}
+
+  /* ---------- page chrome, hand-copied from records-spike.html / tree-spike.html ---------- */
+  .intro{max-width:1000px;margin:0 auto;padding:28px 20px 10px}
+  .intro .kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .intro h1{font-size:27px;margin-top:4px}
+  .intro p.lede{font-size:14px;font-weight:600;color:var(--ink-soft);max-width:78ch;margin-top:10px;line-height:1.55}
+  .intro p.lede b{color:var(--ink)}
+  .toolbar{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;align-items:center}
+  .toolbar button{
+    font:inherit;font-size:12px;font-weight:800;cursor:pointer;
+    padding:8px 14px;border-radius:999px;border:2.5px solid var(--ink);
+    background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+    box-shadow:0 3px 0 var(--ink-2);
+  }
+  .toc{max-width:1000px;margin:14px auto 0;padding:0 20px}
+  .toc ol{margin:0;padding-left:20px;columns:2;column-gap:32px}
+  .toc li{font-size:13px;font-weight:700;line-height:1.7;break-inside:avoid}
+  .toc a{color:var(--ink)}
+
+  section.grp{max-width:1520px;margin:0 auto;padding:38px 20px 6px}
+  section.grp h2{font-size:20px;display:flex;align-items:center;gap:10px}
+  section.grp h2 .n{
+    display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;
+    background:var(--ink);color:var(--paper);font-size:14px;flex:none;
+  }
+  section.grp p.lede{font-size:13.5px;font-weight:700;color:var(--ink-soft);margin:8px 0 20px;max-width:90ch;line-height:1.5}
+  section.grp p.lede b{color:var(--ink)}
+
+  .row-wrap{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start}
+
+  figure{margin:0;display:flex;flex-direction:column;gap:0}
+  figcaption{max-width:420px;margin-bottom:8px}
+  figcaption .tag{
+    display:inline-block;background:var(--ink);color:var(--paper);
+    font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:6px;
+    vertical-align:2px;margin-right:7px;
+  }
+  figcaption b{font-size:14px}
+  figcaption i{display:block;font-style:italic;font-weight:600;color:var(--ink-soft);font-size:12px;margin-top:2px;line-height:1.4}
+
+  .phone{
+    box-sizing:content-box;
+    width:390px;height:844px;overflow:hidden;position:relative;
+    border-radius:36px;border:8px solid #1a120b;
+    background:linear-gradient(180deg,#bfe3ff 0%,#eaf6ff 34%,#eee6c8 60%,#d9c99a 100%);
+    box-shadow:0 14px 26px rgba(20,12,6,.35);
+    font-size:15px;
+  }
+  .phone.w360{width:360px}
+  .phone .notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:120px;height:28px;background:#1a120b;border-radius:0 0 16px 16px;z-index:80;
+  }
+  .crop{position:relative;overflow:hidden;border-radius:26px;border:8px solid #1a120b;box-shadow:0 14px 26px rgba(20,12,6,.35)}
+
+  .note{max-width:420px;margin-top:9px;padding:8px 11px;border-radius:10px;font-size:12px;font-weight:700;line-height:1.5}
+  .note.d{background:#eaf6ea;border:2px solid #7bc47f;color:#245c27}
+  .note.d::before{content:'DECIDED — ';font-weight:900}
+  .note.q{background:#fff3e0;border:2px solid #f0a83f;color:#7a4a05}
+  .note.q::before{content:'QUESTION — ';font-weight:900}
+  .note.p{background:#eaf0ff;border:2px solid #5c86e0;color:#1c3a7a}
+  .note.p::before{content:'PLACEHOLDER, NOT A RECOMMENDATION — ';font-weight:900}
+  .note.f{background:#ffecec;border:2.5px solid #d9463f;color:#7a1410}
+  .note.f::before{content:'FOUND LIVE, ALREADY IN THE SHIPPED GAME — ';font-weight:900}
+  body[data-notes="0"] .note{display:none}
+
+  .strip{background:linear-gradient(180deg,#fffdf7,var(--paper-3));border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 4px 0 var(--ink-2);padding:12px 14px;max-width:420px;margin-top:6px}
+
+  table.meas{border-collapse:collapse;font-size:12.5px;max-width:900px;background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);overflow:hidden}
+  table.meas th,table.meas td{padding:7px 12px;text-align:left;border-bottom:2px solid rgba(44,26,16,.14)}
+  table.meas th{background:var(--paper-3);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  table.meas tr:last-child td{border-bottom:0}
+  table.meas td b{font-variant-numeric:tabular-nums}
+  table.meas td.bad{color:#d9463f;font-weight:800}
+  table.meas td.good{color:#2f7a34;font-weight:800}
+
+  /* ---------- closing summary ---------- */
+  .spec{max-width:1080px;margin:26px auto 0;padding:0 20px}
+  .spec .box{background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);box-shadow:0 4px 0 var(--ink-2);padding:16px 18px;margin-bottom:14px}
+  .spec .box h3{font-size:14.5px;margin-bottom:9px}
+  .spec .box ul{margin:0;padding-left:18px}
+  .spec .box li{font-size:13px;font-weight:600;line-height:1.6;margin-bottom:7px}
+  .spec .box li b{font-weight:800}
+  .spec .box.q{border-color:#f0a83f;background:#fffaf0}
+  .spec .box.p{border-color:#5c86e0;background:#f5f8ff}
+  .spec .box.f{border-color:#d9463f;background:#fff6f5}
+
+  /* =========================================================
+     REAL GAME CHROME — hand-copied from style.css, cited inline
+     ========================================================= */
+  /* The scene is a plain CSS background on .crop/.phone themselves, NOT a separate
+     position:absolute overlay div. It was an overlay div first draft, and every ordinary
+     (non-positioned) piece of HUD content painted BEHIND it regardless of DOM order — an
+     absolutely-positioned, auto-z-index box always paints after in-flow content in the same
+     stacking context, which is a real CSS trap and not the one this file is about, so it is
+     fixed at the root rather than patched with position:relative on every child. */
+  .hs-scene{background:linear-gradient(180deg,#bfe3ff 0%,#eaf6ff 40%,#cdeecb 64%,#5cc45c 64%,#3f9d45 100%)}
+
+  /* .hud / .wallets / .wallet / .hud-actions / .round-btn — style.css lines ~369-432,
+     compressed variant (@media max-width:430px, ALWAYS active at both 390 and 360 — confirmed
+     live, see section 1) already baked in below rather than duplicated as a media query. */
+  .hud{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+    position:relative;padding:calc(var(--sat) + 10px) 10px 0}
+  .wallets{display:flex;gap:6px;flex-wrap:nowrap;position:relative}
+  .wallet{
+    display:flex;align-items:center;gap:5px;flex:none;
+    padding:4px 9px 4px 5px;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+    border:3px solid var(--ink);border-radius:999px;
+    box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18);
+    font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;line-height:1;
+  }
+  .w-icon{width:19px;height:19px;display:block;flex:none}
+  .w-icon svg{width:100%;height:100%;display:block}
+  .hud-actions{display:flex;gap:6px;flex:none}
+  .round-btn{
+    position:relative;width:44px;height:44px;flex:none;
+    display:grid;place-items:center;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+    border:3px solid var(--ink);border-radius:50%;
+    box-shadow:0 4px 0 var(--ink-2), 0 7px 12px rgba(44,26,16,.2);
+  }
+  .round-btn svg{width:24px;height:24px}
+  .hud-dot{
+    position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;
+    background:var(--dot);border:2.5px solid var(--ink);box-shadow:0 2px 0 var(--ink-2);
+  }
+  .dev-dot-ghost{position:absolute;left:100%;top:0;width:44px;height:100%;min-height:32px}
+
+  /* .quest-strip / .q-pip-* — style.css lines ~453-514, verbatim */
+  .quest-strip{
+    display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;
+    width:100%;text-align:left;padding:5px 8px 5px 5px;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));
+    border:3px solid var(--ink);border-radius:18px;
+    box-shadow:0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.16);
+  }
+  .q-pip-wrap{width:36px;height:36px;flex:none;display:grid;place-items:center;position:relative}
+  .q-pip-ring{grid-area:1/1;width:36px;height:36px;border-radius:50%;
+    background:conic-gradient(from -90deg,#69db7c calc(var(--p,0) * 360deg), rgba(44,26,16,.16) 0)}
+  .q-pip{grid-area:1/1;position:relative;z-index:1;width:26px;height:26px;
+    display:grid;place-items:center;background:linear-gradient(180deg,#ffe066,#ffc93c);
+    border:2.5px solid var(--ink);border-radius:50%;font-weight:900;font-size:13px;line-height:1;
+    box-shadow:0 1px 0 var(--ink-2);overflow:hidden}
+  .q-bar{position:relative;display:block;height:24px;min-width:0;border-radius:999px;overflow:hidden;
+    background:rgba(44,26,16,.1);border:2.5px solid var(--ink)}
+  .q-bar i{position:absolute;inset:0;width:100%;background:linear-gradient(90deg,#8ce99a,#ffe066);
+    clip-path:inset(0 calc(100% - var(--fill,0%)) 0 0)}
+  .q-bar-label{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;
+    gap:8px;height:100%;padding:0 10px;color:var(--ink)}
+  .q-text{font-weight:800;font-size:13px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .q-count{flex:none;font-weight:900;font-size:12px;font-variant-numeric:tabular-nums}
+  .q-reward{flex:none;display:flex;align-items:center;gap:3px;padding:4px 8px 4px 6px;
+    background:linear-gradient(180deg,#fff,#fff5e2);border:2.5px solid var(--ink);border-radius:999px;
+    font-weight:900;font-size:12px;line-height:1;box-shadow:0 2px 0 var(--ink-2)}
+  .q-reward svg{width:14px;height:14px;display:block}
+
+  /* .dock-btn.turn / .turn-fill / .seedchip — style.css lines ~1316-1459, trimmed to what a
+     small inset needs (no ready-glint keyframes; this file never asserts the Turn is ready) */
+  .dock-btn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    padding:7px 4px 6px;min-height:56px;background:linear-gradient(180deg,#fffdf7,var(--paper-3));
+    border:3px solid var(--ink);border-radius:var(--r-md);
+    box-shadow:0 5px 0 var(--ink-2), 0 9px 14px rgba(44,26,16,.22)}
+  .dock-ico{width:24px;height:24px;display:block}
+  .dock-ico svg{width:100%;height:100%;display:block}
+  .dock-label{font-size:11px;font-weight:800;line-height:1}
+  .dock-btn.turn{isolation:isolate;width:70px}
+  .turn-fill{position:absolute;inset:0;z-index:-1;overflow:hidden;border-radius:15px}
+  .turn-fill::before{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--year-p,0%);
+    background:linear-gradient(180deg,var(--seed-d) 0 2px,var(--seed-l) 2px,var(--seed))}
+  .seedchip{position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:2px;padding:1px 6px 1px 3px;white-space:nowrap;
+    border:2.5px solid var(--ink);border-radius:999px;background:linear-gradient(180deg,#fffdf7,var(--seed-l));
+    box-shadow:0 2px 0 var(--ink-2);font-size:10px;font-weight:800;line-height:1.5}
+  .seedchip svg{width:12px;height:12px;display:block}
+
+  /* .drawer / .dr-* — style.css lines ~2415-2645, trimmed to a static (already-open) mockup:
+     no transform/transition, since this page never drives the slide-in gesture. */
+  .hs-drawer{
+    position:absolute;top:0;bottom:0;right:0;width:min(86%,332px);
+    display:flex;flex-direction:column;
+    background:linear-gradient(180deg,var(--paper) 0%, var(--paper-2) 62%, var(--paper-3) 100%);
+    border-left:4px solid var(--ink);box-shadow:-14px 0 26px rgba(20,12,6,.22);
+    padding:calc(var(--sat) + 10px) calc(0px + 14px) calc(var(--sab) + 12px) 14px;
+    z-index:5;
+  }
+  .hs-scrim{position:absolute;inset:0;background:rgba(20,12,6,.38);z-index:4}
+  .dr-head{display:flex;align-items:center;gap:11px;padding:2px 0 12px 12px;border-bottom:3px solid rgba(44,26,16,.14);margin-bottom:10px}
+  .avatar{--av:var(--grass-l);position:relative;width:56px;height:56px;flex:none;border-radius:50%;display:grid;place-items:center;overflow:hidden;
+    border:3.5px solid var(--ink);background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)), var(--av);
+    box-shadow:inset 0 5px 0 rgba(255,255,255,.5), inset 0 -7px 0 rgba(44,26,16,.07), 0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24)}
+  .avatar svg{width:82%;height:82%;display:block}
+  .dr-who{flex:1;min-width:0;display:grid;gap:3px}
+  .dr-who b{font-size:18px;font-weight:800;line-height:1.15;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dr-sub{font-size:11.5px;font-weight:600;color:var(--ink-soft);line-height:1.2}
+  .dr-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  .dr-rows{flex:1;min-height:0;overflow-y:auto;display:grid;gap:8px;align-content:start;padding:2px 2px 4px}
+  .dr-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:11px;
+    padding:11px 12px;text-align:left;width:100%;border:3px solid var(--ink);border-radius:var(--r-md);
+    background:linear-gradient(180deg,#fff,#fff5e2);box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.24)}
+  .dr-ico{--rt:var(--paper-3);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:2.5px solid var(--ink);
+    background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.78), rgba(255,255,255,.26)), var(--rt);box-shadow:0 2px 0 var(--ink-2)}
+  .dr-ico svg{width:22px;height:22px;display:block}
+  .dr-lab b{display:block;font-size:15.5px;font-weight:800;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dr-lab i{display:block;font-style:normal;font-size:11px;font-weight:600;color:var(--ink-soft);line-height:1.25;margin-top:1px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dr-end{display:flex;align-items:center;gap:6px;flex:none}
+  .row-dot{width:13px;height:13px;border-radius:50%;background:var(--dot);border:2.5px solid var(--ink);box-shadow:0 2px 0 var(--ink-2)}
+  .chev{width:16px;height:16px;display:grid;place-items:center;opacity:.4}
+  .chev svg{width:100%;height:100%;display:block}
+  .dr-row.soon{background:linear-gradient(180deg,var(--paper-dim),var(--paper-dim-2));
+    box-shadow:0 4px 0 var(--paper-dim-edge), 0 7px 11px rgba(44,26,16,.14)}
+  .dr-row.soon .dr-ico{filter:saturate(.28);border-color:rgba(44,26,16,.55);box-shadow:0 2px 0 var(--paper-dim-edge)}
+  .soon-chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;border:2.5px solid rgba(44,26,16,.55);
+    background:linear-gradient(180deg,#f6f2ea,var(--paper-dim-2));box-shadow:0 2px 0 var(--paper-dim-edge);
+    font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);line-height:1}
+  .dr-sep{display:flex;align-items:center;gap:8px;margin:4px 2px 0;font-size:10.5px;font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink-soft)}
+  .dr-sep::before,.dr-sep::after{content:'';flex:1;height:2px;border-radius:2px;background:rgba(44,26,16,.16)}
+
+  /* Order strip / customer card — hand-copied from tools/tree-spike.html (.custcard/.orderstrip/
+     .rwd/.tip-empty), credited in section 13. Portraits simplified to a plain tinted disc: this
+     spike is not re-litigating the customer card's own art, only what leaves it. */
+  .orderstrip{display:flex;gap:9px;overflow-x:auto;padding:3px 3px 6px;-webkit-overflow-scrolling:touch}
+  .orderstrip::-webkit-scrollbar{height:0}
+  .custcard{scroll-snap-align:start;flex:none;width:104px;display:flex;flex-direction:column;align-items:center;
+    border:3px solid var(--ink);border-radius:15px;overflow:visible;position:relative;
+    background:linear-gradient(180deg,#fffdf7,var(--paper-2));box-shadow:0 4px 0 var(--ink-2), 0 8px 14px rgba(44,26,16,.18)}
+  .custcard .portrait{width:100%;height:46px;border-radius:12px 12px 0 0;display:grid;place-items:center;
+    background:linear-gradient(180deg,#cfe8ff,#eaf6ff);border-bottom:3px solid var(--ink);overflow:hidden}
+  .custcard .rewards{position:absolute;top:-8px;right:-6px;display:flex;align-items:center;gap:3px;z-index:2}
+  .custcard .rwd{display:flex;align-items:center;gap:2px;padding:2px 6px 2px 4px;border-radius:999px;
+    border:2.2px solid var(--ink);font-size:9.5px;font-weight:900;white-space:nowrap}
+  .custcard .rwd svg{width:11px;height:11px}
+  .custcard .rwd.wage{background:linear-gradient(180deg,#c8f2c8,#8ce99a);box-shadow:0 2px 0 #4f9d55}
+  .custcard .rwd.tip{background:linear-gradient(180deg,#fff6c2,#ffe066);box-shadow:0 2px 0 var(--ink-2)}
+  .custcard .tip-empty{width:17px;height:17px;border-radius:50%;flex:none;border:2px dashed var(--paper-dim-edge);opacity:.65}
+  .custcard .counter{width:100%;background:linear-gradient(180deg,#d9a870,#a9713f);
+    border-top:2px solid rgba(255,255,255,.3);padding:6px 5px 7px;display:flex;justify-content:center;gap:4px}
+  .custcard .want{width:23px;height:23px;border-radius:7px;border:2px solid var(--ink);display:grid;place-items:center;
+    background:radial-gradient(circle at 34% 28%,#fff,var(--paper-3));box-shadow:0 2px 0 var(--ink-2)}
+  .custcard .want svg{width:14px;height:14px}
+  .custcard .cname{font-size:9px;font-weight:800;padding:5px 3px 6px;text-align:center;color:var(--ink-soft)}
+
+  /* =========================================================
+     NEW FOR THIS SPIKE — .hs- prefix
+     ========================================================= */
+  /* The width-arithmetic diagram: every segment is drawn at its REAL measured pixel width
+     (1px CSS = 1px of the real HUD), so the numbers are the picture rather than a caption under
+     it. The dashed red line is the real available width; a segment crossing it IS the overflow. */
+  .hs-arith{position:relative;margin-top:18px;padding-top:20px;overflow-x:visible}
+  .hs-track{display:flex;align-items:stretch;height:44px;gap:0;width:max-content}
+  .hs-seg{display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;
+    color:var(--ink);border:2px solid var(--ink);white-space:nowrap;overflow:hidden;flex:none;padding:0 2px}
+  .hs-seg.pill{background:linear-gradient(180deg,#ffe066,#ffc93c);border-radius:20px}
+  .hs-seg.gold{background:linear-gradient(180deg,#fffdf7,var(--paper-3));border-radius:20px}
+  .hs-seg.gem{background:linear-gradient(180deg,#fffdf7,#cdeeff);border-radius:20px}
+  .hs-seg.prism{background:linear-gradient(180deg,#fffdf7,#e3d9ff);border-radius:20px}
+  .hs-seg.btn{background:linear-gradient(180deg,#fffdf7,var(--paper-3));border-radius:50%}
+  .hs-seg.book{background:linear-gradient(180deg,#fffdf7,#ffe3c2);border-radius:50%}
+  .hs-seg.gap{background:transparent;border:none}
+  .hs-seg.clear{background:repeating-linear-gradient(135deg,rgba(105,219,124,.35) 0 6px,rgba(105,219,124,.15) 6px 12px);
+    border:2px dashed #3f9d45;color:#245c27;border-radius:6px}
+  .hs-seg.overflow{background:repeating-linear-gradient(135deg,rgba(217,70,63,.35) 0 6px,rgba(217,70,63,.15) 6px 12px);
+    border:2px dashed #d9463f;color:#7a1410}
+  .hs-avail{position:absolute;top:14px;bottom:0;border-right:3px dashed #d9463f;pointer-events:none}
+  .hs-avail-label{position:absolute;top:-3px;font-size:10px;font-weight:800;color:#d9463f;white-space:nowrap;transform:translateX(-100%)}
+  .hs-arith-total{margin-top:10px;font-size:12px;font-weight:700;color:var(--ink-soft);max-width:460px;line-height:1.5}
+  .hs-arith-total b{color:var(--ink)}
+  .hs-arith-total.bad{color:#d9463f}
+  .hs-arith-total.bad b{color:#d9463f}
+  .hs-arith-total.good b{color:#2f7a34}
+
+  /* The pill's own halo — the SAME mechanism doc 08 documents for .replant-chip: a transparent
+     ::before sized to the 44px floor, extending the tap target without changing the visible
+     36px disc. Drawn only in section 10, where the pill is proposed as a door. */
+  .hs-pill-door{position:relative}
+  .hs-pill-door::before{content:'';position:absolute;left:50%;top:50%;
+    width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%);
+    border:2px dashed #d9463f;border-radius:50%;pointer-events:none}
+
+  /* The flight token for the storyboard — a small star riding a dashed arc. */
+  .hs-arc{position:absolute;pointer-events:none}
+  .hs-fly{position:absolute;width:20px;height:20px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+  .hs-ghost{position:absolute;font-size:13px;font-weight:900;color:#2f7a34;text-shadow:0 1px 0 #fff}
+
+  .hs-zoom-pip{width:120px;height:120px;flex:none}
+  .hs-zoom-pip .q-pip-wrap{width:120px;height:120px}
+  .hs-zoom-pip .q-pip-ring{width:120px;height:120px}
+  .hs-zoom-pip .q-pip{width:86px;height:86px;font-size:40px;border-width:6px}
+
+  .hs-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;font-weight:700;color:var(--ink-soft);margin-top:10px}
+  .hs-legend span{display:inline-flex;align-items:center;gap:6px}
+  .hs-legend i{width:16px;height:16px;border-radius:5px;display:inline-block;border:2px solid var(--ink)}
+</style>
+</head>
+<body data-notes="1">
+
+<div class="intro">
+  <p class="kicker">Garden Wonder &middot; Wireframe spike &middot; docs/08-ui-and-layout.md &middot; docs/10-decision-log.md (2026-09-27)</p>
+  <h1>The HUD's Top Row</h1>
+  <p class="lede">
+    <b>The quest strip converts to the order strip at the first Turn and takes the level pill with
+    it; the trunk's rail prints no digits. Reputation needs a home.</b> The owner's fix: a compact
+    level pill, top-left of the HUD, that an order's reputation flies into on delivery. This spike
+    draws the recommended shape and the owner's own original proposal side by side, measures both
+    for real at 390px and 360px with worst-case numbers in the wallets, and shows exactly what a
+    third wallet costs — including a break this spike found live and did not expect to find.
+  </p>
+  <p class="lede">
+    <b>Read the notes under each frame.</b> Green = already ruled elsewhere; this spike follows it.
+    Orange = an open question, the owner's call, the desk's recommendation marked as such. Blue = a
+    placeholder — pixels had to be chosen to draw anything, not a recommendation. Red = something
+    found live in the running game while building this, not proposed by anyone.
+    <b>Section 11 collects every decision, section 12 every question.</b>
+  </p>
+  <div class="toolbar">
+    <button id="notesBtn" onclick="toggleNotes()">Notes: ON</button>
+    <button onclick="document.getElementById('sec-12').scrollIntoView()">Jump to the questions &darr;</button>
+  </div>
+</div>
+
+<div class="toc">
+  <ol>
+    <li><a href="#sec-1">1. The problem, measured live</a></li>
+    <li><a href="#sec-2">2. The recommended shape</a></li>
+    <li><a href="#sec-3">3. The owner's original proposal, drawn honestly</a></li>
+    <li><a href="#sec-4">4. Every arrangement, side by side</a></li>
+    <li><a href="#sec-5">5. The level pill, close up</a></li>
+    <li><a href="#sec-6">6. The delivery animation — a storyboard</a></li>
+    <li><a href="#sec-7">7. Before and after, same scale</a></li>
+    <li><a href="#sec-8">8. The hamburger menu, with the Almanac</a></li>
+    <li><a href="#sec-9">9. The HUD across the conversion</a></li>
+    <li><a href="#sec-10">10. The tree's door — one question, not answered</a></li>
+    <li><a href="#sec-11">11. Every layout decision, in one list</a></li>
+    <li><a href="#sec-12">12. Questions for the owner</a></li>
+    <li><a href="#sec-13">13. What was measured, and what was copied from where</a></li>
+  </ol>
+</div>
+
+<section class="grp" id="sec-1"><h2><span class="n">1</span> The problem, measured live</h2>
+  <p class="lede">What is actually on screen today, and the real numbers everything below is built
+  from — taken with <code>getBoundingClientRect()</code> against the running game, not estimated.</p>
+  <div class="row-wrap" id="f-1"></div>
+</section>
+
+<section class="grp" id="sec-2"><h2><span class="n">2</span> The recommended shape</h2>
+  <p class="lede"><b>Level pill + gold + gems + hamburger.</b> The Almanac's dedicated HUD button
+  retires — the drawer already has a row for it (section 8) — and Prisms stay on the Turn button's
+  pouch chip where they already live. Two wallets, one compact pill, one button: lighter than
+  today's two wallets and two buttons.</p>
+  <div class="row-wrap" id="f-2"></div>
+</section>
+
+<section class="grp" id="sec-3"><h2><span class="n">3</span> The owner's original proposal, drawn honestly</h2>
+  <p class="lede"><b>Level pill + gold + gems + a Prisms wallet + hamburger.</b> Drawn at its real
+  width, with the same worst-case numbers as section 2, so the third wallet's cost is visible rather
+  than argued. Not softened, not picked against — measured.</p>
+  <div class="row-wrap" id="f-3"></div>
+</section>
+
+<section class="grp" id="sec-4"><h2><span class="n">4</span> Every arrangement, side by side</h2>
+  <p class="lede">The same sums as sections 2 and 3, tabulated, plus today's HUD for reference — one
+  table, both widths, worst-case numbers throughout.</p>
+  <div id="f-4"></div>
+</section>
+
+<section class="grp" id="sec-5"><h2><span class="n">5</span> The level pill, close up</h2>
+  <p class="lede">Level number, progress ring, nothing else — reusing <code>.q-pip-ring</code>
+  verbatim, per the brief. Beside it: a mechanism limit this spike found while reusing it, already
+  live in the shipped game today.</p>
+  <div class="row-wrap" id="f-5"></div>
+</section>
+
+<section class="grp" id="sec-6"><h2><span class="n">6</span> The delivery animation — a storyboard</h2>
+  <p class="lede">An order is filled &rarr; the reputation reward leaves the customer card &rarr; it
+  flies to the level pill &rarr; the ring advances. The beat that turns a progress ring into a
+  payout, so it gets the most care in this file. No timing is ruled anywhere below.</p>
+  <div class="row-wrap" id="f-6"></div>
+</section>
+
+<section class="grp" id="sec-7"><h2><span class="n">7</span> Before and after, same scale</h2>
+  <p class="lede">Today's HUD against the recommended one, same 390px scale, ordinary numbers rather
+  than the stress case — this is what the two actually look like day to day.</p>
+  <div class="row-wrap" id="f-7"></div>
+</section>
+
+<section class="grp" id="sec-8"><h2><span class="n">8</span> The hamburger menu, with the Almanac</h2>
+  <p class="lede"><b>Finding: the Almanac is already a row in this drawer.</b> <code>ui-menu.js</code>'s
+  <code>ROWS</code> table has carried <code>{ id:'bonuses', icon:'book', label:'Almanac' }</code>
+  since 2026-08-31. "Moving it into the hamburger" costs no new menu work — only the HUD's own
+  dedicated book button goes away.</p>
+  <div class="row-wrap" id="f-8"></div>
+</section>
+
+<section class="grp" id="sec-9"><h2><span class="n">9</span> The HUD across the conversion</h2>
+  <p class="lede">The same recommended HUD in both states the quest strip ever wears: mid-tutorial,
+  and after the first Turn. The level pill is the only thing on this row that survives the
+  conversion unchanged underneath it.</p>
+  <div class="row-wrap" id="f-9"></div>
+</section>
+
+<section class="grp" id="sec-10"><h2><span class="n">10</span> The tree's door — one question, not answered</h2>
+  <p class="lede">Open since spike v1: if the Almanac's petal tab is what the tree replaces, and the
+  Almanac moves into the hamburger, where does the trunk's own door go? Three options, drawn side by
+  side. <b>None is picked here.</b></p>
+  <div class="row-wrap" id="f-10"></div>
+</section>
+
+<section class="grp" id="sec-11"><h2><span class="n">11</span> Every layout decision, in one list</h2>
+  <p class="lede">Everything this pass had to settle to put pixels on screen. Green rows were already
+  ruled elsewhere; blue rows are placeholders and reappear in section 12 where still open; red rows
+  are things this spike found, not proposed.</p>
+  <div class="spec" style="margin-left:0;padding-left:0"><div id="f-11"></div></div>
+</section>
+
+<section class="grp" id="sec-12"><h2><span class="n">12</span> Questions for the owner</h2>
+  <p class="lede">Nothing here is decided. Each carries the desk's recommendation, marked as a
+  recommendation, never as a ruling.</p>
+  <div class="spec" style="margin-left:0;padding-left:0"><div id="f-12"></div></div>
+</section>
+
+<section class="grp" id="sec-13"><h2><span class="n">13</span> What was measured, and what was copied from where</h2>
+  <div class="spec" style="margin-left:0;padding-left:0"><div id="f-13"></div></div>
+</section>
+
+<script>
+/* ============================================================
+   Icons — hand-copied from icons.js, verbatim path data.
+   ============================================================ */
+const INK = '#2c1a10';
+function S(body, vb){ return '<svg viewBox="'+(vb||'0 0 24 24')+'" fill="none" stroke="'+INK+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+body+'</svg>'; }
+const ICO = {
+  coin: S('<circle cx="12" cy="12" r="9" fill="#ffc93c"/><circle cx="12" cy="12" r="5.6" fill="#ffe27a" stroke-width="1.6"/><path d="M12 9.2c1.1 0 1.7 1 1.4 1.9 .9-.3 1.9.3 1.9 1.4 0 1.1-1 1.7-1.9 1.4 .3.9-.3 1.9-1.4 1.9s-1.7-1-1.4-1.9c-.9.3-1.9-.3-1.9-1.4 0-1.1 1-1.7 1.9-1.4-.3-.9.3-1.9 1.4-1.9Z" fill="#f59f00" stroke-width="1.2"/>'),
+  gem: S('<path d="M7 3.6h10l4 5.2-9 11.6L3 8.8Z" fill="#8ce0ff"/><path d="M7 3.6 9.6 8.8 12 20.4 14.4 8.8 17 3.6" stroke-width="1.5"/><path d="M3 8.8h18" stroke-width="1.5"/><path d="M9.6 8.8 12 3.6l2.4 5.2" fill="#d6f4ff" stroke-width="1.5"/>'),
+  book: S('<path d="M4 4.6h6a3 3 0 0 1 3 3V20a2.6 2.6 0 0 0-2.6-2.2H4Z" fill="#ffd6a5"/><path d="M20 4.6h-6a3 3 0 0 0-3 3V20a2.6 2.6 0 0 1 2.6-2.2H20Z" fill="#fff0d6"/><path d="M12 7.6V20"/>'),
+  menu: S('<path d="M4.6 7h14.8M4.6 12h14.8M4.6 17h14.8" stroke-width="3.4"/>'),
+  star: S('<path d="m12 2.8 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.6l6.5-.9Z" fill="#ffd43b"/>'),
+  pouch: S('<path d="M8.4 8.2h7.2c2.4 1.8 3.8 4.3 3.8 6.9 0 3-2.6 5.3-7.4 5.3S4.6 18.1 4.6 15.1c0-2.6 1.4-5.1 3.8-6.9Z" fill="#fff3bf"/><path d="M8.4 8.2c-.6-1.3-.4-2.6.6-3.4 1.4-1.1 4.6-1.1 6 0 1 .8 1.2 2.1.6 3.4" fill="#ffd8a8"/><path d="M12 17.4c-2.1 0-3.4-1.4-3.6-3.6 2.4-.3 3.8 1 3.6 3.6Z" fill="#3f9d45" stroke-width="1.5"/><path d="M12 17.4c.2-2.6 1.6-3.9 4-3.6-.2 2.2-1.5 3.6-3.6 3.6Z" fill="#7bd88f" stroke-width="1.5"/><path d="M12 17.4v-2.2" stroke-width="1.5"/>'),
+  prism: S('<path d="M12 3 21.4 20.4 2.6 20.4Z" fill="#f5f2ff"/><path d="M7.7 11h8.6l1 1.9H6.7Z" fill="#ff6b6b" stroke="none"/><path d="M6.7 12.9h10.6l1.1 1.9H5.6Z" fill="#ff922b" stroke="none"/><path d="M5.6 14.8h12.8l1 1.8H4.6Z" fill="#ffe066" stroke="none"/><path d="M4.6 16.6h14.8l1 1.9H3.6Z" fill="#51cf66" stroke="none"/><path d="M3.6 18.5h16.8l1 1.9H2.6Z" fill="#9775fa" stroke="none"/><path d="M12 3v17.4" stroke-width="1.3"/><path d="M12 3 21.4 20.4 2.6 20.4Z" fill="none"/>'),
+  decor: S('<path d="M12 3.2c2.4 0 4 1.9 4 4.2 0 1.4-.6 2.4-1.3 3.2h-5.4C8.6 9.8 8 8.8 8 7.4c0-2.3 1.6-4.2 4-4.2Z" fill="#ff8fab"/><path d="M9.3 10.6h5.4l1.6 8.2a2 2 0 0 1-2 2.4h-4.6a2 2 0 0 1-2-2.4Z" fill="#a5d8ff"/><path d="M8.4 14.6h7.2" stroke-width="1.6"/>'),
+  bell: S('<path d="M12 3.2a5.6 5.6 0 0 1 5.6 5.6v3.5l1.7 3.1a.9.9 0 0 1-.8 1.4H5.5a.9.9 0 0 1-.8-1.4l1.7-3.1V8.8A5.6 5.6 0 0 1 12 3.2Z" fill="#ffe066"/><path d="M12 3.2V1.8" stroke-width="1.8"/><path d="M9.7 16.8a2.3 2.3 0 0 0 4.6 0" fill="#ffd43b"/>'),
+  gear: S('<path d="M12 2.8l1.6 2.2 2.6-.6.5 2.7 2.5 1-1.2 2.4 1.7 2.1-2.2 1.6.3 2.7-2.7.2-1.3 2.4-2.4-1.2-2.3 1.4-1.3-2.4-2.7-.4.1-2.7-2.3-1.4 1.5-2.2-1.1-2.5 2.6-.8.7-2.6 2.6.8Z" fill="#cfd8e3"/><circle cx="12" cy="12" r="3.4" fill="#8b9bb0"/>'),
+  people: S('<circle cx="9.2" cy="8.4" r="3.5" fill="#a5d8ff"/><circle cx="16.6" cy="9.4" r="2.7" fill="#c9f5cf"/><path d="M3.4 19.8c0-3.2 2.6-5.4 5.8-5.4s5.8 2.2 5.8 5.4Z" fill="#a5d8ff"/><path d="M15.6 14.6c3 0 5 1.9 5 4.6h-3.4" fill="#c9f5cf"/>'),
+  gift: S('<path d="M4 10.2h16V20H4Z" fill="#ffd6e0"/><path d="M2.8 6.6h18.4v3.6H2.8Z" fill="#ff8fab"/><path d="M12 6.6V20" stroke-width="2"/><path d="M12 6.6C10.4 3.6 6.8 3.4 6.8 5.4c0 1.3 2.1 1.7 5.2 1.2Z" fill="#ffe066" stroke-width="1.5"/><path d="M12 6.6c1.6-3 5.2-3.2 5.2-1.2 0 1.3-2.1 1.7-5.2 1.2Z" fill="#ffe066" stroke-width="1.5"/>'),
+  scroll: S('<path d="M7 3.6h9.6a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7Z" fill="#fff8e7"/><path d="M7 3.6a2 2 0 0 0-2 2v1.8h2M7 20.6a2 2 0 0 1-2-2v-1.7h2" fill="#ffeecd"/><path d="M9.6 8.4h6.4M9.6 12h6.4M9.6 15.6h4.2" stroke-width="1.7"/>'),
+  chevron: S('<path d="M9.4 5.6 15.8 12l-6.4 6.4" stroke-width="2.8"/>'),
+  sprout: S('<path d="M12 20.4v-7.2" stroke-width="2.4"/><path d="M12 13.6C9.6 13.6 6 12.4 5.2 8.6c3.6-.8 6.4 1.6 6.8 5Z" fill="#69db7c"/><path d="M12 12.6c1.4-2.8 4.2-4.6 6.8-4-.4 3.6-3.4 5.4-6.8 5.2Z" fill="#8ce99a"/>')
+};
+function ico(n){ return ICO[n] || ICO.gear; }
+function bloom(petal, center){
+  return '<svg viewBox="0 0 24 24"><g fill="'+petal+'"><circle cx="12" cy="7" r="4.6"/><circle cx="17" cy="11" r="4.6"/><circle cx="15" cy="17" r="4.6"/><circle cx="9" cy="17" r="4.6"/><circle cx="7" cy="11" r="4.6"/></g><circle cx="12" cy="12" r="3.2" fill="'+center+'"/></svg>';
+}
+
+/* ============================================================
+   Helpers — house pattern from records-spike.html / tree-spike.html
+   ============================================================ */
+function fig(tag, title, sub, inner, notes){
+  const notesHtml = (notes||[]).map(n => '<p class="note ' + n[0] + '">' + n[1] + '</p>').join('');
+  return '<figure><figcaption>' + (tag ? '<span class="tag">' + tag + '</span>' : '') +
+    (title ? '<b>' + title + '</b>' : '') + (sub ? '<i>' + sub + '</i>' : '') + '</figcaption>' +
+    inner + notesHtml + '</figure>';
+}
+function phone(inner, opts){
+  opts = opts || {};
+  const w = opts.w360 ? ' w360' : '';
+  return '<div class="phone hs-scene'+w+'">' + (opts.noNotch ? '' : '<div class="notch"></div>') + inner + '</div>';
+}
+function crop(inner, w, h){
+  return '<div class="crop hs-scene" style="width:'+w+'px;height:'+h+'px">' + inner + '</div>';
+}
+
+/* ---- HUD row builders. Each returns a real .hud row at real CSS pixel sizes. ---- */
+function walletHTML(icon, num){
+  return '<div class="wallet"><span class="w-icon">'+ico(icon)+'</span><span class="w-num">'+num+'</span></div>';
+}
+function pillHTML(level, p, opts){
+  opts = opts || {};
+  const cls = 'q-pip-wrap' + (opts.door ? ' hs-pill-door' : '');
+  const id = opts.id ? ' id="'+opts.id+'"' : '';
+  return '<span class="'+cls+'"'+id+' style="--p:'+p+'"><span class="q-pip-ring"></span><span class="q-pip">'+level+'</span></span>';
+}
+function roundBtnHTML(icon, opts){
+  opts = opts || {};
+  const dot = opts.dot ? '<i class="hud-dot"></i>' : '';
+  const id = opts.id ? ' id="'+opts.id+'"' : '';
+  return '<button class="round-btn" type="button"'+id+'><span>'+ico(icon)+'</span>'+dot+'</button>';
+}
+/* The real .hud pads its top by calc(var(--sat) + 10px) = 69px, to clear the status bar in a
+   full phone frame. Every use of these three builders in this file is a SHORT crop of the HUD
+   row alone (never a full 844-tall phone), so they override that to a plain 16px here — the
+   real inset is still shown correctly in section 8's full phone frame, which uses the drawer
+   markup directly rather than these helpers. */
+function hudToday(gold, gems){
+  return '<div class="hud" style="padding-top:16px"><div class="wallets">'+walletHTML('coin',gold)+walletHTML('gem',gems)+
+    '<span class="dev-dot-ghost"></span></div>' +
+    '<div class="hud-actions">'+roundBtnHTML('book')+roundBtnHTML('menu',{dot:true})+'</div></div>';
+}
+function hudRecommended(gold, gems, level, p){
+  return '<div class="hud" style="padding-top:16px"><div class="wallets">'+pillHTML(level,p)+walletHTML('coin',gold)+walletHTML('gem',gems)+'</div>'+
+    '<div class="hud-actions">'+roundBtnHTML('menu',{dot:true})+'</div></div>';
+}
+function hudProposal(gold, gems, prisms, level, p){
+  return '<div class="hud" style="padding-top:16px"><div class="wallets">'+pillHTML(level,p)+walletHTML('coin',gold)+walletHTML('gem',gems)+walletHTML('prism',prisms)+'</div>'+
+    '<div class="hud-actions">'+roundBtnHTML('menu',{dot:true})+'</div></div>';
+}
+
+/* ---- The width-arithmetic diagram. Segment widths are REAL measured px, 1:1 with CSS px.
+   `segs` is what gets DRAWN (it may include a synthetic clear/overflow spacer so the bar reads
+   left-to-right exactly like the real flex row); `contentW` is the REAL content sum (pill + gaps
+   + wallets + buttons, EXCLUDING any synthetic spacer) that the verdict text is computed from —
+   keeping these separate is what section 2/3's original draft got wrong: summing the drawn
+   segments double-counted the spacer against itself and always read "0px clear". */
+function arith(segs, availPx, contentW, label){
+  const drawnTotal = segs.reduce((a,s)=>a+s.w,0);
+  const bars = segs.map(s =>
+    '<span class="hs-seg '+s.cls+'" style="width:'+s.w+'px" title="'+s.name+': '+s.w+'px">'+(s.w>=30?s.name:'')+'</span>'
+  ).join('');
+  const overflow = contentW - availPx;
+  const availMark = '<div class="hs-avail" style="left:'+availPx+'px"><span class="hs-avail-label">'+availPx+'px available &rarr;</span></div>';
+  const verdict = overflow > 0.5
+    ? '<p class="hs-arith-total bad"><b>'+contentW.toFixed(1)+'px</b> of <b>'+availPx+'px</b> available &mdash; OVERFLOWS by <b>'+overflow.toFixed(1)+'px</b>. '+label+'</p>'
+    : '<p class="hs-arith-total good"><b>'+contentW.toFixed(1)+'px</b> of <b>'+availPx+'px</b> available &mdash; <b>'+(availPx-contentW).toFixed(1)+'px</b> clear. '+label+'</p>';
+  return '<div class="hs-arith"><div class="hs-track" style="min-width:'+(Math.max(drawnTotal,availPx)+30)+'px">'+bars+availMark+'</div></div>' + verdict;
+}
+const GAP6 = {name:'gap', w:6, cls:'gap'};
+const GAP8 = {name:'gap', w:8, cls:'gap'};
+
+/* ================= SECTION 1 — the problem, measured live ================= */
+document.getElementById('f-1').innerHTML =
+  fig(null, "Today's HUD and quest strip", 'Two wallets, two round buttons, then the quest strip one row down. Measured live at 390&times;844 against a dev save (level 11).',
+    crop(
+      '<div class="hud" style="padding-top:16px">'+
+        '<div class="wallets">'+walletHTML('coin','1M')+walletHTML('gem','0')+'<span class="dev-dot-ghost"></span></div>'+
+        '<div class="hud-actions">'+roundBtnHTML('book')+roundBtnHTML('menu',{dot:true})+'</div>'+
+      '</div>'+
+      '<div style="padding:8px 12px 0">'+
+        '<div class="quest-strip"><span class="q-pip-wrap" style="--p:.62"><span class="q-pip-ring"></span><span class="q-pip">11</span></span>'+
+        '<span class="q-bar"><i style="--fill:0%"></i><span class="q-bar-label"><span class="q-text">Tap 25 times</span><span class="q-count">0 / 25</span></span></span>'+
+        '<span class="q-reward">'+ico('star')+'+5</span></div>'+
+      '</div>'+
+      '<div style="position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;align-items:center">'+
+        '<div class="dock-btn turn"><i class="turn-fill" style="--year-p:38%"></i>'+
+        '<span class="seedchip">'+ico('prism')+'1,272</span>'+
+        '<span class="dock-ico">'+ico('pouch')+'</span><span class="dock-label">Turn</span></div>'+
+        '<span style="font-size:9.5px;font-weight:800;color:var(--ink-soft);margin-top:4px;max-width:80px;text-align:center;line-height:1.3">Prisms already live here &mdash; #pouchChip</span>'+
+      '</div>',
+      390, 260
+    ),
+    [
+      ['d','The level pill with its reputation ring already exists: <code>#qPip</code> inside <code>.q-pip-ring</code>, inside the quest strip. It loses its home when the strip converts to orders at the first Turn (doc 10, 2026-09-27). That is the whole problem this spike answers.'],
+      ['d','Prisms already have a home: <code>#pouchChip</code> on the Turn button, shown here at its real position and size (49.6&times;22px, measured), hidden until the first Turn. Doc 32: "afterwards the pill shows the banked Prisms."'],
+    ]
+  ) +
+  fig(null, 'The real numbers', 'Read with <code>getBoundingClientRect()</code> against the running game (<code>preview_start</code>, port 8899), a fresh tab, 2026-09-27.',
+    '<table class="meas"><tr><th>Element</th><th>Value</th><th>Note</th></tr>'+
+    '<tr><td><code>.ui</code> padding</td><td><b>10px</b> each side</td><td>both 390 and 360 widths</td></tr>'+
+    '<tr><td><code>.hud</code> available width</td><td><b>370px</b> @390 &middot; <b>340px</b> @360</td><td>viewport &minus; 20px padding</td></tr>'+
+    '<tr><td><code>.hud</code> / <code>.wallets</code> / <code>.hud-actions</code> gap</td><td><b>8px</b> / <b>6px</b> / <b>6px</b></td><td>style.css, confirmed live</td></tr>'+
+    '<tr><td><code>.wallet</code>, compressed size</td><td>font 14px, icon 19&times;19, h 33px</td><td>the <code>max-width:430px</code> rule is <b>always active</b> at 390 <i>and</i> 360 &mdash; both are &le;430</td></tr>'+
+    '<tr><td>Gold wallet, default save</td><td>"1M" &rarr; <b>63.6px</b></td><td>live default</td></tr>'+
+    '<tr><td>Gold wallet, worst case in <code>fmt()</code>&rsquo;s own math</td><td>"999.99M" &rarr; <b>100.9px</b></td><td>wider than "999.9K" (89.9px) &mdash; see section 4&rsquo;s methodology note</td></tr>'+
+    '<tr><td>Gems / Prisms wallet, worst case used here</td><td>"9,999" &rarr; <b>81.3px</b></td><td>injected and measured live</td></tr>'+
+    '<tr><td><code>.round-btn</code></td><td><b>44&times;44px</b></td><td>both <code>#btnBonuses</code> and <code>#btnMenu</code>, confirmed live</td></tr>'+
+    '<tr><td><code>#qPipWrap</code> (the level pill)</td><td><b>36&times;36px</b>; inner <code>.q-pip</code> 26&times;26px</td><td class="bad">under the 44px touch minimum &mdash; fine today, it is not its own tap target (see section 10)</td></tr>'+
+    '<tr><td><code>#pouchChip</code> (Prisms, already shipped)</td><td><b>49.6&times;22px</b>, showing "1,272"</td><td>hidden pre-first-Turn</td></tr>'+
+    '</table>',
+    [
+      ['p','<b>The worst-case methodology, stated once:</b> <code>fmt()</code> (<code>ui-shared.js</code>) shows numbers under 100,000 with commas, then K/M/B/T with up to two decimals. The widest string it can produce is not the obvious "999.9K" &mdash; it is "999.99M" (or B, or T), measured live at <b>100.9px</b> against 999.9K&rsquo;s 89.9px, because the two-decimal M/B/T branch is one character wider than the one-decimal K branch. Every arrangement below uses <b>gold = "999.99M"</b> and <b>gems / Prisms = "9,999"</b> &mdash; gold because an idle game plausibly reaches nine figures, gems held to a rounder four-digit figure since nothing in the shipped economy suggests gems reach the millions. This is a methodology choice, not a ruling &mdash; see section 12.'],
+    ]
+  );
+
+/* ================= SECTION 2 — the recommended shape ================= */
+function recFrame(width, avail){
+  const hud = hudRecommended('999.99M','9,999','11','.62');
+  const segs = [
+    {name:'pill',w:36,cls:'pill'}, GAP6,
+    {name:'gold',w:100.9,cls:'gold'}, GAP6,
+    {name:'gems',w:81.3,cls:'gem'},
+  ];
+  // Ground truth from the live measurement pass (section 13): wallets-group 230.3px measured,
+  // clear space 95.7px @390 / 65.7px @360 — used directly rather than re-summed from the
+  // hand-picked segment widths above, which round to one decimal and drift ~0.1px.
+  const realContentW = 230.3 + 44;
+  const clear = avail - realContentW;
+  const full = segs.concat([{name:'clear '+clear.toFixed(1)+'px',w:clear,cls:'clear'},{name:'menu',w:44,cls:'btn'}]);
+  return crop(hud, width, 100) +
+    arith(full, avail, realContentW, 'Every touch target clears 44px &mdash; the hamburger is the only button, unchanged at 44&times;44.');
+}
+document.getElementById('f-2').innerHTML =
+  fig('390', '390&times;844 width', 'Level pill leftmost, then gold, then gems. One button.', recFrame(390,370),
+    [['d','Prisms are not drawn as a third wallet &mdash; they stay on the Turn button&rsquo;s pouch chip (section 1), per doc 10&rsquo;s own finding.']]) +
+  fig('360', '360px width', 'The narrower support width doc 08 tests every HUD change against.', recFrame(360,340),
+    [['p','<b>I drew the pill leftmost, ahead of gold.</b> This is a placeholder ordering, not a recommendation &mdash; see section 12, question 2.']]);
+
+/* ================= SECTION 3 — the owner's proposal, drawn honestly ================= */
+function propFrame(width, avail){
+  const hud = hudProposal('999.99M','9,999','9,999','11','.62');
+  const segs = [
+    {name:'pill',w:36,cls:'pill'}, GAP6,
+    {name:'gold',w:100.9,cls:'gold'}, GAP6,
+    {name:'gems',w:81.3,cls:'gem'}, GAP6,
+    {name:'Prisms',w:81.3,cls:'prism'},
+  ];
+  // Ground-truth numbers from the LIVE measurement pass (section 13), not recomputed from the
+  // hand-picked segment widths above (which round to one decimal and drift ~0.1px from the
+  // browser's own floats) — 8.4px clear @390 and a 29.6px overflow @360 are what
+  // getBoundingClientRect() actually reported, built inside the real DOM.
+  let full, label, realContentW;
+  if (width === 390) {
+    full = segs.concat([{name:'clear 8.4px',w:8.4,cls:'clear'},{name:'menu',w:44,cls:'btn'}]);
+    label = 'Fits &mdash; but only just.';
+    realContentW = avail - 8.4;
+  } else {
+    // The flex row still enforces its own 8px minimum gap even while overflowing, which is why
+    // the real overflow (29.6px) is larger than content-vs-available alone (21.6px) would suggest.
+    full = segs.concat([{name:'gap 8px',w:8,cls:'gap'},{name:'menu (PUSHED OFF)',w:44,cls:'overflow'}]);
+    label = 'The hamburger is pushed <b>past the safe column&rsquo;s right edge</b> &mdash; confirmed live and screenshotted (frame below).';
+    realContentW = avail + 29.6;
+  }
+  return crop(hud, width, 100) + arith(full, avail, realContentW, label);
+}
+document.getElementById('f-3').innerHTML =
+  fig('390', '390&times;844 width', 'Same pill, same two wallets, plus a Prisms wallet before the hamburger.', propFrame(390,370),
+    [['f','At 390px this arrangement fits &mdash; with only <b>8.4px</b> of clearance, against the recommended shape&rsquo;s 95.7px. One long Prisms figure and the layout is on a knife-edge, not a comfortable margin.']]) +
+  fig('360', '360px width — BREAKS', 'The same arrangement, 30px narrower. This is not hypothetical: it is what happens with the numbers section 1 already measured as realistic.', propFrame(360,340),
+    [['f','<b>Measured and screenshotted live:</b> at 360px with worst-case (but realistic) wallet numbers, this arrangement overflows the safe column by <b>29.6px</b>. <code>.hud</code> is <code>display:flex;justify-content:space-between</code> with no wrap; <code>.wallets</code>&rsquo; own children refuse to shrink (<code>.wallet{flex:none}</code>), so when content exceeds the available width the row does not compress &mdash; it pushes the hamburger button off the right edge of the column instead. The frame below reconstructs exactly what the real screenshot showed.']]
+  ) +
+  fig(null, 'Redrawn from the live screenshot', 'This spike&rsquo;s own measurement pass built this exact arrangement inside the real running game at 360&times;780 and screenshotted it (section 13); this frame is a faithful CSS reconstruction of that screenshot, not the embedded image file itself &mdash; the hamburger&rsquo;s offset (~30px) matches what was measured live.', screenshotFrame(), []);
+
+function screenshotFrame(){
+  // A faithful redraw of the confirmed-live broken state, at real scale, for the record.
+  return crop(
+    '<div class="hud" style="padding-top:14px">'+
+      '<div class="wallets">'+pillHTML('99','1')+walletHTML('coin','999.99M')+walletHTML('gem','9,999')+walletHTML('prism','9,999')+'</div>'+
+      '<div class="hud-actions" style="transform:translateX(30px)">'+roundBtnHTML('menu',{dot:true})+'</div>'+
+    '</div>'+
+    '<p style="position:absolute;left:12px;right:12px;top:70px;font-size:11px;font-weight:800;color:#d9463f;background:#fff;border:2px solid #d9463f;border-radius:8px;padding:6px 8px;line-height:1.4">The hamburger&rsquo;s right edge sits ~30px past the column&rsquo;s own right edge &mdash; largely off the visible, tappable area.</p>',
+    360, 150
+  );
+}
+
+/* ================= SECTION 4 — every arrangement, side by side ================= */
+document.getElementById('f-4').innerHTML =
+  '<table class="meas"><tr><th>Arrangement</th><th>Width</th><th>Content total</th><th>Available</th><th>Result</th></tr>'+
+  '<tr><td rowspan="2">Today (2 wallets + 2 buttons)</td><td>390px</td><td>282.3px</td><td>370px</td><td class="good">87.7px clear</td></tr>'+
+  '<tr><td>360px</td><td>282.3px</td><td>340px</td><td class="good">57.7px clear</td></tr>'+
+  '<tr><td rowspan="2">Recommended (pill + 2 wallets + 1 button)</td><td>390px</td><td>274.3px</td><td>370px</td><td class="good">95.7px clear</td></tr>'+
+  '<tr><td>360px</td><td>274.3px</td><td>340px</td><td class="good">65.7px clear</td></tr>'+
+  '<tr><td rowspan="2">Owner&rsquo;s proposal (pill + 3 wallets + 1 button)</td><td>390px</td><td>361.6px</td><td>370px</td><td class="good">8.4px clear &mdash; knife-edge</td></tr>'+
+  '<tr><td>360px</td><td>361.6px</td><td>340px</td><td class="bad">OVERFLOWS 29.6px &mdash; broken</td></tr>'+
+  '</table>'+
+  '<p class="hs-arith-total" style="margin-top:12px">All rows use the same worst-case wallet text (gold "999.99M", gems/Prisms "9,999") from section 1. "Content total" already includes every internal gap; "available" is <code>.hud</code>&rsquo;s own measured width. Every touch target that exists in every row above clears 44px &mdash; the failure in the last row is column overflow, not a shrunken button.</p>';
+
+/* ================= SECTION 5 — the level pill, close up ================= */
+document.getElementById('f-5').innerHTML =
+  fig(null, 'The mechanism, at 120px', 'Level number + ring, reusing <code>.q-pip-ring</code>/<code>.q-pip</code> unchanged &mdash; only the size is scaled up here to show the parts.',
+    '<div style="display:flex;align-items:center;gap:28px;padding:20px;background:#fffdf7;border:3px solid var(--ink);border-radius:18px;box-shadow:0 4px 0 var(--ink-2);max-width:460px">'+
+      '<span class="hs-zoom-pip">'+pillHTML('23','.71')+'</span>'+
+      '<div style="font-size:13px;font-weight:700;color:var(--ink-soft);line-height:1.6;max-width:220px">'+
+        '<b style="color:var(--ink);display:block;font-size:15px;margin-bottom:4px">Level 23</b>'+
+        'The ring fills as reputation accrues toward level 24. It answers <i>how close</i>, never <i>how much</i> &mdash; no reputation figure prints anywhere on the pill, consistent with the rail&rsquo;s own numberless ruling (2026-09-26).'+
+      '</div>'+
+    '</div>',
+    [
+      ['d','No reputation number appears on the pill, ever &mdash; only the level and the ring. This matches the rail&rsquo;s own ruling that reputation shows as fill, never as digits.'],
+      ['q','If a player wants the exact number, where does it live? Nowhere today. The Year panel already shows exact numbers for the gold/seed gates; an equivalent deeper screen for reputation would need one, unless the tree itself becomes that screen &mdash; see section 10.'],
+    ]
+  ) +
+  fig(null, 'A mechanism limit, found live', 'Same component, same CSS, two level numbers. Not a proposal &mdash; a confirmed measurement.',
+    '<div style="display:flex;align-items:center;gap:28px;padding:20px;background:#fffdf7;border:3px solid var(--ink);border-radius:18px;box-shadow:0 4px 0 var(--ink-2);max-width:460px">'+
+      '<div style="text-align:center"><span class="hs-zoom-pip" style="display:block;margin:0 auto">'+pillHTML('99','.9')+'</span><p style="font-size:11px;font-weight:800;color:#2f7a34;margin-top:8px">Level 99 &mdash; fits</p></div>'+
+      '<div style="text-align:center"><span class="hs-zoom-pip" style="display:block;margin:0 auto;overflow:visible">'+pillHTML('142','.3')+'</span><p style="font-size:11px;font-weight:800;color:#d9463f;margin-top:8px">Level 142 &mdash; overflows the disc</p></div>'+
+    '</div>',
+    [
+      ['f','<code>.q-pip</code> is a <b>fixed 26&times;26px</b> circle at 13px/weight-900 type. <code>levelFromRep()</code> (<code>game.js</code>) runs the level curve to 999 and is effectively uncapped &mdash; confirmed live: "9" and "99" sit centred, "100" already overflows the disc on both sides, "999" badly. This is <b>already true in the shipped game today</b>, inside the current quest strip, filed as a one-line addition to <code>docs/11-known-issues.md</code> under Correctness. It matters more now: with every order paying reputation (doc 10), level 100 (&asymp;25,000 lifetime reputation at the current curve) stops being a theoretical endgame number.'],
+    ]
+  );
+
+/* ================= SECTION 6 — the delivery animation storyboard ================= */
+function storyPhoneTop(inner, h){
+  return crop(
+    '<div class="hud" style="padding-top:16px">'+
+      '<div class="wallets">'+pillHTML('11','.62',{id:'sbPill'})+walletHTML('coin','12.4K')+walletHTML('gem','340')+'</div>'+
+      '<div class="hud-actions">'+roundBtnHTML('menu')+'</div>'+
+    '</div>' + inner,
+    320, h || 300
+  );
+}
+function miniCard(rep){
+  return '<div class="custcard" style="position:absolute;left:70px;top:118px">'+
+    '<div class="rewards"><span class="rwd wage">'+ico('star')+rep+'</span><span class="tip-empty"></span></div>'+
+    '<div class="portrait" style="background:linear-gradient(180deg,#ffe0e8,#fff0f4)"><svg viewBox="0 0 40 40" width="30" height="30"><circle cx="20" cy="22" r="12" fill="#f3c9a0" stroke="#2c1a10" stroke-width="1.6"/><circle cx="15.6" cy="22.4" r="1.6" fill="#2c1a10"/><circle cx="24.4" cy="22.4" r="1.6" fill="#2c1a10"/></svg></div>'+
+    '<div class="counter">'+
+      '<span class="want">'+bloom('#b7b7ff','#6a6adf')+'</span>'+
+    '</div>'+
+    '<div class="cname">From the lane</div>'+
+  '</div>';
+}
+document.getElementById('f-6').innerHTML =
+  fig('1', 'Order filled', 'A customer&rsquo;s wants are met. Their reputation wage pill sits in the card&rsquo;s own corner, exactly as tree-spike.html already draws it.',
+    storyPhoneTop(miniCard('+14')),
+    [['d','The customer card and its two reward slots (wage + optional tip) are tree-spike.html&rsquo;s own design, not redrawn here &mdash; this storyboard only concerns what happens to the wage after delivery.']]
+  ) +
+  fig('2', 'The reward leaves the card', 'The wage pill lifts off the card and begins travelling &mdash; the card itself can now clear or the next customer can slide in.',
+    storyPhoneTop(
+      miniCard('&nbsp;').replace('+14','') +
+      '<span class="hs-fly" style="left:96px;top:96px;transform:scale(1.3)">'+ico('star')+'</span>'+
+      '<span class="hs-ghost" style="left:118px;top:92px">+14</span>'
+    ),
+    [['p','Drawn as the star + number lifting as one unit. Whether the number rides along or is dropped immediately (leaving just the icon to travel) is a motion-gate choice &mdash; see the list below.']]
+  ) +
+  fig('3', 'Mid-flight', 'The token arcs from the card toward the pill, top-left. The dashed line is the path, not a rendered trail.',
+    storyPhoneTop(
+      '<svg class="hs-arc" style="left:0;top:0" width="320" height="300"><path d="M110 130 Q 60 40 46 34" fill="none" stroke="#d9463f" stroke-width="2" stroke-dasharray="4 5" opacity=".55"/></svg>'+
+      '<span class="hs-fly" style="left:70px;top:78px">'+ico('star')+'</span>',
+      300
+    ),
+    [['p','Arc shown as a gentle curve up and left, the direct route to the pill&rsquo;s actual HUD position. A straight cut, an overshoot past the pill and back, or a curve that swings wide over the quest/order strip are all options &mdash; not asserted here.']]
+  ) +
+  fig('4', 'The ring advances', 'The token reaches the pill; the ring fills further; the pip does not change its printed number unless a level completes.',
+    storyPhoneTop('<span style="position:absolute;left:18px;top:16px;width:36px;height:36px;border-radius:50%;box-shadow:0 0 0 6px rgba(255,212,59,.55)"></span>').replace('--p:.62','--p:.81'),
+    [['d','The pill never prints the reputation number itself, in flight or at rest &mdash; only the transient "+14" toast (frame 2) and the ring&rsquo;s own fill. This is the same floating-reward grammar the game already uses for harvests and quest rewards (<code>.q-reward</code> shows "+5" today); nothing new is invented, only redirected.'],
+     ['d','<b>The ring must NOT reuse the Turn button&rsquo;s breathing/glint treatment</b> (<code>.dock-btn.turn.ready</code>, doc 08) for landing or for completing &mdash; doc 08 is explicit that this exact visual is "worn by exactly one thing in the game and has only ever meant the Turn is ready." A level-up needs its own celebration, not a borrowed one.']]
+  ) +
+  fig('5', 'If the ring completes', 'A placeholder bonus beat: the ring resets, the level number increments, the pip pops once.',
+    storyPhoneTop('<span style="position:absolute;left:14px;top:12px;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle,rgba(255,212,59,.5),transparent 70%)"></span>').replace('--p:.62','--p:.06').replace('>11<','>12<'),
+    [['q','Does a level-up deserve a bigger moment than an ordinary ring-advance &mdash; a toast, a sound, a brief HUD-wide highlight &mdash; or is the pip simply popping (reusing <code>.wallet</code>&rsquo;s own <code>walletPop</code> keyframes) enough? Not answered here.']]
+  );
+
+document.getElementById('sec-6').insertAdjacentHTML('beforeend',
+  '<div class="strip" style="max-width:640px;margin-top:22px"><h3 style="font-size:14px;margin-bottom:8px">Tunable on sliders under the motion gate &mdash; none of it timed here</h3>'+
+  '<ul style="margin:0;padding-left:20px;font-size:13px;font-weight:600;line-height:1.7;color:var(--ink-soft)">'+
+  '<li>How far and along what path the token travels (straight cut vs. arc vs. one that swings over the strip).</li>'+
+  '<li>Whether it travels as the reputation star or as a generic sparkle that resolves into the star only on arrival.</li>'+
+  '<li>Flight duration &mdash; a fast dart reads as a payout tick, a slower arc reads as ceremony; doc 05&rsquo;s own harvest-float timing is the nearest precedent, not asserted as the answer.</li>'+
+  '<li>Whether the ring&rsquo;s advance animates as a smooth radial wipe or steps in discrete ticks.</li>'+
+  '<li>Whether the pip itself pops on landing (<code>walletPop</code>&rsquo;s recipe, already in the codebase) or stays still and lets the ring carry the whole beat.</li>'+
+  '<li>Where a sound or haptic lands &mdash; departure, mid-flight, arrival, or two of the three.</li>'+
+  '<li><b>Reduced motion&rsquo;s static substitute</b> (my placeholder guess, not a recommendation): the reward simply vanishes from the card and the ring jumps straight to its new fill in one frame &mdash; no travelling token, matching doc 08&rsquo;s standing rule that reduced motion gets a real static answer, never a fast copy of the animated one.</li>'+
+  '</ul></div>'
+);
+
+/* ================= SECTION 7 — before and after, same scale ================= */
+document.getElementById('f-7').innerHTML =
+  fig('Before', "Today's HUD", 'Two wallets, two round buttons. Ordinary numbers, not the stress case.',
+    crop(hudToday('12.4K','340'), 390, 90), []) +
+  fig('After', 'The recommended HUD', 'Level pill, two wallets, one button.',
+    crop(hudRecommended('12.4K','340','11','.62'), 390, 90), []);
+
+/* ================= SECTION 8 — the hamburger menu, with the Almanac ================= */
+function menuRow(icon, tint, label, note, opts){
+  opts = opts || {};
+  const end = opts.soon ? '<span class="soon-chip">Soon</span>' : (opts.dot ? '<span class="row-dot"></span><span class="chev">'+ico('chevron')+'</span>' : '<span class="chev">'+ico('chevron')+'</span>');
+  return '<div class="dr-row'+(opts.soon?' soon':'')+'"><span class="dr-ico" style="--rt:'+tint+'">'+ico(icon)+'</span>'+
+    '<span class="dr-lab"><b>'+label+'</b><i>'+note+'</i></span><span class="dr-end">'+end+'</span></div>';
+}
+document.getElementById('f-8').innerHTML =
+  fig(null, 'The drawer as it already ships', 'Real rows from <code>ui-menu.js</code>&rsquo;s own <code>ROWS</code> table &mdash; Almanac included, unchanged. Only the HUD&rsquo;s dedicated book button goes away; nothing here is new work.',
+    phone(
+      '<div class="hs-scrim"></div>'+
+      '<div class="hs-drawer">'+
+        '<div class="dr-head"><span class="avatar">'+bloom('#ffb3c6','#fff3bf')+'</span>'+
+          '<span class="dr-who"><b>Player</b><span class="dr-sub">Level 11 &middot; Summer</span></span></div>'+
+        '<div class="dr-body"><div class="dr-rows">'+
+          menuRow('decor','#ff922b','Shop','Gems, decor and the odd bundle') +
+          menuRow('book','#5c7cfa','Almanac','Every flower, every creature') +
+          menuRow('bell','#ffe066','What&rsquo;s New','What changed, and when',{dot:true}) +
+          menuRow('gear','#8b9bb0','Settings','Sound, music, and your save') +
+          '<div class="dr-sep">Coming soon</div>'+
+          menuRow('people','#74c0fc','Friends','Visit a garden, send a seed',{soon:true}) +
+          menuRow('gift','#f783ac','Daily Gift','Something small, every day',{soon:true}) +
+          menuRow('scroll','#69db7c','Garden Record','What your garden has done',{soon:true}) +
+        '</div></div>'+
+      '</div>',
+      {noNotch:false}
+    ),
+    [
+      ['f','<b>The Almanac row already exists</b> &mdash; <code>{ id:&apos;bonuses&apos;, icon:&apos;book&apos;, tint:&apos;#5c7cfa&apos;, label:&apos;Almanac&apos; }</code>, second row, live since 2026-08-31 (doc 08&rsquo;s side-drawer section lists it in exactly this order: Shop &middot; Almanac &middot; What&rsquo;s New &middot; Settings). "Moving the Almanac into the hamburger" is therefore not a menu change at all &mdash; it is removing the HUD&rsquo;s <i>second</i>, redundant door to the same panel.'],
+      ['d','Four live rows plus three capped "Soon" rows &mdash; doc 08: "past three the menu advertises more game than exists." Nothing about this proposal adds a row, so the cap is untouched.'],
+    ]
+  );
+
+/* ================= SECTION 9 — the HUD across the conversion ================= */
+document.getElementById('f-9').innerHTML =
+  fig('During the tutorial', 'Quest strip present, teaching the core loop', 'The recommended HUD sits above the SAME quest strip that exists today &mdash; nothing about the strip changes, only what sits above it.',
+    crop(
+      hudRecommended('120','0','1','.15') +
+      '<div style="padding:8px 12px 0">'+
+        '<div class="quest-strip"><span class="q-pip-wrap" style="--p:.15;visibility:hidden"><span class="q-pip-ring"></span><span class="q-pip">1</span></span>'+
+        '<span class="q-bar"><i style="--fill:0%"></i><span class="q-bar-label"><span class="q-text">Plant your first Daisy</span><span class="q-count">0/1</span></span></span>'+
+        '<span class="q-reward">'+ico('star')+'+10</span></div>'+
+      '</div>',
+      320, 200
+    ),
+    [['q','The quest strip keeps its own pip-shaped left edge even though the HUD now carries the real level pill above it &mdash; visually two rings stacked in the top-left corner during the tutorial. Worth hiding the quest strip&rsquo;s own ring (it already shows the same level, doubly) once the HUD carries it, or is the redundancy harmless for the few minutes the tutorial lasts? Not answered here.']]
+  ) +
+  fig('After the first Turn', 'Order strip in its place, HUD unchanged above it', 'The level pill is the one thing on this row that is identical in both states &mdash; the whole point of promoting it out of the strip that converts.',
+    crop(
+      hudRecommended('12.4K','340','12','.34') +
+      '<div style="padding:8px 0 0 12px">'+
+        '<div class="orderstrip">'+ miniCardSmall('+14','from the lane') + miniCardSmall('+8','a regular') + '</div>'+
+      '</div>',
+      320, 220
+    ),
+    [['d','The order strip&rsquo;s own shape (portrait, counter, two reward slots) is tree-spike.html&rsquo;s design, reused here only to show the HUD survives the conversion unchanged above it.']]
+  );
+function miniCardSmall(rep, name){
+  return '<div class="custcard" style="position:static;width:96px">'+
+    '<div class="rewards"><span class="rwd wage">'+ico('star')+rep+'</span><span class="tip-empty"></span></div>'+
+    '<div class="portrait" style="background:linear-gradient(180deg,#eaffe0,#f6fff0)"><svg viewBox="0 0 40 40" width="28" height="28"><circle cx="20" cy="22" r="12" fill="#e0b088" stroke="#2c1a10" stroke-width="1.6"/><circle cx="15.6" cy="22.4" r="1.6" fill="#2c1a10"/><circle cx="24.4" cy="22.4" r="1.6" fill="#2c1a10"/></svg></div>'+
+    '<div class="counter"><span class="want">'+ico('sprout')+'</span></div>'+
+    '<div class="cname">'+name+'</div>'+
+  '</div>';
+}
+
+/* ================= SECTION 10 — the tree's door ================= */
+function doorOption(tag, title, body, pillDoor){
+  return fig(tag, title, '', '<div style="display:flex;align-items:center;gap:16px;padding:18px;background:#fffdf7;border:3px solid var(--ink);border-radius:18px;box-shadow:0 4px 0 var(--ink-2);max-width:400px;min-height:96px">' +
+    body + '</div>', []);
+}
+document.getElementById('f-10').innerHTML =
+  doorOption('A', 'The Almanac’s petal tab', 'Almanac (the book icon) &rarr; a tab inside it &rarr; the trunk. Two taps, and the tab already exists in spike v1&rsquo;s own language.',
+    '<span class="dr-ico" style="--rt:#5c7cfa">'+ico('book')+'</span><span style="font-size:12.5px;font-weight:700;color:var(--ink-soft)">Hamburger &rarr; Almanac &rarr; a petal tab &rarr; the trunk</span>') +
+  doorOption('B', 'A dock entry', 'A sixth-ish spot on the dock, or folded into an existing button&rsquo;s long-press. Costs dock width or overloads a button doc 08 already fought hard to keep at five.',
+    '<span class="dock-ico" style="width:32px;height:32px">'+ico('sprout')+'</span><span style="font-size:12.5px;font-weight:700;color:var(--ink-soft)">A dock button, or a gesture on GARDEN</span>') +
+  fig('C', 'The desk’s suggestion: the pill is the door', 'Marked as the desk&rsquo;s, not this spike&rsquo;s ruling.',
+    '<div style="display:flex;align-items:center;gap:16px;padding:18px;background:#fffdf7;border:3px solid var(--ink);border-radius:18px;box-shadow:0 4px 0 var(--ink-2);max-width:400px;min-height:96px">'+
+      pillHTML('11','.62',{door:true})+
+      '<span style="font-size:12.5px;font-weight:700;color:var(--ink-soft)">Tap the pill that already shows your level to open the trunk that level is climbing &mdash; one tap, and the pill is doing double duty rather than sitting decorative.</span>'+
+    '</div>',
+    [
+      ['q','<b>Not picked here.</b> The pill shows your level and opens the trunk that level climbs &mdash; the desk&rsquo;s framing, not a ruling.'],
+      ['f','If chosen, the pill needs its own tap target, and its visible disc (36&times;36px, section 1) is under the 44px minimum. The dashed circle above is the same fix <code>.replant-chip</code> already uses (doc 08): an invisible <code>::before</code> sized to <code>max(100%,44px)</code>, extending the hit area without changing the visible ring.'],
+    ]
+  );
+
+/* ================= SECTION 11 — every layout decision ================= */
+document.getElementById('f-11').innerHTML =
+  '<div class="box"><h3>Decided elsewhere, followed here</h3><ul>'+
+  '<li><b>Two wallets, not three.</b> Prisms stay on the Turn button&rsquo;s pouch chip (doc 32, doc 10) &mdash; not redrawn as a HUD wallet.</li>'+
+  '<li><b>The Almanac&rsquo;s HUD button retires.</b> The drawer already carries the row (<code>ui-menu.js</code>) &mdash; confirmed live, section 8.</li>'+
+  '<li><b>The level pill reuses <code>.q-pip-wrap</code>/<code>.q-pip-ring</code>/<code>.q-pip</code> verbatim</b> &mdash; same 36&times;36 footprint, same conic-gradient mechanism, per the brief.</li>'+
+  '<li><b>No reputation digit anywhere on the pill</b>, in flight or at rest &mdash; consistent with the rail&rsquo;s numberless ruling (2026-09-26).</li>'+
+  '<li><b>The ring&rsquo;s ready-breath/glint is reserved for the Turn button</b> (doc 08) and must not be reused for a level-up.</li>'+
+  '</ul></div>'+
+  '<div class="box p"><h3>Placeholders &mdash; chosen to get pixels on screen, not recommendations</h3><ul>'+
+  '<li>The pill sits leftmost in the wallets row, ahead of gold. Could equally sit after gems, or outside <code>.wallets</code> entirely.</li>'+
+  '<li>Worst-case pairing used throughout: gold "999.99M", gems/Prisms "9,999" &mdash; a methodology choice (section 1), not an economy ruling.</li>'+
+  '<li>The flight token in section 6 travels as a lifted star; the exact path, duration and landing treatment are all under the motion gate, none timed.</li>'+
+  '<li>The level-up bonus beat (section 6, frame 5) is drawn as a simple pip pop &mdash; a guess, explicitly flagged as a question in section 12.</li>'+
+  '</ul></div>'+
+  '<div class="box f"><h3>Found live while building this &mdash; not proposed by anyone</h3><ul>'+
+  '<li><b>The owner&rsquo;s original proposal overflows the safe column at 360px</b> with realistic worst-case wallet numbers &mdash; built inside the live DOM and measured, not hand-computed. Section 3.</li>'+
+  '<li><b><code>.q-pip</code> overflows its own 26px disc from level 100 onward</b>, already true in the shipped game, filed as one line in <code>docs/11-known-issues.md</code>. Section 5.</li>'+
+  '<li>Inserting the 36px pill into <code>.wallets</code> grows the wallet pills&rsquo; own rendered height from 33px to 36px, because <code>.wallets</code> sets no <code>align-items</code> and defaults to <code>stretch</code>. A 3px difference, probably invisible, not fixed here.</li>'+
+  '</ul></div>';
+
+/* ================= SECTION 12 — questions for the owner ================= */
+document.getElementById('f-12').innerHTML =
+  '<div class="box q"><ul>'+
+  '<li><b>1. The Prisms wallet.</b> Section 3 shows it fits at 390px only on a knife-edge (8.4px clear) and breaks outright at 360px. <i>The desk&rsquo;s recommendation: drop it</i> &mdash; Prisms already have a home on the Turn button, and the recommended shape (section 2) is lighter than today&rsquo;s HUD, not just lighter than the proposal.</li>'+
+  '<li><b>2. Where does the pill sit</b> in the wallets row &mdash; leftmost (drawn throughout this file), after the wallets, or as its own element outside <code>.wallets</code>? Not asserted.</li>'+
+  '<li><b>3. The tree&rsquo;s door</b> (section 10) &mdash; the Almanac&rsquo;s petal tab, a dock entry, or the pill itself. <i>The desk&rsquo;s suggestion, not a recommendation: the pill</i> &mdash; but this is the owner&rsquo;s call and the brief asked it be drawn, not answered.</li>'+
+  '<li><b>4. The delivery animation&rsquo;s specifics</b> &mdash; path, duration, sound/haptic placement, and the reduced-motion substitute (section 6&rsquo;s tuning list). All open, all for the motion gate.</li>'+
+  '<li><b>5. Does a level-up deserve its own celebration</b>, distinct from an ordinary ring-advance and distinct from the Turn-ready breath doc 08 reserves? Drawn as a placeholder pip-pop in section 6, frame 5.</li>'+
+  '<li><b>6. The quest strip&rsquo;s own pip, during the tutorial</b> (section 9) &mdash; now redundant with the HUD&rsquo;s pill showing the same level a few rows above it. Worth hiding, or harmless for a few tutorial minutes?</li>'+
+  '<li><b>7. The <code>.wallets</code> stretch-to-36px quirk</b> &mdash; worth a one-line <code>align-items</code> fix when this is built, or beneath noticing?</li>'+
+  '</ul><p style="font-size:12px;font-weight:700;color:var(--ink-soft);margin-top:10px;line-height:1.5">Not re-asked here: whether a tip is visible before delivery or hidden until then. That question belongs to <code>tools/tree-spike.html</code> (frame 9D), which already draws it both ways; this spike&rsquo;s storyboard (section 6) is unaffected either way, since it only concerns the wage&rsquo;s own flight to the pill.</p></div>';
+
+/* ================= SECTION 13 — methodology and credits ================= */
+document.getElementById('f-13').innerHTML =
+  '<div class="box"><h3>Measured live against the running game</h3><p style="font-size:13px;font-weight:600;line-height:1.6;color:var(--ink-soft)">'+
+  '<code>preview_start {name:"garden"}</code>, port 8899, a FRESH tab (<code>tabs_create</code>) rather than the one already open on <code>tools/tree-spike.html</code> in another session &mdash; that tab was never touched. Every dimension in sections 1&ndash;4 came from <code>getBoundingClientRect()</code> on the real DOM at 390&times;844 and 360&times;780; worst-case wallet text was injected via <code>textContent</code> (never saved, never persisted) and measured the same way. Sections 2 and 3&rsquo;s sums were not computed by hand &mdash; the recommended and proposed HUD rows were literally built inside the live page (cloning <code>#qPipWrap</code> and <code>#walletCredits</code>, moving <code>#btnMenu</code>, removing <code>#btnBonuses</code>) so the browser&rsquo;s own flexbox produced the numbers, including the 360px overflow in section 3, which was then screenshotted before the DOM was restored and the tab reloaded clean.</p></div>'+
+  '<div class="box"><h3>Copied from which file</h3><ul>'+
+  '<li><b>Page chrome</b> (<code>.intro</code>, <code>.toc</code>, <code>.phone</code>, the <code>.note</code> d/q/p system) &mdash; <code>tools/records-spike.html</code> and <code>tools/tree-spike.html</code>, per house convention.</li>'+
+  '<li><b><code>.hud</code>, <code>.wallet</code>, <code>.round-btn</code>, <code>.hud-actions</code>, <code>.hud-dot</code>, <code>.dev-dot</code></b> &mdash; <code>style.css</code> lines ~369&ndash;450, compressed (&le;430px) variant baked in directly since it is always active at both widths tested here.</li>'+
+  '<li><b><code>.quest-strip</code>, <code>.q-pip-wrap</code>, <code>.q-pip-ring</code>, <code>.q-pip</code>, <code>.q-bar</code>, <code>.q-reward</code></b> &mdash; <code>style.css</code> lines ~453&ndash;514, verbatim.</li>'+
+  '<li><b><code>.dock-btn</code>, <code>.turn-fill</code>, <code>.seedchip</code></b> &mdash; <code>style.css</code> lines ~1316&ndash;1459, trimmed to a static inset (no ready-glint keyframes).</li>'+
+  '<li><b><code>.drawer</code>/<code>.dr-*</code></b> &mdash; <code>style.css</code> lines ~2415&ndash;2645, trimmed to an already-open static mockup; row contents from <code>ui-menu.js</code>&rsquo;s own <code>ROWS</code> table.</li>'+
+  '<li><b><code>.custcard</code>/<code>.orderstrip</code>/<code>.rwd</code>/<code>.tip-empty</code></b> &mdash; hand-copied from <code>tools/tree-spike.html</code>, portraits simplified since that file owns the customer card&rsquo;s own design.</li>'+
+  '<li><b>Icons</b> (coin, gem, book, menu, star, pouch, prism, decor, bell, people, gift, scroll, gear, chevron, sprout) &mdash; hand-copied path data from <code>icons.js</code>.</li>'+
+  '<li>No game file (<code>data.js</code>, <code>game.js</code>, <code>ui.js</code>, <code>style.css</code>) is loaded by this page.</li>'+
+  '</ul></div>';
+
+function toggleNotes(){
+  const body = document.body;
+  const on = body.getAttribute('data-notes') === '1';
+  body.setAttribute('data-notes', on ? '0' : '1');
+  document.getElementById('notesBtn').textContent = 'Notes: ' + (on ? 'OFF' : 'ON');
+}
+</script>
+</body>
+</html>
