@@ -424,7 +424,7 @@ go and changes the subject to the show, which is the kindness.
 - **Visible change:** the Stand's sign is repainted — Gran's name back over the counter (strip, state 2).
 - **Thread:** beat 2 — the practiced answer. Mara's thought bubble after it is the whole beat:
   *Said that well.* Nothing else.
-- **Sliver:** *"She stopped entering the year the tin got locked."* Mara: *"How do you know that?"* It
+- **Sliver:** *"She stopped the year the door got locked."* (the still room's door; the tin was never locked — corrected 2026-09-27) Mara: *"How do you know that?"* It
   doesn't.
 - **Words:** ~240.
 

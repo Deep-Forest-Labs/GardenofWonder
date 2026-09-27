@@ -5,6 +5,34 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (story) — Volume one's script drafted: every line, in the engine's chunks, for the writer's pass
+
+**Filed: [57-volume-one-script.md](57-volume-one-script.md) — a draft script for the human writer's pass,
+not shipping text.** The owner asked for the whole of volume one written now, so the narrative engine can
+be built against it: *"when I start building the actual narrative engine… I can just point to that."* It
+carries every player-facing line in a tagged format the engine can parse — speaker, portrait expression,
+surface (scene, thought cloud, Poppy's bubble, reply chip, quest strip), room and title cards — across
+eight chapters in the lane's two-face scene shape, about twenty memory slivers, about ninety story lines,
+the four new villagers and the existing ones' chapter lines, the welcome-back board, and the shipped lines
+that change (Poppy's shop lines, Holly's three pronouns). About 3,300 words. The desk coordinated with the
+design desk first: it is the only writer of record, the Fall and Spring heroes stay placeholders, and doc
+55 §7 stays verbatim because the scene spike builds from it — Chapter I's revisions sit in 57 as marked
+alternates.
+
+**Written for women about 35–55, to the owner's standard that it must read as human.** The grammar is
+measured from his Gossip Harbor recording: one breath a line, two faces, dashes only for interruptions, a
+thought cloud to close. **One independent critic** read it for rule breaks, voice drift and machine tells,
+and the fixes are listed in the document. The largest: two lines implied Poppy was bottled as a perfume
+(cut); Mara's *"never quite got round to it"* gave her childlessness a reason (now *"No. No kids."*);
+one joke shape was used by every character (cut to one); the slivers stacked grief (three became plain
+domestic memories); the Scent Prize never played on screen (it does now).
+
+**Rejected:** writing the Fall and Spring heroes' lines before their design pass (a one-sentence beat
+stands in); altering doc 55 §7 (the scene spike's content); a Poppy line on the welcome-back board (doc 55
+§6 gives it to the villager alone, and the draft's version pined); and treating 57 as shipping text — the
+human pass is still owed (doc 55 §9 question 11). Doc 55 §4's *"the tin got locked"* was corrected to the
+still room's door in the same commit.
+
 ## 2026-09-27 (story, the owner's word) — Perfume joins the story: scent is memory, Gran was a perfumer, and the circuit reaches the fashion world
 
 **The owner:** *"Not only are we creating magnificent flowers, but we're creating amazing perfumes and
