@@ -5,6 +5,44 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (story, the owner's word) — Perfume joins the story: scent is memory, Gran was a perfumer, and the circuit reaches the fashion world
+
+**The owner:** *"Not only are we creating magnificent flowers, but we're creating amazing perfumes and
+colognes, and that could spin into the story, into the fashion world, which is also a women's
+category… I do want to add a place where players can mix different essences together to create new
+perfumes."* The thread was already in the game — the apiary's honey and wax, the Apothecary's *Petal
+Perfume*, doc 26's premium shelf — folded away when the bench replaced the Apothecary. Written into doc 55
+in place (§2 *The perfume thread*, the cast, chapters II–VIII, §5's rules, §6, §8, and §9 questions 18–21).
+
+**The desk's shape, which the bible now carries.** **Scent is memory** — smell cues older, more vivid,
+more emotional memories than sight (sourced in doc 55) — and Poppy is the remembrance flower whose mystery
+is memories not her own, so perfume is the story's theme made into a thing the player makes. Gran was a
+perfumer as well as a gardener; the glasshouse was her still room; the seed is the note the fragrance
+world has chased for forty years. The circuit runs from the village show's scent class to the city's
+Scent Prize; the Baroness heads a fragrance house, and Julian owes it. Wren, an existing customer, becomes
+a travelling perfumer and Mara's one friend in that world. **The volume-two hook sharpens:** a rival
+perfume at the Scent Prize is Gran's formula — someone alive has Gran's nose, and the given-away daughter
+is a perfumer.
+
+**The place to mix is a feature, owed its own direction doc and spike.** No chapter depends on it until it
+is built: Chapter IV is where it opens once it exists, and the counter's ribbon carries the chapter until
+then. Its shape is four questions for the owner: where it lives (the desk recommends Gran's glasshouse as
+its own room, entered from the Stand), mixing versus the parked bench's merge (the desk recommends mixing,
+as he described it — which meets HANDOFF's old *"one new mechanic only — merge"* line, a statement, not a
+fence), whether perfume pays reputation (only through orders), and competitions as story rather than a
+timed event.
+
+**Rejected:**
+- **Any character flower as an ingredient** — Poppy, Holly and the coming Fall and Spring heroes are never
+  distilled, pressed, mixed or sold as scent. The house wants to own the source, never extract it; a girl
+  whose essence is bottled is the premise of Süskind's *Perfume*, a murder novel.
+- **Competitions as recurring timed ladders** — the lane's third-largest complaint (doc 38).
+- **Making Chapter IV wait on the perfumery** — story would stall on an unbuilt feature.
+- **Fashion as cruelty about bodies** — snobbery about taste and pedigree, never weight, age or looks.
+
+**Not re-critiqued.** The addition landed after doc 55's gauntlet; a market research pass on perfume in
+this lane is recommended before the perfumery's own spec.
+
 ## 2026-09-27 (direction, the HUD) — Reputation needs a permanent home once the quest strip converts
 
 **Ruled: no Prisms in tips.** An order's bonus may be a card pack, gold, gems or a power-up — never

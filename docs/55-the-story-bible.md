@@ -188,7 +188,7 @@ the daughter Mara never had; no character, line or ad ever says so** (the owner'
 
 **Considered and rejected the same day: Mara's own daughter died.** Not too dark for the lane — Lily's
 Garden carries an infant loss — but wrong for this story. Asked of a bereaved mother, *"Are you my
-mommy?"* turns from tender to cruel; players would read Poppy as the dead girl's soul returned, which
+mama?"* turns from tender to cruel; players would read Poppy as the dead girl's soul returned, which
 tips the story toward a ghost story and swallows Gran's mystery; it gives the story two lost daughters
 competing with each other; it makes Poppy a replacement child, the substitute problem at its sharpest;
 and the backstory could never be shown in an ad (§1's rule 5). The darker weight is already carried
@@ -239,6 +239,52 @@ names itself** in session one — *"I'm Poppy."* / *"Who told you that?"* / *"No
 so the name is the first thing it remembers that nobody taught it. Who first called her Poppy is volume
 two's to answer.
 
+### The perfume thread — the owner's word, 2026-09-27
+
+**The owner:** *"Not only are we creating magnificent flowers, but we're creating amazing perfumes and
+colognes, and that could spin into the story, into the fashion world, which is also a women's
+category… how there could be competitions for perfume… and how we're making the most unique perfumes in
+the world. I think that should be a big part of the story because I do want to add a place where players
+can mix different essences together to create new perfumes."* The game has carried this since August —
+the apiary's honey and wax, the Apothecary's *Petal Perfume* (*"Pressed petals set in beeswax"*), doc
+26's premium shelf of perfumes, candles and salves — and the story now gives it a reason.
+
+**The idea that ties it in: scent is memory.** Smell cues memories that are more vivid, more emotional and
+older than sight does — most from the first ten years of life
+([Chu & Downes, *Proust nose best*](https://pubmed.ncbi.nlm.nih.gov/12184552/);
+[review, *Psychonomic Bulletin & Review*](https://link.springer.com/article/10.3758/s13423-018-1545-3)).
+Poppy is the remembrance flower whose whole mystery is memories that are not her own. **Perfume is memory
+you can carry.** So:
+
+- **Gran was a perfumer as well as a gardener.** The glasshouse was her still room; the album's *Locked
+  Greenhouse* is where she worked. The village remembers how she smelled and nobody could ever name it.
+- **The seed in the tin is the note the fragrance world has chased for forty years** — a scent nobody has
+  been able to make. That is why a collector wants Poppy: not the flower, the scent that comes of her.
+- **The circuit becomes two worlds.** The village show (flowers) grows a scent class, and the scent class
+  leads to the city: **the Scent Prize**, and an old fragrance house whose head is the Baroness. Fashion
+  is the soap register's natural home — glamorous, genteel and quietly vicious — and it keeps the pressure
+  interpersonal.
+- **Mara makes perfumes** from what the garden grows, the bees give and the season leaves on a bloom — and
+  they become things the Stand sells, the shows judge and the fashion world notices.
+- **The volume-two hook gets sharper.** In Chapter VIII a rival's perfume arrives from the city, and Poppy
+  knows it: it is Gran's. Someone alive has Gran's nose. The given-away daughter is a perfumer.
+
+**The place to mix perfumes is a feature, not a story beat.** It needs its own direction document and a
+spike before any code (the wireframe gate, doc 34), and §9 questions 18–21 put its shape to the owner. This
+bible says what the story needs from it and **never makes a chapter depend on it until it is built**: the
+chapter's required change stays on the counter (§4), and the perfumery's opening is the headline once it
+exists. What the story needs, for that spec: an essence from each flower; honey to sweeten and beeswax for
+the base; a catch — Radiant, Wonderstruck — as a rare note; a few essences mixed into a perfume the player
+names and keeps in a book; perfumes as Stand goods and show entries. **No character flower is ever an
+ingredient** (§5).
+
+**The lane has the theme and nobody owns it with a story.** A cosy perfume-workshop game on Steam mixes
+essences to customers' moods ([Perfume Atelier](https://store.steampowered.com/app/3962270/Perfume_Atelier/));
+a mobile merge-and-makeover game counts perfumes among its beauty items
+([Glow Tales](https://apps.apple.com/us/app/6754087834)). **JUDGMENT:** none pairs perfume-making with a
+story, and none ties scent to memory — worth a proper research pass before the perfumery's spec, as §1 was
+for the story.
+
 ### Holly's place — recommended: a sister from the same tin
 
 Holly, Winter's hero flower, is built and has a voice: deadpan, superior, secretly devoted, her sass
@@ -268,15 +314,16 @@ not an illustration.** Nobody below needs a screen the game does not have.
 | **Mara Vance** | Mid-thirties, guarded, dry, competent; left a marriage, wanted a child, doesn't talk about either | To keep one thing alive that is hers | Everywhere — she is the player | — | **None. New portrait row** — needed by the chapter scene (§6); before the act break she speaks through reply chips |
 | **Poppy**, the flower | Gran's impossible hybrid; thinks Mara is its mother; holds memories that aren't its own | Mara, and to know what it is | The garden (Summer's centre), Fall's and the meadow's centre | Never asks for anything that costs money — ever | **Exists** — the talking flower, nine moods and more. **New: its birth from the tin** (sprout to bloom at the centre, once) |
 | **Holly** | The flower's older sister from the same tin; keeps Winter; didn't do it for you | For her sister to stop being so soft | Winter | — | **Exists** (doc 46) |
-| **Gran Ophelia** | The grandmother who bred a flower for thirty years to hold what she had lost | — (dead before the story; never drawn) | The flower's memories, the album's Open Question and Gardener's Ledger sets | — | **None, by design** |
+| **Gran Ophelia** | Gardener and perfumer; bred a flower for thirty years to hold what she had lost, and kept her still room in the glasshouse | — (dead before the story; never drawn) | The flower's memories, the album's Open Question and Gardener's Ledger sets | — | **None, by design** |
 | **Delphine** | The neighbour; gossip, warmth, comic timing; adopts Mara on sight; carries Mara's warmest scenes | A friend, and to be first to know everything | The Stand | Pinks, posies, anything for the table; tea-party orders | **New portrait row** |
 | **Theo** | The groundskeeper who stayed on unpaid; guarded the seed tin for years and never said why | For the garden to be kept the way Gran kept it | The Wild Meadow | Flowers and seed for the meadow — never honey before the player has a hive | **New portrait row** |
-| **Bram** | The village fixer — bakes, trades, knows someone who knows someone who wants rare seed | A deal, and for everyone to eat something | The Stand | Trades; bakes with petals | **Exists** — Bram the Baker, reused (§9) |
+| **Bram** | The village fixer — bakes, trades, knows someone who knows someone who wants rare seed and rarer essences | A deal, and for everyone to eat something | The Stand | Trades; bakes with petals | **Exists** — Bram the Baker, reused (§9) |
 | **Julian** | Mara's cousin; charming, broke, owes a collector; lost the garden in session one | Money before his collector runs out of patience | The Stand | Appraisals — orders that are an excuse to look around | **New portrait row** |
-| **The Baroness** | The county's great collector; warm, funny, genuinely admiring — and she wants the flower, not the friendship | The only living specimen | The Stand | The expensive things — wreaths, the show pieces | **New portrait row** |
+| **The Baroness** | Head of an old fragrance house in the city — the fashion world's face; warm, funny, genuinely admiring — and she wants the flower, not the friendship | The scent nobody has made in forty years | The Stand | The expensive things — wreaths, the show pieces, and perfumes once there are any | **New portrait row** |
 | **Miss Marigold** | The show's judge — particular, snobbish, not bought | Standards | The Stand, and the Village Show | The Village Show order | **Exists** — reused as the judge. Her shipped lines are already a judge's (*"I shall recommend you. Sparingly."*) |
-| **Old Hollis** | Kept Gran's bees before anyone kept anything; the only villager old enough to remember Gran young | Quiet | The Stand | Honey | **Exists**; gains a few lines |
-| **Nan Bramble, Tobin, Wren** | Village colour, unchanged | — | The Stand | As today | **Exist** |
+| **Old Hollis** | Kept Gran's bees — and her wax — before anyone kept anything; the only villager old enough to remember Gran young | Quiet | The Stand | Honey | **Exists**; gains a few lines |
+| **Wren** | A travelling perfumer — a *nose* — who heard about Mara's scents three villages over; the one friend Mara makes in the fashion world | To smell something new before anyone else | The Stand | Rare blooms, then perfumes | **Exists** — reused; the shipped *"Three villages over, they told me about you."* is already the line |
+| **Nan Bramble, Tobin** | Village colour, unchanged | — | The Stand | As today | **Exist** |
 | **The six creatures** | The garden's small life; they never talk | — | The lawn, the Hollow | — | **Exist**. They carry flavour only — a creature's arrival depends on planting, so no chapter may need one |
 
 **Dropped from the premise:** Mrs. Ashgrove (Miss Marigold is the judge, at no cost), and the
@@ -362,13 +409,15 @@ you look at something you were told to guard. He won't say who told him.
 - **Visible change:** Theo arrives at the Stand (new portrait). His orders are for the meadow — flowers
   and seed, and **never honey before the player has a hive** (the Stand's never-ask-the-unproducible
   rule holds only if nothing is forced).
-- **Sliver:** *"He smells like the tin."*
+- **Sliver:** *"He smells like the tin."* And Theo shows her one locked door at the back of the
+  glasshouse — Gran's still room — and doesn't have the key.
 - **Words:** ~220.
 
 ### III — Over the Fence
 
 **~Level 8.** Delphine comes over with tea and everything the village is saying: Gran won the Village
-Show eleven years running and then stopped entering, and nobody knew why. She asks, easily, whether Mara
+Show eleven years running and then stopped entering, and nobody knew why — and everybody remembers how
+Gran smelled, and nobody could ever name it. She asks, easily, whether Mara
 has children. Mara's answer is short, pleasant and practiced; Delphine — who notices everything — lets it
 go and changes the subject to the show, which is the kindness.
 
@@ -382,21 +431,25 @@ go and changes the subject to the show, which is the kindness.
 ### IV — The Village Show
 
 **~Level 14. Act 2 opens.** The Stand pays for the garden, not for Gran's glasshouse roof, so Mara
-enters Gran's old classes. Her blooms win — a Radiant among them — and Miss Marigold asks, very politely,
-where the seed came from. Bram says he knows people who would pay to find out, and means it as a
-warning.
+enters Gran's old classes — and the show's scent class, with a first perfume made from the garden, the
+bees' honey and Old Hollis's wax. Her blooms win — a Radiant among them — and her perfume places, and
+Miss Marigold asks, very politely, where the seed came from. Bram says he knows people in the city who
+would pay to find out, and means it as a warning.
 
 - **Visible change:** the show's first ribbon pinned to the counter (strip, state 3). Miss Marigold's
   **show entry** arrives as a scripted order built from a good the current tier allows
   (`standGoodsAt(tier)`); the shipped *Village Show* good — *"The judges are coming. I am putting my
   name on this."* — becomes her recurring order once tier 4 opens, never forced before it.
+- **The perfumery, once built:** this is the chapter it opens in — the still room unlocked — and its
+  opening becomes the chapter's headline. Until then the ribbon is the change, and the first perfume is
+  told, not made.
 - **Sliver:** *"Ribbons are for winning. Gran had a drawer of them."* The flower has never seen a drawer.
 - **Words:** ~240.
 
 ### V — The Cousin
 
 **~Level 22. The end of the front fifth.** Julian arrives charming and broke: he lost the garden when the
-Year was kept, and he owes a collector who has been patient a long time. He asks about the tin as if he
+Year was kept, and he owes a fragrance house in the city that has been patient a long time. He asks about the tin as if he
 already knows — and the player remembers the note. That night Mara catches herself humming Gran's
 lullaby to the flower and stops mid-bar.
 
@@ -409,10 +462,11 @@ lullaby to the flower and stops mid-bar.
 
 ### VI — The Baroness Pays a Call
 
-**~Level 50. The bridge into Act 3.** The Baroness comes to the Stand in person — warm, funny, genuinely
-admiring — and invites Mara to the county show as her guest. Delphine is a little too pleased for her.
+**~Level 50. The bridge into Act 3.** The Baroness — head of the fragrance house — comes to the Stand in
+person, warm, funny, genuinely admiring, and invites Mara to the city's Scent Prize as her guest. Wren, who
+arrived weeks ago asking after Mara's scents, goes quiet at the name. Delphine is a little too pleased for her.
 At the door the Baroness asks, lightly, whether the flower in the middle is for sale; later it turns out
-Julian's collector is her.
+the house Julian owes is hers.
 
 - **Visible change:** the Baroness arrives at the Stand (new portrait) with the grandest orders the tier
   allows; window boxes fill along the counter (strip, state 4).
@@ -421,8 +475,8 @@ Julian's collector is her.
 
 ### VII — What the Flower Won't Say
 
-**~Level 80. Act 3: the memories.** The flower starts remembering on purpose — a kitchen, a woman's
-hands, a wall with flowers painted halfway across it. Theo, clearing the east wing, finds the room it is
+**~Level 80. Act 3: the memories.** The flower starts remembering on purpose, and her memories come as
+smells — a kitchen, oranges and warm milk, a woman's hands, a wall with flowers painted halfway across it. Theo, clearing the east wing, finds the room it is
 describing: a nursery, half painted, shut for decades. He brings back the one thing in it that still
 works, a child's night-light, and sets it on the counter. Neither of them says anything.
 
@@ -435,16 +489,19 @@ works, a child's night-light, and sets it on the counter. Neither of them says a
 
 ### VIII — Not Yet
 
-**~Level 110. Act 3 ends; volume one ends.** The Baroness makes her offer in writing: the flower, for
-everything Julian owes and the glasshouse roof besides. Mara says no without drama. That night she finds
-Gran's music box in the tin's old hiding place and sets it on the counter, and the flower tells her
-something that cannot be forty years old.
+**~Level 110. Act 3 ends; volume one ends.** At the Scent Prize the Baroness makes her offer in writing:
+the flower, for everything Julian owes and the glasshouse roof besides. Mara says no without drama. Among
+the other entries is one perfume from a small house nobody knows, and when Mara brings its card home,
+Poppy knows it. That night Mara finds Gran's music box in the tin's old hiding place and sets it on the
+counter.
 
 - **Visible change:** Gran's music box on the counter (strip, state 6). If the record shelf has shipped,
   **Gran's Lullaby** drops — a song-only record (§6).
 - **Thread:** none — beat 5 waits for volume two: four lines, once.
 - **The alive-daughter sliver, which ends the volume:**
-  > *"She's got grey in her hair now."*
+  > *"That one's Gran's."*
+  > *"Gran's gone, Poppy."*
+  > *"Somebody made it this year. She's got grey in her hair."*
   > *"Who has?"*
   > *"The girl from the room. I don't know where. Not yet."*
 - **Words:** ~240.
@@ -469,7 +526,7 @@ need different rules:
 
 ## 5. The rules of the voice
 
-**The flower speaks to the player as Mara.** It calls her *mommy* (or *mama* — §9, question 15) exactly once — the hook, in session
+**The flower speaks to the player as Mara.** It calls her *mama* (ruled 2026-09-26, §9 question 15) exactly once — the hook, in session
 one — and after she says her name it calls her Mara from then on. It learned. That single use is the
 restraint that keeps the line from becoming a nag, and it is the only place the word lives until
 volume two.
@@ -525,6 +582,15 @@ Only the new story lines are staged. The shared mood buckets stay one set.
   child.
 - **Mara's thoughts are dry, too.** The scene's thought bubble shows what she holds back — *Said that
   well.* — and never names the wound. It may show a thing was practiced; it never explains why.
+- **No character flower is ever an ingredient.** Poppy, Holly and the Fall and Spring heroes are never
+  distilled, pressed, mixed or sold as a scent, in play or in story. The fragrance house wants to *own* the
+  source, never to extract it. A girl whose essence is bottled is the premise of Süskind's *Perfume*, a
+  murder novel; nothing in this story may rhyme with it.
+- **Fashion is never cruel about bodies.** The fashion world can be snobbish about taste, money and
+  pedigree; never about weight, age or looks, as a joke or as a stake (**JUDGMENT**, for this audience).
+- **A competition is a chapter, not an event that never ends.** The Scent Prize and the shows are story
+  beats and, at most, seasonal showcases — never the endless, unwinnable timed ladder that is the lane's
+  third-largest complaint (doc 38, 17%).
 - **The ex never returns as a romance.** §1's rule 3. He stays offstage and in the past.
 - **The ad is the first minute.** The UA creative is the owner's, but the bible's line is this: it
   shows the question and the deflection exactly as §7 plays them — never a crying Mara, never the
@@ -618,6 +684,8 @@ holds back without her ever saying it** — restraint made visible.
   sliver over the cap waits, latched, for the next day's first quiet moment.
 - **The first Turn carries Chapter I's close. Every Turn after it carries no required story.** A line at
   a later ceremony is flavour, never a chapter.
+- **Perfumes join the Stand only once they can be made.** The Stand's pools know flowers and honey
+  today; perfumes join when the perfumery exists, and never before — the never-ask-the-unproducible rule.
 - **Story pays nothing but the change.** No chapter or line moves gold, gems, Prisms or reputation —
   reputation is never paid by the meta (2026-09-24). A story record is **song-only**, so the story never
   becomes a power source.
@@ -643,7 +711,7 @@ where they become her side of the scene. No line runs past about fifteen words.
 bud holds a breath too long — bloom. The flower opens its eyes, finds her, and looks up.*
 
 > **Flower:** …Oh. Hello.
-> **Flower:** Are you my mommy?
+> **Flower:** Are you my mama?
 > *Mara:* …I'm Mara. — *or* — No, sweetheart. I'm Mara.
 > **Flower:** Mara. Mara-Mara. I'm Poppy.
 > *Mara:* Who told you that?
@@ -718,8 +786,8 @@ ceiling, with room for the owner's own lines.
    is the only order on the strip until the refill brings the next.
 3. **The note is signed "O."** — Gran's only direct words in volume one. The album already owns a card
    called *A Note, Unsigned*; the owner may prefer it unsigned.
-4. **"Mommy" is the premise's word, kept here pending §9's question 15** — the UK string and the slang
-   risk (§1).
+4. **"Mama" is ruled for every market** (§9 question 15, 2026-09-26) — the premise's "mommy" stays in
+   doc 53 as received.
 5. **Delphine hears a hum and never words** (§5). That is what keeps *"Who are you talking to, love?"*
    comedy rather than a woman imagining a child.
 
@@ -727,7 +795,7 @@ ceiling, with room for the owner's own lines.
 
 ## 8. The bill
 
-### Words — about 3,800 for volume one
+### Words — about 4,200 for volume one
 
 | Piece | Lines | Words |
 | --- | --- | --- |
@@ -737,9 +805,10 @@ ceiling, with room for the owner's own lines.
 | Chapter lines for Bram, Miss Marigold, Old Hollis | ~18 | ~150 |
 | Memory slivers (~20) and story lines (~90) | ~110 | ~1,100 |
 | Re-voicing the flower's greetings, a few idle lines and three tap lines (§5) | ~15 | ~110 |
+| The perfume thread — Wren's and Old Hollis's lines, the scent class, the Scent Prize, perfume order lines | ~45 | ~400 |
 | Welcome-back lines | ~16 | ~160 |
 | Chapter titles on the rail | 8 | ~30 |
-| **Volume one** | **~400** | **~3,800** |
+| **Volume one** | **~445** | **~4,200** |
 
 Against the premise's 40–60k words for year one this is under a tenth — doc 27's finding made real: a
 few hundred lines of writing is the cheapest differentiator the game has.
@@ -766,6 +835,7 @@ commissioning briefs. The shipped words should pass through the owner's hand, or
 | A title card per chapter | The moments dialog's shared placeholder until the owner supplies rasters | Optional |
 | Gran's house on the far hill (§9 question 9) | Days | Optional, pending a phone screenshot |
 | Gran's Lullaby — a song-only record | Through doc 48's briefs, once the shelf ships | Optional |
+| **The perfumery** — its room, essences, bottles | Its own direction document and spike; the `perfume` icon already exists | Owed its own bill |
 
 ### Engineering
 
@@ -839,6 +909,10 @@ Each question is priced both ways. The desk's recommendation is first.
 | 15 | ~~**"Mommy" — the exact word**~~ | **Ruled 2026-09-26: "Are you my mama?" in every market** (the owner delegated the word to the desk) | Keep "mommy" (the premise's word) and localise UK English to "mummy" | *Mama*: softer, reads as a hatchling everywhere, and dodges both risks in §1. *Mommy*: the premise's own line, but in 2026 slang it carries an innuendo that turns tutorial lines into clips, and UK English's *"Are you my mummy?"* is Doctor Who's creepy-child line word for word |
 | 16 | ~~**"The daughter she never had"**~~ | **Ruled 2026-09-26 — keep the feeling, never say it.** The heart is raising something that grows up; Mara's childlessness stays the unnamed wound underneath (§2, *The feeling underneath*). A dead daughter was considered and rejected | — | — |
 | 17 | **The Turn's ask line** — *"The year's turning. Save your seeds?"* is a pun on the retired name | **"The year's turning. Shall we keep it?"** — it sets up the note | Another line | Code (`ui-sheet.js`) and doc 32 change together, with a changelog line — outside this document, which touches neither |
+| 18 | **Where the perfumery lives** | **Gran's glasshouse, as its own room, entered from the Stand** — the story already locks it in Chapter II and opens it in Chapter IV | The Hollow (a still room below ground, beside the gramophone); the Lawn, if the parked idea of the Apiary's space becoming a room lands; or a tab in the Stand's sheet | Glasshouse: a new room and a new door in a world whose doors are swipes (sideways the seasons, up the Hollow, down the meadow) — the spec must find one. Hollow: no new door, but it crowds the creatures' room. A tab: cheapest, and it is a menu, not a place |
+| 19 | **Mixing or merging** — HANDOFF records *"one new mechanic only — merge, in the Potting Shed"*, and the parked bench already replaced the Apothecary | **Mixing, as the owner described it** — pick a few essences, discover a perfume, name it, keep it in a book — and the bench's merge stays parked | The perfumery is the bench's long-awaited surface: essences merge upward | Mixing: a second crafting system against an old line that was a statement, not a fence (2026-09-10); the bench's built simulation stays parked or retires. Merge: reuses built code, but three-of-a-kind is not *mixing*, and it is not what the owner asked for |
+| 20 | **Does perfume pay reputation?** | **Only through orders.** A perfume delivered at the Stand is an order and pays as orders do; making one pays none | Mixing pays reputation too | Orders only: the 2026-09-24 core-loop rule holds. Mixing pays: a second faucet the meta feeds, which is the thing that ruling refused |
+| 21 | **Competitions — story, or a recurring event?** | **Story chapters, plus at most a seasonal showcase** with no timer to lose | A recurring timed competition with a leaderboard | Story: no live-ops cost, no stress. Timed: retention, and the lane's third-largest complaint — events that never stop and can't be won (doc 38) |
 
 **Where the flow brief pulled against the premise — the premise was kept each time:**
 
@@ -863,8 +937,11 @@ Each question is priced both ways. The desk's recommendation is first.
   one seed for each season. The two new characters are designed in their own pass — voice, art, the
   silhouette test — and the bible gains their rows when they exist. Fall's is the urgent one.
 - **The chapter scene's target** is the owner's Gossip Harbor recording, described in words in the
-  same log entry; §6's description is of that recording. Question 5's build is recommended and
-  awaits the owner's word.
+  same log entry; §6's description is of that recording. Question 5 was ruled 2026-09-27: build it, to
+  Gossip Harbor parity, through a spike with a motion gate first.
+- **Perfume joins the story (2026-09-27, the owner's word)** — §2's *The perfume thread*; the chapters,
+  cast and rules are updated in place, and questions 18–21 are new. Added after the gauntlet; the two
+  critics did not see it.
 - **Question 11 is ruled as a standard:** the shipped words must pass as human. How — a human
   writer's pass over the draft, or the owner's own — is his next call.
 
