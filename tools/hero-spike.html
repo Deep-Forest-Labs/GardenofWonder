@@ -1,0 +1,1240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Season heroes — the character spike</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   hero-spike.html — Fall's and Spring's hero flowers, and
+   Holly's eyes. Judged by eye; nothing here is built.
+
+   Static. No game dependencies: no data.js, no flora.js, no
+   fall.js. Everything is drawn from scratch so the spike can
+   never break because the game moved, and so it reads on a
+   phone from the live URL. The form is holly-spike.html's.
+
+   HAND-COPIED, on purpose, and each copy names its source:
+     * the tokens and the planter's material — style.css
+     * Poppy — Flora.talkingFlower(), and her eye recipe (tf-eyes)
+     * Holly — Flora.hollyHead(), hollyCrown(), hollyEye()
+     * the idle — stemSway / petalSpin / blink / cheekPulse /
+       leafWave, style.css's talking-flower block
+     * Fall's room — Fall.scene(), Fall.cellFloor(), .fl-board
+     * the Zs — critters.js zGlyph()
+
+   THE GATES, not decoration:
+     * frame 2, the 46px row inside the picker's circular mask
+     * frame 3, the black silhouettes at 46px and 120px
+   ========================================================= */
+
+:root{
+  --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+  --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad;
+  --paper-dim:#ebe5d9; --paper-dim-2:#d8d0c0;
+  --grass:#5cc45c; --grass-d:#3f9d45; --grass-l:#8fe08a;
+  --coin:#ffc93c; --coin-d:#f08c00;
+  --r-lg:26px; --r-md:18px; --r-sm:12px;
+  --font:'Baloo 2', ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#efe3cd;color:var(--ink);
+  font-family:var(--font);font-weight:700;-webkit-text-size-adjust:100%}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+
+/* THE 560px COLUMN. A phone reads it full-width; a desktop reads it as a phone
+   would, which is the size every one of these faces actually lives at. */
+.page{max-width:560px;margin:0 auto;padding:10px 12px 90px}
+h1{font-size:21px;line-height:1.15;margin:4px 0 4px}
+h2{font-size:15.5px;margin:30px 0 4px;padding-top:14px;border-top:3px solid var(--ink)}
+h3{font-size:13px;margin:16px 0 6px}
+.lede{font-size:13px;font-weight:600;line-height:1.5;color:#4a3524;margin:0 0 12px}
+.lede b{font-weight:800}
+.status{display:inline-block;background:var(--ink);color:#ffeecd;border-radius:999px;
+  padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.04em}
+
+/* The strip. Every frame one tap away, and the two switches the owner needs. */
+.strip{position:sticky;top:0;z-index:50;background:#efe3cdF2;padding:7px 0 7px;
+  margin:0 -12px 8px;padding-left:12px;padding-right:12px;
+  display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;border-bottom:3px solid var(--ink)}
+.strip::-webkit-scrollbar{display:none}
+.strip a,.toggle{flex:none;border:2.5px solid var(--ink);border-radius:999px;background:#fffdf7;
+  color:var(--ink);padding:3px 10px;font:inherit;font-size:12px;text-decoration:none;
+  box-shadow:0 2px 0 var(--ink-2);cursor:pointer;white-space:nowrap}
+.strip a b{font-weight:800;margin-right:3px}
+.toggle{background:#e8d5b0}
+.toggle[data-on="1"]{background:linear-gradient(180deg,#ffe98a,var(--coin))}
+.strip a:active,.toggle:active{transform:translateY(2px);box-shadow:0 0 0 var(--ink-2)}
+
+.grid{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+figure{margin:0}
+figcaption{font-size:12px;font-weight:800;margin:0 0 5px;line-height:1.25}
+figcaption i{display:block;font-style:normal;font-weight:600;font-size:11px;color:#5c452f;margin-top:1px}
+.tag{display:inline-block;background:var(--ink);color:#ffeecd;border-radius:999px;
+  padding:0 7px;font-size:10.5px;font-weight:800;margin-right:4px;vertical-align:1px}
+.tag.fall{background:#a76b38}
+.tag.spring{background:#3f9d45}
+.tag.ref{background:#7a6047}
+.note{font-size:11.5px;font-weight:600;line-height:1.45;color:#4a3524;margin:8px 0 0;
+  border-left:4px solid var(--ink-2);padding-left:8px}
+.note b{font-weight:800}
+.note.q{border-color:#e8590c}
+.note.q::before{content:'QUESTION — ';font-weight:800;color:#e8590c}
+.note.d::before{content:'DECIDED IN THE DRAWING — ';font-weight:800}
+.note.f::before{content:'FINDING — ';font-weight:800}
+body[data-notes="0"] .note{display:none}
+
+.card{background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);
+  padding:10px 12px;box-shadow:0 4px 0 var(--ink-2);font-size:12px;font-weight:600;line-height:1.5}
+.card b{font-weight:800}
+.card + .card{margin-top:10px}
+.card ul{margin:4px 0 0;padding-left:18px}
+
+/* ---------- frame 1: the lineup ----------
+   The garden's centre cell at the size the board really gives it on a 390
+   phone (~105px), the flower at .talker's 118% with overflow visible, standing
+   on the planter's own material — .garden's body, grain and lit edge. */
+.lineup{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 10px;padding:14px 4px 4px}
+.lu{text-align:center;font-size:11px;font-weight:800;line-height:1.2}
+.lu small{display:block;font-weight:600;color:var(--ink-soft);font-size:10.5px}
+.cc{width:100%;max-width:105px;aspect-ratio:1;margin:22px auto 30px;position:relative;
+  border:3px solid var(--ink);border-radius:var(--r-md);
+  background:
+    repeating-linear-gradient(96deg, rgba(255,255,255,.07) 0 3px, transparent 3px 14px),
+    linear-gradient(180deg,#d9a870 0%, #bd8551 42%, #97643a 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.28), inset 0 -7px 0 rgba(0,0,0,.2),
+    0 4px 0 #6b4423, 0 8px 14px rgba(44,26,16,.3);
+  display:grid;place-items:center;overflow:visible}
+.cc svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:118%;height:auto;overflow:visible;filter:drop-shadow(0 6px 0 rgba(44,26,16,.22))}
+
+/* ---------- frame 2: the picker ----------
+   .pick-cell restated: the veil over the hero's own tint, the 3px contour, the
+   3px lip. Poppy is drawn as the picker draws her today — the whole plant at
+   84%; every other hero is FITTED, Holly's rule. */
+.faces{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end}
+.face-col{text-align:center;font-size:10.5px;font-weight:800;width:52px}
+.face-col.big{width:98px}
+.pc{--av:#8fe08a;width:46px;height:46px;border-radius:50%;overflow:hidden;margin:0 auto 4px;
+  border:3px solid var(--ink);display:grid;place-items:center;
+  background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,.6)), var(--av);
+  box-shadow:inset 0 4px 0 rgba(255,255,255,.5), 0 3px 0 var(--ink-2), 0 6px 10px rgba(44,26,16,.18)}
+.pc svg{width:84%;height:84%;display:block;overflow:visible}
+.pc.fit svg{width:100%;height:100%}
+.pc.big{width:92px;height:92px}
+.pc.on{box-shadow:inset 0 4px 0 rgba(255,255,255,.5), 0 0 0 3px var(--coin), 0 4px 0 var(--ink-2)}
+.strip-card{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end;
+  background:#fffdf7;border:3px solid var(--ink);border-radius:var(--r-md);
+  padding:10px 10px;box-shadow:0 4px 0 var(--ink-2)}
+
+/* ---------- frame 3: the black silhouettes ---------- */
+.sil svg{filter:brightness(0)}
+.sil .pc{background:#fff}
+.sil120{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.s120{text-align:center}
+.s120 .box{width:100%;max-width:120px;aspect-ratio:1;margin:0 auto 4px;background:#fff;
+  border:2.5px solid var(--ink);border-radius:var(--r-sm);display:grid;place-items:center}
+.s120 .box svg{width:100%;height:100%;filter:brightness(0);overflow:visible}
+.s120 p{margin:0;font-size:10.5px;font-weight:600;line-height:1.3;color:#4a3524;text-align:left}
+.s120 p b{font-weight:800;display:block;color:var(--ink)}
+
+/* ---------- frame 4: Holly's eyes ---------- */
+.hollyrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.hstand{width:100%;aspect-ratio:.76;border:3px solid var(--ink);border-radius:var(--r-md);overflow:hidden;
+  position:relative;background:linear-gradient(180deg,#b9cee0 0%,#eaf4fb 60%,#ffffff 100%);
+  box-shadow:0 4px 0 var(--ink-2)}
+.hstand svg{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);width:112%;overflow:visible}
+.hcap{font-size:10.5px;font-weight:600;line-height:1.35;color:#4a3524;margin:5px 0 0}
+.hcap b{font-weight:800;color:var(--ink);display:block;font-size:11.5px}
+.hcap em{font-style:normal;font-weight:800;color:#a83250}
+
+/* ---------- frame 5: expressions ---------- */
+.xrow{display:grid;grid-template-columns:78px repeat(4,1fr);gap:8px;align-items:center;margin:0 0 10px}
+.xrow .who{font-size:11px;font-weight:800;line-height:1.2}
+.xrow .who small{display:block;font-weight:600;color:var(--ink-soft)}
+.xh{font-size:10.5px;font-weight:800;text-align:center;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em}
+.xc{aspect-ratio:1;border:2.5px solid var(--ink);border-radius:var(--r-sm);overflow:hidden;position:relative;
+  box-shadow:0 3px 0 var(--ink-2)}
+.xc svg{width:100%;height:100%;display:block;overflow:visible}
+.xc.fall{background:linear-gradient(180deg,#ffd9a1,#ffb570)}
+.xc.spring{background:linear-gradient(180deg,#8fe08a,#5cc45c)}
+.xc.night{background:linear-gradient(180deg,#26304f,#3b4568 70%,#5d5570)}
+
+/* ---------- frame 6: in the room ----------
+   Fall.scene() hand-copied at 390 wide and cropped to the band the board sits
+   in; .fl-board and .fl-plot restated. The hero stands in the centre cell at
+   the talking flower's own 118%. */
+.room-wrap{width:100%;max-width:390px;margin:0 auto;border:3px solid var(--ink);border-radius:var(--r-md);
+  overflow:hidden;box-shadow:0 4px 0 var(--ink-2)}
+.room{position:relative;width:390px;height:470px;overflow:hidden;transform-origin:0 0}
+.room .scene{position:absolute;left:0;top:-160px}
+.room .chip{position:absolute;left:50%;top:22px;transform:translateX(-50%);white-space:nowrap;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));border:2.5px solid var(--ink);border-radius:999px;
+  padding:3px 13px;font-size:13px;font-weight:800;box-shadow:0 2px 0 var(--ink-2)}
+.fl-board{--gap:8.6px;position:absolute;left:10px;top:74px;width:370px;height:370px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:var(--gap);padding:calc(var(--gap) * .85);border:4px solid var(--ink);border-radius:26px;
+  background:
+    repeating-linear-gradient(52deg, rgba(255,255,255,.09) 0 4px, transparent 4px 11px),
+    repeating-linear-gradient(-52deg, rgba(0,0,0,.10) 0 4px, transparent 4px 11px),
+    linear-gradient(180deg,#c98a4e 0%, #a76b38 44%, #8a5528 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.24), inset 0 -9px 0 rgba(0,0,0,.22),
+    0 9px 0 #5f3a1a, 0 18px 26px rgba(44,26,16,.32)}
+.fl-board::before{content:'';position:absolute;left:5%;right:5%;top:-10px;height:12px;
+  background:radial-gradient(ellipse 52% 100% at 50% 100%, #7d8b40 0 92%, transparent 94%);
+  background-size:22px 12px;background-repeat:repeat-x;opacity:.9}
+.fl-plot{position:relative;border-radius:var(--r-md);border:3px solid var(--ink);overflow:hidden;
+  background:linear-gradient(180deg,#7e5e42 0%, #5f4630 72%, #453221 100%);
+  box-shadow:0 4px 0 #392a1c, 0 8px 14px rgba(44,26,16,.24)}
+.fl-plot::after{content:'';position:absolute;inset:0;border-radius:15px;
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.13), inset 0 -7px 0 rgba(0,0,0,.2)}
+.fl-plot > svg{position:absolute;inset:0;width:100%;height:100%}
+.fl-plot .mark{position:absolute;inset:0;display:grid;place-items:center;opacity:.62}
+.fl-plot .mark svg{width:30%;height:30%}
+.fl-plot .crop{position:absolute;inset:0;display:grid;place-items:center}
+.fl-plot .crop svg{width:88%;height:88%;overflow:visible}
+.fl-center{display:grid;place-items:center;overflow:visible;position:relative}
+.fl-center svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:118%;height:auto;overflow:visible;filter:drop-shadow(0 6px 0 rgba(44,26,16,.22))}
+.room.spring{background:linear-gradient(180deg,#8fe08a 0%,#5cc45c 60%,#3f9d45 100%)}
+.room.spring .garden{position:absolute;left:10px;top:74px;width:370px;height:370px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:8.6px;padding:7.3px;border:4px solid var(--ink);border-radius:26px;
+  background:repeating-linear-gradient(96deg, rgba(255,255,255,.07) 0 3px, transparent 3px 14px),
+    linear-gradient(180deg,#d9a870 0%, #bd8551 42%, #97643a 100%);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.28), inset 0 -9px 0 rgba(0,0,0,.2),
+    0 9px 0 #6b4423, 0 18px 26px rgba(44,26,16,.3)}
+.room.spring .plot{border-radius:var(--r-md);border:3px solid var(--ink);
+  background:radial-gradient(circle at 26% 22%, rgba(255,255,255,.16) 0 12%, transparent 13%),
+    radial-gradient(circle at 72% 62%, rgba(0,0,0,.10) 0 9%, transparent 10%),
+    linear-gradient(180deg, #a9713f, #7d4f2a 72%, #5f3a1e);
+  box-shadow:inset 0 5px 0 rgba(255,255,255,.16), inset 0 -7px 0 rgba(0,0,0,.18), 0 4px 0 #5f3a1e}
+.room .stand-in{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);white-space:nowrap;
+  background:linear-gradient(180deg,#fffdf7,var(--paper-2));border:2.5px solid var(--ink);border-radius:999px;
+  padding:2px 12px;font-size:12px;font-weight:800;box-shadow:0 2px 0 var(--ink-2)}
+.seg{display:flex;gap:6px;justify-content:center;margin:0 0 8px}
+.seg button{border:2.5px solid var(--ink);border-radius:999px;background:#fffdf7;font:inherit;font-size:12px;
+  padding:3px 12px;box-shadow:0 2px 0 var(--ink-2);cursor:pointer;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#ffe98a,var(--coin))}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.three .mini{width:100%;aspect-ratio:390/470;overflow:hidden;border:2.5px solid var(--ink);
+  border-radius:var(--r-sm);position:relative;box-shadow:0 3px 0 var(--ink-2)}
+.three .mini .room{position:absolute;left:0;top:0}
+
+/* ---------- frame 7: the idle, hand-copied from style.css ----------
+   Line for line from the talking-flower block. Note what is NOT here: the
+   head does not sway. .tf-head sits outside .tf-stemwrap in the game, so only
+   the stem and leaves move — which matters for the bluebell, below. */
+.tf-stemwrap{transform-origin:60px 130px;animation:stemSway 3.4s ease-in-out infinite}
+@keyframes stemSway{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(1.6deg)}}
+.tf-petals.spin{animation:petalSpin 26s linear infinite;transform-origin:0 0}
+@keyframes petalSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.tf-lid{transform-origin:center top;transform:scaleY(0);animation:blink 5.4s infinite}
+@keyframes blink{0%,92%,100%{transform:scaleY(0)}95%,97%{transform:scaleY(1)}}
+.tf-cheek{animation:cheekPulse 3s ease-in-out infinite}
+@keyframes cheekPulse{0%,100%{opacity:.65}50%{opacity:.95}}
+.tf-leaf-l{transform-origin:60px 108px;animation:leafWaveL 2.6s ease-in-out infinite}
+.tf-leaf-r{transform-origin:60px 100px;animation:leafWaveR 2.9s ease-in-out infinite}
+@keyframes leafWaveL{0%,100%{transform:rotate(0)}50%{transform:rotate(-9deg)}}
+@keyframes leafWaveR{0%,100%{transform:rotate(0)}50%{transform:rotate(9deg)}}
+/* The Zs, critters.js's drift. Visible as base style; motion on top. */
+.cr-z{opacity:.8;animation:zfloat 4.8s ease-in-out infinite;animation-delay:calc(var(--i) * -1.6s)}
+@keyframes zfloat{0%{opacity:0;transform:translate(0,3px)}14%{opacity:.8}
+  50%{transform:translate(3px,-8px)}100%{opacity:0;transform:translate(1px,-18px)}}
+/* Everything is animated only where the frame asks for it: the lineup and the
+   other frames stand still so they can be compared. */
+.still .tf-stemwrap,.still .tf-petals,.still .tf-lid,.still .tf-cheek,.still .tf-leaf-l,.still .tf-leaf-r{animation:none}
+.still .tf-cheek{opacity:.8}
+.still .cr-z{animation:none}
+body[data-motion="0"] .tf-stemwrap,body[data-motion="0"] .tf-petals,body[data-motion="0"] .tf-lid,
+body[data-motion="0"] .tf-cheek,body[data-motion="0"] .tf-leaf-l,body[data-motion="0"] .tf-leaf-r,
+body[data-motion="0"] .cr-z{animation:none}
+@media (prefers-reduced-motion:reduce){
+  .tf-stemwrap,.tf-petals,.tf-lid,.tf-cheek,.tf-leaf-l,.tf-leaf-r,.cr-z{animation:none}}
+.idle{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.idle .pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.idle .cc{max-width:105px;margin:24px auto 34px}
+.idle .lab{font-size:10.5px;font-weight:800;text-align:center;color:var(--ink-soft)}
+
+/* ---------- frame 8: palettes ---------- */
+.pal{display:grid;grid-template-columns:86px 1fr;gap:6px 10px;align-items:start;margin:0 0 12px;
+  padding:0 0 10px;border-bottom:2px dashed #cdb893}
+.pal .who{font-size:11.5px;font-weight:800;line-height:1.2}
+.pal .who small{display:block;font-weight:600;color:var(--ink-soft)}
+.sw{display:flex;flex-wrap:wrap;gap:6px}
+.sw span{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;line-height:1.2;
+  background:#fffdf7;border:2px solid var(--ink);border-radius:999px;padding:2px 8px 2px 3px}
+.sw span i{width:16px;height:16px;border-radius:50%;border:2px solid var(--ink);flex:none}
+.sw span b{font-weight:800}
+.sw span.dom{box-shadow:0 0 0 2.5px var(--coin)}
+.pair-ok,.pair-flag{font-size:10.5px;font-weight:700;margin-top:5px;line-height:1.35}
+.pair-ok::before{content:'✓ ';color:#2f9e44;font-weight:800}
+.pair-flag::before{content:'! ';color:#e8590c;font-weight:800}
+table.mx{border-collapse:separate;border-spacing:3px;font-size:11px;margin-top:6px;width:100%;table-layout:fixed}
+table.mx th{font-weight:800;padding:3px 5px;text-align:center}
+table.mx td{background:#fffdf7;border:2px solid var(--ink);border-radius:8px;padding:4px 6px;text-align:center;font-weight:700}
+table.mx td.bad{background:#ffe3d3}
+table.mx td.ok{background:#e6f7e0}
+
+/* ---------- frame 9: names, as the picker would show them ---------- */
+.pick-group{margin:0 0 6px;padding-left:2px;font-size:10.5px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-soft)}
+.namecard{background:linear-gradient(180deg,#fffdf7,var(--paper-2));border:3px solid var(--ink);
+  border-radius:var(--r-md);padding:10px 12px;box-shadow:0 4px 0 var(--ink-2);margin:0 0 10px}
+.namecard .row{display:flex;gap:12px;align-items:flex-start}
+.namecard .pc{width:62px;height:62px}
+.names{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.names span{background:#fffdf7;border:2.5px solid var(--ink);border-radius:999px;padding:1px 11px;
+  font-size:15px;font-weight:800;box-shadow:0 2px 0 var(--ink-2)}
+.names span.pick{box-shadow:0 0 0 2.5px var(--coin),0 2px 0 var(--ink-2)}
+.namecard p{margin:5px 0 0;font-size:11px;font-weight:600;line-height:1.4;color:#4a3524}
+.namecard p b{font-weight:800}
+</style>
+</head>
+<body data-notes="1" data-motion="1">
+<!-- Shared gradients, one copy for the whole page — the game's injectDefs(). -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="gtalker" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#ffb3d1"/><stop offset="100%" stop-color="#ff5d95"/></linearGradient>
+  <radialGradient id="gface" cx="50%" cy="35%" r="70%">
+    <stop offset="55%" stop-color="#ffffff"/><stop offset="100%" stop-color="#ffc978"/></radialGradient>
+  <radialGradient id="gholly" cx="50%" cy="34%" r="70%">
+    <stop offset="52%" stop-color="#ffffff"/><stop offset="100%" stop-color="#cbb0c0"/></radialGradient>
+  <linearGradient id="fall-sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8fbfd8"/><stop offset="0.55" stop-color="#cfe0e6"/><stop offset="1" stop-color="#ffe3bd"/></linearGradient>
+  <pattern id="fp-grain" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(96)">
+    <rect width="3" height="14" fill="rgba(255,255,255,.06)"/></pattern>
+</defs></svg>
+
+<div class="page">
+<p style="margin:6px 0 0"><span class="status">SPIKE · OWNER PICKING · NOTHING BUILT</span></p>
+<h1>Fall and Spring get a face — and Holly's eyes, revisited</h1>
+<p class="lede">Three candidates for each season, drawn to Poppy's construction and judged beside Poppy
+and Holly. The ruling (2026-09-27): <b>simple like Poppy</b> — one face, one petal shape, one palette —
+<b>under Holly's kit</b>, and <b>a silhouette that is neither Poppy's round rosette nor Holly's crowned
+rose</b>. Eyes read first, cute and clear at 46px; mischief is a tilt on a readable eye, never a squint.
+Gender is open. The four should read as one family — Gran's tin held one seed for each season. Design
+doc: <b>docs/56-the-season-heroes.md</b>.</p>
+
+<nav class="strip" aria-label="Frames">
+  <a href="#f1"><b>1</b>Lineup</a><a href="#f2"><b>2</b>46px</a><a href="#f3"><b>3</b>Silhouette</a>
+  <a href="#f4"><b>4</b>Holly's eyes</a><a href="#f5"><b>5</b>Faces</a><a href="#f6"><b>6</b>In the room</a>
+  <a href="#f7"><b>7</b>Idle</a><a href="#f8"><b>8</b>Palettes</a><a href="#f9"><b>9</b>Names</a>
+  <button class="toggle" data-on="1" id="tNotes">Notes</button>
+  <button class="toggle" data-on="1" id="tMotion">Motion</button>
+</nav>
+
+<h2 style="border-top:0;margin-top:14px;padding-top:0">0 · The natures, written before the drawing</h2>
+<p class="lede">Holly's nature comes from her season's rule — Winter is the night shift, so she is the one
+who keeps the garden while you sleep. The same move, once per season:</p>
+<div class="card"><b><span class="tag fall">FALL</span>The rule: hours, and the bed pays together.</b>
+Planted in the morning, popped at dinner; the windfall only lands when all eight are ripe at once.
+<br><b>So Fall's hero is the one who waits until everyone is in, and then calls them to the table.</b>
+Nothing gets picked early on their watch.</div>
+<div class="card"><b><span class="tag spring">SPRING</span>The rule: the long game.</b> The nursery,
+Prisms spent in ceremony, breeding one day — the garden <i>about</i> the other three.
+<br><b>So Spring's hero plants for a year they will not see — patient, a little ceremonious, the keeper
+of what hasn't come up yet.</b></div>
+
+<!-- ======================= 1 ======================= -->
+<h2 id="f1">1 · The lineup — all eight, in the garden's centre cell</h2>
+<p class="lede">The centre cell at its real size on a 390-wide phone (a little smaller on a narrower
+screen), the flower at the talking flower's own 118%, standing on the planter's material. Same outline weight, same face radius, same stem and leaves — the
+seasons differ in silhouette and palette.</p>
+<div class="lineup still" id="lineup"></div>
+<p class="note d"><b>One eye recipe for the family, and it is Poppy's own</b> — the white eye, the ink
+pupil, one shine, her blink lid. Each new hero varies only tilt, a resting lid, pupil size and where
+it looks. It works for the new six because none of them has a pale face (Holly's lesson: a white eye on
+porcelain reads as spectacles). <b>Cheeks are Poppy's pink on all six</b> — the family blush; Holly
+still does not blush.</p>
+<p class="note d"><b>A male read is carried by one stroke above each eye and a wider mouth</b> — Poppy's
+face, with no brow, is the family's default and reads as a girl. A female read is carried by a single
+lash flick at the outer corner (Holly's own, one instead of two) and a head tilt. No bows, no
+moustaches, no lashes doing the eye's work.</p>
+
+<!-- ======================= 2 ======================= -->
+<h2 id="f2">2 · GATE — the faces at 46px, inside the picker's mask</h2>
+<p class="lede">The avatar picker's circle, its veil over each hero's tint, its 3px lip. Poppy is drawn as
+the picker draws her today (the whole plant at 84%); every other hero is <b>fitted</b> — the whole head
+inside the disc — which is Holly's rule since her crown was clipped by this mask (doc 46).</p>
+<div class="strip-card"><div class="faces" id="faces46"></div></div>
+<div style="height:10px"></div>
+<div class="strip-card"><div class="faces" id="faces92"></div></div>
+<p class="note f"><b>All six survive the mask fitted, and none loses its identity to it.</b> The cost
+is face size, and the wide shapes pay it: the Mop fits at 0.74 and the Dinnerplate at 0.72, against Holly's
+0.78 — a face about a sixth smaller than the Cup's or the Trumpet's (0.9). The picker cell measured in <code>docs/screens</code> is ~62px on a 390 phone; 46px is doc 46's
+floor, drawn here because it is the harder test.</p>
+<p class="note q">Should Poppy be fitted too? She is the only face in the row drawn as a whole plant,
+so at 46px her face is the smallest of the eight. Fitting her is one line in <code>ui-menu.js</code>.</p>
+
+<!-- ======================= 3 ======================= -->
+<h2 id="f3">3 · GATE — the black silhouette</h2>
+<p class="lede">Filled plain black, each hero must read as itself and as nobody else in the game. Same fitted
+heads, 46px and 120px. The caption under each is the one thing that makes it not-Poppy and not-Holly.</p>
+<div class="strip-card sil"><div class="faces" id="sil46"></div></div>
+<div style="height:10px"></div>
+<div class="sil120" id="sil120"></div>
+<p class="note f" id="silVerdict"></p>
+
+<!-- ======================= 4 ======================= -->
+<h2 id="f4">4 · Holly's eyes — her head as built, beside three treatments</h2>
+<p class="lede">Everything else about her is identical and untouched: crown, petals, porcelain, mark,
+mouth. Only the eyes change. Her current eye is one solid ink almond with two lashes — drawn that way
+because Poppy's white eye read as spectacles on porcelain (flora.js, <i>"A porcelain face cannot wear the
+Talking Flower's eyes"</i>).</p>
+<div class="hollyrow" id="hollyBig"></div>
+<div style="height:12px"></div>
+<div class="strip-card"><div class="faces" id="holly46"></div></div>
+<p class="note f"><b>The built eye is drawn the wrong way round, and that is most of the problem.</b>
+The spike that designed her described <i>"angled down toward the nose, with two short lashes off the outer
+tip"</i>. In <code>hollyEye()</code> the lash path runs to +x on the unmirrored left eye — the inner side —
+so the almond's point and both lashes sit at the nose, the eyes rise toward the centre, and the four lashes
+meet under the frost mark like a frown line. Checked against <code>flora.js</code> itself, rendered in this
+page: identical. On top of that the eye is 10.6 units tall against Poppy's 14.8. At 46px it reads as two
+worried dark patches — the squint the 2026-09-27 rule forbids, from the other side. Any of H1–H3 fixes the
+direction; they differ in how much eye they give her.</p>
+<p class="note d" id="hollyRec"></p>
+
+<!-- ======================= 5 ======================= -->
+<h2 id="f5">5 · Expressions — idle, talking, pleased, asleep</h2>
+<p class="lede">Each hero is the flower button in its room, so each needs the four faces the button
+wears. Asleep is drawn at night with the creatures' own shut-eye arcs and Zs, because Winter's tuck-in has
+a sleeping face and the story's chapter scenes will ask for one.</p>
+<div class="xrow" style="margin-bottom:4px"><span></span><span class="xh">Idle</span><span class="xh">Talking</span>
+  <span class="xh">Pleased</span><span class="xh">Asleep</span></div>
+<div id="expr" class="still"></div>
+<p class="note d"><b>Pleased is the arc eye, asleep is the cup eye</b> — upturned arcs over a big smile
+against the creatures' downturned arcs over a small one. They must never be mistaken for each other, and
+at 46px the mouth is what tells them apart.</p>
+
+<!-- ======================= 6 ======================= -->
+<h2 id="f6">6 · In the room</h2>
+<h3><span class="tag fall">FALL</span>On Fall's real board — the trug, the damp earth, the orchard sky</h3>
+<div class="seg" id="segFall"></div>
+<div class="room-wrap"><div id="fallRoom"></div></div>
+<div class="three" id="fallThree"></div>
+<p class="note f"><b>Fall's board is brown on olive, so the hero has to be the brightest thing on it.</b>
+Poppy has been standing here on a borrowed face since Turn 1, and her pink is the only non-autumn colour in
+the room. All three Fall candidates are drawn from Fall's own declared ramps — the orchard canopy, the gate's
+sky, the trug — so the flower finally belongs to the room it stands in. <b>That cuts both ways for the
+Mop:</b> its rust is the trug's own family, and on the woven centre cell it is the weakest figure of the
+three. The Dinnerplate's cream is the strongest.</p>
+
+<h3><span class="tag spring">SPRING</span>On a plain spring-green stand-in</h3>
+<div class="seg" id="segSpring"></div>
+<div class="room-wrap"><div id="springRoom"></div></div>
+<div class="three" id="springThree"></div>
+<p class="note">Spring has no board yet (it opens about Turn 6 and is designed as the nursery, doc 32). The
+planter here is Summer's, only so the hero has ground to stand on.</p>
+
+<!-- ======================= 7 ======================= -->
+<h2 id="f7">7 · Idle — the talking flower's sway and blink, hand-copied</h2>
+<p class="lede">The desk's pick for each season, breathing on the game's own idle: stem sway 3.4s, leaves 2.6s and
+2.9s, blink every 5.4s, cheeks pulsing. Left of each pair: animated. Right: the same frame under reduced
+motion, which is what a player with the setting on sees — a still flower, every state still readable.</p>
+<div class="idle" id="idle"></div>
+<p class="note f"><b>Two idle facts a build must carry.</b> (1) Poppy's petals turn once every 26 seconds.
+That is invisible on eight identical round petals and on the sunflower's eighteen rays, but it turns a
+six-point daffodil into a pinwheel and spins a cup, a bell, a mop and a plate sideways — <b>the spin is
+for radial heads only.</b> (2) In the game the head sits outside the swaying stem, so only the stem moves.
+A bluebell's head <i>hangs from</i> its stem, so it has to ride the sway or it comes loose — the Bell is built
+that way on this page.</p>
+
+<!-- ======================= 8 ======================= -->
+<h2 id="f8">8 · Palettes — no new hex</h2>
+<p class="lede">Every colour on every candidate is a value docs/05 already declares — a <code>:root</code>
+token, a declared component ramp, or Poppy's and Holly's own. The ringed swatch is the dominant. The pair
+check is against Poppy (dominant: her pink, <code>gp-talker</code>) and Holly (dominant: the plum).</p>
+<div id="palettes"></div>
+<h3>Which Fall and Spring pairs can stand together</h3>
+<div id="matrix"></div>
+<p class="note f"><b>The rule bites in Spring.</b> Spring's natural colours — clear blue, violet, lemon —
+are all spoken for in doc 05: blue and violet are the rarity colours (Rare, Epic) and the gem, lemon is the
+coin and Legendary, and doc 05 forbids borrowing any of them. So the daffodil wears Poppy's face-gold, the
+bluebell wears Holly's frost-blue and reads cold, and the tulip wears the family's mouth crimson. Fall has no
+such problem — it has three declared autumn ramps of its own.</p>
+<p class="note q">For the Spring hero you pick, may the build declare <b>one</b> component colour of its own,
+beside the drawing, the way Holly's plum was declared? It is the difference between a bluebell that is blue
+and one that is Winter's frost.</p>
+
+<!-- ======================= 9 ======================= -->
+<h2 id="f9">9 · Names, as the picker would show them</h2>
+<p class="lede">Poppy's and Holly's register: a real plant or a plain English word, one or two syllables.
+Every name below was checked against the game's data and the story bible — none is already a seed, a
+creature, a villager or a food. The picker's hero row is headed <i>Who talks to you</i>; it shows no
+names today, so the name under each disc is the one that would appear in the drawer and the chapter
+scenes. Ringed: the desk's pick.</p>
+<div id="namecards"></div>
+
+<h2>What this spike leaves to you</h2>
+<div class="card" id="asks"></div>
+</div>
+
+<script>
+/* ============================================================
+   THE FAMILY'S CONSTRUCTION. Everything is on the talking flower's
+   grid: a 120-wide plant, the head at (60,56), a face of radius 26,
+   the house outline at 3, the eye at (±9.5,-4).
+   ============================================================ */
+const INK = '#2c1a10';
+const MOUTH = '#a83250';          /* Poppy's and Holly's mouth, restated */
+const CHEEK = '#ff9ec1';          /* Poppy's cheek, restated — the family blush */
+const SCLERA = '#fffdf6';         /* Poppy's eye white, restated */
+let UID = 0;
+const r1 = (n) => Math.round(n * 10) / 10;
+
+const PETALS = {
+  /* flora.js */
+  round:'M0,-38 C13,-38 19,-26 17,-16 C15,-6 8,-1 0,-1 C-8,-1 -15,-6 -17,-16 C-19,-26 -13,-38 0,-38 Z',
+  point:'M0,-40 C9,-28 12,-14 0,-2 C-12,-14 -9,-28 0,-40 Z',
+  lotus:'M0,-42 C16,-28 15,-11 0,-2 C-15,-11 -16,-28 0,-42 Z',
+  /* Flora.talkingFlower()'s own petal */
+  poppy:'M0,-40 C15,-40 22,-27 20,-15 C18,-4 10,1 0,1 C-10,1 -18,-4 -20,-15 C-22,-27 -15,-40 0,-40 Z',
+  /* The sunflower's ray: long, straight-sided, one sharp tip. New, and the one
+     new petal path on the page — `point` is too short and `star` too thin to
+     read as a ray at 46px. */
+  ray:'M0,-47 C6,-40 8.5,-28 6.5,-16 C5,-7 2.5,-2 0,-2 C-2.5,-2 -5,-7 -6.5,-16 C-8.5,-28 -6,-40 0,-47 Z'
+};
+
+function ring(n, d, s, rot, fill, sy){
+  let o = '';
+  for (let i = 0; i < n; i++){
+    const a = (360 / n) * i + rot;
+    o += '<path d="' + PETALS[d] + '" fill="' + fill + '" transform="rotate(' + r1(a) + ') scale(' + s + (sy ? ' ' + sy : '') + ')"/>';
+  }
+  return o;
+}
+
+/* ------------------------------------------------------------
+   THE EYE. Poppy's recipe, exactly — ellipse 6.2 x 7.4 in her white
+   with a 2.4 ink contour, an ink pupil, one shine, and her blink lid
+   (.tf-lid, the rect the game animates). What a hero may vary:
+     tilt   degrees, + lifts the outer corner
+     lidO   resting lid at the outer corner, 0..0.34 of the eye
+     lidI   resting lid at the inner corner
+     pr/px/py  pupil radius and where it looks
+   Lids are capped at a third of the eye so the pupil and its shine are
+   always whole — mischief is a tilt on a readable eye, never a squint.
+   ------------------------------------------------------------ */
+function famEye(side, f, state){
+  const mir = side < 0 ? '' : ' scale(-1 1)';
+  const x = side * (f.ex || 9.5), y = f.ey || -4;
+  const rx = 6.2, ry = 7.4;
+  if (state === 'asleep'){
+    return '<g transform="translate(' + x + ' ' + (y + 1) + ')' + mir + '"><path d="M-6,-1 q6 5.6 12 0" fill="none" stroke="' + INK
+      + '" stroke-width="3.2" stroke-linecap="round"/></g>';
+  }
+  if (state === 'pleased'){
+    return '<g transform="translate(' + x + ' ' + (y + 1) + ')' + mir + '"><path d="M-5.8,1.6 Q0,-5.6 5.8,1.6" fill="none" stroke="' + INK
+      + '" stroke-width="3.2" stroke-linecap="round"/></g>';
+  }
+  const pr = f.pr || 3.4, px = f.px || 0, py = f.py || 0;
+  const sr = r1(1.3 * pr / 3.4 + (f.shineUp || 0));
+  const id = 'ec' + (++UID);
+  const lo = f.lidO || 0, li = f.lidI || 0;
+  let lid = '';
+  if (lo || li){
+    /* Left eye: the outer corner is -x, the inner (toward the nose) is +x. */
+    const yo = r1(-ry + 2 * ry * lo), yi = r1(-ry + 2 * ry * li);
+    lid = '<clipPath id="' + id + '"><ellipse rx="' + rx + '" ry="' + ry + '"/></clipPath>'
+      + '<g clip-path="url(#' + id + ')"><path d="M-8,-9 L8,-9 L8,' + yi + ' L-8,' + yo + ' Z" fill="' + f.lid + '"/>'
+      + '<path d="M-8,' + r1(yo - (yi - yo) / 16 * 2) + ' L8,' + r1(yi + (yi - yo) / 16 * 2) + '" stroke="' + INK + '" stroke-width="2.4"/></g>';
+  }
+  const lash = f.lash ? '<path d="M-5.6,-4.2 l-3.8,-2.6" stroke="' + INK + '" stroke-width="2.4" stroke-linecap="round"/>' : '';
+  return '<g class="tf-eye" transform="translate(' + x + ' ' + y + ')' + mir + '"><g transform="rotate(' + (f.tilt || 0) + ')">'
+    + '<ellipse rx="' + rx + '" ry="' + ry + '" fill="' + SCLERA + '"/>'
+    + '<circle r="' + pr + '" cx="' + px + '" cy="' + py + '" fill="' + INK + '"/>'
+    + '<circle cx="' + r1(px - 1.4) + '" cy="' + r1(py - 2) + '" r="' + sr + '" fill="#fff"/>'
+    + lid
+    + '<ellipse rx="' + rx + '" ry="' + ry + '" fill="none" stroke="' + INK + '" stroke-width="2.4"/>'
+    + lash
+    + '<rect class="tf-lid" x="-7.6" y="-9" width="15.2" height="10" rx="4" fill="' + f.lid + '"/>'
+    + '</g></g>';
+}
+
+/* One stroke above each eye, level, the same ink weight as the eye's own
+   contour. Poppy's face has none; this is the whole of the male read. */
+function brows(f, state){
+  if (!f.brow) return '';
+  const lift = state === 'talking' || state === 'pleased' ? -1.4 : 0;
+  const one = (side) => '<g transform="translate(' + side * (f.ex || 9.5) + ' ' + ((f.ey || -4) + lift) + ')' + (side < 0 ? '' : ' scale(-1 1)') + '">'
+    + '<path d="' + (f.brow === 'up' ? 'M-5.4,-12.6 L4.6,-13.2' : 'M-5.6,-12.4 L4.6,-11.2') + '" stroke="' + INK
+    + '" stroke-width="3" stroke-linecap="round"/></g>';
+  return one(-1) + one(1);
+}
+
+/* The face, shared by all six. Poppy's construction line for line: the
+   disc, the warm multiply shading (gface), the cheeks, the eyes, the mouth. */
+function face(f, state){
+  state = state || 'idle';
+  const m = f.mouth[state] || f.mouth.idle;
+  const cheeks = state === 'asleep'
+    ? '<ellipse class="tf-cheek" cx="-15" cy="6" rx="4.6" ry="3.2" fill="' + CHEEK + '" opacity=".8"/><ellipse class="tf-cheek" cx="15" cy="6" rx="4.6" ry="3.2" fill="' + CHEEK + '" opacity=".8"/>'
+    : '<ellipse class="tf-cheek" cx="-16" cy="6" rx="4.6" ry="3.2" fill="' + CHEEK + '" opacity=".8"/><ellipse class="tf-cheek" cx="16" cy="6" rx="4.6" ry="3.2" fill="' + CHEEK + '" opacity=".8"/>';
+  return '<circle r="26" fill="' + f.face + '" stroke="' + INK + '" stroke-width="3"/>'
+    + '<circle r="26" fill="url(#gface)" style="mix-blend-mode:multiply" opacity=".35"/>'
+    + cheeks
+    + famEye(-1, f, state) + famEye(1, f, state)
+    + brows(f, state)
+    + '<path class="tf-mouth-path" d="' + m + '" fill="' + MOUTH + '" stroke="' + INK
+    + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+}
+
+/* The mouths, one set. Poppy's idle and her `open`/`crit` from ui.js's
+   faceReact(), scaled per hero by width. */
+function mouths(w, idle){
+  const k = w / 8;
+  return {
+    idle: idle || ('M' + r1(-8 * k) + ',10 Q0,17 ' + r1(8 * k) + ',10'),
+    talking: 'M' + r1(-7 * k) + ',9 Q0,21 ' + r1(7 * k) + ',9 Q0,13.5 ' + r1(-7 * k) + ',9',
+    pleased: 'M' + r1(-10 * k) + ',8 Q0,23 ' + r1(10 * k) + ',8 Q0,15 ' + r1(-10 * k) + ',8',
+    asleep: 'M-3.6,11.6 Q0,15.4 3.6,11.6 Q0,13 -3.6,11.6'
+  };
+}
+
+/* ------------------------------------------------------------
+   THE HEROES. Poppy and Holly first, hand-copied as the rulers.
+   ------------------------------------------------------------ */
+
+/* ---- Holly, from flora.js, with the eye made swappable (frame 4) ---- */
+const HOLLY = { plumD:'#241426', plumM:'#3b2140', pink:'#ff5d95', ice:'#eaf4fb', iceS:'#93b6d0',
+  face:'#f7eef2', faceS:'#cbb0c0', leaf:'#2f5d43', leafL:'#3f7a57' };
+function hollyRing(n, scale, rot, fill){
+  let s = '';
+  for (let i = 0; i < n; i++) s += '<path d="' + PETALS.round + '" fill="' + fill + '" transform="rotate(' + r1((360 / n) * i + rot) + ') scale(' + scale + ')"/>';
+  return s;
+}
+function hollyCrown(n, len, spread, w){
+  let s = '';
+  for (let i = 0; i < n; i++){
+    const t = n === 1 ? 0 : (i / (n - 1)) * 2 - 1;
+    const a = (t * spread * Math.PI) / 180, r0 = 23;
+    const alt = Math.round(Math.abs(i - (n - 1) / 2)) % 2 === 0 ? 1 : 0.82;
+    const L = len * (1 - 0.26 * Math.abs(t)) * alt;
+    const sx = Math.sin(a), cy = -Math.cos(a), px = Math.cos(a) * w, py = Math.sin(a) * w;
+    s += '<path d="M' + r1(sx * r0 - px) + ',' + r1(cy * r0 - py) + ' L' + r1(sx * (r0 + L)) + ',' + r1(cy * (r0 + L))
+      + ' L' + r1(sx * r0 + px) + ',' + r1(cy * r0 + py) + ' Z" fill="' + HOLLY.ice + '"/>';
+  }
+  return s;
+}
+function hollyMark(){
+  let arms = '';
+  for (let i = 0; i < 3; i++){
+    const a = (i * 60 * Math.PI) / 180, dx = Math.cos(a) * 7, dy = Math.sin(a) * 7;
+    arms += '<path d="M' + r1(-dx) + ',' + r1(-dy) + ' L' + r1(dx) + ',' + r1(dy) + '"/>';
+  }
+  return '<g transform="translate(0 -15.5) scale(0.86)" fill="none" stroke="' + HOLLY.iceS + '" stroke-width="2.2" stroke-linecap="round">' + arms + '</g>';
+}
+const ALMOND = 'M-6.8,0.1 C-4.4,-3.7 2.4,-5.8 7.4,-3.8 C6.6,1 2.4,4.8 -2.4,4.6 C-5.2,4.5 -6.9,2.4 -6.8,0.1 Z';
+
+/* HOLLY'S EYES. `now` is hollyEye() as built. H1/H2/H3 are the proposals;
+   every one keeps her position (±10.5, -2.5) and her downward angle toward
+   the nose, which is where the "mischievous" lives. */
+const HOLLY_EYES = {
+  now: function(side){
+    const m = side < 0 ? '' : ' scale(-1 1)';
+    return '<g transform="translate(' + side * 10.5 + ' -2.5)' + m + '"><g transform="rotate(-13)">'
+      + '<path d="' + ALMOND + '" fill="' + INK + '"/><circle cx="-1.9" cy="-0.9" r="1.35" fill="#fff"/>'
+      + '<path d="M7.4,-4.4 l4.1,-3.2 M8.6,-1.4 l4.4,-1.8" fill="none" stroke="' + INK + '" stroke-width="2.4" stroke-linecap="round"/></g></g>';
+  },
+  /* H1 — the almond, turned round and opened. As built, the almond's point
+     and both lashes sit at the INNER corner (the lash path runs to +x on an
+     unmirrored left eye), so the two eyes rise toward the nose and the lashes
+     meet under the frost mark. H1 keeps the almond and flips it: point and
+     one lash at the OUTER corner, the eye 35% taller, a bigger shine. */
+  h1: function(side){
+    const m = side < 0 ? '' : ' scale(-1 1)';
+    return '<g transform="translate(' + side * 10.5 + ' -2.5)' + m + '"><g transform="rotate(8) scale(-1 1)">'
+      + '<g transform="translate(0.3 -0.5) scale(1.04 1.35) translate(-0.3 0.5)"><path d="' + ALMOND + '" fill="' + INK + '"/></g>'
+      + '<circle cx="-1.6" cy="-1.6" r="1.95" fill="#fff"/>'
+      + '<path d="M7.6,-5.6 l4.3,-3" fill="none" stroke="' + INK + '" stroke-width="2.4" stroke-linecap="round"/></g></g>';
+  },
+  /* H2 — the family eye. Poppy's recipe, so all four sisters share one eye,
+     made porcelain-proof by what fills it: the pupil grows to 4.6 so the
+     white is a thin rim, not a lens. The mischief is a porcelain lid cut on a
+     slant, heavy toward the nose, with its ink lid line. */
+  h2: function(side){
+    return famEye(side, { ex:10.5, ey:-2.5, tilt:-4, lidO:0.04, lidI:0.26, pr:4.6, py:1.1, px:0.4,
+      lid: HOLLY.face, lash:true, shineUp:0.3 }, 'idle');
+  },
+  /* H3 — the pip. critters.js's eye: one solid ink oval with one shine,
+     upright and bigger than the almond, with the same slanted porcelain lid
+     cut across its top and one lash. Solid ink cannot read as spectacles on
+     any face. */
+  h3: function(side){
+    const m = side < 0 ? '' : ' scale(-1 1)';
+    const id = 'hp' + (++UID);
+    return '<g transform="translate(' + side * 10.5 + ' -2.5)' + m + '"><g transform="rotate(-4)">'
+      + '<clipPath id="' + id + '"><ellipse rx="5.6" ry="7.2"/></clipPath>'
+      + '<ellipse rx="5.6" ry="7.2" fill="' + INK + '"/>'
+      + '<circle cx="-1.7" cy="-1.2" r="2.1" fill="#fff"/>'
+      + '<g clip-path="url(#' + id + ')"><path d="M-8,-9 L8,-9 L8,-2.6 L-8,-6.4 Z" fill="' + HOLLY.face + '"/></g>'
+      + '<path d="M-5.2,-5.2 l-3.6,-2.8" fill="none" stroke="' + INK + '" stroke-width="2.4" stroke-linecap="round"/></g></g>';
+  }
+};
+function hollyHead(eyes, state){
+  eyes = eyes || 'now';
+  const e = state === 'asleep'
+    ? '<g fill="none" stroke="' + INK + '" stroke-width="3.4" stroke-linecap="round"><path d="M-15,-3 q4.5 5 9 0"/><path d="M6,-3 q4.5 5 9 0"/></g>'
+    : HOLLY_EYES[eyes](-1) + HOLLY_EYES[eyes](1);
+  return '<g stroke="' + INK + '" stroke-width="3" stroke-linejoin="round">'
+    + hollyRing(8, 1.10, 22, HOLLY.pink) + hollyRing(8, 1.0, 0, HOLLY.plumD) + hollyRing(6, 0.68, 26, HOLLY.plumM) + '</g>'
+    + '<g stroke="' + INK + '" stroke-width="3" stroke-linejoin="round">' + hollyCrown(7, 34, 68, 5) + '</g>'
+    + '<circle r="26" fill="' + HOLLY.face + '" stroke="' + INK + '" stroke-width="3"/>'
+    + '<circle r="26" fill="url(#gholly)" style="mix-blend-mode:multiply" opacity=".34"/>'
+    + hollyMark() + e
+    + '<path d="M-8,10.4 Q0.5,15.8 8.6,8.2" fill="' + MOUTH + '" stroke="' + INK + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+}
+
+/* ---- the Fall and Spring candidates' petal constructions ---- */
+
+/* F-A: eighteen rays in two ranks, the back rank a step darker and set in
+   the gaps — the Talking Flower's own two-ring trick, doc 05. */
+function sunflowerPetals(){
+  return ring(18, 'ray', 1.0, 10, '#e88f4e') + ring(18, 'ray', 0.92, 0, '#ffb570');
+}
+
+/* F-B: the spider mum's quills. Each quill is a stroke with an ink stroke
+   under it — ALL the ink first, then all the colour — so twenty-odd quills
+   share ONE outline, which is exactly "flat inks inside one thick outline".
+   Short on top, long at the sides, and the long ones fall with gravity and
+   curl out at the tip: the mop. */
+/* Three passes, and the first two are worth keeping written down. A DENSE
+   ring of thick quills all round a face is a lion's mane; quills that rise
+   from the top of the head and fall either side are a wig. What reads as a
+   flower is SPARSE and radial with gravity: eighteen thin quills, gaps
+   between them, the top ones standing, the side ones drooping, each with the
+   spider mum's small hooked tip. */
+function mopQuills(){
+  const q = [];
+  const N = 18;
+  for (let i = 0; i < N; i++){
+    const deg = -168 + (336 / (N - 1)) * i, a = deg * Math.PI / 180, t = Math.abs(deg) / 168;
+    const sx = Math.sin(a), cy = -Math.cos(a), side = sx >= 0 ? 1 : -1;
+    const r0 = 21, L = 22 + 10 * Math.sin(t * Math.PI) - (t > 0.8 ? 8 : 0);
+    const S = [sx * r0, cy * r0];
+    const g = Math.pow(Math.abs(sx), 1.2) * L * 0.55;              /* the droop */
+    const E = [S[0] + sx * L, S[1] + cy * L + g];
+    const C = [S[0] + sx * L * 0.75, S[1] + cy * L * 0.75 - 2];
+    const hook = t < 0.12 ? ' q1.5,-3 4,-2' : ' q' + r1(side * 2.4) + ',2.2 ' + r1(side * 4.6) + ',-1.2';
+    q.push({ d: 'M' + r1(S[0]) + ',' + r1(S[1]) + ' Q' + r1(C[0]) + ',' + r1(C[1]) + ' ' + r1(E[0]) + ',' + r1(E[1]) + hook,
+      back: i % 2 === 0 });
+  }
+  const ink = q.map((p) => '<path d="' + p.d + '"/>').join('');
+  const back = q.filter((p) => p.back).map((p) => '<path d="' + p.d + '"/>').join('');
+  const front = q.filter((p) => !p.back).map((p) => '<path d="' + p.d + '"/>').join('');
+  return '<g fill="none" stroke-linecap="round" stroke-linejoin="round">'
+    + '<g stroke="' + INK + '" stroke-width="8">' + ink + '</g>'
+    + '<g stroke="#c9622f" stroke-width="3.6">' + back + '</g>'
+    + '<g stroke="#e0803c" stroke-width="3.6">' + front + '</g></g>';
+}
+
+/* F-C: the dinnerplate dahlia, wider than it is tall. The petals are laid on
+   an ELLIPSE rather than squashed: each petal is lengthened by the ellipse's
+   radius at its angle, so its width — and so its ink outline — stays the
+   house's 3 everywhere. Squashing the group would thin the outline top and
+   bottom. */
+function platePetals(){
+  const A = 1.36, B = 0.82;
+  const tier = (n, s, rot, fill) => {
+    let o = '';
+    for (let i = 0; i < n; i++){
+      const deg = (360 / n) * i + rot, a = deg * Math.PI / 180;
+      const k = 1 / Math.sqrt(Math.pow(Math.sin(a) / A, 2) + Math.pow(Math.cos(a) / B, 2));
+      o += '<path d="' + PETALS.lotus + '" fill="' + fill + '" transform="rotate(' + r1(deg) + ') scale(' + s + ' ' + r1(s * k * 100) / 100 + ')"/>';
+    }
+    return o;
+  };
+  return tier(16, 1.0, 11.25, '#ffd9a1') + tier(14, 0.86, 0, '#ffe0ad') + tier(10, 0.7, 9, '#ffd9a1');
+}
+
+/* S-A: a daffodil's six tepals, three and three, the back trio a step deeper,
+   and the corona — the trumpet's frilled lip — as a ring round the face. */
+function daffodilPetals(){
+  let back = '', front = '';
+  for (let i = 0; i < 3; i++){
+    back += '<path d="' + PETALS.lotus + '" fill="#ffd98a" transform="rotate(' + (60 + i * 120) + ') scale(1.04)"/>';
+    front += '<path d="' + PETALS.lotus + '" fill="#ffe9a8" transform="rotate(' + (i * 120) + ') scale(1.16)"/>';
+  }
+  let d = '';
+  for (let i = 0; i <= 96; i++){
+    const a = (i / 96) * Math.PI * 2;
+    const r = 31.6 + 2.4 * Math.cos(a * 14);
+    d += (i ? 'L' : 'M') + r1(Math.sin(a) * r) + ',' + r1(-Math.cos(a) * r);
+  }
+  return back + front + '<path d="' + d + 'Z" fill="#ffc978"/>';
+}
+
+/* S-B: the bluebell. One fused bell — one petal — worn like a bell wears its
+   clapper: the dome is behind and above the face, the rim flares out at cheek
+   height into six sharp tips, and the chin hangs free below it. Three passes
+   taught this: a bell that wraps past the chin reads as a hood, a bell whose
+   face is its own colour reads as a ghost, and a soft scalloped hem reads as
+   a haircut — the tips have to be POINTS to read as petals. */
+const BELL = 'M0,-44 C15,-44 24,-35 26,-20 C28,-8 29,0 33,5 L46,-4 L41,12 L30,14 L25,24 L16,17 L0,19 '
+  + 'L-16,17 L-25,24 L-30,14 L-41,12 L-46,-4 L-33,5 C-29,0 -28,-8 -26,-20 C-24,-35 -15,-44 0,-44 Z';
+function bellPetals(){
+  return '<path d="M2,-42 C4,-50 10,-54 16,-54" fill="none" stroke="#5cc45c" stroke-width="5" stroke-linecap="round"/>'
+    + '<path d="' + BELL + '" fill="#93b6d0"/>'
+    + '<path d="M-20,-26 C-17,-35 -10,-39 -4,-40 C-12,-35 -16,-28 -18,-18 Z" fill="#b9cee0" stroke="none"/>';
+}
+
+/* S-C: the tulip's cup — a back petal and two side petals wrapping it, three
+   soft tips over a round-bottomed cup. Every petal sits BEHIND the face: a
+   cup drawn in front would hide the mouth. */
+function tulipPetals(){
+  const back = 'M0,-55 C19,-47 31,-27 31,-2 C31,22 18,38 0,40 C-18,38 -31,22 -31,-2 C-31,-27 -19,-47 0,-55 Z';
+  const left = 'M-41,-40 C-27,-41 -12,-28 -8,-8 C-5,12 -10,31 -21,38 C-35,34 -42,16 -42,-4 C-42,-18 -43,-30 -41,-40 Z';
+  return '<path d="' + back + '" fill="#a83250"/>'
+    + '<path d="' + left + '" fill="#a83250"/><path d="' + left + '" fill="#a83250" transform="scale(-1 1)"/>'
+    + '<path d="M-36,-30 C-33,-34 -29,-34 -27,-32 C-31,-24 -33,-14 -34,-4 Z" fill="rgba(255,255,255,.26)" stroke="none"/>';
+}
+
+const HEROES = {
+  poppy: {
+    tag:'REF', season:'summer', title:'Poppy', sub:'Summer · the reference', stand:'summer', tint:'#ffd6ea',
+    petals: () => ring(8, 'poppy', 1.02, 0, 'url(#gtalker)'), spin:true,
+    f: { face:'#ffe9a8', lid:'#ffd98a', mouth: mouths(8) },
+    leaf:'#57c15b', stem:'#4bb257', fit:null
+  },
+  holly: {
+    tag:'REF', season:'winter', title:'Holly', sub:'Winter · as built', stand:'winter', tint:'#ff5d95',
+    headFn: (state) => hollyHead('now', state),
+    leaf:'#3f7a57', stem:'#2f5d43', fit:{ s:0.78, cy:55 }
+  },
+  FA: {
+    tag:'F·A', season:'fall', title:'The Sunflower', sub:'eighteen rays', stand:'fall', tint:'#ffb570',
+    species:'Sunflower (Helianthus)',
+    petals: sunflowerPetals, spin:true,
+    f: { face:'#c98a4e', lid:'#a76b38', tilt:0, lidO:0.1, lidI:0.1, pr:3.6, py:0.4, brow:'level',
+         mouth: mouths(9.5, 'M-9.5,9 Q0,21 9.5,9 Q0,13.5 -9.5,9') },
+    leaf:'#57a25c', stem:'#3f7d43', bigLeaves:true, stemW:11, fit:{ s:0.92, cy:50 },
+    read:'male', names:['Rowan','Barley','Russet'], pick:0,
+    nature:'Turns to follow the sun across the day, and when it sets, calls everybody in to eat. Fall’s hours on a face.',
+    why:'A sunflower is the one flower everybody can draw from memory: a dark disc and a ring of rays. At 46px the ray count is lost but the spikiness is not — a sunburst reads where a rosette would not.',
+    sil:'Rays all the way round, sharp. Poppy’s edge is eight soft lobes; Holly’s points are on top only.',
+    readHow:'One level brow stroke over each eye and a wide open grin; the head sits straight on a thick stem.'
+  },
+  FB: {
+    tag:'F·B', season:'fall', title:'The Mop', sub:'a spider chrysanthemum', stand:'fall', tint:'#e0803c',
+    species:'Spider chrysanthemum',
+    petalsRaw: mopQuills, spin:false,
+    f: { face:'#ffd9a1', lid:'#ffb570', tilt:-5, lidO:0.24, lidI:0.06, pr:3.4, py:0.8,
+         mouth: mouths(6.5) },
+    leaf:'#57a25c', stem:'#3f7d43', fit:{ s:0.74, cy:50 },
+    read:'either', names:['Ginger','Tansy','Aster'], pick:0,
+    nature:'The last bloom of the year, in no hurry at all: everything ripens if you give it the hours, and they are not about to pick anything early.',
+    why:'The chrysanthemum is autumn’s own flower — it opens as the days shorten. The spider form is thin quills with hooked tips, the side ones drooping, which gives the only open, gappy silhouette in the game: you can see through it.',
+    sil:'A spray of thin quills you can see between, drooping at the sides. Poppy and Holly are both solid.',
+    readHow:'Carried by nothing, on purpose: no brow, no lash, lids soft at the outer corner. Voice decides.'
+  },
+  FC: {
+    tag:'F·C', season:'fall', title:'The Dinnerplate', sub:'a dinnerplate dahlia', stand:'fall', tint:'#ffd9a1',
+    species:'Dinnerplate dahlia (café-au-lait type)',
+    petals: platePetals, spin:false, headTilt:-7,
+    f: { face:'#ffb570', lid:'#e88f4e', tilt:7, lidO:0.04, lidI:0.12, pr:3.5, lash:true,
+         mouth: mouths(7.5, 'M-7,10 Q1,16.5 7.6,9') },
+    leaf:'#57a25c', stem:'#3f7d43', fit:{ s:0.72, cy:50 },
+    read:'female', names:['Maple','Clove','Amber'], pick:0,
+    nature:'Sets the table: the windfall is a dinner, and nobody sits down until every one of the eight has come in.',
+    why:'Dinnerplate dahlias are grown for heads the width of a plate, and are cut in September. Wider than it is tall is a silhouette no flower in the game has — and the name is Fall’s own rule, the dinner appointment.',
+    sil:'Wider than it is tall — a plate, a brim. Poppy and Holly are both round.',
+    readHow:'A single lash at each outer corner, the head tilted a few degrees, a small smile lifted at one side.'
+  },
+  SA: {
+    tag:'S·A', season:'spring', title:'The Trumpet', sub:'a daffodil', stand:'spring', tint:'#ffe9a8',
+    species:'Daffodil (Narcissus)',
+    petals: daffodilPetals, spin:false,
+    f: { face:'#ffe0ad', lid:'#ffc978', tilt:4, pr:3.6, py:-0.8, brow:'up',
+         mouth: mouths(6.5, 'M-6,9 Q0,19.5 6,9 Q0,12.5 -6,9') },
+    leaf:'#8fe08a', stem:'#5cc45c', fit:{ s:0.9, cy:52 },
+    read:'male', names:['Sorrel','Dill','Chive'], pick:0,
+    nature:'First up, and loudest about it: the herald who announces every Turn’s ceremony for a spring that has not arrived yet.',
+    why:'The daffodil is the first flower of the year and it has a trumpet. Six tepals make a star with fat points — fewer and broader than the sunflower’s rays, so the two never blur.',
+    sil:'Six fat points, a star, all the way round. Holly’s points are a crown on top; the sunflower’s are eighteen thin ones.',
+    readHow:'A level brow stroke raised high (eager, not cross), an open mouth, looking up.'
+  },
+  SB: {
+    tag:'S·B', season:'spring', title:'The Bell', sub:'a bluebell', stand:'spring', tint:'#b9cee0',
+    species:'Bluebell (Hyacinthoides)',
+    petals: bellPetals, spin:false, headTilt:10, droop:true,
+    f: { face:'#ffe0ad', lid:'#ffc978', tilt:-3, lidO:0.26, lidI:0.1, pr:3.4, py:1.4, lash:true,
+         mouth: mouths(5) },
+    leaf:'#8fe08a', stem:'#5cc45c', fit:{ s:0.84, cy:61 },
+    read:'female', names:['Ivy','Lilac','Wren'], pick:0,
+    nature:'A bluebell wood takes decades to spread and nobody alive planted it — she is fine with that. The long game, in person.',
+    why:'The droop, real: a bluebell’s bells hang from an arched stem. One bell is one petal, so she is the simplest candidate on the page — worn the storybook way, as a bonnet, with her face as the clapper. The risk, said plainly: some will read the bell as blue hair.',
+    sil:'A bell with pointed tips and a stalk on top, the face hanging below it like a clapper.',
+    readHow:'A single lash, lids lowered at the outer corners, looking down; the head hangs, which reads as shy.'
+  },
+  SC: {
+    tag:'S·C', season:'spring', title:'The Cup', sub:'a tulip', stand:'spring', tint:'#ff9ec1',
+    species:'Tulip (Tulipa)',
+    petals: tulipPetals, spin:false,
+    f: { face:'#ffd9a1', lid:'#ffb570', tilt:0, lidO:0.08, lidI:0.08, pr:3.4,
+         mouth: mouths(7, 'M-7,10.5 Q0,15.5 7,10.5') },
+    leaf:'#8fe08a', stem:'#5cc45c', fit:{ s:0.9, cy:57 },
+    read:'either', names:['Sage','Moss','Linden'], pick:0,
+    nature:'Spent the whole winter underground as a bulb, planning — keeps the nursery’s ledger, and ceremony is how they say they care.',
+    why:'A tulip is planted in autumn and waits all winter, which is the long game in one plant. The cup is three soft tips over a round bottom — taller than wide.',
+    sil:'Taller than wide: a cup with three soft tips. Holly’s crown is seven sharp ones over a round head.',
+    readHow:'Level eyes, a level smile, no brow and no lash — the neutral face. Voice decides.'
+  }
+};
+/* The Bell's name list: Wren is a villager (doc 55). Swapped before anyone reads it. */
+HEROES.SB.names = ['Ivy','Lilac','Dewdrop'];
+const ORDER = ['poppy','holly','FA','FB','FC','SA','SB','SC'];
+const CANDS = ['FA','FB','FC','SA','SB','SC'];
+
+/* The head only, centred on 0,0 — what the picker draws. */
+function head(k, state){
+  const h = HEROES[k];
+  if (h.headFn) return h.headFn(state);
+  const petals = h.petalsRaw ? h.petalsRaw()
+    : '<g class="tf-petals' + (h.spin ? ' spin' : '') + '" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round">' + h.petals() + '</g>';
+  const inner = petals + face(h.f, state);
+  return h.headTilt ? '<g transform="rotate(' + h.headTilt + ')">' + inner + '</g>' : inner;
+}
+
+/* The whole plant on the talking flower's grid: 120 wide, the head at
+   (60,56), the outer translate(0 10) Holly's plant uses for headroom. */
+function plant(k, state){
+  const h = HEROES[k];
+  const sw = h.stemW || 9;
+  const leafT = h.bigLeaves ? ' transform="translate(60 110) scale(1.28) translate(-60 -110)"' : '';
+  let stem, headG;
+  if (h.droop){
+    /* The droop: the stem rises past the head and arches over, and the bell
+       hangs from its end. The head is INSIDE the swaying group here. */
+    stem = '<path d="M60,132 C60,110 64,74 70,46 C74,26 66,12 56,14" fill="none" stroke="' + h.stem + '" stroke-width="' + sw + '" stroke-linecap="round"/>';
+    headG = '<g transform="translate(52 56)"><g transform="translate(0 -1)">' + head(k, state) + '</g></g>';
+  } else {
+    stem = '<path d="M60,132 C60,114 59,102 60,92" fill="none" stroke="' + h.stem + '" stroke-width="' + sw + '" stroke-linecap="round"/>';
+    headG = '';
+  }
+  const leaves = '<g' + leafT + '>'
+    + '<path class="tf-leaf tf-leaf-l" d="M60,114 C46,116 34,108 30,96 C44,90 56,100 60,114 Z" fill="' + h.leaf + '" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/>'
+    + '<path class="tf-leaf tf-leaf-r" d="M60,106 C74,108 86,100 90,88 C76,82 64,92 60,106 Z" fill="' + h.leaf + '" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/></g>';
+  return '<svg viewBox="0 0 120 142" aria-hidden="true"><g transform="translate(0 10)">'
+    + '<g class="tf-stemwrap">' + stem + leaves + headG + '</g>'
+    + (h.droop ? '' : '<g class="tf-head" transform="translate(60 56)">' + head(k, state) + '</g>')
+    + '</g></svg>';
+}
+
+/* The picker's face. Poppy as the picker draws her (the whole plant);
+   everyone else fitted, so the whole head is inside the disc. */
+function faceSvg(k, state){
+  const h = HEROES[k];
+  if (!h.fit) return plant(k, state).replace('<svg ', '<svg preserveAspectRatio="xMidYMid meet" ');
+  return '<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="translate(50 ' + h.fit.cy + ') scale(' + h.fit.s + ')">'
+    + head(k, state) + '</g></svg>';
+}
+function pickCell(k, big, extra){
+  const h = HEROES[k];
+  return '<div class="pc' + (h.fit ? ' fit' : '') + (big ? ' big' : '') + (extra || '') + '" style="--av:' + h.tint + '">' + faceSvg(k) + '</div>';
+}
+function tagFor(k){
+  const h = HEROES[k];
+  return '<span class="tag ' + (h.season === 'fall' ? 'fall' : h.season === 'spring' ? 'spring' : 'ref') + '">' + h.tag + '</span>';
+}
+
+/* ========================= frame 1 ========================= */
+document.getElementById('lineup').innerHTML = ORDER.map(function(k){
+  const h = HEROES[k];
+  return '<div class="lu"><div class="cc">' + plant(k) + '</div>' + tagFor(k) + h.title + '<small>' + (h.species ? h.species.replace(/ \(.*\)/, '') : h.sub) + '</small></div>';
+}).join('');
+
+/* ========================= frame 2 ========================= */
+function faceRow(host, big){
+  document.getElementById(host).innerHTML = ORDER.map(function(k){
+    return '<div class="face-col' + (big ? ' big' : '') + '">' + pickCell(k, big) + HEROES[k].tag.replace('REF', HEROES[k].title) + '</div>';
+  }).join('');
+}
+faceRow('faces46', false);
+faceRow('faces92', true);
+
+/* ========================= frame 3 ========================= */
+document.getElementById('sil46').innerHTML = ORDER.map(function(k){
+  return '<div class="face-col">' + pickCell(k) + HEROES[k].tag.replace('REF', HEROES[k].title) + '</div>';
+}).join('');
+document.getElementById('sil120').innerHTML = ORDER.map(function(k){
+  const h = HEROES[k];
+  const fit = h.fit || { s:0.8, cy:50 };
+  const svg = k === 'poppy'
+    ? '<svg viewBox="0 0 100 100"><g transform="translate(50 50) scale(0.94)">' + head(k) + '</g></svg>'
+    : '<svg viewBox="0 0 100 100"><g transform="translate(50 ' + fit.cy + ') scale(' + fit.s + ')">' + head(k) + '</g></svg>';
+  return '<div class="s120"><div class="box">' + svg + '</div><p><b>' + h.tag.replace('REF', h.title) + '</b>'
+    + (h.sil || (k === 'poppy' ? 'The round rosette — the shape that is taken.' : 'The crowned rose — the shape that is taken.')) + '</p></div>';
+}).join('');
+document.getElementById('silVerdict').innerHTML =
+  '<b>The desk’s read of this row.</b> Strongest: the Trumpet, the Bell and the Cup — a star, a bell '
+  + 'and a tulip are the three shapes a child would draw for those flowers, and all three hold at 46px. The '
+  + 'Dinnerplate is the only wide shape in the game and holds for that reason alone. The Mop is distinctive '
+  + 'but, filled black, its hooked quills can read as a spider or an anemone. <b>Weakest: the Sunflower</b> — '
+  + 'at 46px its rays close up into a toothed disc, and a round dark disc is what Holly’s body is too; it '
+  + 'passes, narrowly, on the teeth. The Trumpet and the Sunflower are both points all the way round, so they '
+  + 'should never be picked together.';
+
+/* ========================= frame 4 ========================= */
+const HOLLY_T = [
+  { k:'now', t:'As built', c:'One solid almond, two lashes. The point and both lashes sit at the <b style="display:inline">inner</b> corner, so the eyes rise toward the nose and the lashes meet under the frost mark. <em>Reads as:</em> worried, not sly.' },
+  { k:'h1', t:'H1 · Almond, turned round', c:'The same almond flipped: point and one lash at the <b style="display:inline">outer</b> corner, 35% taller, a bigger shine. <em>Keeps:</em> the almond and the lash — a winged, sly eye. The smallest change.' },
+  { k:'h2', t:'H2 · The family eye', c:'Poppy’s eye — white, ink ring, pupil, shine — with the pupil grown so the white is a rim, and a porcelain lid cut on a slant, heavy toward the nose. <em>Keeps:</em> the slant and one lash. All four sisters would share one eye.' },
+  { k:'h3', t:'H3 · The pip', c:'The creatures’ eye: one solid ink oval, one big shine, upright, with the same slanted lid cut across the top and one lash. <em>Keeps:</em> the slant — the smug half-lid is the mischief.' }
+];
+function hollyPlant(eyes){
+  return '<svg viewBox="0 0 120 142" aria-hidden="true"><g transform="translate(0 10)"><g>'
+    + '<path d="M60,132 C60,114 59,102 60,92" fill="none" stroke="' + HOLLY.leaf + '" stroke-width="9" stroke-linecap="round"/>'
+    + '<path d="M60,114 C46,116 34,108 30,96 C44,90 56,100 60,114 Z" fill="' + HOLLY.leafL + '" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/>'
+    + '<path d="M60,106 C74,108 86,100 90,88 C76,82 64,92 60,106 Z" fill="' + HOLLY.leafL + '" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/></g>'
+    + '<g transform="translate(60 56)">' + hollyHead(eyes) + '</g></g></svg>';
+}
+document.getElementById('hollyBig').innerHTML = HOLLY_T.map(function(t){
+  return '<figure><div class="hstand">' + hollyPlant(t.k) + '</div><p class="hcap"><b>' + t.t + '</b>' + t.c + '</p></figure>';
+}).join('');
+document.getElementById('holly46').innerHTML =
+  '<div class="face-col">' + pickCell('poppy') + 'Poppy</div>'
+  + HOLLY_T.map(function(t){
+    return '<div class="face-col"><div class="pc fit" style="--av:#ff5d95"><svg viewBox="0 0 100 100"><g transform="translate(50 55) scale(0.78)">'
+      + hollyHead(t.k) + '</g></svg></div>' + (t.k === 'now' ? 'Now' : t.k.toUpperCase()) + '</div>';
+  }).join('');
+document.getElementById('hollyRec').innerHTML =
+  '<b>The desk recommends H3, the pip.</b> It is the only treatment that is a <i>solid</i> ink shape, '
+  + 'and solid ink is the one eye that cannot read as spectacles on porcelain — the lesson her first spike '
+  + 'paid for. At 46px it is the clearest dark mark of the four with a shine you can see, and the half-lid '
+  + 'cut on a slant is the smug look, carried by the lid rather than by squeezing the eye. H2 is the runner-up '
+  + 'and the most <i>family</i> — all four sisters would share Poppy’s eye — but it leans on a thin white rim '
+  + 'on a white face, the exact risk two earlier passes failed on. H1 is the smallest change and still narrow. '
+  + '<b>Change her with the heroes, not before</b>: one commit should move all four faces, and her eye bug is '
+  + 'cosmetic, not broken.';
+
+/* ========================= frame 5 ========================= */
+function zzz(x, y){
+  const g = (zx, zy, s, i) => {
+    const t = s * 0.34;
+    return '<path class="cr-z" style="--i:' + i + '" d="M' + zx + ' ' + zy + ' H' + (zx + s) + ' V' + r1(zy + t) + ' L' + r1(zx + t * 1.4) + ' ' + r1(zy + s - t)
+      + ' H' + (zx + s) + ' V' + (zy + s) + ' H' + zx + ' V' + r1(zy + s - t) + ' L' + r1(zx + s - t * 1.4) + ' ' + r1(zy + t) + ' H' + zx + ' Z"/>';
+  };
+  return '<g fill="#ffffff" transform="translate(' + x + ' ' + y + ')">' + g(0, 0, 8, 0) + g(9, -11, 10, 1) + g(20, -24, 12, 2) + '</g>';
+}
+const STATES = ['idle', 'talking', 'pleased', 'asleep'];
+document.getElementById('expr').innerHTML = CANDS.map(function(k){
+  const h = HEROES[k];
+  const fit = h.fit;
+  return '<div class="xrow"><div class="who">' + tagFor(k) + '<br>' + h.title + '<small>' + h.read + '</small></div>'
+    + STATES.map(function(s){
+      const cls = s === 'asleep' ? 'night' : h.season;
+      return '<div class="xc ' + cls + '"><svg viewBox="0 0 100 100"><g transform="translate(50 ' + (fit.cy + 2) + ') scale(' + (fit.s * 0.92) + ')">'
+        + head(k, s) + '</g>' + (s === 'asleep' ? zzz(66, 22) : '') + '</svg></div>';
+    }).join('') + '</div>';
+}).join('');
+
+/* ========================= frame 6 ========================= */
+/* Fall.scene(), hand-copied from fall.js at 390 x 844 on the sun sky. */
+function fallScene(){
+  const w = 390, h = 844;
+  const P = { hillFar:'#b4713a', hillNear:'#96562c', ground:'#8f9c4a', groundDark:'#7d8b40', groundLight:'#a3ae5a',
+    hedge:'#3f7d43', hedgeLit:'#57a25c', trunk:'#7d4f2a', canopy:'#c9622f', canopyLit:'#e0803c', leaf:'#d9773a', haze:'rgba(255,214,160,.35)' };
+  const horizon = Math.round(h * 0.20), groundTop = Math.round(h * 0.70);
+  const dense = (per) => Math.max(3, Math.round(w / per));
+  const hills = '<path d="M' + (-w * 0.1) + ' ' + (horizon + 40) + ' Q' + (w * 0.22) + ' ' + (horizon - 34) + ' ' + (w * 0.5) + ' ' + (horizon + 22)
+    + ' Q' + (w * 0.78) + ' ' + (horizon + 62) + ' ' + (w * 1.1) + ' ' + (horizon + 6) + ' V' + h + ' H' + (-w * 0.1) + ' Z" fill="' + P.hillFar + '"/>'
+    + '<path d="M' + (-w * 0.1) + ' ' + (horizon + 74) + ' Q' + (w * 0.34) + ' ' + (horizon + 14) + ' ' + (w * 0.66) + ' ' + (horizon + 66)
+    + ' Q' + (w * 0.88) + ' ' + (horizon + 96) + ' ' + (w * 1.1) + ' ' + (horizon + 56) + ' V' + h + ' H' + (-w * 0.1) + ' Z" fill="' + P.hillNear + '"/>';
+  let hedge = '';
+  const hedgeW = Math.round(w / dense(150));
+  for (let x = -hedgeW; x < w + hedgeW; x += hedgeW){
+    const lift = 8 + ((x / hedgeW) % 3) * 5, base = horizon + 46;
+    hedge += '<path d="M' + x + ' ' + base + ' V' + (base - 18 - lift) + ' Q' + r1(x + hedgeW * 0.18) + ' ' + (base - 38 - lift) + ' ' + r1(x + hedgeW * 0.4) + ' ' + (base - 30 - lift)
+      + ' Q' + r1(x + hedgeW * 0.68) + ' ' + (base - 46 - lift) + ' ' + (x + hedgeW) + ' ' + (base - 20 - lift) + ' V' + base + ' Z" fill="' + P.hedge + '"/>';
+  }
+  hedge += '<rect x="-4" y="' + (horizon + 30) + '" width="' + (w + 8) + '" height="9" fill="' + P.hedgeLit + '" opacity=".55"/>';
+  const tree = (cx, cy, s) => '<g transform="translate(' + cx + ' ' + cy + ') scale(' + s + ')">'
+    + '<path d="M0 0 V-58" stroke="' + P.trunk + '" stroke-width="13" stroke-linecap="round"/>'
+    + '<path d="M0 -34 L-18 -50 M0 -44 L16 -58" stroke="' + P.trunk + '" stroke-width="8" stroke-linecap="round"/>'
+    + '<g stroke="' + INK + '" stroke-width="3.4"><circle cx="-16" cy="-72" r="26" fill="' + P.canopy + '"/><circle cx="18" cy="-78" r="30" fill="' + P.canopy + '"/>'
+    + '<circle cx="2" cy="-96" r="26" fill="' + P.canopyLit + '"/><circle cx="-24" cy="-88" r="17" fill="' + P.canopyLit + '"/></g></g>';
+  let stubble = '';
+  const step = Math.max(9, Math.round(w / dense(26)));
+  for (let x = 0; x < w + step; x += step){
+    const y = groundTop + 6 + ((x / step) % 4) * 5;
+    stubble += '<path d="M' + x + ' ' + (y + 12) + ' V' + y + ' M' + (x - 3) + ' ' + (y + 12) + ' V' + (y + 4) + ' M' + (x + 3) + ' ' + (y + 12) + ' V' + (y + 3)
+      + '" stroke="' + P.groundDark + '" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>';
+  }
+  let leaves = '';
+  const LEAF_N = Math.max(4, Math.round(w / 90));
+  for (let i = 0; i < LEAF_N; i++){
+    const x = r1(((i * 137) % 100) / 100 * w), y = r1(horizon + ((i * 53) % 100) / 100 * (groundTop - horizon)), rot = (i * 47) % 360;
+    leaves += '<path d="M0 0 q7 -6 13 0 q-6 7 -13 0Z" fill="' + P.leaf + '" opacity=".75" transform="translate(' + x + ' ' + y + ') rotate(' + rot + ')"/>';
+  }
+  return '<svg class="scene" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" aria-hidden="true">'
+    + '<rect width="' + w + '" height="' + h + '" fill="url(#fall-sky)"/>'
+    + '<ellipse cx="' + r1(w * 0.74) + '" cy="' + r1(h * 0.11) + '" rx="' + r1(w * 0.2) + '" ry="' + r1(h * 0.055) + '" fill="' + P.haze + '" opacity=".55"/>'
+    + hills + tree(w - 44, groundTop + 30, 0.52) + tree(38, groundTop + 44, 0.4) + hedge
+    + '<rect x="0" y="' + groundTop + '" width="' + w + '" height="' + (h - groundTop) + '" fill="' + P.ground + '"/>'
+    + '<rect x="0" y="' + groundTop + '" width="' + w + '" height="10" fill="' + P.groundLight + '" opacity=".6"/>'
+    + stubble + leaves + '</svg>';
+}
+/* Fall.cellFloor(), hand-copied. */
+function cellFloor(i){
+  const tilt = (i % 3) * 4 - 4;
+  return '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'
+    + '<rect width="100" height="100" fill="url(#fp-grain)" opacity=".5"/>'
+    + '<ellipse cx="26" cy="22" rx="13" ry="11" fill="rgba(255,255,255,.13)"/>'
+    + '<ellipse cx="72" cy="62" rx="10" ry="8" fill="rgba(0,0,0,.12)"/>'
+    + '<ellipse cx="50" cy="' + (78 + tilt * 0.3) + '" rx="21" ry="7.5" fill="#7b5c3f" opacity=".6"/>'
+    + '<ellipse cx="' + (34 + tilt) + '" cy="34" rx="9" ry="6" fill="#71543a" opacity=".6"/>'
+    + '<ellipse cx="' + (70 - tilt) + '" cy="54" rx="7" ry="5" fill="#4d3826" opacity=".55"/></svg>';
+}
+/* The empty-plot mark, redrawn at the same weight — dashed ring and a plus. */
+const MARK = '<div class="mark"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#fff8e7" stroke-width="2.6" stroke-dasharray="4 3.2"/>'
+  + '<path d="M12 7.5v9M7.5 12h9" stroke="#fff8e7" stroke-width="2.8" stroke-linecap="round"/></svg></div>';
+/* Two stand-in crops so the bed is not all empty: a strawberry and a
+   pumpkin, simplified from fall.js's PLANTS — same ink, same leaf. */
+const CROPS = [
+  '<svg viewBox="0 0 100 100"><path d="M50 92 V58" stroke="#3f9d45" stroke-width="5" stroke-linecap="round"/><path d="M50 74 C38 74 30 66 30 58 C40 56 48 64 50 74Z" fill="#3f9d45" stroke="#2c1a10" stroke-width="3"/>'
+    + '<circle cx="50" cy="40" r="20" fill="#e03131" stroke="#2c1a10" stroke-width="3"/><g fill="#fff8e7"><circle cx="43" cy="36" r="2.2"/><circle cx="54" cy="33" r="2.2"/><circle cx="49" cy="45" r="2.2"/><circle cx="58" cy="44" r="2.2"/></g></svg>',
+  '<svg viewBox="0 0 100 100"><path d="M50 92 V58" stroke="#3f9d45" stroke-width="5" stroke-linecap="round"/><path d="M50 74 C38 74 30 66 30 58 C40 56 48 64 50 74Z" fill="#3f9d45" stroke="#2c1a10" stroke-width="3"/>'
+    + '<ellipse cx="50" cy="44" rx="21" ry="16" fill="#f08c00" stroke="#2c1a10" stroke-width="3"/><path d="M42 30 C38 40 38 50 42 58 M58 30 C62 40 62 50 58 58 M50 28 V60" fill="none" stroke="#2c1a10" stroke-width="2"/><path d="M50 28 V20" stroke="#3f9d45" stroke-width="4" stroke-linecap="round"/></svg>'
+];
+function fallRoom(k){
+  let cells = '';
+  for (let i = 0; i < 9; i++){
+    if (i === 4){ cells += '<div class="fl-center still">' + plant(k) + '</div>'; continue; }
+    const crop = i === 0 ? CROPS[0] : i === 3 ? CROPS[1] : '';
+    cells += '<div class="fl-plot">' + cellFloor(i) + (crop ? '<div class="crop">' + crop + '</div>' : MARK) + '</div>';
+  }
+  return '<div class="room">' + fallScene() + '<div class="chip">5 / 8 planted · fill the bed for +50%</div><div class="fl-board">' + cells + '</div></div>';
+}
+function springRoom(k){
+  let cells = '';
+  for (let i = 0; i < 9; i++) cells += i === 4 ? '<div class="fl-center still">' + plant(k) + '</div>' : '<div class="plot"></div>';
+  return '<div class="room spring"><div class="garden">' + cells + '</div><div class="stand-in">Spring has no board yet — a stand-in</div></div>';
+}
+function roomFrame(season, roomFn, keys){
+  const host = document.getElementById(season + 'Room');
+  const seg = document.getElementById('seg' + season[0].toUpperCase() + season.slice(1));
+  const show = (k) => {
+    host.innerHTML = roomFn(k);
+    seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.k === k ? 'true' : 'false'));
+  };
+  seg.innerHTML = keys.map((k) => '<button type="button" data-k="' + k + '">' + HEROES[k].tag + ' ' + HEROES[k].title.replace('The ', '') + '</button>').join('')
+    + (season === 'fall' ? '<button type="button" data-k="poppy">Today: Poppy</button>' : '');
+  seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) show(b.dataset.k); });
+  show(keys[0]);
+  const three = document.getElementById(season + 'Three');
+  three.innerHTML = keys.map((k) => '<div><div class="mini" data-k="' + k + '">' + roomFn(k) + '</div><div class="lab" style="font-size:10.5px;font-weight:800;text-align:center;margin-top:3px">' + HEROES[k].tag + ' ' + HEROES[k].title + '</div></div>').join('');
+  const fitMini = () => three.querySelectorAll('.mini').forEach((m) => {
+    const r = m.querySelector('.room'); r.style.transform = 'scale(' + (m.clientWidth / 390) + ')';
+  });
+  fitMini(); window.addEventListener('resize', fitMini);
+}
+roomFrame('fall', fallRoom, ['FA', 'FB', 'FC']);
+roomFrame('spring', springRoom, ['SA', 'SB', 'SC']);
+/* The real-size room is 390 wide; on a phone narrower than the column, scale it to fit. */
+function fitRooms(){
+  document.querySelectorAll('.room-wrap').forEach(function(w){
+    const r = w.querySelector('.room'); if (!r) return;
+    const s = Math.min(1, (w.clientWidth) / 390);
+    r.style.transform = s < 1 ? 'scale(' + s + ')' : '';
+    w.style.height = s < 1 ? (470 * s + 'px') : '';
+  });
+}
+new MutationObserver(fitRooms).observe(document.getElementById('fallRoom'), { childList:true });
+new MutationObserver(fitRooms).observe(document.getElementById('springRoom'), { childList:true });
+fitRooms(); window.addEventListener('resize', fitRooms);
+
+/* ========================= frame 7 ========================= */
+const IDLE = ['FC', 'SC'];   /* the desk's forced pair */
+document.getElementById('idle').innerHTML = IDLE.map(function(k){
+  const h = HEROES[k];
+  return '<div><div class="lab" style="font-size:11.5px;color:var(--ink);margin-bottom:2px">' + tagFor(k) + h.title + '</div><div class="pair">'
+    + '<div><div class="cc">' + plant(k) + '</div><div class="lab">Motion</div></div>'
+    + '<div class="still"><div class="cc">' + plant(k) + '</div><div class="lab">Reduced motion</div></div>'
+    + '</div></div>';
+}).join('');
+
+/* ========================= frame 8 ========================= */
+const PAL = {
+  poppy:{ sw:[['#ff5d95','gp-talker','Poppy’s petal', 1],['#ffe9a8','face','Poppy’s face'],['#57c15b','leaf','Poppy’s leaf']] },
+  holly:{ sw:[['#241426','plum','Holly, flora.js', 1],['#f7eef2','porcelain','Holly, flora.js'],['#eaf4fb','frost','snow & frost ramp'],['#ff5d95','pink','gp-talker, lined inside']] },
+  FA:{ sw:[['#ffb570','gate sky, mid','Fall gate’s sky ramp', 1],['#e88f4e','gate sky, deep','the back rank'],['#c98a4e','trug, top','Fall’s trug ramp — the disc'],['#57a25c','hedge, lit','the hedge ramp — leaves']] },
+  FB:{ sw:[['#e0803c','canopy, lit','Fall.SKIES — the orchard', 1],['#c9622f','canopy','Fall.SKIES — back quills'],['#ffd9a1','gate sky, top','the face'],['#57a25c','hedge, lit','leaves']] },
+  FC:{ sw:[['#ffe0ad','--paper-3','the petals', 1],['#ffd9a1','gate sky, top','outer & inner tiers'],['#ffb570','gate sky, mid','the face'],['#57a25c','hedge, lit','leaves']] },
+  SA:{ sw:[['#ffe9a8','Poppy’s face','the tepals', 1],['#ffd98a','Poppy’s lid','the back trio'],['#ffc978','gface stop','the corona'],['#8fe08a','--grass-l','leaves']] },
+  SB:{ sw:[['#93b6d0','frost, shade','Holly’s frost ramp — the bell', 1],['#b9cee0','Winter gate sky','the bell’s light'],['#ffe0ad','--paper-3','the face'],['#8fe08a','--grass-l','leaves']] },
+  SC:{ sw:[['#a83250','the family mouth','Poppy’s & Holly’s mouth', 1],['#ffd9a1','gate sky, top','the face'],['#8fe08a','--grass-l','leaves'],['#5cc45c','--grass','stem']] }
+};
+const PAIR = {
+  FA:[1, 'No shared dominant with Poppy or Holly.'],
+  FB:[1, 'No shared dominant with Poppy or Holly.'],
+  FC:[1, 'No shared dominant — but it is the palest of the six, and pale petals on cream UI need their ink.'],
+  SA:[0, 'Dominant is Poppy’s FACE colour, not her dominant — passes the rule, and reads as family on purpose. It is the closest of the six to Poppy.'],
+  SB:[0, 'Dominant is Holly’s frost — her accent, not her dominant. Passes the rule; reads colder than Spring should.'],
+  SC:[1, 'No shared dominant. The crimson is both sisters’ mouth colour — a use, not a hue.']
+};
+document.getElementById('palettes').innerHTML = ORDER.map(function(k){
+  const h = HEROES[k], p = PAL[k];
+  const pair = PAIR[k] ? '<div class="' + (PAIR[k][0] ? 'pair-ok' : 'pair-flag') + '">' + PAIR[k][1] + '</div>' : '';
+  return '<div class="pal"><div class="who">' + tagFor(k) + '<br>' + h.title + '</div><div><div class="sw">'
+    + p.sw.map((s) => '<span' + (s[3] ? ' class="dom"' : '') + '><i style="background:' + s[0] + '"></i><span style="border:0;padding:0;background:none"><b>' + s[1] + '</b> ' + s[0] + ' · ' + s[2] + '</span></span>').join('')
+    + '</div>' + pair + '</div></div>';
+}).join('');
+/* Fall x Spring: two heroes may stand in the same game only if their dominants
+   are not the same family. Judged by eye and said in words. */
+const MX = {
+  'FA-SA':[0,'amber & gold — too close'], 'FA-SB':[1,'amber & frost'], 'FA-SC':[1,'amber & crimson'],
+  'FB-SA':[1,'rust & gold'], 'FB-SB':[1,'rust & frost'], 'FB-SC':[1,'rust & crimson'],
+  'FC-SA':[0,'cream & pale gold — too close'], 'FC-SB':[1,'cream & frost'], 'FC-SC':[1,'cream & crimson']
+};
+document.getElementById('matrix').innerHTML = '<table class="mx"><tr><th></th>'
+  + ['SA','SB','SC'].map((s) => '<th>' + HEROES[s].tag + '<br>' + HEROES[s].title.replace('The ', '') + '</th>').join('') + '</tr>'
+  + ['FA','FB','FC'].map((f) => '<tr><th style="text-align:left">' + HEROES[f].tag + ' ' + HEROES[f].title.replace('The ', '') + '</th>'
+    + ['SA','SB','SC'].map((s) => { const m = MX[f + '-' + s]; return '<td class="' + (m[0] ? 'ok' : 'bad') + '">' + (m[0] ? '✓' : '✗') + '<br><span style="font-weight:600;font-size:10px">' + m[1] + '</span></td>'; }).join('')
+    + '</tr>').join('') + '</table>';
+
+/* ========================= frame 9 ========================= */
+/* The picker's hero row as it would stand with three in it, at the grid's
+   real ~62px: Poppy, Holly, the candidate wearing the gold "on" ring. */
+document.getElementById('namecards').innerHTML = CANDS.map(function(k){
+  const h = HEROES[k];
+  const disc = (kk, on) => '<div class="face-col" style="width:62px">' + pickCell(kk, false, on ? ' on' : '')
+    + '<span style="font-size:10.5px">' + (kk === k ? h.names[h.pick] : HEROES[kk].title) + '</span></div>';
+  return '<div class="namecard"><p class="pick-group" style="margin:0 0 6px">Who talks to you</p>'
+    + '<div class="faces" style="gap:10px">' + disc('poppy') + disc('holly') + disc(k, true) + '</div>'
+    + '<div style="margin-top:8px">' + tagFor(k) + '<b style="font-size:12px">' + h.title + '</b> · ' + h.read + '</div>'
+    + '<div class="names">' + h.names.map((n, i) => '<span' + (i === h.pick ? ' class="pick"' : '') + '>' + n + '</span>').join('') + '</div>'
+    + '<p><b>Nature:</b> ' + h.nature + '</p></div>';
+}).join('');
+
+document.getElementById('asks').innerHTML =
+  '<b>Decided in the drawing — each reversible with one word:</b><ul>'
+  + '<li>One eye for the family, and it is Poppy’s own, varied by tilt, a resting lid and gaze.</li>'
+  + '<li>Poppy’s pink cheeks on all six; Holly still does not blush.</li>'
+  + '<li>A male read is one level brow stroke and a wider mouth; a female read is one lash and a tilt.</li>'
+  + '<li>Every colour is one doc 05 already declares. No new hex.</li>'
+  + '<li>Fitted in the picker, all six, on Holly’s rule.</li></ul>'
+  + '<b>Yours to pick:</b><ul>'
+  + '<li><b>One Fall hero and one Spring hero</b> — the matrix in frame 8 says which pairs can stand together. The desk’s pair, if forced: <b>F·C the Dinnerplate and S·C the Cup</b>. The Dinnerplate is the only wide shape in the game, the strongest figure on Fall’s own board, and its name is Fall’s rule (the windfall is a dinner). The Cup is the cleanest Spring silhouette, owns a colour no one else wears, and its nature — a bulb that waited all winter — is the long game. Runner-up for Fall: the Sunflower, if recognisability matters more than the silhouette gate.</li>'
+  + '<li><b>Gender</b> for each — the drawings carry a read, but the Mop and the Cup are drawn to be either, and the voice can decide.</li>'
+  + '<li><b>Names</b> — three each; the ringed one is the desk’s.</li>'
+  + '<li><b>Holly’s eyes</b> — Now, H1, H2 or H3, and whether she changes now or with the heroes.</li>'
+  + '<li><b>Spring’s hero before Spring’s garden</b> — Spring opens about Turn 6 and has no board; the hero could first appear in the nursery ceremony.</li>'
+  + '<li><b>One new Spring colour</b> — see frame 8.</li></ul>';
+
+/* ---- controls ---- */
+function bind(id, attr){
+  const b = document.getElementById(id);
+  b.addEventListener('click', function(){
+    const on = b.dataset.on === '1' ? '0' : '1';
+    b.dataset.on = on; document.body.dataset[attr] = on;
+  });
+}
+bind('tNotes', 'notes');
+bind('tMotion', 'motion');
+</script>
+</body>
+</html>

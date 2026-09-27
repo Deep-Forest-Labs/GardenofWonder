@@ -60,6 +60,8 @@ decided, and what to do next. Update it at the end of any significant session.
 
 ## Where the project stands
 
+> **THE SEASON HEROES ARE A SPIKE, 2026-09-27 — owner picking, nothing built:** six Fall and Spring candidates, the silhouette gate and Holly's eyes redrawn three ways (her built eye is mirrored) are in [56-the-season-heroes.md](56-the-season-heroes.md) and `tools/hero-spike.html`.
+
 > **THE MOTION BIBLE'S FIRST FIX ROUND LANDED 2026-09-22 — the first five items the motion bible
 > filed, all DRIVEN, all with a decided anchor and no economy number moved.** In rain and storms the
 > flower's right leaf now holds up over its head (a stray `}` had been folding its rule into the next
