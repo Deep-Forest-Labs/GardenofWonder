@@ -5,6 +5,57 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (rulings, spike v3 reviewed) — Name on top and value beneath; chapters read ahead; the lawn may become a room
+
+**Three rulings, one question, one parked idea**, from the owner's eye pass on `tools/tree-spike.html` v3.
+
+**1. The card reads name, then value, then next star.** *"I still want the title of each card, and
+underneath it the text would read 'Reduces cost by 15%'."* **This corrects yesterday's change 5.**
+The intent was always to replace the vague flavour line with a real number; v3 over-applied it by
+putting the value in the title slot and demoting the proper name to a tag chip. Compost Heap is
+called Compost Heap. The "Next star:" line v3 introduced is kept — the owner called it "really good".
+
+**2. Chapters read ahead, not only behind.** Frame 1's Chapter I tick worked, and the owner wants a
+climber to see *"Chapter 2 is coming up."* Chapters stay ticks on the rail and never become cards;
+what changes is that an upcoming one is legible from below.
+
+**3. The order strip's height is accepted, not fixed.** The owner's call: real art will layer the
+portrait behind the counter far more tightly than a wireframe can. Recorded so nobody "solves" it.
+
+**OPEN — should orders pay only reputation?** Raised by the owner from Gossip Harbor, which pays a
+single currency: remove gold from orders and raise flower output to compensate. **The desk's answer
+is not a simple yes, because the code says two things the proposal must clear:**
+
+- **Order reputation is switched OFF today.** `DATA.stand.repPaused: true` — *"the standing faucet
+  shipped in slice A and the rungs it feeds did not… Orders keep their gold and keep counting on the
+  Tally; the standing waits for slice D."* Orders currently pay **gold only**. This is not a
+  rebalance: it turns on a faucet that was built and never enabled, and turns off the one that works.
+- **Order gold is the one number the owner ruled from playing, not from a spreadsheet.** data.js
+  records it: a filled order should pay *"roughly ONE TO TWO MINUTES of what the player is currently
+  earning,"* after the old values made an order *"so small… almost feels pretty pointless"* — off by
+  a factor of twenty-five to a hundred. **Paying zero gold is the limit case of the exact failure he
+  found by playing.**
+- **It retires an invariant `sim-test` asserts per tier.** *"Orders must always beat selling their
+  contents, or the whole engine is optional"* — floor `mult > 1 / wildBonus`, i.e. 1.12. Once orders
+  pay a different currency than selling, that comparison stops being apples to apples: the rule is
+  less violated than made obsolete. But it is enforced in tests and must be retired **deliberately**,
+  with a replacement stating what an order's reputation has to beat.
+
+**The desk's recommendation: yes, but conditional.** The three-loop split is genuinely cleaner than
+what exists — harvest pays gold for the shop, orders pay reputation for the story, the Turn pays
+Prisms for the trunk; one activity, one currency, no overlap. It also relieves the gold inflation
+opened yesterday when flower unlocks moved to Prisms. **The condition is feel:** reputation is a
+progress bar, not a spendable, and Gossip Harbor's single currency is spendable coins. The reputation
+reward has to *land like a payout* — large on the customer card, the bar visibly jumping, the next
+trunk card visibly closer — or it repeats "almost feels pretty pointless" in a new costume.
+
+**PARKED — the lawn becomes a room.** The Apiary's space becomes **the Lawn**, where a player
+*places* what they have collected — beehives, gnomes, perks — by dragging them out to decorate,
+reached by scrolling to where the Apiary is now. It would also move the two floating buttons off the
+yard band, which is what crowds the creatures today. **If it lands it supersedes "spots on the grass"
+entirely** and answers the no-spare-surface finding by giving the lawn its own room rather than a
+share of a 70–108px strip. Not to be built yet.
+
 ## 2026-09-27 (rulings, the owner's word) — The dialogue system is built to Gossip Harbor parity; every character's eyes must read; three threads run in parallel while the tree waits
 
 **1. The chapter scene is built, and built well.** The owner: *"I definitely want to have parity with
