@@ -221,6 +221,7 @@ const DESC = {
   '49-the-record-shelf.md': "Collectible music records — songs on Side A, charms on Side B, equipped independently; the gramophone in the Hollow, and the menu's Records row. Owner-ruled and pressure-tested 2026-09-02; the music itself is a separate content stream.",
   '52-the-trunk-and-the-tree.md': "The direction for the trunk and the tree — a story tied to reputation, and a branching skill tree that replaces the petal menu and becomes where flowers, perks, creatures, access and offline income are revealed and bought. Reputation reveals, gold buys, Prisms deepen. Direction only, 2026-09-24; the spec follows the spike.",
   '53-narrative-premise.md': "The owner's story premise as received from an outside writing pass — a mother who could not have a child, and a flower that thinks she is its mother — verbatim, with the design desk's read on what fits the game and what collides. An inbound premise, not a ruling; the story bible comes after.",
+  '54-the-story-flow.md': "The brief for the story bible's writer — the when and where: the first session beat by beat (the seed, the flower teaching the garden, the store reopening at the first Turn, customers arriving), the two clocks a beat can ride, the surfaces a beat can land on, and the one correction to doc 53. A brief, not the bible.",
   '48-music-direction.md': "The music bible for the collectible records — the sonic identity every track must sit inside so the game's chimes and weather layer over it, the five v1 track briefs, and the delivery spec for any track that reaches the shelf. A commissioning document, 2026-09-02 — the music half of the record shelf in doc 49; no code has changed.",
   'README.md': 'The docs folder’s own index, mirrored exactly as written. This Home page is a reordering of it for the Unity team.',
 };
@@ -296,6 +297,7 @@ const SHORT = {
   '49-the-record-shelf.md': '49 · The record shelf',
   '52-the-trunk-and-the-tree.md': '52 · The trunk and the tree',
   '53-narrative-premise.md': '53 · Narrative premise',
+  '54-the-story-flow.md': '54 · The story flow',
   '48-music-direction.md': '48 · Music direction',
   'README.md': 'The docs index',
 };
