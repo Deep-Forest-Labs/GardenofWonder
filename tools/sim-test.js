@@ -13618,5 +13618,85 @@ check('it recolours a property the base rule actually paints with (border-color,
   G.reset();
 }
 
+/* ---- THE STORY'S SURFACE, read as source (ui-story.js cannot load headless) ----
+   What these CANNOT see: anything after paint — the veil, the stack's motion,
+   a tap landing. Those were driven with real input through tools/probe.js and
+   the browser pane (docs/10, gate 3/4). What they hold is the order of the
+   guards, which is where every one of these laws lives. Each function is
+   sliced by name with a scrape guard, so a rename goes red here rather than
+   leaving every regex below vacuously true. */
+{
+  const storySrc = fs.readFileSync(path.join(ROOT, 'ui-story.js'), 'utf8');
+  const newsSrc = fs.readFileSync(path.join(ROOT, 'ui-news.js'), 'utf8');
+  const uiJs = fs.readFileSync(path.join(ROOT, 'ui.js'), 'utf8');
+  const fnBody = (src, name) => {
+    const at = src.indexOf(`function ${name}(`);
+    if (at < 0) return '';
+    const open = src.indexOf('{', at);
+    let depth = 0;
+    for (let i = open; i < src.length; i += 1) {
+      if (src[i] === '{') depth += 1;
+      else if (src[i] === '}') { depth -= 1; if (depth === 0) return src.slice(open, i + 1); }
+    }
+    return '';
+  };
+  const tryStory = fnBody(storySrc, 'tryStory');
+  const runStep = fnBody(storySrc, 'runStep');
+  const onTap = fnBody(storySrc, 'onTap');
+  const animateFn = fnBody(storySrc, 'animate');
+  const sayText = fnBody(uiJs, 'sayText');
+  const refreshCoach = fnBody(uiJs, 'refreshCoach');
+  const momentsQuiet = fnBody(newsSrc, 'momentsQuiet');
+  const tryMoment = fnBody(newsSrc, 'tryMoment');
+
+  group('the story\'s surface: the guards are in the order the laws need (source read, scrape-guarded)');
+  check('scrape guard: every function below was found by name',
+    [tryStory, runStep, onTap, animateFn, sayText, refreshCoach, momentsQuiet, tryMoment].every((b) => b.length > 40));
+  /* Sabotage: moving `Game.storyLine()` above the quiet check (the realistic
+     "fetch first, guard later" refactor) turned the first red. */
+  check('tryStory() asks the moments dialog\'s own guard before it asks the engine for anything',
+    tryStory.indexOf('UI.momentsQuiet') > -1 && tryStory.indexOf('UI.momentsQuiet') < tryStory.indexOf('Game.storyPending')
+      && tryStory.indexOf('UI.momentsQuiet') < tryStory.indexOf('Game.storyLine'));
+  check('and refuses the rooms a scene would break — the Hollow, the meadow, a gate, the menu',
+    /hollowOpen/.test(storySrc) && /meadowOpen/.test(storySrc) && /gateOn/.test(storySrc) && /menuOpen/.test(storySrc)
+      && /roomOk\(\)/.test(tryStory));
+  check('that guard refuses an open sheet (the Turn\'s ceremony is one), the news, a painted coach mark, an open scene',
+    /UI\.sheetMode/.test(momentsQuiet) && /\bopen\b/.test(momentsQuiet) && /coach/.test(momentsQuiet) && /storyOpen/.test(momentsQuiet));
+  check('Poppy\'s story lines are drawn ONLY through sayText() — never written into the bubble directly',
+    /UI\.sayText\(l\.text, 'story'/.test(runStep) && !/speechNode\(\)\s*\.\s*textContent|\.textContent\s*=\s*l\.text/.test(runStep));
+  check('sayText() refuses under a painted coach mark before it draws anything, the story\'s lines included',
+    sayText.indexOf('el.coach.hidden') > -1 && sayText.indexOf('el.coach.hidden') < sayText.indexOf('speechEl.textContent'));
+  check('and refuses every other line while the story holds the bubble',
+    /force !== 'story' && UI\.storyBusy/.test(sayText) && sayText.indexOf('storyBusy') < sayText.indexOf('speechEl.textContent'));
+  check('the story goes first in tryMoment(), and a reveal never opens while it holds the floor',
+    tryMoment.indexOf('UI.tryStory') > -1 && tryMoment.indexOf('UI.storyBusy') > -1
+      && tryMoment.indexOf('UI.tryStory') < tryMoment.indexOf('momentsQuiet()'));
+  check('the coach waits for the story — refreshCoach() hides the mark while storyHoldsCoach() says so',
+    /UI\.storyHoldsCoach\s*&&\s*UI\.storyHoldsCoach\(\)\)\s*\{\s*hideCoach\(\);\s*return;/.test(refreshCoach));
+  /* Sabotage: `await`ing an animation's `finished` promise before landing (the
+     realistic "let the slide play out" change) turned this red. */
+  check('a tap never waits on an animation: onTap() finishes what is running and lands the next line in the same call',
+    /finishAll\(\);\s*land\(false\);/.test(onTap) && !/await|finished|setTimeout/.test(onTap));
+  check('reduced motion is a static substitute: animate() does nothing under the preference',
+    /if \(calm\(\)/.test(animateFn));
+  check('the story\'s surface never touches an ad, a price or an offer — Poppy never sells',
+    !/adOffered|watchAd|adTag|priceTag|data-buy|data-ad\b/.test(storySrc));
+  check('ui-story.js is precached for offline play and loads after ui-news.js',
+    /'\.\/ui-story\.js'/.test(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8'))
+      && /ui-news\.js"><\/script>\s*<script src="ui-story\.js"/.test(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8')));
+  check('the scene and the chips live outside `.world`, siblings of #news',
+    (() => {
+      const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+      const news = html.indexOf('id="news"');
+      const story = html.indexOf('id="story"');
+      const worldClose = html.lastIndexOf('</div>', news);
+      return story > news && worldClose > html.indexOf('id="world"');
+    })());
+  check('Poppy\'s re-voiced lines and Holly\'s pronouns are exactly doc 57\'s tables',
+    DATA.story.script.flowerLines.every(({ bucket, from, to }) => FLOWER_LINES[bucket].includes(to) && !FLOWER_LINES[bucket].includes(from))
+      && DATA.story.script.holly.every(({ from, to }) => FLOWER_LINES.hollyIdle.some((l) => l.replace('’', '\'') === to)
+        && !FLOWER_LINES.hollyIdle.some((l) => l.replace('’', '\'') === from)));
+}
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

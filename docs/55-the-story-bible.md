@@ -642,7 +642,7 @@ holds back without her ever saying it** — restraint made visible.
 
 ### What needs building, priced
 
-- **ENGINEERING, medium — the chapter scene, in the lane's shape. Recommended for volume one.** A
+- **BUILT 2026-09-27 (gate 3, the surface — `ui-story.js`, doc 08) — ENGINEERING, medium — the chapter scene, in the lane's shape. Recommended for volume one.** Not a moment kind after all: its own layer beside `#news`, asking the moments dialog's guard rather than joining its queue. A
   `chapter` moment kind with its own entry in `pendingMoments()`: two portraits, stacked bubbles, Mara's
   thought bubble, lines that page on tap, skip always, Continue at the end. Today `showMoment` builds
   only seed and upgrade cards — a title, bullets and a button — so a scene does not fit in it as it
@@ -652,18 +652,18 @@ holds back without her ever saying it** — restraint made visible.
   `DATA.story.caps` alone (doc 03, *The story*). The first session crosses upgrade and
   seed reveals before the Turn; three of them exhaust `sessionCap`, and no queue position helps once
   `momentReady()` says no. Chapters count only against the story's own daily cap.
-- **ENGINEERING, small — the first Turn makes room for the act break.** Chapter I closes on a latch
+- **HALF BUILT 2026-09-27 (gates 2–3) — ENGINEERING, small — the first Turn makes room for the act break.** The latch and Fall's coach waiting are built; `turnYear()` still fills all three slots (atomic on purpose, and the order strip's FTUE is not built), so Delphine's order is dealt when the scene is dismissed instead — the newest undeliverable slot. Chapter I closes on a latch
   (Turns completed ≥ 1, scene not seen) once the ceremony sheet is shut. **Fall's "Swipe left" coach mark
   waits until the scene is dismissed** — while a coach mark is up, no moment can open. And **the first Turn
   fills one order slot, Delphine's** (the *Garden Handful* good — *"A handful of whatever's blooming —
   surprise me."*); the other two arrive on the normal refill. Today `turnYear()` regenerates every slot.
-- **ENGINEERING, small — a reply chip for Mara.** Under the flower's bubble, one or two buttons with
+- **BUILT 2026-09-27 (gate 3) — ENGINEERING, small — a reply chip for Mara.** Under the board, not under the bubble. Under the flower's bubble, one or two buttons with
   Mara's line on them. Never a branch: two chips differ in tone and lead to the same next line. The
   player's tap *is* her saying it.
-- **ENGINEERING, small — the opening run and the coach take turns.** The flower's bubble is suppressed
+- **BUILT 2026-09-27 (gates 2–3) — ENGINEERING, small — the opening run and the coach take turns.** The flower's bubble is suppressed
   while a coach mark is up (doc 03), so the scripted run alternates a line, then its coach mark. The tap
   lines stay silent while the run plays.
-- **ENGINEERING, small — the flower's birth from the tin.** Today the talking flower is on screen from
+- **NOT BUILT (2026-09-27 run) — ENGINEERING, small — the flower's birth from the tin.** The opening run starts on the first tap instead. Today the talking flower is on screen from
   frame one; the opening needs its centre cell to start as soil and grow once.
 - **BUILT 2026-09-27 (gate 2) — ENGINEERING, small — villagers by chapter.** `CUSTOMERS` rows carry `chapter`;
   their pools and every chapter-keyed line come from the script through `Game.customerLines()`; a
@@ -671,7 +671,7 @@ holds back without her ever saying it** — restraint made visible.
   good at random by tier. A villager needs a chapter gate and a scripted first arrival carrying a good
   `standGoodsAt(tier)` allows; chapter-keyed lines on existing villagers need a new data shape, since
   `lines` are fixed arrays.
-- **ENGINEERING, small — the lullaby's cut-off.** The flower's hum (`Sound.sing()`, three phrases on the
+- **NOT BUILT (2026-09-27 run) — ENGINEERING, small — the lullaby's cut-off.** Chapter I's hum plays `Sound.sing()` once; Chapter V's cut is data only. The flower's hum (`Sound.sing()`, three phrases on the
   ambience channel, heard by default — unlike the music, which ships off) is Gran's lullaby; doc 48
   already makes it the First Record's melody. Chapter V needs it to stop mid-phrase.
 - **BUILT 2026-09-27 (gate 2) — ENGINEERING, small — the daily caps.** `state.story.day`, rolled on `todayKey()`. A saved counter keyed to `todayKey()`, per kind.

@@ -405,6 +405,66 @@ template literal, at every site. `paintName()` in `ui-menu.js` is the only place
 in the rows view and the field's `.value` is the only place in the edit view;
 `node tools/html-check.js` fails the build if a third appears.
 
+## The chapter scene and Mara's reply chips (2026-09-27)
+
+**The story's surface, `ui-story.js`, laid out on `tools/scene-spike.html`** (the wireframe gate and
+the motion gate) and to the Gossip Harbor shape the late 2026-09-26 story entry in
+[10-decision-log.md](10-decision-log.md) describes in words. The engine that decides what plays is
+[03-systems.md](03-systems.md#the-story--the-narrative-engine-2026-09-27).
+
+**Where it lives.** `#story` and `#storyChips` are direct children of `.game`, **after `.world`,
+beside `#news`** — the "a modal that must not be painted over lives outside `.world`" trap. The scene
+sits at `z-index: 88`, under the news dialog (90) and over the banner (70), the coach (65) and the FX
+float layer (44); the chips at 66. The layer spans the window and restates the 560px column for its
+three rows, the way `.sheet` does. Both nodes are **emptied and hidden** when nothing is playing, so
+the veil's blur and the stack's mask hold no layer while the garden is being played.
+
+| Part | What it is |
+| --- | --- |
+| **The veil** | The whole layer: the news dialog's own dim and a 6px backdrop blur over whatever screen is up |
+| **Fast-forward** | Top right, always — above the title card too (`z-index: 3` on `.story-top`). Plays lines at `DATA.story.motion.ffLinesPerSec`, stops at the end |
+| **The stack** | Rows bottom-anchored in a clipped box whose top 72px fade out; three or four whole rows visible at 390×844, six kept in the DOM at most |
+| **A row** | A round 64px portrait with a name tag and a bubble beside it. **Mara's portrait is left, her bubble to its right, in `--paper-3`**; whoever she is talking to is mirrored on the right in `--paper`. Each row wears its speaker's face in that line's expression — `DATA.story.faces` maps doc 57's twelve onto customers.js's three |
+| **Poppy in a villager's scene** | Takes the other side for her line, with her own face (the talking flower, cropped to the head) |
+| **Gran's note** | No portrait: her words centred on `--paper-2`, italic |
+| **Mara's thought** | Her row, with a dashed cloud and two puffs pointing at her portrait — the scene's last line |
+| **Continue** | `.big-btn.yes`, under the stack, drawn the moment the last line lands |
+| **The title card** | The whole layer below the top bar: a stand-in silhouette for Mara's full-length art, the `@card` words, *Tap to begin*. Passes on a tap, never on a timer |
+
+**Every visible word is data, written with `textContent`** — the script's lines, the names, the card,
+and the furniture's own labels (`DATA.story.labels`). `tools/html-check.js` fails the build if a
+`DATA.story` or `Game.story*` accessor reaches a template literal; ui-sheet.js's two doors (the
+Almanac's chapter rows, the welcome-back line) leave empty nodes that `UI.paintStory()` fills.
+
+**Nothing waits on an animation, and no state depends on one.** Rows are drawn in their final state;
+the motion is Web Animations toward it (slide, push with overshoot, portrait pop, cloud), and a tap
+`finish()`es whatever is running and lands the next line in the same call. **Reduced motion is a
+static substitute written in the script** — the stylesheet's clamp cannot reach `element.animate()`,
+so under the preference nothing animates and every state is simply drawn. The tap-through listens on
+`pointerdown` (the tap latency is the feel); fast-forward and Continue act on `click`, so a press on
+either never also counts as a stage tap. Space and Enter advance too.
+
+**Mara's reply chips** sit **under the board**, not under Poppy's bubble — under it is on her face.
+`#storyChips` is placed from `#garden`'s rect when it shows: Mara's 40px face, then one or two chip
+buttons, 44px tall, the column restated. Two chips differ in tone and lead to the same next line.
+While a chip waits, Poppy's bubble holds (`sayText(text, 'story', 0)`), and a story sentence wraps
+(`.speech.is-story`) where the shop lines stay on one line.
+
+**It cannot open on a screen it would break.** The scene asks the moments dialog's own guard,
+`UI.momentsQuiet()` (no sheet — the Turn's ceremony is one — no news, no painted coach mark, not
+before the first touch), and refuses the Hollow, the meadow, a season gate and the menu. Poppy's runs
+also need the Summer garden, where her bubble is. **The coach waits for the story, never the reverse:**
+`refreshCoach()` hides the mark while a scene is up or owed on this screen, or Chapter I's opening is
+mid-run or owed — so Fall's *Swipe left* waits for the act break, and the opening alternates a line,
+then its mark. The declarative half is `.game.story-on #coach{display:none}`.
+
+**The replay door, until the rail's ticks replace it:** the Almanac grows a **Chapters** block after
+Collection, one row per chapter seen (*Chapter I · The Seed Tin*, the fast-forward glyph). A tap
+closes the sheet and holds the request until the next quiet beat, so a reveal card cannot take the
+beat and land on top of it; the replay latches nothing.
+
+**The welcome-back line** is the first row of the away sheet: the villager's face and their one line.
+
 ## The What's New dialog (2026-08-30)
 
 **The one thing on screen that is not a sheet.** An announcement is a card in the middle of the

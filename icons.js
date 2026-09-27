@@ -44,6 +44,10 @@ const Icons = (() => {
        `close` and `check`, and for the same reason: a chevron is punctuation,
        not an object. */
     chevron: S(`<path d="M9.4 5.6 15.8 12l-6.4 6.4" stroke-width="2.8"/>`),
+    /* The chapter scene's fast-forward, and the Almanac's replay row. Two filled
+       ink wedges — punctuation like the chevron, so monochrome — because a
+       skip control that is an OBJECT would compete with the portraits. */
+    fastForward: S(`<path d="M3.6 6v12l7.6-6ZM12.4 6v12L20 12Z" fill="#2c1a10" stroke-width="1.8"/>`),
     /* The rewarded-ad glyph. A screen with a play triangle rather than a film
        reel or a gift: the player is being told what will happen, not sold a
        surprise. Coloured rather than monochrome — a flat glyph here would read

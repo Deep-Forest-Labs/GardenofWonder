@@ -172,6 +172,7 @@
     }
 
     el.sheetBody.innerHTML = render ? render() : '';
+    if (UI.paintStory) UI.paintStory(el.sheetBody, sheetMode === 'welcome' ? awayReport : null);
     el.sheetBody.scrollTop = keep;
   }
 
@@ -2036,6 +2037,22 @@
       + petalTrack(seed, 'quick', DATA.petals.shared.quick.name);
   }
 
+  /* The replay door, until the rail's chapter ticks replace it: every chapter
+     seen, one row each, a tap replays it without latching anything. The titles
+     and the heading are painted by ui-story.js from DATA.story — the story's
+     words never enter a template literal here. */
+  function chapterBlock() {
+    const seen = Game.storySeenChapters();
+    if (!seen.length) return '';
+    const rows = seen.map((id) => `<button class="almanac-chapter" type="button" data-replay="${id}">
+        <span class="ac-title" data-chapter-title="${id}"></span>${Icons.get('fastForward')}
+      </button>`).join('');
+    return `<div class="stat-block story-block">
+        <h3>${Icons.get('book')} <span data-story-label="chapters"></span></h3>
+        ${rows}
+      </div>`;
+  }
+
   function renderBonuses() {
     /* Every reading on this panel comes from the engine. The tap stack used to be
        rebuilt here and had already drifted away from tapFlower(), the growth line
@@ -2125,6 +2142,7 @@
         </div>
         ${milestoneRows}
       </div>
+      ${chapterBlock()}
       <div class="stat-block">
         <h3>${Icons.get('sprout')} Seed Almanac</h3>
         ${(S.year.turnsCompleted >= 1 || S.prisms > 0)
@@ -2392,6 +2410,11 @@
         ? `Winter opened ${blooms} overnight${r.winterKept === r.winterRipe ? '' : `, <b>${r.winterKept}</b> of them`} under the quilt — the snowfall pays <b>+${pct}%</b> on ${r.winterKept === 1 ? 'it' : 'those'}. Holly kept watch.`
         : `Winter opened ${blooms} while you were gone.`}</span></li>`);
     }
+
+    /* The welcome-back board's one line, docs/55 §6: an empty node the story
+       fills with textContent after render — the story's words never enter a
+       template literal. */
+    if (r.welcome) lines.unshift('<li class="away-welcome" data-story-welcome></li>');
 
     return `
       <p class="away-lede">You were gone <b>${awayWords(r.away)}</b>. The garden kept going.</p>
@@ -2898,6 +2921,11 @@
   });
 
   el.sheetBody.addEventListener('click', (e) => {
+    const replay = e.target.closest('[data-replay]');
+    if (replay) {
+      if (UI.storyReplay) UI.storyReplay(replay.dataset.replay);
+      return;
+    }
     /* Its own data attribute rather than data-buy — syncAfford()'s final else
        treats anything unrecognised as a booster and throws. */
     const tend = e.target.closest('[data-tend]');
@@ -3267,6 +3295,8 @@
            at a bed the Turn did not touch while their garden was rebuilt behind
            them. */
         if (UI.seasonHere && UI.seasonHere() !== 'summer') UI.enterSeason('summer');
+        /* A Turn after the first says one line of flavour, never story. */
+        if (UI.storyAfterTurn) UI.storyAfterTurn();
         return;
       }
       if (a === 'closeWelcome') { closeSheet(); Sound.play('close'); return; }

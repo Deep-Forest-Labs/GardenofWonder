@@ -306,6 +306,7 @@
        seen by every path regardless of which one calls in. */
     if (window.__noMoments) return false;
     if (open) return false;
+    if (UI.storyOpen && UI.storyOpen()) return false;
     if (UI.sheetMode && UI.sheetMode()) return false;
     /* `el` is ui.js's own module-local cache, not part of the shared UI
        surface — reached here the same way sayText()'s coach check does,
@@ -321,6 +322,12 @@
      backstop for every quiet beat none of those name. Idempotent and cheap:
      calling it when nothing is owed is a few comparisons that return false. */
   function tryMoment() {
+    /* The story goes first, through the same guard: a chapter owed after the
+       Turn's ceremony must never lose the quiet beat to a reveal card, and a
+       reveal never opens while a story run holds the floor. Chapters never
+       count against sessionCap — they have their own daily cap in the engine. */
+    if (UI.tryStory && UI.tryStory()) return false;
+    if (UI.storyBusy && UI.storyBusy()) return false;
     /* Latching happens here too, not only on a render path — the picker and
        the shop keep reveals fresh while they are open, but a threshold can
        cross while the player is simply standing in the garden with no sheet
@@ -332,6 +339,8 @@
     return showMoment(Game.nextMoment());
   }
   UI.tryMoment = tryMoment;
+  /* Exported so the story can ask the SAME question rather than fork it. */
+  UI.momentsQuiet = momentsQuiet;
   /* The developer's look, same shape as UI.previewAnnouncement below: shows
      whatever is actually next in the real queue if anything is pending
      (so cheated or earned progress previews honestly), otherwise a fixed,

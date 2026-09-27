@@ -684,6 +684,12 @@ accident (re-counted 2026-08-30) would be a worse trade than three named ramps i
 properties on their components (the `--mw-stone-*` pattern) is the tidy if a second component ever
 wants one — a phase-4 job, not a phase-2 one.
 
+**The chapter scene (2026-09-27) added no value at all** — the news dialog's dim and blur, the house
+papers and inks, `.big-btn.yes`, radii on the ladder. `tools/style-check.js`'s raw-hex count rose by
+two, both the `#000` a `mask-image` gradient needs for its opaque stop (the stack's fading top edge),
+which the weather layer's masks already use; the distinct set before and after was diffed and is
+identical, so the baseline was re-recorded rather than a colour admitted.
+
 ### The one surface that is deliberately outside the palette
 
 **The frame-rate readout (`.perf-hud`, `.dev-perf`) does not follow this document, and it must not.**

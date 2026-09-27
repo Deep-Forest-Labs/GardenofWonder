@@ -58,6 +58,22 @@ const FIELDS = [
       /\b(?:state|S)\s*\.\s*profile\s*\.\s*name\b/,
     ],
   },
+  {
+    /* Not typed by a player — but the story's words are the one body of
+       player-facing TEXT that arrives as data by the thousand and is written by
+       a hand the code never sees (doc 57, the writer's pass). ui-story.js builds
+       every row with textContent; this holds that, and it holds ui-sheet.js's
+       two doors (the Almanac's chapter titles, the welcome-back line) to the
+       same empty-node rule. */
+    field: 'DATA.story (the script and its labels)',
+    why: 'the story\'s words — imported from docs/57, never written through a template',
+    accessors: [
+      /\bDATA\s*\.\s*story\b/,
+      /\bstory(?:ChapterFor|Line|TurnLine|Welcome)\s*\(/,
+      /\bcustomerLines\s*\(/,
+      /\bLABEL\s*\(/,
+    ],
+  },
 ];
 
 /* Which files the ruling governs. `game.js` is excluded on purpose: it never

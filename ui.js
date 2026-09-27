@@ -456,6 +456,8 @@
     const hollyRoom = season === 'winter';
     const hollyLine = typeof bucket === 'string' && bucket.indexOf('holly') === 0;
     if (hollyRoom !== hollyLine) return;
+    /* Chapter I's opening is a scripted run; her ordinary tap lines wait it out. */
+    if (bucket === 'tap' && Game.storyMutesTap()) return;
     const lines = FLOWER_LINES[bucket] || FLOWER_LINES.idle;
     sayText(lines[(Math.random() * lines.length) | 0], force);
   }
@@ -465,9 +467,14 @@
   /* Returns whether it actually drew. Every existing caller ignores it; the
      meadow's one-time signpost does not, because a line it never showed must
      not be counted as shown. */
-  function sayText(text, force) {
+  /* `force === 'story'` is the story's own voice (ui-story.js): it may speak
+     while a story run holds the bubble, and nothing else may. `ms` is how long
+     the line stays; 0 holds it until the next line replaces it, which is how a
+     line waits under Mara's reply chips. */
+  function sayText(text, force, ms) {
     const now = Date.now() / 1000;
     if (!text) return false;
+    if (force !== 'story' && UI.storyBusy && UI.storyBusy()) return false;
     /* Don't stack a bubble on top of a coach mark — but ASK WHETHER THE COACH
        IS ACTUALLY PAINTED, not merely whether its `hidden` attribute is off.
        `.in-fall .coach:not(.season)` and `.in-winter .coach:not(.season)` hide
@@ -481,9 +488,12 @@
     if (!force && now - lastSpeech < 3.2) return false;
     lastSpeech = now;
     speechEl.textContent = text;
+    /* A story line is a sentence, not an exclamation — it wraps. */
+    speechEl.classList.toggle('is-story', force === 'story');
     speechEl.classList.add('show');
     clearTimeout(speechTimer);
-    speechTimer = setTimeout(() => speechEl.classList.remove('show'), 2400);
+    const hold = typeof ms === 'number' ? ms : 2400;
+    if (hold > 0) speechTimer = setTimeout(() => speechEl.classList.remove('show'), hold);
     return true;
   }
 
@@ -1805,6 +1815,12 @@
        covers the right two thirds of the screen, so a mark pointing into the
        garden lands on top of it. */
     if (UI.sheetMode() || gateOn || UI.hollowOpen() || UI.meadowOpen() || UI.menuOpen()) { hideCoach(); return; }
+    /* THE STORY GOES FIRST, and the mark waits (docs/55 §6): while a scene is up
+       or owed on this screen, or Chapter I's opening is playing, no mark shows —
+       so Fall's "Swipe left" waits for the act break, and the opening alternates
+       a line, then its mark. The story never waits on a mark it has hidden, so
+       the two cannot deadlock. */
+    if (UI.storyHoldsCoach && UI.storyHoldsCoach()) { hideCoach(); return; }
     /* THE SEASON ROOMS, and it has to be NARROW rather than a blanket bail.
        `.in-fall`/`.in-winter` display:none every coach mark EXCEPT `.season` —
        the ones teaching the way in and out point at a season peek, which is a
@@ -2375,6 +2391,8 @@
      this, so it has to follow them between rooms. */
   UI.flowerBtn = () => guestFlower || flowerBtn;
   UI.sayText = sayText;
+  UI.speechNode = () => speechEl;
+  UI.gateOn = () => Boolean(gateOn);
   UI.renderCritters = renderCritters;
   UI.tapCritter = tapCritter;
   UI.critterLine = critterLine;

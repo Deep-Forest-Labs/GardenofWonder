@@ -490,6 +490,10 @@ than a Rare one.
 | Aurora (6) | — | none — every channel is CSS | — | `aurora` bed and dress | — | forced |
 | Wonderfall (all) | — | 26 gold coins, no magnet | — | `wonderfall` bed and dress, `sing` three times | banner | forced |
 | Sunbreak | — | none — light wedges, never particles | — | sunbreak dress | — | yes |
+| A chapter scene opens (2026-09-27) | — | none — the veil and the stack's own push | — | `quest` | — | — |
+| A scene line lands | — | none | — | **silent**, on purpose — a tap-through at six lines a second would be a drum roll | — | — |
+| Mara's reply chip / a scene's Continue / the scene closes | — | none | — | `close` | — | — |
+| Poppy's story line in the garden | — | none | — | — (`sing` once, before Chapter I's hum) | — | the line itself |
 
 **The multiplier float is a MODIFIER on the four harvest rows, not a rung of its own.** It adds no
 sound, no shake, no haptic, no particle and no toast — one extra text node, at 14px against the
@@ -556,6 +560,13 @@ worse than one that reads quietly.
 
 This ladder is a design contract. If you add an event, place it on the ladder deliberately rather
 than giving it maximum juice.
+
+**The story reuses two recipes and adds none (2026-09-27).** A scene opening is a small promise kept,
+the same weight as a quest claim, so it takes `quest`; everything that ends or answers takes the
+soft `close`. The lines themselves are silent: the owner's standard is a tap-through that never
+waits, and a note per line at the fast-forward's six a second is noise, not feedback. No particle,
+shake, toast or haptic anywhere in a scene — the words are the event. Chapter I's hum is Poppy's own
+`Sound.sing()`, played once before the line that remembers it; Chapter V's mid-phrase cut is not built.
 
 ## The Turn's celebration (2026-08-29, phase 2)
 

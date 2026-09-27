@@ -1414,8 +1414,9 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 **IN FLIGHT, 2026-09-27 overnight — the narrative engine, in four gates.** Gate 1 is pushed: the
 chapter scene's wireframe spike and motion gate, `tools/scene-spike.html`. Gate 2 is pushed: the
 engine in `game.js` (doc 03 *The story*, doc 07 `state.story`), the script imported from doc 57 by
-`tools/story-import.js`, and the laws in the suite. Gates 3 (the surface) and 4 (the gauntlet) follow;
-this line is replaced by the morning review when the run ends. See the gate entries in
+`tools/story-import.js`, and the laws in the suite. Gate 3 is pushed: `ui-story.js` — the scene,
+Poppy's runs and Mara's chips, the coach handshake, the welcome-back line and the Almanac's replay door
+(doc 08). Gate 4 (the gauntlet) follows; this line is replaced by the morning review when the run ends. See the gate entries in
 [10-decision-log.md](10-decision-log.md).
 
 **THE MOTION BIBLE'S FIRST FIX ROUND IS DONE AND PUSHED — the first five items doc 11 filed

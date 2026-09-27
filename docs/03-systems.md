@@ -925,6 +925,15 @@ stage the chapters have reached (toddler to III, child to VI, wry after).
 reputation or packs, or touches the well's inputs (`lifetimeCoins`, `mintedBase`,
 `year.coinsEarned`); the suite plays the whole of volume one and asserts every one unchanged.
 
+**When it plays — `ui-story.js`, laid out in [08-ui-and-layout.md](08-ui-and-layout.md#the-chapter-scene-and-maras-reply-chips-2026-09-27).**
+Only at a quiet beat, through the moments dialog's own guard — never over a sheet (so never during the
+Turn's ceremony), the news, a painted coach mark, the Hollow, the meadow, a gate or the menu, and never
+before the session's first touch. The story goes first in `tryMoment()`, so a chapter owed after the
+Turn never loses the beat to a reveal card; the coach mark waits for the story, never the reverse.
+Poppy's runs speak only in the Summer garden, through `sayText()`, which refuses under a painted coach
+mark and refuses every other line while a run holds the bubble. **A replay** (the Almanac's Chapters
+block) plays a seen chapter without calling `storyAdvance()` or `storyDismiss()`, so it latches nothing.
+
 **What is not built:** the order strip, the Stand's counter art and the rail's chapter ticks (the
 chapters' `strip:`/`counter:` changes ship as data the strip will read); the flower's birth from the
 tin; the record shelf (Chapter VIII's lullaby is a no-op); the Fall and Spring heroes (their beats are

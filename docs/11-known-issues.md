@@ -5,6 +5,35 @@ Nothing here is a crash — the game is stable. These are correctness, balance a
 
 If you fix one, delete it from this file in the same commit.
 
+## The story's first build — what it knowingly leaves (2026-09-27)
+
+The narrative engine and its scene shipped in one overnight run ([03-systems.md](03-systems.md#the-story--the-narrative-engine-2026-09-27),
+[08-ui-and-layout.md](08-ui-and-layout.md#the-chapter-scene-and-maras-reply-chips-2026-09-27)). What it did
+not build, each owned by a later spec rather than forgotten:
+
+- **The words are the desk's draft** (`DATA.story.draft: true`). The human pass is owed (doc 55 §9 q11);
+  it is an edit to doc 57 and `node tools/story-import.js`.
+- **Chapter I's `(strip)` lines are not shown.** The quest strip is still the quest strip; they ship as data
+  for the FTUE rebuild. Likewise every chapter's `counter:` and `strip:` change waits for the order strip
+  and the Stand's counter art.
+- **Every scene plays over the garden**, blurred, whatever its `room:` says — the meadow and Stand
+  backdrops (and Chapter VIII's city) are not drawn.
+- **Mara's full-length art** is a stand-in silhouette on the title card; the portraits' looks
+  (`DATA.story.cast.mara`, the four villagers' `CUSTOMERS` rows) are PROVISIONAL. Mara has no export in
+  `art/exports/characters/` because she is not a customer.
+- **`turnYear()` still deals three orders**; Delphine's Garden Handful replaces the newest one that
+  cannot be delivered when the act break is dismissed (doc 55 §6 asked for one slot).
+- **Not built:** the flower's birth from the tin (the opening starts on the first tap), Chapter V's
+  mid-phrase cut to the hum, Chapter VIII's record (no shelf), the Fall and Spring heroes' beats (skipped
+  by the importer and logged as pending), the rail's chapter ticks (the Almanac's Chapters block is the
+  replay door until then).
+- **Wren's welcome-back line can never play**: the board speaks for the most recent *arrival*, and Wren
+  is an existing customer, never an arrival.
+- **The Turn's re-voiced ask** (*"Shall we keep it?"*) is imported as `ch1.turnask` but the ceremony
+  still says the shipped line — doc 55 §9 q17 is the owner's call, and doc 32 changes with it.
+- **Sliver and line levels are placeholders** spread evenly by the importer; the chapter levels are doc
+  57's. The tree spec places both.
+
 ## Graft indexes legacy/main.js alongside the live build
 
 **Filed rather than fixed, wiring session 2026-09-10.** [`graft`](09-conventions.md#finding-your-way-graft)

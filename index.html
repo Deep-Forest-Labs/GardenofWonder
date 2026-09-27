@@ -313,6 +313,14 @@
          the one thing in the game a player cannot swipe away — nothing may draw
          on top of it. -->
     <div class="news" id="news" hidden aria-hidden="true"></div>
+
+    <!-- THE STORY. The chapter scene and Mara's reply chips, both outside
+         `.world` for the reason #news is: nothing in the garden may paint over
+         a scene, and a scene is never inside .ui's stacking context. Built by
+         ui-story.js; empty and hidden whenever nothing is playing, so the veil's
+         blur holds no layer while the garden is being played. -->
+    <div class="story" id="story" hidden aria-hidden="true" tabindex="-1"></div>
+    <div class="story-chips" id="storyChips" hidden></div>
   </div>
 
   <script src="data.js"></script>
@@ -339,6 +347,7 @@
   <script src="ui-fall.js"></script>
   <script src="ui-winter.js"></script>
   <script src="ui-news.js"></script>
+  <script src="ui-story.js"></script>
   <script src="ui-menu.js"></script>
   <script src="ui-events.js"></script>
   <!-- The frame-rate readout. A development instrument: it starts off, the dev

@@ -725,6 +725,13 @@ const DATA = {
      write what it feels like to play, not what was done. */
   changelog: [
     {
+      date: '2026-09-27',
+      lines: [
+        'The garden has a story now. Poppy talks with you from your very first tap, and when your first Year is kept, a neighbour comes to the Stand. Any chapter you have seen can be played again from the Almanac.',
+        'Poppy has new words for saying hello and for her tap chatter, and Holly calls her sister "she" now.'
+      ]
+    },
+    {
       date: '2026-09-26',
       lines: [
         'Saved Seeds — the forever money you get at the Turn — are called Prisms now. Nothing about earning or spending them changed, only the name.',
@@ -891,6 +898,12 @@ const DATA = {
        never orders; Poppy's portrait is the talking flower's own face; Gran's
        note has no portrait at all. Every villager who speaks in a scene is a
        CUSTOMERS row. */
+    /* Every word the scene's own furniture says. Written into the page with
+       textContent, like the script, so no story word is ever a template literal. */
+    labels: {
+      next: 'Tap to continue', go: 'Continue', begin: 'Tap to begin', end: 'Tap to close',
+      ff: 'Fast-forward', chapters: 'Chapters', chapter: 'Chapter', reply: 'Mara says'
+    },
     cast: {
       mara: { name: 'Mara', art: { skin: '#f0c9a8', hair: '#5a3a1f', style: 'bun', clothes: '#c96b3f', accent: '#fff7e1', hat: null } },
       poppy: { name: 'Poppy', flower: true },
@@ -2221,15 +2234,18 @@ const WONDER = {
   ]
 };
 
-/* Things the Talking Flower says. */
+/* Things the Talking Flower says. The greet, tap, harvest, idle and broke lines
+   doc 57 re-voiced (2026-09-27) — and Holly's three pronouns below — are the
+   desk's draft, like the story's words (DATA.story.draft); the suite holds them
+   to doc 57's tables, so the writer's pass changes them there first. */
 const FLOWER_LINES = {
-  greet: ['Well hello, gardener!', 'You came back!', 'The soil missed you.', 'Ready to grow something?'],
-  tap: ['Ooh, do that again!', 'Tickles!', 'Keep it coming!', 'That is the spirit!', 'More petals, please!'],
+  greet: ['Mara! You\'re here!', 'Oh good. It\'s you.', 'Morning, Mara. The soil says hi.', 'Ready? I\'m ready. I was born ready.'],
+  tap: ['Ooh, a coin!', 'Ha! Got one.', 'Coins, coins, coins.', 'Shiny!', 'Another one!'],
   crit: ['WOW! Critical bloom!', 'Sparkles everywhere!', 'That one shook the roots!', 'Magnificent!'],
-  harvest: ['Beautiful harvest!', 'Look at that haul!', 'The basket runneth over!', 'Fresh from the soil!'],
+  harvest: ['Beautiful harvest!', 'Look at that haul!', 'Look how full it is!', 'Fresh from the soil!'],
   legend: ['A LEGENDARY bloom!', 'I have never seen such petals!', 'Legendary! Frame it!'],
-  idle: ['Psst... the plots are lonely.', 'Try planting something new.', 'Tap me if you get bored.', 'Nice weather for growing.'],
-  broke: ['Save up a few coins first!', 'Not enough in the pouch.', 'Tap me for pocket change!'],
+  idle: ['Psst... the plots are lonely.', 'Try planting something new.', 'I\'m bored. Are you bored?', 'Nice weather for growing.'],
+  broke: ['Save up a few coins first!', 'Not enough in the pouch.', 'Coins, please. Lots.'],
 
   /* HOLLY — Winter's hero, and the game's second voice. Deadpan, superior,
      secretly devoted. FOUR BUCKETS, small on purpose: weather chatter stays
@@ -2264,11 +2280,11 @@ const FLOWER_LINES = {
     'They managed without an audience.'
   ],
   hollyIdle: [
-    'It\u2019s not cold. He is just soft.',
-    'He gets a tutorial. I get a season.',
+    'It\u2019s not cold. She is just soft.',
+    'She gets a tutorial. I get a season.',
     'Nothing is happening. That is winter.',
     'Snow is weather with better manners.',
-    'He would not last a night out here.'
+    'She would not last a night out here.'
   ],
   unlock: ['New ground to grow on!', 'More room for flowers!', 'Ooh, fresh soil!'],
   rain: ['Rain! The garden loves this.', 'Mmm, petrichor.', 'Drink up, everyone.'],

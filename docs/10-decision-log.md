@@ -5,6 +5,50 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (overnight, gate 3 of 4) — The surface: the scene, the chips, the handshake, and a replay door
+
+**`ui-story.js` draws what the engine owes, at the first quiet beat, to the spike's layout.** The
+chapter scene is its own layer beside `#news`, outside `.world` (doc 08); Poppy's runs speak through
+`sayText()` with Mara's reply chips under the board; the welcome-back line is the away sheet's first
+row; the Almanac grows a Chapters block that replays a seen chapter without latching anything. Driven
+end to end with real input in the browser pane: first tap → *"Are you my mama?"* → chips → the hum;
+Chapter I's runs; a real Turn through the ceremony, the act break **held while the ceremony was up and
+opened within a second of it shutting**, Fall's *Swipe left* mark appearing only after the scene
+closed, Delphine's Garden Handful on the counter; replay with fast-forward; reduced motion through the
+probe with every state drawn and zero animations on the layer.
+
+**It reuses the moments dialog's guard rather than forking it.** `momentsQuiet()` is exported, the
+story asks it first, and `tryMoment()` calls the story before a reveal — so every trigger that already
+reached the moments dialog (a sheet closing, the news settling, the coach clearing, the once-a-second
+poll) reaches the story too, and a reveal never lands on a scene. The coach waits for the story: a
+scene up or owed on this screen, or Chapter I's opening, hides the mark (the JS half in
+`refreshCoach()`, the declarative half `.game.story-on #coach`).
+
+**Found and fixed while driving it:** the replay first opened on a timer after the Almanac shut, and a
+reveal card took that quiet beat and landed on top of it — the request is now *held* and holds the
+floor until the story takes it; and the title card covered fast-forward, which the recording puts top
+right *always* — the top bar now sits above the card.
+
+**Every visible word is data, written with `textContent`** — held by `tools/html-check.js`, which now
+watches the story's accessors (`DATA.story`, `Game.story*`, `customerLines`) and was broken four ways
+(plain, nested in a second file, a spaced spelling, the customer pool) and went red each time, with the
+legal `textContent` form staying green. **Zero new colours** — the distinct set diffed before and
+after; two more uses of the masks' `#000`, re-baselined with the reason in doc 05.
+
+**Defaults set in the dark, each filed with its reversal:** chips under the board (one `top` in
+`placeChips()`); portraits beside every row, chat-style (the spike's question 1); Poppy on the far side
+in a villager's scene; the veil's blur at 6px (the news dialog uses 2px; a scene is read *over* the
+garden, not beside it); lines silent, `quest` to open, `close` to answer or end (doc 06); Mara's and
+the four villagers' looks; the Chapters block after Collection in the Almanac; `runGap` 6 s and a
+bubble's reading time 1.5 s + 45 ms a character; Poppy's re-voiced shop lines and Holly's pronouns
+applied from doc 57's tables and held to them by the suite.
+
+**Rejected:** a CSS-keyframe tap-through (cannot be finished on demand); a moment kind inside
+`showMoment()` (the dialog is a card, and the scene would inherit its session cap — doc 55 §6 put
+chapters outside it); chips under the bubble (on Poppy's face); a Poppy line on the welcome-back board
+(doc 55 §6 gives it to the villager alone); changing the ceremony's ask to doc 57's *"Shall we keep
+it?"* (§9 question 17 is the owner's, and doc 32 changes with it).
+
 ## 2026-09-27 (overnight, gate 2 of 4) — The narrative engine: a read, never a queue; doc 57 imported, never hand-copied
 
 **The engine decides what plays; the UI will decide only when.** `game.js` gains `storyPending()` (the
