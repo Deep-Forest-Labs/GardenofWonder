@@ -17,8 +17,33 @@ question set, each option priced, so the morning conversation starts warm.
 
 - **Poppy** logged as the flower's name, doc 53 noted, doc 54's open question closed.
 - **The five v2 critiques** folded into doc 52's third REVISED block and the decision log.
-- **Trunk spike v3** dispatched with those five changes — layout only, no economy numbers.
+- **Trunk spike v3 landed** (`82455ac`) with those five changes — layout only, no economy numbers.
+  Desk-verified: all twelve prices on the trunk are Prisms and **no card shows gold**; the rail
+  renders no digits at all; the order strip is a real `overflow-x:auto`, not a picture of scrolling;
+  frame 6 is retitled "a pointer, not a picture" and draws the yard band at its true height. The
+  unveiling grew from four beats to six, with what to tune named but no timing ruled — that stays
+  yours on sliders under the motion gate.
 - **The lawn wireframe** (`tools/lawn-spike.html`) — three approaches plus the creature question.
+
+## Two things from v3 worth your eye
+
+**The order strip is now taller than the quest strip, so "the same box" is no longer literally
+true.** The appeal of the conversion was that the tutorial bar *becomes* the order strip in place.
+Gossip Harbor's shape — a portrait behind the goods, with the goods on a counter — needs more
+height than a quest line does, and the builder accepted the taller box and said so rather than
+quietly cropping it. **The cost lands on the garden stage**, which shrinks by the difference under
+doc 08's auto row. Worth deciding on purpose: keep the same box and lose some of the reference's
+shape, or keep the shape and let the garden lose height.
+
+**Doc 55 built on doc 54 correctly.** The story bible cites the flow brief by name as "the when and
+where," uses Poppy throughout, and its §6 delivers beats only on surfaces that exist. The two
+documents do not contradict each other — the handoff worked, and nobody needs to reconcile them.
+
+**Two small notes, neither needing action.** V3's commit trailer says "Claude Sonnet 5" rather than
+"Claude Opus 5"; the builder used its own model identity and flagged it, which is defensible and not
+worth rewriting a pushed commit over. And the harness denied that builder a `git stash` while
+another session was live — harmless here because its push was a clean fast-forward, but a future
+run needing a real rebase on a busy repo will hit the same wall and will need your hands.
 
 ## The lawn: there is no spare surface — and this is the night's real finding
 
