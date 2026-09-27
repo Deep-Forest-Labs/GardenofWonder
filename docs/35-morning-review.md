@@ -20,6 +20,48 @@ question set, each option priced, so the morning conversation starts warm.
 - **Trunk spike v3** dispatched with those five changes — layout only, no economy numbers.
 - **The lawn wireframe** (`tools/lawn-spike.html`) — three approaches plus the creature question.
 
+## The lawn: there is no spare surface — and this is the night's real finding
+
+`tools/lawn-spike.html` (commit b365fc9) went and looked at the live board before drawing anything,
+and came back with something that **invalidates §4's premise in doc 52**. The desk verified it
+against the source rather than taking the report's word:
+
+- The only grass in the whole layout is the **yard band**: `--yard-h: clamp(70px, 13vh, 108px)`.
+- That band already holds **up to six creatures plus two permanent floating buttons** (the Upgrade
+  pill and the Power-up circle), pinned to its own edges.
+- **The game has already failed at this exact crowding once.** `style.css` (grep
+  `floating buttons share`) records the fix in its own words: *"Trimmed from 19vw when the band took
+  the ends of the yard… Four creatures and two floating buttons share 370px; at 19vw the outer two
+  were half behind a button and each adjacent pair overlapped by 30px."*
+
+Doc 52 §4 draws the lawn as a roomy board with spots to spare. **That board does not exist.** Adding
+five perk objects to the one 70–108px strip is not a layout preference — it is re-running a failure
+the code already documents. This is why tree-spike's frame 6 read as confusing: it was an abstract
+box, not the real thing.
+
+**Four approaches are drawn** in the spike, each at two spots and at five spots with creatures
+present, with the whole equip sequence and the empty state: everything on the grass (the current
+ruling, drawn honestly including the ugly worst case), a lawn button (your idea, drawn as both a
+grass object and a HUD icon), a hybrid, and a fourth the builder proposed — a perk rail using doc
+08's already-reserved row-3 strip.
+
+**A ruling collision you have to settle, not soften.** Your lawn-button idea and the hybrid both
+contradict the 2026-09-26 ruling that *"the lawn is not a screen and has no door."* The builder
+flagged it rather than quietly picking, which is right. Given what the yard band actually is, that
+ruling may simply have been made against a drawing rather than the board — but it is yours to
+reverse, not the desk's.
+
+**On creatures, the desk agrees with the builder's recommendation:** keep creatures and perks
+visibly different kinds of thing. Creatures are the one system built to feel alive — feeding,
+sleeping, keepsakes, pairs — and they already have their own room precisely so they would not
+compete with the board. Collapsing them into one shared token shape on the board undoes that.
+
+## Also landed tonight, from another session
+
+`docs/55-the-story-bible.md` appeared while the desk worked — the story bible has been started by
+someone else, presumably against doc 54. The desk has not read or touched it. Worth knowing before
+you brief anyone further, so two people are not writing the same document.
+
 ## The one thing that blocks everything else
 
 **Prisms now buy flowers, perk stars, access rights, lawn spots and creature reveals — and the only
