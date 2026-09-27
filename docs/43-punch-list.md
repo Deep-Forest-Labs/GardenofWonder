@@ -327,6 +327,33 @@ still sits in the bottom-right corner, and still fits inside its tile in landsca
 
 ---
 
+### #28 · POLISH · The Prism icon's five refraction bands turn to mud at HUD size · cosmetic · reported 2026-09-26
+
+**Deferred by the owner on the day it was filed** — noticed by the desk while verifying the icon,
+raised, and explicitly parked: *"make a note to make the Prisms 3 bands instead of 5… we don't need
+to do it now."* Filed so it is not rediscovered.
+
+**Anchor:** `icons.js` — grep `Prisms' own glyph`, the `prism:` entry. Five `<path>` bands carrying
+`fill="#ff6b6b"`, `#ff922b`, `#ffe066`, `#51cf66`, `#9775fa`.
+
+**The defect, read (not driven):** the glyph is drawn on a 24×24 viewBox with five colour bands
+stacked across roughly its lower third — each band about 1.9 units tall. In the HUD the icon renders
+at ~16px, so each band lands on well under one device pixel at 1× and the five average into a single
+muddy stripe. The spectrum is legible only at 40px and above, which is the Turn sheet and the
+export, not the wallet where the icon actually lives.
+
+**Not a recognition problem.** The 2026-09-26 naming ruling put recognition on the silhouette — a
+hard triangle, apex up, the inverse of `gem`'s point-down kite — precisely so the refraction never
+had to carry identification. This is the refraction failing at its *own* job, looking alive.
+
+**Repro — HYPOTHESIS, not run:** open the game, look at the Prism wallet chip in the dock, compare
+against `art/exports/icons/prism.svg` viewed at 96px.
+
+**Acceptance:** the Prism glyph shows three refraction bands rather than five, and a player looking
+at the wallet chip at normal phone size can see it is split into distinct colours rather than one
+blended band. The silhouette is unchanged — still a hard triangle, apex up, distinct from `gem`.
+
+
 ## Fixed and pruned
 
 **The 2026-09-03 round closed fifteen items across 27 commits**, and the round's own close

@@ -88,6 +88,11 @@ owner's to change).
 >   epic and the spike drew it wrong.
 > - **Tabled:** the §6 creature slot collision (six creatures, four slots).
 >
+> **The well — asked and closed, 2026-09-26.** doc 32's glossary calls the lifetime pool "one deep
+> well" that each Turn scoops from. The desk asked whether a well of Prisms still reads. The owner
+> ruled it stays: it is a glossary metaphor only, and the game never draws a well or shows one
+> anywhere. Do not reopen it.
+>
 > **Two structural consequences the spec must carry, flagged by the desk, not ruled:**
 > 1. **Prisms gain their first faucet outside the Turn.** Today Prisms arrive only at the Turn,
 >    and that scarcity is what makes the Turn the pillar. "Very small" must mean a rounding error

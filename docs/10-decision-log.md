@@ -48,9 +48,15 @@ files. No back-compat shim on the save read — prototype saves may reset, per t
 "Keeping" album card **The Saved Seed** keeps its name because it is about literal seed-saving.
 A player-facing changelog line explains both renames.
 
-**Open, not ruled:** doc 32's glossary says everything you have ever earned feeds **"one deep
-well"** that each Turn scoops from. A well of Prisms is an odd image — light does not pool. Left
-exactly as it was for the owner to rule.
+**Asked and closed the same day:** doc 32's glossary says everything you have ever earned feeds
+**"one deep well"** that each Turn scoops from, and the desk asked whether a well of Prisms still
+reads, since light does not pool. **The owner ruled it stays** — *"that's more of a metaphor even to
+say that, and it's just a glossary line. It has nothing to do with the game. We don't actually show
+a well or anything like that."* The glossary keeps its image; no UI is implicated.
+
+**Deferred, filed as punch-list #28:** the glyph's five refraction bands average into one muddy
+stripe at the ~16px the wallet actually renders. The owner parked it explicitly — three bands
+instead of five, but not now.
 
 ## 2026-09-26 (rulings, the owner's word) — The spike judged: levels not rungs, the quest strip becomes the FTUE, the first Turn moves early
 
