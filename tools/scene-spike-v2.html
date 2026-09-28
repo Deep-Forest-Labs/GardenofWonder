@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The chapter scene v2 — every conversation is a cutscene</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   scene-spike-v2.html — the owner's note of 2026-09-27: "the
+   narrative doesn't have an overlay like Gossip Harbor; all of it
+   happens in the garden with the flower." Three wireframes of the
+   same conversations — Chapter I's opening with Poppy, and the act
+   break with Delphine — each drawn as a full cutscene, measured
+   against the owner's recording (described in words in docs/10;
+   the file stays on his machine).
+
+   Reads ../data.js (the script and the motion values), ../flora.js
+   and ../customers.js (the real faces — both are art libraries that
+   know nothing about the game). No game.js, no ui-*.js.
+
+   Colours: the house tokens, plus one colour per character for the
+   ring, the name pill and the bubble's border — every one taken from
+   an existing game hex. Which colour belongs to whom is a question
+   below, not a ruling.
+   ========================================================= */
+:root{
+  --ink:#2c1a10; --ink-2:#5a3a1f; --ink-soft:#7a6047;
+  --paper:#fff8e7; --paper-2:#ffeecd; --paper-3:#ffe0ad; --card:#fffdf7;
+  --grass:#5cc45c; --grass-d:#3f9d45; --grass-l:#8fe08a;
+  --soil:#a9713f; --coin:#ffc93c; --coin-d:#f08c00;
+  --sky1:#7ec8f2; --sky2:#bfe9ff;
+  --r-lg:26px; --r-md:18px; --r-sm:12px;
+  --font:'Baloo 2', ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+  /* One colour per voice — all existing game hexes. */
+  --c-mara:#3f9d45;      /* the grass's dark green */
+  --c-poppy:#ff5d95;     /* Poppy's own petal pink (gp-talker) */
+  --c-delphine:#c96b3f;  /* a rust from the villagers' palette */
+  --c-note:#7a6047;      /* ink-soft: Gran's handwriting */
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#efe4cf;color:var(--ink);font-family:var(--font)}
+body{padding:18px 14px 60px}
+h1{font-size:24px;margin:0 0 4px;font-weight:800}
+h2{font-size:18px;margin:28px 0 6px;font-weight:800}
+h3{font-size:15px;margin:0 0 6px;font-weight:800}
+p{margin:0 0 10px;line-height:1.4;font-weight:600;font-size:14px;max-width:820px}
+.flag{display:inline-block;background:var(--coin);border:2px solid var(--ink);border-radius:999px;padding:0 9px;font-size:12px;font-weight:800;margin-right:6px}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.cap{font-size:12.5px;font-weight:800;color:var(--ink-2);text-align:center;max-width:200px;line-height:1.3;margin-top:6px}
+.q{border-left:5px solid var(--coin);padding:6px 10px;margin:8px 0;background:var(--paper);border-radius:0 10px 10px 0;font-size:13.5px;font-weight:600;max-width:820px}
+.variant{border:3px solid var(--ink);border-radius:20px;background:var(--card);box-shadow:0 4px 0 var(--ink-2);padding:12px 14px;margin:14px 0}
+.variant > p{max-width:none}
+
+/* ---------- the phone ---------- */
+.phone{position:relative;width:390px;height:844px;overflow:hidden;border:4px solid var(--ink);border-radius:34px;background:var(--grass);box-shadow:0 5px 0 var(--ink-2)}
+.mini{width:195px;height:422px}
+.mini .phone{transform:scale(.5);transform-origin:0 0}
+.garden{position:absolute;inset:0;background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 28%,var(--grass-l) 29%,var(--grass) 60%,var(--grass-d) 100%)}
+.garden .hud{position:absolute;left:10px;right:10px;top:12px;height:44px;display:flex;gap:8px}
+.garden .hud i{flex:1;border:3px solid var(--ink);border-radius:999px;background:var(--paper)}
+.garden .strip{position:absolute;left:10px;right:10px;top:66px;height:46px;border:3px solid var(--ink);border-radius:var(--r-md);background:var(--paper)}
+.garden .board{position:absolute;left:14px;right:14px;top:226px;aspect-ratio:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px;border-radius:var(--r-lg);background:var(--soil)}
+.garden .board i{border:3px solid var(--ink);border-radius:var(--r-md);background:#8a5a33}
+.garden .board .flower{border:none;background:none;display:grid;place-items:center}
+.garden .board .flower svg{width:118%;height:118%}
+.garden .dock{position:absolute;left:10px;right:10px;bottom:14px;height:64px;border:3px solid var(--ink);border-radius:var(--r-lg);background:var(--paper-2)}
+
+/* ---------- the cutscene — the proposal ---------- */
+/* The recording blurs the room and barely dims it: the scene is still there. */
+.cs{position:absolute;inset:0;z-index:5;display:grid;grid-template-rows:auto 1fr auto;padding:14px 10px 18px;user-select:none;
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);background:rgba(30,18,10,.16)}
+.cs .veil{display:none}
+.cs-top{display:flex;justify-content:flex-end;min-height:40px;position:relative;z-index:3}
+.cs-ff{width:44px;height:36px;border-radius:999px;border:2.5px solid rgba(255,255,255,.85);background:rgba(44,26,16,.28);display:grid;place-items:center;padding:0;cursor:pointer}
+.cs-ff svg{width:22px;height:22px}
+.cs-ff[aria-pressed="true"]{background:var(--coin);border-color:var(--ink)}
+.cs-stack-wrap{position:relative;overflow:hidden}
+/* Top-down, like the recording: the first line lands at the top and the stack
+   grows DOWN until the screen is full, then the oldest slides off the top. */
+.cs-stack{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;gap:14px;padding:8px 4px 6px}
+.cs-stack.full{top:auto;bottom:0}
+.r{display:flex;align-items:center;gap:6px;--c:var(--ink)}
+.r.them{flex-direction:row-reverse}
+.r[data-who="mara"]{--c:var(--c-mara)}
+.r[data-who="poppy"]{--c:var(--c-poppy)}
+.r[data-who="delphine"]{--c:var(--c-delphine)}
+.r[data-who="note"]{--c:var(--c-note)}
+.face{position:relative;flex:0 0 var(--fs,96px);width:var(--fs,96px);height:var(--fs,96px);margin-bottom:12px}
+.disc{width:100%;height:100%;border-radius:50%;overflow:hidden;background:var(--card);border:4px solid var(--c);box-shadow:0 0 0 3px var(--ink),0 5px 0 3px var(--ink-2)}
+.disc svg{display:block;width:100%;height:100%}
+.face[data-who="poppy"] .disc{background:#e7f8e3}
+.tag{position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);background:var(--c);color:#fff;border:2.5px solid var(--ink);border-radius:999px;font-size:13px;font-weight:800;line-height:1;padding:4px 10px 3px;white-space:nowrap;text-shadow:0 1px 0 rgba(44,26,16,.5)}
+.bub{position:relative;flex:1 1 auto;min-height:74px;display:grid;place-items:center;text-align:center;padding:10px 14px;background:var(--card);border:4px solid var(--c);border-radius:var(--r-md);box-shadow:0 0 0 2.5px var(--ink),0 5px 0 2.5px var(--ink-2);font-size:17px;font-weight:800;line-height:1.22}
+/* The tail points at the speaker. */
+.bub::after{content:'';position:absolute;top:50%;width:14px;height:14px;background:var(--card);border:4px solid var(--c);border-width:0 0 4px 4px;transform:translateY(-50%) rotate(45deg)}
+.r.mara .bub::after,.r.left .bub::after{left:-9px}
+.r.them .bub::after{right:-9px;transform:translateY(-50%) rotate(-135deg)}
+.r.think .bub{border-radius:40px;border-style:solid;font-style:italic}
+.r.think .bub::after{display:none}
+.r.think .bub::before{content:'';position:absolute;left:-18px;bottom:6px;width:12px;height:12px;border-radius:50%;background:var(--card);border:3px solid var(--c);box-shadow:-10px 10px 0 -2px var(--card),-10px 10px 0 0 var(--c)}
+.r.note{justify-content:center}
+.r.note .bub{flex:0 1 92%;background:var(--paper-2);font-style:italic;color:var(--ink-2);font-weight:700}
+.r.note .bub::after{display:none}
+.r.arriving .bub{color:rgba(44,26,16,.35)}
+.cs-foot{display:grid;justify-items:center;align-content:end;gap:8px;min-height:86px;position:relative;z-index:3}
+.cs-go{font:inherit;font-size:20px;font-weight:800;color:#fff;padding:8px 40px;border:3px solid var(--ink);border-radius:999px;background:linear-gradient(180deg,#5aa9e6,#2f7fc8);box-shadow:0 4px 0 var(--ink-2);text-shadow:0 1px 0 rgba(44,26,16,.5);cursor:pointer}
+.cs-go[hidden],.cs-hint[hidden],.cs-chips[hidden]{display:none}
+.cs-hint{color:#fff;font-size:13px;font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+/* Mara's reply, inside the cutscene: her choices at the foot, in her colour. */
+.cs-chips{display:grid;gap:8px;width:100%;justify-items:center}
+.cs-chips button{font:inherit;font-size:16px;font-weight:800;min-width:70%;padding:9px 16px;border:3px solid var(--ink);border-radius:999px;background:var(--card);box-shadow:inset 0 0 0 3px var(--c-mara),0 4px 0 var(--ink-2);cursor:pointer}
+.cs-card{position:absolute;inset:0;z-index:2;display:grid;place-items:center;align-content:center;gap:14px;background:linear-gradient(180deg,var(--sky1),var(--sky2) 60%,var(--grass-l))}
+.cs-card[hidden]{display:none}
+.cs-card h3{margin:0;font-size:34px;font-weight:800;color:#fff;-webkit-text-stroke:2px var(--ink);text-align:center;padding:0 20px}
+.cs-card .sil{width:130px;height:280px;color:var(--ink-2);opacity:.32}
+.cs-card small{font-size:13px;font-weight:800;color:var(--ink-2)}
+
+/* VARIANT B — focus: the newest line's face is full size; older rows shrink and fade. */
+.v-focus .r .face{--fs:64px;transition:none}
+.v-focus .r:last-child .face{--fs:100px}
+.v-focus .r:not(:last-child) .bub{opacity:.82;font-size:15px;min-height:56px}
+.v-focus .r:not(:last-child) .tag{font-size:11px}
+
+/* VARIANT C — the stage: two big busts stand at the foot, left and right; the
+   bubbles stack between them and carry a small coloured tab instead of a face. */
+.v-stage .face{display:none}
+.v-stage .r .bub{flex:0 1 84%}
+.v-stage .r.mara{justify-content:flex-start}
+.v-stage .r.them{justify-content:flex-start}
+.v-stage .r .bub::before{content:attr(data-name);position:absolute;top:-13px;left:14px;background:var(--c);color:#fff;border:2.5px solid var(--ink);border-radius:999px;font-size:12px;font-style:normal;padding:2px 9px;line-height:1.1}
+.v-stage .r.them .bub::before{left:auto;right:14px}
+.v-stage .r.think .bub::before{content:attr(data-name)}
+.v-stage .cs-foot{min-height:200px;align-content:start;padding-top:8px}
+.busts{position:absolute;left:0;right:0;bottom:0;height:210px;pointer-events:none;display:none}
+.v-stage .busts{display:block}
+.bust{position:absolute;bottom:-8px;width:170px;height:200px;transition:none}
+.bust.l{left:-6px}.bust.r{right:-6px}
+.bust svg{width:100%;height:100%}
+.bust.dim{filter:saturate(.6) brightness(.8)}
+.v-stage .cs-go,.v-stage .cs-hint,.v-stage .cs-chips{position:relative;z-index:4}
+
+/* ---------- the knob panel ---------- */
+.gate{display:grid;grid-template-columns:390px minmax(280px,460px);gap:22px;align-items:start}
+@media (max-width:900px){.gate{grid-template-columns:1fr}}
+.panel{border:3px solid var(--ink);border-radius:18px;background:var(--card);box-shadow:0 4px 0 var(--ink-2);padding:12px 14px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.seg button{font:inherit;font-weight:800;font-size:13.5px;padding:6px 12px;border:3px solid var(--ink);border-radius:999px;background:var(--paper);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--coin)}
+.tf-lid{transform-origin:center top;transform:scaleY(0)}
+.cu-eyes-happy,.cu-mouth-happy,.cu-eyes-wait,.cu-mouth-wait{display:none}
+.is-waiting .cu-eyes,.is-waiting .cu-mouth{display:none}
+.is-waiting .cu-eyes-wait,.is-waiting .cu-mouth-wait{display:block}
+.is-happy .cu-eyes,.is-happy .cu-mouth{display:none}
+.is-happy .cu-eyes-happy,.is-happy .cu-mouth-happy{display:block}
+.is-waiting .tf-lid{transform:scaleY(.55)}
+</style>
+</head>
+<body>
+
+<h1>The chapter scene v2 — every conversation is a cutscene</h1>
+<p><span class="flag">SPIKE</span>The owner's note, 2026-09-27: the opening conversation happens down in the
+garden with the flower, not as a Gossip Harbor cutscene. <b>These three wireframes put every conversation —
+Chapter I's opening with Poppy included — into the overlay</b>, with the portraits the recording shows: a big
+round face per line, the speaker's colour on the ring, the name and the bubble's border, Mara on the left and
+whoever she talks to on the right. Pick one (or mix), then the build follows.</p>
+<p>What the recording shows, measured: portraits about <b>a quarter of the screen wide</b> (~96px at 390); a
+<b>coloured ring and name pill per character</b>; <b>white bubbles with a border in the speaker's colour</b> and a
+tail at the face; the stack <b>fills from the top down</b>, then the oldest slides off the top; <b>four rows</b> on
+screen; the room behind only <b>lightly</b> blurred and dimmed; a small fast-forward top right; the last line a
+cloud with puffs, then a blue <b>Continue</b>.</p>
+
+<h2>Play it</h2>
+<div class="gate">
+  <div><div class="phone" id="live"></div><div class="cap" style="max-width:390px">Tap the phone to land the next line.</div></div>
+  <div class="panel">
+    <h3>Variant</h3>
+    <div class="seg" id="segV">
+      <button type="button" data-v="parity" aria-pressed="true">A · Parity</button>
+      <button type="button" data-v="focus" aria-pressed="false">B · Focus</button>
+      <button type="button" data-v="stage" aria-pressed="false">C · Stage</button>
+    </div>
+    <h3>Conversation</h3>
+    <div class="seg" id="segS">
+      <button type="button" data-s="open" aria-pressed="true">Chapter I's opening, with Poppy</button>
+      <button type="button" data-s="break" aria-pressed="false">The act break, with Delphine</button>
+    </div>
+    <p style="font-size:13px">The motion is today's shipped values from <code>DATA.story.motion</code> — a new line pops
+    its face and slides its bubble in, the stack pushes with the overshoot. The characters in the room behind
+    are not animated, per the owner's note.</p>
+  </div>
+</div>
+
+<h2>The three variants, frozen</h2>
+<div class="variant">
+  <h3>A · Parity — the recording's shape, one to one</h3>
+  <p>Every row a 96px face, ring and name pill in the speaker's colour, a white bubble bordered to match.
+  Top-down fill. Mara's reply choices sit at the foot of the cutscene as two pills in her colour; the one
+  tapped becomes her row. This is the closest to what you played.</p>
+  <div class="row" id="stripA"></div>
+</div>
+<div class="variant">
+  <h3>B · Focus — the one speaking is the big face</h3>
+  <p>Same as A, but only the newest row is full size (100px); older rows shrink to 64px and soften. Your note
+  asked about the characters "that are speaking or thinking" — this makes the speaker unmistakable, at the cost
+  of the recording's steady rhythm of equal rows.</p>
+  <div class="row" id="stripB"></div>
+</div>
+<div class="variant">
+  <h3>C · Stage — two big busts at the foot, bubbles between</h3>
+  <p>The two characters stand as large busts in the bottom corners for the whole scene — the speaker lit, the
+  listener dimmed — and the bubbles carry a coloured name tab instead of a face. Fewer faces on screen, bigger
+  art, and it needs Mara's full-length art sooner. Furthest from the recording.</p>
+  <div class="row" id="stripC"></div>
+</div>
+
+<h2>Questions for the morning</h2>
+<div class="q"><b>1. Which variant</b> — A, B, C, or A with B's focus on the newest face?</div>
+<div class="q"><b>2. Poppy's one-liners.</b> Memory slivers and story lines are a single line from Poppy. Do they
+become a one-row cutscene too (a light veil, her face and her line, tap to close — frame "one-liner" below), or
+stay in her garden bubble where they don't stop play?</div>
+<div class="q"><b>3. Mara's replies.</b> In the opening Mara answers by picking a chip. In A and B the tapped chip
+becomes her row in the stack (the recording has no choices at all, so this is ours). Keep the choice, or have Mara
+simply speak her line?</div>
+<div class="q"><b>4. The colours.</b> Mara green, Poppy her petal pink, Delphine rust, Gran's note in soft ink — every one
+an existing game colour, but the villagers will need one each. Say which feel right.</div>
+<div class="q"><b>5. The Continue button</b> is the recording's blue. Our house "yes" is green. Which?</div>
+<div class="row" id="stripX" style="margin-top:10px"></div>
+
+<script src="../data.js"></script>
+<script src="../flora.js"></script>
+<script src="../customers.js"></script>
+<script>
+Flora.injectDefs();
+const M = Object.assign({ slideMs: 180, pushMs: 220, overshoot: 6, popMs: 160, cloudMs: 260, ffLinesPerSec: 6, tapCompletes: 0 },
+  (typeof DATA !== 'undefined' && DATA.story && DATA.story.motion) || {});
+const SCRIPT = DATA.story.script;
+const ch1 = SCRIPT.chapters.find((c) => c.id === 'ch1');
+const NAMES = { mara: 'Mara', poppy: 'Poppy', delphine: 'Delphine', note: 'Gran' };
+const FACE = (mood) => ({ happy: 'is-happy', laugh: 'is-happy', proud: 'is-happy', sly: 'is-happy',
+  sad: 'is-waiting', worried: 'is-waiting', cross: 'is-waiting', tired: 'is-waiting', sleepy: 'is-waiting' }[mood] || '');
+
+function portrait(who) {
+  if (who === 'poppy') return Flora.talkingFlower().replace('viewBox="0 0 120 130"', 'viewBox="14 8 92 92"');
+  const def = who === 'mara' ? DATA.story.cast.mara : CUSTOMERS.find((c) => c.id === who);
+  return def ? Customers.draw(def).replace('viewBox="0 -18 100 154"', 'viewBox="4 -12 92 100"') : '';
+}
+function bust(who) {
+  if (who === 'poppy') return Flora.talkingFlower();
+  const def = who === 'mara' ? DATA.story.cast.mara : CUSTOMERS.find((c) => c.id === who);
+  return def ? Customers.draw(def) : '';
+}
+
+/* The two conversations as one list of beats each: a line, a choice, a card. */
+const OPEN = ch1.runs.open.filter((l) => l.mode === 'bubble' || l.mode === 'chip').map((l) => (l.mode === 'chip'
+  ? { choose: l.chips } : { who: 'poppy', mood: l.mood, text: l.text }))
+  .concat(ch1.runs.hum.filter((l) => l.mode === 'bubble' || l.mode === 'chip').map((l) => (l.mode === 'chip'
+    ? { choose: l.chips } : { who: 'poppy', mood: l.mood, text: l.text })));
+const BREAK = [{ card: ch1.scenes[0].card }].concat(ch1.scenes[0].lines.filter((l) => l.mode !== 'stage').map((l) => ({
+  who: l.who, mood: l.mood, text: l.text, think: l.mode === 'think'
+})));
+const SCRIPTS = { open: { beats: OPEN, cast: ['mara', 'poppy'] }, break: { beats: BREAK, cast: ['mara', 'delphine'] } };
+
+const FF = '<svg viewBox="0 0 24 24"><path d="M3.6 6v12l7.6-6ZM12.4 6v12L20 12Z" fill="#fff"/></svg>';
+const SIL = '<svg class="sil" viewBox="0 0 120 260"><g fill="currentColor"><circle cx="60" cy="38" r="26"/><path d="M28 250 L34 120 C36 84 46 70 60 70 C74 70 84 84 86 120 L92 250 Z"/></g></svg>';
+
+function garden(poppyUp) {
+  return `<div class="garden"><div class="hud"><i></i><i></i><i></i></div><div class="strip"></div>
+    <div class="board"><i></i><i></i><i></i><i></i><i class="flower">${poppyUp ? Flora.talkingFlower() : ''}</i><i></i><i></i><i></i><i></i></div>
+    <div class="dock"></div></div>`;
+}
+function rowEl(b) {
+  const r = document.createElement('div');
+  const side = b.who === 'mara' ? 'mara' : b.who === 'note' ? 'note' : 'them';
+  r.className = `r ${side}${b.think ? ' think' : ''}`;
+  r.dataset.who = b.who;
+  const bub = document.createElement('div');
+  bub.className = 'bub';
+  bub.textContent = b.text;
+  bub.dataset.name = NAMES[b.who];
+  if (b.who !== 'note') {
+    const f = document.createElement('div');
+    f.className = `face ${FACE(b.mood)}`;
+    f.dataset.who = b.who;
+    f.innerHTML = `<div class="disc">${portrait(b.who)}</div>`;
+    const t = document.createElement('span');
+    t.className = 'tag';
+    t.textContent = NAMES[b.who];
+    f.appendChild(t);
+    r.append(f, bub);
+  } else r.append(bub);
+  return r;
+}
+function shell(variant, cast, poppyUp) {
+  return `${garden(poppyUp)}<div class="cs v-${variant}"><div class="veil"></div>
+    <div class="cs-top"><button class="cs-ff" type="button" aria-pressed="false">${FF}</button></div>
+    <div class="cs-stack-wrap"><div class="cs-stack"></div></div>
+    <div class="cs-foot"><div class="cs-chips" hidden></div><span class="cs-hint">Tap to continue</span><button class="cs-go" type="button" hidden>Continue</button></div>
+    <div class="busts"><div class="bust l">${bust(cast[0])}</div><div class="bust r">${bust(cast[1])}</div></div>
+    <div class="cs-card" hidden>${SIL}<h3></h3><small>Tap to begin</small></div></div>`;
+}
+function fitStack(cs) {
+  const wrap = cs.querySelector('.cs-stack-wrap');
+  const st = cs.querySelector('.cs-stack');
+  while (st.children.length > 7) st.removeChild(st.firstElementChild);
+  st.classList.toggle('full', st.scrollHeight > wrap.clientHeight);
+}
+function lightBust(cs, who) {
+  cs.querySelectorAll('.bust').forEach((b, i) => b.classList.toggle('dim', (i === 0) !== (who === 'mara')));
+}
+
+/* ---------- the live player ---------- */
+const live = document.getElementById('live');
+let V = 'parity'; let S = 'open'; let idx = 0; let running = []; let ffT = null;
+const anim = (el, frames, ms) => { if (!el || !(ms > 0)) return; const a = el.animate(frames, { duration: ms, easing: 'cubic-bezier(.2,.7,.3,1)' }); running.push(a); a.onfinish = () => { running = running.filter((x) => x !== a); }; };
+const finish = () => { running.forEach((a) => { try { a.finish(); } catch (e) {} }); running = []; };
+
+function play() {
+  finish(); clearInterval(ffT); ffT = null; idx = 0;
+  const sc = SCRIPTS[S];
+  live.innerHTML = shell(V, sc.cast, S === 'open');
+  const cs = live.querySelector('.cs');
+  cs.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.cs-ff')) { toggleFf(); return; }
+    if (e.target.closest('.cs-go')) { play(); return; }
+    if (e.target.closest('.cs-chips button')) { choose(e.target.closest('button').textContent); return; }
+    step();
+  });
+  step();
+}
+function step() {
+  const cs = live.querySelector('.cs');
+  const sc = SCRIPTS[S];
+  const card = cs.querySelector('.cs-card');
+  if (!card.hidden) { card.hidden = true; }
+  const chips = cs.querySelector('.cs-chips');
+  if (!chips.hidden) return;
+  finish();
+  const b = sc.beats[idx];
+  if (!b) return;
+  idx += 1;
+  if (b.card) { card.querySelector('h3').textContent = b.card; card.hidden = false; return; }
+  if (b.choose) {
+    chips.innerHTML = '';
+    b.choose.forEach((t) => { const x = document.createElement('button'); x.type = 'button'; x.textContent = t; chips.appendChild(x); });
+    chips.hidden = false;
+    cs.querySelector('.cs-hint').hidden = true;
+    anim(chips, [{ transform: 'translateY(16px)', opacity: 0 }, { transform: 'none', opacity: 1 }], M.slideMs);
+    if (V === 'stage') lightBust(cs, 'mara');
+    return;
+  }
+  land(cs, b);
+}
+function choose(text) {
+  const cs = live.querySelector('.cs');
+  const chips = cs.querySelector('.cs-chips');
+  chips.hidden = true;
+  cs.querySelector('.cs-hint').hidden = false;
+  land(cs, { who: 'mara', mood: 'neutral', text });
+}
+function land(cs, b) {
+  const st = cs.querySelector('.cs-stack');
+  const row = rowEl(b);
+  st.appendChild(row);
+  fitStack(cs);
+  if (V === 'stage') lightBust(cs, b.who);
+  const h = row.getBoundingClientRect().height + 14;
+  if (st.classList.contains('full')) anim(st, [{ transform: `translateY(${h}px)` }, { transform: `translateY(${-h * M.overshoot / 100}px)`, offset: 0.72 }, { transform: 'none' }], M.pushMs);
+  const dx = row.classList.contains('them') ? 30 : row.classList.contains('note') ? 0 : -30;
+  anim(row.querySelector('.bub'), [{ transform: `translateX(${dx}px) scale(.92)`, opacity: 0 }, { transform: 'none', opacity: 1 }], b.think ? M.cloudMs : M.slideMs);
+  anim(row.querySelector('.disc'), [{ transform: 'scale(.6)' }, { transform: 'scale(1.08)', offset: 0.6 }, { transform: 'none' }], M.popMs);
+  if (idx >= SCRIPTS[S].beats.length) { clearInterval(ffT); ffT = null; cs.querySelector('.cs-hint').hidden = true; cs.querySelector('.cs-go').hidden = false; }
+}
+function toggleFf() {
+  const btn = live.querySelector('.cs-ff');
+  if (ffT) { clearInterval(ffT); ffT = null; btn.setAttribute('aria-pressed', 'false'); return; }
+  btn.setAttribute('aria-pressed', 'true');
+  ffT = setInterval(() => {
+    const cs = live.querySelector('.cs'); const chips = cs.querySelector('.cs-chips');
+    if (!chips.hidden) { const b = chips.querySelector('button'); if (b) choose(b.textContent); return; }
+    if (idx >= SCRIPTS[S].beats.length) { clearInterval(ffT); ffT = null; btn.setAttribute('aria-pressed', 'false'); return; }
+    step();
+  }, 1000 / M.ffLinesPerSec);
+}
+function seg(id, key, set) {
+  document.getElementById(id).addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll(`#${id} button`).forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    set(b.dataset[key]); play();
+  });
+}
+seg('segV', 'v', (v) => { V = v; });
+seg('segS', 's', (s) => { S = s; });
+play();
+
+/* ---------- the frozen frames ---------- */
+function frame(variant, scriptKey, n, opts = {}) {
+  const sc = SCRIPTS[scriptKey];
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<div class="mini"><div class="phone">${shell(variant, sc.cast, scriptKey === 'open')}</div></div><div class="cap"></div>`;
+  const cs = wrap.querySelector('.cs');
+  const st = cs.querySelector('.cs-stack');
+  let last = null;
+  sc.beats.slice(0, n).forEach((b) => {
+    if (b.card) return;
+    if (b.choose) { last = { who: 'mara', mood: 'neutral', text: b.choose[0] }; st.appendChild(rowEl(last)); return; }
+    st.appendChild(rowEl(b)); last = b;
+  });
+  if (opts.choose) {
+    const chips = cs.querySelector('.cs-chips');
+    opts.choose.forEach((t) => { const x = document.createElement('button'); x.type = 'button'; x.textContent = t; chips.appendChild(x); });
+    chips.hidden = false; cs.querySelector('.cs-hint').hidden = true;
+  }
+  if (opts.card) { const c = cs.querySelector('.cs-card'); c.hidden = false; c.querySelector('h3').textContent = opts.card; }
+  if (opts.done) { cs.querySelector('.cs-hint').hidden = true; cs.querySelector('.cs-go').hidden = false; }
+  if (variant === 'stage' && last && last.who) lightBust(cs, last.who);
+  wrap.querySelector('.cap').textContent = opts.cap;
+  return wrap;
+}
+function strip(id, variant) {
+  const host = document.getElementById(id);
+  const openChipAt = OPEN.findIndex((b) => b.choose);
+  [
+    frame(variant, 'open', openChipAt, { choose: OPEN[openChipAt].choose, cap: 'The opening: "Are you my mama?" and Mara’s two replies' }),
+    frame(variant, 'open', OPEN.length, { done: true, cap: 'The opening, its end: the hum remembered, then Continue (doc 57 gives this run no thought)' }),
+    frame(variant, 'break', 1, { card: ch1.scenes[0].card, cap: 'The title card before the act break' }),
+    frame(variant, 'break', 5, { cap: 'The act break: Gran’s note, then Delphine' }),
+    frame(variant, 'break', BREAK.length, { done: true, cap: 'The act break’s end: four rows, the thought, Continue' })
+  ].forEach((f) => host.appendChild(f));
+  host.querySelectorAll('.cs-stack').forEach((st) => fitStack(st.closest('.cs')));
+}
+strip('stripA', 'parity'); strip('stripB', 'focus'); strip('stripC', 'stage');
+
+/* Question 2's frame: a one-line memory sliver as a one-row cutscene. */
+{
+  const host = document.getElementById('stripX');
+  const f = frame('parity', 'open', 0, { cap: 'Question 2 — a memory sliver as a one-row cutscene over the garden' });
+  f.querySelector('.cs-stack').appendChild(rowEl({ who: 'poppy', mood: 'curious', text: SCRIPT.slivers[1].text }));
+  f.querySelector('.cs-hint').textContent = 'Tap to close';
+  host.appendChild(f);
+}
+</script>
+</body>
+</html>

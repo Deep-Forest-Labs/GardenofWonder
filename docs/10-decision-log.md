@@ -5,6 +5,35 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (the owner's note, spike v2) — Every conversation becomes a cutscene; three ways to draw the faces
+
+**The owner, after playing the build:** *"the narrative doesn't have an overlay or anything like Gossip
+Harbor. All the narrative happens in the scene underneath the garden and with the flower."* True of what
+a new player meets first: Chapter I's opening is Poppy's garden bubble with Mara's chips under the board,
+and the full-screen scene only appears at the first Turn. He re-shared the same recording and asked for
+the faces — who is speaking or thinking, left and right — not the characters animating in the room.
+
+**The recording, measured again, in words** (the file stays on his machine, beside the repo in a
+`references/` folder that is not in git): every line is its own row with a **round portrait about a
+quarter of the screen wide**, ringed in **that character's colour**, with a **name pill in the same
+colour**; the lead is **always left** with her bubble to its right, the other speaker mirrored right;
+bubbles are **white with a border in the speaker's colour** and a tail at the face; the stack **fills
+from the top down**, four rows on screen, then the oldest slides off the top; the room behind is only
+**lightly** blurred and dimmed; a small translucent fast-forward top right; a thought is a cloud with
+puffs, then a **blue** Continue. Against that, the shipped scene's faces are about 60% the size, ringed in
+ink rather than colour, its bubbles are paper-filled, and its stack grows from the bottom.
+
+**`tools/scene-spike-v2.html`** plays Chapter I's opening (Poppy) and the act break (Delphine) as full
+cutscenes in three variants, with the real faces from `customers.js` and the talking flower: **A · Parity**
+(the recording one to one — Mara's reply choices sit at the foot and the one tapped becomes her row),
+**B · Focus** (only the newest line's face full size, older rows shrink), **C · Stage** (two big busts in the
+bottom corners, bubbles between with a coloured name tab). Five questions are on the page: which variant;
+whether Poppy's one-liners (slivers, story lines) become a one-row cutscene or stay in the garden bubble;
+whether Mara keeps her reply choice; the character colours (each an existing game hex, not ruled); and
+the recording's blue Continue against the house green.
+
+**Nothing in the game changed.** The build waits for the owner's picks.
+
 ## 2026-09-27 (overnight, gate 4 of 4) — The gauntlet: three critics, eight findings, all closed
 
 **Three independent critics, not five** — the laws and the partition together (a verifier writing
