@@ -13431,6 +13431,7 @@ check('it recolours a property the base rule actually paints with (border-color,
   check('between scenes the chapter resumes at the next scene', G.storyPending().scene === 1);
   G.storyDismiss('ch2', 1);
   check('Chapter II seen; Theo arrived', G.storySeen('ch2') && G.storyArrived().join() === 'delphine,theo');
+  check('and the resume point is cleared, not left naming a finished chapter', S.story.beat === null);
   check('Chapter III waits for tomorrow — the cap is one a day', G.storyPending() === null);
   reload();
   check('and the cap holds across a reload the same day', G.storyPending() === null && S.story.day.chapters === 1);
@@ -13441,6 +13442,27 @@ check('it recolours a property the base rule actually paints with (border-color,
   const beforeReplay = JSON.stringify(S.story);
   G.storyChapterFor('ch1', true);
   check('reading a chapter for replay latches nothing', JSON.stringify(S.story) === beforeReplay);
+
+  group('the story: the chapter gate reads the LEVEL, never raw reputation');
+  /* Critic's find: a `state.rep >= ch.level` mix-up was caught only by accident. */
+  G.reset();
+  seeCh1();
+  nextDay();
+  S.rep = 0; S.level = 5;
+  check('level 5 with no reputation on record still owes Chapter II', G.storyPending() && G.storyPending().chapter === 'ch2');
+  S.level = 3; S.rep = 999;
+  check('and level 3 with a pile of reputation does not', G.storyPending() === null);
+
+  group('the story: a garden that Turned without ever harvesting still reaches the act break');
+  /* Found writing the phone script: the harvest step waited for a harvest that
+     a dev-driven (or tap-only) first Year never makes, and the act break
+     waited behind it forever. */
+  G.reset();
+  S.year.turnsCompleted = 1;
+  let chainSteps = 0;
+  for (let l = G.storyLine(); l && l.kind === 'run' && chainSteps < 20; l = G.storyLine(), chainSteps += 1) G.storySaid(l.id);
+  check('every opening step still plays, in order', G.storySeen('ch1.open') && G.storySeen('ch1.teach.harvest') && G.storySeen('ch1.ask') && chainSteps === 8, String(chainSteps));
+  check('and the act break is owed', G.storyPending() && G.storyPending().chapter === 'ch1');
 
   group('the story: a save that crossed a level offline finds its chapter waiting');
   G.reset();
@@ -13470,6 +13492,33 @@ check('it recolours a property the base rule actually paints with (border-color,
   check('the missing day and orders come back as defaults',
     S.story.day && S.story.day.chapters === 0 && Array.isArray(S.story.orders) && S.story.orders.length === 0 && S.story.beat === null);
   check('the sliver pointer is kept', S.story.sliver === 3);
+  /* Critic's find: every rejection path below was untested, and dropping the
+     orders filter outright stayed green. */
+  G.reset();
+  G.saveNow();
+  const bad = JSON.parse(localStorage.getItem(SAVE_KEY));
+  bad.story = {
+    seen: { ch1: true }, beat: { chapter: 'ch1', scene: 0, line: 2 }, sliver: 999,
+    day: { key: 'x', chapters: -2, slivers: 1.5, lines: 'two' },
+    orders: [{ villager: 'nobody', good: 'posy' }, { villager: 'theo', good: 'nothing' }, null]
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(bad));
+  G.load();
+  check('a beat naming a chapter already seen is dropped', S.story.beat === null);
+  check('an out-of-range sliver pointer is clamped to the script', S.story.sliver === DATA.story.script.slivers.length);
+  check('corrupt day counts come back as zero', S.story.day.chapters === 0 && S.story.day.slivers === 0 && S.story.day.lines === 0);
+  check('an order for an unknown villager is dropped and an unknown good becomes "any"',
+    S.story.orders.length === 1 && S.story.orders[0].villager === 'theo' && S.story.orders[0].good === null, JSON.stringify(S.story.orders));
+  G.saveNow();
+  const bad2 = JSON.parse(localStorage.getItem(SAVE_KEY));
+  bad2.story = { seen: {}, beat: { chapter: 'ch9', scene: 0, line: 0 } };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(bad2));
+  G.load();
+  check('a beat naming a chapter that does not exist is dropped', S.story.beat === null);
+  bad2.story = { seen: { 'ch1.ask': true }, beat: { chapter: 'ch1', scene: 4, line: 0 } };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(bad2));
+  G.load();
+  check('a beat naming a scene past the chapter\'s end is dropped', S.story.beat === null);
 
   group('the story: memory slivers play in order and are never skipped; story lines — newest wins, the rest superseded');
   /* Sabotage: choosing the newest sliver owed (the story-line rule) instead of
@@ -13553,6 +13602,9 @@ check('it recolours a property the base rule actually paints with (border-color,
     check('Chapter IV deals Miss Marigold\'s show entry, with a good the tier allows',
       Boolean(mEntry) && G.standGoodsAt(G.standTier().tier).some((g) => g.id === mEntry.good) && G.standOrders().length >= beforeCh4,
       JSON.stringify(mEntry && mEntry.good));
+    S.lastSeen = G.nowSeconds() - DATA.story.welcomeAfter;
+    const exact = G.reconcile();
+    check('exactly three days away counts — the boundary is inclusive', exact && exact.welcome && exact.welcome.who === 'theo');
     const now = G.nowSeconds();
     S.lastSeen = now - (DATA.story.welcomeAfter - 3600);
     const short = G.reconcile();

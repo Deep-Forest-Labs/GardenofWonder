@@ -887,7 +887,9 @@ scene latches the chapter, counts it against the day, adds the villagers it brin
 1. **Chapter I's opening chain**, before Chapter I is seen: `ch1.open` (on the first tap — *"Are you my
    mama?"*), `ch1.hum` (Poppy hums `Sound.sing()` first), the teach intro, then one line per *kind* of
    tutorial step — the first tap, planting (once `seen.intro`), a harvest, an upgrade — then
-   `ch1.ask`. Each waits for the one before it and for its own step to have begun. The tutorial is
+   `ch1.ask`. Each waits for the one before it and for its own step to have begun — **or for the first
+Turn**, so a garden that reached its Turn without ever harvesting (or tapping, or buying) never strands
+the act break behind a step it will not take; the lines still play first, in order. The tutorial is
    being re-cut, so steps key to kinds, never to quest ids. Poppy's ordinary tap chatter is muted from
    the opening to the ask (`storyMutesTap()`).
 2. A seen chapter's **`.after`** coda, once.

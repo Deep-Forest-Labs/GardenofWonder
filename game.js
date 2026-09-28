@@ -4836,14 +4836,18 @@ const Game = (() => {
      tutorial is being re-cut (2026-09-26), so a step is keyed by KIND — the
      first tap, planting, a harvest, an upgrade — never by a quest id. */
   const anyUpgrade = () => Object.values(state.upgrades).some((v) => v > 0);
+  /* A Turn opens every step: a garden that reached its first Turn without ever
+     harvesting (or tapping, or buying) must not strand the act break behind a
+     step it will never take — the lines still play, in order, first. */
+  const turned = () => state.year.turnsCompleted >= 1;
   const CH1_CHAIN = [
-    { id: 'ch1.open', lines: (r) => r.open, ready: () => state.stats.totalTaps >= 1 },
+    { id: 'ch1.open', lines: (r) => r.open, ready: () => state.stats.totalTaps >= 1 || turned() },
     { id: 'ch1.hum', lines: (r) => r.hum, ready: () => true },
     { id: 'ch1.teach', lines: (r) => r.teach.intro, ready: () => true },
-    { id: 'ch1.teach.tap', lines: (r) => r.teach.tap, ready: () => state.stats.totalTaps >= 1 },
-    { id: 'ch1.teach.plant', lines: (r) => r.teach.plant, ready: () => Boolean(state.seen.intro) },
-    { id: 'ch1.teach.harvest', lines: (r) => r.teach.harvest, ready: () => state.stats.totalHarvests >= 1 },
-    { id: 'ch1.teach.upgrade', lines: (r) => r.teach.upgrade, ready: () => anyUpgrade() || state.year.turnsCompleted >= 1 },
+    { id: 'ch1.teach.tap', lines: (r) => r.teach.tap, ready: () => state.stats.totalTaps >= 1 || turned() },
+    { id: 'ch1.teach.plant', lines: (r) => r.teach.plant, ready: () => Boolean(state.seen.intro) || turned() },
+    { id: 'ch1.teach.harvest', lines: (r) => r.teach.harvest, ready: () => state.stats.totalHarvests >= 1 || turned() },
+    { id: 'ch1.teach.upgrade', lines: (r) => r.teach.upgrade, ready: () => anyUpgrade() || turned() },
     { id: 'ch1.ask', lines: (r) => r.ask, ready: () => true }
   ];
 

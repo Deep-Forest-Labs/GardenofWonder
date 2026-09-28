@@ -727,7 +727,9 @@ const DATA = {
     {
       date: '2026-09-27',
       lines: [
-        'The garden has a story now. Poppy talks with you from your very first tap, and when your first Year is kept, a neighbour comes to the Stand. Any chapter you have seen can be played again from the Almanac.',
+        'The garden has a story now, and Poppy talks with you from your very first tap.',
+        'When your first Year is kept, a neighbour comes to visit the Stand.',
+        'Any chapter you have seen can be played again from the Almanac.',
         'Poppy has new words for saying hello and for her tap chatter, and Holly calls her sister "she" now.'
       ]
     },

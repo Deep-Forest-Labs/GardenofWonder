@@ -5,6 +5,36 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-09-27 (overnight, gate 4 of 4) — The gauntlet: three critics, eight findings, all closed
+
+**Three independent critics, not five** — the laws and the partition together (a verifier writing
+realistic wrong implementations), the pictures and the feel together (probe-driven at 390×844 and
+360×780, real touch input), and the words. The cost rule (2026-09-21) asked for fewer, narrower agents;
+the two pairs share their instruments, so nothing was lost by merging them.
+
+**What they found, and what changed:**
+- **The laws critic tried sixteen wrong implementations; five stayed green.** Dropping `cleanStory()`'s
+  `orders` filter; leaving `beat` set after a chapter finished; `>` for `>=` at the welcome-back's
+  three-day boundary; reading raw reputation instead of the level (caught only by accident, through
+  two helpers that set one without the other); and the opening chain's `return null` (belt-and-braces
+  by design, and says so). All but the last now have an assertion of their own, re-sabotaged red:
+  malformed `orders`, `beat`, `sliver` and `day` on disk; `beat === null` after completion; the exact
+  boundary; level-without-reputation and reputation-without-level.
+- **Found by the desk writing the phone script:** a garden that reached its first Turn without ever
+  harvesting stalled Chapter I's opening at the harvest step, and the act break waited behind it
+  forever. The first Turn now opens every step of the chain; the lines still play first, in order.
+- **The pictures and the feel passed**: no overlap, clip or off-screen box at either size, every touch
+  target ≥44px, the thought and Continue drawn under reduced motion, a ten-tap burst with no wait landing
+  every line synchronously, fast-forward working from the title card to the end. One stale comment
+  called the Continue cream (it is the house green) — fixed.
+- **The words critic** found one: the changelog packed three changes into one line. Split in three.
+- **A process trap, recorded in HANDOFF:** the laws critic restored `data.js` from its start-of-run
+  copy and silently undid a fix made while it ran. Only `game.js` was its to touch; a critic that
+  sabotages is told the one file it may restore, and nothing else is edited until it reports.
+
+**Rejected:** a second clean round (the cost rule — every finding was re-sabotaged red by hand instead);
+and five critics as the brief listed them (two pairs share instruments).
+
 ## 2026-09-27 (overnight, gate 3 of 4) — The surface: the scene, the chips, the handshake, and a replay door
 
 **`ui-story.js` draws what the engine owes, at the first quiet beat, to the spike's layout.** The

@@ -5515,7 +5515,7 @@ button:focus-visible{
    Continue button. There is deliberately no keyframe to depend on.
 
    Zero new colours: the news dialog's own dim and blur, the house papers and
-   inks, the cream Continue of `.big-btn.yes`. */
+   inks, the green Continue of `.big-btn.yes`. */
 .story[hidden]{display:none}
 .story{
   position:absolute;inset:0;z-index:88;

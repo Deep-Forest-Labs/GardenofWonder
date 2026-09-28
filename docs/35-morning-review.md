@@ -6,6 +6,75 @@ changing it costs, and the questions that could not be answered alone. Notes on 
 
 ---
 
+# 2026-09-27 overnight — the narrative engine: the scene, the machine and Chapter I, end to end
+
+**What you can do this morning:** start a fresh garden on your phone, tap the flower and hear *"Are you
+my mama?"*, answer with one of Mara's two chips, play to the first Turn, close the ceremony and tap
+through the act break — Gran's note, Delphine at the Stand, Poppy's one line, Mara's thought — then
+replay it from the Almanac. The script at the bottom of this section takes two minutes.
+
+**The words are the desk's draft** (doc 57), shipped to the web lab behind `DATA.story.draft: true`
+so the machine can be judged. The writer's pass is an edit to doc 57 and `node tools/story-import.js`.
+
+## The four gates
+
+| Gate | What landed | Commit |
+| --- | --- | --- |
+| 1 — the spike first | `tools/scene-spike.html`: the act break verbatim at 390×844, a frame strip of every state, and the **motion gate** — seven sliders driving a live run | `ef5460e` |
+| 2 — the engine | `game.js`: chapters latched and swept, never queued; the daily caps; villagers by chapter with a scripted first order; `state.story`, permanent; `tools/story-import.js` writes the script from doc 57 and refuses what it cannot read | `2da92df` |
+| 3 — the surface | `ui-story.js`: the scene, Poppy's runs and Mara's chips, the coach handshake, the welcome-back line, the Almanac's replay door; Poppy's re-voiced shop lines and Holly's "she" | `360e0cf` |
+| 4 — the gauntlet | three independent critics — the laws (a verifier writing wrong implementations), the pictures and the feel, the words — and the fixes | *this commit* |
+
+## Every default set in the dark — the knob, and the one line that reverses it
+
+| Default | Where the knob is | The reversal |
+| --- | --- | --- |
+| **The motion values** — slide 180 ms, push 220 ms, overshoot 6%, portrait pop 160 ms, thought cloud 260 ms, fast-forward 6 lines a second, tap-to-complete **off** | `DATA.story.motion` in `data.js`; tune them live on `tools/scene-spike.html` and press *Copy values* | Paste the copied line over `motion:` — it ships verbatim; the spike reads it back |
+| **The caps** — 1 chapter, 1 memory sliver, 2 story lines a local day; Chapter I's runs and a chapter's `.after` coda uncapped | `DATA.story.caps` | One number each |
+| **Chapter levels** — doc 57's placeholders: II ~4, III ~8, IV ~14, V ~22, VI ~50, VII ~80, VIII ~110 | doc 57's `@level` tags → re-run the importer | The tree spec places them |
+| **Sliver and line levels** — spread evenly across each window by the importer (m01 plays straight after Chapter I) | `spread()` in `tools/story-import.js` | Put a level on each row in doc 57, or change `spread()` |
+| **The opening chain keys to kinds of step** — the first tap owes the question; planting's line after the first tap is taught; harvest's after a harvest; upgrade's after an upgrade; the ask after that; the act break after the ask and the Turn. **The first Turn also opens every step**, so a Year kept without a harvest never strands the act break (found writing this script) | `CH1_CHAIN` in `game.js` | Its `ready()` column |
+| **The expression map** — happy, laugh, proud, sly → the smiling face; sad, worried, cross, tired, sleepy → the waiting face; the rest neutral. Poppy's waiting face is her squint | `DATA.story.faces` | One word per expression |
+| **The portraits' looks** — Mara (brown bun, rust cardigan), Delphine (blonde braid, pink), Theo (brown cap, green), Julian (dark mop, blue), Isolde (black bun, purple and gold) | `DATA.story.cast.mara` and the four `CUSTOMERS` rows | Palette keys in the rows |
+| **Poppy's portrait** is the talking flower's own face, cropped to the head | `portraitSvg()` in `ui-story.js` | One line |
+| **Portraits ride every row**, chat-style, rather than two fixed faces at the foot | the scene's CSS and `buildRow()` | The spike's question 1 |
+| **Poppy takes the far side** for her line in a villager's scene | `buildRow()` | A third, smaller portrait |
+| **Mara's chips sit under the board**, not under Poppy's bubble (which would cover her face) | `placeChips()` | One `top` |
+| **The title card passes on a tap**, never a timer | `showCard()` | — (a timer is a wait) |
+| **The veil blurs 6px** (the news dialog blurs 2px) | `.story` in `style.css` | One value |
+| **Lines are silent**; `quest` opens a scene, `close` answers or ends | `ui-story.js`, doc 06 | Two recipe names |
+| **Replay lives in the Almanac**, a Chapters block after Collection, until the rail's ticks exist | `chapterBlock()` in `ui-sheet.js` | Move the block |
+| **The first Turn still deals three orders**; Delphine's Garden Handful replaces the newest one that cannot be delivered when the act break is dismissed (doc 55 asked for one slot) | `storyDealOrders()` | Queue only, and wait for a free slot |
+| **Bubble timing** — a line stays 1.5 s plus 45 ms a character; 6 s between two runs | `DATA.story.bubbleMs`, `DATA.story.runGap` | Two numbers |
+| **The ceremony still asks "Save your seeds?"** — doc 57's *"Shall we keep it?"* is imported but not shown | doc 55 §9 q17 is yours | Change `turnAsk()`'s line and doc 32 together |
+
+## What this run did not build (doc 11 has the list)
+
+The order strip and the Stand's counter art (the chapters' `counter:`/`strip:` changes are data
+waiting for them), Chapter I's `(strip)` lines, the room backdrops (every scene plays over the garden),
+Mara's full-length art (a stand-in silhouette), the flower's birth from the tin, Chapter V's hum cut
+mid-phrase, the record shelf's lullaby, and the Fall and Spring heroes' beats.
+
+## The two-minute phone script
+
+1. **Fresh save.** Settings → reset (or the What's New fresh start). The flower is up; *Tap the flower!*
+2. **Tap the flower once.** Poppy: *"…Oh. Hello."* then *"Are you my mama?"* — two chips appear under the
+   board. Tap either. Answer two more chips. Six seconds later she hums, then remembers the tune.
+3. **Play a minute** — plant, harvest, buy one upgrade. Each first one gets a Poppy line; the *Plant a
+   seed here* mark waits for her line, then shows. After the upgrade she asks about the Stand.
+4. **Developer tools** (the unlabelled dot beside the gem wallet) → *Earn +400K*. Close the sheet.
+   Open the Turn from the dock and play the ceremony through to *Spring*.
+5. **Close the ceremony.** The act break opens within a second: *The Year is kept* — tap — Gran's note,
+   Delphine, Poppy, Mara, the thought, **Continue**. Tap as fast as you like; no tap should ever wait.
+   Try fast-forward (top right). After Continue, *Swipe left for Fall* appears, and Delphine is on the
+   counter with a Garden Handful.
+6. **Replay:** the Almanac (the book, top right) → *Chapters* → *Chapter I · The Seed Tin*.
+7. **Reduced motion:** iOS Settings → Accessibility → Motion → Reduce Motion, then replay again. Every
+   line should simply appear, nothing sliding, and the thought and Continue still there.
+
+**Say "the pictures are wrong" or "the feel is wrong" and the fix is a data edit** — the look is the
+rows in `data.js`, the feel is the spike's sliders.
+
 # 2026-09-27 — the Prism economy, and what the night did NOT decide
 
 **The standing rule this file exists for: never economy numbers in the dark.** The owner went to bed

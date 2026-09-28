@@ -1411,13 +1411,32 @@ re-keyed in the same slice. Scope held as one piece, as promised.
 
 ## The current task
 
-**IN FLIGHT, 2026-09-27 overnight — the narrative engine, in four gates.** Gate 1 is pushed: the
-chapter scene's wireframe spike and motion gate, `tools/scene-spike.html`. Gate 2 is pushed: the
-engine in `game.js` (doc 03 *The story*, doc 07 `state.story`), the script imported from doc 57 by
-`tools/story-import.js`, and the laws in the suite. Gate 3 is pushed: `ui-story.js` — the scene,
-Poppy's runs and Mara's chips, the coach handshake, the welcome-back line and the Almanac's replay door
-(doc 08). Gate 4 (the gauntlet) follows; this line is replaced by the morning review when the run ends. See the gate entries in
-[10-decision-log.md](10-decision-log.md).
+**THE NARRATIVE ENGINE LANDED 2026-09-27 OVERNIGHT — the scene, the machine and Chapter I, end to
+end, in four gates.** The owner can start a fresh garden, hear *"Are you my mama?"* on the first tap,
+answer with Mara's chips, play to the first Turn, close the ceremony and tap through the act break, then
+replay it from the Almanac. **Read [35-morning-review.md](35-morning-review.md)'s top section first:** it
+is the morning review — every default set in the dark with its knob and its one-line reversal (the
+motion values, the caps, the placeholder levels, the expression map, the portraits' looks, where replay
+lives), what was not built, and the two-minute phone script.
+
+| Gate | What | Commit |
+| --- | --- | --- |
+| 1 | `tools/scene-spike.html` — the wireframe and the motion gate; the sliders read `DATA.story.motion` | `ef5460e` |
+| 2 | The engine in `game.js` ([03-systems.md](03-systems.md#the-story--the-narrative-engine-2026-09-27)), `state.story` ([07-save-data.md](07-save-data.md)), `tools/story-import.js` writing `DATA.story.script` from doc 57 | `2da92df` |
+| 3 | `ui-story.js` — the scene, Poppy's runs, Mara's chips, the coach handshake, the welcome-back line, the Almanac's replay ([08-ui-and-layout.md](08-ui-and-layout.md#the-chapter-scene-and-maras-reply-chips-2026-09-27)) | `360e0cf` |
+| 4 | The gauntlet — three critics, eight findings closed, the stalled-chain fix | the gate-4 commit |
+
+**Checks:** suite **2,335 passed, 0 failed**, three runs; `node --check` on every touched file;
+`html-check` (now watching the story's accessors, broken four ways and red each time), `style-check`
+(zero new colours, distinct set diffed), `export-icons --check`, `export-motion --check`,
+`story-import --check`. **The words are the desk's draft** behind `DATA.story.draft: true`; the
+writer's pass is doc 57 plus `node tools/story-import.js`. **What comes next** is the owner's: tune the
+feel on the spike, rule doc 55 §9 q17 (the ceremony's ask), and the human pass; the order strip, the
+Stand's counter art, the heroes and the rail's ticks each own a piece this run left as data
+([11-known-issues.md](11-known-issues.md)). **docs/43 was not touched.**
+
+**Graft tally:** `graft skeleton game.js` once (~61k tokens saved against reading 6,000 lines) and
+`graft skeleton ui.js` once; everything else was read at the exact spans those pointed to.
 
 **THE MOTION BIBLE'S FIRST FIX ROUND IS DONE AND PUSHED — the first five items doc 11 filed
 2026-09-21, across six commits, all confirmed on `origin/main` by `git log`.** The suite went
@@ -2786,6 +2805,23 @@ That inversion was inherited from the frozen economy port; it is fixed. What rem
 the Orchid throughput dip and the identical Aurora/Celestial rates.
 
 ## Traps in this codebase
+
+**A critic that sabotages must be told the ONE file it may restore — and nothing else is edited until
+it reports.** The story's gauntlet (2026-09-27) sent a verifier to write wrong implementations into
+`game.js` and restore from a copy; it copied `data.js` too, and its final restore silently undid a
+changelog fix the desk had made while it ran. Nothing went red. Name the file, tell it never to use
+`git checkout`/`git stash` (other sessions share this tree), and hold every edit to the files it touches
+until it hands back.
+
+**`tap:.hud` in a probe recipe can open Developer tools at a narrow width.** The HUD's centre can land
+on the invisible 44px `#btnDev` hit strip beside the wallets. To satisfy "the session's first touch"
+(the moments and story guard), dispatch a bare `pointerdown` on `window` instead. And the once-a-second
+poll that plays moments and story rides `requestAnimationFrame`, which a headless probe starves — call
+`UI.tryMoment()` yourself after setting a scene up.
+
+**`ui-story.js`'s motion is Web Animations, so the stylesheet's reduced-motion clamp cannot reach it.**
+The static substitute is `animate()` returning early under `calm()`; a new animation in that file that
+bypasses `animate()` would play for a player who asked for stillness, and no CSS check would see it.
 
 **A stray `}` or `;` in `style.css` silently kills the NEXT rule, however valid it looks.** The CSS
 parser folds a brace or semicolon with no block to belong to into the following selector, which is
