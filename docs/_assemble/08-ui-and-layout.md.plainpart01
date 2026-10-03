@@ -1,0 +1,231 @@
+> **candy-language illustrations** (title-splash / popzgames.com hero bar, locked 2026-10-03). Motifs
+> listed in [19-card-album.md](19-card-album.md). Do not invent a fourth album panel or a new layout
+> here — nothing in code changed for the art lock.
+
+The four dock modes share a tab strip — the `TABS` array in `ui-sheet.js`, with `SHOP_TABS` deciding which
+modes display it — so a player can move between them without closing. `seeds` carries the target
+plot index in `sheetArg`. Boosters have no sheet panel at all; see "Status rail" below.
+
+> **This structure is phase 1 of a larger change.** Apiary and Craft are still dock tabs — they
+> move to the world map in phase 2. See [15-navigation-and-ia.md](15-navigation-and-ia.md) for the
+> full build order before making changes here.
+
+Behaviour:
+
+- Tapping the dock button of the **already-open** panel closes the sheet, so the dock toggles.
+- A scrim fades in behind and closes the sheet on tap.
+- The grip at the top is draggable; **dragging down more than 110 px dismisses**. Anything less
+  springs back. Uses pointer capture so a fast flick doesn't lose the pointer.
+- Re-rendering preserves `scrollTop` unless the mode changed, so buying an upgrade doesn't jump you
+  back to the top of a long list.
+
+## The side drawer — the menu (2026-08-31)
+
+**Drawn in `tools/menu-spike.html` first, approved at the gate, then built.** `.drawer` in
+`style.css`, `ui-menu.js` for the behaviour, `#menu` in `index.html`.
+
+**A drawer is a third surface class, and the game now has three.** The distinction is worth being
+exact about, because calling this a sheet is the mistake that would break it:
+
+| Surface | Comes from | Holds | Dismissed by |
+| --- | --- | --- | --- |
+| **The bottom sheet** (`.sheet`) | the bottom | one panel at a time, from a mode map | drag down 110px, scrim tap, close button |
+| **The What's New dialog** (`#news`) | nowhere — it is simply there | one announcement | its own button, and nothing else |
+| **The drawer** (proposed) | the right edge | a menu — a scrolling column of rows | drag right, scrim tap, the hamburger again |
+
+Rules it inherits, and the one it adds:
+
+- **It obeys the column, and it has to say so itself.** `min(86%, 332px)`, pinned to the column's
+  right edge with `right: max(0px, calc((100% - 560px) / 2))`. **It is a SIBLING of `.ui`, not a
+  child** — a child would be painted over by the FX float layer at `z-index: 40` and by the sheet
+  at 50 — which puts it in exactly the position `.sheet` and `.meadow-layer` are in: outside the
+  cap, inheriting nothing, obliged to re-state it. `.sheet` does that with `max-width` +
+  `margin: 0 auto` because it spans the column; a drawer is pinned to one *edge* of it, so it says
+  the same thing as an offset. **This was got wrong first and caught by measuring**: without the
+  offset the menu flew out to the corner of a desktop window while looking perfect on a phone —
+  the meadow's own bug, on a new surface, exactly as the trap predicts.
+- **It pays the FULL safe-area inset, top and bottom.** `--bottom-gap` is `max(10px, calc(var(--sab)
+  - 12px))` and it is right for the dock, which is a row of buttons nobody swipes from. A panel
+  that reaches both edges of the screen takes `var(--sat)` and `var(--sab)` whole, the way
+  `.news-card` does. `env()` is still never called directly — the four `:root` variables only.
+- **It shares the sheet's scrim and z-order** — scrim 45, surface 50 — and the same two-property
+  dance: `hidden` off first, `.show` on the next frame, and `hidden` back only after the slide.
+- **NEW: it is a column of rows, so no row may depend on the drawer's height.** The sheet's panels
+  are laid out against a fixed height; a menu scrolls, and a row that centres itself against the
+  panel is a row that moves when the list grows. `.dr-rows` scrolls; the footer sits under it and
+  does not.
+- **A wide row takes the plain gradient, not the plot's blemish radials.** `.dr-row` is
+  `.seed-row`'s material verbatim — two-stop gradient, 3px ink, a 4px opaque lip, the matching
+  contact shadow. The five-layer recipe's two blemishes are positioned and sized in *percentages of
+  the box*, so a 9% dirt mark that is a speck on a 100px plot is a 39px grey blob across a 300px
+  row. That is the scale trap written in CSS, and it is why every wide card in this game is a
+  two-stop gradient. (The class is `.dr-row`, never `.seed-row` — that one is the plant picker's
+  button and reusing it collapses the columns.)
+- **Its state lives in a module local, never in the DOM**, exactly as `sheetMode` does. A `panels`
+  emit rebuilds markup from scratch and anything held in an attribute vanishes mid-interaction.
+- **Reduced motion gets a real version, not a fast one.** The global clamp collapses every
+  transition to 80ms, which on a full-height panel is a flinch rather than a calm arrival, so the
+  drawer names `transition: none` for itself in a block at the very end of the file. Nothing about
+  its state is carried by movement in the first place — the badge dot is a solid disc in its base
+  style, the scrim's dim is a plain opacity, the rows never animate — so there is no state needing a
+  static substitute, which is the check docs/05 asks for, answered rather than assumed. The close
+  path's 340ms wait also goes to zero, or an invisible scrim eats taps for a third of a second
+  after an instant close.
+
+**The strip of garden down the left is load-bearing.** 332px of 390 leaves 58px of the game
+visible (50px at 360 wide, 45px at 320). Full-bleed would make this a screen rather than a drawer,
+and **the visible strip is the second dismissal** — measured, not assumed: `elementFromPoint` in
+that strip returns the scrim.
+
+**There are TWO dismissals, not three.** Drag the grip right past 90px, or tap the garden beside it.
+The spike's third — tap the hamburger again — **is not reachable with a thumb**, because an open
+drawer covers the button that opened it; that was measured after the build and the spike's note was
+corrected in place. The toggle is still wired, because the button stays focusable and Enter on it
+fires a click without hit-testing, but it is not a dismissal a player will find. Two is what every
+drawer of this shape has, and it is why the strip is not negotiable.
+
+### What is in it
+
+Rows are `icon left · label · optional badge`, in the house's card material — the cream five-layer
+recipe, a 3px opaque `var(--ink-2)` lip, and the icon in the round tinted badge `.seed-art`
+already uses (a **saturated** tint under the white veil, never a pale one — four pale tints under
+that veil produce four identical white discs, which is `.set-ring`'s named failure reached from
+the other direction).
+
+Ours, in order: **Shop · Almanac · What's New · Settings.** Then three reserved rows in the
+drained `--paper-dim` family, marked *Soon* and non-interactive: **Friends · Daily Gift · Garden
+Record.** Three is a cap, not a coincidence — past three the menu advertises more game than
+exists.
+
+**Settings moves off the HUD and into the drawer.** The gear button becomes the hamburger; every
+one of Settings' controls stays reachable, one tap deeper. Nothing else in the HUD moves.
+
+**The audio rows are the first form controls in the game.** Three channels — Sound effects,
+Ambience, Music — each a two-line row: name, note and mute switch on the first line, a level on the
+second. The level is a real `<input type="range">`, and it stays native on purpose: keyboard
+support and the slider role come with the element, and a slider rebuilt from divs would have to
+reproduce both, including the `setPointerCapture` retarget the native control already does to
+itself correctly. It is fully restyled — `::-webkit-slider-runnable-track`,
+`::-webkit-slider-thumb` and the Firefox pair, none of which inherits from the others — because a
+system control in a hand-drawn garden reads as something that got left in. The filled half of the
+track is one gradient stop driven by a `--lvl` custom property the input handler writes, so the
+paint follows the thumb without rebuilding the row.
+
+A muted row wears the drained `--paper-dim` family the locked seed row wears, and **keeps its
+slider position**: the mute is a switch, not a level, which is the whole reason there are two
+controls rather than one.
+
+Ranges report through `input`, not `click`, so `ui-sheet.js` carries a second delegated listener on
+`#sheetBody` for `[data-level]`. The save is written on `change` — the end of the drag — while the
+level follows the thumb, so hearing a slider never costs eight writes.
+
+**Coach marks are hidden under it twice, and both are needed.** `.drawer.open ~ .coach` stops the
+mark being *painted* — the drawer precedes the coach in the DOM, the same route
+`.sheet.open ~ .coach` uses — and `refreshCoach()` names the drawer in its guard so a hidden target
+is never *measured*. The CSS half exists because `refreshCoach()` runs on the 0.6s slow tick: with
+the JS guard alone, "Tap the flower!" sat on top of the menu for up to half a second after it
+opened, which is exactly long enough to photograph.
+
+**The profile header is the drawer's own, and it appears nowhere else.** A round avatar, the
+player's name and a pencil. The avatar is generated from what the player owns — a bloom through
+`Flora.head` or a creature through `Critters.draw` — never uploaded. The name is the first
+player-typed text in this game and is governed by the escaping rule in
+[11-known-issues.md](11-known-issues.md): it renders through `textContent`, never inside a
+template literal, at every site. `paintName()` in `ui-menu.js` is the only place it reaches the DOM
+in the rows view and the field's `.value` is the only place in the edit view;
+`node tools/html-check.js` fails the build if a third appears.
+
+## The chapter scene and Mara's reply chips (2026-09-27)
+
+**The story's surface, `ui-story.js`, laid out on `tools/scene-spike.html`** (the wireframe gate and
+the motion gate) and to the Gossip Harbor shape the late 2026-09-26 story entry in
+[10-decision-log.md](10-decision-log.md) describes in words. The engine that decides what plays is
+[03-systems.md](03-systems.md#the-story--the-narrative-engine-2026-09-27).
+
+**Where it lives.** `#story` and `#storyChips` are direct children of `.game`, **after `.world`,
+beside `#news`** — the "a modal that must not be painted over lives outside `.world`" trap. The scene
+sits at `z-index: 88`, under the news dialog (90) and over the banner (70), the coach (65) and the FX
+float layer (44); the chips at 66. The layer spans the window and restates the 560px column for its
+three rows, the way `.sheet` does. Both nodes are **emptied and hidden** when nothing is playing, so
+the veil's blur and the stack's mask hold no layer while the garden is being played.
+
+| Part | What it is |
+| --- | --- |
+| **The veil** | The whole layer: the news dialog's own dim and a 6px backdrop blur over whatever screen is up |
+| **Fast-forward** | Top right, always — above the title card too (`z-index: 3` on `.story-top`). Plays lines at `DATA.story.motion.ffLinesPerSec`, stops at the end |
+| **The stack** | Rows bottom-anchored in a clipped box whose top 72px fade out; three or four whole rows visible at 390×844, six kept in the DOM at most |
+| **A row** | A round 64px portrait with a name tag and a bubble beside it. **Mara's portrait is left, her bubble to its right, in `--paper-3`**; whoever she is talking to is mirrored on the right in `--paper`. Each row wears its speaker's face in that line's expression — `DATA.story.faces` maps doc 57's twelve onto customers.js's three |
+| **Poppy in a villager's scene** | Takes the other side for her line, with her own face (the talking flower, cropped to the head) |
+| **Gran's note** | No portrait: her words centred on `--paper-2`, italic |
+| **Mara's thought** | Her row, with a dashed cloud and two puffs pointing at her portrait — the scene's last line |
+| **Continue** | `.big-btn.yes`, under the stack, drawn the moment the last line lands |
+| **The title card** | The whole layer below the top bar: a stand-in silhouette for Mara's full-length art, the `@card` words, *Tap to begin*. Passes on a tap, never on a timer |
+
+**Every visible word is data, written with `textContent`** — the script's lines, the names, the card,
+and the furniture's own labels (`DATA.story.labels`). `tools/html-check.js` fails the build if a
+`DATA.story` or `Game.story*` accessor reaches a template literal; ui-sheet.js's two doors (the
+Almanac's chapter rows, the welcome-back line) leave empty nodes that `UI.paintStory()` fills.
+
+**Nothing waits on an animation, and no state depends on one.** Rows are drawn in their final state;
+the motion is Web Animations toward it (slide, push with overshoot, portrait pop, cloud), and a tap
+`finish()`es whatever is running and lands the next line in the same call. **Reduced motion is a
+static substitute written in the script** — the stylesheet's clamp cannot reach `element.animate()`,
+so under the preference nothing animates and every state is simply drawn. The tap-through listens on
+`pointerdown` (the tap latency is the feel); fast-forward and Continue act on `click`, so a press on
+either never also counts as a stage tap. Space and Enter advance too.
+
+**Mara's reply chips** sit **under the board**, not under Poppy's bubble — under it is on her face.
+`#storyChips` is placed from `#garden`'s rect when it shows: Mara's 40px face, then one or two chip
+buttons, 44px tall, the column restated. Two chips differ in tone and lead to the same next line.
+While a chip waits, Poppy's bubble holds (`sayText(text, 'story', 0)`), and a story sentence wraps
+(`.speech.is-story`) where the shop lines stay on one line.
+
+**It cannot open on a screen it would break.** The scene asks the moments dialog's own guard,
+`UI.momentsQuiet()` (no sheet — the Turn's ceremony is one — no news, no painted coach mark, not
+before the first touch), and refuses the Hollow, the meadow, a season gate and the menu. Poppy's runs
+also need the Summer garden, where her bubble is. **The coach waits for the story, never the reverse:**
+`refreshCoach()` hides the mark while a scene is up or owed on this screen, or Chapter I's opening is
+mid-run or owed — so Fall's *Swipe left* waits for the act break, and the opening alternates a line,
+then its mark. The declarative half is `.game.story-on #coach{display:none}`.
+
+**The replay door, until the rail's ticks replace it:** the Almanac grows a **Chapters** block after
+Collection, one row per chapter seen (*Chapter I · The Seed Tin*, the fast-forward glyph). A tap
+closes the sheet and holds the request until the next quiet beat, so a reveal card cannot take the
+beat and land on top of it; the replay latches nothing.
+
+**The welcome-back line** is the first row of the away sheet: the villager's face and their one line.
+
+## The What's New dialog (2026-08-30)
+
+**The one thing on screen that is not a sheet.** An announcement is a card in the middle of the
+screen with its own scrim, `#news` in `index.html`, drawn by `ui-news.js`. It is not a sheet panel
+because it cannot be dragged away and it cannot be closed by tapping the scrim: its single "Got it!"
+button is the only way out, and on an announcement marked `reset` that button hands the player a
+fresh garden.
+
+| Rule | Why |
+| --- | --- |
+| **Never fullscreen.** `width: min(340px, 100% - 40px)`, centred, `max-height` inside `--sat`/`--sab` | The owner asked for a mobile-game popup, and the house has one. A full-bleed takeover was rejected in the same ruling |
+| **`z-index: 90`** — above the banner (70), the coach mark (65) and the toasts (60) | It is the first thing a player sees on a new build; nothing may land on top of it |
+| **Its own scrim**, not `#scrim` | The sheet's scrim belongs to a thing you can dismiss by tapping it. This one must not be dismissible |
+| **Nothing fades in.** The card and the scrim are opaque in their base style; `.show` moves the card 14px and nothing else | A frame that never arrives — a stopped animation clock, a transition that never starts — must not be able to trap a player behind a modal with an invisible button. Visibility belongs to the base style; motion is the flourish on top |
+| **The art is framed, never laid out.** `aspect-ratio: 4/3`, `object-fit: cover`, both dimensions stated on the `<img>` | The art is owner-supplied and portrait (1152×1728). Given its own aspect it is taller than the phone. Stating both dimensions is the raster version of the `width:auto` SVG trap |
+| **`.news[hidden]{display:none}` sits beside `.news{display:grid}`** | `[hidden]` loses to any later rule that sets `display`; the attribute selector's specificity is what saves it |
+
+**It goes first and alone on boot.** `boot()` calls `UI.maybeAnnounce()` before the away report and
+before the flower's greeting, and both stand down while it is up — the welcome sheet takes its turn
+from `UI.afterNews()` if the announcement did not send the player back to the start.
+
+### The changelog (2026-08-31)
+
+**The same dialog, wearing a list of days instead of one event.** No art of its own, no `reset`, and
+it is the What's New popup's little sibling in the most literal sense: same `#news` node, same
+`ui-news.js`, same card, same seed-green bullets, same "Got it!". Sharing the module's single `open`
+variable is also what makes "never two popups" structural rather than a rule somebody has to
+remember.
+
+| Rule | Why |
+| --- | --- |
+| **At most once a day**, batching everything unread into one list | A popup on every load is a tax on opening the game |
+| **Never beside an announcement.** If one is pending it wins and the changelog waits for the next open | Two modals on one boot is one too many, and the one with the fresh-garden button cannot wait |
+| **Never to a brand-new player.** The marker is seeded as read on a fresh save | Their first changelog is the game |
