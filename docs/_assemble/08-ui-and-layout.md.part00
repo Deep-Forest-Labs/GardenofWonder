@@ -1,0 +1,283 @@
+# UI and Layout
+
+## This is a phone game, and the layout says so
+
+**The game is composed at phone size and a desktop window shows that same phone column, centred.**
+`.ui` is `max-width: 560px; margin: 0 auto` — that one line is what keeps the garden looking
+deliberate on a laptop instead of stretched. The scenery behind it is full-bleed and bleeds out to
+the window edges; only the *interface* is capped.
+
+**A place layer sits OUTSIDE `.ui` and inherits none of this.** `.hollow` is inside `.ui` and gets
+it for free; `.meadow-layer` and `.map-layer` are siblings of `.ui` at `#world` level, because they
+have to paint under it. So **every room built as a layer must re-state the column itself** — the
+same cap, the same padding, the same rows. The meadow shipped without it and was the only screen in
+the game whose dock ran the full width of a desktop window; next to the garden it read as a
+different, worse game. `.mw-ui` is the worked example.
+
+The same rule governs the art: **a room's scene must be drawn at the size the room actually
+measures.** The meadow's backdrop was composed at 390×844 and rendered with
+`preserveAspectRatio="slice"`, so a 1440-wide window scaled every blade of grass by nearly four.
+See [05-art-direction.md](05-art-direction.md#draw-the-scene-at-the-size-the-room-really-is).
+
+## The layout contract
+
+One screen, never scrolling, never zooming. The garden owns as much of it as possible. Anything
+that isn't the garden either sits in a fixed band at the top or bottom, or slides over the top as a
+sheet the player asked for.
+
+```
+┌────────────────────────────┐
+│  wallets          book gear │  hud          (row 1, auto)
+├────────────────────────────┤
+│  ⑦ ▓▓▓  Harvest 3 roses     │  quest strip  (row 2, auto — always visible)
+├────────────────────────────┤
+│  boost countdowns           │  rail         (row 3, reserved — hidden if short)
+├────────────────────────────┤
+│                             │
+│      ┌───┬───┬───┐          │
+│      │ P │ P │ P │          │  stage        (row 4, 1fr)
+│      ├───┼───┼───┤          │
+│      │ P │ 🌸│ P │          │
+│      ├───┼───┼───┤          │
+│      │ P │ P │ P │          │
+│      └───┴───┴───┘          │
+│                             │
+├────────────────────────────┤
+│  [UP]   pets pets   [PWR]   │  the band     (in the stage's own yard)
+├────────────────────────────┤
+│ Orders Cards (GARDEN) Turn Shop │ dock   (row 5, auto — the centre rises)
+└────────────────────────────┘
+```
+
+**The band costs the layout nothing.** `.stage` already reserves a yard along its bottom for the
+creatures (`--yard-h`, 108px at 390×844, 91px at 700); the two floating controls move into the two
+ends of that same strip. The board measures 370×370 before and after. **Both sit on the column's own
+edge** since 2026-09-03 (`.fpill{left:0}` / `.fround{right:0}`), and that is a margin rather than
+flush: they are absolute against `.stage`, which already lives inside `.ui`'s
+`padding:calc(var(--sal) + 10px)`, so zero here is 10px plus the horizontal safe-area inset and no
+second `env()` call is needed. It is the same edge the dock, the rail, the quest strip and the board
+already stand on. They used to be inset 34px to clear a 38px season tab; the tabs retired with the
+same commit and the clear lane between the two buttons measured **177.4px → 245.4px at 390×844**
+(215.4 at 360 wide, 175.4 at 320, 415.4 at 844×390).
+
+**The pedestal rises out of the dock without making the dock taller.** `.dock.five` pins
+`grid-template-rows` to the dock's own height with `align-items:end`, and gives every button that
+exact height; only `.dock-btn.home` is taller (74px at 844, 64 at ≤700) and overflows upward. Row 5
+never changes height, so nothing in the `.ui` grid is re-measured — which is the rule that stops a
+fifth button wrapping onto a second row.
+
+The stage is the only flexible row. Everything else is content-sized, so the garden absorbs
+whatever space is left.
+
+### Why the rows are pinned
+
+`hud`, `quest-strip`, `rail`, `stage` and `dock` each declare an explicit `grid-row`. This looks
+redundant and isn't.
+
+The rail is `display: none` below 600 px of height. With implicit row placement, removing it shifts
+the stage and dock up a track, leaving a spare track at the bottom that the dock stretches into —
+producing enormous dock buttons that ate a third of the screen. Explicit rows keep every element
+where it belongs regardless of what's hidden. This was a real bug; don't undo it. The quest strip
+is pinned to row 2 and stays visible when the rail hides.
+
+Grid tracks also use `minmax(0, 1fr)` rather than `1fr`, because `1fr` has an automatic minimum of
+`auto` and lets content push a track wider than its share.
+
+### Square garden
+
+CSS can't express "square, fitting the smaller dimension of a flexible parent" here, so
+`sizeGarden()` measures the stage and writes explicit pixel dimensions, with a 150 px floor. It's
+driven by a `ResizeObserver` on the stage plus `resize` and `orientationchange` listeners
+(orientation change is deferred 250 ms because iOS reports stale dimensions immediately after
+rotating).
+
+The garden itself is a 3×3 grid; the centre cell holds the flower, the other eight are plots.
+
+## Mobile specifics
+
+From the viewport meta tag: `viewport-fit=cover` for edge-to-edge under notches,
+`maximum-scale=1, user-scalable=no` to stop accidental pinch-zoom mid-tap.
+
+- **`apple-mobile-web-app-status-bar-style` is `default`, and must stay that way.**
+  `black-translucent` is what a full-bleed design wants and it is a trap on iOS: it hands an
+  installed app a window the height of the screen *minus* the status bar and then pins that window
+  to the **top**, so the game drew under the clock and left a dead strip along the bottom that no
+  CSS can reach. Measured on an iPhone 16 Pro through the dev panel's screen report: screen 874,
+  window 812, insets 62/34 — the window was short by exactly the top inset, and the 34px bottom
+  inset was being reserved for a home indicator that was not even inside the window. `default` puts
+  the window *below* the status bar, where it reaches the bottom of the screen. The cost is the
+  status bar strip, which is drawn from `theme-color`; `updateSky()` writes the current sky colour
+  there on every tick so the strip tracks dawn, day and night rather than sitting sky-blue at
+  midnight. `setThemeColor()` **re-inserts the meta element** rather than only rewriting its
+  `content`, because a browser that snapshotted the value at launch otherwise keeps showing that
+  snapshot — a stale sunset over a midnight sky. It skips changes under two units per channel, since
+  it runs every 0.6s. **Three rounds of layout work went into fixing this from inside the page and none of
+  them could have worked.**
+
+- **Safe-area insets are read through four `:root` variables**, not `env()` at each call site:
+  `--sat`, `--sar`, `--sab`, `--sal`, each `env(safe-area-inset-*, 0px)`. Nothing else in the
+  stylesheet may call `env()` directly. The reason is testing: `env()` cannot be simulated in a
+  desktop browser, so the notched-phone layout was unverifiable without an installed build on a real
+  handset — and that blind spot shipped the dead band under the dock twice. With the indirection,
+  overriding four numbers on `:root` puts the real inset layout on screen in the preview.
+- **`dvh`, not `vh`**, so the layout doesn't jump when mobile browser chrome slides away.
+- **`.game` is an untransformed fixed box, and the shake moved into `.world`.** `.game` is
+  `position: fixed; inset: 0` with **no transform**; `#world` is the element inside it that carries
+  `translate3d(var(--shake-x), var(--shake-y), 0) rotate(var(--shake-r))` and wraps everything else.
+  A transform makes an element its own containing block, and *that* is the shape of box WebKit has
+  now sized short of the home indicator twice — first with `inset: 0` alone, then with
+  `height: 100dvh` (2026-08-18). Both attempts were made while `.game` was transformed, so the
+  common factor was never tested until 2026-08-20. Nothing depends on `.game` being the transformed
+  ancestor: the only `position: fixed` descendant in the stylesheet, `.bee-fly`, is appended to
+  `document.body` and sits outside the game entirely.
+- **`--app-h` is a floor, not the height, and it is the window and only the window.** `.game` reads
+  it as `min-height: var(--app-h, 0px)`, so the box is the taller of what the browser says
+  (`inset: 0`) and what JS measured — a stale, late or missing measurement can then only fail by
+  doing nothing, where the older `height: var(--app-h)` made a bad measurement authoritative.
+  `sizeViewport()` in `ui.js` maxes `window.innerHeight` and
+  `document.documentElement.clientHeight`, which are two readings of the same window. Measured on
+  boot, again at 80/250/600/1200 ms, on `resize`, on `pageshow`, on becoming visible, and twice
+  around `orientationchange` (iOS reports the pre-rotation height on the event itself). Deliberately
+  *not* `visualViewport.height`, which shrinks for the keyboard and for pinch-zoom.
+- **Never stretch the game past the window.** For a few hours on 2026-08-20 `sizeViewport()` also
+  consulted `screen`, on the theory that an installed app's window *is* the screen so a short
+  `innerHeight` had to be WebKit under-reporting. On a real iPhone it pushed the dock off the bottom
+  of the window, where nobody could tap it. **The window really is shorter than the screen there**,
+  iOS paints the strip below it, and no CSS reaches into ground the window does not own —
+  `innerHeight` was right the whole time. A band of lawn under the dock is a blemish; a dock nobody
+  can tap is a dead app. The strip is dealt with by making it invisible instead (see the page
+  background and the two rules under it).
+- **The dock stops `--bottom-gap` short of the physical bottom**, defined as
+  `max(10px, calc(var(--sab) - 12px))`. Spending the whole bottom inset put 42px of dead lawn under
+  the dock on a notched phone; the full inset is sized for a swipe-up gesture area, and a row of
+  buttons nobody swipes from does not need all of it. The floor keeps a margin on a phone with no
+  inset at all. `.ui`, `.hollow-dock` and `.hollow-count` all key off it, so the garden and the
+  Hollow sit at the same height. The bottom **sheet** still pads by the full `--sab`, because its
+  content scrolls right up to the edge.
+- **The page background is `--page-fill`, and it tracks the bottom of the screen.** iOS paints any
+  strip below a short window with the page's background colour, so the page has to be whatever the
+  bottom of the screen is showing: the lawn normally, `--paper-2` while a sheet is open (set in
+  `openSheet`/`closeSheet`, the reset delayed 340ms so it does not flip green under a sheet still
+  sliding away). With the status bar style fixed there should be no strip left to paint — this is
+  the belt to that brace, and it costs two lines.
+- **The page background is the meadow, and deliberately flat** — `#4fae54`, no stripes. Anything a
+  browser leaves uncovered is always at the *bottom* of the screen, which is where the game draws
+  lawn, so a strip the game fails to reach reads as more lawn rather than as the page showing
+  through; iOS also fills the strip below a short web view with this colour. It carried the mown
+  stripes until 2026-08-20, which was worse than useless: a `repeating-linear-gradient` starts from
+  its own box, so the page's stripes could never line up with `.meadow`'s and the mismatch drew the
+  join as a line. `.meadow::after` now **fades its stripes out over the last 44px** instead, so flat
+  meets flat and there is nothing to see. This is the safety net under the `--app-h` measurement,
+  not a substitute for it. Note the manifest's `background_color` is separately the sky blue,
+  because that one is the launch splash.
+- **Nothing may paint a dark edge along the bottom of `.game`.** Two things did, and between them
+  they are what made a short box read as a *cut* rather than as lawn — the colours already matched,
+  it was the darkening above the join that drew the line. Both are fixed; check this rule before
+  adding any full-bleed overlay or bottom-anchored shadow.
+- **The bottom sheet only casts its shadow when open** — `box-shadow` moved from `.sheet` to
+  `.sheet.open`, with `box-shadow` added to the transition so it fades in with the slide. Parked, the
+  sheet sits just below the game's bottom edge, and `0 -8px 30px` from there painted a dark band up
+  across the lawn that `.game` then clipped square. Measured: with the sheet's shadow suppressed, the
+  pixels above and below a deliberately short game box are *identical*.
+- **The vignette stops before the lawn does** — `.vignette` is masked with
+  `linear-gradient(180deg, #000 0 74%, transparent 92%)`. It is what made a short box read as a
+  *cut* rather than as lawn: the page behind the game is flat meadow green, so a darkened game edge
+  meeting an undarkened page drew a hard horizontal line across the bottom of the screen. With the
+  fade, any strip the game fails to reach meets lawn of the same value and the join disappears into
+  the mown stripes.
+- **`touch-action: manipulation`** on buttons removes the 300 ms double-tap delay.
+- **`-webkit-tap-highlight-color: transparent`** kills the grey flash on tap.
+- **`overscroll-behavior: none`** and `overflow: hidden` on the body prevent rubber-banding.
+- **`user-select: none`** everywhere, since the whole screen is a tap target.
+
+### Navigating between the garden and its two rooms
+
+**Re-ruled by the owner from live play, 2026-08-30 (phase 3.8), and this is the second rewrite.**
+Phase 3.5 read the gesture as a *pointer* — the Hollow is under the garden, so point the finger down
+to go there — and in the hand it came out backwards.
+
+**The finger drags the world, it does not point at the destination.** Pull the world up and you
+descend; push it down and you rise. So:
+
+**Swipe UP in the garden to go down to the Hollow; swipe DOWN to go out to the Wild Meadow.** A
+room's own exit is the opposite of the swipe that got you there, so the Hollow leaves downward and
+the meadow leaves upward, and both exit pills' marks point the way their swipe goes.
+
+This is the rule [22-creatures.md](22-creatures.md) argued for when the Hollow was designed —
+*"dragging down pulls the world down past you, which is the direction every scroll already uses"* —
+and it is the half of the phase-3.5a option that was rejected then and is now reinstated.
+
+**There is no longer a labelled door for either room.** The burrow mouth is gone (the owner's call at
+the phase-3.5 gate): the gesture is what a player is meant to learn, and two labelled mouths on the
+lawn were competing with it — as well as occupying the foot of the yard the floating pair now needs.
+The Hollow can afford that, because its creatures are standing in the garden whether or not you ever
+swipe. **The meadow cannot**, so the flower names it once, on the first idle line after the tutorial
+(`seen.meadow`). That one line is the whole of the meadow's discoverability and it is filed as a risk
+in [11-known-issues.md](11-known-issues.md).
+
+Two rules keep the gestures from fighting the game:
+
+- **A swipe only counts if it starts on the background.** Plots, the flower, the docks, the rail,
+  the quest strip, the HUD, the sheet and the creatures all act on `pointerdown` and have already
+  fired by the time a drag is recognisable — so a swipe begun on one would plant, harvest or open a
+  panel on its way out. Waiting for `pointerup` instead would cost the tap latency the core loop is
+  built on. The exclusion list lives next to the handler in `ui.js`.
+- **It must be vertical and clearly so** (`dy > 70` and `dy > dx`), so a diagonal drag does nothing.
+
+Worth knowing for the installed app: **do not require a swipe to start at the very bottom edge**,
+which is the iOS home gesture.
+
+### The sheet's breakout art
+
+`#sheetArt` sits **inside `.sheet` but positioned above its top edge**, so whoever a panel is about
+stands on it rather than being filed inside it. It is on the sheet and not in `.sheet-body`, which
+means it rides the open/close transform and then holds still while the body scrolls. `.sheet` is
+`overflow: visible` and the art carries `z-index: 1`, so it paints over the sheet's own background
+and border — that overlap is the whole effect and anything that clips the sheet would kill it.
+
+Only the creature panel uses it so far; `renderSheet()` clears it for every other mode.
+
+**It is hidden whenever `.sheet` lacks `.open`, in CSS.** The art rides the sheet's transform, and a
+closed sheet parks just below the bottom edge — so the art, which sits *above* the sheet's top edge,
+ended up just above the screen's bottom edge with a creature's head over the dock. Keeping the rule
+declarative means no close path, drag-dismiss included, can forget it.
+
+### Input uses pointer events
+
+`pointerdown`, not `click`, on the flower and plots — `click` waits for release and makes rapid
+tapping feel laggy. Handlers call `preventDefault()` with `{ passive: false }` to suppress
+synthesized mouse events and text selection.
+
+The consequence is that dragging off a plot still counts as a press. Acceptable for a game with no
+drag gestures on the board.
+
+## The bottom sheet
+
+All shopping happens in one sheet that slides up from the bottom, holding eight panels:
+
+| Mode | Title | Opened from | Tabs |
+| --- | --- | --- | --- |
+| `upgrades` | Upgrades | Dock | shared shop strip |
+| `apiary` | Apiary | Dock | shared shop strip |
+| `craft` | Apothecary | Dock | shared shop strip |
+| `shop` | Shop | Dock | shared shop strip |
+| `seeds` | Choose a seed | Tapping an empty plot | Sort: tier / balanced / cheapest / priciest |
+| `quests` | Quests | Tapping the quest strip | none |
+| `bonuses` | Garden Almanac | Book button in HUD | none |
+| `settings` | Settings | Menu drawer → Settings row | none |
+| `dev` | Developer tools | Unlabelled hit area beside the gem wallet | none |
+| `welcome` | While you were away | Opens itself on load after a real absence | none |
+| `turn` | *(per beat)* | The year-meter pill when the meter is full | none |
+| `album` | *(season name)* | **Cards** button in the dock (Big Five). Was a star in the HUD until the dock rebuild — see also the note under the Big Five / HUD section that the album star moved to Cards. | none |
+| `cardset` | *(set name)* | Tapping a set tile | none |
+| `pack` | Opening a pack | Opening a pack from the album | none |
+
+> **Card faces (art).** Album UI layout is unchanged: three sheet panels — `album` (season grid of
+> sets), `cardset` (nine cards in a set), `pack` (one-at-a-time reveal). Face art is a slot
+> (`cardArt()` in `ui-sheet.js`): procedural `{ icon, tint }` placeholders today; real faces are
+> **candy-language illustrations** (title-splash / popzgames.com hero bar, locked 2026-10-03). Motifs
+> listed in [19-card-album.md](19-card-album.md). Do not invent a fourth album panel or a new layout
+> here — nothing in code changed for the art lock.
+
+The four dock modes share a tab strip — the `TABS` array in `ui-sheet.js`, with `SHOP_TABS` deciding which
+modes display it — so a player can move between them without closing. `seeds` carries the target
