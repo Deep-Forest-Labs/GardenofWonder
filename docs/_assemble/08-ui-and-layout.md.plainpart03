@@ -1,0 +1,245 @@
+on a plot that is already showing a price chip. Measured live at 390×844: plot 0 at
+`data-state="empty"`, `data-replant="ok"`, `.has-pack` on, with the pack badge painting at
+41.8×41.8px top-centre and the (now much larger, `#27`) replant chip at 75×31px bottom-right —
+still clear of each other. It costs nothing today, because the pack sits at top centre and the two
+price chips take the right-hand corners — but do not free a corner on the strength of "only one
+chip at a time". That holds for the price pair, not for all three.
+
+The bottom-right corner **looks** occupied and is not: the growth bar runs straight through it, but
+`.plot[data-state="empty"] .bar` is `display:none`, so the one state that shows the replant chip is
+the one state the bar is absent from.
+
+Both price chips are **`pointerdown` with `preventDefault` + `stopPropagation`**, and the
+propagation guard is load-bearing rather than tidy: the plot beneath them is itself a `pointerdown`
+button. Without it one tap on the replant chip both replants and reaches the plot underneath — which
+steals a hasten when the replant succeeds, and opens the seed picker over the plot when it is
+refused. Do not
+"simplify" either chip to `click`; mixing the two is the recorded gesture trap in reverse.
+
+Visibility is `display` under a data attribute, never a class and never an animation — a badge that
+only exists once a keyframe has run is invisible with reduced motion on.
+
+**The gem chip and Fall's chip still share one CSS rule** (`.skip-chip,.fl-skip`) and differ in
+exactly two declarations: which corner, and which currency's fill. **The replant chip does not
+share it anymore** — split into its own rule 2026-09-10 (`#27`), because the owner's drawing asked
+it to also carry the seed's own bloom (`Flora.head(seed, 26)`, the exact call the seed picker
+makes), and a 26×26 bloom is taller than the entire old chip. Widening both chips together, so the
+gem chip grew with it for no reason, and pinning the replant chip to the gem chip's own 22px height
+and letting the bloom overflow it, were both rejected — see `10-decision-log.md`'s dated entry. The
+gem chip's own size is unchanged and is `#26`'s to move (a colour treatment, not a resize), not
+this item's.
+
+**`#26` shipped that colour treatment the same day.** A third `data-skip="held"` value sits beside
+the existing `ok` / `no`, styled in its own rule off the `--paper-dim-2` / `--paper-dim-edge` tokens
+this file's other "not available right now" surfaces already use, rather than a fourth grey or a
+resize of the box measured above. Box, icon and price stay exactly as built here; only the fill and
+the border change, plus the `aria-label` and a floated line on tap. The behaviour and the wording are
+`03-systems.md`'s to own; the reasoning is dated in `10-decision-log.md`.
+
+### The replant chip's own size — measured against the marker it shares the plot with
+
+The chip is `[cycle-arrows icon][the seed's own bloom][gold price]` in a row, and it grows to fit
+that content rather than holding one fixed pixel size, because the plant-here marker (`.empty-mark`,
+`#12`) is centred in the same empty plot this chip has to fit beside. Driven measurement at 390×844
+puts only **~31px** of clear plot between the marker's own bottom edge and the plot's own bottom
+inset — before this chip's border and padding even start — well short of the 44px a corner control
+would default to, and the budget only shrinks at narrower or shorter viewports. So the bloom and
+the icon are sized with `min(px, vh)` — continuously, off the viewport's own height, rather than one
+more `max-height` breakpoint — tuned until a real screenshot cleared the marker with a few pixels to
+spare at every supported size:
+
+| Viewport | Plot | Chip | Marker svg | Clear of the marker? |
+| --- | --- | --- | --- | --- |
+| 390×844 | 110.1×110.1 | 75.1×31.1 | 31.2×31.2 | yes, 3.3px to spare |
+| 360×780 | 100.9×100.9 | 72.5×29.5 | 28.5×28.5 | yes, 1.7px to spare |
+| 320×568 | 88.7×88.7 | 60.6×24.2 | 24.8×24.8 | yes, 2.8px to spare |
+| 844×390 (landscape) | 31.3×31.3 | 18.0×19.8 | 7.6×7.6 | **no — overlaps by 7.6px** |
+
+**Landscape cannot clear the marker at any legible size, and that is accepted rather than solved.**
+The plot itself is only ~31px there and the marker alone already occupies most of that, centred —
+the same `min(px, vh)` rule that clears the marker everywhere else asymptotes toward the marker's
+own footprint rather than past it, and nothing legible fits in the ~4px that would be left. What
+landscape does still get, and what `#27`'s own "true after the fix" actually names for that
+orientation, is the pre-existing `max-width:calc(100% - 10px)` clamp: the chip's own rect stays
+**inside its plot's rect** at 844×390 (measured), even though it cannot also dodge the marker.
+Landscape is not a supported orientation (below), and the gem chip and Fall's chip already overhang
+their own tiles there, unchanged — this chip is the one improvement of the three, not a new
+regression.
+
+**The visible box is therefore smaller than 44px everywhere it ships.** A `::before` — the same
+halo mechanism `.fl-collect` rides for its glow (a pseudo-element painted behind the button's own
+opaque background via `z-index`), repurposed here with no visible fill — extends the actual tap
+target back out without moving the corner the chip reads from or changing its visible size.
+`overflow` is deliberately never set on `.replant-chip` itself — setting it would clip the extension
+straight back off, the same trap `.fl-collect`'s own comment records.
+
+**Amended 2026-09-10 (independent critic on `#27`):** a fixed `inset:-6px` was shipped first and
+fell short of the 44px minimum the chip's own acceptance line requires — 43.09px at 390×844
+(31.09 + 12), and further short at 360×780 and 320×568, because the halo's own reach is a constant
+add-on to a box that itself shrinks with the viewport (the table above). Fixed by centring the
+`::before` on the chip and sizing it with `max(calc(100% + 12px), 44px)` in both dimensions instead
+of an inset: the halo still just adds its old 12px of slack when the chip is big enough, but never
+resolves smaller than 44×44px no matter how far `min(px, vh)` has shrunk the visible box. Confirmed
+live at all four sizes in the table above — the invisible tap target's smaller dimension is exactly
+44px at each. This does reach a little further into the marker-clearance budget above than the old
+fixed inset did (already non-zero before this fix, since 6px already exceeded the 1.7–3.3px of
+visible-box clearance) — accepted the same way the visible-box/marker overlap in landscape is
+accepted: the invisible halo and the marker's own hit area are not the same concern this section's
+measurement table is about, and nothing here changes what a player sees.
+
+### The developer hit area
+
+`#btnDev` sits **absolutely positioned at `left: 100%` of `.wallets`** — immediately right of the gem
+wallet, 44 px wide, `opacity: 0`, and `tabindex="-1"`.
+
+Absolute rather than a flex sibling for a concrete reason: in flow it wrapped onto its own row and
+made the wallets three rows tall, pushing the HUD down. Out of flow it cannot affect layout at all.
+
+44 px because that is the touch minimum — an invisible control still has to be hittable on a phone.
+Out of the tab order so a keyboard user never lands on something with no visible state.
+
+### Mutation and weather visuals
+
+**Mutated plots** carry `data-mutation` plus `--mut` / `--mut-glow` set inline from
+`DATA.mutations`. The treatment escalates with rank: every tier gets a tinted border, an outer glow
+and a slow pulse; **Radiant and Wonderstruck also get a moving shimmer** the lower two don't. The
+mutation stays visible from the moment it lands until harvest — that permanence *is* the mechanic,
+and it is what separates a mutation from a rarity roll revealed at the end.
+
+Written through the `renderPlots()` cache like every other plot property, so an unchanged mutation
+touches no DOM.
+
+**Weather** sets `data-weather` on `.game`, plus `data-wx-phase`, `data-sunbreak`, `data-wx-flash`
+and `data-wx-night` since the Sky Pass. The sky itself is `.wx-wash`, a gradient inside the `.wx`
+layer — an overlay over the living sky rather than a repaint of it, so the day/night cycle keeps
+running underneath. It tops out at `--wx-storm-wash`, 0.68 for a storm, which reads as overcast
+without hiding the garden. The flat `.scenery::after` fade that used to carry this is retired: its
+four per-sky opacities are zero, because two tints over one sky darkened every sky twice.
+
+**`.wx` carries no `z-index`, and nothing may give it one.** A positioned element with a z-index is
+a stacking context, and a stacking context is an isolated blending group — every multiply, screen
+and overlay inside would then blend against transparency instead of against the sky, which looks
+plausible and is wrong. DOM order alone places it.
+
+**`.scenery-warp` wraps everything above the lawn** — the sky, the sun, the stars, both cloud bands
+and all three hill layers, in one `inset:0` box inside `.scenery`. It exists so Wonderfall's
+breathing warp is one animated filter instead of eight, and its geometry deliberately matches
+`.scenery`'s so every percentage inside resolves against the same rectangle it always did.
+**`.meadow`, `.fence`, `.vignette` and `.season-tint` stay outside it**, and that is the whole
+reason the box exists at all rather than the warp simply moving to `.scenery`: a filter cannot carry
+a mask, `.scenery` owns the bottom edge, and a warp reaching that edge draws the iOS strip join
+three rounds of layout work went into hiding.
+
+Two things the eight-selector form was silently cancelling had to be restated when it collapsed,
+because `animation` and `filter` are one property each: the stars stop twinkling under a Wonderfall,
+and the far hills lose their own `saturate(.8) brightness(1.04)`. Both were true before and are true
+now. If the far hills should *keep* their haze during a Wonderfall, that is a look decision and the
+owner's to make.
+
+**An inactive sky layer gives up its mask and its blend, and that is a memory rule rather than a
+frame-rate one.** `opacity:0` hides a layer; it does not release it. A `mask-image` or a
+`mix-blend-mode` puts an element on its own composited layer and holds a full-window backing store
+there — width x height x dpr² x 4 bytes — for as long as it is in the tree, drawn or not. Eleven of
+those hung over a clear sky. Each one now drops both under a `:not()` gate naming exactly the sky it
+belongs to, which took the page from 80 composited layers to 59 and from 343 MB to 266 MB at DPR 3.
+
+**Not `display:none`, and the reason is load-bearing: you cannot transition out of `display:none`.**
+A layer that appears in the same frame its opacity is told to rise has nothing to rise from, so every
+fade-in in the Sky Pass would become a pop. Dropping only the mask and the blend leaves the opacity
+transition intact, and while a layer is off it is at `opacity:0`, where a mask and a blend mode have
+nothing to change. **`.wx-ground` is deliberately not gated** — the wet ground dries for thirty
+seconds after the sky has gone back to clear, which is the trace the pass exists to leave.
+
+**The Wonderfall veil slides; it does not repaint.** `.wx-veil` is the blend, the mask and the
+opacity; `.wx-veil::before` is a two-tile-wide child carrying the rainbow, moved by `transform`.
+The tile is `background-size:50% 400%` of that child — the same 4×window tile the old
+`background-size:400% 400%` made, repeating the same way. **The repeat is the load-bearing part**:
+a first attempt used one un-repeated tile and slid it off the left edge, which drained the colour
+out of the lawn for most of the cycle. Nothing in the code looked wrong; a pixel diff found it.
+**It is five tiles wide and not one more** — a composited layer costs its own area in memory, and at
+eight tiles this was the single largest thing the game asked the compositor for, at 90 MB. Five is
+the minimum that still covers the window at the far end of the travel. Note that narrowing it also
+changes the tile fraction, because `background-size` percentages resolve against the element's own
+box: at five tiles the tile is 80%, at eight it was 50%. Getting that wrong makes the tile the wrong
+size, which is a quarter of the screen different and invisible in a diff of the CSS.
+
+**Cue discipline.** Every real sky now speaks twice: a forecast line a few seconds before it lands,
+and its arrival line when it does. **Wonderfall alone gets a banner** — that ruling stands, and a
+banner four times an hour would still be noise. Rarity buys the interruption: only the aurora and
+Wonderfall talk over the speech cooldown. The ladder is in
+[06-audio-and-fx.md](06-audio-and-fx.md#the-feedback-ladder).
+Catching a mutation is celebrated per rank — sparks and a float for the lower two, plus shake,
+confetti and a banner for the top two. Both honour reduced motion.
+
+### The adjacency flash
+
+Two transient classes, added on planting a flower that carries a verb and removed after 1.6 s:
+
+| Class | Appearance |
+| --- | --- |
+| `verb-source` | Solid ring in the verb's colour, with a dark outer shadow — the flower you just planted |
+| `verb-linked` | Dashed ring in the same colour — the two plots it affects |
+
+Both read `--verb`, set inline from `DATA.verbs[id].tint`, and animate through `verbLink` — scale up,
+hold, fade to nothing. Reduced motion swaps to `verbLinkCalm`, which does the same fade with no
+scaling — **true again as of 2026-09-22**: the substitute's duration shipped without `!important`,
+so the global clamp flattened it to a single invisible frame and the flash never showed at all with
+the preference on ([11-known-issues.md](11-known-issues.md)).
+
+**Why it is transient.** Adjacency is invisible until something points at it, so it has to be shown
+at the moment the choice is made. But a permanent link indicator on all eight plots would clutter a
+board whose readability at arm's length is the single hardest-won property of this layout. Showing
+it on plant and fading it out is the compromise: taught at the decision point, gone by the time you
+are looking at the garden again.
+
+**Testing note.** An automated tab without OS focus can freeze CSS animation clocks entirely, so the
+flash may screenshot as invisible even though it fired. Verify by asserting the classes and the
+`--verb` value, or seek the animation manually — see "Traps in this codebase" in
+[HANDOFF.md](HANDOFF.md).
+
+## HUD
+
+### The year meter is the dock's Turn button (2026-08-30, phase 3.5)
+
+**Superseding the third-pill design of phase 2.** `.wallet.meter`, `.meter-fill` and `.year-pop` are
+gone; their whole job moved down to the dock.
+
+**The button's body is the meter.** `.dock-btn.turn` carries `.turn-fill`, an absolutely-positioned
+child at `z-index:-1` under `isolation:isolate` — the pill's own trick, one row lower. **The fill
+rises from the bottom rather than wiping across.** The pill it replaces was **39px wide** (the one
+wallet with no number in it), so it never had room to say much; a dock button has 56px of height to
+travel, and rising is the truer picture anyway — the pouch fills.
+
+**It shows the binding gate,** unchanged: `yearProgress()` returns `min(seeds, coins)`, because the
+Turn needs *both* the un-tallied increment ≥ `minSeeds` and the year's earnings ≥ `minCoins`, and a
+bar tracking one would sit full while the other held the ceremony shut. Still recomputed on the 0.6s
+slow tick, never per frame — `projectedMint()` walks the whole Tally table.
+
+**Ready** takes `turnFull`, the 1.4s gold breath the full pill used to wear. Worth being exact about
+what that borrows: this ring is worn by **exactly one thing in the game** and has only ever meant
+*the Turn is ready*, so the meaning travels with it intact. The attention dot is suppressed while it
+breathes — a dot on a button that is already pulsing is noise.
+
+**And since 2026-08-30, ready also throws a glint** (`turnShine` on `.turn-fill::after`). The breath
+says *something here*; a Turn is the player taking hold of the season itself, and the ruling was that
+it has to say *look now*. It is the ready plot's own `sweep` — same 100° band, same 8° tilt — but
+**parked off the button for seven eighths of its cycle** and crossing in the last eighth, so it lands
+as a moment rather than as the constant travel a plot can afford at 1.9s. Gold rather than the plot's
+white, because gold is already the only thing on this button that means *the Turn is ready*. The
+interval is `DATA.year.turnShineEvery` (9s), written to `--turn-shine` once at boot — a longer
+interval is also a statelier sweep, since the travel is a fraction of the cycle. **Since 2026-09-03
+that knob feeds two buttons**: Fall's Collect All wears the same glint, and `ui-fall.js` writes the
+same property from the same row so the two cadences cannot drift apart.
+
+**The clip belongs to `.turn-fill`, never to the button** — `overflow:hidden` on `.dock-btn.turn`
+eats the pouch chip hanging 9px above it.
+
+**Reduced motion holds the ring on solid and the glint still.** This is a repair as much as an
+addition: the breath is an animation, the global clamp runs it once for `.001ms` and drops it, and
+the attention dot is hidden on the assumption that the button is breathing — so a player with the
+preference on had **no ready signal on the Turn button at all**. The block sits at the very end of
+`style.css`, because a media query adds no specificity and has to come after every rule it cancels.
+
+**The fill is `--year-p` on `.turn-fill`, not a height.** `.turn-fill` is only the clip box and is
+pinned `inset:0`; the water is `.turn-fill::before` rising from the bottom. `ui.js` wrote a `height`
+onto the clip box for a day and a half, which shrank the box from the top and left the waterline at
