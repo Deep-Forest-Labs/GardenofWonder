@@ -6,20 +6,29 @@ Structure and slots are in [19-card-album.md](19-card-album.md).
 **Nothing here is required.** The album ships with procedural placeholders and works without a single
 image. This exists so art can be added when it is wanted, not before.
 
+> **Art lock 2026-10-03:** candy title-splash language; nine reusable motifs; see
+> [19-card-album.md](19-card-album.md#the-cards-the-long-season) for the full card list.
+
 ## The style is the game, not the interface
 
 An earlier version of this document described flat vector emblems with heavy outlines. **That was
 wrong** — it described the *card frames* and the rest of the UI chrome, not the world the game is set
 in.
 
-The art direction is [05-art-direction.md](05-art-direction.md): **Super Mario Bros. Wonder**, with
-Mario Kart alongside it. Vivid grass greens, warm oranges, sunny yellows. Everything glossy, rounded,
-slightly plush. Soft dimensional shading rather than flat fills. Bouncy, characterful, joyful.
+The art direction for **card faces** is locked (2026-10-03) to the **Garden of Wonder title splash /
+popzgames.com hero** candy language — plump toy-smooth candy 3D, simple rounded shapes, bright
+saturated colour. **Not photoreal. Not complex topiary.** Same family as the game's Nintendo /
+storybook feel in [05-art-direction.md](05-art-direction.md), but the card bar is the splash/hero
+read, not a photoreal garden and not a flat UI emblem.
+
+Luke signed this against the candy-v2 plates in
+[Drive](https://drive.google.com/drive/folders/1GpKgFm1m8pGdk3VwSvnZw8Mx9om0xVi3)
+(`cards-motifs-sheet.candy-v2.jpg` plus the First Light / Night Garden / Weather Watch mood plates).
 
 **Why the in-game art looks flatter than this.** Everything in the running game is procedural SVG
 drawn at 22–64px, so it needs thick outlines and big shapes to survive. Card art has neither
-constraint. **It should be the aspirational version of the same world** — what the garden looks like
-in the player's head.
+constraint. **It should be the aspirational candy version of the same world** — what the garden looks
+like on the title splash, not a photo.
 
 ### So: ask for detail
 
@@ -79,7 +88,7 @@ Grok generates conversationally and takes **no Midjourney flags**. `--ar`, `--st
 
 Grok is better than Midjourney at two things here: iterating on one image in conversation, and taking
 an approved image as a reference. It is worse at two: aspect ratio is a request rather than a
-guarantee, and it drifts toward photorealism unless pushed.
+guarantee, and it drifts toward photorealism unless pushed — the 2026-10-03 candy lock makes that push mandatory (not photoreal).
 
 *Grok moves quickly and this was written against what it did at the time. If the interface offers
 explicit aspect-ratio or style-reference controls, prefer those over describing them.*
@@ -105,18 +114,19 @@ start.
 Paste once at the top of the thread, then send subjects one at a time.
 
 ```
-Draw bright, vibrant cartoon video-game art in the style of a modern Nintendo platformer — glossy,
-colourful and joyful. Soft rounded three-dimensional forms with clean crisp edges. Richly saturated
-colours: vivid grass greens, warm oranges, sunny yellows, bright sky blues. A cheerful sunlit
-storybook world, playful and whimsical, with a sense of bounce and life.
+Draw plump toy-smooth candy 3D in the style of the Garden of Wonder title splash / popzgames.com
+hero — glossy, colourful and joyful. Simple rounded shapes, clean soft edges, bright saturated
+colour. A cheerful candy storybook object, playful and whimsical, with a sense of bounce and life.
+Not photoreal. Not complex topiary. Not a busy garden scene.
 
-Soft rim lighting, gentle highlights, a little gloss on every surface. Pack in small delightful
-details — sparkles, dewdrops, tiny creatures — while keeping one clear hero subject in the centre.
+Soft rim lighting, gentle highlights, a little gloss on every surface. Keep small delightful candy
+details if they help the read — sparkles, a dewdrop — while keeping one clear hero subject in the
+centre.
 
 Square image. Simple uncluttered background so the subject pops.
 
 No text, letters, numbers, watermarks or signatures. No people or human faces. Not photorealistic,
-not gritty, not muted.
+not gritty, not muted, not photographic.
 
 The subject is:
 ```
@@ -124,29 +134,28 @@ The subject is:
 ### Style block — Midjourney
 
 ```
-bright vibrant cartoon video game art, modern Nintendo platformer aesthetic, glossy and colourful,
-soft rounded 3d forms with clean edges, richly saturated vivid greens oranges and sunny yellows,
-cheerful sunlit storybook world, playful and whimsical, soft rim lighting, gentle highlights,
-delightful small details, sparkles and dewdrops, single clear hero subject centred,
-simple uncluttered background
+plump toy-smooth candy 3D, Garden of Wonder title splash / popzgames.com hero style, glossy and
+colourful, simple rounded shapes, bright saturated colour, cheerful candy storybook object,
+playful and whimsical, soft rim lighting, gentle highlights, single clear hero subject centred,
+simple uncluttered background, not photoreal, not complex topiary
 --ar 1:1 --style raw --s 400
---no text, letters, words, numbers, watermark, signature, photorealism, gritty, muted, dark,
-people, human faces, ui, frame, border
+--no text, letters, words, numbers, watermark, signature, photorealism, photo, gritty, muted, dark,
+people, human faces, ui, frame, border, complex topiary, busy garden scene
 ```
 
 ### The nine subjects
 
 | # | Rarity | Subject |
 | --- | --- | --- |
-| 1 | Common | `a bright green seedling bursting up out of rich dark soil, two glossy round leaves, one dewdrop catching the light` |
-| 2 | Common | `a cheerful white daisy with a big golden centre, petals glowing in warm sunlight, a tiny ladybird on one petal` |
-| 3 | Common | `a warm terracotta plant pot sitting in sunlight, a small chip in the rim, rich soil inside and a curl of green` |
-| 4 | Uncommon | `a butterfly with vivid orange and yellow wings caught mid-flutter, a trail of sparkles behind it` |
-| 5 | Uncommon | `a fat jar of golden honey overflowing down its sides, a wooden dipper resting in it, one happy bee circling` |
-| 6 | Rare | `a glowing paper lantern spilling warm orange light into the dusk, two soft moths drawn to the glow` |
-| 7 | Rare | `a rounded teacup with steam curling up and flower petals floating on the surface, cosy golden light` |
-| 8 | Legendary | `a golden four-leaf clover radiating light, jewel-bright dewdrops on its leaves, sparkles spinning around it` |
-| 9 | Mythical | `an enormous radiant star-shaped bloom exploding with rays of golden light, rainbow shimmer, floating sparkles, glorious and magical` |
+| 1 | Common | `a plump candy-smooth bright green seedling bursting up out of a simple rounded soil mound, two glossy round leaves, one dewdrop catching the light` |
+| 2 | Common | `a cheerful candy-smooth white daisy with a big golden centre, simple rounded petals glowing in warm sunlight` |
+| 3 | Common | `a bright candy sparkle burst — simple rounded star-spark shapes, glossy and jewel-bright, floating as one clear hero` |
+| 4 | Uncommon | `a plump candy-smooth glowing paper lantern spilling warm orange light, simple rounded form, soft moth-like spark accents optional` |
+| 5 | Uncommon | `a plump candy-smooth butterfly with vivid rounded wings caught mid-flutter, a short trail of sparkles` |
+| 6 | Rare | `a plump candy-smooth hive with one happy round bee, glossy honey-gold and warm yellows, simple toy shapes` |
+| 7 | Rare | `a rounded candy-smooth teacup with a soft steam curl and a few floating petals, cosy golden light` |
+| 8 | Legendary | `a golden four-leaf clover, candy-smooth and radiating light, jewel-bright dewdrops, sparkles spinning around it` |
+| 9 | Mythical | `an enormous radiant star-shaped bloom (star-bloom), candy-smooth, exploding with rays of golden light, rainbow shimmer, floating sparkles, glorious and magical` |
 
 In Grok, send the style block once and each subject as its own message. In Midjourney, subject first,
 style block after, as one prompt.
@@ -162,6 +171,7 @@ Do not spend time cutting it out.
 - Nine images that look like **one family**.
 - **Card nine is obviously the best one.** If the Mythical does not beat the Common at a glance,
   regenerate it.
+- **Must read as title-splash candy, not photoreal flora.**
 
 ---
 
@@ -172,21 +182,25 @@ Nine full-bleed 3:4 scenes. The first set a player meets, so the right one to te
 The arc is the point: **a garden waking up.** Cards 1–3 are cool blue and quiet, card 9 is full
 golden daylight. Rarity and warmth climb together.
 
+> Set-mood plates also exist for **Night Garden** and **Weather Watch** (candy-v2). Weather Watch
+> drifted sunny — mood reference only, **not a locked subject**. Full per-set scenes beyond First
+> Light are not authored in this doc yet.
+
 ### Style block — Grok
 
 ```
-Draw a bright, vibrant cartoon garden scene in the style of a modern Nintendo platformer — glossy,
-colourful and joyful. Soft rounded three-dimensional forms with clean crisp edges. Richly saturated
-colours: vivid grass greens, warm oranges, sunny yellows, bright sky blues. A cheerful storybook
-garden world, playful and whimsical, full of life.
+Draw a plump toy-smooth candy 3D garden scene in the style of the Garden of Wonder title splash /
+popzgames.com hero — glossy, colourful and joyful. Simple rounded shapes, clean soft edges, bright
+saturated colour. A cheerful candy storybook garden, playful and whimsical, full of life.
+Not photoreal. Not complex topiary.
 
-Beautiful atmospheric light, soft rim lighting, gentle glow. Pack in small delightful details —
-sparkles, dewdrops, bees, butterflies, tiny flowers — while keeping one clear focal point.
+Beautiful atmospheric light, soft rim lighting, gentle glow. Keep small delightful candy details —
+sparkles, a dewdrop — while keeping one clear focal point.
 
 Tall portrait image, 3:4 ratio, taller than it is wide.
 
 No text, letters, numbers, watermarks or signatures. No people or human faces. Not photorealistic,
-not gritty, not muted. No frame or border.
+not gritty, not muted, not photographic. No frame or border.
 
 The scene is:
 ```
@@ -194,13 +208,13 @@ The scene is:
 ### Style block — Midjourney
 
 ```
-bright vibrant cartoon garden scene, modern Nintendo platformer aesthetic, glossy and colourful,
-soft rounded 3d forms with clean edges, richly saturated vivid greens oranges and sunny yellows,
-cheerful storybook garden world, playful and whimsical, beautiful atmospheric light, soft rim
-lighting, delightful small details, bees and butterflies and sparkles, clear focal point
+plump toy-smooth candy 3D garden scene, Garden of Wonder title splash / popzgames.com hero style,
+glossy and colourful, simple rounded shapes, bright saturated colour, cheerful candy storybook
+garden, playful and whimsical, not photoreal, not complex topiary, beautiful atmospheric light,
+soft rim lighting, clear focal point
 --ar 3:4 --style raw --s 500
---no text, letters, words, numbers, watermark, signature, photorealism, gritty, muted, dark,
-people, human faces, ui, frame, border
+--no text, letters, words, numbers, watermark, signature, photorealism, photo, gritty, muted, dark,
+people, human faces, ui, frame, border, complex topiary
 ```
 
 ### The nine scenes
