@@ -1,0 +1,340 @@
+**Harvest reads the neighbourhood before clearing the plot**, because clearing it changes what the
+neighbours see. Beacon, Lantern and the payout multiplier are all captured first.
+
+**Keeper works in both directions.** Growth time is baked in at plant time (`grow = seed.grow ×
+growModifier() × keeperModifier(idx)`), so a plot planted *next to* an existing Keeper gets the
+bonus for free. A Keeper planted *afterwards* calls `quickenNeighbours()`, which shaves its share
+off the remaining time of anything already growing. Without that second path the verb would only
+pay out when the player happened to plant in the right order, which is a rule nobody would ever
+discover.
+
+**Spreader plants through the normal `plant()` path** with `payCost = false`, so a sown copy is free,
+fires the usual `plant` event, and counts for quests exactly like any other planting.
+
+### No new saved state
+
+Verbs are derived entirely from the seed id already in `state.grid[i].seed`. **Nothing was added to
+the save**, so there is no migration and no backfill — see
+[07-save-data.md](07-save-data.md). Retuning a verb is a `data.js` edit that applies to every
+existing save immediately.
+
+### Surface
+
+The plant picker shows a tinted **verb chip** next to the name and a bordered **verb note** under
+the description. On planting a verb flower, the source plot flashes a solid ring and its two
+neighbours flash dashed rings in the verb's colour, then fade after 1.6 s — adjacency is invisible
+until something points at it, and a permanent indicator would clutter a board whose readability is
+the point. See [08-ui-and-layout.md](08-ui-and-layout.md).
+
+## Automation
+
+### Harvest Drone
+
+One badge, escalating speed:
+
+```
+cadence = max(0.7, 3 − level × 0.5)   seconds
+```
+
+Level 1 collects every 2.5 s, level 5 every 0.7 s (the floor). It takes the lowest-indexed ready
+plot, so with several ripe at once it works left to right.
+
+**The drone can also be RENTED, and the two compose by `max`.** The Shop lends it for thirty minutes
+in exchange for a rewarded video ([37-monetization.md](37-monetization.md)) — a `DATA.boosters` row
+(`drone`, `dur: 1800`, `effects: { autoHarvest: 1 }`), not a temporary badge, so it inherits the rail
+chip, the countdown, the expiry sweep and the Turn's leave-a-running-boost-alone rule for free. The
+level the loop flies at is
+
+```
+Game.droneLevel() = max(state.upgrades.autoHarvest, boostVal('autoHarvest'))
+```
+
+**`max`, never a sum and never the most recent**: a player who owns the drone at level 3 must never
+be handed a rental that slows them to level 1. For the same reason the rental is refused outright
+when the badge already matches or beats it — spending an ad on nothing is the one thing a rewarded
+offer may never do. `Game.droneLevel()` is the single source of the live speed: the loop, the
+Almanac's Automation row and the suite all read it.
+
+**A rental does NOT reach `passiveIncomeRate()`, and that exclusion is deliberate** — see the
+Automation note under "What counts as passive income" above. It also draws no rail chip in Fall or
+Winter, where the drone cannot reach the board you are looking at, though it keeps flying over the
+summer garden the whole time.
+
+**And a RENTED drone's picks pay the wallet only — never the Turn's well.** The offer hands over no
+gold, but the machine it lends picks plots for half an hour and every pick pays, so without this the
+gold from a thirty-second video would land in `lifetimeCoins` and `year.coinsEarned` — the well's
+only two inputs. `processAutoHarvest()` therefore passes `{ ad: true }` to `harvest()`, which
+forwards that one flag to `credit()`, exactly when the **borrowed** half wins `droneLevel()`'s `max`:
+
+```
+autoPickIsRented() = boostVal('autoHarvest') > state.upgrades.autoHarvest
+```
+
+The condition is the composition rule read backwards. When the bought badge equals or beats the
+loan, the loan is buying nothing — the identical pick at the identical cadence — so that gold is the
+**purchase** earning and counts in full; excluding it would quietly nerf the most expensive badge in
+the Upgrades tab. A hand harvest during a rental counts too: that is the player's own tap.
+[37-monetization.md](37-monetization.md)'s first promise is the ruling behind it.
+
+### Per-plot harvesters
+
+Eight separate badges, one per plot, that keep their plot planted. Cost for plot *n*:
+
+```
+base  = round(3000 × 1.3^(n−1))     scale 2.3 per level
+```
+
+So plot 1's harvester starts at 3,000 and plot 8's at 18,825.
+
+A harvester at level *L* may plant any of the first *L* seeds in tier order, further capped by
+the highest seed the garden level has unlocked. It picks the **most expensive one it can currently
+afford**, checking downward from that ceiling. This means a high-level harvester quietly spends
+your coin balance on premium seeds — which is the intended behaviour, but it's the reason a big
+balance can drain while you're in a menu.
+
+Harvesters only appear in the Upgrades tab for plots you've already unlocked.
+
+## Reputation and quests
+
+Reputation is the only progression number. Level is a display of it. Quests in `DATA.quests` pay
+into `state.rep`; the Market will later pay into the same field. Counters live on the active quest
+instance and increment from game events — they never read `state.flowers`. Full spec in
+[16-progression-and-quests.md](16-progression-and-quests.md).
+
+## Boosters
+
+Inventory in `state.boostInv`, timed once activated, and stackable across different
+boosters. Activating one that's already running is a no-op — the seat hides the hold-chip while
+that boost's countdown is up, so you cannot spend a second copy to refresh. No shop panel and no
+purchase path. A held booster surfaces in the **power-up button in the band**, tap to spend one.
+
+**Mostly earned, but not entirely: a brand-new garden opens with `DATA.startingBoosts` already in
+the bag.** `giveOpeningBag()` is called only where a save is *created* — a load that finds none, a
+load whose save will not parse, and the Settings reset — so the Turn can never mint one. The full
+faucet audit, and the rule that nothing paying a power-up may be re-earnable through the year loop,
+is in [04-economy.md](04-economy.md#every-faucet-audited-2026-08-30). See
+[15-navigation-and-ia.md](15-navigation-and-ia.md) and
+[16-progression-and-quests.md](16-progression-and-quests.md).
+
+| Booster | Duration | Effect |
+| --- | --- | --- |
+| Bloom Burst | 30 s | +50% tap power, +2% crit chance |
+| Seed Rush | 10 min | +30% growth speed |
+| Fortune Aura | 30 min | +50% rarity weights |
+| Golden Popups | 30 s | +25% credits from taps and garden harvests |
+
+Expiry is checked each tick and removal emits `panels` so open shop cards update themselves.
+
+## Decor
+
+Purely cosmetic since navigation phase 1 — see [15-navigation-and-ia.md](15-navigation-and-ia.md).
+Lives in the Shop tab, bought with `Game.buyDecor(id)`. Permanent and repeatable — buying a second
+gnome is a second copy in `state.decor`, tracked only for `Game.decorCount(id)` display.
+
+| Piece | Cost |
+| --- | --- |
+| Gnome of Fortune | 250 gems |
+| Butterfly Shrine | 1,000 coins |
+| Crystal Fountain | 5,000 coins |
+| Lantern Tree | 40 gems |
+
+Prices are flat — the tenth costs the same as the first. No effect on any formula on this page;
+decor doesn't appear in any of them anymore.
+
+Saves from before this change had decor carrying real stat bonuses. `Game.load()` refunds each
+owned copy at its purchase price the first time such a save loads — see
+[07-save-data.md](07-save-data.md) for the migration mechanics.
+
+## The Wonder Effect
+
+A rare, brief, garden-wide transformation. Configured in `data.js` under `WONDER`.
+
+| Property | Value |
+| --- | --- |
+| Duration | 20 s |
+| Payout multiplier | 3× on taps *and* harvests |
+| Growth multiplier | 3× |
+| Chance per harvest | 2% |
+| Chance per tap | 0.15% |
+| Cooldown | 90 s |
+
+The cooldown is measured from the *start* of the last Wonder, so the true minimum gap between one
+ending and the next starting is 70 seconds.
+
+Growth acceleration is applied in `tick()` by subtracting extra time from every immature plot each
+frame — `dt × (growMult − 1)` — rather than by scaling a rate. This is why it correctly affects
+plants that were already in the ground when the Wonder began.
+
+While active: the `wonder` class goes on `#game` driving a rainbow halo and hue-shift, a banner
+appears, the rail shows a countdown chip, confetti fires in five waves, and the flower pulls a
+`wow` face.
+
+The Wonder can also be summoned on demand from Settings, which bypasses both the roll and the
+cooldown.
+
+## Talking flower
+
+The face lives in `flora.js` as SVG with named parts, and `ui.js` animates it:
+
+- **Blinking** is a pure CSS animation on the eyelid rectangles.
+- **Pupils track the pointer** via `lookAt()`, which writes `--px`/`--py`. On touch this happens on
+  tap; on desktop it follows the mouse continuously.
+- **Mouth shapes** swap between four SVG paths — idle, open, crit, and wow — reverting after 340 ms.
+- **Squash-and-stretch** on every tap by re-triggering a `bounce` class.
+
+Dialogue is drawn from nine mood buckets in `FLOWER_LINES`: `greet`, `tap`, `crit`, `harvest`,
+`legend`, `idle`, `broke`, `unlock`, `wonder`.
+
+Speech is deliberately sparse. A bubble is suppressed if another spoke less than 3.2 s ago
+(unless forced), and is suppressed entirely while a coach mark is on screen so the two never
+overlap. Ordinary taps only speak 6% of the time and harvests 12%; milestone moments —
+greeting, Legendary, unlock, Wonder — always speak. Bubbles clear after 2.4 s.
+
+If the player does nothing for 26 seconds the flower makes an idle remark, but never while a
+sheet is open.
+
+## The story — the narrative engine (2026-09-27)
+
+Volume one's words are [57-volume-one-script.md](57-volume-one-script.md); the why is
+[55-the-story-bible.md](55-the-story-bible.md). This section is the machine. **The engine decides WHAT
+plays and the UI decides only WHEN** — `game.js` owns every getter below, and no `ui-*` file ever picks
+a chapter, a line or a sliver.
+
+**The data.** `DATA.story` in `data.js` is two halves. The hand-authored half holds the caps, the
+scene's motion values, the bubble timings, the welcome-back absence, the expression-to-face map and
+the two voices who are not villagers (Mara's portrait row, Poppy). `DATA.story.script` is **generated**
+from doc 57 by `node tools/story-import.js`, which refuses — naming the doc's line — on any chunk it
+does not understand; `--check` exits 1 when `data.js` is stale, and the suite runs it. The writer's
+pass is therefore an edit to doc 57 and a re-run, never an edit to `data.js`. `DATA.story.draft: true`
+marks the words as the desk's draft and prints nothing.
+
+**What a chapter is.** Eight chapters, each one to three scenes of two faces trading lines, a title
+card (`@card`) before a scene, and — for Chapter I — a run of Poppy's bubble lines in the garden before
+its one scene. Four kinds of between-chapter beat ride Poppy's bubble instead: Chapter I's opening runs,
+a chapter's `.after` coda, **memory slivers** (m01–m20) and **story lines** (~90).
+
+**How the next scene is chosen — `Game.storyPending()`.** A pure read, never a queue:
+
+1. A chapter already begun resumes at `state.story.beat` (scene and line), whatever the day's count.
+2. Otherwise only the **first unseen chapter** is a candidate — strictly in order.
+3. **Chapter I is a latch:** owed once the first Turn has completed (`year.turnsCompleted ≥ 1`) *and*
+   its opening run has finished. `turnYear()` writes nothing to the story; the UI plays the scene the
+   first time it finds a quiet screen, which is after the ceremony sheet has shut (the `fallOpen()`
+   precedent). **No later Turn is ever a trigger.**
+4. Every other chapter needs Chapter I seen and `state.level ≥` its level. **Nothing but Chapter I
+   plays before Chapter I is seen.**
+5. A new chapter waits for the day's cap (one). Because it is a read of state, a save that crossed a
+   level offline — or before the story existed — finds its chapter owed: **never missable**.
+
+`storyAdvance()` records the line reached; `storyDismiss()` latches a scene, and on a chapter's last
+scene latches the chapter, counts it against the day, adds the villagers it brings to
+`state.story.arrived`, and deals its scripted order (below). A seen chapter never re-queues.
+
+**How the next bubble line is chosen — `Game.storyLine()`.** In this order:
+
+1. **Chapter I's opening chain**, before Chapter I is seen: `ch1.open` (on the first tap — *"Are you my
+   mama?"*), `ch1.hum` (Poppy hums `Sound.sing()` first), the teach intro, then one line per *kind* of
+   tutorial step — the first tap, planting (once `seen.intro`), a harvest, an upgrade — then
+   `ch1.ask`. Each waits for the one before it and for its own step to have begun — **or for the first
+Turn**, so a garden that reached its Turn without ever harvesting (or tapping, or buying) never strands
+the act break behind a step it will not take; the lines still play first, in order. The tutorial is
+   being re-cut, so steps key to kinds, never to quest ids. Poppy's ordinary tap chatter is muted from
+   the opening to the ask (`storyMutesTap()`).
+2. A seen chapter's **`.after`** coda, once.
+3. The next **memory sliver** — by pointer (`state.story.sliver`), in order, never skipped — once its
+   window's chapter is seen and its level reached; one a day.
+4. The **newest story line** owed — the latest whose level is reached, after the last one played;
+   every older one is superseded forever. A line that names Holly (`?met:holly`) waits until she has
+   been met and a newer line plays past it. Two a day.
+
+`storySaid(id)` consumes a line only after the UI has drawn its last step — the `hollyIntro` rule.
+
+**Caps and levels — PROVISIONAL.** `DATA.story.caps` is one chapter, one sliver and two story lines
+per local day (`todayKey()`), counted in `state.story.day`. Chapter levels are doc 57's placeholders
+(II ~4, III ~8, IV ~14, V ~22, VI ~50, VII ~80, VIII ~110) until the tree spec places them. Sliver and
+line levels are spread evenly across their window by the importer — also until the spec places them.
+
+**Villagers by chapter.** Delphine (Chapter I), Theo (II), Julian (V) and Isolde (VI) are `CUSTOMERS`
+rows carrying `chapter`; `standPickCustomer()` leaves them out until that chapter is seen. Their pools
+live in the script, and `Game.customerLines(id, bucket)` merges a row's own lines, a story villager's
+pool and any chapter-keyed lines earned (Bram, Miss Marigold and Old Hollis after IV; Isolde's
+*before the Prize* lines retire at VIII). **A scripted first order** — `order:<villager>-<good>` in a
+chapter's `@change` — is queued in `state.story.orders` and dealt at once: an empty slot first,
+otherwise the most recently dealt order that cannot be delivered this minute; never over one that can.
+Its good is the script's when `standGoodsAt(tier)` allows it and any allowed good when not, and it is
+priced by the same `standBuildOrder()` as every order. Chapter I deals Delphine's Garden Handful;
+Chapter IV, Miss Marigold's show entry.
+
+**The welcome-back board.** After `DATA.story.welcomeAfter` away (three days), `reconcile()`'s report
+carries one line from the villager who arrived most recently — nothing more.
+
+**A Turn after the first** carries flavour, never story: `storyTurnLine()` returns one line for the
+stage the chapters have reached (toddler to III, child to VI, wry after).
+
+**The story pays nothing but the change.** No getter or latch here credits gold, gems, Prisms,
+reputation or packs, or touches the well's inputs (`lifetimeCoins`, `mintedBase`,
+`year.coinsEarned`); the suite plays the whole of volume one and asserts every one unchanged.
+
+**When it plays — `ui-story.js`, laid out in [08-ui-and-layout.md](08-ui-and-layout.md#the-chapter-scene-and-maras-reply-chips-2026-09-27).**
+Only at a quiet beat, through the moments dialog's own guard — never over a sheet (so never during the
+Turn's ceremony), the news, a painted coach mark, the Hollow, the meadow, a gate or the menu, and never
+before the session's first touch. The story goes first in `tryMoment()`, so a chapter owed after the
+Turn never loses the beat to a reveal card; the coach mark waits for the story, never the reverse.
+Poppy's runs speak only in the Summer garden, through `sayText()`, which refuses under a painted coach
+mark and refuses every other line while a run holds the bubble. **A replay** (the Almanac's Chapters
+block) plays a seen chapter without calling `storyAdvance()` or `storyDismiss()`, so it latches nothing.
+
+**What is not built:** the order strip, the Stand's counter art and the rail's chapter ticks (the
+chapters' `strip:`/`counter:` changes ship as data the strip will read); the flower's birth from the
+tin; the record shelf (Chapter VIII's lullaby is a no-op); the Fall and Spring heroes (their beats are
+skipped by the importer and logged as pending); the hum's mid-phrase cut in Chapter V.
+
+## The Apiary — prototype, slated for rework
+
+> **Decided 2026-08-14: this system is being folded into garden adjacency and will lose its dock
+> tab.** Bees become a plot-adjacency effect — a flower attracts them, they lift neighbouring plots,
+> honey becomes an occasional drop rather than a parallel production chain. The Apiary was built as
+> an explicit throwaway to give the garden's output a consumer, because nothing in the game wanted
+> anything; once plants have their own verbs and orders exist, that job is absorbed and a second
+> economy just competes with the one that matters. Reasoning in
+> [10-decision-log.md](10-decision-log.md); the target shape is in
+> [17-market-and-positioning.md](17-market-and-positioning.md#why-plant-this-flower).
+>
+> The description below is **what is built today**, and stays accurate until the rework lands.
+
+The first piece of the meta-layer described in [12-meta-layer-design.md](12-meta-layer-design.md).
+Lives in the `apiary` dock tab. Data in `APIARY` (`data.js`), simulation in the apiary section of
+`game.js`, tests in `tools/sim-test.js`.
+
+Up to **4 hives**, costing `2500 × 2^owned` credits. Each produces one jar every **90 seconds** and
+holds **5** before the bees stop; a full hive freezes its own clock rather than banking jars it
+cannot hold, so the timer restarts from the moment you collect. Because production is derived from
+elapsed time, offline accrual works for free and is naturally bounded by capacity.
+
+Each hive adds **+8% to every harvest payout** — pollination, applied in `harvest()`.
+
+### Honey variety follows what is blooming
+
+The load-bearing rule. When a jar is produced, its variety is sampled from the seeds *currently in
+the ground*. Lavender planted means lavender honey, worth `seed.yield × 0.5`. An empty garden gives
+Wildflower honey, worth a flat 40.
+
+Sampling happens at **production** time, not collection time, and this matters: sampling on
+collection would let a player keep an empty garden, plant one Eternal Crown, and collect a full hive
+of the most valuable honey without ever growing it. Fixing variety when the jar is made means the
+bloom had to actually be standing in the garden while the bees worked.
+
+Collecting also yields **beeswax**, at a 50% chance per jar.
+
+## Creatures
+
+**Built 2026-08-16.** Full design in [22-creatures.md](22-creatures.md). Content in `CREATURES`
+(`data.js`), art in `critters.js`, simulation in the creatures section of `game.js`, the yard in
+`ui.js`.
+
+**A creature comes to live in the garden because of what you chose to grow.** Pip the Grove Spirit
+arrives after five lifetime Bluebell harvests, then lives on the lawn, reacts when tapped, and leaves
+keepsakes on a slow clock.
+
+- **Attraction reads `state.discovered`**, the lifetime record, never the spendable pantry — so
+  spending a bloom can never send a creature away.
