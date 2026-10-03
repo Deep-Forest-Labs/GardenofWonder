@@ -158,7 +158,7 @@ Every count here was taken by running the code, not by reading a document.
 | **The hedge** | `ui-scenery.js` `UI.hedge(flip)` | one boolean | 1 shape, 2 orientations, used at two sizes | [`hedge.svg`](../art/exports/samples/hedge.svg) |
 | **Weather layers** | `index.html` markup + `style.css`; staged by `ui-weather.js` | `DATA.weatherStage`, mirrored into CSS variables | **11 layer nodes**, 4 skies × 5 phases | — |
 | **Decor** | `data.js` `DATA.decor`; drawn only as `Icons.get(d.icon)` | a row per piece | **4 pieces**, 4 icons, no sharing | in the icon manifest |
-| **Card art** | `data.js` `CARD_MOTIFS`; `ui-sheet.js` `cardArt(card, size)` | `card.art` — either `{icon, tint}` or `{src}` | **108 slots**, filled today by **9 motifs cycled** | in the icon manifest |
+| **Card art** | `data.js` `CARD_MOTIFS`; `ui-sheet.js` `cardArt(card, size)` | `card.art` — either `{icon, tint}` or `{src}` | **108 slots**, filled today by **9 motifs cycled** (sprout → star); finished faces = candy title-splash language (lock 2026-10-03), not yet binary assets in-repo | in the icon manifest; prompts in [20-card-art-prompts.md](20-card-art-prompts.md) |
 
 ## The six things most likely to cost you a rebuild
 
@@ -197,12 +197,14 @@ texture, props — and check by looking rather than by reading coordinates.
 function, `decorCount(id)`, which the shop card uses for its "Owned ×N" caption. Nothing places
 a gnome in the garden. Four pieces are content that exists; the placement feature does not.
 
-**Card art is a pipeline, not an asset set.** There are 108 named cards across 12 sets, with
-rarities, set tints, and the whole reveal and celebration staging — and **no real card art at
-all**. Every slot is filled by one of nine placeholder motifs cycled by the card's index within
-its set, so every set's card #1 is the same sprout on the same green disc. The slot mechanism
-(`{icon, tint}` for the placeholder, `{src}` for a real image) is what you inherit;
-[20-card-art-prompts.md](20-card-art-prompts.md) is the spec for filling it.
+**Card art is a pipeline, not an asset set.** There are 108 named cards across 12 sets (*The Long
+Season* — list in [19-card-album.md](19-card-album.md)), with rarities, set tints, and the whole
+reveal and celebration staging. The **web build still has no binary card faces**: every slot is
+filled by one of nine placeholder motifs cycled by the card's index within its set, so every set's
+card #1 is the same sprout on the same green disc. Finished illustration language is locked
+2026-10-03 to **candy title-splash / popzgames.com hero** (nine reusable motifs, not 108 unique
+drawings). The slot mechanism (`{icon, tint}` for the placeholder, `{src}` for a real image) is
+what you inherit; [20-card-art-prompts.md](20-card-art-prompts.md) is the spec for filling it.
 
 ## The representative samples
 
