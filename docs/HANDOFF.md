@@ -60,6 +60,11 @@ decided, and what to do next. Update it at the end of any significant session.
 
 ## Where the project stands
 
+> **LOCAL FOLDERS RENAMED 2026-10-05 — housekeeping, nothing in the repo or on GitHub
+> changed:** the workspace is now `Garden of Wonder/` and the checkout inside it
+> `GardenofWonder/`, the repository's own name. The leftover `ghostgarden/` folder beside it
+> awaits the owner's delete.
+
 > **THE SEASON HEROES ARE A SPIKE, 2026-09-27 — owner picking, nothing built:** six Fall and Spring candidates, the silhouette gate and Holly's eyes redrawn three ways (her built eye is mirrored) are in [56-the-season-heroes.md](56-the-season-heroes.md) and `tools/hero-spike.html`.
 
 > **THE MOTION BIBLE'S FIRST FIX ROUND LANDED 2026-09-22 — the first five items the motion bible
@@ -4071,8 +4076,7 @@ stale line here costs them real time before they have any way to know it is wron
 > in `docs/`.
 >
 > **The repo is a subdirectory of my workspace, not the workspace root:** open
-> `Ghost Garden/Ghost Garden`. (`garden-polish` beside it is a second worktree on the `polish`
-> branch; `ghostgarden` is an empty leftover.) Run `git fetch` and check `git status` before you
+> `Garden of Wonder/GardenofWonder`. Run `git fetch` and check `git status` before you
 > start — other sessions work in this tree.
 >
 > **You'll be asked to approve an MCP server on first launch** — that's `graft`, wired into `.mcp.json`

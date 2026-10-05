@@ -5,6 +5,21 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-10-05 (housekeeping) — Local folders take the game's real name
+
+**Decision.** The workspace `Ghost Garden/` became `Garden of Wonder/` and the checkout inside
+it `Ghost Garden/` became `GardenofWonder/`, the repository's own name. Re-pointed: `serve.js`'s
+default root, both `.claude/launch.json` files, the Claude Code project memory (copied to the two
+new path slugs, the old one left in place) and the graft caches (rebuilt). The leftover
+`ghostgarden/` folder was LEFT IN PLACE for the owner to delete: it holds a `.git`, and deleting
+a repository is the owner's act.
+
+**Why.** Nothing a player sees changed, nothing on GitHub changed, no history was rewritten; the
+only live text that named the old folder was one sentence in HANDOFF's briefing. The prompts
+quoted in docs 34, 39 and 52 keep the old name because they are records of what was sent.
+
+---
+
 ## 2026-09-27 (the owner's note, spike v2) — Every conversation becomes a cutscene; three ways to draw the faces
 
 **The owner, after playing the build:** *"the narrative doesn't have an overlay or anything like Gossip
