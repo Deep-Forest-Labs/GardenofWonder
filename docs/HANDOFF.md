@@ -1,6 +1,22 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-09-01** (the growth stages pass)
+Last updated: **2026-10-05** (the folder rename; the story engine and its spikes landed 2026-09-27)
+
+> **WHERE THINGS STAND, 2026-10-05 — read this paragraph, then the dated blocks below in any order.**
+> The narrative engine is built and gauntleted (four gates, 2026-09-27; suite **2,335**): chapters are
+> data imported from [57-volume-one-script.md](57-volume-one-script.md), latched and swept, played in
+> order, with the chapter scene, Poppy's lines, Mara's reply chips and a replay door in the Almanac.
+> **Five things wait on the owner's eye:** the cutscene's look (`tools/scene-spike-v2.html`, three
+> variants, five questions), the Fall and Spring heroes (`tools/hero-spike.html`,
+> [56-the-season-heroes.md](56-the-season-heroes.md)), Holly's eyes (three treatments on the same
+> page), the writer for the script's human pass ([55-the-story-bible.md](55-the-story-bible.md) §9),
+> and the Prisms economy ([35-morning-review.md](35-morning-review.md) calls it the one thing that blocks
+> everything else). **The tree is on hold by the owner's word** while he works the trunk's levels.
+> **A small fix round is queued and unrun:** Clover to 10,000, Holly's "he" → "she", Old Hollis's "lad" →
+> "lass". The local folders were renamed on 2026-10-05 (`Garden of Wonder/GardenofWonder`); nothing in
+> the repo, on GitHub or on the live site changed. The blocks below are the dated record, newest at the
+> top of each thread; the 2026-09-01 blocks that open this file are the oldest still worth reading first
+> for a builder, because the traps section they introduce has not moved.
 
 > **THE GROWTH STAGES PASS LANDED 2026-09-01 — every flower grows through four stages, and the
 > ripe blooms are proven untouched.** Sprout (shared cotyledons in the species' leaf colour), stem,
