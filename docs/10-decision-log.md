@@ -5,6 +5,33 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-10-08 (correction + owner statement) — Merge revenue fixed; hybrid casual and paid acquisition are open
+
+**Correction.** Doc 38 said merge-2 did **$1.91bn in H1 2026, nearly double YoY**. It does not
+reproduce. AppMagic's H1 2026 casual report, via PocketGamer.biz (27 Jul 2026), gives merge **$1.3bn,
++74%**; another outlet says $1.24bn. The old figure was also internally inconsistent: H1 2025 merge-2
+was ~$685M, and nearly doubling that is ~$1.3bn. Doc 38's row now carries the corrected figure with its
+source and a dated note. Nothing else in `docs/` quoted the number (grepped).
+
+**Why it surfaced.** A pitch-deck market brief (`pitch-market-brief.md`, outside the repo) re-checked the
+farming, merge and cozy pools for the first time since 08-30. Farming's $576M (+15%) held.
+
+**The owner, same day:** positioning is **hybrid casual cozy** across farming, merge and cozy games, and
+it has "never been set in stone". *"We are not avoiding hybrid casual. We will be doing paid
+acquisition"* — every game will carry some acquisition budget, with organic growth still preferred.
+
+**What this does to older docs.** Doc 17 ("What to avoid": hybrid-casual is "a user-acquisition
+business") and the no-paid-acquisition assumptions in docs 29, 39 and 40 (the 375-installs-a-day
+organic requirement, the "no-spend soft launch" advice) are **records of the assumption at the time,
+not rules**. They are left as written. Anyone building plans or the financial model should treat paid
+acquisition as in scope and re-run doc 40 with a CPI and a marketing line before relying on its
+bottom-line bands.
+
+**Rejected:** rewriting docs 17/29/39/40 now. They are research dated 08-14 to 08-30; the right
+rewrite is a new financial model with a paid-acquisition line, not an edit to old sentences.
+
+---
+
 ## 2026-10-05 (housekeeping) — Local folders take the game's real name
 
 **Decision.** The workspace `Ghost Garden/` became `Garden of Wonder/` and the checkout inside
