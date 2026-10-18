@@ -5,6 +5,55 @@ not the diff — git already has the diff.
 
 ---
 
+## 2026-10-17 (estimate) — The replacement cost is written down, because last time it wasn't
+
+**Decision.** The "what would this have cost a studio" exercise now lives in
+[58-replacement-cost.md](58-replacement-cost.md) and in an artifact
+(<https://claude.ai/artifact/HvfFdNzKWaanf7F8B7EZjr>). Current reading: **51–64 person-months,
+$615K–$1.22M at fully loaded US/EU small-studio rates, middle ~$900K**, against **~$450K** when the same
+method was run on 2026-08-30 at day 28.
+
+**Why it is in the repo at all.** The first run of this exercise, on 2026-08-30, produced a figure the
+owner has quoted since — and it existed only in a chat transcript. Finding it again took a transcript
+grep across every project on the machine. An estimate people repeat out loud is a number the repo should
+own, with its method attached, or the next person re-derives it from scratch and gets a different answer
+with no way to tell which is right.
+
+**What the method is, and what it is not.** The measured half is counted from the tree with commands the
+doc prints, so anyone can recount: 422 commits, 31,218 lines of shipped client code, **2,335 assertions
+passing** (an actual run, not a remembered number), 22,723 lines of tooling, 525,623 words across 60
+docs, 183 renders. The priced half is a bottom-up person-month reconstruction per discipline at 160
+hours a month, cross-checked against the August figures so the two scale consistently. **Every dollar is
+judgment and the doc says so in the row it appears in.**
+
+**The finding that matters is not the money.** 57 person-months is ~11 months of calendar for a
+five-person studio; this took 11 weeks. The compression is 4–5× on *schedule*, which is the half of the
+story a competitor cannot buy. The doc leads with the dollars because that is the unit outsiders read,
+and then says this.
+
+**What this document is forbidden from doing.** Standing in for [40-financial-model.md](40-financial-model.md).
+Replacement cost is what has been built; doc 40 is what it might earn. There is still no retention data
+on anything, and the doc states that plainly in its own "what this proves" section, because a build-cost
+figure quoted at an investor without that sentence is a boast rather than evidence.
+
+**Two numbers corrected against what the deck carries.** The CEO-perspective memo (2026-10-11) describes
+Garden Wonder as "roughly six months of studio time" and the deck arc carries a "cost per title
+$250–500K, estimate" line that the memo itself asked to replace. Both predate this count and both are
+low: the measured artifact prices at 51–64 person-months. The memo and the arc live outside this repo
+and are left as the records they are.
+
+**Also corrected: the elapsed time.** The owner's working phrase for this build has been "the past
+month". The first commit is **2026-08-02** and the latest **2026-10-08**: 77 days, eleven weeks. The doc
+uses the real dates, because a span that disagrees with `git log` is the first thing a sceptical reader
+checks, and the true figure is the better one anyway.
+
+**Rejected:** putting the figures in doc 40. It is a revenue model, and a cost-to-build section inside it
+is exactly the confusion the doc above is written to prevent. Also rejected: a single point estimate.
+Every band here is wide on purpose; a replacement cost quoted to the dollar invites an argument about
+the dollar instead of the scope.
+
+---
+
 ## 2026-10-08 (correction + owner statement) — Merge revenue fixed; hybrid casual and paid acquisition are open
 
 **Correction.** Doc 38 said merge-2 did **$1.91bn in H1 2026, nearly double YoY**. It does not

@@ -1,6 +1,20 @@
 # Handoff — Current State and Next Steps
 
-Last updated: **2026-10-05** (the folder rename; the story engine and its spikes landed 2026-09-27)
+Last updated: **2026-10-17** (the replacement-cost doc; the folder rename was 2026-10-05, the story
+engine and its spikes landed 2026-09-27)
+
+> **THE REPLACEMENT COST IS WRITTEN DOWN, 2026-10-17 — a doc and an artifact, no game code touched.**
+> [58-replacement-cost.md](58-replacement-cost.md) prices what is in this repository the way a studio
+> would quote it: **51–64 person-months, $615K–$1.22M fully loaded, middle ~$900K**, against ~$450K when
+> the same exercise ran on 2026-08-30 at day 28. The measured half is recountable with the commands the
+> doc prints (422 commits, 31,218 lines of client code, **2,335 assertions passing** from a real run,
+> 525,623 words of docs, 183 renders); every dollar is labelled judgment. The showable version is an
+> artifact: <https://claude.ai/artifact/HvfFdNzKWaanf7F8B7EZjr>. **It exists because the first run of
+> this exercise lived only in a chat transcript** and the owner has been quoting the figure since.
+> Two things it corrects for anyone working on the deck: the elapsed build is **77 days from 2026-08-02**,
+> not "the past month", and the memo's "roughly six months of studio time" plus the arc's "$250–500K per
+> title" both undercount the measured artifact. **It is not a revenue model** — there is still no
+> retention data on anything, and [40-financial-model.md](40-financial-model.md) owns that question.
 
 > **WHERE THINGS STAND, 2026-10-05 — read this paragraph, then the dated blocks below in any order.**
 > The narrative engine is built and gauntleted (four gates, 2026-09-27; suite **2,335**): chapters are

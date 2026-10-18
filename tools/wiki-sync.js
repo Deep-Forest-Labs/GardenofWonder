@@ -225,6 +225,7 @@ const DESC = {
   '55-the-story-bible.md': "The story bible, volume one — what this lane's players praise and punish in a story, with the evidence; the owner's premise fitted to the Garden Year; the cast; eight chapters at reputation levels, each changing something visible; the rules of the voice; how beats are delivered; the first session's lines; the perfume thread (scent is memory, Gran the perfumer, the Scent Prize); the bill and the owner's open questions. Direction, the owner picking.",
   '56-the-season-heroes.md': "The season heroes — Fall's and Spring's character flowers, three candidates each, drawn simple like Poppy with a silhouette of their own; the family's shared eye, the silhouette gate, the palettes, names, and Holly's eyes redrawn three ways (her built eye is mirrored). A spike, the owner picking; nothing built.",
   '57-volume-one-script.md': "Volume one's script — every player-facing line, tagged by speaker, expression and surface, in the chunks the narrative engine reads: eight chapters of two-face scenes, memory slivers, story lines, villagers, the welcome-back board, and a brief for the human writer. A draft for the writer's pass, not shipping text.",
+  '58-replacement-cost.md': 'Replacement cost — what another studio would have charged to deliver what is in this repository: the measured counts with the commands to recount them, a person-month reconstruction per discipline, three rate bands, the two budget lines that would surprise a studio quoting it, and the cost-to-ship asterisk. An estimate, re-run from the 2026-08-30 original; not a revenue model.',
   '48-music-direction.md': "The music bible for the collectible records — the sonic identity every track must sit inside so the game's chimes and weather layer over it, the five v1 track briefs, and the delivery spec for any track that reaches the shelf. A commissioning document, 2026-09-02 — the music half of the record shelf in doc 49; no code has changed.",
   'README.md': 'The docs folder’s own index, mirrored exactly as written. This Home page is a reordering of it for the Unity team.',
 };
@@ -305,6 +306,7 @@ const SHORT = {
   '56-the-season-heroes.md': '56 · The season heroes',
   '57-volume-one-script.md': '57 · Volume one script',
   '48-music-direction.md': '48 · Music direction',
+  '58-replacement-cost.md': '58 · Replacement cost',
   'README.md': 'The docs index',
 };
 
