@@ -268,9 +268,16 @@ All shopping happens in one sheet that slides up from the bottom, holding eight 
 | `dev` | Developer tools | Unlabelled hit area beside the gem wallet | none |
 | `welcome` | While you were away | Opens itself on load after a real absence | none |
 | `turn` | *(per beat)* | The year-meter pill when the meter is full | none |
-| `album` | *(season name)* | Star button in HUD | none |
+| `album` | *(season name)* | **Cards** button in the dock (Big Five). Was a star in the HUD until the dock rebuild — see also the note under the Big Five / HUD section that the album star moved to Cards. | none |
 | `cardset` | *(set name)* | Tapping a set tile | none |
 | `pack` | Opening a pack | Opening a pack from the album | none |
+
+> **Card faces (art).** Album UI layout is unchanged: three sheet panels — `album` (season grid of
+> sets), `cardset` (nine cards in a set), `pack` (one-at-a-time reveal). Face art is a slot
+> (`cardArt()` in `ui-sheet.js`): procedural `{ icon, tint }` placeholders today; real faces are
+> **candy-language illustrations** (title-splash / popzgames.com hero bar, locked 2026-10-03). Motifs
+> listed in [19-card-album.md](19-card-album.md). Do not invent a fourth album panel or a new layout
+> here — nothing in code changed for the art lock.
 
 The four dock modes share a tab strip — the `TABS` array in `ui-sheet.js`, with `SHOP_TABS` deciding which
 modes display it — so a player can move between them without closing. `seeds` carries the target

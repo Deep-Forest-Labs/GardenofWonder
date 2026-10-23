@@ -242,6 +242,8 @@ tint the empty soil until something new is planted.
 **Built 2026-08-15.** Full design in [19-card-album.md](19-card-album.md). Content in `ALBUM`
 (`data.js`), state and drawing in `game.js`, three panels in `ui-sheet.js`.
 
+Sheet modes: `album`, `cardset`, `pack`. Reached from the **Cards** dock button (Big Five).
+
 **Deliberately independent of the garden.** No card is earned by growing anything in particular —
 packs come from play, and what is inside them owes nothing to what is planted. A coupled album would
 dictate what the player plants and turn the garden from a place to arrange into a checklist.
@@ -251,8 +253,12 @@ Legendary and one Mythical. `state.cards` holds **counts, not flags**, so duplic
 representable for the dust sink that has yet to be built.
 
 **Card art is a slot** — `{ icon, tint }` composes a placeholder from the existing icon vocabulary,
-`{ src }` would carry a real illustration. Nine motifs are cycled across all twelve sets, because the
-feature is the album rather than the illustration.
+`{ src }` would carry a real illustration. Nine motifs are cycled across all twelve sets
+(`CARD_MOTIFS` in `data.js`: sprout, petal, sparkle, lantern, butterfly, hive, teacup, clover, star).
+The web build still uses those placeholders; **finished card faces are candy-language illustrations**
+locked 2026-10-03 to the Garden of Wonder title splash / popzgames.com hero bar (plump toy-smooth
+candy 3D — not photoreal). Full card list and lock notes: [19-card-album.md](19-card-album.md);
+prompts: [20-card-art-prompts.md](20-card-art-prompts.md).
 
 Packs hold three cards, drawn by rarity and then **biased toward what the player is missing**. The
 opening reveals one card at a time with rarity telegraphed before the name is legible.

@@ -249,13 +249,242 @@ art: { src: 'cards/dawn.png' }             // a real illustration, when one exis
 ```
 
 `cardArt()` in `ui-sheet.js` renders either and nothing else knows which it got. **Nine motifs are cycled
-across all twelve sets** — deliberately placeholder, because the feature is the album, not the
-illustration.
+across all twelve sets** (listed below under *The cards*) — still the web placeholder path; finished
+candy-language faces are the Unity / illustration pipeline, locked 2026-10-03 against the candy-v2 plates.
 
 This is how the no-binary-assets rule in [09-conventions.md](09-conventions.md) and real card art
 coexist: the web build is the design lab and keeps its placeholders, finished art belongs to the
 Unity port, and swapping one for the other is a data edit with no code change. Midjourney or any
 other generator can therefore be used freely without it ever blocking the build.
+
+### The cards (The Long Season)
+
+Season name, set ids, card ids, names, rarities and motif icons are copied from `ALBUM_SETS` / `ALBUM`
+and `CARD_MOTIFS` / `SET_SHAPE` in `data.js`. **12 sets × 9 cards = 108.** Every set uses the same
+rarity shape: three Common, two Uncommon, two Rare, one Legendary, one Mythical. Motif index within
+the set maps to rarity (card 1–3 Common … card 9 Mythical); the same nine icons recycle across every set.
+
+#### Art direction lock 2026-10-03
+
+Luke signed candy Cards art against the **candy-v2** plates (2026-10-03). Style bar:
+**Garden of Wonder title splash / popzgames.com hero** — plump toy-smooth candy 3D, simple rounded
+shapes, bright saturated colour, **not photoreal**, not complex topiary.
+
+Drive folder: [Candy Cards plates](https://drive.google.com/drive/folders/1GpKgFm1m8pGdk3VwSvnZw8Mx9om0xVi3)
+
+Reference files: `cards-motifs-sheet.candy-v2.jpg`, `mood-firstlight.candy-v2.jpg`,
+`mood-nightgarden.candy-v2.jpg`, `mood-weatherwatch.candy-v2.jpg`.
+
+**Motif language (9, reused across sets — not 108 unique illustrations):**
+
+| # | Motif (candy lock) | `CARD_MOTIFS.icon` | tint |
+| --- | --- | --- | --- |
+| 1 | seedling | `sprout` | `#8ce99a` |
+| 2 | petal (daisy) | `petal` | `#ffc9de` |
+| 3 | sparkle | `sparkle` | `#c9b6ff` |
+| 4 | lantern | `lantern` | `#ffd6a5` |
+| 5 | butterfly | `butterfly` | `#a5d8ff` |
+| 6 | hive+bee | `hive` | `#ffe066` |
+| 7 | teacup | `teacup` | `#d8b4a0` |
+| 8 | four-leaf clover | `clover` | `#b2f2bb` |
+| 9 | star-bloom | `star` | `#ffd43b` |
+
+**Set-mood concepts** (plates for First Light, Night Garden, Weather Watch): mood language only.
+Weather Watch plate drifted sunny — treat as **soft / not locked subject**.
+
+Season: **The Long Season**. Pack size: **3** (from `ALBUM.packSize`).
+
+#### First Light (`firstlight`)
+
+Set tint: `#ffe3bf`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `firstlight_0` | Dawn Chorus | Common | `sprout` |
+| 2 | `firstlight_1` | Dewfall | Common | `petal` |
+| 3 | `firstlight_2` | The Early Row | Common | `sparkle` |
+| 4 | `firstlight_3` | Frost on the Gate | Uncommon | `lantern` |
+| 5 | `firstlight_4` | Mist Over the Beds | Uncommon | `butterfly` |
+| 6 | `firstlight_5` | Long Shadows | Rare | `hive` |
+| 7 | `firstlight_6` | The Watering Can | Rare | `teacup` |
+| 8 | `firstlight_7` | Sunrise Bloom | Legendary | `clover` |
+| 9 | `firstlight_8` | The First Warmth | Mythical | `star` |
+
+#### Harvest Moon (`harvestmoon`)
+
+Set tint: `#ffd6a5`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `harvestmoon_0` | Full Moon | Common | `sprout` |
+| 2 | `harvestmoon_1` | The Late Crop | Common | `petal` |
+| 3 | `harvestmoon_2` | Lantern Path | Common | `sparkle` |
+| 4 | `harvestmoon_3` | Moths at the Window | Uncommon | `lantern` |
+| 5 | `harvestmoon_4` | Cider Press | Uncommon | `butterfly` |
+| 6 | `harvestmoon_5` | The Long Table | Rare | `hive` |
+| 7 | `harvestmoon_6` | Autumn Wreath | Rare | `teacup` |
+| 8 | `harvestmoon_7` | Moonlit Furrow | Legendary | `clover` |
+| 9 | `harvestmoon_8` | The Harvest Song | Mythical | `star` |
+
+#### Good Neighbours (`goodneighbours`)
+
+Set tint: `#b2f2bb`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `goodneighbours_0` | Over the Fence | Common | `sprout` |
+| 2 | `goodneighbours_1` | Borrowed Shears | Common | `petal` |
+| 3 | `goodneighbours_2` | The Spare Seedling | Common | `sparkle` |
+| 4 | `goodneighbours_3` | Jam for the Postman | Uncommon | `lantern` |
+| 5 | `goodneighbours_4` | A Cutting to Share | Uncommon | `butterfly` |
+| 6 | `goodneighbours_5` | The Shared Wall | Rare | `hive` |
+| 7 | `goodneighbours_6` | Left on the Step | Rare | `teacup` |
+| 8 | `goodneighbours_7` | Village Show | Legendary | `clover` |
+| 9 | `goodneighbours_8` | The Kindest Gardener | Mythical | `star` |
+
+#### Small Visitors (`smallvisitors`)
+
+Set tint: `#a5d8ff`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `smallvisitors_0` | Bumblebee | Common | `sprout` |
+| 2 | `smallvisitors_1` | Ladybird | Common | `petal` |
+| 3 | `smallvisitors_2` | Garden Snail | Common | `sparkle` |
+| 4 | `smallvisitors_3` | The Bold Robin | Uncommon | `lantern` |
+| 5 | `smallvisitors_4` | Hedgehog at Dusk | Uncommon | `butterfly` |
+| 6 | `smallvisitors_5` | Dragonfly | Rare | `hive` |
+| 7 | `smallvisitors_6` | The Fox Who Waits | Rare | `teacup` |
+| 8 | `smallvisitors_7` | Barn Owl | Legendary | `clover` |
+| 9 | `smallvisitors_8` | The Rare Moth | Mythical | `star` |
+
+#### Weather Watch (`weatherwatch`)
+
+Set tint: `#c5f6fa`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `weatherwatch_0` | Soft Rain | Common | `sprout` |
+| 2 | `weatherwatch_1` | Sun After Rain | Common | `petal` |
+| 3 | `weatherwatch_2` | The Still Morning | Common | `sparkle` |
+| 4 | `weatherwatch_3` | Thunder Far Off | Uncommon | `lantern` |
+| 5 | `weatherwatch_4` | Petrichor | Uncommon | `butterfly` |
+| 6 | `weatherwatch_5` | Hailstones | Rare | `hive` |
+| 7 | `weatherwatch_6` | The Green Sky | Rare | `teacup` |
+| 8 | `weatherwatch_7` | Aurora | Legendary | `clover` |
+| 9 | `weatherwatch_8` | The Wonderfall | Mythical | `star` |
+
+#### The Tool Shed (`toolshed`)
+
+Set tint: `#e9d8c4`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `toolshed_0` | Trowel | Common | `sprout` |
+| 2 | `toolshed_1` | Twine | Common | `petal` |
+| 3 | `toolshed_2` | The Good Gloves | Common | `sparkle` |
+| 4 | `toolshed_3` | Terracotta Pots | Uncommon | `lantern` |
+| 5 | `toolshed_4` | Seed Tins | Uncommon | `butterfly` |
+| 6 | `toolshed_5` | The Wheelbarrow | Rare | `hive` |
+| 7 | `toolshed_6` | Grandfather’s Spade | Rare | `teacup` |
+| 8 | `toolshed_7` | The Brass Tap | Legendary | `clover` |
+| 9 | `toolshed_8` | The Lost Key | Mythical | `star` |
+
+#### The Night Garden (`nightgarden`)
+
+Set tint: `#c9b6ff`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `nightgarden_0` | Evening Primrose | Common | `sprout` |
+| 2 | `nightgarden_1` | Moonflower | Common | `petal` |
+| 3 | `nightgarden_2` | Night Scent | Common | `sparkle` |
+| 4 | `nightgarden_3` | The Owl’s Round | Uncommon | `lantern` |
+| 5 | `nightgarden_4` | Glow Worms | Uncommon | `butterfly` |
+| 6 | `nightgarden_5` | Stars Through Leaves | Rare | `hive` |
+| 7 | `nightgarden_6` | The Sleeping Hive | Rare | `teacup` |
+| 8 | `nightgarden_7` | Midnight Bloom | Legendary | `clover` |
+| 9 | `nightgarden_8` | What Blooms Once | Mythical | `star` |
+
+#### Sweet Things (`sweetthings`)
+
+Set tint: `#ffc9de`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `sweetthings_0` | Honeycomb | Common | `sprout` |
+| 2 | `sweetthings_1` | Elderflower Cordial | Common | `petal` |
+| 3 | `sweetthings_2` | Windfall Apples | Common | `sparkle` |
+| 4 | `sweetthings_3` | Bramble Jam | Uncommon | `lantern` |
+| 5 | `sweetthings_4` | The Cake on the Sill | Uncommon | `butterfly` |
+| 6 | `sweetthings_5` | Sugared Petals | Rare | `hive` |
+| 7 | `sweetthings_6` | Rosehip Syrup | Rare | `teacup` |
+| 8 | `sweetthings_7` | The Secret Recipe | Legendary | `clover` |
+| 9 | `sweetthings_8` | First Honey | Mythical | `star` |
+
+#### The Gardener’s Ledger (`ledger`)
+
+Set tint: `#d8cfc0`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `ledger_0` | Seed Packets | Common | `sprout` |
+| 2 | `ledger_1` | Pressed Flowers | Common | `petal` |
+| 3 | `ledger_2` | The Margin Note | Common | `sparkle` |
+| 4 | `ledger_3` | A Bad Year | Uncommon | `lantern` |
+| 5 | `ledger_4` | The Good Year | Uncommon | `butterfly` |
+| 6 | `ledger_5` | Sketch of a Bee | Rare | `hive` |
+| 7 | `ledger_6` | Weather Notes | Rare | `teacup` |
+| 8 | `ledger_7` | The Last Page | Legendary | `clover` |
+| 9 | `ledger_8` | What Was Planted First | Mythical | `star` |
+
+#### The Wild Edge (`wildedge`)
+
+Set tint: `#8ce99a`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `wildedge_0` | Nettles | Common | `sprout` |
+| 2 | `wildedge_1` | The Unmown Corner | Common | `petal` |
+| 3 | `wildedge_2` | Bindweed | Common | `sparkle` |
+| 4 | `wildedge_3` | Seedheads | Uncommon | `lantern` |
+| 5 | `wildedge_4` | Where the Fence Ends | Uncommon | `butterfly` |
+| 6 | `wildedge_5` | The Old Hedge | Rare | `hive` |
+| 7 | `wildedge_6` | Foxgloves | Rare | `teacup` |
+| 8 | `wildedge_7` | The Path Nobody Cut | Legendary | `clover` |
+| 9 | `wildedge_8` | What Grew Back | Mythical | `star` |
+
+#### Keeping (`keeping`)
+
+Set tint: `#ffe066`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `keeping_0` | Dried Bunches | Common | `sprout` |
+| 2 | `keeping_1` | The Cold Frame | Common | `petal` |
+| 3 | `keeping_2` | Wrapped in Newspaper | Common | `sparkle` |
+| 4 | `keeping_3` | Root Cellar | Uncommon | `lantern` |
+| 5 | `keeping_4` | Labelled Jars | Uncommon | `butterfly` |
+| 6 | `keeping_5` | The Saved Seed | Rare | `hive` |
+| 7 | `keeping_6` | Overwintering | Rare | `teacup` |
+| 8 | `keeping_7` | The Long Wait | Legendary | `clover` |
+| 9 | `keeping_8` | Come Spring | Mythical | `star` |
+
+#### The Open Question (`openquestion`)
+
+Set tint: `#ffd43b`.
+
+| # | id | name | rarity | motif icon |
+| --- | --- | --- | --- | --- |
+| 1 | `openquestion_0` | A Gate You Did Not Build | Common | `sprout` |
+| 2 | `openquestion_1` | Footprints in the Beds | Common | `petal` |
+| 3 | `openquestion_2` | The Bell Nobody Rang | Common | `sparkle` |
+| 4 | `openquestion_3` | Someone Has Been Weeding | Uncommon | `lantern` |
+| 5 | `openquestion_4` | A Note, Unsigned | Uncommon | `butterfly` |
+| 6 | `openquestion_5` | The Locked Greenhouse | Rare | `hive` |
+| 7 | `openquestion_6` | What the Flower Won’t Say | Rare | `teacup` |
+| 8 | `openquestion_7` | The Ninth Row | Legendary | `clover` |
+| 9 | `openquestion_8` | Not Yet | Mythical | `star` |
 
 ### Drawing
 
